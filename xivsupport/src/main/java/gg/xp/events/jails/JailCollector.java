@@ -15,11 +15,13 @@ public class JailCollector implements EventHandler<AbilityUsedEvent> {
 
 	@Override
 	public void handle(EventContext<Event> context, AbilityUsedEvent event) {
+		// Check ability ID - we only care about these two
 		int id = event.getAbility().getId();
 		if (id != 0x2B6B && id != 0x2B6C) {
 			return;
 		}
 		jailedPlayers.add(event.getTarget());
+		// Fire off new event if we have exactly 3 events
 		if (jailedPlayers.size() == 3) {
 			context.accept(new UnsortedTitanJailsSolvedEvent(new ArrayList<>(jailedPlayers)));
 		}

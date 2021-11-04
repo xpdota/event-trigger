@@ -16,8 +16,10 @@ Cactbot, with its triggers being written in JS, makes it easier to write complex
 of state management (most things should not carry over from pull to pull). However, it still doesn't take the next
 logical step of abstracting away the actual log lines into objects where everything is already parsed.
 
-Both suffer from the issue that the idea of running log lines through regices should be *every* trigger's job, when in
-reality, it should just be done once and parsed into a convenient object.
+Both suffer from the issue parsing log lines is treated as being *every* trigger's job, when in
+reality, it should just be done once and parsed into a convenient object. Cactbot provides some nice functionality
+for programmatically creating the regices, but this still doesn't answer the question of why an individual trigger
+should be remotely concerned with a regex in the first place.
 
 Then, there's the bespoke ACT plugins, like the Jail plugin. These are, in my opinion, severely lacking in
 functionality, and suffer from re-use issues as well. For example, what if I want automarks, *and* a personal callout?
@@ -78,22 +80,24 @@ all - it just needs to do something like this:
 
 ```java
 
-@Scope(Scopes.PULL) // One instance of this class per pull
-public final class JailStuff {
-	// Collect jailed players
-	private final List<Entity> jailedPlayers = new ArrayList<>();
+@Scope(Scopes.PULL) // One instance of this class per pull - this functionality doesn't exist yet
+public class JailCollector implements EventHandler<AbilityUsedEvent> {
 
-	// Handle event - 'acceptor' is where we send back new synthetic events.
-	public void handleEvent(EventAcceptor acceptor, AbilityUsedEvent event) {
-		// This is our filter - these are the only ability IDs we care about.
-		if (event.getAbility().getId() != 0x2B6C && event.getAbility().getId() != 0x2B6B) {
-			return;
-		}
-		jailedPlayers.add(event.getTarget());
-		if (jailedPlayers.size() == 3) {
-			acceptor.accept(new UnsortedTitanJailsSolvedEvent(new ArrayList<>(jailedPlayers)));
-		}
-	}
+   private final List<XivEntity> jailedPlayers = new ArrayList<>();
+
+   @Override
+   public void handle(EventContext<Event> context, AbilityUsedEvent event) {
+      // Check ability ID - we only care about these two
+      int id = event.getAbility().getId();
+      if (id != 0x2B6B && id != 0x2B6C) {
+         return;
+      }
+      jailedPlayers.add(event.getTarget());
+      // Fire off new event if we have exactly 3 events
+      if (jailedPlayers.size() == 3) {
+         context.accept(new UnsortedTitanJailsSolvedEvent(new ArrayList<>(jailedPlayers)));
+      }
+   }
 }
 ```
 
@@ -102,9 +106,13 @@ here. We just use `event.getAbility().getId()` to check if it's one of the abili
 extract the player out of it. The sorting/prioritization, as well as the actual callout/marking, are completely
 de-coupled from the collection logic.
 
-You also avoid a lot of nonsense - hex vs decimal conversion, some hex IDs being in lowercase while most are upper,
+You also avoid a lot of nonsense. hex vs decimal conversion only needs to happen once, and then anything past that can
+specify IDs in hex or decimal natively. This also sidesteps weird issues of a few hex IDs in log lines being in
+lowercase while most are upper,
 as well as the ability to abstract away certain details that are useless 99% of the time (e.g. 21 NetworkAbility 
 vs 22 NetworkAOEAbility).
 
 Another advantage of abstracting away the log lines is that if log line format or fields change in the future, only a
-single update is needed, rather than potentially every trigger needing an update.
+single update is needed, rather than potentially every trigger needing an update. Or, if SE changes how a particular
+ability shows up in the log lines (e.g. headmarker obfuscation), then once again the logic only needs to be updated
+in a single place.
