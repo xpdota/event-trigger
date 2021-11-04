@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SortedTitanJailsSolvedEvent implements Event {
+public class FinalTitanJailsSolvedEvent implements Event {
 	private final List<XivEntity> jailedPlayers;
 
-	public SortedTitanJailsSolvedEvent(List<XivEntity> jailedPlayers) {
+	public FinalTitanJailsSolvedEvent(List<XivEntity> jailedPlayers) {
 		this.jailedPlayers = new ArrayList<>(jailedPlayers);
 	}
 

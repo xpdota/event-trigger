@@ -16,6 +16,6 @@ public class JailSorter implements EventHandler<UnsortedTitanJailsSolvedEvent> {
 		// This is where we would do job prio, custom prio, or whatever else you can come up with
 		List<XivEntity> jailedPlayers = new ArrayList<>(event.getJailedPlayers());
 		jailedPlayers.sort(Comparator.comparing(XivEntity::getName));
-		context.accept(new SortedTitanJailsSolvedEvent(jailedPlayers));
+		context.accept(new FinalTitanJailsSolvedEvent(jailedPlayers));
 	}
 }

@@ -2,7 +2,7 @@ package gg.xp.events;
 
 import gg.xp.events.jails.JailCollector;
 import gg.xp.events.jails.JailSorter;
-import gg.xp.events.jails.SortedTitanJailsSolvedEvent;
+import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.events.jails.UnsortedTitanJailsSolvedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +12,9 @@ import org.testng.annotations.Test;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class JailExample {
+public class JailExampleTest {
 
-	private static final Logger log = LoggerFactory.getLogger(JailExample.class);
+	private static final Logger log = LoggerFactory.getLogger(JailExampleTest.class);
 
 	/**
 	 * End to end example for titan jails
@@ -47,10 +47,10 @@ public class JailExample {
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				UnsortedTitanJailsSolvedEvent.class,
-				SortedTitanJailsSolvedEvent.class
+				FinalTitanJailsSolvedEvent.class
 		));
 		// Last event should be sorted jails
-		List<XivEntity> jailedPlayers = ((SortedTitanJailsSolvedEvent) finalEvents.get(finalEvents.size() - 1)).getJailedPlayers();
+		List<XivEntity> jailedPlayers = ((FinalTitanJailsSolvedEvent) finalEvents.get(finalEvents.size() - 1)).getJailedPlayers();
 		Assert.assertEquals(jailedPlayers.stream().map(XivEntity::getName).collect(Collectors.toList()), List.of("Other Player", "Some Player", "Third Player"));
 	}
 }
