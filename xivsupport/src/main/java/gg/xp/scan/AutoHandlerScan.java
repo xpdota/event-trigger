@@ -1,6 +1,5 @@
 package gg.xp.scan;
 
-import gg.xp.events.BasicEvent;
 import gg.xp.events.BasicEventDistributor;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
@@ -24,6 +23,7 @@ import static org.reflections.scanners.Scanners.MethodsAnnotated;
 public class AutoHandlerScan {
 
 	private static final Logger log = LoggerFactory.getLogger(AutoHandlerScan.class);
+	private static final Logger log_topo = LoggerFactory.getLogger(AutoHandlerScan.class.getCanonicalName() + ".Topology");
 
 	public static EventDistributor<Event> create() {
 		Reflections reflections = new Reflections(new ConfigurationBuilder().forPackages("gg").setScanners(MethodsAnnotated));
@@ -45,7 +45,11 @@ public class AutoHandlerScan {
 
 		BasicEventDistributor distributor = new BasicEventDistributor();
 
+		StringBuilder topo = new StringBuilder();
 		classMethodMap.forEach((clazz, methods) -> {
+			// TODO: error handling
+			topo.append("Class: ").append(clazz.getSimpleName()).append("\n");
+			// TODO: move this to AutoHandler so scope can be implemented
 			Object clazzInstance;
 			try {
 				clazzInstance = clazz.getConstructor((Class<?>[]) null).newInstance();
@@ -54,28 +58,12 @@ public class AutoHandlerScan {
 				throw new RuntimeException("Error instantiating event handler class " + clazz.getSimpleName(), e);
 			}
 			for (Method method : methods) {
-				// TODO: exception types
-				Class<?>[] paramTypes = method.getParameterTypes();
-				String methodLabel = method.getDeclaringClass().getSimpleName() + '.' + method.getName();
-				log.info("Setting up method {}", methodLabel);
-				if (paramTypes.length != 2) {
-					throw new IllegalStateException("Error setting up method " + methodLabel + ": wrong number of parameters (should be 2)");
-				}
-				if (!EventContext.class.isAssignableFrom(paramTypes[0]) || !Event.class.isAssignableFrom(paramTypes[1])) {
-					throw new IllegalStateException("Error setting up method " + methodLabel + ": method signature must be (EventContext, Event)");
-				}
-				Class<? extends Event> eventClass = (Class<? extends Event>) paramTypes[1];
-				EventHandler<? extends Event> rawEvh = (context, event) -> {
-					try {
-						method.invoke(clazzInstance, context, event);
-					}
-					catch (IllegalAccessException | InvocationTargetException e) {
-						log.error("Error invoking trigger method {}", methodLabel, e);
-					}
-				};
-				distributor.registerHandler((Class) eventClass, rawEvh);
+				AutoHandler rawEvh = new AutoHandler(method, clazzInstance);
+				distributor.registerHandler(rawEvh);
+				topo.append(" - Method: ").append(rawEvh.getTopoLabel()).append("\n");
 			}
 		});
+		log_topo.info("Topology:\n{}", topo);
 		return distributor;
 	}
 
