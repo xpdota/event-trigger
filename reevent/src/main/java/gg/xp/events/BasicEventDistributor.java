@@ -21,6 +21,12 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 		handlers.add(handler);
 	}
 
+	// TODO: decide how to plumb this through
+	@Override
+	public StateStore getStateStore() {
+		return state;
+	}
+
 	@Override
 	public void acceptEvent(Event event) {
 		Queue<Event> eventsForImmediateProcessing = new ArrayDeque<>();
@@ -45,7 +51,7 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 
 							@Override
 							public void acceptToQueue(Event event) {
-								throw new UnsupportedOperationException("This implementation does not support that");
+								throw new UnsupportedOperationException("Not implemented yet");
 							}
 
 							@Override

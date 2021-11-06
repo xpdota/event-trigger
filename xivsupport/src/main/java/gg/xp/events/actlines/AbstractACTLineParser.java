@@ -50,16 +50,17 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 
 			String[] splits = line.split("\\|", numSplits);
 			Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
+			// TODO: validate number of fields
 			for (int i = 0; i < groups.size(); i++) {
 				// i + 2 is because the first two are the line number and timestamp.
 				out.put(groups.get(i), splits[i + 2]);
 			}
 			ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
-			Event outgoingEvent = convert(out, lineNumber, zdt);
+			Event outgoingEvent = convert(new FieldMapper<>(out), lineNumber, zdt);
 			context.accept(outgoingEvent);
 		}
 	}
 
 	// TODO: consider other ways of handling line number + timestamp
-	protected abstract Event convert(Map<F, String> fields, int lineNumber, ZonedDateTime time);
+	protected abstract Event convert(FieldMapper<F> fields, int lineNumber, ZonedDateTime time);
 }

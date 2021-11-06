@@ -6,8 +6,7 @@ import org.testng.annotations.Test;
 
 public class Line21Test extends AbstractACTLineTest<AbilityUsedEvent> {
 
-
-	protected Line21Test() {
+	public Line21Test() {
 		super(AbilityUsedEvent.class);
 	}
 

@@ -1,5 +1,7 @@
 package gg.xp.events;
 
+import gg.xp.context.StateStore;
+
 public interface EventDistributor<X extends Event> {
 
 	/**
@@ -25,4 +27,6 @@ public interface EventDistributor<X extends Event> {
 	}
 
 	void acceptEvent(Event event);
+
+	StateStore getStateStore();
 }

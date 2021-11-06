@@ -5,8 +5,7 @@ import org.testng.annotations.Test;
 
 public class Line00Test extends AbstractACTLineTest<ZeroLogLineEvent> {
 
-
-	protected Line00Test() {
+	public Line00Test() {
 		super(ZeroLogLineEvent.class);
 	}
 

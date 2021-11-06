@@ -6,7 +6,6 @@ import gg.xp.events.XivAbility;
 import gg.xp.events.XivEntity;
 
 import java.time.ZonedDateTime;
-import java.util.Map;
 
 @SuppressWarnings("unused")
 public class Line21Parser extends AbstractACTLineParser<Line21Parser.Fields> {
@@ -20,11 +19,11 @@ public class Line21Parser extends AbstractACTLineParser<Line21Parser.Fields> {
 	}
 
 	@Override
-	protected Event convert(Map<Fields, String> fields, int lineNumber, ZonedDateTime time) {
+	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		return new AbilityUsedEvent(
-				new XivAbility(Long.parseLong(fields.get(Fields.abilityId), 16), fields.get(Fields.abilityName)),
-				new XivEntity(Long.parseLong(fields.get(Fields.casterId), 16), fields.get(Fields.casterName)),
-				new XivEntity(Long.parseLong(fields.get(Fields.targetId), 16), fields.get(Fields.targetName))
+				new XivAbility(fields.getHex(Fields.abilityId), fields.getString(Fields.abilityName)),
+				new XivEntity(fields.getHex(Fields.casterId), fields.getString(Fields.casterName)),
+				new XivEntity(fields.getHex(Fields.targetId), fields.getString(Fields.targetName))
 		);
 	}
 }
