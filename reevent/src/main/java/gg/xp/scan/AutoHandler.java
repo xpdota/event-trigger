@@ -22,7 +22,7 @@ public class AutoHandler implements EventHandler<Event> {
 		// TODO: exception types
 		Class<?>[] paramTypes = method.getParameterTypes();
 		String tmpMethodLabel = method.getDeclaringClass().getSimpleName() + '.' + method.getName();
-		log.info("Setting up method {}", tmpMethodLabel);
+		log.trace("Setting up method {}", tmpMethodLabel);
 		if (paramTypes.length != 2) {
 			throw new IllegalStateException("Error setting up method " + tmpMethodLabel + ": wrong number of parameters (should be 2)");
 		}
@@ -44,6 +44,7 @@ public class AutoHandler implements EventHandler<Event> {
 	public String getTopoLabel() {
 		return String.format("%s(%s)", method.getName(), eventClass.getSimpleName());
 	}
+
 
 	@Override
 	public void handle(EventContext<Event> context, Event event) {

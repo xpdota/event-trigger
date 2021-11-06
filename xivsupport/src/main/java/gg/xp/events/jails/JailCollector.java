@@ -18,7 +18,7 @@ public class JailCollector implements EventHandler<AbilityUsedEvent> {
 	@HandleEvents
 	public void handle(EventContext<Event> context, AbilityUsedEvent event) {
 		// Check ability ID - we only care about these two
-		int id = event.getAbility().getId();
+		long id = event.getAbility().getId();
 		if (id != 0x2B6B && id != 0x2B6C) {
 			return;
 		}

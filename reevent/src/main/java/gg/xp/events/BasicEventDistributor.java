@@ -1,5 +1,6 @@
 package gg.xp.events;
 
+import gg.xp.context.StateStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,8 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 
 	private final List<EventHandler<Event>> handlers = new ArrayList<>();
 
+	private final StateStore state = new StateStore();
+
 	public void registerHandler(EventHandler<Event> handler) {
 		handlers.add(handler);
 	}
@@ -27,10 +30,29 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 			final Event tmpNext = next;
 			handlers.forEach(handler -> {
 				log.trace("Sending event {} to handler {} with {} immediate events", tmpNext, handler, eventsForImmediateProcessing.size());
-				handler.handle(e -> {
-					log.trace("Event {} triggered new event {}", tmpNext, e);
-					eventsForImmediateProcessing.add(e);
-				}, tmpNext);
+				handler.handle(
+						new EventContext<>() {
+							@Override
+							public void accept(Event e) {
+								if (e == tmpNext) {
+									log.error("Event {} was re-submitted by {}!", e, handler);
+								}
+								else {
+									log.trace("Event {} triggered new event {}", tmpNext, e);
+									eventsForImmediateProcessing.add(e);
+								}
+							}
+
+							@Override
+							public void acceptToQueue(Event event) {
+								throw new UnsupportedOperationException("This implementation does not support that");
+							}
+
+							@Override
+							public StateStore getStateInfo() {
+								return state;
+							}
+						}, tmpNext);
 				log.trace("Sent event {} to handler {}, now with {} immediate events", tmpNext, handler, eventsForImmediateProcessing.size());
 			});
 		}

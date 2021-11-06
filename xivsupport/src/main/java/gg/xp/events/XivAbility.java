@@ -1,15 +1,15 @@
 package gg.xp.events;
 
 public class XivAbility {
-	private final int id;
+	private final long id;
 	private final String name;
 
-	public XivAbility(int id, String name) {
+	public XivAbility(long id, String name) {
 		this.id = id;
 		this.name = name;
 	}
 
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 

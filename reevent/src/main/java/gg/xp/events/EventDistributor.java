@@ -17,13 +17,9 @@ public interface EventDistributor<X extends Event> {
 	 * @param <Y>     Type of event
 	 */
 	default <Y extends X> void registerHandler(Class<Y> clazz, EventHandler<Y> handler) {
-		final EventDistributor<X> thisQueue = this;
-		registerHandler(new EventHandler<X>() {
-			@Override
-			public void handle(EventContext<Event> context, X event) {
-				if (clazz.isInstance(event)) {
-					handler.handle(context, (Y) event);
-				}
+		registerHandler((context, event) -> {
+			if (clazz.isInstance(event)) {
+				handler.handle(context, (Y) event);
 			}
 		});
 	}

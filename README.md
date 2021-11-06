@@ -13,6 +13,9 @@ while you get expression-level validation, you don't get validation for things l
 It is also poor in terms of code re-use. Making a function or framework that other people can use is doable,
 but more complicated and hacky than it should be.
 
+Regardless, it is unlikely that this could *replace* Triggernometry, but it's clear that there's room for at least
+Triggernometry plus something else.
+
 Cactbot, with its triggers being written in JS, makes it easier to write complex triggers, and even offers some degree
 of state management (most things should not carry over from pull to pull). However, it still doesn't take the next
 logical step of abstracting away the actual log lines into objects where everything is already parsed.
@@ -20,7 +23,9 @@ logical step of abstracting away the actual log lines into objects where everyth
 Both suffer from the issue that parsing log lines is treated as being *every* trigger's job, when in
 reality, it should just be done once and parsed into a convenient object. Cactbot provides some nice functionality
 for programmatically creating the regices, but this still doesn't answer the question of why an individual trigger
-should be remotely concerned with a regex in the first place.
+should be remotely concerned with a regex in the first place. Or - for that matter, why Regex is even used in the first
+place, rather than just splitting on `|` characters and mapping them to fields. Splitting may result in somewhat
+reduced average-case performance, but improves worst-case since not every user-supplied regex would be optimized.
 
 Then, there's the bespoke ACT plugins, like the Jail plugin. These are, in my opinion, severely lacking in
 functionality, and suffer from re-use issues as well. For example, what if I want automarks, *and* a personal callout?
@@ -122,6 +127,10 @@ single update is needed, rather than potentially every trigger needing an update
 ability shows up in the log lines (e.g. headmarker obfuscation), then once again the logic only needs to be updated
 in a single place.
 
+On top of all that, there's the advantage that you get full IDE auto-completion and much better linting than what
+you'd get from either Cactbot or Trigg. Plus, I'm the kind of guy that considers "No JS involved" to be a job
+benefit, so there's that too.
+
 ### Future Functionality
 
 Due to how the architecture works, debugging would be extremely easy. You'd even have the ability to produce a
@@ -133,3 +142,6 @@ standpoint.
 
 Context will also be an important feature. This goes for both filtering based on context (i.e. zone-locked or
 job-locked) triggers, and state management (i.e. discarding pull-specific state on a wipe).
+
+I will also need to, at some point, bite the bullet and write an actual ACT integration using JNI or something,
+rather than just reading a log file, in order to get things like player info, party data, and positions/headings.

@@ -2,31 +2,35 @@ package gg.xp.scan;
 
 import gg.xp.events.BasicEventDistributor;
 import gg.xp.events.Event;
-import gg.xp.events.EventContext;
 import gg.xp.events.EventDistributor;
-import gg.xp.events.EventHandler;
 import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.reflections.scanners.Scanners.MethodsAnnotated;
+import static org.reflections.scanners.Scanners.SubTypes;
 
+@SuppressWarnings("ClassWithMultipleLoggers")
 public class AutoHandlerScan {
 
 	private static final Logger log = LoggerFactory.getLogger(AutoHandlerScan.class);
+	// Secondary logger for topology so it can be controlled differently
 	private static final Logger log_topo = LoggerFactory.getLogger(AutoHandlerScan.class.getCanonicalName() + ".Topology");
 
 	public static EventDistributor<Event> create() {
-		Reflections reflections = new Reflections(new ConfigurationBuilder().forPackages("gg").setScanners(MethodsAnnotated));
+		Reflections reflections = new Reflections(new ConfigurationBuilder().forPackages("gg").setScanners(Scanners.MethodsAnnotated, Scanners.SubTypes));
 		Set<Method> annotatedMethods = reflections.get(MethodsAnnotated.with(HandleEvents.class).as(Method.class));
 
 		Map<Class<?>, List<Method>> classMethodMap = new HashMap<>();
@@ -37,9 +41,16 @@ public class AutoHandlerScan {
 				// method lying around. Safest option is to just ignore stuff if it is synthetic or a bridge.
 				continue;
 			}
-			methodCount ++;
+			methodCount++;
 			Class<?> clazz = method.getDeclaringClass();
-			classMethodMap.computeIfAbsent(clazz, unused -> new ArrayList<>()).add(method);
+			Set<Class<?>> implementingClasses = reflections.get(SubTypes.of(clazz).asClass());
+			if (!implementingClasses.isEmpty()) {
+				log.info("Class {} has implementors: {}", clazz, implementingClasses);
+			}
+			//noinspection SimplifyForEach
+			Stream.concat(Stream.of(clazz), implementingClasses.stream())
+					.filter(AutoHandlerScan::isClassInstantiable)
+					.forEach(cls -> classMethodMap.computeIfAbsent(cls, unused -> new ArrayList<>()).add(method));
 		}
 		log.info("Methods: {}", methodCount);
 
@@ -67,4 +78,7 @@ public class AutoHandlerScan {
 		return distributor;
 	}
 
+	private static boolean isClassInstantiable(Class<?> clazz) {
+		return !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers());
+	}
 }

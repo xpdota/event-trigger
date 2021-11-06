@@ -16,6 +16,42 @@
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <parallel>methods</parallel>
+                    <threadCount>10</threadCount>
+                    <properties>
+<!--                        <property>-->
+<!--                            <name>parallel</name>-->
+<!--                            <value>classes</value>-->
+<!--                        </property>-->
+<!--                        <property>-->
+<!--                            <name>dataproviderthreadcount</name>-->
+<!--                            <value>30</value>-->
+<!--                        </property>-->
+<!--                        <property>-->
+<!--                            <name>suitethreadpoolsize</name>-->
+<!--                            <value>4</value>-->
+<!--                        </property>-->
+<!--                        <propperty>-->
+<!--                            <name>threadcount</name>-->
+<!--                            <value>4</value>-->
+<!--                        </propperty>-->
+<!--                        <propperty>-->
+<!--                            <name>threadpoolsize</name>-->
+<!--                            <value>4</value>-->
+<!--                        </propperty>-->
+                    </properties>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>gg.xp</groupId>
@@ -40,13 +76,25 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>7.4.0</version>
+            <!-- 7.4.0 Breaks stuff-->
+            <!--suppress MavenPackageUpdate -->
+            <version>7.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>0.10.2</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>net.contentobjects.jnotify</groupId>-->
+        <!--            <artifactId>jnotify</artifactId>-->
+        <!--            <version>0.94</version>-->
+        <!--        </dependency>-->
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>deps</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

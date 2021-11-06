@@ -14,7 +14,7 @@ public class ACTLogLineParser implements EventHandler<ACTLogLineEvent> {
 	private static final Pattern LINE21_PATTERN = Pattern.compile("^21\\|(?<ts>[^|]*)\\|(?<casterId>[^|]*)\\|(?<casterName>[^|]*)\\|(?<abilityId>[^|]*)\\|(?<abilityName>[^|]*)\\|(?<targetId>[^|]*)\\|(?<targetName>[^|]*)\\|");
 
 	@Override
-	@HandleEvents
+//	@HandleEvents
 	public void handle(EventContext<Event> context, ACTLogLineEvent event) {
 		String logLine = event.getLogLine();
 		// This could obviously be cleaned up when we support more events

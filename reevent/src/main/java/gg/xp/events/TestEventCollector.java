@@ -19,6 +19,15 @@ public class TestEventCollector implements EventHandler<Event> {
 		return Collections.unmodifiableList(eventsSeen);
 	}
 
+	public <X extends Event> List<X> getEventsOf(Class<X> eventClass) {
+		return eventsSeen
+				.stream()
+				.filter(eventClass::isInstance)
+				.map(eventClass::cast)
+				.collect(Collectors.toList());
+	}
+
+
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public <X extends Event> List<X> getEventsOf(Collection<Class<? extends X>> eventClasses) {
 		return (List) eventsSeen
