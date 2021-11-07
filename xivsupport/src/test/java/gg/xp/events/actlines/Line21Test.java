@@ -1,6 +1,5 @@
 package gg.xp.events.actlines;
 
-import gg.xp.events.AbilityUsedEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -16,11 +15,11 @@ public class Line21Test extends AbstractACTLineTest<AbilityUsedEvent> {
 		AbilityUsedEvent event = expectEvent(goodLine);
 
 		Assert.assertEquals(event.getAbility().getId(), 0x200524E);
-		Assert.assertEquals(event.getCaster().getId(), 0x107361AF);
+		Assert.assertEquals(event.getSource().getId(), 0x107361AF);
 		Assert.assertEquals(event.getTarget().getId(), 0x107361AD);
 
 		Assert.assertEquals(event.getAbility().getName(), "Item_524E");
-		Assert.assertEquals(event.getCaster().getName(), "Foo Bar");
+		Assert.assertEquals(event.getSource().getName(), "Foo Bar");
 		Assert.assertEquals(event.getTarget().getName(), "The Target");
 	}
 

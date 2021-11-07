@@ -1,8 +1,7 @@
 package gg.xp.events.jails;
 
 import gg.xp.events.BaseEvent;
-import gg.xp.events.Event;
-import gg.xp.events.XivEntity;
+import gg.xp.events.models.XivEntity;
 
 import java.util.ArrayList;
 import java.util.Collections;

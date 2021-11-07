@@ -1,6 +1,10 @@
-package gg.xp.events;
+package gg.xp.events.actlines;
 
-public class AbilityUsedEvent extends BaseEvent {
+import gg.xp.events.BaseEvent;
+import gg.xp.events.models.XivAbility;
+import gg.xp.events.models.XivEntity;
+
+public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
 
 	private final XivAbility ability;
 	private final XivEntity caster;
@@ -16,10 +20,12 @@ public class AbilityUsedEvent extends BaseEvent {
 		return ability;
 	}
 
-	public XivEntity getCaster() {
+	@Override
+	public XivEntity getSource() {
 		return caster;
 	}
 
+	@Override
 	public XivEntity getTarget() {
 		return target;
 	}

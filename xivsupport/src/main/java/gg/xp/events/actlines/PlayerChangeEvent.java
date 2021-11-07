@@ -1,8 +1,7 @@
 package gg.xp.events.actlines;
 
 import gg.xp.events.BaseEvent;
-import gg.xp.events.Event;
-import gg.xp.events.XivEntity;
+import gg.xp.events.models.XivEntity;
 
 public class PlayerChangeEvent extends BaseEvent {
 	private final XivEntity player;

@@ -1,6 +1,7 @@
 package gg.xp.events;
 
 import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
+import gg.xp.events.models.XivEntity;
 import gg.xp.scan.AutoHandlerScan;
 import gg.xp.speech.TtsCall;
 import org.testng.Assert;

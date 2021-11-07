@@ -1,7 +1,7 @@
 package gg.xp.events.state;
 
-import gg.xp.events.XivEntity;
-import gg.xp.events.XivZone;
+import gg.xp.events.models.XivEntity;
+import gg.xp.events.models.XivZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +12,7 @@ public class XivState {
 	private XivZone zone;
 	private XivEntity player;
 
+	// Note: can be null until we've seen a 02-line
 	public XivEntity getPlayer() {
 		return player;
 	}
@@ -21,6 +22,7 @@ public class XivState {
 		this.player = player;
 	}
 
+	// Note: can be null until we've seen a 01-line
 	public XivZone getZone() {
 		return zone;
 	}

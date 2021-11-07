@@ -25,38 +25,26 @@ public class DelayedTest {
 
 	private static final Logger log = LoggerFactory.getLogger(DelayedTest.class);
 
-	private static final class DelayedEvent extends BaseEvent {
-		private final long runAt;
-
-		private DelayedEvent(long runAt) {
-			this.runAt = runAt;
-		}
-
-		@Override
-		public long delayedEnqueueAt() {
-			return this.runAt;
-		}
-
-		@Override
-		public boolean delayedEnqueueAtFront() {
-			return true;
+	private static final class DelayedTestEvent extends BaseDelayedEvent {
+		private DelayedTestEvent(long delay) {
+			super(delay);
 		}
 	}
 
-	private volatile DelayedEvent pending;
+	private volatile DelayedTestEvent pending;
 
 	@HandleEvents
 	public void handleStart(EventContext<Event> context, EchoEvent event) {
 		if (event.getLine().equals("delaystart")) {
 			log.info("Delay test start");
-			DelayedEvent outgoingEvent = new DelayedEvent(System.currentTimeMillis() + 5000);
+			DelayedTestEvent outgoingEvent = new DelayedTestEvent(5000);
 			context.enqueue(outgoingEvent);
 			pending = outgoingEvent;
 		}
 	}
 
 	@HandleEvents
-	public void handleEnd(EventContext<Event> context, DelayedEvent event) {
+	public void handleEnd(EventContext<Event> context, DelayedTestEvent event) {
 		log.info("Delay test end");
 		if (pending == event) {
 			context.accept(new TtsCall("Foo"));

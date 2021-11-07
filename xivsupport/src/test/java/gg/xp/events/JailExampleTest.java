@@ -1,9 +1,11 @@
 package gg.xp.events;
 
+import gg.xp.events.actlines.AbilityUsedEvent;
 import gg.xp.events.jails.JailCollector;
 import gg.xp.events.jails.JailSorter;
 import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.events.jails.UnsortedTitanJailsSolvedEvent;
+import gg.xp.events.models.XivEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;

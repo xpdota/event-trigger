@@ -1,8 +1,7 @@
 package gg.xp.events.actlines;
 
 import gg.xp.events.BaseEvent;
-import gg.xp.events.Event;
-import gg.xp.events.XivZone;
+import gg.xp.events.models.XivZone;
 
 public class ZoneChangeEvent extends BaseEvent {
 	private final XivZone zone;

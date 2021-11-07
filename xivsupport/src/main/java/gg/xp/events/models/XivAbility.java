@@ -1,4 +1,4 @@
-package gg.xp.events;
+package gg.xp.events.models;
 
 public class XivAbility {
 	private final long id;
@@ -16,4 +16,10 @@ public class XivAbility {
 	public String getName() {
 		return name;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("XivAbility(0x%X:%s)", id, name);
+	}
+
 }

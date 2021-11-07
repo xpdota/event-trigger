@@ -1,13 +1,13 @@
-package gg.xp.events;
+package gg.xp.events.models;
 
-public class XivEntity {
+public class XivZone {
 
 	// IMPORTANT: Annoyingly, these all must be 'long' instead of 'int' because the game treats them as
 	// unsigned 32-bit, but Java treats them as signed, so values above 7FFFFFFF cause an overflow
 	private final long id;
 	private final String name;
 
-	public XivEntity(long id, String name) {
+	public XivZone(long id, String name) {
 		this.id = id;
 		this.name = name;
 	}
@@ -22,6 +22,6 @@ public class XivEntity {
 
 	@Override
 	public String toString() {
-		return String.format("XivEntity(0x%X:%s)", id, name);
+		return String.format("XivZone(0x%X:%s)", id, name);
 	}
 }

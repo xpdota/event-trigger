@@ -1,9 +1,8 @@
 package gg.xp.events.actlines;
 
-import gg.xp.events.AbilityUsedEvent;
 import gg.xp.events.Event;
-import gg.xp.events.XivAbility;
-import gg.xp.events.XivEntity;
+import gg.xp.events.models.XivAbility;
+import gg.xp.events.models.XivEntity;
 
 import java.time.ZonedDateTime;
 

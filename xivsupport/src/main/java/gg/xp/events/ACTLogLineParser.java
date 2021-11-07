@@ -1,6 +1,8 @@
 package gg.xp.events;
 
-import gg.xp.scan.HandleEvents;
+import gg.xp.events.actlines.AbilityUsedEvent;
+import gg.xp.events.models.XivAbility;
+import gg.xp.events.models.XivEntity;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

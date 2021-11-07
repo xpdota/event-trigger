@@ -1,10 +1,9 @@
 package gg.xp.events.actlines;
 
 import gg.xp.events.Event;
-import gg.xp.events.XivEntity;
+import gg.xp.events.models.XivEntity;
 
 import java.time.ZonedDateTime;
-import java.util.Map;
 
 @SuppressWarnings("unused")
 public class Line02Parser extends AbstractACTLineParser<Line02Parser.Fields> {

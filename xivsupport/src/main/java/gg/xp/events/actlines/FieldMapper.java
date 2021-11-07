@@ -1,7 +1,5 @@
 package gg.xp.events.actlines;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -15,6 +13,10 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public String getString(K key) {
 		return raw.get(key);
+	}
+
+	public long getLong(K key) {
+		return Long.parseLong(raw.get(key), 10);
 	}
 
 	public long getHex(K key) {
