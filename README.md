@@ -138,10 +138,24 @@ visual "tree" of events, showing exactly what event triggered what.
 
 Obviously, there also needs to be a system for actually installing triggers. Java does support hot-swapping of classes
 and such, as well as having a good deal of control over class loaders, so it shouldn't be difficult from a language
-standpoint. 
+standpoint. I have hot-add and hot-remove working, but hot-modify is going to be harder. However, it will all become
+significantly easier once it gets to the point where triggers are in separate repositories (a la Triggernometry).
 
 Context will also be an important feature. This goes for both filtering based on context (i.e. zone-locked or
 job-locked) triggers, and state management (i.e. discarding pull-specific state on a wipe).
 
 I will also need to, at some point, bite the bullet and write an actual ACT integration using JNI or something,
 rather than just reading a log file, in order to get things like player info, party data, and positions/headings.
+
+Some kind of interface would also be a start, including possibly a simple trigger maker covering at least the
+functionality of Vanilla ACT triggers (which is a very low bar, but I digress). 
+
+## Ok I just want to run it, how do I do that
+
+Well, I don't actually have any proper ACT integration yet, so it just reads the log file. Assuming your logs are in the
+default location (`%appdata%\Advanced Combat Tracker\FFXIVLogs`, e.g.
+C:\Users\Your Name\Appdata\Roaming\Advanced Combat Tracker\FFXIVLogs), it should 'just work™'. Try `/e tts` for a TTS
+test, or `/e delaystart` for a demonstration of how to have a delayed callout (for dot/CD timers and such).
+
+There's no launcher or proper packaging yet, so your best bet at actually *running* it is to just install IntelliJ,
+let it install a JDK for you (at least version 11), and run `xivsupport/src/main/java/gg/xp/sys/XivMain.java`.
