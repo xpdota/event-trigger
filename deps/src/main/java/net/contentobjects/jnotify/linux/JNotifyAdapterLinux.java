@@ -37,15 +37,15 @@
 
 package net.contentobjects.jnotify.linux;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Hashtable;
-
 import net.contentobjects.jnotify.IJNotify;
 import net.contentobjects.jnotify.JNotify;
 import net.contentobjects.jnotify.JNotifyException;
 import net.contentobjects.jnotify.JNotifyListener;
 import net.contentobjects.jnotify.Util;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Hashtable;
 
 
 /** TODO : added by omry at Dec 11, 2005 : Handle move events*/

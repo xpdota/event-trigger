@@ -2,7 +2,6 @@ package gg.xp.speech;
 
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
-import gg.xp.events.EventHandler;
 import gg.xp.events.misc.EchoEvent;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;

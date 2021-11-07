@@ -1,6 +1,5 @@
 package gg.xp.events.delaytest;
 
-import gg.xp.events.BaseEvent;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.misc.EchoEvent;

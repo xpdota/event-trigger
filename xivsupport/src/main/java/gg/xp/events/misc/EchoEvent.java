@@ -1,7 +1,6 @@
 package gg.xp.events.misc;
 
 import gg.xp.events.BaseEvent;
-import gg.xp.events.Event;
 
 public class EchoEvent extends BaseEvent {
 

@@ -1,9 +1,7 @@
 package gg.xp.events.actlines.parsers;
 
 import gg.xp.events.Event;
-import gg.xp.events.actlines.events.AbilityCastCancel;
 import gg.xp.events.actlines.events.EntityKilledEvent;
-import gg.xp.events.models.XivAbility;
 import gg.xp.events.models.XivEntity;
 
 import java.time.ZonedDateTime;

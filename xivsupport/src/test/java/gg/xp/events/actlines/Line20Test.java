@@ -1,7 +1,6 @@
 package gg.xp.events.actlines;
 
 import gg.xp.events.actlines.events.AbilityCastStart;
-import gg.xp.events.actlines.events.AbilityUsedEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

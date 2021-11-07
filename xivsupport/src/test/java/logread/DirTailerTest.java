@@ -1,10 +1,8 @@
 package logread;
 
 import gg.xp.logread.DirTailer;
-import gg.xp.logread.LogTailer;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.BufferedWriter;
@@ -13,7 +11,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class DirTailerTest {
 	// TODO: this test is flaky. I think there's some strange file flushing behavior making it unreliable,

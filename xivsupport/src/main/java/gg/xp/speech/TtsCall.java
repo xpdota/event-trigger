@@ -1,7 +1,6 @@
 package gg.xp.speech;
 
 import gg.xp.events.BaseEvent;
-import gg.xp.events.Event;
 
 public class TtsCall extends BaseEvent {
 	private final String callText;

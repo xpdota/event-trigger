@@ -1,11 +1,5 @@
 package gg.xp.events;
 
-import gg.xp.events.actlines.events.AbilityUsedEvent;
-import gg.xp.events.actlines.parsers.Line21Parser;
-import gg.xp.events.models.XivAbility;
-import gg.xp.events.models.XivEntity;
-
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ACTLogLineParser implements EventHandler<ACTLogLineEvent> {

@@ -1,5 +1,10 @@
 package net.contentobjects.jnotify.macosx;
 
+import net.contentobjects.jnotify.IJNotify;
+import net.contentobjects.jnotify.JNotify;
+import net.contentobjects.jnotify.JNotifyException;
+import net.contentobjects.jnotify.JNotifyListener;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
@@ -9,11 +14,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
-import net.contentobjects.jnotify.IJNotify;
-import net.contentobjects.jnotify.JNotify;
-import net.contentobjects.jnotify.JNotifyException;
-import net.contentobjects.jnotify.JNotifyListener;
 
 public class JNotifyAdapterMacOSX implements IJNotify
 {

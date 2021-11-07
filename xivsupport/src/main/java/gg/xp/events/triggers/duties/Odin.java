@@ -3,7 +3,6 @@ package gg.xp.events.triggers.duties;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.actlines.events.AbilityCastStart;
-import gg.xp.events.actlines.events.AbilityUsedEvent;
 import gg.xp.events.state.XivState;
 import gg.xp.scan.FilteredEventHandler;
 import gg.xp.scan.HandleEvents;

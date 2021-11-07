@@ -1,7 +1,6 @@
 package gg.xp.events.actlines;
 
 import gg.xp.events.actlines.events.AbilityCastCancel;
-import gg.xp.events.actlines.events.AbilityCastStart;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

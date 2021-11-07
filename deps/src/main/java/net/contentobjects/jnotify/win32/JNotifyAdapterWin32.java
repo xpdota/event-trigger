@@ -37,13 +37,13 @@
 
 package net.contentobjects.jnotify.win32;
 
-import java.util.Hashtable;
-
 import net.contentobjects.jnotify.IJNotify;
 import net.contentobjects.jnotify.JNotify;
 import net.contentobjects.jnotify.JNotifyException;
 import net.contentobjects.jnotify.JNotifyListener;
 import net.contentobjects.jnotify.Util;
+
+import java.util.Hashtable;
 
 public class JNotifyAdapterWin32 implements IJNotify
 {

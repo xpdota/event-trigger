@@ -1,7 +1,6 @@
 package gg.xp.events.actlines.events;
 
 import gg.xp.events.BaseEvent;
-import gg.xp.events.Event;
 
 public class ZeroLogLineEvent extends BaseEvent {
 	private final long code;
