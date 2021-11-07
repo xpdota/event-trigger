@@ -12,7 +12,7 @@ public class Odin implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext<Event> context) {
-		return context.getStateInfo().get(XivState.class).getZone().getId() == 394;
+		return context.getStateInfo().get(XivState.class).zoneIs(394);
 	}
 
 	@HandleEvents

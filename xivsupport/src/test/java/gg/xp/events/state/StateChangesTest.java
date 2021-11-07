@@ -6,8 +6,10 @@ import gg.xp.events.Event;
 import gg.xp.events.EventDistributor;
 import gg.xp.scan.AutoHandlerScan;
 import org.testng.Assert;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
+@Ignore // Using ACTWS for zone/player change
 public class StateChangesTest {
 
 	@Test

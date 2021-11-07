@@ -1,8 +1,10 @@
 package gg.xp.events.actlines;
 
 import org.testng.Assert;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
+@Ignore // Using ACTWS for zone/player change
 public class Line01Test extends AbstractACTLineTest<ZoneChangeEvent> {
 
 	public Line01Test() {

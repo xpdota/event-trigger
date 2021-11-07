@@ -64,4 +64,10 @@ public class XivState {
 			}
 		}));
 	}
+
+	public boolean zoneIs(long zoneId) {
+		XivZone zone = getZone();
+		return zone != null && zone.getId() == zoneId;
+
+	}
 }
