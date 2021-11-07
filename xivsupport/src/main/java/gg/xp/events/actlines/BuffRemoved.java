@@ -4,16 +4,14 @@ import gg.xp.events.BaseEvent;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivStatusEffect;
 
-// TODO: track new application vs refresh
-// Note that stacks decreasing (e.g. Embolden) still counts as "Application".
-public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTargetEntity {
+public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTargetEntity {
 	private final XivStatusEffect buff;
 	private final double duration;
 	private final XivEntity source;
 	private final XivEntity target;
 	private final long stacks;
 
-	public BuffApplied(XivStatusEffect buff, double duration, XivEntity source, XivEntity target, long stacks) {
+	public BuffRemoved(XivStatusEffect buff, double duration, XivEntity source, XivEntity target, long stacks) {
 		this.buff = buff;
 		this.duration = duration;
 		this.source = source;

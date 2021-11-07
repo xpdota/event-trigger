@@ -3,11 +3,14 @@ package gg.xp.events.triggers.jobs;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.actlines.BuffApplied;
+import gg.xp.events.actlines.BuffRemoved;
 import gg.xp.events.delaytest.BaseDelayedEvent;
 import gg.xp.events.filters.Filters;
 import gg.xp.events.models.BuffTrackingKey;
 import gg.xp.scan.HandleEvents;
 import gg.xp.speech.TtsCall;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class DotTracker {
+
+	private static final Logger log = LoggerFactory.getLogger(DotTracker.class);
 
 	private static final long dotRefreshAdvance = 5000L;
 
@@ -30,6 +35,7 @@ public class DotTracker {
 	private enum WhitelistedBuffs {
 		// JLS/javac being dumb, had to put the L there to make it a long
 		Dia(0x8fL, 0x90L, 0x74fL),
+		Biolysis(0xb3L, 0xbdL, 0x767L),
 		GoringBlade(0x2d5L);
 
 		private final Set<Long> buffIds;
@@ -58,7 +64,12 @@ public class DotTracker {
 		}
 	}
 
+	// TODO: combine?
 	private static BuffTrackingKey getKey(BuffApplied event) {
+		return new BuffTrackingKey(event.getSource(), event.getTarget(), event.getBuff());
+	}
+
+	private static BuffTrackingKey getKey(BuffRemoved event) {
 		return new BuffTrackingKey(event.getSource(), event.getTarget(), event.getBuff());
 	}
 
@@ -67,6 +78,7 @@ public class DotTracker {
 	@HandleEvents
 	public void buffApplication(EventContext<Event> context, BuffApplied event) {
 		if (Filters.sourceIsPlayer(context, event) && isWhitelisted(event.getBuff().getId())) {
+			log.info("Buff applied: {}", event);
 			buffs.put(
 					getKey(event),
 					event
@@ -75,12 +87,26 @@ public class DotTracker {
 		}
 	}
 
+	// TODO: this doesn't actually work as well as I'd like - if the advance timing is too small and/or we're behind on
+	// processing, we might hit the remove before the callout.
+	@HandleEvents
+	public void buffRemove(EventContext<Event> context, BuffRemoved event) {
+		BuffApplied removed = buffs.remove(getKey(event));
+		if (removed != null) {
+			log.info("Buff removed: {}", event);
+		}
+	}
+
 	@HandleEvents
 	public void refreshReminderCall(EventContext<Event> context, DelayedBuffCallout event) {
 		BuffApplied originalEvent = event.originalEvent;
 		BuffApplied mostRecentEvent = buffs.get(getKey(originalEvent));
 		if (originalEvent == mostRecentEvent) {
+			log.info("Dot refresh callout still valid");
 			context.accept(new TtsCall(originalEvent.getBuff().getName()));
+		}
+		else {
+			log.info("Not calling");
 		}
 	}
 }
