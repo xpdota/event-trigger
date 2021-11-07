@@ -15,6 +15,6 @@ public abstract class BaseEvent implements Event {
 
 	@Override
 	public @Nullable Event getParent() {
-		return null;
+		return parent;
 	}
 }
