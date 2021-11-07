@@ -10,13 +10,18 @@ import gg.xp.scan.HandleEvents;
 public final class TrackStateChanges {
 
 	@HandleEvents
-	public static void handle(EventContext<Event> context, ZoneChangeEvent event) {
+	public static void zoneChange(EventContext<Event> context, ZoneChangeEvent event) {
 		context.getStateInfo().get(XivState.class).setZone(event.getZone());
 	}
 
 	@HandleEvents
-	public static void handle(EventContext<Event> context, PlayerChangeEvent event) {
+	public static void playerChange(EventContext<Event> context, PlayerChangeEvent event) {
 		context.getStateInfo().get(XivState.class).setPlayer(event.getPlayer());
+	}
+
+	@HandleEvents
+	public static void partyChange(EventContext<Event> context, PartyChangeEvent event) {
+		context.getStateInfo().get(XivState.class).setPartyList(event.getMembers());
 	}
 
 }

@@ -24,7 +24,7 @@ public class Line26Parser extends AbstractACTLineParser<Line26Parser.Fields> {
 				fields.getDouble(Fields.duration),
 				new XivEntity(fields.getHex(Fields.sourceId), fields.getString(Fields.sourceName)),
 				new XivEntity(fields.getHex(Fields.targetId), fields.getString(Fields.targetName)),
-				fields.getLong(Fields.buffStacks)
+				fields.getHex(Fields.buffStacks)
 		);
 	}
 }

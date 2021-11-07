@@ -18,6 +18,8 @@ public class Line01Parser extends AbstractACTLineParser<Line01Parser.Fields> {
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
-		return new ZoneChangeEvent(new XivZone(fields.getHex(Fields.id), fields.getString(Fields.name)));
+		// TODO: some kind of @Disable annotation
+		return null;
+//		return new ZoneChangeEvent(new XivZone(fields.getHex(Fields.id), fields.getString(Fields.name)));
 	}
 }

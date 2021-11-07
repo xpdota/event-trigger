@@ -5,6 +5,7 @@ import gg.xp.events.AutoEventDistributor;
 import gg.xp.events.Event;
 import gg.xp.events.EventDistributor;
 import gg.xp.events.EventMaster;
+import gg.xp.events.ws.ActWsLogSource;
 import gg.xp.logread.DirTailer;
 import gg.xp.scan.AutoHandlerScan;
 import org.slf4j.Logger;
@@ -35,11 +36,11 @@ public final class XivMain {
 		EventDistributor<Event> eventDistributor = new AutoEventDistributor();
 
 		EventMaster master = new EventMaster(eventDistributor);
-
-		DirTailer tailer = new DirTailer(logDir.toFile(), line -> master.pushEvent(new ACTLogLineEvent(line)));
-		tailer.start();
-
 		master.start();
+
+		ActWsLogSource wsLogSource = new ActWsLogSource(master::pushEvent);
+		wsLogSource.start();
+
 
 		log.info("Everything seems to have started successfully");
 

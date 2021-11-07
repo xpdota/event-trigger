@@ -51,6 +51,11 @@ public class AutoHandler implements EventHandler<Event> {
 		if (!eventClass.isInstance(event)) {
 			return;
 		}
+		if (clazzInstance instanceof FilteredEventHandler) {
+			if (!((FilteredEventHandler) clazzInstance).enabled(context)) {
+				return;
+			}
+		}
 		try {
 			method.invoke(clazzInstance, context, event);
 		}

@@ -39,6 +39,10 @@ public class EventMaster {
 		eventPumpThread.start();
 	}
 
+	public EventQueue<Event> getQueue() {
+		return queue;
+	}
+
 	public void stop() {
 		// TODO: this doesn't wake or interrupt or anything
 		stop = true;

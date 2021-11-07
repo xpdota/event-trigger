@@ -1,6 +1,7 @@
 package gg.xp.events;
 
 import gg.xp.events.actlines.AbilityUsedEvent;
+import gg.xp.events.actlines.Line21Parser;
 import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.events.jails.JailCollector;
 import gg.xp.events.jails.JailSorter;
@@ -31,7 +32,7 @@ public class JailExampleTest {
 		dist.registerHandler(collector);
 
 		// Register plugins
-		dist.registerHandler(ACTLogLineEvent.class, new ACTLogLineParser());
+		dist.registerHandler(ACTLogLineEvent.class, new Line21Parser()::handle);
 		dist.registerHandler(AbilityUsedEvent.class, new JailCollector());
 		dist.registerHandler(UnsortedTitanJailsSolvedEvent.class, new JailSorter());
 

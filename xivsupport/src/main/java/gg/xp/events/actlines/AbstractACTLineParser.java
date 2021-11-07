@@ -57,10 +57,12 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 			}
 			ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
 			Event outgoingEvent = convert(new FieldMapper<>(out), lineNumber, zdt);
-			context.accept(outgoingEvent);
+			if (outgoingEvent != null) {
+				context.accept(outgoingEvent);
+			}
 		}
 	}
 
 	// TODO: consider other ways of handling line number + timestamp
-	protected abstract Event convert(FieldMapper<F> fields, int lineNumber, ZonedDateTime time);
+	protected abstract @Nullable Event convert(FieldMapper<F> fields, int lineNumber, ZonedDateTime time);
 }

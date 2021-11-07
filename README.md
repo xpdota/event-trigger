@@ -23,9 +23,11 @@ logical step of abstracting away the actual log lines into objects where everyth
 Both suffer from the issue that parsing log lines is treated as being *every* trigger's job, when in
 reality, it should just be done once and parsed into a convenient object. Cactbot provides some nice functionality
 for programmatically creating the regices, but this still doesn't answer the question of why an individual trigger
-should be remotely concerned with a regex in the first place. Or - for that matter, why Regex is even used in the first
-place, rather than just splitting on `|` characters and mapping them to fields. Splitting may result in somewhat
-reduced average-case performance, but improves worst-case since not every user-supplied regex would be optimized.
+should be remotely concerned with a regex in the first place. Or - for that matter, why we're even using Regex rather
+than just splitting on `|` characters and mapping them to fields. Splitting may result in somewhat
+reduced average-case performance, but improves worst-case since you don't have to worry about user-supplied, 
+poorly-optimized regices. You also gain significantly more performance than you lose via this approach, by virtue of
+only parsing a given line once, no matter how many triggers you have.
 
 Then, there's the bespoke ACT plugins, like the Jail plugin. These are, in my opinion, severely lacking in
 functionality, and suffer from re-use issues as well. For example, what if I want automarks, *and* a personal callout?

@@ -47,17 +47,22 @@ public class SpeechProcessor {
 		String text = textUnsanitized.replaceAll("['\";\0]", "");
 		if (!text.equals(textUnsanitized)) {
 			log.warn("Had to sanitize text: Old {'{}'}, New {'{}'}", textUnsanitized, text);
-			log.warn("If this does not appear to be malicious, consuder improving your input");
+			log.warn("If this does not appear to be malicious, consider improving your input");
 		}
 		log.info("Saying text: {}", text);
 		try {
+			// TODO: replace this with something that's not terrible. Even just holding the PS open and communicating
+			// with pipes would probably make it a little more responsive.
 			Process process = Runtime.getRuntime().exec("powershell.exe Add-Type -AssemblyName System.speech; " +
 					"$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
 					"$speak.Speak('" + text + "')");
 			int exit = process.waitFor();
+			if (exit == 0) {
+				return;
+			}
 			String out = new String(process.getInputStream().readAllBytes());
 			String err = new String(process.getErrorStream().readAllBytes());
-			log.info("exit: {}; out: {}; err: {}", exit, out, err);
+			log.warn("exit: {}; out: {}; err: {}", exit, out, err);
 		}
 		catch (Throwable t) {
 			log.error("Speech error", t);

@@ -92,6 +92,21 @@ public class BasicEventQueue implements EventQueue<Event> {
 		}
 	}
 
+	// Should only be used for testing, or maybe hot reloads
+	public void waitDrain() {
+		synchronized (queueLock) {
+			if (pendingSize() == 0) {
+				return;
+			}
+			try {
+				queueLock.wait();
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
 	private void queueDelayedEvent(Event event) {
 		long delta = event.delayedEnqueueAt() - System.currentTimeMillis();
 		log.info("Queueing delayed event for execution in {}ms: {}", delta, event);

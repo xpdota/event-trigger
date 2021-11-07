@@ -7,7 +7,10 @@ import gg.xp.events.actlines.HasTargetEntity;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.state.XivState;
 
-public class Filters {
+public final class Filters {
+
+	private Filters() {
+	}
 
 	private static long getPlayerId(EventContext<Event> context) {
 		XivEntity player = context.getStateInfo().get(XivState.class).getPlayer();

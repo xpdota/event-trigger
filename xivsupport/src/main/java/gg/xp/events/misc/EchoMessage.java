@@ -3,8 +3,6 @@ package gg.xp.events.misc;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.actlines.ZeroLogLineEvent;
-import gg.xp.events.actlines.ZoneChangeEvent;
-import gg.xp.events.state.XivState;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
