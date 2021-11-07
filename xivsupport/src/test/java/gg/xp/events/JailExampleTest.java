@@ -1,7 +1,7 @@
 package gg.xp.events;
 
-import gg.xp.events.actlines.AbilityUsedEvent;
-import gg.xp.events.actlines.Line21Parser;
+import gg.xp.events.actlines.events.AbilityUsedEvent;
+import gg.xp.events.actlines.parsers.Line21Parser;
 import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.events.jails.JailCollector;
 import gg.xp.events.jails.JailSorter;

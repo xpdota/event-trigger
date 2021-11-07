@@ -2,7 +2,7 @@ package gg.xp.events.misc;
 
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
-import gg.xp.events.actlines.ZeroLogLineEvent;
+import gg.xp.events.actlines.events.ZeroLogLineEvent;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

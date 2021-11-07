@@ -2,8 +2,8 @@ package gg.xp.events.triggers.jobs;
 
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
-import gg.xp.events.actlines.BuffApplied;
-import gg.xp.events.actlines.BuffRemoved;
+import gg.xp.events.actlines.events.BuffApplied;
+import gg.xp.events.actlines.events.BuffRemoved;
 import gg.xp.events.delaytest.BaseDelayedEvent;
 import gg.xp.events.filters.Filters;
 import gg.xp.events.models.BuffTrackingKey;

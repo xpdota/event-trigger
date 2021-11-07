@@ -15,36 +15,35 @@ public class AbstractACTLineTest<X extends Event> {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractACTLineTest.class);
 
-	private final EventDistributor<Event> dist;
-	private final TestEventCollector coll;
 	private final Class<X> eventClass;
 
 	protected AbstractACTLineTest(Class<X> eventClass) {
 		this.eventClass = eventClass;
-		dist = AutoHandlerScan.create();
-		coll = new TestEventCollector();
-		dist.registerHandler(coll);
 		log.info("AbstractACTLineTest for {}", eventClass.getSimpleName());
 	}
 
-	private void submitLine(String line) {
+	private TestEventCollector submitLine(String line) {
+		final EventDistributor<Event> dist;
+		final TestEventCollector coll;
+		dist = AutoHandlerScan.create();
+		coll = new TestEventCollector();
+		dist.registerHandler(coll);
 		ACTLogLineEvent event = new ACTLogLineEvent(line);
 		dist.acceptEvent(event);
-
+		return coll;
 	}
 
 	protected X expectEvent(String line) {
-		submitLine(line);
+		TestEventCollector coll = submitLine(line);
 		List<X> events = coll.getEventsOf(eventClass);
 		Assert.assertEquals(events.size(), 1);
 		return events.get(0);
 	}
 
 	protected void assertNoEvent(String line) {
-		submitLine(line);
+		TestEventCollector coll = submitLine(line);
 		Assert.assertTrue(coll.getEventsOf(eventClass).isEmpty(), "Expected to not find an event, but found one");
 	}
-
 
 
 }

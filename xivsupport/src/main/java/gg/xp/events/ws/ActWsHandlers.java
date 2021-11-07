@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.events.ACTLogLineEvent;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
-import gg.xp.events.actlines.PlayerChangeEvent;
-import gg.xp.events.actlines.ZoneChangeEvent;
+import gg.xp.events.actlines.events.PlayerChangeEvent;
+import gg.xp.events.actlines.events.ZoneChangeEvent;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivJob;
 import gg.xp.events.models.XivPlayerCharacter;
@@ -50,6 +50,9 @@ public class ActWsHandlers {
 		}
 	}
 
+	// Player/Zone/Party uses specific WS feeds rather than normal log lines, since the WS endpoint will send us the
+	// current values when we subscribe to the events, unlike log lines which will only trigger when there is a change.
+	// i.e. it would only work after a zone change.
 	@HandleEvents
 	public static void actWsPlayerChange(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("ChangePrimaryPlayer".equals(jsonMsg.getType())) {

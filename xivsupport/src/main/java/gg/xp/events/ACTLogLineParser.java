@@ -1,6 +1,7 @@
 package gg.xp.events;
 
-import gg.xp.events.actlines.AbilityUsedEvent;
+import gg.xp.events.actlines.events.AbilityUsedEvent;
+import gg.xp.events.actlines.parsers.Line21Parser;
 import gg.xp.events.models.XivAbility;
 import gg.xp.events.models.XivEntity;
 
@@ -18,16 +19,16 @@ public class ACTLogLineParser implements EventHandler<ACTLogLineEvent> {
 	@Override
 //	@HandleEvents
 	public void handle(EventContext<Event> context, ACTLogLineEvent event) {
-		String logLine = event.getLogLine();
-		// This could obviously be cleaned up when we support more events
-		Matcher matcher21 = LINE21_PATTERN.matcher(logLine);
-		if (matcher21.find()) {
-			context.accept(
-					new AbilityUsedEvent(
-							new XivAbility(Integer.parseInt(matcher21.group("abilityId"), 16), matcher21.group("abilityName")),
-							new XivEntity(Integer.parseInt(matcher21.group("casterId"), 16), matcher21.group("casterName")),
-							new XivEntity(Integer.parseInt(matcher21.group("targetId"), 16), matcher21.group("targetName"))
-					));
-		}
+//		String logLine = event.getLogLine();
+//		// This could obviously be cleaned up when we support more events
+//		Matcher matcher21 = LINE21_PATTERN.matcher(logLine);
+//		if (matcher21.find()) {
+//			context.accept(
+//					new AbilityUsedEvent(
+//							new XivAbility(Integer.parseInt(matcher21.group("abilityId"), 16), matcher21.group("abilityName")),
+//							new XivEntity(Integer.parseInt(matcher21.group("casterId"), 16), matcher21.group("casterName")),
+//							new XivEntity(Integer.parseInt(matcher21.group("targetId"), 16), matcher21.group("targetName")),
+//							fields.getHex(Line21Parser.Fields.flags), fields.getLong(Line21Parser.Fields.damage)));
+//		}
 	}
 }

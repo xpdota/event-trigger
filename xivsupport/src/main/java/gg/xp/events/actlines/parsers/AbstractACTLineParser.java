@@ -1,4 +1,4 @@
-package gg.xp.events.actlines;
+package gg.xp.events.actlines.parsers;
 
 import gg.xp.events.ACTLogLineEvent;
 import gg.xp.events.Event;

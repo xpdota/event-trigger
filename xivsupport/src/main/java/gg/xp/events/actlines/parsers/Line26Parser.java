@@ -1,6 +1,7 @@
-package gg.xp.events.actlines;
+package gg.xp.events.actlines.parsers;
 
 import gg.xp.events.Event;
+import gg.xp.events.actlines.events.BuffApplied;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivStatusEffect;
 

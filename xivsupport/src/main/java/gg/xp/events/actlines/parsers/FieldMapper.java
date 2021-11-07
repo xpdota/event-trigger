@@ -1,4 +1,4 @@
-package gg.xp.events.actlines;
+package gg.xp.events.actlines.parsers;
 
 import java.util.EnumMap;
 import java.util.Map;

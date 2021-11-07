@@ -12,8 +12,8 @@ public class ClassLoaderTest {
 		ForceReloadClassLoader cl1 = new ForceReloadClassLoader();
 		ForceReloadClassLoader cl2 = new ForceReloadClassLoader();
 
-		Class<?> c1 = cl1.findClass("gg.xp.events.actlines.ZeroLogLineEvent");
-		Class<?> c2 = cl2.findClass("gg.xp.events.actlines.ZeroLogLineEvent");
+		Class<?> c1 = cl1.findClass("gg.xp.events.actlines.events.ZeroLogLineEvent");
+		Class<?> c2 = cl2.findClass("gg.xp.events.actlines.events.ZeroLogLineEvent");
 
 		log.info("Stuff");
 	}

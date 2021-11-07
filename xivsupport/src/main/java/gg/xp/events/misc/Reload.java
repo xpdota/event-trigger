@@ -17,10 +17,6 @@ public class Reload {
 	private static final int staticId = ThreadLocalRandom.current().nextInt();
 	private final int instanceId = ThreadLocalRandom.current().nextInt();
 
-	static {
-		log.info("Stuff");
-	}
-
 	public Reload() {
 		printUids();
 	}
@@ -32,8 +28,8 @@ public class Reload {
 		}
 	}
 
+	// Debugging for testing hot reload
 	private void printUids() {
-		log.info("bar goes here");
 		log.info("UIDs: static {} instance {}", staticId, instanceId);
 	}
 

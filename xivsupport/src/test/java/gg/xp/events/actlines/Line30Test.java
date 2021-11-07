@@ -1,19 +1,19 @@
 package gg.xp.events.actlines;
 
-import gg.xp.events.actlines.events.BuffApplied;
+import gg.xp.events.actlines.events.BuffRemoved;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class Line26Test extends AbstractACTLineTest<BuffApplied> {
+public class Line30Test extends AbstractACTLineTest<BuffRemoved> {
 
-	public Line26Test() {
-		super(BuffApplied.class);
+	public Line30Test() {
+		super(BuffRemoved.class);
 	}
 
 	@Test
 	public void positiveTest() {
-		String goodLine = "26|2021-04-26T14:23:38.7560000-04:00|13b|Whispering Dawn|21.00|4000B283|Selene|10FF0002|The Player|4000016E|00|51893|49487||c7400f0eed1fe9d29834369affc22d3b";
-		BuffApplied event = expectEvent(goodLine);
+		String goodLine = "30|2021-04-26T14:23:38.7560000-04:00|13b|Whispering Dawn|21.00|4000B283|Selene|10FF0002|The Player|4000016E|00|51893|49487||c7400f0eed1fe9d29834369affc22d3b";
+		BuffRemoved event = expectEvent(goodLine);
 
 		Assert.assertEquals(event.getBuff().getId(), 0x13B);
 		Assert.assertEquals(event.getSource().getId(), 0x4000B283);

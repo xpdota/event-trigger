@@ -2,8 +2,8 @@ package gg.xp.events.state;
 
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
-import gg.xp.events.actlines.PlayerChangeEvent;
-import gg.xp.events.actlines.ZoneChangeEvent;
+import gg.xp.events.actlines.events.PlayerChangeEvent;
+import gg.xp.events.actlines.events.ZoneChangeEvent;
 import gg.xp.scan.HandleEvents;
 
 @SuppressWarnings("UtilityClassWithoutPrivateConstructor")

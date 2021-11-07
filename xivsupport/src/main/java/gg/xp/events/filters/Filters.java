@@ -2,8 +2,8 @@ package gg.xp.events.filters;
 
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
-import gg.xp.events.actlines.HasSourceEntity;
-import gg.xp.events.actlines.HasTargetEntity;
+import gg.xp.events.actlines.events.HasSourceEntity;
+import gg.xp.events.actlines.events.HasTargetEntity;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.state.XivState;
 

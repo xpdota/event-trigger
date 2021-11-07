@@ -22,6 +22,13 @@ public class XivEntity {
 
 	@Override
 	public String toString() {
+		if (isEnvironment()) {
+			return "XivEntity(ENVIRONMENT)";
+		}
 		return String.format("XivEntity(0x%X:%s)", id, name);
+	}
+
+	public boolean isEnvironment() {
+		return id == 0xE0000000L;
 	}
 }

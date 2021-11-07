@@ -2,7 +2,8 @@ package gg.xp.events.triggers.duties;
 
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
-import gg.xp.events.actlines.AbilityUsedEvent;
+import gg.xp.events.actlines.events.AbilityCastStart;
+import gg.xp.events.actlines.events.AbilityUsedEvent;
 import gg.xp.events.state.XivState;
 import gg.xp.scan.FilteredEventHandler;
 import gg.xp.scan.HandleEvents;
@@ -16,7 +17,7 @@ public class Odin implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void valknut(EventContext<Event> context, AbilityUsedEvent event) {
+	public void valknut(EventContext<Event> context, AbilityCastStart event) {
 		// TODO: this calls at end of cast....
 		if (event.getAbility().getId() == 0xC49) {
 			context.accept(new TtsCall("Out"));

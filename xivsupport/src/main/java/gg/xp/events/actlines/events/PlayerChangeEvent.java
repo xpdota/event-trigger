@@ -1,4 +1,4 @@
-package gg.xp.events.actlines;
+package gg.xp.events.actlines.events;
 
 import gg.xp.events.BaseEvent;
 import gg.xp.events.models.XivEntity;
