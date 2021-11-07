@@ -73,6 +73,7 @@ public class ActWsLogSource {
 		client.send("{\"call\":\"subscribe\",\"events\":[\"ChangeZone\"]}");
 		client.send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
 		client.send("{\"call\":\"subscribe\",\"events\":[\"LogLine\"]}");
+		client.send("{\"call\":\"subscribe\",\"events\":[\"onPartyWipe\"]}");
 	}
 
 	public static void main(String[] args) throws InterruptedException {

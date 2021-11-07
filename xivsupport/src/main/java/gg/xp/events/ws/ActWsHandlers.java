@@ -7,6 +7,7 @@ import gg.xp.events.ACTLogLineEvent;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.actlines.events.PlayerChangeEvent;
+import gg.xp.events.actlines.events.WipeEvent;
 import gg.xp.events.actlines.events.ZoneChangeEvent;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivJob;
@@ -88,6 +89,12 @@ public class ActWsHandlers {
 		}
 	}
 
+	@HandleEvents
+	public static void actWsWipe(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
+		if ("onPartyWipe".equals(jsonMsg.getType())) {
+			context.enqueue(new WipeEvent());
+		}
+	}
 
 //	@HandleEvents
 //	public st
