@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,6 +55,11 @@ public class DirTailer {
 		catch (JNotifyException e) {
 			throw new RuntimeException("Error setting up FS notifier", e);
 		}
+		//noinspection ConstantConditions - already confirmed to be a directory, unusual race conditions aside
+		Arrays.stream(dirToTail.listFiles())
+				.max(Comparator.comparing(File::lastModified))
+				.map(File::getName)
+				.ifPresent(this::addOrUpdateNormalTailer);
 	}
 
 	public void destroy() {
@@ -62,6 +69,23 @@ public class DirTailer {
 		catch (JNotifyException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private void addOrUpdateNormalTailer(String name) {
+		fileTailers.compute(name, (fname, tailer) -> {
+			if (tailer == null) {
+				// Haven't tailed this file yet - create tailer
+				log.info("Starting tail on log file: {}", name);
+				LogTailer logTailer = new LogTailer(new File(dirToTail, fname), lineConsumer);
+				logTailer.startCurrentPos();
+				return logTailer;
+			}
+			else {
+				// Already tailing this file - wake up tailer
+				tailer.notifyCheck();
+				return tailer;
+			}
+		});
 	}
 
 	private class Listener implements JNotifyListener {
@@ -90,20 +114,7 @@ public class DirTailer {
 			// TODO: reduce log level
 			log.trace("Modified {} {} {}", wd, rootPath, name);
 			if (name.toLowerCase(Locale.ROOT).endsWith(".log")) {
-				fileTailers.compute(name, (fname, tailer) -> {
-					if (tailer == null) {
-						// Haven't tailed this file yet - create tailer
-						log.info("Starting tail on log file: {}", name);
-						LogTailer logTailer = new LogTailer(new File(dirToTail, fname), lineConsumer);
-						logTailer.startCurrentPos();
-						return logTailer;
-					}
-					else {
-						// Already tailing this file - wake up tailer
-						tailer.notifyCheck();
-						return tailer;
-					}
-				});
+				addOrUpdateNormalTailer(name);
 			}
 		}
 

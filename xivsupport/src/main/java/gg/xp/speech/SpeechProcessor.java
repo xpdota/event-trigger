@@ -3,6 +3,7 @@ package gg.xp.speech;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.EventHandler;
+import gg.xp.events.misc.EchoEvent;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class SpeechProcessor implements EventHandler<TtsCall> {
+public class SpeechProcessor {
 
 	private static final Logger log = LoggerFactory.getLogger(SpeechProcessor.class);
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor(r -> {
@@ -68,5 +69,12 @@ public class SpeechProcessor implements EventHandler<TtsCall> {
 		// Events are not processed nor distributed in parallel - thus we need to make sure that we use async operations
 		// for things that take non-trivial amounts of time (e.g. speech)
 		sayAsync(event.getCallText());
+	}
+
+	@HandleEvents
+	public void handle(EventContext<Event> context, EchoEvent echo) {
+		if (echo.getLine().equals("tts")) {
+			context.accept(new TtsCall("test"));
+		}
 	}
 }

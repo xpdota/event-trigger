@@ -1,6 +1,6 @@
 package gg.xp.events;
 
-public class DiagEvent implements Event {
+public class DiagEvent extends BaseEvent {
 	private final String text;
 	private final int source;
 

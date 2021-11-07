@@ -28,5 +28,7 @@ public interface EventDistributor<X extends Event> {
 
 	void acceptEvent(Event event);
 
+	void setQueue(EventQueue<X> queue);
+
 	StateStore getStateStore();
 }

@@ -113,7 +113,7 @@ public class LogTailer {
 			// TODO
 			try {
 				synchronized (stateNotify) {
-					stateNotify.wait(1000);
+					stateNotify.wait(50);
 				}
 			}
 			catch (InterruptedException e) {

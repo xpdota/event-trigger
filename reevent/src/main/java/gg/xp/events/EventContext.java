@@ -17,7 +17,7 @@ public interface EventContext<X extends Event> {
 	 *
 	 * @param event
 	 */
-	void acceptToQueue(X event);
+	void enqueue(X event);
 
 	/**
 	 * Return an object conveying state information

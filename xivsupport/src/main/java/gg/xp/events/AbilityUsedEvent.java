@@ -1,6 +1,6 @@
 package gg.xp.events;
 
-public class AbilityUsedEvent implements Event {
+public class AbilityUsedEvent extends BaseEvent {
 
 	private final XivAbility ability;
 	private final XivEntity caster;

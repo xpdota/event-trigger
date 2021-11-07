@@ -1,5 +1,6 @@
 package gg.xp.events.jails;
 
+import gg.xp.events.BaseEvent;
 import gg.xp.events.Event;
 import gg.xp.events.XivEntity;
 
@@ -7,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class UnsortedTitanJailsSolvedEvent implements Event {
+public class UnsortedTitanJailsSolvedEvent extends BaseEvent {
 
 	private final List<XivEntity> jailedPlayers;
 

@@ -1,6 +1,7 @@
 package gg.xp.sys;
 
 import gg.xp.events.ACTLogLineEvent;
+import gg.xp.events.AutoEventDistributor;
 import gg.xp.events.Event;
 import gg.xp.events.EventDistributor;
 import gg.xp.events.EventMaster;
@@ -31,7 +32,7 @@ public final class XivMain {
 		}
 
 
-		EventDistributor<Event> eventDistributor = AutoHandlerScan.create();
+		EventDistributor<Event> eventDistributor = new AutoEventDistributor();
 
 		EventMaster master = new EventMaster(eventDistributor);
 

@@ -1,6 +1,6 @@
 package gg.xp.events;
 
-public class BasicEvent implements Event {
+public class BasicEvent extends BaseEvent {
 
 	private final String value;
 

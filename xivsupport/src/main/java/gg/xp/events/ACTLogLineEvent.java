@@ -1,6 +1,6 @@
 package gg.xp.events;
 
-public class ACTLogLineEvent implements Event {
+public class ACTLogLineEvent extends BaseEvent {
 
 	private final String logLine;
 

@@ -13,12 +13,17 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 
 	private static final Logger log = LoggerFactory.getLogger(BasicEventDistributor.class);
 
-	private final List<EventHandler<Event>> handlers = new ArrayList<>();
+	protected final List<EventHandler<Event>> handlers = new ArrayList<>();
 
 	private final StateStore state = new StateStore();
+	private EventQueue<Event> queue;
 
 	public void registerHandler(EventHandler<Event> handler) {
 		handlers.add(handler);
+	}
+
+	public void setQueue(EventQueue<Event> queue) {
+		this.queue = queue;
 	}
 
 	// TODO: decide how to plumb this through
@@ -33,33 +38,45 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 		eventsForImmediateProcessing.add(event);
 		Event next;
 		while ((next = eventsForImmediateProcessing.poll()) != null) {
-			final Event tmpNext = next;
+			final Event current = next;
 			handlers.forEach(handler -> {
-				log.trace("Sending event {} to handler {} with {} immediate events", tmpNext, handler, eventsForImmediateProcessing.size());
+				log.trace("Sending event {} to handler {} with {} immediate events", current, handler, eventsForImmediateProcessing.size());
 				handler.handle(
 						new EventContext<>() {
 							@Override
 							public void accept(Event e) {
-								if (e == tmpNext) {
+								if (e == current) {
 									log.error("Event {} was re-submitted by {}!", e, handler);
 								}
 								else {
-									log.trace("Event {} triggered new event {}", tmpNext, e);
+									e.setParent(current);
+									log.trace("Event {} triggered new event {}", current, e);
 									eventsForImmediateProcessing.add(e);
 								}
 							}
 
 							@Override
-							public void acceptToQueue(Event event) {
-								throw new UnsupportedOperationException("Not implemented yet");
+							public void enqueue(Event e) {
+								if (queue != null) {
+									if (e == current) {
+										log.error("Event {} was re-submitted by {}!", e, handler);
+									}
+									else {
+										e.setParent(current);
+										queue.push(e);
+									}
+								}
+								else {
+									throw new IllegalStateException("Cannot push to queue if there is no queue attached to this distributor");
+								}
 							}
 
 							@Override
 							public StateStore getStateInfo() {
 								return state;
 							}
-						}, tmpNext);
-				log.trace("Sent event {} to handler {}, now with {} immediate events", tmpNext, handler, eventsForImmediateProcessing.size());
+						}, current);
+				log.trace("Sent event {} to handler {}, now with {} immediate events", current, handler, eventsForImmediateProcessing.size());
 			});
 		}
 	}

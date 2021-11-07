@@ -28,6 +28,7 @@ public class EventMaster {
 
 	public EventMaster(EventDistributor<Event> eventDistributor) {
 		this.eventDistributor = eventDistributor;
+		eventDistributor.setQueue(queue);
 		queueSizeMonitorThread = new Thread(this::monitorQueueSize);
 		queueSizeMonitorThread.setName(eventPumpThread.getName() + "-qsm");
 		queueSizeMonitorThread.setDaemon(true);
@@ -71,6 +72,7 @@ public class EventMaster {
 
 	@SuppressWarnings({"BusyWait", "InfiniteLoopStatement"})
 	public void monitorQueueSize() {
+		log.info("Queue monitor started. Current size: {}", queue.pendingSize());
 		while (true) {
 			int queueSize = queue.pendingSize();
 			if (queueSize > queueSizeErrorThreshold) {
