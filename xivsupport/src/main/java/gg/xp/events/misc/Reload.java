@@ -3,6 +3,7 @@ package gg.xp.events.misc;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.TopologyReloadEvent;
+import gg.xp.events.debug.DebugCommand;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,8 @@ public class Reload {
 	}
 
 	@HandleEvents
-	public void checkRandomId(EventContext<Event> context, EchoEvent event) {
-		if (event.getLine().equals("printuids")) {
+	public void checkRandomId(EventContext<Event> context, DebugCommand event) {
+		if (event.getCommand().equals("printuids")) {
 			printUids();
 		}
 	}
@@ -34,8 +35,8 @@ public class Reload {
 	}
 
 	@HandleEvents
-	public static void handle(EventContext<Event> context, EchoEvent event) {
-		if (event.getLine().equals("reload")) {
+	public static void handle(EventContext<Event> context, DebugCommand event) {
+		if (event.getCommand().equals("reload")) {
 			context.enqueue(new TopologyReloadEvent());
 		}
 	}

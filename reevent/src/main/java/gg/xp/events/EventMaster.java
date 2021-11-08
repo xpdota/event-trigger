@@ -1,5 +1,6 @@
 package gg.xp.events;
 
+import gg.xp.events.state.QueueState;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ public class EventMaster {
 		queueSizeMonitorThread = new Thread(this::monitorQueueSize);
 		queueSizeMonitorThread.setName(eventPumpThread.getName() + "-qsm");
 		queueSizeMonitorThread.setDaemon(true);
+		eventDistributor.getStateStore().putCustom(QueueState.class, new QueueState(queue));
 	}
 
 	public void start() {
@@ -41,6 +43,10 @@ public class EventMaster {
 
 	public EventQueue<Event> getQueue() {
 		return queue;
+	}
+
+	public EventDistributor<Event> getDistributor() {
+		return eventDistributor;
 	}
 
 	public void stop() {

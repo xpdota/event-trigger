@@ -156,7 +156,9 @@ functionality of Vanilla ACT triggers (which is a very low bar, but I digress).
 
 ## Ok I just want to run it, how do I do that
 
-The current iteration uses the ACT websocket connection. In ACT, click the Plugins tab, then OverlayPlugin WSServer,
+The current iteration uses the OverlayPlugin websocket connection. 
+First, make sure you have OverlayPlugin installed in ACT.
+Then, click the Plugins tab, then OverlayPlugin WSServer,
 and then if it is not already running, press "Start". Make sure the IP address is 127.0.0.1 and the port is 10501. Leave
 "Enable SSL" unchecked. This setting should be sticky, as in it will automatically start the WS server every time you
 open ACT.
@@ -164,6 +166,7 @@ open ACT.
 There's no launcher or proper packaging yet, so your best bet at actually *running* it is to just install IntelliJ,
 let it install a JDK for you (at least version 11), and run `xivsupport/src/main/java/gg/xp/sys/XivMain.java`.
 
-Once you've done all that it should 'just work™'. Try `/e tts` for a TTS
-test, or `/e delaystart` for a demonstration of how to have a delayed callout (for dot/CD timers and such).
+Once you've done all that it should 'just work™'. Try `/e c:tts` for a TTS
+test, or `/e c:delaystart` for a demonstration of how to have a delayed callout (for dot/CD timers and such).
+All echo commands are invoked using `/e c:command`.
 

@@ -2,6 +2,7 @@ package gg.xp.events.delaytest;
 
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
+import gg.xp.events.debug.DebugCommand;
 import gg.xp.events.misc.EchoEvent;
 import gg.xp.scan.HandleEvents;
 import gg.xp.speech.TtsCall;
@@ -33,8 +34,8 @@ public class DelayedTest {
 	private volatile DelayedTestEvent pending;
 
 	@HandleEvents
-	public void handleStart(EventContext<Event> context, EchoEvent event) {
-		if (event.getLine().equals("delaystart")) {
+	public void handleStart(EventContext<Event> context, DebugCommand event) {
+		if (event.getCommand().equals("delaystart")) {
 			log.info("Delay test start");
 			DelayedTestEvent outgoingEvent = new DelayedTestEvent(5000);
 			context.enqueue(outgoingEvent);
@@ -51,8 +52,8 @@ public class DelayedTest {
 	}
 
 	@HandleEvents
-	public void handleCancel(EventContext<Event> context, EchoEvent event) {
-		if (event.getLine().equals("delaycancel")) {
+	public void handleCancel(EventContext<Event> context, DebugCommand event) {
+		if (event.getCommand().equals("delaycancel")) {
 			log.info("Delay test cancel");
 			pending = null;
 		}

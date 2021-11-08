@@ -2,6 +2,7 @@ package gg.xp.speech;
 
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
+import gg.xp.events.debug.DebugCommand;
 import gg.xp.events.misc.EchoEvent;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ public class SpeechProcessor {
 	});
 	// There's no way this is the best option, but the projects I found for Java -> MS Speech are all either
 	// ancient, or are using the Azure API (not the local one) which requires API keys and all that.
+	// Never mind, can probably just use ACT websocket for TTS.
 
 	// Quick test util
 
@@ -76,8 +78,8 @@ public class SpeechProcessor {
 	}
 
 	@HandleEvents
-	public void handle(EventContext<Event> context, EchoEvent echo) {
-		if (echo.getLine().equals("tts")) {
+	public void handle(EventContext<Event> context, DebugCommand echo) {
+		if (echo.getCommand().equals("tts")) {
 			context.accept(new TtsCall("test"));
 		}
 	}

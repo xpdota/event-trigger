@@ -9,14 +9,22 @@ public class StateStore {
 	private final Map<Class<?>, Object> map = new ConcurrentHashMap<>();
 
 	@SuppressWarnings("unchecked")
-	public <X> X get(Class<X> clazz) {
+	public <X extends SubState> X get(Class<X> clazz) {
 		return (X) map.computeIfAbsent(clazz, (cls) -> {
 			try {
 				return cls.getConstructor().newInstance();
 			}
-			catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-				throw new RuntimeException("Error instantiation state class " + cls, e);
+			catch (NoSuchMethodException nsme) {
+				throw new RuntimeException("Error instantiating state class because it does not have the correct constructor. A custom instance may need to be installed.", nsme);
+
+			}
+			catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+				throw new RuntimeException("Error instantiating state class " + cls, e);
 			}
 		});
+	}
+
+	public <X> void putCustom(Class<X> clazz, X instance) {
+		map.put(clazz, instance);
 	}
 }

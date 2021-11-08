@@ -1,18 +1,20 @@
 package gg.xp.events.models;
 
+import gg.xp.events.actlines.data.Job;
+
 public class XivPlayerCharacter extends XivEntity {
-	private final XivJob job;
+	private final Job job;
 	private final XivWorld world;
 	private final int level;
 
-	public XivPlayerCharacter(long id, String name, XivJob job, XivWorld world, int level) {
+	public XivPlayerCharacter(long id, String name, Job job, XivWorld world, int level) {
 		super(id, name);
 		this.job = job;
 		this.world = world;
 		this.level = level;
 	}
 
-	public XivJob getJob() {
+	public Job getJob() {
 		return job;
 	}
 
