@@ -1,11 +1,14 @@
 package gg.xp.sys;
 
+import gg.xp.context.StateStore;
 import gg.xp.events.AutoEventDistributor;
 import gg.xp.events.Event;
 import gg.xp.events.EventDistributor;
 import gg.xp.events.EventMaster;
 import gg.xp.events.state.XivState;
 import gg.xp.events.ws.ActWsLogSource;
+import org.picocontainer.DefaultPicoContainer;
+import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,24 +26,24 @@ public final class XivMain {
 		masterInit();
 	}
 
-	public static EventMaster masterInit() {
+	public static MutablePicoContainer masterInit() {
 		log.info("Starting main program");
 		log.info("PID: {}", ProcessHandle.current().pid());
 
-		EventDistributor<Event> eventDistributor = new AutoEventDistributor();
+		MutablePicoContainer pico = new DefaultPicoContainer();
+		pico.addComponent(AutoEventDistributor.class);
+		pico.addComponent(EventMaster.class);
+		pico.addComponent(StateStore.class);
+		pico.addComponent(XivState.class);
+		pico.addComponent(ActWsLogSource.class);
+		pico.addComponent(pico);
 
-		EventMaster master = new EventMaster(eventDistributor);
 		// TODO: picocontainer or something - cross-class dependencies are getting out of hand
-		EventDistributor<Event> distributor = master.getDistributor();
-		distributor.getStateStore().putCustom(XivState.class, new XivState(master));
-		master.start();
-
-
-		ActWsLogSource wsLogSource = new ActWsLogSource(master);
-		wsLogSource.start();
+		pico.getComponent(EventMaster.class).start();
+		pico.getComponent(ActWsLogSource.class).start();
 
 		log.info("Everything seems to have started successfully");
-		return master;
+		return pico;
 	}
 
 

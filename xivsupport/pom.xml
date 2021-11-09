@@ -114,5 +114,12 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.12.4</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.picocontainer/picocontainer -->
+        <dependency>
+            <groupId>org.picocontainer</groupId>
+            <artifactId>picocontainer</artifactId>
+            <version>2.15</version>
+        </dependency>
+
     </dependencies>
 </project>

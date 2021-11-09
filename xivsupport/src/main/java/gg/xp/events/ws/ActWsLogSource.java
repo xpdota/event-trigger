@@ -1,5 +1,6 @@
 package gg.xp.events.ws;
 
+import gg.xp.context.StateStore;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.EventDistributor;
@@ -87,19 +88,17 @@ public class ActWsLogSource implements EventSource {
 
 	private final Consumer<Event> eventConsumer;
 	private final ActWsClientInternal client;
-	private final WsState state;
+	private final WsState state = new WsState();
 
-	public ActWsLogSource(EventMaster master) {
+	public ActWsLogSource(EventMaster master, EventDistributor<Event> distributor, StateStore stateStore) {
 		this.eventConsumer = master::pushEvent;
-		EventDistributor<Event> distributor = master.getDistributor();
 		distributor.registerHandler(DebugCommand.class, this::getCombatantsDbg);
 		distributor.registerHandler(DebugCommand.class, this::forceReconnect);
 		distributor.registerHandler(RefreshCombatantsRequest.class, this::getCombatants);
 		distributor.registerHandler(ActWsReconnectRequest.class, this::requestReconnect);
 		distributor.registerHandler(ActWsDisconnectedEvent.class, this::reconnectActWs);
 		this.client = new ActWsClientInternal();
-		state = new WsState();
-		distributor.getStateStore().putCustom(WsState.class, state);
+		stateStore.putCustom(WsState.class, state);
 	}
 
 	private final AtomicInteger rseqCounter = new AtomicInteger();
@@ -161,8 +160,13 @@ public class ActWsLogSource implements EventSource {
 				}
 				log.info("Connecting");
 				try {
-					client.connectBlocking();
-					log.info("Connected");
+					boolean connected = client.connectBlocking();
+					if (connected) {
+						log.info("Connected");
+					}
+					else {
+						log.warn("Not Connected");
+					}
 				}
 				catch (InterruptedException e) {
 					log.error("Interrupted", e);
@@ -180,8 +184,13 @@ public class ActWsLogSource implements EventSource {
 				}
 				log.info("Reconnecting");
 				try {
-					client.reconnectBlocking();
-					log.info("Reconnected");
+					boolean connected = client.reconnectBlocking();
+					if (connected) {
+						log.info("Reconnected");
+					}
+					else {
+						log.warn("Not Reconnected");
+					}
 				}
 				catch (InterruptedException e) {
 					log.error("Interrupted", e);

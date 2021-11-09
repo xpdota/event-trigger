@@ -36,8 +36,10 @@ public class XivState implements SubState {
 	private @NotNull Map<Long, CombatantInfo> combatants = Collections.emptyMap();
 
 	@SuppressWarnings("unused")
+	@Deprecated
 	public XivState() {
 		// TODO: this is still needed for tests
+		log.warn("Using old XivState ctor");
 		this.master = null;
 	}
 

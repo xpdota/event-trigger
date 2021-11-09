@@ -12,6 +12,7 @@ import gg.xp.events.state.XivState;
 import gg.xp.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.events.ws.WsState;
 import gg.xp.sys.XivMain;
+import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +33,9 @@ public class GuiMain {
 	private final StateStore state;
 
 	public static void main(String[] args) {
-		EventMaster eventMaster = XivMain.masterInit();
-		new GuiMain(eventMaster);
+		MutablePicoContainer pico = XivMain.masterInit();
+		EventMaster master = pico.getComponent(EventMaster.class);
+		new GuiMain(master);
 	}
 
 	public GuiMain(EventMaster master) {
