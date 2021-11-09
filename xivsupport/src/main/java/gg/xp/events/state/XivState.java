@@ -35,6 +35,12 @@ public class XivState implements SubState {
 	private @NotNull List<XivPlayerCharacter> partyList = Collections.emptyList();
 	private @NotNull Map<Long, CombatantInfo> combatants = Collections.emptyMap();
 
+	@SuppressWarnings("unused")
+	public XivState() {
+		// TODO: this is still needed for tests
+		this.master = null;
+	}
+
 	public XivState(EventMaster master) {
 		this.master = master;
 	}
@@ -102,7 +108,9 @@ public class XivState implements SubState {
 		}
 		log.info("Recalculated state, player is {}, party is {}", player, partyList);
 		// TODO: improve this
-		master.getQueue().push(new XivStateRecalculatedEvent());
+		if (master != null) {
+			master.getQueue().push(new XivStateRecalculatedEvent());
+		}
 	}
 
 	public boolean zoneIs(long zoneId) {
