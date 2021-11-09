@@ -8,6 +8,7 @@ import java.util.List;
 
 public class CombatantsUpdateRaw extends BaseEvent {
 
+	private static final long serialVersionUID = 6485573030632033688L;
 	private final List<CombatantInfo> combatantMaps;
 
 	public CombatantsUpdateRaw(List<CombatantInfo> combatantMaps) {

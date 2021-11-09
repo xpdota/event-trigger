@@ -12,8 +12,8 @@ public class EventMaster {
 	private static final Logger log = LoggerFactory.getLogger(EventMaster.class);
 
 	// TODO: make this smarter - don't warn just because we got a big chunk all at once
-	private static final int queueSizeInfoThreshold = 50;
-	private static final int queueSizeWarningThreshold = 200;
+	private static final int queueSizeInfoThreshold = 25;
+	private static final int queueSizeWarningThreshold = 100;
 	private static final int queueSizeErrorThreshold = 500;
 
 	private static final ThreadFactory threadFactory = new BasicThreadFactory.Builder()

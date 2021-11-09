@@ -5,6 +5,7 @@ import gg.xp.events.models.XivEntity;
 
 public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
 
+	private static final long serialVersionUID = 7043671273943254143L;
 	private final XivEntity source;
 	private final XivEntity target;
 	private final long id;

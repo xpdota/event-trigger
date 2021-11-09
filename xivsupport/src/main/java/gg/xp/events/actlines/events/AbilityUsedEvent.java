@@ -6,6 +6,7 @@ import gg.xp.events.models.XivEntity;
 
 public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
 
+	private static final long serialVersionUID = -4539070760062288496L;
 	private final XivAbility ability;
 	private final XivEntity caster;
 	private final XivEntity target;

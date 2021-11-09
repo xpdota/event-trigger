@@ -36,6 +36,9 @@ functionality, and suffer from re-use issues as well. For example, what if I wan
 Setting up two separate triggers for that would make it prone to getting the logic or priority inconsistent between the
 two, leading to wrong callouts.
 
+What I aim to do here is not necessarily make triggers get "more cheaty", but rather just take existing functionality
+and make it work better.
+
 ### So How Does This Work?
 
 This is intended as a proof of concept for how things *could* work. This is just to show that a better way exists.
@@ -152,7 +155,11 @@ I will also need to, at some point, bite the bullet and write an actual ACT inte
 rather than just reading a log file, in order to get things like player info, party data, and positions/headings.
 
 Some kind of interface would also be a start, including possibly a simple trigger maker covering at least the
-functionality of Vanilla ACT triggers (which is a very low bar, but I digress). 
+functionality of Vanilla ACT triggers (which is a very low bar, but I digress). It would be nice to be able to create
+a simple trigger maker that lets you pick from ability names and such.
+
+Another feature I'd like to have is to make it easy to take an existing log (or even a live instance) and be able to
+quickly create triggers and test cases from it.
 
 ## Ok I just want to run it, how do I do that
 

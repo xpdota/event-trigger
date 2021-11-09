@@ -1,6 +1,7 @@
 package gg.xp.events;
 
 public class DiagEvent extends BaseEvent {
+	private static final long serialVersionUID = 103691663668521872L;
 	private final String text;
 	private final int source;
 

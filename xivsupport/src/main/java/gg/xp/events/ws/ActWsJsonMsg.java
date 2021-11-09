@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class ActWsJsonMsg extends BaseEvent {
 
+	private static final long serialVersionUID = -5830123394422861873L;
 	private final @Nullable String type;
 	private final JsonNode json;
 

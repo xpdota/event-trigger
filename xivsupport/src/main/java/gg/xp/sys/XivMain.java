@@ -21,15 +21,6 @@ public final class XivMain {
 	public static void main(String[] args) {
 		log.info("Starting main program");
 		log.info("PID: {}", ProcessHandle.current().pid());
-//		Path logDir = Paths.get(System.getenv("APPDATA"), "Advanced Combat Tracker", "FFXIVLogs");
-//		log.info("Log dir guess: {}", logDir);
-//		if (!logDir.toFile().exists()) {
-//			throw new RuntimeException("Log directory does not exist: " + logDir);
-//		}
-//		if (!logDir.toFile().exists()) {
-//			throw new RuntimeException("Log directory does not exist: " + logDir);
-//		}
-
 
 		EventDistributor<Event> eventDistributor = new AutoEventDistributor();
 
@@ -39,14 +30,8 @@ public final class XivMain {
 		ActWsLogSource wsLogSource = new ActWsLogSource(master);
 		wsLogSource.start();
 
-
 		log.info("Everything seems to have started successfully");
-
-
-//		while (true) {
-//			Thread.sleep(10000);
-//		}
-
 	}
+
 
 }

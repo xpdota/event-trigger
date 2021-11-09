@@ -5,6 +5,7 @@ import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivStatusEffect;
 
 public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTargetEntity {
+	private static final long serialVersionUID = -5438212467951183512L;
 	private final XivStatusEffect buff;
 	private final double duration;
 	private final XivEntity source;

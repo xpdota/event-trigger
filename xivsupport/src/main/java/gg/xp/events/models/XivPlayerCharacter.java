@@ -3,6 +3,7 @@ package gg.xp.events.models;
 import gg.xp.events.actlines.data.Job;
 
 public class XivPlayerCharacter extends XivEntity {
+	private static final long serialVersionUID = 8719229961190925919L;
 	private final Job job;
 	private final XivWorld world;
 	private final int level;

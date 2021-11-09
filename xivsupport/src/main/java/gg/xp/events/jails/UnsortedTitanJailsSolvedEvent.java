@@ -9,6 +9,7 @@ import java.util.List;
 
 public class UnsortedTitanJailsSolvedEvent extends BaseEvent {
 
+	private static final long serialVersionUID = -358330710284359399L;
 	private final List<XivEntity> jailedPlayers;
 
 	public UnsortedTitanJailsSolvedEvent(List<XivEntity> jailedPlayers) {

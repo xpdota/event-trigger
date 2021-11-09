@@ -1,6 +1,9 @@
 package gg.xp.events.models;
 
-public class XivAbility {
+import java.io.Serializable;
+
+public class XivAbility implements Serializable {
+	private static final long serialVersionUID = -6170494857373031360L;
 	private final long id;
 	private final String name;
 

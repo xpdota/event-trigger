@@ -7,6 +7,7 @@ import gg.xp.events.models.XivEntity;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CombatantInfo extends XivEntity {
 
+	private static final long serialVersionUID = -4500158723610391407L;
 	private final int jobId;
 	private final long curHp;
 	private final long maxHp;

@@ -26,6 +26,8 @@ public class DelayedTest {
 	private static final Logger log = LoggerFactory.getLogger(DelayedTest.class);
 
 	private static final class DelayedTestEvent extends BaseDelayedEvent {
+		private static final long serialVersionUID = 3234353073228933673L;
+
 		private DelayedTestEvent(long delay) {
 			super(delay);
 		}

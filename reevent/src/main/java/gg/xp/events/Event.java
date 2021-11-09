@@ -2,6 +2,8 @@ package gg.xp.events;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serializable;
+
 /**
  * Marker interface for events
  * <p>
@@ -11,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
  * TODO: figure out if also tracking child events might use too much memory.
  * Perhaps SoftReference would be appropriate?
  */
-public interface Event {
+public interface Event extends Serializable {
 
 	@Nullable Event getParent();
 

@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class FinalTitanJailsSolvedEvent extends BaseEvent {
+	private static final long serialVersionUID = 3966119066157989985L;
 	private final List<XivEntity> jailedPlayers;
 
 	public FinalTitanJailsSolvedEvent(List<XivEntity> jailedPlayers) {

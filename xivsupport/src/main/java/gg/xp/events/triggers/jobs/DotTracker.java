@@ -56,6 +56,7 @@ public class DotTracker {
 
 	private static class DelayedBuffCallout extends BaseDelayedEvent {
 
+		private static final long serialVersionUID = 499685323334095132L;
 		private final BuffApplied originalEvent;
 
 		protected DelayedBuffCallout(BuffApplied originalEvent, long delayMs) {

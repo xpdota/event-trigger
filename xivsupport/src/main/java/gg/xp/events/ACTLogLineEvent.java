@@ -2,6 +2,7 @@ package gg.xp.events;
 
 public class ACTLogLineEvent extends BaseEvent {
 
+	private static final long serialVersionUID = -5255204546093791693L;
 	private final String logLine;
 
 	public ACTLogLineEvent(String logLine) {

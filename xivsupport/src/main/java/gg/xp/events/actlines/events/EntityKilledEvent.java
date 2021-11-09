@@ -4,6 +4,7 @@ import gg.xp.events.BaseEvent;
 import gg.xp.events.models.XivEntity;
 
 public class EntityKilledEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
+	private static final long serialVersionUID = 2379855663603121468L;
 	private final XivEntity source;
 	private final XivEntity target;
 

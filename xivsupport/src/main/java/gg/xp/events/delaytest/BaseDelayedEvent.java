@@ -4,6 +4,7 @@ import gg.xp.events.BaseEvent;
 
 public abstract class BaseDelayedEvent extends BaseEvent {
 
+	private static final long serialVersionUID = 4516450176008003145L;
 	private final long runAt;
 
 	protected BaseDelayedEvent(long delayMs) {

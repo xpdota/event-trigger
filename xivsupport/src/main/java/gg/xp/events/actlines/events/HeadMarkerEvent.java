@@ -5,6 +5,7 @@ import gg.xp.events.models.XivEntity;
 
 public class HeadMarkerEvent extends BaseEvent implements HasTargetEntity {
 
+	private static final long serialVersionUID = -413687601479469145L;
 	private final XivEntity target;
 	private final long markerId;
 

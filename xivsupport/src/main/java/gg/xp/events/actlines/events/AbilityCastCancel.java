@@ -6,6 +6,7 @@ import gg.xp.events.models.XivEntity;
 
 public class AbilityCastCancel extends BaseEvent implements HasSourceEntity {
 
+	private static final long serialVersionUID = -5704173639583049362L;
 	private final XivEntity source;
 	private final XivAbility ability;
 	private final String reason;

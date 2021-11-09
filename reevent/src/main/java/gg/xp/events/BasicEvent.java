@@ -2,6 +2,7 @@ package gg.xp.events;
 
 public class BasicEvent extends BaseEvent {
 
+	private static final long serialVersionUID = -3964771061111399357L;
 	private final String value;
 
 	public BasicEvent(String value) {
