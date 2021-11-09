@@ -33,7 +33,7 @@ public class JailExampleTest {
 
 		// Register plugins
 		dist.registerHandler(ACTLogLineEvent.class, new Line21Parser()::handle);
-		dist.registerHandler(AbilityUsedEvent.class, new JailCollector());
+		dist.registerHandler(AbilityUsedEvent.class, new JailCollector()::handleAbility);
 		dist.registerHandler(UnsortedTitanJailsSolvedEvent.class, new JailSorter());
 
 		// Send events

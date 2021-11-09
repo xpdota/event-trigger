@@ -1,7 +1,11 @@
 package gg.xp.events.state;
 
 import gg.xp.context.SubState;
+import gg.xp.events.Event;
+import gg.xp.events.EventDistributor;
+import gg.xp.events.EventMaster;
 import gg.xp.events.actlines.data.Job;
+import gg.xp.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.models.XivWorld;
@@ -21,6 +25,7 @@ import java.util.stream.Collectors;
 public class XivState implements SubState {
 
 	private static final Logger log = LoggerFactory.getLogger(XivState.class);
+	private final EventMaster master;
 
 	private XivZone zone;
 	// EARLY player info before we have combatant data
@@ -29,6 +34,10 @@ public class XivState implements SubState {
 	private XivPlayerCharacter player;
 	private @NotNull List<XivPlayerCharacter> partyList = Collections.emptyList();
 	private @NotNull Map<Long, CombatantInfo> combatants = Collections.emptyMap();
+
+	public XivState(EventMaster master) {
+		this.master = master;
+	}
 
 	// Note: can be null until we have all the required data, but this should only happen very early on in init
 	public XivEntity getPlayer() {
@@ -92,7 +101,8 @@ public class XivState implements SubState {
 			}));
 		}
 		log.info("Recalculated state, player is {}, party is {}", player, partyList);
-
+		// TODO: improve this
+		master.getQueue().push(new XivStateRecalculatedEvent());
 	}
 
 	public boolean zoneIs(long zoneId) {

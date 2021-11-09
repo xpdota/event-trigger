@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,16 +18,20 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 	private static final int MAX_EVENTS_PER_NATURAL_EVENT = 3000;
 
 	protected final List<EventHandler<Event>> handlers = new ArrayList<>();
+	private final Object handlersLock = new Object();
 
 	private final StateStore state = new StateStore();
 	private EventQueue<Event> queue;
 
-	// todo: sync object
+	// todo: sync object doesn't cover direct access as seen in subclass
 	public synchronized void registerHandler(EventHandler<Event> handler) {
 		if (!(handler instanceof AutoHandler)) {
 			log.info("Added manual handler: {}", handler);
 		}
-		handlers.add(handler);
+		synchronized (handlersLock) {
+			handlers.add(handler);
+		}
+		handlers.sort(Comparator.comparing(EventHandler::getOrder));
 	}
 
 	public void setQueue(EventQueue<Event> queue) {
@@ -46,7 +51,7 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 		int count = 0;
 		Event next;
 		while ((next = eventsForImmediateProcessing.poll()) != null) {
-			count ++;
+			count++;
 			// Failsafe for infinite loops
 			if (count > MAX_EVENTS_PER_NATURAL_EVENT) {
 				log.error("Too many synthetic events from one natural event. Possible loop. Original event: {}", event);
@@ -57,7 +62,10 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 			if (handlers.isEmpty()) {
 				log.warn("No handlers for event {}!", event);
 			}
-			List<EventHandler<Event>> handlersTmp = new ArrayList<>(handlers);
+			List<EventHandler<Event>> handlersTmp;
+			synchronized (handlersLock) {
+				handlersTmp = new ArrayList<>(handlers);
+			}
 			handlersTmp.forEach(handler -> {
 				log.trace("Sending event {} to handler {} with {} immediate events", current, handler, eventsForImmediateProcessing.size());
 				AtomicBoolean isDone = new AtomicBoolean();

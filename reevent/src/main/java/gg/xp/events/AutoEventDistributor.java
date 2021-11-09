@@ -1,5 +1,6 @@
 package gg.xp.events;
 
+import gg.xp.scan.AutoHandler;
 import gg.xp.scan.AutoHandlerScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +14,10 @@ public class AutoEventDistributor extends BasicEventDistributor {
 
 	private void reload() {
 		handlers.clear();
-		handlers.addAll(AutoHandlerScan.listAll());
+		AutoHandlerScan.listAll().forEach(this::registerHandler);
 	}
 
+	// TODO: is there a better place to put this?
 	@Override
 	public void acceptEvent(Event event) {
 		if (event instanceof TopologyReloadEvent) {

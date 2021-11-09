@@ -4,19 +4,24 @@ import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.EventHandler;
 import gg.xp.events.actlines.events.AbilityUsedEvent;
+import gg.xp.events.actlines.events.WipeEvent;
 import gg.xp.events.models.XivEntity;
 import gg.xp.scan.HandleEvents;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class JailCollector implements EventHandler<AbilityUsedEvent> {
+public class JailCollector {
 
 	private final List<XivEntity> jailedPlayers = new ArrayList<>();
 
-	@Override
 	@HandleEvents
-	public void handle(EventContext<Event> context, AbilityUsedEvent event) {
+	public void handleWipe(EventContext<Event> context, WipeEvent event) {
+		jailedPlayers.clear();
+	}
+
+	@HandleEvents
+	public void handleAbility(EventContext<Event> context, AbilityUsedEvent event) {
 		// Check ability ID - we only care about these two
 		long id = event.getAbility().getId();
 		if (id != 0x2B6B && id != 0x2B6C) {

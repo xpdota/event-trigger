@@ -4,6 +4,7 @@ import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.EventDistributor;
 import gg.xp.events.EventMaster;
+import gg.xp.events.EventSource;
 import gg.xp.events.debug.DebugCommand;
 import gg.xp.events.state.RefreshCombatantsRequest;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
@@ -18,7 +19,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-public class ActWsLogSource {
+// TODO: EventSource interface
+public class ActWsLogSource implements EventSource {
 
 	private static final Logger log = LoggerFactory.getLogger(ActWsLogSource.class);
 	private static final ExecutorService taskPool = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("ActWsLogPool-%d").build());

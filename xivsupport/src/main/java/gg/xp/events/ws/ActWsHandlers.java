@@ -8,7 +8,7 @@ import gg.xp.events.ACTLogLineEvent;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.actlines.data.Job;
-import gg.xp.events.actlines.events.PlayerChangeEvent;
+import gg.xp.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.events.actlines.events.WipeEvent;
 import gg.xp.events.actlines.events.ZoneChangeEvent;
 import gg.xp.events.models.XivEntity;
@@ -83,7 +83,7 @@ public class ActWsHandlers {
 		if ("ChangePrimaryPlayer".equals(jsonMsg.getType())) {
 			long id = jsonMsg.getJson().get("charID").intValue();
 			String name = jsonMsg.getJson().get("charName").textValue();
-			context.enqueue(new PlayerChangeEvent(new XivEntity(id, name)));
+			context.enqueue(new RawPlayerChangeEvent(new XivEntity(id, name)));
 		}
 	}
 

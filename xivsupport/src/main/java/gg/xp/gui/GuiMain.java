@@ -1,25 +1,26 @@
 package gg.xp.gui;
 
 import gg.xp.context.StateStore;
-import gg.xp.events.AutoEventDistributor;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
-import gg.xp.events.EventDistributor;
 import gg.xp.events.EventMaster;
 import gg.xp.events.actlines.events.XivStateChange;
 import gg.xp.events.models.XivEntity;
+import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.models.XivZone;
 import gg.xp.events.state.XivState;
 import gg.xp.events.ws.ActWsConnectionStatusChangedEvent;
-import gg.xp.events.ws.ActWsLogSource;
 import gg.xp.events.ws.WsState;
+import gg.xp.sys.XivMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.AbstractTableModel;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -31,21 +32,8 @@ public class GuiMain {
 	private final StateStore state;
 
 	public static void main(String[] args) {
-		log.info("Starting main program");
-		log.info("PID: {}", ProcessHandle.current().pid());
-
-		EventDistributor<Event> eventDistributor = new AutoEventDistributor();
-
-		EventMaster master = new EventMaster(eventDistributor);
-		master.start();
-
-		new GuiMain(master);
-
-		ActWsLogSource wsLogSource = new ActWsLogSource(master);
-		wsLogSource.start();
-
-
-		log.info("Everything seems to have started successfully");
+		EventMaster eventMaster = XivMain.masterInit();
+		new GuiMain(eventMaster);
 	}
 
 	public GuiMain(EventMaster master) {
@@ -54,28 +42,38 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("My New Window");
 			JTabbedPane tabPane = new JTabbedPane();
-			frame.setSize(640, 480);
+			frame.setSize(800, 600);
 			frame.setVisible(true);
-			JPanel mainPanel = new JPanel();
-			BoxLayout mgr = new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS);
-			mainPanel.setLayout(mgr);
-//			mainPanel.setLayout(new GridBagLayout());
-//			frame.add(mainPanel);
+			JPanel mainPanel = new SystemStatusPanel();
+			JScrollPane scrollPanel = new JScrollPane(mainPanel);
+			tabPane.addTab("System", scrollPanel);
+			tabPane.addTab("Stats", new JPanel());
+			tabPane.addTab("Plugins", new JPanel());
+			tabPane.addTab("Events", new JPanel());
+			tabPane.addTab("ACT Log", new JPanel());
+			tabPane.addTab("System Log", new JPanel());
+			tabPane.addTab("Import/Export", new JPanel());
+			frame.add(tabPane);
+		});
+	}
+
+	private class SystemStatusPanel extends JPanel {
+		SystemStatusPanel() {
+
+			BoxLayout mgr = new BoxLayout(this, BoxLayout.PAGE_AXIS);
+			setLayout(mgr);
 			ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
-			mainPanel.add(connectionStatusPanel);
+			add(connectionStatusPanel);
 			XivStateStatus xivStateStatus = new XivStateStatus();
-			mainPanel.add(xivStateStatus);
+			add(xivStateStatus);
 			// filler for alignment
 			StandardPanel fillerPanel = new StandardPanel("Random Filler Panel");
 			fillerPanel.add(new JLabel("How do I layout"));
-			mainPanel.add(fillerPanel);
+			add(fillerPanel);
 			// TODO: these don't work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
 			master.getDistributor().registerHandler(XivStateChange.class, (c, e) -> xivStateStatus.refresh());
-			JScrollPane scrollPanel = new JScrollPane(mainPanel);
-			tabPane.addTab("System", scrollPanel);
-			frame.add(tabPane);
-		});
+		}
 	}
 
 	// TODO: system for plugins to install their own guis
@@ -88,14 +86,20 @@ public class GuiMain {
 
 	private class ActWsConnectionStatus extends StandardPanel {
 
-		private final JCheckBox checkBox;
+		private final KeyValuePairDisplay<JCheckBox, Boolean> connectedDisp;
 
 		public ActWsConnectionStatus() {
 			super("System Status");
-			checkBox = new JCheckBox("Connected to ACT WS");
-			checkBox.setEnabled(false);
+			JCheckBox box = new JCheckBox();
+			box.setEnabled(false);
+			connectedDisp = new KeyValuePairDisplay<>(
+					"Connected to ACT WS",
+					box,
+					() -> state.get(WsState.class).isConnected(),
+					AbstractButton::setSelected
+			);
+			add(connectedDisp);
 			updateGui();
-			this.add(checkBox);
 		}
 
 		public void connectionStatusChange(EventContext<Event> context, ActWsConnectionStatusChangedEvent event) {
@@ -103,8 +107,7 @@ public class GuiMain {
 		}
 
 		private void updateGui() {
-			boolean status = state.get(WsState.class).isConnected();
-			SwingUtilities.invokeLater(() -> checkBox.setSelected(status));
+			connectedDisp.refresh();
 		}
 	}
 
@@ -138,45 +141,100 @@ public class GuiMain {
 
 		public XivStateStatus() {
 			super("Xiv Status");
-//			GridBagLayout mgr = new GridBagLayout();
-//			GridBagConstraints c = new GridBagConstraints();
-//			c.fill = GridBagConstraints.HORIZONTAL;
-//			c.weightx = 0;
-//			c.weighty = 0;
-//			c.gridy = 0;
-//			c.gridx = 0;
-//			setLayout(mgr);
-			setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
-			displayed.add(new KeyValuePairDisplay<>(
-					"Player Name",
-					new JTextArea(1, 20),
-					() -> {
-						XivEntity player = state.get(XivState.class).getPlayer();
-						return player == null ? "null" : player.getName();
-					},
-					JTextArea::setText
-			));
-			displayed.add(new KeyValuePairDisplay<>(
-					"Zone Name",
-					new JTextArea(1, 20),
-					() -> {
-						XivZone zone = state.get(XivState.class).getZone();
-						return zone == null ? "null" : zone.getName();
-					},
-					JTextArea::setText
-			));
-			displayed.forEach(d -> {
-				this.add(d);
-//				this.add(d, c);
-//				c.gridy ++;
-			});
-//			setPreferredSize(getMinimumSize());
+			setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+
+			JPanel left = new JPanel();
+			left.setLayout(new BoxLayout(left, BoxLayout.PAGE_AXIS));
+			List<KeyValuePairDisplay<?, ?>> leftItems = List.of(new KeyValuePairDisplay<>(
+							"Player Name",
+							new JTextArea(1, 15),
+							() -> {
+								XivEntity player = state.get(XivState.class).getPlayer();
+								return player == null ? "null" : player.getName();
+							},
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Zone Name",
+							new JTextArea(1, 15),
+							() -> {
+								XivZone zone = state.get(XivState.class).getZone();
+								return zone == null ? "null" : zone.getName();
+							},
+							JTextArea::setText
+					));
+			leftItems.forEach(left::add);
+			displayed.addAll(leftItems);
+			add(left);
+
+			JPanel right = new JPanel();
+			JTable partyMembersTable = new JTable(3, 3);
+			partyMembersTable.setPreferredSize(new Dimension(300, 300));
+			XivPlayerTableModel dataModel = new XivPlayerTableModel();
+			partyMembersTable.setModel(dataModel);
+			right.setLayout(new BoxLayout(right, BoxLayout.PAGE_AXIS));
+			KeyValuePairDisplay<JScrollPane, List<XivPlayerCharacter>> tableHolder = new KeyValuePairDisplay<>(
+					"Party Members",
+					new JScrollPane(partyMembersTable),
+					() -> state.get(XivState.class).getPartyList(),
+					(ignored, v) -> {
+						dataModel.setData(v);
+					}
+			);
+			// TODO
+			right.add(tableHolder);
+			displayed.add(tableHolder);
+			add(right);
+
+
 			refresh();
 		}
 
 		public void refresh() {
 			displayed.forEach(KeyValuePairDisplay::refresh);
+		}
+	}
+
+	private class XivPlayerTableModel extends AbstractTableModel {
+
+		private List<XivPlayerCharacter> data = Collections.emptyList();
+		// TODO: IIRC, column models do this, but cleaner?
+		private String[] columnNames = {"Name", "Job", "ID"};
+
+		public void setData(List<XivPlayerCharacter> data) {
+			this.data = data;
+			fireTableDataChanged();
+		}
+
+		@Override
+		public String getColumnName(int column) {
+			return columnNames[column];
+		}
+
+		@Override
+		public int getRowCount() {
+			return data.size();
+		}
+
+		@Override
+		public int getColumnCount() {
+			return 3;
+		}
+
+		@Override
+		public Object getValueAt(int rowIndex, int columnIndex) {
+			switch (columnIndex) {
+				case 1:
+					return data.get(rowIndex - 1).getName();
+				case 2:
+					return data.get(rowIndex - 1).getJob().name();
+				case 3:
+					return data.get(rowIndex - 1).getId();
+				default:
+					// TODO
+					return null;
+			}
 		}
 	}
 }

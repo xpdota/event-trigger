@@ -17,6 +17,7 @@ public class AutoHandler implements EventHandler<Event> {
 	private final String methodLabel;
 	private final Object clazzInstance;
 	private final Class<? extends Event> eventClass;
+	private final int order;
 
 	public AutoHandler(Method method, Object clazzInstance) {
 		// TODO: exception types
@@ -34,6 +35,17 @@ public class AutoHandler implements EventHandler<Event> {
 		String fullMethodLabel = method.getDeclaringClass().getSimpleName() + '.' + method.getName() + ':' + eventClass.getSimpleName();
 		this.methodLabel = fullMethodLabel;
 		this.clazzInstance = clazzInstance;
+		HandleEvents annotation = this.method.getAnnotation(HandleEvents.class);
+		if (annotation != null) {
+			order = annotation.order();
+		}
+		else {
+			order = 0;
+		}
+	}
+
+	public int getOrder() {
+		return order;
 	}
 
 	@Override
