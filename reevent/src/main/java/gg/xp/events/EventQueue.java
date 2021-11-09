@@ -1,10 +1,10 @@
 package gg.xp.events;
 
-public interface EventQueue<X extends Event> {
+public interface EventQueue {
 
-	void push(X event);
+	void push(Event event);
 
-	X pull();
+	Event pull();
 
 	int pendingSize();
 }

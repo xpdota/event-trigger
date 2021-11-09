@@ -37,7 +37,7 @@ public class XivState implements SubState {
 
 	@SuppressWarnings("unused")
 	@Deprecated
-	public XivState() {
+	XivState() {
 		// TODO: this is still needed for tests
 		log.warn("Using old XivState ctor");
 		this.master = null;

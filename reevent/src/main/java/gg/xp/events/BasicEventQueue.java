@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ThreadFactory;
 
-public class BasicEventQueue implements EventQueue<Event> {
+public class BasicEventQueue implements EventQueue {
 
 
 	private static final Logger log = LoggerFactory.getLogger(BasicEventQueue.class);

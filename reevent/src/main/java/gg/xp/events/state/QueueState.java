@@ -5,9 +5,9 @@ import gg.xp.events.EventQueue;
 
 public class QueueState implements SubState {
 
-	private final EventQueue<?> eventQueue;
+	private final EventQueue eventQueue;
 
-	public QueueState(EventQueue<?> eventQueue) {
+	public QueueState(EventQueue eventQueue) {
 		this.eventQueue = eventQueue;
 	}
 

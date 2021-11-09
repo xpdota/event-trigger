@@ -90,7 +90,7 @@ public class ActWsLogSource implements EventSource {
 	private final ActWsClientInternal client;
 	private final WsState state = new WsState();
 
-	public ActWsLogSource(EventMaster master, EventDistributor<Event> distributor, StateStore stateStore) {
+	public ActWsLogSource(EventMaster master, EventDistributor distributor, StateStore stateStore) {
 		this.eventConsumer = master::pushEvent;
 		distributor.registerHandler(DebugCommand.class, this::getCombatantsDbg);
 		distributor.registerHandler(DebugCommand.class, this::forceReconnect);

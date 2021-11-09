@@ -23,7 +23,7 @@ public class AbstractACTLineTest<X extends Event> {
 	}
 
 	private TestEventCollector submitLine(String line) {
-		final EventDistributor<Event> dist;
+		final EventDistributor dist;
 		final TestEventCollector coll;
 		dist = AutoHandlerScan.create();
 		coll = new TestEventCollector();

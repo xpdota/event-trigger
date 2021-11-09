@@ -1,5 +1,6 @@
 package gg.xp.events;
 
+import gg.xp.context.BasicStateStore;
 import gg.xp.events.actlines.events.AbilityUsedEvent;
 import gg.xp.events.actlines.parsers.Line21Parser;
 import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
@@ -27,7 +28,7 @@ public class JailExampleTest {
 	@Test
 	public void jailTest() {
 		// Test setup
-		EventDistributor<Event> dist = new BasicEventDistributor();
+		EventDistributor dist = new BasicEventDistributor(new BasicStateStore());
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 

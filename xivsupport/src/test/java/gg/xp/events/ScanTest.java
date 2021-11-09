@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class ScanTest {
 	@Test
 	public void testAutoScan() {
-		EventDistributor<Event> dist = AutoHandlerScan.create();
+		EventDistributor dist = AutoHandlerScan.create();
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 		// Send events
@@ -38,7 +38,7 @@ public class ScanTest {
 	@Test
 	@Ignore // Manual test - listen for TTS
 	public void testTTS() {
-		EventDistributor<Event> dist = AutoHandlerScan.create();
+		EventDistributor dist = AutoHandlerScan.create();
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 		dist.acceptEvent(new TtsCall("Foo Bar"));
@@ -47,7 +47,7 @@ public class ScanTest {
 
 	@Test
 	public void testMultiMethod() {
-		EventDistributor<Event> dist = AutoHandlerScan.create();
+		EventDistributor dist = AutoHandlerScan.create();
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 		dist.acceptEvent(new ACTLogLineEvent("Stuff"));

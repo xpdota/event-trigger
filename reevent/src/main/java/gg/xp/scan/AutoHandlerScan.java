@@ -1,7 +1,7 @@
 package gg.xp.scan;
 
+import gg.xp.context.BasicStateStore;
 import gg.xp.events.BasicEventDistributor;
-import gg.xp.events.Event;
 import gg.xp.events.EventDistributor;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
@@ -102,8 +102,8 @@ public class AutoHandlerScan {
 
 	}
 
-	public static EventDistributor<Event> create() {
-		BasicEventDistributor distributor = new BasicEventDistributor();
+	public static EventDistributor create() {
+		BasicEventDistributor distributor = new BasicEventDistributor(new BasicStateStore());
 		listAll().forEach(distributor::registerHandler);
 		return distributor;
 	}

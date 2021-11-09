@@ -1,16 +1,16 @@
 package gg.xp.events.ws;
 
+import gg.xp.context.BasicStateStore;
 import gg.xp.context.StateStore;
-import gg.xp.events.AutoEventDistributor;
 import gg.xp.events.BasicEventQueue;
-import gg.xp.events.Event;
-import gg.xp.events.EventDistributor;
 import gg.xp.events.EventMaster;
 import gg.xp.events.actlines.data.Job;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.state.XivState;
+import gg.xp.sys.XivMain;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -33,10 +33,9 @@ public class WsHandlerTests {
 
 	@Test
 	public void testZoneAndPlayerChange() {
-		EventDistributor<Event> dist = new AutoEventDistributor();
+		MutablePicoContainer pico = XivMain.masterNoSource();
+		EventMaster master = pico.getComponent(EventMaster.class);
 
-		EventMaster master = new EventMaster(dist);
-		master.start();
 
 		master.pushEvent(new ActWsRawMsg("{\"type\":\"ChangePrimaryPlayer\",\"charID\":275160354,\"charName\":\"Foo Bar\"}"));
 		master.pushEvent(new ActWsRawMsg("{\"type\":\"ChangeZone\",\"zoneID\":129,\"zoneName\":\"Limsa Lominsa Lower Decks\"}"));
@@ -150,9 +149,9 @@ public class WsHandlerTests {
 						"    }\n" +
 						"  ],\n" +
 						"  \"rseq\":0" +
-				"}"
+						"}"
 		));
-		StateStore stateStore = dist.getStateStore();
+		StateStore stateStore = pico.getComponent(StateStore.class);
 		XivState xivState = stateStore.get(XivState.class);
 
 		try {

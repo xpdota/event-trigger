@@ -1,6 +1,6 @@
 package gg.xp.events;
 
-import gg.xp.scan.AutoHandler;
+import gg.xp.context.StateStore;
 import gg.xp.scan.AutoHandlerScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 public class AutoEventDistributor extends BasicEventDistributor {
 	private static final Logger log = LoggerFactory.getLogger(AutoEventDistributor.class);
 
-	public AutoEventDistributor() {
+	public AutoEventDistributor(StateStore state) {
+		super(state);
 		handlers.addAll(AutoHandlerScan.listAll());
 	}
 

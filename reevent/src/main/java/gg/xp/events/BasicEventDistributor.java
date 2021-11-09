@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BasicEventDistributor implements EventDistributor<Event> {
+public class BasicEventDistributor implements EventDistributor {
 
 	private static final Logger log = LoggerFactory.getLogger(BasicEventDistributor.class);
 	private static final int MAX_EVENTS_PER_NATURAL_EVENT = 3000;
@@ -20,8 +20,12 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 	protected final List<EventHandler<Event>> handlers = new ArrayList<>();
 	private final Object handlersLock = new Object();
 
-	private final StateStore state = new StateStore();
-	private EventQueue<Event> queue;
+	private final StateStore state;
+	private EventQueue queue;
+
+	public BasicEventDistributor(StateStore state) {
+		this.state = state;
+	}
 
 	// todo: sync object doesn't cover direct access as seen in subclass
 	public synchronized void registerHandler(EventHandler<Event> handler) {
@@ -34,7 +38,7 @@ public class BasicEventDistributor implements EventDistributor<Event> {
 		handlers.sort(Comparator.comparing(EventHandler::getOrder));
 	}
 
-	public void setQueue(EventQueue<Event> queue) {
+	public void setQueue(EventQueue queue) {
 		this.queue = queue;
 	}
 

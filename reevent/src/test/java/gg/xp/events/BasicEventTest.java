@@ -1,5 +1,6 @@
 package gg.xp.events;
 
+import gg.xp.context.BasicStateStore;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -10,7 +11,7 @@ public class BasicEventTest {
 
 	@Test
 	void testBasicEvent() {
-		BasicEventDistributor queue = new BasicEventDistributor();
+		BasicEventDistributor queue = new BasicEventDistributor(new BasicStateStore());
 		List<String> seen = new ArrayList<>();
 		queue.registerHandler(BasicEvent.class, (q, event) -> {
 			String value = event.getValue();
