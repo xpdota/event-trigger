@@ -18,8 +18,18 @@ public class AutoHandler implements EventHandler<Event> {
 	private final Object clazzInstance;
 	private final Class<? extends Event> eventClass;
 	private final int order;
+	private final Class<?> clazz;
 
-	public AutoHandler(Method method, Object clazzInstance) {
+	private volatile boolean enabled = true;
+
+	public AutoHandler(Class<?> clazz, Method method, Object clazzInstance) {
+		this.clazz = clazz;
+		if (method == null) {
+			throw new IllegalArgumentException("Method cannot be null");
+		}
+		if (clazzInstance == null) {
+			throw new IllegalArgumentException("Instance cannot be null");
+		}
 		// TODO: exception types
 		Class<?>[] paramTypes = method.getParameterTypes();
 		String tmpMethodLabel = method.getDeclaringClass().getSimpleName() + '.' + method.getName();
@@ -57,9 +67,24 @@ public class AutoHandler implements EventHandler<Event> {
 		return String.format("%s(%s)", method.getName(), eventClass.getSimpleName());
 	}
 
+	public Class<?> getHandlerClass() {
+		return clazz;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		log.info("AutoHandler {} is now {}", getTopoLabel(), enabled ? "ENABLED" : "DISABLED");
+		this.enabled = enabled;
+	}
 
 	@Override
 	public void handle(EventContext<Event> context, Event event) {
+		if (!enabled) {
+			return;
+		}
 		if (!eventClass.isInstance(event)) {
 			return;
 		}
@@ -73,6 +98,9 @@ public class AutoHandler implements EventHandler<Event> {
 		}
 		catch (IllegalAccessException | InvocationTargetException e) {
 			log.error("Error invoking trigger method {}", methodLabel, e);
+		}
+		catch (NullPointerException npe) {
+			log.error("npe");
 		}
 	}
 }

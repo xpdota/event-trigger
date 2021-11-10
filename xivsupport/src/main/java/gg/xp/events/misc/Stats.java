@@ -10,15 +10,17 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 public class Stats { // :eldercat:
 
 	private static final Logger log = LoggerFactory.getLogger(Stats.class);
 
-	private long start = System.currentTimeMillis();
-	private long total;
-	private long primogenitor;
-	private long synthetic;
+	private volatile long start = System.currentTimeMillis();
+	private volatile long total;
+	private volatile long primogenitor;
+	private volatile long synthetic;
 
 	@HandleEvents
 	public void countEvents(EventContext<Event> context, Event event) {
@@ -57,4 +59,22 @@ public class Stats { // :eldercat:
 		}
 	}
 
+	// These aren't thread safe but it probably doesn't matter
+	public Duration getDuration() {
+		long now = System.currentTimeMillis();
+		long delta = now - start;
+		return Duration.of(delta, ChronoUnit.MILLIS);
+	}
+
+	public long getTotal() {
+		return total;
+	}
+
+	public long getPrimogenitor() {
+		return primogenitor;
+	}
+
+	public long getSynthetic() {
+		return synthetic;
+	}
 }

@@ -5,6 +5,7 @@ import gg.xp.events.EventMaster;
 import gg.xp.events.state.PicoStateStore;
 import gg.xp.events.state.XivState;
 import gg.xp.events.ws.ActWsLogSource;
+import gg.xp.scan.AutoHandlerScan;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
 import org.slf4j.Logger;
@@ -21,17 +22,26 @@ public final class XivMain {
 		masterInit();
 	}
 
-	public static MutablePicoContainer masterNoSource() {
+	private static MutablePicoContainer requiredComponents() {
 		MutablePicoContainer pico = new PicoBuilder()
 				.withCaching()
 				.withLifecycle()
+				.withAutomatic()
 				.build();
 		pico.addComponent(AutoEventDistributor.class);
+		pico.addComponent(AutoHandlerScan.class);
 		pico.addComponent(EventMaster.class);
 		pico.addComponent(PicoStateStore.class);
 		pico.addComponent(XivState.class);
+		pico.addComponent(PicoBasedInstanceProvider.class);
 		pico.addComponent(pico);
+		return pico;
 
+	}
+
+	public static MutablePicoContainer masterNoSource() {
+
+		MutablePicoContainer pico = requiredComponents();
 		// TODO: picocontainer or something - cross-class dependencies are getting out of hand
 		pico.getComponent(EventMaster.class).start();
 		return pico;
@@ -41,18 +51,11 @@ public final class XivMain {
 		log.info("Starting main program");
 		log.info("PID: {}", ProcessHandle.current().pid());
 
-		MutablePicoContainer pico = new PicoBuilder()
-				.withCaching()
-				.withLifecycle()
-				.build();
-		pico.addComponent(AutoEventDistributor.class);
-		pico.addComponent(EventMaster.class);
-		pico.addComponent(PicoStateStore.class);
-		pico.addComponent(XivState.class);
-		pico.addComponent(ActWsLogSource.class);
-		pico.addComponent(pico);
 
-		// TODO: picocontainer or something - cross-class dependencies are getting out of hand
+		MutablePicoContainer pico = requiredComponents();
+		pico.addComponent(ActWsLogSource.class);
+
+		// TODO: use "Startable" interface?
 		pico.getComponent(EventMaster.class).start();
 		pico.getComponent(ActWsLogSource.class).start();
 

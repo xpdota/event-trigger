@@ -28,8 +28,13 @@ public class AutoHandlerScan {
 	private static final Logger log = LoggerFactory.getLogger(AutoHandlerScan.class);
 	// Secondary logger for topology so it can be controlled differently
 	private static final Logger log_topo = LoggerFactory.getLogger(AutoHandlerScan.class.getCanonicalName() + ".Topology");
+	private final AutoHandlerInstanceProvider instanceProvider;
 
-	public static List<AutoHandler> listAll() {
+	public AutoHandlerScan(AutoHandlerInstanceProvider instanceProvider) {
+		this.instanceProvider = instanceProvider;
+	}
+
+	public List<AutoHandler> build() {
 		log.info("Scanning packages");
 		List<AutoHandler> out = new ArrayList<>();
 		ClassLoader loader = new ForceReloadClassLoader();
@@ -80,15 +85,9 @@ public class AutoHandlerScan {
 				// TODO: error handling
 				topo.append("Class: ").append(clazz.getSimpleName()).append("\n");
 				// TODO: move this to AutoHandler so scope can be implemented
-				Object clazzInstance;
-				try {
-					clazzInstance = clazz.getConstructor((Class<?>[]) null).newInstance();
-				}
-				catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-					throw new RuntimeException("Error instantiating event handler class " + clazz.getSimpleName(), e);
-				}
+				Object clazzInstance = instanceProvider.getInstance(clazz);
 				for (Method method : methods) {
-					AutoHandler rawEvh = new AutoHandler(method, clazzInstance);
+					AutoHandler rawEvh = new AutoHandler(clazz, method, clazzInstance);
 					out.add(rawEvh);
 					topo.append(" - Method: ").append(rawEvh.getTopoLabel()).append("\n");
 				}
@@ -100,12 +99,35 @@ public class AutoHandlerScan {
 			Thread.currentThread().setContextClassLoader(oldLoader);
 		}
 
+
 	}
 
+	@Deprecated
+	public static List<AutoHandler> listAll() {
+		return defaultInstance().build();
+	}
+
+	@Deprecated
+	public static AutoHandlerScan defaultInstance() {
+		return new AutoHandlerScan(AutoHandlerScan::getInstance);
+	}
+
+	@Deprecated
 	public static EventDistributor create() {
 		BasicEventDistributor distributor = new BasicEventDistributor(new BasicStateStore());
-		listAll().forEach(distributor::registerHandler);
+		AutoHandlerScan autoHandlerScan = new AutoHandlerScan(AutoHandlerScan::getInstance);
+		autoHandlerScan.build().forEach(distributor::registerHandler);
 		return distributor;
+	}
+
+	private static <X> X getInstance(Class<X> clazz) {
+		try {
+			return clazz.getConstructor((Class<?>[]) null).newInstance();
+		}
+		catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+			throw new RuntimeException("Error instantiating event handler class " + clazz.getSimpleName(), e);
+		}
+
 	}
 
 	// Filter out interfaces and abstract classes

@@ -2,20 +2,35 @@ package gg.xp.events;
 
 import gg.xp.context.StateStore;
 import gg.xp.scan.AutoHandlerScan;
+import gg.xp.topology.Topology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class AutoEventDistributor extends BasicEventDistributor {
 	private static final Logger log = LoggerFactory.getLogger(AutoEventDistributor.class);
+	private final AutoHandlerScan scanner;
 
-	public AutoEventDistributor(StateStore state) {
-		super(state);
+	AutoEventDistributor(StateStore state) {
+		this(state, AutoHandlerScan.defaultInstance());
 		handlers.addAll(AutoHandlerScan.listAll());
+	}
+
+	public AutoEventDistributor(StateStore state, AutoHandlerScan scanner) {
+		super(state);
+		this.scanner = scanner;
+		handlers.addAll(scanner.build());
 	}
 
 	private void reload() {
 		handlers.clear();
-		AutoHandlerScan.listAll().forEach(this::registerHandler);
+		handlers.addAll(scanner.build());
+	}
+
+	public Topology getTopology() {
+		return Topology.fromHandlers(new ArrayList<>(handlers));
 	}
 
 	// TODO: is there a better place to put this?
@@ -27,4 +42,6 @@ public class AutoEventDistributor extends BasicEventDistributor {
 		}
 		super.acceptEvent(event);
 	}
+
+
 }

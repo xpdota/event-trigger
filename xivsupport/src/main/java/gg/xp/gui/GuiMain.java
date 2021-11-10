@@ -1,57 +1,68 @@
 package gg.xp.gui;
 
 import gg.xp.context.StateStore;
+import gg.xp.events.AutoEventDistributor;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.EventMaster;
 import gg.xp.events.actlines.events.XivStateChange;
+import gg.xp.events.misc.RawEventStorage;
+import gg.xp.events.misc.Stats;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.models.XivZone;
 import gg.xp.events.state.XivState;
 import gg.xp.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.events.ws.WsState;
+import gg.xp.gui.tables.AutoBottomScrollHelper;
+import gg.xp.gui.tables.CustomColumn;
+import gg.xp.gui.tables.CustomTableModel;
+import gg.xp.gui.tree.TopologyTreeEditor;
+import gg.xp.gui.tree.TopologyTreeModel;
+import gg.xp.gui.tree.TopologyTreeRenderer;
 import gg.xp.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.AbstractTableModel;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 public class GuiMain {
 
 	private static final Logger log = LoggerFactory.getLogger(GuiMain.class);
 	private final EventMaster master;
 	private final StateStore state;
+	private final PicoContainer container;
 
 	public static void main(String[] args) {
 		MutablePicoContainer pico = XivMain.masterInit();
-		EventMaster master = pico.getComponent(EventMaster.class);
-		new GuiMain(master);
+		pico.addComponent(GuiMain.class);
+		pico.getComponent(GuiMain.class);
 	}
 
-	public GuiMain(EventMaster master) {
+	public GuiMain(EventMaster master, PicoContainer container) {
 		this.master = master;
 		this.state = master.getDistributor().getStateStore();
+		this.container = container;
 		SwingUtilities.invokeLater(() -> {
-			JFrame frame = new JFrame("My New Window");
+			JFrame frame = new JFrame("My New Window TODO pick a name");
 			JTabbedPane tabPane = new JTabbedPane();
 			frame.setSize(800, 600);
 			frame.setVisible(true);
-			JPanel mainPanel = new SystemStatusPanel();
-			JScrollPane scrollPanel = new JScrollPane(mainPanel);
+			JPanel mainPanel = new SystemTabPanel();
+			Component scrollPanel = new JScrollPane(mainPanel);
 			tabPane.addTab("System", scrollPanel);
-			tabPane.addTab("Stats", new JPanel());
-			tabPane.addTab("Plugins", new JPanel());
-			tabPane.addTab("Events", new JPanel());
+//			tabPane.addTab("System", mainPanel);
+			JPanel stats = new StatsPanel();
+			tabPane.addTab("Stats", stats);
+			tabPane.addTab("Plugins", new PluginTopologyPanel());
+			tabPane.addTab("Events", new EventsPanel());
 			tabPane.addTab("ACT Log", new JPanel());
 			tabPane.addTab("System Log", new JPanel());
 			tabPane.addTab("Import/Export", new JPanel());
@@ -59,17 +70,21 @@ public class GuiMain {
 		});
 	}
 
-	private class SystemStatusPanel extends JPanel {
-		SystemStatusPanel() {
+	private class SystemTabPanel extends JPanel {
+		SystemTabPanel() {
 
 			BoxLayout mgr = new BoxLayout(this, BoxLayout.PAGE_AXIS);
 			setLayout(mgr);
+//			setLayout(new FlowLayout());
 			ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
+			connectionStatusPanel.setMaximumSize(new Dimension(32768, 200));
 			add(connectionStatusPanel);
 			XivStateStatus xivStateStatus = new XivStateStatus();
+			xivStateStatus.setMaximumSize(new Dimension(32768, 400));
 			add(xivStateStatus);
 			// filler for alignment
 			StandardPanel fillerPanel = new StandardPanel("Random Filler Panel");
+			fillerPanel.setMaximumSize(new Dimension(32768, 200));
 			fillerPanel.add(new JLabel("How do I layout"));
 			add(fillerPanel);
 			// TODO: these don't work right because we aren't guaranteed to be the last event handler
@@ -79,7 +94,7 @@ public class GuiMain {
 	}
 
 	// TODO: system for plugins to install their own guis
-	private class StandardPanel extends JPanel {
+	private static class StandardPanel extends JPanel {
 		public StandardPanel(String title) {
 			setBorder(new TitledBorder(title));
 			setPreferredSize(getMinimumSize());
@@ -88,19 +103,22 @@ public class GuiMain {
 
 	private class ActWsConnectionStatus extends StandardPanel {
 
-		private final KeyValuePairDisplay<JCheckBox, Boolean> connectedDisp;
+		private final KeyValueDisplaySet connectedDisp;
 
 		public ActWsConnectionStatus() {
 			super("System Status");
 			JCheckBox box = new JCheckBox();
 			box.setEnabled(false);
-			connectedDisp = new KeyValuePairDisplay<>(
+			connectedDisp = new KeyValueDisplaySet(List.of(new KeyValuePairDisplay<>(
 					"Connected to ACT WS",
 					box,
 					() -> state.get(WsState.class).isConnected(),
 					AbstractButton::setSelected
-			);
+			)));
 			add(connectedDisp);
+//			setMinimumSize(new Dimension(500, 500));
+//			setMaximumSize(new Dimension(500, 500));
+//			repaint();
 			updateGui();
 		}
 
@@ -115,40 +133,16 @@ public class GuiMain {
 
 	;
 
-	public static class KeyValuePairDisplay<C extends Component, D> extends JPanel {
+	private class XivStateStatus extends StandardPanel implements Refreshable {
 
-		private final C component;
-		private final Supplier<D> dataGetter;
-		private final BiConsumer<C, D> guiUpdater;
-
-		public KeyValuePairDisplay(String labelText, C component, Supplier<D> dataGetter, BiConsumer<C, D> guiUpdater) {
-			this.component = component;
-			this.dataGetter = dataGetter;
-			this.guiUpdater = guiUpdater;
-			JLabel label = new JLabel(labelText);
-			label.setLabelFor(component);
-			add(component);
-			add(label);
-		}
-
-		public void refresh() {
-			D newData = dataGetter.get();
-			guiUpdater.accept(component, newData);
-		}
-	}
-
-	private class XivStateStatus extends StandardPanel {
-
-		private final List<KeyValuePairDisplay<?, ?>> displayed = new ArrayList<>();
+		private final List<Refreshable> displayed = new ArrayList<>();
 
 		public XivStateStatus() {
 			super("Xiv Status");
 
 			setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
 
-			JPanel left = new JPanel();
-			left.setLayout(new BoxLayout(left, BoxLayout.PAGE_AXIS));
-			List<KeyValuePairDisplay<?, ?>> leftItems = List.of(new KeyValuePairDisplay<>(
+			KeyValueDisplaySet leftItems = new KeyValueDisplaySet(List.of(new KeyValuePairDisplay<>(
 							"Player Name",
 							new JTextArea(1, 15),
 							() -> {
@@ -165,28 +159,31 @@ public class GuiMain {
 								return zone == null ? "null" : zone.getName();
 							},
 							JTextArea::setText
-					));
-			leftItems.forEach(left::add);
-			displayed.addAll(leftItems);
-			add(left);
+					)));
+			displayed.add(leftItems);
+			add(leftItems);
 
 			JPanel right = new JPanel();
-			JTable partyMembersTable = new JTable(3, 3);
-			partyMembersTable.setPreferredSize(new Dimension(300, 300));
+			right.setLayout(new BoxLayout(right, BoxLayout.PAGE_AXIS));
+			JTable partyMembersTable = new JTable(8, 3);
+//			partyMembersTable.setPreferredSize(new Dimension(300, 300));
 			XivPlayerTableModel dataModel = new XivPlayerTableModel();
 			partyMembersTable.setModel(dataModel);
 			right.setLayout(new BoxLayout(right, BoxLayout.PAGE_AXIS));
+			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
 			KeyValuePairDisplay<JScrollPane, List<XivPlayerCharacter>> tableHolder = new KeyValuePairDisplay<>(
 					"Party Members",
-					new JScrollPane(partyMembersTable),
+					scrollPane,
 					() -> state.get(XivState.class).getPartyList(),
-					(ignored, v) -> {
-						dataModel.setData(v);
-					}
+					(ignored, v) -> dataModel.setData(v)
 			);
+//			scrollPane.setMinimumSize(new Dimension(400, 400));
+
+			setMinimumSize(new Dimension(400, 400));
+			right.add(new WrapperPanel(tableHolder.getLabel()));
+			right.add((tableHolder.getComponent()));
 			// TODO
-			right.add(tableHolder);
-			displayed.add(tableHolder);
+//			displayed.add(tableHolder);
 			add(right);
 
 
@@ -194,49 +191,129 @@ public class GuiMain {
 		}
 
 		public void refresh() {
-			displayed.forEach(KeyValuePairDisplay::refresh);
+			displayed.forEach(Refreshable::refresh);
 		}
 	}
 
-	private class XivPlayerTableModel extends AbstractTableModel {
+	private class StatsPanel extends StandardPanel implements Refreshable {
+		private final KeyValueDisplaySet displayed;
 
-		private List<XivPlayerCharacter> data = Collections.emptyList();
-		// TODO: IIRC, column models do this, but cleaner?
-		private String[] columnNames = {"Name", "Job", "ID"};
+		public StatsPanel() {
+			super("Stats");
 
-		public void setData(List<XivPlayerCharacter> data) {
-			this.data = data;
-			fireTableDataChanged();
+			JButton refreshButton = new JButton("Refresh");
+			refreshButton.addActionListener(e -> refresh());
+
+			setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+
+			List<KeyValuePairDisplay<?, ?>> leftItems = List.of(
+					new KeyValuePairDisplay<>(
+							"Duration",
+							new JTextArea(1, 15),
+							() -> container.getComponent(Stats.class).getDuration().toString(),
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Total",
+							new JTextArea(1, 15),
+							() -> String.valueOf(container.getComponent(Stats.class).getTotal()),
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Primo",
+							new JTextArea(1, 15),
+							() -> String.valueOf(container.getComponent(Stats.class).getPrimogenitor()),
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Synthetic",
+							new JTextArea(1, 15),
+							() -> String.valueOf(container.getComponent(Stats.class).getSynthetic()),
+							JTextArea::setText
+					));
+			displayed = new KeyValueDisplaySet(leftItems);
+			add(new WrapperPanel(refreshButton));
+			this.add(displayed);
+			refresh();
 		}
 
-		@Override
-		public String getColumnName(int column) {
-			return columnNames[column];
+		public void refresh() {
+			displayed.refresh();
 		}
+	}
 
-		@Override
-		public int getRowCount() {
-			return data.size();
+	private class PluginTopologyPanel extends StandardPanel {
+
+		public PluginTopologyPanel() {
+			super("Topology");
+			setLayout(new BorderLayout());
+			JTree tree = new JTree(new TopologyTreeModel(container.getComponent(AutoEventDistributor.class)));
+			TopologyTreeRenderer renderer = new TopologyTreeRenderer();
+			tree.setCellRenderer(renderer);
+			tree.setCellEditor(new TopologyTreeEditor(tree));
+			tree.setEditable(true);
+			JScrollPane scrollPane = new JScrollPane(tree);
+			scrollPane.setBorder(new LineBorder(Color.BLUE));
+			scrollPane.setPreferredSize(scrollPane.getMaximumSize());
+			add(scrollPane);
 		}
+	}
 
-		@Override
-		public int getColumnCount() {
-			return 3;
-		}
+	private class EventsPanel extends StandardPanel {
+		public EventsPanel() {
+			super("Events");
+			setLayout(new BorderLayout());
+			// TODO: event serial number
+			// TODO: jump to parent button
+			// Main table
+			RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
+			CustomTableModel<Event> model = CustomTableModel.builder(rawStorage::getEvents)
+					.addColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
+					.addColumn(new CustomColumn<>("Parent", e -> {
+						Event parent = e.getParent();
+						return parent == null ? null : parent.getClass().getSimpleName();
+					}))
+					.addColumn(new CustomColumn<>("toString", Object::toString))
+					.rowSelectedCallback(e -> log.info("Selected row {}", e))
+					.build();
+			JTable table = new JTable(model);
+			JButton refreshButton = new JButton("Refresh");
+			refreshButton.addActionListener(e -> model.refresh());
 
-		@Override
-		public Object getValueAt(int rowIndex, int columnIndex) {
-			switch (columnIndex) {
-				case 1:
-					return data.get(rowIndex - 1).getName();
-				case 2:
-					return data.get(rowIndex - 1).getJob().name();
-				case 3:
-					return data.get(rowIndex - 1).getId();
-				default:
-					// TODO
-					return null;
-			}
+			JCheckBox stayAtBottom = new JCheckBox("Scroll to Bottom");
+			AutoBottomScrollHelper scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
+			stayAtBottom.addItemListener(e -> scroller.setAutoScrollEnabled(stayAtBottom.isSelected()));
+
+			// Top panel
+			JPanel topPanel = new JPanel();
+			topPanel.add(refreshButton);
+			topPanel.add(stayAtBottom);
+			add(topPanel, BorderLayout.PAGE_START);
+
+			// Details
+			StandardPanel bottomPanel = new StandardPanel("Event Details");
+//			bottomPanel.setMinimumSize(new Dimension(200, 100));
+
+
+
+			CustomTableModel<Event> detailsModel = CustomTableModel.builder(rawStorage::getEvents)
+					.addColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
+					.addColumn(new CustomColumn<>("Parent", e -> {
+						Event parent = e.getParent();
+						return parent == null ? null : parent.getClass().getSimpleName();
+					}))
+					.addColumn(new CustomColumn<>("toString", Object::toString))
+					.rowSelectedCallback(e -> log.info("Selected row {}", e))
+					.build();
+			JTable detailsTable = new JTable(detailsModel);
+			JScrollPane detailsScroller = new JScrollPane(detailsTable);
+			detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
+			bottomPanel.add(detailsScroller);
+
+			// Split pane
+			JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
+			add(splitPane);
+			SwingUtilities.invokeLater(() -> splitPane.setDividerLocation(0.7));
 		}
 	}
 }

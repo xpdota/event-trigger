@@ -1,8 +1,11 @@
 package gg.xp.events;
 
+import gg.xp.util.Utils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.Map;
 
 /**
  * Marker interface for events
@@ -32,5 +35,9 @@ public interface Event extends Serializable {
 	 */
 	default boolean delayedEnqueueAtFront() {
 		return false;
+	}
+
+	default Map<Field, Object> dumpFields() {
+		return Utils.dumpAllFields(this);
 	}
 }
