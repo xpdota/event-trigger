@@ -13,7 +13,6 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	public static class CustomTableModelBuilder<B> {
 		private final Supplier<List<B>> dataGetter;
 		private final List<CustomColumn<B>> columns = new ArrayList<>();
-		private Consumer<B> rowSelectedCallback = b -> {};
 
 		private CustomTableModelBuilder(Supplier<List<B>> dataGetter) {
 			this.dataGetter = dataGetter;
@@ -21,11 +20,6 @@ public class CustomTableModel<X> extends AbstractTableModel {
 
 		public CustomTableModelBuilder<B> addColumn(CustomColumn<B> colDef) {
 			columns.add(colDef);
-			return this;
-		}
-
-		public CustomTableModelBuilder<B> rowSelectedCallback(Consumer<B> callback) {
-			rowSelectedCallback = callback;
 			return this;
 		}
 
@@ -77,6 +71,9 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		return false;
 	}
 
+	public X getValueForRow(int row) {
+		return data.get(row);
+	}
 
 
 	@Override
@@ -84,6 +81,4 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		X item = data.get(rowIndex);
 		return columns.get(columnIndex).getValue(item);
 	}
-
-
 }

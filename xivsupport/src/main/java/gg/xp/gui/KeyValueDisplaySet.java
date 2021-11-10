@@ -20,7 +20,7 @@ class KeyValueDisplaySet extends JPanel implements Refreshable {
 		// TODO: remove
 //			setLayout(new GridLayout(keyValues.size(), 2, 2, 2));
 		setLayout(new GridBagLayout());
-		setBorder(new LineBorder(Color.GREEN));
+//		setBorder(new LineBorder(Color.GREEN));
 		displayed = new ArrayList<>(keyValues);
 		int row = 0;
 		GridBagConstraints c = new GridBagConstraints();
@@ -38,7 +38,6 @@ class KeyValueDisplaySet extends JPanel implements Refreshable {
 			add(d.getComponent(), c);
 		}
 		refresh();
-		Optional<Double> maxWidth = displayed.stream().map(element -> getPreferredSize().getWidth()).max(Double::compareTo);
 		this.setMaximumSize(getPreferredSize());
 		this.setMinimumSize(getPreferredSize());
 		this.setSize(getPreferredSize());
@@ -48,7 +47,7 @@ class KeyValueDisplaySet extends JPanel implements Refreshable {
 	}
 
 	public void refresh() {
-		log.info("Refreshing");
+		log.trace("Refreshing");
 		displayed.forEach(KeyValuePairDisplay::refresh);
 	}
 

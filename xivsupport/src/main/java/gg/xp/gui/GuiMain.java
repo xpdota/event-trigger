@@ -30,8 +30,11 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class GuiMain {
 
@@ -253,16 +256,35 @@ public class GuiMain {
 			tree.setCellEditor(new TopologyTreeEditor(tree));
 			tree.setEditable(true);
 			JScrollPane scrollPane = new JScrollPane(tree);
-			scrollPane.setBorder(new LineBorder(Color.BLUE));
+//			scrollPane.setBorder(new LineBorder(Color.BLUE));
 			scrollPane.setPreferredSize(scrollPane.getMaximumSize());
 			add(scrollPane);
 		}
 	}
 
 	private class EventsPanel extends StandardPanel {
+		private volatile Event currentEvent;
+
 		public EventsPanel() {
 			super("Events");
 			setLayout(new BorderLayout());
+			// TODO: show handler that caused an event
+			// TODO: third table that shows pedigree? No, actually, just have a button that sets your filter to events
+			// in that chain
+			// Details model needs to be defined first
+			CustomTableModel<Map.Entry<Field, Object>> detailsModel = CustomTableModel.builder(() -> {
+						if (currentEvent == null) {
+							return Collections.emptyList();
+						}
+						else {
+							return new ArrayList<>(currentEvent.dumpFields().entrySet());
+						}
+					})
+					.addColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
+					.addColumn(new CustomColumn<>("Value", Map.Entry::getValue))
+					.addColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
+					.addColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+					.build();
 			// TODO: event serial number
 			// TODO: jump to parent button
 			// Main table
@@ -274,9 +296,21 @@ public class GuiMain {
 						return parent == null ? null : parent.getClass().getSimpleName();
 					}))
 					.addColumn(new CustomColumn<>("toString", Object::toString))
-					.rowSelectedCallback(e -> log.info("Selected row {}", e))
 					.build();
 			JTable table = new JTable(model);
+			table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			ListSelectionModel selectionModel = table.getSelectionModel();
+			selectionModel.addListSelectionListener(e -> {
+				int[] selected = selectionModel.getSelectedIndices();
+				if (selected.length == 0) {
+					currentEvent = null;
+				}
+				else {
+					currentEvent = model.getValueForRow(selected[0]);
+				}
+				detailsModel.refresh();
+				detailsModel.fireTableDataChanged();
+			});
 			JButton refreshButton = new JButton("Refresh");
 			refreshButton.addActionListener(e -> model.refresh());
 
@@ -292,19 +326,8 @@ public class GuiMain {
 
 			// Details
 			StandardPanel bottomPanel = new StandardPanel("Event Details");
-//			bottomPanel.setMinimumSize(new Dimension(200, 100));
 
 
-
-			CustomTableModel<Event> detailsModel = CustomTableModel.builder(rawStorage::getEvents)
-					.addColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
-					.addColumn(new CustomColumn<>("Parent", e -> {
-						Event parent = e.getParent();
-						return parent == null ? null : parent.getClass().getSimpleName();
-					}))
-					.addColumn(new CustomColumn<>("toString", Object::toString))
-					.rowSelectedCallback(e -> log.info("Selected row {}", e))
-					.build();
 			JTable detailsTable = new JTable(detailsModel);
 			JScrollPane detailsScroller = new JScrollPane(detailsTable);
 			detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
