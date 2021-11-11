@@ -20,6 +20,9 @@ public class XivEntity implements Serializable {
 	}
 
 	public String getName() {
+		if (isEnvironment()) {
+			return "ENVIRONMENT";
+		}
 		return name;
 	}
 

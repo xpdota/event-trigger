@@ -1,5 +1,7 @@
 package gg.xp.gui.tables;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.function.Function;
 
 public class CustomColumn<X> {
@@ -8,7 +10,7 @@ public class CustomColumn<X> {
 	private final Function<X, Object> getter;
 
 	// TODO: custom renderers
-	public CustomColumn(String columnName, Function<X, Object> getter) {
+	public CustomColumn(String columnName, Function<X, @Nullable Object> getter) {
 		this.columnName = columnName;
 		this.getter = getter;
 	}

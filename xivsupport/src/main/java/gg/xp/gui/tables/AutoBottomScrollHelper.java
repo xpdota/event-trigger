@@ -18,6 +18,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		// I think the best, but most-work solution would be to have the table update event turn on a scrollbar event listener,
 		// and then have the event scroll down then remove itself.
 		// This isn't perfect, but it's good enough for now
+		// TODO: when changing the filter so that less stuff shows up, it disables auto scroll
 		setPreferredSize(getMaximumSize());
 		JScrollBar bar = getVerticalScrollBar();
 		bar.addAdjustmentListener(event -> SwingUtilities.invokeLater(() -> {
