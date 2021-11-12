@@ -21,9 +21,9 @@ public class Line22Parser extends AbstractACTLineParser<Line22Parser.Fields> {
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		return new AbilityUsedEvent(
-				new XivAbility(fields.getHex(Fields.abilityId), fields.getString(Fields.abilityName)),
-				new XivEntity(fields.getHex(Fields.casterId), fields.getString(Fields.casterName)),
-				new XivEntity(fields.getHex(Fields.targetId), fields.getString(Fields.targetName)),
+				fields.getAbility(Fields.abilityId, Fields.abilityName),
+				fields.getEntity(Fields.casterId, Fields.casterName),
+				fields.getEntity(Fields.targetId, Fields.targetName),
 				fields.getHex(Fields.flags),
 				// TODO
 				0

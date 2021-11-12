@@ -2,14 +2,14 @@ package gg.xp.events.models;
 
 import gg.xp.events.actlines.data.Job;
 
-public class XivPlayerCharacter extends XivEntity {
+public class XivPlayerCharacter extends XivCombatant {
 	private static final long serialVersionUID = 8719229961190925919L;
 	private final Job job;
 	private final XivWorld world;
 	private final int level;
 
-	public XivPlayerCharacter(long id, String name, Job job, XivWorld world, int level) {
-		super(id, name);
+	public XivPlayerCharacter(long id, String name, Job job, XivWorld world, int level, boolean isPLayerCharacter) {
+		super(id, name, true, isPLayerCharacter);
 		this.job = job;
 		this.world = world;
 		this.level = level;
@@ -29,7 +29,7 @@ public class XivPlayerCharacter extends XivEntity {
 
 	@Override
 	public String toString() {
-		return String.format("XivPlayerCharacter(0x%X:%s, %s, %s, %s)", getId(), getName(), getJob(), getWorld(), getLevel());
+		return String.format("XivPlayerCharacter(0x%X:%s, %s, %s, %s, %s)", getId(), getName(), getJob(), getWorld(), getLevel(), isThePlayer());
 	}
 
 }

@@ -93,6 +93,10 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
 		add(splitPane);
 		SwingUtilities.invokeLater(() -> splitPane.setDividerLocation(0.7));
+		SwingUtilities.invokeLater(() -> {
+			updateData();
+			mainModel.refresh();
+		});
 	}
 
 	private List<X> getFilteredData() {
@@ -139,7 +143,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters);
+			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters);
 		}
 	}
 

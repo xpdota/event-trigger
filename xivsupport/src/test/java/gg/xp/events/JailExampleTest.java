@@ -1,6 +1,5 @@
 package gg.xp.events;
 
-import gg.xp.context.BasicStateStore;
 import gg.xp.events.actlines.events.AbilityUsedEvent;
 import gg.xp.events.actlines.parsers.Line21Parser;
 import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
@@ -8,8 +7,10 @@ import gg.xp.events.jails.JailCollector;
 import gg.xp.events.jails.JailSorter;
 import gg.xp.events.jails.UnsortedTitanJailsSolvedEvent;
 import gg.xp.events.models.XivEntity;
+import gg.xp.sys.XivMain;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -28,7 +29,8 @@ public class JailExampleTest {
 	@Test
 	public void jailTest() {
 		// Test setup
-		EventDistributor dist = new BasicEventDistributor(new BasicStateStore());
+		MutablePicoContainer container = XivMain.testingMinimalInit();
+		EventDistributor dist = container.getComponent(EventDistributor.class);
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 

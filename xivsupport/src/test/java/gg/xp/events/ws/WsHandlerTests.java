@@ -1,6 +1,5 @@
 package gg.xp.events.ws;
 
-import gg.xp.context.BasicStateStore;
 import gg.xp.context.StateStore;
 import gg.xp.events.BasicEventQueue;
 import gg.xp.events.EventMaster;
@@ -33,7 +32,7 @@ public class WsHandlerTests {
 
 	@Test
 	public void testZoneAndPlayerChange() {
-		MutablePicoContainer pico = XivMain.masterNoSource();
+		MutablePicoContainer pico = XivMain.testingMasterInit();
 		EventMaster master = pico.getComponent(EventMaster.class);
 
 

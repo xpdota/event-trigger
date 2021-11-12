@@ -22,7 +22,7 @@ public class Line20Test extends AbstractACTLineTest<AbilityCastStart> {
 		Assert.assertEquals(event.getAbility().getName(), "Seed Of The Sky");
 		Assert.assertEquals(event.getSource().getName(), "The Manipulator");
 		Assert.assertFalse(event.getSource().isEnvironment());
-		Assert.assertEquals(event.getTarget().getName(), "");
+		Assert.assertEquals(event.getTarget().getName(), "ENVIRONMENT");
 		Assert.assertTrue(event.getTarget().isEnvironment());
 	}
 

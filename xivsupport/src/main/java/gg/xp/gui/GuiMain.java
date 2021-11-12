@@ -14,17 +14,21 @@ import gg.xp.events.misc.Stats;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.models.XivZone;
+import gg.xp.events.slf4j.LogCollector;
+import gg.xp.events.slf4j.LogEvent;
+import gg.xp.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.events.state.XivState;
 import gg.xp.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.events.ws.WsState;
 import gg.xp.gui.tables.CustomColumn;
-import gg.xp.gui.tables.filters.EventTypeFilter;
 import gg.xp.gui.tables.TableWithFilterAndDetails;
 import gg.xp.gui.tables.filters.EventEntityFilter;
+import gg.xp.gui.tables.filters.EventTypeFilter;
 import gg.xp.gui.tree.TopologyTreeEditor;
 import gg.xp.gui.tree.TopologyTreeModel;
 import gg.xp.gui.tree.TopologyTreeRenderer;
 import gg.xp.sys.XivMain;
+import gg.xp.util.Utils;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -37,6 +41,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GuiMain {
 
@@ -57,7 +62,7 @@ public class GuiMain {
 		this.state = master.getDistributor().getStateStore();
 		this.container = container;
 		SwingUtilities.invokeLater(() -> {
-			JFrame frame = new JFrame("My New Window TODO pick a name");
+			JFrame frame = new JFrame("Triggevent");
 			JTabbedPane tabPane = new JTabbedPane();
 			frame.setSize(800, 600);
 			frame.setVisible(true);
@@ -70,7 +75,7 @@ public class GuiMain {
 			tabPane.addTab("Plugins", new PluginTopologyPanel());
 			tabPane.addTab("Events", getEventsPanel());
 			tabPane.addTab("ACT Log", getActLogPanel());
-			tabPane.addTab("System Log", new JPanel());
+			tabPane.addTab("System Log", getSystemLogPanel());
 			tabPane.addTab("Import/Export", new JPanel());
 			frame.add(tabPane);
 		});
@@ -140,11 +145,12 @@ public class GuiMain {
 
 			setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
 
-			KeyValueDisplaySet leftItems = new KeyValueDisplaySet(List.of(new KeyValuePairDisplay<>(
+			KeyValueDisplaySet leftItems = new KeyValueDisplaySet(List.of(
+					new KeyValuePairDisplay<>(
 							"Player Name",
 							new JTextArea(1, 15),
 							() -> {
-								XivEntity player = state.get(XivState.class).getPlayer();
+								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
 								return player == null ? "null" : player.getName();
 							},
 							JTextArea::setText
@@ -157,7 +163,35 @@ public class GuiMain {
 								return zone == null ? "null" : zone.getName();
 							},
 							JTextArea::setText
-					)));
+					),
+					new KeyValuePairDisplay<>(
+							"Player Job",
+							new JTextArea(1, 15),
+							() -> {
+								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
+								return player == null ? "null" : player.getJob().getFriendlyName();
+							},
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Player Level",
+							new JTextArea(1, 15),
+							() -> {
+								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
+								return player == null ? "null" : Integer.toString(player.getLevel());
+							},
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Player World",
+							new JTextArea(1, 15),
+							() -> {
+								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
+								return player == null ? "null" : player.getWorld().toString();
+							},
+							JTextArea::setText
+					)
+			));
 			displayed.add(leftItems);
 			add(leftItems);
 
@@ -318,8 +352,40 @@ public class GuiMain {
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
 				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
 				.build();
-
 	}
+
+	private JPanel getSystemLogPanel() {
+		LogCollector instance = LogCollector.getInstance();
+		if (instance == null) {
+			JPanel panel = new TitleBorderFullsizePanel("Logs");
+			panel.add(new JLabel("Error: no LogCollector instance"));
+			return panel;
+		}
+		else {
+			return TableWithFilterAndDetails.builder("System Log",
+							instance::getEvents,
+							e -> {
+								if (e == null) {
+									return Collections.emptyList();
+								}
+								return Stream.concat(
+										Utils.dumpAllFields(e).entrySet().stream(),
+										Utils.dumpAllFields(e.getEvent()).entrySet().stream()
+								).collect(Collectors.toList());
+							})
+					// TODO: timestamp?
+					.addMainColumn(new CustomColumn<>("Thread", e -> e.getEvent().getThreadName()))
+					.addMainColumn(new CustomColumn<>("Level", e -> e.getEvent().getLevel()))
+					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded))
+					.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
+					.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
+					.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
+					.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+					.addFilter(LogLevelVisualFilter::new)
+					.build();
+		}
+	}
+
 
 	private static void installCustomEventQueue() {
 		EventQueue queue = Toolkit.getDefaultToolkit().getSystemEventQueue();
@@ -329,7 +395,8 @@ public class GuiMain {
 				long timeBefore = System.currentTimeMillis();
 				try {
 					super.dispatchEvent(event);
-				} finally {
+				}
+				finally {
 					long timeAfter = System.currentTimeMillis();
 					long delta = timeAfter - timeBefore;
 					// TODO find good value for this

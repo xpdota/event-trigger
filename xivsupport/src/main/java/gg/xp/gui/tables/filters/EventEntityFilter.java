@@ -3,7 +3,7 @@ package gg.xp.gui.tables.filters;
 import gg.xp.events.Event;
 import gg.xp.events.actlines.events.HasSourceEntity;
 import gg.xp.events.actlines.events.HasTargetEntity;
-import gg.xp.events.models.XivEntity;
+import gg.xp.events.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,13 +18,15 @@ public class EventEntityFilter<X> implements VisualFilter<Event> {
 
 	private final JComboBox<String> comboBox;
 	private final Class<X> expectedClass;
-	private final Function<X, XivEntity> entityGetter;
+	private final Function<X, XivCombatant> entityGetter;
 	private final String labelText;
 	// TODO: really shouldn't be a string
 	private String selectedItem;
 
 	private static final String ALL = "All (Including None)";
 	private static final String ANY = "Any (Excluding None)";
+	private static final String PLAYERS = "Players";
+	private static final String NPCS = "NPC";
 	private static final String SELF = "Self (Not Supported Yet)";
 	private static final String ENVIRONMENT = "Environment";
 	private static final String NONE = "None (Non-Targeted Event)";
@@ -36,7 +38,7 @@ public class EventEntityFilter<X> implements VisualFilter<Event> {
 		return new EventEntityFilter<>(HasTargetEntity.class, HasTargetEntity::getTarget, filterUpdatedCallback, "Target Entity");
 	}
 
-	private EventEntityFilter(Class<X> expectedClass, Function<X, XivEntity> entityGetter, Runnable filterUpdatedCallback, String label) {
+	private EventEntityFilter(Class<X> expectedClass, Function<X, XivCombatant> entityGetter, Runnable filterUpdatedCallback, String label) {
 		this.expectedClass = expectedClass;
 		this.entityGetter = entityGetter;
 		this.labelText = label;
@@ -70,16 +72,27 @@ public class EventEntityFilter<X> implements VisualFilter<Event> {
 				return (expectedClass.isInstance(item));
 			case NONE:
 				return !(expectedClass.isInstance(item));
+			case PLAYERS:
+				if (expectedClass.isInstance(item)) {
+					return entityGetter.apply((X) item).isPc();
+				}
+				return false;
+			case NPCS:
+				if (expectedClass.isInstance(item)) {
+					return !entityGetter.apply((X) item).isPc();
+				}
+				return false;
 			case ENVIRONMENT:
 				if (expectedClass.isInstance(item)) {
 					return entityGetter.apply((X) item).isEnvironment();
 				}
+				return false;
 			case SELF:
 				// TODO: need to inject stuff into here
 				return false;
 			default:
 				if (expectedClass.isInstance(item)) {
-					XivEntity source = entityGetter.apply((X) item);
+					XivCombatant source = entityGetter.apply((X) item);
 					// TODO: regex
 					// Treat as hex
 					if (selectedItem.startsWith("0x")) {

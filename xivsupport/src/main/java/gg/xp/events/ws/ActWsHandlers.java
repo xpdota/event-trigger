@@ -15,9 +15,10 @@ import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.models.XivWorld;
 import gg.xp.events.models.XivZone;
-import gg.xp.events.state.CombatantInfo;
+import gg.xp.events.state.RawXivCombatantInfo;
 import gg.xp.events.state.CombatantsUpdateRaw;
 import gg.xp.events.state.PartyChangeEvent;
+import gg.xp.events.state.RawXivPartyInfo;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,7 @@ public class ActWsHandlers {
 	private static final Logger log = LoggerFactory.getLogger(ActWsHandlers.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 
-	@HandleEvents
+	@HandleEvents(order = -100)
 	public static void actWsRawToJson(EventContext<Event> context, ActWsRawMsg rawMsg) {
 		JsonNode jsonNode;
 		try {
@@ -68,7 +69,7 @@ public class ActWsHandlers {
 		context.accept(actWsJsonMsg);
 	}
 
-	@HandleEvents
+	@HandleEvents(order = -100)
 	public static void actWsLogLine(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("LogLine".equals(jsonMsg.getType())) {
 			context.enqueue(new ACTLogLineEvent(jsonMsg.getJson().get("rawLine").textValue()));
@@ -78,7 +79,7 @@ public class ActWsHandlers {
 	// Player/Zone/Party uses specific WS feeds rather than normal log lines, since the WS endpoint will send us the
 	// current values when we subscribe to the events, unlike log lines which will only trigger when there is a change.
 	// i.e. it would only work after a zone change.
-	@HandleEvents
+	@HandleEvents(order = -100)
 	public static void actWsPlayerChange(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("ChangePrimaryPlayer".equals(jsonMsg.getType())) {
 			long id = jsonMsg.getJson().get("charID").intValue();
@@ -87,7 +88,7 @@ public class ActWsHandlers {
 		}
 	}
 
-	@HandleEvents
+	@HandleEvents(order = -100)
 	public static void actWsZoneChange(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("ChangeZone".equals(jsonMsg.getType())) {
 			long id = jsonMsg.getJson().get("zoneID").intValue();
@@ -96,10 +97,10 @@ public class ActWsHandlers {
 		}
 	}
 
-	@HandleEvents
+	@HandleEvents(order = -100)
 	public static void actWsPartyChange(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("PartyChanged".equals(jsonMsg.getType())) {
-			List<XivPlayerCharacter> members = new ArrayList<>();
+			List<RawXivPartyInfo> members = new ArrayList<>();
 			// TODO: consider using automatic deserialization rather than doing it manually
 			for (JsonNode partyMember : jsonMsg.getJson().get("party")) {
 				String name = partyMember.get("name").textValue();
@@ -107,24 +108,24 @@ public class ActWsHandlers {
 				int world = partyMember.get("worldId").intValue();
 				int job = partyMember.get("job").intValue();
 				int level = partyMember.get("level").intValue();
-				members.add(new XivPlayerCharacter(id, name, Job.getById(job), new XivWorld(), level));
+				members.add(new RawXivPartyInfo(id, name, world, job, level));
 			}
 			context.enqueue(new PartyChangeEvent(members));
 		}
 	}
 
-	@HandleEvents
+	@HandleEvents(order = -100)
 	public static void actWsWipe(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("onPartyWipe".equals(jsonMsg.getType())) {
 			context.enqueue(new WipeEvent());
 		}
 	}
 
-	@HandleEvents
+	@HandleEvents(order = -100)
 	public static void actWsCombatants(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("combatants".equals(jsonMsg.getType())) {
 			JsonNode combatantsNode = jsonMsg.getJson().path("combatants");
-			List<CombatantInfo> combatantMaps = mapper.convertValue(combatantsNode, new TypeReference<List<CombatantInfo>>() {
+			List<RawXivCombatantInfo> combatantMaps = mapper.convertValue(combatantsNode, new TypeReference<List<RawXivCombatantInfo>>() {
 			});
 			context.enqueue(new CombatantsUpdateRaw(combatantMaps));
 		}

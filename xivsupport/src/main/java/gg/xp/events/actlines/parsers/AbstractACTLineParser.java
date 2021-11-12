@@ -56,7 +56,13 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				out.put(groups.get(i), splits[i + 2]);
 			}
 			ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
-			Event outgoingEvent = convert(new FieldMapper<>(out), lineNumber, zdt);
+			Event outgoingEvent;
+			try {
+				outgoingEvent = convert(new FieldMapper<>(out, context), lineNumber, zdt);
+			}
+			catch (Throwable t) {
+				throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
+			}
 			if (outgoingEvent != null) {
 				context.accept(outgoingEvent);
 			}

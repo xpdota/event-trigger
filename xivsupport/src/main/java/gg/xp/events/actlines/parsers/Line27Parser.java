@@ -21,7 +21,7 @@ public class Line27Parser extends AbstractACTLineParser<Line27Parser.Fields> {
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		// TODO: handle obfuscated headmarks - I believe these are zone-specific
 		return new HeadMarkerEvent(
-				new XivEntity(fields.getHex(Fields.targetId), fields.getString(Fields.targetName)),
+				fields.getEntity(Fields.targetId, Fields.targetName),
 				fields.getHex(Fields.markerId)
 		);
 	}

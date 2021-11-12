@@ -5,16 +5,27 @@
             <pattern>
                 %d{HH:mm:ss.SSS} [%t] %highlight(%-5level) %logger{36}:%line - %msg%n
             </pattern>
-
+        </encoder>
+    </appender>
+    <appender name="COLLECTOR" class="gg.xp.events.slf4j.LogCollector">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                %msg
+            </pattern>
         </encoder>
     </appender>
 
-<!--    <logger name="com.mkyong" level="debug" additivity="false">-->
-<!--        <appender-ref ref="CONSOLE"/>-->
-<!--    </logger>-->
+    <!--    <logger name="com.mkyong" level="debug" additivity="false">-->
+    <!--        <appender-ref ref="CONSOLE"/>-->
+    <!--    </logger>-->
 
     <root level="debug">
         <appender-ref ref="CONSOLE"/>
+        <!--        TODO: Find a clean way to have COLLECTOR also get trace-level logs-->
+        <appender-ref ref="COLLECTOR"/>
     </root>
+    <!--    <logger name="" level="trace">-->
+    <!--        <appender-ref ref="COLLECTOR"/>-->
+    <!--    </logger>-->
 
 </configuration>

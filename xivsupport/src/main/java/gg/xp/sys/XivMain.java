@@ -1,6 +1,7 @@
 package gg.xp.sys;
 
 import gg.xp.events.AutoEventDistributor;
+import gg.xp.events.BasicEventDistributor;
 import gg.xp.events.EventMaster;
 import gg.xp.events.state.PicoStateStore;
 import gg.xp.events.state.XivState;
@@ -22,6 +23,7 @@ public final class XivMain {
 		masterInit();
 	}
 
+	// Just the required stuff, doesn't start anything
 	private static MutablePicoContainer requiredComponents() {
 		MutablePicoContainer pico = new PicoBuilder()
 				.withCaching()
@@ -39,14 +41,47 @@ public final class XivMain {
 
 	}
 
-	public static MutablePicoContainer masterNoSource() {
-
+	/**
+	 * Stripped-down configuration for unit testing. Still has auto-scanning, so you
+	 * can use this to make a reasonable integration test without needing to manually
+	 * add everything.
+	 *
+	 * @return The container
+	 */
+	public static MutablePicoContainer testingMasterInit() {
 		MutablePicoContainer pico = requiredComponents();
-		// TODO: picocontainer or something - cross-class dependencies are getting out of hand
 		pico.getComponent(EventMaster.class).start();
 		return pico;
 	}
 
+	/**
+	 * Even more stripped-down configuration for unit testing. Does NOT auto scan, giving you
+	 * more control over what gets registered.
+	 *
+	 * @return The container
+	 */
+	public static MutablePicoContainer testingMinimalInit() {
+		MutablePicoContainer pico = new PicoBuilder()
+				.withCaching()
+				.withLifecycle()
+				.withAutomatic()
+				.build();
+		pico.addComponent(BasicEventDistributor.class);
+		pico.addComponent(EventMaster.class);
+		pico.addComponent(PicoStateStore.class);
+		pico.addComponent(XivState.class);
+		pico.addComponent(PicoBasedInstanceProvider.class);
+		pico.addComponent(pico);
+
+		pico.getComponent(EventMaster.class).start();
+		return pico;
+	}
+
+	/**
+	 * The typical configuration for actual use
+	 *
+	 * @return The container
+	 */
 	public static MutablePicoContainer masterInit() {
 		log.info("Starting main program");
 		log.info("PID: {}", ProcessHandle.current().pid());

@@ -5,10 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.events.models.XivEntity;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CombatantInfo extends XivEntity {
+public class RawXivCombatantInfo extends XivEntity {
 
 	private static final long serialVersionUID = -4500158723610391407L;
 	private final int jobId;
+	private final int type;
 	private final long curHp;
 	private final long maxHp;
 	private final double posX;
@@ -16,10 +17,11 @@ public class CombatantInfo extends XivEntity {
 	private final double posZ;
 	private final double heading;
 
-	public CombatantInfo(
+	public RawXivCombatantInfo(
 			@JsonProperty("ID") long id,
 			@JsonProperty("Name") String name,
 			@JsonProperty("Job") int jobId,
+			@JsonProperty("type") int type,
 			@JsonProperty("CurrentHP") long curHp,
 			@JsonProperty("MaxHP") long maxHp,
 			@JsonProperty("PosX") double posX,
@@ -29,6 +31,7 @@ public class CombatantInfo extends XivEntity {
 	) {
 		super(id, name);
 		this.jobId = jobId;
+		this.type = type;
 		this.curHp = curHp;
 		this.maxHp = maxHp;
 		this.posX = posX;
@@ -63,5 +66,9 @@ public class CombatantInfo extends XivEntity {
 
 	public double getHeading() {
 		return heading;
+	}
+
+	public int getType() {
+		return type;
 	}
 }

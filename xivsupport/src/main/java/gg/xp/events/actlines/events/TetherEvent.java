@@ -1,26 +1,26 @@
 package gg.xp.events.actlines.events;
 
 import gg.xp.events.BaseEvent;
-import gg.xp.events.models.XivEntity;
+import gg.xp.events.models.XivCombatant;
 
 public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
 
 	private static final long serialVersionUID = 7043671273943254143L;
-	private final XivEntity source;
-	private final XivEntity target;
+	private final XivCombatant source;
+	private final XivCombatant target;
 	private final long id;
 
-	public TetherEvent(XivEntity source, XivEntity target, long id) {
+	public TetherEvent(XivCombatant source, XivCombatant target, long id) {
 		this.source = source;
 		this.target = target;
 		this.id = id;
 	}
 
-	public XivEntity getSource() {
+	public XivCombatant getSource() {
 		return source;
 	}
 
-	public XivEntity getTarget() {
+	public XivCombatant getTarget() {
 		return target;
 	}
 

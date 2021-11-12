@@ -20,8 +20,8 @@ public class Line25Parser extends AbstractACTLineParser<Line25Parser.Fields> {
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		return new EntityKilledEvent(
-				new XivEntity(fields.getHex(Fields.sourceId), fields.getString(Fields.sourceName)),
-				new XivEntity(fields.getHex(Fields.targetId), fields.getString(Fields.targetName))
+				fields.getEntity(Fields.sourceId, Fields.sourceName),
+				fields.getEntity(Fields.targetId, Fields.targetName)
 		);
 	}
 }

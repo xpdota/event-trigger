@@ -9,13 +9,13 @@ import java.util.List;
 
 public class PartyChangeEvent extends BaseEvent {
 	private static final long serialVersionUID = -9103783238842156824L;
-	private final List<XivPlayerCharacter> members;
+	private final List<RawXivPartyInfo> members;
 
-	public PartyChangeEvent(List<XivPlayerCharacter> members) {
+	public PartyChangeEvent(List<RawXivPartyInfo> members) {
 		this.members = new ArrayList<>(members);
 	}
 
-	public List<XivPlayerCharacter> getMembers() {
+	public List<RawXivPartyInfo> getMembers() {
 		return Collections.unmodifiableList(members);
 	}
 }

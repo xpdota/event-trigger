@@ -22,6 +22,7 @@ public class AutoHandler implements EventHandler<Event> {
 
 	private volatile boolean enabled = true;
 
+	@SuppressWarnings("unchecked")
 	public AutoHandler(Class<?> clazz, Method method, Object clazzInstance) {
 		this.clazz = clazz;
 		if (method == null) {
@@ -42,8 +43,7 @@ public class AutoHandler implements EventHandler<Event> {
 		}
 		this.eventClass = (Class<? extends Event>) paramTypes[1];
 		this.method = method;
-		String fullMethodLabel = method.getDeclaringClass().getSimpleName() + '.' + method.getName() + ':' + eventClass.getSimpleName();
-		this.methodLabel = fullMethodLabel;
+		this.methodLabel = method.getDeclaringClass().getSimpleName() + '.' + method.getName() + ':' + eventClass.getSimpleName();
 		this.clazzInstance = clazzInstance;
 		HandleEvents annotation = this.method.getAnnotation(HandleEvents.class);
 		if (annotation != null) {

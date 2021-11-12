@@ -4,6 +4,8 @@ import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.events.models.XivEntity;
 import gg.xp.scan.AutoHandlerScan;
 import gg.xp.speech.TtsCall;
+import gg.xp.sys.XivMain;
+import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
 import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
@@ -14,7 +16,8 @@ import java.util.stream.Collectors;
 public class ScanTest {
 	@Test
 	public void testAutoScan() {
-		EventDistributor dist = AutoHandlerScan.create();
+		MutablePicoContainer pico = XivMain.testingMasterInit();
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 		// Send events

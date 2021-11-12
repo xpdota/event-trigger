@@ -21,8 +21,8 @@ public class Line35Parser extends AbstractACTLineParser<Line35Parser.Fields> {
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		// TODO: handle obfuscated headmarks - I believe these are zone-specific
 		return new TetherEvent(
-				new XivEntity(fields.getHex(Fields.sourceId), fields.getString(Fields.sourceName)),
-				new XivEntity(fields.getHex(Fields.targetId), fields.getString(Fields.targetName)),
+				fields.getEntity(Fields.sourceId, Fields.sourceName),
+				fields.getEntity(Fields.targetId, Fields.targetName),
 				fields.getHex(Fields.markerId)
 		);
 	}

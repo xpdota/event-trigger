@@ -21,8 +21,8 @@ public class Line23Parser extends AbstractACTLineParser<Line23Parser.Fields> {
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		return new AbilityCastCancel(
-				new XivEntity(fields.getHex(Fields.casterId), fields.getString(Fields.casterName)),
-				new XivAbility(fields.getHex(Fields.abilityId), fields.getString(Fields.abilityName)),
+				fields.getEntity(Fields.casterId, Fields.casterName),
+				fields.getAbility(Fields.abilityId, Fields.abilityName),
 				fields.getString(Fields.reason)
 		);
 	}

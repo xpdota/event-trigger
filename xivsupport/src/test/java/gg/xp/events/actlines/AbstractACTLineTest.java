@@ -3,8 +3,11 @@ package gg.xp.events.actlines;
 import gg.xp.events.ACTLogLineEvent;
 import gg.xp.events.Event;
 import gg.xp.events.EventDistributor;
+import gg.xp.events.EventQueue;
 import gg.xp.events.TestEventCollector;
 import gg.xp.scan.AutoHandlerScan;
+import gg.xp.sys.XivMain;
+import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -23,10 +26,10 @@ public class AbstractACTLineTest<X extends Event> {
 	}
 
 	private TestEventCollector submitLine(String line) {
-		final EventDistributor dist;
-		final TestEventCollector coll;
-		dist = AutoHandlerScan.create();
-		coll = new TestEventCollector();
+		// TODO: really need a way to assert there were no background errors in tests
+		MutablePicoContainer container = XivMain.testingMasterInit();
+		TestEventCollector coll = new TestEventCollector();
+		EventDistributor dist = container.getComponent(EventDistributor.class);
 		dist.registerHandler(coll);
 		ACTLogLineEvent event = new ACTLogLineEvent(line);
 		dist.acceptEvent(event);

@@ -1,11 +1,10 @@
 package gg.xp.events.state;
 
 import gg.xp.context.SubState;
-import gg.xp.events.Event;
-import gg.xp.events.EventDistributor;
 import gg.xp.events.EventMaster;
 import gg.xp.events.actlines.data.Job;
 import gg.xp.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.events.models.XivCombatant;
 import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.models.XivWorld;
@@ -32,8 +31,10 @@ public class XivState implements SubState {
 	private XivEntity playerPartial;
 	// FULL player info after we get the stuff we need
 	private XivPlayerCharacter player;
-	private @NotNull List<XivPlayerCharacter> partyList = Collections.emptyList();
-	private @NotNull Map<Long, CombatantInfo> combatants = Collections.emptyMap();
+	private @NotNull List<RawXivPartyInfo> partyListRaw = Collections.emptyList();
+	private final @NotNull List<XivPlayerCharacter> partyListProcessed = new ArrayList<>();
+	private @NotNull Map<Long, RawXivCombatantInfo> combatantsRaw = Collections.emptyMap();
+	private final @NotNull Map<Long, XivCombatant> combatantsProcessed = new HashMap<>();
 
 	@SuppressWarnings("unused")
 	@Deprecated
@@ -48,7 +49,7 @@ public class XivState implements SubState {
 	}
 
 	// Note: can be null until we have all the required data, but this should only happen very early on in init
-	public XivEntity getPlayer() {
+	public XivPlayerCharacter getPlayer() {
 		return player;
 	}
 
@@ -68,14 +69,14 @@ public class XivState implements SubState {
 		this.zone = zone;
 	}
 
-	public void setPartyList(List<XivPlayerCharacter> partyList) {
-		this.partyList = new ArrayList<>(partyList);
+	public void setPartyList(List<RawXivPartyInfo> partyList) {
+		this.partyListRaw = new ArrayList<>(partyList);
 		recalcState();
-		log.info("Party list changed to {}", this.partyList.stream().map(XivEntity::getName).collect(Collectors.joining(", ")));
+		log.info("Party list changed to {}", this.partyListProcessed.stream().map(XivEntity::getName).collect(Collectors.joining(", ")));
 	}
 
 	public List<XivPlayerCharacter> getPartyList() {
-		return new ArrayList<>(partyList);
+		return new ArrayList<>(partyListProcessed);
 	}
 
 	// TODO: concurrency issues?
@@ -85,30 +86,76 @@ public class XivState implements SubState {
 			return;
 		}
 		long playerId = playerPartial.getId();
-		CombatantInfo combatantInfo = combatants.get(playerId);
-		if (combatantInfo != null) {
-			player = new XivPlayerCharacter(
-					combatantInfo.getId(),
-					combatantInfo.getName(),
-					Job.getById(combatantInfo.getJobId()),
-					// TODO
-					new XivWorld(),
-					// TODO
-					0);
+		{
+			RawXivCombatantInfo playerCombatantInfo = combatantsRaw.get(playerId);
+			if (playerCombatantInfo != null) {
+				player = new XivPlayerCharacter(
+						playerCombatantInfo.getId(),
+						playerCombatantInfo.getName(),
+						Job.getById(playerCombatantInfo.getJobId()),
+						// TODO
+						new XivWorld(),
+						// TODO
+						0,
+						true);
+			}
 		}
-		if (player != null) {
-			partyList.sort(Comparator.comparing(p -> {
-				if (player.getId() == p.getId()) {
-					// Always sort main player first
-					return -1;
-				}
-				else {
-					// TODO: customizable party sorting
-					return p.getJob().partySortOrder();
-				}
-			}));
-		}
-		log.info("Recalculated state, player is {}, party is {}", player, partyList);
+		combatantsProcessed.clear();
+		combatantsRaw.forEach((unused, combatant) -> {
+			long id = combatant.getId();
+			int jobId = combatant.getJobId();
+			XivCombatant value;
+			if (jobId == 0) {
+				value = new XivCombatant(
+						id,
+						combatant.getName(),
+						false,
+						false
+				);
+			}
+			else {
+				value = new XivPlayerCharacter(
+						id,
+						combatant.getName(),
+						Job.getById(jobId),
+						// TODO
+						new XivWorld(),
+						// TODO
+						0,
+						false);
+			}
+			combatantsProcessed.put(id, value);
+		});
+		// lazy but works
+		combatantsProcessed.put(playerId, player);
+		partyListProcessed.clear();
+		partyListRaw.forEach(rawPartyMember -> {
+			long id = rawPartyMember.getId();
+			XivCombatant fullCombatant = combatantsProcessed.get(id);
+			if (fullCombatant instanceof XivPlayerCharacter) {
+				partyListProcessed.add((XivPlayerCharacter) fullCombatant);
+			}
+			else {
+				partyListProcessed.add(new XivPlayerCharacter(
+						rawPartyMember.getId(),
+						rawPartyMember.getName(),
+						Job.getById(rawPartyMember.getJobId()),
+						new XivWorld(rawPartyMember.getWorldId()),
+						0, // TODO
+						false));
+			}
+		});
+		partyListProcessed.sort(Comparator.comparing(p -> {
+			if (player != null && player.getId() == p.getId()) {
+				// Always sort main player first
+				return -1;
+			}
+			else {
+				// TODO: customizable party sorting
+				return p.getJob().partySortOrder();
+			}
+		}));
+		log.info("Recalculated state, player is {}, party is {}", player, partyListProcessed);
 		// TODO: improve this
 		if (master != null) {
 			master.getQueue().push(new XivStateRecalculatedEvent());
@@ -120,15 +167,15 @@ public class XivState implements SubState {
 		return zone != null && zone.getId() == zoneId;
 	}
 
-	public void setCombatants(List<CombatantInfo> combatants) {
-		this.combatants = new HashMap<>(combatants.size());
+	public void setCombatants(List<RawXivCombatantInfo> combatants) {
+		this.combatantsRaw = new HashMap<>(combatants.size());
 		combatants.forEach(combatant -> {
 			long id = combatant.getId();
 			// Fake/environment actors
 			if (id == 0xE0000000L) {
 				return;
 			}
-			CombatantInfo old = this.combatants.put(id, combatant);
+			RawXivCombatantInfo old = this.combatantsRaw.put(id, combatant);
 			if (old != null) {
 				log.warn("Duplicate combatant data for id {}: old ({}) vs new ({})", id, old, combatant);
 			}
@@ -137,7 +184,7 @@ public class XivState implements SubState {
 		recalcState();
 	}
 
-	public Map<Long, CombatantInfo> getCombatants() {
-		return Collections.unmodifiableMap(combatants);
+	public Map<Long, XivCombatant> getCombatants() {
+		return Collections.unmodifiableMap(combatantsProcessed);
 	}
 }

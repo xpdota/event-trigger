@@ -24,7 +24,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		bar.addAdjustmentListener(event -> SwingUtilities.invokeLater(() -> {
 			int newMax = bar.getMaximum();
 			int newValue = bar.getValue();
-			if (newMax > oldMax) {
+			if (newMax != oldMax) {
 				doScrollIfEnabled();
 			}
 			else {
