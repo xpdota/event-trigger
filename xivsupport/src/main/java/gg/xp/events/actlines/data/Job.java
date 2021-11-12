@@ -102,6 +102,10 @@ public enum Job {
 
 	public static Job getById(int id) {
 		// This will work as long as they stay in order and contiguous
+		if (id > values().length) {
+			log.error("There is no job with ID {}, using ADV instead", id);
+			return ADV;
+		}
 		return values()[id];
 	}
 
