@@ -4,7 +4,7 @@ import gg.xp.events.BaseEvent;
 import gg.xp.events.models.XivCombatant;
 import gg.xp.events.models.XivStatusEffect;
 
-public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTargetEntity {
+public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect {
 	private static final long serialVersionUID = -5438212467951183512L;
 	private final XivStatusEffect buff;
 	private final double duration;
@@ -20,6 +20,7 @@ public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTarget
 		this.stacks = stacks;
 	}
 
+	@Override
 	public XivStatusEffect getBuff() {
 		return buff;
 	}

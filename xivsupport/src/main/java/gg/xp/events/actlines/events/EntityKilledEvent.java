@@ -13,10 +13,18 @@ public class EntityKilledEvent extends BaseEvent implements HasSourceEntity, Has
 		this.target = target;
 	}
 
+	/**
+	 * @return The killer
+	 */
+	@Override
 	public XivCombatant getSource() {
 		return source;
 	}
 
+	/**
+	 * @return The killed entity
+	 */
+	@Override
 	public XivCombatant getTarget() {
 		return target;
 	}

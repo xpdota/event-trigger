@@ -6,7 +6,7 @@ import gg.xp.events.models.XivStatusEffect;
 
 // TODO: track new application vs refresh
 // Note that stacks decreasing (e.g. Embolden) still counts as "Application".
-public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTargetEntity {
+public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect {
 	private static final long serialVersionUID = -3698392943125561045L;
 	private final XivStatusEffect buff;
 	private final double duration;
@@ -22,6 +22,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		this.stacks = stacks;
 	}
 
+	@Override
 	public XivStatusEffect getBuff() {
 		return buff;
 	}

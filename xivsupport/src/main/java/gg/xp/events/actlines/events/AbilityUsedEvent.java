@@ -4,7 +4,7 @@ import gg.xp.events.BaseEvent;
 import gg.xp.events.models.XivAbility;
 import gg.xp.events.models.XivCombatant;
 
-public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
+public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility {
 
 	private static final long serialVersionUID = -4539070760062288496L;
 	private final XivAbility ability;

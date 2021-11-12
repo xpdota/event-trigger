@@ -1,8 +1,10 @@
 package gg.xp.events.models;
 
+import gg.xp.events.actlines.events.NameIdPair;
+
 import java.io.Serializable;
 
-public class XivEntity implements Serializable {
+public class XivEntity implements Serializable , NameIdPair {
 
 	private static final long serialVersionUID = 1282314870448740356L;
 	// IMPORTANT: Annoyingly, these all must be 'long' instead of 'int' because the game treats them as

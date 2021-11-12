@@ -74,6 +74,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		JCheckBox stayAtBottom = new JCheckBox("Scroll to Bottom");
 		AutoBottomScrollHelper scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
 		stayAtBottom.addItemListener(e -> scroller.setAutoScrollEnabled(stayAtBottom.isSelected()));
+		stayAtBottom.setSelected(true);
 
 		// Top panel
 		JPanel topPanel = new JPanel();
@@ -92,8 +93,9 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		// Split pane
 		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
 		add(splitPane);
-		SwingUtilities.invokeLater(() -> splitPane.setDividerLocation(0.7));
 		SwingUtilities.invokeLater(() -> {
+			splitPane.setDividerLocation(0.7);
+			splitPane.setResizeWeight(1);
 			updateData();
 			mainModel.refresh();
 		});

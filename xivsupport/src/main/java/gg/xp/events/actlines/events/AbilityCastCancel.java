@@ -5,7 +5,7 @@ import gg.xp.events.models.XivAbility;
 import gg.xp.events.models.XivCombatant;
 import gg.xp.events.models.XivCombatant;
 
-public class AbilityCastCancel extends BaseEvent implements HasSourceEntity {
+public class AbilityCastCancel extends BaseEvent implements HasSourceEntity, HasAbility {
 
 	private static final long serialVersionUID = -5704173639583049362L;
 	private final XivCombatant source;

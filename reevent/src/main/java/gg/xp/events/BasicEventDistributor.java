@@ -5,6 +5,7 @@ import gg.xp.scan.AutoHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -62,6 +63,7 @@ public class BasicEventDistributor implements EventDistributor {
 				return;
 			}
 			final Event current = next;
+			current.setPumpedAt(Instant.now());
 			// TODO: this doesn't work, because handlers filter it themselves
 			if (handlers.isEmpty()) {
 				log.warn("No handlers for event {}!", event);
@@ -86,6 +88,7 @@ public class BasicEventDistributor implements EventDistributor {
 									}
 									else {
 										e.setParent(current);
+										e.setEnqueuedAt(Instant.now());
 										log.trace("Event {} triggered new event {}", current, e);
 										eventsForImmediateProcessing.add(e);
 									}

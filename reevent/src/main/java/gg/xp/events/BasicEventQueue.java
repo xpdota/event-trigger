@@ -4,6 +4,7 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -55,6 +56,7 @@ public class BasicEventQueue implements EventQueue {
 		long runAt = event.delayedEnqueueAt();
 		if (runAt == 0 || runAt <= System.currentTimeMillis()) {
 			synchronized (queueLock) {
+				event.setEnqueuedAt(Instant.now());
 				backingQueue.add(new Tracker(event));
 				queueLock.notifyAll();
 			}

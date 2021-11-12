@@ -29,6 +29,7 @@ public class EventTypeFilter implements VisualFilter<Event> {
 		PRIMO("Primo", e -> e.getParent() == null),
 		SYNTH("Synthetic",  e -> e.getParent() != null);
 
+		// TODO
 		private final String name;
 		private final Predicate<Event> pred;
 

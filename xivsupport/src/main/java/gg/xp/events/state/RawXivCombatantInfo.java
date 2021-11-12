@@ -71,4 +71,20 @@ public class RawXivCombatantInfo extends XivEntity {
 	public int getType() {
 		return type;
 	}
+
+	@Override
+	public String toString() {
+		return "RawXivCombatantInfo{" +
+				"id=" + getId() +
+				", name=" + getName() +
+				", jobId=" + jobId +
+				", type=" + type +
+				", curHp=" + curHp +
+				", maxHp=" + maxHp +
+				", posX=" + posX +
+				", posY=" + posY +
+				", posZ=" + posZ +
+				", heading=" + heading +
+				'}';
+	}
 }

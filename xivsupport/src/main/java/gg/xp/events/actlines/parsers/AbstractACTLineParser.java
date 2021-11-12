@@ -64,6 +64,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
 			}
 			if (outgoingEvent != null) {
+				outgoingEvent.setHappenedAt(zdt.toInstant());
 				context.accept(outgoingEvent);
 			}
 		}

@@ -6,24 +6,28 @@ import gg.xp.events.AutoEventDistributor;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.EventMaster;
+import gg.xp.events.actlines.events.HasAbility;
 import gg.xp.events.actlines.events.HasSourceEntity;
+import gg.xp.events.actlines.events.HasStatusEffect;
 import gg.xp.events.actlines.events.HasTargetEntity;
 import gg.xp.events.actlines.events.XivStateChange;
 import gg.xp.events.misc.RawEventStorage;
 import gg.xp.events.misc.Stats;
-import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.models.XivZone;
 import gg.xp.events.slf4j.LogCollector;
 import gg.xp.events.slf4j.LogEvent;
-import gg.xp.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.events.state.XivState;
 import gg.xp.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.events.ws.WsState;
 import gg.xp.gui.tables.CustomColumn;
 import gg.xp.gui.tables.TableWithFilterAndDetails;
+import gg.xp.gui.tables.filters.EventAbilityOrBuffFilter;
+import gg.xp.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.gui.tables.filters.EventEntityFilter;
 import gg.xp.gui.tables.filters.EventTypeFilter;
+import gg.xp.gui.tables.filters.LogLevelVisualFilter;
+import gg.xp.gui.tables.filters.SystemEventFilter;
 import gg.xp.gui.tree.TopologyTreeEditor;
 import gg.xp.gui.tree.TopologyTreeModel;
 import gg.xp.gui.tree.TopologyTreeRenderer;
@@ -36,6 +40,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,7 +70,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
 			JTabbedPane tabPane = new JTabbedPane();
-			frame.setSize(800, 600);
+			frame.setSize(960, 720);
 			frame.setVisible(true);
 			JPanel mainPanel = new SystemTabPanel();
 			Component scrollPanel = new JScrollPane(mainPanel);
@@ -136,94 +142,86 @@ public class GuiMain {
 
 	;
 
-	private class XivStateStatus extends TitleBorderFullsizePanel implements Refreshable {
+	private class XivStateStatus extends JPanel implements Refreshable {
 
 		private final List<Refreshable> displayed = new ArrayList<>();
+		private final XivPlayerTableModel partyTableModel;
 
 		public XivStateStatus() {
-			super("Xiv Status");
+//			super("Xiv Status");
 
-			setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+//			setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+			setLayout(new GridLayout(1, 2));
+
+//			JLabel dummyLabelForWidthPurposes = new JLabel();
+//			dummyLabelForWidthPurposes.setMinimumSize(new Dimension(200, 1));
+//			Dimension preferredSize = dummyLabelForWidthPurposes.getPreferredSize();
+//			dummyLabelForWidthPurposes.setPreferredSize(new Dimension(200, preferredSize.height));
 
 			KeyValueDisplaySet leftItems = new KeyValueDisplaySet(List.of(
 					new KeyValuePairDisplay<>(
 							"Player Name",
-							new JTextArea(1, 15),
+							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
 								return player == null ? "null" : player.getName();
 							},
-							JTextArea::setText
+							JLabel::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Zone Name",
-							new JTextArea(1, 15),
+							new JLabel(),
 							() -> {
 								XivZone zone = state.get(XivState.class).getZone();
 								return zone == null ? "null" : zone.getName();
 							},
-							JTextArea::setText
+							JLabel::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Player Job",
-							new JTextArea(1, 15),
+							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
 								return player == null ? "null" : player.getJob().getFriendlyName();
 							},
-							JTextArea::setText
+							JLabel::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Player Level",
-							new JTextArea(1, 15),
+							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
 								return player == null ? "null" : Integer.toString(player.getLevel());
 							},
-							JTextArea::setText
+							JLabel::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Player World",
-							new JTextArea(1, 15),
+							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
 								return player == null ? "null" : player.getWorld().toString();
 							},
-							JTextArea::setText
+							JLabel::setText
 					)
 			));
 			displayed.add(leftItems);
-			add(leftItems);
+			add(new TitleBorderFullsizePanel("Player Status", leftItems));
 
-			JPanel right = new JPanel();
-			right.setLayout(new BoxLayout(right, BoxLayout.PAGE_AXIS));
+			JPanel right = new TitleBorderFullsizePanel("Party Status");
 			JTable partyMembersTable = new JTable(8, 3);
-//			partyMembersTable.setPreferredSize(new Dimension(300, 300));
-			XivPlayerTableModel dataModel = new XivPlayerTableModel();
-			partyMembersTable.setModel(dataModel);
-			right.setLayout(new BoxLayout(right, BoxLayout.PAGE_AXIS));
+			partyTableModel = new XivPlayerTableModel();
+			partyMembersTable.setModel(partyTableModel);
+			right.setLayout(new BorderLayout());
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
-			KeyValuePairDisplay<JScrollPane, List<XivPlayerCharacter>> tableHolder = new KeyValuePairDisplay<>(
-					"Party Members",
-					scrollPane,
-					() -> state.get(XivState.class).getPartyList(),
-					(ignored, v) -> dataModel.setData(v)
-			);
-//			scrollPane.setMinimumSize(new Dimension(400, 400));
-
-			setMinimumSize(new Dimension(400, 400));
-			right.add(new WrapperPanel(tableHolder.getLabel()));
-			right.add((tableHolder.getComponent()));
-			// TODO
-//			displayed.add(tableHolder);
+			right.add(scrollPane);
 			add(right);
-
-
 			refresh();
 		}
 
 		public void refresh() {
 			displayed.forEach(Refreshable::refresh);
+			partyTableModel.setData(state.get(XivState.class).getPartyList());
 		}
 	}
 
@@ -309,22 +307,42 @@ public class GuiMain {
 										.collect(Collectors.toList());
 							}
 						})
+				.addMainColumn(new CustomColumn<>("Time", event -> {
+					return event.getHappenedAt()
+							.atZone(ZoneId.systemDefault())
+							.format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
+//					return DateTimeFormatter.ISO_TIME.format(event.getHappenedAt());
+////					return event.getHappenedAt();
+				}))
 				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource().getName() : null))
 				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget().getName() : null))
-				// TODO: action/effect column that shows buff or
+				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> {
+					if (e instanceof HasAbility) {
+						return ((HasAbility) e).getAbility().getName();
+					}
+					if (e instanceof HasStatusEffect) {
+						return ((HasStatusEffect) e).getBuff().getName();
+					}
+					return null;
+				}))
 				.addMainColumn(new CustomColumn<>("Parent", e -> {
 					Event parent = e.getParent();
 					return parent == null ? null : parent.getClass().getSimpleName();
 				}))
+				// TODO: is this column useful?
 				.addMainColumn(new CustomColumn<>("toString", Object::toString))
 				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
 				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
 				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				// TODO: time range
 				.addFilter(EventTypeFilter::new)
+				.addFilter(SystemEventFilter::new)
+				.addFilter(EventClassFilterFilter::new)
 				.addFilter(EventEntityFilter::sourceFilter)
 				.addFilter(EventEntityFilter::targetFilter)
+				.addFilter(EventAbilityOrBuffFilter::new)
 				.build();
 	}
 
@@ -388,7 +406,11 @@ public class GuiMain {
 
 
 	private static void installCustomEventQueue() {
-		EventQueue queue = Toolkit.getDefaultToolkit().getSystemEventQueue();
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		if (toolkit.isDynamicLayoutActive()) {
+			toolkit.setDynamicLayout(true);
+		}
+		EventQueue queue = toolkit.getSystemEventQueue();
 		queue.push(new EventQueue() {
 			@Override
 			protected void dispatchEvent(AWTEvent event) {

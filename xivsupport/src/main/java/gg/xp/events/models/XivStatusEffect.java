@@ -1,8 +1,10 @@
 package gg.xp.events.models;
 
+import gg.xp.events.actlines.events.NameIdPair;
+
 import java.io.Serializable;
 
-public class XivStatusEffect implements Serializable {
+public class XivStatusEffect implements Serializable, NameIdPair {
 	private static final long serialVersionUID = -408717295208496811L;
 	private final long id;
 	private final String name;

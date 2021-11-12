@@ -29,8 +29,10 @@ public class KeyValuePairDisplay<C extends Component, D> extends JPanel implemen
 		guiUpdater.accept(component, newData);
 	}
 
-	public C getComponent() {
-		return component;
+	public JPanel getComponent() {
+		JPanel panel = new JPanel();
+		panel.add(component);
+		return panel;
 	}
 
 	public JLabel getLabel() {

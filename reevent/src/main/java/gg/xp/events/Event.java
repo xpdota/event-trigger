@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -40,4 +41,16 @@ public interface Event extends Serializable {
 	default Map<Field, Object> dumpFields() {
 		return Utils.dumpAllFields(this);
 	}
+
+	Instant getHappenedAt();
+
+	void setHappenedAt(Instant happenedAt);
+
+	Instant getEnqueuedAt();
+
+	void setEnqueuedAt(Instant enqueuedAt);
+
+	Instant getPumpedAt();
+
+	void setPumpedAt(Instant pumpedAt);
 }

@@ -26,8 +26,8 @@ public class EventEntityFilter<X> implements VisualFilter<Event> {
 	private static final String ALL = "All (Including None)";
 	private static final String ANY = "Any (Excluding None)";
 	private static final String PLAYERS = "Players";
-	private static final String NPCS = "NPC";
-	private static final String SELF = "Self (Not Supported Yet)";
+	private static final String NPCS = "NPCs";
+	private static final String SELF = "Self";
 	private static final String ENVIRONMENT = "Environment";
 	private static final String NONE = "None (Non-Targeted Event)";
 
@@ -47,6 +47,8 @@ public class EventEntityFilter<X> implements VisualFilter<Event> {
 		comboBox.addItem(ALL);
 		comboBox.addItem(ANY);
 		comboBox.addItem(SELF);
+		comboBox.addItem(PLAYERS);
+		comboBox.addItem(NPCS);
 		comboBox.addItem(ENVIRONMENT);
 		comboBox.addItem(NONE);
 //		comboBox.addActionListener(event -> {
@@ -54,9 +56,9 @@ public class EventEntityFilter<X> implements VisualFilter<Event> {
 //
 //		});
 		comboBox.addItemListener(event -> {
-			filterUpdatedCallback.run();
 			log.info("Combo Box Event: {}", event);
 			selectedItem = (String) comboBox.getSelectedItem();
+			filterUpdatedCallback.run();
 		});
 		selectedItem = (String) comboBox.getSelectedItem();
 
@@ -88,20 +90,23 @@ public class EventEntityFilter<X> implements VisualFilter<Event> {
 				}
 				return false;
 			case SELF:
-				// TODO: need to inject stuff into here
+				if (expectedClass.isInstance(item)) {
+					return entityGetter.apply((X) item).isThePlayer();
+				}
 				return false;
 			default:
 				if (expectedClass.isInstance(item)) {
 					XivCombatant source = entityGetter.apply((X) item);
 					// TODO: regex
 					// Treat as hex
-					if (selectedItem.startsWith("0x")) {
-						String wantedId = selectedItem.substring(2);
-						String actualId = Long.toString(source.getId(), 16);
-						return wantedId.equalsIgnoreCase(actualId);
-					}
-					// Treat as partial match
-					return source.getName().toUpperCase(Locale.ROOT).contains(selectedItem.toUpperCase());
+					return source.matchesFilter(selectedItem);
+//					if (selectedItem.startsWith("0x")) {
+//						String wantedId = selectedItem.substring(2);
+//						String actualId = Long.toString(source.getId(), 16);
+//						return wantedId.equalsIgnoreCase(actualId);
+//					}
+//					// Treat as partial match
+//					return source.getName().toUpperCase(Locale.ROOT).contains(selectedItem.toUpperCase());
 				}
 				return false;
 		}

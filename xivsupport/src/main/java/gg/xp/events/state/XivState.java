@@ -105,15 +105,7 @@ public class XivState implements SubState {
 			long id = combatant.getId();
 			int jobId = combatant.getJobId();
 			XivCombatant value;
-			if (jobId == 0) {
-				value = new XivCombatant(
-						id,
-						combatant.getName(),
-						false,
-						false
-				);
-			}
-			else {
+			if (combatant.getType() == 1) {
 				value = new XivPlayerCharacter(
 						id,
 						combatant.getName(),
@@ -123,6 +115,14 @@ public class XivState implements SubState {
 						// TODO
 						0,
 						false);
+			}
+			else {
+				value = new XivCombatant(
+						id,
+						combatant.getName(),
+						false,
+						false
+				);
 			}
 			combatantsProcessed.put(id, value);
 		});

@@ -21,6 +21,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		// TODO: when changing the filter so that less stuff shows up, it disables auto scroll
 		setPreferredSize(getMaximumSize());
 		JScrollBar bar = getVerticalScrollBar();
+		setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		bar.addAdjustmentListener(event -> SwingUtilities.invokeLater(() -> {
 			int newMax = bar.getMaximum();
 			int newValue = bar.getValue();
