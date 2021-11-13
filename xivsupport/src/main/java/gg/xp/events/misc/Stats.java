@@ -13,6 +13,7 @@ import java.lang.management.MemoryMXBean;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
+@SuppressWarnings("ALL")
 public class Stats { // :eldercat:
 
 	private static final Logger log = LoggerFactory.getLogger(Stats.class);

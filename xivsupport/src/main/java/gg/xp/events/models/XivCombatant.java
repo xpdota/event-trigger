@@ -115,4 +115,8 @@ public class XivCombatant extends XivEntity {
 	public long getOwnerId() {
 		return ownerId;
 	}
+
+	public boolean isFake() {
+		return false;
+	}
 }

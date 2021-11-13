@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -34,7 +36,8 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			List<CustomColumn<X>> mainColumns,
 			List<CustomColumn<D>> detailsColumns,
 			Function<X, List<D>> detailsConverter,
-			List<Function<Runnable, VisualFilter<X>>> filterCreators
+			List<Function<Runnable, VisualFilter<X>>> filterCreators,
+			BiPredicate<X, X> selectionEquivalence
 	) {
 		super(title);
 		// TODO: add count of events
@@ -49,6 +52,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 		CustomTableModel.CustomTableModelBuilder<X> mainBuilder = CustomTableModel.builder(this::getFilteredData);
 		mainColumns.forEach(mainBuilder::addColumn);
+		mainBuilder.setSelectionEquivalence(selectionEquivalence);
 		mainModel = mainBuilder.build();
 
 
@@ -147,6 +151,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		private final List<CustomColumn<D>> detailsColumns = new ArrayList<>();
 		private final Function<X, List<D>> detailsConverter;
 		private final List<Function<Runnable, VisualFilter<X>>> filters = new ArrayList<>();
+		private BiPredicate<X, X> selectionEquivalence = Objects::equals;
 
 
 		private TableWithFilterAndDetailsBuilder(String title, Supplier<List<X>> dataGetter, Function<X, List<D>> detailsConverter) {
@@ -170,9 +175,13 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			return this;
 		}
 
+		public TableWithFilterAndDetailsBuilder<X, D> setSelectionEquivalence(BiPredicate<X, X> selectionEquivalence) {
+			this.selectionEquivalence = selectionEquivalence;
+			return this;
+		}
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters);
+			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, selectionEquivalence);
 		}
 	}
 

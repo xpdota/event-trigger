@@ -127,7 +127,7 @@ public class ActWsLogSource implements EventSource {
 	public void getCombatants(EventContext<Event> context, RefreshCombatantsRequest event) {
 
 		try {
-			client.send(mapper.writeValueAsString(Map.ofEntries(Map.entry("call", "getCombatants"), Map.entry("rseq", rseqCounter.getAndIncrement()))));
+			client.send(mapper.writeValueAsString(Map.ofEntries(Map.entry("call", "getCombatants"), Map.entry("rseq", rseqCounter.get()))));
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException(e);

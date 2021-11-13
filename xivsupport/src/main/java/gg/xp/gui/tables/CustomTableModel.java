@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -19,6 +21,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	public static class CustomTableModelBuilder<B> {
 		private final Supplier<List<B>> dataGetter;
 		private final List<CustomColumn<B>> columns = new ArrayList<>();
+		private BiPredicate<B, B> selectionEquivalence = Objects::equals;
 
 		private CustomTableModelBuilder(Supplier<List<B>> dataGetter) {
 			this.dataGetter = dataGetter;
@@ -30,7 +33,12 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		}
 
 		public CustomTableModel<B> build() {
-			return new CustomTableModel<>(dataGetter, columns);
+			return new CustomTableModel<>(dataGetter, columns, selectionEquivalence);
+		}
+
+		public CustomTableModelBuilder<B> setSelectionEquivalence(BiPredicate<B, B> selectionEquivalence) {
+			this.selectionEquivalence = selectionEquivalence;
+			return this;
 		}
 	}
 
@@ -42,11 +50,13 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	private final Supplier<List<X>> dataGetter;
 	private final List<CustomColumn<X>> columns;
 	private List<X> data = Collections.emptyList();
+	private final BiPredicate<X, X> selectionEquivalence;
 
-	// TODO: will this keep selection?
-	public CustomTableModel(Supplier<List<X>> dataGetter, List<CustomColumn<X>> columns) {
+
+	private CustomTableModel(Supplier<List<X>> dataGetter, List<CustomColumn<X>> columns, BiPredicate<X, X> selectionEquivalence) {
 		this.dataGetter = dataGetter;
 		this.columns = columns;
+		this.selectionEquivalence = selectionEquivalence;
 		refresh();
 	}
 
@@ -68,6 +78,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			// fast path for typical case where data is only appended
 			// in such cases, the selected element would be in the same index, so guess that
 			// first, and fall back to the slow path if our guess was wrong
+			// TODO: this doesn't work for combatants since we replace them completely
 			if (oldSelections.size() == 1) {
 				X theItem = oldSelections.get(0);
 				int theIndex = oldSelectionIndices[0];
@@ -76,10 +87,15 @@ public class CustomTableModel<X> extends AbstractTableModel {
 					return;
 				}
 			}
-			oldSelections.stream()
-					.mapToInt(o -> data.indexOf(o))
-					.filter(i -> i != -1)
-					.forEach(i -> selectionModel.addSelectionInterval(i, i));
+			for (X oldItem : oldSelections) {
+				for (int i = 0; i < data.size(); i++) {
+					X newItem = data.get(i);
+					if (selectionEquivalence.test(oldItem, newItem)) {
+						selectionModel.addSelectionInterval(i, i);
+						break;
+					}
+				}
+			}
 		}
 //
 //

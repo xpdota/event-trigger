@@ -7,18 +7,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.events.ACTLogLineEvent;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
-import gg.xp.events.actlines.data.Job;
+import gg.xp.events.EventMaster;
 import gg.xp.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.events.actlines.events.WipeEvent;
 import gg.xp.events.actlines.events.ZoneChangeEvent;
 import gg.xp.events.models.XivEntity;
-import gg.xp.events.models.XivPlayerCharacter;
-import gg.xp.events.models.XivWorld;
 import gg.xp.events.models.XivZone;
-import gg.xp.events.state.RawXivCombatantInfo;
 import gg.xp.events.state.CombatantsUpdateRaw;
 import gg.xp.events.state.PartyChangeEvent;
+import gg.xp.events.state.RawXivCombatantInfo;
 import gg.xp.events.state.RawXivPartyInfo;
+import gg.xp.events.state.RefreshCombatantsRequest;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,15 +30,40 @@ public class ActWsHandlers {
 	private static final Logger log = LoggerFactory.getLogger(ActWsHandlers.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 
+	public ActWsHandlers(EventMaster master) {
+		new Thread(() -> {
+			while (true) {
+				try {
+					Thread.sleep(1000);
+					master.pushEvent(new RefreshCombatantsRequest());
+				} catch (Throwable t) {
+					log.error("Error", t);
+				}
+			}
+		}).start();
+	}
+
+	// Memory saving hacks
+	private String lastRawMsg;
+	private JsonNode lastJson;
+
 	@HandleEvents(order = -100)
-	public static void actWsRawToJson(EventContext<Event> context, ActWsRawMsg rawMsg) {
+	public void actWsRawToJson(EventContext<Event> context, ActWsRawMsg rawMsg) {
 		JsonNode jsonNode;
-		try {
-			jsonNode = mapper.readTree(rawMsg.getRawMsgData());
+		String raw = rawMsg.getRawMsgData();
+		if (raw.equals(lastRawMsg)) {
+			jsonNode = lastJson;
 		}
-		catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
+		else {
+			try {
+				jsonNode = mapper.readTree(raw);
+				lastJson = jsonNode;
+			}
+			catch (JsonProcessingException e) {
+				throw new RuntimeException(e);
+			}
 		}
+		lastRawMsg = raw;
 		// Two types of messages - subscriptions, and responses to explicit requests.
 		// Subscribed messages have a 'type' field that lets us know what it is.
 		// Responses instead have an 'rseq' field that lets us match up the response to the request.
@@ -67,7 +91,8 @@ public class ActWsHandlers {
 		String type;
 		if (typeNode.isTextual()) {
 			type = typeNode.textValue();
-		} else {
+		}
+		else {
 			type = null;
 		}
 		ActWsJsonMsg actWsJsonMsg = new ActWsJsonMsg(type, jsonNode);

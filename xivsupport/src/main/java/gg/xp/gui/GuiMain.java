@@ -82,14 +82,14 @@ public class GuiMain {
 			Component scrollPanel = new JScrollPane(mainPanel);
 			tabPane.addTab("System", scrollPanel);
 //			tabPane.addTab("System", mainPanel);
-			JPanel stats = new StatsPanel();
 			// TODO: move this to a panel in first page
-			tabPane.addTab("Stats", stats);
 			tabPane.addTab("Plugins", new PluginTopologyPanel());
 			tabPane.addTab("Combatants", getCombatantsPanel());
 			tabPane.addTab("Events", getEventsPanel());
 			tabPane.addTab("ACT Log", getActLogPanel());
 			tabPane.addTab("System Log", getSystemLogPanel());
+			JPanel stats = new StatsPanel();
+			tabPane.addTab("Stats", stats);
 			tabPane.addTab("Import/Export", new JPanel());
 			frame.add(tabPane);
 		});
@@ -124,21 +124,7 @@ public class GuiMain {
 			c.weighty = 1;
 			c.weighty = 1;
 			add(combatantsPanel, c);
-//			combatantsPanel.setPreferredSize(new Dimension(100, 100));
-//			BoxLayout mgr = new BoxLayout(this, BoxLayout.PAGE_AXIS);
-//			setLayout(mgr);
-////			setLayout(new FlowLayout());
-//			ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
-//			connectionStatusPanel.setMaximumSize(new Dimension(32768, 100));
-//			add(connectionStatusPanel);
-//			XivStateStatus xivStateStatus = new XivStateStatus();
-//			xivStateStatus.setMaximumSize(new Dimension(32768, 400));
-//			add(xivStateStatus);
-//			// filler for alignment
-//			TitleBorderFullsizePanel combatantsPanel = new CombatantsPanel();
-//			add(combatantsPanel);
-////			combatantsPanel.setPreferredSize(new Dimension(100, 100));
-			// TODO: these don't work right because we aren't guaranteed to be the last event handler
+			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
 			master.getDistributor().registerHandler(XivStateChange.class, (ctx, e) -> xivStateStatus.refresh());
 			master.getDistributor().registerHandler(XivStateChange.class, (ctx, e) -> combatantsPanel.refresh());
@@ -269,6 +255,7 @@ public class GuiMain {
 					.addColumn(new CustomColumn<>("ID", c -> Long.toString(c.getId(), 16)))
 					.addColumn(new CustomColumn<>("Name", XivEntity::getName))
 					.addColumn(new CustomColumn<>("Is Player", XivCombatant::isPc))
+					.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable table = new JTable(combatantsTableModel);
 			JScrollPane scrollPane = new JScrollPane(table);
@@ -377,6 +364,7 @@ public class GuiMain {
 				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
 				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 				// TODO: time range filter
 //				.addFilter(EventTypeFilter::new)
 //				.addFilter(SystemEventFilter::new)

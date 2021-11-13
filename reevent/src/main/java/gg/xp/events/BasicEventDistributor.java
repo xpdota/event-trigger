@@ -36,8 +36,12 @@ public class BasicEventDistributor implements EventDistributor {
 		synchronized (handlersLock) {
 			handlers.add(handler);
 		}
+	}
+
+	protected void sortHandlers() {
 		handlers.sort(Comparator.comparing(EventHandler::getOrder));
 	}
+
 
 	public void setQueue(EventQueue queue) {
 		this.queue = queue;

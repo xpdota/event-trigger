@@ -190,7 +190,7 @@ public class XivState implements SubState {
 			}
 		}));
 		this.partyListProcessed = partyListProcessed;
-		log.debug("Recalculated state, player is {}, party is {}", player, partyListProcessed);
+		log.trace("Recalculated state, player is {}, party is {}", player, partyListProcessed);
 		// TODO: improve this
 		if (master != null) {
 			master.getQueue().push(new XivStateRecalculatedEvent());
@@ -215,7 +215,7 @@ public class XivState implements SubState {
 				log.warn("Duplicate combatant data for id {}: old ({}) vs new ({})", id, old, combatant);
 			}
 		});
-		log.debug("Received info on {} combatants", combatants.size());
+		log.trace("Received info on {} combatants", combatants.size());
 		this.combatantsRaw = combatantsRaw;
 		recalcState();
 	}
