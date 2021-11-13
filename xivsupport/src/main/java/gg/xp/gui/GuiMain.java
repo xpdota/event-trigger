@@ -251,7 +251,7 @@ public class GuiMain {
 			super("Combatants");
 			setLayout(new BorderLayout());
 			combatantsTableModel = CustomTableModel.builder(
-							() -> new ArrayList<>(state.get(XivState.class).getCombatants().values()))
+							() -> state.get(XivState.class).getCombatantsListCopy())
 					.addColumn(new CustomColumn<>("ID", c -> Long.toString(c.getId(), 16)))
 					.addColumn(new CustomColumn<>("Name", XivEntity::getName))
 					.addColumn(new CustomColumn<>("Is Player", XivCombatant::isPc))
@@ -358,8 +358,8 @@ public class GuiMain {
 						return c.getType();
 					}
 				}))
-				.addMainColumn(new CustomColumn<>("Name", XivCombatant::getHp))
-				.addMainColumn(new CustomColumn<>("Name", XivCombatant::getPos))
+				.addMainColumn(new CustomColumn<>("HP", XivCombatant::getHp))
+				.addMainColumn(new CustomColumn<>("POS", XivCombatant::getPos))
 				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
 				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
@@ -523,6 +523,7 @@ public class GuiMain {
 	}
 
 
+	// TODO: unhandled exception logger
 	private static void installCustomEventQueue() {
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
 		if (toolkit.isDynamicLayoutActive()) {

@@ -24,6 +24,7 @@
         <!--        TODO: Find a clean way to have COLLECTOR also get trace-level logs-->
         <appender-ref ref="COLLECTOR"/>
     </root>
+    <!--    TODO turn some log levels down, like actws null response -->
     <!--    <logger name="" level="trace">-->
     <!--        <appender-ref ref="COLLECTOR"/>-->
     <!--    </logger>-->

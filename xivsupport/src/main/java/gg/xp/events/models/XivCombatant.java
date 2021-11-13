@@ -17,6 +17,7 @@ public class XivCombatant extends XivEntity {
 	private final long partyType;
 	private final long level;
 	private final long ownerId;
+	private boolean isFake;
 	// TODO: location/heading
 	// TODO: hp info
 
@@ -79,6 +80,9 @@ public class XivCombatant extends XivEntity {
 		if (isPc()) {
 			return CombatantType.PC;
 		}
+		else if (isFake) {
+			return CombatantType.FAKE;
+		}
 		else {
 			return CombatantType.NPC;
 		}
@@ -117,6 +121,10 @@ public class XivCombatant extends XivEntity {
 	}
 
 	public boolean isFake() {
-		return false;
+		return isFake;
+	}
+
+	public void setFake(boolean fake) {
+		isFake = fake;
 	}
 }

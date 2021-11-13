@@ -111,6 +111,7 @@ public class XivState implements SubState {
 			}
 		}
 		Map<Long, XivCombatant> combatantsProcessed = new HashMap<>(combatantsRaw.size());
+		Map<Long, List<XivCombatant>> combatantsByNpcName = new HashMap<>();
 		combatantsRaw.forEach((unused, combatant) -> {
 			long id = combatant.getId();
 			long jobId = combatant.getJobId();
@@ -148,8 +149,42 @@ public class XivState implements SubState {
 						combatant.getPartyType(),
 						combatant.getLevel(),
 						combatant.getOwnerId());
+				combatantsByNpcName.computeIfAbsent(value.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(value);
 			}
 			combatantsProcessed.put(id, value);
+		});
+		combatantsByNpcName.forEach((name, values) -> {
+			if (values.size() <= 2) {
+				// Skip if only one, nothing to do
+				// With two, unfortunately we can't really confirm if it's a fake or not,
+				// because we don't have any other alleged fakes to compare it to.
+				return;
+			}
+			// Sort highest HP first
+			values.sort(Comparator.<XivCombatant, Long>comparing(npc -> {
+				return npc.getHp() != null ? npc.getHp().getMax() : 0;
+			}).reversed());
+			XivCombatant primaryCombatant = values.get(0);
+			if (primaryCombatant.getHp() == null) {
+				return;
+			}
+			List<XivCombatant> potentialFakes = new ArrayList<>();
+			for (XivCombatant otherCombatant : values.subList(1, values.size())) {
+				if (otherCombatant.getHp() == null) {
+					continue;
+				}
+				if (otherCombatant.getHp().getMax() < primaryCombatant.getHp().getMax()
+						&& otherCombatant.getbNpcId() != primaryCombatant.getbNpcId()) {
+					potentialFakes.add(otherCombatant);
+				}
+			}
+			if (potentialFakes.size() >= 2) {
+				XivCombatant firstPossibleFake = potentialFakes.get(0);
+				boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getPos().equals(firstPossibleFake.getPos()));
+				if (allMatch) {
+					potentialFakes.forEach(fake -> fake.setFake(true));
+				}
+			}
 		});
 		// lazy but works
 		combatantsProcessed.put(playerId, player);
@@ -207,6 +242,7 @@ public class XivState implements SubState {
 		combatants.forEach(combatant -> {
 			long id = combatant.getId();
 			// Fake/environment actors
+			// TODO: should we still be doing this?
 			if (id == 0xE0000000L) {
 				return;
 			}

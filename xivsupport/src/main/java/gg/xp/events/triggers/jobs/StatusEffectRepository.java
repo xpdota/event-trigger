@@ -70,7 +70,6 @@ public class StatusEffectRepository {
 		}
 	}
 
-	// TODO: combine?
 	private static <X extends HasSourceEntity & HasTargetEntity & HasStatusEffect> BuffTrackingKey getKey(X event) {
 		return new BuffTrackingKey(event.getSource(), event.getTarget(), event.getBuff());
 	}
@@ -79,12 +78,16 @@ public class StatusEffectRepository {
 
 	@HandleEvents
 	public void buffApplication(EventContext<Event> context, BuffApplied event) {
+		if (event.getTarget().isFake()) {
+			return;
+		}
 		buffs.put(
 				getKey(event),
 				event
 		);
 		log.info("Buff applied: {}. Tracking {} buffs.", event, buffs.size());
-		if (Filters.sourceIsPlayer(context, event) && isWhitelisted(event.getBuff().getId())) {
+		// TODO: should fakes still be tracked somewhere?
+		if (event.getSource().isThePlayer() && isWhitelisted(event.getBuff().getId()) && !event.getTarget().isFake()) {
 			context.enqueue(new DelayedBuffCallout(event, (long) (event.getDuration() * 1000L - dotRefreshAdvance)));
 		}
 	}
