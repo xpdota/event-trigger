@@ -11,6 +11,7 @@ import gg.xp.events.actlines.events.HasSourceEntity;
 import gg.xp.events.actlines.events.HasStatusEffect;
 import gg.xp.events.actlines.events.HasTargetEntity;
 import gg.xp.events.actlines.events.XivStateChange;
+import gg.xp.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.events.misc.RawEventStorage;
 import gg.xp.events.misc.Stats;
 import gg.xp.events.models.XivCombatant;
@@ -82,10 +83,11 @@ public class GuiMain {
 			tabPane.addTab("System", scrollPanel);
 //			tabPane.addTab("System", mainPanel);
 			JPanel stats = new StatsPanel();
+			// TODO: move this to a panel in first page
 			tabPane.addTab("Stats", stats);
 			tabPane.addTab("Plugins", new PluginTopologyPanel());
-			JPanel eventsPanel = getEventsPanel();
-			tabPane.addTab("Events", eventsPanel);
+			tabPane.addTab("Combatants", getCombatantsPanel());
+			tabPane.addTab("Events", getEventsPanel());
 			tabPane.addTab("ACT Log", getActLogPanel());
 			tabPane.addTab("System Log", getSystemLogPanel());
 			tabPane.addTab("Import/Export", new JPanel());
@@ -215,7 +217,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
-								return player == null ? "null" : Integer.toString(player.getLevel());
+								return player == null ? "null" : Long.toString(player.getLevel());
 							},
 							JLabel::setText
 					),
@@ -342,6 +344,52 @@ public class GuiMain {
 		}
 	}
 
+	private JPanel getCombatantsPanel() {
+		// TODO: jump to parent button
+		// Main table
+		XivState state = container.getComponent(XivState.class);
+		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", state::getCombatantsListCopy,
+						combatant -> {
+							if (combatant == null) {
+								return Collections.emptyList();
+							}
+							else {
+								return Utils.dumpAllFields(combatant)
+										.entrySet()
+										.stream()
+										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
+										.collect(Collectors.toList());
+							}
+						})
+				.addMainColumn(new CustomColumn<>("ID", xivCombatant -> Long.toString(xivCombatant.getId(), 16)))
+				.addMainColumn(new CustomColumn<>("Name", XivEntity::getName))
+				.addMainColumn(new CustomColumn<>("Type", c -> {
+					if (c.isThePlayer()) {
+						return "YOU";
+					}
+					else {
+						return c.getType();
+					}
+				}))
+				.addMainColumn(new CustomColumn<>("Name", XivCombatant::getHp))
+				.addMainColumn(new CustomColumn<>("Name", XivCombatant::getPos))
+				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
+				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
+				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
+				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				// TODO: time range filter
+//				.addFilter(EventTypeFilter::new)
+//				.addFilter(SystemEventFilter::new)
+//				.addFilter(EventClassFilterFilter::new)
+//				.addFilter(EventEntityFilter::sourceFilter)
+//				.addFilter(EventEntityFilter::targetFilter)
+//				.addFilter(EventAbilityOrBuffFilter::new)
+				.build();
+		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalUpdate());
+		return table;
+
+	}
+
 	private JPanel getEventsPanel() {
 		// TODO: jump to parent button
 		// Main table
@@ -398,9 +446,7 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::targetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 				.build();
-		master.getDistributor().registerHandler(Event.class, (ctx, e) -> {
-			table.signalUpdate();
-		});
+		master.getDistributor().registerHandler(Event.class, (ctx, e) -> table.signalUpdate());
 		return table;
 
 	}

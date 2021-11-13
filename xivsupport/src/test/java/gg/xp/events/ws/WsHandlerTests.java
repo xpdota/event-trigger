@@ -4,7 +4,10 @@ import gg.xp.context.StateStore;
 import gg.xp.events.BasicEventQueue;
 import gg.xp.events.EventMaster;
 import gg.xp.events.actlines.data.Job;
+import gg.xp.events.models.CombatantType;
+import gg.xp.events.models.XivCombatant;
 import gg.xp.events.models.XivPlayerCharacter;
+import gg.xp.events.models.XivZone;
 import gg.xp.events.state.XivState;
 import gg.xp.sys.XivMain;
 import org.hamcrest.MatcherAssert;
@@ -16,6 +19,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static gg.xp.events.actlines.data.Job.AST;
@@ -131,12 +135,12 @@ public class WsHandlerTests {
 						"      \"BNpcID\": 387,\n" +
 						"      \"BNpcNameID\": 387,\n" +
 						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 3758096384,\n" +
+						"      \"ID\": 123456,\n" +
 						"      \"OwnerID\": 0,\n" +
 						"      \"type\": 9,\n" +
 						"      \"Job\": 0,\n" +
 						"      \"Level\": 0,\n" +
-						"      \"Name\": \"Sand Fox\",\n" +
+						"      \"Name\": \"Some Boss\",\n" +
 						"      \"CurrentHP\": 0,\n" +
 						"      \"MaxHP\": 0,\n" +
 						"      \"CurrentMP\": 0,\n" +
@@ -164,14 +168,31 @@ public class WsHandlerTests {
 		((BasicEventQueue) master.getQueue()).waitDrain();
 		log.info("Queue size: {}", master.getQueue().pendingSize());
 
-		Assert.assertEquals(xivState.getZone().getId(), 129);
-		Assert.assertEquals(xivState.getPlayer().getId(), 275160354);
+		XivZone zone = xivState.getZone();
+		Assert.assertEquals(zone.getId(), 129);
+		Assert.assertEquals(zone.getName(), "Limsa Lominsa Lower Decks");
 
-		Assert.assertEquals(xivState.getZone().getName(), "Limsa Lominsa Lower Decks");
-		Assert.assertEquals(xivState.getPlayer().getName(), "Foo Bar");
+		XivPlayerCharacter player = xivState.getPlayer();
+
+		Assert.assertEquals(player.getId(), 275160354);
+		Assert.assertEquals(player.getName(), "Foo Bar");
+		Assert.assertEquals(player.getJob(), WHM);
+		Assert.assertTrue(player.isThePlayer());
+		Assert.assertTrue(player.isPc());
+		Assert.assertFalse(player.isEnvironment());
+		Assert.assertEquals(player.getType(), CombatantType.PC);
 
 		Assert.assertEquals(xivState.getPartyList().get(0).getId(), 275160354);
 		Assert.assertEquals(xivState.getPartyList().get(0).getName(), "Foo Bar");
+
+		Map<Long, XivCombatant> combatants = xivState.getCombatants();
+		XivCombatant otherCombatant = combatants.get(123456L);
+		Assert.assertEquals(otherCombatant.getName(), "Some Boss");
+		Assert.assertEquals(otherCombatant.getType(), CombatantType.NPC);
+		Assert.assertFalse(otherCombatant.isPc());
+		Assert.assertFalse(otherCombatant.isThePlayer());
+		Assert.assertFalse(otherCombatant.isEnvironment());
+
 
 		List<Job> jobs = xivState.getPartyList().stream().map(XivPlayerCharacter::getJob).collect(Collectors.toList());
 

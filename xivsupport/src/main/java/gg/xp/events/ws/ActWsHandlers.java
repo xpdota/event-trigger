@@ -130,7 +130,7 @@ public class ActWsHandlers {
 	public static void actWsCombatants(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("combatants".equals(jsonMsg.getType())) {
 			JsonNode combatantsNode = jsonMsg.getJson().path("combatants");
-			List<RawXivCombatantInfo> combatantMaps = mapper.convertValue(combatantsNode, new TypeReference<List<RawXivCombatantInfo>>() {
+			List<RawXivCombatantInfo> combatantMaps = mapper.convertValue(combatantsNode, new TypeReference<>() {
 			});
 			context.enqueue(new CombatantsUpdateRaw(combatantMaps));
 		}

@@ -31,10 +31,11 @@ public class XivState implements SubState {
 	private XivEntity playerPartial;
 	// FULL player info after we get the stuff we need
 	private XivPlayerCharacter player;
-	private @NotNull List<RawXivPartyInfo> partyListRaw = Collections.emptyList();
-	private final @NotNull List<XivPlayerCharacter> partyListProcessed = new ArrayList<>();
-	private @NotNull Map<Long, RawXivCombatantInfo> combatantsRaw = Collections.emptyMap();
-	private final @NotNull Map<Long, XivCombatant> combatantsProcessed = new HashMap<>();
+	// TODO: see if same-world parties with out-of-zone players would break this
+	private volatile @NotNull List<RawXivPartyInfo> partyListRaw = Collections.emptyList();
+	private volatile @NotNull List<XivPlayerCharacter> partyListProcessed = Collections.emptyList();
+	private volatile @NotNull Map<Long, RawXivCombatantInfo> combatantsRaw = Collections.emptyMap();
+	private volatile @NotNull Map<Long, XivCombatant> combatantsProcessed = Collections.emptyMap();
 
 //	@SuppressWarnings("unused")
 //	@Deprecated
@@ -98,16 +99,24 @@ public class XivState implements SubState {
 						// TODO
 						new XivWorld(),
 						// TODO
-						0,
-						true);
+						true,
+						playerCombatantInfo.getRawType(),
+						playerCombatantInfo.getHP(),
+						playerCombatantInfo.getPos(),
+						playerCombatantInfo.getBnpcId(),
+						playerCombatantInfo.getBnpcNameId(),
+						playerCombatantInfo.getPartyType(),
+						playerCombatantInfo.getLevel(),
+						playerCombatantInfo.getOwnerId());
 			}
 		}
-		combatantsProcessed.clear();
+		Map<Long, XivCombatant> combatantsProcessed = new HashMap<>(combatantsRaw.size());
 		combatantsRaw.forEach((unused, combatant) -> {
 			long id = combatant.getId();
-			int jobId = combatant.getJobId();
+			long jobId = combatant.getJobId();
+			long rawType = combatant.getRawType();
 			XivCombatant value;
-			if (combatant.getType() == 1) {
+			if (rawType == 1) {
 				value = new XivPlayerCharacter(
 						id,
 						combatant.getName(),
@@ -115,22 +124,37 @@ public class XivState implements SubState {
 						// TODO
 						new XivWorld(),
 						// TODO
-						0,
-						false);
+						false,
+						combatant.getRawType(),
+						combatant.getHP(),
+						combatant.getPos(),
+						combatant.getBnpcId(),
+						combatant.getBnpcNameId(),
+						combatant.getPartyType(),
+						combatant.getLevel(),
+						combatant.getOwnerId());
 			}
 			else {
 				value = new XivCombatant(
 						id,
 						combatant.getName(),
 						false,
-						false
-				);
+						false,
+						combatant.getRawType(),
+						combatant.getHP(),
+						combatant.getPos(),
+						combatant.getBnpcId(),
+						combatant.getBnpcNameId(),
+						combatant.getPartyType(),
+						combatant.getLevel(),
+						combatant.getOwnerId());
 			}
 			combatantsProcessed.put(id, value);
 		});
 		// lazy but works
 		combatantsProcessed.put(playerId, player);
-		partyListProcessed.clear();
+		this.combatantsProcessed = combatantsProcessed;
+		List<XivPlayerCharacter> partyListProcessed = new ArrayList<>(partyListRaw.size());
 		partyListRaw.forEach(rawPartyMember -> {
 			long id = rawPartyMember.getId();
 			XivCombatant fullCombatant = combatantsProcessed.get(id);
@@ -143,8 +167,16 @@ public class XivState implements SubState {
 						rawPartyMember.getName(),
 						Job.getById(rawPartyMember.getJobId()),
 						new XivWorld(rawPartyMember.getWorldId()),
-						0, // TODO
-						false));
+						false,
+						0,
+						null,
+						null,
+						0,
+						0,
+						0,
+						0,
+						0
+				));
 			}
 		});
 		partyListProcessed.sort(Comparator.comparing(p -> {
@@ -157,6 +189,7 @@ public class XivState implements SubState {
 				return p.getJob().partySortOrder();
 			}
 		}));
+		this.partyListProcessed = partyListProcessed;
 		log.debug("Recalculated state, player is {}, party is {}", player, partyListProcessed);
 		// TODO: improve this
 		if (master != null) {
@@ -170,23 +203,28 @@ public class XivState implements SubState {
 	}
 
 	public void setCombatants(List<RawXivCombatantInfo> combatants) {
-		this.combatantsRaw = new HashMap<>(combatants.size());
+		Map<Long, RawXivCombatantInfo> combatantsRaw = new HashMap<>(combatants.size());
 		combatants.forEach(combatant -> {
 			long id = combatant.getId();
 			// Fake/environment actors
 			if (id == 0xE0000000L) {
 				return;
 			}
-			RawXivCombatantInfo old = this.combatantsRaw.put(id, combatant);
+			RawXivCombatantInfo old = combatantsRaw.put(id, combatant);
 			if (old != null) {
 				log.warn("Duplicate combatant data for id {}: old ({}) vs new ({})", id, old, combatant);
 			}
 		});
 		log.debug("Received info on {} combatants", combatants.size());
+		this.combatantsRaw = combatantsRaw;
 		recalcState();
 	}
 
 	public Map<Long, XivCombatant> getCombatants() {
 		return Collections.unmodifiableMap(combatantsProcessed);
+	}
+
+	public List<XivCombatant> getCombatantsListCopy() {
+		return new ArrayList<>(combatantsProcessed.values());
 	}
 }

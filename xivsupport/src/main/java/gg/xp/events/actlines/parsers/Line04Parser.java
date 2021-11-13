@@ -9,7 +9,7 @@ import java.time.ZonedDateTime;
 public class Line04Parser extends AbstractACTLineParser<Line04Parser.Fields> {
 
 	public Line04Parser() {
-		super(3, Fields.class);
+		super(4, Fields.class);
 	}
 
 	enum Fields {
@@ -21,5 +21,10 @@ public class Line04Parser extends AbstractACTLineParser<Line04Parser.Fields> {
 		// TODO: some kind of @Disable annotation
 		return new RawRemoveCombatantEvent(fields.getEntity(Fields.id, Fields.name));
 //		return new PlayerChangeEvent(new XivEntity(fields.getHex(Fields.id), fields.getString(Fields.name)));
+	}
+
+	@Override
+	protected boolean shouldIgnoreEntityLookupMisses() {
+		return true;
 	}
 }

@@ -58,7 +58,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 			ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
 			Event outgoingEvent;
 			try {
-				outgoingEvent = convert(new FieldMapper<>(out, context), lineNumber, zdt);
+				outgoingEvent = convert(new FieldMapper<>(out, context, shouldIgnoreEntityLookupMisses()), lineNumber, zdt);
 			}
 			catch (Throwable t) {
 				throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
@@ -72,4 +72,8 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 
 	// TODO: consider other ways of handling line number + timestamp
 	protected abstract @Nullable Event convert(FieldMapper<F> fields, int lineNumber, ZonedDateTime time);
+
+	protected boolean shouldIgnoreEntityLookupMisses() {
+		return false;
+	}
 }

@@ -22,4 +22,9 @@ public class Line03Parser extends AbstractACTLineParser<Line03Parser.Fields> {
 		return new RawAddCombatantEvent(fields.getEntity(Fields.id, Fields.name));
 //		return new PlayerChangeEvent(new XivEntity(fields.getHex(Fields.id), fields.getString(Fields.name)));
 	}
+
+	@Override
+	protected boolean shouldIgnoreEntityLookupMisses() {
+		return true;
+	}
 }

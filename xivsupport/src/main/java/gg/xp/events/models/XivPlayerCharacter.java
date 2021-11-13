@@ -6,13 +6,24 @@ public class XivPlayerCharacter extends XivCombatant {
 	private static final long serialVersionUID = 8719229961190925919L;
 	private final Job job;
 	private final XivWorld world;
-	private final int level;
 
-	public XivPlayerCharacter(long id, String name, Job job, XivWorld world, int level, boolean isLocalPlayerCharacter) {
-		super(id, name, true, isLocalPlayerCharacter);
+	public XivPlayerCharacter(long id,
+	                          String name,
+	                          Job job,
+	                          XivWorld world,
+	                          boolean isLocalPlayerCharacter,
+	                          long typeRaw,
+	                          HitPoints hp,
+	                          Position pos,
+	                          long bNpcId,
+	                          long bNpcNameId,
+	                          long partyType,
+	                          long level,
+	                          long ownerId
+	) {
+		super(id, name, true, isLocalPlayerCharacter, typeRaw, hp, pos, bNpcId, bNpcNameId, partyType, level, ownerId);
 		this.job = job;
 		this.world = world;
-		this.level = level;
 	}
 
 	public Job getJob() {
@@ -21,10 +32,6 @@ public class XivPlayerCharacter extends XivCombatant {
 
 	public XivWorld getWorld() {
 		return world;
-	}
-
-	public int getLevel() {
-		return level;
 	}
 
 	@Override
