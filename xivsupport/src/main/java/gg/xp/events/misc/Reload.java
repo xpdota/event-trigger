@@ -31,7 +31,7 @@ public class Reload {
 
 	// Debugging for testing hot reload
 	private void printUids() {
-		log.info("UIDs: static {} instance {}", staticId, instanceId);
+		log.debug("UIDs: static {} instance {}", staticId, instanceId);
 	}
 
 	@HandleEvents

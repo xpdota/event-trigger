@@ -11,7 +11,7 @@ import gg.xp.events.filters.Filters;
 import gg.xp.events.models.BuffTrackingKey;
 import gg.xp.events.models.XivAbility;
 import gg.xp.scan.HandleEvents;
-import gg.xp.speech.TtsCall;
+import gg.xp.speech.CalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +108,7 @@ public class CdTracker {
 		XivAbility originalAbility = event.originalEvent.getAbility();
 		if (event.originalKey == cdResetKey) {
 			log.info("CD callout still valid");
-			context.accept(new TtsCall(originalAbility.getName()));
+			context.accept(new CalloutEvent(originalAbility.getName()));
 		}
 		else {
 			log.info("Not calling {} - no longer valid", originalAbility.getName());

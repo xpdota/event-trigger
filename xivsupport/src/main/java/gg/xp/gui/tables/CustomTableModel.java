@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -59,15 +58,28 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		}
 		else {
 			ListSelectionModel selectionModel = table.getSelectionModel();
-			List<X> oldSelections = Arrays.stream(selectionModel.getSelectedIndices())
+			int[] oldSelectionIndices = selectionModel.getSelectedIndices();
+			List<X> oldSelections = Arrays.stream(oldSelectionIndices)
 					.mapToObj(i -> data.get(i))
 					.collect(Collectors.toList());
+			// TODO: smarter data provider that informs us of append-only operations
 			data = dataGetter.get();
 			fireTableDataChanged();
+			// fast path for typical case where data is only appended
+			// in such cases, the selected element would be in the same index, so guess that
+			// first, and fall back to the slow path if our guess was wrong
+			if (oldSelections.size() == 1) {
+				X theItem = oldSelections.get(0);
+				int theIndex = oldSelectionIndices[0];
+				if (data.get(theIndex) == theItem) {
+					selectionModel.addSelectionInterval(theIndex, theIndex);
+					return;
+				}
+			}
 			oldSelections.stream()
 					.mapToInt(o -> data.indexOf(o))
 					.filter(i -> i != -1)
-							.forEach(i -> selectionModel.addSelectionInterval(i, i));
+					.forEach(i -> selectionModel.addSelectionInterval(i, i));
 		}
 //
 //

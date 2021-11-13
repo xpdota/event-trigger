@@ -4,11 +4,16 @@ import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.actlines.events.BuffApplied;
 import gg.xp.events.actlines.events.BuffRemoved;
+import gg.xp.events.actlines.events.HasSourceEntity;
+import gg.xp.events.actlines.events.HasStatusEffect;
+import gg.xp.events.actlines.events.HasTargetEntity;
+import gg.xp.events.actlines.events.WipeEvent;
+import gg.xp.events.actlines.events.ZoneChangeEvent;
 import gg.xp.events.delaytest.BaseDelayedEvent;
 import gg.xp.events.filters.Filters;
 import gg.xp.events.models.BuffTrackingKey;
 import gg.xp.scan.HandleEvents;
-import gg.xp.speech.TtsCall;
+import gg.xp.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class DotTracker {
+public class StatusEffectRepository {
 
-	private static final Logger log = LoggerFactory.getLogger(DotTracker.class);
+	private static final Logger log = LoggerFactory.getLogger(StatusEffectRepository.class);
 
 	private static final long dotRefreshAdvance = 5000L;
 
@@ -66,11 +71,7 @@ public class DotTracker {
 	}
 
 	// TODO: combine?
-	private static BuffTrackingKey getKey(BuffApplied event) {
-		return new BuffTrackingKey(event.getSource(), event.getTarget(), event.getBuff());
-	}
-
-	private static BuffTrackingKey getKey(BuffRemoved event) {
+	private static <X extends HasSourceEntity & HasTargetEntity & HasStatusEffect> BuffTrackingKey getKey(X event) {
 		return new BuffTrackingKey(event.getSource(), event.getTarget(), event.getBuff());
 	}
 
@@ -78,12 +79,12 @@ public class DotTracker {
 
 	@HandleEvents
 	public void buffApplication(EventContext<Event> context, BuffApplied event) {
+		buffs.put(
+				getKey(event),
+				event
+		);
+		log.info("Buff applied: {}. Tracking {} buffs.", event, buffs.size());
 		if (Filters.sourceIsPlayer(context, event) && isWhitelisted(event.getBuff().getId())) {
-			log.info("Buff applied: {}", event);
-			buffs.put(
-					getKey(event),
-					event
-			);
 			context.enqueue(new DelayedBuffCallout(event, (long) (event.getDuration() * 1000L - dotRefreshAdvance)));
 		}
 	}
@@ -94,8 +95,20 @@ public class DotTracker {
 	public void buffRemove(EventContext<Event> context, BuffRemoved event) {
 		BuffApplied removed = buffs.remove(getKey(event));
 		if (removed != null) {
-			log.info("Buff removed: {}", event);
+			log.info("Buff removed: {}. Tracking {} buffs.", event, buffs.size());
 		}
+	}
+
+	@HandleEvents
+	public void wipe(EventContext<Event> context, WipeEvent wipe) {
+		log.info("Wipe, clearing {} buffs", buffs.size());
+		buffs.clear();
+	}
+
+	@HandleEvents
+	public void wipe(EventContext<Event> context, ZoneChangeEvent wipe) {
+		log.info("Wipe, clearing {} buffs", buffs.size());
+		buffs.clear();
 	}
 
 	@HandleEvents
@@ -104,7 +117,7 @@ public class DotTracker {
 		BuffApplied mostRecentEvent = buffs.get(getKey(originalEvent));
 		if (originalEvent == mostRecentEvent) {
 			log.info("Dot refresh callout still valid");
-			context.accept(new TtsCall(originalEvent.getBuff().getName()));
+			context.accept(new CalloutEvent(originalEvent.getBuff().getName()));
 		}
 		else {
 			log.info("Not calling");

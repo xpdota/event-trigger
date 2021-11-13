@@ -6,7 +6,7 @@ import gg.xp.events.actlines.events.AbilityCastStart;
 import gg.xp.events.state.XivState;
 import gg.xp.scan.FilteredEventHandler;
 import gg.xp.scan.HandleEvents;
-import gg.xp.speech.TtsCall;
+import gg.xp.speech.CalloutEvent;
 
 public class Odin implements FilteredEventHandler {
 
@@ -19,7 +19,7 @@ public class Odin implements FilteredEventHandler {
 	public void valknut(EventContext<Event> context, AbilityCastStart event) {
 		// TODO: this calls at end of cast....
 		if (event.getAbility().getId() == 0xC49) {
-			context.accept(new TtsCall("Out"));
+			context.accept(new CalloutEvent("Out"));
 		}
 	}
 

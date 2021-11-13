@@ -13,6 +13,8 @@ import gg.xp.events.actlines.events.HasTargetEntity;
 import gg.xp.events.actlines.events.XivStateChange;
 import gg.xp.events.misc.RawEventStorage;
 import gg.xp.events.misc.Stats;
+import gg.xp.events.models.XivCombatant;
+import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.models.XivZone;
 import gg.xp.events.slf4j.LogCollector;
@@ -21,6 +23,7 @@ import gg.xp.events.state.XivState;
 import gg.xp.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.events.ws.WsState;
 import gg.xp.gui.tables.CustomColumn;
+import gg.xp.gui.tables.CustomTableModel;
 import gg.xp.gui.tables.TableWithFilterAndDetails;
 import gg.xp.gui.tables.filters.EventAbilityOrBuffFilter;
 import gg.xp.gui.tables.filters.EventClassFilterFilter;
@@ -40,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.lang.reflect.Field;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -70,6 +74,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
 			JTabbedPane tabPane = new JTabbedPane();
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(960, 720);
 			frame.setVisible(true);
 			JPanel mainPanel = new SystemTabPanel();
@@ -79,7 +84,8 @@ public class GuiMain {
 			JPanel stats = new StatsPanel();
 			tabPane.addTab("Stats", stats);
 			tabPane.addTab("Plugins", new PluginTopologyPanel());
-			tabPane.addTab("Events", getEventsPanel());
+			JPanel eventsPanel = getEventsPanel();
+			tabPane.addTab("Events", eventsPanel);
 			tabPane.addTab("ACT Log", getActLogPanel());
 			tabPane.addTab("System Log", getSystemLogPanel());
 			tabPane.addTab("Import/Export", new JPanel());
@@ -90,23 +96,50 @@ public class GuiMain {
 	private class SystemTabPanel extends JPanel {
 		SystemTabPanel() {
 
-			BoxLayout mgr = new BoxLayout(this, BoxLayout.PAGE_AXIS);
-			setLayout(mgr);
+			setLayout(new GridBagLayout());
+			GridBagConstraints c = new GridBagConstraints();
+			c.fill = GridBagConstraints.BOTH;
+			c.anchor = GridBagConstraints.CENTER;
+			c.weightx = 1;
+			c.weighty = 0;
+//			c.weightx = 1; c.weighty = 0.5;
+//			c.gridx = 0;
+			c.gridy = 0;
+//			c.gridwidth = 1;
 //			setLayout(new FlowLayout());
 			ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
-			connectionStatusPanel.setMaximumSize(new Dimension(32768, 200));
-			add(connectionStatusPanel);
+			connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
+			add(connectionStatusPanel, c);
 			XivStateStatus xivStateStatus = new XivStateStatus();
-			xivStateStatus.setMaximumSize(new Dimension(32768, 400));
-			add(xivStateStatus);
+			xivStateStatus.setPreferredSize(new Dimension(100, 200));
+			c.gridy++;
+//			c.gridwidth = 1;
+			add(xivStateStatus, c);
 			// filler for alignment
-			TitleBorderFullsizePanel fillerPanel = new TitleBorderFullsizePanel("Random Filler Panel");
-			fillerPanel.setMaximumSize(new Dimension(32768, 200));
-			fillerPanel.add(new JLabel("How do I layout"));
-			add(fillerPanel);
+			CombatantsPanel combatantsPanel = new CombatantsPanel();
+//			c.gridx = 0;
+			c.gridy++;
+			c.weighty = 1;
+			c.weighty = 1;
+			add(combatantsPanel, c);
+//			combatantsPanel.setPreferredSize(new Dimension(100, 100));
+//			BoxLayout mgr = new BoxLayout(this, BoxLayout.PAGE_AXIS);
+//			setLayout(mgr);
+////			setLayout(new FlowLayout());
+//			ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
+//			connectionStatusPanel.setMaximumSize(new Dimension(32768, 100));
+//			add(connectionStatusPanel);
+//			XivStateStatus xivStateStatus = new XivStateStatus();
+//			xivStateStatus.setMaximumSize(new Dimension(32768, 400));
+//			add(xivStateStatus);
+//			// filler for alignment
+//			TitleBorderFullsizePanel combatantsPanel = new CombatantsPanel();
+//			add(combatantsPanel);
+////			combatantsPanel.setPreferredSize(new Dimension(100, 100));
 			// TODO: these don't work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
-			master.getDistributor().registerHandler(XivStateChange.class, (c, e) -> xivStateStatus.refresh());
+			master.getDistributor().registerHandler(XivStateChange.class, (ctx, e) -> xivStateStatus.refresh());
+			master.getDistributor().registerHandler(XivStateChange.class, (ctx, e) -> combatantsPanel.refresh());
 		}
 	}
 
@@ -140,23 +173,14 @@ public class GuiMain {
 		}
 	}
 
-	;
-
 	private class XivStateStatus extends JPanel implements Refreshable {
 
 		private final List<Refreshable> displayed = new ArrayList<>();
-		private final XivPlayerTableModel partyTableModel;
+		private final CustomTableModel<XivPlayerCharacter> partyTableModel;
 
 		public XivStateStatus() {
-//			super("Xiv Status");
 
-//			setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
 			setLayout(new GridLayout(1, 2));
-
-//			JLabel dummyLabelForWidthPurposes = new JLabel();
-//			dummyLabelForWidthPurposes.setMinimumSize(new Dimension(200, 1));
-//			Dimension preferredSize = dummyLabelForWidthPurposes.getPreferredSize();
-//			dummyLabelForWidthPurposes.setPreferredSize(new Dimension(200, preferredSize.height));
 
 			KeyValueDisplaySet leftItems = new KeyValueDisplaySet(List.of(
 					new KeyValuePairDisplay<>(
@@ -209,8 +233,14 @@ public class GuiMain {
 			add(new TitleBorderFullsizePanel("Player Status", leftItems));
 
 			JPanel right = new TitleBorderFullsizePanel("Party Status");
+			partyTableModel = CustomTableModel.builder(
+//					() -> List.of(new XivPlayerCharacter(123, "Foo Bar", Job.WHM, new XivWorld(), 23, true)))
+							() -> state.get(XivState.class).getPartyList())
+					.addColumn(new CustomColumn<>("Name", XivEntity::getName))
+					.addColumn(new CustomColumn<>("Job", c -> c.getJob().getFriendlyName()))
+					.addColumn(new CustomColumn<>("ID", c -> Long.toString(c.getId(), 16)))
+					.build();
 			JTable partyMembersTable = new JTable(8, 3);
-			partyTableModel = new XivPlayerTableModel();
 			partyMembersTable.setModel(partyTableModel);
 			right.setLayout(new BorderLayout());
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
@@ -221,7 +251,30 @@ public class GuiMain {
 
 		public void refresh() {
 			displayed.forEach(Refreshable::refresh);
-			partyTableModel.setData(state.get(XivState.class).getPartyList());
+			partyTableModel.refresh();
+		}
+	}
+
+	private class CombatantsPanel extends TitleBorderFullsizePanel {
+
+		private final CustomTableModel<XivCombatant> combatantsTableModel;
+
+		public CombatantsPanel() {
+			super("Combatants");
+			setLayout(new BorderLayout());
+			combatantsTableModel = CustomTableModel.builder(
+							() -> new ArrayList<>(state.get(XivState.class).getCombatants().values()))
+					.addColumn(new CustomColumn<>("ID", c -> Long.toString(c.getId(), 16)))
+					.addColumn(new CustomColumn<>("Name", XivEntity::getName))
+					.addColumn(new CustomColumn<>("Is Player", XivCombatant::isPc))
+					.build();
+			JTable table = new JTable(combatantsTableModel);
+			JScrollPane scrollPane = new JScrollPane(table);
+			add(scrollPane);
+		}
+
+		public void refresh() {
+			combatantsTableModel.refresh();
 		}
 	}
 
@@ -290,11 +343,10 @@ public class GuiMain {
 	}
 
 	private JPanel getEventsPanel() {
-		// TODO: event serial number
 		// TODO: jump to parent button
 		// Main table
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
-		return TableWithFilterAndDetails.builder("Events", rawStorage::getEvents,
+		TableWithFilterAndDetails<Event, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", rawStorage::getEvents,
 						currentEvent -> {
 							if (currentEvent == null) {
 								return Collections.emptyList();
@@ -313,6 +365,8 @@ public class GuiMain {
 							.format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
 //					return DateTimeFormatter.ISO_TIME.format(event.getHappenedAt());
 ////					return event.getHappenedAt();
+				}, col -> {
+					col.setMaxWidth(100);
 				}))
 				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource().getName() : null))
@@ -331,12 +385,12 @@ public class GuiMain {
 					return parent == null ? null : parent.getClass().getSimpleName();
 				}))
 				// TODO: is this column useful?
-				.addMainColumn(new CustomColumn<>("toString", Object::toString))
+//				.addMainColumn(new CustomColumn<>("toString", Object::toString))
 				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
 				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
 				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
-				// TODO: time range
+				// TODO: time range filter
 				.addFilter(EventTypeFilter::new)
 				.addFilter(SystemEventFilter::new)
 				.addFilter(EventClassFilterFilter::new)
@@ -344,11 +398,16 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::targetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 				.build();
+		master.getDistributor().registerHandler(Event.class, (ctx, e) -> {
+			table.signalUpdate();
+		});
+		return table;
+
 	}
 
 	private JPanel getActLogPanel() {
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
-		return TableWithFilterAndDetails.builder("ACT Log",
+		TableWithFilterAndDetails<ACTLogLineEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("ACT Log",
 						() -> rawStorage.getEvents().stream().filter(ACTLogLineEvent.class::isInstance)
 								.map(ACTLogLineEvent.class::cast)
 								.collect(Collectors.toList()),
@@ -370,6 +429,10 @@ public class GuiMain {
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
 				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
 				.build();
+		master.getDistributor().registerHandler(Event.class, (ctx, e) -> {
+			table.signalUpdate();
+		});
+		return table;
 	}
 
 	private JPanel getSystemLogPanel() {
@@ -380,7 +443,7 @@ public class GuiMain {
 			return panel;
 		}
 		else {
-			return TableWithFilterAndDetails.builder("System Log",
+			TableWithFilterAndDetails<LogEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("System Log",
 							instance::getEvents,
 							e -> {
 								if (e == null) {
@@ -392,15 +455,36 @@ public class GuiMain {
 								).collect(Collectors.toList());
 							})
 					// TODO: timestamp?
-					.addMainColumn(new CustomColumn<>("Thread", e -> e.getEvent().getThreadName()))
-					.addMainColumn(new CustomColumn<>("Level", e -> e.getEvent().getLevel()))
-					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded))
+					.addMainColumn(new CustomColumn<>("Thread", e -> e.getEvent().getThreadName(), col -> {
+						col.setPreferredWidth(150);
+					}))
+					// TODO: column widths
+					.addMainColumn(new CustomColumn<>("Level", e -> e.getEvent().getLevel(), col -> {
+						col.setMinWidth(50);
+						col.setMaxWidth(50);
+						col.setResizable(false);
+					}))
+					.addMainColumn(new CustomColumn<>("Where", e -> {
+						StackTraceElement callerDataTop = e.getEvent().getCallerData()[0];
+						String className = callerDataTop.getClassName();
+						String[] split = className.split("\\.");
+						String simpleClassName = split[split.length - 1];
+						return simpleClassName + ":" + callerDataTop.getLineNumber();
+//						return e.getEvent().getLoggerName() + ":";
+					}, col -> {
+						col.setPreferredWidth(200);
+					}))
+					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded, col -> {
+						col.setPreferredWidth(700);
+					}))
 					.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
 					.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
 					.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
 					.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
 					.addFilter(LogLevelVisualFilter::new)
 					.build();
+			instance.addCallback(table::signalUpdate);
+			return table;
 		}
 	}
 

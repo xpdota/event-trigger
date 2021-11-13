@@ -1,5 +1,7 @@
 package gg.xp.events.ws;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.context.StateStore;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
@@ -8,6 +10,7 @@ import gg.xp.events.EventMaster;
 import gg.xp.events.EventSource;
 import gg.xp.events.debug.DebugCommand;
 import gg.xp.events.state.RefreshCombatantsRequest;
+import gg.xp.speech.TtsRequest;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -15,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,6 +29,7 @@ public class ActWsLogSource implements EventSource {
 
 	private static final Logger log = LoggerFactory.getLogger(ActWsLogSource.class);
 	private static final ExecutorService taskPool = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("ActWsLogPool-%d").build());
+	private static final ObjectMapper mapper = new ObjectMapper();
 	private final Object connectLock = new Object();
 
 	private final class ActWsClientInternal extends WebSocketClient {
@@ -90,10 +95,12 @@ public class ActWsLogSource implements EventSource {
 	private final ActWsClientInternal client;
 	private final WsState state = new WsState();
 
-	public ActWsLogSource(EventMaster master, EventDistributor distributor, StateStore stateStore) {
+	public ActWsLogSource(EventMaster master, StateStore stateStore) {
 		this.eventConsumer = master::pushEvent;
+		EventDistributor distributor = master.getDistributor();
 		distributor.registerHandler(DebugCommand.class, this::getCombatantsDbg);
 		distributor.registerHandler(DebugCommand.class, this::forceReconnect);
+		distributor.registerHandler(TtsRequest.class, this::sayTts);
 		distributor.registerHandler(RefreshCombatantsRequest.class, this::getCombatants);
 		distributor.registerHandler(ActWsReconnectRequest.class, this::requestReconnect);
 		distributor.registerHandler(ActWsDisconnectedEvent.class, this::reconnectActWs);
@@ -118,7 +125,28 @@ public class ActWsLogSource implements EventSource {
 	}
 
 	public void getCombatants(EventContext<Event> context, RefreshCombatantsRequest event) {
-		client.send(String.format("{\"call\":\"getCombatants\",\"rseq\":%s}", rseqCounter.getAndIncrement()));
+
+		try {
+			client.send(mapper.writeValueAsString(Map.ofEntries(Map.entry("call", "getCombatants"), Map.entry("rseq", rseqCounter.getAndIncrement()))));
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	// TODO: this probably doesn't belong here
+
+	public void sayTts(EventContext<Event> context, TtsRequest event) {
+
+		try {
+			client.send(mapper.writeValueAsString(Map.ofEntries(
+					Map.entry("call", "say"),
+					Map.entry("text", event.getTtsString()),
+					Map.entry("rseq", rseqCounter.getAndIncrement()))));
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public void requestReconnect(EventContext<Event> context, ActWsReconnectRequest event) {

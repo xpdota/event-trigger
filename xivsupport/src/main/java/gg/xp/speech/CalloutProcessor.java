@@ -3,7 +3,6 @@ package gg.xp.speech;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.debug.DebugCommand;
-import gg.xp.events.misc.EchoEvent;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +11,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class SpeechProcessor {
+public class CalloutProcessor {
 
-	private static final Logger log = LoggerFactory.getLogger(SpeechProcessor.class);
+	private static final Logger log = LoggerFactory.getLogger(CalloutProcessor.class);
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor(r -> {
 		Thread thread = new Thread(r);
 		thread.setName("SpeechThread");
@@ -70,17 +69,23 @@ public class SpeechProcessor {
 		}
 	}
 
-	@HandleEvents
-	public void handle(EventContext<Event> context, TtsCall event) {
+//	@HandleEvents
+	public void handle(EventContext<Event> context, CalloutEvent event) {
 		// Events are not processed nor distributed in parallel - thus we need to make sure that we use async operations
 		// for things that take non-trivial amounts of time (e.g. speech)
+
 		sayAsync(event.getCallText());
 	}
 
 	@HandleEvents
-	public void handle(EventContext<Event> context, DebugCommand echo) {
+	public void callout(EventContext<Event> context, CalloutEvent callout) {
+		context.accept(new TtsRequest(callout.getCallText()));
+	}
+
+	@HandleEvents
+	public void ttsDebugCommand(EventContext<Event> context, DebugCommand echo) {
 		if (echo.getCommand().equals("tts")) {
-			context.accept(new TtsCall("test"));
+			context.accept(new CalloutEvent("test"));
 		}
 	}
 }

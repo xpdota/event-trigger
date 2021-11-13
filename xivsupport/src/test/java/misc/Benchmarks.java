@@ -6,10 +6,15 @@ import org.testng.Assert;
 import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-@Ignore
+//@Ignore
+@SuppressWarnings("ResultOfObjectAllocationIgnored")
 public class Benchmarks {
 
 	private static final Logger log = LoggerFactory.getLogger(Benchmarks.class);
@@ -235,6 +240,19 @@ public class Benchmarks {
 			}
 		});
 
+	}
+
+	@Test
+	public void testListCopy() {
+		List<Integer> collect = IntStream.range(0, 1_000_000)
+				.boxed()
+				.collect(Collectors.toList());
+		timeIt("List Copy", () -> {
+			int count = 1000;
+			for (int i = 0; i < count; i++) {
+				new ArrayList<>(collect);
+			}
+		});
 	}
 
 }

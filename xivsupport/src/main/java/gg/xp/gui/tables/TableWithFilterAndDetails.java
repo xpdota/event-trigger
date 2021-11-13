@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,8 +23,10 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 	private final Supplier<List<X>> dataGetter;
 	private final List<VisualFilter<X>> filters;
+	private final CustomTableModel<X> mainModel;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
+	private volatile boolean isAutoRefreshEnabled;
 
 	private TableWithFilterAndDetails(
 			String title,
@@ -46,11 +49,16 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 		CustomTableModel.CustomTableModelBuilder<X> mainBuilder = CustomTableModel.builder(this::getFilteredData);
 		mainColumns.forEach(mainBuilder::addColumn);
-		CustomTableModel<X> mainModel = mainBuilder.build();
+		mainModel = mainBuilder.build();
 
 
 		// Main table
 		JTable table = new JTable(mainModel);
+		for (int i = 0; i < mainColumns.size(); i++) {
+			TableColumn column = table.getColumnModel().getColumn(i);
+			CustomColumn<X> customColumn = mainColumns.get(i);
+			customColumn.configureColumn(column);
+		}
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ListSelectionModel selectionModel = table.getSelectionModel();
 		selectionModel.addListSelectionListener(e -> {
@@ -67,9 +75,13 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		});
 		JButton refreshButton = new JButton("Refresh");
 		refreshButton.addActionListener(e -> {
-			updateData();
-			mainModel.refresh();
+			updateAll();
 		});
+		JCheckBox autoRefresh = new JCheckBox("Auto Refresh");
+		autoRefresh.addItemListener(e -> {
+			isAutoRefreshEnabled = autoRefresh.isSelected();
+		});
+		autoRefresh.setSelected(true);
 
 		JCheckBox stayAtBottom = new JCheckBox("Scroll to Bottom");
 		AutoBottomScrollHelper scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
@@ -79,6 +91,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		// Top panel
 		JPanel topPanel = new JPanel();
 		topPanel.add(refreshButton);
+		topPanel.add(autoRefresh);
 		topPanel.add(stayAtBottom);
 		topPanel.setLayout(new WrapLayout(FlowLayout.LEFT));
 		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(mainModel::refresh)).collect(Collectors.toList());
@@ -96,8 +109,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		SwingUtilities.invokeLater(() -> {
 			splitPane.setDividerLocation(0.7);
 			splitPane.setResizeWeight(1);
-			updateData();
-			mainModel.refresh();
+			updateAll();
 		});
 	}
 
@@ -109,8 +121,23 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 				.collect(Collectors.toList());
 	}
 
-	private void updateData() {
+	private void updateDataOnly() {
 		dataRaw = dataGetter.get();
+	}
+
+	private void updateModel() {
+		mainModel.refresh();
+	}
+
+	public void signalUpdate() {
+		if (isAutoRefreshEnabled) {
+			SwingUtilities.invokeLater(this::updateAll);
+		}
+	}
+
+	private void updateAll() {
+		updateDataOnly();
+		updateModel();
 	}
 
 	public static final class TableWithFilterAndDetailsBuilder<X, D> {

@@ -9,10 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Locale;
 import java.util.function.Function;
 
-public class EventEntityFilter<X> implements VisualFilter<Event> {
+public final class EventEntityFilter<X> implements VisualFilter<Event> {
 
 	private static final Logger log = LoggerFactory.getLogger(EventEntityFilter.class);
 
@@ -34,6 +33,7 @@ public class EventEntityFilter<X> implements VisualFilter<Event> {
 	public static EventEntityFilter<HasSourceEntity> sourceFilter(Runnable filterUpdatedCallback) {
 		return new EventEntityFilter<>(HasSourceEntity.class, HasSourceEntity::getSource, filterUpdatedCallback, "Source Entity");
 	}
+
 	public static EventEntityFilter<HasTargetEntity> targetFilter(Runnable filterUpdatedCallback) {
 		return new EventEntityFilter<>(HasTargetEntity.class, HasTargetEntity::getTarget, filterUpdatedCallback, "Target Entity");
 	}
@@ -76,27 +76,27 @@ public class EventEntityFilter<X> implements VisualFilter<Event> {
 				return !(expectedClass.isInstance(item));
 			case PLAYERS:
 				if (expectedClass.isInstance(item)) {
-					return entityGetter.apply((X) item).isPc();
+					return entityGetter.apply(expectedClass.cast(item)).isPc();
 				}
 				return false;
 			case NPCS:
 				if (expectedClass.isInstance(item)) {
-					return !entityGetter.apply((X) item).isPc();
+					return !entityGetter.apply(expectedClass.cast(item)).isPc();
 				}
 				return false;
 			case ENVIRONMENT:
 				if (expectedClass.isInstance(item)) {
-					return entityGetter.apply((X) item).isEnvironment();
+					return entityGetter.apply(expectedClass.cast(item)).isEnvironment();
 				}
 				return false;
 			case SELF:
 				if (expectedClass.isInstance(item)) {
-					return entityGetter.apply((X) item).isThePlayer();
+					return entityGetter.apply(expectedClass.cast(item)).isThePlayer();
 				}
 				return false;
 			default:
 				if (expectedClass.isInstance(item)) {
-					XivCombatant source = entityGetter.apply((X) item);
+					XivCombatant source = entityGetter.apply(expectedClass.cast(item));
 					// TODO: regex
 					// Treat as hex
 					return source.matchesFilter(selectedItem);

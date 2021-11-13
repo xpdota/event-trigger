@@ -7,16 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class AutoEventDistributor extends BasicEventDistributor {
 	private static final Logger log = LoggerFactory.getLogger(AutoEventDistributor.class);
 	private final AutoHandlerScan scanner;
-
-	AutoEventDistributor(StateStore state) {
-		this(state, AutoHandlerScan.defaultInstance());
-		handlers.addAll(AutoHandlerScan.listAll());
-	}
 
 	public AutoEventDistributor(StateStore state, AutoHandlerScan scanner) {
 		super(state);

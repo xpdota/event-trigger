@@ -1,7 +1,7 @@
 package gg.xp.events.actlines.parsers;
 
 import gg.xp.events.Event;
-import gg.xp.events.actlines.events.ZeroLogLineEvent;
+import gg.xp.events.actlines.events.ChatLineEvent;
 
 import java.time.ZonedDateTime;
 
@@ -18,6 +18,6 @@ public class Line00Parser extends AbstractACTLineParser<Line00Parser.Fields> {
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
-		return new ZeroLogLineEvent(fields.getHex(Fields.code), fields.getString(Fields.name), fields.getString(Fields.line));
+		return new ChatLineEvent(fields.getHex(Fields.code), fields.getString(Fields.name), fields.getString(Fields.line));
 	}
 }

@@ -3,7 +3,7 @@ package gg.xp.events;
 import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.events.models.XivEntity;
 import gg.xp.scan.AutoHandlerScan;
-import gg.xp.speech.TtsCall;
+import gg.xp.speech.CalloutEvent;
 import gg.xp.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
@@ -44,7 +44,7 @@ public class ScanTest {
 		EventDistributor dist = AutoHandlerScan.create();
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
-		dist.acceptEvent(new TtsCall("Foo Bar"));
+		dist.acceptEvent(new CalloutEvent("Foo Bar"));
 		collector.getEvents();
 	}
 

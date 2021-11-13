@@ -41,6 +41,7 @@ import java.io.IOException;
 
 
 
+@SuppressWarnings("ALL") // Don't need this anymore anyway
 public class JNotify
 {
 	public static final int FILE_CREATED 	= 0x1;

@@ -1,24 +1,24 @@
 package gg.xp.events.actlines;
 
-import gg.xp.events.actlines.events.ZeroLogLineEvent;
+import gg.xp.events.actlines.events.ChatLineEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class Line00Test extends AbstractACTLineTest<ZeroLogLineEvent> {
+public class Line00Test extends AbstractACTLineTest<ChatLineEvent> {
 
 	private static final Logger log = LoggerFactory.getLogger(Line00Test.class);
 
 	public Line00Test() {
-		super(ZeroLogLineEvent.class);
+		super(ChatLineEvent.class);
 	}
 
 	@Test
 	public void positiveTest() {
 		log.info("XXX: {}", this);
 		String goodLine = "00|2021-04-26T14:12:30.0000000-04:00|0839|Stuff|You change to warrior.|d8c450105ea12854e26eb687579564df";
-		ZeroLogLineEvent event = expectEvent(goodLine);
+		ChatLineEvent event = expectEvent(goodLine);
 
 		Assert.assertEquals(event.getCode(), 0x839);
 		Assert.assertEquals(event.getName(), "Stuff");

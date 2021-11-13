@@ -36,13 +36,13 @@ public class XivState implements SubState {
 	private @NotNull Map<Long, RawXivCombatantInfo> combatantsRaw = Collections.emptyMap();
 	private final @NotNull Map<Long, XivCombatant> combatantsProcessed = new HashMap<>();
 
-	@SuppressWarnings("unused")
-	@Deprecated
-	XivState() {
-		// TODO: this is still needed for tests
-		log.warn("Using old XivState ctor");
-		this.master = null;
-	}
+//	@SuppressWarnings("unused")
+//	@Deprecated
+//	XivState() {
+//		// TODO: this is still needed for tests
+//		log.warn("Using old XivState ctor");
+//		this.master = null;
+//	}
 
 	public XivState(EventMaster master) {
 		this.master = master;
@@ -80,6 +80,8 @@ public class XivState implements SubState {
 	}
 
 	// TODO: concurrency issues?
+	// TODO: emit events after state is recalculated reflecting actual changes
+	// Probably requires proper equals/hashcode on everything so we can actually compare them
 	private void recalcState() {
 		// *Shouldn't* happen, but no reason to fail when we'll get the data soon anyway
 		if (playerPartial == null) {
@@ -155,7 +157,7 @@ public class XivState implements SubState {
 				return p.getJob().partySortOrder();
 			}
 		}));
-		log.info("Recalculated state, player is {}, party is {}", player, partyListProcessed);
+		log.debug("Recalculated state, player is {}, party is {}", player, partyListProcessed);
 		// TODO: improve this
 		if (master != null) {
 			master.getQueue().push(new XivStateRecalculatedEvent());
@@ -180,7 +182,7 @@ public class XivState implements SubState {
 				log.warn("Duplicate combatant data for id {}: old ({}) vs new ({})", id, old, combatant);
 			}
 		});
-		log.info("Received info on {} combatants", combatants.size());
+		log.debug("Received info on {} combatants", combatants.size());
 		recalcState();
 	}
 

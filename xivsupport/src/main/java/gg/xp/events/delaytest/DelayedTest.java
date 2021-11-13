@@ -3,9 +3,8 @@ package gg.xp.events.delaytest;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.debug.DebugCommand;
-import gg.xp.events.misc.EchoEvent;
 import gg.xp.scan.HandleEvents;
-import gg.xp.speech.TtsCall;
+import gg.xp.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +48,7 @@ public class DelayedTest {
 	public void handleEnd(EventContext<Event> context, DelayedTestEvent event) {
 		log.info("Delay test end");
 		if (pending == event) {
-			context.accept(new TtsCall("Foo"));
+			context.accept(new CalloutEvent("Foo"));
 		}
 	}
 

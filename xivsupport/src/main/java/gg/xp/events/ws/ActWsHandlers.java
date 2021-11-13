@@ -45,6 +45,11 @@ public class ActWsHandlers {
 		// Responses instead have an 'rseq' field that lets us match up the response to the request.
 		JsonNode rseqNode = jsonNode.path("rseq");
 		if (!rseqNode.isMissingNode()) {
+			// Null response - TODO try to match it up with the rseq
+			if (!jsonNode.path("$isNull").isMissingNode()) {
+				log.debug("Got null ActWS response for rseq {}", rseqNode.intValue());
+				return;
+			}
 			// For now, since this is the only request/response we're using, we can just look for it specifically and
 			// not bother with actually matching it back up to a request.
 			JsonNode combatantsNode = jsonNode.path("combatants");

@@ -8,8 +8,8 @@ public class XivPlayerCharacter extends XivCombatant {
 	private final XivWorld world;
 	private final int level;
 
-	public XivPlayerCharacter(long id, String name, Job job, XivWorld world, int level, boolean isPLayerCharacter) {
-		super(id, name, true, isPLayerCharacter);
+	public XivPlayerCharacter(long id, String name, Job job, XivWorld world, int level, boolean isLocalPlayerCharacter) {
+		super(id, name, true, isLocalPlayerCharacter);
 		this.job = job;
 		this.world = world;
 		this.level = level;
