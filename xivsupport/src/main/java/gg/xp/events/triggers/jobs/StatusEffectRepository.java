@@ -10,7 +10,6 @@ import gg.xp.events.actlines.events.HasTargetEntity;
 import gg.xp.events.actlines.events.WipeEvent;
 import gg.xp.events.actlines.events.ZoneChangeEvent;
 import gg.xp.events.delaytest.BaseDelayedEvent;
-import gg.xp.events.filters.Filters;
 import gg.xp.events.models.BuffTrackingKey;
 import gg.xp.scan.HandleEvents;
 import gg.xp.speech.CalloutEvent;
@@ -78,6 +77,7 @@ public class StatusEffectRepository {
 
 	@HandleEvents
 	public void buffApplication(EventContext<Event> context, BuffApplied event) {
+		// TODO: should fakes still be tracked somewhere?
 		if (event.getTarget().isFake()) {
 			return;
 		}
@@ -85,8 +85,7 @@ public class StatusEffectRepository {
 				getKey(event),
 				event
 		);
-		log.info("Buff applied: {}. Tracking {} buffs.", event, buffs.size());
-		// TODO: should fakes still be tracked somewhere?
+		log.info("Buff applied: {} applied {} to {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 		if (event.getSource().isThePlayer() && isWhitelisted(event.getBuff().getId()) && !event.getTarget().isFake()) {
 			context.enqueue(new DelayedBuffCallout(event, (long) (event.getDuration() * 1000L - dotRefreshAdvance)));
 		}
@@ -98,7 +97,7 @@ public class StatusEffectRepository {
 	public void buffRemove(EventContext<Event> context, BuffRemoved event) {
 		BuffApplied removed = buffs.remove(getKey(event));
 		if (removed != null) {
-			log.info("Buff removed: {}. Tracking {} buffs.", event, buffs.size());
+			log.info("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 		}
 	}
 

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 public class AutoEventDistributor extends BasicEventDistributor {
 	private static final Logger log = LoggerFactory.getLogger(AutoEventDistributor.class);
 	private final AutoHandlerScan scanner;
+	private final Object loadLock = new Object();
 	boolean isLoaded;
 
 	public AutoEventDistributor(StateStore state, AutoHandlerScan scanner) {
@@ -41,8 +42,13 @@ public class AutoEventDistributor extends BasicEventDistributor {
 			reload();
 		}
 		if (event instanceof TopologyReloadEvent) {
-			log.warn("RELOAD REQUESTED - ERRORS LIKELY");
-			reload();
+			// Disabling hot reloading for now
+			// Now that log *providers* such as the WS log source expose handlers via
+			// @HandleEvents, reloading also causes them to spin up their log sources
+			// twice, with disastrous results.
+			log.error("Reloading currently disabled");
+//			log.warn("RELOAD REQUESTED - ERRORS LIKELY");
+//			reload();
 		}
 		super.acceptEvent(event);
 	}

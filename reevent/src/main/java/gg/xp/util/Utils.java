@@ -1,5 +1,7 @@
 package gg.xp.util;
 
+import org.slf4j.Logger;
+
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -24,6 +26,10 @@ public final class Utils {
 						}
 						catch (IllegalAccessException e) {
 							throw new RuntimeException(String.format("Error dumping field %s on object %s", field, object), e);
+						}
+						if (field.getType().equals(Logger.class)) {
+							// ignore logger fields
+							return;
 						}
 						fieldValues.put(field, value);
 					});

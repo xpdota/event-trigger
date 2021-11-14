@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -28,7 +29,9 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 	private final CustomTableModel<X> mainModel;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
+	private List<X> dataFiltered = Collections.emptyList();
 	private volatile boolean isAutoRefreshEnabled;
+	private final boolean appendOrPruneOnly;
 
 	private TableWithFilterAndDetails(
 			String title,
@@ -37,11 +40,12 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			List<CustomColumn<D>> detailsColumns,
 			Function<X, List<D>> detailsConverter,
 			List<Function<Runnable, VisualFilter<X>>> filterCreators,
-			BiPredicate<X, X> selectionEquivalence
-	) {
+			BiPredicate<X, X> selectionEquivalence,
+			boolean appendOrPruneOnly) {
 		super(title);
 		// TODO: add count of events
 		this.dataGetter = dataGetter;
+		this.appendOrPruneOnly = appendOrPruneOnly;
 		setLayout(new BorderLayout());
 
 		CustomTableModel.CustomTableModelBuilder<D> detailsBuilder = CustomTableModel.builder(() -> detailsConverter.apply(this.currentSelection));
@@ -66,6 +70,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ListSelectionModel selectionModel = table.getSelectionModel();
 		selectionModel.addListSelectionListener(e -> {
+			// TODO: bug where you mess up your selection by selecting a row in the details table
 			int[] selected = selectionModel.getSelectedIndices();
 			log.trace("Selected: {}", Arrays.toString(selected));
 			if (selected.length == 0) {
@@ -74,7 +79,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			else {
 				currentSelection = mainModel.getValueForRow(selected[0]);
 			}
-			detailsModel.refresh();
+			detailsModel.fullRefresh();
 			detailsModel.fireTableDataChanged();
 		});
 		JButton refreshButton = new JButton("Refresh");
@@ -98,7 +103,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		topPanel.add(autoRefresh);
 		topPanel.add(stayAtBottom);
 		topPanel.setLayout(new WrapLayout(FlowLayout.LEFT));
-		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(mainModel::refresh)).collect(Collectors.toList());
+		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering)).collect(Collectors.toList());
 		filters.forEach(filter -> topPanel.add(filter.getComponent()));
 		add(topPanel, BorderLayout.PAGE_START);
 
@@ -117,30 +122,110 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		});
 	}
 
-	private List<X> getFilteredData() {
-		List<X> raw = dataRaw;
-		return raw.stream()
+	private List<X> doFiltering(List<X> thingsToFilter) {
+		long before = System.currentTimeMillis();
+		// Parallel should be safe here, because we're still squatting on the EDT, so there shouldn't be concurrent
+		// modifications to the visual filters themselves. However, it's a waste if the data set is too small.
+		int numberOfThings = thingsToFilter.size();
+		List<X> out = ((numberOfThings > 1000) ? thingsToFilter.parallelStream() : thingsToFilter.stream())
 				.filter(event -> filters.stream()
 						.allMatch(filter -> filter.passesFilter(event)))
 				.collect(Collectors.toList());
+		long after = System.currentTimeMillis();
+		long delta = after - before;
+		if (delta > 5) {
+			log.warn("Slow filtering: took {}ms to filter {} items", delta, numberOfThings);
+		}
+		return out;
 	}
 
-	private void updateDataOnly() {
-		dataRaw = dataGetter.get();
+	private List<X> getFilteredData() {
+		return Collections.unmodifiableList(dataFiltered);
 	}
 
-	private void updateModel() {
-		mainModel.refresh();
+	private void filterFully() {
+		List<X> raw = dataRaw;
+		List<X> out = doFiltering(raw);
+		refreshNeeded = RefreshType.FULL;
+		dataFiltered = out;
 	}
 
-	public void signalUpdate() {
-		if (isAutoRefreshEnabled) {
-			SwingUtilities.invokeLater(this::updateAll);
+	private enum RefreshType {
+		NONE,
+		APPEND,
+		FULL
+	}
+
+	private RefreshType refreshNeeded = RefreshType.FULL;
+
+	private void updateAndFilterData() {
+		if (appendOrPruneOnly) {
+			List<X> dataBefore = dataRaw;
+			int sizeBefore = dataBefore.size();
+			List<X> dataAfter = dataGetter.get();
+			this.dataRaw = dataAfter;
+			int sizeAfter = dataAfter.size();
+			if (sizeAfter == 0 || sizeBefore == 0) {
+				dataFiltered = doFiltering(dataAfter);
+				// A full refresh technically isn't always needed here, but it doesn't really and simplifies the code
+				refreshNeeded = RefreshType.FULL;
+				return;
+			}
+			X firstBefore = dataBefore.get(0);
+			X firstAfter = dataAfter.get(0);
+			if (firstBefore == firstAfter) {
+				if (sizeBefore == sizeAfter) {
+					refreshNeeded = RefreshType.NONE;
+				}
+				else {
+					List<X> newData = dataAfter.subList(sizeBefore, sizeAfter);
+					dataFiltered.addAll(doFiltering(newData));
+					refreshNeeded = RefreshType.APPEND;
+				}
+			}
+		}
+		else {
+			dataRaw = dataGetter.get();
+			filterFully();
+			refreshNeeded = RefreshType.FULL;
 		}
 	}
 
+
+	private void updateModel() {
+		switch (refreshNeeded) {
+			case NONE:
+				break;
+			case APPEND:
+				mainModel.appendOnlyRefresh();
+				break;
+			case FULL:
+				mainModel.fullRefresh();
+				break;
+		}
+		refreshNeeded = RefreshType.NONE;
+	}
+
+	private final AtomicBoolean pendingRefresh = new AtomicBoolean();
+
+	public void signalNewData() {
+		if (isAutoRefreshEnabled) {
+			// This setup allows for there to be exactly one refresh in progress, and one pending after that
+			boolean skipRefresh = pendingRefresh.compareAndExchange(false, true);
+			if (!skipRefresh) {
+				SwingUtilities.invokeLater(this::updateAll);
+			}
+		}
+	}
+
+	private void updateFiltering() {
+		filterFully();
+		updateModel();
+	}
+
 	private void updateAll() {
-		updateDataOnly();
+		pendingRefresh.set(false);
+		updateAndFilterData();
 		updateModel();
 	}
 
@@ -152,6 +237,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		private final Function<X, List<D>> detailsConverter;
 		private final List<Function<Runnable, VisualFilter<X>>> filters = new ArrayList<>();
 		private BiPredicate<X, X> selectionEquivalence = Objects::equals;
+		private boolean appendOrPruneOnly;
 
 
 		private TableWithFilterAndDetailsBuilder(String title, Supplier<List<X>> dataGetter, Function<X, List<D>> detailsConverter) {
@@ -180,9 +266,15 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			return this;
 		}
 
-		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, selectionEquivalence);
+		public TableWithFilterAndDetailsBuilder<X, D> setAppendOrPruneOnly(boolean appendOrPruneOnly) {
+			this.appendOrPruneOnly = appendOrPruneOnly;
+			return this;
 		}
+
+		public TableWithFilterAndDetails<X, D> build() {
+			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, selectionEquivalence, appendOrPruneOnly);
+		}
+
 	}
 
 	public static <X, D> TableWithFilterAndDetailsBuilder<X, D> builder(String title, Supplier<List<X>> dataGetter, Function<X, List<D>> detailsConverter) {

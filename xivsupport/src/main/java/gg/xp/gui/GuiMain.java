@@ -1,5 +1,7 @@
 package gg.xp.gui;
 
+import com.bulenkov.darcula.DarculaLaf;
+import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.context.StateStore;
 import gg.xp.events.ACTLogLineEvent;
 import gg.xp.events.AutoEventDistributor;
@@ -69,27 +71,31 @@ public class GuiMain {
 	}
 
 	public GuiMain(EventMaster master, PicoContainer container) {
+		log.info("Starting GUI setup");
 		this.master = master;
 		this.state = master.getDistributor().getStateStore();
 		this.container = container;
+		try {
+//			UIManager.setLookAndFeel(new DarculaLaf());
+			UIManager.setLookAndFeel(new FlatDarculaLaf());
+		}
+		catch (Throwable t) {
+			log.error("Error setting up look and feel", t);
+		}
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
 			JTabbedPane tabPane = new JTabbedPane();
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(960, 720);
 			frame.setVisible(true);
-			JPanel mainPanel = new SystemTabPanel();
-			Component scrollPanel = new JScrollPane(mainPanel);
-			tabPane.addTab("System", scrollPanel);
-//			tabPane.addTab("System", mainPanel);
-			// TODO: move this to a panel in first page
+			tabPane.addTab("System", new SystemTabPanel());
 			tabPane.addTab("Plugins", new PluginTopologyPanel());
 			tabPane.addTab("Combatants", getCombatantsPanel());
 			tabPane.addTab("Events", getEventsPanel());
 			tabPane.addTab("ACT Log", getActLogPanel());
 			tabPane.addTab("System Log", getSystemLogPanel());
-			JPanel stats = new StatsPanel();
-			tabPane.addTab("Stats", stats);
+			// TODO: move this to a panel in first page
+			tabPane.addTab("Stats", new StatsPanel());
 			tabPane.addTab("Import/Export", new JPanel());
 			frame.add(tabPane);
 		});
@@ -239,7 +245,7 @@ public class GuiMain {
 
 		public void refresh() {
 			displayed.forEach(Refreshable::refresh);
-			partyTableModel.refresh();
+			partyTableModel.fullRefresh();
 		}
 	}
 
@@ -263,7 +269,7 @@ public class GuiMain {
 		}
 
 		public void refresh() {
-			combatantsTableModel.refresh();
+			combatantsTableModel.fullRefresh();
 		}
 	}
 
@@ -358,8 +364,9 @@ public class GuiMain {
 						return c.getType();
 					}
 				}))
+				.addMainColumn(new CustomColumn<>("Raw Type", XivCombatant::getRawType))
 				.addMainColumn(new CustomColumn<>("HP", XivCombatant::getHp))
-				.addMainColumn(new CustomColumn<>("POS", XivCombatant::getPos))
+				.addMainColumn(new CustomColumn<>("Position", XivCombatant::getPos))
 				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
 				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
@@ -373,7 +380,7 @@ public class GuiMain {
 //				.addFilter(EventEntityFilter::targetFilter)
 //				.addFilter(EventAbilityOrBuffFilter::new)
 				.build();
-		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalUpdate());
+		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalNewData());
 		return table;
 
 	}
@@ -433,8 +440,10 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::sourceFilter)
 				.addFilter(EventEntityFilter::targetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
+				// TODO: put this everywhere applicable
+				.setAppendOrPruneOnly(true)
 				.build();
-		master.getDistributor().registerHandler(Event.class, (ctx, e) -> table.signalUpdate());
+		master.getDistributor().registerHandler(Event.class, (ctx, e) -> table.signalNewData());
 		return table;
 
 	}
@@ -462,9 +471,10 @@ public class GuiMain {
 				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
 				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				.setAppendOrPruneOnly(true)
 				.build();
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> {
-			table.signalUpdate();
+			table.signalNewData();
 		});
 		return table;
 	}
@@ -516,8 +526,9 @@ public class GuiMain {
 					.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
 					.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
 					.addFilter(LogLevelVisualFilter::new)
+					.setAppendOrPruneOnly(true)
 					.build();
-			instance.addCallback(table::signalUpdate);
+			instance.addCallback(table::signalNewData);
 			return table;
 		}
 	}

@@ -16,6 +16,7 @@ public abstract class BaseEvent implements Event {
 	private Instant happenedAt = Instant.now();
 	private Instant enqueuedAt;
 	private Instant pumpedAt;
+	private Instant pumpFinishedAt;
 
 	public void setParent(Event parent) {
 		if (this.parent != null) {
@@ -63,5 +64,18 @@ public abstract class BaseEvent implements Event {
 			log.error("Event {} already has a pumpedAt time!", this);
 		}
 		this.pumpedAt = pumpedAt;
+	}
+
+	@Override
+	public Instant getPumpFinishedAt() {
+		return pumpedAt;
+	}
+
+	@Override
+	public void setPumpFinishedAt(Instant pumpedAt) {
+		if (this.pumpFinishedAt != null) {
+			log.error("Event {} already has a pumpFinishedAt time!", this);
+		}
+		this.pumpFinishedAt = pumpedAt;
 	}
 }

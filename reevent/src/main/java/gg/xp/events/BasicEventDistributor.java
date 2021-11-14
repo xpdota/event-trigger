@@ -133,6 +133,7 @@ public class BasicEventDistributor implements EventDistributor {
 					log.error("Error pumping event {} into handler {}", event, handler, t);
 				}
 			});
+			current.setPumpFinishedAt(Instant.now());
 		}
 	}
 }

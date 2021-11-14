@@ -180,7 +180,7 @@ public class XivState implements SubState {
 			}
 			if (potentialFakes.size() >= 2) {
 				XivCombatant firstPossibleFake = potentialFakes.get(0);
-				boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getPos().equals(firstPossibleFake.getPos()));
+				boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getPos() != null && p.getPos().equals(firstPossibleFake.getPos()));
 				if (allMatch) {
 					potentialFakes.forEach(fake -> fake.setFake(true));
 				}

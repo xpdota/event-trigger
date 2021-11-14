@@ -83,11 +83,26 @@ public class XivCombatant extends XivEntity {
 		else if (isFake) {
 			return CombatantType.FAKE;
 		}
+		else if (rawType == 6) {
+			return CombatantType.GP;
+		}
 		else {
 			return CombatantType.NPC;
 		}
 	}
 
+	/**
+	 * 0 = ?
+	 * 1 = PC
+	 * 2 = Combatant NPCs and pets? Both Selene and Chocobo seem to be in here, as do enemies
+	 * 3 = Random NPC? Id seems to always be E0000000 (3758096384)
+	 * 4 = ?
+	 * 5 = ?
+	 * 6 = Gathering point? I got "Mature Tree" in here
+	 * 7 = ?
+	 *
+	 * @return Raw type from ACT
+	 */
 	public long getRawType() {
 		return rawType;
 	}

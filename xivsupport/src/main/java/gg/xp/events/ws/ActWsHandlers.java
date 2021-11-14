@@ -23,7 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ActWsHandlers {
 
@@ -36,7 +40,8 @@ public class ActWsHandlers {
 				try {
 					Thread.sleep(1000);
 					master.pushEvent(new RefreshCombatantsRequest());
-				} catch (Throwable t) {
+				}
+				catch (Throwable t) {
 					log.error("Error", t);
 				}
 			}
@@ -151,13 +156,33 @@ public class ActWsHandlers {
 		}
 	}
 
+	// TODO: clear on zone change
+	private final Map<Long, RawXivCombatantInfo> rawCbtCache = new HashMap<>();
+
 	@HandleEvents(order = -100)
-	public static void actWsCombatants(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
+	public void actWsCombatants(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("combatants".equals(jsonMsg.getType())) {
 			JsonNode combatantsNode = jsonMsg.getJson().path("combatants");
 			List<RawXivCombatantInfo> combatantMaps = mapper.convertValue(combatantsNode, new TypeReference<>() {
 			});
-			context.enqueue(new CombatantsUpdateRaw(combatantMaps));
+			List<RawXivCombatantInfo> optimizedCombatantMaps = combatantMaps.stream().map(combatant -> {
+				long id = combatant.getId();
+				if (id == 0xE0000000) {
+					// Don't bother with these. Since we map by ID anyway, they'd end up overwriting each other. Waste of memory.
+					return null;
+				}
+				else {
+					RawXivCombatantInfo cached = rawCbtCache.get(id);
+					if (combatant.equals(cached)) {
+						return cached;
+					}
+					else {
+						rawCbtCache.put(id, combatant);
+						return combatant;
+					}
+				}
+			}).filter(Objects::nonNull).collect(Collectors.toList());
+			context.enqueue(new CombatantsUpdateRaw(optimizedCombatantMaps));
 		}
 	}
 //	@HandleEvents

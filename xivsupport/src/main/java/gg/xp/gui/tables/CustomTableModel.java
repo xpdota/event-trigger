@@ -51,37 +51,47 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	private final List<CustomColumn<X>> columns;
 	private List<X> data = Collections.emptyList();
 	private final BiPredicate<X, X> selectionEquivalence;
+	// TODO
+	private final boolean appendFastPathOk = true;
 
 
 	private CustomTableModel(Supplier<List<X>> dataGetter, List<CustomColumn<X>> columns, BiPredicate<X, X> selectionEquivalence) {
 		this.dataGetter = dataGetter;
 		this.columns = columns;
 		this.selectionEquivalence = selectionEquivalence;
-		refresh();
+		fullRefresh();
 	}
 
-	public void refresh() {
+	public void appendOnlyRefresh() {
 		JTable table = getTable();
 		if (table == null) {
 			data = dataGetter.get();
+			// This shouldn't really happen anyway, no need to optimize
 			fireTableDataChanged();
 		}
 		else {
+			if (data.isEmpty()) {
+				// Fast path for when data is currently empty
+				fireTableDataChanged();
+				return;
+			}
 			ListSelectionModel selectionModel = table.getSelectionModel();
+			int oldSize = data.size();
 			int[] oldSelectionIndices = selectionModel.getSelectedIndices();
 			List<X> oldSelections = Arrays.stream(oldSelectionIndices)
 					.mapToObj(i -> data.get(i))
 					.collect(Collectors.toList());
 			// TODO: smarter data provider that informs us of append-only operations
 			data = dataGetter.get();
-			fireTableDataChanged();
-			// fast path for typical case where data is only appended
-			// in such cases, the selected element would be in the same index, so guess that
-			// first, and fall back to the slow path if our guess was wrong
-			// TODO: this doesn't work for combatants since we replace them completely
+			int newSize = data.size();
+			fireTableRowsInserted(oldSize, newSize - 1);
+			// fast path for typical case where data is only appended and we only have a single selection
 			if (oldSelections.size() == 1) {
 				X theItem = oldSelections.get(0);
 				int theIndex = oldSelectionIndices[0];
+				if (theIndex >= data.size()) {
+					return;
+				}
 				if (data.get(theIndex) == theItem) {
 					selectionModel.addSelectionInterval(theIndex, theIndex);
 					return;
@@ -97,12 +107,40 @@ public class CustomTableModel<X> extends AbstractTableModel {
 				}
 			}
 		}
-//
-//
-//
-//		int sizeBefore = data.size();
-//		int sizeAfter = data.size();
-//		fireTableRowsInserted(sizeBefore, sizeAfter - 1);
+
+	}
+
+	public void fullRefresh() {
+		JTable table = getTable();
+		if (table == null) {
+			data = dataGetter.get();
+			fireTableDataChanged();
+		}
+		else {
+			if (data.isEmpty()) {
+				// Fast path for when data is currently empty
+				data = dataGetter.get();
+				fireTableDataChanged();
+				return;
+			}
+			ListSelectionModel selectionModel = table.getSelectionModel();
+			int[] oldSelectionIndices = selectionModel.getSelectedIndices();
+			List<X> oldSelections = Arrays.stream(oldSelectionIndices)
+					.mapToObj(i -> data.get(i))
+					.collect(Collectors.toList());
+			// TODO: smarter data provider that informs us of append-only operations
+			data = dataGetter.get();
+			fireTableDataChanged();
+			for (X oldItem : oldSelections) {
+				for (int i = 0; i < data.size(); i++) {
+					X newItem = data.get(i);
+					if (selectionEquivalence.test(oldItem, newItem)) {
+						selectionModel.addSelectionInterval(i, i);
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	@Override

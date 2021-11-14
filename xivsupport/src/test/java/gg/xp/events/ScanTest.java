@@ -41,7 +41,7 @@ public class ScanTest {
 	@Test
 	@Ignore // Manual test - listen for TTS
 	public void testTTS() {
-		EventDistributor dist = AutoHandlerScan.create();
+		EventDistributor dist = XivMain.testingMasterInit().getComponent(EventDistributor.class);
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 		dist.acceptEvent(new CalloutEvent("Foo Bar"));
@@ -50,7 +50,7 @@ public class ScanTest {
 
 	@Test
 	public void testMultiMethod() {
-		EventDistributor dist = AutoHandlerScan.create();
+		EventDistributor dist = XivMain.testingMasterInit().getComponent(EventDistributor.class);
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 		dist.acceptEvent(new ACTLogLineEvent("Stuff"));

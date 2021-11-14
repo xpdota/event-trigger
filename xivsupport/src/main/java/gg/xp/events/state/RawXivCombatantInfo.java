@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.events.models.HitPoints;
 import gg.xp.events.models.Position;
-import gg.xp.events.models.XivEntity;
+
+import java.io.Serializable;
+import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RawXivCombatantInfo extends XivEntity {
+public final class RawXivCombatantInfo implements Serializable {
 
 	private static final long serialVersionUID = -4500158723610391407L;
 	private final long id;
@@ -51,7 +53,6 @@ public class RawXivCombatantInfo extends XivEntity {
 			@JsonProperty("PartyType") long partyType,
 			@JsonProperty("OwnerID") long ownerId
 	) {
-		super(id, name);
 		this.id = id;
 		this.name = name;
 		this.jobId = jobId;
@@ -66,11 +67,19 @@ public class RawXivCombatantInfo extends XivEntity {
 		this.posZ = posZ;
 		this.heading = heading;
 		this.worldId = worldId;
-		this.worldName = worldName;
+		this.worldName = worldName.intern();
 		this.bnpcId = bnpcId;
 		this.bnpcNameId = bnpcNameId;
 		this.partyType = partyType;
 		this.ownerId = ownerId;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	public long getJobId() {
@@ -147,5 +156,18 @@ public class RawXivCombatantInfo extends XivEntity {
 				", partyType=" + partyType +
 				", ownerId=" + ownerId +
 				'}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		RawXivCombatantInfo that = (RawXivCombatantInfo) o;
+		return id == that.id && jobId == that.jobId && type == that.type && curHp == that.curHp && maxHp == that.maxHp && curMp == that.curMp && maxMp == that.maxMp && level == that.level && Double.compare(that.posX, posX) == 0 && Double.compare(that.posY, posY) == 0 && Double.compare(that.posZ, posZ) == 0 && Double.compare(that.heading, heading) == 0 && worldId == that.worldId && bnpcId == that.bnpcId && bnpcNameId == that.bnpcNameId && partyType == that.partyType && ownerId == that.ownerId && Objects.equals(name, that.name) && Objects.equals(worldName, that.worldName);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, name, jobId, type, curHp, maxHp, curMp, maxMp, level, posX, posY, posZ, heading, worldId, worldName, bnpcId, bnpcNameId, partyType, ownerId);
 	}
 }
