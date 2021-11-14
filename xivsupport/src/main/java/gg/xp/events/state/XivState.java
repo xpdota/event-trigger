@@ -153,6 +153,12 @@ public class XivState implements SubState {
 			}
 			combatantsProcessed.put(id, value);
 		});
+		combatantsProcessed.values().forEach(c -> {
+			long ownerId = c.getOwnerId();
+			if (ownerId != 0) {
+				c.setParent(combatantsProcessed.get(ownerId));
+			}
+		});
 		combatantsByNpcName.forEach((name, values) -> {
 			if (values.size() <= 2) {
 				// Skip if only one, nothing to do
@@ -161,9 +167,7 @@ public class XivState implements SubState {
 				return;
 			}
 			// Sort highest HP first
-			values.sort(Comparator.<XivCombatant, Long>comparing(npc -> {
-				return npc.getHp() != null ? npc.getHp().getMax() : 0;
-			}).reversed());
+			values.sort(Comparator.<XivCombatant, Long>comparing(npc -> npc.getHp() != null ? npc.getHp().getMax() : 0).reversed());
 			XivCombatant primaryCombatant = values.get(0);
 			if (primaryCombatant.getHp() == null) {
 				return;
@@ -182,7 +186,13 @@ public class XivState implements SubState {
 				XivCombatant firstPossibleFake = potentialFakes.get(0);
 				boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getPos() != null && p.getPos().equals(firstPossibleFake.getPos()));
 				if (allMatch) {
-					potentialFakes.forEach(fake -> fake.setFake(true));
+					potentialFakes.forEach(fake -> {
+						fake.setFake(true);
+						// Also use Parent field to link to real NPC if it doesn't already have a real owner
+						if (fake.getParent() == null) {
+							fake.setParent(primaryCombatant);
+						}
+					});
 				}
 			}
 		});

@@ -18,6 +18,7 @@ public class XivCombatant extends XivEntity {
 	private final long level;
 	private final long ownerId;
 	private boolean isFake;
+	private XivCombatant parent;
 	// TODO: location/heading
 	// TODO: hp info
 
@@ -141,5 +142,13 @@ public class XivCombatant extends XivEntity {
 
 	public void setFake(boolean fake) {
 		isFake = fake;
+	}
+
+	public @Nullable XivCombatant getParent() {
+		return parent;
+	}
+
+	public void setParent(XivCombatant parent) {
+		this.parent = parent;
 	}
 }

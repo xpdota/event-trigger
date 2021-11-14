@@ -1,6 +1,5 @@
 package gg.xp.gui;
 
-import com.bulenkov.darcula.DarculaLaf;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.context.StateStore;
 import gg.xp.events.ACTLogLineEvent;
@@ -354,8 +353,13 @@ public class GuiMain {
 										.collect(Collectors.toList());
 							}
 						})
-				.addMainColumn(new CustomColumn<>("ID", xivCombatant -> Long.toString(xivCombatant.getId(), 16)))
+				.addMainColumn(new CustomColumn<>("ID", xivCombatant -> Long.toString(xivCombatant.getId(), 16),
+						c -> {
+							c.setMinWidth(100);
+							c.setMaxWidth(100);
+						}))
 				.addMainColumn(new CustomColumn<>("Name", XivEntity::getName))
+				.addMainColumn(new CustomColumn<>("Parent", c -> c.getParent() != null ? c.getParent().getName() : null))
 				.addMainColumn(new CustomColumn<>("Type", c -> {
 					if (c.isThePlayer()) {
 						return "YOU";
@@ -363,8 +367,14 @@ public class GuiMain {
 					else {
 						return c.getType();
 					}
+				}, c -> {
+					c.setMinWidth(50);
+					c.setMaxWidth(50);
 				}))
-				.addMainColumn(new CustomColumn<>("Raw Type", XivCombatant::getRawType))
+				.addMainColumn(new CustomColumn<>("Type#", XivCombatant::getRawType, c -> {
+					c.setMaxWidth(60);
+					c.setMinWidth(60);
+				}))
 				.addMainColumn(new CustomColumn<>("HP", XivCombatant::getHp))
 				.addMainColumn(new CustomColumn<>("Position", XivCombatant::getPos))
 				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))

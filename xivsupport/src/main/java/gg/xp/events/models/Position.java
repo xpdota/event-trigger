@@ -35,7 +35,7 @@ public final class Position implements Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("Pos(%.2s, %.2s, %.2s : %.2s)", x, y, z, heading);
+		return String.format("Pos(%.2f, %.2f, %.2f : %.2f)", x, y, z, heading);
 	}
 
 	@Override
