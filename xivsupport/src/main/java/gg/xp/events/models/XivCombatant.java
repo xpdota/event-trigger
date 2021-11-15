@@ -155,7 +155,7 @@ public class XivCombatant extends XivEntity {
 
 	public static final XivCombatant ENVIRONMENT
 			= new XivCombatant(
-			0xE0000000,
+			0xE0000000L,
 			"ENVIRONMENT",
 			false,
 			false,

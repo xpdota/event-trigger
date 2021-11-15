@@ -3,8 +3,7 @@ package gg.xp.events;
 import gg.xp.events.actlines.events.AbilityUsedEvent;
 import gg.xp.events.actlines.parsers.Line21Parser;
 import gg.xp.events.jails.FinalTitanJailsSolvedEvent;
-import gg.xp.events.jails.JailCollector;
-import gg.xp.events.jails.JailSorter;
+import gg.xp.events.jails.JailSolver;
 import gg.xp.events.jails.UnsortedTitanJailsSolvedEvent;
 import gg.xp.events.models.XivEntity;
 import gg.xp.sys.XivMain;
@@ -29,29 +28,35 @@ public class JailExampleTest {
 	@Test
 	public void jailTest() {
 		// Test setup
-		MutablePicoContainer container = XivMain.testingMinimalInit();
+		MutablePicoContainer container = XivMain.testingMasterInit();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 
-		// Register plugins
-		dist.registerHandler(ACTLogLineEvent.class, new Line21Parser()::handle);
-		dist.registerHandler(AbilityUsedEvent.class, new JailCollector()::handleAbility);
-		dist.registerHandler(UnsortedTitanJailsSolvedEvent.class, new JailSorter());
+//		// Register plugins
+//		dist.registerHandler(ACTLogLineEvent.class, new Line21Parser()::handle);
+//		JailSolver jailSolver = new JailSolver();
+//		dist.registerHandler(AbilityUsedEvent.class, jailSolver
+		List<Class<? extends BaseEvent>> eventsWeCareAbout = List.of(
+				ACTLogLineEvent.class,
+				AbilityUsedEvent.class,
+				UnsortedTitanJailsSolvedEvent.class,
+				FinalTitanJailsSolvedEvent.class
+		);
 
 		// Send events
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|106D41EA|Some Player|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 		// This ACTLogLineEvent also causes an AbilityUsedEvent, since that is what the 21-line represents
-		Assert.assertEquals(collector.getEvents().size(), 2);
+		Assert.assertEquals(collector.getEventsOf(eventsWeCareAbout).size(), 2);
 
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|106D41EA|Other Player|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 		// Same here, so now we have 4
-		Assert.assertEquals(collector.getEvents().size(), 4);
+		Assert.assertEquals(collector.getEventsOf(eventsWeCareAbout).size(), 4);
 
 		// But now, after this final line, we have all that, plus all the jail stuff!
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|106D41EA|Third Player|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 
-		List<Event> finalEvents = collector.getEvents();
+		List<? extends Event> finalEvents = collector.getEventsOf(eventsWeCareAbout);
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
