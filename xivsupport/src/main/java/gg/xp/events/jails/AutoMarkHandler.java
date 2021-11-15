@@ -5,6 +5,7 @@ import gg.xp.events.EventContext;
 import gg.xp.events.debug.DebugCommand;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.state.XivState;
+import gg.xp.scan.DisableInTest;
 import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,14 @@ public class AutoMarkHandler {
 	}
 
 	@HandleEvents
+	@DisableInTest
+	public static void clearMarks(EventContext<Event> context, ClearAutoMarkRequest event) {
+		log.info("Clearing marks");
+		clearAutoMark();
+	}
+
+	@HandleEvents
+	@DisableInTest
 	public static void doAutoMark(EventContext<Event> context, AutoMarkRequest event) {
 		XivState xivState = context.getStateInfo().get(XivState.class);
 		List<XivPlayerCharacter> partyList = xivState.getPartyList();
@@ -41,6 +50,20 @@ public class AutoMarkHandler {
 		log.info("Resolved player {} to party slot {}", player.getName(), partySlot);
 		event.setResolvedPartySlot(partySlot);
 		doAutoMarkForSlot(partySlot);
+	}
+
+	private static void clearAutoMark() {
+		exs.submit(() -> {
+			try {
+				new Robot().keyPress(KeyEvent.VK_NUMPAD1);
+				Thread.sleep(50);
+				new Robot().keyRelease(KeyEvent.VK_NUMPAD9);
+				Thread.sleep(50);
+			}
+			catch (AWTException | InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		});
 	}
 
 	private static void doAutoMarkForSlot(int i) {
@@ -55,7 +78,6 @@ public class AutoMarkHandler {
 				throw new RuntimeException(e);
 			}
 		});
-
 	}
 
 

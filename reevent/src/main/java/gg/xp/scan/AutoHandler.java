@@ -19,12 +19,15 @@ public class AutoHandler implements EventHandler<Event> {
 	private final Class<? extends Event> eventClass;
 	private final int order;
 	private final Class<?> clazz;
+	private final AutoHandlerConfig config;
+	private final boolean isDisabledInTests;
 
 	private volatile boolean enabled = true;
 
 	@SuppressWarnings("unchecked")
-	public AutoHandler(Class<?> clazz, Method method, Object clazzInstance) {
+	public AutoHandler(Class<?> clazz, Method method, Object clazzInstance, AutoHandlerConfig config) {
 		this.clazz = clazz;
+		this.config = config;
 		if (method == null) {
 			throw new IllegalArgumentException("Method cannot be null");
 		}
@@ -52,6 +55,7 @@ public class AutoHandler implements EventHandler<Event> {
 		else {
 			order = 0;
 		}
+		isDisabledInTests = method.isAnnotationPresent(DisableInTest.class) || clazz.isAnnotationPresent(DisableInTest.class);
 	}
 
 	public int getOrder() {
@@ -96,6 +100,9 @@ public class AutoHandler implements EventHandler<Event> {
 			if (!((FilteredEventHandler) clazzInstance).enabled(context)) {
 				return;
 			}
+		}
+		if (config.isTest() && isDisabledInTests) {
+			log.info("Skipping {} because it is disabled for tests", getLongTopoLabel());
 		}
 		try {
 			method.invoke(clazzInstance, context, event);

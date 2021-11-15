@@ -29,9 +29,11 @@ public class AutoHandlerScan {
 	// Secondary logger for topology so it can be controlled differently
 	private static final Logger log_topo = LoggerFactory.getLogger(AutoHandlerScan.class.getCanonicalName() + ".Topology");
 	private final AutoHandlerInstanceProvider instanceProvider;
+	private final AutoHandlerConfig config;
 
-	public AutoHandlerScan(AutoHandlerInstanceProvider instanceProvider) {
+	public AutoHandlerScan(AutoHandlerInstanceProvider instanceProvider, AutoHandlerConfig config) {
 		this.instanceProvider = instanceProvider;
+		this.config = config;
 	}
 
 	public List<AutoHandler> build() {
@@ -87,7 +89,7 @@ public class AutoHandlerScan {
 				// TODO: move this to AutoHandler so scope can be implemented
 				Object clazzInstance = instanceProvider.getInstance(clazz);
 				for (Method method : methods) {
-					AutoHandler rawEvh = new AutoHandler(clazz, method, clazzInstance);
+					AutoHandler rawEvh = new AutoHandler(clazz, method, clazzInstance, config);
 					out.add(rawEvh);
 					topo.append(" - Method: ").append(rawEvh.getTopoLabel()).append("\n");
 				}
@@ -102,33 +104,6 @@ public class AutoHandlerScan {
 
 	}
 
-	@Deprecated
-	public static List<AutoHandler> listAll() {
-		return defaultInstance().build();
-	}
-
-	@Deprecated
-	public static AutoHandlerScan defaultInstance() {
-		return new AutoHandlerScan(AutoHandlerScan::getInstance);
-	}
-
-	@Deprecated
-	public static EventDistributor create() {
-		BasicEventDistributor distributor = new BasicEventDistributor(new BasicStateStore());
-		AutoHandlerScan autoHandlerScan = new AutoHandlerScan(AutoHandlerScan::getInstance);
-		autoHandlerScan.build().forEach(distributor::registerHandler);
-		return distributor;
-	}
-
-	private static <X> X getInstance(Class<X> clazz) {
-		try {
-			return clazz.getConstructor((Class<?>[]) null).newInstance();
-		}
-		catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-			throw new RuntimeException("Error instantiating event handler class " + clazz.getSimpleName(), e);
-		}
-
-	}
 
 	// Filter out interfaces and abstract classes
 	private static boolean isClassInstantiable(Class<?> clazz) {

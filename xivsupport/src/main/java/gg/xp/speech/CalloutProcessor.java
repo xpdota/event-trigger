@@ -4,6 +4,7 @@ import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.debug.DebugCommand;
 import gg.xp.scan.HandleEvents;
+import gg.xp.scan.DisableInTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +79,7 @@ public class CalloutProcessor {
 	}
 
 	@HandleEvents
+	@DisableInTest
 	public void callout(EventContext<Event> context, CalloutEvent callout) {
 		context.accept(new TtsRequest(callout.getCallText()));
 	}

@@ -9,6 +9,7 @@ import gg.xp.events.TopologyReloadEvent;
 import gg.xp.events.state.PicoStateStore;
 import gg.xp.events.state.XivState;
 import gg.xp.events.ws.ActWsLogSource;
+import gg.xp.scan.AutoHandlerConfig;
 import gg.xp.scan.AutoHandlerScan;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
@@ -34,6 +35,7 @@ public final class XivMain {
 				.withAutomatic()
 				.build();
 		pico.addComponent(AutoEventDistributor.class);
+		pico.addComponent(AutoHandlerConfig.class);
 		pico.addComponent(AutoHandlerScan.class);
 		pico.addComponent(EventMaster.class);
 		pico.addComponent(PicoStateStore.class);
@@ -53,6 +55,7 @@ public final class XivMain {
 	 */
 	public static MutablePicoContainer testingMasterInit() {
 		MutablePicoContainer pico = requiredComponents();
+		pico.getComponent(AutoHandlerConfig.class).setTest(true);
 		pico.getComponent(EventMaster.class).start();
 		return pico;
 	}
@@ -74,6 +77,8 @@ public final class XivMain {
 		pico.addComponent(PicoStateStore.class);
 		pico.addComponent(XivState.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
+		pico.addComponent(AutoHandlerConfig.class);
+		pico.getComponent(AutoHandlerConfig.class).setTest(true);
 		pico.addComponent(pico);
 
 		pico.getComponent(EventMaster.class).start();

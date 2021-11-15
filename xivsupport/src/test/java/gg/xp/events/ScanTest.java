@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ScanTest {
+	@Ignore // covered by other tests now
 	@Test
 	public void testAutoScan() {
 		MutablePicoContainer pico = XivMain.testingMasterInit();

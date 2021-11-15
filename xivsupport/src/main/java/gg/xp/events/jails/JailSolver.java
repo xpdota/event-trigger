@@ -8,6 +8,7 @@ import gg.xp.events.actlines.events.WipeEvent;
 import gg.xp.events.debug.DebugCommand;
 import gg.xp.events.models.XivAbility;
 import gg.xp.events.models.XivCombatant;
+import gg.xp.events.models.XivEntity;
 import gg.xp.events.models.XivPlayerCharacter;
 import gg.xp.events.state.XivState;
 import gg.xp.scan.HandleEvents;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JailSolver {
 	private static final Logger log = LoggerFactory.getLogger(JailSolver.class);
@@ -77,6 +79,8 @@ public class JailSolver {
 		if (target instanceof XivPlayerCharacter) {
 			jailedPlayers.add((XivPlayerCharacter) target);
 		}
+		log.info("Jailed Players: {}", jailedPlayers.stream().map(XivEntity::getName).collect(Collectors.joining(", ")));
+
 		// Fire off new event if we have exactly 3 events
 		if (jailedPlayers.size() == 3) {
 			context.accept(new UnsortedTitanJailsSolvedEvent(new ArrayList<>(jailedPlayers)));
@@ -117,17 +121,28 @@ public class JailSolver {
 	public static void personalCallout(EventContext<Event> context, FinalTitanJailsSolvedEvent event) {
 		XivPlayerCharacter me = context.getStateInfo().get(XivState.class).getPlayer();
 		List<XivPlayerCharacter> jailedPlayers = event.getJailedPlayers();
-		int i = jailedPlayers.indexOf(me);
-		log.info("Jail index of player: {}", i);
-		switch (i) {
-			case 0:
-				context.accept(new CalloutEvent("One"));
+		int myIndex = 0;
+		for (int i = 0; i < jailedPlayers.size(); i++) {
+			if (jailedPlayers.get(i).getId() == me.getId()) {
+				myIndex = i + 1;
 				break;
+			}
+		}
+		if (myIndex == 0) {
+			log.info("Player is not jailed, no personal callout");
+		}
+		else {
+			log.info("Jail index of player: {}", myIndex);
+		}
+		switch (myIndex) {
 			case 1:
-				context.accept(new CalloutEvent("Two"));
+				context.accept(new CalloutEvent("First"));
 				break;
 			case 2:
-				context.accept(new CalloutEvent("Three"));
+				context.accept(new CalloutEvent("Second"));
+				break;
+			case 3:
+				context.accept(new CalloutEvent("Third"));
 				break;
 		}
 
@@ -135,8 +150,8 @@ public class JailSolver {
 
 	@HandleEvents
 	public static void automarks(EventContext<Event> context, FinalTitanJailsSolvedEvent event) {
-		log.info("Marking jailed players");
 		List<XivPlayerCharacter> playersToMark = event.getJailedPlayers();
+		log.info("Requesting to mark jailed players: {}", playersToMark.stream().map(XivEntity::getName).collect(Collectors.joining(", ")));
 		context.accept(new AutoMarkRequest(playersToMark.get(0)));
 		context.accept(new AutoMarkRequest(playersToMark.get(1)));
 		context.accept(new AutoMarkRequest(playersToMark.get(2)));
