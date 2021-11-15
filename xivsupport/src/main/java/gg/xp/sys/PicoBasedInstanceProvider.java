@@ -2,7 +2,6 @@ package gg.xp.sys;
 
 import gg.xp.scan.AutoHandlerInstanceProvider;
 import org.picocontainer.MutablePicoContainer;
-import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +21,7 @@ public class PicoBasedInstanceProvider implements AutoHandlerInstanceProvider {
 			synchronized (lock) {
 				instance = pico.getComponent(clazz);
 				if (instance == null) {
-					log.info("Adding component {}", clazz);
+					log.debug("Adding component {}", clazz);
 					pico.addComponent(clazz);
 					instance = pico.getComponent(clazz);
 				}

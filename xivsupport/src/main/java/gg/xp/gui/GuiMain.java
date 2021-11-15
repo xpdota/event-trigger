@@ -7,11 +7,12 @@ import gg.xp.events.AutoEventDistributor;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
 import gg.xp.events.EventMaster;
+import gg.xp.events.actlines.events.BuffApplied;
 import gg.xp.events.actlines.events.HasAbility;
 import gg.xp.events.actlines.events.HasSourceEntity;
 import gg.xp.events.actlines.events.HasStatusEffect;
 import gg.xp.events.actlines.events.HasTargetEntity;
-import gg.xp.events.actlines.events.XivStateChange;
+import gg.xp.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.events.misc.RawEventStorage;
 import gg.xp.events.misc.Stats;
@@ -22,11 +23,13 @@ import gg.xp.events.models.XivZone;
 import gg.xp.events.slf4j.LogCollector;
 import gg.xp.events.slf4j.LogEvent;
 import gg.xp.events.state.XivState;
+import gg.xp.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.events.ws.WsState;
 import gg.xp.gui.tables.CustomColumn;
 import gg.xp.gui.tables.CustomTableModel;
 import gg.xp.gui.tables.TableWithFilterAndDetails;
+import gg.xp.gui.tables.filters.ActLineFilter;
 import gg.xp.gui.tables.filters.EventAbilityOrBuffFilter;
 import gg.xp.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.gui.tables.filters.EventEntityFilter;
@@ -90,6 +93,7 @@ public class GuiMain {
 			tabPane.addTab("System", new SystemTabPanel());
 			tabPane.addTab("Plugins", new PluginTopologyPanel());
 			tabPane.addTab("Combatants", getCombatantsPanel());
+			tabPane.addTab("Buffs", getStatusEffectsPanel());
 			tabPane.addTab("Events", getEventsPanel());
 			tabPane.addTab("ACT Log", getActLogPanel());
 			tabPane.addTab("System Log", getSystemLogPanel());
@@ -118,7 +122,7 @@ public class GuiMain {
 			connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
 			add(connectionStatusPanel, c);
 			XivStateStatus xivStateStatus = new XivStateStatus();
-			xivStateStatus.setPreferredSize(new Dimension(100, 200));
+			xivStateStatus.setPreferredSize(new Dimension(100, 250));
 			c.gridy++;
 //			c.gridwidth = 1;
 			add(xivStateStatus, c);
@@ -127,12 +131,12 @@ public class GuiMain {
 //			c.gridx = 0;
 			c.gridy++;
 			c.weighty = 1;
-			c.weighty = 1;
+//			c.weighty = 1;
 			add(combatantsPanel, c);
 			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
-			master.getDistributor().registerHandler(XivStateChange.class, (ctx, e) -> xivStateStatus.refresh());
-			master.getDistributor().registerHandler(XivStateChange.class, (ctx, e) -> combatantsPanel.refresh());
+			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> xivStateStatus.refresh());
+			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> combatantsPanel.refresh());
 		}
 	}
 
@@ -386,11 +390,46 @@ public class GuiMain {
 //				.addFilter(EventTypeFilter::new)
 //				.addFilter(SystemEventFilter::new)
 //				.addFilter(EventClassFilterFilter::new)
-//				.addFilter(EventEntityFilter::sourceFilter)
+				.addFilter(EventEntityFilter::selfFilter)
 //				.addFilter(EventEntityFilter::targetFilter)
 //				.addFilter(EventAbilityOrBuffFilter::new)
 				.build();
 		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalNewData());
+		return table;
+
+	}
+	private JPanel getStatusEffectsPanel() {
+		// TODO: jump to parent button
+		// Main table
+		StatusEffectRepository repo = container.getComponent(StatusEffectRepository.class);
+		TableWithFilterAndDetails<BuffApplied, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Status Effects", repo::getBuffs,
+						combatant -> {
+							if (combatant == null) {
+								return Collections.emptyList();
+							}
+							else {
+								return Utils.dumpAllFields(combatant)
+										.entrySet()
+										.stream()
+										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
+										.collect(Collectors.toList());
+							}
+						})
+//				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
+				.addMainColumn(new CustomColumn<>("Source", e -> e.getSource().getName()))
+				.addMainColumn(new CustomColumn<>("Target", e -> e.getTarget().getName()))
+				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> e.getBuff().getName()))
+				.addMainColumn(new CustomColumn<>("Initial Duration", BuffApplied::getDuration))
+				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
+				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
+				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
+				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				.setSelectionEquivalence(Object::equals)
+				.addFilter(EventEntityFilter::buffSourceFilter)
+				.addFilter(EventEntityFilter::buffTargetFilter)
+				.addFilter(EventAbilityOrBuffFilter::new)
+				.build();
+		master.getDistributor().registerHandler(XivBuffsUpdatedEvent.class, (ctx, e) -> table.signalNewData());
 		return table;
 
 	}
@@ -437,8 +476,6 @@ public class GuiMain {
 					Event parent = e.getParent();
 					return parent == null ? null : parent.getClass().getSimpleName();
 				}))
-				// TODO: is this column useful?
-//				.addMainColumn(new CustomColumn<>("toString", Object::toString))
 				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
 				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
@@ -447,8 +484,8 @@ public class GuiMain {
 				.addFilter(EventTypeFilter::new)
 				.addFilter(SystemEventFilter::new)
 				.addFilter(EventClassFilterFilter::new)
-				.addFilter(EventEntityFilter::sourceFilter)
-				.addFilter(EventEntityFilter::targetFilter)
+				.addFilter(EventEntityFilter::eventSourceFilter)
+				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 				// TODO: put this everywhere applicable
 				.setAppendOrPruneOnly(true)
@@ -481,6 +518,7 @@ public class GuiMain {
 				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
 				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
 				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				.addFilter(ActLineFilter::new)
 				.setAppendOrPruneOnly(true)
 				.build();
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> {

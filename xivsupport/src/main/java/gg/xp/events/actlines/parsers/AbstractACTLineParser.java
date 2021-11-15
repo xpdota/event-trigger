@@ -3,6 +3,7 @@ package gg.xp.events.actlines.parsers;
 import gg.xp.events.ACTLogLineEvent;
 import gg.xp.events.Event;
 import gg.xp.events.EventContext;
+import gg.xp.events.state.RefreshCombatantsRequest;
 import gg.xp.scan.HandleEvents;
 import org.jetbrains.annotations.Nullable;
 
@@ -56,12 +57,16 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				out.put(groups.get(i), splits[i + 2]);
 			}
 			ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
+			FieldMapper<F> mapper = new FieldMapper<>(out, context, shouldIgnoreEntityLookupMisses());
 			Event outgoingEvent;
 			try {
-				outgoingEvent = convert(new FieldMapper<>(out, context, shouldIgnoreEntityLookupMisses()), lineNumber, zdt);
+				outgoingEvent = convert(mapper, lineNumber, zdt);
 			}
 			catch (Throwable t) {
 				throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
+			}
+			if (mapper.isFlaggedForCombatantUpdate()) {
+				context.accept(new RefreshCombatantsRequest());
 			}
 			if (outgoingEvent != null) {
 				outgoingEvent.setHappenedAt(zdt.toInstant());

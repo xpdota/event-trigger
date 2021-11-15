@@ -1,9 +1,11 @@
 package gg.xp.gui.tables.filters;
 
 import gg.xp.events.Event;
+import gg.xp.events.actlines.events.BuffApplied;
 import gg.xp.events.actlines.events.HasSourceEntity;
 import gg.xp.events.actlines.events.HasTargetEntity;
 import gg.xp.events.models.XivCombatant;
+import gg.xp.events.models.XivEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Function;
 
-public final class EventEntityFilter<X> implements VisualFilter<Event> {
+public final class EventEntityFilter<I, X> implements VisualFilter<I> {
 
 	private static final Logger log = LoggerFactory.getLogger(EventEntityFilter.class);
 
@@ -30,12 +32,24 @@ public final class EventEntityFilter<X> implements VisualFilter<Event> {
 	private static final String ENVIRONMENT = "Environment";
 	private static final String NONE = "None (Non-Targeted Event)";
 
-	public static EventEntityFilter<HasSourceEntity> sourceFilter(Runnable filterUpdatedCallback) {
+	public static EventEntityFilter<Event, HasSourceEntity> eventSourceFilter(Runnable filterUpdatedCallback) {
 		return new EventEntityFilter<>(HasSourceEntity.class, HasSourceEntity::getSource, filterUpdatedCallback, "Source Entity");
 	}
 
-	public static EventEntityFilter<HasTargetEntity> targetFilter(Runnable filterUpdatedCallback) {
+	public static EventEntityFilter<Event, HasTargetEntity> eventTargetFilter(Runnable filterUpdatedCallback) {
 		return new EventEntityFilter<>(HasTargetEntity.class, HasTargetEntity::getTarget, filterUpdatedCallback, "Target Entity");
+	}
+
+	public static EventEntityFilter<BuffApplied, HasSourceEntity> buffSourceFilter(Runnable filterUpdatedCallback) {
+		return new EventEntityFilter<>(HasSourceEntity.class, HasSourceEntity::getSource, filterUpdatedCallback, "Source Entity");
+	}
+
+	public static EventEntityFilter<BuffApplied, HasTargetEntity> buffTargetFilter(Runnable filterUpdatedCallback) {
+		return new EventEntityFilter<>(HasTargetEntity.class, HasTargetEntity::getTarget, filterUpdatedCallback, "Target Entity");
+	}
+
+	public static EventEntityFilter<XivCombatant, XivCombatant> selfFilter(Runnable filterUpdatedCallback) {
+		return new EventEntityFilter<>(XivCombatant.class, Function.identity(), filterUpdatedCallback, "Entity");
 	}
 
 	private EventEntityFilter(Class<X> expectedClass, Function<X, XivCombatant> entityGetter, Runnable filterUpdatedCallback, String label) {
@@ -65,7 +79,7 @@ public final class EventEntityFilter<X> implements VisualFilter<Event> {
 	}
 
 	@Override
-	public boolean passesFilter(Event item) {
+	public boolean passesFilter(I item) {
 		// TODO: computing a single lambda once when we change filters is probably faster?
 		switch (selectedItem) {
 			case ALL:

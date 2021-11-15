@@ -22,7 +22,6 @@ import gg.xp.scan.HandleEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -135,16 +134,20 @@ public class ActWsHandlers {
 	@HandleEvents(order = -100)
 	public static void actWsPartyChange(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
 		if ("PartyChanged".equals(jsonMsg.getType())) {
-			List<RawXivPartyInfo> members = new ArrayList<>();
-			// TODO: consider using automatic deserialization rather than doing it manually
-			for (JsonNode partyMember : jsonMsg.getJson().get("party")) {
-				String name = partyMember.get("name").textValue();
-				long id = Long.parseLong(partyMember.get("id").textValue(), 16);
-				int world = partyMember.get("worldId").intValue();
-				int job = partyMember.get("job").intValue();
-				int level = partyMember.get("level").intValue();
-				members.add(new RawXivPartyInfo(id, name, world, job, level));
-			}
+			List<RawXivPartyInfo> members = mapper.convertValue(jsonMsg.getJson().path("party"), new TypeReference<>() {
+			});
+//			// TODO: consider using automatic deserialization rather than doing it manually
+//
+//			for (JsonNode partyMember : jsonMsg.getJson().get("party")) {
+//				mapper.convertValue(partyMember)
+//				String name = partyMember.get("name").textValue();
+//				long id = Long.parseLong(partyMember.get("id").textValue(), 16);
+//				int world = partyMember.get("worldId").intValue();
+//				int job = partyMember.get("job").intValue();
+//				int level = partyMember.get("level").intValue();
+//				members.add(new RawXivPartyInfo(id, name, world, job, level));
+//			}
+			log.info("Party changed: {}", jsonMsg);
 			context.enqueue(new PartyChangeEvent(members));
 		}
 	}

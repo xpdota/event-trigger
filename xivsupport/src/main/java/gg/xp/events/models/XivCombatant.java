@@ -101,6 +101,7 @@ public class XivCombatant extends XivEntity {
 	 * 5 = ?
 	 * 6 = Gathering point? I got "Mature Tree" in here
 	 * 7 = ?
+	 * 12 = Interactable housing item?
 	 *
 	 * @return Raw type from ACT
 	 */
@@ -151,4 +152,21 @@ public class XivCombatant extends XivEntity {
 	public void setParent(XivCombatant parent) {
 		this.parent = parent;
 	}
+
+	public static final XivCombatant ENVIRONMENT
+			= new XivCombatant(
+			0xE0000000,
+			"ENVIRONMENT",
+			false,
+			false,
+			0,
+			null,
+			null,
+			0,
+			0,
+			0,
+			0,
+			0);
+
+
 }

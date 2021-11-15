@@ -19,6 +19,7 @@ public class FieldMapper<K extends Enum<K>> {
 	private final Map<K, String> raw;
 	private final EventContext<Event> context;
 	private final boolean ignoreEntityLookupMiss;
+	private boolean flagForCombatantUpdate;
 
 	public FieldMapper(Map<K, String> raw, EventContext<Event> context, boolean ignoreEntityLookupMiss) {
 		this.raw = new EnumMap<>(raw);
@@ -53,6 +54,7 @@ public class FieldMapper<K extends Enum<K>> {
 		String name = getString(nameKey);
 		return new XivStatusEffect(id, name);
 	}
+
 	public XivCombatant getEntity(K idKey, K nameKey) {
 		long id = getHex(idKey);
 		String name = getString(nameKey);
@@ -62,11 +64,18 @@ public class FieldMapper<K extends Enum<K>> {
 			return xivCombatant;
 		}
 		else {
+			if (id == 0xE0000000L) {
+				return XivCombatant.ENVIRONMENT;
+			}
 			if (!ignoreEntityLookupMiss) {
+				flagForCombatantUpdate = true;
 				log.warn("Did not find combatant info for id {} name '{}', guessing", Long.toString(id, 16), name);
 			}
 			return new XivCombatant(id, name);
 		}
 	}
 
+	public boolean isFlaggedForCombatantUpdate() {
+		return flagForCombatantUpdate;
+	}
 }

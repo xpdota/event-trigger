@@ -13,7 +13,7 @@ public interface NameIdPair {
 	default boolean matchesFilter(String filter) {
 		if (filter.startsWith("0x")) {
 			// TODO: this is also inefficient because we should just be parsing the input text
-			String wantedId = filter.substring(2);
+			String wantedId = filter.substring(2).trim();
 			String actualId = Long.toString(getId(), 16);
 			return wantedId.equalsIgnoreCase(actualId);
 		}

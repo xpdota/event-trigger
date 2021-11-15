@@ -1,6 +1,7 @@
 package gg.xp.events.state;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.events.models.XivEntity;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -9,18 +10,21 @@ public class RawXivPartyInfo extends XivEntity {
 	private final int worldId;
 	private final int jobId;
 	private final int level;
+	private final boolean inParty;
 
 	public RawXivPartyInfo(
-			long id,
-			String name,
-			int worldId,
-			int jobId,
-			int level
+			@JsonProperty("id") String idRaw,
+			@JsonProperty("name") String name,
+			@JsonProperty("worldId") int worldId,
+			@JsonProperty("job") int jobId,
+			@JsonProperty("level") int level,
+			@JsonProperty("inParty") boolean inParty
 			) {
-		super(id, name);
+		super(Long.parseLong(idRaw, 16), name);
 		this.worldId = worldId;
 		this.jobId = jobId;
 		this.level = level;
+		this.inParty = inParty;
 	}
 
 	public int getWorldId() {
@@ -33,5 +37,9 @@ public class RawXivPartyInfo extends XivEntity {
 
 	public int getLevel() {
 		return level;
+	}
+
+	public boolean isInParty() {
+		return inParty;
 	}
 }

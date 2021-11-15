@@ -13,6 +13,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	private final XivCombatant source;
 	private final XivCombatant target;
 	private final long stacks;
+	private boolean isRefresh;
 
 	public BuffApplied(XivStatusEffect buff, double duration, XivCombatant source, XivCombatant target, long stacks) {
 		this.buff = buff;
@@ -43,5 +44,25 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 
 	public long getStacks() {
 		return stacks;
+	}
+
+	public boolean isRefresh() {
+		return isRefresh;
+	}
+
+	public void setIsRefresh(boolean refresh) {
+		isRefresh = refresh;
+	}
+
+	@Override
+	public String toString() {
+		return "BuffApplied{" +
+				"buff=" + buff +
+				", duration=" + duration +
+				", source=" + source +
+				", target=" + target +
+				", stacks=" + stacks +
+				", isRefresh=" + isRefresh +
+				'}';
 	}
 }

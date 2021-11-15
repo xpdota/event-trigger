@@ -29,4 +29,16 @@ public class BuffTrackingKey {
 	public int hashCode() {
 		return Objects.hash(source.getId(), target.getId(), buff.getId());
 	}
+
+	public XivEntity getSource() {
+		return source;
+	}
+
+	public XivEntity getTarget() {
+		return target;
+	}
+
+	public XivStatusEffect getBuff() {
+		return buff;
+	}
 }

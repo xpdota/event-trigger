@@ -78,6 +78,14 @@ public class WsHandlerTests {
 				"      \"inParty\": true\n" +
 				"    },\n" +
 				"    {\n" +
+				"      \"id\": \"AABBCCDD\",\n" +
+				"      \"name\": \"Other Alliance\",\n" +
+				"      \"worldId\": 79,\n" +
+				"      \"job\": 33,\n" +
+				"      \"level\": 0,\n" +
+				"      \"inParty\": false\n" +
+				"    },\n" +
+				"    {\n" +
 				"      \"id\": \"106CD17F\",\n" +
 				"      \"name\": \"Pf Hero\",\n" +
 				"      \"worldId\": 79,\n" +

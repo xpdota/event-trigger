@@ -7,7 +7,9 @@ import gg.xp.events.actlines.events.BuffRemoved;
 import gg.xp.events.actlines.events.HasSourceEntity;
 import gg.xp.events.actlines.events.HasStatusEffect;
 import gg.xp.events.actlines.events.HasTargetEntity;
+import gg.xp.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.events.actlines.events.WipeEvent;
+import gg.xp.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.events.actlines.events.ZoneChangeEvent;
 import gg.xp.events.delaytest.BaseDelayedEvent;
 import gg.xp.events.models.BuffTrackingKey;
@@ -16,8 +18,12 @@ import gg.xp.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,7 +38,7 @@ public class StatusEffectRepository {
 	// DO in fact explicitly remove the first one, while refreshes don't, so it might not be
 	// that bad.
 	// For now, just use the event objects as valuessince they contain everything we need.
-	private final Map<BuffTrackingKey, BuffApplied> buffs = new HashMap<>();
+	private final Map<BuffTrackingKey, BuffApplied> buffs = new LinkedHashMap<>();
 
 
 	// WL of buffs to track
@@ -75,29 +81,34 @@ public class StatusEffectRepository {
 
 	// TODO: handle buff removal, enemy dying before buff expires, etc
 
-	@HandleEvents
+	@HandleEvents(order = -500)
 	public void buffApplication(EventContext<Event> context, BuffApplied event) {
 		// TODO: should fakes still be tracked somewhere?
 		if (event.getTarget().isFake()) {
 			return;
 		}
-		buffs.put(
+		BuffApplied previous = buffs.put(
 				getKey(event),
 				event
 		);
+		if (previous != null) {
+			event.setIsRefresh(true);
+		}
 		log.info("Buff applied: {} applied {} to {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 		if (event.getSource().isThePlayer() && isWhitelisted(event.getBuff().getId()) && !event.getTarget().isFake()) {
 			context.enqueue(new DelayedBuffCallout(event, (long) (event.getDuration() * 1000L - dotRefreshAdvance)));
 		}
+		context.accept(new XivBuffsUpdatedEvent());
 	}
 
 	// TODO: this doesn't actually work as well as I'd like - if the advance timing is too small and/or we're behind on
 	// processing, we might hit the remove before the callout.
-	@HandleEvents
+	@HandleEvents(order = -500)
 	public void buffRemove(EventContext<Event> context, BuffRemoved event) {
 		BuffApplied removed = buffs.remove(getKey(event));
 		if (removed != null) {
 			log.info("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
+			context.accept(new XivBuffsUpdatedEvent());
 		}
 	}
 
@@ -105,12 +116,34 @@ public class StatusEffectRepository {
 	public void wipe(EventContext<Event> context, WipeEvent wipe) {
 		log.info("Wipe, clearing {} buffs", buffs.size());
 		buffs.clear();
+		context.accept(new XivBuffsUpdatedEvent());
 	}
 
 	@HandleEvents
 	public void wipe(EventContext<Event> context, ZoneChangeEvent wipe) {
-		log.info("Wipe, clearing {} buffs", buffs.size());
+		log.info("Zone change, clearing {} buffs", buffs.size());
 		buffs.clear();
+		context.accept(new XivBuffsUpdatedEvent());
+	}
+
+	@HandleEvents(order = -500)
+	public void removeCombatant(EventContext<Event> context, RawRemoveCombatantEvent event) {
+		long idToRemove = event.getEntity().getId();
+		Iterator<Map.Entry<BuffTrackingKey, BuffApplied>> iterator = buffs.entrySet().iterator();
+		Map.Entry<BuffTrackingKey, BuffApplied> current;
+		boolean anyRemoved = false;
+		while (iterator.hasNext()) {
+			current = iterator.next();
+			BuffTrackingKey key = current.getKey();
+			if (key.getTarget().getId() == idToRemove) {
+				log.info("Buff removed: {} removed {} from {} due to removal of target. Tracking {} buffs.", key.getSource().getName(), key.getBuff().getName(), key.getTarget().getName(), buffs.size());
+				iterator.remove();
+				anyRemoved = true;
+			}
+		}
+		if (anyRemoved) {
+			context.accept(new XivBuffsUpdatedEvent());
+		}
 	}
 
 	@HandleEvents
@@ -124,5 +157,10 @@ public class StatusEffectRepository {
 		else {
 			log.info("Not calling");
 		}
+	}
+
+	public List<BuffApplied> getBuffs() {
+		// TODO: thread safety
+		return new ArrayList<>(buffs.values());
 	}
 }

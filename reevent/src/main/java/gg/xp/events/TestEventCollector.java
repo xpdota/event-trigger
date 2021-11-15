@@ -35,4 +35,8 @@ public class TestEventCollector implements EventHandler<Event> {
 				.filter(event -> eventClasses.stream().anyMatch(clazz -> clazz.isInstance(event)))
 				.collect(Collectors.toList());
 	}
+
+	public void clear() {
+		eventsSeen.clear();
+	}
 }

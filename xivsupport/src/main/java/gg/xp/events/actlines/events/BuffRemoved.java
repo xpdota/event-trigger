@@ -42,4 +42,15 @@ public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTarget
 	public long getStacks() {
 		return stacks;
 	}
+
+	@Override
+	public String toString() {
+		return "BuffRemoved{" +
+				"buff=" + buff +
+				", duration=" + duration +
+				", source=" + source +
+				", target=" + target +
+				", stacks=" + stacks +
+				'}';
+	}
 }

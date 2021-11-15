@@ -201,12 +201,18 @@ public class XivState implements SubState {
 		this.combatantsProcessed = combatantsProcessed;
 		List<XivPlayerCharacter> partyListProcessed = new ArrayList<>(partyListRaw.size());
 		partyListRaw.forEach(rawPartyMember -> {
+			if (!rawPartyMember.isInParty()) {
+				// Member of different alliance, ignore
+				// TODO: is there value in supporting alliance stuff?
+				return;
+			}
 			long id = rawPartyMember.getId();
 			XivCombatant fullCombatant = combatantsProcessed.get(id);
 			if (fullCombatant instanceof XivPlayerCharacter) {
 				partyListProcessed.add((XivPlayerCharacter) fullCombatant);
 			}
 			else {
+				log.debug("Party member not in combatants: {}:{}", rawPartyMember.getId(), rawPartyMember.getName());
 				partyListProcessed.add(new XivPlayerCharacter(
 						rawPartyMember.getId(),
 						rawPartyMember.getName(),

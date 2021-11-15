@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -23,15 +25,17 @@ import java.util.stream.Collectors;
 public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 	private static final Logger log = LoggerFactory.getLogger(TableWithFilterAndDetails.class);
+	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
 
 	private final Supplier<List<X>> dataGetter;
-	private final List<VisualFilter<X>> filters;
+	private final List<VisualFilter<? super X>> filters;
 	private final CustomTableModel<X> mainModel;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
 	private List<X> dataFiltered = Collections.emptyList();
 	private volatile boolean isAutoRefreshEnabled;
 	private final boolean appendOrPruneOnly;
+	private final String title;
 
 	private TableWithFilterAndDetails(
 			String title,
@@ -39,10 +43,11 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			List<CustomColumn<X>> mainColumns,
 			List<CustomColumn<D>> detailsColumns,
 			Function<X, List<D>> detailsConverter,
-			List<Function<Runnable, VisualFilter<X>>> filterCreators,
+			List<Function<Runnable, VisualFilter<? super X>>> filterCreators,
 			BiPredicate<X, X> selectionEquivalence,
 			boolean appendOrPruneOnly) {
 		super(title);
+		this.title = title;
 		// TODO: add count of events
 		this.dataGetter = dataGetter;
 		this.appendOrPruneOnly = appendOrPruneOnly;
@@ -133,8 +138,8 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 				.collect(Collectors.toList());
 		long after = System.currentTimeMillis();
 		long delta = after - before;
-		if (delta > 5) {
-			log.warn("Slow filtering: took {}ms to filter {} items", delta, numberOfThings);
+		if (delta >= 3) {
+			log.warn("Slow filtering for table {}: took {}ms to filter {} items", title, delta, numberOfThings);
 		}
 		return out;
 	}
@@ -213,7 +218,17 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			// This setup allows for there to be exactly one refresh in progress, and one pending after that
 			boolean skipRefresh = pendingRefresh.compareAndExchange(false, true);
 			if (!skipRefresh) {
-				SwingUtilities.invokeLater(this::updateAll);
+				exs.submit(() -> {
+					SwingUtilities.invokeLater(this::updateAll);
+					try {
+						// Cap updates to 100 fps, while not delaying updates
+						// if they come in less frequent
+						Thread.sleep(10);
+					}
+					catch (InterruptedException e) {
+						// ignored
+					}
+				});
 			}
 		}
 	}
@@ -235,7 +250,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		private final List<CustomColumn<X>> mainColumns = new ArrayList<>();
 		private final List<CustomColumn<D>> detailsColumns = new ArrayList<>();
 		private final Function<X, List<D>> detailsConverter;
-		private final List<Function<Runnable, VisualFilter<X>>> filters = new ArrayList<>();
+		private final List<Function<Runnable, VisualFilter<? super X>>> filters = new ArrayList<>();
 		private BiPredicate<X, X> selectionEquivalence = Objects::equals;
 		private boolean appendOrPruneOnly;
 
@@ -256,7 +271,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			return this;
 		}
 
-		public TableWithFilterAndDetailsBuilder<X, D> addFilter(Function<Runnable, VisualFilter<X>> filter) {
+		public TableWithFilterAndDetailsBuilder<X, D> addFilter(Function<Runnable, VisualFilter<? super X>> filter) {
 			this.filters.add(filter);
 			return this;
 		}
