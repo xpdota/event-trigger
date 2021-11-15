@@ -88,7 +88,7 @@ public class JailExampleTest {
 
 
 		// Last event should be sorted jails
-		List<XivEntity> jailedPlayers = sortedEvent.getJailedPlayers();
+		List<? extends XivEntity> jailedPlayers = sortedEvent.getJailedPlayers();
 		// Assert correct sort order
 		Assert.assertEquals(jailedPlayers.stream().map(XivEntity::getName).collect(Collectors.toList()), List.of("Other Player", "Some Player", "Third Player"));
 	}

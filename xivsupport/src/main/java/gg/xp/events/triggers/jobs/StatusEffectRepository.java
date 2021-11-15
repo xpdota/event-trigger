@@ -94,7 +94,7 @@ public class StatusEffectRepository {
 		if (previous != null) {
 			event.setIsRefresh(true);
 		}
-		log.info("Buff applied: {} applied {} to {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
+		log.debug("Buff applied: {} applied {} to {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 		if (event.getSource().isThePlayer() && isWhitelisted(event.getBuff().getId()) && !event.getTarget().isFake()) {
 			context.enqueue(new DelayedBuffCallout(event, (long) (event.getDuration() * 1000L - dotRefreshAdvance)));
 		}
@@ -107,21 +107,21 @@ public class StatusEffectRepository {
 	public void buffRemove(EventContext<Event> context, BuffRemoved event) {
 		BuffApplied removed = buffs.remove(getKey(event));
 		if (removed != null) {
-			log.info("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
+			log.debug("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 			context.accept(new XivBuffsUpdatedEvent());
 		}
 	}
 
 	@HandleEvents
 	public void wipe(EventContext<Event> context, WipeEvent wipe) {
-		log.info("Wipe, clearing {} buffs", buffs.size());
+		log.debug("Wipe, clearing {} buffs", buffs.size());
 		buffs.clear();
 		context.accept(new XivBuffsUpdatedEvent());
 	}
 
 	@HandleEvents
 	public void wipe(EventContext<Event> context, ZoneChangeEvent wipe) {
-		log.info("Zone change, clearing {} buffs", buffs.size());
+		log.debug("Zone change, clearing {} buffs", buffs.size());
 		buffs.clear();
 		context.accept(new XivBuffsUpdatedEvent());
 	}
@@ -136,7 +136,7 @@ public class StatusEffectRepository {
 			current = iterator.next();
 			BuffTrackingKey key = current.getKey();
 			if (key.getTarget().getId() == idToRemove) {
-				log.info("Buff removed: {} removed {} from {} due to removal of target. Tracking {} buffs.", key.getSource().getName(), key.getBuff().getName(), key.getTarget().getName(), buffs.size());
+				log.debug("Buff removed: {} removed {} from {} due to removal of target. Tracking {} buffs.", key.getSource().getName(), key.getBuff().getName(), key.getTarget().getName(), buffs.size());
 				iterator.remove();
 				anyRemoved = true;
 			}
@@ -151,11 +151,11 @@ public class StatusEffectRepository {
 		BuffApplied originalEvent = event.originalEvent;
 		BuffApplied mostRecentEvent = buffs.get(getKey(originalEvent));
 		if (originalEvent == mostRecentEvent) {
-			log.info("Dot refresh callout still valid");
+			log.debug("Dot refresh callout still valid");
 			context.accept(new CalloutEvent(originalEvent.getBuff().getName()));
 		}
 		else {
-			log.info("Not calling");
+			log.debug("Not calling");
 		}
 	}
 

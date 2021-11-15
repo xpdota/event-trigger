@@ -37,7 +37,7 @@ public class Stats { // :eldercat:
 	@HandleEvents
 	public void statsCommand(EventContext<Event> context, DebugCommand event) {
 		if (event.getCommand().equals("stats")) {
-			if (event.args().size() == 1) {
+			if (event.getArgs().size() == 1) {
 				long now = System.currentTimeMillis();
 				double delta = ((double) (now - start)) / 1000;
 				log.info("Processing for {} seconds", delta);
@@ -48,7 +48,7 @@ public class Stats { // :eldercat:
 				log.info("Heap: {}", memory.getHeapMemoryUsage().toString());
 				log.info("Non-heap: {}", memory.getNonHeapMemoryUsage().toString());
 			}
-			else if ("clear".equals(event.args().get(1))) {
+			else if ("clear".equals(event.getArgs().get(1))) {
 				log.info("Clearing stats");
 				start = System.currentTimeMillis();
 				total = 0;

@@ -240,7 +240,12 @@ public class XivState implements SubState {
 				return p.getJob().partySortOrder();
 			}
 		}));
-		this.partyListProcessed = partyListProcessed;
+		if (partyListProcessed.isEmpty() && player != null) {
+			this.partyListProcessed = List.of(player);
+		}
+		else {
+			this.partyListProcessed = partyListProcessed;
+		}
 		log.trace("Recalculated state, player is {}, party is {}", player, partyListProcessed);
 		// TODO: improve this
 		if (master != null) {

@@ -33,7 +33,7 @@ public class ScanTest {
 				.map(FinalTitanJailsSolvedEvent.class::cast)
 				.collect(Collectors.toList());
 		Assert.assertEquals(collect.size(), 1);
-		List<XivEntity> jailedPlayers = collect.get(0).getJailedPlayers();
+		List<? extends XivEntity> jailedPlayers = collect.get(0).getJailedPlayers();
 
 		Assert.assertEquals(jailedPlayers.stream().map(XivEntity::getName).collect(Collectors.toList()), List.of("Other Player", "Some Player", "Third Player"));
 	}

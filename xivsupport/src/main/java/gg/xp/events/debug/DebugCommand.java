@@ -26,7 +26,7 @@ public class DebugCommand extends BaseEvent {
 		return split.get(0);
 	}
 
-	public List<String> args() {
+	public List<String> getArgs() {
 		return Collections.unmodifiableList(split);
 	}
 
