@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.jails;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.xivsupport.events.actlines.data.Job;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
@@ -20,10 +21,16 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class JailSolver {
+public class JailSolver implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(JailSolver.class);
 
 	private final List<XivPlayerCharacter> jailedPlayers = new ArrayList<>();
+
+	@Override
+	public boolean enabled(EventContext<Event> context) {
+		// TODO: test this
+		return context.getStateInfo().get(XivState.class).zoneIs(0x309L);
+	}
 
 	@HandleEvents
 	public void amTest(EventContext<Event> context, DebugCommand event) {

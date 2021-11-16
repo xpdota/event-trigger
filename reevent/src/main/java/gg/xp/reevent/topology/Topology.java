@@ -2,6 +2,7 @@ package gg.xp.reevent.topology;
 
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.scan.AutoHandler;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,26 +11,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Topology implements TopoItem {
+public class Topology extends BaseToggleableTopo {
 
 	// TODO: later, try to make it update in place for UI purposes
 	// Or, instead of uisng this as an object that merely represents the topology, have this *actually be*
 	// the topology
-	private final List<TopoPackage> packages;
 
 	public Topology(List<TopoPackage> packages) {
-		this.packages = packages;
+		super("Root", packages);
 	}
 
-	@Override
-	public String getName() {
-		return "Root";
-	}
-
-	@Override
-	public List<? extends TopoItem> getChildren() {
-		return packages;
-	}
+//	@Override
+//	public boolean canBeDisabled() {
+//		return false;
+//	}
 
 	@Override
 	public boolean canBeDisabled() {
@@ -62,4 +57,13 @@ public class Topology implements TopoItem {
 	}
 
 
+	@Override
+	void applyEnabledStatus(boolean newEnabledStatus) {
+
+	}
+
+	@Override
+	protected @Nullable String getPropertyKey() {
+		return "root";
+	}
 }

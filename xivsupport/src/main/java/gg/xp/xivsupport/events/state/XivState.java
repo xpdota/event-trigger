@@ -197,9 +197,12 @@ public class XivState implements SubState {
 			}
 		});
 		// lazy but works
-		combatantsProcessed.put(playerId, player);
+		if (player != null) {
+			combatantsProcessed.put(playerId, player);
+		}
 		this.combatantsProcessed = combatantsProcessed;
 		List<XivPlayerCharacter> partyListProcessed = new ArrayList<>(partyListRaw.size());
+		List<RawXivPartyInfo> partyMembersNotInCombatants = new ArrayList<>();
 		partyListRaw.forEach(rawPartyMember -> {
 			if (!rawPartyMember.isInParty()) {
 				// Member of different alliance, ignore
@@ -212,7 +215,7 @@ public class XivState implements SubState {
 				partyListProcessed.add((XivPlayerCharacter) fullCombatant);
 			}
 			else {
-				log.debug("Party member not in combatants: {}:{}", rawPartyMember.getId(), rawPartyMember.getName());
+				partyMembersNotInCombatants.add(rawPartyMember);
 				partyListProcessed.add(new XivPlayerCharacter(
 						rawPartyMember.getId(),
 						rawPartyMember.getName(),
@@ -230,6 +233,11 @@ public class XivState implements SubState {
 				));
 			}
 		});
+		if (!partyMembersNotInCombatants.isEmpty()) {
+			log.debug("Party member(s) not in combatants: {}", partyMembersNotInCombatants.stream()
+					.map(raw -> raw.getName() != null && !raw.getName().isEmpty() ? raw.getName() : ("0x" + Long.toString(raw.getId(), 16)))
+					.collect(Collectors.joining(", ")));
+		}
 		partyListProcessed.sort(Comparator.comparing(p -> {
 			if (player != null && player.getId() == p.getId()) {
 				// Always sort main player first

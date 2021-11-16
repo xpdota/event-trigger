@@ -2,29 +2,33 @@ package gg.xp.reevent.topology;
 
 import java.util.List;
 
-public class TopoClass implements TopoItem {
+public class TopoClass extends BaseToggleableTopo {
 
-	private final String className;
 	private List<TopoMethod> methods;
+	private final String key;
 
 	public TopoClass(String className, List<TopoMethod> methods) {
-		this.className = className;
-		this.methods = methods;
+		super(className, methods);
+		this.key = "TODO";
 	}
 
 	public TopoClass(Class<?> clazz, List<TopoMethod> methods) {
-		this.className = "Class: " + clazz.getSimpleName();
-		this.methods = methods;
+		super("Class: " + clazz.getSimpleName(), methods);
+		String canonicalName = clazz.getCanonicalName();
+		if (canonicalName == null) {
+			throw new IllegalArgumentException("Cannot have an anonymous class in a topology! " + clazz);
+		}
+		this.key = canonicalName;
 	}
 
 	@Override
-	public String getName() {
-		return className;
+	void applyEnabledStatus(boolean newEnabledStatus) {
+		// no-op - we only disable children
 	}
 
 	@Override
-	public List<? extends TopoItem> getChildren() {
-		return methods;
+	protected String getPropertyKey() {
+		return key;
 	}
 
 }

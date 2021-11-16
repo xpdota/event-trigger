@@ -1,41 +1,29 @@
 package gg.xp.reevent.topology;
 
 import gg.xp.reevent.scan.AutoHandler;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
-import java.util.List;
 
-public class TopoAutoMethod implements TopoMethod {
+public class TopoAutoMethod extends BaseToggleableTopo implements TopoMethod {
 
 
 	private final AutoHandler handler;
 
 	public TopoAutoMethod(AutoHandler handler) {
+		super("Method: " + handler.getTopoLabel(), Collections.emptyList());
 		this.handler = handler;
+		// TODO: this is where the lookup would go
+		setEnabledDirectly(true);
 	}
 
 	@Override
-	public String getName() {
-		return "Method: " + handler.getTopoLabel();
+	void applyEnabledStatus(boolean newEnabledStatus) {
+		handler.setEnabled(newEnabledStatus);
 	}
 
 	@Override
-	public List<? extends TopoItem> getChildren() {
-		return Collections.emptyList();
-	}
-
-	@Override
-	public boolean canBeDisabled() {
-		return true;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return handler.isEnabled();
-	}
-
-	@Override
-	public void setEnabled(boolean newStatus) {
-		handler.setEnabled(newStatus);
+	protected @Nullable String getPropertyKey() {
+		return handler.getTopoKey();
 	}
 }

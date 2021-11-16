@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ public class AutoEventDistributor extends BasicEventDistributor {
 	private final AutoHandlerScan scanner;
 	private final Object loadLock = new Object();
 	boolean isLoaded;
+	private Topology topology = Topology.fromHandlers(Collections.emptyList());
 
 	public AutoEventDistributor(StateStore state, AutoHandlerScan scanner) {
 		super(state);
@@ -27,12 +29,14 @@ public class AutoEventDistributor extends BasicEventDistributor {
 		List<EventHandler<Event>> handlersToKeep = handlers.stream().filter(e -> !(e instanceof AutoHandler)).collect(Collectors.toList());
 		handlers.clear();
 		handlers.addAll(handlersToKeep);
-		handlers.addAll(scanner.build());
+		List<AutoHandler> handlers = scanner.build();
+		this.handlers.addAll(handlers);
+		topology = Topology.fromHandlers(new ArrayList<>(this.handlers));
 		isLoaded = true;
 	}
 
 	public Topology getTopology() {
-		return Topology.fromHandlers(new ArrayList<>(handlers));
+		return topology;
 	}
 
 	// TODO: is there a better place to put this?

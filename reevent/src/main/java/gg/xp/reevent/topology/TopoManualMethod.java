@@ -20,4 +20,5 @@ public class TopoManualMethod implements TopoMethod {
 	public List<? extends TopoItem> getChildren() {
 		return Collections.emptyList();
 	}
+
 }

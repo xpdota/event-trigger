@@ -70,6 +70,10 @@ public class AutoHandler implements EventHandler<Event> {
 		return String.format("%s(%s)", method.getName(), eventClass.getSimpleName());
 	}
 
+	public String getTopoKey() {
+		return String.format("%s.%s", method.getName(), eventClass.getSimpleName());
+	}
+
 	public String getLongTopoLabel() {
 		return String.format("%s.%s(%s)", clazz.getSimpleName(), method.getName(), eventClass.getSimpleName());
 	}
@@ -83,8 +87,10 @@ public class AutoHandler implements EventHandler<Event> {
 	}
 
 	public void setEnabled(boolean enabled) {
-		log.info("AutoHandler {} is now {}", getLongTopoLabel(), enabled ? "ENABLED" : "DISABLED");
-		this.enabled = enabled;
+		if (enabled != this.enabled) {
+			log.info("AutoHandler {} is now {}", getLongTopoLabel(), enabled ? "ENABLED" : "DISABLED");
+			this.enabled = enabled;
+		}
 	}
 
 	@Override

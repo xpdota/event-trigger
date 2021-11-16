@@ -11,11 +11,20 @@ public interface TopoItem {
 		return false;
 	};
 
-	default boolean isEnabled() {
+	default boolean isEnabledDirectly() {
 		return true;
 	}
 
-	default void setEnabled(boolean newStatus) {
-		// By default do nothing
+	default void setEnabledDirectly(boolean newStatus) {
+		// By default do nothing, since not every topo can be enabled/disabled
 	}
+
+	default boolean isEnabledByParent() {
+		return true;
+	}
+
+	default void setEnabledByParent(boolean enabled) {
+		// By default do nothing, since not every topo can be enabled/disabled
+	}
+
 }

@@ -1,25 +1,26 @@
 package gg.xp.reevent.topology;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
-public class TopoPackage implements TopoItem {
+public class TopoPackage extends BaseToggleableTopo {
 
 	private final String packageName;
-	private List<TopoClass> classes;
 
 	public TopoPackage(String packageName, List<TopoClass> classes) {
+		super(packageName, classes);
 		this.packageName = packageName;
-		this.classes = classes;
 	}
 
+	@Override
+	void applyEnabledStatus(boolean newEnabledStatus) {
+		// No-op
+	}
 
 	@Override
-	public String getName() {
+	protected @Nullable String getPropertyKey() {
 		return packageName;
 	}
 
-	@Override
-	public List<? extends TopoItem> getChildren() {
-		return classes;
-	}
 }
