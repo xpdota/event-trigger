@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.models;
+package gg.xp.xivsupport.models;
 
 import java.util.Objects;
 

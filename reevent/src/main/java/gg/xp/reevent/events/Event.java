@@ -57,4 +57,8 @@ public interface Event extends Serializable {
 	Instant getPumpFinishedAt();
 
 	void setPumpFinishedAt(Instant pumpedAt);
+
+	EventHandler<?> getSourceEventHandler();
+
+	void setSourceEventHandler(EventHandler<?> source);
 }

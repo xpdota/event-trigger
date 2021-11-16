@@ -1,7 +1,7 @@
-package gg.xp.xivsupport.events.jails;
+package gg.xp.xivsupport.events.triggers.jails;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivsupport.events.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 
 public class AutoMarkRequest extends BaseEvent {
 

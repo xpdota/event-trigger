@@ -12,6 +12,7 @@ public abstract class BaseEvent implements Event {
 	private static final Logger log = LoggerFactory.getLogger(BaseEvent.class);
 	private static final long serialVersionUID = 6147224373832437718L;
 	private Event parent;
+	private EventHandler<?> source;
 
 	private Instant happenedAt = Instant.now();
 	private Instant enqueuedAt;
@@ -77,5 +78,15 @@ public abstract class BaseEvent implements Event {
 			log.error("Event {} already has a pumpFinishedAt time!", this);
 		}
 		this.pumpFinishedAt = pumpedAt;
+	}
+
+	@Override
+	public EventHandler<?> getSourceEventHandler() {
+		return source;
+	}
+
+	@Override
+	public void setSourceEventHandler(EventHandler<?> source) {
+		this.source = source;
 	}
 }

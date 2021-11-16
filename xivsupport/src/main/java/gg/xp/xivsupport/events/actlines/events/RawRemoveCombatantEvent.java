@@ -2,7 +2,7 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
-import gg.xp.xivsupport.events.models.XivCombatant;
+import gg.xp.xivsupport.models.XivCombatant;
 
 /**
  * Equivalent to an ACT 04 line. This event is intentionally left pretty bare, because

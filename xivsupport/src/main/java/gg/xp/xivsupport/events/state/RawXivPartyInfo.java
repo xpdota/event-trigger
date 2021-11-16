@@ -2,7 +2,7 @@ package gg.xp.xivsupport.events.state;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import gg.xp.xivsupport.events.models.XivEntity;
+import gg.xp.xivsupport.models.XivEntity;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RawXivPartyInfo extends XivEntity {

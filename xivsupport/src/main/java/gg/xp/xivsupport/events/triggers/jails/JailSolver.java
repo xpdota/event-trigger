@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.jails;
+package gg.xp.xivsupport.events.triggers.jails;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -7,9 +7,9 @@ import gg.xp.xivsupport.events.actlines.data.Job;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
-import gg.xp.xivsupport.events.models.XivCombatant;
-import gg.xp.xivsupport.events.models.XivEntity;
-import gg.xp.xivsupport.events.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivEntity;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.speech.CalloutEvent;

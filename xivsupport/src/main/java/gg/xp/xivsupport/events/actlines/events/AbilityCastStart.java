@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivsupport.events.models.XivAbility;
-import gg.xp.xivsupport.events.models.XivCombatant;
+import gg.xp.xivsupport.models.XivAbility;
+import gg.xp.xivsupport.models.XivCombatant;
 
 public class AbilityCastStart extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility {
 	private static final long serialVersionUID = -8156458501097189982L;

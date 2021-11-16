@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.jails;
+package gg.xp.xivsupport.events.triggers.jails;
 
 import gg.xp.reevent.events.BaseEvent;
 

@@ -1,8 +1,10 @@
-package gg.xp.xivsupport.events;
+package gg.xp.xivsupport.events.misc;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.DiagEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -12,7 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
-import gg.xp.xivsupport.events.models.BuffTrackingKey;
+import gg.xp.xivsupport.models.BuffTrackingKey;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;

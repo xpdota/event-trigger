@@ -93,6 +93,7 @@ public class BasicEventDistributor implements EventDistributor {
 									else {
 										e.setParent(current);
 										e.setEnqueuedAt(Instant.now());
+										e.setSourceEventHandler(handler);
 										log.trace("Event {} triggered new event {}", current, e);
 										eventsForImmediateProcessing.add(e);
 									}
@@ -110,6 +111,7 @@ public class BasicEventDistributor implements EventDistributor {
 										}
 										else {
 											e.setParent(current);
+											e.setSourceEventHandler(handler);
 											queue.push(e);
 										}
 									}

@@ -2,8 +2,8 @@ package gg.xp.xivsupport.events.state;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import gg.xp.xivsupport.events.models.HitPoints;
-import gg.xp.xivsupport.events.models.Position;
+import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.Position;
 
 import java.io.Serializable;
 import java.util.Objects;

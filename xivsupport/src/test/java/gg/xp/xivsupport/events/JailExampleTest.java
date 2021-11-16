@@ -5,10 +5,10 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
-import gg.xp.xivsupport.events.jails.AutoMarkRequest;
-import gg.xp.xivsupport.events.jails.FinalTitanJailsSolvedEvent;
-import gg.xp.xivsupport.events.jails.UnsortedTitanJailsSolvedEvent;
-import gg.xp.xivsupport.events.models.XivEntity;
+import gg.xp.xivsupport.events.triggers.jails.AutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.jails.FinalTitanJailsSolvedEvent;
+import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;
+import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -55,7 +55,7 @@ public class JailExampleTest {
 		);
 		// TODO: make this a template for integration testing
 		dist.acceptEvent(new ActWsRawMsg("{\"type\":\"ChangePrimaryPlayer\",\"charID\":22,\"charName\":\"Foo Bar\"}"));
-		dist.acceptEvent(new ActWsRawMsg("{\"type\":\"ChangeZone\",\"zoneID\":129,\"zoneName\":\"Limsa Lominsa Lower Decks\"}"));
+		dist.acceptEvent(new ActWsRawMsg("{\"type\":\"ChangeZone\",\"zoneID\":777,\"zoneName\":\"the Weapon's Refrain (Ultimate)\"}"));
 		dist.acceptEvent(new ActWsRawMsg("{\n" +
 				"  \"type\": \"PartyChanged\",\n" +
 				"  \"party\": [\n" +

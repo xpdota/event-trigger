@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
-import gg.xp.xivsupport.events.slf4j.LogEvent;
+import gg.xp.xivsupport.slf4j.LogEvent;
 import org.slf4j.event.Level;
 
 import javax.swing.*;

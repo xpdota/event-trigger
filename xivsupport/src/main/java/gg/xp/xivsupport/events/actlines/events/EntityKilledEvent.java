@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivsupport.events.models.XivCombatant;
+import gg.xp.xivsupport.models.XivCombatant;
 
 public class EntityKilledEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
 	private static final long serialVersionUID = 2379855663603121468L;

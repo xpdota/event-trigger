@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivsupport.events.models.XivEntity;
+import gg.xp.xivsupport.models.XivEntity;
 
 // Full player info comes from both player + combatant info, so this is NOT the event you want to listen to
 public class RawPlayerChangeEvent extends BaseEvent implements XivStateChange {

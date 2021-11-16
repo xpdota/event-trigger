@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivsupport.events.models.XivCombatant;
-import gg.xp.xivsupport.events.models.XivStatusEffect;
+import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivStatusEffect;
 
 // TODO: track new application vs refresh
 // Note that stacks decreasing (e.g. Embolden) still counts as "Application".

@@ -4,7 +4,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
-import gg.xp.xivsupport.events.models.XivEntity;
+import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.events.state.XivState;
 
 public final class Filters {

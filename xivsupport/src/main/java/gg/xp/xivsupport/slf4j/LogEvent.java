@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.slf4j;
+package gg.xp.xivsupport.slf4j;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 

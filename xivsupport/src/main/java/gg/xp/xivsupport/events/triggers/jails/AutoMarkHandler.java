@@ -1,9 +1,9 @@
-package gg.xp.xivsupport.events.jails;
+package gg.xp.xivsupport.events.triggers.jails;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.debug.DebugCommand;
-import gg.xp.xivsupport.events.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.reevent.scan.DisableInTest;
 import gg.xp.reevent.scan.HandleEvents;

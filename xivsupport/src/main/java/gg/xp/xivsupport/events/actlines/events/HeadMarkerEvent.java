@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivsupport.events.models.XivCombatant;
+import gg.xp.xivsupport.models.XivCombatant;
 
 public class HeadMarkerEvent extends BaseEvent implements HasTargetEntity {
 
