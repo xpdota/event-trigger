@@ -7,7 +7,7 @@
             </pattern>
         </encoder>
     </appender>
-    <appender name="COLLECTOR" class="gg.xp.events.slf4j.LogCollector">
+    <appender name="COLLECTOR" class="gg.xp.xivsupport.events.slf4j.LogCollector">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>
                 %msg

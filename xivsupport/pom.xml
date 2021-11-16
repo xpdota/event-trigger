@@ -14,6 +14,7 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <mainClass>gg.xp.xivsupport.gui.GuiMain</mainClass>
     </properties>
 
     <build>
@@ -25,30 +26,205 @@
                 <configuration>
                     <parallel>methods</parallel>
                     <threadCount>10</threadCount>
-                    <properties>
-                        <!--                        <property>-->
-                        <!--                            <name>parallel</name>-->
-                        <!--                            <value>classes</value>-->
-                        <!--                        </property>-->
-                        <!--                        <property>-->
-                        <!--                            <name>dataproviderthreadcount</name>-->
-                        <!--                            <value>30</value>-->
-                        <!--                        </property>-->
-                        <!--                        <property>-->
-                        <!--                            <name>suitethreadpoolsize</name>-->
-                        <!--                            <value>4</value>-->
-                        <!--                        </property>-->
-                        <!--                        <propperty>-->
-                        <!--                            <name>threadcount</name>-->
-                        <!--                            <value>4</value>-->
-                        <!--                        </propperty>-->
-                        <!--                        <propperty>-->
-                        <!--                            <name>threadpoolsize</name>-->
-                        <!--                            <value>4</value>-->
-                        <!--                        </propperty>-->
-                    </properties>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>runtime</includeScope>
+                            <outputDirectory>target/windows/deps</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--            <plugin>-->
+            <!--                <groupId>org.panteleyev</groupId>-->
+            <!--                <artifactId>jpackage-maven-plugin</artifactId>-->
+            <!--                <version>1.4.0</version>-->
+
+            <!--                <configuration>-->
+            <!--                    <name>Application Name</name>-->
+            <!--&lt;!&ndash;                    <appVersion>${project.version}</appVersion>&ndash;&gt;-->
+            <!--                    <appVersion>0.1.0</appVersion>-->
+            <!--                    <vendor>app.org</vendor>-->
+            <!--                    <module>xivsupport/gg.xp.xivsupport.gui.GuiMain</module>-->
+            <!--                    <modulePaths>-->
+            <!--                        <modulePath>target/jmods</modulePath>-->
+            <!--                        <modulePath>target</modulePath>-->
+            <!--                    </modulePaths>-->
+            <!--                    <destination>target/dist</destination>-->
+            <!--                    <javaOptions>-->
+            <!--                        <option>&#45;&#45;enable-preview</option>-->
+            <!--                        <option>-Dfile.encoding=UTF-8</option>-->
+            <!--                    </javaOptions>-->
+            <!--                </configuration>-->
+
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <id>makebin</id>-->
+            <!--                        <phase>package</phase>-->
+            <!--                        <goals>-->
+            <!--                            <goal>jpackage</goal>-->
+            <!--                        </goals>-->
+            <!--&lt;!&ndash;                        <configuration>&ndash;&gt;-->
+            <!--&lt;!&ndash;                            <includeScope>runtime</includeScope>&ndash;&gt;-->
+            <!--&lt;!&ndash;                            <outputDirectory>target/jmods</outputDirectory>&ndash;&gt;-->
+            <!--&lt;!&ndash;                        </configuration>&ndash;&gt;-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--&lt;!&ndash;                <executions>&ndash;&gt;-->
+            <!--&lt;!&ndash;                    <execution>&ndash;&gt;-->
+            <!--&lt;!&ndash;                        <id>win</id>&ndash;&gt;-->
+            <!--&lt;!&ndash;                        <configuration>&ndash;&gt;-->
+            <!--&lt;!&ndash;                            <icon>icons/icon.ico</icon>&ndash;&gt;-->
+            <!--&lt;!&ndash;                            <winMenu>true</winMenu>&ndash;&gt;-->
+            <!--&lt;!&ndash;                        </configuration>&ndash;&gt;-->
+            <!--&lt;!&ndash;                    </execution>&ndash;&gt;-->
+            <!--&lt;!&ndash;                </executions>&ndash;&gt;-->
+            <!--            </plugin>-->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${mainClass}</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>copy-jar</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>xivsupport-1.0-SNAPSHOT-jar-with-dependencies.jar</includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-jre</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows/jre</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${java.home}</directory>
+                                </resource>
+                            </resources>
+
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <id>l4j-gui</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <chdir>.</chdir>
+                            <singleInstance>
+                                <mutexName>triggevent</mutexName>
+                                <windowTitle>Triggevent</windowTitle>
+                            </singleInstance>
+                            <headerType>gui</headerType>
+                            <outfile>target/windows/triggevent.exe</outfile>
+                            <!--                            <jar>target/xivsupport-${version}-jar-with-dependencies.jar</jar>-->
+                            <jar>./xivsupport-${version}-jar-with-dependencies.jar</jar>
+                            <errTitle>Triggevent</errTitle>
+                            <dontWrapJar>true</dontWrapJar>
+
+                            <classPath>
+                                <mainClass>${mainClass}</mainClass>
+                                <addDependencies>false</addDependencies>
+                                <!--                                <preCp>anything</preCp>-->
+                                <!--                                <postCp>../deps</postCp>-->
+                                <postCp>.</postCp>
+                                <postCp>./deps</postCp>
+                            </classPath>
+                            <jre>
+                                <path>jre</path>
+                                <minVersion>11</minVersion>
+                                <!--                                <opts>-->
+                                <!--                                    <opt>-Djava.endorsed.dirs=./endorsed</opt>-->
+                                <!--                                </opts>-->
+                            </jre>
+                            <versionInfo>
+                                <fileVersion>1.0.0.0</fileVersion>
+                                <txtFileVersion>txt file version</txtFileVersion>
+                                <fileDescription>description</fileDescription>
+                                <copyright>2021</copyright>
+                                <productVersion>1.0.0.0</productVersion>
+                                <txtProductVersion>1.0.0.0</txtProductVersion>
+                                <productName>Triggevent</productName>
+                                <internalName>triggevent</internalName>
+                                <originalFilename>original.exe</originalFilename>
+                            </versionInfo>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--                        <plugin>-->
+            <!--                            <artifactId>maven-assembly-plugin</artifactId>-->
+            <!--                            <executions>-->
+            <!--                                <execution>-->
+            <!--                                    <id>assembly</id>-->
+            <!--                                    <phase>package</phase>-->
+            <!--                                    <goals>-->
+            <!--                                        <goal>single</goal>-->
+            <!--                                    </goals>-->
+            <!--                                    <configuration>-->
+            <!--                                        <descriptors>-->
+            <!--                                            <descriptor>assembly.xml</descriptor>-->
+            <!--                                        </descriptors>-->
+            <!--                                    </configuration>-->
+            <!--                                </execution>-->
+            <!--                            </executions>-->
+            <!--                        </plugin>-->
+
         </plugins>
     </build>
 
@@ -127,7 +303,7 @@
             <version>2021.7</version>
         </dependency>
 
-                <dependency>
+        <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
             <version>1.6.2</version>
