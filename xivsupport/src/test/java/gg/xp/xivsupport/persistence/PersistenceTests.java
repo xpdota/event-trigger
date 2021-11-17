@@ -41,10 +41,11 @@ public class PersistenceTests {
 	}
 
 	@Test
-	public void testFilePersistence() throws InterruptedException {
-		testPersistenceWrite(new PropertiesFilePersistenceProvider(new File("target/testdata/foo.properties")));
+	public void testFilePersistence() {
+		PropertiesFilePersistenceProvider persistence = new PropertiesFilePersistenceProvider(new File("target/testdata/foo.properties"));
+		testPersistenceWrite(persistence);
 		// Wait for file flush
-		Thread.sleep(200);
+		persistence.flush();
 		testPersistenceRead(new PropertiesFilePersistenceProvider(new File("target/testdata/foo.properties")));
 	}
 

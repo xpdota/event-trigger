@@ -12,8 +12,6 @@
     <artifactId>xivsupport</artifactId>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
         <mainClass>gg.xp.xivsupport.gui.GuiMain</mainClass>
     </properties>
 
@@ -94,6 +92,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>fat-jar</id>
@@ -113,7 +112,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>zip-file</id>
+                        <id>zip-file-no-jre</id>
                         <phase>install</phase>
                         <goals>
                             <goal>single</goal>
@@ -123,6 +122,20 @@
                                 <descriptor>src/assembly/bin.xml</descriptor>
                             </descriptors>
                             <finalName>triggevent-win</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>zip-file</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/bin-no-jre.xml</descriptor>
+                            </descriptors>
+                            <finalName>triggevent-win-byoj</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                     </execution>
@@ -181,6 +194,8 @@
                         </goals>
                         <configuration>
                             <chdir>.</chdir>
+                            <downloadUrl>https://www.oracle.com/java/technologies/downloads/#jdk17-windows</downloadUrl>
+
                             <singleInstance>
                                 <mutexName>triggevent</mutexName>
                                 <windowTitle>Triggevent</windowTitle>
@@ -188,7 +203,7 @@
                             <headerType>gui</headerType>
                             <outfile>target/windows/triggevent.exe</outfile>
                             <!--                            <jar>target/xivsupport-${version}-jar-with-dependencies.jar</jar>-->
-                            <jar>./xivsupport-${version}-jar-with-dependencies.jar</jar>
+                            <jar>./xivsupport-${project.version}-jar-with-dependencies.jar</jar>
                             <errTitle>Triggevent</errTitle>
                             <dontWrapJar>true</dontWrapJar>
 
@@ -202,7 +217,7 @@
                             </classPath>
                             <jre>
                                 <path>jre</path>
-                                <minVersion>11</minVersion>
+                                <minVersion>${java.version}</minVersion>
                                 <!--                                <opts>-->
                                 <!--                                    <opt>-Djava.endorsed.dirs=./endorsed</opt>-->
                                 <!--                                </opts>-->
@@ -218,6 +233,10 @@
                                 <internalName>triggevent</internalName>
                                 <originalFilename>original.exe</originalFilename>
                             </versionInfo>
+                            <messages>
+                                <bundledJreErr>You need to download Java version 11 or higher, or download the version of Triggevent with bundled Java.</bundledJreErr>
+                                <jreVersionErr>You need to download Java version 11 or higher, or download the version of Triggevent with bundled Java.</jreVersionErr>
+                            </messages>
                         </configuration>
                     </execution>
                 </executions>

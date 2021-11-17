@@ -12,8 +12,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProvider {
 
@@ -52,8 +56,8 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 		writeChangesToDisk();
 	}
 
-	private void writeChangesToDisk() {
-		exs.submit(() -> {
+	private Future<?> writeChangesToDisk() {
+		return exs.submit(() -> {
 			try {
 				File parentFile = file.getParentFile();
 				if (parentFile != null) {
@@ -67,6 +71,16 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 				log.error("Error saving properties! Changes may not be saved!", e);
 			}
 		});
+	}
+
+	public void flush() {
+		Future<?> future = writeChangesToDisk();
+		try {
+			future.get(5, TimeUnit.SECONDS);
+		}
+		catch (InterruptedException | ExecutionException | TimeoutException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
