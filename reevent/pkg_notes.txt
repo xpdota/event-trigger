@@ -1,0 +1,2 @@
+Stuff that seems to be unnecessary:
+jre/lib/src.zip

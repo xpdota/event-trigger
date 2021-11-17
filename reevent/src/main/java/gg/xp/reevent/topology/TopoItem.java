@@ -27,4 +27,10 @@ public interface TopoItem {
 		// By default do nothing, since not every topo can be enabled/disabled
 	}
 
+	default boolean isEffectivelyEnabled() {
+		return isEnabledByParent() && isEnabledDirectly();
+	}
+
+	void init();
+
 }

@@ -1,34 +1,24 @@
 package gg.xp.reevent.topology;
 
 import java.util.List;
+import java.util.Objects;
 
 public class TopoClass extends BaseToggleableTopo {
 
-	private List<TopoMethod> methods;
-	private final String key;
+	private final boolean canBeToggled;
 
-	public TopoClass(String className, List<TopoMethod> methods) {
-		super(className, methods);
-		this.key = "TODO";
+	public TopoClass(String className, List<TopoMethod> methods, TopologyInfo info) {
+		super(className, methods, info, "manual");
+		canBeToggled = false;
 	}
 
-	public TopoClass(Class<?> clazz, List<TopoMethod> methods) {
-		super("Class: " + clazz.getSimpleName(), methods);
-		String canonicalName = clazz.getCanonicalName();
-		if (canonicalName == null) {
-			throw new IllegalArgumentException("Cannot have an anonymous class in a topology! " + clazz);
-		}
-		this.key = canonicalName;
+	public TopoClass(Class<?> clazz, List<TopoMethod> methods, TopologyInfo info) {
+		super("Class: " + clazz.getSimpleName(), methods, info, Objects.requireNonNull(clazz.getSimpleName(), "Cannot have an anonymous class in a topology!" + clazz));
+		canBeToggled = true;
 	}
 
 	@Override
-	void applyEnabledStatus(boolean newEnabledStatus) {
-		// no-op - we only disable children
+	public boolean canBeDisabled() {
+		return canBeToggled;
 	}
-
-	@Override
-	protected String getPropertyKey() {
-		return key;
-	}
-
 }

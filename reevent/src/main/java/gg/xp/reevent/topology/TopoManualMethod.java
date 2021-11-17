@@ -21,4 +21,9 @@ public class TopoManualMethod implements TopoMethod {
 		return Collections.emptyList();
 	}
 
+	@Override
+	public void init() {
+
+	}
+
 }

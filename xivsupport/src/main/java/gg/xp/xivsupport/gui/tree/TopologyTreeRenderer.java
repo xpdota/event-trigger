@@ -17,8 +17,6 @@ public class TopologyTreeRenderer implements TreeCellRenderer {
 //				checkBox.setEnabled(item.canBeDisabled());
 			return new CheckboxTreeNode(tree, (TopoItem) value, selected, expanded, leaf, row, hasFocus);
 		}
-		else {
-			return defaultRenderer.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-		}
+		return defaultRenderer.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 	}
 }

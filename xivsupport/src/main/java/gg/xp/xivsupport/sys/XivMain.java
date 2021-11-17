@@ -4,11 +4,14 @@ import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.BasicEventDistributor;
 import gg.xp.reevent.events.DummyEventToForceAutoScan;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.topology.TopoInfoImpl;
 import gg.xp.xivsupport.events.state.PicoStateStore;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.AutoHandlerScan;
+import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
+import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
 import org.slf4j.Logger;
@@ -39,9 +42,14 @@ public final class XivMain {
 		pico.addComponent(PicoStateStore.class);
 		pico.addComponent(XivState.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
+		pico.addComponent(TopoInfoImpl.class);
 		pico.addComponent(pico);
 		return pico;
 
+	}
+
+	private static boolean isRealLauncher() {
+		return !"true".equals(System.getenv("TRIGGEVENT_TESTING"));
 	}
 
 	/**
@@ -53,6 +61,7 @@ public final class XivMain {
 	 */
 	public static MutablePicoContainer testingMasterInit() {
 		MutablePicoContainer pico = requiredComponents();
+		pico.addComponent(InMemoryMapPersistenceProvider.class);
 		pico.getComponent(AutoHandlerConfig.class).setTest(true);
 		pico.getComponent(EventMaster.class).start();
 		return pico;
@@ -76,6 +85,7 @@ public final class XivMain {
 		pico.addComponent(XivState.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
 		pico.addComponent(AutoHandlerConfig.class);
+		pico.addComponent(InMemoryMapPersistenceProvider.class);
 		pico.getComponent(AutoHandlerConfig.class).setTest(true);
 		pico.addComponent(pico);
 
@@ -95,6 +105,13 @@ public final class XivMain {
 
 		MutablePicoContainer pico = requiredComponents();
 		pico.addComponent(ActWsLogSource.class);
+		// TODO: replace with on-disk storage when done
+		if (isRealLauncher()) {
+			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent"));
+		}
+		else {
+			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing"));
+		}
 
 		// TODO: use "Startable" interface?
 		pico.getComponent(AutoEventDistributor.class).acceptEvent(new DummyEventToForceAutoScan());
