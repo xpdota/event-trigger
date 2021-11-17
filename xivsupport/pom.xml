@@ -112,23 +112,20 @@
                             </descriptorRefs>
                         </configuration>
                     </execution>
-<!--                    <execution>-->
-<!--                        <id>zip-file</id>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>single</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <archive>-->
-<!--                                <manifest>-->
-<!--                                    <mainClass>${mainClass}</mainClass>-->
-<!--                                </manifest>-->
-<!--                            </archive>-->
-<!--                            <descriptorRefs>-->
-<!--                                <descriptorRef>bin</descriptorRef>-->
-<!--                            </descriptorRefs>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
+                    <execution>
+                        <id>zip-file</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/bin.xml</descriptor>
+                            </descriptors>
+                            <finalName>triggevent-win</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
