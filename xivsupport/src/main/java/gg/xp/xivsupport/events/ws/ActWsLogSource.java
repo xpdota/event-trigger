@@ -84,11 +84,12 @@ public class ActWsLogSource implements EventSource {
 			send("{\"call\":\"subscribe\",\"events\":[\"ChangeZone\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"PartyChanged\"]}");
 //		send("{\"call\":\"subscribe\",\"events\":[\"onPlayerChangedEvent\"]}");
+			// TODO: there does not seem to be a non-cactbot alternative to this
 			send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"LogLine\"]}");
-			send("{\"call\":\"subscribe\",\"events\":[\"onPartyWipe\"]}");
+			// This comes from Cact, but Cact is just using the 40000010
+//			send("{\"call\":\"subscribe\",\"events\":[\"onPartyWipe\"]}");
 			log.info("Subscribed to WS events");
-
 		}
 	}
 
@@ -98,13 +99,6 @@ public class ActWsLogSource implements EventSource {
 
 	public ActWsLogSource(EventMaster master, StateStore stateStore) {
 		this.eventConsumer = master::pushEvent;
-//		EventDistributor distributor = master.getDistributor();
-//		distributor.registerHandler(DebugCommand.class, this::getCombatantsDbg);
-//		distributor.registerHandler(DebugCommand.class, this::forceReconnect);
-//		distributor.registerHandler(TtsRequest.class, this::sayTts);
-//		distributor.registerHandler(RefreshCombatantsRequest.class, this::getCombatants);
-//		distributor.registerHandler(ActWsReconnectRequest.class, this::requestReconnect);
-//		distributor.registerHandler(ActWsDisconnectedEvent.class, this::reconnectActWs);
 		this.client = new ActWsClientInternal();
 		stateStore.putCustom(WsState.class, state);
 	}

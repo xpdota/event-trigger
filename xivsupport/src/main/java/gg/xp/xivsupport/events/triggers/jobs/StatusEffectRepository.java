@@ -15,6 +15,7 @@ import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.models.BuffTrackingKey;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,6 @@ public class StatusEffectRepository {
 
 	private static final Logger log = LoggerFactory.getLogger(StatusEffectRepository.class);
 
-	private static final long dotRefreshAdvance = 5000L;
 
 	// Buffs are actually kind of complicated in terms of what does/doesn't stack on the same
 	// target, so I'll need to revisit. IIRC buffs that get kicked off due to a similar buff
@@ -39,44 +39,6 @@ public class StatusEffectRepository {
 	// For now, just use the event objects as valuessince they contain everything we need.
 	private final Map<BuffTrackingKey, BuffApplied> buffs = new LinkedHashMap<>();
 
-
-	// WL of buffs to track
-	private enum WhitelistedBuffs {
-		// JLS/javac being dumb, had to put the L there to make it a long
-		Dia(0x8fL, 0x90L, 0x74fL),
-		Biolysis(0xb3L, 0xbdL, 0x767L),
-		GoringBlade(0x2d5L);
-
-		private final Set<Long> buffIds;
-
-		WhitelistedBuffs(Long... buffIds) {
-			this.buffIds = Set.of(buffIds);
-		}
-
-		boolean matches(long id) {
-			return buffIds.contains(id);
-		}
-	}
-
-	private static boolean isWhitelisted(long id) {
-		return Arrays.stream(WhitelistedBuffs.values())
-				.anyMatch(b -> b.matches(id));
-	}
-
-	private static class DelayedBuffCallout extends BaseDelayedEvent {
-
-		private static final long serialVersionUID = 499685323334095132L;
-		private final BuffApplied originalEvent;
-
-		protected DelayedBuffCallout(BuffApplied originalEvent, long delayMs) {
-			super(delayMs);
-			this.originalEvent = originalEvent;
-		}
-	}
-
-	private static <X extends HasSourceEntity & HasTargetEntity & HasStatusEffect> BuffTrackingKey getKey(X event) {
-		return new BuffTrackingKey(event.getSource(), event.getTarget(), event.getBuff());
-	}
 
 	// TODO: handle buff removal, enemy dying before buff expires, etc
 
@@ -87,16 +49,13 @@ public class StatusEffectRepository {
 			return;
 		}
 		BuffApplied previous = buffs.put(
-				getKey(event),
+				BuffTrackingKey.of(event),
 				event
 		);
 		if (previous != null) {
 			event.setIsRefresh(true);
 		}
 		log.debug("Buff applied: {} applied {} to {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
-		if (event.getSource().isThePlayer() && isWhitelisted(event.getBuff().getId()) && !event.getTarget().isFake()) {
-			context.enqueue(new DelayedBuffCallout(event, (long) (event.getDuration() * 1000L - dotRefreshAdvance)));
-		}
 		context.accept(new XivBuffsUpdatedEvent());
 	}
 
@@ -104,13 +63,14 @@ public class StatusEffectRepository {
 	// processing, we might hit the remove before the callout.
 	@HandleEvents(order = -500)
 	public void buffRemove(EventContext<Event> context, BuffRemoved event) {
-		BuffApplied removed = buffs.remove(getKey(event));
+		BuffApplied removed = buffs.remove(BuffTrackingKey.of(event));
 		if (removed != null) {
 			log.debug("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 			context.accept(new XivBuffsUpdatedEvent());
 		}
 	}
 
+	// TODO: issues with buffs that persist through wipes (like tank stance)
 	@HandleEvents
 	public void wipe(EventContext<Event> context, WipeEvent wipe) {
 		log.debug("Wipe, clearing {} buffs", buffs.size());
@@ -145,21 +105,12 @@ public class StatusEffectRepository {
 		}
 	}
 
-	@HandleEvents
-	public void refreshReminderCall(EventContext<Event> context, DelayedBuffCallout event) {
-		BuffApplied originalEvent = event.originalEvent;
-		BuffApplied mostRecentEvent = buffs.get(getKey(originalEvent));
-		if (originalEvent == mostRecentEvent) {
-			log.debug("Dot refresh callout still valid");
-			context.accept(new CalloutEvent(originalEvent.getBuff().getName()));
-		}
-		else {
-			log.debug("Not calling");
-		}
-	}
-
 	public List<BuffApplied> getBuffs() {
 		// TODO: thread safety
 		return new ArrayList<>(buffs.values());
+	}
+
+	public @Nullable BuffApplied get(BuffTrackingKey key) {
+		return buffs.get(key);
 	}
 }

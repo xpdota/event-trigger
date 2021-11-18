@@ -12,13 +12,14 @@ import org.testng.Assert;
 
 import java.util.List;
 
+// TODO: Not really abstract anymore...
 public class AbstractACTLineTest<X extends Event> {
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractACTLineTest.class);
 
 	private final Class<X> eventClass;
 
-	protected AbstractACTLineTest(Class<X> eventClass) {
+	public AbstractACTLineTest(Class<X> eventClass) {
 		this.eventClass = eventClass;
 		log.info("AbstractACTLineTest for {}", eventClass.getSimpleName());
 	}
@@ -34,14 +35,14 @@ public class AbstractACTLineTest<X extends Event> {
 		return coll;
 	}
 
-	protected X expectEvent(String line) {
+	public X expectEvent(String line) {
 		TestEventCollector coll = submitLine(line);
 		List<X> events = coll.getEventsOf(eventClass);
-		Assert.assertEquals(events.size(), 1);
+		Assert.assertEquals(events.size(), 1, "Expected exactly one event");
 		return events.get(0);
 	}
 
-	protected void assertNoEvent(String line) {
+	public void assertNoEvent(String line) {
 		TestEventCollector coll = submitLine(line);
 		Assert.assertTrue(coll.getEventsOf(eventClass).isEmpty(), "Expected to not find an event, but found one");
 	}

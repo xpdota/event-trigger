@@ -2,6 +2,7 @@ package gg.xp.xivsupport.sys;
 
 import gg.xp.reevent.scan.AutoHandlerInstanceProvider;
 import org.picocontainer.MutablePicoContainer;
+import org.picocontainer.PicoCompositionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,5 +29,17 @@ public class PicoBasedInstanceProvider implements AutoHandlerInstanceProvider {
 			}
 		}
 		return instance;
+	}
+
+	@Override
+	public void preAdd(Class<?> clazz) {
+		// TODO: find a better way of doing this
+		try {
+			pico.addComponent(clazz);
+		} catch (PicoCompositionException e) {
+			if (!e.getMessage().contains("Duplicate")) {
+				throw e;
+			}
+		}
 	}
 }

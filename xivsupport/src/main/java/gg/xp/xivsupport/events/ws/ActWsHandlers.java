@@ -152,12 +152,13 @@ public class ActWsHandlers {
 		}
 	}
 
-	@HandleEvents(order = -100)
-	public static void actWsWipe(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
-		if ("onPartyWipe".equals(jsonMsg.getType())) {
-			context.enqueue(new WipeEvent());
-		}
-	}
+	// Disabled - trying to get off of cactbot events
+//	@HandleEvents(order = -100)
+//	public static void actWsWipe(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
+//		if ("onPartyWipe".equals(jsonMsg.getType())) {
+//			context.enqueue(new WipeEvent());
+//		}
+//	}
 
 	// TODO: clear on zone change
 	private final Map<Long, RawXivCombatantInfo> rawCbtCache = new HashMap<>();

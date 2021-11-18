@@ -81,6 +81,10 @@ public class AutoHandlerScan {
 
 
 			StringBuilder topo = new StringBuilder();
+			classMethodMap.forEach((clazz, unused) -> {
+				// Preload class instances
+				instanceProvider.preAdd(clazz);
+			});
 			classMethodMap.forEach((clazz, methods) -> {
 				// TODO: error handling
 				topo.append("Class: ").append(clazz.getSimpleName()).append("\n");

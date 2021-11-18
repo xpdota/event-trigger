@@ -1,5 +1,9 @@
 package gg.xp.xivsupport.models;
 
+import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
+import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
+import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
+
 import java.util.Objects;
 
 /**
@@ -15,6 +19,10 @@ public class BuffTrackingKey {
 		this.source = source;
 		this.target = target;
 		this.buff = buff;
+	}
+
+	public static <X extends HasSourceEntity & HasTargetEntity & HasStatusEffect> BuffTrackingKey of(X event) {
+		return new BuffTrackingKey(event.getSource(), event.getTarget(), event.getBuff());
 	}
 
 	@Override
