@@ -24,6 +24,9 @@ import java.util.Set;
 public class CdTracker {
 
 	private static final Logger log = LoggerFactory.getLogger(CdTracker.class);
+	// TODO: have these be tristate rather than on/off:
+	// Never call, call only my own, call in party
+	// Or just two checkboxes
 
 	private static final long cdTriggerAdvance = 5000L;
 	// To be incremented on wipe or other event that would reset cooldowns

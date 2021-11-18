@@ -23,6 +23,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
+import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -56,14 +57,18 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GuiMain {
 
 	private static final Logger log = LoggerFactory.getLogger(GuiMain.class);
+	private static final ExecutorService exs = Executors.newCachedThreadPool();
 	private final EventMaster master;
 	private final StateStore state;
 	private final PicoContainer container;
@@ -97,6 +102,7 @@ public class GuiMain {
 			frame.setVisible(true);
 			tabPane.addTab("System", new SystemTabPanel());
 			tabPane.addTab("Plugins", new PluginTopologyPanel());
+			tabPane.addTab("Plugin Settings", new PluginSettingsPanel());
 			tabPane.addTab("Combatants", getCombatantsPanel());
 			tabPane.addTab("Buffs", getStatusEffectsPanel());
 			tabPane.addTab("Events", getEventsPanel());
@@ -358,6 +364,48 @@ public class GuiMain {
 //			scrollPane.setBorder(new LineBorder(Color.BLUE));
 			scrollPane.setPreferredSize(scrollPane.getMaximumSize());
 			add(scrollPane);
+		}
+	}
+
+	private class PluginSettingsPanel extends TitleBorderFullsizePanel {
+
+		private final JTabbedPane tabPanel;
+
+		public PluginSettingsPanel() {
+			super("Plugin Settings");
+			setLayout(new BorderLayout());
+			tabPanel = new JTabbedPane();
+			add(tabPanel);
+			exs.submit(this::getAndAddTabs);
+		}
+
+		private void addTab(PluginTab tab) {
+			String tabName = tab.getTabName();
+			log.info("Adding Plugin Tab {}", tabName);
+			tabPanel.addTab(tabName, tab.getTabContents());
+		}
+
+		private void addTabs(List<PluginTab> tabs) {
+			tabs.forEach(tab -> SwingUtilities.invokeLater(() -> addTab(tab)));
+		}
+
+		private void getAndAddTabs() {
+			while (true) {
+				// Kinda bad...
+				try {
+					List<PluginTab> components = container.getComponents(PluginTab.class);
+					SwingUtilities.invokeLater(() -> this.addTabs(components));
+					return;
+				}
+				catch (ConcurrentModificationException ignored) {
+					try {
+						Thread.sleep(1000);
+					}
+					catch (InterruptedException e) {
+						// ignored
+					}
+				}
+			}
 		}
 	}
 

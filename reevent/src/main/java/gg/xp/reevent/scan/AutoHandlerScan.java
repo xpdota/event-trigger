@@ -51,11 +51,21 @@ public class AutoHandlerScan {
 //						.addClassLoaders(new ForceReloadClassLoader(Thread.currentThread().getContextClassLoader()))
 							.setUrls(ClasspathHelper.forJavaClassPath())
 //							.forPackages("")
-							.setScanners(Scanners.MethodsAnnotated, Scanners.SubTypes));
+							.setScanners(Scanners.TypesAnnotated, Scanners.MethodsAnnotated, Scanners.SubTypes));
 			Set<Method> annotatedMethods = reflections.get(MethodsAnnotated.with(HandleEvents.class).as(Method.class));
+			Set<Class<?>> annotatedClasses = reflections.get(Scanners.TypesAnnotated.with(ScanMe.class).asClass());
 			log.info("Scan done, setting up topology now");
 
 			Map<Class<?>, List<Method>> classMethodMap = new HashMap<>();
+			for (Class<?> annotatedClass : annotatedClasses) {
+				if (isClassInstantiable(annotatedClass)) {
+					classMethodMap.computeIfAbsent(annotatedClass, unused -> new ArrayList<>());
+				}
+				else {
+					log.warn("Not adding @ScanMe class {} because it is not instantiable", annotatedClass);
+				}
+
+			}
 			int methodCount = 0;
 			for (Method method : annotatedMethods) {
 				if (method.isBridge() || method.isSynthetic()) {
