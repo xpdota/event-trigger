@@ -87,7 +87,7 @@ public class CdTracker {
 	// TODO: handle buff removal, enemy dying before buff expires, etc
 
 	@HandleEvents
-	public void cdUsed(EventContext<Event> context, AbilityUsedEvent event) {
+	public void cdUsed(EventContext context, AbilityUsedEvent event) {
 		TrackedCooldown cd;
 		if (Filters.sourceIsPlayer(context, event) && (cd = getCdInfo(event.getAbility().getId())) != null) {
 			log.info("CD used: {}", event);
@@ -98,13 +98,13 @@ public class CdTracker {
 	// TODO: this doesn't actually work as well as I'd like - if the advance timing is too small and/or we're behind on
 	// processing, we might hit the remove before the callout.
 	@HandleEvents
-	public void wiped(EventContext<Event> context, WipeEvent event) {
+	public void wiped(EventContext context, WipeEvent event) {
 		//noinspection NonAtomicOperationOnVolatileField
 		cdResetKey++;
 	}
 
 	@HandleEvents
-	public void refreshReminderCall(EventContext<Event> context, DelayedCdCallout event) {
+	public void refreshReminderCall(EventContext context, DelayedCdCallout event) {
 		XivAbility originalAbility = event.originalEvent.getAbility();
 		if (event.originalKey == cdResetKey) {
 			log.info("CD callout still valid");

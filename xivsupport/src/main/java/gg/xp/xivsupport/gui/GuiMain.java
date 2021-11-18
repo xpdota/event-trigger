@@ -167,7 +167,7 @@ public class GuiMain {
 			updateGui();
 		}
 
-		public void connectionStatusChange(EventContext<Event> context, ActWsConnectionStatusChangedEvent event) {
+		public void connectionStatusChange(EventContext context, ActWsConnectionStatusChangedEvent event) {
 			updateGui();
 		}
 

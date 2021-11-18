@@ -24,7 +24,7 @@ public class Stats { // :eldercat:
 	private volatile long synthetic;
 
 	@HandleEvents
-	public void countEvents(EventContext<Event> context, Event event) {
+	public void countEvents(EventContext context, Event event) {
 		total++;
 		if (event.getParent() == null) {
 			primogenitor++;
@@ -35,7 +35,7 @@ public class Stats { // :eldercat:
 	}
 
 	@HandleEvents
-	public void statsCommand(EventContext<Event> context, DebugCommand event) {
+	public void statsCommand(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("stats")) {
 			if (event.getArgs().size() == 1) {
 				long now = System.currentTimeMillis();

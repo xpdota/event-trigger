@@ -17,11 +17,11 @@ public class FieldMapper<K extends Enum<K>> {
 	private static final Logger log = LoggerFactory.getLogger(FieldMapper.class);
 
 	private final Map<K, String> raw;
-	private final EventContext<Event> context;
+	private final EventContext context;
 	private final boolean ignoreEntityLookupMiss;
 	private boolean flagForCombatantUpdate;
 
-	public FieldMapper(Map<K, String> raw, EventContext<Event> context, boolean ignoreEntityLookupMiss) {
+	public FieldMapper(Map<K, String> raw, EventContext context, boolean ignoreEntityLookupMiss) {
 		this.raw = new EnumMap<>(raw);
 		this.context = context;
 		this.ignoreEntityLookupMiss = ignoreEntityLookupMiss;

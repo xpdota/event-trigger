@@ -16,7 +16,7 @@ public class ACTLogLineParser implements EventHandler<ACTLogLineEvent> {
 
 	@Override
 //	@HandleEvents
-	public void handle(EventContext<Event> context, ACTLogLineEvent event) {
+	public void handle(EventContext context, ACTLogLineEvent event) {
 //		String logLine = event.getLogLine();
 //		// This could obviously be cleaned up when we support more events
 //		Matcher matcher21 = LINE21_PATTERN.matcher(logLine);

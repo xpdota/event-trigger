@@ -52,7 +52,7 @@ public class ActWsHandlers {
 	private JsonNode lastJson;
 
 	@HandleEvents(order = -100)
-	public void actWsRawToJson(EventContext<Event> context, ActWsRawMsg rawMsg) {
+	public void actWsRawToJson(EventContext context, ActWsRawMsg rawMsg) {
 		JsonNode jsonNode;
 		String raw = rawMsg.getRawMsgData();
 		if (raw.equals(lastRawMsg)) {
@@ -104,7 +104,7 @@ public class ActWsHandlers {
 	}
 
 	@HandleEvents(order = -100)
-	public static void actWsLogLine(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
+	public static void actWsLogLine(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("LogLine".equals(jsonMsg.getType())) {
 			context.enqueue(new ACTLogLineEvent(jsonMsg.getJson().get("rawLine").textValue()));
 		}
@@ -114,7 +114,7 @@ public class ActWsHandlers {
 	// current values when we subscribe to the events, unlike log lines which will only trigger when there is a change.
 	// i.e. it would only work after a zone change.
 	@HandleEvents(order = -100)
-	public static void actWsPlayerChange(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
+	public static void actWsPlayerChange(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("ChangePrimaryPlayer".equals(jsonMsg.getType())) {
 			long id = jsonMsg.getJson().get("charID").intValue();
 			String name = jsonMsg.getJson().get("charName").textValue();
@@ -123,7 +123,7 @@ public class ActWsHandlers {
 	}
 
 	@HandleEvents(order = -100)
-	public static void actWsZoneChange(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
+	public static void actWsZoneChange(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("ChangeZone".equals(jsonMsg.getType())) {
 			long id = jsonMsg.getJson().get("zoneID").intValue();
 			String name = jsonMsg.getJson().get("zoneName").textValue();
@@ -132,7 +132,7 @@ public class ActWsHandlers {
 	}
 
 	@HandleEvents(order = -100)
-	public static void actWsPartyChange(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
+	public static void actWsPartyChange(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("PartyChanged".equals(jsonMsg.getType())) {
 			List<RawXivPartyInfo> members = mapper.convertValue(jsonMsg.getJson().path("party"), new TypeReference<>() {
 			});
@@ -154,7 +154,7 @@ public class ActWsHandlers {
 
 	// Disabled - trying to get off of cactbot events
 //	@HandleEvents(order = -100)
-//	public static void actWsWipe(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
+//	public static void actWsWipe(EventContext context, ActWsJsonMsg jsonMsg) {
 //		if ("onPartyWipe".equals(jsonMsg.getType())) {
 //			context.enqueue(new WipeEvent());
 //		}
@@ -164,7 +164,7 @@ public class ActWsHandlers {
 	private final Map<Long, RawXivCombatantInfo> rawCbtCache = new HashMap<>();
 
 	@HandleEvents(order = -100)
-	public void actWsCombatants(EventContext<Event> context, ActWsJsonMsg jsonMsg) {
+	public void actWsCombatants(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("combatants".equals(jsonMsg.getType())) {
 			JsonNode combatantsNode = jsonMsg.getJson().path("combatants");
 			List<RawXivCombatantInfo> combatantMaps = mapper.convertValue(combatantsNode, new TypeReference<>() {

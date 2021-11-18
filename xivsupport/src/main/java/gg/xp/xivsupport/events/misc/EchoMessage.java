@@ -12,7 +12,7 @@ public class EchoMessage {
 	private static final Logger log = LoggerFactory.getLogger(EchoMessage.class);
 
 	@HandleEvents
-	public static void handle(EventContext<Event> context, ChatLineEvent event) {
+	public static void handle(EventContext context, ChatLineEvent event) {
 		if (event.getCode() == 0x38) {
 			String line = event.getLine();
 			log.info("Echo Message: {}", line);

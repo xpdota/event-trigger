@@ -44,7 +44,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 
 	@SuppressWarnings("unchecked")
 	@HandleEvents
-	public void handle(EventContext<Event> context, ACTLogLineEvent event) {
+	public void handle(EventContext context, ACTLogLineEvent event) {
 		String line = event.getLogLine();
 		if (line.startsWith(lineStart)) {
 			int numSplits = groups.size() + 3;

@@ -11,7 +11,7 @@ public class TestEventCollector implements EventHandler<Event> {
 	private final List<Event> eventsSeen = new ArrayList<>();
 
 	@Override
-	public void handle(EventContext<Event> context, Event event) {
+	public void handle(EventContext context, Event event) {
 		eventsSeen.add(event);
 	}
 

@@ -94,7 +94,7 @@ public class AutoHandler implements EventHandler<Event> {
 	}
 
 	@Override
-	public void handle(EventContext<Event> context, Event event) {
+	public void handle(EventContext context, Event event) {
 		if (!enabled) {
 			return;
 		}

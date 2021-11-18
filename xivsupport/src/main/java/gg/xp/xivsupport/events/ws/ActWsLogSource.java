@@ -107,7 +107,7 @@ public class ActWsLogSource implements EventSource {
 
 	@DisableInTest
 	@HandleEvents
-	public void getCombatantsDbg(EventContext<Event> context, DebugCommand event) {
+	public void getCombatantsDbg(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("combatants")) {
 			context.accept(new RefreshCombatantsRequest());
 		}
@@ -115,7 +115,7 @@ public class ActWsLogSource implements EventSource {
 
 	@DisableInTest
 	@HandleEvents
-	public void forceReconnect(EventContext<Event> context, DebugCommand event) {
+	public void forceReconnect(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("reconnect_ws")) {
 			log.info("Reconnect requested");
 			context.accept(new ActWsReconnectRequest());
@@ -124,7 +124,7 @@ public class ActWsLogSource implements EventSource {
 
 	@DisableInTest
 	@HandleEvents
-	public void getCombatants(EventContext<Event> context, RefreshCombatantsRequest event) {
+	public void getCombatants(EventContext context, RefreshCombatantsRequest event) {
 
 		try {
 			client.send(mapper.writeValueAsString(Map.ofEntries(Map.entry("call", "getCombatants"), Map.entry("rseq", rseqCounter.get()))));
@@ -138,7 +138,7 @@ public class ActWsLogSource implements EventSource {
 
 	@DisableInTest
 	@HandleEvents
-	public void sayTts(EventContext<Event> context, TtsRequest event) {
+	public void sayTts(EventContext context, TtsRequest event) {
 
 		try {
 			client.send(mapper.writeValueAsString(Map.ofEntries(
@@ -153,14 +153,14 @@ public class ActWsLogSource implements EventSource {
 
 	@DisableInTest
 	@HandleEvents
-	public void requestReconnect(EventContext<Event> context, ActWsReconnectRequest event) {
+	public void requestReconnect(EventContext context, ActWsReconnectRequest event) {
 		log.info("Forcing connection closed, should auto-reconnect");
 		doClose();
 	}
 
 	@DisableInTest
 	@HandleEvents
-	public void reconnectActWs(EventContext<Event> context, ActWsDisconnectedEvent event) {
+	public void reconnectActWs(EventContext context, ActWsDisconnectedEvent event) {
 		log.info("Disconnected, reconnecting");
 		doReconnect();
 	}

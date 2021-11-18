@@ -70,7 +70,7 @@ public class CalloutProcessor {
 	}
 
 //	@HandleEvents
-	public void handle(EventContext<Event> context, gg.xp.xivsupport.speech.CalloutEvent event) {
+	public void handle(EventContext context, gg.xp.xivsupport.speech.CalloutEvent event) {
 		// Events are not processed nor distributed in parallel - thus we need to make sure that we use async operations
 		// for things that take non-trivial amounts of time (e.g. speech)
 
@@ -78,12 +78,12 @@ public class CalloutProcessor {
 	}
 
 	@HandleEvents
-	public void callout(EventContext<Event> context, gg.xp.xivsupport.speech.CalloutEvent callout) {
+	public void callout(EventContext context, gg.xp.xivsupport.speech.CalloutEvent callout) {
 		context.accept(new gg.xp.xivsupport.speech.TtsRequest(callout.getCallText()));
 	}
 
 	@HandleEvents
-	public void ttsDebugCommand(EventContext<Event> context, DebugCommand echo) {
+	public void ttsDebugCommand(EventContext context, DebugCommand echo) {
 		if (echo.getCommand().equals("tts")) {
 			context.accept(new CalloutEvent("test"));
 		}

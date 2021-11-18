@@ -27,13 +27,13 @@ public class JailSolver implements FilteredEventHandler {
 	private final List<XivPlayerCharacter> jailedPlayers = new ArrayList<>();
 
 	@Override
-	public boolean enabled(EventContext<Event> context) {
+	public boolean enabled(EventContext context) {
 		// TODO: test this
 		return context.getStateInfo().get(XivState.class).zoneIs(0x309L);
 	}
 
 	@HandleEvents
-	public void amTest(EventContext<Event> context, DebugCommand event) {
+	public void amTest(EventContext context, DebugCommand event) {
 		XivState xivState = context.getStateInfo().get(XivState.class);
 		List<XivPlayerCharacter> partyList = xivState.getPartyList();
 		if (event.getCommand().equals("jailtest")) {
@@ -61,13 +61,13 @@ public class JailSolver implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void handleWipe(EventContext<Event> context, WipeEvent event) {
+	public void handleWipe(EventContext context, WipeEvent event) {
 		log.info("Cleared jails");
 		jailedPlayers.clear();
 	}
 
 	@HandleEvents
-	public void amResetManual(EventContext<Event> context, DebugCommand event) {
+	public void amResetManual(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("jailreset")) {
 			log.info("Cleared jails");
 			jailedPlayers.clear();
@@ -75,7 +75,7 @@ public class JailSolver implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void handleJailCast(EventContext<Event> context, AbilityUsedEvent event) {
+	public void handleJailCast(EventContext context, AbilityUsedEvent event) {
 		// Check ability ID - we only care about these two
 		long id = event.getAbility().getId();
 		if (id != 0x2B6B && id != 0x2B6C) {
@@ -94,7 +94,7 @@ public class JailSolver implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void sortTheJails(EventContext<Event> context, UnsortedTitanJailsSolvedEvent event) {
+	public void sortTheJails(EventContext context, UnsortedTitanJailsSolvedEvent event) {
 		// This is where we would do job prio, custom prio, or whatever else you can come up with
 		List<XivPlayerCharacter> jailedPlayers = new ArrayList<>(event.getJailedPlayers());
 		jailedPlayers.sort(Comparator.comparing(player -> {
@@ -124,7 +124,7 @@ public class JailSolver implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public static void personalCallout(EventContext<Event> context, FinalTitanJailsSolvedEvent event) {
+	public static void personalCallout(EventContext context, FinalTitanJailsSolvedEvent event) {
 		XivPlayerCharacter me = context.getStateInfo().get(XivState.class).getPlayer();
 		List<XivPlayerCharacter> jailedPlayers = event.getJailedPlayers();
 		int myIndex = 0;
@@ -155,7 +155,7 @@ public class JailSolver implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public static void automarks(EventContext<Event> context, FinalTitanJailsSolvedEvent event) {
+	public static void automarks(EventContext context, FinalTitanJailsSolvedEvent event) {
 		List<XivPlayerCharacter> playersToMark = event.getJailedPlayers();
 		log.info("Requesting to mark jailed players: {}", playersToMark.stream().map(XivEntity::getName).collect(Collectors.joining(", ")));
 		context.accept(new AutoMarkRequest(playersToMark.get(0)));

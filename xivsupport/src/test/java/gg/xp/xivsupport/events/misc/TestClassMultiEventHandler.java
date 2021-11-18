@@ -15,21 +15,21 @@ public class TestClassMultiEventHandler {
 	private final int source = System.identityHashCode(this);
 
 	@HandleEvents
-	public void firstHandler(EventContext<Event> context, ACTLogLineEvent logLineEvent) {
+	public void firstHandler(EventContext context, ACTLogLineEvent logLineEvent) {
 		if (logLineEvent.getLogLine().equals("Stuff")) {
 			context.accept(new DiagEvent("Foo", source));
 		}
 	}
 
 	@HandleEvents
-	public void secondHandler(EventContext<Event> context, ACTLogLineEvent logLineEvent) {
+	public void secondHandler(EventContext context, ACTLogLineEvent logLineEvent) {
 		if (logLineEvent.getLogLine().equals("Stuff")) {
 			context.accept(new DiagEvent("Bar", source));
 		}
 	}
 
 	@HandleEvents
-	public void diagHandler(EventContext<Event> context, DiagEvent event) {
+	public void diagHandler(EventContext context, DiagEvent event) {
 		log.info("Received diag event from {}: {}", event.getSource(), event.getText());
 	}
 }

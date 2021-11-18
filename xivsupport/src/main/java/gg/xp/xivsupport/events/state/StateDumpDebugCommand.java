@@ -13,7 +13,7 @@ public class StateDumpDebugCommand {
 	private static final Logger log = LoggerFactory.getLogger(StateDumpDebugCommand.class);
 
 	@HandleEvents
-	public void checkRandomId(EventContext<Event> context, DebugCommand event) {
+	public void checkRandomId(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("dumpstate")) {
 			XivState xivState = context.getStateInfo().get(XivState.class);
 			log.info("Dumping state");

@@ -9,7 +9,7 @@ import gg.xp.reevent.scan.HandleEvents;
 public class StressTest {
 
 	@HandleEvents
-	public static void handle(EventContext<Event> context, DebugCommand event) {
+	public static void handle(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("stresstest")) {
 			for (int i = 0; i < 1000; i++) {
 				context.enqueue(new RefreshCombatantsRequest());

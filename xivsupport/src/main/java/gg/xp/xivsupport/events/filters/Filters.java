@@ -12,7 +12,7 @@ public final class Filters {
 	private Filters() {
 	}
 
-	private static long getPlayerId(EventContext<Event> context) {
+	private static long getPlayerId(EventContext context) {
 		XivEntity player = context.getStateInfo().get(XivState.class).getPlayer();
 		if (player == null) {
 			// I don't like this but it works
@@ -21,11 +21,11 @@ public final class Filters {
 		return player.getId();
 	}
 
-	public static boolean sourceIsPlayer(EventContext<Event> context, HasSourceEntity event) {
+	public static boolean sourceIsPlayer(EventContext context, HasSourceEntity event) {
 		return getPlayerId(context) == event.getSource().getId();
 	}
 
-	public static boolean targetIsPlayer(EventContext<Event> context, HasTargetEntity event) {
+	public static boolean targetIsPlayer(EventContext context, HasTargetEntity event) {
 		return getPlayerId(context) == event.getTarget().getId();
 	}
 

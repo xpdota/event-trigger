@@ -23,7 +23,7 @@ public class RawEventStorage {
 	private List<Event> events = new ArrayList<>();
 
 	@HandleEvents(order = Integer.MIN_VALUE)
-	public void storeEvent(EventContext<Event> context, Event event) {
+	public void storeEvent(EventContext context, Event event) {
 		events.add(event);
 		if (events.size() > MAX_EVENTS_STORED) {
 			log.info("Pruning events");
@@ -33,7 +33,7 @@ public class RawEventStorage {
 	}
 
 	@HandleEvents
-	public void clear(EventContext<Event> context, DebugCommand event) {
+	public void clear(EventContext context, DebugCommand event) {
 		if ("clear".equals(event.getCommand())) {
 			events = new ArrayList<>();
 		}

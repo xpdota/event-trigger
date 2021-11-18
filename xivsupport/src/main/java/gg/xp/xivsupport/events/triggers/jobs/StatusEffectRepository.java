@@ -43,7 +43,7 @@ public class StatusEffectRepository {
 	// TODO: handle buff removal, enemy dying before buff expires, etc
 
 	@HandleEvents(order = -500)
-	public void buffApplication(EventContext<Event> context, BuffApplied event) {
+	public void buffApplication(EventContext context, BuffApplied event) {
 		// TODO: should fakes still be tracked somewhere?
 		if (event.getTarget().isFake()) {
 			return;
@@ -62,7 +62,7 @@ public class StatusEffectRepository {
 	// TODO: this doesn't actually work as well as I'd like - if the advance timing is too small and/or we're behind on
 	// processing, we might hit the remove before the callout.
 	@HandleEvents(order = -500)
-	public void buffRemove(EventContext<Event> context, BuffRemoved event) {
+	public void buffRemove(EventContext context, BuffRemoved event) {
 		BuffApplied removed = buffs.remove(BuffTrackingKey.of(event));
 		if (removed != null) {
 			log.debug("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
@@ -72,21 +72,21 @@ public class StatusEffectRepository {
 
 	// TODO: issues with buffs that persist through wipes (like tank stance)
 	@HandleEvents
-	public void wipe(EventContext<Event> context, WipeEvent wipe) {
+	public void wipe(EventContext context, WipeEvent wipe) {
 		log.debug("Wipe, clearing {} buffs", buffs.size());
 		buffs.clear();
 		context.accept(new XivBuffsUpdatedEvent());
 	}
 
 	@HandleEvents
-	public void wipe(EventContext<Event> context, ZoneChangeEvent wipe) {
+	public void wipe(EventContext context, ZoneChangeEvent wipe) {
 		log.debug("Zone change, clearing {} buffs", buffs.size());
 		buffs.clear();
 		context.accept(new XivBuffsUpdatedEvent());
 	}
 
 	@HandleEvents(order = -500)
-	public void removeCombatant(EventContext<Event> context, RawRemoveCombatantEvent event) {
+	public void removeCombatant(EventContext context, RawRemoveCombatantEvent event) {
 		long idToRemove = event.getEntity().getId();
 		Iterator<Map.Entry<BuffTrackingKey, BuffApplied>> iterator = buffs.entrySet().iterator();
 		Map.Entry<BuffTrackingKey, BuffApplied> current;

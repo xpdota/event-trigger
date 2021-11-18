@@ -101,7 +101,7 @@ public class JailCollector implements EventHandler<AbilityUsedEvent> {
    private final List<XivEntity> jailedPlayers = new ArrayList<>();
 
    @Override
-   public void handle(EventContext<Event> context, AbilityUsedEvent event) {
+   public void handle(EventContext context, AbilityUsedEvent event) {
       // Check ability ID - we only care about these two
       int id = event.getAbility().getId();
       if (id != 0x2B6B && id != 0x2B6C) {

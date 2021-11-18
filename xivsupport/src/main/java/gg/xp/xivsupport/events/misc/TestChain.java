@@ -16,7 +16,7 @@ public class TestChain {
 	private static final Logger log = LoggerFactory.getLogger(TestChain.class);
 
 	@HandleEvents
-	public void checkPedigree(EventContext<Event> context, DebugCommand event) {
+	public void checkPedigree(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("showchain")) {
 			List<Event> eventChain = new ArrayList<>();
 			Event current = event;

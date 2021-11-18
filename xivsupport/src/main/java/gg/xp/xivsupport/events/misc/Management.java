@@ -12,7 +12,7 @@ public class Management {
 	private static final Logger log = LoggerFactory.getLogger(Management.class);
 
 	@HandleEvents
-	public void forceGc(EventContext<Event> context, DebugCommand event) {
+	public void forceGc(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("gc")) {
 			log.info("Explicit GC requested");
 			//noinspection CallToSystemGC

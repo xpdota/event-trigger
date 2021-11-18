@@ -10,7 +10,7 @@ public class DebugEchoCommandHandler {
 	private static final String commandPrefix = "c:";
 
 	@HandleEvents
-	public static void debugCmd(EventContext<Event> context, EchoEvent event) {
+	public static void debugCmd(EventContext context, EchoEvent event) {
 		if (event.getLine().startsWith(commandPrefix)) {
 			context.enqueue(new DebugCommand(event.getLine().substring(commandPrefix.length())));
 		}

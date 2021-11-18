@@ -81,7 +81,7 @@ public class BasicEventDistributor implements EventDistributor {
 				AtomicBoolean isDone = new AtomicBoolean();
 				try {
 					handler.handle(
-							new EventContext<>() {
+							new EventContext() {
 								@Override
 								public void accept(Event e) {
 									if (isDone.get()) {

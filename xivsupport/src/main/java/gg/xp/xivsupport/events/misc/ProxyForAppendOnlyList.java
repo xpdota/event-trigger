@@ -9,17 +9,13 @@ public class ProxyForAppendOnlyList<E> extends AbstractList<E> implements Random
 	private final List<E> backingList;
 	private final int size;
 
+	@SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
 	public ProxyForAppendOnlyList(List<E> list) {
 		if (!(list instanceof RandomAccess)) {
 			throw new IllegalArgumentException("Use a random access list type with this, not " + list.getClass());
 		}
 		backingList = list;
 		size = list.size();
-//		int size = list.size();
-//		backingList = new ArrayList<>(size);
-//		for (int i = 0; i < list.size(); i++) {
-//			backingList.add(list.get(i));
-//		}
 	}
 
 	@Override

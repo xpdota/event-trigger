@@ -23,7 +23,7 @@ public class Reload {
 	}
 
 	@HandleEvents
-	public void checkRandomId(EventContext<Event> context, DebugCommand event) {
+	public void checkRandomId(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("printuids")) {
 			printUids();
 		}
@@ -35,7 +35,7 @@ public class Reload {
 	}
 
 	@HandleEvents
-	public static void handle(EventContext<Event> context, DebugCommand event) {
+	public static void handle(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("reload")) {
 			context.enqueue(new TopologyReloadEvent());
 		}

@@ -9,7 +9,7 @@ import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeInEvent;
 public class WipeDetector {
 
 	@HandleEvents
-	public void wipe(EventContext<Event> context, FadeInEvent event) {
+	public void wipe(EventContext context, FadeInEvent event) {
 		context.accept(new WipeEvent());
 	}
 

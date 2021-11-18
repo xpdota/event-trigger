@@ -12,34 +12,34 @@ import gg.xp.reevent.scan.HandleEvents;
 public final class TrackStateChanges {
 
 	@HandleEvents(order = Integer.MIN_VALUE)
-	public static void zoneChange(EventContext<Event> context, ZoneChangeEvent event) {
+	public static void zoneChange(EventContext context, ZoneChangeEvent event) {
 		context.getStateInfo().get(XivState.class).setZone(event.getZone());
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
-	public static void playerChange(EventContext<Event> context, RawPlayerChangeEvent event) {
+	public static void playerChange(EventContext context, RawPlayerChangeEvent event) {
 		context.getStateInfo().get(XivState.class).setPlayer(event.getPlayer());
 		// After learning about the player, make sure we request combatant data
 		context.accept(new RefreshCombatantsRequest());
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
-	public static void combatantAdded(EventContext<Event> context, RawAddCombatantEvent event) {
+	public static void combatantAdded(EventContext context, RawAddCombatantEvent event) {
 		context.accept(new RefreshCombatantsRequest());
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
-	public static void combatantRemoved(EventContext<Event> context, RawRemoveCombatantEvent event) {
+	public static void combatantRemoved(EventContext context, RawRemoveCombatantEvent event) {
 		context.accept(new RefreshCombatantsRequest());
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
-	public static void partyChange(EventContext<Event> context, PartyChangeEvent event) {
+	public static void partyChange(EventContext context, PartyChangeEvent event) {
 		context.getStateInfo().get(XivState.class).setPartyList(event.getMembers());
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
-	public static void combatants(EventContext<Event> context, CombatantsUpdateRaw event) {
+	public static void combatants(EventContext context, CombatantsUpdateRaw event) {
 		context.getStateInfo().get(XivState.class).setCombatants(event.getCombatantMaps());
 	}
 

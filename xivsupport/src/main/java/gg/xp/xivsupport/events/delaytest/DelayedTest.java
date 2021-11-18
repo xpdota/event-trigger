@@ -35,7 +35,7 @@ public class DelayedTest {
 	private volatile DelayedTestEvent pending;
 
 	@HandleEvents
-	public void handleStart(EventContext<Event> context, DebugCommand event) {
+	public void handleStart(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("delaystart")) {
 			log.info("Delay test start");
 			DelayedTestEvent outgoingEvent = new DelayedTestEvent(5000);
@@ -45,7 +45,7 @@ public class DelayedTest {
 	}
 
 	@HandleEvents
-	public void handleEnd(EventContext<Event> context, DelayedTestEvent event) {
+	public void handleEnd(EventContext context, DelayedTestEvent event) {
 		log.info("Delay test end");
 		if (pending == event) {
 			context.accept(new CalloutEvent("Foo"));
@@ -53,7 +53,7 @@ public class DelayedTest {
 	}
 
 	@HandleEvents
-	public void handleCancel(EventContext<Event> context, DebugCommand event) {
+	public void handleCancel(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("delaycancel")) {
 			log.info("Delay test cancel");
 			pending = null;

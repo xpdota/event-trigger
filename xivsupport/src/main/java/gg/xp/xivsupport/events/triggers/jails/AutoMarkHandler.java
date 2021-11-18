@@ -22,7 +22,7 @@ public class AutoMarkHandler {
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
 
 	@HandleEvents
-	public static void amTest(EventContext<Event> context, DebugCommand event) {
+	public static void amTest(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("amtest")) {
 			List<String> args = event.getArgs();
 			args.subList(1, args.size())
@@ -34,14 +34,14 @@ public class AutoMarkHandler {
 
 	@HandleEvents
 	@DisableInTest
-	public static void clearMarks(EventContext<Event> context, ClearAutoMarkRequest event) {
+	public static void clearMarks(EventContext context, ClearAutoMarkRequest event) {
 		log.info("Clearing marks");
 		clearAutoMark();
 	}
 
 	@HandleEvents
 	@DisableInTest
-	public static void doAutoMark(EventContext<Event> context, AutoMarkRequest event) {
+	public static void doAutoMark(EventContext context, AutoMarkRequest event) {
 		XivState xivState = context.getStateInfo().get(XivState.class);
 		List<XivPlayerCharacter> partyList = xivState.getPartyList();
 		XivPlayerCharacter player = event.getPlayerToMark();

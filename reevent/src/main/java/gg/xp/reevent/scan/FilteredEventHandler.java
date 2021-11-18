@@ -5,6 +5,6 @@ import gg.xp.reevent.events.EventContext;
 
 public interface FilteredEventHandler {
 
-	boolean enabled(EventContext<Event> context);
+	boolean enabled(EventContext context);
 
 }

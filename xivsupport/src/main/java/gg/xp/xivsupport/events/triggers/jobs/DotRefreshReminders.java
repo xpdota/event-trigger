@@ -48,7 +48,7 @@ public class DotRefreshReminders {
 	}
 
 	@HandleEvents
-	public void buffApplication(EventContext<Event> context, BuffApplied event) {
+	public void buffApplication(EventContext context, BuffApplied event) {
 		if (event.getSource().isThePlayer() && isWhitelisted(event.getBuff().getId()) && !event.getTarget().isFake()) {
 			context.enqueue(new DelayedBuffCallout(event, (long) (event.getDuration() * 1000L - dotRefreshAdvance)));
 		}
@@ -69,7 +69,7 @@ public class DotRefreshReminders {
 
 
 	@HandleEvents
-	public void refreshReminderCall(EventContext<Event> context, DelayedBuffCallout event) {
+	public void refreshReminderCall(EventContext context, DelayedBuffCallout event) {
 		BuffApplied originalEvent = event.originalEvent;
 		BuffApplied mostRecentEvent = buffs.get(BuffTrackingKey.of(originalEvent));
 		if (originalEvent == mostRecentEvent) {
