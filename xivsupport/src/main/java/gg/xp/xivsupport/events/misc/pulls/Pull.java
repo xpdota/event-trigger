@@ -9,6 +9,8 @@ import gg.xp.xivsupport.models.XivZone;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -68,6 +70,33 @@ public class Pull {
 
 	public void addEnemy(XivCombatant enemy) {
 		enemies.put(enemy.getId(), enemy);
+	}
+
+	// TODO: clock skew from client to server might cause an issue here
+	public @NotNull Instant startTime() {
+		return start.getHappenedAt();
+	}
+
+	public @Nullable Instant combatStartTime() {
+		return combatStart == null ? null : combatStart.getHappenedAt();
+	}
+
+	public @Nullable Instant endTime() {
+		return end == null ? null : end.getHappenedAt();
+	}
+
+	public @NotNull Duration getDuration() {
+		Instant start = startTime();
+		Instant end = endTime();
+		if (end == null) {
+			end = Instant.now();
+		}
+		return Duration.between(start, end);
+	}
+
+	public @Nullable Duration getCombatDuration() {
+		// TODO: this won't work because we don't have a 'start of combat' event yet
+		return null;
 	}
 
 	public PullStatus getStatus() {

@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.jobs;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -25,12 +24,12 @@ public class DotRefreshReminders {
 	}
 
 	private static boolean isWhitelisted(long id) {
-		return Arrays.stream(WhitelistedBuffs.values())
+		return Arrays.stream(DotBuffs.values())
 				.anyMatch(b -> b.matches(id));
 	}
 
-	// WL of buffs to track
-	private enum WhitelistedBuffs {
+	// List of ALL buffs to track - WL/BL will be done by user settings
+	private enum DotBuffs {
 		// JLS/javac being dumb, had to put the L there to make it a long
 		Dia(0x8fL, 0x90L, 0x74fL),
 		Biolysis(0xb3L, 0xbdL, 0x767L),
@@ -38,7 +37,7 @@ public class DotRefreshReminders {
 
 		private final Set<Long> buffIds;
 
-		WhitelistedBuffs(Long... buffIds) {
+		DotBuffs(Long... buffIds) {
 			this.buffIds = Set.of(buffIds);
 		}
 

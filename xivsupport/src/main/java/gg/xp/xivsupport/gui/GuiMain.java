@@ -2,11 +2,12 @@ package gg.xp.xivsupport.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.reevent.context.StateStore;
-import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.util.Utils;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
@@ -16,12 +17,8 @@ import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.Stats;
-import gg.xp.xivsupport.models.XivCombatant;
-import gg.xp.xivsupport.models.XivEntity;
-import gg.xp.xivsupport.models.XivPlayerCharacter;
-import gg.xp.xivsupport.models.XivZone;
-import gg.xp.xivsupport.slf4j.LogCollector;
-import gg.xp.xivsupport.slf4j.LogEvent;
+import gg.xp.xivsupport.events.misc.pulls.Pull;
+import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
@@ -39,9 +36,14 @@ import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tree.TopologyTreeEditor;
 import gg.xp.xivsupport.gui.tree.TopologyTreeModel;
 import gg.xp.xivsupport.gui.tree.TopologyTreeRenderer;
+import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivEntity;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.slf4j.LogCollector;
+import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
-import gg.xp.reevent.util.Utils;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -100,6 +102,7 @@ public class GuiMain {
 			tabPane.addTab("Events", getEventsPanel());
 			tabPane.addTab("ACT Log", getActLogPanel());
 			tabPane.addTab("System Log", getSystemLogPanel());
+			tabPane.addTab("Pulls", getPullsTab());
 			// TODO: move this to a panel in first page
 			tabPane.addTab("Stats", new StatsPanel());
 			tabPane.addTab("Import/Export", new JPanel());
@@ -416,6 +419,7 @@ public class GuiMain {
 		return table;
 
 	}
+
 	private JPanel getStatusEffectsPanel() {
 		// TODO: jump to parent button
 		// Main table
@@ -597,6 +601,46 @@ public class GuiMain {
 			instance.addCallback(table::signalNewData);
 			return table;
 		}
+	}
+
+	private JPanel getPullsTab() {
+		PullTracker pulls = state.get(PullTracker.class);
+		TableWithFilterAndDetails<Pull, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Pulls",
+						pulls::getPulls,
+						currentPull -> {
+							if (currentPull == null) {
+								return Collections.emptyList();
+							}
+							else {
+								return Utils.dumpAllFields(currentPull)
+										.entrySet()
+										.stream()
+										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
+										.collect(Collectors.toList());
+							}
+						})
+				.addMainColumn(new CustomColumn<>("Zone", e -> e.getZone().getName(), col -> {
+					col.setPreferredWidth(200);
+				}))
+				.addMainColumn(new CustomColumn<>("Status", e -> e.getStatus(), col -> {
+					col.setMinWidth(100);
+					col.setMaxWidth(100);
+					col.setResizable(false);
+				}))
+				.addMainColumn(new CustomColumn<>("Start", e -> e.startTime(), col -> {
+					col.setPreferredWidth(200);
+				}))
+				.addMainColumn(new CustomColumn<>("Duration", e -> e.getDuration(), col -> {
+					col.setPreferredWidth(200);
+				}))
+				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
+				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
+				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
+				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+//				.addFilter(LogLevelVisualFilter::new)
+				.setAppendOrPruneOnly(false)
+				.build();
+		return table;
 	}
 
 

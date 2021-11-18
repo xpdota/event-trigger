@@ -37,6 +37,7 @@ public class AutoEventDistributor extends BasicEventDistributor {
 		handlers.addAll(handlersToKeep);
 		List<AutoHandler> handlers = scanner.build();
 		this.handlers.addAll(handlers);
+		sortHandlers();
 		topology = Topology.fromHandlers(new ArrayList<>(this.handlers), topoInfo);
 		isLoaded = true;
 	}

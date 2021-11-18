@@ -35,6 +35,7 @@ public class BasicEventDistributor implements EventDistributor {
 		}
 		synchronized (handlersLock) {
 			handlers.add(handler);
+			sortHandlers();
 		}
 	}
 
