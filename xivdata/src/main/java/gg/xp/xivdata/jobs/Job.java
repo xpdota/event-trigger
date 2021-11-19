@@ -3,6 +3,7 @@ package gg.xp.xivdata.jobs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URL;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -107,6 +108,12 @@ public enum Job {
 			return ADV;
 		}
 		return values()[(int) id];
+	}
+
+	public URL getIcon() {
+		// Fine for now
+		String fileName = getFriendlyName().replaceAll(" ", "") + ".png";
+		return Job.class.getResource("/xiv/jobicons/" + fileName);
 	}
 
 	public int getId() {

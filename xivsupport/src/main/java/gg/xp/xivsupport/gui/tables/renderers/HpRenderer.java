@@ -49,7 +49,8 @@ public class HpRenderer implements TableCellRenderer {
 			Color colorRaw = Color.getHSBColor((float) (0.33f * hpPercent), 0.36f, 0.58f);
 			Color actualColor = new Color(colorRaw.getRed(), colorRaw.getGreen(), colorRaw.getBlue(), 98);
 			leftPanel.setBackground(actualColor);
-			rightPanel.setBackground(baseLabel.getBackground());
+			Color gray = baseLabel.getBackground();
+			rightPanel.setBackground(new Color(gray.getRed(), gray.getGreen(), gray.getBlue(), 128));
 
 			panel1.add(leftPanel);
 			panel1.add(rightPanel);

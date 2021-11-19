@@ -35,6 +35,7 @@ import gg.xp.xivsupport.gui.tables.filters.EventTypeFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.gui.tree.TopologyTreeEditor;
 import gg.xp.xivsupport.gui.tree.TopologyTreeModel;
 import gg.xp.xivsupport.gui.tree.TopologyTreeRenderer;
@@ -245,7 +246,7 @@ public class GuiMain {
 //					() -> List.of(new XivPlayerCharacter(123, "Foo Bar", Job.WHM, new XivWorld(), 23, true)))
 							() -> state.get(XivState.class).getPartyList())
 					.addColumn(new CustomColumn<>("Name", XivEntity::getName))
-					.addColumn(new CustomColumn<>("Job", c -> c.getJob().getFriendlyName()))
+					.addColumn(new CustomColumn<>("Job", c -> c.getJob()))
 					// TODO: seeing custom renderer here does not work, because this would normally be read by
 					// TableWithFilterAndDetails, but that isn't in use here.
 					.addColumn(new CustomColumn<>("HP", XivCombatant::getHp, c -> c.setCellRenderer(new HpRenderer())))
@@ -255,6 +256,7 @@ public class GuiMain {
 			// TODO: see above todo, remove this when done
 
 			partyMembersTable.setModel(partyTableModel);
+			partyMembersTable.getColumnModel().getColumn(1).setCellRenderer(new JobRenderer());
 			partyMembersTable.getColumnModel().getColumn(2).setCellRenderer(new HpRenderer());
 			right.setLayout(new BorderLayout());
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);

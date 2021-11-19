@@ -69,6 +69,7 @@ public final class RearrangeableList<X> extends JList<X> {
 
 			currentDrag = null;
 			model.add(moveTo, object);
+			RearrangeableList.this.setSelectedIndex(moveTo);
 			// If we are moving downwards in the list (index increasing), then we need to
 			if (moveDown) {
 				model.removeElementAt(model.indexOf(object));

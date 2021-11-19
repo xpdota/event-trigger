@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -106,6 +107,14 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			}
 		}
 
+	}
+
+	public void configureColumns(JTable table) {
+		for (int i = 0; i < columns.size(); i++) {
+			TableColumn column = table.getColumnModel().getColumn(i);
+			CustomColumn<X> customColumn = columns.get(i);
+			customColumn.configureColumn(column);
+		}
 	}
 
 	public void fullRefresh() {

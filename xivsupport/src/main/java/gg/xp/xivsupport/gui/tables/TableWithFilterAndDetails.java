@@ -67,11 +67,12 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 		// Main table
 		JTable table = new JTable(mainModel);
-		for (int i = 0; i < mainColumns.size(); i++) {
-			TableColumn column = table.getColumnModel().getColumn(i);
-			CustomColumn<X> customColumn = mainColumns.get(i);
-			customColumn.configureColumn(column);
-		}
+		mainModel.configureColumns(table);
+//		for (int i = 0; i < mainColumns.size(); i++) {
+//			TableColumn column = table.getColumnModel().getColumn(i);
+//			CustomColumn<X> customColumn = mainColumns.get(i);
+//			customColumn.configureColumn(column);
+//		}
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ListSelectionModel selectionModel = table.getSelectionModel();
 		selectionModel.addListSelectionListener(e -> {
