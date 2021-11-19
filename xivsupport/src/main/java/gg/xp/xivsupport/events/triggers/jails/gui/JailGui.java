@@ -48,7 +48,16 @@ public class JailGui implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
+		// Defined first so we can trigger refresh
+		CustomTableModel<XivPlayerCharacter> partyTableModel;
+		partyTableModel = CustomTableModel.builder(
+						jails::partyOrderPreview)
+				.addColumn(new CustomColumn<>("Name", XivEntity::getName))
+				.addColumn(new CustomColumn<>("Job", XivPlayerCharacter::getJob, c -> c.setCellRenderer(new JobRenderer())))
+				.build();
 		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Jails");
+
+
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = 1;
@@ -82,8 +91,12 @@ public class JailGui implements PluginTab {
 		dragger.setBorder(new LineBorder(Color.PINK));
 		dragger.setAlignmentX(0);
 		dragger.setLayout(new FlowLayout(FlowLayout.LEFT));
-		List<Job> items = Arrays.stream(Job.values()).filter(Job::isCombatJob).collect(Collectors.toList());
-		JList<Job> jobList = new RearrangeableList<>(items, l -> log.info("Changed jail prio: {}", l.stream().map(Enum::name).collect(Collectors.joining(", "))));
+		List<Job> items = jails.getCurrentJailSort();
+		RearrangeableList<Job> jobList = new RearrangeableList<>(items, l -> {
+			jails.setCurrentJailSort(l);
+			log.info("Changed jail prio: {}", l.stream().map(Enum::name).collect(Collectors.joining(", ")));
+			partyTableModel.fullRefresh();
+		});
 		jobList.setCellRenderer(new JobRenderer());
 		JScrollPane scroll = new JScrollPane(jobList);
 		Dimension size = new Dimension(100, 50);
@@ -97,16 +110,20 @@ public class JailGui implements PluginTab {
 		panel.add(scroll, c);
 
 
-		CustomTableModel<XivPlayerCharacter> partyTableModel;
-		partyTableModel = CustomTableModel.builder(
-						jails::partyOrderPreview)
-				.addColumn(new CustomColumn<>("Name", XivEntity::getName))
-				.addColumn(new CustomColumn<>("Job", XivPlayerCharacter::getJob))
-				.build();
 
 		JTable partyMembersTable = new JTable(8, 3);
 		partyMembersTable.setModel(partyTableModel);
 		partyTableModel.configureColumns(partyMembersTable);
+		partyMembersTable.getSelectionModel().addListSelectionListener(l -> {
+			int[] selectedRows = partyMembersTable.getSelectedRows();
+			jobList.clearSelection();
+			Arrays.stream(selectedRows).forEach(partyRow -> {
+				XivPlayerCharacter player = partyTableModel.getValueForRow(partyRow);
+				int jobRow = jobList.getValues().indexOf(player.getJob());
+				jobList.addSelectionInterval(jobRow, jobRow);
+
+			});
+		});
 		c.gridx ++;
 		c.weightx = 1;
 		panel.add(new JScrollPane(partyMembersTable), c);

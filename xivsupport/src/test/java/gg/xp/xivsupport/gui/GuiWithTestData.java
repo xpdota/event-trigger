@@ -190,8 +190,8 @@ public class GuiWithTestData {
 						"      \"type\": 1,\n" +
 						"      \"Job\": 33,\n" +
 						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Other Alliance\",\n" +
-						"      \"CurrentHP\": 65345,\n" +
+						"      \"Name\": \"Pf Hero\",\n" +
+						"      \"CurrentHP\": 5421,\n" +
 						"      \"MaxHP\": 122700,\n" +
 						"      \"CurrentMP\": 10000,\n" +
 						"      \"MaxMP\": 10000,\n" +
@@ -212,8 +212,8 @@ public class GuiWithTestData {
 						"      \"type\": 1,\n" +
 						"      \"Job\": 33,\n" +
 						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Pf Hero\",\n" +
-						"      \"CurrentHP\": 5421,\n" +
+						"      \"Name\": \"Other Alliance\",\n" +
+						"      \"CurrentHP\": 65345,\n" +
 						"      \"MaxHP\": 122700,\n" +
 						"      \"CurrentMP\": 10000,\n" +
 						"      \"MaxMP\": 10000,\n" +

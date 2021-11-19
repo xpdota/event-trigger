@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,9 +31,19 @@ public class JailSolver implements FilteredEventHandler {
 	private final BooleanSetting enableTts;
 	private final BooleanSetting enableAutomark;
 	private final XivState state;
+	private List<Job> currentJailSort;
 
-	private final Comparator<XivPlayerCharacter> jailSortComparator = Comparator.comparing(player -> {
-		Job job = player.getJob();
+	private final Comparator<XivPlayerCharacter> playerJailSortComparator = Comparator.<XivPlayerCharacter, Integer>comparing(player -> {
+		int index = currentJailSort.indexOf(player.getJob());
+		if (index == -1) {
+			// Return a big value so it sorts last
+			log.warn("Couldn't determine jail prio for player {}", player);
+			return 65536;
+		}
+		return index;
+	}).thenComparing(XivPlayerCharacter::getName);
+
+	private final Comparator<Job> defaultJailSortComparator = Comparator.comparing(job -> {
 		if (job.isMeleeDps()) {
 			return 1;
 		}
@@ -48,13 +60,17 @@ public class JailSolver implements FilteredEventHandler {
 			return 5;
 		}
 		// Shouldn't happen
-		log.warn("Couldn't determine jail prio for player {} job {}", player, job);
+		log.warn("Couldn't determine jail prio for job {}", job);
 		return 6;
 	});
 
 	public JailSolver(PersistenceProvider persistence, XivState state) {
 		enableTts = new BooleanSetting(persistence, "jail-solver.tts.enable", true);
 		enableAutomark = new BooleanSetting(persistence, "jail-solver.automark.enable", true);
+		currentJailSort = Arrays.stream(Job.values())
+				.filter(Job::isCombatJob)
+				.sorted(defaultJailSortComparator)
+				.collect(Collectors.toUnmodifiableList());
 		this.state = state;
 	}
 
@@ -129,7 +145,7 @@ public class JailSolver implements FilteredEventHandler {
 	public void sortTheJails(EventContext context, UnsortedTitanJailsSolvedEvent event) {
 		// This is where we would do job prio, custom prio, or whatever else you can come up with
 		List<XivPlayerCharacter> jailedPlayers = new ArrayList<>(event.getJailedPlayers());
-		jailedPlayers.sort(jailSortComparator);
+		jailedPlayers.sort(playerJailSortComparator);
 		context.accept(new FinalTitanJailsSolvedEvent(jailedPlayers));
 		log.info("Unsorted jails: {}", event.getJailedPlayers());
 		log.info("Sorted jails: {}", jailedPlayers);
@@ -189,7 +205,15 @@ public class JailSolver implements FilteredEventHandler {
 		return enableAutomark;
 	}
 
+	public List<Job> getCurrentJailSort() {
+		return Collections.unmodifiableList(currentJailSort);
+	}
+
+	public void setCurrentJailSort(List<Job> currentJailSort) {
+		this.currentJailSort = Collections.unmodifiableList(new ArrayList<>(currentJailSort));
+	}
+
 	public List<XivPlayerCharacter> partyOrderPreview() {
-		return state.getPartyList().stream().sorted(jailSortComparator).collect(Collectors.toList());
+		return state.getPartyList().stream().sorted(playerJailSortComparator).collect(Collectors.toList());
 	}
 }

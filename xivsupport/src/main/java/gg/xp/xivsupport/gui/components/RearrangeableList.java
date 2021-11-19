@@ -82,6 +82,11 @@ public final class RearrangeableList<X> extends JList<X> {
 		}
 	}
 
+	public List<X> getValues() {
+		DefaultListModel<X> model = (DefaultListModel<X>) RearrangeableList.this.getModel();
+		return Collections.list(model.elements());
+	}
+
 	private class MyDragListener extends DragSourceAdapter implements DragGestureListener {
 
 		DragSource ds = new DragSource();
@@ -107,7 +112,5 @@ public final class RearrangeableList<X> extends JList<X> {
 				log.info("Drag and Drop Failed");
 			}
 		}
-
 	}
-
 }

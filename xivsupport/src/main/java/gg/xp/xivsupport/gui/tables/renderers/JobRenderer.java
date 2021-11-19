@@ -33,7 +33,7 @@ public class JobRenderer implements TableCellRenderer, ListCellRenderer<Job> {
 				return null;
 			}
 			ImageIcon icon = new ImageIcon(imageUrl);
-			return icon.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+			return icon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
 		});
 		if (scaled == null) {
 			return defaultLabel;
