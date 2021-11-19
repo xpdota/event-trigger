@@ -34,6 +34,7 @@ import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventTypeFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
+import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tree.TopologyTreeEditor;
 import gg.xp.xivsupport.gui.tree.TopologyTreeModel;
 import gg.xp.xivsupport.gui.tree.TopologyTreeRenderer;
@@ -114,7 +115,6 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
 		// TODO: move this to a panel in first page
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Stats", new StatsPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", new JPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", new JPanel()));
 	}
 
@@ -245,11 +245,16 @@ public class GuiMain {
 							() -> state.get(XivState.class).getPartyList())
 					.addColumn(new CustomColumn<>("Name", XivEntity::getName))
 					.addColumn(new CustomColumn<>("Job", c -> c.getJob().getFriendlyName()))
-					.addColumn(new CustomColumn<>("HP", XivCombatant::getHp))
+					// TODO: seeing custom renderer here does not work, because this would normally be read by
+					// TableWithFilterAndDetails, but that isn't in use here.
+					.addColumn(new CustomColumn<>("HP", XivCombatant::getHp, c -> c.setCellRenderer(new HpRenderer())))
 					.addColumn(new CustomColumn<>("ID", c -> Long.toString(c.getId(), 16)))
 					.build();
 			JTable partyMembersTable = new JTable(8, 3);
+			// TODO: see above todo, remove this when done
+
 			partyMembersTable.setModel(partyTableModel);
+			partyMembersTable.getColumnModel().getColumn(2).setCellRenderer(new HpRenderer());
 			right.setLayout(new BorderLayout());
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
 			right.add(scrollPane);
@@ -444,7 +449,8 @@ public class GuiMain {
 					c.setMaxWidth(60);
 					c.setMinWidth(60);
 				}))
-				.addMainColumn(new CustomColumn<>("HP", XivCombatant::getHp))
+				.addMainColumn(new CustomColumn<>("HP", XivCombatant::getHp,
+						c -> c.setCellRenderer(new HpRenderer())))
 				.addMainColumn(new CustomColumn<>("Position", XivCombatant::getPos))
 				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
 				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
