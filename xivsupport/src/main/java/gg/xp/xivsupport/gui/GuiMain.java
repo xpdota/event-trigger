@@ -72,6 +72,7 @@ public class GuiMain {
 	private final EventMaster master;
 	private final StateStore state;
 	private final PicoContainer container;
+	private JTabbedPane tabPane;
 
 	public static void main(String[] args) {
 		log.info("GUI Init");
@@ -82,7 +83,7 @@ public class GuiMain {
 		installCustomEventQueue();
 	}
 
-	public GuiMain(EventMaster master, PicoContainer container) {
+	public GuiMain(EventMaster master, PicoContainer container) throws InterruptedException {
 		log.info("Starting GUI setup");
 		this.master = master;
 		this.state = master.getDistributor().getStateStore();
@@ -96,24 +97,25 @@ public class GuiMain {
 		}
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
-			JTabbedPane tabPane = new JTabbedPane();
+			tabPane = new JTabbedPane();
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(960, 720);
 			frame.setVisible(true);
-			tabPane.addTab("System", new SystemTabPanel());
-			tabPane.addTab("Plugins", new PluginTopologyPanel());
-			tabPane.addTab("Plugin Settings", new PluginSettingsPanel());
-			tabPane.addTab("Combatants", getCombatantsPanel());
-			tabPane.addTab("Buffs", getStatusEffectsPanel());
-			tabPane.addTab("Events", getEventsPanel());
-			tabPane.addTab("ACT Log", getActLogPanel());
-			tabPane.addTab("System Log", getSystemLogPanel());
-			tabPane.addTab("Pulls", getPullsTab());
-			// TODO: move this to a panel in first page
-			tabPane.addTab("Stats", new StatsPanel());
-			tabPane.addTab("Import/Export", new JPanel());
 			frame.add(tabPane);
 		});
+		SwingUtilities.invokeLater(() -> tabPane.addTab("System", new SystemTabPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Plugins", new PluginTopologyPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Plugin Settings", new PluginSettingsPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Combatants", getCombatantsPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Buffs", getStatusEffectsPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Events", getEventsPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("ACT Log", getActLogPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("System Log", getSystemLogPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
+		// TODO: move this to a panel in first page
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Stats", new StatsPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", new JPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", new JPanel()));
 	}
 
 	private class SystemTabPanel extends JPanel {
@@ -125,25 +127,18 @@ public class GuiMain {
 			c.anchor = GridBagConstraints.CENTER;
 			c.weightx = 1;
 			c.weighty = 0;
-//			c.weightx = 1; c.weighty = 0.5;
-//			c.gridx = 0;
 			c.gridy = 0;
-//			c.gridwidth = 1;
-//			setLayout(new FlowLayout());
 			ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
 			connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
 			add(connectionStatusPanel, c);
 			XivStateStatus xivStateStatus = new XivStateStatus();
 			xivStateStatus.setPreferredSize(new Dimension(100, 250));
 			c.gridy++;
-//			c.gridwidth = 1;
 			add(xivStateStatus, c);
 			// filler for alignment
 			CombatantsPanel combatantsPanel = new CombatantsPanel();
-//			c.gridx = 0;
 			c.gridy++;
 			c.weighty = 1;
-//			c.weighty = 1;
 			add(combatantsPanel, c);
 			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
@@ -407,6 +402,7 @@ public class GuiMain {
 				}
 			}
 		}
+
 	}
 
 	private JPanel getCombatantsPanel() {

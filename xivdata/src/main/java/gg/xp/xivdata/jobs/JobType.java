@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.actlines.data;
+package gg.xp.xivdata.jobs;
 
 public enum JobType {
 	// Try to not use this directly - rather, query the isX methods

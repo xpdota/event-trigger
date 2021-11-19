@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.models;
 
-import gg.xp.xivsupport.events.actlines.data.Job;
+import gg.xp.xivdata.jobs.Job;
 
 public class XivPlayerCharacter extends XivCombatant {
 	private static final long serialVersionUID = 8719229961190925919L;

@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.actlines.data;
+package gg.xp.xivdata.jobs;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

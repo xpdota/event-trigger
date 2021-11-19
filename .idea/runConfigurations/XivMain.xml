@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="XivMain" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="gg.xp.xivsupport.sys.XivMain" />
+    <module name="xivsupport" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="gg.xp.xivsupport.sys.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

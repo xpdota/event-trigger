@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events.state;
 import gg.xp.reevent.events.DummyEventToForceAutoScan;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
-import gg.xp.xivsupport.events.actlines.data.Job;
+import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;

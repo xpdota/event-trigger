@@ -30,5 +30,6 @@
         <module>reevent</module>
         <module>xivsupport</module>
         <module>deps</module>
+        <module>xivdata</module>
     </modules>
 </project>

@@ -2,7 +2,7 @@ package gg.xp.xivsupport.events.state;
 
 import gg.xp.reevent.context.SubState;
 import gg.xp.reevent.events.EventMaster;
-import gg.xp.xivsupport.events.actlines.data.Job;
+import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
