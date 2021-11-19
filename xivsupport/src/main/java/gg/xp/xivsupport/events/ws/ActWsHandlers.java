@@ -32,24 +32,36 @@ public class ActWsHandlers {
 
 	private static final Logger log = LoggerFactory.getLogger(ActWsHandlers.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
+	private final EventMaster master;
 
 	public ActWsHandlers(EventMaster master) {
-		new Thread(() -> {
-			while (true) {
-				try {
-					Thread.sleep(1000);
-					master.pushEvent(new RefreshCombatantsRequest());
-				}
-				catch (Throwable t) {
-					log.error("Error", t);
-				}
-			}
-		}).start();
+		this.master = master;
 	}
 
 	// Memory saving hacks
 	private String lastRawMsg;
 	private JsonNode lastJson;
+
+	private Thread combatantsLoopThread;
+
+	@HandleEvents
+	public void startCombatantsLoop(EventContext context, ActWsConnectedEvent connected) {
+		if (combatantsLoopThread == null) {
+			combatantsLoopThread = new Thread(() -> {
+				while (true) {
+					try {
+						Thread.sleep(1000);
+						master.pushEvent(new RefreshCombatantsRequest());
+					}
+					catch (Throwable t) {
+						log.error("Error", t);
+					}
+				}
+			});
+			combatantsLoopThread.start();
+		}
+
+	}
 
 	@HandleEvents(order = -100)
 	public void actWsRawToJson(EventContext context, ActWsRawMsg rawMsg) {

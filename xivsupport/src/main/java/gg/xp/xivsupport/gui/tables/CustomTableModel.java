@@ -51,8 +51,6 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	private final List<CustomColumn<X>> columns;
 	private List<X> data = Collections.emptyList();
 	private final BiPredicate<X, X> selectionEquivalence;
-	// TODO
-	private final boolean appendFastPathOk = true;
 
 
 	private CustomTableModel(Supplier<List<X>> dataGetter, List<CustomColumn<X>> columns, BiPredicate<X, X> selectionEquivalence) {

@@ -81,6 +81,7 @@ public class GuiMain {
 		MutablePicoContainer pico = XivMain.masterInit();
 		pico.addComponent(GuiMain.class);
 		pico.getComponent(GuiMain.class);
+		// TODO: doesn't transfer over to test modes
 		installCustomEventQueue();
 	}
 
