@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.persistence.gui;
 
-import gg.xp.xivsupport.persistence.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 
 import javax.swing.*;
 

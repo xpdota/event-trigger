@@ -2,7 +2,7 @@ package gg.xp.xivsupport.persistence.gui;
 
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
-import gg.xp.xivsupport.persistence.LongSetting;
+import gg.xp.xivsupport.persistence.settings.LongSetting;
 
 import javax.swing.*;
 import java.awt.*;

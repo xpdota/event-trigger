@@ -8,11 +8,13 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
-import gg.xp.xivsupport.persistence.BooleanSetting;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.EnumListSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class JailSolver implements FilteredEventHandler {
@@ -31,7 +35,9 @@ public class JailSolver implements FilteredEventHandler {
 	private final BooleanSetting enableTts;
 	private final BooleanSetting enableAutomark;
 	private final XivState state;
+	private final Set<Job> allValidJobs;
 	private List<Job> currentJailSort;
+	private final EnumListSetting<Job> sortSetting;
 
 	private final Comparator<XivPlayerCharacter> playerJailSortComparator = Comparator.<XivPlayerCharacter, Integer>comparing(player -> {
 		int index = currentJailSort.indexOf(player.getJob());
@@ -43,7 +49,7 @@ public class JailSolver implements FilteredEventHandler {
 		return index;
 	}).thenComparing(XivPlayerCharacter::getName);
 
-	private final Comparator<Job> defaultJailSortComparator = Comparator.comparing(job -> {
+	private final Comparator<Job> defaultJailSortComparator = Comparator.<Job, Integer>comparing(job -> {
 		if (job.isMeleeDps()) {
 			return 1;
 		}
@@ -62,21 +68,39 @@ public class JailSolver implements FilteredEventHandler {
 		// Shouldn't happen
 		log.warn("Couldn't determine jail prio for job {}", job);
 		return 6;
-	});
+	}).thenComparing(Enum::ordinal);
 
 	public JailSolver(PersistenceProvider persistence, XivState state) {
 		enableTts = new BooleanSetting(persistence, "jail-solver.tts.enable", true);
 		enableAutomark = new BooleanSetting(persistence, "jail-solver.automark.enable", true);
-		currentJailSort = Arrays.stream(Job.values())
+		// TODO: add "upgrades to job X" field to Job so that we can just combine
+		// jobs and base classes.
+		allValidJobs = Arrays.stream(Job.values())
 				.filter(Job::isCombatJob)
-				.sorted(defaultJailSortComparator)
-				.collect(Collectors.toUnmodifiableList());
+				.collect(Collectors.toUnmodifiableSet());
+		sortSetting = new EnumListSetting<>(Job.class, persistence, "jail-solver.job-order", EnumListSetting.BadKeyBehavior.RETURN_DEFAULT, null);
+		List<Job> listFromSettings = sortSetting.get();
+		if (listFromSettings != null) {
+			try {
+				validateJobSortOrder(listFromSettings);
+				currentJailSort = listFromSettings;
+			}
+			catch (Throwable t) {
+				log.error("Saved jail order did not pass validation", t);
+			}
+		}
+		// Fall back to default
+		if (currentJailSort == null) {
+			currentJailSort = allValidJobs
+					.stream()
+					.sorted(defaultJailSortComparator)
+					.collect(Collectors.toUnmodifiableList());
+		}
 		this.state = state;
 	}
 
 	@Override
 	public boolean enabled(EventContext context) {
-		// TODO: test this
 		return context.getStateInfo().get(XivState.class).zoneIs(0x309L);
 	}
 
@@ -209,8 +233,34 @@ public class JailSolver implements FilteredEventHandler {
 		return Collections.unmodifiableList(currentJailSort);
 	}
 
-	public void setCurrentJailSort(List<Job> currentJailSort) {
-		this.currentJailSort = Collections.unmodifiableList(new ArrayList<>(currentJailSort));
+	public void resetJailSort() {
+		this.currentJailSort = currentJailSort.stream()
+				.sorted(defaultJailSortComparator)
+				.collect(Collectors.toUnmodifiableList());
+		sortSetting.delete();
+	}
+
+	private void validateJobSortOrder(List<Job> newSort) {
+		int expectedNumberOfJobs = allValidJobs.size();
+		int actualNumberOfJobs = newSort.size();
+		if (expectedNumberOfJobs != actualNumberOfJobs) {
+			throw new IllegalArgumentException(String.format("New jail sort order was not the same size! %s -> %s", expectedNumberOfJobs, actualNumberOfJobs));
+		}
+		EnumSet<Job> newSortAsSet = EnumSet.copyOf(newSort);
+		int newUniqueSize = newSortAsSet.size();
+		if (newUniqueSize != actualNumberOfJobs) {
+			throw new IllegalArgumentException("New jail sort had duplicates!");
+		}
+	}
+
+	public void setJailSort(List<Job> newSort) {
+		validateJobSortOrder(newSort);
+		this.currentJailSort = List.copyOf(newSort);
+		saveJailSort();
+	}
+
+	private void saveJailSort() {
+		this.sortSetting.set(currentJailSort);
 	}
 
 	public List<XivPlayerCharacter> partyOrderPreview() {

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.state;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 
 import java.io.Serializable;
@@ -88,6 +89,10 @@ public final class RawXivCombatantInfo implements Serializable {
 
 	public HitPoints getHP() {
 		return new HitPoints(curHp, maxHp);
+	}
+
+	public ManaPoints getMP() {
+		return new ManaPoints(curMp, maxMp);
 	}
 
 	public Position getPos() {

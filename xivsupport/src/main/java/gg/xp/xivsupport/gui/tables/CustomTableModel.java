@@ -21,23 +21,23 @@ public class CustomTableModel<X> extends AbstractTableModel {
 
 	public static class CustomTableModelBuilder<B> {
 		private final Supplier<List<B>> dataGetter;
-		private final List<CustomColumn<B>> columns = new ArrayList<>();
-		private BiPredicate<B, B> selectionEquivalence = Objects::equals;
+		private final List<CustomColumn<? super B>> columns = new ArrayList<>();
+		private BiPredicate<? super B, ? super B> selectionEquivalence = Objects::equals;
 
 		private CustomTableModelBuilder(Supplier<List<B>> dataGetter) {
 			this.dataGetter = dataGetter;
 		}
 
-		public CustomTableModelBuilder<B> addColumn(CustomColumn<B> colDef) {
+		public CustomTableModelBuilder<B> addColumn(CustomColumn<? super B> colDef) {
 			columns.add(colDef);
 			return this;
 		}
 
 		public CustomTableModel<B> build() {
-			return new CustomTableModel<>(dataGetter, columns, selectionEquivalence);
+			return new CustomTableModel<B>(dataGetter, columns, selectionEquivalence);
 		}
 
-		public CustomTableModelBuilder<B> setSelectionEquivalence(BiPredicate<B, B> selectionEquivalence) {
+		public CustomTableModelBuilder<B> setSelectionEquivalence(BiPredicate<? super B, ? super B> selectionEquivalence) {
 			this.selectionEquivalence = selectionEquivalence;
 			return this;
 		}
@@ -49,12 +49,12 @@ public class CustomTableModel<X> extends AbstractTableModel {
 
 
 	private final Supplier<List<X>> dataGetter;
-	private final List<CustomColumn<X>> columns;
+	private final List<CustomColumn<? super X>> columns;
 	private List<X> data = Collections.emptyList();
-	private final BiPredicate<X, X> selectionEquivalence;
+	private final BiPredicate<? super X, ? super X> selectionEquivalence;
 
 
-	private CustomTableModel(Supplier<List<X>> dataGetter, List<CustomColumn<X>> columns, BiPredicate<X, X> selectionEquivalence) {
+	private CustomTableModel(Supplier<List<X>> dataGetter, List<CustomColumn<? super X>> columns, BiPredicate<? super X, ? super X> selectionEquivalence) {
 		this.dataGetter = dataGetter;
 		this.columns = columns;
 		this.selectionEquivalence = selectionEquivalence;
@@ -112,7 +112,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	public void configureColumns(JTable table) {
 		for (int i = 0; i < columns.size(); i++) {
 			TableColumn column = table.getColumnModel().getColumn(i);
-			CustomColumn<X> customColumn = columns.get(i);
+			CustomColumn<? super X> customColumn = columns.get(i);
 			customColumn.configureColumn(column);
 		}
 	}

@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public enum Job {
+public enum Job implements HasIconURL {
 
 
 	ADV(0, false, JobType.UNKNOWN, "Adventurer"),
 	GLA(1, true, JobType.TANK, "Gladiator"),
-	PGL(2, true, JobType.TANK, "Pugilist"),
+	PGL(2, true, JobType.MELEE_DPS, "Pugilist"),
 	MRD(3, true, JobType.TANK, "Marauder"),
 	LNC(4, true, JobType.MELEE_DPS, "Lancer"),
 	ARC(5, true, JobType.PRANGED, "Archer"),
@@ -110,6 +110,7 @@ public enum Job {
 		return values()[(int) id];
 	}
 
+	@Override
 	public URL getIcon() {
 		// Fine for now
 		String fileName = getFriendlyName().replaceAll(" ", "") + ".png";

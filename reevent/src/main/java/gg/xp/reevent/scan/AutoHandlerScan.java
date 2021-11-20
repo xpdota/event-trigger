@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,7 +57,7 @@ public class AutoHandlerScan {
 			Set<Class<?>> annotatedClasses = reflections.get(Scanners.TypesAnnotated.with(ScanMe.class).asClass());
 			log.info("Scan done, setting up topology now");
 
-			Map<Class<?>, List<Method>> classMethodMap = new HashMap<>();
+			Map<Class<?>, List<Method>> classMethodMap = new LinkedHashMap<>();
 			for (Class<?> annotatedClass : annotatedClasses) {
 				if (isClassInstantiable(annotatedClass)) {
 					classMethodMap.computeIfAbsent(annotatedClass, unused -> new ArrayList<>());

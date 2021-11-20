@@ -26,6 +26,7 @@ import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.ActLineFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventAbilityOrBuffFilter;
@@ -34,8 +35,7 @@ import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventTypeFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
-import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tree.TopologyTreeEditor;
 import gg.xp.xivsupport.gui.tree.TopologyTreeModel;
 import gg.xp.xivsupport.gui.tree.TopologyTreeRenderer;
@@ -55,10 +55,12 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.Field;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
@@ -115,8 +117,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("ACT Log", getActLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("System Log", getSystemLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
-		// TODO: move this to a panel in first page
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Stats", new StatsPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", new JPanel()));
 	}
 
@@ -246,18 +247,17 @@ public class GuiMain {
 //					() -> List.of(new XivPlayerCharacter(123, "Foo Bar", Job.WHM, new XivWorld(), 23, true)))
 							() -> state.get(XivState.class).getPartyList())
 					.addColumn(new CustomColumn<>("Name", XivEntity::getName))
-					.addColumn(new CustomColumn<>("Job", c -> c.getJob()))
+					.addColumn(StandardColumns.jobOnlyColumn)
 					// TODO: seeing custom renderer here does not work, because this would normally be read by
 					// TableWithFilterAndDetails, but that isn't in use here.
-					.addColumn(new CustomColumn<>("HP", XivCombatant::getHp, c -> c.setCellRenderer(new HpRenderer())))
-					.addColumn(new CustomColumn<>("ID", c -> Long.toString(c.getId(), 16)))
+					.addColumn(StandardColumns.hpColumn)
+					.addColumn(StandardColumns.entityIdColumn)
 					.build();
 			JTable partyMembersTable = new JTable(8, 3);
 			// TODO: see above todo, remove this when done
 
 			partyMembersTable.setModel(partyTableModel);
-			partyMembersTable.getColumnModel().getColumn(1).setCellRenderer(new JobRenderer());
-			partyMembersTable.getColumnModel().getColumn(2).setCellRenderer(new HpRenderer());
+			partyTableModel.configureColumns(partyMembersTable);
 			right.setLayout(new BorderLayout());
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
 			right.add(scrollPane);
@@ -279,24 +279,19 @@ public class GuiMain {
 			super("Combatants");
 			setLayout(new BorderLayout());
 			combatantsTableModel = CustomTableModel.builder(
-							() -> state.get(XivState.class).getCombatantsListCopy())
-					.addColumn(new CustomColumn<>("ID", c -> Long.toString(c.getId(), 16)))
-					.addColumn(new CustomColumn<>("Name", XivEntity::getName))
-					.addColumn(new CustomColumn<>("Parent", c -> c.getParent() != null ? c.getParent().getName() : null))
-					.addColumn(new CustomColumn<>("Type", c -> {
-						if (c.isThePlayer()) {
-							return "YOU";
-						}
-						else {
-							return c.getType();
-						}
-					}, c -> {
-						c.setMinWidth(50);
-						c.setMaxWidth(50);
-					}))
+							() -> state.get(XivState.class).getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()))
+					.addColumn(StandardColumns.entityIdColumn)
+					.addColumn(StandardColumns.nameJobColumn)
+					.addColumn(StandardColumns.parentNameJobColumn)
+					.addColumn(StandardColumns.combatantTypeColumn)
+					.addColumn(StandardColumns.combatantRawTypeColumn)
+					.addColumn(StandardColumns.hpColumn)
+					.addColumn(StandardColumns.mpColumn)
+					.addColumn(StandardColumns.posColumn)
 					.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable table = new JTable(combatantsTableModel);
+			combatantsTableModel.configureColumns(table);
 			JScrollPane scrollPane = new JScrollPane(table);
 			add(scrollPane);
 		}
@@ -306,11 +301,11 @@ public class GuiMain {
 		}
 	}
 
-	private class StatsPanel extends TitleBorderFullsizePanel implements Refreshable {
+	private class AdvancedPanel extends TitleBorderFullsizePanel implements Refreshable {
 		private final KeyValueDisplaySet displayed;
 
-		public StatsPanel() {
-			super("Stats");
+		public AdvancedPanel() {
+			super("Advanced");
 
 			JButton refreshButton = new JButton("Refresh");
 			refreshButton.addActionListener(e -> refresh());
@@ -417,7 +412,8 @@ public class GuiMain {
 		// TODO: jump to parent button
 		// Main table
 		XivState state = container.getComponent(XivState.class);
-		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", state::getCombatantsListCopy,
+		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events",
+						() -> state.getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
 						combatant -> {
 							if (combatant == null) {
 								return Collections.emptyList();
@@ -430,35 +426,18 @@ public class GuiMain {
 										.collect(Collectors.toList());
 							}
 						})
-				.addMainColumn(new CustomColumn<>("ID", xivCombatant -> Long.toString(xivCombatant.getId(), 16),
-						c -> {
-							c.setMinWidth(100);
-							c.setMaxWidth(100);
-						}))
-				.addMainColumn(new CustomColumn<>("Name", XivEntity::getName))
-				.addMainColumn(new CustomColumn<>("Parent", c -> c.getParent() != null ? c.getParent().getName() : null))
-				.addMainColumn(new CustomColumn<>("Type", c -> {
-					if (c.isThePlayer()) {
-						return "YOU";
-					}
-					else {
-						return c.getType();
-					}
-				}, c -> {
-					c.setMinWidth(50);
-					c.setMaxWidth(50);
-				}))
-				.addMainColumn(new CustomColumn<>("Type#", XivCombatant::getRawType, c -> {
-					c.setMaxWidth(60);
-					c.setMinWidth(60);
-				}))
-				.addMainColumn(new CustomColumn<>("HP", XivCombatant::getHp,
-						c -> c.setCellRenderer(new HpRenderer())))
-				.addMainColumn(new CustomColumn<>("Position", XivCombatant::getPos))
-				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
-				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
-				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
-				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				.addMainColumn(StandardColumns.entityIdColumn)
+				.addMainColumn(StandardColumns.nameJobColumn)
+				.addMainColumn(StandardColumns.parentNameJobColumn)
+				.addMainColumn(StandardColumns.combatantTypeColumn)
+				.addMainColumn(StandardColumns.combatantRawTypeColumn)
+				.addMainColumn(StandardColumns.hpColumn)
+				.addMainColumn(StandardColumns.mpColumn)
+				.addMainColumn(StandardColumns.posColumn)
+				.addDetailsColumn(StandardColumns.fieldName)
+				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.fieldType)
+				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 				// TODO: time range filter
 //				.addFilter(EventTypeFilter::new)
@@ -468,6 +447,7 @@ public class GuiMain {
 //				.addFilter(EventEntityFilter::targetFilter)
 //				.addFilter(EventAbilityOrBuffFilter::new)
 				.build();
+		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalNewData());
 		return table;
 
@@ -491,19 +471,29 @@ public class GuiMain {
 							}
 						})
 //				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
-				.addMainColumn(new CustomColumn<>("Source", e -> e.getSource().getName()))
-				.addMainColumn(new CustomColumn<>("Target", e -> e.getTarget().getName()))
+				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer())))
+				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> e.getBuff().getName()))
-				.addMainColumn(new CustomColumn<>("Initial Duration", BuffApplied::getDuration))
-				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
-				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
-				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
-				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				.addMainColumn(new CustomColumn<>("Initial Duration", buffApplied -> {
+					double duration = buffApplied.getDuration();
+					if (duration >= 9998.0d && duration <= 9999.9d) {
+						return "∞";
+					}
+					return duration;
+				}, c -> {
+					c.setMinWidth(100);
+					c.setMaxWidth(100);
+				}))
+				.addDetailsColumn(StandardColumns.fieldName)
+				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.fieldType)
+				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.setSelectionEquivalence(Object::equals)
 				.addFilter(EventEntityFilter::buffSourceFilter)
 				.addFilter(EventEntityFilter::buffTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 				.build();
+		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivBuffsUpdatedEvent.class, (ctx, e) -> table.signalNewData());
 		return table;
 
@@ -536,8 +526,8 @@ public class GuiMain {
 					col.setMaxWidth(100);
 				}))
 				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
-				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource().getName() : null))
-				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget().getName() : null))
+				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(new NameJobRenderer())))
+				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> {
 					if (e instanceof HasAbility) {
 						return ((HasAbility) e).getAbility().getName();
@@ -551,10 +541,10 @@ public class GuiMain {
 					Event parent = e.getParent();
 					return parent == null ? null : parent.getClass().getSimpleName();
 				}))
-				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
-				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
-				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
-				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				.addDetailsColumn(StandardColumns.fieldName)
+				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.fieldType)
+				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				// TODO: time range filter
 				.addFilter(EventTypeFilter::new)
 				.addFilter(SystemEventFilter::new)
@@ -589,10 +579,10 @@ public class GuiMain {
 							}
 						})
 				.addMainColumn(new CustomColumn<>("Line", ACTLogLineEvent::getLogLine))
-				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
-				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
-				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
-				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				.addDetailsColumn(StandardColumns.fieldName)
+				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.fieldType)
+				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.addFilter(ActLineFilter::new)
 				.setAppendOrPruneOnly(true)
 				.build();
@@ -622,6 +612,13 @@ public class GuiMain {
 								).collect(Collectors.toList());
 							})
 					// TODO: timestamp?
+					.addMainColumn(new CustomColumn<>("Time",
+							e -> Instant.ofEpochMilli(e.getEvent().getTimeStamp())
+									.atZone(ZoneId.systemDefault())
+									.format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS")), col -> {
+						col.setMinWidth(80);
+						col.setMaxWidth(80);
+					}))
 					.addMainColumn(new CustomColumn<>("Thread", e -> e.getEvent().getThreadName(), col -> {
 						col.setPreferredWidth(150);
 					}))
@@ -644,10 +641,10 @@ public class GuiMain {
 					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded, col -> {
 						col.setPreferredWidth(700);
 					}))
-					.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
-					.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
-					.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
-					.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+					.addDetailsColumn(StandardColumns.fieldName)
+					.addDetailsColumn(StandardColumns.fieldValue)
+					.addDetailsColumn(StandardColumns.fieldType)
+					.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 					.addFilter(LogLevelVisualFilter::new)
 					.setAppendOrPruneOnly(true)
 					.build();
@@ -686,10 +683,10 @@ public class GuiMain {
 				.addMainColumn(new CustomColumn<>("Duration", e -> e.getDuration(), col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addDetailsColumn(new CustomColumn<>("Field", e -> e.getKey().getName()))
-				.addDetailsColumn(new CustomColumn<>("Value", Map.Entry::getValue))
-				.addDetailsColumn(new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()))
-				.addDetailsColumn(new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()))
+				.addDetailsColumn(StandardColumns.fieldName)
+				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.fieldType)
+				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 //				.addFilter(LogLevelVisualFilter::new)
 				.setAppendOrPruneOnly(false)
 				.build();

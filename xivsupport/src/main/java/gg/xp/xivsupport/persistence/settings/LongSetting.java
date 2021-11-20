@@ -1,4 +1,6 @@
-package gg.xp.xivsupport.persistence;
+package gg.xp.xivsupport.persistence.settings;
+
+import gg.xp.xivsupport.persistence.PersistenceProvider;
 
 public class LongSetting {
 

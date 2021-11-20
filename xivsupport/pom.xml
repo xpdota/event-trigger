@@ -234,8 +234,12 @@
                                 <originalFilename>original.exe</originalFilename>
                             </versionInfo>
                             <messages>
-                                <bundledJreErr>You need to download Java version 11 or higher, or download the version of Triggevent with bundled Java.</bundledJreErr>
-                                <jreVersionErr>You need to download Java version 11 or higher, or download the version of Triggevent with bundled Java.</jreVersionErr>
+                                <bundledJreErr>You need to download Java version 11 or higher, or download the version
+                                    of Triggevent with bundled Java.
+                                </bundledJreErr>
+                                <jreVersionErr>You need to download Java version 11 or higher, or download the version
+                                    of Triggevent with bundled Java.
+                                </jreVersionErr>
                             </messages>
                         </configuration>
                     </execution>
@@ -347,5 +351,19 @@
             <artifactId>flatlaf</artifactId>
             <version>1.6.2</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/net.java.dev.jna/jna -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.10.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/net.java.dev.jna/jna-platform -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>5.10.0</version>
+        </dependency>
+
     </dependencies>
 </project>

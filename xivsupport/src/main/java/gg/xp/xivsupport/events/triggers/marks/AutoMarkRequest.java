@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.triggers.jails;
+package gg.xp.xivsupport.events.triggers.marks;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.models.XivPlayerCharacter;

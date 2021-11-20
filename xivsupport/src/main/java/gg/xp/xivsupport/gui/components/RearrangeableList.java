@@ -77,14 +77,28 @@ public final class RearrangeableList<X> extends JList<X> {
 			else {
 				model.removeElementAt(model.lastIndexOf(object));
 			}
-			callback.accept(Collections.list(model.elements()));
+			doCallback();
 			return true;
 		}
+	}
+
+	private void doCallback() {
+		DefaultListModel<X> model = (DefaultListModel<X>) RearrangeableList.this.getModel();
+		callback.accept(Collections.list(model.elements()));
 	}
 
 	public List<X> getValues() {
 		DefaultListModel<X> model = (DefaultListModel<X>) RearrangeableList.this.getModel();
 		return Collections.list(model.elements());
+	}
+
+	// TODO: should this work like the self-refresh in tables?
+	public void setValues(List<X> values) {
+		DefaultListModel<X> model = (DefaultListModel<X>) RearrangeableList.this.getModel();
+		model.clear();
+		model.addAll(values);
+		// TODO: decide if this should be here
+//		doCallback();
 	}
 
 	private class MyDragListener extends DragSourceAdapter implements DragGestureListener {

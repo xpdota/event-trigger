@@ -14,6 +14,7 @@ public class XivPlayerCharacter extends XivCombatant {
 	                          boolean isLocalPlayerCharacter,
 	                          long typeRaw,
 	                          HitPoints hp,
+	                          ManaPoints mp,
 	                          Position pos,
 	                          long bNpcId,
 	                          long bNpcNameId,
@@ -21,7 +22,7 @@ public class XivPlayerCharacter extends XivCombatant {
 	                          long level,
 	                          long ownerId
 	) {
-		super(id, name, true, isLocalPlayerCharacter, typeRaw, hp, pos, bNpcId, bNpcNameId, partyType, level, ownerId);
+		super(id, name, true, isLocalPlayerCharacter, typeRaw, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId);
 		this.job = job;
 		this.world = world;
 	}

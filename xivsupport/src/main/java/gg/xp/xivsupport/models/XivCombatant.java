@@ -11,6 +11,7 @@ public class XivCombatant extends XivEntity {
 	private final long rawType;
 	// Marking as nullable for now until I figure out party members more
 	private final @Nullable HitPoints hp;
+	private final @Nullable ManaPoints mp;
 	private final @Nullable Position pos;
 	private final long bNpcId;
 	private final long bNpcNameId;
@@ -29,6 +30,7 @@ public class XivCombatant extends XivEntity {
 			boolean isThePlayer,
 			long rawType,
 			@Nullable HitPoints hp,
+			@Nullable ManaPoints mp,
 			@Nullable Position pos,
 			long bNpcId,
 			long bNpcNameId,
@@ -41,6 +43,7 @@ public class XivCombatant extends XivEntity {
 		this.isThePlayer = isThePlayer;
 		this.rawType = rawType;
 		this.hp = hp;
+		this.mp = mp;
 		this.pos = pos;
 		this.bNpcId = bNpcId;
 		this.bNpcNameId = bNpcNameId;
@@ -56,7 +59,7 @@ public class XivCombatant extends XivEntity {
 	 * @param name
 	 */
 	public XivCombatant(long id, String name) {
-		this(id, name, false, false, 0, null, null, 0, 0, 0, 0, 0);
+		this(id, name, false, false, 0, null, null, null, 0, 0, 0, 0, 0);
 	}
 
 
@@ -113,6 +116,10 @@ public class XivCombatant extends XivEntity {
 		return hp;
 	}
 
+	public @Nullable ManaPoints getMp() {
+		return mp;
+	}
+
 	public @Nullable Position getPos() {
 		return pos;
 	}
@@ -160,6 +167,7 @@ public class XivCombatant extends XivEntity {
 			false,
 			false,
 			0,
+			null,
 			null,
 			null,
 			0,

@@ -10,6 +10,7 @@ import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -44,6 +45,7 @@ public class BuffTrackingTest {
 				true,
 				1,
 				new HitPoints(123, 456),
+				new ManaPoints(123, 456),
 				new Position(0, 0, 0, 0),
 				0,
 				0,
@@ -58,6 +60,7 @@ public class BuffTrackingTest {
 				true,
 				1,
 				new HitPoints(123, 456),
+				new ManaPoints(123, 456),
 				new Position(0, 0, 0, 0),
 				0,
 				0,
@@ -71,6 +74,7 @@ public class BuffTrackingTest {
 				false,
 				2,
 				new HitPoints(1000, 2000),
+				new ManaPoints(1000, 2000),
 				new Position(0, 0, 0, 0),
 				123,
 				456,
@@ -84,6 +88,7 @@ public class BuffTrackingTest {
 				false,
 				2,
 				new HitPoints(1000, 2000),
+				new ManaPoints(1000, 2000),
 				new Position(0, 0, 0, 0),
 				123,
 				456,

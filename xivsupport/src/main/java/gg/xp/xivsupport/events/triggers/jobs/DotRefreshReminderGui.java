@@ -4,15 +4,12 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.jobs.DotBuff;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
-import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
-import gg.xp.xivsupport.persistence.BooleanSetting;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.LongSettingGui;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.util.Comparator;
 import java.util.List;

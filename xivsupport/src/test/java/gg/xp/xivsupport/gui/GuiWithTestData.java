@@ -49,7 +49,7 @@ public class GuiWithTestData {
 				"      \"id\": \"11\",\n" +
 				"      \"name\": \"Some Guy\",\n" +
 				"      \"worldId\": 65,\n" +
-				"      \"job\": 27,\n" +
+				"      \"job\": 26,\n" +
 				"      \"level\": 0,\n" +
 				"      \"inParty\": true\n" +
 				"    },\n" +
@@ -122,7 +122,7 @@ public class GuiWithTestData {
 						"      \"ID\": 17,\n" +
 						"      \"OwnerID\": 0,\n" +
 						"      \"type\": 1,\n" +
-						"      \"Job\": 27,\n" +
+						"      \"Job\": 26,\n" +
 						"      \"Level\": 80,\n" +
 						"      \"Name\": \"Some Guy\",\n" +
 						"      \"CurrentHP\": 90700,\n" +

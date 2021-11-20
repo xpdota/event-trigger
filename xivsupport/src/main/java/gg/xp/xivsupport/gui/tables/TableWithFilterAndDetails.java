@@ -30,6 +30,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 	private final Supplier<List<X>> dataGetter;
 	private final List<VisualFilter<? super X>> filters;
 	private final CustomTableModel<X> mainModel;
+	private final JCheckBox stayAtBottom;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
 	private List<X> dataFiltered = Collections.emptyList();
@@ -40,11 +41,11 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 	private TableWithFilterAndDetails(
 			String title,
 			Supplier<List<X>> dataGetter,
-			List<CustomColumn<X>> mainColumns,
-			List<CustomColumn<D>> detailsColumns,
-			Function<X, List<D>> detailsConverter,
+			List<CustomColumn<? super X>> mainColumns,
+			List<CustomColumn<? super D>> detailsColumns,
+			Function<? super X, List<D>> detailsConverter,
 			List<Function<Runnable, VisualFilter<? super X>>> filterCreators,
-			BiPredicate<X, X> selectionEquivalence,
+			BiPredicate<? super X, ? super X> selectionEquivalence,
 			boolean appendOrPruneOnly) {
 		super(title);
 		this.title = title;
@@ -98,7 +99,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		});
 		autoRefresh.setSelected(true);
 
-		JCheckBox stayAtBottom = new JCheckBox("Scroll to Bottom");
+		stayAtBottom = new JCheckBox("Scroll to Bottom");
 		AutoBottomScrollHelper scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
 		stayAtBottom.addItemListener(e -> scroller.setAutoScrollEnabled(stayAtBottom.isSelected()));
 		stayAtBottom.setSelected(true);
@@ -248,11 +249,11 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 	public static final class TableWithFilterAndDetailsBuilder<X, D> {
 		private final String title;
 		private final Supplier<List<X>> dataGetter;
-		private final List<CustomColumn<X>> mainColumns = new ArrayList<>();
-		private final List<CustomColumn<D>> detailsColumns = new ArrayList<>();
+		private final List<CustomColumn<? super X>> mainColumns = new ArrayList<>();
+		private final List<CustomColumn<? super D>> detailsColumns = new ArrayList<>();
 		private final Function<X, List<D>> detailsConverter;
 		private final List<Function<Runnable, VisualFilter<? super X>>> filters = new ArrayList<>();
-		private BiPredicate<X, X> selectionEquivalence = Objects::equals;
+		private BiPredicate<? super X, ? super X> selectionEquivalence = Objects::equals;
 		private boolean appendOrPruneOnly;
 
 
@@ -262,7 +263,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			this.detailsConverter = detailsConverter;
 		}
 
-		public TableWithFilterAndDetailsBuilder<X, D> addMainColumn(CustomColumn<X> mainColumn) {
+		public TableWithFilterAndDetailsBuilder<X, D> addMainColumn(CustomColumn<? super X> mainColumn) {
 			this.mainColumns.add(mainColumn);
 			return this;
 		}
@@ -288,12 +289,15 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		}
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, selectionEquivalence, appendOrPruneOnly);
+			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, selectionEquivalence, appendOrPruneOnly);
 		}
-
 	}
 
 	public static <X, D> TableWithFilterAndDetailsBuilder<X, D> builder(String title, Supplier<List<X>> dataGetter, Function<X, List<D>> detailsConverter) {
 		return new TableWithFilterAndDetailsBuilder<>(title, dataGetter, detailsConverter);
+	}
+
+	public void setBottomScroll(boolean value) {
+		stayAtBottom.setSelected(value);
 	}
 }
