@@ -8,6 +8,7 @@ mkdir combined
 mv whatever_path/*/*.png combined/
 # Preview needed icons
 # Action.csv = relevant data file, -f = which field represents the icon
+# Just kidding, this doesn't properly handle commas in quotes
 cut -f 4 -d, Action.csv | sort -n | uniq
 # Actually copy them to a new folder
 mkdir actions

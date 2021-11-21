@@ -51,6 +51,11 @@ public class ActionIcon implements HasIconURL {
 		// If we fail, it's always going to fail, so continue without icons.
 	}
 
+	public static void main(String[] args) {
+		readCsv();
+		csvValues.values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
+	}
+
 	// Special value to indicate no icon
 	private static final ActionIcon NULL_MARKER;
 
