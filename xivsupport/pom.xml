@@ -23,7 +23,7 @@
                 <version>3.0.0-M5</version>
                 <configuration>
                     <parallel>methods</parallel>
-                    <threadCount>10</threadCount>
+                    <threadCount>5</threadCount>
                 </configuration>
             </plugin>
             <!--            <plugin>-->

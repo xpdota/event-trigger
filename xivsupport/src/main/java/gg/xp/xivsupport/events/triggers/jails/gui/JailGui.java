@@ -155,7 +155,7 @@ public class JailGui implements PluginTab {
 			"3. Drag jobs in the list to configure your priority. The party list on the right shows what the effective priority will be.\n" +
 			"4. If using personal callouts, make sure everyone has the same priority (using the defaults makes this easy).\n" +
 			"\n" +
-			"To test automarks, use the command 'amtest' like so:\n" +
+			"To test automarks, you must in inside the UWU instance. Then, use the command 'amtest' like so:\n" +
 			"\n" +
 			"/e c:amtest 4 2 7\n" +
 			"\n" +

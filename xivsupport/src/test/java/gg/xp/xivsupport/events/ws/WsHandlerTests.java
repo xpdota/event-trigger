@@ -145,7 +145,7 @@ public class WsHandlerTests {
 						"      \"PartyType\": 0,\n" +
 						"      \"ID\": 123456,\n" +
 						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 9,\n" +
+						"      \"type\": 2,\n" +
 						"      \"Job\": 0,\n" +
 						"      \"Level\": 0,\n" +
 						"      \"Name\": \"Some Boss\",\n" +

@@ -24,6 +24,7 @@ import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
@@ -35,6 +36,7 @@ import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventTypeFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
+import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tree.TopologyTreeEditor;
 import gg.xp.xivsupport.gui.tree.TopologyTreeModel;
@@ -81,18 +83,6 @@ public class GuiMain {
 	public static void main(String[] args) {
 		log.info("GUI Init");
 		log.info("Classpath: {}", System.getProperty("java.class.path"));
-		MutablePicoContainer pico = XivMain.masterInit();
-		pico.addComponent(GuiMain.class);
-		pico.getComponent(GuiMain.class);
-		// TODO: doesn't transfer over to test modes
-		installCustomEventQueue();
-	}
-
-	public GuiMain(EventMaster master, PicoContainer container) throws InterruptedException {
-		log.info("Starting GUI setup");
-		this.master = master;
-		this.state = master.getDistributor().getStateStore();
-		this.container = container;
 		try {
 //			UIManager.setLookAndFeel(new DarculaLaf());
 			UIManager.setLookAndFeel(new FlatDarculaLaf());
@@ -100,6 +90,18 @@ public class GuiMain {
 		catch (Throwable t) {
 			log.error("Error setting up look and feel", t);
 		}
+		MutablePicoContainer pico = XivMain.masterInit();
+		pico.addComponent(GuiMain.class);
+		pico.getComponent(GuiMain.class);
+		// TODO: doesn't transfer over to test modes
+		installCustomEventQueue();
+	}
+
+	public GuiMain(EventMaster master, MutablePicoContainer container) {
+		log.info("Starting GUI setup");
+		this.master = master;
+		this.state = master.getDistributor().getStateStore();
+		this.container = container;
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
 			tabPane = new JTabbedPane();
@@ -119,6 +121,8 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", new JPanel()));
+//		container.addComponent(OverlayMain.class);
+//		container.getComponent(OverlayMain.class);
 	}
 
 	private class SystemTabPanel extends JPanel {
@@ -439,7 +443,7 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
-				// TODO: time range filter
+				// TODO: combat vs noncombat filter
 //				.addFilter(EventTypeFilter::new)
 //				.addFilter(SystemEventFilter::new)
 //				.addFilter(EventClassFilterFilter::new)
@@ -530,12 +534,14 @@ public class GuiMain {
 				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> {
 					if (e instanceof HasAbility) {
-						return ((HasAbility) e).getAbility().getName();
+						return ((HasAbility) e).getAbility();
 					}
 					if (e instanceof HasStatusEffect) {
-						return ((HasStatusEffect) e).getBuff().getName();
+						return ((HasStatusEffect) e).getBuff();
 					}
 					return null;
+				}, c -> {
+					c.setCellRenderer(new ActionAndStatusRenderer());
 				}))
 				.addMainColumn(new CustomColumn<>("Parent", e -> {
 					Event parent = e.getParent();

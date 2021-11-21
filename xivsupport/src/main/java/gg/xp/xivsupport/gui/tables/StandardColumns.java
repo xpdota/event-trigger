@@ -4,6 +4,7 @@ import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.MpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
+import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -73,8 +74,8 @@ public class StandardColumns {
 					return c.getType();
 				}
 			}, c -> {
-		c.setMinWidth(50);
-		c.setMaxWidth(50);
+		c.setMinWidth(80);
+		c.setMaxWidth(80);
 	});
 
 	public static final CustomColumn<XivCombatant> combatantRawTypeColumn

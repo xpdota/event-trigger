@@ -27,10 +27,14 @@ which would likely take an absurd amount of memory.
 
 ### Pulls View
 
+#### In progress - unfortunately, need reliable pull start detection without relying on Cactbot
+
 I'd like to make a view that shows all pulls and such, similar to what you'd see on FFLogs.
 
 
 ### UI Icons
+
+#### In progress - implemented for jobs
 
 All of the tables and such could have icons, bars, etc. So for example, the combatants view could have job icons and
 proper HP/MP bars. The events view could show icons for abilities/buffs and job icons. When I get around to making a
@@ -43,5 +47,44 @@ Speaking of which, I need a normal right click menu so you can copy things from 
 
 ### In-Game Overlay
 
+#### In progress - basic example working
+
 Not sure what the best implementation would be. Could either go for web-based (i.e. someone else would be doing the
 actual work) or some kind of transparent window.
+
+### Sequential Triggers
+
+For triggers that cover a sequence of events, it would be nice to be able to write it like this:
+
+```java
+class Something extends SequentialEventHandler {
+	@HandleEventsSequentially(timeout = 20000)
+	// Initial event is optional - you could omit it if, for example, if your initial condition
+	// is multiple events
+	void myMethod(SomeEvent initialEvent) {
+		// wait fixed time
+		sleep(5000);
+		// Wait for another event
+		OtherEvent secondEvent = waitEvent(
+				// Event class
+				OtherEvent.class,
+				// Event condition
+				e -> e.getSomething() == 5);
+		// Wait again
+		sleep(2000);
+		List<FooEvent> otherEvents = waitEvents(
+				// Event class
+				FooEvent.class,
+				// Event condition
+				e -> e.isNice(),
+				// How many of the event we'd like
+				count -> count,
+				// minimum timeout - will continue even if we haven't hit the minimum number
+				5000);
+				// Maxmimum timeout - will abort if we hit this time even if we haven't hit the desired number
+		queueEvent(new StuffEvent(otherEvents));
+	}
+}
+```
+
+Here, the 'sleep' would actually be an event that 

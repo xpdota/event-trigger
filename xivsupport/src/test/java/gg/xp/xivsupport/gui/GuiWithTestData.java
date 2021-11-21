@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.DummyEventToForceAutoScan;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
@@ -8,8 +9,17 @@ import org.picocontainer.MutablePicoContainer;
 import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
+import javax.swing.*;
+
 public class GuiWithTestData {
 	public static void main(String[] args) {
+		try {
+//			UIManager.setLookAndFeel(new DarculaLaf());
+			UIManager.setLookAndFeel(new FlatDarculaLaf());
+		}
+		catch (Throwable t) {
+			throw new RuntimeException(t);
+		}
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		pico.addComponent(GuiMain.class);
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);

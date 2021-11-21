@@ -223,9 +223,9 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 				exs.submit(() -> {
 					SwingUtilities.invokeLater(this::updateAll);
 					try {
-						// Cap updates to 100 fps, while not delaying updates
-						// if they come in less frequent
-						Thread.sleep(10);
+						// Cap updates to 1000/x fps, while not delaying updates
+						// if they come in less frequently than that
+						Thread.sleep(50);
 					}
 					catch (InterruptedException e) {
 						// ignored

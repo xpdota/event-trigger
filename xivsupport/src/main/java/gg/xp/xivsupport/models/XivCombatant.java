@@ -90,8 +90,17 @@ public class XivCombatant extends XivEntity {
 		else if (rawType == 6) {
 			return CombatantType.GP;
 		}
-		else {
+		else if (rawType == 2) {
+			if (parent != null && parent.isPc()) {
+				return CombatantType.PET;
+			}
 			return CombatantType.NPC;
+		}
+		else if (rawType == 3) {
+			return CombatantType.NONCOM;
+		}
+		else {
+			return CombatantType.OTHER;
 		}
 	}
 
@@ -99,11 +108,11 @@ public class XivCombatant extends XivEntity {
 	 * 0 = ?
 	 * 1 = PC
 	 * 2 = Combatant NPCs and pets? Both Selene and Chocobo seem to be in here, as do enemies
-	 * 3 = Random NPC? Id seems to always be E0000000 (3758096384)
+	 * 3 = Non-combat NPC?
 	 * 4 = ?
 	 * 5 = ?
 	 * 6 = Gathering point? I got "Mature Tree" in here
-	 * 7 = ?
+	 * 7 = Gardening patch?
 	 * 12 = Interactable housing item?
 	 *
 	 * @return Raw type from ACT
