@@ -4,32 +4,39 @@ import gg.xp.xivdata.jobs.HasIconURL;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.awt.RenderingHints.KEY_ANTIALIASING;
+import static java.awt.RenderingHints.KEY_INTERPOLATION;
+import static java.awt.RenderingHints.KEY_RENDERING;
+import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
+import static java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR;
+import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
+
 public final class IconTextRenderer {
 
-	private static final Map<Object, Image> cache = new HashMap<>();
+	private static final Map<Object, ScaledImageComponent> cache = new HashMap<>();
+	private static final int size = 20;
 
 	private IconTextRenderer() {
 	}
 
 	public static Component getComponent(HasIconURL value, Component defaultLabel) {
 
-		Image scaled = cache.computeIfAbsent(value, job -> {
+		ScaledImageComponent scaled = cache.computeIfAbsent(value, ignored -> {
 			URL imageUrl = value.getIcon();
 			if (imageUrl == null) {
 				return null;
 			}
-			ImageIcon icon = new ImageIcon(imageUrl);
-			return icon.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+			return new ScaledImageComponent(Toolkit.getDefaultToolkit().getImage(imageUrl), size);
 		});
 		if (scaled == null) {
 			return defaultLabel;
 		}
-		ImageIcon scaledIcon = new ImageIcon(scaled);
-		JLabel label = new JLabel(scaledIcon);
+
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -38,12 +45,41 @@ public final class IconTextRenderer {
 		c.weightx = 0;
 		panel.setOpaque(true);
 		panel.setBackground(defaultLabel.getBackground());
-		panel.add(label, c);
+		panel.add(scaled, c);
 		c.ipadx = 5;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.FIRST_LINE_START;
 		panel.add(defaultLabel, c);
 		return panel;
+	}
 
+	private static class ScaledImageComponent extends JComponent {
+		private final Image image;
+		private final int size;
+		private final Map<Integer, Image> cache = new HashMap<>();
+
+		ScaledImageComponent(Image image, int size) {
+			this.image = image;
+			this.size = size;
+			Dimension dims = new Dimension(size, size);
+			setMinimumSize(dims);
+			setMaximumSize(dims);
+			setPreferredSize(dims);
+		}
+
+		@Override
+		public void paint(Graphics g) {
+			AffineTransform t = ((Graphics2D) g).getTransform();
+			((Graphics2D) g).setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
+			((Graphics2D) g).setRenderingHint(KEY_INTERPOLATION, VALUE_INTERPOLATION_BILINEAR);
+			((Graphics2D) g).setRenderingHint(KEY_RENDERING, VALUE_RENDER_QUALITY);
+			double xScale = t.getScaleX();
+			double yScale = t.getScaleY();
+			t.scale(1 / xScale, 1 / yScale);
+			((Graphics2D) g).setTransform(t);
+			int scaledSize = (int) (size * xScale);
+			Image scaledInstance = cache.computeIfAbsent(scaledSize, newSize -> image.getScaledInstance(newSize, newSize, Image.SCALE_SMOOTH));
+			new ImageIcon(scaledInstance).paintIcon(this, g, 0, 0);
+		}
 	}
 }

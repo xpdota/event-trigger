@@ -7,10 +7,10 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.EventSource;
-import gg.xp.xivsupport.events.debug.DebugCommand;
-import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.reevent.scan.DisableInTest;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.debug.DebugCommand;
+import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.speech.TtsRequest;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.java_websocket.client.WebSocketClient;
@@ -127,7 +127,37 @@ public class ActWsLogSource implements EventSource {
 	public void getCombatants(EventContext context, RefreshCombatantsRequest event) {
 
 		try {
-			client.send(mapper.writeValueAsString(Map.ofEntries(Map.entry("call", "getCombatants"), Map.entry("rseq", rseqCounter.get()))));
+			client.send(mapper.writeValueAsString(
+					Map.ofEntries(
+							Map.entry("call", "getCombatants"),
+							Map.entry("rseq", rseqCounter.get()),
+							Map.entry("props", new String[]{
+									"CurrentWorldID",
+									"WorldID",
+									"WorldName",
+									"BNpcID",
+									"BNpcNameID",
+									"PartyType",
+									"ID",
+									"OwnerID",
+									"type",
+									"Job",
+									"Level",
+									"Name",
+									"CurrentHP",
+									"MaxHP",
+									"CurrentMP",
+									"MaxMP",
+									"CurrentCP",
+									"MaxCP",
+									"CurrentGP",
+									"MaxGP",
+									"PosX",
+									"PosY",
+									"PosZ",
+									"Heading"
+							})
+					)));
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException(e);
