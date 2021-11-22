@@ -15,3 +15,8 @@ See [Installation](https://github.com/xpdota/event-trigger/wiki/Installation)
 ![Overview](https://user-images.githubusercontent.com/14287379/142812965-7666c15e-12b3-4b6c-91a6-ed38820a7aa8.png)
 
 ![Jail Plugin](https://user-images.githubusercontent.com/14287379/142813080-c44d1ff7-873b-4119-9c15-1212c9e31133.png)
+
+## Future Features
+
+See [Feature Ideas](https://github.com/xpdota/event-trigger/wiki/Feature-Ideas) for what I plan to implement down the
+line.
