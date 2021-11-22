@@ -92,6 +92,9 @@ public class BasicEventDistributor implements EventDistributor {
 										log.error("Event {} was re-submitted by {}!", e, handler);
 									}
 									else {
+										if (e.delayedEnqueueAt() > 0) {
+											log.error("You called 'accept' on an event ({}) with a delayed enqueue - you probably meant to 'queue' it instead.", event.getClass().getSimpleName());
+										}
 										e.setParent(current);
 										e.setEnqueuedAt(Instant.now());
 										e.setSourceEventHandler(handler);

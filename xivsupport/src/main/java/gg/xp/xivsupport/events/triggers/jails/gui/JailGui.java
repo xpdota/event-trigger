@@ -89,6 +89,10 @@ public class JailGui implements PluginTab {
 			JOptionPane.showMessageDialog(SwingUtilities.getRoot(helpButton), helpText);
 		});
 		toggles.add(helpButton);
+		toggles.add(new BooleanSettingGui(jails.getOverrideZoneLock(), "Override Zone Lock (for testing)").getComponent());
+
+
+
 		panel.add(toggles, c);
 
 		c.gridy++;

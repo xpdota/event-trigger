@@ -21,13 +21,14 @@ public class EventMaster {
 			.namingPattern("EventPump-%d")
 			.build();
 
-	private final EventQueue queue = new BasicEventQueue();
+	private final EventQueue queue;
 	private final EventDistributor eventDistributor;
 	private final Thread eventPumpThread = threadFactory.newThread(this::eventLoop);
 	private final Thread queueSizeMonitorThread;
 	private volatile boolean stop;
 
-	public EventMaster(EventDistributor eventDistributor) {
+	public EventMaster(EventDistributor eventDistributor, EventQueue queue) {
+		this.queue = queue;
 		this.eventDistributor = eventDistributor;
 		eventDistributor.setQueue(queue);
 		queueSizeMonitorThread = new Thread(this::monitorQueueSize);

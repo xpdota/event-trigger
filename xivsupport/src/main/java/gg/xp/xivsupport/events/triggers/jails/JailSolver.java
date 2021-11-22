@@ -6,6 +6,8 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
+import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
@@ -15,10 +17,12 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.EnumListSetting;
+import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,10 +38,12 @@ public class JailSolver implements FilteredEventHandler {
 	private final List<XivPlayerCharacter> jailedPlayers = new ArrayList<>();
 	private final BooleanSetting enableTts;
 	private final BooleanSetting enableAutomark;
+	private final BooleanSetting overrideZoneLock;
 	private final XivState state;
 	private final Set<Job> allValidJobs;
 	private List<Job> currentJailSort;
 	private final EnumListSetting<Job> sortSetting;
+	private final LongSetting jailClearDelay;
 
 	private final Comparator<XivPlayerCharacter> playerJailSortComparator = Comparator.<XivPlayerCharacter, Integer>comparing(player -> {
 		int index = currentJailSort.indexOf(player.getJob());
@@ -70,9 +76,11 @@ public class JailSolver implements FilteredEventHandler {
 		return 6;
 	}).thenComparing(Enum::ordinal);
 
+	// TODO: scope - this is a perfect opportunity
 	public JailSolver(PersistenceProvider persistence, XivState state) {
 		enableTts = new BooleanSetting(persistence, "jail-solver.tts.enable", true);
 		enableAutomark = new BooleanSetting(persistence, "jail-solver.automark.enable", true);
+		overrideZoneLock = new BooleanSetting(persistence, "jail-solver.override-zone-lock", false);
 		// TODO: add "upgrades to job X" field to Job so that we can just combine
 		// jobs and base classes.
 		allValidJobs = Arrays.stream(Job.values())
@@ -97,11 +105,13 @@ public class JailSolver implements FilteredEventHandler {
 					.collect(Collectors.toUnmodifiableList());
 		}
 		this.state = state;
+		jailClearDelay = new LongSetting(persistence, "jail-solver.clear-delay", 10000L);
 	}
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return context.getStateInfo().get(XivState.class).zoneIs(0x309L);
+//		return true;
+		return overrideZoneLock.get() || context.getStateInfo().get(XivState.class).zoneIs(0x309L);
 	}
 
 	@HandleEvents
@@ -133,7 +143,22 @@ public class JailSolver implements FilteredEventHandler {
 	}
 
 	@HandleEvents
+	public void handleWipe(EventContext context, DutyCommenceEvent event) {
+		// TODO: this one can replace the other two but it needs testing
+		clearJails();
+	}
+
+	@HandleEvents
 	public void handleWipe(EventContext context, WipeEvent event) {
+		clearJails();
+	}
+
+	@HandleEvents
+	public void handleWipe(EventContext context, ZoneChangeEvent event) {
+		clearJails();
+	}
+
+	private void clearJails() {
 		log.info("Cleared jails");
 		jailedPlayers.clear();
 	}
@@ -215,6 +240,9 @@ public class JailSolver implements FilteredEventHandler {
 			context.accept(new AutoMarkRequest(playersToMark.get(0)));
 			context.accept(new AutoMarkRequest(playersToMark.get(1)));
 			context.accept(new AutoMarkRequest(playersToMark.get(2)));
+			ClearAutoMarkRequest clear = new ClearAutoMarkRequest();
+			clear.setDelayedEnqueueOffset(jailClearDelay.get());
+			context.enqueue(clear);
 		}
 		else {
 			log.info("Automark disabled, skipping");
@@ -265,5 +293,13 @@ public class JailSolver implements FilteredEventHandler {
 
 	public List<XivPlayerCharacter> partyOrderPreview() {
 		return state.getPartyList().stream().sorted(playerJailSortComparator).collect(Collectors.toList());
+	}
+
+	public LongSetting getJailClearDelay() {
+		return jailClearDelay;
+	}
+
+	public BooleanSetting getOverrideZoneLock() {
+		return overrideZoneLock;
 	}
 }

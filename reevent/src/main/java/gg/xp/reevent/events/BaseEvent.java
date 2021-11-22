@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 
 @SuppressWarnings("AbstractClassWithoutAbstractMethods")
@@ -18,6 +19,7 @@ public abstract class BaseEvent implements Event {
 	private Instant enqueuedAt;
 	private Instant pumpedAt;
 	private Instant pumpFinishedAt;
+	private long delayedEnqueueAt;
 
 	public void setParent(Event parent) {
 		if (this.parent != null) {
@@ -88,5 +90,22 @@ public abstract class BaseEvent implements Event {
 	@Override
 	public void setSourceEventHandler(EventHandler<?> source) {
 		this.source = source;
+	}
+
+	@Override
+	public long delayedEnqueueAt() {
+		return delayedEnqueueAt;
+	}
+
+	public void setDelayedEnqueueAt(long delayedEnqueueAt) {
+		this.delayedEnqueueAt = delayedEnqueueAt;
+	}
+
+	public void setDelayedEnqueueOffset(Duration fromNow) {
+		setDelayedEnqueueOffset(fromNow.toMillis());
+	}
+
+	public void setDelayedEnqueueOffset(long fromNowMillis) {
+		this.delayedEnqueueAt = System.currentTimeMillis() + fromNowMillis;
 	}
 }

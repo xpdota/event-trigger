@@ -6,6 +6,7 @@ import gg.xp.xivdata.jobs.DotBuff;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.models.BuffTrackingKey;
+import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
@@ -13,6 +14,8 @@ import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -71,6 +74,9 @@ public class DotRefreshReminders {
 		}
 	}
 
+	// Kind of a hack but good enough
+	private Instant lastBrdCallout = Instant.now();
+	private long lastEntityId;
 
 	@HandleEvents
 	public void refreshReminderCall(EventContext context, DelayedBuffCallout event) {
@@ -78,7 +84,20 @@ public class DotRefreshReminders {
 		BuffApplied mostRecentEvent = buffs.get(BuffTrackingKey.of(originalEvent));
 		if (originalEvent == mostRecentEvent) {
 			log.debug("Dot refresh callout still valid");
-			context.accept(new CalloutEvent(originalEvent.getBuff().getName()));
+			// BRD special case
+			if (DotBuff.BRD_CombinedDots.matches(originalEvent.getBuff().getId())) {
+				Instant now = Instant.now();
+				Duration delta = Duration.between(lastBrdCallout, now);
+				long thisEntityId = originalEvent.getTarget().getId();
+				if (delta.toMillis() > 3500 || thisEntityId != lastEntityId) {
+					context.accept(new CalloutEvent("Dots"));
+				}
+				lastBrdCallout = now;
+				lastEntityId = thisEntityId;
+			}
+			else {
+				context.accept(new CalloutEvent(originalEvent.getBuff().getName()));
+			}
 		}
 		else {
 			log.debug("Not calling");

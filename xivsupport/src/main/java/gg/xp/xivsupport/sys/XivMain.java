@@ -2,6 +2,7 @@ package gg.xp.xivsupport.sys;
 
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.BasicEventDistributor;
+import gg.xp.reevent.events.BasicEventQueue;
 import gg.xp.reevent.events.DummyEventToForceAutoScan;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.topology.TopoInfoImpl;
@@ -39,6 +40,7 @@ public final class XivMain {
 		pico.addComponent(AutoHandlerConfig.class);
 		pico.addComponent(AutoHandlerScan.class);
 		pico.addComponent(EventMaster.class);
+		pico.addComponent(BasicEventQueue.class);
 		pico.addComponent(PicoStateStore.class);
 		pico.addComponent(XivState.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);

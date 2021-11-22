@@ -35,6 +35,7 @@ import gg.xp.xivsupport.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventTypeFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
+import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
@@ -256,6 +257,7 @@ public class GuiMain {
 					// TableWithFilterAndDetails, but that isn't in use here.
 					.addColumn(StandardColumns.hpColumn)
 					.addColumn(StandardColumns.entityIdColumn)
+					.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable partyMembersTable = new JTable(8, 3);
 			// TODO: see above todo, remove this when done
@@ -283,7 +285,11 @@ public class GuiMain {
 			super("Combatants");
 			setLayout(new BorderLayout());
 			combatantsTableModel = CustomTableModel.builder(
-							() -> state.get(XivState.class).getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()))
+							() -> state.get(XivState.class).getCombatantsListCopy()
+									.stream()
+									.filter(XivCombatant::isCombative)
+									.sorted(Comparator.comparing(XivEntity::getId))
+									.collect(Collectors.toList()))
 					.addColumn(StandardColumns.entityIdColumn)
 					.addColumn(StandardColumns.nameJobColumn)
 					.addColumn(StandardColumns.parentNameJobColumn)
@@ -416,7 +422,7 @@ public class GuiMain {
 		// TODO: jump to parent button
 		// Main table
 		XivState state = container.getComponent(XivState.class);
-		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events",
+		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Combatants",
 						() -> state.getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
 						combatant -> {
 							if (combatant == null) {
@@ -443,11 +449,13 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
+				.setDetailsSelectionEquivalence((a, b) -> a.getKey().equals(b.getKey()))
 				// TODO: combat vs noncombat filter
 //				.addFilter(EventTypeFilter::new)
 //				.addFilter(SystemEventFilter::new)
 //				.addFilter(EventClassFilterFilter::new)
 				.addFilter(EventEntityFilter::selfFilter)
+				.addFilter(NonCombatEntityFilter::new)
 //				.addFilter(EventEntityFilter::targetFilter)
 //				.addFilter(EventAbilityOrBuffFilter::new)
 				.build();
@@ -686,7 +694,7 @@ public class GuiMain {
 				.addMainColumn(new CustomColumn<>("Start", e -> e.startTime(), col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addMainColumn(new CustomColumn<>("Duration", e -> e.getDuration(), col -> {
+				.addMainColumn(new CustomColumn<>("Duration", e -> e.getCombatDuration(), col -> {
 					col.setPreferredWidth(200);
 				}))
 				.addDetailsColumn(StandardColumns.fieldName)

@@ -109,7 +109,7 @@ public class XivCombatant extends XivEntity {
 	 * 1 = PC
 	 * 2 = Combatant NPCs and pets? Both Selene and Chocobo seem to be in here, as do enemies
 	 * 3 = Non-combat NPC?
-	 * 4 = ?
+	 * 4 = Treasure coffer?
 	 * 5 = ?
 	 * 6 = Gathering point? I got "Mature Tree" in here
 	 * 7 = Gardening patch?
@@ -167,6 +167,10 @@ public class XivCombatant extends XivEntity {
 
 	public void setParent(XivCombatant parent) {
 		this.parent = parent;
+	}
+
+	public boolean isCombative() {
+		return !(getType() == CombatantType.OTHER || getType() == CombatantType.NONCOM);
 	}
 
 	public static final XivCombatant ENVIRONMENT

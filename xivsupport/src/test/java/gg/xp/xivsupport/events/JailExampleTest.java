@@ -1,11 +1,18 @@
 package gg.xp.xivsupport.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.BasicEventQueue;
+import gg.xp.reevent.events.DummyEventToForceAutoScan;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.WipeEvent;
+import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
+import gg.xp.xivsupport.events.triggers.jails.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
@@ -13,6 +20,7 @@ import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
+import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
@@ -56,8 +64,8 @@ public class JailExampleTest {
 		dist.registerHandler(collector);
 
 		XivState state = container.getComponent(XivState.class);
-		// TODO: still need better support for this...
-		Thread.sleep(1000);
+//		// TODO: still need better support for this...
+//		Thread.sleep(1000);
 		Assert.assertEquals(state.getPartyList().size(), 8);
 		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
@@ -127,6 +135,100 @@ public class JailExampleTest {
 		List<TtsRequest> ttsEvents = collector.getEventsOf(TtsRequest.class);
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
+
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
+		Thread.sleep(1200);
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
+
+	}
+
+	@Test
+	public void testWrongZone() {
+		MutablePicoContainer container = setup();
+		EventDistributor dist = container.getComponent(EventDistributor.class);
+		// Test setup
+		TestEventCollector collector = new TestEventCollector();
+		dist.registerHandler(collector);
+
+		XivState state = container.getComponent(XivState.class);
+//		// TODO: still need better support for this...
+//		Thread.sleep(1000);
+		Assert.assertEquals(state.getPartyList().size(), 8);
+		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
+
+		dist.acceptEvent(new ZoneChangeEvent(new XivZone(0x123, "Stuff")));
+
+		// Send events
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|13|Random Person|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|16|Foo Bar|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+
+		Assert.assertEquals(collector.getEventsOf(UnsortedTitanJailsSolvedEvent.class).size(), 0);
+	}
+
+	@Test
+	public void testZoneLockOverride() {
+		MutablePicoContainer container = setup();
+		EventDistributor dist = container.getComponent(EventDistributor.class);
+		// Test setup
+		TestEventCollector collector = new TestEventCollector();
+		dist.registerHandler(collector);
+
+		JailSolver jails = container.getComponent(JailSolver.class);
+		jails.getOverrideZoneLock().set(true);
+
+		XivState state = container.getComponent(XivState.class);
+//		// TODO: still need better support for this...
+//		Thread.sleep(1000);
+		Assert.assertEquals(state.getPartyList().size(), 8);
+		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
+
+		dist.acceptEvent(new ZoneChangeEvent(new XivZone(0x123, "Stuff")));
+
+		// Send events
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|13|Random Person|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|16|Foo Bar|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+
+		Assert.assertEquals(collector.getEventsOf(UnsortedTitanJailsSolvedEvent.class).size(), 1);
+	}
+
+	@Test
+	public void testResets() {
+		MutablePicoContainer container = setup();
+		EventDistributor dist = container.getComponent(EventDistributor.class);
+		// Test setup
+		TestEventCollector collector = new TestEventCollector();
+		dist.registerHandler(collector);
+
+		XivState state = container.getComponent(XivState.class);
+//		// TODO: still need better support for this...
+//		Thread.sleep(1000);
+		Assert.assertEquals(state.getPartyList().size(), 8);
+		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
+
+
+		// Send events
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|13|Random Person|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|16|Foo Bar|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		// Change zone
+		dist.acceptEvent(new ZoneChangeEvent(new XivZone(0x309, "Stuff")));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		// Wipe
+		dist.acceptEvent(new WipeEvent());
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+
+		dist.acceptEvent(new DutyRecommenceEvent());
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+
+		dist.acceptEvent(new WipeEvent());
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
+
+		Assert.assertEquals(collector.getEventsOf(UnsortedTitanJailsSolvedEvent.class).size(), 0);
 	}
 
 	@Test
@@ -138,8 +240,6 @@ public class JailExampleTest {
 		dist.registerHandler(collector);
 
 		XivState state = container.getComponent(XivState.class);
-		// TODO: still need better support for this...
-		Thread.sleep(1000);
 		Assert.assertEquals(state.getPartyList().size(), 8);
 		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
@@ -201,6 +301,10 @@ public class JailExampleTest {
 
 		List<CalloutEvent> callouts = collector.getEventsOf(CalloutEvent.class);
 		Assert.assertEquals(callouts.size(), 0);
+
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
+		Thread.sleep(1200);
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
 	@Test
@@ -212,8 +316,6 @@ public class JailExampleTest {
 		dist.registerHandler(collector);
 
 		XivState state = container.getComponent(XivState.class);
-		// TODO: still need better support for this...
-		Thread.sleep(1000);
 		Assert.assertEquals(state.getPartyList().size(), 8);
 		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
@@ -283,6 +385,9 @@ public class JailExampleTest {
 		List<TtsRequest> ttsEvents = collector.getEventsOf(TtsRequest.class);
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
+		Thread.sleep(1200);
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
 	}
 
 	@Test
@@ -371,6 +476,9 @@ public class JailExampleTest {
 		List<TtsRequest> ttsEvents = collector.getEventsOf(TtsRequest.class);
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
+		Thread.sleep(1200);
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
 	@Test
@@ -462,6 +570,9 @@ public class JailExampleTest {
 		PersistenceProvider persistence = container.getComponent(PersistenceProvider.class);
 		String sortString = persistence.get("jail-solver.job-order", String.class, null);
 		Assert.assertEquals(sortString, "AST,SCH,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,SAM,NIN,ROG,DRG,MNK,LNC,PGL");
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
+		Thread.sleep(1200);
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
 	@Test
@@ -486,7 +597,7 @@ public class JailExampleTest {
 	}
 
 	@Test
-	public void testLoadOrder() {
+	public void testLoadOrder() throws InterruptedException {
 		String customSort = "AST,SCH,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,SAM,NIN,ROG,DRG,MNK,LNC,PGL";
 		MutablePicoContainer container = XivMain.testingMasterInit();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
@@ -568,6 +679,9 @@ public class JailExampleTest {
 		String sortString = persistence.get("jail-solver.job-order", String.class, null);
 		Assert.assertEquals(sortString, customSort);
 
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
+		Thread.sleep(1200);
+		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
 	}
 
 	private static MutablePicoContainer setup() {
@@ -575,6 +689,12 @@ public class JailExampleTest {
 		MutablePicoContainer container = XivMain.testingMasterInit();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		doEvents(dist);
+		BasicEventQueue queue = container.getComponent(BasicEventQueue.class);
+		queue.waitDrain();
+		dist.acceptEvent(new DummyEventToForceAutoScan());
+		JailSolver jail = container.getComponent(JailSolver.class);
+		jail.getJailClearDelay().set(1000);
+
 		return container;
 	}
 

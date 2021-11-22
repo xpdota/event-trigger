@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +45,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			Function<? super X, List<D>> detailsConverter,
 			List<Function<Runnable, VisualFilter<? super X>>> filterCreators,
 			BiPredicate<? super X, ? super X> selectionEquivalence,
+			BiPredicate<? super D, ? super D> detailsSelectionEquivalence,
 			boolean appendOrPruneOnly) {
 		super(title);
 		this.title = title;
@@ -56,6 +56,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 		CustomTableModel.CustomTableModelBuilder<D> detailsBuilder = CustomTableModel.builder(() -> detailsConverter.apply(this.currentSelection));
 		detailsColumns.forEach(detailsBuilder::addColumn);
+		detailsBuilder.setSelectionEquivalence(detailsSelectionEquivalence);
 		CustomTableModel<D> detailsModel = detailsBuilder
 				.build();
 
@@ -77,7 +78,6 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ListSelectionModel selectionModel = table.getSelectionModel();
 		selectionModel.addListSelectionListener(e -> {
-			// TODO: bug where you mess up your selection by selecting a row in the details table
 			int[] selected = selectionModel.getSelectedIndices();
 			log.trace("Selected: {}", Arrays.toString(selected));
 			if (selected.length == 0) {
@@ -86,8 +86,9 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			else {
 				currentSelection = mainModel.getValueForRow(selected[0]);
 			}
-			detailsModel.fullRefresh();
-			detailsModel.fireTableDataChanged();
+			// TODO: selection doesn't stick for details items as table updates
+			SwingUtilities.invokeLater(detailsModel::fullRefresh);
+//			detailsModel.fireTableDataChanged();
 		});
 		JButton refreshButton = new JButton("Refresh");
 		refreshButton.addActionListener(e -> {
@@ -254,6 +255,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		private final Function<X, List<D>> detailsConverter;
 		private final List<Function<Runnable, VisualFilter<? super X>>> filters = new ArrayList<>();
 		private BiPredicate<? super X, ? super X> selectionEquivalence = Objects::equals;
+		private BiPredicate<? super D, ? super D> detailsSelectionEquivalence = Objects::equals;
 		private boolean appendOrPruneOnly;
 
 
@@ -283,13 +285,18 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			return this;
 		}
 
+		public TableWithFilterAndDetailsBuilder<X, D> setDetailsSelectionEquivalence(BiPredicate<? super D, ? super D> detailsSelectionEquivalence) {
+			this.detailsSelectionEquivalence = detailsSelectionEquivalence;
+			return this;
+		}
+
 		public TableWithFilterAndDetailsBuilder<X, D> setAppendOrPruneOnly(boolean appendOrPruneOnly) {
 			this.appendOrPruneOnly = appendOrPruneOnly;
 			return this;
 		}
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, selectionEquivalence, appendOrPruneOnly);
+			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly);
 		}
 	}
 

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.misc.pulls;
 import gg.xp.reevent.context.SubState;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
@@ -11,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeOutEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.misc.ProxyForAppendOnlyList;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.models.CombatantType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +51,14 @@ public class PullTracker implements SubState {
 	}
 
 	// TODO: start of combat - currently would depend on cactbot event source, which we don't want to depend on
+	@HandleEvents
+	public void startCombat(EventContext context, AbilityUsedEvent abilityUsed) {
+		if (currentPull != null && currentPull.getStatus().equals(PullStatus.PRE_PULL)) {
+			if (abilityUsed.getSource().isPc() && abilityUsed.getTarget().getType() == CombatantType.NPC) {
+				currentPull.setCombatStart(abilityUsed);
+			}
+		}
+	}
 
 	@HandleEvents
 	public void wipe(EventContext context, FadeOutEvent wipe) {

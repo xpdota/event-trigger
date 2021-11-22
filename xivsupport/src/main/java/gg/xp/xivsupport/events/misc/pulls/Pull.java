@@ -95,8 +95,15 @@ public class Pull {
 	}
 
 	public @Nullable Duration getCombatDuration() {
-		// TODO: this won't work because we don't have a 'start of combat' event yet
-		return null;
+		Instant start = combatStartTime();
+		if (start == null) {
+			return null;
+		}
+		Instant end = endTime();
+		if (end == null) {
+			end = Instant.now();
+		}
+		return Duration.between(start, end);
 	}
 
 	public PullStatus getStatus() {
