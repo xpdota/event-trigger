@@ -5,21 +5,20 @@ import gg.xp.reevent.events.BasicEventQueue;
 import gg.xp.reevent.events.DummyEventToForceAutoScan;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
-import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.jails.ClearAutoMarkRequest;
-import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;
-import gg.xp.xivsupport.models.XivEntity;
-import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
+import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -66,8 +65,6 @@ public class JailExampleTest {
 		XivState state = container.getComponent(XivState.class);
 //		// TODO: still need better support for this...
 //		Thread.sleep(1000);
-		Assert.assertEquals(state.getPartyList().size(), 8);
-		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
 
 		// Send events
@@ -150,11 +147,6 @@ public class JailExampleTest {
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
 
-		XivState state = container.getComponent(XivState.class);
-//		// TODO: still need better support for this...
-//		Thread.sleep(1000);
-		Assert.assertEquals(state.getPartyList().size(), 8);
-		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
 		dist.acceptEvent(new ZoneChangeEvent(new XivZone(0x123, "Stuff")));
 
@@ -177,12 +169,6 @@ public class JailExampleTest {
 		JailSolver jails = container.getComponent(JailSolver.class);
 		jails.getOverrideZoneLock().set(true);
 
-		XivState state = container.getComponent(XivState.class);
-//		// TODO: still need better support for this...
-//		Thread.sleep(1000);
-		Assert.assertEquals(state.getPartyList().size(), 8);
-		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
-
 		dist.acceptEvent(new ZoneChangeEvent(new XivZone(0x123, "Stuff")));
 
 		// Send events
@@ -200,12 +186,6 @@ public class JailExampleTest {
 		// Test setup
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
-
-		XivState state = container.getComponent(XivState.class);
-//		// TODO: still need better support for this...
-//		Thread.sleep(1000);
-		Assert.assertEquals(state.getPartyList().size(), 8);
-		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
 
 		// Send events
@@ -238,10 +218,6 @@ public class JailExampleTest {
 		// Test setup
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
-
-		XivState state = container.getComponent(XivState.class);
-		Assert.assertEquals(state.getPartyList().size(), 8);
-		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
 		jail.getEnableTts().set(false);
@@ -314,10 +290,6 @@ public class JailExampleTest {
 		// Test setup
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
-
-		XivState state = container.getComponent(XivState.class);
-		Assert.assertEquals(state.getPartyList().size(), 8);
-		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
 		jail.getEnableAutomark().set(false);
@@ -397,12 +369,6 @@ public class JailExampleTest {
 		// Test setup
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
-
-		XivState state = container.getComponent(XivState.class);
-		// TODO: still need better support for this...
-		Thread.sleep(1000);
-		Assert.assertEquals(state.getPartyList().size(), 8);
-		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
 		List<Job> currentJailSort = new ArrayList<>(jail.getCurrentJailSort());
@@ -488,12 +454,6 @@ public class JailExampleTest {
 		// Test setup
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
-
-		XivState state = container.getComponent(XivState.class);
-		// TODO: still need better support for this...
-		Thread.sleep(1000);
-		Assert.assertEquals(state.getPartyList().size(), 8);
-		Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
 		List<Job> currentJailSort = new ArrayList<>(jail.getCurrentJailSort());
@@ -692,6 +652,23 @@ public class JailExampleTest {
 		BasicEventQueue queue = container.getComponent(BasicEventQueue.class);
 		queue.waitDrain();
 		dist.acceptEvent(new DummyEventToForceAutoScan());
+		XivState state = container.getComponent(XivState.class);
+		// TODO: find actual solution to race conditions in tests
+		try {
+			Assert.assertEquals(state.getPartyList().size(), 8);
+			Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
+		}
+		catch (Throwable e) {
+			try {
+				Thread.sleep(1000);
+			}
+			catch (InterruptedException ex) {
+				ex.printStackTrace();
+			}
+			Assert.assertEquals(state.getPartyList().size(), 8);
+			Assert.assertEquals(state.getCombatantsListCopy().size(), 8);
+		}
+
 		JailSolver jail = container.getComponent(JailSolver.class);
 		jail.getJailClearDelay().set(1000);
 

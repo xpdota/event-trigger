@@ -25,8 +25,6 @@
 <!--        <appender-ref ref="COLLECTOR"/>-->
     </root>
     <!--    TODO turn some log levels down, like actws null response -->
-    <logger name="gg.xp.reevent.scan.AutoHandlerScan.Topology" level="warn">
-        <appender-ref ref="COLLECTOR"/>
-    </logger>
+    <logger name="gg.xp.reevent.scan.AutoHandlerScan.Topology" level="warn"/>
 
 </configuration>
