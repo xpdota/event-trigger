@@ -3,7 +3,7 @@ package gg.xp.xivsupport.models;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class HitPoints implements ResourcePoints, Serializable {
+public final class HitPoints implements CurrentMaxPair, Serializable {
 	private static final long serialVersionUID = 5725036718136891291L;
 	private final long current;
 	private final long max;

@@ -485,10 +485,10 @@ public class GuiMain {
 //				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer())))
-				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> e.getBuff().getName()))
+				.addMainColumn(new CustomColumn<>("Buff/Ability", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer())))
 				.addMainColumn(new CustomColumn<>("Initial Duration", buffApplied -> {
-					double duration = buffApplied.getDuration();
-					if (duration >= 9998.0d && duration <= 9999.9d) {
+					long duration = buffApplied.getInitialDuration().getSeconds();
+					if (duration >= 9998 && duration <= 10000) {
 						return "∞";
 					}
 					return duration;

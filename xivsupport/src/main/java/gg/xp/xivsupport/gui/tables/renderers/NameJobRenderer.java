@@ -18,7 +18,7 @@ public class NameJobRenderer implements TableCellRenderer {
 			Component defaultLabel = fallback.getTableCellRendererComponent(table, ((XivPlayerCharacter) value).getName(), isSelected, hasFocus, row, column);
 			Job job = ((XivPlayerCharacter) value).getJob();
 			if (job != null) {
-				return IconTextRenderer.getComponent(job, defaultLabel);
+				return IconTextRenderer.getComponent(job, defaultLabel, false);
 			}
 			return defaultLabel;
 		}

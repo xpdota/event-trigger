@@ -16,6 +16,12 @@ See [Installation](https://github.com/xpdota/event-trigger/wiki/Installation)
 
 ![Jail Plugin](https://user-images.githubusercontent.com/14287379/142813080-c44d1ff7-873b-4119-9c15-1212c9e31133.png)
 
+#### Multi Target DoT Tracker
+
+![Dot Tracker](https://i.imgur.com/72Zof3c.png)
+
+It even combines multiple targets with the same DoT + similar duration into one row.
+
 ## Future Features
 
 See [Feature Ideas](https://github.com/xpdota/event-trigger/wiki/Feature-Ideas) for what I plan to implement down the

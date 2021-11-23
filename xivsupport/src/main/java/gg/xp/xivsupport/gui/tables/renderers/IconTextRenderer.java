@@ -24,7 +24,7 @@ public final class IconTextRenderer {
 	private IconTextRenderer() {
 	}
 
-	public static Component getComponent(HasIconURL value, Component defaultLabel) {
+	public static Component getComponent(HasIconURL value, Component defaultLabel, boolean iconOnly) {
 
 		ScaledImageComponent scaled = cache.computeIfAbsent(value, ignored -> {
 			URL imageUrl = value.getIcon();
@@ -35,6 +35,9 @@ public final class IconTextRenderer {
 		});
 		if (scaled == null) {
 			return defaultLabel;
+		}
+		if (iconOnly) {
+			return scaled;
 		}
 
 		JPanel panel = new JPanel();

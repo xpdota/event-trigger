@@ -6,7 +6,6 @@ import gg.xp.xivdata.jobs.DotBuff;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.models.BuffTrackingKey;
-import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
@@ -16,9 +15,13 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 // TODO: figure out how to track BRD buffs in a good way
@@ -54,14 +57,37 @@ public class DotRefreshReminders {
 				.orElse(false);
 	}
 
+	private final Object myDotsLock = new Object();
+	private final Map<BuffTrackingKey, BuffApplied> myDots = new HashMap<>();
 
 	@HandleEvents
 	public void buffApplication(EventContext context, BuffApplied event) {
 		if (event.getSource().isThePlayer() && isWhitelisted(event.getBuff().getId()) && !event.getTarget().isFake()) {
-			context.enqueue(new DelayedBuffCallout(event, (long) (event.getDuration() * 1000L - dotRefreshAdvance.get())));
+			context.enqueue(new DelayedBuffCallout(event, event.getInitialDuration().toMillis() - dotRefreshAdvance.get()));
+			synchronized (myDotsLock) {
+				myDots.put(BuffTrackingKey.of(event), event);
+				recheckMyDots();
+			}
 		}
 	}
 
+	private void recheckMyDots() {
+		myDots.entrySet().removeIf(e -> {
+			BuffApplied buffFromRepo = buffs.get(e.getKey());
+			// Keep the buff displayed if it is still active,
+			// OR if it is inactive but would be past expiry,
+			// but not by more than 5 seconds.
+			if (buffFromRepo != null) {
+				return false;
+			}
+			Duration timeSinceExpiry = e.getValue().getEstimatedTimeSinceExpiry();
+			if (timeSinceExpiry.isNegative()
+					|| timeSinceExpiry.compareTo(Duration.of(5, ChronoUnit.SECONDS)) > 0) {
+				return true;
+			}
+			return false;
+		});
+	}
 
 	static class DelayedBuffCallout extends BaseDelayedEvent {
 
@@ -110,5 +136,12 @@ public class DotRefreshReminders {
 
 	public LongSetting getDotRefreshAdvance() {
 		return dotRefreshAdvance;
+	}
+
+	public List<BuffApplied> getCurrentDots() {
+		synchronized (myDotsLock) {
+			recheckMyDots();
+			return new ArrayList<>(myDots.values());
+		}
 	}
 }

@@ -22,7 +22,8 @@ public class XivOverlay {
 	private static final Logger log = LoggerFactory.getLogger(XivOverlay.class);
 	private static final Color panelBackgroundEditMode = new Color(0, 255, 0, 64);
 	private static final Color panelBackgroundDefault = new Color(0, 0, 0, 0);
-	private static final LineBorder transparentBorder = new LineBorder(new Color(0, 0, 0, 0), 1);
+	private static final LineBorder editBorder = new LineBorder(Color.PINK, 5);
+	private static final LineBorder transparentBorder = new LineBorder(new Color(0, 0, 0, 0), 5);
 	private int dragX;
 	private int dragY;
 	private final JFrame frame;
@@ -69,6 +70,10 @@ public class XivOverlay {
 		});
 	}
 
+	public void finishInit() {
+		frame.pack();
+	}
+
 	public String getTitle() {
 		return title;
 	}
@@ -94,10 +99,10 @@ public class XivOverlay {
 	public void setEditMode(boolean editMode) {
 		setClickThrough(frame, !editMode);
 		if (editMode) {
-			panel.setBorder(new LineBorder(Color.PINK, 1));
+			panel.setBorder(editBorder);
 		}
 		else {
-			panel.setBorder(new LineBorder(new Color(0, 0, 0, 0), 1));
+			panel.setBorder(transparentBorder);
 		}
 	}
 
@@ -107,7 +112,7 @@ public class XivOverlay {
 	}
 
 	private static void setClickThrough(Component w, boolean clickThrough) {
-		log.info("Click-through: {}", clickThrough);
+		log.trace("Click-through: {}", clickThrough);
 		WinDef.HWND hwnd = getHWnd(w);
 		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
 		if (clickThrough) {

@@ -2,21 +2,22 @@ package gg.xp.xivsupport.gui.overlay;
 
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
+import gg.xp.reevent.events.DummyEventToForceAutoScan;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@ScanMe
 public class OverlayMain {
 
 	private static final Logger log = LoggerFactory.getLogger(OverlayMain.class);
@@ -56,9 +57,12 @@ public class OverlayMain {
 	private boolean windowActive;
 	private boolean editing;
 
-	public OverlayMain(PersistenceProvider persistence) {
+	public OverlayMain(PicoContainer container, EventDistributor dist, PersistenceProvider persistence) {
 		show = new BooleanSetting(persistence, "xiv-overlay.show", false);
-		addOverlay(new ExampleOverlay(persistence));
+
+		List<XivOverlay> overlays = container.getComponents(XivOverlay.class);
+		overlays.forEach(this::addOverlay);
+
 		setEditing(false);
 		//noinspection CallToThreadStartDuringObjectConstruction
 		new Thread(() -> {
@@ -66,7 +70,7 @@ public class OverlayMain {
 				try {
 					boolean old = windowActive;
 					String window = getActiveWindowText();
-					windowActive = window.startsWith("FINAL FANTASY XIV") || overlays.stream().anyMatch(o -> o.getTitle().equals(window));
+					windowActive = window.startsWith("FINAL FANTASY XIV") || this.overlays.stream().anyMatch(o -> o.getTitle().equals(window));
 					if (old != windowActive) {
 						recalc();
 					}
@@ -82,6 +86,7 @@ public class OverlayMain {
 
 	public void addOverlay(XivOverlay overlay) {
 		overlays.add(overlay);
+		overlay.finishInit();
 		recalc();
 	}
 
@@ -110,29 +115,16 @@ public class OverlayMain {
 		boolean shouldShow = editing || (show.get() && windowActive);
 		SwingUtilities.invokeLater(() -> {
 			if (shouldShow) {
+				overlays.forEach(o -> o.setVisible(true));
 				overlays.forEach(o -> o.setEditMode(editing));
 			}
-			overlays.forEach(o -> o.setVisible(shouldShow));
+			else {
+				overlays.forEach(o -> o.setVisible(false));
+			}
 		});
 	}
 
 	private final List<XivOverlay> overlays = new ArrayList<>();
-
-	private static class ExampleOverlay extends XivOverlay {
-
-		public ExampleOverlay(PersistenceProvider persistence) {
-			super("Example Overlay", "example-overlay", persistence);
-			JPanel panel = new JPanel();
-			panel.add(new JLabel("Foo Bar Label Here"));
-			JButton button = new JButton("Button");
-			panel.add(button);
-			panel.setBackground(new Color(200, 100, 0, 255));
-//			panel.setBackground(new Color(255, 128, 0, 128));
-			getPanel().add(panel);
-//			getFrame().validate();
-			getFrame().pack();
-		}
-	}
 
 	private static void doWindowInfo() {
 		log.info("Active window: {}", getActiveWindowText());

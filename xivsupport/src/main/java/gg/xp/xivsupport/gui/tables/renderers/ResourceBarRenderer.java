@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivsupport.models.ResourcePoints;
-import gg.xp.xivsupport.models.ResourcePoints;
+import gg.xp.xivsupport.models.CurrentMaxPair;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -12,13 +11,14 @@ import java.awt.*;
 
 public abstract class ResourceBarRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
+
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		if (value instanceof ResourcePoints) {
+		if (value instanceof CurrentMaxPair) {
 			Component baseLabel = fallback.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column);
 			TableColumn col = table.getColumnModel().getColumn(column);
 			int width = col.getWidth();
-			ResourcePoints hp = (ResourcePoints) value;
+			CurrentMaxPair hp = (CurrentMaxPair) value;
 			double percent;
 			long actualMax = hp.getMax();
 			long actualCurrent = hp.getCurrent();
@@ -58,7 +58,7 @@ public abstract class ResourceBarRenderer implements TableCellRenderer {
 
 			leftPanel.setPreferredSize(new Dimension((int) (width * percent), 10));
 			rightPanel.setPreferredSize(new Dimension((int) (width * (1 - percent)), 10));
-			JLabel label = new JLabel(String.format("%s / %s", actualCurrent, actualMax));
+			JLabel label = new JLabel(getText(hp));
 			leftPanel.add(label);
 			label.setForeground(baseLabel.getForeground());
 
@@ -74,7 +74,8 @@ public abstract class ResourceBarRenderer implements TableCellRenderer {
 	}
 
 	protected abstract Color getBarColor(double percent);
-	
-	
 
+	protected String getText(CurrentMaxPair item) {
+		return String.format("%s / %s", item.getCurrent(), item.getMax());
+	}
 }

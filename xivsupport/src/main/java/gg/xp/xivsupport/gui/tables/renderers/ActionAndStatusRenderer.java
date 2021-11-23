@@ -14,13 +14,27 @@ import java.awt.*;
 
 public class ActionAndStatusRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
+	private final boolean iconOnly;
+
+	public ActionAndStatusRenderer() {
+		this(false);
+	}
+
+	public ActionAndStatusRenderer(boolean iconOnly) {
+		this.iconOnly = iconOnly;
+	}
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 
 		Component defaultLabel;
 		if (value instanceof NameIdPair) {
-			defaultLabel = fallback.getTableCellRendererComponent(table, ((NameIdPair) value).getName(), isSelected, hasFocus, row, column);
+			if (iconOnly) {
+				defaultLabel = fallback.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
+			}
+			else {
+				defaultLabel = fallback.getTableCellRendererComponent(table, ((NameIdPair) value).getName(), isSelected, hasFocus, row, column);
+			}
 		}
 		else {
 			return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
@@ -39,7 +53,7 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		if (icon == null) {
 			return defaultLabel;
 		}
-		return IconTextRenderer.getComponent(icon, defaultLabel);
+		return IconTextRenderer.getComponent(icon, defaultLabel, iconOnly);
 
 
 	}

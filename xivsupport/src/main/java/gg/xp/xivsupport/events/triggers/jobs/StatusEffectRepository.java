@@ -40,8 +40,6 @@ public class StatusEffectRepository {
 	private final Map<BuffTrackingKey, BuffApplied> buffs = new LinkedHashMap<>();
 
 
-	// TODO: handle buff removal, enemy dying before buff expires, etc
-
 	@HandleEvents(order = -500)
 	public void buffApplication(EventContext context, BuffApplied event) {
 		// TODO: should fakes still be tracked somewhere?
@@ -106,7 +104,6 @@ public class StatusEffectRepository {
 	}
 
 	public List<BuffApplied> getBuffs() {
-		// TODO: thread safety
 		return new ArrayList<>(buffs.values());
 	}
 
