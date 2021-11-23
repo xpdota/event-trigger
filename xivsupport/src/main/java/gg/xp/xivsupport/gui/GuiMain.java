@@ -24,7 +24,6 @@ import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
@@ -50,12 +49,14 @@ import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -91,11 +92,63 @@ public class GuiMain {
 		catch (Throwable t) {
 			log.error("Error setting up look and feel", t);
 		}
-		MutablePicoContainer pico = XivMain.masterInit();
-		pico.addComponent(GuiMain.class);
-		pico.getComponent(GuiMain.class);
-		// TODO: doesn't transfer over to test modes
-		installCustomEventQueue();
+		try {
+			MutablePicoContainer pico = XivMain.masterInit();
+			pico.addComponent(GuiMain.class);
+			pico.getComponent(GuiMain.class);
+			// TODO: doesn't transfer over to test modes
+			installCustomEventQueue();
+		}
+		catch (Throwable e) {
+			log.error("Startup Error!", e);
+			JFrame frame = new JFrame("Startup Error!");
+			JPanel panel = new JPanel();
+			panel.setBorder(new LineBorder(Color.RED));
+			panel.setPreferredSize(new Dimension(800, 600));
+			panel.setLayout(new GridBagLayout());
+			GridBagConstraints c = new GridBagConstraints();
+			c.fill = GridBagConstraints.NONE;
+			c.anchor = GridBagConstraints.CENTER;
+			c.gridx = 0;
+			c.gridy = 0;
+			c.weightx = 1;
+			c.weighty = 0;
+			panel.setAlignmentX(0.5f);
+			panel.add(new JLabel("A Fatal Error Has Occurred"), c);
+			c.gridy ++;
+			c.weighty = 1;
+			c.fill = GridBagConstraints.BOTH;
+			JTextArea textArea = new JTextArea();
+			textArea.setText("You should report this as a bug and include log files in " +
+					System.getenv("APPDATA") +
+					System.getProperty("file.separator") +
+					"triggevent" +
+					" as well as this error message." +
+					"\n\n" +
+					"You can also try moving/renaming the properties files in that directory to see if this error is being caused by a problem with your settings." +
+					"\n\n" +
+					ExceptionUtils.getStackTrace(e)
+			);
+			textArea.setEditable(false);
+			textArea.setLineWrap(true);
+			textArea.setWrapStyleWord(true);
+			JScrollPane scroll = new JScrollPane(textArea);
+			scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+			scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+			panel.add(scroll, c);
+			c.weighty = 0;
+			c.gridy ++;
+			c.fill = GridBagConstraints.NONE;
+			JButton exit = new JButton("Exit");
+			exit.addActionListener(l -> System.exit(1));
+			panel.add(exit, c);
+			frame.add(panel);
+			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+			frame.validate();
+			frame.pack();
+			frame.setVisible(true);
+
+		}
 	}
 
 	public GuiMain(EventMaster master, MutablePicoContainer container) {
@@ -107,6 +160,7 @@ public class GuiMain {
 			JFrame frame = new JFrame("Triggevent");
 			tabPane = new JTabbedPane();
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setLocationByPlatform(true);
 			frame.setSize(960, 720);
 			frame.setVisible(true);
 			frame.add(tabPane);

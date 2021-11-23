@@ -7,6 +7,24 @@
             </pattern>
         </encoder>
     </appender>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${APPDATA}/triggevent/triggevent.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>3</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>100MB</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>
+                %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36}:%line - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
     <appender name="COLLECTOR" class="gg.xp.xivsupport.slf4j.LogCollector">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>
@@ -23,6 +41,7 @@
         <appender-ref ref="CONSOLE"/>
         <!--        TODO: Find a clean way to have COLLECTOR also get trace-level logs-->
         <appender-ref ref="COLLECTOR"/>
+        <appender-ref ref="FILE"/>
     </root>
     <!--    TODO turn some log levels down, like actws null response -->
     <!--    <logger name="" level="trace">-->
