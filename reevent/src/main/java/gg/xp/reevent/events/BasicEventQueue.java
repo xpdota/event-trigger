@@ -5,7 +5,6 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -82,6 +81,7 @@ public class BasicEventQueue implements EventQueue {
 				}
 				else {
 					tracker.markExit();
+					queueLock.notifyAll();
 					return tracker.event;
 				}
 			}
@@ -100,14 +100,13 @@ public class BasicEventQueue implements EventQueue {
 	// event to be fully processed. This probably needs to be on EventMaster.
 	public void waitDrain() {
 		synchronized (queueLock) {
-			if (pendingSize() == 0) {
-				return;
-			}
-			try {
-				queueLock.wait();
-			}
-			catch (InterruptedException e) {
-				throw new RuntimeException(e);
+			while (pendingSize() > 0) {
+				try {
+					queueLock.wait(1000);
+				}
+				catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
 			}
 		}
 	}
