@@ -25,6 +25,7 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private final Properties properties;
 	private final File file;
+	private final File backupFile;
 
 	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName) {
 		String userDataDir = System.getenv("APPDATA");
@@ -40,6 +41,7 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 
 	public PropertiesFilePersistenceProvider(File file) {
 		this.file = file;
+		this.backupFile = Paths.get(file.getParentFile().toPath().toString(), file.getName() + ".backup").toFile();
 		Properties properties = new Properties();
 		try {
 			try (FileInputStream stream = new FileInputStream(file)) {
@@ -66,6 +68,14 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 				try (FileOutputStream stream = new FileOutputStream(file)) {
 					properties.store(stream, "Saved programmatically");
 				}
+				if (!backupFile.exists()) {
+					if (!backupFile.createNewFile()) {
+						throw new RuntimeException("Could not create backup file");
+					}
+				}
+				try (FileOutputStream stream = new FileOutputStream(backupFile)) {
+					properties.store(stream, "Saved programmatically - backup file");
+				}
 			}
 			catch (IOException e) {
 				log.error("Error saving properties! Changes may not be saved!", e);
@@ -81,11 +91,6 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 		catch (InterruptedException | ExecutionException | TimeoutException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	@Override
-	protected String rewriteKey(String originalKey) {
-		return super.rewriteKey(originalKey);
 	}
 
 	@Override

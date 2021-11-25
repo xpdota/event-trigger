@@ -60,7 +60,10 @@ public class DotTrackerOverlay extends XivOverlay {
 			while (true) {
 				try {
 					refresh();
-					Thread.sleep(100);
+					// 200ms is the optimal update interval - typical dot is 30 seconds, and the bar is 150 pixels wide,
+					// so we'd expect 5 updates per second
+					//noinspection BusyWait
+					Thread.sleep(200);
 				}
 				catch (Throwable e) {
 					log.error("Error refreshing dots", e);
@@ -68,6 +71,7 @@ public class DotTrackerOverlay extends XivOverlay {
 			}
 		});
 		thread.setName("DotRefreshOverlayThread");
+		//noinspection CallToThreadStartDuringObjectConstruction
 		thread.start();
 	}
 
@@ -115,13 +119,6 @@ public class DotTrackerOverlay extends XivOverlay {
 							.thenComparing(event -> event.getEvent().getTarget().getId()))
 					.limit(MAX_DOTS)
 					.collect(Collectors.toList());
-
-//			croppedDots = currentDots.stream()
-//					.sorted(Comparator.<BuffApplied, Long>comparing(event -> event.getTarget().getHp() != null ? event.getTarget().getHp().getMax() : 0)
-//							.reversed()
-//							.thenComparing(event -> event.getTarget().getId())).map(VisualDotInfo::new)
-//					.limit(MAX_DOTS)
-//					.collect(Collectors.toList());
 		}
 	}
 

@@ -64,7 +64,7 @@ public final class XivMain {
 	public static MutablePicoContainer testingMasterInit() {
 		MutablePicoContainer pico = requiredComponents();
 		pico.addComponent(InMemoryMapPersistenceProvider.class);
-		pico.getComponent(AutoHandlerConfig.class).setTest(true);
+		pico.getComponent(AutoHandlerConfig.class).setNotLive(true);
 		pico.getComponent(EventMaster.class).start();
 		return pico;
 	}
@@ -88,7 +88,7 @@ public final class XivMain {
 		pico.addComponent(PicoBasedInstanceProvider.class);
 		pico.addComponent(AutoHandlerConfig.class);
 		pico.addComponent(InMemoryMapPersistenceProvider.class);
-		pico.getComponent(AutoHandlerConfig.class).setTest(true);
+		pico.getComponent(AutoHandlerConfig.class).setNotLive(true);
 		pico.addComponent(pico);
 
 		pico.getComponent(EventMaster.class).start();

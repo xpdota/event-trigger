@@ -2,6 +2,7 @@ package gg.xp.reevent.events;
 
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.scan.AutoHandler;
+import gg.xp.xivsupport.events.misc.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +69,10 @@ public class BasicEventDistributor implements EventDistributor {
 				return;
 			}
 			final Event current = next;
-			current.setPumpedAt(Instant.now());
+			boolean updateTimes = !current.isImported();
+			if (updateTimes) {
+				current.setPumpedAt(TimeUtils.now());
+			}
 			// TODO: this doesn't work, because handlers filter it themselves
 			if (handlers.isEmpty()) {
 				log.warn("No handlers for event {}!", event);
@@ -96,7 +100,7 @@ public class BasicEventDistributor implements EventDistributor {
 											log.error("You called 'accept' on an event ({}) with a delayed enqueue - you probably meant to 'queue' it instead.", event.getClass().getSimpleName());
 										}
 										e.setParent(current);
-										e.setEnqueuedAt(Instant.now());
+										e.setEnqueuedAt(TimeUtils.now());
 										e.setSourceEventHandler(handler);
 										log.trace("Event {} triggered new event {}", current, e);
 										eventsForImmediateProcessing.add(e);
@@ -139,7 +143,9 @@ public class BasicEventDistributor implements EventDistributor {
 					log.error("Error pumping event {} into handler {}", event, handler, t);
 				}
 			});
-			current.setPumpFinishedAt(Instant.now());
+			if (updateTimes) {
+				current.setPumpFinishedAt(TimeUtils.now());
+			}
 		}
 	}
 }

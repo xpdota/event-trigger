@@ -97,7 +97,7 @@ public class XivState implements SubState {
 						playerCombatantInfo.getName(),
 						Job.getById(playerCombatantInfo.getJobId()),
 						// TODO
-						new XivWorld(),
+						XivWorld.of(),
 						// TODO
 						true,
 						playerCombatantInfo.getRawType(),
@@ -124,7 +124,7 @@ public class XivState implements SubState {
 						combatant.getName(),
 						Job.getById(jobId),
 						// TODO
-						new XivWorld(),
+						XivWorld.of(),
 						// TODO
 						false,
 						combatant.getRawType(),
@@ -223,7 +223,7 @@ public class XivState implements SubState {
 						rawPartyMember.getId(),
 						rawPartyMember.getName(),
 						Job.getById(rawPartyMember.getJobId()),
-						new XivWorld(rawPartyMember.getWorldId()),
+						XivWorld.createXivWorld(rawPartyMember.getWorldId()),
 						false,
 						0,
 						null,

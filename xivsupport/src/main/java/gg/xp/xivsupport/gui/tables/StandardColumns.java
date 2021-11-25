@@ -4,7 +4,6 @@ import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.MpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
-import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -89,9 +88,20 @@ public class StandardColumns {
 			= new CustomColumn<>("Position", XivCombatant::getPos);
 
 
-	public static final CustomColumn<Map.Entry<Field, Object>> fieldName = (new CustomColumn<>("Field", e -> e.getKey().getName()));
-	public static final CustomColumn<Map.Entry<Field, Object>> fieldValue = (new CustomColumn<>("Value", Map.Entry::getValue));
-	public static final CustomColumn<Map.Entry<Field, Object>> fieldType = (new CustomColumn<>("Field Type", e -> e.getKey().getGenericType()));
-	public static final CustomColumn<Map.Entry<Field, Object>> fieldDeclaredIn = (new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName()));
+	public static final CustomColumn<Map.Entry<Field, Object>> fieldName
+			= new CustomColumn<>("Field", e -> e.getKey().getName());
+	public static final CustomColumn<Map.Entry<Field, Object>> fieldValue
+			= new CustomColumn<>("Value", Map.Entry::getValue);
+	public static final CustomColumn<Map.Entry<Field, Object>> identity
+			= new CustomColumn<>("Identity", e -> {
+		if (e.getKey().getType().isPrimitive()) {
+			return "(primitive)";
+		}
+		return "0x" + Integer.toString(System.identityHashCode(e.getValue()), 16);
+	});
+	public static final CustomColumn<Map.Entry<Field, Object>> fieldType
+			= new CustomColumn<>("Field Type", e -> e.getKey().getGenericType());
+	public static final CustomColumn<Map.Entry<Field, Object>> fieldDeclaredIn
+			= new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName());
 
 }

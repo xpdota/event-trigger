@@ -1,5 +1,6 @@
 package gg.xp.reevent.events;
 
+import gg.xp.xivsupport.events.misc.TimeUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,11 +16,12 @@ public abstract class BaseEvent implements Event {
 	private Event parent;
 	private EventHandler<?> source;
 
-	private Instant happenedAt = Instant.now();
+	private Instant happenedAt = TimeUtils.now();
 	private Instant enqueuedAt;
 	private Instant pumpedAt;
 	private Instant pumpFinishedAt;
 	private long delayedEnqueueAt;
+	private transient boolean isImported;
 
 	public void setParent(Event parent) {
 		if (this.parent != null) {
@@ -107,5 +109,15 @@ public abstract class BaseEvent implements Event {
 
 	public void setDelayedEnqueueOffset(long fromNowMillis) {
 		this.delayedEnqueueAt = System.currentTimeMillis() + fromNowMillis;
+	}
+
+	@Override
+	public boolean isImported() {
+		return isImported;
+	}
+
+	@Override
+	public void setImported(boolean imported) {
+		isImported = imported;
 	}
 }

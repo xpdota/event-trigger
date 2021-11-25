@@ -7,7 +7,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.EventSource;
-import gg.xp.reevent.scan.DisableInTest;
+import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
@@ -105,7 +105,7 @@ public class ActWsLogSource implements EventSource {
 
 	private final AtomicInteger rseqCounter = new AtomicInteger();
 
-	@DisableInTest
+	@LiveOnly
 	@HandleEvents
 	public void getCombatantsDbg(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("combatants")) {
@@ -113,7 +113,7 @@ public class ActWsLogSource implements EventSource {
 		}
 	}
 
-	@DisableInTest
+	@LiveOnly
 	@HandleEvents
 	public void forceReconnect(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("reconnect_ws")) {
@@ -122,7 +122,7 @@ public class ActWsLogSource implements EventSource {
 		}
 	}
 
-	@DisableInTest
+	@LiveOnly
 	@HandleEvents
 	public void getCombatants(EventContext context, RefreshCombatantsRequest event) {
 
@@ -166,7 +166,7 @@ public class ActWsLogSource implements EventSource {
 
 	// TODO: this probably doesn't belong here
 
-	@DisableInTest
+	@LiveOnly
 	@HandleEvents
 	public void sayTts(EventContext context, TtsRequest event) {
 
@@ -181,14 +181,14 @@ public class ActWsLogSource implements EventSource {
 		}
 	}
 
-	@DisableInTest
+	@LiveOnly
 	@HandleEvents
 	public void requestReconnect(EventContext context, ActWsReconnectRequest event) {
 		log.info("Forcing connection closed, should auto-reconnect");
 		doClose();
 	}
 
-	@DisableInTest
+	@LiveOnly
 	@HandleEvents
 	public void reconnectActWs(EventContext context, ActWsDisconnectedEvent event) {
 		log.info("Disconnected, reconnecting");

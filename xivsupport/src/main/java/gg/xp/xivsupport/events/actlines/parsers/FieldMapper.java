@@ -1,11 +1,10 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
-import gg.xp.xivsupport.events.state.XivState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

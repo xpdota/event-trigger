@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.triggers.marks;
 
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.scan.DisableInTest;
+import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
@@ -44,14 +44,14 @@ public class AutoMarkHandler {
 	}
 
 	@HandleEvents
-	@DisableInTest
+	@LiveOnly
 	public void clearMarks(EventContext context, ClearAutoMarkRequest event) {
 		log.info("Clearing marks");
 		clearAutoMark();
 	}
 
 	@HandleEvents
-	@DisableInTest
+	@LiveOnly
 	public void doAutoMark(EventContext context, AutoMarkRequest event) {
 		XivState xivState = context.getStateInfo().get(XivState.class);
 		List<XivPlayerCharacter> partyList = xivState.getPartyList();

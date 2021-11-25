@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.misc.pulls;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
+import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 public class Pull {
 
+	private final int pullNum;
 	private final Event start;
 	private Event combatStart;
 	private Event end;
@@ -26,9 +28,14 @@ public class Pull {
 	private final Map<Long, XivCombatant> enemies = new HashMap<>();
 	// TODO: also hold events? Might be a creative way to prevent pruning on "current" events.
 
-	public Pull(Event start, XivZone zone) {
+	public Pull(int pullNum, Event start, XivZone zone) {
+		this.pullNum = pullNum;
 		this.start = start;
 		this.zone = zone;
+	}
+
+	public int getPullNum() {
+		return pullNum;
 	}
 
 	public @NotNull Event getStart() {
@@ -112,6 +119,9 @@ public class Pull {
 		}
 		if (end instanceof ZoneChangeEvent) {
 			return PullStatus.LEFT_ZONE;
+		}
+		if (end instanceof DebugCommand) {
+			return PullStatus.MANUAL_END;
 		}
 		if (end != null) {
 			return PullStatus.WIPED;

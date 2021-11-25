@@ -5,5 +5,6 @@ public enum PullStatus {
 	COMBAT,
 	WIPED,
 	LEFT_ZONE,
+	MANUAL_END,
 	VICTORY
 }

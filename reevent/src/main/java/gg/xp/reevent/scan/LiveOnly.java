@@ -7,9 +7,10 @@ import java.lang.annotation.Target;
 
 /**
  * Indicates that a particular handler is purely an output, and should be
- * excluded from test environments
+ * excluded from both replays and tests. i.e. we only want them to be used
+ * when running live.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface DisableInTest {
+public @interface LiveOnly {
 }

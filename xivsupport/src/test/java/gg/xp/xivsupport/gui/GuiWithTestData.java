@@ -11,7 +11,10 @@ import org.testng.annotations.Test;
 
 import javax.swing.*;
 
-public class GuiWithTestData {
+public final class GuiWithTestData {
+	private GuiWithTestData() {
+	}
+
 	public static void main(String[] args) {
 		try {
 //			UIManager.setLookAndFeel(new DarculaLaf());
@@ -282,10 +285,4 @@ public class GuiWithTestData {
 		));
 
 	}
-
-	@Ignore
-	@Test
-	private void guiWithTestData() {
-	}
-
 }

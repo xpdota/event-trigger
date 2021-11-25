@@ -1,13 +1,13 @@
 package gg.xp.reevent.scan;
 
 public class AutoHandlerConfig {
-	private boolean isTest;
+	private boolean isNotLive;
 
-	public boolean isTest() {
-		return isTest;
+	public boolean isNotLive() {
+		return isNotLive;
 	}
 
-	public void setTest(boolean test) {
-		isTest = test;
+	public void setNotLive(boolean notLive) {
+		isNotLive = notLive;
 	}
 }

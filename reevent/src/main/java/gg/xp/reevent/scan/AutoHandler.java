@@ -19,7 +19,7 @@ public class AutoHandler implements EventHandler<Event> {
 	private final int order;
 	private final Class<?> clazz;
 	private final AutoHandlerConfig config;
-	private final boolean isDisabledInTests;
+	private final boolean onlyInLive;
 
 	private volatile boolean enabled = true;
 
@@ -54,7 +54,7 @@ public class AutoHandler implements EventHandler<Event> {
 		else {
 			order = 0;
 		}
-		isDisabledInTests = method.isAnnotationPresent(DisableInTest.class) || clazz.isAnnotationPresent(DisableInTest.class);
+		onlyInLive = method.isAnnotationPresent(LiveOnly.class) || clazz.isAnnotationPresent(LiveOnly.class);
 	}
 
 	public int getOrder() {
@@ -106,7 +106,7 @@ public class AutoHandler implements EventHandler<Event> {
 				return;
 			}
 		}
-		if (config.isTest() && isDisabledInTests) {
+		if (config.isNotLive() && onlyInLive) {
 			log.info("Skipping {} because it is disabled for tests", getLongTopoLabel());
 			return;
 		}

@@ -141,7 +141,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 				.collect(Collectors.toList());
 		long after = System.currentTimeMillis();
 		long delta = after - before;
-		if (delta >= 3) {
+		if (delta >= 5) {
 			log.warn("Slow filtering for table {}: took {}ms to filter {} items", title, delta, numberOfThings);
 		}
 		return out;

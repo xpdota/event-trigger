@@ -1,5 +1,6 @@
 package gg.xp.reevent.events;
 
+import gg.xp.xivsupport.events.misc.TimeUtils;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public class BasicEventQueue implements EventQueue {
 		long runAt = event.delayedEnqueueAt();
 		if (runAt == 0 || runAt <= System.currentTimeMillis()) {
 			synchronized (queueLock) {
-				event.setEnqueuedAt(Instant.now());
+				event.setEnqueuedAt(TimeUtils.now());
 				backingQueue.add(new Tracker(event));
 				queueLock.notifyAll();
 			}

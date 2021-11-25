@@ -13,7 +13,7 @@ public class ActWsJsonMsg extends BaseEvent {
 
 	private static final long serialVersionUID = -5830123394422861873L;
 	private final @Nullable String type;
-	private WeakReference<JsonNode> jsonWeakRef;
+	private final WeakReference<JsonNode> jsonWeakRef;
 	private JsonNode json;
 
 	public ActWsJsonMsg(@Nullable String type, JsonNode json) {
@@ -32,9 +32,9 @@ public class ActWsJsonMsg extends BaseEvent {
 	}
 
 	@Override
-	public void setPumpedAt(Instant pumpedAt) {
+	public void setPumpFinishedAt(Instant pumpedAt) {
 		// TODO: should really be a different method
 		json = null;
-		super.setPumpedAt(pumpedAt);
+		super.setPumpFinishedAt(pumpedAt);
 	}
 }

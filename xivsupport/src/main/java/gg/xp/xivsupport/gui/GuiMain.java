@@ -35,6 +35,7 @@ import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventTypeFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
+import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
@@ -45,6 +46,8 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.IntSettingGui;
 import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
@@ -58,6 +61,8 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -115,7 +120,7 @@ public class GuiMain {
 			c.weighty = 0;
 			panel.setAlignmentX(0.5f);
 			panel.add(new JLabel("A Fatal Error Has Occurred"), c);
-			c.gridy ++;
+			c.gridy++;
 			c.weighty = 1;
 			c.fill = GridBagConstraints.BOTH;
 			JTextArea textArea = new JTextArea();
@@ -137,7 +142,7 @@ public class GuiMain {
 			scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 			panel.add(scroll, c);
 			c.weighty = 0;
-			c.gridy ++;
+			c.gridy++;
 			c.fill = GridBagConstraints.NONE;
 			JButton exit = new JButton("Exit");
 			exit.addActionListener(l -> System.exit(1));
@@ -365,50 +370,137 @@ public class GuiMain {
 		}
 	}
 
-	private class AdvancedPanel extends TitleBorderFullsizePanel implements Refreshable {
+	private class AdvancedPanel extends JPanel implements Refreshable {
 		private final KeyValueDisplaySet displayed;
+		private final KeyValueDisplaySet mem;
 
 		public AdvancedPanel() {
-			super("Advanced");
+//			super("Advanced");
+			setLayout(new GridBagLayout());
 
+			GridBagConstraints c = new GridBagConstraints();
+			c.gridx = 0;
+			c.gridy = 0;
+			c.anchor = GridBagConstraints.NORTH;
+			c.weightx = 1;
+			c.weighty = 0;
+			c.fill = GridBagConstraints.HORIZONTAL;
+
+			Stats stats = container.getComponent(Stats.class);
+			RawEventStorage storage = container.getComponent(RawEventStorage.class);
+
+			JPanel statsPanel = new TitleBorderFullsizePanel("Stats");
+			statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
 			JButton refreshButton = new JButton("Refresh");
 			refreshButton.addActionListener(e -> refresh());
-
-			setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-
 			List<KeyValuePairDisplay<?, ?>> leftItems = List.of(
 					new KeyValuePairDisplay<>(
 							"Duration",
 							new JTextArea(1, 15),
-							() -> container.getComponent(Stats.class).getDuration().toString(),
+							() -> stats.getDuration().toString(),
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Total",
 							new JTextArea(1, 15),
-							() -> String.valueOf(container.getComponent(Stats.class).getTotal()),
+							() -> String.valueOf(stats.getTotal()),
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Primo",
 							new JTextArea(1, 15),
-							() -> String.valueOf(container.getComponent(Stats.class).getPrimogenitor()),
+							() -> String.valueOf(stats.getPrimogenitor()),
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Synthetic",
 							new JTextArea(1, 15),
-							() -> String.valueOf(container.getComponent(Stats.class).getSynthetic()),
+							() -> String.valueOf(stats.getSynthetic()),
 							JTextArea::setText
-					));
+					),
+					new KeyValuePairDisplay<>(
+							"In-Memory",
+							new JTextArea(1, 15),
+							() -> String.valueOf(storage.getEvents().size()),
+							JTextArea::setText
+					)
+			);
 			displayed = new KeyValueDisplaySet(leftItems);
-			add(new WrapperPanel(refreshButton));
-			this.add(displayed);
+			statsPanel.add(new WrapperPanel(refreshButton));
+			statsPanel.add(displayed);
+			statsPanel.add(new IntSettingGui(storage.getMaxEventsStoredSetting(), "Max In-Memory Events").getComponent());
+			statsPanel.setPreferredSize(new Dimension(300, 300));
+			add(statsPanel, c);
+
+
+			TitleBorderFullsizePanel memoryPanel = new TitleBorderFullsizePanel("Memory Info");
+			memoryPanel.setLayout(new BoxLayout(memoryPanel, BoxLayout.PAGE_AXIS));
+
+			MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+			List<KeyValuePairDisplay<?, ?>> memoryItems = List.of(
+					new KeyValuePairDisplay<>(
+							"Heap Used",
+							new JTextArea(1, 15),
+							() -> (memoryMXBean.getHeapMemoryUsage().getUsed() >> 20) + "M",
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Heap Committed",
+							new JTextArea(1, 15),
+							() -> (memoryMXBean.getHeapMemoryUsage().getCommitted() >> 20) + "M",
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Heap Max",
+							new JTextArea(1, 15),
+							() -> (memoryMXBean.getHeapMemoryUsage().getMax() >> 20) + "M",
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Other Used",
+							new JTextArea(1, 15),
+							() -> (memoryMXBean.getNonHeapMemoryUsage().getUsed() >> 20) + "M",
+							JTextArea::setText
+					),
+					new KeyValuePairDisplay<>(
+							"Other Committed",
+							new JTextArea(1, 15),
+							() -> (memoryMXBean.getNonHeapMemoryUsage().getCommitted() >> 20) + "M",
+							JTextArea::setText
+					)
+			);
+			JButton forceGcButton = new JButton("Force GC");
+			forceGcButton.addActionListener(l -> {
+				exs.submit(System::gc);
+				exs.submit(() -> SwingUtilities.invokeLater(this::refresh));
+			});
+			memoryPanel.add(new WrapperPanel(forceGcButton));
+			mem = new KeyValueDisplaySet(memoryItems);
+			memoryPanel.add(mem);
+			memoryPanel.setPreferredSize(new Dimension(300, 300));
+			c.gridx++;
+			add(memoryPanel, c);
+
+			JPanel diskStoragePanel = new TitleBorderFullsizePanel("Disk Storage");
+			BooleanSettingGui saveCheckbox = new BooleanSettingGui(storage.getSaveToDisk(), "Save to Disk");
+			diskStoragePanel.setLayout(new BoxLayout(diskStoragePanel, BoxLayout.PAGE_AXIS));
+			diskStoragePanel.add(new WrapperPanel(saveCheckbox.getComponent()));
+			JButton flushButton = new JButton("Flush");
+			flushButton.addActionListener(l -> storage.flushToDisk());
+			diskStoragePanel.add(new WrapperPanel(flushButton));
+			diskStoragePanel.setPreferredSize(new Dimension(300, 150));
+			c.gridx = 0;
+			c.gridy++;
+			c.weighty = 1;
+			add(diskStoragePanel, c);
+
 			refresh();
 		}
 
+		@Override
 		public void refresh() {
 			displayed.refresh();
+			mem.refresh();
 		}
 	}
 
@@ -500,6 +592,7 @@ public class GuiMain {
 				.addMainColumn(StandardColumns.posColumn)
 				.addDetailsColumn(StandardColumns.fieldName)
 				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
@@ -552,6 +645,7 @@ public class GuiMain {
 				}))
 				.addDetailsColumn(StandardColumns.fieldName)
 				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.setSelectionEquivalence(Object::equals)
@@ -569,6 +663,7 @@ public class GuiMain {
 		// TODO: jump to parent button
 		// Main table
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
+		PullTracker pulls = container.getComponent(PullTracker.class);
 		TableWithFilterAndDetails<Event, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", rawStorage::getEvents,
 						currentEvent -> {
 							if (currentEvent == null) {
@@ -611,6 +706,7 @@ public class GuiMain {
 				}))
 				.addDetailsColumn(StandardColumns.fieldName)
 				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				// TODO: time range filter
@@ -620,6 +716,7 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::eventSourceFilter)
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
+				.addFilter(r -> new PullNumberFilter(pulls, r))
 				// TODO: put this everywhere applicable
 				.setAppendOrPruneOnly(true)
 				.build();
@@ -649,6 +746,7 @@ public class GuiMain {
 				.addMainColumn(new CustomColumn<>("Line", ACTLogLineEvent::getLogLine))
 				.addDetailsColumn(StandardColumns.fieldName)
 				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.addFilter(ActLineFilter::new)
@@ -711,6 +809,7 @@ public class GuiMain {
 					}))
 					.addDetailsColumn(StandardColumns.fieldName)
 					.addDetailsColumn(StandardColumns.fieldValue)
+					.addDetailsColumn(StandardColumns.identity)
 					.addDetailsColumn(StandardColumns.fieldType)
 					.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 					.addFilter(LogLevelVisualFilter::new)
@@ -737,27 +836,43 @@ public class GuiMain {
 										.collect(Collectors.toList());
 							}
 						})
-				.addMainColumn(new CustomColumn<>("Zone", e -> e.getZone().getName(), col -> {
+				.addMainColumn(new CustomColumn<>("Number", Pull::getPullNum, col -> {
+					col.setMinWidth(50);
+					col.setMaxWidth(50);
+				}))
+				.addMainColumn(new CustomColumn<>("Zone", p -> p.getZone().getName(), col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addMainColumn(new CustomColumn<>("Status", e -> e.getStatus(), col -> {
+				.addMainColumn(new CustomColumn<>("Status", Pull::getStatus, col -> {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
 					col.setResizable(false);
 				}))
-				.addMainColumn(new CustomColumn<>("Start", e -> e.startTime(), col -> {
+				.addMainColumn(new CustomColumn<>("Start", Pull::startTime, col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addMainColumn(new CustomColumn<>("Duration", e -> e.getCombatDuration(), col -> {
+				.addMainColumn(new CustomColumn<>("Duration", Pull::getCombatDuration, col -> {
 					col.setPreferredWidth(200);
 				}))
 				.addDetailsColumn(StandardColumns.fieldName)
 				.addDetailsColumn(StandardColumns.fieldValue)
+				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 //				.addFilter(LogLevelVisualFilter::new)
 				.setAppendOrPruneOnly(false)
 				.build();
+		new Thread(() -> {
+			while (true) {
+				table.signalNewData();
+				try {
+					Thread.sleep(1000);
+				}
+				catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}).start();
 		return table;
 	}
 
@@ -780,7 +895,7 @@ public class GuiMain {
 					long timeAfter = System.currentTimeMillis();
 					long delta = timeAfter - timeBefore;
 					// TODO find good value for this
-					if (delta > 250) {
+					if (delta > 100) {
 						log.warn("Slow GUI performance: took {}ms to dispatch event {}", delta, event);
 					}
 				}

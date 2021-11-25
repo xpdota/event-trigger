@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -19,6 +20,7 @@ import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.reevent.scan.HandleEvents;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +46,16 @@ public class ActWsHandlers {
 
 	private Thread combatantsLoopThread;
 
+	@LiveOnly
 	@HandleEvents
 	public void startCombatantsLoop(EventContext context, ActWsConnectedEvent connected) {
 		if (combatantsLoopThread == null) {
 			combatantsLoopThread = new Thread(() -> {
 				while (true) {
 					try {
+						// TODO: consider having this refresh rate be dynamic based on things like
+						// number of current combatants, or whether the current zone is a raid, or
+						// whether a pull is actually started.
 						Thread.sleep(1000);
 						master.pushEvent(new RefreshCombatantsRequest());
 					}
@@ -118,7 +124,12 @@ public class ActWsHandlers {
 	@HandleEvents(order = -100)
 	public static void actWsLogLine(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("LogLine".equals(jsonMsg.getType())) {
-			context.enqueue(new ACTLogLineEvent(jsonMsg.getJson().get("rawLine").textValue()));
+			String rawLine = jsonMsg.getJson().get("rawLine").textValue();
+			// Just going to specifically ignore 39-lines since they take up memory and don't do anything the combatants data doesn't do
+			// They're not even guaranteed
+			if (!rawLine.startsWith("39|")) {
+				context.enqueue(new ACTLogLineEvent(rawLine));
+			}
 		}
 	}
 
@@ -181,6 +192,7 @@ public class ActWsHandlers {
 			JsonNode combatantsNode = jsonMsg.getJson().path("combatants");
 			List<RawXivCombatantInfo> combatantMaps = mapper.convertValue(combatantsNode, new TypeReference<>() {
 			});
+			MutableBoolean hasUpdate = new MutableBoolean();
 			List<RawXivCombatantInfo> optimizedCombatantMaps = combatantMaps.stream().map(combatant -> {
 				long id = combatant.getId();
 				if (id == 0xE0000000) {
@@ -194,11 +206,14 @@ public class ActWsHandlers {
 					}
 					else {
 						rawCbtCache.put(id, combatant);
+						hasUpdate.setTrue();
 						return combatant;
 					}
 				}
 			}).filter(Objects::nonNull).collect(Collectors.toList());
-			context.enqueue(new CombatantsUpdateRaw(optimizedCombatantMaps));
+			if (hasUpdate.getValue()) {
+				context.enqueue(new CombatantsUpdateRaw(optimizedCombatantMaps));
+			}
 		}
 	}
 //	@HandleEvents

@@ -2,33 +2,85 @@ package gg.xp.xivsupport.events.misc;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.reevent.scan.LiveOnly;
+import gg.xp.xivsupport.events.debug.DebugCommand;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.IntSetting;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPOutputStream;
 
 public class RawEventStorage {
 
 	private static final Logger log = LoggerFactory.getLogger(RawEventStorage.class);
-	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
+	private static final ExecutorService exs = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder()
+			.daemon(false)
+			.namingPattern("RawEventStorageThread-%d")
+			.uncaughtExceptionHandler((t, e) -> log.error("Uncaught Error", e))
+			.priority(Thread.MIN_PRIORITY)
+			.build());
 
-	private static final int MAX_EVENTS_STORED = 25_000;
-	private static final int EVENTS_TO_PRUNE = 10_000;
+	private final IntSetting maxEventsStored;
+	private final String sessionName;
+	private ObjectOutputStream eventSaveStream;
 	// TODO: cap this or otherwise manage memory
+	private final Object eventsPruneLock = new Object();
 	private List<Event> events = new ArrayList<>();
+	private final BooleanSetting saveToDisk;
+
+	public RawEventStorage(PersistenceProvider persist) {
+		maxEventsStored = new IntSetting(persist, "raw-storage.events-to-retain", 25000);
+		saveToDisk = new BooleanSetting(persist, "raw-storage.save-to-disk", false);
+		sessionName = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			if (eventSaveStream != null) {
+				try {
+					eventSaveStream.flush();
+					eventSaveStream.close();
+				}
+				catch (IOException e) {
+					log.error("Error", e);
+				}
+			}
+		}));
+	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public void storeEvent(EventContext context, Event event) {
 		events.add(event);
-		if (events.size() > MAX_EVENTS_STORED) {
+		int maxEvents = maxEventsStored.get();
+		if (events.size() > maxEvents) {
 			log.info("Pruning events");
-			events = new ArrayList<>(events.subList(EVENTS_TO_PRUNE, events.size()));
+			synchronized (eventsPruneLock) {
+				int demarcation = events.size() / 3;
+				events = new ArrayList<>(events.subList(demarcation, events.size()));
+			}
+			// TODO: shutdown hook, or just stream events directly
 			exs.submit(System::gc);
+		}
+	}
+
+	@LiveOnly
+	@HandleEvents(order = Integer.MAX_VALUE)
+	public void writeEventToDisk(EventContext context, Event event) {
+		if (event.shouldSave() && saveToDisk.get()) {
+			exs.submit(() -> this.saveEventToDisk(event));
 		}
 	}
 
@@ -36,26 +88,54 @@ public class RawEventStorage {
 	public void clear(EventContext context, DebugCommand event) {
 		if ("clear".equals(event.getCommand())) {
 			events = new ArrayList<>();
+			exs.submit(System::gc);
 		}
 	}
 
 	public List<Event> getEvents() {
-		// Trying new thing
+		// Trying new thing - this implementation is safe because we only append to the list
 		return new ProxyForAppendOnlyList<>(events);
+	}
 
-		// I don't really like this - I'd rather not copy the whole thing, but in theory the list could be trimmed
-		// while something still has an open view of the list here
-		// TODO: is this even threadsafe? In theory, it should be (apart from maybe missing the most recent event or two,
-		// because ArrayList.add adds the data *before* incrementing the size.
-//		return new ArrayList<>(events);
-		// TODO: this would be nice to get working, but current implementations don't work for it.
-		// What we need is an append-only list implementation that:
-		// - Supports a read-only subList view
-		// - Does not invalidate iterator state on such views when the mainline list is appended to,
-		//   because the iterator wouldn't see anything new anyway.
-		// Quick and dirty way would be to copy ArrayList, prohibit all modifications other than a simple
-		// add(), and have the sub-list iterator ignore concurrent modifications
-		// Implementation idea: use nested so we never have to copy data on list growing
-//		return Collections.unmodifiableList(events.subList(0, events.size()));
+	public IntSetting getMaxEventsStoredSetting() {
+		return maxEventsStored;
+	}
+
+	private void saveEventToDisk(Event event) {
+		try {
+			if (eventSaveStream == null) {
+				String userDataDir = System.getenv("APPDATA");
+				Path sessionsDir = Paths.get(userDataDir, "triggevent", "sessions", sessionName);
+				File sessionsDirFile = sessionsDir.toFile();
+				sessionsDirFile.mkdirs();
+				if (!sessionsDirFile.exists() && sessionsDirFile.isDirectory()) {
+					log.error("Error saving to disk! Could not make dirs: {}", sessionsDirFile.getAbsolutePath());
+					return;
+				}
+				File file = Paths.get(sessionsDir.toString(), "session.oos.gz").toFile();
+				FileOutputStream fileOutputStream = new FileOutputStream(file, true);
+				GZIPOutputStream compressedOutputStream = new GZIPOutputStream(fileOutputStream);
+				eventSaveStream = new ObjectOutputStream(compressedOutputStream);
+			}
+			eventSaveStream.writeObject(event);
+		}
+		catch (IOException e) {
+			log.error("Error saving to disk!", e);
+		}
+	}
+
+	public void flushToDisk() {
+		if (eventSaveStream != null) {
+			try {
+				eventSaveStream.flush();
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	public BooleanSetting getSaveToDisk() {
+		return saveToDisk;
 	}
 }
