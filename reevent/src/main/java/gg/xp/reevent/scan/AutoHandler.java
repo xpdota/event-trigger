@@ -93,6 +93,8 @@ public class AutoHandler implements EventHandler<Event> {
 		}
 	}
 
+	private boolean warnedAboutTestOnlySkip;
+
 	@Override
 	public void handle(EventContext context, Event event) {
 		if (!enabled) {
@@ -107,7 +109,10 @@ public class AutoHandler implements EventHandler<Event> {
 			}
 		}
 		if (config.isNotLive() && onlyInLive) {
-			log.info("Skipping {} because it is disabled for tests", getLongTopoLabel());
+			if (!warnedAboutTestOnlySkip) {
+				log.info("Skipping {} because it is disabled for tests", getLongTopoLabel());
+				warnedAboutTestOnlySkip = true;
+			}
 			return;
 		}
 		try {

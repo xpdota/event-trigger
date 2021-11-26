@@ -16,6 +16,7 @@ import gg.xp.xivsupport.events.triggers.jails.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.models.XivEntity;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +50,9 @@ public class JailExampleTest {
 			FinalTitanJailsSolvedEvent.class,
 			CalloutEvent.class,
 			TtsRequest.class,
-			AutoMarkRequest.class
+			AutoMarkRequest.class,
+			ClearAutoMarkRequest.class,
+			AutoMarkHandler.KeyPressRequest.class
 	);
 
 	/**
@@ -98,6 +102,8 @@ public class JailExampleTest {
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
 				CalloutEvent.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
 				// TTS
 				TtsRequest.class
 
@@ -132,6 +138,10 @@ public class JailExampleTest {
 		List<TtsRequest> ttsEvents = collector.getEventsOf(TtsRequest.class);
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
+
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+				.collect(Collectors.toList());
+		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
 		Thread.sleep(1200);
@@ -250,7 +260,9 @@ public class JailExampleTest {
 				// Finally, we have the three players that got jailed, but sorted in whatever order (currently just alphabetical)
 				FinalTitanJailsSolvedEvent.class,
 				// Automarks
-				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class
+				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
 		// parent tagged onto it.
@@ -277,6 +289,10 @@ public class JailExampleTest {
 
 		List<CalloutEvent> callouts = collector.getEventsOf(CalloutEvent.class);
 		Assert.assertEquals(callouts.size(), 0);
+
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+				.collect(Collectors.toList());
+		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
 		Thread.sleep(1200);
@@ -408,6 +424,8 @@ public class JailExampleTest {
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
 				CalloutEvent.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
 				// TTS
 				TtsRequest.class
 
@@ -434,6 +452,10 @@ public class JailExampleTest {
 
 		List<AutoMarkRequest> automarks = collector.getEventsOf(AutoMarkRequest.class);
 		Assert.assertEquals(automarks.stream().map(am -> am.getPlayerToMark().getName()).collect(Collectors.toList()), List.of("Random Person", "Some Guy", "Foo Bar"));
+
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+				.collect(Collectors.toList());
+		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
 		List<CalloutEvent> callouts = collector.getEventsOf(CalloutEvent.class);
 		Assert.assertEquals(callouts.size(), 1);
@@ -492,6 +514,8 @@ public class JailExampleTest {
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
 				CalloutEvent.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
 				// TTS
 				TtsRequest.class
 
@@ -518,6 +542,10 @@ public class JailExampleTest {
 
 		List<AutoMarkRequest> automarks = collector.getEventsOf(AutoMarkRequest.class);
 		Assert.assertEquals(automarks.stream().map(am -> am.getPlayerToMark().getName()).collect(Collectors.toList()), List.of("Foo Bar", "Some Guy", "Random Person"));
+
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+				.collect(Collectors.toList());
+		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD1, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD2));
 
 		List<CalloutEvent> callouts = collector.getEventsOf(CalloutEvent.class);
 		Assert.assertEquals(callouts.size(), 1);
@@ -601,6 +629,8 @@ public class JailExampleTest {
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
 				CalloutEvent.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
 				// TTS
 				TtsRequest.class
 
@@ -635,6 +665,10 @@ public class JailExampleTest {
 		List<TtsRequest> ttsEvents = collector.getEventsOf(TtsRequest.class);
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "First");
+
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+				.collect(Collectors.toList());
+		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD1, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD2));
 
 		String sortString = persistence.get("jail-solver.job-order", String.class, null);
 		Assert.assertEquals(sortString, customSort);
@@ -671,6 +705,7 @@ public class JailExampleTest {
 
 		JailSolver jail = container.getComponent(JailSolver.class);
 		jail.getJailClearDelay().set(1000);
+
 
 		return container;
 	}

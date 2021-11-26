@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class XivState implements SubState {
 
@@ -295,5 +296,13 @@ public class XivState implements SubState {
 
 	public List<XivCombatant> getCombatantsListCopy() {
 		return new ArrayList<>(combatantsProcessed.values());
+	}
+
+	public int getPartySlotOf(XivEntity entity) {
+		List<XivPlayerCharacter> partyList = getPartyList();
+		return IntStream.range(0, partyList.size())
+				.filter(i -> partyList.get(i).getId() == entity.getId())
+				.findFirst()
+				.orElse(-1);
 	}
 }

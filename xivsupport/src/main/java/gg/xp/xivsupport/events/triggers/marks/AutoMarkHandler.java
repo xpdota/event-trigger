@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.marks;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.reevent.scan.HandleEvents;
@@ -39,28 +40,45 @@ public class AutoMarkHandler {
 			args.subList(1, args.size())
 					.stream()
 					.mapToInt(Integer::parseInt)
-					.forEach(this::doAutoMarkForSlot);
+					.forEach(i -> doAutoMarkForSlot(context, i));
 		}
 	}
 
 	@HandleEvents
-	@LiveOnly
+//	@LiveOnly
 	public void clearMarks(EventContext context, ClearAutoMarkRequest event) {
 		log.info("Clearing marks");
-		clearAutoMark();
+		clearAutoMark(context);
 	}
 
 	@HandleEvents
-	@LiveOnly
 	public void doAutoMark(EventContext context, AutoMarkRequest event) {
 		XivState xivState = context.getStateInfo().get(XivState.class);
-		List<XivPlayerCharacter> partyList = xivState.getPartyList();
 		XivPlayerCharacter player = event.getPlayerToMark();
-		int index = partyList.indexOf(player);
-		int partySlot = index + 1;
-		log.info("Resolved player {} to party slot {}", player.getName(), partySlot);
-		event.setResolvedPartySlot(partySlot);
-		doAutoMarkForSlot(partySlot);
+		int index = xivState.getPartySlotOf(player);
+		if (index >= 0) {
+			int partySlot = index + 1;
+			log.info("Resolved player {} to party slot {}", player.getName(), partySlot);
+			event.setResolvedPartySlot(partySlot);
+			doAutoMarkForSlot(context, partySlot);
+		}
+		else {
+			log.error("Couldn't resolve player '{}' to party slot", player.getName());
+		}
+	}
+
+	public static final class KeyPressRequest extends BaseEvent {
+		private static final long serialVersionUID = -3520916842042620376L;
+		private final int keyCode;
+
+		// Leaving this private for now - need a way to prevent abuse
+		private KeyPressRequest(int keyCode) {
+			this.keyCode = keyCode;
+		}
+
+		public int getKeyCode() {
+			return keyCode;
+		}
 	}
 
 	// i = 1-8
@@ -80,22 +98,28 @@ public class AutoMarkHandler {
 		else {
 			return KeyEvent.VK_NUMPAD9;
 		}
-
 	}
 
-	private void clearAutoMark() {
+	private void clearAutoMark(EventContext context) {
 		int keyCode = keycodeForClear();
-		pressAndReleaseKey(keyCode);
+		context.accept(new KeyPressRequest(keyCode));
 	}
 
-	private void doAutoMarkForSlot(int i) {
+	private void doAutoMarkForSlot(EventContext context, int i) {
 		int keyCode = keycodeForSlot(i);
-		pressAndReleaseKey(keyCode);
+		context.accept(new KeyPressRequest(keyCode));
+	}
+
+	@LiveOnly
+	@HandleEvents
+	public static void doKeyPress(EventContext context, KeyPressRequest event) {
+		pressAndReleaseKey(event.getKeyCode());
 	}
 
 	private static void pressAndReleaseKey(int keyCode) {
 		exs.submit(() -> {
 			try {
+				log.info("Pressing key {} ({})", keyCode, KeyEvent.getKeyText(keyCode));
 				new Robot().keyPress(keyCode);
 				Thread.sleep(50);
 				new Robot().keyRelease(keyCode);

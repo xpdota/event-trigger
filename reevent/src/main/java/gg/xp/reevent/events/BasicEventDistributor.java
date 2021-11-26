@@ -81,6 +81,9 @@ public class BasicEventDistributor implements EventDistributor {
 			synchronized (handlersLock) {
 				handlersTmp = new ArrayList<>(handlers);
 			}
+			if (handlersTmp.isEmpty()) {
+				log.warn("No handlers!");
+			}
 			handlersTmp.forEach(handler -> {
 				log.trace("Sending event {} to handler {} with {} immediate events", current, handler, eventsForImmediateProcessing.size());
 				AtomicBoolean isDone = new AtomicBoolean();
