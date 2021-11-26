@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// TODO: figure out how to track BRD buffs in a good way
 
 public class DotRefreshReminders {
 
@@ -81,11 +80,8 @@ public class DotRefreshReminders {
 				return false;
 			}
 			Duration timeSinceExpiry = e.getValue().getEstimatedTimeSinceExpiry();
-			if (timeSinceExpiry.isNegative()
-					|| timeSinceExpiry.compareTo(Duration.of(5, ChronoUnit.SECONDS)) > 0) {
-				return true;
-			}
-			return false;
+			return timeSinceExpiry.isNegative()
+					|| timeSinceExpiry.compareTo(Duration.of(5, ChronoUnit.SECONDS)) > 0;
 		});
 	}
 
@@ -100,6 +96,7 @@ public class DotRefreshReminders {
 		}
 	}
 
+	private Instant lastCallout = Instant.now();
 	// Kind of a hack but good enough
 	private Instant lastBrdCallout = Instant.now();
 	private long lastEntityId;
@@ -110,9 +107,9 @@ public class DotRefreshReminders {
 		BuffApplied mostRecentEvent = buffs.get(BuffTrackingKey.of(originalEvent));
 		if (originalEvent == mostRecentEvent) {
 			log.debug("Dot refresh callout still valid");
+			Instant now = Instant.now();
 			// BRD special case
 			if (DotBuff.BRD_CombinedDots.matches(originalEvent.getBuff().getId())) {
-				Instant now = Instant.now();
 				Duration delta = Duration.between(lastBrdCallout, now);
 				long thisEntityId = originalEvent.getTarget().getId();
 				if (delta.toMillis() > 3500 || thisEntityId != lastEntityId) {
@@ -122,7 +119,11 @@ public class DotRefreshReminders {
 				lastEntityId = thisEntityId;
 			}
 			else {
-				context.accept(new CalloutEvent(originalEvent.getBuff().getName()));
+				Duration delta = Duration.between(lastCallout, now);
+				if (delta.toMillis() > 500) {
+					context.accept(new CalloutEvent(originalEvent.getBuff().getName()));
+				}
+				lastCallout = now;
 			}
 		}
 		else {

@@ -58,7 +58,7 @@ public abstract class ResourceBarRenderer implements TableCellRenderer {
 
 			leftPanel.setPreferredSize(new Dimension((int) (width * percent), 10));
 			rightPanel.setPreferredSize(new Dimension((int) (width * (1 - percent)), 10));
-			JLabel label = new JLabel(getText(hp));
+			JLabel label = getLabel(hp, width);
 			leftPanel.add(label);
 			label.setForeground(baseLabel.getForeground());
 
@@ -75,7 +75,12 @@ public abstract class ResourceBarRenderer implements TableCellRenderer {
 
 	protected abstract Color getBarColor(double percent);
 
-	protected String getText(CurrentMaxPair item) {
-		return String.format("%s / %s", item.getCurrent(), item.getMax());
+	protected JLabel getLabel(CurrentMaxPair item, int width) {
+		// Try to do long label, otherwise fall back to short label
+		JLabel longLabel = new JLabel(String.format("%s / %s", item.getCurrent(), item.getMax()));
+		if (longLabel.getPreferredSize().width <= width) {
+			return longLabel;
+		}
+		return new JLabel(String.valueOf(item.getCurrent()));
 	}
 }

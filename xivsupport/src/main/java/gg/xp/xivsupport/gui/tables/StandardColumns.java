@@ -1,15 +1,21 @@
 package gg.xp.xivsupport.gui.tables;
 
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.MpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.StatusEffectsRenderer;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.XivStatusEffect;
 
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StandardColumns {
 
@@ -41,6 +47,14 @@ public class StandardColumns {
 		c.setCellRenderer(new NameJobRenderer());
 		c.setPreferredWidth(100);
 	});
+
+	public static final CustomColumn<XivCombatant> statusEffectsColumn(StatusEffectRepository state) {
+		return new CustomColumn<>("Statuses", entity -> state.statusesOnTarget(entity).stream().map(BuffApplied::getBuff).collect(Collectors.toList()), c -> {
+			c.setCellRenderer(new StatusEffectsRenderer());
+			c.setPreferredWidth(300);
+		});
+	}
+
 
 	public static final CustomColumn<XivCombatant> hpColumn
 			= new CustomColumn<>("HP", XivCombatant::getHp,

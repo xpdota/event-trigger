@@ -14,6 +14,7 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.models.BuffTrackingKey;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class StatusEffectRepository {
 
@@ -70,14 +72,14 @@ public class StatusEffectRepository {
 
 	// TODO: issues with buffs that persist through wipes (like tank stance)
 	@HandleEvents
-	public void wipe(EventContext context, WipeEvent wipe) {
+	public void zoneChange(EventContext context, WipeEvent wipe) {
 		log.debug("Wipe, clearing {} buffs", buffs.size());
 		buffs.clear();
 		context.accept(new XivBuffsUpdatedEvent());
 	}
 
 	@HandleEvents
-	public void wipe(EventContext context, ZoneChangeEvent wipe) {
+	public void zoneChange(EventContext context, ZoneChangeEvent wipe) {
 		log.debug("Zone change, clearing {} buffs", buffs.size());
 		buffs.clear();
 		context.accept(new XivBuffsUpdatedEvent());
@@ -109,5 +111,11 @@ public class StatusEffectRepository {
 
 	public @Nullable BuffApplied get(BuffTrackingKey key) {
 		return buffs.get(key);
+	}
+
+
+	public List<BuffApplied> statusesOnTarget(XivEntity entity)  {
+		long id = entity.getId();
+		return getBuffs().stream().filter(s -> s.getTarget().getId() == id).collect(Collectors.toList());
 	}
 }

@@ -9,6 +9,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
@@ -52,6 +53,7 @@ import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
@@ -76,6 +78,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class GuiMain {
@@ -192,24 +195,41 @@ public class GuiMain {
 			GridBagConstraints c = new GridBagConstraints();
 			c.fill = GridBagConstraints.BOTH;
 			c.anchor = GridBagConstraints.CENTER;
-			c.weightx = 1;
 			c.weighty = 0;
+			c.gridx = 0;
 			c.gridy = 0;
+			c.weightx = 1;
+			c.gridwidth = GridBagConstraints.REMAINDER;
+
 			ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
 			connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
 			add(connectionStatusPanel, c);
-			XivStateStatus xivStateStatus = new XivStateStatus();
-			xivStateStatus.setPreferredSize(new Dimension(100, 250));
+
 			c.gridy++;
+			c.weightx = 0;
+			c.gridwidth = 1;
+			XivStateStatus xivStateStatus = new XivStateStatus();
+			xivStateStatus.setPreferredSize(xivStateStatus.getMinimumSize());
+//			xivStateStatus.setPreferredSize(new Dimension(100, 250));
 			add(xivStateStatus, c);
+
+			c.gridx++;
+			c.weightx = 1;
+			XivPartyPanel xivPartyPanel = new XivPartyPanel();
+			xivPartyPanel.setMinimumSize(new Dimension(1, 215));
+			xivPartyPanel.setPreferredSize(new Dimension(32768, 300));
+			add(xivPartyPanel, c);
 			// filler for alignment
 			CombatantsPanel combatantsPanel = new CombatantsPanel();
+			c.gridwidth = GridBagConstraints.REMAINDER;
+			c.gridx = 0;
 			c.gridy++;
 			c.weighty = 1;
 			add(combatantsPanel, c);
 			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
 			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> xivStateStatus.refresh());
+			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> xivPartyPanel.refresh());
 			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> combatantsPanel.refresh());
 		}
 	}
@@ -247,14 +267,13 @@ public class GuiMain {
 		}
 	}
 
-	private class XivStateStatus extends JPanel implements Refreshable {
+	private class XivStateStatus extends TitleBorderFullsizePanel implements Refreshable {
 
-		private final List<Refreshable> displayed = new ArrayList<>();
-		private final CustomTableModel<XivPlayerCharacter> partyTableModel;
+		private final List<Refreshable> refreshables = new ArrayList<>();
 
 		public XivStateStatus() {
 
-			setLayout(new GridLayout(1, 2));
+			super("Player Status");
 
 			KeyValueDisplaySet leftItems = new KeyValueDisplaySet(List.of(
 					new KeyValuePairDisplay<>(
@@ -303,19 +322,30 @@ public class GuiMain {
 							JLabel::setText
 					)
 			));
-			displayed.add(leftItems);
-			add(new TitleBorderFullsizePanel("Player Status", leftItems));
+			refreshables.add(leftItems);
+			add(leftItems);
 
-			JPanel right = new TitleBorderFullsizePanel("Party Status");
+			refresh();
+		}
+
+		public void refresh() {
+			refreshables.forEach(Refreshable::refresh);
+		}
+	}
+
+	private class XivPartyPanel extends TitleBorderFullsizePanel implements Refreshable {
+
+		private final CustomTableModel<XivPlayerCharacter> partyTableModel;
+
+		public XivPartyPanel() {
+			super("Party Status");
+			setLayout(new BorderLayout());
 			partyTableModel = CustomTableModel.builder(
-//					() -> List.of(new XivPlayerCharacter(123, "Foo Bar", Job.WHM, new XivWorld(), 23, true)))
 							() -> state.get(XivState.class).getPartyList())
-					.addColumn(new CustomColumn<>("Name", XivEntity::getName))
-					.addColumn(StandardColumns.jobOnlyColumn)
-					// TODO: seeing custom renderer here does not work, because this would normally be read by
-					// TableWithFilterAndDetails, but that isn't in use here.
+					.addColumn(StandardColumns.nameJobColumn)
+					.addColumn(StandardColumns.statusEffectsColumn(container.getComponent(StatusEffectRepository.class)))
 					.addColumn(StandardColumns.hpColumn)
-					.addColumn(StandardColumns.entityIdColumn)
+					.addColumn(StandardColumns.mpColumn)
 					.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable partyMembersTable = new JTable(8, 3);
@@ -323,15 +353,14 @@ public class GuiMain {
 
 			partyMembersTable.setModel(partyTableModel);
 			partyTableModel.configureColumns(partyMembersTable);
-			right.setLayout(new BorderLayout());
+//			right.setLayout(new BorderLayout());
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
-			right.add(scrollPane);
-			add(right);
+			add(scrollPane);
+//			add(right);
 			refresh();
 		}
 
 		public void refresh() {
-			displayed.forEach(Refreshable::refresh);
 			partyTableModel.fullRefresh();
 		}
 	}
@@ -349,7 +378,6 @@ public class GuiMain {
 									.filter(XivCombatant::isCombative)
 									.sorted(Comparator.comparing(XivEntity::getId))
 									.collect(Collectors.toList()))
-					.addColumn(StandardColumns.entityIdColumn)
 					.addColumn(StandardColumns.nameJobColumn)
 					.addColumn(StandardColumns.parentNameJobColumn)
 					.addColumn(StandardColumns.combatantTypeColumn)
@@ -357,6 +385,7 @@ public class GuiMain {
 					.addColumn(StandardColumns.hpColumn)
 					.addColumn(StandardColumns.mpColumn)
 					.addColumn(StandardColumns.posColumn)
+					.addColumn(StandardColumns.entityIdColumn)
 					.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable table = new JTable(combatantsTableModel);
@@ -568,6 +597,7 @@ public class GuiMain {
 		// TODO: jump to parent button
 		// Main table
 		XivState state = container.getComponent(XivState.class);
+		StatusEffectRepository statuses = container.getComponent(StatusEffectRepository.class);
 		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Combatants",
 						() -> state.getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
 						combatant -> {
@@ -584,6 +614,7 @@ public class GuiMain {
 						})
 				.addMainColumn(StandardColumns.entityIdColumn)
 				.addMainColumn(StandardColumns.nameJobColumn)
+				.addMainColumn(StandardColumns.statusEffectsColumn(statuses))
 				.addMainColumn(StandardColumns.parentNameJobColumn)
 				.addMainColumn(StandardColumns.combatantTypeColumn)
 				.addMainColumn(StandardColumns.combatantRawTypeColumn)
@@ -608,6 +639,8 @@ public class GuiMain {
 				.build();
 		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalNewData());
+		master.getDistributor().registerHandler(BuffApplied.class, (ctx, e) -> table.signalNewData());
+		master.getDistributor().registerHandler(BuffRemoved.class, (ctx, e) -> table.signalNewData());
 		return table;
 
 	}
