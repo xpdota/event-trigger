@@ -41,6 +41,7 @@ public class DotRefreshReminderTest {
 		dist.registerHandler(coll);
 
 		DotRefreshReminders dots = container.getComponent(DotRefreshReminders.class);
+		dots.suppressSpamCallouts = false;
 		dots.getDotRefreshAdvance().set(8000);
 
 		// My dot

@@ -33,6 +33,8 @@ public class DotRefreshReminders {
 	private final LongSetting dotRefreshAdvance;
 	private final Map<DotBuff, BooleanSetting> enabledDots = new LinkedHashMap<>();
 	private final StatusEffectRepository buffs;
+	// TODO: make this a real setting
+	boolean suppressSpamCallouts = true;
 
 	public DotRefreshReminders(StatusEffectRepository buffs, PersistenceProvider persistence) {
 		this.buffs = buffs;
@@ -119,8 +121,7 @@ public class DotRefreshReminders {
 				lastEntityId = thisEntityId;
 			}
 			else {
-				Duration delta = Duration.between(lastCallout, now);
-				if (delta.toMillis() > 500) {
+				if (!suppressSpamCallouts || Duration.between(lastCallout, now).toMillis() > 500) {
 					context.accept(new CalloutEvent(originalEvent.getBuff().getName()));
 				}
 				lastCallout = now;
