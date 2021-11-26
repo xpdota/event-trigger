@@ -6,7 +6,7 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import javax.swing.*;
 import java.awt.*;
 
-@ScanMe
+//@ScanMe
 public class ExampleOverlay extends XivOverlay {
 
 	public ExampleOverlay(PersistenceProvider persistence) {

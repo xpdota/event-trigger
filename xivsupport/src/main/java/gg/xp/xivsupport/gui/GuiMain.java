@@ -209,6 +209,7 @@ public class GuiMain {
 			c.weightx = 0;
 			c.gridwidth = 1;
 			XivStateStatus xivStateStatus = new XivStateStatus();
+			xivStateStatus.setMinimumSize(new Dimension(200, 200));
 			xivStateStatus.setPreferredSize(xivStateStatus.getMinimumSize());
 //			xivStateStatus.setPreferredSize(new Dimension(100, 250));
 			add(xivStateStatus, c);
