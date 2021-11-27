@@ -290,6 +290,23 @@ public class XivState implements SubState {
 		recalcState();
 	}
 
+	public void setSpecificCombatants(List<RawXivCombatantInfo> combatants) {
+		Map<Long, RawXivCombatantInfo> combatantsRaw = new HashMap<>(this.combatantsRaw.size() + combatants.size());
+		combatantsRaw.putAll(this.combatantsRaw);
+		combatants.forEach(combatant -> {
+			long id = combatant.getId();
+			// Fake/environment actors
+			// TODO: should we still be doing this?
+			if (id == 0xE0000000L) {
+				return;
+			}
+			combatantsRaw.put(id, combatant);
+		});
+		log.trace("Received info on {} combatants", combatants.size());
+		this.combatantsRaw = combatantsRaw;
+		recalcState();
+	}
+
 	public Map<Long, XivCombatant> getCombatants() {
 		return Collections.unmodifiableMap(combatantsProcessed);
 	}

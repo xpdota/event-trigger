@@ -107,4 +107,13 @@ public class PullTracker implements SubState {
 	public Pull getPull(int pullNum) {
 		return pulls.stream().filter(p -> p.getPullNum() == pullNum).findFirst().orElse(null);
 	}
+
+	public PullStatus getCurrentStatus() {
+		if (currentPull == null) {
+			return PullStatus.PRE_PULL;
+		}
+		else {
+			return currentPull.getStatus();
+		}
+	}
 }

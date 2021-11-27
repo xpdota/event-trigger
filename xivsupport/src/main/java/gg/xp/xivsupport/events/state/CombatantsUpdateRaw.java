@@ -12,9 +12,15 @@ public class CombatantsUpdateRaw extends BaseEvent {
 
 	private static final long serialVersionUID = 6485573030632033688L;
 	private final List<RawXivCombatantInfo> combatantMaps;
+	private final boolean fullRefresh;
 
-	public CombatantsUpdateRaw(List<RawXivCombatantInfo> combatantMaps) {
+	public CombatantsUpdateRaw(List<RawXivCombatantInfo> combatantMaps, boolean fullRefresh) {
 		this.combatantMaps = combatantMaps;
+		this.fullRefresh = fullRefresh;
+	}
+
+	public boolean isFullRefresh() {
+		return fullRefresh;
 	}
 
 	public List<RawXivCombatantInfo> getCombatantMaps() {

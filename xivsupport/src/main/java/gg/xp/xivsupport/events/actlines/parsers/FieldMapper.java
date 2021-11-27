@@ -8,7 +8,10 @@ import gg.xp.xivsupport.models.XivStatusEffect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 public class FieldMapper<K extends Enum<K>> {
@@ -17,13 +20,13 @@ public class FieldMapper<K extends Enum<K>> {
 
 	private final Map<K, String> raw;
 	private final EventContext context;
-	private final boolean ignoreEntityLookupMiss;
-	private boolean flagForCombatantUpdate;
+	private final EntityLookupMissBehavior entityLookupMissBehavior;
+	private final List<Long> combatantsToUpdate = new ArrayList<>();
 
-	public FieldMapper(Map<K, String> raw, EventContext context, boolean ignoreEntityLookupMiss) {
+	public FieldMapper(Map<K, String> raw, EventContext context, EntityLookupMissBehavior entityLookupMissBehavior) {
 		this.raw = new EnumMap<>(raw);
 		this.context = context;
-		this.ignoreEntityLookupMiss = ignoreEntityLookupMiss;
+		this.entityLookupMissBehavior = entityLookupMissBehavior;
 	}
 
 	public String getString(K key) {
@@ -66,15 +69,17 @@ public class FieldMapper<K extends Enum<K>> {
 			if (id == 0xE0000000L) {
 				return XivCombatant.ENVIRONMENT;
 			}
-			if (!ignoreEntityLookupMiss) {
-				flagForCombatantUpdate = true;
-				log.warn("Did not find combatant info for id {} name '{}', guessing", Long.toString(id, 16), name);
+			switch (entityLookupMissBehavior) {
+				case GET_AND_WARN:
+					log.warn("Did not find combatant info for id {} name '{}', guessing", Long.toString(id, 16), name);
+				case GET:
+					combatantsToUpdate.add(id);
 			}
 			return new XivCombatant(id, name);
 		}
 	}
 
-	public boolean isFlaggedForCombatantUpdate() {
-		return flagForCombatantUpdate;
+	public List<Long> getCombatantsToUpdate() {
+		return Collections.unmodifiableList(combatantsToUpdate);
 	}
 }

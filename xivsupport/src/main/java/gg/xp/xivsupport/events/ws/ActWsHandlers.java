@@ -4,22 +4,25 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gg.xp.reevent.scan.LiveOnly;
-import gg.xp.xivsupport.events.ACTLogLineEvent;
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.reevent.scan.LiveOnly;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
-import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
-import gg.xp.xivsupport.models.XivEntity;
-import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.events.misc.pulls.PullStatus;
+import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.CombatantsUpdateRaw;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
-import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
+import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivEntity;
+import gg.xp.xivsupport.models.XivZone;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ActWsHandlers {
@@ -35,9 +39,13 @@ public class ActWsHandlers {
 	private static final Logger log = LoggerFactory.getLogger(ActWsHandlers.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 	private final EventMaster master;
+	private final XivState state;
+	private final PullTracker pulls;
 
-	public ActWsHandlers(EventMaster master) {
+	public ActWsHandlers(EventMaster master, XivState state, PullTracker pulls) {
 		this.master = master;
+		this.state = state;
+		this.pulls = pulls;
 	}
 
 	// Memory saving hacks
@@ -56,8 +64,19 @@ public class ActWsHandlers {
 						// TODO: consider having this refresh rate be dynamic based on things like
 						// number of current combatants, or whether the current zone is a raid, or
 						// whether a pull is actually started.
-						Thread.sleep(1000);
+						Thread.sleep(250);
 						master.pushEvent(new RefreshCombatantsRequest());
+						for (int i = 0; i < 15; i++) {
+							Thread.sleep(250);
+							Set<Long> fastRefreshEntities = state.getPartyList().stream().map(XivEntity::getId).collect(Collectors.toSet());
+							if (pulls.getCurrentStatus() == PullStatus.COMBAT) {
+								state.getCombatantsListCopy().stream()
+										.filter(XivCombatant::isCombative)
+										.map(XivCombatant::getId)
+										.forEach(fastRefreshEntities::add);
+							}
+							master.pushEvent(new RefreshSpecificCombatantsRequest(fastRefreshEntities));
+						}
 					}
 					catch (Throwable t) {
 						log.error("Error", t);
@@ -90,6 +109,7 @@ public class ActWsHandlers {
 		// Subscribed messages have a 'type' field that lets us know what it is.
 		// Responses instead have an 'rseq' field that lets us match up the response to the request.
 		JsonNode rseqNode = jsonNode.path("rseq");
+		Object rseqObj = mapper.convertValue(rseqNode, Object.class);
 		if (!rseqNode.isMissingNode()) {
 			// Null response - TODO try to match it up with the rseq
 			if (!jsonNode.path("$isNull").isMissingNode()) {
@@ -104,7 +124,7 @@ public class ActWsHandlers {
 			}
 			else {
 				// Just fake the type
-				ActWsJsonMsg actWsJsonMsg = new ActWsJsonMsg("combatants", jsonNode);
+				ActWsJsonMsg actWsJsonMsg = new ActWsJsonMsg("combatants", rseqObj, jsonNode);
 				context.accept(actWsJsonMsg);
 			}
 			return;
@@ -117,7 +137,7 @@ public class ActWsHandlers {
 		else {
 			type = null;
 		}
-		ActWsJsonMsg actWsJsonMsg = new ActWsJsonMsg(type, jsonNode);
+		ActWsJsonMsg actWsJsonMsg = new ActWsJsonMsg(type, rseqObj, jsonNode);
 		context.accept(actWsJsonMsg);
 	}
 
@@ -190,6 +210,7 @@ public class ActWsHandlers {
 	public void actWsCombatants(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("combatants".equals(jsonMsg.getType())) {
 			JsonNode combatantsNode = jsonMsg.getJson().path("combatants");
+			boolean fullRefresh = "allCombatants".equals(jsonMsg.getRseq());
 			List<RawXivCombatantInfo> combatantMaps = mapper.convertValue(combatantsNode, new TypeReference<>() {
 			});
 			MutableBoolean hasUpdate = new MutableBoolean();
@@ -212,7 +233,7 @@ public class ActWsHandlers {
 				}
 			}).filter(Objects::nonNull).collect(Collectors.toList());
 			if (hasUpdate.getValue()) {
-				context.enqueue(new CombatantsUpdateRaw(optimizedCombatantMaps));
+				context.enqueue(new CombatantsUpdateRaw(optimizedCombatantMaps, fullRefresh));
 			}
 		}
 	}

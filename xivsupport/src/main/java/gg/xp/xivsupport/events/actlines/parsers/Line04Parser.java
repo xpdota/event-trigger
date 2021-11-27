@@ -24,7 +24,7 @@ public class Line04Parser extends AbstractACTLineParser<Line04Parser.Fields> {
 	}
 
 	@Override
-	protected boolean shouldIgnoreEntityLookupMisses() {
-		return true;
+	protected EntityLookupMissBehavior entityLookupMissBehavior() {
+		return EntityLookupMissBehavior.IGNORE;
 	}
 }

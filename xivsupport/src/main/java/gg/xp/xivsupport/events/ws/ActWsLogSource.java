@@ -7,10 +7,11 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.EventSource;
-import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
+import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import gg.xp.xivsupport.speech.TtsRequest;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.java_websocket.client.WebSocketClient;
@@ -19,11 +20,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 // TODO: EventSource interface
 public class ActWsLogSource implements EventSource {
@@ -87,8 +90,6 @@ public class ActWsLogSource implements EventSource {
 			// TODO: there does not seem to be a non-cactbot alternative to this
 			send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"LogLine\"]}");
-			// This comes from Cact, but Cact is just using the 40000010
-//			send("{\"call\":\"subscribe\",\"events\":[\"onPartyWipe\"]}");
 			log.info("Subscribed to WS events");
 		}
 	}
@@ -125,43 +126,15 @@ public class ActWsLogSource implements EventSource {
 	@LiveOnly
 	@HandleEvents
 	public void getCombatants(EventContext context, RefreshCombatantsRequest event) {
+		client.send(allCbtRequest);
+	}
 
-		try {
-			client.send(mapper.writeValueAsString(
-					Map.ofEntries(
-							Map.entry("call", "getCombatants"),
-							Map.entry("rseq", rseqCounter.get()),
-							Map.entry("props", new String[]{
-									"CurrentWorldID",
-									"WorldID",
-									"WorldName",
-									"BNpcID",
-									"BNpcNameID",
-									"PartyType",
-									"ID",
-									"OwnerID",
-									"type",
-									"Job",
-									"Level",
-									"Name",
-									"CurrentHP",
-									"MaxHP",
-									"CurrentMP",
-									"MaxMP",
-									"CurrentCP",
-									"MaxCP",
-									"CurrentGP",
-									"MaxGP",
-									"PosX",
-									"PosY",
-									"PosZ",
-									"Heading"
-							})
-					)));
-		}
-		catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
+	@LiveOnly
+	@HandleEvents
+	public void getCombatant(EventContext context, RefreshSpecificCombatantsRequest event) {
+		// Trying to do this to avoid some overhead, not sure if it's actually better
+		String myRequest = specificCbtRequestTemplate.replaceAll("123456", event.getCombatants().stream().map(Object::toString).collect(Collectors.joining(", ")));
+		client.send(myRequest);
 	}
 
 	// TODO: this probably doesn't belong here
@@ -269,5 +242,78 @@ public class ActWsLogSource implements EventSource {
 		doOpen();
 	}
 
+	private static final String allCbtRequest;
+	private static final String specificCbtRequestTemplate;
+
+	static {
+		try {
+			allCbtRequest = mapper.writeValueAsString(
+					Map.ofEntries(
+							Map.entry("call", "getCombatants"),
+							Map.entry("rseq", "allCombatants"),
+							Map.entry("props", new String[]{
+									"CurrentWorldID",
+									"WorldID",
+									"WorldName",
+									"BNpcID",
+									"BNpcNameID",
+									"PartyType",
+									"ID",
+									"OwnerID",
+									"type",
+									"Job",
+									"Level",
+									"Name",
+									"CurrentHP",
+									"MaxHP",
+									"CurrentMP",
+									"MaxMP",
+									"CurrentCP",
+									"MaxCP",
+									"CurrentGP",
+									"MaxGP",
+									"PosX",
+									"PosY",
+									"PosZ",
+									"Heading"
+							})
+					));
+			specificCbtRequestTemplate = mapper.writeValueAsString(
+					Map.ofEntries(
+							Map.entry("call", "getCombatants"),
+							Map.entry("rseq", "specificCombatants"),
+							Map.entry("ids", List.of(123456)),
+							Map.entry("props", new String[]{
+									"CurrentWorldID",
+									"WorldID",
+									"WorldName",
+									"BNpcID",
+									"BNpcNameID",
+									"PartyType",
+									"ID",
+									"OwnerID",
+									"type",
+									"Job",
+									"Level",
+									"Name",
+									"CurrentHP",
+									"MaxHP",
+									"CurrentMP",
+									"MaxMP",
+									"CurrentCP",
+									"MaxCP",
+									"CurrentGP",
+									"MaxGP",
+									"PosX",
+									"PosY",
+									"PosZ",
+									"Heading"
+							})
+					));
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException("Could not build JSON request", e);
+		}
+	}
 
 }

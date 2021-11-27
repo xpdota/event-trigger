@@ -8,12 +8,15 @@ import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.reevent.scan.HandleEvents;
 
+import java.util.Collections;
+
 @SuppressWarnings("UtilityClassWithoutPrivateConstructor")
 public final class TrackStateChanges {
 
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public static void zoneChange(EventContext context, ZoneChangeEvent event) {
 		context.getStateInfo().get(XivState.class).setZone(event.getZone());
+		context.accept(new RefreshCombatantsRequest());
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
@@ -25,7 +28,7 @@ public final class TrackStateChanges {
 
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public static void combatantAdded(EventContext context, RawAddCombatantEvent event) {
-		context.accept(new RefreshCombatantsRequest());
+		context.accept(new RefreshSpecificCombatantsRequest(Collections.singletonList(event.getEntity().getId())));
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
@@ -40,7 +43,12 @@ public final class TrackStateChanges {
 
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public static void combatants(EventContext context, CombatantsUpdateRaw event) {
-		context.getStateInfo().get(XivState.class).setCombatants(event.getCombatantMaps());
+		if (event.isFullRefresh()) {
+			context.getStateInfo().get(XivState.class).setCombatants(event.getCombatantMaps());
+		}
+		else {
+			context.getStateInfo().get(XivState.class).setSpecificCombatants(event.getCombatantMaps());
+		}
 	}
 
 }

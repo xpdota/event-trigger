@@ -3,8 +3,8 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.ZonedDateTime;
@@ -57,7 +57,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				out.put(groups.get(i), splits[i + 2]);
 			}
 			ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
-			FieldMapper<F> mapper = new FieldMapper<>(out, context, shouldIgnoreEntityLookupMisses());
+			FieldMapper<F> mapper = new FieldMapper<>(out, context, entityLookupMissBehavior());
 			Event outgoingEvent;
 			try {
 				outgoingEvent = convert(mapper, lineNumber, zdt);
@@ -65,9 +65,9 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 			catch (Throwable t) {
 				throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
 			}
-			if (mapper.isFlaggedForCombatantUpdate()) {
-				context.accept(new RefreshCombatantsRequest());
-			}
+			mapper.getCombatantsToUpdate().forEach(id -> {
+				context.accept(new RefreshSpecificCombatantsRequest(List.of(id)));
+			});
 			if (outgoingEvent != null) {
 				outgoingEvent.setHappenedAt(zdt.toInstant());
 				context.accept(outgoingEvent);
@@ -78,7 +78,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	// TODO: consider other ways of handling line number + timestamp
 	protected abstract @Nullable Event convert(FieldMapper<F> fields, int lineNumber, ZonedDateTime time);
 
-	protected boolean shouldIgnoreEntityLookupMisses() {
-		return false;
+	protected EntityLookupMissBehavior entityLookupMissBehavior() {
+		return EntityLookupMissBehavior.GET_AND_WARN;
 	}
 }

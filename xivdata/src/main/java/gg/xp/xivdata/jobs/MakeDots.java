@@ -1,53 +1,25 @@
 package gg.xp.xivdata.jobs;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.json.JsonReadFeature;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class MakeData {
-	private static final Logger log = LoggerFactory.getLogger(MakeData.class);
+public final class MakeDots {
+	private static final Logger log = LoggerFactory.getLogger(MakeDots.class);
+
+	private MakeDots() {
+	}
 
 	public static void main(String[] args) throws IOException, URISyntaxException {
-		// Kind of bad
-		List<String> lines = Files.readAllLines(Path.of(MakeData.class.getResource("/abilities.js").toURI()));
-		String wholeString = lines.stream().map(line -> {
-					if (line.startsWith("var")) {
-						return "[";
-					}
-//				.replaceAll(" //(.*)", "")
-					return line
-//							.replaceAll("order: (\\d+),", "order: $1")
-//							.replaceFirst("([a-zA-Z].+): ", "\"$1\": ")
-							;
-				}
-		).collect(Collectors.joining("\n"));
 
-
-		ObjectMapper mapper = JsonMapper.builder()
-				.enable(JsonParser.Feature.ALLOW_COMMENTS)
-				.enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
-				.enable(JsonReadFeature.ALLOW_TRAILING_COMMA)
-				.build();
-
-		JsonNode tree = mapper.readTree(wholeString);
-		List<Map<String, Object>> maps = mapper.convertValue(tree, new TypeReference<>() {
-
-		});
+		List<Map<String, Object>> maps = ReadData.readData();
 
 		List<Map<String, Object>> out = maps.stream()
 				.filter(m -> m.get("type").equals("DoT"))

@@ -9,7 +9,7 @@ import java.awt.*;
 public class DotBarRenderer extends ResourceBarRenderer {
 
 	private static final Color colorExpired = new Color(255, 0, 0);
-	private static final Color colorGood = new Color(81, 143, 162);
+	private static final Color colorGood = new Color(79, 211, 255);
 	private final JLabel label = new JLabel();
 
 	@Override

@@ -13,11 +13,13 @@ public class ActWsJsonMsg extends BaseEvent {
 
 	private static final long serialVersionUID = -5830123394422861873L;
 	private final @Nullable String type;
+	private final Object rseq;
 	private final WeakReference<JsonNode> jsonWeakRef;
 	private JsonNode json;
 
-	public ActWsJsonMsg(@Nullable String type, JsonNode json) {
+	public ActWsJsonMsg(@Nullable String type, @Nullable Object rseq, JsonNode json) {
 		this.type = type;
+		this.rseq = rseq;
 		jsonWeakRef = new WeakReference<>(json);
 		this.json = json;
 	}
@@ -36,5 +38,9 @@ public class ActWsJsonMsg extends BaseEvent {
 		// TODO: should really be a different method
 		json = null;
 		super.setPumpFinishedAt(pumpedAt);
+	}
+
+	public @Nullable Object getRseq() {
+		return rseq;
 	}
 }

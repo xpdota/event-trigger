@@ -229,9 +229,21 @@ public class GuiMain {
 			add(combatantsPanel, c);
 			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
-			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> xivStateStatus.refresh());
-			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> xivPartyPanel.refresh());
-			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> combatantsPanel.refresh());
+			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> {
+				xivStateStatus.refresh();
+				xivPartyPanel.refresh();
+				combatantsPanel.refresh();
+			});
+			master.getDistributor().registerHandler(BuffApplied.class, (ctx, e) -> {
+				xivStateStatus.refresh();
+				xivPartyPanel.refresh();
+				combatantsPanel.refresh();
+			});
+			master.getDistributor().registerHandler(BuffRemoved.class, (ctx, e) -> {
+				xivStateStatus.refresh();
+				xivPartyPanel.refresh();
+				combatantsPanel.refresh();
+			});
 		}
 	}
 

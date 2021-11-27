@@ -20,11 +20,10 @@ public class Line03Parser extends AbstractACTLineParser<Line03Parser.Fields> {
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		// TODO: some kind of @Disable annotation
 		return new RawAddCombatantEvent(fields.getEntity(Fields.id, Fields.name));
-//		return new PlayerChangeEvent(new XivEntity(fields.getHex(Fields.id), fields.getString(Fields.name)));
 	}
 
 	@Override
-	protected boolean shouldIgnoreEntityLookupMisses() {
-		return true;
+	protected EntityLookupMissBehavior entityLookupMissBehavior() {
+		return EntityLookupMissBehavior.GET;
 	}
 }
