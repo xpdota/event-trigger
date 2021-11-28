@@ -1,10 +1,8 @@
 package gg.xp.xivsupport.events;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
-import gg.xp.xivsupport.events.triggers.jails.FinalTitanJailsSolvedEvent;
-import gg.xp.xivsupport.models.XivEntity;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;
@@ -13,10 +11,8 @@ import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ScanTest {
-	@Ignore // covered by other tests now
 	@Test
 	public void testAutoScan() {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
@@ -25,20 +21,7 @@ public class ScanTest {
 		dist.registerHandler(collector);
 		// Send events
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|106D41EA|Some Player|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
-//		Assert.assertEquals(collector.getEvents().size(), 2);
-		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|106D41EA|Other Player|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
-//		Assert.assertEquals(collector.getEvents().size(), 4);
-		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|106D41EA|Third Player|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
-
-		List<Event> finalEvents = collector.getEvents();
-		List<FinalTitanJailsSolvedEvent> collect = finalEvents.stream()
-				.filter(FinalTitanJailsSolvedEvent.class::isInstance)
-				.map(FinalTitanJailsSolvedEvent.class::cast)
-				.collect(Collectors.toList());
-		Assert.assertEquals(collect.size(), 1);
-		List<? extends XivEntity> jailedPlayers = collect.get(0).getJailedPlayers();
-
-		Assert.assertEquals(jailedPlayers.stream().map(XivEntity::getName).collect(Collectors.toList()), List.of("Other Player", "Some Player", "Third Player"));
+		Assert.assertEquals(collector.getEventsOf(AbilityUsedEvent.class).size(), 1);
 	}
 
 	@Test

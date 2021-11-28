@@ -11,6 +11,7 @@ import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;

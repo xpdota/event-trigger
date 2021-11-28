@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface HandleEvents {
 	int order() default 0;
+	String name() default "";
 }

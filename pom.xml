@@ -34,5 +34,7 @@
         <module>xivsupport</module>
         <module>deps</module>
         <module>xivdata</module>
+        <module>launcher</module>
+        <module>triggers</module>
     </modules>
 </project>

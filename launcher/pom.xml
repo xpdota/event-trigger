@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>newtrig</artifactId>
+        <groupId>gg.xp</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>launcher</artifactId>
+
+    <properties>
+        <mainClass>gg.xp.xivsupport.gui.GuiLaunch</mainClass>
+    </properties>
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>runtime</includeScope>
+                            <outputDirectory>target/windows/deps</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+<!--                    <execution>-->
+<!--                        <id>fat-jar</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>single</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <archive>-->
+<!--                                <manifest>-->
+<!--                                    <mainClass>${mainClass}</mainClass>-->
+<!--                                </manifest>-->
+<!--                            </archive>-->
+<!--                            <descriptorRefs>-->
+<!--                                <descriptorRef>jar-with-dependencies</descriptorRef>-->
+<!--                            </descriptorRefs>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+                    <execution>
+                        <id>zip-file-no-jre</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/bin.xml</descriptor>
+                            </descriptors>
+                            <finalName>triggevent-win</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>zip-file</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/bin-no-jre.xml</descriptor>
+                            </descriptors>
+                            <finalName>triggevent-win-byoj</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>copy-jar</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>launcher-1.0-SNAPSHOT.jar</includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-jre</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows/jre</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${java.home}</directory>
+                                </resource>
+                            </resources>
+
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <id>l4j-gui</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <chdir>.</chdir>
+                            <downloadUrl>https://www.oracle.com/java/technologies/downloads/#jdk17-windows</downloadUrl>
+
+                            <singleInstance>
+                                <mutexName>triggevent</mutexName>
+                                <windowTitle>Triggevent</windowTitle>
+                            </singleInstance>
+                            <headerType>gui</headerType>
+                            <outfile>target/windows/triggevent.exe</outfile>
+                            <!--                            <jar>target/xivsupport-${version}-jar-with-dependencies.jar</jar>-->
+                            <jar>./launcher-${project.version}.jar</jar>
+                            <errTitle>Triggevent</errTitle>
+                            <dontWrapJar>true</dontWrapJar>
+
+                            <classPath>
+                                <mainClass>${mainClass}</mainClass>
+                                <addDependencies>false</addDependencies>
+                                <!--                                <preCp>anything</preCp>-->
+                                <!--                                <postCp>../deps</postCp>-->
+                                <postCp>./deps/*.jar</postCp>
+                                <!--                                <postCp>./deps</postCp>-->
+                            </classPath>
+                            <jre>
+                                <path>jre</path>
+                                <minVersion>${java.version}</minVersion>
+                                <!--                                <opts>-->
+                                <!--                                    <opt>-Djava.endorsed.dirs=./endorsed</opt>-->
+                                <!--                                </opts>-->
+                            </jre>
+                            <versionInfo>
+                                <fileVersion>1.0.0.0</fileVersion>
+                                <txtFileVersion>txt file version</txtFileVersion>
+                                <fileDescription>description</fileDescription>
+                                <copyright>2021</copyright>
+                                <productVersion>1.0.0.0</productVersion>
+                                <txtProductVersion>1.0.0.0</txtProductVersion>
+                                <productName>Triggevent</productName>
+                                <internalName>triggevent</internalName>
+                                <originalFilename>original.exe</originalFilename>
+                            </versionInfo>
+                            <messages>
+                                <bundledJreErr>You need to download Java version 11 or higher, or download the version
+                                    of Triggevent with bundled Java.
+                                </bundledJreErr>
+                                <jreVersionErr>You need to download Java version 11 or higher, or download the version
+                                    of Triggevent with bundled Java.
+                                </jreVersionErr>
+                            </messages>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>xivsupport</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>triggers</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+</project>

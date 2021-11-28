@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.gui.tables;
 
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
-import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
@@ -11,7 +10,6 @@ import gg.xp.xivsupport.gui.tables.renderers.StatusEffectsRenderer;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
-import gg.xp.xivsupport.models.XivStatusEffect;
 
 import java.lang.reflect.Field;
 import java.util.Map;

@@ -6,7 +6,6 @@ import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.triggers.jails.ClearAutoMarkRequest;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;

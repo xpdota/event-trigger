@@ -62,6 +62,10 @@ public class CdTrackerGui implements PluginTab {
 		c.anchor = GridBagConstraints.CENTER;
 		c.ipadx = 50;
 		c.gridy = 0;
+		// TODO: idea for how to do separate TTS/visual plus icons
+		// Instead of one checkbox per ability, just have one for TTS, and one for visual, and then
+		// have a label with icon and text.
+		// Alternatively, have a table with a bunch of checkbox columns
 		jobTypeKeys.forEach((job) -> {
 			List<Cooldown> cooldownsForJob = byJobType.get(job);
 			c.gridwidth = 1;

@@ -10,6 +10,6 @@ public class TopoAutoMethod extends BaseToggleableTopo implements TopoMethod {
 		// TODO: this is getting out of hand...super can't call stuff that would be dependent on subclass
 		// field inits. So we either have to stuff *everything* into the super() call, or need to rethink
 		// this whole setup.
-		super("Method: " + handler.getTopoLabel(), Collections.emptyList(), topo, handler.getTopoKey(), handler::setEnabled);
+		super(handler.getTopoLabel(), Collections.emptyList(), topo, handler.getTopoKey(), handler::setEnabled);
 	}
 }

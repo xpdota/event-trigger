@@ -14,6 +14,7 @@ public class AutoHandler implements EventHandler<Event> {
 
 	private final Method method;
 	private final String methodLabel;
+	private final String extraLabel;
 	private final Object clazzInstance;
 	private final Class<? extends Event> eventClass;
 	private final int order;
@@ -50,9 +51,17 @@ public class AutoHandler implements EventHandler<Event> {
 		HandleEvents annotation = this.method.getAnnotation(HandleEvents.class);
 		if (annotation != null) {
 			order = annotation.order();
+			String name = annotation.name();
+			if (name == null || name.isEmpty()) {
+				extraLabel = null;
+			}
+			else {
+				extraLabel = name;
+			}
 		}
 		else {
 			order = 0;
+			extraLabel = null;
 		}
 		onlyInLive = method.isAnnotationPresent(LiveOnly.class) || clazz.isAnnotationPresent(LiveOnly.class);
 	}
@@ -67,7 +76,13 @@ public class AutoHandler implements EventHandler<Event> {
 	}
 
 	public String getTopoLabel() {
-		return String.format("%s(%s)", method.getName(), eventClass.getSimpleName());
+		if (extraLabel == null) {
+			return String.format("%s(%s)", method.getName(), eventClass.getSimpleName());
+		}
+		else {
+			return String.format("%s -- %s(%s)", extraLabel, method.getName(), eventClass.getSimpleName());
+
+		}
 	}
 
 	public String getTopoKey() {
