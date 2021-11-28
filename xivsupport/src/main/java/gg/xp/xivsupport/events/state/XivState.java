@@ -38,6 +38,7 @@ public class XivState implements SubState {
 	private volatile @NotNull Map<Long, RawXivCombatantInfo> combatantsRaw = Collections.emptyMap();
 	private volatile @NotNull Map<Long, XivCombatant> combatantsProcessed = Collections.emptyMap();
 
+	private Job previousPlayerJob;
 //	@SuppressWarnings("unused")
 //	@Deprecated
 //	XivState() {
@@ -263,6 +264,13 @@ public class XivState implements SubState {
 		// TODO: improve this
 		if (master != null) {
 			master.getQueue().push(new XivStateRecalculatedEvent());
+			if (player != null) {
+				Job newJob = player.getJob();
+				if (previousPlayerJob != null && previousPlayerJob != newJob) {
+					master.getQueue().push(new PlayerChangedJobEvent(previousPlayerJob, newJob));
+				}
+				previousPlayerJob = newJob;
+			}
 		}
 	}
 

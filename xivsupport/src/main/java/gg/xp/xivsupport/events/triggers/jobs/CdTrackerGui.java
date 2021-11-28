@@ -1,8 +1,10 @@
 package gg.xp.xivsupport.events.triggers.jobs;
 
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.jobs.DotBuff;
+import gg.xp.xivdata.jobs.Cooldown;
+import gg.xp.xivdata.jobs.Cooldown;
 import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.jobs.JobType;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
@@ -18,29 +20,28 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @ScanMe
-public class DotRefreshReminderGui implements PluginTab {
+public class CdTrackerGui implements PluginTab {
 
-	private final DotRefreshReminders backend;
+	private final CdTracker backend;
 
-	public DotRefreshReminderGui(DotRefreshReminders backend) {
+	public CdTrackerGui(CdTracker backend) {
 		this.backend = backend;
 	}
 
 	@Override
 	public String getTabName() {
-		return "DoT Tracker";
+		return "Cooldown Tracker";
 	}
 
 	@Override
 	public Component getTabContents() {
-		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Dots");
-//		outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.PAGE_AXIS));
+		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Cooldowns");
 		outerPanel.setLayout(new BorderLayout());
 
 		JPanel settingsPanel = new JPanel();
 		settingsPanel.setLayout(new WrapLayout());
 
-		JPanel preTimeBox = new LongSettingGui(backend.getDotRefreshAdvance(), "Time before expiry to call out (milliseconds)").getComponent();
+		JPanel preTimeBox = new LongSettingGui(backend.getCdTriggerAdvance(), "Time before expiry to call out (milliseconds)").getComponent();
 		settingsPanel.add(preTimeBox);
 		JCheckBox enableTts = new BooleanSettingGui(backend.getEnableTts(), "Enable TTS").getComponent();
 		settingsPanel.add(enableTts);
@@ -52,15 +53,17 @@ public class DotRefreshReminderGui implements PluginTab {
 		JPanel innerPanel = new JPanel();
 		innerPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		Map<DotBuff, BooleanSetting> dots = backend.getEnabledDots();
-		Map<Job, List<DotBuff>> byJob = dots.keySet().stream().collect(Collectors.groupingBy(DotBuff::getJob));
+		Map<Cooldown, BooleanSetting> cooldowns = backend.getEnabledCds();
+		Map<JobType, List<Cooldown>> byJobType = cooldowns.keySet().stream().filter(cd -> cd.getJobType() != null).collect(Collectors.groupingBy(Cooldown::getJobType));
+		Map<Job, List<Cooldown>> byJob = cooldowns.keySet().stream().filter(cd -> cd.getJobType() == null).collect(Collectors.groupingBy(Cooldown::getJob));
+		List<JobType> jobTypeKeys = byJobType.keySet().stream().sorted(Comparator.comparing(JobType::getFriendlyName)).collect(Collectors.toList());
 		List<Job> jobKeys = byJob.keySet().stream().sorted(Comparator.comparing(Job::getFriendlyName)).collect(Collectors.toList());
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.CENTER;
 		c.ipadx = 50;
 		c.gridy = 0;
-		jobKeys.forEach((job) -> {
-			List<DotBuff> dotsForJob = byJob.get(job);
+		jobTypeKeys.forEach((job) -> {
+			List<Cooldown> cooldownsForJob = byJobType.get(job);
 			c.gridwidth = 1;
 			c.gridx = 0;
 			c.weightx = 0;
@@ -69,9 +72,35 @@ public class DotRefreshReminderGui implements PluginTab {
 			c.gridx ++;
 			JLabel label = new JLabel(job.getFriendlyName());
 			innerPanel.add(label, c);
-			dotsForJob.forEach(dot -> {
+			cooldownsForJob.forEach(dot -> {
 				c.gridx++;
-				BooleanSetting setting = dots.get(dot);
+
+				BooleanSetting setting = cooldowns.get(dot);
+				JCheckBox checkbox = new BooleanSettingGui(setting, dot.getLabel()).getComponent();
+				innerPanel.add(checkbox, c);
+			});
+			c.gridx++;
+			c.weightx = 1;
+			c.gridwidth = GridBagConstraints.REMAINDER;
+			// Add dummy to pad out the right side
+			JPanel dummyPanel = new JPanel();
+			innerPanel.add(dummyPanel, c);
+			c.gridy++;
+		});
+		jobKeys.forEach((job) -> {
+			List<Cooldown> cooldownsForJob = byJob.get(job);
+			c.gridwidth = 1;
+			c.gridx = 0;
+			c.weightx = 0;
+			// left filler
+			innerPanel.add(new JPanel());
+			c.gridx ++;
+			JLabel label = new JLabel(job.getFriendlyName());
+			innerPanel.add(label, c);
+			cooldownsForJob.forEach(dot -> {
+				c.gridx++;
+
+				BooleanSetting setting = cooldowns.get(dot);
 				JCheckBox checkbox = new BooleanSettingGui(setting, dot.getLabel()).getComponent();
 				innerPanel.add(checkbox, c);
 			});

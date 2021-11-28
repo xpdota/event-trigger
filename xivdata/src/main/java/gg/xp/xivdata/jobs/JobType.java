@@ -2,14 +2,24 @@ package gg.xp.xivdata.jobs;
 
 public enum JobType {
 	// Try to not use this directly - rather, query the isX methods
-	UNKNOWN,
-	DOH,
-	DOL,
-	TANK,
-	HEALER,
-	MELEE_DPS,
-	CASTER,
-	PRANGED;
+	UNKNOWN("Unknown"),
+	DOH("Disciple of Hand"),
+	DOL("Disciple of Land"),
+	TANK("Tank"),
+	HEALER("Healer"),
+	MELEE_DPS("Melee DPS"),
+	CASTER("Caster"),
+	PRANGED("Phys Ranged");
+
+	private final String friendlyName;
+
+	JobType(String friendlyName) {
+		this.friendlyName = friendlyName;
+	}
+
+	public String getFriendlyName() {
+		return friendlyName;
+	}
 
 	public boolean isCombatJob() {
 		return this != DOH && this != DOL && this != UNKNOWN;

@@ -1,12 +1,8 @@
 package gg.xp.xivdata.jobs;
 
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -25,10 +21,10 @@ public class ActionIcon implements HasIconURL {
 
 	private static void readCsv() {
 		List<String[]> arrays;
-		try (CSVReader csvReader = new CSVReader(new InputStreamReader(ActionIcon.class.getResourceAsStream("/xiv/actions/Action.csv")))) {
-			arrays = csvReader.readAll();
+		try {
+			arrays = ReadCsv.cells("/xiv/actions/Action.csv");
 		}
-		catch (IOException | CsvException e) {
+		catch (Throwable e) {
 			log.error("Could not load icons!", e);
 			return;
 		}

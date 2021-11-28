@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -21,6 +23,17 @@ public final class MakeCoolDowns {
 	public static void main(String[] args) throws IOException, URISyntaxException {
 
 		List<Map<String, Object>> maps = ReadData.readData();
+		List<String[]> csvRaw = ReadCsv.cells("/xiv/actions/Action.csv");
+		Map<Long, String[]> csvData = new HashMap<>(csvRaw.size());
+		csvRaw.forEach(row -> {
+			try {
+				long id = Long.parseLong(row[0]);
+				csvData.put(id, row);
+			}
+			catch (NumberFormatException nfe) {
+				// Ignore non-numeric
+			}
+		});
 
 		List<Map<String, Object>> out = maps.stream()
 				.filter(m -> m.get("cooldown") != null)
@@ -29,7 +42,7 @@ public final class MakeCoolDowns {
 
 		log.info("Number of cooldowns: {}", out.size());
 
-		List<CdData> data = new ArrayList<>();
+		Map<String, CdData> data = new LinkedHashMap<>();
 
 		out.forEach(item -> {
 			CdData cdData = new CdData();
@@ -64,18 +77,32 @@ public final class MakeCoolDowns {
 					break;
 				case "Buff":
 					cdData.cdType = Cooldown.CooldownType.PERSONAL;
+					break;
+				case "Party":
+				default:
+					cdData.cdType = Cooldown.CooldownType.PARTY_TODO_CATEGORIZE_ME;
+					break;
+			}
+			if (cdData.fullName.endsWith(" Finish")) {
+				return;
 			}
 			cdData.enumName = cdData.fullName.replaceAll("[^A-Za-z]", "");
-			cdData.cooldown = (int) item.get("cooldown");
+			cdData.abilityId = (int) item.get("id");
+			// TODO: combine
+//			cdData.cooldown = (int) item.get("cooldown");
+			cdData.cooldown = Double.parseDouble(csvData.get(cdData.abilityId)[39]) / 10;
 			Object durationRaw = item.get("duration");
 			cdData.duration = durationRaw == null ? null : (double) ((Integer) durationRaw);
-			cdData.abilityId = (int) item.get("id");
-			data.add(cdData);
+
+			if (cdData.cooldown < 15) {
+				return;
+			}
+			data.putIfAbsent(cdData.enumName, cdData);
 		});
 
 		// TODO: we already have Action.csv, so pull the name from that
-		data.sort(Comparator.comparing(c -> c.enumName));
-		data.forEach(d -> {
+//		data.sort(Comparator.comparing(c -> c.enumName));
+		data.forEach((name, d) -> {
 			String jobOrType;
 			if (d.job == null) {
 				jobOrType = d.jobType.toString();
@@ -83,7 +110,7 @@ public final class MakeCoolDowns {
 			else {
 				jobOrType = d.job.toString();
 			}
-			System.out.printf("%s(%s, %s, \"%s\", %s, 0x%x, %s),%n", d.enumName, jobOrType, d.cooldown, d.fullName, d.cdType, d.abilityId, -1);
+			System.out.printf("%s(%s, %s, \"%s\", CooldownType.%s, 0x%x, %s),%n", d.enumName, jobOrType, d.cooldown, d.fullName, d.cdType, d.abilityId, -1);
 		});
 
 

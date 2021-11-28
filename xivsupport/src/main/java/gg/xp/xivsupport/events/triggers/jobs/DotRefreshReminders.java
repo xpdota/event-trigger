@@ -30,6 +30,8 @@ public class DotRefreshReminders {
 	private static final Logger log = LoggerFactory.getLogger(DotRefreshReminders.class);
 	private static final String dotKeyStub = "dot-tracker.enable-buff.";
 
+	private final BooleanSetting enableTts;
+	private final BooleanSetting enableOverlay;
 	private final LongSetting dotRefreshAdvance;
 	private final Map<DotBuff, BooleanSetting> enabledDots = new LinkedHashMap<>();
 	private final StatusEffectRepository buffs;
@@ -42,6 +44,8 @@ public class DotRefreshReminders {
 			enabledDots.put(dot, new BooleanSetting(persistence, getKey(dot), true));
 		}
 		this.dotRefreshAdvance = new LongSetting(persistence, "dot-tracker.pre-call-ms", 5000);
+		this.enableTts = new BooleanSetting(persistence, "dot-tracker.enable-tts", true);
+		this.enableOverlay = new BooleanSetting(persistence, "dot-tracker.enable-overlay", true);
 	}
 
 	private static String getKey(DotBuff buff) {
@@ -64,7 +68,9 @@ public class DotRefreshReminders {
 	@HandleEvents
 	public void buffApplication(EventContext context, BuffApplied event) {
 		if (event.getSource().isThePlayer() && isWhitelisted(event.getBuff().getId()) && !event.getTarget().isFake()) {
-			context.enqueue(new DelayedBuffCallout(event, event.getInitialDuration().toMillis() - dotRefreshAdvance.get()));
+			if (enableTts.get()) {
+				context.enqueue(new DelayedBuffCallout(event, event.getInitialDuration().toMillis() - dotRefreshAdvance.get()));
+			}
 			synchronized (myDotsLock) {
 				myDots.put(BuffTrackingKey.of(event), event);
 				recheckMyDots();
@@ -145,5 +151,13 @@ public class DotRefreshReminders {
 			recheckMyDots();
 			return new ArrayList<>(myDots.values());
 		}
+	}
+
+	public BooleanSetting getEnableTts() {
+		return enableTts;
+	}
+
+	public BooleanSetting getEnableOverlay() {
+		return enableOverlay;
 	}
 }

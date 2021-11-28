@@ -3,14 +3,28 @@ package gg.xp.xivsupport.models;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 
 import java.io.Serializable;
+import java.util.Objects;
 
-public class XivEntity implements Serializable , NameIdPair {
+public class XivEntity implements Serializable, NameIdPair {
 
 	private static final long serialVersionUID = 1282314870448740356L;
 	// IMPORTANT: Annoyingly, these all must be 'long' instead of 'int' because the game treats them as
 	// unsigned 32-bit, but Java treats them as signed, so values above 7FFFFFFF cause an overflow
 	private final long id;
 	private final String name;
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		XivEntity xivEntity = (XivEntity) o;
+		return id == xivEntity.id;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
 
 	public XivEntity(long id, String name) {
 		this.id = id;

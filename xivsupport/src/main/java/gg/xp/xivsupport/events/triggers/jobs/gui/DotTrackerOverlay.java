@@ -8,6 +8,7 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +32,14 @@ public class DotTrackerOverlay extends XivOverlay {
 
 	private final DotRefreshReminders dots;
 	private final CustomTableModel<VisualDotInfo> tableModel;
+	private final BooleanSetting enabled;
 	private volatile List<BuffApplied> currentDots = Collections.emptyList();
 	private volatile List<VisualDotInfo> croppedDots = Collections.emptyList();
 
 
 	public DotTrackerOverlay(PersistenceProvider persistence, DotRefreshReminders dots) {
 		super("Dot Tracker", "dot-tracker.overlay", persistence);
+		enabled = dots.getEnableOverlay();
 		this.dots = dots;
 		tableModel = CustomTableModel.builder(() -> croppedDots)
 				.addColumn(new CustomColumn<>("Icon", c -> c.getEvent().getBuff(), c -> {
@@ -77,6 +80,10 @@ public class DotTrackerOverlay extends XivOverlay {
 
 
 	private void getAndSort() {
+		if (!enabled.get()) {
+			croppedDots = Collections.emptyList();
+			return;
+		}
 		List<BuffApplied> newCurrentDots = dots.getCurrentDots();
 		if (!newCurrentDots.equals(currentDots)) {
 			if (newCurrentDots.isEmpty()) {

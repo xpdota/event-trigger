@@ -6,7 +6,7 @@ import gg.xp.xivsupport.models.CurrentMaxPair;
 import javax.swing.*;
 import java.awt.*;
 
-public class DotBarRenderer extends ResourceBarRenderer {
+public class CdBarRenderer extends ResourceBarRenderer {
 
 	private static final Color colorExpired = new Color(255, 0, 0);
 	private static final Color colorGood = new Color(79, 211, 255);
@@ -32,6 +32,18 @@ public class DotBarRenderer extends ResourceBarRenderer {
 
 	@Override
 	protected Color getBarColor(double percent, CurrentMaxPair item) {
+		if (item instanceof VisualCdInfo) {
+			if (((VisualCdInfo) item).getBuffApplied() != null) {
+				return Color.BLUE;
+			}
+			if (percent > 0.999d) {
+				return Color.GREEN;
+			}
+			else {
+				return Color.RED;
+			}
+
+		}
 		if (percent > 0.999d) {
 			return colorExpired;
 		}

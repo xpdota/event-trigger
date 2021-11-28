@@ -45,7 +45,7 @@ public abstract class ResourceBarRenderer implements TableCellRenderer {
 			JPanel rightPanel = new JPanel();
 
 //			Color greenColor = new Color(95, 148, 95, 98);
-			Color colorRaw = getBarColor(percent);
+			Color colorRaw = getBarColor(percent, hp);
 			Color actualColor = new Color(colorRaw.getRed(), colorRaw.getGreen(), colorRaw.getBlue(), 98);
 			leftPanel.setBackground(actualColor);
 			Color gray = baseLabel.getBackground();
@@ -73,7 +73,7 @@ public abstract class ResourceBarRenderer implements TableCellRenderer {
 		return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 	}
 
-	protected abstract Color getBarColor(double percent);
+	protected abstract Color getBarColor(double percent, CurrentMaxPair item);
 
 	protected JLabel getLabel(CurrentMaxPair item, int width) {
 		// Try to do long label, otherwise fall back to short label
