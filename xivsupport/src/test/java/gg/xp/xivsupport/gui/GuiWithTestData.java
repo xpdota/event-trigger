@@ -2,12 +2,10 @@ package gg.xp.xivsupport.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.reevent.events.AutoEventDistributor;
-import gg.xp.reevent.events.DummyEventToForceAutoScan;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;
-import org.testng.annotations.Ignore;
-import org.testng.annotations.Test;
 
 import javax.swing.*;
 
@@ -26,7 +24,7 @@ public final class GuiWithTestData {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		pico.addComponent(GuiMain.class);
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
-		dist.acceptEvent(new DummyEventToForceAutoScan());
+		dist.acceptEvent(new InitEvent());
 		pico.getComponent(GuiMain.class);
 
 		dist.acceptEvent(new ActWsRawMsg("{\"type\":\"ChangePrimaryPlayer\",\"charID\":22,\"charName\":\"Foo Bar\"}"));

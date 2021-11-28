@@ -93,7 +93,10 @@ public class XivOverlay {
 	}
 
 	public void setVisible(boolean visible) {
-		frame.setVisible(visible);
+		if (visible) {
+			frame.setVisible(true);
+		}
+		panel.setVisible(visible);
 	}
 
 	public void setEditMode(boolean editMode) {

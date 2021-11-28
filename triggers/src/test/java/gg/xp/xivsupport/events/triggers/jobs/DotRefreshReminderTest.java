@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.triggers.jobs;
 
-import gg.xp.reevent.events.DummyEventToForceAutoScan;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivdata.jobs.DotBuff;
@@ -37,7 +37,7 @@ public class DotRefreshReminderTest {
 		MutablePicoContainer container = XivMain.testingMasterInit();
 		TestEventCollector coll = new TestEventCollector();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
-		dist.acceptEvent(new DummyEventToForceAutoScan());
+		dist.acceptEvent(new InitEvent());
 		dist.registerHandler(coll);
 
 		DotRefreshReminders dots = container.getComponent(DotRefreshReminders.class);
@@ -128,7 +128,7 @@ public class DotRefreshReminderTest {
 		MutablePicoContainer container = XivMain.testingMasterInit();
 		TestEventCollector coll = new TestEventCollector();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
-		dist.acceptEvent(new DummyEventToForceAutoScan());
+		dist.acceptEvent(new InitEvent());
 		dist.registerHandler(coll);
 
 		DotRefreshReminders dots = container.getComponent(DotRefreshReminders.class);

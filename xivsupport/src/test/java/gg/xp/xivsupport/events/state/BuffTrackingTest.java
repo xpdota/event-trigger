@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.state;
 
-import gg.xp.reevent.events.DummyEventToForceAutoScan;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivdata.jobs.Job;
@@ -107,7 +107,7 @@ public class BuffTrackingTest {
 		ZoneChangeEvent zoneChange = new ZoneChangeEvent(new XivZone(123, "Help I'm trapped in an integration test"));
 
 		// Dummy event to force initialization
-		distributor.acceptEvent(new DummyEventToForceAutoScan());
+		distributor.acceptEvent(new InitEvent());
 		// Initial state - empty
 		repo = pico.getComponent(StatusEffectRepository.class);
 		Assert.assertEquals(repo.getBuffs().size(), 0);

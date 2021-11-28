@@ -4,6 +4,8 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivsupport.callouts.CalloutRepo;
+import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
@@ -33,7 +35,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@CalloutRepo("Titan Gaols")
 public class JailSolver implements FilteredEventHandler {
+	private final ModifiableCallout first = new ModifiableCallout("First Jail", "First");
+	private final ModifiableCallout second = new ModifiableCallout("Second Jail", "Second");
+	private final ModifiableCallout third = new ModifiableCallout("Third Jail", "Third");
 	private static final Logger log = LoggerFactory.getLogger(JailSolver.class);
 
 	private final List<XivPlayerCharacter> jailedPlayers = new ArrayList<>();
@@ -221,13 +227,13 @@ public class JailSolver implements FilteredEventHandler {
 			}
 			switch (myIndex) {
 				case 1:
-					context.accept(new CalloutEvent("First"));
+					context.accept(first.getModified());
 					break;
 				case 2:
-					context.accept(new CalloutEvent("Second"));
+					context.accept(second.getModified());
 					break;
 				case 3:
-					context.accept(new CalloutEvent("Third"));
+					context.accept(third.getModified());
 					break;
 			}
 		}

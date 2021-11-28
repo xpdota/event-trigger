@@ -3,7 +3,7 @@ package gg.xp.xivsupport.sys;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.BasicEventDistributor;
 import gg.xp.reevent.events.BasicEventQueue;
-import gg.xp.reevent.events.DummyEventToForceAutoScan;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.topology.TopoInfoImpl;
 import gg.xp.xivsupport.events.state.PicoStateStore;
@@ -116,7 +116,7 @@ public final class XivMain {
 		}
 
 		// TODO: use "Startable" interface?
-		pico.getComponent(AutoEventDistributor.class).acceptEvent(new DummyEventToForceAutoScan());
+		pico.getComponent(AutoEventDistributor.class).acceptEvent(new InitEvent());
 		pico.getComponent(EventMaster.class).start();
 		pico.getComponent(ActWsLogSource.class).start();
 		log.info("Everything seems to have started successfully");

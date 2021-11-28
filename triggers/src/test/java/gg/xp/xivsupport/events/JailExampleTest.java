@@ -2,7 +2,7 @@ package gg.xp.xivsupport.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.BasicEventQueue;
-import gg.xp.reevent.events.DummyEventToForceAutoScan;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
@@ -685,7 +685,7 @@ public class JailExampleTest {
 		doEvents(dist);
 		BasicEventQueue queue = container.getComponent(BasicEventQueue.class);
 		queue.waitDrain();
-		dist.acceptEvent(new DummyEventToForceAutoScan());
+		dist.acceptEvent(new InitEvent());
 		XivState state = container.getComponent(XivState.class);
 		// TODO: find actual solution to race conditions in tests
 		try {

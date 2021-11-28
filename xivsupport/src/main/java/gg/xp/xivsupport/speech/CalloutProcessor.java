@@ -1,9 +1,8 @@
 package gg.xp.xivsupport.speech;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.debug.DebugCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,17 +68,20 @@ public class CalloutProcessor {
 		}
 	}
 
-//	@HandleEvents
-	public void handle(EventContext context, gg.xp.xivsupport.speech.CalloutEvent event) {
+	//	@HandleEvents
+	public void handle(EventContext context, CalloutEvent event) {
 		// Events are not processed nor distributed in parallel - thus we need to make sure that we use async operations
 		// for things that take non-trivial amounts of time (e.g. speech)
 
-		sayAsync(event.getCallText());
+		String text = event.getCallText();
+		if (text != null) {
+			sayAsync(text);
+		}
 	}
 
 	@HandleEvents
-	public void callout(EventContext context, gg.xp.xivsupport.speech.CalloutEvent callout) {
-		context.accept(new gg.xp.xivsupport.speech.TtsRequest(callout.getCallText()));
+	public void callout(EventContext context, CalloutEvent callout) {
+		context.accept(new TtsRequest(callout.getCallText()));
 	}
 
 	@HandleEvents

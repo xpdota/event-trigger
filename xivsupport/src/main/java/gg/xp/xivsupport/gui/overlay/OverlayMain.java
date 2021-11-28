@@ -2,11 +2,9 @@ package gg.xp.xivsupport.gui.overlay;
 
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
-import gg.xp.reevent.events.DummyEventToForceAutoScan;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;

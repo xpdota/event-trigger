@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.persistence;
 
 import gg.xp.reevent.events.AutoEventDistributor;
-import gg.xp.reevent.events.DummyEventToForceAutoScan;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.topology.BaseToggleableTopo;
 import gg.xp.reevent.topology.TopoItem;
@@ -20,7 +20,7 @@ public class TopoPersistence {
 	@Test
 	void testTopoTogglePersistence() {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
-		pico.getComponent(EventDistributor.class).acceptEvent(new DummyEventToForceAutoScan());
+		pico.getComponent(EventDistributor.class).acceptEvent(new InitEvent());
 		AutoEventDistributor auto = pico.getComponent(AutoEventDistributor.class);
 		Topology topTopo = auto.getTopology();
 		PersistenceProvider persistence = pico.getComponent(PersistenceProvider.class);
