@@ -511,6 +511,7 @@ public class GuiMain {
 							JTextArea::setText
 					)
 			);
+			// TODO: also add a button to force a full refresh on all tables
 			JButton forceGcButton = new JButton("Force GC");
 			forceGcButton.addActionListener(l -> {
 				exs.submit(System::gc);

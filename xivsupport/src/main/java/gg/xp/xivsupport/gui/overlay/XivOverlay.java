@@ -16,6 +16,15 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.AffineTransform;
+import java.awt.image.ColorModel;
+
+import static java.awt.RenderingHints.KEY_ANTIALIASING;
+import static java.awt.RenderingHints.KEY_INTERPOLATION;
+import static java.awt.RenderingHints.KEY_RENDERING;
+import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
+import static java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR;
+import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
 
 @SuppressWarnings("NumericCastThatLosesPrecision")
 public class XivOverlay {
@@ -31,21 +40,104 @@ public class XivOverlay {
 	private final LongSetting xSetting;
 	private final LongSetting ySetting;
 	private final DoubleSetting opacity;
+	private final DoubleSetting scaleFactor;
 	private final String title;
 
+	private final class FakeGraphicsConfiguration extends GraphicsConfiguration {
+		private final GraphicsConfiguration wrapped;
+
+		FakeGraphicsConfiguration(GraphicsConfiguration wrapped) {
+			this.wrapped = wrapped;
+		}
+
+		@Override
+		public GraphicsDevice getDevice() {
+			return wrapped.getDevice();
+		}
+
+		@Override
+		public ColorModel getColorModel() {
+			return wrapped.getColorModel();
+		}
+
+		@Override
+		public ColorModel getColorModel(int transparency) {
+			return wrapped.getColorModel(transparency);
+		}
+
+		@Override
+		public AffineTransform getDefaultTransform() {
+			AffineTransform defaultTransform = wrapped.getDefaultTransform();
+			defaultTransform.scale(scaleFactor.get(), scaleFactor.get());
+			log.info("getDefaultTransform");
+			return defaultTransform;
+		}
+
+		@Override
+		public AffineTransform getNormalizingTransform() {
+			AffineTransform defaultTransform = wrapped.getDefaultTransform();
+			defaultTransform.scale(scaleFactor.get(), scaleFactor.get());
+			log.info("getNormalizingTransform");
+			return defaultTransform;
+		}
+
+		@Override
+		public Rectangle getBounds() {
+//			Rectangle bounds = wrapped.getBounds();
+//			log.info("getBounds: {} {} {} {}", bounds.x, bounds.y, bounds.width, bounds.height);
+//			return new Rectangle(bounds.x, bounds.y, (int) (bounds.width * scaleFactor.get()), (int) (bounds.height * scaleFactor.get()));
+			return wrapped.getBounds();
+		}
+	}
+
 	public XivOverlay(String title, String settingKeyBase, PersistenceProvider persistence) {
-		frame = new JFrame(title);
+		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), 200);
+		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), 200);
+		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d);
+		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 2.0d);
+		JFrame fakeFrame = new JFrame();
+		GraphicsConfiguration gc = fakeFrame.getGraphicsConfiguration();
+		FakeGraphicsConfiguration fakeGraphics = new FakeGraphicsConfiguration(gc);
+		frame = new JFrame(title, fakeGraphics) {
+			@Override
+			public GraphicsConfiguration getGraphicsConfiguration() {
+				return fakeGraphics;
+			}
+
+			@Override
+			public void paint(Graphics g) {
+				super.paint(getGraphics());
+			}
+
+			@Override
+			public void paintComponents(Graphics g) {
+				super.paintComponents(getGraphics());
+			}
+
+			@Override
+			public void paintAll(Graphics g) {
+				super.paintAll(getGraphics());
+			}
+
+			@Override
+			public Graphics getGraphics() {
+				Graphics2D graphics = (Graphics2D) super.getGraphics();
+				AffineTransform transform = graphics.getTransform();
+				transform.scale(scaleFactor.get(), scaleFactor.get());
+				graphics.setTransform(transform);
+				return graphics;
+			}
+
+		};
 		this.title = title;
 		frame.setUndecorated(true);
 		frame.setBackground(panelBackgroundDefault);
 		frame.setType(Window.Type.UTILITY);
-		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), 200);
-		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), 200);
-		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d);
 		panel = new JPanel();
 		panel.setOpaque(false);
 //			panel.add(contents);
 		panel.setBorder(transparentBorder);
+		frame.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT));
 		frame.getContentPane().add(panel);
 		frame.setAlwaysOnTop(true);
 		frame.setLocation((int) xSetting.get(), (int) ySetting.get());
@@ -71,7 +163,12 @@ public class XivOverlay {
 	}
 
 	public void finishInit() {
+		frame.repaint();
 		frame.pack();
+		Rectangle bounds = frame.getBounds();
+		frame.setBounds(bounds.x, bounds.y, (int) (bounds.width * scaleFactor.get()), (int) (bounds.height * scaleFactor.get()));
+		frame.validate();
+		frame.repaint();
 	}
 
 	public String getTitle() {
