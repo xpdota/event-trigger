@@ -69,7 +69,7 @@ public class ActionIcon implements HasIconURL {
 			readCsv();
 		}
 		ActionIcon result = cache.computeIfAbsent(id, missingId -> {
-			URL resource = ActionIcon.class.getResource(String.format("/xiv/actions/icons/%06d.png", csvValues.get(missingId)));
+			URL resource = ActionIcon.class.getResource(String.format("/xiv/actions/icons/%06d_hr1.png", csvValues.get(missingId)));
 			if (resource == null) {
 				return NULL_MARKER;
 			}

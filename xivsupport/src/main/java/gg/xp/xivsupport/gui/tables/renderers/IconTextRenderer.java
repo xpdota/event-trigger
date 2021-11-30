@@ -80,8 +80,9 @@ public final class IconTextRenderer {
 			double yScale = t.getScaleY();
 			t.scale(1 / xScale, 1 / yScale);
 			((Graphics2D) g).setTransform(t);
-			int scaledSize = (int) (size * xScale);
-			Image scaledInstance = cache.computeIfAbsent(scaledSize, newSize -> image.getScaledInstance(newSize, newSize, Image.SCALE_SMOOTH));
+			int scaledSize = (int) (size * yScale);
+			// -1 = keep original aspect ratio
+			Image scaledInstance = cache.computeIfAbsent(scaledSize, newSize -> image.getScaledInstance(-1, newSize, Image.SCALE_SMOOTH));
 			new ImageIcon(scaledInstance).paintIcon(this, g, 0, 0);
 		}
 	}

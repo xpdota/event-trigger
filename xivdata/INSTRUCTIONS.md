@@ -14,4 +14,7 @@ cut -f 4 -d, Action.csv | sort -n | uniq
 mkdir actions
 cut -f 4 -d, Action.csv | sort -n | uniq | grep -E '[0-9]+' |  awk '{printf "%06d\n", $0}' | xargs -n 1 -I '{}' mv '2021.08.17.0000.0000/ui/icon/combined/{}.png' actions/
 #                                          ^ filters out header             ^ left pad          ^ actual move
+
+# Actually working versions: Run ActionIcon.main or StatusEffectIcon.main, then:
+stuff | xargs -n 1 -I '{}' cp '2021.08.17.0000.0000/ui/icon/combined/{}.png' actions/
 ```

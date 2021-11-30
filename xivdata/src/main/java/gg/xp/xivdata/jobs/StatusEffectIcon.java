@@ -73,7 +73,7 @@ public class StatusEffectIcon implements HasIconURL {
 			readCsv();
 		}
 		StatusEffectIcon result = cache.computeIfAbsent(id, missingId -> {
-			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/statuseffect/icons/%06d.png", csvValues.get(missingId)));
+			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/statuseffect/icons/%06d_hr1.png", csvValues.get(missingId)));
 			if (resource == null) {
 				return NULL_MARKER;
 			}
