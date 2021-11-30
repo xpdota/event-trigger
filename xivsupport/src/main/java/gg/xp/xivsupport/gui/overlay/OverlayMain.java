@@ -48,6 +48,13 @@ public class OverlayMain {
 					log.error("Wrong number of arguments, expected 2 ({})", dbg.getArgs());
 				}
 				setOpacity(Float.parseFloat(dbg.getArgs().get(1)));
+				break;
+			case "overlay:setallscale":
+				if (dbg.getArgs().size() != 2) {
+					log.error("Wrong number of arguments, expected 2 ({})", dbg.getArgs());
+				}
+				setScale(Float.parseFloat(dbg.getArgs().get(1)));
+				break;
 		}
 	}
 
@@ -102,7 +109,14 @@ public class OverlayMain {
 		if (opacity < 0 || opacity > 1) {
 			throw new IllegalArgumentException("Opacity must be between 0 and 1, not " + opacity);
 		}
-		overlays.forEach(o -> o.setOpacity(opacity));
+		SwingUtilities.invokeLater(() -> overlays.forEach(o -> o.setOpacity(opacity)));
+	}
+
+	public void setScale(double scale) {
+		if (scale < 0.05 || scale > 10) {
+			throw new IllegalArgumentException("Scale must be between 0.05 and 10, not " + scale);
+		}
+		SwingUtilities.invokeLater(() -> overlays.forEach(o -> o.setScale(scale)));
 	}
 
 	private void recalc() {

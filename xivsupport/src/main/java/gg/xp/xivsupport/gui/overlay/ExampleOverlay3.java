@@ -7,16 +7,16 @@ import javax.swing.*;
 import java.awt.*;
 
 //@ScanMe
-public class ExampleOverlay extends XivOverlay {
+public class ExampleOverlay3 extends XivOverlay {
 
-	public ExampleOverlay(PersistenceProvider persistence) {
-		super("Example Overlay", "example-overlay2", persistence);
+	public ExampleOverlay3(PersistenceProvider persistence) {
+		super("Example Overlay", "example-overlay3", persistence);
 		JPanel panel = new JPanel();
-		JButton button = new JButton("Foo");
+		JButton button = new JButton("Bar");
 		button.addActionListener(l -> this.dummyMethodForBreakpoint());
 		panel.add(button);
 		panel.add(new JLabel("Foo Bar Label Here"));
-		panel.setBackground(new Color(200, 100, 0, 255));
+		panel.setBackground(new Color(100, 100, 200, 255));
 		getPanel().add(panel);
 	}
 

@@ -4,6 +4,7 @@ import com.sun.jna.Native;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinUser;
+import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
@@ -163,12 +164,16 @@ public class XivOverlay {
 	}
 
 	public void finishInit() {
-		frame.repaint();
+		redoScale();
+	}
+
+	protected void redoScale() {
 		frame.pack();
 		Rectangle bounds = frame.getBounds();
 		frame.setBounds(bounds.x, bounds.y, (int) (bounds.width * scaleFactor.get()), (int) (bounds.height * scaleFactor.get()));
-		frame.validate();
-		frame.repaint();
+		if (frame.isVisible()) {
+			frame.repaint();
+		}
 	}
 
 	public String getTitle() {
@@ -209,6 +214,14 @@ public class XivOverlay {
 	public void setOpacity(float opacity) {
 		this.opacity.set(opacity);
 		frame.setOpacity(opacity);
+	}
+
+	public void setScale(double scale) {
+		boolean wasVisible = frame.isVisible();
+		frame.setVisible(false);
+		this.scaleFactor.set(scale);
+		redoScale();
+		frame.setVisible(wasVisible);
 	}
 
 	private static void setClickThrough(Component w, boolean clickThrough) {
