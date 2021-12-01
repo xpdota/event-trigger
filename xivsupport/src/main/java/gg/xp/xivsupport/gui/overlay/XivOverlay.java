@@ -4,7 +4,6 @@ import com.sun.jna.Native;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinUser;
-import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
@@ -17,15 +16,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.awt.geom.AffineTransform;
-import java.awt.image.ColorModel;
-
-import static java.awt.RenderingHints.KEY_ANTIALIASING;
-import static java.awt.RenderingHints.KEY_INTERPOLATION;
-import static java.awt.RenderingHints.KEY_RENDERING;
-import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
-import static java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR;
-import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
 
 @SuppressWarnings("NumericCastThatLosesPrecision")
 public class XivOverlay {
@@ -36,7 +26,7 @@ public class XivOverlay {
 	private static final LineBorder transparentBorder = new LineBorder(new Color(0, 0, 0, 0), 5);
 	private int dragX;
 	private int dragY;
-	private final JFrame frame;
+	private final ScalableJFrame frame;
 	private final JPanel panel;
 	private final LongSetting xSetting;
 	private final LongSetting ySetting;
@@ -44,92 +34,14 @@ public class XivOverlay {
 	private final DoubleSetting scaleFactor;
 	private final String title;
 
-	private final class FakeGraphicsConfiguration extends GraphicsConfiguration {
-		private final GraphicsConfiguration wrapped;
-
-		FakeGraphicsConfiguration(GraphicsConfiguration wrapped) {
-			this.wrapped = wrapped;
-		}
-
-		@Override
-		public GraphicsDevice getDevice() {
-			return wrapped.getDevice();
-		}
-
-		@Override
-		public ColorModel getColorModel() {
-			return wrapped.getColorModel();
-		}
-
-		@Override
-		public ColorModel getColorModel(int transparency) {
-			return wrapped.getColorModel(transparency);
-		}
-
-		@Override
-		public AffineTransform getDefaultTransform() {
-			AffineTransform defaultTransform = wrapped.getDefaultTransform();
-			defaultTransform.scale(scaleFactor.get(), scaleFactor.get());
-			log.info("getDefaultTransform");
-			return defaultTransform;
-		}
-
-		@Override
-		public AffineTransform getNormalizingTransform() {
-			AffineTransform defaultTransform = wrapped.getDefaultTransform();
-			defaultTransform.scale(scaleFactor.get(), scaleFactor.get());
-			log.info("getNormalizingTransform");
-			return defaultTransform;
-		}
-
-		@Override
-		public Rectangle getBounds() {
-//			Rectangle bounds = wrapped.getBounds();
-//			log.info("getBounds: {} {} {} {}", bounds.x, bounds.y, bounds.width, bounds.height);
-//			return new Rectangle(bounds.x, bounds.y, (int) (bounds.width * scaleFactor.get()), (int) (bounds.height * scaleFactor.get()));
-			return wrapped.getBounds();
-		}
-	}
 
 	public XivOverlay(String title, String settingKeyBase, PersistenceProvider persistence) {
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), 200);
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), 200);
 		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d);
-		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 2.0d);
-		JFrame fakeFrame = new JFrame();
-		GraphicsConfiguration gc = fakeFrame.getGraphicsConfiguration();
-		FakeGraphicsConfiguration fakeGraphics = new FakeGraphicsConfiguration(gc);
-		frame = new JFrame(title, fakeGraphics) {
-			@Override
-			public GraphicsConfiguration getGraphicsConfiguration() {
-				return fakeGraphics;
-			}
-
-			@Override
-			public void paint(Graphics g) {
-				super.paint(getGraphics());
-			}
-
-			@Override
-			public void paintComponents(Graphics g) {
-				super.paintComponents(getGraphics());
-			}
-
-			@Override
-			public void paintAll(Graphics g) {
-				super.paintAll(getGraphics());
-			}
-
-			@Override
-			public Graphics getGraphics() {
-				Graphics2D graphics = (Graphics2D) super.getGraphics();
-				AffineTransform transform = graphics.getTransform();
-				transform.scale(scaleFactor.get(), scaleFactor.get());
-				graphics.setTransform(transform);
-				return graphics;
-			}
-
-		};
+		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d);
+		frame = ScalableJFrame.construct(title, scaleFactor.get());
+//		frame.setScaleFactor(scaleFactor.get());
 		this.title = title;
 		frame.setUndecorated(true);
 		frame.setBackground(panelBackgroundDefault);
@@ -144,11 +56,29 @@ public class XivOverlay {
 		frame.setLocation((int) xSetting.get(), (int) ySetting.get());
 		frame.setOpacity((float) opacity.get());
 		frame.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mousePressed(MouseEvent ev) {
 				dragX = ev.getXOnScreen();
 				dragY = ev.getYOnScreen();
 			}
 		});
+		frame.addMouseWheelListener(ev -> {
+					int scrollAmount = ev.getWheelRotation();
+					double currentScale = getScale();
+					if (scrollAmount > 0) {
+						if (currentScale > 0.8) {
+							double newScale = (Math.round ((currentScale - 0.1) * 10)) / 10.0;
+							setScale(newScale);
+						}
+					}
+					else if (scrollAmount < 0) {
+						if (currentScale < 8) {
+							double newScale = (Math.round ((currentScale + 0.1) * 10)) / 10.0;
+							setScale(newScale);
+						}
+					}
+				}
+		);
 		frame.addMouseMotionListener(new MouseMotionAdapter() {
 			public void mouseDragged(MouseEvent evt) {
 				int newX = evt.getXOnScreen();
@@ -168,12 +98,7 @@ public class XivOverlay {
 	}
 
 	protected void redoScale() {
-		frame.pack();
-		Rectangle bounds = frame.getBounds();
-		frame.setBounds(bounds.x, bounds.y, (int) (bounds.width * scaleFactor.get()), (int) (bounds.height * scaleFactor.get()));
-		if (frame.isVisible()) {
-			frame.repaint();
-		}
+		frame.setScaleFactor(scaleFactor.get());
 	}
 
 	public String getTitle() {
@@ -222,6 +147,10 @@ public class XivOverlay {
 		this.scaleFactor.set(scale);
 		redoScale();
 		frame.setVisible(wasVisible);
+	}
+
+	public double getScale() {
+		return scaleFactor.get();
 	}
 
 	private static void setClickThrough(Component w, boolean clickThrough) {

@@ -94,18 +94,11 @@ public class GuiMain {
 		log.info("GUI Init");
 		log.info("Classpath: {}", System.getProperty("java.class.path"));
 		try {
-//			UIManager.setLookAndFeel(new DarculaLaf());
-			UIManager.setLookAndFeel(new FlatDarculaLaf());
-		}
-		catch (Throwable t) {
-			log.error("Error setting up look and feel", t);
-		}
-		try {
+			CommonGuiSetup.setup();
 			MutablePicoContainer pico = XivMain.masterInit();
 			pico.addComponent(GuiMain.class);
 			pico.getComponent(GuiMain.class);
 			// TODO: doesn't transfer over to test modes
-			installCustomEventQueue();
 		}
 		catch (Throwable e) {
 			log.error("Startup Error!", e);
@@ -921,32 +914,5 @@ public class GuiMain {
 			}
 		}).start();
 		return table;
-	}
-
-
-	// TODO: unhandled exception logger
-	private static void installCustomEventQueue() {
-		Toolkit toolkit = Toolkit.getDefaultToolkit();
-		if (toolkit.isDynamicLayoutActive()) {
-			toolkit.setDynamicLayout(true);
-		}
-		EventQueue queue = toolkit.getSystemEventQueue();
-		queue.push(new EventQueue() {
-			@Override
-			protected void dispatchEvent(AWTEvent event) {
-				long timeBefore = System.currentTimeMillis();
-				try {
-					super.dispatchEvent(event);
-				}
-				finally {
-					long timeAfter = System.currentTimeMillis();
-					long delta = timeAfter - timeBefore;
-					// TODO find good value for this
-					if (delta > 100) {
-						log.warn("Slow GUI performance: took {}ms to dispatch event {}", delta, event);
-					}
-				}
-			}
-		});
 	}
 }
