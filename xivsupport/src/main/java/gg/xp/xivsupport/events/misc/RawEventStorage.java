@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.xivsupport.events.debug.DebugCommand;
+import gg.xp.xivsupport.persistence.Compressible;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
@@ -79,9 +80,7 @@ public class RawEventStorage {
 	@LiveOnly
 	@HandleEvents(order = Integer.MAX_VALUE)
 	public void writeEventToDisk(EventContext context, Event event) {
-		if (event.shouldSave() && saveToDisk.get()) {
-			exs.submit(() -> this.saveEventToDisk(event));
-		}
+		exs.submit(() -> this.saveEventToDisk(event));
 	}
 
 	@HandleEvents
@@ -102,25 +101,30 @@ public class RawEventStorage {
 	}
 
 	private void saveEventToDisk(Event event) {
-		try {
-			if (eventSaveStream == null) {
-				String userDataDir = System.getenv("APPDATA");
-				Path sessionsDir = Paths.get(userDataDir, "triggevent", "sessions", sessionName);
-				File sessionsDirFile = sessionsDir.toFile();
-				sessionsDirFile.mkdirs();
-				if (!sessionsDirFile.exists() && sessionsDirFile.isDirectory()) {
-					log.error("Error saving to disk! Could not make dirs: {}", sessionsDirFile.getAbsolutePath());
-					return;
-				}
-				File file = Paths.get(sessionsDir.toString(), "session.oos.gz").toFile();
-				FileOutputStream fileOutputStream = new FileOutputStream(file, true);
-				GZIPOutputStream compressedOutputStream = new GZIPOutputStream(fileOutputStream);
-				eventSaveStream = new ObjectOutputStream(compressedOutputStream);
-			}
-			eventSaveStream.writeObject(event);
+		if (event instanceof Compressible) {
+			((Compressible) event).compress();
 		}
-		catch (IOException e) {
-			log.error("Error saving to disk!", e);
+		if (event.shouldSave() && saveToDisk.get()) {
+			try {
+				if (eventSaveStream == null) {
+					String userDataDir = System.getenv("APPDATA");
+					Path sessionsDir = Paths.get(userDataDir, "triggevent", "sessions", sessionName);
+					File sessionsDirFile = sessionsDir.toFile();
+					sessionsDirFile.mkdirs();
+					if (!sessionsDirFile.exists() && sessionsDirFile.isDirectory()) {
+						log.error("Error saving to disk! Could not make dirs: {}", sessionsDirFile.getAbsolutePath());
+						return;
+					}
+					File file = Paths.get(sessionsDir.toString(), "session.oos.gz").toFile();
+					FileOutputStream fileOutputStream = new FileOutputStream(file, true);
+					GZIPOutputStream compressedOutputStream = new GZIPOutputStream(fileOutputStream);
+					eventSaveStream = new ObjectOutputStream(compressedOutputStream);
+				}
+				eventSaveStream.writeObject(event);
+			}
+			catch (IOException e) {
+				log.error("Error saving to disk!", e);
+			}
 		}
 	}
 

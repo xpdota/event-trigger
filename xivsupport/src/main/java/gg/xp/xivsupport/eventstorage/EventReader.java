@@ -8,13 +8,15 @@ import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 public class EventReader {
 
 	public static List<Event> readEventsFromResource(String resourcePath) {
 		InputStream stream = EventReader.class.getResourceAsStream(resourcePath);
 		List<Event> events;
-		try (ObjectInputStream ois = new ObjectInputStream(stream)) {
+		try (GZIPInputStream gzip = new GZIPInputStream(stream);
+		     ObjectInputStream ois = new ObjectInputStream(gzip)) {
 			// TODO: security
 			ObjectInputFilter filter = filterInfo -> {
 				if (filterInfo.serialClass() == null) {

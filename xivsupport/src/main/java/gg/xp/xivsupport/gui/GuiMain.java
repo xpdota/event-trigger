@@ -202,7 +202,7 @@ public class GuiMain {
 			c.weightx = 0;
 			c.gridwidth = 1;
 			XivStateStatus xivStateStatus = new XivStateStatus();
-			xivStateStatus.setMinimumSize(new Dimension(200, 200));
+			xivStateStatus.setMinimumSize(new Dimension(250, 200));
 			xivStateStatus.setPreferredSize(xivStateStatus.getMinimumSize());
 //			xivStateStatus.setPreferredSize(new Dimension(100, 250));
 			add(xivStateStatus, c);
@@ -283,7 +283,7 @@ public class GuiMain {
 
 			KeyValueDisplaySet leftItems = new KeyValueDisplaySet(List.of(
 					new KeyValuePairDisplay<>(
-							"Player Name",
+							"Name",
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
@@ -292,7 +292,7 @@ public class GuiMain {
 							JLabel::setText
 					),
 					new KeyValuePairDisplay<>(
-							"Zone Name",
+							"Zone",
 							new JLabel(),
 							() -> {
 								XivZone zone = state.get(XivState.class).getZone();
@@ -301,7 +301,7 @@ public class GuiMain {
 							JLabel::setText
 					),
 					new KeyValuePairDisplay<>(
-							"Player Job",
+							"Job",
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
@@ -310,7 +310,7 @@ public class GuiMain {
 							JLabel::setText
 					),
 					new KeyValuePairDisplay<>(
-							"Player Level",
+							"Level",
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
@@ -319,7 +319,7 @@ public class GuiMain {
 							JLabel::setText
 					),
 					new KeyValuePairDisplay<>(
-							"Player World",
+							"World",
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
