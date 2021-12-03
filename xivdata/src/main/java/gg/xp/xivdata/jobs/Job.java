@@ -51,7 +51,10 @@ public enum Job implements HasIconURL {
 	RDM(35, false, JobType.CASTER, "Red Mage"),
 	BLU(36, false, JobType.CASTER, "Blue Mage"),
 	GNB(37, false, JobType.TANK, "Gunbreaker"),
-	DNC(38, false, JobType.PRANGED, "Dancer");
+	DNC(38, false, JobType.PRANGED, "Dancer"),
+	RPR(39, false, JobType.MELEE_DPS, "Reaper"),
+//	SAG(40, false, JobType.HEALER, "The Cooler SCH");
+	SGE(40, false, JobType.HEALER, "Sage");
 
 	private static final Logger log = LoggerFactory.getLogger(Job.class);
 
@@ -70,10 +73,11 @@ public enum Job implements HasIconURL {
 	// TODO: only supports default party list sort - revisit later to support custom ordering
 
 	private static final EnumMap<Job, Integer> sortOrder = new EnumMap<>(Job.class);
+	// TODO: confirm after EW what the default ordering is
 	private static final Job[] sortOrderArray = {
 			PLD, GLA, WAR, MRD, DRK, GNB,
-			WHM, CNJ, SCH, AST,
-			MNK, PGL, DRG, LNC, NIN, ROG, SAM,
+			WHM, CNJ, SCH, AST, SGE,
+			MNK, PGL, DRG, LNC, NIN, ROG, SAM, RPR,
 			BRD, ARC, MCH, DNC,
 			BLM, THM, SMN, ACN, RDM, BLU
 	};

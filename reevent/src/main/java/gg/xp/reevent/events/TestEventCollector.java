@@ -8,19 +8,24 @@ import java.util.stream.Collectors;
 
 public class TestEventCollector implements EventHandler<Event> {
 
+	private final Object lock = new Object();
 	private final List<Event> eventsSeen = new ArrayList<>();
 
 	@Override
 	public void handle(EventContext context, Event event) {
-		eventsSeen.add(event);
+		synchronized (lock) {
+			eventsSeen.add(event);
+		}
 	}
 
 	public List<Event> getEvents() {
-		return Collections.unmodifiableList(eventsSeen);
+		synchronized (lock) {
+			return new ArrayList<>(eventsSeen);
+		}
 	}
 
 	public <X extends Event> List<X> getEventsOf(Class<X> eventClass) {
-		return eventsSeen
+		return getEvents()
 				.stream()
 				.filter(eventClass::isInstance)
 				.map(eventClass::cast)
@@ -30,13 +35,15 @@ public class TestEventCollector implements EventHandler<Event> {
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public <X extends Event> List<X> getEventsOf(Collection<Class<? extends X>> eventClasses) {
-		return (List) eventsSeen
+		return (List) getEvents()
 				.stream()
 				.filter(event -> eventClasses.stream().anyMatch(clazz -> clazz.isInstance(event)))
 				.collect(Collectors.toList());
 	}
 
 	public void clear() {
-		eventsSeen.clear();
+		synchronized (lock) {
+			eventsSeen.clear();
+		}
 	}
 }

@@ -25,9 +25,21 @@ public class EventSerializationTests {
 	}
 
 	@Test
-	public void readCompressedSampleFile() {
+	public void readCompressedSampleFile3() {
 		List<Event> events = EventReader.readEventsFromResource("/testsession3.oos.gz");
 		Assert.assertEquals(events.size(), 25790);
+	}
+
+	@Test
+	public void readCompressedSampleFile4() {
+		List<Event> events = EventReader.readEventsFromResource("/testsession4.oos.gz");
+		Assert.assertEquals(events.size(), 498);
+	}
+
+	@Test
+	public void readCompressedSampleFile5() {
+		List<Event> events = EventReader.readEventsFromResource("/testsession5.oos.gz");
+		Assert.assertEquals(events.size(), 13232);
 	}
 
 }
