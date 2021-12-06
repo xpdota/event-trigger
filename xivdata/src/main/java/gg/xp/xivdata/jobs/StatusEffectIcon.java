@@ -12,6 +12,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StatusEffectIcon implements HasIconURL {
 
@@ -36,20 +38,42 @@ public class StatusEffectIcon implements HasIconURL {
 			loaded = true;
 		}
 		arrays.forEach(row -> {
+			long id;
 			try {
-				long id = Long.parseLong(row[0]);
-				long imageId = Long.parseLong(row[3]);
-				if (imageId != 0) {
-					csvValues.put(id, imageId);
-				}
+				id = Long.parseLong(row[0]);
 			}
 			catch (NumberFormatException nfe) {
-				// Ignore non-numeric
+				// Ignore the bad value at the top
+				return;
+			}
+			String rawImg = row[3];
+			if (rawImg.isEmpty()) {
+				return;
+			}
+			long imageId;
+			try {
+				imageId = Long.parseLong(rawImg);
+			}
+			catch (NumberFormatException nfe) {
+				Matcher matcher = texFilePattern.matcher(rawImg);
+				if (matcher.find()) {
+					imageId = Long.parseLong(matcher.group(1));
+				}
+				else {
+					throw new RuntimeException("Invalid image specifier: " + rawImg);
+					// Ignore non-numeric
+//					return;
+				}
+			}
+			if (imageId != 0) {
+				csvValues.put(id, imageId);
 			}
 		});
 
 		// If we fail, it's always going to fail, so continue without icons.
 	}
+
+	private static final Pattern texFilePattern = Pattern.compile("(\\d+)\\.tex");
 
 	public static void main(String[] args) {
 		readCsv();

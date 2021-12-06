@@ -12,7 +12,6 @@ import static gg.xp.xivdata.jobs.Job.NIN;
 import static gg.xp.xivdata.jobs.Job.PLD;
 import static gg.xp.xivdata.jobs.Job.RDM;
 import static gg.xp.xivdata.jobs.Job.SCH;
-import static gg.xp.xivdata.jobs.Job.SMN;
 import static gg.xp.xivdata.jobs.Job.WAR;
 import static gg.xp.xivdata.jobs.Job.WHM;
 import static gg.xp.xivdata.jobs.JobType.CASTER;
@@ -47,7 +46,6 @@ public enum Cooldown {
 	Brotherhood(MNK, 90.0, "Brotherhood", CooldownType.OFFENSIVE, 0x1ce4, -1),
 	DragonSight(DRG, 120.0, "Dragon Sight", CooldownType.OFFENSIVE, 0x1ce6, -1),
 	Troubadour(BRD, 120.0, "Troubadour", CooldownType.PARTY_TODO_CATEGORIZE_ME, 0x1ced, -1),
-	Aetherpact(SMN, 180.0, "Aetherpact", CooldownType.OFFENSIVE, 0x1cff, -1),
 	ChainStratagem(SCH, 120.0, "Chain Stratagem", CooldownType.OFFENSIVE, 0x1d0c, -1),
 	Embolden(RDM, 120.0, "Embolden", CooldownType.OFFENSIVE, 0x1d60, -1),
 	Rampart(TANK, 90.0, "Rampart", CooldownType.DEFENSIVE, 0x1d6b, -1),
