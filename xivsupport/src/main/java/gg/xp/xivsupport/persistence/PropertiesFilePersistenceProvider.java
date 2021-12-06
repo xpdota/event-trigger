@@ -66,7 +66,7 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 					parentFile.mkdirs();
 				}
 				try (FileOutputStream stream = new FileOutputStream(file)) {
-					properties.store(stream, "Saved programmatically");
+					properties.store(stream, "Saved programmatically - close program before editing");
 				}
 				if (!backupFile.exists()) {
 					if (!backupFile.createNewFile()) {
