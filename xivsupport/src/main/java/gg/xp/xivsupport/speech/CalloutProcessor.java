@@ -81,7 +81,10 @@ public class CalloutProcessor {
 
 	@HandleEvents
 	public void callout(EventContext context, CalloutEvent callout) {
-		context.accept(new TtsRequest(callout.getCallText()));
+		String callText = callout.getCallText();
+		if (callText != null) {
+			context.accept(new TtsRequest(callText));
+		}
 	}
 
 	@HandleEvents

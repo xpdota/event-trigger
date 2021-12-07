@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.persistence;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -95,12 +96,15 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 
 	@Override
 	protected void setValue(@NotNull String key, @Nullable String value) {
+		String truncated = StringUtils.abbreviate(value, 50);
+		log.info("Setting changed: {} -> {}", key, truncated);
 		properties.setProperty(key, value);
 		writeChangesToDisk();
 	}
 
 	@Override
 	protected void deleteValue(@NotNull String key) {
+		log.info("Setting deleted: {}", key);
 		properties.remove(key);
 		writeChangesToDisk();
 	}
@@ -112,6 +116,7 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 
 	@Override
 	protected void clearAllValues() {
+		log.info("Settings wiped");
 		properties.clear();
 		writeChangesToDisk();
 	}

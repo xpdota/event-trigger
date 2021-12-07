@@ -38,8 +38,8 @@ public class GuiWithImportedData {
 		List<Event> events = EventReader.readEventsFromResource("/testsession5.oos.gz");
 		long read = System.currentTimeMillis();
 		events.stream()
-//				.limit(10000)
-				.peek((e) -> doSleep(1))
+				.limit(10000)
+//				.peek((e) -> doSleep(1))
 				.forEach(dist::acceptEvent);
 		queue.waitDrain();
 		long finish = System.currentTimeMillis();

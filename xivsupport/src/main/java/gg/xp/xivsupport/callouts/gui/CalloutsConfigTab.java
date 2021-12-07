@@ -68,10 +68,10 @@ public class CalloutsConfigTab implements PluginTab {
 			c.gridwidth = 1;
 			innerPanel.add(new JPanel(), c);
 			c.gridwidth = GridBagConstraints.REMAINDER;
-			JLabel label = new JLabel(desc);
+			JLabel descriptionLabel = new JLabel(desc);
 			c.gridx ++;
 			c.weightx = 1;
-			innerPanel.add(label, c);
+			innerPanel.add(descriptionLabel, c);
 			c.weightx = 0;
 			c.gridwidth = 1;
 			callouts.forEach(call -> {
@@ -79,15 +79,44 @@ public class CalloutsConfigTab implements PluginTab {
 				c.gridx = 1;
 				innerPanel.add(new JPanel(), c);
 				c.gridx ++;
+				BooleanSetting enableTts = call.getEnableTts();
 				StringSetting ttsSetting = call.getTtsSetting();
+				BooleanSetting enableText = call.getEnableText();
 				StringSetting textSetting = call.getTextSetting();
 
 				innerPanel.add(new JLabel(call.getDescription()), c);
 
 				c.gridx ++;
-				innerPanel.add(new StringSettingGui(ttsSetting, "TTS").getComponent(), c);
+				{
+					JLabel label = new JLabel("TTS:");
+					JPanel holder = new JPanel();
+					holder.setLayout(new BoxLayout(holder, BoxLayout.LINE_AXIS));
+					JCheckBox checkbox = new BooleanSettingGui(enableTts, null).getComponent();
+					label.setLabelFor(checkbox);
+					holder.add(label);
+					holder.add(checkbox);
+					Component stringSetting = new StringSettingGui(ttsSetting, null).getTextBoxOnly();
+					holder.add(stringSetting);
+					innerPanel.add(holder, c);
+				}
 				c.gridx ++;
-				innerPanel.add(new StringSettingGui(textSetting, "Text").getComponent(), c);
+				JPanel padding = new JPanel();
+				padding.setSize(20, 1);
+				innerPanel.add(padding, c);
+				c.gridx ++;
+				{
+					JLabel label = new JLabel("Text:");
+					JPanel holder = new JPanel();
+					holder.setLayout(new BoxLayout(holder, BoxLayout.LINE_AXIS));
+					JCheckBox checkbox = new BooleanSettingGui(enableText, null).getComponent();
+					label.setLabelFor(checkbox);
+					holder.add(label);
+					holder.add(checkbox);
+					Component stringSetting = new StringSettingGui(textSetting, null).getTextBoxOnly();
+					holder.add(stringSetting);
+					innerPanel.add(holder, c);
+				}
+				c.gridx ++;
 				c.gridwidth = GridBagConstraints.REMAINDER;
 				innerPanel.add(new JPanel(), c);
 				c.gridwidth = 1;

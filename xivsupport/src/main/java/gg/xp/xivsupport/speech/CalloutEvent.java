@@ -21,8 +21,7 @@ public class CalloutEvent extends BaseEvent {
 		return visualText;
 	}
 
-	public @Nullable
-	String getCallText() {
+	public @Nullable String getCallText() {
 		return callText;
 	}
 }
