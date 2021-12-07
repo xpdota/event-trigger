@@ -15,7 +15,11 @@ public enum DotBuff {
 	MNK_Demolish(MNK, "Demolish", 0xf6L),
 	NIN_ShadowFang(NIN, "Shadow Fang", 0x1fcL),
 	PLD_GoringBlade(PLD, "Goring Blade", 0x2d5L),
+	WAR_StormsEye(WAR, "Storm's Eye", 0x5AL),
 	SAM_Higanbana(SAM, "Higanbana", 0x4ccL),
+	// TODO: this isn't really a dot, but it's something you'd want 100% uptime on
+	SAM_Fugetsu(SAM, "Fugetsu", 0x512L),
+	SAM_Fuka(SAM, "Fuka", 0x513L),
 	SCH_Bio(SCH, "Bio/II/Biolysis", 0xb3L, 0xbdL, 0x767L),
 //	SMN_Bio(SMN, "Bio/II/III", 0xb3L, 0xbdL, 0x4beL),
 //	SMN_Miasma(SMN, "Miasma/II/III", 0xb4L, 0xbcL, 0x4bfL),

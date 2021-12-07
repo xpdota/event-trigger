@@ -111,7 +111,13 @@ public class DotTrackerOverlay extends XivOverlay {
 						}))
 						.forEach((k, v) -> {
 							if (v.size() == 1) {
-								out.add(new VisualDotInfo(v.get(0)));
+								BuffApplied thisBuff = v.get(0);
+								if (thisBuff.getTarget().isThePlayer()) {
+									out.add(new VisualDotInfo(thisBuff, thisBuff.getBuff().getName()));
+								}
+								else {
+									out.add(new VisualDotInfo(thisBuff));
+								}
 							}
 							else {
 								out.add(new VisualDotInfo(v.get(0), String.format("%s Targets", v.size())));

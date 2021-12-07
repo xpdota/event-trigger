@@ -9,12 +9,14 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.reflections.scanners.Scanners.MethodsAnnotated;
@@ -37,8 +39,8 @@ public class AutoHandlerScan {
 	public List<AutoHandler> build() {
 		log.info("Scanning packages");
 		List<AutoHandler> out = new ArrayList<>();
-		ClassLoader loader = new ForceReloadClassLoader();
-		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
+//		ClassLoader loader = new ForceReloadClassLoader();
+//		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
 		try {
 			// TODO: Reload of existing classes is broken because reloading basic classes such as 'Event'
 			// in a new classloader causes the JVM to no longer see it as the same class, causing signature
@@ -114,7 +116,7 @@ public class AutoHandlerScan {
 			return out;
 		}
 		finally {
-			Thread.currentThread().setContextClassLoader(oldLoader);
+//			Thread.currentThread().setContextClassLoader(oldLoader);
 		}
 
 

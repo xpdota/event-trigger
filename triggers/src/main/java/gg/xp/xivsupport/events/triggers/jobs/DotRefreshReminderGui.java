@@ -28,7 +28,7 @@ public class DotRefreshReminderGui implements PluginTab {
 
 	@Override
 	public String getTabName() {
-		return "DoT Tracker";
+		return "DoT/Buff Tracker";
 	}
 
 	@Override

@@ -70,10 +70,18 @@ public enum Cooldown {
 	Tactician(MCH, 120.0, "Tactician", CooldownType.PARTY_TODO_CATEGORIZE_ME, 0x41f9, -1),
 
 
-
 	FOO(JobType.TANK, 30.0d, "Foo Buff", CooldownType.DEFENSIVE, 0x123, 0x456);
 
 	public enum CooldownType {
+		// TODO: change these to:
+		/*
+			Personal Mit,
+			Party Mit,
+			Personal Burst (both buff and damage CD),
+			Party Buff,
+			Personal Utility (lucid, etc),
+			Party utility (rescue, scholoton)
+		 */
 		DEFENSIVE,
 		OFFENSIVE,
 		PERSONAL,
