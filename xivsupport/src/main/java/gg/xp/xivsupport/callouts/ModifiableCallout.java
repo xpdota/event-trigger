@@ -43,8 +43,11 @@ public class ModifiableCallout {
 			log.warn("ModifiableCallout does not have handle yet ({})", description);
 			return new CalloutEvent(defaultTtsText, defaultVisualText);
 		}
-		return new CalloutEvent(
-				handle.getEnableTts().get() ? handle.getTtsSetting().get() : null,
-				handle.getEnableText().get() ? handle.getTextSetting().get() : null);
+		if (handle.isEffectivelyEnabled()) {
+			return new CalloutEvent(
+					handle.getEnableTts().get() ? handle.getTtsSetting().get() : null,
+					handle.getEnableText().get() ? handle.getTextSetting().get() : null);
+		}
+		return new CalloutEvent(null);
 	}
 }

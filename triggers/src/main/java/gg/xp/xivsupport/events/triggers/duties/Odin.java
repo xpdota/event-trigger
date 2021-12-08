@@ -12,7 +12,6 @@ import gg.xp.xivsupport.events.state.XivState;
 public class Odin implements FilteredEventHandler {
 
 	private final ModifiableCallout valknut = new ModifiableCallout("Valknut (Out)", "Out");
-	private final ModifiableCallout dummy = new ModifiableCallout("Dummy Callout to Test UI", "Out");
 
 	@Override
 	public boolean enabled(EventContext context) {

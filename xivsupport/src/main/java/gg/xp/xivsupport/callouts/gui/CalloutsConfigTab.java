@@ -1,25 +1,18 @@
 package gg.xp.xivsupport.callouts.gui;
 
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.jobs.DotBuff;
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
-import gg.xp.xivsupport.persistence.gui.LongSettingGui;
-import gg.xp.xivsupport.persistence.gui.StringSettingGui;
-import gg.xp.xivsupport.persistence.settings.BooleanSetting;
-import gg.xp.xivsupport.persistence.settings.StringSetting;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @ScanMe
 public class CalloutsConfigTab implements PluginTab {
@@ -56,70 +49,54 @@ public class CalloutsConfigTab implements PluginTab {
 		JPanel innerPanel = new JPanel();
 		innerPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		Map<String, List<ModifiedCalloutHandle>> calloutMap = backend.getAllCallouts();
+		List<CalloutGroup> calloutMap = backend.getAllCallouts();
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.LINE_START;
 		c.ipadx = 20;
-		c.gridy = 0;
-		calloutMap.forEach((desc, callouts) -> {
+		c.gridy = 3;
+		calloutMap.forEach((group) -> {
+			List<ModifiedCalloutHandle> callouts = group.getCallouts();
 			c.gridx = 0;
 			c.weightx = 0;
 			// left filler
 			c.gridwidth = 1;
 			innerPanel.add(new JPanel(), c);
 			c.gridwidth = GridBagConstraints.REMAINDER;
-			JLabel descriptionLabel = new JLabel(desc);
-			c.gridx ++;
+			JCheckBox topLevelCheckbox = new BooleanSettingGui(group.getEnabled(), group.getName()).getComponent();
+			c.gridx++;
 			c.weightx = 1;
-			innerPanel.add(descriptionLabel, c);
+			innerPanel.add(topLevelCheckbox, c);
 			c.weightx = 0;
 			c.gridwidth = 1;
+			List<CalloutSettingGui> csgs = new ArrayList<>();
 			callouts.forEach(call -> {
-				c.gridy ++;
+				c.gridy++;
 				c.gridx = 1;
 				innerPanel.add(new JPanel(), c);
-				c.gridx ++;
-				BooleanSetting enableTts = call.getEnableTts();
-				StringSetting ttsSetting = call.getTtsSetting();
-				BooleanSetting enableText = call.getEnableText();
-				StringSetting textSetting = call.getTextSetting();
+				c.gridx++;
+				CalloutSettingGui csg = new CalloutSettingGui(call);
+				csgs.add(csg);
 
-				innerPanel.add(new JLabel(call.getDescription()), c);
 
-				c.gridx ++;
-				{
-					JLabel label = new JLabel("TTS:");
-					JPanel holder = new JPanel();
-					holder.setLayout(new BoxLayout(holder, BoxLayout.LINE_AXIS));
-					JCheckBox checkbox = new BooleanSettingGui(enableTts, null).getComponent();
-					label.setLabelFor(checkbox);
-					holder.add(label);
-					holder.add(checkbox);
-					Component stringSetting = new StringSettingGui(ttsSetting, null).getTextBoxOnly();
-					holder.add(stringSetting);
-					innerPanel.add(holder, c);
-				}
-				c.gridx ++;
+				innerPanel.add(csg.getCallCheckbox(), c);
+
+				c.gridx++;
+				innerPanel.add(csg.getTtsPanel(), c);
+				c.gridx++;
 				JPanel padding = new JPanel();
 				padding.setSize(20, 1);
 				innerPanel.add(padding, c);
-				c.gridx ++;
-				{
-					JLabel label = new JLabel("Text:");
-					JPanel holder = new JPanel();
-					holder.setLayout(new BoxLayout(holder, BoxLayout.LINE_AXIS));
-					JCheckBox checkbox = new BooleanSettingGui(enableText, null).getComponent();
-					label.setLabelFor(checkbox);
-					holder.add(label);
-					holder.add(checkbox);
-					Component stringSetting = new StringSettingGui(textSetting, null).getTextBoxOnly();
-					holder.add(stringSetting);
-					innerPanel.add(holder, c);
-				}
-				c.gridx ++;
+				c.gridx++;
+				innerPanel.add(csg.getTextPanel(), c);
+				c.gridx++;
 				c.gridwidth = GridBagConstraints.REMAINDER;
 				innerPanel.add(new JPanel(), c);
 				c.gridwidth = 1;
+			});
+			csgs.forEach(csg -> csg.setEnabledByParent(topLevelCheckbox.isSelected()));
+			topLevelCheckbox.addActionListener(l -> {
+				csgs.forEach(csg -> csg.setEnabledByParent(topLevelCheckbox.isSelected()));
+				group.updateChildren();
 			});
 			c.gridx++;
 			c.weightx = 1;

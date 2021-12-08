@@ -12,9 +12,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ModifiedCalloutRepository {
@@ -29,7 +27,7 @@ public class ModifiedCalloutRepository {
 		this.persistence = persistence;
 	}
 
-	private final Map<String, List<ModifiedCalloutHandle>> allCallouts = new HashMap<>();
+	private final List<CalloutGroup> allCallouts = new ArrayList<>();
 
 	@HandleEvents
 	public void handleEvent(EventContext context, InitEvent init) {
@@ -45,6 +43,7 @@ public class ModifiedCalloutRepository {
 			List<Field> fields = Arrays.stream(clazz.getDeclaredFields()).filter(f -> ModifiableCallout.class.isAssignableFrom(f.getType()))
 					.collect(Collectors.toList());
 			String classPropStub = "callouts." + clazz.getCanonicalName();
+			String topLevelPropStub = "callouts.group." + clazz.getCanonicalName();
 			fields.forEach(f -> {
 				String fieldName = f.getName();
 				String fullPropStub = classPropStub + "." + fieldName;
@@ -60,12 +59,12 @@ public class ModifiedCalloutRepository {
 				original.attachHandle(modified);
 				callouts.add(modified);
 			});
-			allCallouts.put(description, callouts);
+			allCallouts.add(new CalloutGroup(description, topLevelPropStub, persistence, callouts));
 		});
 		log.info("Found {} callout repo classes", allCallouts.size());
 	}
 
-	public Map<String, List<ModifiedCalloutHandle>> getAllCallouts() {
-		return Collections.unmodifiableMap(allCallouts);
+	public List<CalloutGroup> getAllCallouts() {
+		return Collections.unmodifiableList(allCallouts);
 	}
 }
