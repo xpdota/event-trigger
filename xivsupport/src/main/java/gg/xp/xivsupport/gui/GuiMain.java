@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
@@ -53,7 +52,6 @@ import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
@@ -78,7 +76,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class GuiMain {
@@ -176,7 +173,8 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("System Log", getSystemLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", new JPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", getImportExportTab()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
 //		container.addComponent(OverlayMain.class);
 //		container.getComponent(OverlayMain.class);
 	}
@@ -915,4 +913,34 @@ public class GuiMain {
 		}).start();
 		return table;
 	}
+
+	private JPanel getImportExportTab() {
+		return new TitleBorderFullsizePanel("Import/Export", new JLabel("Coming Soon!"));
+	}
+
+	private JPanel getOverlayConfigTab() {
+		JTextArea text2 = new JTextArea("By default, they are hidden. Use /e c:overlay:show or /e c:overlay:hide to show/hide. /e c:overlay:edit or /e c:overlay:lock to enter/exit edit mode, allowing you to drag the borders around.");
+		text2.setOpaque(false);
+		text2.setEditable(false);
+		text2.setBorder(null);
+		text2.setLineWrap(true);
+		text2.setWrapStyleWord(true);
+		JLabel text1 = new JLabel("Overlays work, but I haven't made the tab for managing them yet.");
+		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Import/Export");
+		panel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.weightx = 1;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		panel.add(text1, c);
+		c.gridy++;
+		panel.add(text2, c);
+		c.gridy++;
+		c.weighty = 1;
+		panel.add(new JPanel(), c);
+		return panel;
+	}
+
 }
