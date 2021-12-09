@@ -67,7 +67,7 @@ public class DotRefreshReminderTest {
 				1));
 		// My player, second enemy
 		dist.acceptEvent(new BuffApplied(
-				new XivStatusEffect(0x74fL, "Foo4"),
+				new XivStatusEffect(0x74fL, "Eukrasian Dosis V"),
 				9,
 				thePlayer,
 				enemy2,
@@ -81,7 +81,7 @@ public class DotRefreshReminderTest {
 				1));
 		// My player, second enemy, outside of the time window
 		dist.acceptEvent(new BuffApplied(
-				new XivStatusEffect(0x74fL, "Foo6"),
+				new XivStatusEffect(0x74fL, "Bar IV"),
 				11,
 				thePlayer,
 				enemy3,
@@ -101,10 +101,10 @@ public class DotRefreshReminderTest {
 			Assert.assertEquals(delayedEvents.size(), 3);
 			List<CalloutEvent> callouts = coll.getEventsOf(CalloutEvent.class);
 			List<String> calloutData = callouts.stream().map(CalloutEvent::getCallText).collect(Collectors.toList());
-			MatcherAssert.assertThat(calloutData, Matchers.contains("Foo2", "Foo4"));
+			MatcherAssert.assertThat(calloutData, Matchers.contains("Foo2", "Dosis"));
 			List<TtsRequest> ttsEvents = coll.getEventsOf(TtsRequest.class);
 			List<String> ttsData = ttsEvents.stream().map(TtsRequest::getTtsString).collect(Collectors.toList());
-			MatcherAssert.assertThat(ttsData, Matchers.contains("Foo2", "Foo4"));
+			MatcherAssert.assertThat(ttsData, Matchers.contains("Foo2", "Dosis"));
 			coll.clear();
 		}
 
@@ -114,10 +114,10 @@ public class DotRefreshReminderTest {
 			Assert.assertEquals(delayedEvents.size(), 1);
 			List<CalloutEvent> callouts = coll.getEventsOf(CalloutEvent.class);
 			List<String> calloutData = callouts.stream().map(CalloutEvent::getCallText).collect(Collectors.toList());
-			MatcherAssert.assertThat(calloutData, Matchers.contains("Foo6"));
+			MatcherAssert.assertThat(calloutData, Matchers.contains("Bar"));
 			List<TtsRequest> ttsEvents = coll.getEventsOf(TtsRequest.class);
 			List<String> ttsData = ttsEvents.stream().map(TtsRequest::getTtsString).collect(Collectors.toList());
-			MatcherAssert.assertThat(ttsData, Matchers.contains("Foo6"));
+			MatcherAssert.assertThat(ttsData, Matchers.contains("Bar"));
 			coll.clear();
 		}
 

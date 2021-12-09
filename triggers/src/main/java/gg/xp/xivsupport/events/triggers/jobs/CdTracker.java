@@ -129,7 +129,9 @@ public class CdTracker {
 		XivAbility originalAbility = event.originalEvent.getAbility();
 		if (event.originalKey == cdResetKey) {
 			log.info("CD callout still valid");
-			context.accept(new CalloutEvent(originalAbility.getName()));
+			if (enableTts.get()) {
+				context.accept(new CalloutEvent(originalAbility.getName()));
+			}
 		}
 		else {
 			log.info("Not calling {} - no longer valid", originalAbility.getName());

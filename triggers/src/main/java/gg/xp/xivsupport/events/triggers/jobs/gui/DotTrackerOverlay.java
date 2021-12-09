@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @ScanMe
@@ -47,7 +48,7 @@ public class DotTrackerOverlay extends XivOverlay {
 					c.setMaxWidth(22);
 					c.setMinWidth(22);
 				}))
-				.addColumn(new CustomColumn<>("Bar", c -> c,
+				.addColumn(new CustomColumn<>("Bar", Function.identity(),
 						c -> {
 							c.setCellRenderer(new DotBarRenderer());
 							c.setMaxWidth(150);
@@ -63,10 +64,11 @@ public class DotTrackerOverlay extends XivOverlay {
 			while (true) {
 				try {
 					refresh();
-					// 200ms is the optimal update interval - typical dot is 30 seconds, and the bar is 150 pixels wide,
-					// so we'd expect 5 updates per second
+					// 200ms is the optimal update interval at 100% scale - typical dot is 30 seconds, and the bar is
+					// 150 pixels wide, so we'd expect 5 updates per second. But then we also need to adjust by the
+					// scale factor.
 					//noinspection BusyWait
-					Thread.sleep(200);
+					Thread.sleep((int) (200 / getScale()));
 				}
 				catch (Throwable e) {
 					log.error("Error refreshing dots", e);

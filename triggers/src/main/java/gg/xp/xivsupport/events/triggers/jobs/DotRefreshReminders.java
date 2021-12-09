@@ -128,13 +128,31 @@ public class DotRefreshReminders {
 			}
 			else {
 				if (!suppressSpamCallouts || Duration.between(lastCallout, now).toMillis() > 500) {
-					context.accept(new CalloutEvent(originalEvent.getBuff().getName()));
+					String name = originalEvent.getBuff().getName();
+					String adjustedName = adjustDotName(name);
+					context.accept(new CalloutEvent(adjustedName));
 				}
 				lastCallout = now;
 			}
 		}
 		else {
 			log.debug("Not calling");
+		}
+	}
+
+	private static String adjustDotName(String originalName) {
+		// Special case for SGE
+		if (originalName.startsWith("Eukrasian")) {
+			return "Dosis";
+		}
+		else if (originalName.endsWith(" II") || originalName.endsWith(" IV")) {
+			return originalName.substring(0, originalName.length() - 3);
+		}
+		else if (originalName.endsWith(" III")) {
+			return originalName.substring(0, originalName.length() - 4);
+		}
+		else {
+			return originalName;
 		}
 	}
 

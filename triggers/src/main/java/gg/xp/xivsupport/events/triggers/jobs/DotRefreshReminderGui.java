@@ -33,7 +33,7 @@ public class DotRefreshReminderGui implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
-		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Dots");
+		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Dots and Buffs");
 //		outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.PAGE_AXIS));
 		outerPanel.setLayout(new BorderLayout());
 

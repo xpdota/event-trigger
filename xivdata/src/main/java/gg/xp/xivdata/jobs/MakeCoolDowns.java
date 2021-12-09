@@ -69,18 +69,19 @@ public final class MakeCoolDowns {
 
 			String typeRaw = item.get("type").toString();
 			switch (typeRaw) {
+				// TODO: these don't really match up
 				case "RaidBuff":
-					cdData.cdType = Cooldown.CooldownType.OFFENSIVE;
+					cdData.cdType = Cooldown.CooldownType.PARTY_BUFF;
 					break;
 				case "Mitigation":
-					cdData.cdType = Cooldown.CooldownType.DEFENSIVE;
+					cdData.cdType = Cooldown.CooldownType.PERSONAL_MIT;
 					break;
 				case "Buff":
-					cdData.cdType = Cooldown.CooldownType.PERSONAL;
+					cdData.cdType = Cooldown.CooldownType.PERSONAL_BURST;
 					break;
 				case "Party":
 				default:
-					cdData.cdType = Cooldown.CooldownType.PARTY_TODO_CATEGORIZE_ME;
+					cdData.cdType = Cooldown.CooldownType.PARTY_MIT;
 					break;
 			}
 			if (cdData.fullName.endsWith(" Finish")) {
