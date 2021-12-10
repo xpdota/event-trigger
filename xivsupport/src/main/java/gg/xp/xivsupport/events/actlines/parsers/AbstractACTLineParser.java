@@ -21,13 +21,18 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	private final int lineNumber;
 	private final String lineStart;
 	private final List<@Nullable F> groups;
+	private final boolean splitAll;
 
 	AbstractACTLineParser(int logLineNumber, Class<F> enumCls) {
-		this(logLineNumber, Arrays.asList(enumCls.getEnumConstants()));
+		this(logLineNumber, enumCls, false);
+	}
+	AbstractACTLineParser(int logLineNumber, Class<F> enumCls, boolean splitAll) {
+		this(logLineNumber, Arrays.asList(enumCls.getEnumConstants()), splitAll);
 	}
 
 	@SuppressWarnings({"ConstantConditions", "unchecked"})
-	AbstractACTLineParser(int logLineNumber, List<@Nullable F> groups) {
+	AbstractACTLineParser(int logLineNumber, List<@Nullable F> groups, boolean splitAll) {
+		this.splitAll = splitAll;
 		if (groups.isEmpty()) {
 			// TODO: could some of them make sense as empty?
 			throw new IllegalArgumentException("Capture groups cannot be empty");
@@ -47,9 +52,14 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	public void handle(EventContext context, ACTLogLineEvent event) {
 		String line = event.getLogLine();
 		if (line.startsWith(lineStart)) {
-			int numSplits = groups.size() + 3;
-
-			String[] splits = line.split("\\|", numSplits);
+			String[] splits;
+			if (splitAll) {
+				splits = line.split("\\|");
+			}
+			else {
+				int numSplits = groups.size() + 3;
+				splits = line.split("\\|", numSplits);
+			}
 			Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
 			// TODO: validate number of fields
 			for (int i = 0; i < groups.size(); i++) {
@@ -57,7 +67,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				out.put(groups.get(i), splits[i + 2]);
 			}
 			ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
-			FieldMapper<F> mapper = new FieldMapper<>(out, context, entityLookupMissBehavior());
+			FieldMapper<F> mapper = new FieldMapper<>(out, context, entityLookupMissBehavior(), splits);
 			Event outgoingEvent;
 			try {
 				outgoingEvent = convert(mapper, lineNumber, zdt);

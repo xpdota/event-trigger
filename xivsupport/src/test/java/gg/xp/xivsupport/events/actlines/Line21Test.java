@@ -25,6 +25,42 @@ public class Line21Test extends AbstractACTLineTest<AbilityUsedEvent> {
 	}
 
 	@Test
+	public void damageTests() {
+		String lineTemplate = "21|2021-11-06T09:46:46.4900000-07:00|107361AF|Foo Bar|200524E|Item_524E|107361AD|The Target|%x|%x|1B|270A8000|0|0|0|0|0|0|0|0|0|0|0|0|170781|170781|10000|10000|0|1000|-46.33868|20.93576|1.6|-1.167042|170781|170781|10000|10000|0|1000|-46.33868|20.93576|1.6|-1.167042|000BACE5|0|104137929bde2acb55f6b35d58ffb560";
+		{
+			AbilityUsedEvent event = expectEvent(String.format(lineTemplate, 0x750003, 0x47280000));
+			long damage = event.getDamage();
+			Assert.assertEquals(damage, 18216);
+		}
+		{
+			AbilityUsedEvent event = expectEvent(String.format(lineTemplate, 0x750003, 0x426B4001));
+			long damage = event.getDamage();
+			Assert.assertEquals(damage, 82538);
+		}
+		{
+			AbilityUsedEvent event = expectEvent(String.format(lineTemplate, 0x750003, 0x565D0000));
+			long damage = event.getDamage();
+			Assert.assertEquals(damage, 22109);
+		}
+//		{
+//			AbilityUsedEvent event = expectEvent(String.format(lineTemplate, 0x313, 0x4C3));
+//			long damage = event.getDamage();
+//			Assert.assertEquals(damage, 15732);
+//		}
+		{
+			AbilityUsedEvent event = expectEvent(String.format(lineTemplate, 0x33, 0));
+			long damage = event.getDamage();
+			Assert.assertEquals(damage, 0);
+		}
+		{
+			AbilityUsedEvent event = expectEvent(String.format(lineTemplate, 0, 0));
+			long damage = event.getDamage();
+			Assert.assertEquals(damage, 0);
+		}
+
+	}
+
+	@Test
 	public void negativeTest() {
 		assertNoEvent("25|2021-11-06T09:46:46.4900000-07:00|107361AF|Foo Bar|200524E|Item_524E|107361AD|The Target|33C|20000|1B|270A8000|0|0|0|0|0|0|0|0|0|0|0|0|170781|170781|10000|10000|0|1000|-46.33868|20.93576|1.6|-1.167042|170781|170781|10000|10000|0|1000|-46.33868|20.93576|1.6|-1.167042|000BACE5|0|104137929bde2acb55f6b35d58ffb560");
 	}

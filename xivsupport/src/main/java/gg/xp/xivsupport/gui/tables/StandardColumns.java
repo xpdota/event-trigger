@@ -103,7 +103,14 @@ public class StandardColumns {
 	public static final CustomColumn<Map.Entry<Field, Object>> fieldName
 			= new CustomColumn<>("Field", e -> e.getKey().getName());
 	public static final CustomColumn<Map.Entry<Field, Object>> fieldValue
-			= new CustomColumn<>("Value", Map.Entry::getValue);
+			= new CustomColumn<>("Value", fieldObjectEntry -> {
+
+		Object value = fieldObjectEntry.getValue();
+		if (value instanceof Long || value instanceof Integer) {
+			return String.format("0x%x (%d)", value, value);
+		}
+		return value;
+	});
 	public static final CustomColumn<Map.Entry<Field, Object>> identity
 			= new CustomColumn<>("Identity", e -> {
 		if (e.getKey().getType().isPrimitive()) {

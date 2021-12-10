@@ -28,11 +28,11 @@ public enum Cooldown {
 	ThrillofBattle(WAR, 90.0, "Thrill of Battle", CooldownType.PERSONAL_MIT, 0x28, 87),
 	Holmgang(WAR, 240.0, "Holmgang", CooldownType.INVULN, 0x2b, 409),
 	Vengeance(WAR, 120.0, "Vengeance", CooldownType.PERSONAL_MIT, 0x2c, 89),
-	// TODO: need to figure out if BRD buffs have correct duration, also some apply to self vs team
-	MagesBallad(BRD, 80.0, "Mage's Ballad", CooldownType.PARTY_BUFF, 0x72, 2217),
-	ArmysPaeon(BRD, 80.0, "Army's Paeon", CooldownType.PARTY_BUFF, 0x74, 2214),
-	BattleVoice(BRD, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 141),
-	theWanderersMinuet(BRD, 80.0, "the Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 865),
+	// TODO: these do not have correct duration - need to fix
+	MagesBallad(BRD, 120.0, "Mage's Ballad", CooldownType.PARTY_BUFF, 0x72, 0x8a9),
+	ArmysPaeon(BRD, 120.0, "Army's Paeon", CooldownType.PARTY_BUFF, 0x74, 0x8aa),
+	WanderersMinuet(BRD, 120.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
+	BattleVoice(BRD, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 0x8d),
 	Benediction(WHM, 180.0, "Benediction", CooldownType.HEAL, 0x8c),
 	SacredSoil(SCH, 30.0, "Sacred Soil", CooldownType.PARTY_MIT, 0xbc, 0x798),
 	// TODO - check ability ID

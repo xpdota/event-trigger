@@ -7,6 +7,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
@@ -37,6 +38,7 @@ import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
+import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tree.TopologyTreeEditor;
@@ -738,6 +740,13 @@ public class GuiMain {
 				}, c -> {
 					c.setCellRenderer(new ActionAndStatusRenderer());
 				}))
+				.addMainColumn(new CustomColumn<>("Dmg/Heal", e -> {
+					if (e instanceof AbilityUsedEvent) {
+						AbilityUsedEvent event = (AbilityUsedEvent) e;
+						return event.getEffects();
+					}
+					return null;
+				}, c -> c.setCellRenderer(new AbilityEffectListRenderer())))
 				.addMainColumn(new CustomColumn<>("Parent", e -> {
 					Event parent = e.getParent();
 					return parent == null ? null : parent.getClass().getSimpleName();

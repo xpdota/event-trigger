@@ -25,6 +25,10 @@ public final class IconTextRenderer {
 	}
 
 	public static Component getComponent(HasIconURL value, Component defaultLabel, boolean iconOnly) {
+		return getComponent(value, defaultLabel, iconOnly, false);
+	}
+
+	public static Component getComponent(HasIconURL value, Component defaultLabel, boolean iconOnly, boolean textOnleft) {
 
 		ScaledImageComponent scaled = cache.computeIfAbsent(value, ignored -> {
 			URL imageUrl = value.getIcon();
@@ -43,19 +47,35 @@ public final class IconTextRenderer {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		c.ipadx = 0;
-		c.ipady = 0;
-		c.weightx = 0;
-		panel.setOpaque(true);
-		panel.setBackground(defaultLabel.getBackground());
-		panel.add(scaled, c);
-		c.ipadx = 5;
-		c.weightx = 1;
-		c.anchor = GridBagConstraints.FIRST_LINE_START;
-		panel.add(defaultLabel, c);
+		if (textOnleft) {
+			c.ipadx = 0;
+			c.ipady = 0;
+			c.weightx = 1;
+			panel.setOpaque(true);
+			panel.setBackground(defaultLabel.getBackground());
+			panel.add(defaultLabel, c);
+			c.ipadx = 5;
+			c.weightx = 0;
+			c.anchor = GridBagConstraints.FIRST_LINE_START;
+			panel.add(scaled, c);
+
+		}
+		else {
+			c.ipadx = 0;
+			c.ipady = 0;
+			c.weightx = 0;
+			panel.setOpaque(true);
+			panel.setBackground(defaultLabel.getBackground());
+			panel.add(scaled, c);
+			c.ipadx = 5;
+			c.weightx = 1;
+			c.anchor = GridBagConstraints.FIRST_LINE_START;
+			panel.add(defaultLabel, c);
+		}
 		return panel;
 	}
 
+	// TODO: this seems to just break if you have multiple of the same buff
 	private static class ScaledImageComponent extends JComponent {
 		private final Image image;
 		private final int size;
