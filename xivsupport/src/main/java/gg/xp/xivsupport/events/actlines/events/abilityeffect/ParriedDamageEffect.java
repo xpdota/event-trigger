@@ -1,10 +1,10 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
-public class MpGain extends AbilityEffect {
+public class ParriedDamageEffect extends AbilityEffect {
 	private final long amount;
 
-	public MpGain(long amount) {
-		super(AbilityEffectType.HEAL);
+	public ParriedDamageEffect(long amount) {
+		super(AbilityEffectType.PARRIED);
 		this.amount = amount;
 	}
 
@@ -14,11 +14,11 @@ public class MpGain extends AbilityEffect {
 
 	@Override
 	public String toString() {
-		return String.format("+M(%s)", amount);
+		return String.format("Parry(%s)", amount);
 	}
 
 	@Override
 	public String getDescription() {
-		return String.format("Gained MP: %s", amount);
+		return String.format("Parried: %s", amount);
 	}
 }

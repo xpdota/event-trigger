@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
+
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -19,6 +21,7 @@ public class AbilityEffectListRenderer implements TableCellRenderer {
 			JPanel panel = new JPanel();
 			panel.setBackground(defaultLabel.getBackground());
 			panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+			StringBuilder tooltipBuilder = new StringBuilder();
 			for (int i = 0; i < coll.size(); i++) {
 				Object obj = coll.get(i);
 				AbilityEffectRenderer renderer;
@@ -31,10 +34,18 @@ public class AbilityEffectListRenderer implements TableCellRenderer {
 				}
 				Component component = renderer.getTableCellRendererComponent(table, obj, isSelected, hasFocus, row, column);
 				panel.add(component);
+				if (obj instanceof AbilityEffect) {
+					tooltipBuilder.append(((AbilityEffect) obj).getDescription());
+					tooltipBuilder.append('\n');
+				}
 			}
 
 			if (coll.size() > 1) {
 				int foo = 5 + 2;
+			}
+			String tooltip = tooltipBuilder.toString().stripTrailing();
+			if (!tooltip.isEmpty()) {
+				panel.setToolTipText(tooltip);
 			}
 
 			return panel;

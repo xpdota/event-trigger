@@ -22,4 +22,14 @@ public class DamageEffect extends AbilityEffect {
 	public String toString() {
 		return String.format("D(%s%s)", severity.getSymbol(), amount);
 	}
+
+	@Override
+	public String getDescription() {
+		if (severity == HitSeverity.NORMAL) {
+			return String.format("Damage: %s", amount);
+		}
+		else {
+			return String.format("Damage: %s (%s)", amount, severity.getFriendlyName());
+		}
+	}
 }

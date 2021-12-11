@@ -4,6 +4,7 @@ import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
@@ -55,6 +56,7 @@ import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -97,7 +99,8 @@ public class GuiMain {
 			MutablePicoContainer pico = XivMain.masterInit();
 			pico.addComponent(GuiMain.class);
 			pico.getComponent(GuiMain.class);
-			// TODO: doesn't transfer over to test modes
+			// TODO: make this a setting
+//			FailOnThreadViolationRepaintManager.install();
 		}
 		catch (Throwable e) {
 			log.error("Startup Error!", e);
@@ -222,21 +225,16 @@ public class GuiMain {
 			add(combatantsPanel, c);
 			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
-			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> {
-				xivStateStatus.refresh();
-				xivPartyPanel.refresh();
-				combatantsPanel.refresh();
-			});
-			master.getDistributor().registerHandler(BuffApplied.class, (ctx, e) -> {
-				xivStateStatus.refresh();
-				xivPartyPanel.refresh();
-				combatantsPanel.refresh();
-			});
-			master.getDistributor().registerHandler(BuffRemoved.class, (ctx, e) -> {
-				xivStateStatus.refresh();
-				xivPartyPanel.refresh();
-				combatantsPanel.refresh();
-			});
+			EventHandler update = (ctx, e) -> {
+				SwingUtilities.invokeLater(() -> {
+					xivStateStatus.refresh();
+					xivPartyPanel.refresh();
+					combatantsPanel.refresh();
+				});
+			};
+			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, update);
+			master.getDistributor().registerHandler(BuffApplied.class, update);
+			master.getDistributor().registerHandler(BuffRemoved.class, update);
 		}
 	}
 
@@ -265,7 +263,7 @@ public class GuiMain {
 		}
 
 		public void connectionStatusChange(EventContext context, ActWsConnectionStatusChangedEvent event) {
-			updateGui();
+			SwingUtilities.invokeLater(this::updateGui);
 		}
 
 		private void updateGui() {

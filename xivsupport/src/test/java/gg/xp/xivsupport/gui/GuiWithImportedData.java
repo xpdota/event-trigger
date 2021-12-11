@@ -9,6 +9,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.eventstorage.EventReader;
 import gg.xp.xivsupport.sys.XivMain;
+import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,8 @@ public class GuiWithImportedData {
 		log.info("Time to read, decompress, and deserialize: {}ms", read - start);
 		log.info("Time to replay: {}ms", finish - read);
 
+		// TODO: make this a setting
+		FailOnThreadViolationRepaintManager.install();
 
 	}
 	private static void doSleep(long ms) {

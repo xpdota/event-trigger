@@ -22,4 +22,16 @@ public class HealEffect extends AbilityEffect {
 	public String toString() {
 		return String.format("H(%s%s)", severity.getSymbol(), amount);
 	}
+
+
+	@Override
+	public String getDescription() {
+		if (severity == HitSeverity.NORMAL) {
+			return String.format("Heal: %s", amount);
+		}
+		else {
+			return String.format("Heal: %s (%s)", amount, severity.getFriendlyName());
+		}
+	}
+
 }

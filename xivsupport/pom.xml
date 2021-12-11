@@ -127,6 +127,11 @@
             <artifactId>jna-platform</artifactId>
             <version>5.10.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-swing</artifactId>
+            <version>3.17.1</version>
+        </dependency>
 
     </dependencies>
 </project>

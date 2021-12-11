@@ -2,14 +2,18 @@ package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.FullyResistedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.InvulnBlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.MissEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpGain;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpLoss;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.NoEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.OtherEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
 import gg.xp.xivsupport.events.state.XivState;
@@ -159,6 +163,18 @@ public class FieldMapper<K extends Enum<K>> {
 				case 4:
 					out.add(new HealEffect(calcSeverity(healSeverityByte), calcDamage(value)));
 					break;
+				case 5:
+					out.add(new BlockedDamageEffect(calcDamage(value)));
+					break;
+				case 6:
+					out.add(new ParriedDamageEffect(calcDamage(value)));
+					break;
+				case 7:
+					out.add(new InvulnBlockedDamageEffect(calcDamage(value)));
+					break;
+				case 8:
+					out.add(new NoEffect());
+					break;
 				case 10:
 					out.add(new MpLoss(value >> 16));
 					break;
@@ -185,6 +201,9 @@ public class FieldMapper<K extends Enum<K>> {
 				case 61:
 					// Gauge build?
 					break;
+
+				case 74:
+					// Don't know - saw it on Superbolide
 
 				default:
 					out.add(new OtherEffect(flags, value));

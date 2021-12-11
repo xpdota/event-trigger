@@ -37,6 +37,8 @@ public class DotTrackerOverlay extends XivOverlay {
 	private volatile List<BuffApplied> currentDots = Collections.emptyList();
 	private volatile List<VisualDotInfo> croppedDots = Collections.emptyList();
 
+	private static final int BAR_WIDTH = 150;
+
 
 	public DotTrackerOverlay(PersistenceProvider persistence, DotRefreshReminders dots) {
 		super("Dot Tracker", "dot-tracker.overlay", persistence);
@@ -44,15 +46,15 @@ public class DotTrackerOverlay extends XivOverlay {
 		this.dots = dots;
 		tableModel = CustomTableModel.builder(() -> croppedDots)
 				.addColumn(new CustomColumn<>("Icon", c -> c.getEvent().getBuff(), c -> {
-					c.setCellRenderer(new ActionAndStatusRenderer(true));
-					c.setMaxWidth(22);
-					c.setMinWidth(22);
+					c.setCellRenderer(new ActionAndStatusRenderer(true, false, false));
+					c.setMaxWidth(20);
+					c.setMinWidth(20);
 				}))
 				.addColumn(new CustomColumn<>("Bar", Function.identity(),
 						c -> {
 							c.setCellRenderer(new DotBarRenderer());
-							c.setMaxWidth(150);
-							c.setMinWidth(150);
+							c.setMaxWidth(BAR_WIDTH);
+							c.setMinWidth(BAR_WIDTH);
 						}))
 				.build();
 		getPanel().setPreferredSize(new Dimension(200, 200));
@@ -67,8 +69,10 @@ public class DotTrackerOverlay extends XivOverlay {
 					// 200ms is the optimal update interval at 100% scale - typical dot is 30 seconds, and the bar is
 					// 150 pixels wide, so we'd expect 5 updates per second. But then we also need to adjust by the
 					// scale factor.
+					// TODO I think this is actually wrong - the logical width of the bar is always the same, so we
+					// end up skipping pixels anyway
 					//noinspection BusyWait
-					Thread.sleep((int) (200 / getScale()));
+					Thread.sleep((int) (BAR_WIDTH / getScale()));
 				}
 				catch (Throwable e) {
 					log.error("Error refreshing dots", e);

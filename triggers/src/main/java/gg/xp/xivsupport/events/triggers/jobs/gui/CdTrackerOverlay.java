@@ -40,6 +40,7 @@ public class CdTrackerOverlay extends XivOverlay {
 	private volatile List<VisualCdInfo> croppedCds = Collections.emptyList();
 	private volatile List<BuffApplied> currentBuffs = Collections.emptyList();
 
+	private static final int BAR_WIDTH = 150;
 
 	public CdTrackerOverlay(PersistenceProvider persistence, CdTracker cdTracker, StatusEffectRepository buffRepo) {
 		super("Cd Tracker", "cd-tracker.overlay", persistence);
@@ -47,15 +48,15 @@ public class CdTrackerOverlay extends XivOverlay {
 		this.buffRepo = buffRepo;
 		tableModel = CustomTableModel.builder(() -> croppedCds)
 				.addColumn(new CustomColumn<>("Icon", c -> c.getEvent().getAbility(), c -> {
-					c.setCellRenderer(new ActionAndStatusRenderer(true));
+					c.setCellRenderer(new ActionAndStatusRenderer(true, false, false));
 					c.setMaxWidth(22);
 					c.setMinWidth(22);
 				}))
 				.addColumn(new CustomColumn<>("Bar", Function.identity(),
 						c -> {
 							c.setCellRenderer(new CdBarRenderer());
-							c.setMaxWidth(150);
-							c.setMinWidth(150);
+							c.setMaxWidth(BAR_WIDTH);
+							c.setMinWidth(BAR_WIDTH);
 						}))
 				.build();
 		getPanel().setPreferredSize(new Dimension(200, 200));

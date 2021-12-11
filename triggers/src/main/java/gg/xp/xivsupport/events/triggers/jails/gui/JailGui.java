@@ -92,7 +92,6 @@ public class JailGui implements PluginTab {
 		toggles.add(new BooleanSettingGui(jails.getOverrideZoneLock(), "Override Zone Lock (for testing)").getComponent());
 
 
-
 		panel.add(toggles, c);
 
 		c.gridy++;
@@ -146,9 +145,11 @@ public class JailGui implements PluginTab {
 
 	@HandleEvents
 	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-		if (partyTableModel != null) {
-			partyTableModel.fullRefresh();
-		}
+		SwingUtilities.invokeLater(() -> {
+			if (partyTableModel != null) {
+				partyTableModel.fullRefresh();
+			}
+		});
 	}
 
 

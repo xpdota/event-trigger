@@ -30,4 +30,9 @@ public class StatusAppliedEffect extends AbilityEffect {
 	public boolean isOnTarget() {
 		return onTarget;
 	}
+
+	@Override
+	public String getDescription() {
+		return String.format("Applied Status 0x%x to %s", status.getId(), onTarget ? "Target" : "Caster");
+	}
 }

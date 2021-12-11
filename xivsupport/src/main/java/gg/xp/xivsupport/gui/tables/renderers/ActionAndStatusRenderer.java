@@ -15,13 +15,15 @@ import java.awt.*;
 public class ActionAndStatusRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
 	private final boolean iconOnly;
+	private final boolean bypassCache;
 
 	public ActionAndStatusRenderer() {
-		this(false);
+		this(false, false, true);
 	}
 
-	public ActionAndStatusRenderer(boolean iconOnly) {
+	public ActionAndStatusRenderer(boolean iconOnly, boolean bypassCache, boolean enableTooltips) {
 		this.iconOnly = iconOnly;
+		this.bypassCache = bypassCache;
 	}
 
 	@Override
@@ -40,11 +42,16 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 			return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 		}
 		HasIconURL icon;
+		String tooltip;
 		if (value instanceof XivAbility) {
-			icon = ActionIcon.forId(((XivAbility) value).getId());
+			XivAbility ability = ((XivAbility) value);
+			icon = ActionIcon.forId(ability.getId());
+			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 		}
 		else if (value instanceof XivStatusEffect) {
-			icon = StatusEffectIcon.forId(((XivStatusEffect) value).getId());
+			XivStatusEffect status = (XivStatusEffect) value;
+			icon = StatusEffectIcon.forId(status.getId());
+			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
 		}
 		else {
 			// Would never actually happen
@@ -53,7 +60,9 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		if (icon == null) {
 			return defaultLabel;
 		}
-		return IconTextRenderer.getComponent(icon, defaultLabel, iconOnly);
+		Component component = IconTextRenderer.getComponent(icon, defaultLabel, iconOnly, false, bypassCache);
+		RenderUtils.setTooltip(component, tooltip);
+		return component;
 
 
 	}

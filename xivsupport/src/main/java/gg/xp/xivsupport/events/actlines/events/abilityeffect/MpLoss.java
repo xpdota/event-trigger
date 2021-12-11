@@ -16,4 +16,9 @@ public class MpLoss extends AbilityEffect {
 	public String toString() {
 		return String.format("-M(%s)", amount);
 	}
+
+	@Override
+	public String getDescription() {
+		return String.format("Lost MP: %s", amount);
+	}
 }

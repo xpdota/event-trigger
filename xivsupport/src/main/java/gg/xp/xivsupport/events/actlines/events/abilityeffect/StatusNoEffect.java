@@ -7,12 +7,21 @@ public class StatusNoEffect extends AbilityEffect {
 
 	// TODO: target
 	public StatusNoEffect(long id) {
-		super(AbilityEffectType.NO_EFFECT);
+		super(AbilityEffectType.STATUS_NO_EFFECT);
 		this.status = new XivStatusEffect(id, "");
 	}
 
 	@Override
 	public String toString() {
 		return String.format("SNE(%s)", status.getId());
+	}
+
+	@Override
+	public String getDescription() {
+		return String.format("Status %x has no effect", status.getId());
+	}
+
+	public XivStatusEffect getStatus() {
+		return status;
 	}
 }
