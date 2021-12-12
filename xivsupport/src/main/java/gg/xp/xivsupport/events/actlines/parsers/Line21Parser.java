@@ -23,7 +23,8 @@ public class Line21Parser extends AbstractACTLineParser<Line21Parser.Fields> {
 				fields.getAbility(Fields.abilityId, Fields.abilityName),
 				fields.getEntity(Fields.casterId, Fields.casterName),
 				fields.getEntity(Fields.targetId, Fields.targetName),
-				fields.getAbilityEffects(Fields.targetName.ordinal() + 3, 8)
+				fields.getAbilityEffects(Fields.targetName.ordinal() + 3, 8),
+				fields.getRawHex(44)
 		);
 	}
 }

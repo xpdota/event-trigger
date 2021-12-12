@@ -16,12 +16,14 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	private final XivCombatant caster;
 	private final XivCombatant target;
 	private final List<AbilityEffect> effects;
+	private final long sequenceId;
 
-	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects) {
+	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId) {
 		this.ability = ability;
 		this.caster = caster;
 		this.target = target;
 		this.effects = effects;
+		this.sequenceId = sequenceId;
 	}
 
 	public XivAbility getAbility() {
@@ -42,8 +44,13 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 		return Collections.unmodifiableList(effects);
 	}
 
+	// TODO: not accurate, need to account for parries and stuff
 	public long getDamage() {
 		return effects.stream().filter(effect -> effect instanceof DamageEffect).map(DamageEffect.class::cast)
 				.mapToLong(DamageEffect::getAmount).sum();
+	}
+
+	public long getSequenceId() {
+		return sequenceId;
 	}
 }

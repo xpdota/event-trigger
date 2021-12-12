@@ -100,7 +100,7 @@ public class FieldMapper<K extends Enum<K>> {
 		return rawLineSplit[fieldIndex];
 	}
 
-	private long getRawHex(int fieldIndex) {
+	public long getRawHex(int fieldIndex) {
 		String rawField = getRawField(fieldIndex);
 		if (rawField.isEmpty()) {
 			return -1;
