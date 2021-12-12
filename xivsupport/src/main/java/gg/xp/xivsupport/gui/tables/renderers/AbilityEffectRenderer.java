@@ -66,7 +66,7 @@ public class AbilityEffectRenderer implements TableCellRenderer {
 		else if (value instanceof BlockedDamageEffect) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
 			text = Long.toString(((BlockedDamageEffect) value).getAmount());
-			icon = ActionIcon.forId(3543);
+			icon = ActionIcon.forId(3542);
 		}
 		else if (value instanceof InvulnBlockedDamageEffect) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
