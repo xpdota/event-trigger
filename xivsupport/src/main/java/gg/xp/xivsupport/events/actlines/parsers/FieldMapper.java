@@ -229,6 +229,7 @@ public class FieldMapper<K extends Enum<K>> {
 		}
 	}
 
+	@SuppressWarnings("NumericCastThatLosesPrecision")
 	private static long calcDamage(long damageRaw) {
 		if (damageRaw < 65536) {
 			return 0;

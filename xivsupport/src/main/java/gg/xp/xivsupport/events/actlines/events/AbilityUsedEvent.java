@@ -9,7 +9,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.util.Collections;
 import java.util.List;
 
-public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility {
+public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects {
 
 	private static final long serialVersionUID = -4539070760062288496L;
 	private final XivAbility ability;
@@ -40,6 +40,7 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 		return target;
 	}
 
+	@Override
 	public List<AbilityEffect> getEffects() {
 		return Collections.unmodifiableList(effects);
 	}

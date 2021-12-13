@@ -34,9 +34,6 @@ public class ActWsRawMsg extends BaseEvent implements Compressible {
 		// Only compress if it actually saves memory
 		if (compressed.length < rawMsgData.length()) {
 			this.compressed = compressed;
-			// TODO: this isn't working right - getting NPEs in getRawMsgData when deserializing.
-			// Guessing that there's a concurrency issue where the thread doing the serialization
-			// is seeing both fields as null.
 			rawMsgData = null;
 		}
 	}

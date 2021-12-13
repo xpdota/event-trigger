@@ -75,7 +75,7 @@ public final class CommonGuiSetup {
 				finally {
 					long timeAfter = System.currentTimeMillis();
 					long delta = timeAfter - timeBefore;
-					// TODO find good value for this
+					// TODO find good value for this - 100 might be a little low
 					if (delta > 100) {
 						log.warn("Slow GUI performance: took {}ms to dispatch event {}", delta, event);
 					}

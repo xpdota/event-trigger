@@ -8,10 +8,12 @@ import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.AbilityResolvedEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasEffects;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
@@ -30,11 +32,11 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
+import gg.xp.xivsupport.gui.tables.filters.AbilityResolutionFilter;
 import gg.xp.xivsupport.gui.tables.filters.ActLineFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventAbilityOrBuffFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
-import gg.xp.xivsupport.gui.tables.filters.EventTypeFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
@@ -51,12 +53,13 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
+import gg.xp.xivsupport.replay.ReplayController;
+import gg.xp.xivsupport.replay.gui.ReplayControllerGui;
 import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -82,6 +85,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@SuppressWarnings({"ReturnOfNull", "CodeBlock2Expr"})
 public class GuiMain {
 
 	private static final Logger log = LoggerFactory.getLogger(GuiMain.class);
@@ -89,6 +93,7 @@ public class GuiMain {
 	private final EventMaster master;
 	private final StateStore state;
 	private final PicoContainer container;
+	private final StandardColumns columns;
 	private JTabbedPane tabPane;
 
 	public static void main(String[] args) {
@@ -159,14 +164,20 @@ public class GuiMain {
 		this.master = master;
 		this.state = master.getDistributor().getStateStore();
 		this.container = container;
+		columns = container.getComponent(StandardColumns.class);
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
 			tabPane = new JTabbedPane();
+			frame.setLayout(new BorderLayout());
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setLocationByPlatform(true);
 			frame.setSize(960, 720);
 			frame.setVisible(true);
 			frame.add(tabPane);
+			ReplayController replay = container.getComponent(ReplayController.class);
+			if (replay != null) {
+				frame.add(new ReplayControllerGui(replay).getPanel(), BorderLayout.PAGE_START);
+			}
 		});
 		SwingUtilities.invokeLater(() -> tabPane.addTab("System", new SystemTabPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Plugins", new PluginTopologyPanel()));
@@ -233,6 +244,8 @@ public class GuiMain {
 				});
 			};
 			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, update);
+			master.getDistributor().registerHandler(AbilityResolvedEvent.class, update);
+			master.getDistributor().registerHandler(AbilityUsedEvent.class, update);
 			master.getDistributor().registerHandler(BuffApplied.class, update);
 			master.getDistributor().registerHandler(BuffRemoved.class, update);
 		}
@@ -347,8 +360,8 @@ public class GuiMain {
 			partyTableModel = CustomTableModel.builder(
 							() -> state.get(XivState.class).getPartyList())
 					.addColumn(StandardColumns.nameJobColumn)
-					.addColumn(StandardColumns.statusEffectsColumn(container.getComponent(StatusEffectRepository.class)))
-					.addColumn(StandardColumns.hpColumn)
+					.addColumn(columns.statusEffectsColumn())
+					.addColumn(columns.hpColumnWithUnresolved())
 					.addColumn(StandardColumns.mpColumn)
 					.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
@@ -386,7 +399,7 @@ public class GuiMain {
 					.addColumn(StandardColumns.parentNameJobColumn)
 					.addColumn(StandardColumns.combatantTypeColumn)
 					.addColumn(StandardColumns.combatantRawTypeColumn)
-					.addColumn(StandardColumns.hpColumn)
+					.addColumn(columns.hpColumnWithUnresolved())
 					.addColumn(StandardColumns.mpColumn)
 					.addColumn(StandardColumns.posColumn)
 					.addColumn(StandardColumns.entityIdColumn)
@@ -419,114 +432,130 @@ public class GuiMain {
 			c.weighty = 0;
 			c.fill = GridBagConstraints.HORIZONTAL;
 
-			Stats stats = container.getComponent(Stats.class);
 			RawEventStorage storage = container.getComponent(RawEventStorage.class);
+			{
+				Stats stats = container.getComponent(Stats.class);
 
-			JPanel statsPanel = new TitleBorderFullsizePanel("Stats");
-			statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
-			JButton refreshButton = new JButton("Refresh");
-			refreshButton.addActionListener(e -> refresh());
-			List<KeyValuePairDisplay<?, ?>> leftItems = List.of(
-					new KeyValuePairDisplay<>(
-							"Duration",
-							new JTextArea(1, 15),
-							() -> stats.getDuration().toString(),
-							JTextArea::setText
-					),
-					new KeyValuePairDisplay<>(
-							"Total",
-							new JTextArea(1, 15),
-							() -> String.valueOf(stats.getTotal()),
-							JTextArea::setText
-					),
-					new KeyValuePairDisplay<>(
-							"Primo",
-							new JTextArea(1, 15),
-							() -> String.valueOf(stats.getPrimogenitor()),
-							JTextArea::setText
-					),
-					new KeyValuePairDisplay<>(
-							"Synthetic",
-							new JTextArea(1, 15),
-							() -> String.valueOf(stats.getSynthetic()),
-							JTextArea::setText
-					),
-					new KeyValuePairDisplay<>(
-							"In-Memory",
-							new JTextArea(1, 15),
-							() -> String.valueOf(storage.getEvents().size()),
-							JTextArea::setText
-					)
-			);
-			displayed = new KeyValueDisplaySet(leftItems);
-			statsPanel.add(new WrapperPanel(refreshButton));
-			statsPanel.add(displayed);
-			statsPanel.add(new IntSettingGui(storage.getMaxEventsStoredSetting(), "Max In-Memory Events").getComponent());
-			statsPanel.setPreferredSize(new Dimension(300, 300));
-			add(statsPanel, c);
+				JPanel statsPanel = new TitleBorderFullsizePanel("Stats");
+				statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
+				JButton refreshButton = new JButton("Refresh");
+				refreshButton.addActionListener(e -> refresh());
+				List<KeyValuePairDisplay<?, ?>> leftItems = List.of(
+						new KeyValuePairDisplay<>(
+								"Duration",
+								new JTextArea(1, 15),
+								() -> stats.getDuration().toString(),
+								JTextArea::setText
+						),
+						new KeyValuePairDisplay<>(
+								"Total",
+								new JTextArea(1, 15),
+								() -> String.valueOf(stats.getTotal()),
+								JTextArea::setText
+						),
+						new KeyValuePairDisplay<>(
+								"Primo",
+								new JTextArea(1, 15),
+								() -> String.valueOf(stats.getPrimogenitor()),
+								JTextArea::setText
+						),
+						new KeyValuePairDisplay<>(
+								"Synthetic",
+								new JTextArea(1, 15),
+								() -> String.valueOf(stats.getSynthetic()),
+								JTextArea::setText
+						),
+						new KeyValuePairDisplay<>(
+								"In-Memory",
+								new JTextArea(1, 15),
+								() -> String.valueOf(storage.getEvents().size()),
+								JTextArea::setText
+						)
+				);
+				displayed = new KeyValueDisplaySet(leftItems);
+				statsPanel.add(new WrapperPanel(refreshButton));
+				statsPanel.add(displayed);
+				statsPanel.add(new IntSettingGui(storage.getMaxEventsStoredSetting(), "Max In-Memory Events").getComponent());
+				statsPanel.setPreferredSize(new Dimension(300, 300));
+				add(statsPanel, c);
+			}
 
 
-			TitleBorderFullsizePanel memoryPanel = new TitleBorderFullsizePanel("Memory Info");
-			memoryPanel.setLayout(new BoxLayout(memoryPanel, BoxLayout.PAGE_AXIS));
+			{
+				TitleBorderFullsizePanel memoryPanel = new TitleBorderFullsizePanel("Memory Info");
+				memoryPanel.setLayout(new BoxLayout(memoryPanel, BoxLayout.PAGE_AXIS));
 
-			MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-			List<KeyValuePairDisplay<?, ?>> memoryItems = List.of(
-					new KeyValuePairDisplay<>(
-							"Heap Used",
-							new JTextArea(1, 15),
-							() -> (memoryMXBean.getHeapMemoryUsage().getUsed() >> 20) + "M",
-							JTextArea::setText
-					),
-					new KeyValuePairDisplay<>(
-							"Heap Committed",
-							new JTextArea(1, 15),
-							() -> (memoryMXBean.getHeapMemoryUsage().getCommitted() >> 20) + "M",
-							JTextArea::setText
-					),
-					new KeyValuePairDisplay<>(
-							"Heap Max",
-							new JTextArea(1, 15),
-							() -> (memoryMXBean.getHeapMemoryUsage().getMax() >> 20) + "M",
-							JTextArea::setText
-					),
-					new KeyValuePairDisplay<>(
-							"Other Used",
-							new JTextArea(1, 15),
-							() -> (memoryMXBean.getNonHeapMemoryUsage().getUsed() >> 20) + "M",
-							JTextArea::setText
-					),
-					new KeyValuePairDisplay<>(
-							"Other Committed",
-							new JTextArea(1, 15),
-							() -> (memoryMXBean.getNonHeapMemoryUsage().getCommitted() >> 20) + "M",
-							JTextArea::setText
-					)
-			);
-			// TODO: also add a button to force a full refresh on all tables
-			JButton forceGcButton = new JButton("Force GC");
-			forceGcButton.addActionListener(l -> {
-				exs.submit(System::gc);
-				exs.submit(() -> SwingUtilities.invokeLater(this::refresh));
-			});
-			memoryPanel.add(new WrapperPanel(forceGcButton));
-			mem = new KeyValueDisplaySet(memoryItems);
-			memoryPanel.add(mem);
-			memoryPanel.setPreferredSize(new Dimension(300, 300));
-			c.gridx++;
-			add(memoryPanel, c);
+				MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+				List<KeyValuePairDisplay<?, ?>> memoryItems = List.of(
+						new KeyValuePairDisplay<>(
+								"Heap Used",
+								new JTextArea(1, 15),
+								() -> (memoryMXBean.getHeapMemoryUsage().getUsed() >> 20) + "M",
+								JTextArea::setText
+						),
+						new KeyValuePairDisplay<>(
+								"Heap Committed",
+								new JTextArea(1, 15),
+								() -> (memoryMXBean.getHeapMemoryUsage().getCommitted() >> 20) + "M",
+								JTextArea::setText
+						),
+						new KeyValuePairDisplay<>(
+								"Heap Max",
+								new JTextArea(1, 15),
+								() -> (memoryMXBean.getHeapMemoryUsage().getMax() >> 20) + "M",
+								JTextArea::setText
+						),
+						new KeyValuePairDisplay<>(
+								"Other Used",
+								new JTextArea(1, 15),
+								() -> (memoryMXBean.getNonHeapMemoryUsage().getUsed() >> 20) + "M",
+								JTextArea::setText
+						),
+						new KeyValuePairDisplay<>(
+								"Other Committed",
+								new JTextArea(1, 15),
+								() -> (memoryMXBean.getNonHeapMemoryUsage().getCommitted() >> 20) + "M",
+								JTextArea::setText
+						)
+				);
+				// TODO: also add a button to force a full refresh on all tables
+				JButton forceGcButton = new JButton("Force GC");
+				forceGcButton.addActionListener(l -> {
+					exs.submit(System::gc);
+					exs.submit(() -> SwingUtilities.invokeLater(this::refresh));
+				});
+				memoryPanel.add(new WrapperPanel(forceGcButton));
+				mem = new KeyValueDisplaySet(memoryItems);
+				memoryPanel.add(mem);
+				memoryPanel.setPreferredSize(new Dimension(300, 300));
+				c.gridx++;
+				add(memoryPanel, c);
+			}
 
-			JPanel diskStoragePanel = new TitleBorderFullsizePanel("Disk Storage");
-			BooleanSettingGui saveCheckbox = new BooleanSettingGui(storage.getSaveToDisk(), "Save to Disk");
-			diskStoragePanel.setLayout(new BoxLayout(diskStoragePanel, BoxLayout.PAGE_AXIS));
-			diskStoragePanel.add(new WrapperPanel(saveCheckbox.getComponent()));
-			JButton flushButton = new JButton("Flush");
-			flushButton.addActionListener(l -> storage.flushToDisk());
-			diskStoragePanel.add(new WrapperPanel(flushButton));
-			diskStoragePanel.setPreferredSize(new Dimension(300, 150));
-			c.gridx = 0;
-			c.gridy++;
-			c.weighty = 1;
-			add(diskStoragePanel, c);
+			{
+				JPanel diskStoragePanel = new TitleBorderFullsizePanel("Disk Storage");
+				BooleanSettingGui saveCheckbox = new BooleanSettingGui(storage.getSaveToDisk(), "Save to Disk");
+				diskStoragePanel.setLayout(new BoxLayout(diskStoragePanel, BoxLayout.PAGE_AXIS));
+				diskStoragePanel.add(new WrapperPanel(saveCheckbox.getComponent()));
+				JButton flushButton = new JButton("Flush");
+				flushButton.addActionListener(l -> storage.flushToDisk());
+				diskStoragePanel.add(new WrapperPanel(flushButton));
+				diskStoragePanel.setPreferredSize(new Dimension(300, 150));
+				c.gridx = 0;
+				c.gridy++;
+				c.weighty = 1;
+				add(diskStoragePanel, c);
+			}
+
+			{
+				TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Misc");
+				BooleanSettingGui showPredictedHp = new BooleanSettingGui(columns.getShowPredictedHp(), "Experimental HP Bar (Buggy)");
+				miscPanel.setPreferredSize(new Dimension(300, 150));
+				miscPanel.add(showPredictedHp.getComponent());
+				c.gridx++;
+				add(miscPanel, c);
+			}
+
 
 			refresh();
 		}
@@ -619,11 +648,11 @@ public class GuiMain {
 						})
 				.addMainColumn(StandardColumns.entityIdColumn)
 				.addMainColumn(StandardColumns.nameJobColumn)
-				.addMainColumn(StandardColumns.statusEffectsColumn(statuses))
+				.addMainColumn(columns.statusEffectsColumn())
 				.addMainColumn(StandardColumns.parentNameJobColumn)
 				.addMainColumn(StandardColumns.combatantTypeColumn)
 				.addMainColumn(StandardColumns.combatantRawTypeColumn)
-				.addMainColumn(StandardColumns.hpColumn)
+				.addMainColumn(columns.hpColumnWithUnresolved())
 				.addMainColumn(StandardColumns.mpColumn)
 				.addMainColumn(StandardColumns.posColumn)
 				.addDetailsColumn(StandardColumns.fieldName)
@@ -633,7 +662,6 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 				.setDetailsSelectionEquivalence((a, b) -> a.getKey().equals(b.getKey()))
-				// TODO: combat vs noncombat filter
 //				.addFilter(EventTypeFilter::new)
 //				.addFilter(SystemEventFilter::new)
 //				.addFilter(EventClassFilterFilter::new)
@@ -644,6 +672,8 @@ public class GuiMain {
 				.build();
 		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalNewData());
+		master.getDistributor().registerHandler(AbilityUsedEvent.class, (ctx, e) -> table.signalNewData());
+		master.getDistributor().registerHandler(AbilityResolvedEvent.class, (ctx, e) -> table.signalNewData());
 		master.getDistributor().registerHandler(BuffApplied.class, (ctx, e) -> table.signalNewData());
 		master.getDistributor().registerHandler(BuffRemoved.class, (ctx, e) -> table.signalNewData());
 		return table;
@@ -651,7 +681,6 @@ public class GuiMain {
 	}
 
 	private JPanel getStatusEffectsPanel() {
-		// TODO: jump to parent button
 		// Main table
 		StatusEffectRepository repo = container.getComponent(StatusEffectRepository.class);
 		TableWithFilterAndDetails<BuffApplied, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Status Effects", repo::getBuffs,
@@ -738,9 +767,9 @@ public class GuiMain {
 				}, c -> {
 					c.setCellRenderer(new ActionAndStatusRenderer());
 				}))
-				.addMainColumn(new CustomColumn<>("Dmg/Heal", e -> {
-					if (e instanceof AbilityUsedEvent) {
-						AbilityUsedEvent event = (AbilityUsedEvent) e;
+				.addMainColumn(new CustomColumn<>("Effects", e -> {
+					if (e instanceof HasEffects) {
+						HasEffects event = (HasEffects) e;
 						return event.getEffects();
 					}
 					return null;
@@ -755,14 +784,14 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				// TODO: time range filter
-				.addFilter(EventTypeFilter::new)
+//				.addFilter(EventTypeFilter::new)
 				.addFilter(SystemEventFilter::new)
 				.addFilter(EventClassFilterFilter::new)
+				.addFilter(AbilityResolutionFilter::new)
 				.addFilter(EventEntityFilter::eventSourceFilter)
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 				.addFilter(r -> new PullNumberFilter(pulls, r))
-				// TODO: put this everywhere applicable
 				.setAppendOrPruneOnly(true)
 				.build();
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> table.signalNewData());

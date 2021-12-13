@@ -1,17 +1,19 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.events.actlines.events.AbilityResolvedEvent;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.function.Predicate;
 
-public class EventTypeFilter implements VisualFilter<Event> {
+public class AbilityResolutionFilter implements VisualFilter<Event> {
 
 	private final JComboBox<FilterOption> comboBox;
-	private FilterOption currentOption = FilterOption.BOTH;
+	private FilterOption currentOption = FilterOption.SNAPSHOT;
 
-	public EventTypeFilter(Runnable filterUpdatedCallback) {
+	public AbilityResolutionFilter(Runnable filterUpdatedCallback) {
 		comboBox = new JComboBox<>(FilterOption.values());
 		comboBox.setRenderer(new DefaultListCellRenderer() {
 			@Override
@@ -34,9 +36,11 @@ public class EventTypeFilter implements VisualFilter<Event> {
 	}
 
 	private enum FilterOption implements Predicate<Event> {
-		BOTH("Both", e -> true),
-		PRIMO("Primo", e -> e.getParent() == null),
-		SYNTH("Synthetic",  e -> e.getParent() != null);
+		SNAPSHOT("Snapshot", e -> !(e instanceof AbilityResolvedEvent)),
+		RESOLVED("Resolved", e -> !(e instanceof AbilityUsedEvent)),
+		BOTH("Both",  e -> true);
+//		GHOSTED("Ghosted (TODO)",  e -> e.getParent() != null);
+
 
 		// TODO
 		private final String name;
@@ -61,7 +65,7 @@ public class EventTypeFilter implements VisualFilter<Event> {
 	public Component getComponent() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
-		JLabel label = new JLabel("Event Type: ");
+		JLabel label = new JLabel("Snap/Resolve: ");
 		label.setLabelFor(comboBox);
 		panel.add(label);
 		panel.add(comboBox);

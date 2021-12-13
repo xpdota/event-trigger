@@ -1,32 +1,24 @@
 package gg.xp.xivsupport.events.triggers.jobs;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
-import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
-import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
-import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
-import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.models.BuffTrackingKey;
-import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.models.XivEntity;
-import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class StatusEffectRepository {
@@ -40,6 +32,7 @@ public class StatusEffectRepository {
 	// that bad.
 	// For now, just use the event objects as valuessince they contain everything we need.
 	private final Map<BuffTrackingKey, BuffApplied> buffs = new LinkedHashMap<>();
+	private final Object lock = new Object();
 
 
 	@HandleEvents(order = -500)
@@ -48,14 +41,18 @@ public class StatusEffectRepository {
 		if (event.getTarget().isFake()) {
 			return;
 		}
-		BuffApplied previous = buffs.put(
-				BuffTrackingKey.of(event),
-				event
-		);
+		BuffTrackingKey key = BuffTrackingKey.of(event);
+		BuffApplied previous;
+		synchronized (lock) {
+			previous = buffs.put(
+					key,
+					event
+			);
+		}
 		if (previous != null) {
 			event.setIsRefresh(true);
 		}
-		log.debug("Buff applied: {} applied {} to {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
+		log.trace("Buff applied: {} applied {} to {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 		context.accept(new XivBuffsUpdatedEvent());
 	}
 
@@ -63,9 +60,12 @@ public class StatusEffectRepository {
 	// processing, we might hit the remove before the callout.
 	@HandleEvents(order = -500)
 	public void buffRemove(EventContext context, BuffRemoved event) {
-		BuffApplied removed = buffs.remove(BuffTrackingKey.of(event));
+		BuffApplied removed;
+		synchronized (lock) {
+			removed = buffs.remove(BuffTrackingKey.of(event));
+		}
 		if (removed != null) {
-			log.debug("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
+			log.trace("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 			context.accept(new XivBuffsUpdatedEvent());
 		}
 	}
@@ -74,14 +74,18 @@ public class StatusEffectRepository {
 	@HandleEvents
 	public void zoneChange(EventContext context, WipeEvent wipe) {
 		log.debug("Wipe, clearing {} buffs", buffs.size());
-		buffs.clear();
+		synchronized (lock) {
+			buffs.clear();
+		}
 		context.accept(new XivBuffsUpdatedEvent());
 	}
 
 	@HandleEvents
 	public void zoneChange(EventContext context, ZoneChangeEvent wipe) {
 		log.debug("Zone change, clearing {} buffs", buffs.size());
-		buffs.clear();
+		synchronized (lock) {
+			buffs.clear();
+		}
 		context.accept(new XivBuffsUpdatedEvent());
 	}
 
@@ -91,13 +95,15 @@ public class StatusEffectRepository {
 		Iterator<Map.Entry<BuffTrackingKey, BuffApplied>> iterator = buffs.entrySet().iterator();
 		Map.Entry<BuffTrackingKey, BuffApplied> current;
 		boolean anyRemoved = false;
-		while (iterator.hasNext()) {
-			current = iterator.next();
-			BuffTrackingKey key = current.getKey();
-			if (key.getTarget().getId() == idToRemove) {
-				log.debug("Buff removed: {} removed {} from {} due to removal of target. Tracking {} buffs.", key.getSource().getName(), key.getBuff().getName(), key.getTarget().getName(), buffs.size());
-				iterator.remove();
-				anyRemoved = true;
+		synchronized (lock) {
+			while (iterator.hasNext()) {
+				current = iterator.next();
+				BuffTrackingKey key = current.getKey();
+				if (key.getTarget().getId() == idToRemove) {
+					log.trace("Buff removed: {} removed {} from {} due to removal of target. Tracking {} buffs.", key.getSource().getName(), key.getBuff().getName(), key.getTarget().getName(), buffs.size());
+					iterator.remove();
+					anyRemoved = true;
+				}
 			}
 		}
 		if (anyRemoved) {
@@ -106,15 +112,19 @@ public class StatusEffectRepository {
 	}
 
 	public List<BuffApplied> getBuffs() {
-		return new ArrayList<>(buffs.values());
+		synchronized (lock) {
+			return new ArrayList<>(buffs.values());
+		}
 	}
 
 	public @Nullable BuffApplied get(BuffTrackingKey key) {
-		return buffs.get(key);
+		synchronized (lock) {
+			return buffs.get(key);
+		}
 	}
 
 
-	public List<BuffApplied> statusesOnTarget(XivEntity entity)  {
+	public List<BuffApplied> statusesOnTarget(XivEntity entity) {
 		long id = entity.getId();
 		return getBuffs().stream().filter(s -> s.getTarget().getId() == id).collect(Collectors.toList());
 	}

@@ -2,7 +2,6 @@ package gg.xp.reevent.events;
 
 import gg.xp.reevent.context.StateStore;
 
-// TODO: what should the generic type be here
 public interface EventContext {
 
 	/**

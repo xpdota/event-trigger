@@ -4,6 +4,7 @@ import gg.xp.reevent.context.SubState;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -37,6 +38,7 @@ public class XivState implements SubState {
 	private volatile @NotNull List<XivPlayerCharacter> partyListProcessed = Collections.emptyList();
 	private volatile @NotNull Map<Long, RawXivCombatantInfo> combatantsRaw = Collections.emptyMap();
 	private volatile @NotNull Map<Long, XivCombatant> combatantsProcessed = Collections.emptyMap();
+	private final Map<Long, HitPoints> hpOverrides = new HashMap<>();
 
 	private Job previousPlayerJob;
 //	@SuppressWarnings("unused")
@@ -82,6 +84,7 @@ public class XivState implements SubState {
 		return new ArrayList<>(partyListProcessed);
 	}
 
+
 	// TODO: concurrency issues?
 	// TODO: emit events after state is recalculated reflecting actual changes
 	// Probably requires proper equals/hashcode on everything so we can actually compare them
@@ -103,7 +106,7 @@ public class XivState implements SubState {
 						// TODO
 						true,
 						playerCombatantInfo.getRawType(),
-						playerCombatantInfo.getHP(),
+						hpOverrides.getOrDefault(playerCombatantInfo.getId(), playerCombatantInfo.getHP()),
 						playerCombatantInfo.getMP(),
 						playerCombatantInfo.getPos(),
 						playerCombatantInfo.getBnpcId(),
@@ -130,7 +133,7 @@ public class XivState implements SubState {
 						// TODO
 						false,
 						combatant.getRawType(),
-						combatant.getHP(),
+						hpOverrides.getOrDefault(combatant.getId(), combatant.getHP()),
 						combatant.getMP(),
 						combatant.getPos(),
 						combatant.getBnpcId(),
@@ -146,7 +149,7 @@ public class XivState implements SubState {
 						false,
 						false,
 						combatant.getRawType(),
-						combatant.getHP(),
+						hpOverrides.getOrDefault(combatant.getId(), combatant.getHP()),
 						combatant.getMP(),
 						combatant.getPos(),
 						combatant.getBnpcId(),
@@ -281,6 +284,7 @@ public class XivState implements SubState {
 
 	public void setCombatants(List<RawXivCombatantInfo> combatants) {
 		Map<Long, RawXivCombatantInfo> combatantsRaw = new HashMap<>(combatants.size());
+		hpOverrides.clear();
 		combatants.forEach(combatant -> {
 			long id = combatant.getId();
 			// Fake/environment actors
@@ -303,6 +307,7 @@ public class XivState implements SubState {
 		combatantsRaw.putAll(this.combatantsRaw);
 		combatants.forEach(combatant -> {
 			long id = combatant.getId();
+			hpOverrides.remove(id);
 			// Fake/environment actors
 			// TODO: should we still be doing this?
 			if (id == 0xE0000000L) {
@@ -329,5 +334,9 @@ public class XivState implements SubState {
 				.filter(i -> partyList.get(i).getId() == entity.getId())
 				.findFirst()
 				.orElse(-1);
+	}
+
+	public void provideCombatantHP(XivCombatant target, HitPoints hitPoints) {
+		hpOverrides.put(target.getId(), hitPoints);
 	}
 }

@@ -8,6 +8,8 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.eventstorage.EventReader;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.XivMain;
 import org.assertj.swing.edt.FailOnThreadViolationRepaintManager;
 import org.picocontainer.MutablePicoContainer;
@@ -28,21 +30,20 @@ public class GuiWithImportedData {
 		}
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
-		dist.acceptEvent(new InitEvent());
-		RawEventStorage raw = pico.getComponent(RawEventStorage.class);
-		raw.getMaxEventsStoredSetting().set(1_000_000);
-		BasicEventQueue queue = pico.getComponent(BasicEventQueue.class);
-		pico.addComponent(GuiMain.class);
-		pico.getComponent(GuiMain.class);
-
+		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
+		pers.save("gui.display-predicted-hp", "true");
 		long start = System.currentTimeMillis();
 		List<Event> events = EventReader.readEventsFromResource("/testsession5.oos.gz");
 		long read = System.currentTimeMillis();
-		events.stream()
-				.limit(10000)
-//				.peek((e) -> doSleep(1))
-				.forEach(dist::acceptEvent);
-		queue.waitDrain();
+		ReplayController replayController = new ReplayController(dist, events);
+		pico.addComponent(replayController);
+		dist.acceptEvent(new InitEvent());
+		RawEventStorage raw = pico.getComponent(RawEventStorage.class);
+		raw.getMaxEventsStoredSetting().set(1_000_000);
+		pico.addComponent(GuiMain.class);
+		pico.getComponent(GuiMain.class);
+		FailOnThreadViolationRepaintManager.install();
+
 		long finish = System.currentTimeMillis();
 		log.info("Imported Event Count: {}", events.size());
 		log.info("Processed Event Count: {}", raw.getEvents().size());
@@ -50,7 +51,6 @@ public class GuiWithImportedData {
 		log.info("Time to replay: {}ms", finish - read);
 
 		// TODO: make this a setting
-		FailOnThreadViolationRepaintManager.install();
 
 	}
 	private static void doSleep(long ms) {

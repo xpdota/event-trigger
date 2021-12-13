@@ -21,7 +21,7 @@ public class PullNumberFilter implements VisualFilter<Event> {
 		this.pt = pt;
 		this.filterUpdatedCallback = filterUpdatedCallback;
 		this.textBox = new TextFieldWithValidation<>(this::makeFilter, this::setFilter, "");
-		textBox.setColumns(8);
+		textBox.setColumns(3);
 	}
 
 	private void setFilter(Predicate<Event> filter) {

@@ -113,7 +113,7 @@ public class ActWsHandlers {
 		if (!rseqNode.isMissingNode()) {
 			// Null response - TODO try to match it up with the rseq
 			if (!jsonNode.path("$isNull").isMissingNode()) {
-				log.debug("Got null ActWS response for rseq {}", rseqNode.intValue());
+				log.trace("Got null ActWS response for rseq {}", rseqNode.intValue());
 				return;
 			}
 			// For now, since this is the only request/response we're using, we can just look for it specifically and

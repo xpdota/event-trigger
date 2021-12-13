@@ -14,7 +14,6 @@ public class SystemEventFilter implements VisualFilter<Event> {
 
 	private final JCheckBox checkBox;
 	private final Runnable filterUpdatedCallback;
-	// TODO: really shouldn't be a string
 	private boolean selectedItem;
 
 	public SystemEventFilter(Runnable filterUpdatedCallback) {

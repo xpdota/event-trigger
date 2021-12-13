@@ -3,6 +3,7 @@ package gg.xp.xivsupport.slf4j;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
+import gg.xp.xivsupport.events.misc.ViewForAppendOnlyList;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ public class LogCollector extends AppenderBase<ILoggingEvent> {
 					.daemon(true)
 					.build());
 
-	public static LogCollector instance;
+	private static LogCollector instance;
 
 	{
 		if (instance != null) {
@@ -31,8 +32,7 @@ public class LogCollector extends AppenderBase<ILoggingEvent> {
 		instance = this;
 	}
 
-	// TODO: pruning
-	private final List<LogEvent> events = new ArrayList<>();
+	private List<LogEvent> events = new ArrayList<>();
 	private final List<Runnable> callbacks = new ArrayList<>();
 
 	private PatternLayoutEncoder encoder;
@@ -40,6 +40,9 @@ public class LogCollector extends AppenderBase<ILoggingEvent> {
 	@Override
 	protected void append(ILoggingEvent iLoggingEvent) {
 		LogEvent logEvent = new LogEvent(new String(encoder.encode(iLoggingEvent)), iLoggingEvent);
+		if (events.size() > 50_000) {
+			events = new ArrayList<>(events.subList(20_000, events.size()));
+		}
 		events.add(logEvent);
 		exs.submit(() -> {
 			try {
@@ -60,7 +63,7 @@ public class LogCollector extends AppenderBase<ILoggingEvent> {
 	}
 
 	public List<LogEvent> getEvents() {
-		return new ArrayList<>(events);
+		return new ViewForAppendOnlyList<>(events);
 	}
 
 	public static LogCollector getInstance() {

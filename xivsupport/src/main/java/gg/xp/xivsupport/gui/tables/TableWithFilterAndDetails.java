@@ -227,6 +227,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 						// Cap updates to 1000/x fps, while not delaying updates
 						// if they come in less frequently than that
 						Thread.sleep(50);
+//						Thread.sleep(50);
 					}
 					catch (InterruptedException e) {
 						// ignored

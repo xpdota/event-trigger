@@ -1,22 +1,42 @@
 package gg.xp.xivsupport.gui.tables;
 
+import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
+import gg.xp.xivsupport.gui.tables.renderers.HpPredictedRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.MpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectsRenderer;
+import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.HitPointsWithPredicted;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import jdk.jshell.PersistentSnippet;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class StandardColumns {
+@ScanMe
+public final class StandardColumns {
 
+	private final BooleanSetting showPredictedHp;
+	private final StatusEffectRepository statuses;
+	private final SequenceIdTracker sqidTracker;
+
+	public StandardColumns(PersistenceProvider persist, StatusEffectRepository statuses, SequenceIdTracker sqidTracker) {
+		showPredictedHp = new BooleanSetting(persist, "gui.display-predicted-hp", false);
+		this.statuses = statuses;
+		this.sqidTracker = sqidTracker;
+	}
 
 	public static final CustomColumn<XivEntity> entityIdColumn
 			= new CustomColumn<>("ID", c -> "0x" + Long.toString(c.getId(), 16),
@@ -46,8 +66,8 @@ public class StandardColumns {
 		c.setPreferredWidth(100);
 	});
 
-	public static final CustomColumn<XivCombatant> statusEffectsColumn(StatusEffectRepository state) {
-		return new CustomColumn<>("Statuses", entity -> state.statusesOnTarget(entity).stream().map(BuffApplied::getBuff).collect(Collectors.toList()), c -> {
+	public CustomColumn<XivCombatant> statusEffectsColumn() {
+		return new CustomColumn<>("Statuses", entity -> statuses.statusesOnTarget(entity).stream().map(BuffApplied::getBuff).collect(Collectors.toList()), c -> {
 			c.setCellRenderer(new StatusEffectsRenderer());
 			c.setPreferredWidth(300);
 		});
@@ -60,6 +80,28 @@ public class StandardColumns {
 				c.setCellRenderer(new HpRenderer());
 				c.setPreferredWidth(200);
 			});
+
+	public CustomColumn<XivCombatant> hpColumnWithUnresolved() {
+		return new CustomColumn<>("HP", combatant -> {
+			HitPoints realHp = combatant.getHp();
+			if (realHp == null) {
+				return null;
+			}
+			long pending;
+			if (showPredictedHp.get()) {
+				List<AbilityUsedEvent> events = sqidTracker.getEventsTargetedOnEntity(combatant);
+				pending = events.stream().mapToLong(AbilityUsedEvent::getDamage).sum();
+			}
+			else {
+				pending = 0;
+			}
+			return new HitPointsWithPredicted(realHp.getCurrent(), Math.max(realHp.getCurrent() - pending, 0), realHp.getMax());
+		}, c ->
+		{
+			c.setCellRenderer(new HpPredictedRenderer());
+			c.setPreferredWidth(200);
+		});
+	}
 
 	public static final CustomColumn<XivCombatant> mpColumn
 			= new CustomColumn<>("MP", xivCombatant -> {
@@ -123,4 +165,8 @@ public class StandardColumns {
 	public static final CustomColumn<Map.Entry<Field, Object>> fieldDeclaredIn
 			= new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName());
 
+
+	public BooleanSetting getShowPredictedHp() {
+		return showPredictedHp;
+	}
 }

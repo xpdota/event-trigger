@@ -82,6 +82,8 @@ public final class EventEntityFilter<I, X> implements VisualFilter<I> {
 		// TODO: computing a single lambda once when we change filters is probably faster?
 		switch (selectedItem) {
 			case ALL:
+				// TODO: make entering nothing simply snap it back to the real "ALL" setting
+			case "":
 				return true;
 			case ANY:
 				return (expectedClass.isInstance(item));

@@ -16,7 +16,6 @@ public class NonCombatEntityFilter implements VisualFilter<XivCombatant> {
 
 	private final JCheckBox checkBox;
 	private final Runnable filterUpdatedCallback;
-	// TODO: really shouldn't be a string
 	private boolean selectedItem;
 
 	public NonCombatEntityFilter(Runnable filterUpdatedCallback) {

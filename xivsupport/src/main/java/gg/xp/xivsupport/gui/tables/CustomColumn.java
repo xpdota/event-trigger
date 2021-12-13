@@ -12,7 +12,6 @@ public class CustomColumn<X> {
 	private final Function<X, Object> getter;
 	private final Consumer<TableColumn> columnConfigurer;
 
-	// TODO: custom renderers
 	public CustomColumn(String columnName, Function<X, @Nullable Object> getter) {
 		this(columnName, getter, ignored -> {});
 	}

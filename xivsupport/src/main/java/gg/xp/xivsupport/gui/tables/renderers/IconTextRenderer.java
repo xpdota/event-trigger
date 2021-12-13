@@ -94,7 +94,6 @@ public final class IconTextRenderer {
 		return panel;
 	}
 
-	// TODO: this seems to just break if you have multiple of the same buff
 	private static class ScaledImageComponent extends JComponent {
 		private final Image image;
 		private final int size;

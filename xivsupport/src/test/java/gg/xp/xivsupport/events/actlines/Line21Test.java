@@ -19,6 +19,7 @@ public class Line21Test extends AbstractACTLineTest<AbilityUsedEvent> {
 		Assert.assertEquals(event.getSource().getId(), 0x107361AF);
 		Assert.assertEquals(event.getTarget().getId(), 0x107361AD);
 		Assert.assertEquals(event.getSequenceId(), 0x000BACE5);
+
 		Assert.assertEquals(event.getAbility().getName(), "Item_524E");
 		Assert.assertEquals(event.getSource().getName(), "Foo Bar");
 		Assert.assertEquals(event.getTarget().getName(), "The Target");

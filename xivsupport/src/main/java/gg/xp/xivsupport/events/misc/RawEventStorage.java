@@ -29,6 +29,7 @@ import java.util.zip.GZIPOutputStream;
 
 public class RawEventStorage {
 
+
 	private static final Logger log = LoggerFactory.getLogger(RawEventStorage.class);
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder()
 			.daemon(false)
@@ -39,6 +40,9 @@ public class RawEventStorage {
 
 	private final IntSetting maxEventsStored;
 	private final String sessionName;
+	// TODO: I have confirmed that this does result in a (very slow) memory leak, because the OOS just keeps handles on
+	// everything because the output stream needs to keep track of references. But since realistically we'd just be
+	// writing websocket stuff to it, we can probably just save one big string.
 	private ObjectOutputStream eventSaveStream;
 	// TODO: cap this or otherwise manage memory
 	private final Object eventsPruneLock = new Object();
