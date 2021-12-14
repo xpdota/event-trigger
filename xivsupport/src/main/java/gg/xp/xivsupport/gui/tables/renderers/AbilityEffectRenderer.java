@@ -3,7 +3,6 @@ package gg.xp.xivsupport.gui.tables.renderers;
 import gg.xp.xivdata.jobs.ActionIcon;
 import gg.xp.xivdata.jobs.HasIconURL;
 import gg.xp.xivdata.jobs.StatusEffectIcon;
-import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
@@ -19,25 +18,23 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class AbilityEffectRenderer implements TableCellRenderer {
+public class AbilityEffectRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
 	private final boolean iconOnly;
-
-	public AbilityEffectRenderer() {
-		this(false);
-	}
 
 	public AbilityEffectRenderer(boolean iconOnly) {
 		this.iconOnly = iconOnly;
 	}
 
-	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+	public List<Component> getTableCellRendererComponents(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 
 		Component defaultLabel;
 		if (!(value instanceof AbilityEffect)) {
-			return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			return Collections.singletonList(fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column));
 		}
 		String text;
 		HasIconURL icon;
@@ -84,11 +81,21 @@ public class AbilityEffectRenderer implements TableCellRenderer {
 			textOnRight = true;
 		}
 		else {
-			return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			return Collections.singletonList(fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column));
 		}
 		defaultLabel = fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
-		return IconTextRenderer.getComponent(icon, defaultLabel, iconOnly, textOnRight, true);
-
-
+		if (iconOnly) {
+			return Collections.singletonList(IconTextRenderer.getComponent(icon, defaultLabel, true, textOnRight, true));
+		}
+		List<Component> components = new ArrayList<>();
+		if (textOnRight) {
+			components.add(fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column));
+			components.add(IconTextRenderer.getComponent(icon, defaultLabel, true, false, true));
+		}
+		else {
+			components.add(IconTextRenderer.getComponent(icon, defaultLabel, true, false, true));
+			components.add(fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column));
+		}
+		return components;
 	}
 }

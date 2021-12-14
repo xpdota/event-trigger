@@ -14,7 +14,7 @@ public class Line22Parser extends AbstractACTLineParser<Line22Parser.Fields> {
 	}
 
 	enum Fields {
-		casterId, casterName, abilityId, abilityName, targetId, targetName, flags, damage
+		casterId, casterName, abilityId, abilityName, targetId, targetName
 	}
 
 	@Override

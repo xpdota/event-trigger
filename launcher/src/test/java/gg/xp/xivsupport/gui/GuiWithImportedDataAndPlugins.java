@@ -2,10 +2,8 @@ package gg.xp.xivsupport.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.reevent.events.AutoEventDistributor;
-import gg.xp.reevent.events.BasicEventQueue;
-import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.Event;
-import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.eventstorage.EventReader;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -19,10 +17,10 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.util.List;
 
-public final class GuiWithImportedData {
-	private static final Logger log = LoggerFactory.getLogger(GuiWithImportedData.class);
+public final class GuiWithImportedDataAndPlugins {
+	private static final Logger log = LoggerFactory.getLogger(GuiWithImportedDataAndPlugins.class);
 
-	private GuiWithImportedData() {
+	private GuiWithImportedDataAndPlugins() {
 	}
 
 	public static void main(String[] args) throws InterruptedException {

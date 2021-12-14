@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.CurrentHpSetEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.FullyResistedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
@@ -20,6 +21,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +54,14 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public long getLong(K key) {
 		return Long.parseLong(raw.get(key), 10);
+	}
+
+	public @Nullable Long getOptionalLong(K key) {
+		String rawStr = raw.get(key);
+		if (rawStr.isEmpty()) {
+			return null;
+		}
+		return Long.parseLong(rawStr, 10);
 	}
 
 	public long getHex(K key) {
@@ -147,6 +157,9 @@ public class FieldMapper<K extends Enum<K>> {
 			healSeverityByte = (byte) (flagsTmp >>= 8);
 			unknownByte = (byte) (flagsTmp >> 8);
 
+			// TODO: it's unclear which of these need the "lots of damage" calculation applied - IDs that point to an
+			// ability or status will probably be safe for the forseeable future, since there's nowhere close to
+			// 65536 statuses.
 			switch (effectTypeByte) {
 				case 0:
 					// nothing
@@ -176,10 +189,10 @@ public class FieldMapper<K extends Enum<K>> {
 					out.add(new NoEffect());
 					break;
 				case 10:
-					out.add(new MpLoss(value >> 16));
+					out.add(new MpLoss(calcDamage(value)));
 					break;
 				case 11:
-					out.add(new MpGain(value >> 16));
+					out.add(new MpGain(calcDamage(value)));
 					break;
 				case 14: //0e
 					out.add(new StatusAppliedEffect(value >> 16, true));
@@ -189,21 +202,26 @@ public class FieldMapper<K extends Enum<K>> {
 					break;
 				case 20: //14
 					out.add(new StatusNoEffect(value >> 16));
+					break;
 				case 27:
-					// Combo - don't care atm
+					// Not sure - seems to do "combo" as well as certain boss mechanics like "Subtract" from the math boss
 					break;
+				case 32:
+					// Super cyclone did it
 				case 40:
-					// mount -- TODO maybe use the actual mount icons?
-					break;
+//					 mount -- TODO maybe use the actual mount icons?
+//					break;
 				case 60:
-					// bunch of random stuff like Aether Compass
-					break;
+//					// bunch of random stuff like Aether Compass
+//					break;
 				case 61:
-					// Gauge build?
-					break;
-
+//					// Gauge build?
+//					break;
+//
 				case 74:
 					// Don't know - saw it on Superbolide
+					// Okay, not HP set - saw it on Machinist Hypercharge + other MCH abilities
+//					out.add(new CurrentHpSetEffect(calcDamage(value)));
 
 				default:
 					out.add(new OtherEffect(flags, value));

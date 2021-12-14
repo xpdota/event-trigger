@@ -337,6 +337,23 @@ public class XivState implements SubState {
 	}
 
 	public void provideCombatantHP(XivCombatant target, HitPoints hitPoints) {
-		hpOverrides.put(target.getId(), hitPoints);
+		HitPoints oldOverride = hpOverrides.put(target.getId(), hitPoints);
+		// Only trigger refresh if something actually changed
+		if (oldOverride == null
+				|| oldOverride.getCurrent() != hitPoints.getCurrent()
+				|| oldOverride.getMax() != hitPoints.getMax()
+		) {
+			// If there was no previous override, and the HP from WS == HP from the event, ignore
+			XivCombatant cbt = combatantsProcessed.get(target.getId());
+			if (oldOverride == null && cbt != null) {
+				HitPoints existingHp = cbt.getHp();
+				if (existingHp != null
+						&& existingHp.getCurrent() == hitPoints.getCurrent()
+						&& existingHp.getMax() == hitPoints.getMax()) {
+					return;
+				}
+			}
+			recalcState();
+		}
 	}
 }

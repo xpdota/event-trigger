@@ -33,6 +33,12 @@ public class CdTrackerGui implements PluginTab {
 		return "Cooldown Tracker";
 	}
 
+	// TODO: here's how I can do settings in a reasonable way:
+	// Have a gui with 5 or so checkboxes (all on/off, this, DPS, healer, tank)
+	// Let each callout be selectable (including ctrl/shift)
+	// Then cascade changes to multiple callouts
+
+
 	@Override
 	public Component getTabContents() {
 		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Cooldowns");

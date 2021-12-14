@@ -22,5 +22,5 @@ public enum AbilityEffectType {
 	KNOCKBACK,
 	MOUNT,
 	VFX,
-	OTHER
+	HP_SET_TO, OTHER
 }
