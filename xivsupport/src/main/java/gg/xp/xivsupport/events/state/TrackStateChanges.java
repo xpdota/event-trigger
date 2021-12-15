@@ -1,12 +1,11 @@
 package gg.xp.xivsupport.events.state;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
-import gg.xp.reevent.scan.HandleEvents;
 
 import java.util.Collections;
 

@@ -36,5 +36,6 @@
         <module>xivdata</module>
         <module>launcher</module>
         <module>triggers</module>
+        <module>actimport</module>
     </modules>
 </project>

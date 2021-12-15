@@ -18,9 +18,7 @@ public class Line04Parser extends AbstractACTLineParser<Line04Parser.Fields> {
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
-		// TODO: some kind of @Disable annotation
 		return new RawRemoveCombatantEvent(fields.getEntity(Fields.id, Fields.name));
-//		return new PlayerChangeEvent(new XivEntity(fields.getHex(Fields.id), fields.getString(Fields.name)));
 	}
 
 	@Override

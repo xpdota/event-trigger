@@ -11,11 +11,11 @@ public class ReplayController {
 
 	private final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private final EventDistributor dist;
-	private final List<Event> events;
+	private final List<? extends Event> events;
 	private final Object lock = new Object();
 	private int currentIndex;
 
-	public ReplayController(EventDistributor dist, List<Event> events) {
+	public ReplayController(EventDistributor dist, List<? extends Event> events) {
 		this.dist = dist;
 		this.events = events;
 	}

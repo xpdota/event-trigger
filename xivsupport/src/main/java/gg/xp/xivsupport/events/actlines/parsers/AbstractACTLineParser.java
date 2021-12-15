@@ -5,7 +5,10 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
+import org.assertj.core.internal.bytebuddy.implementation.bytecode.Throw;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -16,6 +19,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public abstract class AbstractACTLineParser<F extends Enum<F>> {
+
+	private static final Logger log = LoggerFactory.getLogger(AbstractACTLineParser.class);
 
 	private final Class<? extends Enum<F>> enumCls;
 	private final int lineNumber;
@@ -50,38 +55,42 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	@SuppressWarnings("unchecked")
 	@HandleEvents
 	public void handle(EventContext context, ACTLogLineEvent event) {
-		String line = event.getLogLine();
-		if (line.startsWith(lineStart)) {
-			String[] splits;
-			if (splitAll) {
-				splits = line.split("\\|");
+		try {
+			String line = event.getLogLine();
+			if (line.startsWith(lineStart)) {
+				String[] splits;
+				if (splitAll) {
+					splits = line.split("\\|");
+				}
+				else {
+					int numSplits = groups.size() + 3;
+					splits = line.split("\\|", numSplits);
+				}
+				Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
+				// TODO: validate number of fields
+				for (int i = 0; i < groups.size(); i++) {
+					// i + 2 is because the first two are the line number and timestamp.
+					out.put(groups.get(i), splits[i + 2]);
+				}
+				ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
+				FieldMapper<F> mapper = new FieldMapper<>(out, context, entityLookupMissBehavior(), splits);
+				Event outgoingEvent;
+				try {
+					outgoingEvent = convert(mapper, lineNumber, zdt);
+				}
+				catch (Throwable t) {
+					throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
+				}
+				mapper.getCombatantsToUpdate().forEach(id -> {
+					context.accept(new RefreshSpecificCombatantsRequest(List.of(id)));
+				});
+				if (outgoingEvent != null) {
+					outgoingEvent.setHappenedAt(zdt.toInstant());
+					context.accept(outgoingEvent);
+				}
 			}
-			else {
-				int numSplits = groups.size() + 3;
-				splits = line.split("\\|", numSplits);
-			}
-			Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
-			// TODO: validate number of fields
-			for (int i = 0; i < groups.size(); i++) {
-				// i + 2 is because the first two are the line number and timestamp.
-				out.put(groups.get(i), splits[i + 2]);
-			}
-			ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
-			FieldMapper<F> mapper = new FieldMapper<>(out, context, entityLookupMissBehavior(), splits);
-			Event outgoingEvent;
-			try {
-				outgoingEvent = convert(mapper, lineNumber, zdt);
-			}
-			catch (Throwable t) {
-				throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
-			}
-			mapper.getCombatantsToUpdate().forEach(id -> {
-				context.accept(new RefreshSpecificCombatantsRequest(List.of(id)));
-			});
-			if (outgoingEvent != null) {
-				outgoingEvent.setHappenedAt(zdt.toInstant());
-				context.accept(outgoingEvent);
-			}
+		} catch (Throwable t) {
+			throw new ActLineParseException(event.getLogLine(), t);
 		}
 	}
 

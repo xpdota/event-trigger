@@ -320,6 +320,10 @@ public class XivState implements SubState {
 		recalcState();
 	}
 
+	public void removeSpecificCombatant(long idToRemove) {
+		combatantsRaw.remove(idToRemove);
+	}
+
 	public Map<Long, XivCombatant> getCombatants() {
 		return Collections.unmodifiableMap(combatantsProcessed);
 	}
