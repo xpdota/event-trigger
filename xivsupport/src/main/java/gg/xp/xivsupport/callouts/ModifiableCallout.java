@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.callouts;
 
+import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
@@ -55,7 +56,7 @@ public class ModifiableCallout {
 		return getModified(Collections.emptyMap());
 	}
 
-	public CalloutEvent getModified(Map<String, String> arguments) {
+	public CalloutEvent getModified(Map<String, Object> arguments) {
 		String callText;
 		String visualText;
 		if (handle == null) {
@@ -79,13 +80,29 @@ public class ModifiableCallout {
 	}
 
 	@Contract("null, _ -> null")
-	public static @Nullable String applyReplacements(@Nullable String input, Map<String, String> replacements) {
+	public static @Nullable String applyReplacements(@Nullable String input, Map<String, Object> replacements) {
 		if (input == null) {
 			return null;
 		}
-		for (Map.Entry<String, String> entry : replacements.entrySet()) {
+		for (Map.Entry<String, Object> entry : replacements.entrySet()) {
 			String key = entry.getKey();
-			String value = entry.getValue();
+			Object rawValue = entry.getValue();
+			String value;
+			if (rawValue instanceof String) {
+				value = (String) rawValue;
+			}
+			else if (rawValue instanceof XivCombatant) {
+				XivCombatant cbt = (XivCombatant) rawValue;
+				if (cbt.isThePlayer()) {
+					value = "YOU";
+				}
+				else {
+					value = cbt.getName();
+				}
+			}
+			else {
+				value = rawValue.toString();
+			}
 			String searchString = String.format("\\{%s\\}", key);
 			input = input.replaceAll(searchString, value);
 		}

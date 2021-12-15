@@ -208,6 +208,8 @@ public class XivState implements SubState {
 		if (player != null) {
 			combatantsProcessed.put(playerId, player);
 		}
+		// TODO: just doing a simple diff of this would be a great way to synthesize
+		// add/remove combatant events
 		this.combatantsProcessed = combatantsProcessed;
 		List<XivPlayerCharacter> partyListProcessed = new ArrayList<>(partyListRaw.size());
 		List<RawXivPartyInfo> partyMembersNotInCombatants = new ArrayList<>();

@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.callouts;
 
+import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.testng.Assert;
@@ -82,9 +83,18 @@ public class CalloutTests {
 			CalloutEvent modified = mc.getModified();
 			Assert.assertEquals(modified.getCallText(), "Tankbuster on {target}");
 			Assert.assertEquals(modified.getVisualText(), "Tankbuster on {target}");
+
 			CalloutEvent modifiedWithArgs = mc.getModified(Map.of("target", "Foo"));
 			Assert.assertEquals(modifiedWithArgs.getCallText(), "Tankbuster on Foo");
 			Assert.assertEquals(modifiedWithArgs.getVisualText(), "Tankbuster on Foo");
+
+			CalloutEvent modifiedWithOtherPlayer = mc.getModified(Map.of("target", new XivCombatant(0x123, "Foo")));
+			Assert.assertEquals(modifiedWithOtherPlayer.getCallText(), "Tankbuster on Foo");
+			Assert.assertEquals(modifiedWithOtherPlayer.getVisualText(), "Tankbuster on Foo");
+
+			CalloutEvent modifiedWithThePlayer = mc.getModified(Map.of("target", new XivCombatant(0x123, "Bar", true, true, 1, null, null, null, 0, 0, 0, 0, 0)));
+			Assert.assertEquals(modifiedWithThePlayer.getCallText(), "Tankbuster on YOU");
+			Assert.assertEquals(modifiedWithThePlayer.getVisualText(), "Tankbuster on YOU");
 		}
 	}
 }

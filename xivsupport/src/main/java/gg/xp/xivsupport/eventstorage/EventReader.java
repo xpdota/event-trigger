@@ -60,7 +60,9 @@ public class EventReader {
 		} catch (Throwable t) {
 			throw new RuntimeException(t);
 		}
-		return lines.stream().map(ACTLogLineEvent::new)
+		return lines.stream()
+				.filter(s -> !s.isEmpty())
+				.map(ACTLogLineEvent::new)
 				.collect(Collectors.toList());
 	}
 }
