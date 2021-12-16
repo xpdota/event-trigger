@@ -201,6 +201,7 @@ public class GuiMain {
 
 
 	private class SystemTabPanel extends JPanel {
+		@SuppressWarnings("unchecked")
 		SystemTabPanel() {
 
 			setLayout(new GridBagLayout());
@@ -978,14 +979,7 @@ public class GuiMain {
 
 	private JPanel getOverlayConfigTab() {
 		OverlayMain overlayMain = container.getComponent(OverlayMain.class);
-		JTextArea text2 = new JTextArea("By default, they are hidden. Use /e c:overlay:show or /e c:overlay:hide to show/hide. /e c:overlay:edit or /e c:overlay:lock to enter/exit edit mode, allowing you to drag the borders around.");
-		text2.setOpaque(false);
-		text2.setEditable(false);
-		text2.setBorder(null);
-		text2.setLineWrap(true);
-		text2.setWrapStyleWord(true);
-		JLabel text1 = new JLabel("Overlays work, but I haven't made the tab for managing them yet.");
-		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Import/Export");
+		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Overlays");
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = 1;
@@ -993,13 +987,6 @@ public class GuiMain {
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
 		c.gridy = 0;
-		panel.add(text1, c);
-		c.gridy++;
-		panel.add(text2, c);
-		c.gridy++;
-		panel.add(new JPanel(), c);
-
-		c.gridy++;
 		{
 			JPanel allOverlayControls = new JPanel();
 			allOverlayControls.setLayout(new WrapLayout());

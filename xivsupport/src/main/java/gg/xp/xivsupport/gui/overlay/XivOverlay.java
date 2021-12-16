@@ -19,6 +19,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 @SuppressWarnings("NumericCastThatLosesPrecision")
 public class XivOverlay {
@@ -46,11 +48,13 @@ public class XivOverlay {
 
 	private boolean visible;
 
+	private static final AtomicLong nextDefaultPos = new AtomicLong(200);
+
 
 	public XivOverlay(String title, String settingKeyBase, PersistenceProvider persistence) {
 		editBorder = new TitledBorder(editBorderPink, title);
-		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), 200);
-		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), 200);
+		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), nextDefaultPos.get());
+		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
 		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d);
 		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d);
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), true);

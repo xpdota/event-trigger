@@ -28,6 +28,7 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 	private final File file;
 	private final File backupFile;
 
+	// TODO: is this threadsafe?
 	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName) {
 		String userDataDir = System.getenv("APPDATA");
 		log.info("Appdata: {}", userDataDir);
