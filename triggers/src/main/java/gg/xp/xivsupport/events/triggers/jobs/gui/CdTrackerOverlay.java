@@ -82,7 +82,7 @@ public class CdTrackerOverlay extends XivOverlay {
 
 	private void getAndSort() {
 		Map<CdTrackingKey, AbilityUsedEvent> newCurrentCds = cdTracker.getCurrentCooldowns();
-		List<BuffApplied> newCurrentBuffs = this.buffRepo.getBuffs();
+		List<BuffApplied> newCurrentBuffs = this.buffRepo.getBuffsAndPreapps();
 		if (!newCurrentCds.equals(currentCds) || !newCurrentBuffs.equals(currentBuffs)) {
 			if (newCurrentCds.isEmpty()) {
 				currentCds = Collections.emptyMap();

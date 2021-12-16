@@ -16,6 +16,7 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
 	private final boolean iconOnly;
 	private final boolean bypassCache;
+	private final boolean enableTooltips;
 
 	public ActionAndStatusRenderer() {
 		this(false, false, true);
@@ -24,6 +25,7 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 	public ActionAndStatusRenderer(boolean iconOnly, boolean bypassCache, boolean enableTooltips) {
 		this.iconOnly = iconOnly;
 		this.bypassCache = bypassCache;
+		this.enableTooltips = enableTooltips;
 	}
 
 	@Override
@@ -61,7 +63,12 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 			return defaultLabel;
 		}
 		Component component = IconTextRenderer.getComponent(icon, defaultLabel, iconOnly, false, bypassCache);
-		RenderUtils.setTooltip(component, tooltip);
+		if (enableTooltips) {
+			RenderUtils.setTooltip(component, tooltip);
+		}
+		else {
+			RenderUtils.setTooltip(component, null);
+		}
 		return component;
 
 

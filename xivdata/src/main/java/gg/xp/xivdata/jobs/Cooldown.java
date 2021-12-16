@@ -34,6 +34,7 @@ public enum Cooldown {
 	WanderersMinuet(BRD, 120.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
 	BattleVoice(BRD, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 0x8d),
 	Benediction(WHM, 180.0, "Benediction", CooldownType.HEAL, 0x8c),
+	// TODO: there's a lower level version too
 	SacredSoil(SCH, 30.0, "Sacred Soil", CooldownType.PARTY_MIT, 0xbc, 0x798),
 	// TODO - check ability ID
 	TrickAttack(NIN, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
@@ -57,6 +58,7 @@ public enum Cooldown {
 	ArmsLength(TANK, 120.0, "Arm's Length", CooldownType.PERSONAL_UTILITY, 0x1d7c, 1209),
 	Feint(MELEE_DPS, 90.0, "Feint", CooldownType.PARTY_MIT, 0x1d7d, 1195),
 	Addle(CASTER, 90.0, "Addle", CooldownType.PARTY_MIT, 0x1d88, 1203),
+	// TODO: this should only pick up on your own
 	Swiftcast(CASTER, 60.0, "Swiftcast", CooldownType.PERSONAL_UTILITY, 0x1d89, 167, 1325),
 	StandardStep(DNC, 30.0, "Standard Step", CooldownType.PARTY_BUFF, 0x3e7d, 1821, 2024),
 	TechnicalStep(DNC, 120.0, "Technical Step", CooldownType.PARTY_BUFF, 0x3e7e, 1819, 2049),

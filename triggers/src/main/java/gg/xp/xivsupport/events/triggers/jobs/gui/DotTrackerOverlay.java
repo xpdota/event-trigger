@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.triggers.jobs.DotRefreshReminders;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
@@ -33,7 +35,6 @@ public class DotTrackerOverlay extends XivOverlay {
 
 	private final DotRefreshReminders dots;
 	private final CustomTableModel<VisualDotInfo> tableModel;
-	private final BooleanSetting enabled;
 	private volatile List<BuffApplied> currentDots = Collections.emptyList();
 	private volatile List<VisualDotInfo> croppedDots = Collections.emptyList();
 
@@ -42,7 +43,6 @@ public class DotTrackerOverlay extends XivOverlay {
 
 	public DotTrackerOverlay(PersistenceProvider persistence, DotRefreshReminders dots) {
 		super("Dot Tracker", "dot-tracker.overlay", persistence);
-		enabled = dots.getEnableOverlay();
 		this.dots = dots;
 		tableModel = CustomTableModel.builder(() -> croppedDots)
 				.addColumn(new CustomColumn<>("Icon", c -> c.getEvent().getBuff(), c -> {
@@ -72,7 +72,7 @@ public class DotTrackerOverlay extends XivOverlay {
 					// TODO I think this is actually wrong - the logical width of the bar is always the same, so we
 					// end up skipping pixels anyway
 					//noinspection BusyWait
-					Thread.sleep((int) (BAR_WIDTH / getScale()));
+					Thread.sleep(200);
 				}
 				catch (Throwable e) {
 					log.error("Error refreshing dots", e);
@@ -86,7 +86,7 @@ public class DotTrackerOverlay extends XivOverlay {
 
 
 	private void getAndSort() {
-		if (!enabled.get()) {
+		if (!getEnabled().get()) {
 			croppedDots = Collections.emptyList();
 			return;
 		}

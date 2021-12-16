@@ -7,6 +7,8 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.XivEntity;
 
 import java.util.ArrayList;
@@ -18,7 +20,15 @@ public class Uwu implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return true;
+		return context.getStateInfo().get(XivState.class).zoneIs(0x309L);
+	}
+
+
+	private final List<XivEntity> mistralTargets = new ArrayList<>();
+
+	@HandleEvents
+	public void reset(EventContext context, PullStartedEvent pull) {
+		mistralTargets.clear();
 	}
 
 	private final ModifiableCallout slipStream = new ModifiableCallout("Slipstream (Cleave)", "Slipstream");
@@ -32,7 +42,6 @@ public class Uwu implements FilteredEventHandler {
 
 	// TODO: since these come in pairs, might be a good idea to finally do instance replacement
 	private final ModifiableCallout mistral = new ModifiableCallout("Mistral (Headmark)", "Mistral");
-	private final List<XivEntity> mistralTargets = new ArrayList<>();
 
 	@HandleEvents
 	public void mistral(EventContext context, HeadMarkerEvent event) {
@@ -56,5 +65,15 @@ public class Uwu implements FilteredEventHandler {
 			context.accept(searingWind.getModified(Map.of("target", event.getTarget())));
 		}
 	}
+
+	// TODO: this shouldn't call out Titan
+//	private final ModifiableCallout woken = new ModifiableCallout("Woken", "{target} awoken");
+//	@HandleEvents
+//	public void searingWind(EventContext context, BuffApplied event) {
+//		if (event.getBuff().getId() == 0x5F9) {
+//			context.accept(woken.getModified(Map.of("target", event.getTarget())));
+//		}
+//	}
+
 
 }

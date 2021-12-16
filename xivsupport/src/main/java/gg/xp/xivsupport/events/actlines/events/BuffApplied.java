@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
@@ -16,14 +17,26 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	private final XivCombatant source;
 	private final XivCombatant target;
 	private final long stacks;
+	private final boolean isPreApp;
 	private boolean isRefresh;
 
+
+	// Only for pre-apps
+	public BuffApplied(AbilityUsedEvent event, StatusAppliedEffect effect) {
+		this(effect.getStatus(), 9999, event.getSource(), event.getTarget(), 1, true);
+	}
+
 	public BuffApplied(XivStatusEffect buff, double durationRaw, XivCombatant source, XivCombatant target, long stacks) {
+		this(buff, durationRaw, source, target, stacks, false);
+	}
+
+	public BuffApplied(XivStatusEffect buff, double durationRaw, XivCombatant source, XivCombatant target, long stacks, boolean isPreApp) {
 		this.buff = buff;
 		this.duration = Duration.ofMillis((long) (durationRaw * 1000.0));
 		this.source = source;
 		this.target = target;
 		this.stacks = stacks;
+		this.isPreApp = isPreApp;
 	}
 
 	@Override
@@ -35,8 +48,12 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		return duration;
 	}
 
+	private Instant getStart() {
+		return getPumpedAt() == null ? getHappenedAt() : getPumpedAt();
+	}
+
 	public Duration getEstimatedElapsedDuration() {
-		Duration delta = Duration.between(getHappenedAt(), Instant.now());
+		Duration delta = Duration.between(getStart(), Instant.now());
 		// If negative, return zero. If longer than expected duration, return duration.
 		if (delta.isNegative()) {
 			return Duration.ZERO;
@@ -54,7 +71,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	}
 
 	public Duration getEstimatedTimeSinceExpiry() {
-		Duration elapsed = Duration.between(getHappenedAt(), Instant.now());
+		Duration elapsed = Duration.between(getStart(), Instant.now());
 		return elapsed.minus(duration);
 	}
 
@@ -78,6 +95,10 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 
 	public void setIsRefresh(boolean refresh) {
 		isRefresh = refresh;
+	}
+
+	public boolean isPreApp() {
+		return isPreApp;
 	}
 
 	@Override

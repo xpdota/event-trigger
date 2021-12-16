@@ -33,6 +33,9 @@ public class VisualCdInfo implements CurrentMaxPair, LabelOverride {
 			return String.format("%.1f", ((double) (getMax() - getCurrent())) / 1000.0f);
 		}
 		else {
+			if (buffApplied.isPreApp()) {
+				return "...";
+			}
 			return String.format("%.1f", ((double) (buffApplied.getEstimatedRemainingDuration().toMillis())) / 1000.0f);
 		}
 	}

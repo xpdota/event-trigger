@@ -3,7 +3,9 @@ package gg.xp.xivsupport.events.triggers.jobs;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.jobs.DotBuff;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.models.BuffTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -23,6 +25,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class DotRefreshReminders {
@@ -31,7 +34,6 @@ public class DotRefreshReminders {
 	private static final String dotKeyStub = "dot-tracker.enable-buff.";
 
 	private final BooleanSetting enableTts;
-	private final BooleanSetting enableOverlay;
 	private final LongSetting dotRefreshAdvance;
 	private final Map<DotBuff, BooleanSetting> enabledDots = new LinkedHashMap<>();
 	private final StatusEffectRepository buffs;
@@ -45,7 +47,6 @@ public class DotRefreshReminders {
 		}
 		this.dotRefreshAdvance = new LongSetting(persistence, "dot-tracker.pre-call-ms", 5000);
 		this.enableTts = new BooleanSetting(persistence, "dot-tracker.enable-tts", true);
-		this.enableOverlay = new BooleanSetting(persistence, "dot-tracker.enable-overlay", true);
 	}
 
 	private static String getKey(DotBuff buff) {
@@ -78,6 +79,27 @@ public class DotRefreshReminders {
 		}
 	}
 
+	@HandleEvents
+	public void buffPreApplication(EventContext context, AbilityUsedEvent event) {
+		// Be more responsive by also tracking pre-apps
+		if (event.getSource().isThePlayer() && !event.getTarget().isFake()) {
+			List<StatusAppliedEffect> preApps = event.getEffects().stream()
+					.filter(StatusAppliedEffect.class::isInstance).map(StatusAppliedEffect.class::cast)
+					.filter(StatusAppliedEffect::isOnTarget)
+					.filter(effect -> isWhitelisted(effect.getStatus().getId()))
+					.collect(Collectors.toList());
+			synchronized (myDotsLock) {
+				for (StatusAppliedEffect preApp : preApps) {
+					BuffApplied value = new BuffApplied(event, preApp);
+					value.setParent(event);
+					value.setHappenedAt(Instant.now());
+					myDots.put(new BuffTrackingKey(event.getSource(), event.getTarget(), preApp.getStatus()), value);
+				}
+				recheckMyDots();
+			}
+		}
+	}
+
 	private void recheckMyDots() {
 		myDots.entrySet().removeIf(e -> {
 			BuffApplied buffFromRepo = buffs.get(e.getKey());
@@ -87,7 +109,15 @@ public class DotRefreshReminders {
 			if (buffFromRepo != null) {
 				return false;
 			}
+			if (buffs.getPreApp(e.getKey()) != null) {
+				return false;
+			}
 			Duration timeSinceExpiry = e.getValue().getEstimatedTimeSinceExpiry();
+//			// TODO: this is a total hack - we need to not remove our own preapps
+//			boolean isPreApp = e.getValue().getParent() instanceof AbilityUsedEvent;
+//			if (isPreApp) {
+//				return e.getValue().getEstimatedElapsedDuration().toMillis() > 2000;
+//			}
 			return timeSinceExpiry.isNegative()
 					|| timeSinceExpiry.compareTo(Duration.of(5, ChronoUnit.SECONDS)) > 0;
 		});
@@ -173,9 +203,5 @@ public class DotRefreshReminders {
 
 	public BooleanSetting getEnableTts() {
 		return enableTts;
-	}
-
-	public BooleanSetting getEnableOverlay() {
-		return enableOverlay;
 	}
 }

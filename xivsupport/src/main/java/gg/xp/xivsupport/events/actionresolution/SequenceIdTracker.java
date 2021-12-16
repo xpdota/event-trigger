@@ -5,7 +5,9 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.AbilityResolvedEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActionSyncEvent;
+import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
+import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import org.slf4j.Logger;
@@ -31,6 +33,8 @@ public class SequenceIdTracker {
 	private static final int EVENTS_TO_PRUNE = 1_000;
 	// Max age in MS before considering an action to be ghosted
 	private static final long MAX_AGE = 10_000;
+
+	// TODO: make a unit dying clear unresolved actions from/to it
 
 	// TODO: current main problem with the idea of being able to use ActionEffects to get predicted data faster than
 	// waiting for sync: we have to basically redo the entire way we get combatant data, since it looks something like
@@ -62,6 +66,11 @@ public class SequenceIdTracker {
 		Keep the current system, but also use ACT lines to complement the data from WS.
 		I think for now, it would be sufficient to purely use the NetworkActionSync data, and yoink *just* HP from it,
 		since NetworkActionSync is what would actually result in a unit's HP going down.
+
+		Third idea: Combine the two
+
+		This seems like the most reasonable. For replaying ACT log files, I already have some basic extra processing
+		of 03/04 lines, so it wouldn't be a stretch to also apply those to ACT lines in general.
 	 */
 
 	@HandleEvents
@@ -72,13 +81,13 @@ public class SequenceIdTracker {
 	}
 
 	@HandleEvents
-	public void clearOnZoneChange(EventContext context, WipeEvent event) {
+	public void clearOnZoneChange(EventContext context, ZoneChangeEvent event) {
 		synchronized (lock) {
 			events = new ArrayList<>();
 		}
 	}
 
-	@HandleEvents
+	@HandleEvents(order = -400)
 	public void push(EventContext context, AbilityUsedEvent event) {
 		XivCombatant target = event.getTarget();
 		// "Environment" hits don't seem to ever actually resolve (why would they?)
@@ -97,7 +106,7 @@ public class SequenceIdTracker {
 		}
 	}
 
-	@HandleEvents
+	@HandleEvents(order = -400)
 	public void pop(EventContext context, ActionSyncEvent event) {
 		synchronized (lock) {
 			Iterator<AbilityUsedEvent> iterator = events.iterator();
@@ -120,9 +129,24 @@ public class SequenceIdTracker {
 		}
 	}
 
+	@HandleEvents(order = 400)
+	public void pop(EventContext context, EntityKilledEvent event) {
+		long targetId = event.getTarget().getId();
+		synchronized (lock) {
+			events.removeIf(e -> e.getTarget().getId() == targetId || e.getSource().getId() == targetId);
+		}
+	}
+
+
 	public List<AbilityUsedEvent> getEvents() {
 		synchronized (lock) {
 			return new ArrayList<>(events);
+		}
+	}
+
+	public boolean isEventStillPending(AbilityUsedEvent event) {
+		synchronized (lock) {
+			return events.contains(event);
 		}
 	}
 

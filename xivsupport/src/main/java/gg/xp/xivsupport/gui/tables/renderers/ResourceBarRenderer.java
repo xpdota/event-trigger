@@ -9,8 +9,31 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 
-public abstract class ResourceBarRenderer implements TableCellRenderer {
+public abstract class ResourceBarRenderer extends JPanel implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
+	private final JPanel leftPanel;
+	private final JPanel rightPanel;
+	private final JLabel label;
+
+	protected ResourceBarRenderer() {
+		this.setLayout(new OverlapLayout());
+		JPanel panel1 = new JPanel();
+		panel1.setBorder(new LineBorder(Color.DARK_GRAY, 1));
+		panel1.setLayout(new BoxLayout(panel1, BoxLayout.LINE_AXIS));
+
+		leftPanel = new JPanel();
+		rightPanel = new JPanel();
+		panel1.add(leftPanel);
+		panel1.add(rightPanel);
+		panel1.setBounds(0, 0, 40, 40);
+		// TODO
+//		if (percent < 1.0) {
+//			panel1.add(rightPanel);
+//		}
+		this.add(panel1);
+		this.label = new JLabel("Text");
+		this.add(label);
+	}
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -35,14 +58,6 @@ public abstract class ResourceBarRenderer implements TableCellRenderer {
 			}
 			percent = effectiveCurrent / (double) effectiveMax;
 
-			JPanel outerPanel = new JPanel();
-			outerPanel.setLayout(new OverlapLayout());
-			JPanel panel1 = new JPanel();
-			panel1.setBorder(new LineBorder(Color.DARK_GRAY, 1));
-			panel1.setLayout(new BoxLayout(panel1, BoxLayout.LINE_AXIS));
-
-			JPanel leftPanel = new JPanel();
-			JPanel rightPanel = new JPanel();
 
 //			Color greenColor = new Color(95, 148, 95, 98);
 			Color colorRaw = getBarColor(percent, hp);
@@ -51,36 +66,32 @@ public abstract class ResourceBarRenderer implements TableCellRenderer {
 			Color gray = baseLabel.getBackground();
 			rightPanel.setBackground(new Color(gray.getRed(), gray.getGreen(), gray.getBlue(), 128));
 
-			panel1.add(leftPanel);
-			if (percent < 1.0) {
-				panel1.add(rightPanel);
-			}
 
 			leftPanel.setPreferredSize(new Dimension((int) (width * percent), 10));
 			rightPanel.setPreferredSize(new Dimension((int) (width * (1 - percent)), 10));
-			JLabel label = getLabel(hp, width);
-			leftPanel.add(label);
 			label.setForeground(baseLabel.getForeground());
 
-			panel1.setBounds(0, 0, 40, 40);
+			formatLabel(label, hp, width);
+
 			label.setBounds(0, 0, label.getPreferredSize().width, label.getPreferredSize().height);
 			label.setHorizontalAlignment(0);
 			label.setVerticalAlignment(0);
-			outerPanel.add(panel1);
-			outerPanel.add(label);
-			return outerPanel;
+
+			validate();
+
+			return this;
 		}
 		return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 	}
 
 	protected abstract Color getBarColor(double percent, CurrentMaxPair item);
 
-	protected JLabel getLabel(CurrentMaxPair item, int width) {
+	protected void formatLabel(JLabel label, CurrentMaxPair item, int width) {
 		// Try to do long label, otherwise fall back to short label
-		JLabel longLabel = new JLabel(String.format("%s / %s", item.getCurrent(), item.getMax()));
-		if (longLabel.getPreferredSize().width <= width) {
-			return longLabel;
+		String text = String.format("%s / %s", item.getCurrent(), item.getMax());
+		label.setText(text);
+		if (label.getPreferredSize().width > width) {
+			label.setText(String.valueOf(item.getCurrent()));
 		}
-		return new JLabel(String.valueOf(item.getCurrent()));
 	}
 }

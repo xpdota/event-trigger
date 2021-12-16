@@ -44,8 +44,6 @@ public class DotRefreshReminderGui implements PluginTab {
 		settingsPanel.add(preTimeBox);
 		JCheckBox enableTts = new BooleanSettingGui(backend.getEnableTts(), "Enable TTS").getComponent();
 		settingsPanel.add(enableTts);
-		JCheckBox enableOverlay = new BooleanSettingGui(backend.getEnableOverlay(), "Enable Overlay").getComponent();
-		settingsPanel.add(enableOverlay);
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 

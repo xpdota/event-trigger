@@ -61,9 +61,13 @@ public class OverlayMain {
 	private final BooleanSetting show;
 	private boolean windowActive;
 	private boolean editing;
+	private final BooleanSetting forceShow;
 
 	public OverlayMain(PicoContainer container, EventDistributor dist, PersistenceProvider persistence) {
 		show = new BooleanSetting(persistence, "xiv-overlay.show", false);
+		show.addListener(this::recalc);
+		forceShow = new BooleanSetting(persistence, "xiv-overlay.force-show", false);
+		forceShow.addListener(this::recalc);
 
 		List<XivOverlay> overlays = container.getComponents(XivOverlay.class);
 		overlays.forEach(this::addOverlay);
@@ -74,8 +78,7 @@ public class OverlayMain {
 			while (true) {
 				try {
 					boolean old = windowActive;
-					String window = getActiveWindowText();
-					windowActive = window.startsWith("FINAL FANTASY XIV") || this.overlays.stream().anyMatch(o -> o.getTitle().equals(window));
+					windowActive = isGameWindowActive();
 					if (old != windowActive) {
 						recalc();
 					}
@@ -89,6 +92,11 @@ public class OverlayMain {
 		}).start();
 	}
 
+	private boolean isGameWindowActive() {
+		String window = getActiveWindowText();
+		return window.startsWith("FINAL FANTASY XIV") || this.overlays.stream().anyMatch(o -> o.getTitle().equals(window));
+	}
+
 	public void addOverlay(XivOverlay overlay) {
 		overlays.add(overlay);
 		overlay.finishInit();
@@ -97,12 +105,15 @@ public class OverlayMain {
 
 	public void setVisible(boolean visible) {
 		show.set(visible);
-		recalc();
 	}
 
 	public void setEditing(boolean editing) {
 		this.editing = editing;
 		recalc();
+	}
+
+	public BooleanSetting forceShow() {
+		return forceShow;
 	}
 
 	public void setOpacity(float opacity) {
@@ -121,10 +132,11 @@ public class OverlayMain {
 
 	private void recalc() {
 		// Do this again, otherwise it may flash away when you finish editing
-		windowActive = getActiveWindowText().startsWith("FINAL FANTASY XIV");
+		windowActive = isGameWindowActive();
 		// Always show if editing
 		// If not editing, show if the user has turned overlay on, and ffxiv is the active window
-		boolean shouldShow = editing || (show.get() && windowActive);
+		boolean shouldShow = editing || (show.get() && (windowActive || forceShow.get()));
+		log.debug("New Overlay State: WindowActive {}; Visible {}; Editing {}", windowActive, shouldShow, editing);
 		SwingUtilities.invokeLater(() -> {
 			if (shouldShow) {
 				overlays.forEach(o -> o.setVisible(true));
@@ -137,6 +149,10 @@ public class OverlayMain {
 	}
 
 	private final List<XivOverlay> overlays = new ArrayList<>();
+
+	public List<XivOverlay> getOverlays() {
+		return new ArrayList<>(overlays);
+	}
 
 	private static void doWindowInfo() {
 		log.info("Active window: {}", getActiveWindowText());

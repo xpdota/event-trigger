@@ -10,7 +10,6 @@ public class DotBarRenderer extends ResourceBarRenderer {
 
 	private static final Color colorExpired = new Color(255, 0, 0);
 	private static final Color colorGood = new Color(79, 211, 255);
-	private final JLabel label = new JLabel();
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -22,12 +21,13 @@ public class DotBarRenderer extends ResourceBarRenderer {
 	}
 
 	@Override
-	protected JLabel getLabel(CurrentMaxPair item, int width) {
+	protected void formatLabel(JLabel label, CurrentMaxPair item, int width) {
 		if (item instanceof LabelOverride) {
 			label.setText(((LabelOverride) item).getLabel());
-			return label;
 		}
-		return super.getLabel(item, width);
+		else {
+			super.formatLabel(label, item, width);
+		}
 	}
 
 	@Override

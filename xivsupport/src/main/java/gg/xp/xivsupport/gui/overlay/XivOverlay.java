@@ -5,13 +5,16 @@ import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinUser;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -22,8 +25,14 @@ public class XivOverlay {
 	private static final Logger log = LoggerFactory.getLogger(XivOverlay.class);
 	private static final Color panelBackgroundEditMode = new Color(0, 255, 0, 64);
 	private static final Color panelBackgroundDefault = new Color(0, 0, 0, 0);
-	private static final LineBorder editBorder = new LineBorder(Color.PINK, 5);
-	private static final LineBorder transparentBorder = new LineBorder(new Color(0, 0, 0, 0), 5);
+	private static final Border editBorderPink = new LineBorder(Color.PINK, 5);
+	private final TitledBorder editBorder;
+	private static final Border transparentBorderLine = new LineBorder(new Color(0, 0, 0, 0), 5);
+	private static final TitledBorder transparentBorder = new TitledBorder(transparentBorderLine, "Foo");
+	static {
+		transparentBorder.setTitleColor(new Color(0, 0, 0, 0));
+	}
+
 	private int dragX;
 	private int dragY;
 	private final ScalableJFrame frame;
@@ -32,14 +41,20 @@ public class XivOverlay {
 	private final LongSetting ySetting;
 	private final DoubleSetting opacity;
 	private final DoubleSetting scaleFactor;
+	private final BooleanSetting enabled;
 	private final String title;
+
+	private boolean visible;
 
 
 	public XivOverlay(String title, String settingKeyBase, PersistenceProvider persistence) {
+		editBorder = new TitledBorder(editBorderPink, title);
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), 200);
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), 200);
 		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d);
 		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d);
+		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), true);
+		enabled.addListener(this::recalc);
 		frame = ScalableJFrame.construct(title, scaleFactor.get());
 //		frame.setScaleFactor(scaleFactor.get());
 		this.title = title;
@@ -113,6 +128,10 @@ public class XivOverlay {
 		return panel;
 	}
 
+	public BooleanSetting getEnabled() {
+		return enabled;
+	}
+
 	public void setPosition(int x, int y) {
 		frame.setLocation(x, y);
 		xSetting.set(x);
@@ -120,6 +139,12 @@ public class XivOverlay {
 	}
 
 	public void setVisible(boolean visible) {
+		this.visible = visible;
+		recalc();
+	}
+
+	private void recalc() {
+		boolean visible = this.visible && enabled.get();
 		if (visible) {
 			frame.setVisible(true);
 		}

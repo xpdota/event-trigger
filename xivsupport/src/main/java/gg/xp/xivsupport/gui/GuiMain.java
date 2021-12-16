@@ -28,6 +28,8 @@ import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.overlay.OverlayMain;
+import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
@@ -53,6 +55,7 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayControllerGui;
 import gg.xp.xivsupport.slf4j.LogCollector;
@@ -67,6 +70,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
+import javax.swing.event.CellEditorListener;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -78,6 +85,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
+import java.util.EventObject;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -194,6 +202,7 @@ public class GuiMain {
 //		container.addComponent(OverlayMain.class);
 //		container.getComponent(OverlayMain.class);
 	}
+
 
 	private class SystemTabPanel extends JPanel {
 		SystemTabPanel() {
@@ -955,6 +964,7 @@ public class GuiMain {
 	}
 
 	private JPanel getOverlayConfigTab() {
+		OverlayMain overlayMain = container.getComponent(OverlayMain.class);
 		JTextArea text2 = new JTextArea("By default, they are hidden. Use /e c:overlay:show or /e c:overlay:hide to show/hide. /e c:overlay:edit or /e c:overlay:lock to enter/exit edit mode, allowing you to drag the borders around.");
 		text2.setOpaque(false);
 		text2.setEditable(false);
@@ -967,16 +977,61 @@ public class GuiMain {
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = 1;
 		c.weighty = 0;
-		c.fill = GridBagConstraints.HORIZONTAL;
+		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
 		c.gridy = 0;
 		panel.add(text1, c);
 		c.gridy++;
 		panel.add(text2, c);
 		c.gridy++;
-		c.weighty = 1;
 		panel.add(new JPanel(), c);
+
+		c.gridy ++;
+		{
+			JPanel allOverlayControls = new JPanel();
+			allOverlayControls.setLayout(new WrapLayout());
+
+			JButton show = new JButton("Show");
+			show.addActionListener(e -> overlayMain.setVisible(true));
+			allOverlayControls.add(show);
+
+			JButton hide = new JButton("Hide");
+			hide.addActionListener(e -> overlayMain.setVisible(false));
+			allOverlayControls.add(hide);
+
+			JCheckBox edit = new JCheckBox("Edit");
+			edit.addActionListener(e -> overlayMain.setEditing(edit.isSelected()));
+			allOverlayControls.add(edit);
+
+			allOverlayControls.add(new BooleanSettingGui(overlayMain.forceShow(), "Force Visible Even When Game Inactive").getComponent());
+
+			panel.add(allOverlayControls, c);
+			c.gridy ++;
+		}
+		{
+			// Will need to do something about this later
+			JTable table = new JTable() {
+				@Override
+				public boolean isCellEditable(int row, int column) {
+					return true;
+				}
+			};
+			CustomTableModel<XivOverlay> tableModel = CustomTableModel.builder(overlayMain::getOverlays)
+					.addColumn(StandardColumns.booleanSettingColumn("E", XivOverlay::getEnabled))
+					.addColumn(new CustomColumn<>("Name", XivOverlay::getTitle, col -> col.setCellEditor(new NoCellEditor())))
+					.build();
+			table.setModel(tableModel);
+			tableModel.configureColumns(table);
+			JScrollPane scrollPane = new JScrollPane(table);
+			scrollPane.setPreferredSize(scrollPane.getMaximumSize());
+			c.weighty = 1;
+			panel.add(scrollPane, c);
+		}
+
+
+
 		return panel;
 	}
+
 
 }

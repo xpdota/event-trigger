@@ -2,7 +2,7 @@ package gg.xp.xivsupport.persistence.settings;
 
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 
-public class BooleanSetting {
+public class BooleanSetting extends ObservableSetting {
 
 	private final PersistenceProvider persistence;
 	private final String settingKey;
@@ -27,5 +27,6 @@ public class BooleanSetting {
 	public void set(boolean newValue) {
 		cached = newValue;
 		persistence.save(settingKey, newValue);
+		notifyListeners();
 	}
 }

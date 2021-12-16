@@ -46,6 +46,7 @@ public class PullTracker implements SubState {
 		Pull myPull = new Pull(pullCounter.getAndIncrement(), event, context.getStateInfo().get(XivState.class).getZone());
 		pulls.add(myPull);
 		currentPull = myPull;
+		context.accept(new PullStartedEvent());
 	}
 
 	@HandleEvents

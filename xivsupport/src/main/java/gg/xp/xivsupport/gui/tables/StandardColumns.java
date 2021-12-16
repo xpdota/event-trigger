@@ -5,6 +5,7 @@ import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
+import gg.xp.xivsupport.gui.GuiMain;
 import gg.xp.xivsupport.gui.tables.renderers.HpPredictedRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
@@ -17,12 +18,19 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import jdk.jshell.PersistentSnippet;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @ScanMe
@@ -168,5 +176,44 @@ public final class StandardColumns {
 
 	public BooleanSetting getShowPredictedHp() {
 		return showPredictedHp;
+	}
+
+	public static <X> CustomColumn<X> booleanSettingColumn(String name, Function<X, BooleanSetting> settingGetter) {
+		return new CustomColumn<>(name, settingGetter::apply, col -> {
+			col.setMaxWidth(20);
+			col.setMinWidth(20);
+			col.setCellRenderer(new TableCellRenderer() {
+				private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+
+				@Override
+				public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+					if (value instanceof BooleanSetting) {
+						JCheckBox cb = new JCheckBox();
+						cb.setOpaque(false);
+						cb.setSelected(((BooleanSetting) value).get());
+						cb.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column).getBackground());
+						return cb;
+					}
+					else {
+						return null;
+					}
+				}
+			});
+			col.setCellEditor(new BooleanSettingCellEditor());
+		});
+	}
+
+
+	private static class BooleanSettingCellEditor extends AbstractCellEditor implements TableCellEditor {
+
+		@Override
+		public Object getCellEditorValue() {
+			return null;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			return new BooleanSettingGui((BooleanSetting) value, null).getComponent();
+		}
 	}
 }
