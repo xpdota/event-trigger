@@ -2,18 +2,19 @@ package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.state.XivState;
 
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
 public class Line20Parser extends AbstractACTLineParser<Line20Parser.Fields> {
 
-	public Line20Parser() {
-		super(20, Fields.class);
+	public Line20Parser(XivState state) {
+		super(state,  20, Fields.class);
 	}
 
 	enum Fields {
-		casterId, casterName, abilityId, abilityName, targetId, targetName, castTime;
+		casterId, casterName, abilityId, abilityName, targetId, targetName, castTime
 	}
 
 	@Override

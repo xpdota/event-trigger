@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -39,6 +40,7 @@ public class XivState implements SubState {
 	private volatile @NotNull Map<Long, RawXivCombatantInfo> combatantsRaw = Collections.emptyMap();
 	private volatile @NotNull Map<Long, XivCombatant> combatantsProcessed = Collections.emptyMap();
 	private final Map<Long, HitPoints> hpOverrides = new HashMap<>();
+	private final Map<Long, Position> posOverrides = new HashMap<>();
 
 	private Job previousPlayerJob;
 //	@SuppressWarnings("unused")
@@ -108,7 +110,7 @@ public class XivState implements SubState {
 						playerCombatantInfo.getRawType(),
 						hpOverrides.getOrDefault(playerCombatantInfo.getId(), playerCombatantInfo.getHP()),
 						playerCombatantInfo.getMP(),
-						playerCombatantInfo.getPos(),
+						posOverrides.getOrDefault(playerCombatantInfo.getId(), playerCombatantInfo.getPos()),
 						playerCombatantInfo.getBnpcId(),
 						playerCombatantInfo.getBnpcNameId(),
 						playerCombatantInfo.getPartyType(),
@@ -135,7 +137,7 @@ public class XivState implements SubState {
 						combatant.getRawType(),
 						hpOverrides.getOrDefault(combatant.getId(), combatant.getHP()),
 						combatant.getMP(),
-						combatant.getPos(),
+						posOverrides.getOrDefault(combatant.getId(), combatant.getPos()),
 						combatant.getBnpcId(),
 						combatant.getBnpcNameId(),
 						combatant.getPartyType(),
@@ -151,7 +153,7 @@ public class XivState implements SubState {
 						combatant.getRawType(),
 						hpOverrides.getOrDefault(combatant.getId(), combatant.getHP()),
 						combatant.getMP(),
-						combatant.getPos(),
+						posOverrides.getOrDefault(combatant.getId(), combatant.getPos()),
 						combatant.getBnpcId(),
 						combatant.getBnpcNameId(),
 						combatant.getPartyType(),
@@ -342,23 +344,49 @@ public class XivState implements SubState {
 				.orElse(-1);
 	}
 
-	public void provideCombatantHP(XivCombatant target, HitPoints hitPoints) {
+	private boolean dirtyOverrides;
+
+	public void provideCombatantHP(XivCombatant target, @NotNull HitPoints hitPoints) {
 		HitPoints oldOverride = hpOverrides.put(target.getId(), hitPoints);
-		// Only trigger refresh if something actually changed
-		if (oldOverride == null
-				|| oldOverride.getCurrent() != hitPoints.getCurrent()
-				|| oldOverride.getMax() != hitPoints.getMax()
-		) {
+		// Only trigger refresh if something actually changed, or there is already a pending refresh
+		if (dirtyOverrides) {
+			return;
+		}
+		if (oldOverride == null || oldOverride.equals(hitPoints)) {
 			// If there was no previous override, and the HP from WS == HP from the event, ignore
 			XivCombatant cbt = combatantsProcessed.get(target.getId());
 			if (oldOverride == null && cbt != null) {
 				HitPoints existingHp = cbt.getHp();
-				if (existingHp != null
-						&& existingHp.getCurrent() == hitPoints.getCurrent()
-						&& existingHp.getMax() == hitPoints.getMax()) {
+				if (hitPoints.equals(existingHp)) {
 					return;
 				}
 			}
+			dirtyOverrides = true;
+		}
+	}
+
+	public void provideCombatantPos(XivCombatant target, Position newPos) {
+		Position oldOverride = posOverrides.put(target.getId(), newPos);
+		// Only trigger refresh if something actually changed, or there is already a pending refresh
+		if (dirtyOverrides) {
+			return;
+		}
+		if (oldOverride == null || oldOverride.equals(newPos)) {
+			// If there was no previous override, and the HP from WS == HP from the event, ignore
+			XivCombatant cbt = combatantsProcessed.get(target.getId());
+			if (oldOverride == null && cbt != null) {
+				Position existingPos = cbt.getPos();
+				if (newPos.equals(existingPos)) {
+					return;
+				}
+			}
+			dirtyOverrides = true;
+		}
+	}
+
+	public void flushProvidedValues() {
+		if (dirtyOverrides) {
+			dirtyOverrides = false;
 			recalcState();
 		}
 	}

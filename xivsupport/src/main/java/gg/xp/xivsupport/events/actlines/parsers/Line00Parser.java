@@ -2,14 +2,15 @@ package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
+import gg.xp.xivsupport.events.state.XivState;
 
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
 public class Line00Parser extends AbstractACTLineParser<Line00Parser.Fields> {
 
-	public Line00Parser() {
-		super(0, Fields.class);
+	public Line00Parser(XivState state) {
+		super(state,  0, Fields.class);
 	}
 
 	enum Fields {

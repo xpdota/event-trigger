@@ -1,11 +1,11 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
-import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
-import org.assertj.core.internal.bytebuddy.implementation.bytecode.Throw;
+import gg.xp.xivsupport.events.state.XivState;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,17 +26,19 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	private final int lineNumber;
 	private final String lineStart;
 	private final List<@Nullable F> groups;
+	private final XivState state;
 	private final boolean splitAll;
 
-	AbstractACTLineParser(int logLineNumber, Class<F> enumCls) {
-		this(logLineNumber, enumCls, false);
+	AbstractACTLineParser(XivState state, int logLineNumber, Class<F> enumCls) {
+		this(state, logLineNumber, enumCls, false);
 	}
-	AbstractACTLineParser(int logLineNumber, Class<F> enumCls, boolean splitAll) {
-		this(logLineNumber, Arrays.asList(enumCls.getEnumConstants()), splitAll);
+	AbstractACTLineParser(XivState state, int logLineNumber, Class<F> enumCls, boolean splitAll) {
+		this(state, logLineNumber, Arrays.asList(enumCls.getEnumConstants()), splitAll);
 	}
 
 	@SuppressWarnings({"ConstantConditions", "unchecked"})
-	AbstractACTLineParser(int logLineNumber, List<@Nullable F> groups, boolean splitAll) {
+	AbstractACTLineParser(XivState state, int logLineNumber, List<@Nullable F> groups, boolean splitAll) {
+		this.state = state;
 		this.splitAll = splitAll;
 		if (groups.isEmpty()) {
 			// TODO: could some of them make sense as empty?
@@ -73,7 +75,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 					out.put(groups.get(i), splits[i + 2]);
 				}
 				ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
-				FieldMapper<F> mapper = new FieldMapper<>(out, context, entityLookupMissBehavior(), splits);
+				FieldMapper<F> mapper = new FieldMapper<>(out, state, context, entityLookupMissBehavior(), splits);
 				Event outgoingEvent;
 				try {
 					outgoingEvent = convert(mapper, lineNumber, zdt);
@@ -84,6 +86,9 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				mapper.getCombatantsToUpdate().forEach(id -> {
 					context.accept(new RefreshSpecificCombatantsRequest(List.of(id)));
 				});
+				if (mapper.isRecalcNeeded()) {
+					state.flushProvidedValues();
+				}
 				if (outgoingEvent != null) {
 					outgoingEvent.setHappenedAt(zdt.toInstant());
 					context.accept(outgoingEvent);

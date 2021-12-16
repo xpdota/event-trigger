@@ -3,7 +3,6 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.CurrentHpSetEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.FullyResistedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
@@ -18,6 +17,8 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
@@ -26,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -36,13 +38,16 @@ public class FieldMapper<K extends Enum<K>> {
 	private static final Logger log = LoggerFactory.getLogger(FieldMapper.class);
 
 	private final Map<K, String> raw;
+	private final XivState state;
 	private final EventContext context;
 	private final EntityLookupMissBehavior entityLookupMissBehavior;
 	private final String[] rawLineSplit;
 	private final List<Long> combatantsToUpdate = new ArrayList<>();
+	private boolean recalcNeeded;
 
-	public FieldMapper(Map<K, String> raw, EventContext context, EntityLookupMissBehavior entityLookupMissBehavior, String[] rawLineSplit) {
+	public FieldMapper(Map<K, String> raw, XivState state, EventContext context, EntityLookupMissBehavior entityLookupMissBehavior, String[] rawLineSplit) {
 		this.raw = new EnumMap<>(raw);
+		this.state = state;
 		this.context = context;
 		this.entityLookupMissBehavior = entityLookupMissBehavior;
 		this.rawLineSplit = rawLineSplit;
@@ -64,6 +69,18 @@ public class FieldMapper<K extends Enum<K>> {
 		return Long.parseLong(rawStr, 10);
 	}
 
+	public @Nullable Double getOptionalDouble(K key) {
+		String rawStr = raw.get(key);
+		if (rawStr.isEmpty()) {
+			return null;
+		}
+		return Double.parseDouble(rawStr);
+	}
+
+	public List<String> getRawLineSplit() {
+		return Arrays.asList(rawLineSplit);
+	}
+
 	public long getHex(K key) {
 		return Long.parseLong(raw.get(key), 16);
 	}
@@ -82,6 +99,42 @@ public class FieldMapper<K extends Enum<K>> {
 		long id = getHex(idKey);
 		String name = getString(nameKey);
 		return new XivStatusEffect(id, name);
+	}
+
+	public XivCombatant getEntity(K idKey, K nameKey, K currentHpKey, K maxHpKey, K currentMpKey, K maxMpKey, K posXKey, K posYKey, K posZKey, K headingKey) {
+		XivCombatant cbt = getEntity(idKey, nameKey);
+		if (currentHpKey != null && maxHpKey != null) {
+			Long curHp = getOptionalLong(currentHpKey);
+			if (curHp != null) {
+				// Plan A - both the current and max fields are present
+				Long maxHp = getOptionalLong(maxHpKey);
+				if (maxHp != null) {
+					// TODO: collect these all then do them once at the end
+					state.provideCombatantHP(cbt, new HitPoints(curHp, maxHp));
+					recalcNeeded = true;
+				}
+				// Plan B - we only have current available, so use stored max and assume it's the same (since max HP changes
+				// are not that common).
+				else {
+					if (cbt.getHp() != null) {
+						state.provideCombatantHP(cbt, new HitPoints(curHp, cbt.getHp().getMax()));
+						recalcNeeded = true;
+					}
+				}
+			}
+		}
+		if (posXKey != null && posYKey != null && posZKey != null && headingKey != null) {
+			Double x = getOptionalDouble(posXKey);
+			Double y = getOptionalDouble(posYKey);
+			Double z = getOptionalDouble(posZKey);
+			Double h = getOptionalDouble(headingKey);
+
+			if (x != null && y != null && z != null && h != null) {
+				state.provideCombatantPos(cbt, new Position(x, y, z, h));
+				recalcNeeded = true;
+			}
+		}
+		return cbt;
 	}
 
 	public XivCombatant getEntity(K idKey, K nameKey) {
@@ -270,5 +323,9 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public List<Long> getCombatantsToUpdate() {
 		return Collections.unmodifiableList(combatantsToUpdate);
+	}
+
+	public boolean isRecalcNeeded() {
+		return recalcNeeded;
 	}
 }

@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui;
 
+import ch.qos.logback.classic.Level;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
@@ -55,7 +56,6 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
-import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayControllerGui;
 import gg.xp.xivsupport.slf4j.LogCollector;
@@ -70,10 +70,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
-import javax.swing.event.CellEditorListener;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -85,7 +82,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
-import java.util.EventObject;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -871,11 +867,28 @@ public class GuiMain {
 					.addMainColumn(new CustomColumn<>("Thread", e -> e.getEvent().getThreadName(), col -> {
 						col.setPreferredWidth(150);
 					}))
-					// TODO: column widths
 					.addMainColumn(new CustomColumn<>("Level", e -> e.getEvent().getLevel(), col -> {
 						col.setMinWidth(50);
 						col.setMaxWidth(50);
 						col.setResizable(false);
+						col.setCellRenderer(new DefaultTableCellRenderer() {
+							private final Color defaultFg = getForeground();
+
+							@Override
+							public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+								Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+								if (value == Level.ERROR) {
+									setForeground(Color.RED);
+								}
+								else if (value == Level.WARN) {
+									setForeground(Color.ORANGE);
+								}
+								else {
+									setForeground(defaultFg);
+								}
+								return comp;
+							}
+						});
 					}))
 					.addMainColumn(new CustomColumn<>("Where", e -> {
 						StackTraceElement callerDataTop = e.getEvent().getCallerData()[0];
@@ -888,7 +901,7 @@ public class GuiMain {
 						col.setPreferredWidth(200);
 					}))
 					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded, col -> {
-						col.setPreferredWidth(700);
+						col.setPreferredWidth(900);
 					}))
 					.addDetailsColumn(StandardColumns.fieldName)
 					.addDetailsColumn(StandardColumns.fieldValue)
@@ -986,7 +999,7 @@ public class GuiMain {
 		c.gridy++;
 		panel.add(new JPanel(), c);
 
-		c.gridy ++;
+		c.gridy++;
 		{
 			JPanel allOverlayControls = new JPanel();
 			allOverlayControls.setLayout(new WrapLayout());
@@ -1006,7 +1019,7 @@ public class GuiMain {
 			allOverlayControls.add(new BooleanSettingGui(overlayMain.forceShow(), "Force Visible Even When Game Inactive").getComponent());
 
 			panel.add(allOverlayControls, c);
-			c.gridy ++;
+			c.gridy++;
 		}
 		{
 			// Will need to do something about this later
@@ -1027,7 +1040,6 @@ public class GuiMain {
 			c.weighty = 1;
 			panel.add(scrollPane, c);
 		}
-
 
 
 		return panel;

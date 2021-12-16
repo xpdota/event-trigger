@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs;
 
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.SystemEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.jobs.DotBuff;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -123,6 +124,7 @@ public class DotRefreshReminders {
 		});
 	}
 
+	@SystemEvent
 	static class DelayedBuffCallout extends BaseDelayedEvent {
 
 		private static final long serialVersionUID = 499685323334095132L;

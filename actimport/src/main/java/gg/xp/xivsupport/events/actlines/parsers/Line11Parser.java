@@ -3,36 +3,31 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
+import gg.xp.xivsupport.events.state.XivState;
 import org.assertj.core.util.Strings;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 @SuppressWarnings("unused")
 public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> {
 
-	public Line11Parser() {
-		super(11, Fields.class);
+	public Line11Parser(XivState state) {
+		super(state, 11, Fields.class, true);
 	}
 
 	enum Fields {
-		count, id1, id2, id3, id4, id5, id6, id7, id8
+		count
 	}
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
-		List<RawXivPartyInfo> raw = Stream.of(
-						Fields.id1,
-						Fields.id2,
-						Fields.id3,
-						Fields.id4,
-						Fields.id5,
-						Fields.id6,
-						Fields.id7,
-						Fields.id8
-				).map(fields::getString)
+		long count = fields.getLong(Fields.count);
+		List<String> raw = fields.getRawLineSplit();
+		List<RawXivPartyInfo> out = IntStream.range(0, (int) count)
+				.mapToObj(i -> raw.get(i + 3))
 				.filter(s -> !Strings.isNullOrEmpty(s))
 				// We can use bad info for most of this because it gets replaced by the fake real combatant info anyway
 				// (from 03-lines)
@@ -45,6 +40,6 @@ public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> {
 						true
 				))
 				.collect(Collectors.toList());
-		return new PartyChangeEvent(raw);
+		return new PartyChangeEvent(out);
 	}
 }

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
 import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
+import gg.xp.xivsupport.events.state.XivState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +14,8 @@ public class Line03Parser extends AbstractACTLineParser<Line03Parser.Fields> {
 
 	private static final Logger log = LoggerFactory.getLogger(Line03Parser.class);
 
-	public Line03Parser() {
-		super(3, Fields.class);
+	public Line03Parser(XivState state) {
+		super(state,  3, Fields.class);
 	}
 
 	enum Fields {
@@ -57,8 +58,8 @@ public class Line03Parser extends AbstractACTLineParser<Line03Parser.Fields> {
 							fields.getDouble(Fields.heading),
 							fields.getHex(Fields.worldId),
 							fields.getString(Fields.world),
-							fields.getHex(Fields.bNpcId),
-							fields.getHex(Fields.bNpcNameId),
+							fields.getLong(Fields.bNpcId),
+							fields.getLong(Fields.bNpcNameId),
 							0,
 							fields.getHex(Fields.ownerId))
 					);
