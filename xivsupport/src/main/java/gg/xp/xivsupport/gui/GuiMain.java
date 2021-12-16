@@ -29,6 +29,7 @@ import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.map.MapPanel;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -184,7 +185,6 @@ public class GuiMain {
 			}
 		});
 		SwingUtilities.invokeLater(() -> tabPane.addTab("System", new SystemTabPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Plugins", new PluginTopologyPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Plugin Settings", new PluginSettingsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Combatants", getCombatantsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Buffs", getStatusEffectsPanel()));
@@ -193,8 +193,10 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("System Log", getSystemLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", getImportExportTab()));
+//		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", getImportExportTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", new MapPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Topology", new PluginTopologyPanel()));
 //		container.addComponent(OverlayMain.class);
 //		container.getComponent(OverlayMain.class);
 	}

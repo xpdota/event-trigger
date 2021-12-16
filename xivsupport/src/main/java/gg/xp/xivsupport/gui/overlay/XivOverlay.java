@@ -47,6 +47,7 @@ public class XivOverlay {
 	private final String title;
 
 	private boolean visible;
+	private boolean editMode;
 
 	private static final AtomicLong nextDefaultPos = new AtomicLong(200);
 
@@ -148,21 +149,24 @@ public class XivOverlay {
 	}
 
 	private void recalc() {
+		if (!editMode) {
+			panel.setBorder(transparentBorder);
+		}
 		boolean visible = this.visible && enabled.get();
 		if (visible) {
 			frame.setVisible(true);
 		}
 		panel.setVisible(visible);
-	}
-
-	public void setEditMode(boolean editMode) {
 		setClickThrough(frame, !editMode);
+		frame.setFocusable(editMode);
 		if (editMode) {
 			panel.setBorder(editBorder);
 		}
-		else {
-			panel.setBorder(transparentBorder);
-		}
+	}
+
+	public void setEditMode(boolean editMode) {
+		this.editMode = editMode;
+		recalc();
 	}
 
 	public void setOpacity(float opacity) {
@@ -182,15 +186,21 @@ public class XivOverlay {
 		return scaleFactor.get();
 	}
 
-	private static void setClickThrough(Component w, boolean clickThrough) {
+	// https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
+	private static final long WS_NOACTIVATE = 0x08000000L;
+
+	private static void setClickThrough(JFrame w, boolean clickThrough) {
 		log.trace("Click-through: {}", clickThrough);
+		w.setFocusableWindowState(!clickThrough);
 		WinDef.HWND hwnd = getHWnd(w);
 		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
 		if (clickThrough) {
 			wl |= WinUser.WS_EX_TRANSPARENT;
+			wl |= WS_NOACTIVATE;
 		}
 		else {
 			wl &= ~WinUser.WS_EX_TRANSPARENT;
+			wl &= ~WS_NOACTIVATE;
 		}
 		w.setBackground(new Color(0, 0, 0, 0));
 		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);

@@ -22,6 +22,10 @@ public final class XivMain {
 
 	private static final Logger log = LoggerFactory.getLogger(XivMain.class);
 
+	static {
+		Thread.setDefaultUncaughtExceptionHandler((t, e) -> log.error("Uncaught exception in thread {}", t, e));
+	}
+
 	private XivMain() {
 	}
 

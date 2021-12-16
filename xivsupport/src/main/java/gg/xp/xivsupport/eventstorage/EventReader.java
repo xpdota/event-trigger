@@ -2,7 +2,6 @@ package gg.xp.xivsupport.eventstorage;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
-import gg.xp.xivsupport.logread.LogTailer;
 
 import java.io.EOFException;
 import java.io.InputStream;
