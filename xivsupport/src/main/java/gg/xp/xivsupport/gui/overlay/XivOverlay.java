@@ -19,7 +19,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @SuppressWarnings("NumericCastThatLosesPrecision")
@@ -31,6 +30,7 @@ public class XivOverlay {
 	private final TitledBorder editBorder;
 	private static final Border transparentBorderLine = new LineBorder(new Color(0, 0, 0, 0), 5);
 	private static final TitledBorder transparentBorder = new TitledBorder(transparentBorderLine, "Foo");
+
 	static {
 		transparentBorder.setTitleColor(new Color(0, 0, 0, 0));
 	}
@@ -56,11 +56,12 @@ public class XivOverlay {
 		editBorder = new TitledBorder(editBorderPink, title);
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), nextDefaultPos.get());
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
-		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d);
-		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d);
+		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
+		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), true);
 		enabled.addListener(this::recalc);
 		frame = ScalableJFrame.construct(title, scaleFactor.get());
+		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
 		this.title = title;
 		frame.setUndecorated(true);
@@ -87,13 +88,13 @@ public class XivOverlay {
 					double currentScale = getScale();
 					if (scrollAmount > 0) {
 						if (currentScale > 0.8) {
-							double newScale = (Math.round ((currentScale - 0.1) * 10)) / 10.0;
+							double newScale = (Math.round((currentScale - 0.1) * 10)) / 10.0;
 							setScale(newScale);
 						}
 					}
 					else if (scrollAmount < 0) {
 						if (currentScale < 8) {
-							double newScale = (Math.round ((currentScale + 0.1) * 10)) / 10.0;
+							double newScale = (Math.round((currentScale + 0.1) * 10)) / 10.0;
 							setScale(newScale);
 						}
 					}
@@ -169,9 +170,8 @@ public class XivOverlay {
 		recalc();
 	}
 
-	public void setOpacity(float opacity) {
-		this.opacity.set(opacity);
-		frame.setOpacity(opacity);
+	public DoubleSetting opacity() {
+		return this.opacity;
 	}
 
 	public void setScale(double scale) {

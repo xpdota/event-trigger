@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
 import javax.swing.*;

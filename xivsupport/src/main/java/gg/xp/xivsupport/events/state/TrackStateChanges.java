@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.state;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
@@ -15,6 +16,12 @@ public final class TrackStateChanges {
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public static void zoneChange(EventContext context, ZoneChangeEvent event) {
 		context.getStateInfo().get(XivState.class).setZone(event.getZone());
+		context.accept(new RefreshCombatantsRequest());
+	}
+
+	@HandleEvents(order = Integer.MIN_VALUE)
+	public static void mapChange(EventContext context, MapChangeEvent event) {
+		context.getStateInfo().get(XivState.class).setMap(event.getMap());
 		context.accept(new RefreshCombatantsRequest());
 	}
 

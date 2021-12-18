@@ -8,6 +8,8 @@ import gg.xp.xivsupport.events.actlines.events.ActionSyncEvent;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffectType;
+import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import org.slf4j.Logger;
@@ -15,8 +17,11 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SequenceIdTracker {
@@ -25,6 +30,10 @@ public class SequenceIdTracker {
 
 	// TODO: investigate if this is performant
 	private List<AbilityUsedEvent> events = new ArrayList<>();
+
+	// TODO: this has some potential for other uses
+	private final Map<XivEntity, List<AbilityUsedEvent>> perTargetCache = new HashMap<>();
+
 	private final Object lock = new Object();
 
 	// Max unresolved events to track
@@ -77,15 +86,44 @@ public class SequenceIdTracker {
 	public void clearOnWipe(EventContext context, WipeEvent event) {
 		synchronized (lock) {
 			events = new ArrayList<>();
+			perTargetCache.clear();
 		}
 	}
 
 	@HandleEvents
+	public void sqidDebug(EventContext context, DebugCommand cmd) {
+		if (cmd.getCommand().equals("sqinfo")) {
+			log.info("Unresolved actions: {}", events.size());
+
+		}
+	}
+	@HandleEvents
 	public void clearOnZoneChange(EventContext context, ZoneChangeEvent event) {
 		synchronized (lock) {
 			events = new ArrayList<>();
+			perTargetCache.clear();
 		}
 	}
+
+	private void pushToCache(AbilityUsedEvent event) {
+		perTargetCache.computeIfAbsent(event.getTarget(), k -> new ArrayList<>()).add(event);
+	}
+
+	private void rebuildCache() {
+		perTargetCache.clear();
+		events.forEach(this::pushToCache);
+	}
+
+//	private void popFromCache(AbilityResolvedEvent event) {
+//		perTargetCache.get(event.getTarget()).removeIf(usedEvent -> usedEvent.getSequenceId() == event.getSequenceId());
+//	}
+//
+//	@HandleEvents(order = -2000)
+//	public void removeFromCache(EventContext context, AbilityResolvedEvent event) {
+//		synchronized (lock) {
+//			popFromCache(event);
+//		}
+//	}
 
 	@HandleEvents(order = -400)
 	public void push(EventContext context, AbilityUsedEvent event) {
@@ -94,13 +132,20 @@ public class SequenceIdTracker {
 		// Note that the *source* can still be environment.
 		Instant happenedAt = event.getHappenedAt();
 		Instant cutoff = happenedAt.minusMillis(MAX_AGE);
-		if (target != null && !target.isEnvironment() && !event.getEffects().isEmpty()) {
+		if (shouldRecord(event)) {
 			synchronized (lock) {
 				events.add(event);
-				events.removeIf(e -> e.getHappenedAt().isBefore(cutoff));
+				boolean dirty = events.removeIf(e -> e.getHappenedAt().isBefore(cutoff));
 				if (events.size() > MAX_EVENTS) {
 					log.warn("Unresolved events too big, pruning");
 					events = new ArrayList<>(events.subList(EVENTS_TO_PRUNE, events.size()));
+					dirty = true;
+				}
+				if (dirty) {
+					rebuildCache();
+				}
+				else {
+					pushToCache(event);
 				}
 			}
 		}
@@ -120,8 +165,12 @@ public class SequenceIdTracker {
 					newEvent.setHappenedAt(event.getHappenedAt());
 					context.accept(newEvent);
 					iterator.remove();
-					return;
+					break;
 				}
+			}
+			List<AbilityUsedEvent> cache = perTargetCache.get(event.getTarget());
+			if (cache != null) {
+				cache.removeIf(other -> other.getSequenceId() == event.getSequenceId());
 			}
 			// TODO: figure out more about whether this is actually a problem or not.
 			// Sometimes, you get an ActionSync on both the caster and target.
@@ -129,11 +178,32 @@ public class SequenceIdTracker {
 		}
 	}
 
+	// TODO: find a better way of doing this...
+	private boolean shouldRecord(AbilityUsedEvent event) {
+		XivEntity target = event.getTarget();
+		if (target == null || target.isEnvironment()) {
+			return false;
+		}
+		if (event.getEffects().stream().noneMatch(effect -> {
+			AbilityEffectType type = effect.getEffectType();
+			return type == AbilityEffectType.DAMAGE || type == AbilityEffectType.APPLY_STATUS || type == AbilityEffectType.BLOCKED || type == AbilityEffectType.PARRIED;
+		})) {
+			return false;
+		}
+		long abilityId = event.getAbility().getId();
+		// Ten/Chi/Jin never seem to resolve
+		if (abilityId == 0x4976 || abilityId == 0x8D3 || abilityId == 0x4977) {
+			return false;
+		}
+		return true;
+	}
+
 	@HandleEvents(order = 400)
-	public void pop(EventContext context, EntityKilledEvent event) {
+	public void casterKilled(EventContext context, EntityKilledEvent event) {
 		long targetId = event.getTarget().getId();
 		synchronized (lock) {
 			events.removeIf(e -> e.getTarget().getId() == targetId || e.getSource().getId() == targetId);
+			perTargetCache.remove(event.getSource());
 		}
 	}
 
@@ -151,6 +221,12 @@ public class SequenceIdTracker {
 	}
 
 	public List<AbilityUsedEvent> getEventsTargetedOnEntity(XivEntity target) {
-		return getEvents().stream().filter(event -> event.getTarget().getId() == target.getId()).collect(Collectors.toList());
+		synchronized (lock) {
+			List<AbilityUsedEvent> list = perTargetCache.get(target);
+			if (list == null) {
+				return Collections.emptyList();
+			}
+			return Collections.unmodifiableList(list);
+		}
 	}
 }

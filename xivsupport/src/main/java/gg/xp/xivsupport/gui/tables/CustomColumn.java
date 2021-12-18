@@ -13,9 +13,19 @@ public class CustomColumn<X> {
 	private final Consumer<TableColumn> columnConfigurer;
 
 	public CustomColumn(String columnName, Function<X, @Nullable Object> getter) {
-		this(columnName, getter, ignored -> {});
+		this(columnName, getter, ignored -> {
+		});
 	}
 
+	/**
+	 * Custom table column
+	 *
+	 * @param columnName       Name of the column
+	 * @param getter           Function to convert an item in the table to whatever this column cares about. Note that this
+	 *                         is executed **in the table rendering code** so it should under no circumstances involve
+	 *                         non-trivial computation or access.
+	 * @param columnConfigurer Lets you configure the column, e.g. to override the renderer.
+	 */
 	public CustomColumn(String columnName, Function<X, @Nullable Object> getter, Consumer<TableColumn> columnConfigurer) {
 		this.columnName = columnName;
 		this.getter = getter;

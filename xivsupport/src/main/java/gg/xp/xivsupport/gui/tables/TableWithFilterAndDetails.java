@@ -56,14 +56,14 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 		CustomTableModel.CustomTableModelBuilder<D> detailsBuilder = CustomTableModel.builder(() -> detailsConverter.apply(this.currentSelection));
 		detailsColumns.forEach(detailsBuilder::addColumn);
-		detailsBuilder.setSelectionEquivalence(detailsSelectionEquivalence);
+		detailsBuilder.setItemEquivalence(detailsSelectionEquivalence);
 		CustomTableModel<D> detailsModel = detailsBuilder
 				.build();
 
 
 		CustomTableModel.CustomTableModelBuilder<X> mainBuilder = CustomTableModel.builder(this::getFilteredData);
 		mainColumns.forEach(mainBuilder::addColumn);
-		mainBuilder.setSelectionEquivalence(selectionEquivalence);
+		mainBuilder.setItemEquivalence(selectionEquivalence);
 		mainModel = mainBuilder.build();
 
 

@@ -50,7 +50,7 @@ public class JailGui implements PluginTab {
 						jails::partyOrderPreview)
 				.addColumn(new CustomColumn<>("Name", XivEntity::getName))
 				.addColumn(new CustomColumn<>("Job", XivPlayerCharacter::getJob, c -> c.setCellRenderer(new JobRenderer())))
-				.setSelectionEquivalence((a, b) -> a.getId() == b.getId() && a.getJob() == b.getJob())
+				.setItemEquivalence((a, b) -> a.getId() == b.getId() && a.getJob() == b.getJob())
 				.build();
 
 		List<Job> items = jails.getCurrentJailSort();

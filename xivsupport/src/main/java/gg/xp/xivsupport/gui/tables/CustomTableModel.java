@@ -38,7 +38,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			return new CustomTableModel<B>(dataGetter, columns, selectionEquivalence);
 		}
 
-		public CustomTableModelBuilder<B> setSelectionEquivalence(BiPredicate<? super B, ? super B> selectionEquivalence) {
+		public CustomTableModelBuilder<B> setItemEquivalence(BiPredicate<? super B, ? super B> selectionEquivalence) {
 			this.selectionEquivalence = selectionEquivalence;
 			return this;
 		}
@@ -117,6 +117,59 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			customColumn.configureColumn(column);
 		}
 	}
+
+//	public void refreshItem(X item) {
+//		JTable table = getTable();
+//		if (table == null) {
+//			data = dataGetter.get();
+//			fireTableDataChanged();
+//		}
+//		else {
+//			int oldIndex = data.indexOf(item);
+//			ListSelectionModel selectionModel = table.getSelectionModel();
+//			int[] oldSelectionIndices = selectionModel.getSelectedIndices();
+//			List<X> oldSelections = Arrays.stream(oldSelectionIndices)
+//					.mapToObj(i -> data.get(i))
+//					.collect(Collectors.toList());
+//			// TODO: smarter data provider that informs us of append-only operations
+//			{
+//				long timeBefore = System.currentTimeMillis();
+//				data = dataGetter.get();
+//				long timeAfter = System.currentTimeMillis();
+//				long delta = timeAfter - timeBefore;
+//				// TODO find good value for this - 100 might be a little low
+//				if (delta > 50) {
+//					log.warn("Slow Data Getter performance: took {}ms to refresh", delta);
+//				}
+//			}
+//			int newIndex = data.indexOf(item);
+//			// TODO: more optimizations could be done in XivState to only report changed combatants
+//			if (oldIndex == newIndex && oldIndex >= 0) {
+//				fireTableRowsUpdated(oldIndex, newIndex);
+//			}
+//			else {
+//				{
+//					long timeBefore = System.currentTimeMillis();
+//					fireTableDataChanged();
+//					long timeAfter = System.currentTimeMillis();
+//					long delta = timeAfter - timeBefore;
+//					// TODO find good value for this - 100 might be a little low
+//					if (delta > 50) {
+//						log.warn("Slow Table performance: took {}ms to refresh", delta);
+//					}
+//				}
+//				for (X oldItem : oldSelections) {
+//					for (int i = 0; i < data.size(); i++) {
+//						X newItem = data.get(i);
+//						if (selectionEquivalence.test(oldItem, newItem)) {
+//							selectionModel.addSelectionInterval(i, i);
+//							break;
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
 
 	public void fullRefresh() {
 		JTable table = getTable();
@@ -207,7 +260,15 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			return null;
 		}
 		try {
-			return columns.get(columnIndex).getValue(item);
+			long timeBefore = System.nanoTime();
+			Object value = columns.get(columnIndex).getValue(item);
+			long timeAfter = System.nanoTime();
+			long delta = timeAfter - timeBefore;
+			// TODO find good value for this - 100 might be a little low
+			if (delta > 500_000) {
+				log.warn("Slow getValueAt performance: took {}ns to get value at row {} col {}", delta, rowIndex, columnIndex);
+			}
+			return value;
 		}
 		catch (Throwable e) {
 			log.error("ERROR getting value for row {} col {} value {}", rowIndex, columnIndex, item, e);

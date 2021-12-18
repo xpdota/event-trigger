@@ -21,12 +21,12 @@ public class DotBarRenderer extends ResourceBarRenderer {
 	}
 
 	@Override
-	protected void formatLabel(JLabel label, CurrentMaxPair item, int width) {
+	protected void formatLabel(CurrentMaxPair item) {
 		if (item instanceof LabelOverride) {
-			label.setText(((LabelOverride) item).getLabel());
+			bar.setTextOptions(((LabelOverride) item).getLabel());
 		}
 		else {
-			super.formatLabel(label, item, width);
+			super.formatLabel(item);
 		}
 	}
 

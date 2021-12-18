@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.state;
 import gg.xp.reevent.context.SubState;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.jobs.XivMap;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
@@ -12,9 +13,11 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivWorld;
 import gg.xp.xivsupport.models.XivZone;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,6 +33,7 @@ public class XivState implements SubState {
 	private final EventMaster master;
 
 	private XivZone zone;
+	private XivMap map = XivMap.UNKNOWN;
 	// EARLY player info before we have combatant data
 	private XivEntity playerPartial;
 	// FULL player info after we get the stuff we need
@@ -41,6 +45,8 @@ public class XivState implements SubState {
 	private volatile @NotNull Map<Long, XivCombatant> combatantsProcessed = Collections.emptyMap();
 	private final Map<Long, HitPoints> hpOverrides = new HashMap<>();
 	private final Map<Long, Position> posOverrides = new HashMap<>();
+	private volatile Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
+
 
 	private Job previousPlayerJob;
 //	@SuppressWarnings("unused")
@@ -71,9 +77,18 @@ public class XivState implements SubState {
 		return zone;
 	}
 
+	public XivMap getMap() {
+		return map;
+	}
+
 	public void setZone(XivZone zone) {
 		log.info("Zone changed to {}", zone);
 		this.zone = zone;
+	}
+
+	public void setMap(XivMap map) {
+		log.info("Map changed to {}", map);
+		this.map = map;
 	}
 
 	public void setPartyList(List<RawXivPartyInfo> partyList) {
@@ -279,6 +294,7 @@ public class XivState implements SubState {
 				previousPlayerJob = newJob;
 			}
 		}
+		combatantsProcessed.forEach((id, cbt) -> graveyard.putIfAbsent(id, new SoftReference<>(cbt)));
 	}
 
 	public boolean zoneIs(long zoneId) {
@@ -326,12 +342,17 @@ public class XivState implements SubState {
 
 	public void removeSpecificCombatant(long idToRemove) {
 		combatantsRaw.remove(idToRemove);
+		XivCombatant cbt = combatantsProcessed.get(idToRemove);
+		if (cbt != null) {
+			graveyard.put(cbt.getId(), new SoftReference<>(cbt));
+		}
 	}
 
 	public Map<Long, XivCombatant> getCombatants() {
 		return Collections.unmodifiableMap(combatantsProcessed);
 	}
 
+	// TODO: does this still need to be a copy?
 	public List<XivCombatant> getCombatantsListCopy() {
 		return new ArrayList<>(combatantsProcessed.values());
 	}
@@ -352,17 +373,23 @@ public class XivState implements SubState {
 		if (dirtyOverrides) {
 			return;
 		}
+		// The only time we want to completely ignore an update is if the new override has no real effect.
+		// i.e. it is the same as the current HP, and either there is no previous override, or the previous override is
+		// the same as the current.
+
+		// Old override
 		if (oldOverride == null || oldOverride.equals(hitPoints)) {
 			// If there was no previous override, and the HP from WS == HP from the event, ignore
 			XivCombatant cbt = combatantsProcessed.get(target.getId());
-			if (oldOverride == null && cbt != null) {
+			if (cbt != null) {
+				// new override = existing WS hp
 				HitPoints existingHp = cbt.getHp();
 				if (hitPoints.equals(existingHp)) {
 					return;
 				}
 			}
-			dirtyOverrides = true;
 		}
+		dirtyOverrides = true;
 	}
 
 	public void provideCombatantPos(XivCombatant target, Position newPos) {
@@ -389,5 +416,13 @@ public class XivState implements SubState {
 			dirtyOverrides = false;
 			recalcState();
 		}
+	}
+
+	public @Nullable XivCombatant getDeadCombatant(long id) {
+		SoftReference<XivCombatant> ref = graveyard.get(id);
+		if (ref == null) {
+			return null;
+		}
+		return ref.get();
 	}
 }

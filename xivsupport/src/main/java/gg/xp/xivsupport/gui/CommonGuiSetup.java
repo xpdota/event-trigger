@@ -99,7 +99,7 @@ public final class CommonGuiSetup {
 					long timeAfter = System.currentTimeMillis();
 					long delta = timeAfter - timeBefore;
 					// TODO find good value for this - 100 might be a little low
-					if (delta > 125) {
+					if (delta > 100) {
 						log.warn("Slow GUI performance: took {}ms to dispatch event {}", delta, event);
 						if (monitor != null) {
 							StackTraceElement[] lastStackTrace = monitor.getLastStackTrace();

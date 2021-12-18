@@ -8,6 +8,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
+import gg.xp.xivdata.jobs.XivMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityResolvedEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -72,6 +73,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -195,7 +197,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedPanel()));
 //		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", getImportExportTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", new MapPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", new MapPanel(state.get(XivState.class))));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Topology", new PluginTopologyPanel()));
 //		container.addComponent(OverlayMain.class);
 //		container.getComponent(OverlayMain.class);
@@ -244,18 +246,44 @@ public class GuiMain {
 			add(combatantsPanel, c);
 			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
-			EventHandler update = (ctx, e) -> {
-				SwingUtilities.invokeLater(() -> {
-					xivStateStatus.refresh();
-					xivPartyPanel.refresh();
-					combatantsPanel.refresh();
-				});
+			EventHandler<Event> update = (ctx, e) -> {
+				SwingUtilities.invokeLater(xivStateStatus::refresh);
+				SwingUtilities.invokeLater(xivPartyPanel::refresh);
+				SwingUtilities.invokeLater(combatantsPanel::refresh);
 			};
 			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, update);
 			master.getDistributor().registerHandler(AbilityResolvedEvent.class, update);
 			master.getDistributor().registerHandler(AbilityUsedEvent.class, update);
 			master.getDistributor().registerHandler(BuffApplied.class, update);
 			master.getDistributor().registerHandler(BuffRemoved.class, update);
+//			master.getDistributor().registerHandler(AbilityResolvedEvent.class, (ctx, e) -> {
+//				SwingUtilities.invokeLater(() -> {
+//					xivPartyPanel.refreshCombatant(e.getSource());
+//					combatantsPanel.refreshCombatant(e.getSource());
+//					xivPartyPanel.refreshCombatant(e.getTarget());
+//					combatantsPanel.refreshCombatant(e.getTarget());
+//				});
+//			});
+//			master.getDistributor().registerHandler(AbilityUsedEvent.class, (ctx, e) -> {
+//				SwingUtilities.invokeLater(() -> {
+//					xivPartyPanel.refreshCombatant(e.getSource());
+//					combatantsPanel.refreshCombatant(e.getSource());
+//					xivPartyPanel.refreshCombatant(e.getTarget());
+//					combatantsPanel.refreshCombatant(e.getTarget());
+//				});
+//			});
+//			master.getDistributor().registerHandler(BuffApplied.class, (ctx, e) -> {
+//				SwingUtilities.invokeLater(() -> {
+//					xivPartyPanel.refreshCombatant(e.getTarget());
+//					combatantsPanel.refreshCombatant(e.getTarget());
+//				});
+//			});
+//			master.getDistributor().registerHandler(BuffRemoved.class, (ctx, e) -> {
+//				SwingUtilities.invokeLater(() -> {
+//					xivPartyPanel.refreshCombatant(e.getTarget());
+//					combatantsPanel.refreshCombatant(e.getTarget());
+//				});
+//			});
 		}
 	}
 
@@ -320,6 +348,15 @@ public class GuiMain {
 							JLabel::setText
 					),
 					new KeyValuePairDisplay<>(
+							"Map",
+							new JLabel(),
+							() -> {
+								XivMap map = state.get(XivState.class).getMap();
+								return map == null ? "null" : map.getPlace();
+							},
+							JLabel::setText
+					),
+					new KeyValuePairDisplay<>(
 							"Job",
 							new JLabel(),
 							() -> {
@@ -371,7 +408,7 @@ public class GuiMain {
 					.addColumn(columns.statusEffectsColumn())
 					.addColumn(columns.hpColumnWithUnresolved())
 					.addColumn(StandardColumns.mpColumn)
-					.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
+					.setItemEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable partyMembersTable = new JTable(8, 3);
 			// TODO: see above todo, remove this when done
@@ -386,19 +423,39 @@ public class GuiMain {
 		}
 
 		public void refresh() {
+			// perf - took about 3 seconds for 10k iterations
 			partyTableModel.fullRefresh();
+		}
+
+		public void refreshCombatant(XivCombatant combatant) {
+			// TODO: can't use this here, because this wouldn't be filtered to just party
+			refresh();
+//			if (XivCombatant instanceof XivPlayerCharacter) {
+//				partyTableModel.refreshItem(combatant);
+//			}
 		}
 	}
 
 	private class CombatantsPanel extends TitleBorderFullsizePanel {
 
 		private final CustomTableModel<XivCombatant> combatantsTableModel;
+		private final XivState state;
 
 		public CombatantsPanel() {
 			super("Combatants");
 			setLayout(new BorderLayout());
+			state = GuiMain.this.state.get(XivState.class);
+			/*
+			TODO: performance issue
+			General problem is that the HP bars are quite heavy on rendering.
+			Plan is to look at their classes and figure out if there's any JPanel methods that could be overridden with
+			no-ops, like the default cell renderer does.
+
+			Or, at some point, bite the bullet and do custom painting.
+			 */
 			combatantsTableModel = CustomTableModel.builder(
-							() -> state.get(XivState.class).getCombatantsListCopy()
+//							Collections::<XivCombatant>emptyList)
+							() -> state.getCombatantsListCopy()
 									.stream()
 									.filter(XivCombatant::isCombative)
 									.sorted(Comparator.comparing(XivEntity::getId))
@@ -406,22 +463,44 @@ public class GuiMain {
 					.addColumn(StandardColumns.nameJobColumn)
 					.addColumn(StandardColumns.parentNameJobColumn)
 					.addColumn(StandardColumns.combatantTypeColumn)
-					.addColumn(StandardColumns.combatantRawTypeColumn)
 					.addColumn(columns.hpColumnWithUnresolved())
 					.addColumn(StandardColumns.mpColumn)
 					.addColumn(StandardColumns.posColumn)
-					.addColumn(StandardColumns.entityIdColumn)
-					.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
+					.setItemEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable table = new JTable(combatantsTableModel);
+//			JTable table = new JTable(combatantsTableModel) {
+//				@Override
+//				public TableCellRenderer getCellRenderer(int row, int column) {
+//					TableCellRenderer renderer;
+//					{
+//						long timeBefore = System.nanoTime();
+//						renderer = super.getCellRenderer(row, column);
+//						long timeAfter = System.nanoTime();
+//						long delta = timeAfter - timeBefore;
+//						 TODO find good value for this - 100 might be a little low
+//						if (delta > 5000) {
+//							log.warn("Slow Renderer performance: took {}ns to refresh col {} row {}", delta, column, row);
+//						}
+//					}
+//					return renderer;
+//				}
+//			};
 			combatantsTableModel.configureColumns(table);
 			JScrollPane scrollPane = new JScrollPane(table);
 			add(scrollPane);
 		}
 
 		public void refresh() {
+//			state.getCombatants().values().forEach(this::refreshCombatant);
 			combatantsTableModel.fullRefresh();
 		}
+
+//		public void refreshCombatant(XivCombatant combatant) {
+//			SwingUtilities.invokeLater(() -> {
+//				combatantsTableModel.refreshItem(combatant);
+//			});
+//		}
 	}
 
 	private class AdvancedPanel extends JPanel implements Refreshable {
@@ -642,6 +721,7 @@ public class GuiMain {
 		StatusEffectRepository statuses = container.getComponent(StatusEffectRepository.class);
 		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Combatants",
 						() -> state.getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
+//						Collections::<XivCombatant>emptyList,
 						combatant -> {
 							if (combatant == null) {
 								return Collections.emptyList();
@@ -659,7 +739,6 @@ public class GuiMain {
 				.addMainColumn(columns.statusEffectsColumn())
 				.addMainColumn(StandardColumns.parentNameJobColumn)
 				.addMainColumn(StandardColumns.combatantTypeColumn)
-				.addMainColumn(StandardColumns.combatantRawTypeColumn)
 				.addMainColumn(columns.hpColumnWithUnresolved())
 				.addMainColumn(StandardColumns.mpColumn)
 				.addMainColumn(StandardColumns.posColumn)
@@ -993,13 +1072,9 @@ public class GuiMain {
 			JPanel allOverlayControls = new JPanel();
 			allOverlayControls.setLayout(new WrapLayout());
 
-			JButton show = new JButton("Show");
-			show.addActionListener(e -> overlayMain.setVisible(true));
-			allOverlayControls.add(show);
 
-			JButton hide = new JButton("Hide");
-			hide.addActionListener(e -> overlayMain.setVisible(false));
-			allOverlayControls.add(hide);
+
+			allOverlayControls.add(new BooleanSettingGui(overlayMain.getVisibleSetting(), "Show Overlays").getComponent());
 
 			JCheckBox edit = new JCheckBox("Edit");
 			edit.addActionListener(e -> overlayMain.setEditing(edit.isSelected()));
@@ -1013,16 +1088,23 @@ public class GuiMain {
 		{
 			// Will need to do something about this later
 			JTable table = new JTable() {
+
 				@Override
 				public boolean isCellEditable(int row, int column) {
+					// TODO: make this more official
+					if (getCellEditor(row, column) instanceof NoCellEditor) {
+						return false;
+					}
 					return true;
 				}
 			};
 			CustomTableModel<XivOverlay> tableModel = CustomTableModel.builder(overlayMain::getOverlays)
 					.addColumn(StandardColumns.booleanSettingColumn("E", XivOverlay::getEnabled))
 					.addColumn(new CustomColumn<>("Name", XivOverlay::getTitle, col -> col.setCellEditor(new NoCellEditor())))
+					.addColumn(StandardColumns.doubleSettingSliderColumn("Opacity", XivOverlay::opacity, 200, 0.05))
 					.build();
 			table.setModel(tableModel);
+			table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			tableModel.configureColumns(table);
 			JScrollPane scrollPane = new JScrollPane(table);
 			scrollPane.setPreferredSize(scrollPane.getMaximumSize());

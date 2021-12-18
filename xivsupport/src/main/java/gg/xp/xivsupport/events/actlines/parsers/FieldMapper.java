@@ -142,6 +142,9 @@ public class FieldMapper<K extends Enum<K>> {
 		String name = getString(nameKey);
 		XivState xivState = context.getStateInfo().get(XivState.class);
 		XivCombatant xivCombatant = xivState.getCombatants().get(id);
+		if (xivCombatant == null) {
+			xivCombatant = xivState.getDeadCombatant(id);
+		}
 		if (xivCombatant != null) {
 			return xivCombatant;
 		}
@@ -150,6 +153,8 @@ public class FieldMapper<K extends Enum<K>> {
 				return XivCombatant.ENVIRONMENT;
 			}
 			switch (entityLookupMissBehavior) {
+				// TODO: seems we need a "graveyard" of sorts since removed combatants can still have lingering
+				// references to them.
 				case GET_AND_WARN:
 					log.warn("Did not find combatant info for id {} name '{}', guessing", Long.toString(id, 16), name);
 				case GET:

@@ -13,6 +13,7 @@ import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.models.BuffTrackingKey;
+import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -20,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,11 +41,11 @@ public class StatusEffectRepository {
 	// For now, just use the event objects as valuessince they contain everything we need.
 	private final Map<BuffTrackingKey, BuffApplied> buffs = new LinkedHashMap<>();
 	private final Map<BuffTrackingKey, BuffApplied> preApps = new LinkedHashMap<>();
+	private final Map<XivEntity, Map<BuffTrackingKey, BuffApplied>> onTargetCache = new HashMap<>();
 	private final Object lock = new Object();
 	private final SequenceIdTracker sqid;
 
 	public StatusEffectRepository(SequenceIdTracker sqid) {
-
 		this.sqid = sqid;
 	}
 
@@ -64,7 +67,8 @@ public class StatusEffectRepository {
 	@HandleEvents(order = -500)
 	public void buffApplication(EventContext context, BuffApplied event) {
 		// TODO: should fakes still be tracked somewhere?
-		if (event.getTarget().isFake()) {
+		XivCombatant target = event.getTarget();
+		if (target.isFake()) {
 			return;
 		}
 		BuffTrackingKey key = BuffTrackingKey.of(event);
@@ -75,11 +79,12 @@ public class StatusEffectRepository {
 					event
 			);
 			preApps.remove(key);
+			onTargetCache.computeIfAbsent(target, k -> new LinkedHashMap<>()).put(key, event);
 		}
 		if (previous != null) {
 			event.setIsRefresh(true);
 		}
-		log.trace("Buff applied: {} applied {} to {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
+		log.trace("Buff applied: {} applied {} to {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), target.getName(), buffs.size());
 		context.accept(new XivBuffsUpdatedEvent());
 	}
 
@@ -89,7 +94,9 @@ public class StatusEffectRepository {
 	public void buffRemove(EventContext context, BuffRemoved event) {
 		BuffApplied removed;
 		synchronized (lock) {
-			removed = buffs.remove(BuffTrackingKey.of(event));
+			BuffTrackingKey key = BuffTrackingKey.of(event);
+			removed = buffs.remove(key);
+			onTargetCache.getOrDefault(event.getTarget(), Collections.emptyMap()).remove(key);
 		}
 		if (removed != null) {
 			log.trace("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
@@ -103,6 +110,7 @@ public class StatusEffectRepository {
 		log.debug("Wipe, clearing {} buffs", buffs.size());
 		synchronized (lock) {
 			buffs.clear();
+			onTargetCache.clear();
 		}
 		context.accept(new XivBuffsUpdatedEvent());
 	}
@@ -112,6 +120,7 @@ public class StatusEffectRepository {
 		log.debug("Zone change, clearing {} buffs", buffs.size());
 		synchronized (lock) {
 			buffs.clear();
+			onTargetCache.clear();
 		}
 		context.accept(new XivBuffsUpdatedEvent());
 	}
@@ -130,6 +139,7 @@ public class StatusEffectRepository {
 					log.trace("Buff removed: {} removed {} from {} due to removal of target. Tracking {} buffs.", key.getSource().getName(), key.getBuff().getName(), key.getTarget().getName(), buffs.size());
 					iterator.remove();
 					anyRemoved = true;
+					onTargetCache.remove(key.getTarget());
 				}
 			}
 		}
@@ -191,7 +201,16 @@ public class StatusEffectRepository {
 
 
 	public List<BuffApplied> statusesOnTarget(XivEntity entity) {
-		long id = entity.getId();
-		return getBuffs().stream().filter(s -> s.getTarget().getId() == id).collect(Collectors.toList());
+		if (false) {
+			long id = entity.getId();
+			return getBuffs().stream().filter(s -> s.getTarget().getId() == id).collect(Collectors.toList());
+		}
+		synchronized (lock) {
+			Map<BuffTrackingKey, BuffApplied> cached = onTargetCache.get(entity);
+			if (cached == null) {
+				return Collections.emptyList();
+			}
+			return new ArrayList<>(cached.values());
+		}
 	}
 }

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.tables.renderers;
 import gg.xp.xivsupport.models.CurrentMaxPredicted;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -11,14 +12,38 @@ import java.awt.*;
 /**
  * Bar that shows "movement", like that white are on a bar that shows how much HP you just lost.
  */
-public abstract class ResourceBarRendererWithMovement implements TableCellRenderer {
+public abstract class ResourceBarRendererWithMovementOld extends JPanel implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
-	protected final ResourceBar bar = new ResourceBar();
+	private final JPanel leftPanel;
+	private final JPanel midPanel;
+	private final JPanel rightPanel;
+	private final JLabel label;
+
+	protected ResourceBarRendererWithMovementOld() {
+		this.setLayout(new OverlapLayout());
+		JPanel panel1 = new JPanel();
+		panel1.setBorder(new LineBorder(Color.DARK_GRAY, 1));
+		panel1.setLayout(new BoxLayout(panel1, BoxLayout.LINE_AXIS));
+
+		leftPanel = new JPanel();
+		midPanel = new JPanel();
+		rightPanel = new JPanel();
+		panel1.add(leftPanel);
+		panel1.add(midPanel);
+		panel1.add(rightPanel);
+		panel1.setBounds(0, 0, 40, 40);
+		this.add(panel1);
+		this.label = new JLabel("Text");
+		this.add(label);
+
+	}
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 		if (value instanceof CurrentMaxPredicted) {
 			Component baseLabel = fallback.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column);
+			TableColumn col = table.getColumnModel().getColumn(column);
+			int width = col.getWidth();
 			CurrentMaxPredicted hp = (CurrentMaxPredicted) value;
 			double percent;
 			double percentChange;
@@ -42,33 +67,32 @@ public abstract class ResourceBarRendererWithMovement implements TableCellRender
 
 			Color colorRaw = getBarColor(percent, percentChange, hp);
 			Color actualColor = new Color(colorRaw.getRed(), colorRaw.getGreen(), colorRaw.getBlue(), 98);
-			bar.setColor1(actualColor);
-			Color originalBg = baseLabel.getBackground();
-			Color bg = new Color(originalBg.getRed(), originalBg.getGreen(), originalBg.getBlue(), 128);
-			bar.setColor3(bg);
-			bar.setBorderColor(originalBg);
-			bar.setTextColor(baseLabel.getForeground());
+			leftPanel.setBackground(actualColor);
+			Color gray = baseLabel.getBackground();
+			rightPanel.setBackground(new Color(gray.getRed(), gray.getGreen(), gray.getBlue(), 128));
 
 			if (percentChange == 0) {
 				// No predicted change - logic is easy:
 				// | Current | Max - Current |
-				bar.setPercent1(percent);
-				bar.setPercent2(0);
+				leftPanel.setPreferredSize(new Dimension((int) (width * percent), 10));
+				midPanel.setPreferredSize(new Dimension(0, 10));
+				rightPanel.setPreferredSize(new Dimension((int) (width * (1 - percent)), 10));
 			}
 			else {
 				// Predicted higher than current
 				// | Current | ΔPredicted | Max - (Current + Predicted) |
 				Color predictedColorRaw = getMovementBarColor(percent, percentChange, hp);
 				Color actualPredictedColor = new Color(predictedColorRaw.getRed(), predictedColorRaw.getGreen(), predictedColorRaw.getBlue(), 98);
-				bar.setColor2(actualPredictedColor);
+				midPanel.setBackground(actualPredictedColor);
 				if (percentChange > 0) {
 					if (percent + percentChange > 1) {
 						// Cap current + predicted to 100% since you can't overheal
 						percentChange = 1 - percent;
 					}
 
-					bar.setPercent1(percent);
-					bar.setPercent2(percentChange);
+					leftPanel.setPreferredSize(new Dimension((int) (width * percent), 10));
+					midPanel.setPreferredSize(new Dimension((int) (width * percentChange), 10));
+					rightPanel.setPreferredSize(new Dimension((int) (width * (1 - (percent + percentChange))), 10));
 				}
 				else {
 					// Predicted lower than current
@@ -78,15 +102,23 @@ public abstract class ResourceBarRendererWithMovement implements TableCellRender
 						percentChange = -1 * percent;
 					}
 
-					bar.setPercent1(percent + percentChange);
-					bar.setPercent2(-1 * percentChange);
+					leftPanel.setPreferredSize(new Dimension((int) (width * (percent + percentChange)), 10));
+					midPanel.setPreferredSize(new Dimension((int) (width * -1 * percentChange), 10));
+					rightPanel.setPreferredSize(new Dimension((int) (width * (1 - (percent))), 10));
 				}
 
 			}
 
-			formatLabel(hp);
+			label.setForeground(baseLabel.getForeground());
+			formatLabel(label, hp, width);
 
-			return bar;
+			label.setBounds(0, 0, label.getPreferredSize().width, label.getPreferredSize().height);
+			label.setHorizontalAlignment(0);
+			label.setVerticalAlignment(0);
+
+			validate();
+
+			return this;
 		}
 		return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 	}
@@ -95,9 +127,12 @@ public abstract class ResourceBarRendererWithMovement implements TableCellRender
 
 	protected abstract Color getMovementBarColor(double percent, double percentChange, CurrentMaxPredicted item);
 
-	protected void formatLabel(CurrentMaxPredicted item) {
+	protected void formatLabel(JLabel label, CurrentMaxPredicted item, int width) {
 		// Try to do long label, otherwise fall back to short label
-		String longText = String.format("%s / %s", item.getPredicted(), item.getMax());
-		bar.setTextOptions(longText, String.valueOf(item.getPredicted()));
+		String text = String.format("%s / %s", item.getPredicted(), item.getMax());
+		label.setText(text);
+		if (label.getPreferredSize().width > width) {
+			label.setText(String.valueOf(item.getPredicted()));
+		}
 	}
 }

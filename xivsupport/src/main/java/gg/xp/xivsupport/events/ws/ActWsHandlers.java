@@ -64,10 +64,10 @@ public class ActWsHandlers {
 						// TODO: consider having this refresh rate be dynamic based on things like
 						// number of current combatants, or whether the current zone is a raid, or
 						// whether a pull is actually started.
-						Thread.sleep(250);
+						Thread.sleep(500);
 						master.pushEvent(new RefreshCombatantsRequest());
 						for (int i = 0; i < 15; i++) {
-							Thread.sleep(250);
+							Thread.sleep(500);
 							Set<Long> fastRefreshEntities = state.getPartyList().stream().map(XivEntity::getId).collect(Collectors.toSet());
 							if (pulls.getCurrentStatus() == PullStatus.COMBAT) {
 								state.getCombatantsListCopy().stream()

@@ -5,12 +5,12 @@ import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
-import gg.xp.xivsupport.gui.GuiMain;
 import gg.xp.xivsupport.gui.tables.renderers.HpPredictedRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.MpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectsRenderer;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.HitPointsWithPredicted;
@@ -19,8 +19,9 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.DoubleSettingSlider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
-import jdk.jshell.PersistentSnippet;
+import gg.xp.xivsupport.persistence.settings.DoubleSetting;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -98,7 +99,11 @@ public final class StandardColumns {
 			long pending;
 			if (showPredictedHp.get()) {
 				List<AbilityUsedEvent> events = sqidTracker.getEventsTargetedOnEntity(combatant);
-				pending = events.stream().mapToLong(AbilityUsedEvent::getDamage).sum();
+				long dmg = 0;
+				for (AbilityUsedEvent event : events) {
+					dmg += event.getDamage();
+				}
+				pending = dmg;
 			}
 			else {
 				pending = 0;
@@ -127,14 +132,31 @@ public final class StandardColumns {
 
 	public static final CustomColumn<XivCombatant> combatantTypeColumn
 			= new CustomColumn<>("Type",
-			c -> {
-				if (c.isThePlayer()) {
-					return "YOU";
+			c -> c, c -> {
+		c.setCellRenderer(new DefaultTableCellRenderer() {
+
+			final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+				if (value instanceof XivCombatant) {
+					XivCombatant c = (XivCombatant) value;
+					String text;
+					String tooltip;
+					if (c.isThePlayer()) {
+						text = "YOU";
+					}
+					else {
+						text = c.getType().name();
+					}
+					tooltip = String.format("%s (%s)", text, c.getRawType());
+					Component label = defaultRenderer.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
+					RenderUtils.setTooltip(label, tooltip);
+					return label;
 				}
-				else {
-					return c.getType();
-				}
-			}, c -> {
+				return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			}
+		});
 		c.setMinWidth(80);
 		c.setMaxWidth(80);
 	});
@@ -189,7 +211,7 @@ public final class StandardColumns {
 				public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 					if (value instanceof BooleanSetting) {
 						JCheckBox cb = new JCheckBox();
-						cb.setOpaque(false);
+//						cb.setOpaque(false);
 						cb.setSelected(((BooleanSetting) value).get());
 						cb.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column).getBackground());
 						return cb;
@@ -203,8 +225,43 @@ public final class StandardColumns {
 		});
 	}
 
+	public static <X> CustomColumn<X> doubleSettingSliderColumn(String name, Function<X, DoubleSetting> settingGetter, int displayWidth, double increment) {
+		return new CustomColumn<>(name, settingGetter::apply, col -> {
+			col.setMaxWidth(displayWidth);
+			col.setMinWidth(displayWidth);
+			col.setCellRenderer(new TableCellRenderer() {
+				private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
 
-	private static class BooleanSettingCellEditor extends AbstractCellEditor implements TableCellEditor {
+				@Override
+				public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+					if (value instanceof DoubleSetting) {
+						// TODO: range
+						DoubleSetting setting = ((DoubleSetting) value);
+						JSlider slider = new DoubleSettingSlider(name, setting, increment, false).getComponent();
+						slider.setOpaque(true);
+						slider.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column).getBackground());
+						return slider;
+					}
+					else {
+						return null;
+					}
+				}
+			});
+			col.setCellEditor(new DoubleSettingSliderEditor(name, increment));
+		});
+	}
+
+	private static class DoubleSettingSliderEditor extends AbstractCellEditor implements TableCellEditor {
+
+		private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+		private static final long serialVersionUID = -6990208664804878646L;
+		private final String name;
+		private final double increment;
+
+		DoubleSettingSliderEditor(String name, double increment) {
+			this.name = name;
+			this.increment = increment;
+		}
 
 		@Override
 		public Object getCellEditorValue() {
@@ -213,7 +270,29 @@ public final class StandardColumns {
 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-			return new BooleanSettingGui((BooleanSetting) value, null).getComponent();
+			DoubleSetting setting = (DoubleSetting) value;
+			Component comp = defaultRenderer.getTableCellRendererComponent(table, setting, isSelected, true, row, column);
+			JSlider slider = new DoubleSettingSlider(name, setting, increment, false).getComponent();
+			slider.setBackground(comp.getBackground());
+			return slider;
+		}
+	}
+	private static class BooleanSettingCellEditor extends AbstractCellEditor implements TableCellEditor {
+
+		private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+		private static final long serialVersionUID = -6990208664804878646L;
+
+		@Override
+		public Object getCellEditorValue() {
+			return null;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			Component comp = defaultRenderer.getTableCellRendererComponent(table, value, isSelected, false, row, column);
+			JCheckBox checkbox = new BooleanSettingGui((BooleanSetting) value, null, false).getComponent();
+			checkbox.setBackground(comp.getBackground());
+			return checkbox;
 		}
 	}
 }

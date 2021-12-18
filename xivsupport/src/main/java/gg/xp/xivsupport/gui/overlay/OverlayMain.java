@@ -32,10 +32,10 @@ public class OverlayMain {
 				setEditing(true);
 				break;
 			case "overlay:hide":
-				setVisible(false);
+				show.set(false);
 				break;
 			case "overlay:show":
-				setVisible(true);
+				show.set(true);
 				break;
 			case "overlay:windowinfo":
 				doWindowInfo();
@@ -103,8 +103,8 @@ public class OverlayMain {
 		recalc();
 	}
 
-	public void setVisible(boolean visible) {
-		show.set(visible);
+	public BooleanSetting getVisibleSetting() {
+		return show;
 	}
 
 	public void setEditing(boolean editing) {
@@ -120,7 +120,7 @@ public class OverlayMain {
 		if (opacity < 0 || opacity > 1) {
 			throw new IllegalArgumentException("Opacity must be between 0 and 1, not " + opacity);
 		}
-		SwingUtilities.invokeLater(() -> overlays.forEach(o -> o.setOpacity(opacity)));
+		SwingUtilities.invokeLater(() -> overlays.forEach(o -> o.opacity().set(opacity)));
 	}
 
 	public void setScale(double scale) {
