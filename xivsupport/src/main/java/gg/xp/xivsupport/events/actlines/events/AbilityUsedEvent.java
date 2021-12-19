@@ -2,7 +2,7 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 
@@ -47,8 +47,8 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 
 	// TODO: not accurate, need to account for parries and stuff
 	public long getDamage() {
-		return effects.stream().filter(effect -> effect instanceof DamageEffect).map(DamageEffect.class::cast)
-				.mapToLong(DamageEffect::getAmount).sum();
+		return effects.stream().filter(effect -> effect instanceof DamageTakenEffect).map(DamageTakenEffect.class::cast)
+				.mapToLong(DamageTakenEffect::getAmount).sum();
 	}
 
 	public long getSequenceId() {

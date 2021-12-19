@@ -52,6 +52,7 @@ import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tree.TopologyTreeEditor;
 import gg.xp.xivsupport.gui.tree.TopologyTreeModel;
 import gg.xp.xivsupport.gui.tree.TopologyTreeRenderer;
+import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -64,20 +65,20 @@ import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -103,67 +104,18 @@ public class GuiMain {
 	private final StandardColumns columns;
 	private JTabbedPane tabPane;
 
+
 	public static void main(String[] args) {
 		log.info("GUI Init");
 		log.info("Classpath: {}", System.getProperty("java.class.path"));
-		try {
+		CatchFatalError.run(() -> {
 			CommonGuiSetup.setup();
 			MutablePicoContainer pico = XivMain.masterInit();
 			pico.addComponent(GuiMain.class);
 			pico.getComponent(GuiMain.class);
 			// TODO: make this a setting
 //			FailOnThreadViolationRepaintManager.install();
-		}
-		catch (Throwable e) {
-			log.error("Startup Error!", e);
-			JFrame frame = new JFrame("Startup Error!");
-			JPanel panel = new JPanel();
-			panel.setBorder(new LineBorder(Color.RED));
-			panel.setPreferredSize(new Dimension(800, 600));
-			panel.setLayout(new GridBagLayout());
-			GridBagConstraints c = new GridBagConstraints();
-			c.fill = GridBagConstraints.NONE;
-			c.anchor = GridBagConstraints.CENTER;
-			c.gridx = 0;
-			c.gridy = 0;
-			c.weightx = 1;
-			c.weighty = 0;
-			panel.setAlignmentX(0.5f);
-			panel.add(new JLabel("A Fatal Error Has Occurred"), c);
-			c.gridy++;
-			c.weighty = 1;
-			c.fill = GridBagConstraints.BOTH;
-			JTextArea textArea = new JTextArea();
-			textArea.setText("You should report this as a bug and include log files in " +
-					System.getenv("APPDATA") +
-					System.getProperty("file.separator") +
-					"triggevent" +
-					" as well as this error message." +
-					"\n\n" +
-					"You can also try moving/renaming the properties files in that directory to see if this error is being caused by a problem with your settings." +
-					"\n\n" +
-					ExceptionUtils.getStackTrace(e)
-			);
-			textArea.setEditable(false);
-			textArea.setLineWrap(true);
-			textArea.setWrapStyleWord(true);
-			JScrollPane scroll = new JScrollPane(textArea);
-			scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-			scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-			panel.add(scroll, c);
-			c.weighty = 0;
-			c.gridy++;
-			c.fill = GridBagConstraints.NONE;
-			JButton exit = new JButton("Exit");
-			exit.addActionListener(l -> System.exit(1));
-			panel.add(exit, c);
-			frame.add(panel);
-			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-			frame.validate();
-			frame.pack();
-			frame.setVisible(true);
-
-		}
+		});
 	}
 
 	public GuiMain(EventMaster master, MutablePicoContainer container) {
@@ -186,7 +138,7 @@ public class GuiMain {
 				frame.add(new ReplayControllerGui(replay).getPanel(), BorderLayout.PAGE_START);
 			}
 		});
-		SwingUtilities.invokeLater(() -> tabPane.addTab("System", new SystemTabPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("General", new SystemTabPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Plugin Settings", new PluginSettingsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Combatants", getCombatantsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Buffs", getStatusEffectsPanel()));
@@ -205,7 +157,6 @@ public class GuiMain {
 
 
 	private class SystemTabPanel extends JPanel {
-		@SuppressWarnings("unchecked")
 		SystemTabPanel() {
 
 			setLayout(new GridBagLayout());
@@ -247,12 +198,16 @@ public class GuiMain {
 			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
 			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
 			EventHandler<Event> update = (ctx, e) -> {
-				SwingUtilities.invokeLater(xivStateStatus::refresh);
-				SwingUtilities.invokeLater(xivPartyPanel::refresh);
-				SwingUtilities.invokeLater(combatantsPanel::refresh);
+				xivStateStatus.refresh();
+				xivPartyPanel.refresh();
+				combatantsPanel.refresh();
+//				SwingUtilities.invokeLater(xivStateStatus::refresh);
+//				SwingUtilities.invokeLater(xivPartyPanel::refresh);
+//				SwingUtilities.invokeLater(combatantsPanel::refresh);
 			};
 			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, update);
-			master.getDistributor().registerHandler(AbilityResolvedEvent.class, update);
+			// This *should* result in an XivStateRecalculatedEvent, so no need to listen separately
+//			master.getDistributor().registerHandler(AbilityResolvedEvent.class, update);
 			master.getDistributor().registerHandler(AbilityUsedEvent.class, update);
 			master.getDistributor().registerHandler(BuffApplied.class, update);
 			master.getDistributor().registerHandler(BuffRemoved.class, update);
@@ -423,16 +378,7 @@ public class GuiMain {
 		}
 
 		public void refresh() {
-			// perf - took about 3 seconds for 10k iterations
-			partyTableModel.fullRefresh();
-		}
-
-		public void refreshCombatant(XivCombatant combatant) {
-			// TODO: can't use this here, because this wouldn't be filtered to just party
-			refresh();
-//			if (XivCombatant instanceof XivPlayerCharacter) {
-//				partyTableModel.refreshItem(combatant);
-//			}
+			partyTableModel.signalNewData();
 		}
 	}
 
@@ -461,6 +407,7 @@ public class GuiMain {
 									.sorted(Comparator.comparing(XivEntity::getId))
 									.collect(Collectors.toList()))
 					.addColumn(StandardColumns.nameJobColumn)
+					.addColumn(columns.statusEffectsColumn())
 					.addColumn(StandardColumns.parentNameJobColumn)
 					.addColumn(StandardColumns.combatantTypeColumn)
 					.addColumn(columns.hpColumnWithUnresolved())
@@ -488,19 +435,13 @@ public class GuiMain {
 //			};
 			combatantsTableModel.configureColumns(table);
 			JScrollPane scrollPane = new JScrollPane(table);
+			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 			add(scrollPane);
 		}
 
 		public void refresh() {
-//			state.getCombatants().values().forEach(this::refreshCombatant);
-			combatantsTableModel.fullRefresh();
+			combatantsTableModel.signalNewData();
 		}
-
-//		public void refreshCombatant(XivCombatant combatant) {
-//			SwingUtilities.invokeLater(() -> {
-//				combatantsTableModel.refreshItem(combatant);
-//			});
-//		}
 	}
 
 	private class AdvancedPanel extends JPanel implements Refreshable {
@@ -508,7 +449,6 @@ public class GuiMain {
 		private final KeyValueDisplaySet mem;
 
 		public AdvancedPanel() {
-//			super("Advanced");
 			setLayout(new GridBagLayout());
 
 			GridBagConstraints c = new GridBagConstraints();
@@ -636,7 +576,7 @@ public class GuiMain {
 
 			{
 				TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Misc");
-				BooleanSettingGui showPredictedHp = new BooleanSettingGui(columns.getShowPredictedHp(), "Experimental HP Bar (Buggy)");
+				BooleanSettingGui showPredictedHp = new BooleanSettingGui(columns.getShowPredictedHp(), "Experimental HP Bar (Buggy and slow, don't use)");
 				miscPanel.setPreferredSize(new Dimension(300, 150));
 				miscPanel.add(showPredictedHp.getComponent());
 				c.gridx++;
@@ -698,6 +638,7 @@ public class GuiMain {
 				// Kinda bad...
 				try {
 					List<PluginTab> components = container.getComponents(PluginTab.class);
+					components.sort(Comparator.comparing(PluginTab::getSortOrder));
 					SwingUtilities.invokeLater(() -> this.addTabs(components));
 					return;
 				}
@@ -760,7 +701,7 @@ public class GuiMain {
 		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalNewData());
 		master.getDistributor().registerHandler(AbilityUsedEvent.class, (ctx, e) -> table.signalNewData());
-		master.getDistributor().registerHandler(AbilityResolvedEvent.class, (ctx, e) -> table.signalNewData());
+//		master.getDistributor().registerHandler(AbilityResolvedEvent.class, (ctx, e) -> table.signalNewData());
 		master.getDistributor().registerHandler(BuffApplied.class, (ctx, e) -> table.signalNewData());
 		master.getDistributor().registerHandler(BuffRemoved.class, (ctx, e) -> table.signalNewData());
 		return table;
@@ -1071,7 +1012,6 @@ public class GuiMain {
 		{
 			JPanel allOverlayControls = new JPanel();
 			allOverlayControls.setLayout(new WrapLayout());
-
 
 
 			allOverlayControls.add(new BooleanSettingGui(overlayMain.getVisibleSetting(), "Show Overlays").getComponent());

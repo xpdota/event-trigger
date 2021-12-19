@@ -135,6 +135,8 @@ public class SequenceIdTracker {
 		if (shouldRecord(event)) {
 			synchronized (lock) {
 				events.add(event);
+				// TODO: the problem with lazy time based pruning is that often we never actually get anything
+				// that would cause a prune for quite some time.
 				boolean dirty = events.removeIf(e -> e.getHappenedAt().isBefore(cutoff));
 				if (events.size() > MAX_EVENTS) {
 					log.warn("Unresolved events too big, pruning");
@@ -226,7 +228,7 @@ public class SequenceIdTracker {
 			if (list == null) {
 				return Collections.emptyList();
 			}
-			return Collections.unmodifiableList(list);
+			return new ArrayList<>(list);
 		}
 	}
 }

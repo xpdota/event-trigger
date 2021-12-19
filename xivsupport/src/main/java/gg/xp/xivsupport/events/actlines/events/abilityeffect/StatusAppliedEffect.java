@@ -16,10 +16,10 @@ public class StatusAppliedEffect extends AbilityEffect {
 	@Override
 	public String toString() {
 		if (isOnTarget()) {
-			return String.format("S(%s)", status.getId());
+			return String.format("S(0x%x)", status.getId());
 		}
 		else {
-			return String.format("Sb(%s)", status.getId());
+			return String.format("Sb(0x%x)", status.getId());
 		}
 	}
 

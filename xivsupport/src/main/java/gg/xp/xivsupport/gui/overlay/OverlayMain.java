@@ -98,9 +98,11 @@ public class OverlayMain {
 	}
 
 	public void addOverlay(XivOverlay overlay) {
-		overlays.add(overlay);
-		overlay.finishInit();
-		recalc();
+		SwingUtilities.invokeLater(() -> {
+			overlays.add(overlay);
+			overlay.finishInit();
+			recalc();
+		});
 	}
 
 	public BooleanSetting getVisibleSetting() {

@@ -2,7 +2,7 @@ package gg.xp.xivsupport.persistence.settings;
 
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 
-public class IntSetting {
+public class IntSetting extends ObservableSetting {
 
 	private final PersistenceProvider persistence;
 	private final String settingKey;
@@ -27,5 +27,6 @@ public class IntSetting {
 	public void set(int newValue) {
 		cached = newValue;
 		persistence.save(settingKey, newValue);
+		notifyListeners();
 	}
 }

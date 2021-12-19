@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @SuppressWarnings("NumericCastThatLosesPrecision")
 public class XivOverlay {
 	private static final Logger log = LoggerFactory.getLogger(XivOverlay.class);
-	private static final Color panelBackgroundEditMode = new Color(0, 255, 0, 64);
+	private static final Color panelBackgroundEditMode = new Color(255, 192, 192, 64);
 	private static final Color panelBackgroundDefault = new Color(0, 0, 0, 0);
 	private static final Border editBorderPink = new LineBorder(Color.PINK, 5);
 	private final TitledBorder editBorder;
@@ -60,6 +60,7 @@ public class XivOverlay {
 		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), true);
 		enabled.addListener(this::recalc);
+		ThreadGroup group = new ThreadGroup("Foo");
 		frame = ScalableJFrame.construct(title, scaleFactor.get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
@@ -69,6 +70,7 @@ public class XivOverlay {
 		frame.setType(Window.Type.UTILITY);
 		panel = new JPanel();
 		panel.setOpaque(false);
+//		panel.setBackground(new Color(0, 0, 0, 0));
 //			panel.add(contents);
 		panel.setBorder(transparentBorder);
 		frame.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT));

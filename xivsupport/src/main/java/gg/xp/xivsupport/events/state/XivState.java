@@ -46,6 +46,7 @@ public class XivState implements SubState {
 	private final Map<Long, HitPoints> hpOverrides = new HashMap<>();
 	private final Map<Long, Position> posOverrides = new HashMap<>();
 	private volatile Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
+	private boolean isActImport;
 
 
 	private Job previousPlayerJob;
@@ -225,6 +226,12 @@ public class XivState implements SubState {
 		if (player != null) {
 			combatantsProcessed.put(playerId, player);
 		}
+		combatantsProcessed.values().forEach(c -> {
+			long ownerId = c.getOwnerId();
+			if (ownerId != 0) {
+				c.setParent(combatantsProcessed.get(ownerId));
+			}
+		});
 		// TODO: just doing a simple diff of this would be a great way to synthesize
 		// add/remove combatant events
 		this.combatantsProcessed = combatantsProcessed;
@@ -304,7 +311,6 @@ public class XivState implements SubState {
 
 	public void setCombatants(List<RawXivCombatantInfo> combatants) {
 		Map<Long, RawXivCombatantInfo> combatantsRaw = new HashMap<>(combatants.size());
-		hpOverrides.clear();
 		combatants.forEach(combatant -> {
 			long id = combatant.getId();
 			// Fake/environment actors
@@ -319,6 +325,8 @@ public class XivState implements SubState {
 		});
 		log.trace("Received info on {} combatants", combatants.size());
 		this.combatantsRaw = combatantsRaw;
+		hpOverrides.clear();
+		posOverrides.clear();
 		recalcState();
 	}
 
@@ -424,5 +432,13 @@ public class XivState implements SubState {
 			return null;
 		}
 		return ref.get();
+	}
+
+	public boolean isActImport() {
+		return isActImport;
+	}
+
+	public void setActImport(boolean actImport) {
+		this.isActImport = actImport;
 	}
 }

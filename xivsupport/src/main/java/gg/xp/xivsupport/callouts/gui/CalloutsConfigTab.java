@@ -30,6 +30,11 @@ public class CalloutsConfigTab implements PluginTab {
 	}
 
 	@Override
+	public int getSortOrder() {
+		return 1;
+	}
+
+	@Override
 	public Component getTabContents() {
 		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Callouts");
 		outerPanel.setLayout(new BorderLayout());

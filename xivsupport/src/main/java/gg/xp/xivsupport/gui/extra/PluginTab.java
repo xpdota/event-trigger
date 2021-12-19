@@ -18,4 +18,10 @@ public interface PluginTab {
 	 */
 	Component getTabContents();
 
+	/**
+	 * return The sort order
+	 */
+	default int getSortOrder() {
+		return 100;
+	}
 }

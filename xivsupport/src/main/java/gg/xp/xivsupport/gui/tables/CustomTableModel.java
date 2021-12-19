@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables;
 
+import gg.xp.xivsupport.gui.GuiGlobals;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -19,6 +23,7 @@ import java.util.stream.Collectors;
 public class CustomTableModel<X> extends AbstractTableModel {
 
 	private static final Logger log = LoggerFactory.getLogger(CustomTableModel.class);
+	private final ExecutorService exs = Executors.newSingleThreadExecutor();
 
 	public static class CustomTableModelBuilder<B> {
 		private final Supplier<List<B>> dataGetter;
@@ -52,6 +57,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	private final Supplier<List<X>> dataGetter;
 	private final List<CustomColumn<? super X>> columns;
 	private List<X> data = Collections.emptyList();
+	private volatile List<X> newData = data;
 	private final BiPredicate<? super X, ? super X> selectionEquivalence;
 
 
@@ -63,9 +69,14 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	}
 
 	public void appendOnlyRefresh() {
+		updateDataOnly();
+		SwingUtilities.invokeLater(this::processNewDataAppend);
+	}
+
+	private void processNewDataAppend() {
 		JTable table = getTable();
 		if (table == null) {
-			data = dataGetter.get();
+			data = newData;
 			// This shouldn't really happen anyway, no need to optimize
 			fireTableDataChanged();
 		}
@@ -82,7 +93,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 					.mapToObj(i -> data.get(i))
 					.collect(Collectors.toList());
 			// TODO: smarter data provider that informs us of append-only operations
-			data = dataGetter.get();
+			data = newData;
 			int newSize = data.size();
 			fireTableRowsInserted(oldSize, newSize - 1);
 			// fast path for typical case where data is only appended and we only have a single selection
@@ -118,7 +129,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		}
 	}
 
-//	public void refreshItem(X item) {
+	//	public void refreshItem(X item) {
 //		JTable table = getTable();
 //		if (table == null) {
 //			data = dataGetter.get();
@@ -170,17 +181,54 @@ public class CustomTableModel<X> extends AbstractTableModel {
 //			}
 //		}
 //	}
+	private final AtomicBoolean pendingRefresh = new AtomicBoolean();
+	public void signalNewData() {
+		// This setup allows for there to be exactly one refresh in progress, and one pending after that
+		boolean skipRefresh = pendingRefresh.compareAndExchange(false, true);
+		if (!skipRefresh) {
+			exs.submit(() -> {
+				fullRefresh();
+				try {
+					// Cap updates to 1000/x fps, while not delaying updates
+					// if they come in less frequently than that
+					Thread.sleep(GuiGlobals.REFRESH_MIN_DELAY);
+//						Thread.sleep(50);
+				}
+				catch (InterruptedException e) {
+					// ignored
+				}
+			});
+		}
+	}
+
+	private void updateDataOnly() {
+		newData = dataGetter.get();
+	}
 
 	public void fullRefresh() {
+		updateDataOnly();
+		SwingUtilities.invokeLater(this::processNewDataFull);
+	}
+
+
+	// Experimenting, don't use
+	public void overlayHackRefresh() {
+		updateDataOnly();
+		pendingRefresh.set(false);
+		data = newData;
+	}
+
+	private void processNewDataFull() {
 		JTable table = getTable();
 		if (table == null) {
-			data = dataGetter.get();
+			data = newData;
 			fireTableDataChanged();
 		}
 		else {
 			if (data.isEmpty()) {
 				// Fast path for when data is currently empty
-				data = dataGetter.get();
+				pendingRefresh.set(false);
+				data = newData;
 				fireTableDataChanged();
 				return;
 			}
@@ -190,7 +238,8 @@ public class CustomTableModel<X> extends AbstractTableModel {
 					.mapToObj(i -> data.get(i))
 					.collect(Collectors.toList());
 			// TODO: smarter data provider that informs us of append-only operations
-			data = dataGetter.get();
+			pendingRefresh.set(false);
+			data = newData;
 			fireTableDataChanged();
 			for (X oldItem : oldSelections) {
 				for (int i = 0; i < data.size(); i++) {

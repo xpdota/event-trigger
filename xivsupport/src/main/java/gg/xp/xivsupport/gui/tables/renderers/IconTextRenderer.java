@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
 import gg.xp.xivdata.jobs.HasIconURL;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,6 +29,11 @@ public final class IconTextRenderer {
 		return getComponent(value, defaultLabel, iconOnly, false, false);
 	}
 
+	public static @Nullable Component getIconOnly(HasIconURL value) {
+		return getComponent(value, null, true, false, false);
+	}
+
+	// TODO: we might be able to get rid of the whole 'bypassCache' thing if we use ComponentListRenderer everywhere
 	public static Component getComponent(HasIconURL value, Component defaultLabel, boolean iconOnly, boolean textOnleft, boolean bypassCache) {
 
 		ScaledImageComponent scaled;

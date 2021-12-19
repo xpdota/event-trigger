@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.FullyResistedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
@@ -229,7 +229,7 @@ public class FieldMapper<K extends Enum<K>> {
 					out.add(new FullyResistedEffect());
 					break;
 				case 3:
-					out.add(new DamageEffect(calcSeverity(severityByte), calcDamage(value)));
+					out.add(new DamageTakenEffect(calcSeverity(severityByte), calcDamage(value)));
 					break;
 				case 4:
 					out.add(new HealEffect(calcSeverity(healSeverityByte), calcDamage(value)));

@@ -20,22 +20,21 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @ScanMe
-public class CdTrackerGui implements PluginTab {
+public class PartyCdTrackerGui implements PluginTab {
 
 	private final CdTracker backend;
 
-	public CdTrackerGui(CdTracker backend) {
+	public PartyCdTrackerGui(CdTracker backend) {
 		this.backend = backend;
 	}
 
 	@Override
 	public String getTabName() {
-		return "Cooldown Tracker";
+		return "Party Cooldown Tracker";
 	}
-
 	@Override
 	public int getSortOrder() {
-		return 5;
+		return 7;
 	}
 
 	// TODO: here's how I can do settings in a reasonable way:
@@ -46,17 +45,17 @@ public class CdTrackerGui implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
-		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Cooldowns");
+		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Party Cooldowns");
 		outerPanel.setLayout(new BorderLayout());
 
 		JPanel settingsPanel = new JPanel();
 		settingsPanel.setLayout(new WrapLayout());
 
-		JPanel preTimeBox = new LongSettingGui(backend.getCdTriggerAdvancePersonal(), "Time before expiry to call out (milliseconds)").getComponent();
+		JPanel preTimeBox = new LongSettingGui(backend.getCdTriggerAdvanceParty(), "Time before expiry to call out (milliseconds)").getComponent();
 		settingsPanel.add(preTimeBox);
-		JCheckBox enableTts = new BooleanSettingGui(backend.getEnableTtsPersonal(), "Enable TTS").getComponent();
+		JCheckBox enableTts = new BooleanSettingGui(backend.getEnableTtsParty(), "Enable TTS").getComponent();
 		settingsPanel.add(enableTts);
-		JPanel numSetting = new IntSettingSpinner(backend.getOverlayMaxPersonal(), "Max in Overlay").getComponent();
+		JPanel numSetting = new IntSettingSpinner(backend.getOverlayMaxParty(), "Max in Overlay").getComponent();
 		settingsPanel.add(numSetting);
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
@@ -64,7 +63,7 @@ public class CdTrackerGui implements PluginTab {
 		JPanel innerPanel = new JPanel();
 		innerPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		Map<Cooldown, BooleanSetting> cooldowns = backend.getPersonalCdSettings();
+		Map<Cooldown, BooleanSetting> cooldowns = backend.getPartyCdSettings();
 		Map<JobType, List<Cooldown>> byJobType = cooldowns.keySet().stream().filter(cd -> cd.getJobType() != null).collect(Collectors.groupingBy(Cooldown::getJobType));
 		Map<Job, List<Cooldown>> byJob = cooldowns.keySet().stream().filter(cd -> cd.getJobType() == null).collect(Collectors.groupingBy(Cooldown::getJob));
 		List<JobType> jobTypeKeys = byJobType.keySet().stream().sorted(Comparator.comparing(JobType::getFriendlyName)).collect(Collectors.toList());

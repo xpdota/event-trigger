@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.models.XivCombatant;
 
 enum NetworkAbilityFields {
 	casterId, casterName, abilityId, abilityName, targetId, targetName,
@@ -19,10 +20,12 @@ enum NetworkAbilityFields {
 	targetIndex;
 
 	public static Event convert(FieldMapper<NetworkAbilityFields> fields) {
+		XivCombatant caster = fields.getEntity(casterId, casterName, casterCurHp, casterMaxHp, casterCurMp, casterMaxMp, casterX, casterY, casterZ, casterHeading);
+		XivCombatant target = fields.getEntity(targetId, targetName, targetCurHp, targetMaxHp, targetCurMp, targetMaxMp, targetX, targetY, targetZ, targetHeading);
 		return new AbilityUsedEvent(
 				fields.getAbility(abilityId, abilityName),
-				fields.getEntity(casterId, casterName),
-				fields.getEntity(targetId, targetName),
+				caster,
+				target,
 				fields.getAbilityEffects(targetName.ordinal() + 3, 8),
 				fields.getRawHex(44)
 		);

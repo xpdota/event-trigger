@@ -6,14 +6,16 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class StatusEffectsRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
 	private final ActionAndStatusRenderer renderer = new ActionAndStatusRenderer(true, false, false);
-	private final ActionAndStatusRenderer rendererNoCache = new ActionAndStatusRenderer(true, true, false);
+	private final ComponentListRenderer listRenderer = new ComponentListRenderer(0);
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 		if (value instanceof Collection) {
@@ -22,21 +24,12 @@ public class StatusEffectsRenderer implements TableCellRenderer {
 			if (coll.isEmpty()) {
 				return defaultLabel;
 			}
-			JPanel panel = new JPanel();
-			panel.setBackground(defaultLabel.getBackground());
-			panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+			listRenderer.setBackground(defaultLabel.getBackground());
+			List<Component> comps = new ArrayList<>();
 			StringBuilder tooltipBuilder = new StringBuilder();
-			Set<Component> seen = new HashSet<>(coll.size());
 			coll.forEach(obj -> {
 				Component component = (renderer.getTableCellRendererComponent(table, obj, isSelected, hasFocus, row, column));
-				boolean alreadyExists = !seen.add(component);
-				if (alreadyExists) {
-					// TODO: this is messy
-					// Better way would be to make a special JPanel subclass that allows you to add components lazily,
-					// and then paint them manually when rendered.
-					component = rendererNoCache.getTableCellRendererComponent(table, obj, isSelected, hasFocus, row, column);;
-				}
-				panel.add(component);
+				comps.add(component);
 				if (obj instanceof XivStatusEffect) {
 					XivStatusEffect status = (XivStatusEffect) obj;
 					tooltipBuilder.append(status.getName());
@@ -45,8 +38,9 @@ public class StatusEffectsRenderer implements TableCellRenderer {
 							.append(", ").append(id).append(")\n\n");
 				}
 			});
-			panel.setToolTipText(tooltipBuilder.toString().stripTrailing());
-			return panel;
+			listRenderer.setComponents(comps);
+			listRenderer.setToolTipText(tooltipBuilder.toString().stripTrailing());
+			return listRenderer;
 		}
 		return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 	}

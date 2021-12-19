@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.tables.renderers;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 
 public class ResourceBar extends JComponent {
 
@@ -81,11 +82,15 @@ public class ResourceBar extends JComponent {
 		int width = getWidth();
 		for (String text : textOptions) {
 			label.setText(text);
-			if (label.getPreferredSize().width <= width) {
+			if (label.getPreferredSize().width <= (width - (2 * getBorderWidth()))) {
 				break;
 			}
 		}
 		label.setBounds(0, 0, getWidth(), getHeight());
+	}
+
+	int getBorderWidth() {
+		return borderColor == null ? 0 : 1;
 	}
 
 	@Override
@@ -102,29 +107,45 @@ public class ResourceBar extends JComponent {
 
 	@Override
 	protected void paintComponent(Graphics g) {
-		int width = getWidth();
-		int height = getHeight();
-		int width1 = (int) (width * percent1);
-		int width2 = (int) (width * percent2);
-		int width3 = width - width1 - width2;
+		AffineTransform old = ((Graphics2D) g).getTransform();
+		AffineTransform t = new AffineTransform(old);
+		double xScale = t.getScaleX();
+		double yScale = t.getScaleY();
+		t.scale(1 / xScale, 1 / yScale);
+		((Graphics2D) g).setTransform(t);
+		int realWidth = (int) Math.floor(getWidth() * xScale);
+		if (xScale != 1.0d) {
+			realWidth--;
+		}
+		int realHeight = (int) Math.floor(getHeight() * yScale);
+		int borderWidth = getBorderWidth();
+		int innerWidth = realWidth - (2 * borderWidth);
+		int innerHeight = realHeight - (2 * borderWidth);
+		int width1 = (int) (innerWidth * percent1);
+		int width2 = (int) (innerWidth * percent2);
+		int width3 = innerWidth - width1 - width2;
 
 		if (width1 > 0) {
 			g.setColor(color1);
-			g.fillRect(0, 0, width1, height);
+			g.fillRect(borderWidth, borderWidth, width1, innerHeight);
 		}
 
 		if (width2 > 0) {
 			g.setColor(color2);
-			g.fillRect(width1, 0, width2, height);
+			g.fillRect(width1 + borderWidth, borderWidth, width2 + borderWidth, innerHeight);
 		}
 
 		if (width3 > 0) {
 			g.setColor(color3);
-			g.fillRect(width1 + width2, 0, width3, height);
+			g.fillRect(width1 + width2 + borderWidth, borderWidth, width3 + borderWidth, innerHeight);
 		}
 
-		g.setColor(borderColor);
-		g.drawRect(0, 0, width, height);
+		if (borderColor != null) {
+			g.setColor(borderColor);
+			g.drawRect(0, 0, realWidth - 1, realHeight - 1);
+		}
+
+		((Graphics2D) g).setTransform(old);
 
 //		g.setColor(textColor);
 //

@@ -1,35 +1,5 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
-public class DamageEffect extends AbilityEffect {
-	private final HitSeverity severity;
-	private final long amount;
-
-	public DamageEffect(HitSeverity severity, long amount) {
-		super(AbilityEffectType.DAMAGE);
-		this.severity = severity;
-		this.amount = amount;
-	}
-
-	public HitSeverity getSeverity() {
-		return severity;
-	}
-
-	public long getAmount() {
-		return amount;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("D(%s%s)", severity.getSymbol(), amount);
-	}
-
-	@Override
-	public String getDescription() {
-		if (severity == HitSeverity.NORMAL) {
-			return String.format("Damage: %s", amount);
-		}
-		else {
-			return String.format("Damage: %s (%s)", amount, severity.getFriendlyName());
-		}
-	}
+public interface DamageEffect {
+	long getAmount();
 }

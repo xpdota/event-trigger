@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.events.ActImportOnly;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import gg.xp.xivsupport.events.state.XivState;
@@ -12,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @SuppressWarnings("unused")
-public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> {
+public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> implements ActImportOnly {
 
 	public Line11Parser(XivState state) {
 		super(state, 11, Fields.class, true);

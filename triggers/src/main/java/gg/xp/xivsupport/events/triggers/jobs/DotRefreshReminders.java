@@ -11,6 +11,7 @@ import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.models.BuffTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ public class DotRefreshReminders {
 	private final LongSetting dotRefreshAdvance;
 	private final Map<DotBuff, BooleanSetting> enabledDots = new LinkedHashMap<>();
 	private final StatusEffectRepository buffs;
+	private final IntSetting numberToDisplay;
 	// TODO: make this a real setting
 	boolean suppressSpamCallouts = true;
 
@@ -48,6 +50,7 @@ public class DotRefreshReminders {
 		}
 		this.dotRefreshAdvance = new LongSetting(persistence, "dot-tracker.pre-call-ms", 5000);
 		this.enableTts = new BooleanSetting(persistence, "dot-tracker.enable-tts", true);
+		this.numberToDisplay = new IntSetting(persistence, "dot-tracker.disp-number", 8);
 	}
 
 	private static String getKey(DotBuff buff) {
@@ -114,12 +117,15 @@ public class DotRefreshReminders {
 				return false;
 			}
 			Duration timeSinceExpiry = e.getValue().getEstimatedTimeSinceExpiry();
+			Duration timeRemaining = e.getValue().getEstimatedRemainingDuration();
 //			// TODO: this is a total hack - we need to not remove our own preapps
 //			boolean isPreApp = e.getValue().getParent() instanceof AbilityUsedEvent;
 //			if (isPreApp) {
 //				return e.getValue().getEstimatedElapsedDuration().toMillis() > 2000;
 //			}
-			return timeSinceExpiry.isNegative()
+			// Keep showing the buff as "expired" for 5 seconds, but also allow for a bit of slop
+			// in the other direction.
+			return timeRemaining.compareTo(Duration.of(2, ChronoUnit.SECONDS)) > 0
 					|| timeSinceExpiry.compareTo(Duration.of(5, ChronoUnit.SECONDS)) > 0;
 		});
 	}
@@ -201,6 +207,10 @@ public class DotRefreshReminders {
 			recheckMyDots();
 			return new ArrayList<>(myDots.values());
 		}
+	}
+
+	public IntSetting getNumberToDisplay() {
+		return numberToDisplay;
 	}
 
 	public BooleanSetting getEnableTts() {

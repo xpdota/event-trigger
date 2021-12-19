@@ -66,8 +66,9 @@ public class VisualCdInfo implements CurrentMaxPair, LabelOverride {
 
 	public boolean stillValid() {
 
+		// TODO: make hang time a setting
 		return (buffApplied != null
-				|| Duration.between(abilityEvent.getEnqueuedAt().plusMillis((long) (cd.getCooldown() * 1000L)), Instant.now()).toMillis() < 5000);
+				|| Duration.between(abilityEvent.getEnqueuedAt().plusMillis((long) (cd.getCooldown() * 1000L)), Instant.now()).toMillis() < 10_000);
 	}
 
 }

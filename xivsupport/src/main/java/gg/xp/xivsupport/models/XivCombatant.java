@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.models;
 
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class XivCombatant extends XivEntity {
@@ -163,6 +164,15 @@ public class XivCombatant extends XivEntity {
 
 	public @Nullable XivCombatant getParent() {
 		return parent;
+	}
+
+	public @NotNull XivCombatant walkParentChain() {
+		if (parent == null) {
+			return this;
+		}
+		else {
+			return parent.walkParentChain();
+		}
 	}
 
 	public void setParent(XivCombatant parent) {

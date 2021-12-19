@@ -8,9 +8,18 @@ public final class ManaPoints implements CurrentMaxPair, Serializable {
 	private final long current;
 	private final long max;
 
-	public ManaPoints(long current, long max) {
+	private ManaPoints(long current, long max) {
 		this.current = current;
 		this.max = max;
+	}
+
+	private static final ManaPoints FULL = new ManaPoints(10_000, 10_000);
+
+	public static ManaPoints of(long current, long max) {
+		if (current == 10_000 && max == 10_000) {
+			return FULL;
+		}
+		return new ManaPoints(current, max);
 	}
 
 	@Override
@@ -25,7 +34,7 @@ public final class ManaPoints implements CurrentMaxPair, Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("HP( %s / %s )", current, max);
+		return String.format("MP(%s / %s)", current, max);
 	}
 
 	@Override
@@ -40,5 +49,8 @@ public final class ManaPoints implements CurrentMaxPair, Serializable {
 	public int hashCode() {
 		return Objects.hash(current, max);
 	}
+
+	// Re-usable instance to save memory
+
 }
 

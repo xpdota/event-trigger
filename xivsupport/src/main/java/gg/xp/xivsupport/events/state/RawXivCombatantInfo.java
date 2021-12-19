@@ -92,7 +92,7 @@ public final class RawXivCombatantInfo implements Serializable {
 	}
 
 	public ManaPoints getMP() {
-		return new ManaPoints(curMp, maxMp);
+		return ManaPoints.of(curMp, maxMp);
 	}
 
 	public Position getPos() {

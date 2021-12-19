@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
-public class InvulnBlockedDamageEffect extends AbilityEffect {
+public class InvulnBlockedDamageEffect extends AbilityEffect implements DamageEffect {
 	private final long amount;
 
 	public InvulnBlockedDamageEffect(long amount) {
@@ -8,6 +8,7 @@ public class InvulnBlockedDamageEffect extends AbilityEffect {
 		this.amount = amount;
 	}
 
+	@Override
 	public long getAmount() {
 		return amount;
 	}

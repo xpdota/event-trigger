@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
-public class ParriedDamageEffect extends AbilityEffect {
+public class ParriedDamageEffect extends AbilityEffect implements DamageEffect {
 	private final long amount;
 
 	public ParriedDamageEffect(long amount) {
@@ -8,6 +8,7 @@ public class ParriedDamageEffect extends AbilityEffect {
 		this.amount = amount;
 	}
 
+	@Override
 	public long getAmount() {
 		return amount;
 	}

@@ -42,6 +42,9 @@ public final class CommonGuiSetup {
 		catch (Throwable t) {
 			log.error("Error setting up look and feel", t);
 		}
+		SwingUtilities.invokeLater(() -> {
+			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+		});
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
 		if (toolkit.isDynamicLayoutActive()) {
 			toolkit.setDynamicLayout(true);

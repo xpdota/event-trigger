@@ -5,7 +5,7 @@ import gg.xp.xivdata.jobs.HasIconURL;
 import gg.xp.xivdata.jobs.StatusEffectIcon;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.InvulnBlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpGain;
@@ -39,8 +39,8 @@ public class AbilityEffectRenderer {
 		String text;
 		HasIconURL icon;
 		boolean textOnRight = false;
-		if (value instanceof DamageEffect) {
-			text = ((DamageEffect) value).getSeverity().getSymbol() + ((DamageEffect) value).getAmount();
+		if (value instanceof DamageTakenEffect) {
+			text = ((DamageTakenEffect) value).getSeverity().getSymbol() + ((DamageTakenEffect) value).getAmount();
 			icon = ActionIcon.forId(9);
 		}
 		else if (value instanceof HealEffect) {

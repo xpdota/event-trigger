@@ -11,6 +11,8 @@ import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.IntSetting;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +32,11 @@ public class DotTrackerOverlay extends XivOverlay {
 
 	private static final Logger log = LoggerFactory.getLogger(DotTrackerOverlay.class);
 
-	// TODO make this a setting
-	private static final int MAX_DOTS = 8;
+	private final IntSetting numberOfRows;
 
 	private final DotRefreshReminders dots;
 	private final CustomTableModel<VisualDotInfo> tableModel;
+	private final JTable table;
 	private volatile List<BuffApplied> currentDots = Collections.emptyList();
 	private volatile List<VisualDotInfo> croppedDots = Collections.emptyList();
 
@@ -43,6 +45,8 @@ public class DotTrackerOverlay extends XivOverlay {
 
 	public DotTrackerOverlay(PersistenceProvider persistence, DotRefreshReminders dots) {
 		super("Dot Tracker", "dot-tracker.overlay", persistence);
+		this.numberOfRows = dots.getNumberToDisplay();
+		numberOfRows.addListener(this::repackSize);
 		this.dots = dots;
 		tableModel = CustomTableModel.builder(() -> croppedDots)
 				.addColumn(new CustomColumn<>("Icon", c -> c.getEvent().getBuff(), c -> {
@@ -57,8 +61,9 @@ public class DotTrackerOverlay extends XivOverlay {
 							c.setMinWidth(BAR_WIDTH);
 						}))
 				.build();
-		getPanel().setPreferredSize(new Dimension(200, 200));
-		JTable table = new JTable(tableModel);
+//		getPanel().setPreferredSize();
+		table = new JTable(tableModel);
+//		table.getPreferredSize();
 		table.setOpaque(false);
 		tableModel.configureColumns(table);
 		getPanel().add(table);
@@ -69,10 +74,8 @@ public class DotTrackerOverlay extends XivOverlay {
 					// 200ms is the optimal update interval at 100% scale - typical dot is 30 seconds, and the bar is
 					// 150 pixels wide, so we'd expect 5 updates per second. But then we also need to adjust by the
 					// scale factor.
-					// TODO I think this is actually wrong - the logical width of the bar is always the same, so we
-					// end up skipping pixels anyway
 					//noinspection BusyWait
-					Thread.sleep(200);
+					Thread.sleep((long) (200.0 / getScale()));
 				}
 				catch (Throwable e) {
 					log.error("Error refreshing dots", e);
@@ -80,8 +83,15 @@ public class DotTrackerOverlay extends XivOverlay {
 			}
 		});
 		thread.setName("DotRefreshOverlayThread");
+		repackSize();
 		//noinspection CallToThreadStartDuringObjectConstruction
 		thread.start();
+	}
+
+	private void repackSize() {
+		table.setPreferredSize(new Dimension(table.getPreferredSize().width, table.getRowHeight() * numberOfRows.get()));
+		getFrame().revalidate();
+		redoScale();
 	}
 
 
@@ -136,7 +146,7 @@ public class DotTrackerOverlay extends XivOverlay {
 					.sorted(Comparator.<VisualDotInfo, Long>comparing(event -> event.getEvent().getTarget().getHp() != null ? event.getEvent().getTarget().getHp().getMax() : 0)
 							.reversed()
 							.thenComparing(event -> event.getEvent().getTarget().getId()))
-					.limit(MAX_DOTS)
+					.limit(numberOfRows.get())
 					.collect(Collectors.toList());
 		}
 	}
@@ -144,6 +154,13 @@ public class DotTrackerOverlay extends XivOverlay {
 
 	private void refresh() {
 		getAndSort();
-		SwingUtilities.invokeLater(tableModel::fullRefresh);
+		tableModel.fullRefresh();
+//		tableModel.overlayHackRefresh();
+//		getFrame().paint(getFrame().getGraphics());
+//		RepaintManager repaintManager = RepaintManager.currentManager(table);
+//		repaintManager.addDirtyRegion(table, 0, 0, table.getSize().width, table.getSize().height);
+//		repaintManager.paintDirtyRegions();
+//		table.paintImmediately(table.getBounds());
+//		table.repaint();
 	}
 }

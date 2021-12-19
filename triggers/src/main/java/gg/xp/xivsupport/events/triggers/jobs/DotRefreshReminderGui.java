@@ -7,6 +7,8 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.IntSettingGui;
+import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.LongSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 
@@ -31,6 +33,11 @@ public class DotRefreshReminderGui implements PluginTab {
 		return "DoT/Buff Tracker";
 	}
 
+
+	@Override
+	public int getSortOrder() {
+		return 3;
+	}
 	@Override
 	public Component getTabContents() {
 		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Dots and Buffs");
@@ -44,6 +51,8 @@ public class DotRefreshReminderGui implements PluginTab {
 		settingsPanel.add(preTimeBox);
 		JCheckBox enableTts = new BooleanSettingGui(backend.getEnableTts(), "Enable TTS").getComponent();
 		settingsPanel.add(enableTts);
+		JPanel numSetting = new IntSettingSpinner(backend.getNumberToDisplay(), "Max in Overlay").getComponent();
+		settingsPanel.add(numSetting);
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 

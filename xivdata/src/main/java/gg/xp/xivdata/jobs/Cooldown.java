@@ -12,10 +12,12 @@ import static gg.xp.xivdata.jobs.Job.NIN;
 import static gg.xp.xivdata.jobs.Job.PLD;
 import static gg.xp.xivdata.jobs.Job.RDM;
 import static gg.xp.xivdata.jobs.Job.SCH;
+import static gg.xp.xivdata.jobs.Job.SGE;
 import static gg.xp.xivdata.jobs.Job.SMN;
 import static gg.xp.xivdata.jobs.Job.WAR;
 import static gg.xp.xivdata.jobs.Job.WHM;
 import static gg.xp.xivdata.jobs.JobType.CASTER;
+import static gg.xp.xivdata.jobs.JobType.HEALER;
 import static gg.xp.xivdata.jobs.JobType.MELEE_DPS;
 import static gg.xp.xivdata.jobs.JobType.TANK;
 
@@ -34,8 +36,22 @@ public enum Cooldown {
 	WanderersMinuet(BRD, 120.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
 	BattleVoice(BRD, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 0x8d),
 	Benediction(WHM, 180.0, "Benediction", CooldownType.HEAL, 0x8c),
-	// TODO: there's a lower level version too
-	SacredSoil(SCH, 30.0, "Sacred Soil", CooldownType.PARTY_MIT, 0xbc, 0x798),
+	SacredSoil(SCH, 30.0, "Sacred Soil", CooldownType.PARTY_MIT, 0xbc, 0x798, 0x12A),
+	// Summon order buffs:
+	/*
+		Fey Blessing: 0x7AE
+		Fey Illumination: 0x7AC
+		Fey Union: 0x7AD
+		Whispering Dawn: 0x77B
+
+		Consolation: 0x7AD
+		Whisper: 0x77B
+		Seraphic Illumination: 0x7AC
+	 */
+	WhisperingDawn(SCH, 60.0, "Whispering Dawn", CooldownType.HEAL, 0x4099, 0x13b, 0x752),
+	FeyIllumination(SCH, 120.0, "Fey Illumination", CooldownType.PARTY_MIT, 0x409A, 0x13d, 0x753),
+	Expedient(SCH, 120.0, "Expedient", CooldownType.PARTY_UTILITY, 0x650C, 0xA97, 0xA98),
+	LucidDreaming(HEALER, 60.0, "Lucid Dreaming", CooldownType.PERSONAL_UTILITY, 0x1D8A, 0x4B4),
 	// TODO - check ability ID
 	TrickAttack(NIN, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
 	DivineVeil(PLD, 90.0, "Divine Veil", CooldownType.PARTY_MIT, 0xdd4, 726, 727),
@@ -75,13 +91,32 @@ public enum Cooldown {
 	DarkMissionary(DRK, 90.0, "Dark Missionary", CooldownType.PARTY_MIT, 0x4057, 1894),
 	Divination(AST, 120.0, "Divination", CooldownType.PARTY_BUFF, 0x40a8, 1878),
 	Tactician(MCH, 120.0, "Tactician", CooldownType.PARTY_MIT, 0x41f9, 1951, 2177),
-	SearingLight(SMN, 120.0, "Searing Light", CooldownType.PARTY_BUFF, 25801, 2703);
+	SearingLight(SMN, 120.0, "Searing Light", CooldownType.PARTY_BUFF, 25801, 2703),
+	// Sage stuff
+	Krasis(SGE, 60.0, "Krasis", CooldownType.HEAL, 0x5EFD, 0xA3E),
+	Pepsis(SGE, 30.0, "Pepsis", CooldownType.HEAL, 0x5EED),
+	Rhizomata(SGE, 90.0, "Rhizomata", CooldownType.PERSONAL_UTILITY, 0x5EF5),
+	Kerachole(SGE, 30.0, "Kerachole", CooldownType.PARTY_MIT, 0x5EEA, 0xA3A, 0xB7A),
+	Soteria(SGE, 90.0, "Soteria", CooldownType.HEAL, 0x5EE6, 0xA32),
+	Zoe(SGE, 120.0, "Zoe", CooldownType.HEAL, 0x5EEC, 0xA32),
+	Ixochole(SGE, 30.0, "Pepsis", CooldownType.HEAL, 0x5EEB),
+	Icarus(SGE, 45.0, "Icarus", CooldownType.PERSONAL_UTILITY, 0x5EE7),
+	Taurochole(SGE, 45.0, "Taurochole", CooldownType.HEAL, 0x5EEF, 0xA3B),
+	Haima(SGE, 120.0, "Haima", CooldownType.SINGLE_TARGET_MIT, 0x5EF1, 0xA34),
+	Panhaima(SGE, 120.0, "Panhaima", CooldownType.PARTY_MIT, 0x5EF7, 0xA35),
+	Physis(SGE, 60.0, "Physis", CooldownType.HEAL, 0x5EEE, 0xA3C),
+	Holos(SGE, 120.0, "Holos", CooldownType.PARTY_MIT, 0x5EF6, 0xBBB);
+
+
+
+
 
 
 	public enum CooldownType {
 		PERSONAL_MIT,
 		INVULN,
 		PARTY_MIT,
+		SINGLE_TARGET_MIT,
 		PERSONAL_BURST,
 		PARTY_BUFF,
 		PERSONAL_UTILITY,

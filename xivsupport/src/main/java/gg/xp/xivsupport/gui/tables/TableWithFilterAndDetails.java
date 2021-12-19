@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables;
 
+import gg.xp.xivsupport.gui.GuiGlobals;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.VisualFilter;
@@ -226,7 +227,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 					try {
 						// Cap updates to 1000/x fps, while not delaying updates
 						// if they come in less frequently than that
-						Thread.sleep(50);
+						Thread.sleep(GuiGlobals.REFRESH_MIN_DELAY);
 //						Thread.sleep(50);
 					}
 					catch (InterruptedException e) {
