@@ -10,9 +10,19 @@ For the technical explanation of why I made this, see [Why](https://github.com/x
 
 ## How to Download/Install
 
-See [Installation](https://github.com/xpdota/event-trigger/wiki/Installation)
+READ THIS: See [Installation](https://github.com/xpdota/event-trigger/wiki/Installation)
+
+Short version: Install Overlayplugin in your ACT, then start OverlayPlugin WSServer from within ACT.
+
+## Features
+
+#### General
+
+Easy access to combtants and events data
 
 ![Overview](https://user-images.githubusercontent.com/14287379/142812965-7666c15e-12b3-4b6c-91a6-ed38820a7aa8.png)
+
+Makes it easier to create and test reliable, extensible overlays and triggers
 
 ![Jail Plugin](https://user-images.githubusercontent.com/14287379/142813080-c44d1ff7-873b-4119-9c15-1212c9e31133.png)
 
@@ -21,6 +31,19 @@ See [Installation](https://github.com/xpdota/event-trigger/wiki/Installation)
 ![Dot Tracker](https://i.imgur.com/72Zof3c.png)
 
 It even combines multiple targets with the same DoT + similar duration into one row.
+
+#### CD Tracker
+
+![CD Tracker](https://i.imgur.com/FgSHZY8.png)
+
+Shows remaining cooldown and active time. 
+
+#### Replay Support
+
+You can import a previous session, or an ACT log. You can even force-on overlays to see what your overlays *would*
+have looked like at that point.
+
+![Replay](https://user-images.githubusercontent.com/14287379/146716550-189ba0ef-5f04-480a-9477-903f82882584.png)
 
 ## Future Features
 
