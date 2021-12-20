@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.io.Serial;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,37 +30,22 @@ public final class IconTextRenderer {
 		return getComponent(value, defaultLabel, iconOnly, false, false);
 	}
 
-	public static @Nullable Component getIconOnly(HasIconURL value) {
-		return getComponent(value, null, true, false, false);
+	public static @Nullable ScaledImageComponent getIconOnly(HasIconURL value) {
+		return cache.computeIfAbsent(value, (ignored1) -> {
+			URL imageUrl = value.getIcon();
+			if (imageUrl == null) {
+				return null;
+			}
+			return new ScaledImageComponent(Toolkit.getDefaultToolkit().getImage(imageUrl), size);
+		});
 	}
 
 	// TODO: we might be able to get rid of the whole 'bypassCache' thing if we use ComponentListRenderer everywhere
 	public static Component getComponent(HasIconURL value, Component defaultLabel, boolean iconOnly, boolean textOnleft, boolean bypassCache) {
 
-		ScaledImageComponent scaled;
-		if (bypassCache) {
-			ScaledImageComponent existing = cache.get(value);
-			if (existing == null) {
-				scaled = cache.computeIfAbsent(value, (ignored1) -> {
-					URL imageUrl = value.getIcon();
-					if (imageUrl == null) {
-						return null;
-					}
-					return new ScaledImageComponent(Toolkit.getDefaultToolkit().getImage(imageUrl), size);
-				});
-			}
-			else {
-				scaled = existing.cloneThis();
-			}
-		}
-		else {
-			scaled = cache.computeIfAbsent(value, ignored -> {
-				URL imageUrl = value.getIcon();
-				if (imageUrl == null) {
-					return null;
-				}
-				return new ScaledImageComponent(Toolkit.getDefaultToolkit().getImage(imageUrl), size);
-			});
+		ScaledImageComponent scaled = getIconOnly(value);
+		if (scaled != null && bypassCache) {
+			scaled = scaled.cloneThis();
 		}
 		if (scaled == null) {
 			return defaultLabel;
@@ -100,16 +86,18 @@ public final class IconTextRenderer {
 		return panel;
 	}
 
-	private static class ScaledImageComponent extends JComponent {
+	private static class ScaledImageComponent extends Component {
+		@Serial
+		private static final long serialVersionUID = -6148301310440811739L;
 		private final Image image;
 		private final int size;
-		private final Map<Integer, ImageIcon> cache;
+		private final Map<Integer, Image> cache;
 
 		ScaledImageComponent(Image image, int size) {
 			this(image, size, new HashMap<>());
 		}
 
-		ScaledImageComponent(Image image, int size, Map<Integer, ImageIcon> cache) {
+		ScaledImageComponent(Image image, int size, Map<Integer, Image> cache) {
 			this.cache = cache;
 			this.image = image;
 			this.size = size;
@@ -138,8 +126,8 @@ public final class IconTextRenderer {
 			((Graphics2D) g).setTransform(t);
 			int scaledSize = (int) (size * yScale);
 			// -1 = keep original aspect ratio
-			ImageIcon scaledInstance = cache.computeIfAbsent(scaledSize, newSize -> new ImageIcon(image.getScaledInstance(-1, newSize, Image.SCALE_SMOOTH)));
-			(scaledInstance).paintIcon(this, g, 0, 0);
+			Image scaledImage = cache.computeIfAbsent(scaledSize, newSize -> image.getScaledInstance(-1, newSize, Image.SCALE_SMOOTH));
+			g.drawImage(scaledImage, 0, 0, null);
 		}
 	}
 }

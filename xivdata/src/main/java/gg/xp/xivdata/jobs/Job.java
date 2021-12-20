@@ -99,7 +99,7 @@ public enum Job implements HasIconURL {
 
 	}
 
-	public int partySortOrder() {
+	public int defaultPartySortOrder() {
 		// Sort non-combat jobs to the end of the list, I guess?
 		return sortOrder.getOrDefault(this, Integer.MAX_VALUE);
 	}

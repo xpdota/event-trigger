@@ -282,7 +282,7 @@ public class XivState implements SubState {
 			}
 			else {
 				// TODO: customizable party sorting
-				return p.getJob().partySortOrder();
+				return p.getJob().defaultPartySortOrder();
 			}
 		}));
 		if (partyListProcessed.isEmpty() && player != null) {

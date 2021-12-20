@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.io.Serial;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,8 @@ import java.util.stream.Collectors;
 public class MapPanel extends TitleBorderFullsizePanel {
 
 	private static final Logger log = LoggerFactory.getLogger(MapPanel.class);
+	@Serial
+	private static final long serialVersionUID = 6804697839463860552L;
 
 	private final JPanel mapPanel;
 	private final Map<Long, PlayerDoohickey> things = new HashMap<>();
