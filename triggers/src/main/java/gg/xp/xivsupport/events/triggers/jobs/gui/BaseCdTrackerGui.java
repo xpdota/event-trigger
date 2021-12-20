@@ -2,33 +2,30 @@ package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.xivdata.jobs.Cooldown;
 import gg.xp.xivdata.jobs.Job;
-import gg.xp.xivdata.jobs.JobType;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
-import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
-import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.LongSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.CooldownSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
+import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public abstract class BaseCdTrackerGui implements PluginTab {
 
@@ -38,7 +35,7 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 
 	protected abstract IntSetting overlayMax();
 
-	protected abstract Map<Cooldown, BooleanSetting> cds();
+	protected abstract Map<Cooldown, CooldownSetting> cds();
 
 	// TODO: here's how I can do settings in a reasonable way:
 	// Have a gui with 5 or so checkboxes (all on/off, this, DPS, healer, tank)
@@ -58,21 +55,15 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 
 		JPanel preTimeBox = new LongSettingGui(cdAdvance(), "Time before expiry to call out (milliseconds)").getComponent();
 		settingsPanel.add(preTimeBox);
-		JCheckBox enableTts = new BooleanSettingGui(enableTts(), "Enable TTS").getComponent();
+		BooleanSetting enableTtsSetting = enableTts();
+		JCheckBox enableTts = new BooleanSettingGui(enableTtsSetting, "Enable TTS").getComponent();
 		settingsPanel.add(enableTts);
 		JPanel numSetting = new IntSettingSpinner(overlayMax(), "Max in Overlay").getComponent();
 		settingsPanel.add(numSetting);
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 
-		JPanel innerPanel = new JPanel();
-		innerPanel.setLayout(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		Map<Cooldown, BooleanSetting> cooldowns = cds();
-		c.fill = GridBagConstraints.BOTH;
-		c.anchor = GridBagConstraints.CENTER;
-		c.ipadx = 50;
-		c.gridy = 0;
+		Map<Cooldown, CooldownSetting> cooldowns = cds();
 		// TODO: idea for how to do separate TTS/visual plus icons
 		// Instead of one checkbox per ability, just have one for TTS, and one for visual, and then
 		// have a label with icon and text.
@@ -85,7 +76,7 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 			if (job == null) {
 				return cd.getJobType().ordinal();
 			}
-			return job.defaultPartySortOrder();
+			return job.defaultPartySortOrder() + 10000;
 		}));
 		JTable table = new JTable() {
 			@Override
@@ -98,76 +89,36 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 			}
 		};
 		CustomTableModel<Cooldown> model = CustomTableModel.builder(() -> sortedCds)
-				.addColumn(StandardColumns.booleanSettingColumn("TTS", cd -> cooldowns.get(cd)))
-				.addColumn(new CustomColumn<>("Job", Function.identity(),
+				.addColumn(StandardColumns.booleanSettingColumn("Overlay", cd -> cooldowns.get(cd).getOverlay(), 50, null))
+				.addColumn(StandardColumns.booleanSettingColumn("TTS", cd -> cooldowns.get(cd).getTts(), 50, enableTtsSetting))
+				.addColumn(new CustomColumn<>("Job", cd -> {
+					if (cd.getJob() != null) {
+						return cd.getJob();
+					}
+					else {
+						return cd.getJobType().getFriendlyName();
+					}
+				},
 						col -> {
 							col.setCellRenderer(new JobRenderer());
-							col.setMinWidth(60);
-							col.setMaxWidth(60);
+							col.setMinWidth(100);
+							col.setMaxWidth(100);
 						}))
+				.addColumn(new CustomColumn<>("Cooldown", Cooldown::getLabel))
 				.build();
 
 		table.setModel(model);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		model.configureColumns(table);
 
-//		jobTypeKeys.forEach((job) -> {
-//			List<Cooldown> cooldownsForJob = byJobType.get(job);
-//			c.gridwidth = 1;
-//			c.gridx = 0;
-//			c.weightx = 0;
-//			// left filler
-//			innerPanel.add(new JPanel());
-//			c.gridx ++;
-//
-//			JLabel label = new JLabel(job.getFriendlyName());
-//			innerPanel.add(label, c);
-//			cooldownsForJob.forEach(dot -> {
-//				c.gridx++;
-//
-//				BooleanSetting setting = cooldowns.get(dot);
-//				JCheckBox checkbox = new BooleanSettingGui(setting, dot.getLabel()).getComponent();
-//				innerPanel.add(checkbox, c);
-//			});
-//			c.gridx++;
-//			c.weightx = 1;
-//			c.gridwidth = GridBagConstraints.REMAINDER;
-//			// Add dummy to pad out the right side
-//			JPanel dummyPanel = new JPanel();
-//			innerPanel.add(dummyPanel, c);
-//			c.gridy++;
-//		});
-//		JLabel templateLabel = new JLabel();
-//		jobKeys.forEach((job) -> {
-//			List<Cooldown> cooldownsForJob = byJob.get(job);
-//			c.gridwidth = 1;
-//			c.gridx = 0;
-//			c.weightx = 0;
-//			// left filler
-//			innerPanel.add(new JPanel());
-//			c.gridx ++;
-//			innerPanel.add(new IconTextRenderer.getIconOnly(job))
-////			JLabel label = new JLabel(job.getFriendlyName());
-////			innerPanel.add(label, c);
-//			cooldownsForJob.forEach(dot -> {
-//				c.gridx++;
-//
-//				BooleanSetting setting = cooldowns.get(dot);
-//				JCheckBox checkbox = new BooleanSettingGui(setting, dot.getLabel()).getComponent();
-//				innerPanel.add(checkbox, c);
-//			});
-//			c.gridx++;
-//			c.weightx = 1;
-//			c.gridwidth = GridBagConstraints.REMAINDER;
-//			// Add dummy to pad out the right side
-//			JPanel dummyPanel = new JPanel();
-//			innerPanel.add(dummyPanel, c);
-//			c.gridy++;
-//		});
-//		c.weighty = 1;
-//		innerPanel.add(new JPanel(), c);
-//		innerPanel.setPreferredSize(innerPanel.getMinimumSize());
-//		JScrollPane scroll = new JScrollPane(innerPanel);
+		enableTtsSetting.addListener(() -> {
+			TableCellEditor cellEditor = table.getCellEditor();
+			if (cellEditor != null) {
+				cellEditor.stopCellEditing();
+			}
+		});
+		enableTtsSetting.addListener(table::repaint);
+
 		JScrollPane scroll = new JScrollPane(table);
 		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		outerPanel.add(scroll);

@@ -7,8 +7,6 @@ import gg.xp.xivsupport.events.triggers.jobs.CdTracker;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -28,7 +26,7 @@ public class CdTrackerOverlay extends BaseCdTrackerOverlay {
 
 	@Override
 	protected Map<CdTrackingKey, AbilityUsedEvent> getCooldowns() {
-		return cdTracker.getMyCooldowns();
+		return cdTracker.getOverlayPersonalCds();
 	}
 
 	@Override

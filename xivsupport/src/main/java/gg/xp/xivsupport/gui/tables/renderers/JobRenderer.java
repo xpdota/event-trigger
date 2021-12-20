@@ -13,7 +13,7 @@ public class JobRenderer implements TableCellRenderer, ListCellRenderer<Job> {
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		Component defaultLabel = fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+		Component defaultLabel = fallback.getTableCellRendererComponent(table, value, isSelected, false, row, column);
 		if (value instanceof Job) {
 			return IconTextRenderer.getComponent((Job) value, defaultLabel, false);
 		}

@@ -127,6 +127,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		SwingUtilities.invokeLater(() -> {
 			splitPane.setDividerLocation(0.7);
 			splitPane.setResizeWeight(1);
+			splitPane.setOneTouchExpandable(true);
 			updateAll();
 		});
 	}

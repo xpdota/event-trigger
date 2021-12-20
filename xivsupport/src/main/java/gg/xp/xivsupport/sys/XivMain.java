@@ -127,5 +127,17 @@ public final class XivMain {
 		return pico;
 	}
 
+	public static MutablePicoContainer importInit() {
+		MutablePicoContainer pico = requiredComponents();
+		if (isRealLauncher()) {
+			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent", true));
+		}
+		else {
+			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing", true));
+		}
+		pico.getComponent(AutoHandlerConfig.class).setNotLive(true);
+		pico.getComponent(EventMaster.class).start();
+		return pico;
+	}
 
 }

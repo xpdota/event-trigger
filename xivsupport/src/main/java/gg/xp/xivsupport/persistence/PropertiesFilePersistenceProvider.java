@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,23 +28,28 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 	private final Properties properties;
 	private final File file;
 	private final File backupFile;
+	private final boolean readOnly;
 
 	// TODO: is this threadsafe?
 	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName) {
+		return inUserDataFolder(baseName, false);
+	}
+	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName, boolean readOnly) {
 		String userDataDir = System.getenv("APPDATA");
 		log.info("Appdata: {}", userDataDir);
 		File file = Paths.get(userDataDir, "triggevent", baseName + ".properties").toFile();
 		log.info("Using file: {}", file);
-		return new PropertiesFilePersistenceProvider(file);
-	}
-
-	public PropertiesFilePersistenceProvider(String filePath) {
-		this(new File(filePath));
+		return new PropertiesFilePersistenceProvider(file, readOnly);
 	}
 
 	public PropertiesFilePersistenceProvider(File file) {
+		this(file, false);
+	}
+
+	public PropertiesFilePersistenceProvider(File file, boolean readOnly) {
 		this.file = file;
 		this.backupFile = Paths.get(file.getParentFile().toPath().toString(), file.getName() + ".backup").toFile();
+		this.readOnly = readOnly;
 		Properties properties = new Properties();
 		try {
 			try (FileInputStream stream = new FileInputStream(file)) {
@@ -61,6 +67,9 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 	}
 
 	private Future<?> writeChangesToDisk() {
+		if (readOnly) {
+			return CompletableFuture.completedFuture(null);
+		}
 		return exs.submit(() -> {
 			try {
 				File parentFile = file.getParentFile();

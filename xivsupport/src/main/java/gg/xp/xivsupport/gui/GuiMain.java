@@ -59,6 +59,7 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayControllerGui;
 import gg.xp.xivsupport.slf4j.LogCollector;
@@ -72,6 +73,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.io.File;
 import java.lang.management.ManagementFactory;
@@ -382,12 +384,12 @@ public class GuiMain {
 		}
 	}
 
-	private class CombatantsPanel extends TitleBorderFullsizePanel {
+	private class CombatantsPanelDummy extends TitleBorderFullsizePanel {
 
 //		private final CustomTableModel<XivCombatant> combatantsTableModel;
 //		private final XivState state;
 
-		public CombatantsPanel() {
+		public CombatantsPanelDummy() {
 			super("Combatants");
 			setLayout(new BorderLayout());
 			add(new JLabel("This has been moved to its own tab, as it slows down the UI"), BorderLayout.PAGE_START);
@@ -445,67 +447,67 @@ public class GuiMain {
 		}
 	}
 
-//	private class CombatantsPanel extends TitleBorderFullsizePanel {
-//
-//		private final CustomTableModel<XivCombatant> combatantsTableModel;
-//		private final XivState state;
-//
-//		public CombatantsPanel() {
-//			super("Combatants");
-//			setLayout(new BorderLayout());
-//			state = GuiMain.this.state.get(XivState.class);
-//			/*
-//			TODO: performance issue
-//			General problem is that the HP bars are quite heavy on rendering.
-//			Plan is to look at their classes and figure out if there's any JPanel methods that could be overridden with
-//			no-ops, like the default cell renderer does.
-//
-//			Or, at some point, bite the bullet and do custom painting.
-//			 */
-//			combatantsTableModel = CustomTableModel.builder(
-////							Collections::<XivCombatant>emptyList)
-//							() -> state.getCombatantsListCopy()
-//									.stream()
-//									.filter(XivCombatant::isCombative)
-//									.sorted(Comparator.comparing(XivEntity::getId))
-//									.collect(Collectors.toList()))
-//					.addColumn(StandardColumns.nameJobColumn)
-//					.addColumn(columns.statusEffectsColumn())
-//					.addColumn(StandardColumns.parentNameJobColumn)
-//					.addColumn(StandardColumns.combatantTypeColumn)
-//					.addColumn(columns.hpColumnWithUnresolved())
-//					.addColumn(StandardColumns.mpColumn)
-//					.addColumn(StandardColumns.posColumn)
-//					.setItemEquivalence((a, b) -> a.getId() == b.getId())
-//					.build();
-//			JTable table = new JTable(combatantsTableModel);
-////			JTable table = new JTable(combatantsTableModel) {
-////				@Override
-////				public TableCellRenderer getCellRenderer(int row, int column) {
-////					TableCellRenderer renderer;
-////					{
-////						long timeBefore = System.nanoTime();
-////						renderer = super.getCellRenderer(row, column);
-////						long timeAfter = System.nanoTime();
-////						long delta = timeAfter - timeBefore;
-////						 TODO find good value for this - 100 might be a little low
-////						if (delta > 5000) {
-////							log.warn("Slow Renderer performance: took {}ns to refresh col {} row {}", delta, column, row);
-////						}
-////					}
-////					return renderer;
-////				}
-////			};
-//			combatantsTableModel.configureColumns(table);
-//			JScrollPane scrollPane = new JScrollPane(table);
-//			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-//			add(scrollPane);
-//		}
-//
-//		public void refresh() {
-//			combatantsTableModel.signalNewData();
-//		}
-//	}
+	private class CombatantsPanel extends TitleBorderFullsizePanel {
+
+		private final CustomTableModel<XivCombatant> combatantsTableModel;
+		private final XivState state;
+
+		public CombatantsPanel() {
+			super("Combatants");
+			setLayout(new BorderLayout());
+			state = GuiMain.this.state.get(XivState.class);
+			/*
+			TODO: performance issue
+			General problem is that the HP bars are quite heavy on rendering.
+			Plan is to look at their classes and figure out if there's any JPanel methods that could be overridden with
+			no-ops, like the default cell renderer does.
+
+			Or, at some point, bite the bullet and do custom painting.
+			 */
+			combatantsTableModel = CustomTableModel.builder(
+//							Collections::<XivCombatant>emptyList)
+							() -> state.getCombatantsListCopy()
+									.stream()
+									.filter(XivCombatant::isCombative)
+									.sorted(Comparator.comparing(XivEntity::getId))
+									.collect(Collectors.toList()))
+					.addColumn(StandardColumns.nameJobColumn)
+					.addColumn(columns.statusEffectsColumn())
+					.addColumn(StandardColumns.parentNameJobColumn)
+					.addColumn(StandardColumns.combatantTypeColumn)
+					.addColumn(columns.hpColumnWithUnresolved())
+					.addColumn(StandardColumns.mpColumn)
+					.addColumn(StandardColumns.posColumn)
+					.setItemEquivalence((a, b) -> a.getId() == b.getId())
+					.build();
+			JTable table = new JTable(combatantsTableModel);
+//			JTable table = new JTable(combatantsTableModel) {
+//				@Override
+//				public TableCellRenderer getCellRenderer(int row, int column) {
+//					TableCellRenderer renderer;
+//					{
+//						long timeBefore = System.nanoTime();
+//						renderer = super.getCellRenderer(row, column);
+//						long timeAfter = System.nanoTime();
+//						long delta = timeAfter - timeBefore;
+//						 TODO find good value for this - 100 might be a little low
+//						if (delta > 5000) {
+//							log.warn("Slow Renderer performance: took {}ns to refresh col {} row {}", delta, column, row);
+//						}
+//					}
+//					return renderer;
+//				}
+//			};
+			combatantsTableModel.configureColumns(table);
+			JScrollPane scrollPane = new JScrollPane(table);
+			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+			add(scrollPane);
+		}
+
+		public void refresh() {
+			combatantsTableModel.signalNewData();
+		}
+	}
 
 	private class AdvancedPanel extends JPanel implements Refreshable {
 		private final KeyValueDisplaySet displayed;
@@ -1072,12 +1074,13 @@ public class GuiMain {
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
 		c.gridy = 0;
+		BooleanSetting visibleSetting = overlayMain.getVisibleSetting();
 		{
 			JPanel allOverlayControls = new JPanel();
 			allOverlayControls.setLayout(new WrapLayout());
 
 
-			allOverlayControls.add(new BooleanSettingGui(overlayMain.getVisibleSetting(), "Show Overlays").getComponent());
+			allOverlayControls.add(new BooleanSettingGui(visibleSetting, "Show Overlays").getComponent());
 
 			JCheckBox edit = new JCheckBox("Edit");
 			edit.addActionListener(e -> overlayMain.setEditing(edit.isSelected()));
@@ -1102,12 +1105,19 @@ public class GuiMain {
 				}
 			};
 			CustomTableModel<XivOverlay> tableModel = CustomTableModel.builder(overlayMain::getOverlays)
-					.addColumn(StandardColumns.booleanSettingColumn("E", XivOverlay::getEnabled))
+					.addColumn(StandardColumns.booleanSettingColumn("On", XivOverlay::getEnabled, 50, visibleSetting))
 					.addColumn(new CustomColumn<>("Name", XivOverlay::getTitle, col -> col.setCellEditor(new NoCellEditor())))
 					.addColumn(StandardColumns.doubleSettingSliderColumn("Opacity", XivOverlay::opacity, 200, 0.05))
 					.build();
 			table.setModel(tableModel);
 			table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			visibleSetting.addListener(() -> {
+				TableCellEditor cellEditor = table.getCellEditor();
+				if (cellEditor != null) {
+					cellEditor.stopCellEditing();
+				}
+			});
+			visibleSetting.addListener(panel::repaint);
 			tableModel.configureColumns(table);
 			JScrollPane scrollPane = new JScrollPane(table);
 			scrollPane.setPreferredSize(scrollPane.getMaximumSize());

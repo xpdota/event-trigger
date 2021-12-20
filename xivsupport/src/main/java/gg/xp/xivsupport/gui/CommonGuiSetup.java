@@ -79,11 +79,10 @@ public final class CommonGuiSetup {
 		CompletableFuture<Monitor> monFuture = new CompletableFuture<>();
 		SwingUtilities.invokeLater(() -> {
 			Monitor monitor = new Monitor(Thread.currentThread());
-			monitor.start();
+//			monitor.start();
 			monFuture.complete(monitor);
 		});
 		final Monitor monitor;
-		// TODO revisit this - performance seems to just be D3D paint issues
 		Monitor monitorTmp;
 		try {
 			monitorTmp = monFuture.get(5, TimeUnit.SECONDS);

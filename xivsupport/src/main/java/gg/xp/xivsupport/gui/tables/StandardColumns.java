@@ -22,6 +22,7 @@ import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.DoubleSettingSlider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -200,10 +201,10 @@ public final class StandardColumns {
 		return showPredictedHp;
 	}
 
-	public static <X> CustomColumn<X> booleanSettingColumn(String name, Function<X, BooleanSetting> settingGetter) {
+	public static <X> CustomColumn<X> booleanSettingColumn(String name, Function<X, BooleanSetting> settingGetter, int width, @Nullable BooleanSetting enabledBy) {
 		return new CustomColumn<>(name, settingGetter::apply, col -> {
-			col.setMaxWidth(20);
-			col.setMinWidth(20);
+			col.setMaxWidth(width);
+			col.setMinWidth(width);
 			col.setCellRenderer(new TableCellRenderer() {
 				private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
 
@@ -211,6 +212,9 @@ public final class StandardColumns {
 				public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 					if (value instanceof BooleanSetting) {
 						JCheckBox cb = new JCheckBox();
+						if (enabledBy != null) {
+							cb.setEnabled(enabledBy.get());
+						}
 //						cb.setOpaque(false);
 						cb.setSelected(((BooleanSetting) value).get());
 						cb.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column).getBackground());
@@ -221,7 +225,7 @@ public final class StandardColumns {
 					}
 				}
 			});
-			col.setCellEditor(new BooleanSettingCellEditor());
+			col.setCellEditor(new BooleanSettingCellEditor(enabledBy));
 		});
 	}
 
@@ -281,6 +285,11 @@ public final class StandardColumns {
 
 		private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
 		private static final long serialVersionUID = -6990208664804878646L;
+		private final BooleanSetting enabledBy;
+
+		public BooleanSettingCellEditor(BooleanSetting enabledBy) {
+			this.enabledBy = enabledBy;
+		}
 
 		@Override
 		public Object getCellEditorValue() {
@@ -289,9 +298,12 @@ public final class StandardColumns {
 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-			Component comp = defaultRenderer.getTableCellRendererComponent(table, value, isSelected, false, row, column);
+//			Component comp = defaultRenderer.getTableCellRendererComponent(table, value, isSelected, false, row, column);
 			JCheckBox checkbox = new BooleanSettingGui((BooleanSetting) value, null, false).getComponent();
-			checkbox.setBackground(comp.getBackground());
+			checkbox.setEnabled(enabledBy.get());
+			checkbox.setOpaque(true);
+//			checkbox.setBackground(comp.getBackground());
+			checkbox.setBackground(table.getSelectionBackground());
 			return checkbox;
 		}
 	}

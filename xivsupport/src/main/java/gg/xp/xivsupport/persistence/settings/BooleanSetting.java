@@ -15,6 +15,10 @@ public class BooleanSetting extends ObservableSetting {
 		this.dflt = dflt;
 	}
 
+	public boolean isSet() {
+		return persistence.get(settingKey, Boolean.class, null) != null;
+	}
+
 	public boolean get() {
 		if (cached == null) {
 			return cached = persistence.get(settingKey, boolean.class, dflt);

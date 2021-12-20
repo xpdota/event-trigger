@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui;
 
 import gg.xp.xivsupport.eventstorage.EventReader;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public final class GuiImportLaunch {
 
 				Path sessionsDir = Paths.get(userDataDir, "triggevent", "sessions");
 				JFileChooser sessionChooser = new JFileChooser(sessionsDir.toString());
+				sessionChooser.setPreferredSize(new Dimension(800, 600));
 				JButton importSessionButton = new JButton("Import Session");
 				importSessionButton.addActionListener(e -> {
 					int result = sessionChooser.showOpenDialog(panel);
@@ -95,9 +97,15 @@ public final class GuiImportLaunch {
 				}
 				{
 					c.gridy++;
-					c.weighty = 1;
+					c.weighty = 0;
 					c.gridx = 0;
 					c.gridwidth = GridBagConstraints.REMAINDER;
+					// Filler
+					panel.add(new ReadOnlyText("In replay mode, the program will use your existing settings, but any changes you make will not be saved."), c);
+				}
+				{
+					c.gridy++;
+					c.weighty = 1;
 					// Filler
 					panel.add(new JPanel(), c);
 				}

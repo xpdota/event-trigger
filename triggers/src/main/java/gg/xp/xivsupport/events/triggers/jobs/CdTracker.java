@@ -14,6 +14,7 @@ import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.CooldownSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -26,15 +27,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class CdTracker {
 
 	private static final Logger log = LoggerFactory.getLogger(CdTracker.class);
 	private static final String cdKeyStub = "cd-tracker.enable-cd.";
-	// TODO: have these be tristate rather than on/off:
-	// Never call, call only my own, call in party
-	// Or just two checkboxes
 
 	private final BooleanSetting enableTtsPersonal;
 	private final BooleanSetting enableTtsParty;
@@ -42,15 +41,15 @@ public class CdTracker {
 	private final LongSetting cdTriggerAdvanceParty;
 	private final IntSetting overlayMaxPersonal;
 	private final IntSetting overlayMaxParty;
-	private final Map<Cooldown, BooleanSetting> personalCds = new LinkedHashMap<>();
-	private final Map<Cooldown, BooleanSetting> partyCds = new LinkedHashMap<>();
+	private final Map<Cooldown, CooldownSetting> personalCds = new LinkedHashMap<>();
+	private final Map<Cooldown, CooldownSetting> partyCds = new LinkedHashMap<>();
 	private final XivState state;
 
 	public CdTracker(PersistenceProvider persistence, XivState state) {
 		this.state = state;
 		for (Cooldown cd : Cooldown.values()) {
-			personalCds.put(cd, new BooleanSetting(persistence, getKey(cd), false));
-			partyCds.put(cd, new BooleanSetting(persistence, getKey(cd) + ".party", false));
+			personalCds.put(cd, new CooldownSetting(persistence, getKey(cd), true, false));
+			partyCds.put(cd, new CooldownSetting(persistence, getKey(cd) + ".party", false, false));
 		}
 		enableTtsPersonal = new BooleanSetting(persistence, "cd-tracker.enable-tts", true);
 		enableTtsParty = new BooleanSetting(persistence, "cd-tracker.enable-tts.party", false);
@@ -99,14 +98,14 @@ public class CdTracker {
 		}
 	}
 
-	private boolean isEnabledForPersonal(Cooldown cd) {
-		BooleanSetting personalCdSetting = personalCds.get(cd);
-		return personalCdSetting != null && personalCdSetting.get();
+	private boolean isEnabledForPersonalTts(Cooldown cd) {
+		CooldownSetting personalCdSetting = personalCds.get(cd);
+		return personalCdSetting != null && personalCdSetting.getTts().get();
 	}
 
-	private boolean isEnabledForParty(Cooldown cd) {
-		BooleanSetting partyCdSetting = partyCds.get(cd);
-		return partyCdSetting != null && partyCdSetting.get();
+	private boolean isEnabledForPartyTts(Cooldown cd) {
+		CooldownSetting partyCdSetting = partyCds.get(cd);
+		return partyCdSetting != null && partyCdSetting.getTts().get();
 	}
 
 	@HandleEvents
@@ -115,13 +114,13 @@ public class CdTracker {
 		if (event.getTargetIndex() == 0 && (cd = getCdInfo(event.getAbility().getId())) != null) {
 			// TODO: there's some duplicate whitelist logic
 			boolean isSelf = event.getSource().isThePlayer();
-			if (enableTtsPersonal.get() && isEnabledForPersonal(cd) && isSelf) {
+			if (enableTtsPersonal.get() && isEnabledForPersonalTts(cd) && isSelf) {
 				log.info("Personal CD used: {}", event);
 				//noinspection NumericCastThatLosesPrecision
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvancePersonal.get()));
 			}
 			// TODO: party check
-			else if (enableTtsParty.get() && isEnabledForParty(cd) && state.getPartyList().contains(event.getSource())) {
+			else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
 				log.info("Party CD used: {}", event);
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvanceParty.get()));
 			}
@@ -167,22 +166,38 @@ public class CdTracker {
 		}
 	}
 
-	public Map<CdTrackingKey, AbilityUsedEvent> getMyCooldowns() {
-		synchronized (cdLock) {
-			return cds.entrySet()
-					.stream()
-					.filter(entry -> isEnabledForPersonal(entry.getKey().getCooldown()))
-					.filter(entry -> entry.getValue().getSource().walkParentChain().isThePlayer())
-					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-		}
+	public Map<CdTrackingKey, AbilityUsedEvent> getOverlayPersonalCds() {
+		return getCds(entry -> {
+			CooldownSetting cdSetting = personalCds.get(entry.getKey().getCooldown());
+			if (cdSetting == null) {
+				return false;
+			}
+			if (!cdSetting.getOverlay().get()) {
+				return false;
+			}
+			return entry.getValue().getSource().walkParentChain().isThePlayer();
+		});
 	}
 
-	public Map<CdTrackingKey, AbilityUsedEvent> getPartyCooldowns() {
+	public Map<CdTrackingKey, AbilityUsedEvent> getOverlayPartyCds() {
+		return getCds(entry -> {
+			CooldownSetting cdSetting = partyCds.get(entry.getKey().getCooldown());
+			if (cdSetting == null) {
+				return false;
+			}
+			if (!cdSetting.getOverlay().get()) {
+				return false;
+			}
+			return state.getPartyList().contains(entry.getValue().getSource().walkParentChain());
+		});
+	}
+
+	// TODO: just combine these and use predicates
+	public Map<CdTrackingKey, AbilityUsedEvent> getCds(Predicate<Map.Entry<CdTrackingKey, AbilityUsedEvent>> cdFilter) {
 		synchronized (cdLock) {
 			return cds.entrySet()
 					.stream()
-					.filter(entry -> isEnabledForParty(entry.getKey().getCooldown()))
-					.filter(entry -> state.getPartyList().contains(entry.getValue().getSource().walkParentChain()))
+					.filter(cdFilter)
 					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		}
 	}
@@ -204,11 +219,11 @@ public class CdTracker {
 	}
 
 
-	public Map<Cooldown, BooleanSetting> getPersonalCdSettings() {
+	public Map<Cooldown, CooldownSetting> getPersonalCdSettings() {
 		return Collections.unmodifiableMap(personalCds);
 	}
 
-	public Map<Cooldown, BooleanSetting> getPartyCdSettings() {
+	public Map<Cooldown, CooldownSetting> getPartyCdSettings() {
 		return Collections.unmodifiableMap(partyCds);
 	}
 }

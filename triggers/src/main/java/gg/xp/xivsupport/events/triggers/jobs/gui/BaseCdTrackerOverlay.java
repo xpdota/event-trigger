@@ -11,6 +11,7 @@ import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.CooldownSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -47,6 +47,10 @@ public class XivOverlay {
 	private final BooleanSetting enabled;
 	private final String title;
 
+	private volatile int x;
+	private volatile int y;
+	private volatile boolean posSettingDirty;
+
 	private boolean visible;
 	private boolean editMode;
 
@@ -61,7 +65,6 @@ public class XivOverlay {
 		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), true);
 		enabled.addListener(this::recalc);
-		ThreadGroup group = new ThreadGroup("Foo");
 		frame = ScalableJFrame.construct(title, scaleFactor.get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
@@ -84,6 +87,11 @@ public class XivOverlay {
 			public void mousePressed(MouseEvent ev) {
 				dragX = ev.getXOnScreen();
 				dragY = ev.getYOnScreen();
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				flushPosition();
 			}
 		});
 		frame.addMouseWheelListener(ev -> {
@@ -142,9 +150,19 @@ public class XivOverlay {
 	}
 
 	public void setPosition(int x, int y) {
+		this.x = x;
+		this.y = y;
 		frame.setLocation(x, y);
+		posSettingDirty = true;
+	}
+
+	private void flushPosition() {
+		if (!posSettingDirty) {
+			return;
+		}
 		xSetting.set(x);
 		ySetting.set(y);
+		posSettingDirty = false;
 	}
 
 	public void setVisible(boolean visible) {

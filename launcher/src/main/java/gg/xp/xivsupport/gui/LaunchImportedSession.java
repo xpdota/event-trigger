@@ -23,7 +23,7 @@ public final class LaunchImportedSession {
 
 	public static void fromEvents(List<? extends Event> events) {
 		CommonGuiSetup.setup();
-		MutablePicoContainer pico = XivMain.testingMasterInit();
+		MutablePicoContainer pico = XivMain.importInit();
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);

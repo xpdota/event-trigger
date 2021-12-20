@@ -91,13 +91,13 @@ public final class IconTextRenderer {
 		private static final long serialVersionUID = -6148301310440811739L;
 		private final Image image;
 		private final int size;
-		private final Map<Integer, Image> cache;
+		private final Map<Integer, ImageIcon> cache;
 
 		ScaledImageComponent(Image image, int size) {
 			this(image, size, new HashMap<>());
 		}
 
-		ScaledImageComponent(Image image, int size, Map<Integer, Image> cache) {
+		ScaledImageComponent(Image image, int size, Map<Integer, ImageIcon> cache) {
 			this.cache = cache;
 			this.image = image;
 			this.size = size;
@@ -126,8 +126,10 @@ public final class IconTextRenderer {
 			((Graphics2D) g).setTransform(t);
 			int scaledSize = (int) (size * yScale);
 			// -1 = keep original aspect ratio
-			Image scaledImage = cache.computeIfAbsent(scaledSize, newSize -> image.getScaledInstance(-1, newSize, Image.SCALE_SMOOTH));
-			g.drawImage(scaledImage, 0, 0, null);
+			ImageIcon scaledImage = cache.computeIfAbsent(scaledSize, newSize -> new ImageIcon(image.getScaledInstance(-1, newSize, Image.SCALE_SMOOTH)));
+			scaledImage.paintIcon(this, g, 0, 0);
+//			(scaledInstance).paintIcon(this, g, 0, 0);
+//			g.drawImage(scaledImage, 0, 0, null);
 		}
 	}
 }

@@ -27,7 +27,7 @@ public final class LaunchImportedActLog {
 
 	public static void fromEvents(List<? extends Event> events) {
 		CommonGuiSetup.setup();
-		MutablePicoContainer pico = XivMain.testingMasterInit();
+		MutablePicoContainer pico = XivMain.importInit();
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		pers.save("gui.display-predicted-hp", "true");

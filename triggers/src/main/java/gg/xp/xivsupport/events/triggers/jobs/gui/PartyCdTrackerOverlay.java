@@ -12,6 +12,7 @@ import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.CooldownSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ public class PartyCdTrackerOverlay extends BaseCdTrackerOverlay {
 
 	@Override
 	protected Map<CdTrackingKey, AbilityUsedEvent> getCooldowns() {
-		return cdTracker.getPartyCooldowns();
+		return cdTracker.getOverlayPartyCds();
 	}
 
 	@Override
