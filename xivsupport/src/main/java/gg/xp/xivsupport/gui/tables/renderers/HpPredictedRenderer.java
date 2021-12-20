@@ -5,6 +5,10 @@ import gg.xp.xivsupport.models.CurrentMaxPredicted;
 import java.awt.*;
 
 public class HpPredictedRenderer extends ResourceBarRendererWithMovement {
+
+	private static final Color predictedDead = new Color(108, 7, 7);
+	private static final Color actualDead = new Color(49, 7, 7);
+
 	@Override
 	protected Color getBarColor(double percent, double percentChange, CurrentMaxPredicted item) {
 		Color raw = Color.getHSBColor((float) (0.33f * percent), 0.36f, 0.52f);
@@ -29,10 +33,10 @@ public class HpPredictedRenderer extends ResourceBarRendererWithMovement {
 	@Override
 	protected Color getBorderColor(double percent, double percentChange, CurrentMaxPredicted item, Color originalBg) {
 		if (percent == 0.0) {
-			return Color.WHITE;
+			return actualDead;
 		}
 		else if (item.getPredicted() == 0.0) {
-			return Color.RED;
+			return predictedDead;
 		}
 		else {
 			return originalBg;
