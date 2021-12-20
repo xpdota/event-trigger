@@ -43,6 +43,8 @@ Shows remaining cooldown and active time.
 You can import a previous session, or an ACT log. You can even force-on overlays to see what your overlays *would*
 have looked like at that point.
 
+To open a replay, simple run triggevent-import.exe instead of triggevent.exe, and then choose a file.
+
 ![Replay](https://user-images.githubusercontent.com/14287379/146716550-189ba0ef-5f04-480a-9477-903f82882584.png)
 
 ## Future Features
