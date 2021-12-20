@@ -109,40 +109,20 @@ public class CdTracker {
 		return partyCdSetting != null && partyCdSetting.get();
 	}
 
-	private boolean isWhitelisted(AbilityUsedEvent event) {
-		long id = event.getAbility().getId();
-		// Find applicable CD setting
-		Cooldown cooldown = Arrays.stream(Cooldown.values())
-				.filter(b -> b.abilityIdMatches(id))
-				// Then, see if it's enabled
-				.findFirst()
-				.orElse(null);
-		if (cooldown == null) {
-			return false;
-		}
-		if (event.getSource().isThePlayer()) {
-			if (isEnabledForPersonal(cooldown)) {
-				return true;
-			}
-		}
-		if (state.getPartyList().contains(event.getSource())) {
-			return isEnabledForParty(cooldown);
-		}
-		return false;
-	}
-
 	@HandleEvents
 	public void cdUsed(EventContext context, AbilityUsedEvent event) {
 		Cooldown cd;
-		if ((cd = getCdInfo(event.getAbility().getId())) != null) {
+		if (event.getTargetIndex() == 0 && (cd = getCdInfo(event.getAbility().getId())) != null) {
 			// TODO: there's some duplicate whitelist logic
 			boolean isSelf = event.getSource().isThePlayer();
-			log.info("CD used: {}", event);
 			if (enableTtsPersonal.get() && isEnabledForPersonal(cd) && isSelf) {
+				log.info("Personal CD used: {}", event);
 				//noinspection NumericCastThatLosesPrecision
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvancePersonal.get()));
 			}
-			else if (enableTtsParty.get() && isEnabledForParty(cd)) {
+			// TODO: party check
+			else if (enableTtsParty.get() && isEnabledForParty(cd) && state.getPartyList().contains(event.getSource())) {
+				log.info("Party CD used: {}", event);
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvanceParty.get()));
 			}
 			synchronized (cdLock) {

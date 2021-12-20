@@ -39,6 +39,7 @@ public class RawEventStorage {
 			.build());
 
 	private final IntSetting maxEventsStored;
+	private final String dirName;
 	private final String sessionName;
 	// TODO: I have confirmed that this does result in a (very slow) memory leak, because the OOS just keeps handles on
 	// everything because the output stream needs to keep track of references. But since realistically we'd just be
@@ -52,6 +53,7 @@ public class RawEventStorage {
 	public RawEventStorage(PersistenceProvider persist) {
 		maxEventsStored = new IntSetting(persist, "raw-storage.events-to-retain", 25000);
 		saveToDisk = new BooleanSetting(persist, "raw-storage.save-to-disk", false);
+		dirName = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		sessionName = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			if (eventSaveStream != null) {
@@ -106,20 +108,20 @@ public class RawEventStorage {
 
 	private void saveEventToDisk(Event event) {
 		if (event instanceof Compressible) {
-			((Compressible) event).compress();
+//			((Compressible) event).compress();
 		}
 		if (event.shouldSave() && saveToDisk.get()) {
 			try {
 				if (eventSaveStream == null) {
 					String userDataDir = System.getenv("APPDATA");
-					Path sessionsDir = Paths.get(userDataDir, "triggevent", "sessions", sessionName);
+					Path sessionsDir = Paths.get(userDataDir, "triggevent", "sessions", dirName);
 					File sessionsDirFile = sessionsDir.toFile();
 					sessionsDirFile.mkdirs();
 					if (!sessionsDirFile.exists() && sessionsDirFile.isDirectory()) {
 						log.error("Error saving to disk! Could not make dirs: {}", sessionsDirFile.getAbsolutePath());
 						return;
 					}
-					File file = Paths.get(sessionsDir.toString(), "session.oos.gz").toFile();
+					File file = Paths.get(sessionsDir.toString(), sessionName + ".session.oos.gz").toFile();
 					FileOutputStream fileOutputStream = new FileOutputStream(file, true);
 					GZIPOutputStream compressedOutputStream = new GZIPOutputStream(fileOutputStream);
 					eventSaveStream = new ObjectOutputStream(compressedOutputStream);

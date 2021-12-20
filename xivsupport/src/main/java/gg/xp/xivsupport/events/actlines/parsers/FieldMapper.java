@@ -61,6 +61,14 @@ public class FieldMapper<K extends Enum<K>> {
 		return Long.parseLong(raw.get(key), 10);
 	}
 
+	public @Nullable Long getOptionalHex(K key) {
+		String rawStr = raw.get(key);
+		if (rawStr.isEmpty()) {
+			return null;
+		}
+		return Long.parseLong(rawStr, 16);
+	}
+
 	public @Nullable Long getOptionalLong(K key) {
 		String rawStr = raw.get(key);
 		if (rawStr.isEmpty()) {
@@ -101,24 +109,38 @@ public class FieldMapper<K extends Enum<K>> {
 		return new XivStatusEffect(id, name);
 	}
 
+	private boolean trustedHp;
+
+	/**
+	 * Indicates that HP from this line is 'trusted' as it comes from network lines rather than memory (which may
+	 * not have been updated yet). If not trusted, this line will ONLY be used if we don't already have HP info.
+	 *
+	 * @param trustedHp Whether to trust HP
+	 */
+	public void setTrustedHp(boolean trustedHp) {
+		this.trustedHp = trustedHp;
+	}
+
 	public XivCombatant getEntity(K idKey, K nameKey, K currentHpKey, K maxHpKey, K currentMpKey, K maxMpKey, K posXKey, K posYKey, K posZKey, K headingKey) {
 		XivCombatant cbt = getEntity(idKey, nameKey);
-		if (currentHpKey != null && maxHpKey != null) {
-			Long curHp = getOptionalLong(currentHpKey);
-			if (curHp != null) {
-				// Plan A - both the current and max fields are present
-				Long maxHp = getOptionalLong(maxHpKey);
-				if (maxHp != null) {
-					// TODO: collect these all then do them once at the end
-					state.provideCombatantHP(cbt, new HitPoints(curHp, maxHp));
-					recalcNeeded = true;
-				}
-				// Plan B - we only have current available, so use stored max and assume it's the same (since max HP changes
-				// are not that common).
-				else {
-					if (cbt.getHp() != null) {
-						state.provideCombatantHP(cbt, new HitPoints(curHp, cbt.getHp().getMax()));
+		if (cbt.getHp() == null || trustedHp) {
+			if (currentHpKey != null && maxHpKey != null) {
+				Long curHp = getOptionalLong(currentHpKey);
+				if (curHp != null) {
+					// Plan A - both the current and max fields are present
+					Long maxHp = getOptionalLong(maxHpKey);
+					if (maxHp != null) {
+						// TODO: collect these all then do them once at the end
+						state.provideCombatantHP(cbt, new HitPoints(curHp, maxHp));
 						recalcNeeded = true;
+					}
+					// Plan B - we only have current available, so use stored max and assume it's the same (since max HP changes
+					// are not that common).
+					else {
+						if (cbt.getHp() != null) {
+							state.provideCombatantHP(cbt, new HitPoints(curHp, cbt.getHp().getMax()));
+							recalcNeeded = true;
+						}
 					}
 				}
 			}
@@ -156,7 +178,7 @@ public class FieldMapper<K extends Enum<K>> {
 				// TODO: seems we need a "graveyard" of sorts since removed combatants can still have lingering
 				// references to them.
 				case GET_AND_WARN:
-					log.warn("Did not find combatant info for id {} name '{}', guessing", Long.toString(id, 16), name);
+					log.trace("Did not find combatant info for id {} name '{}', guessing", Long.toString(id, 16), name);
 				case GET:
 					combatantsToUpdate.add(id);
 			}

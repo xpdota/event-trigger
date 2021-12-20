@@ -269,9 +269,11 @@ public class XivState implements SubState {
 			}
 		});
 		if (!partyMembersNotInCombatants.isEmpty()) {
-			log.debug("Party member(s) not in combatants: {}", partyMembersNotInCombatants.stream()
-					.map(raw -> raw.getName() != null && !raw.getName().isEmpty() ? raw.getName() : ("0x" + Long.toString(raw.getId(), 16)))
-					.collect(Collectors.joining(", ")));
+			if (log.isTraceEnabled()) {
+				log.trace("Party member(s) not in combatants: {}", partyMembersNotInCombatants.stream()
+						.map(raw -> raw.getName() != null && !raw.getName().isEmpty() ? raw.getName() : ("0x" + Long.toString(raw.getId(), 16)))
+						.collect(Collectors.joining(", ")));
+			}
 		}
 		partyListProcessed.sort(Comparator.comparing(p -> {
 			if (player != null && player.getId() == p.getId()) {
@@ -325,7 +327,7 @@ public class XivState implements SubState {
 		});
 		log.trace("Received info on {} combatants", combatants.size());
 		this.combatantsRaw = combatantsRaw;
-		hpOverrides.clear();
+//		hpOverrides.clear();
 		posOverrides.clear();
 		recalcState();
 	}
@@ -335,7 +337,7 @@ public class XivState implements SubState {
 		combatantsRaw.putAll(this.combatantsRaw);
 		combatants.forEach(combatant -> {
 			long id = combatant.getId();
-			hpOverrides.remove(id);
+//			hpOverrides.remove(id);
 			// Fake/environment actors
 			// TODO: should we still be doing this?
 			if (id == 0xE0000000L) {

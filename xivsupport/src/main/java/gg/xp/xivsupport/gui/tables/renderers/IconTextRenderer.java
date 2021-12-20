@@ -113,6 +113,9 @@ public final class IconTextRenderer {
 			this.cache = cache;
 			this.image = image;
 			this.size = size;
+//			int width = image.getWidth(null);
+//			int height = image.getHeight(null);
+//			Dimension dims = new Dimension((int) Math.ceil((width / (double) height) * size), size);
 			Dimension dims = new Dimension(size, size);
 			setMinimumSize(dims);
 			setMaximumSize(dims);

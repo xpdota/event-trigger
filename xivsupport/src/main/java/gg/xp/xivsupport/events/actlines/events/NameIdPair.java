@@ -18,7 +18,11 @@ public interface NameIdPair {
 			return wantedId.equalsIgnoreCase(actualId);
 		}
 		// Treat as partial match
-		return getName().toUpperCase(Locale.ROOT).contains(filter.toUpperCase());
+		String name = getName();
+		if (name == null) {
+			return false;
+		}
+		return name.toUpperCase(Locale.ROOT).contains(filter.toUpperCase());
 
 	}
 }

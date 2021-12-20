@@ -346,7 +346,7 @@ public class GuiMain {
 		}
 
 		public void refresh() {
-			refreshables.forEach(Refreshable::refresh);
+			refreshables.forEach(r -> SwingUtilities.invokeLater(r::refresh));
 		}
 	}
 
@@ -384,13 +384,14 @@ public class GuiMain {
 
 	private class CombatantsPanel extends TitleBorderFullsizePanel {
 
-		private final CustomTableModel<XivCombatant> combatantsTableModel;
-		private final XivState state;
+//		private final CustomTableModel<XivCombatant> combatantsTableModel;
+//		private final XivState state;
 
 		public CombatantsPanel() {
 			super("Combatants");
 			setLayout(new BorderLayout());
-			state = GuiMain.this.state.get(XivState.class);
+			add(new JLabel("This has been moved to its own tab, as it slows down the UI"), BorderLayout.PAGE_START);
+//			state = GuiMain.this.state.get(XivState.class);
 			/*
 			TODO: performance issue
 			General problem is that the HP bars are quite heavy on rendering.
@@ -399,23 +400,23 @@ public class GuiMain {
 
 			Or, at some point, bite the bullet and do custom painting.
 			 */
-			combatantsTableModel = CustomTableModel.builder(
-//							Collections::<XivCombatant>emptyList)
-							() -> state.getCombatantsListCopy()
-									.stream()
-									.filter(XivCombatant::isCombative)
-									.sorted(Comparator.comparing(XivEntity::getId))
-									.collect(Collectors.toList()))
-					.addColumn(StandardColumns.nameJobColumn)
-					.addColumn(columns.statusEffectsColumn())
-					.addColumn(StandardColumns.parentNameJobColumn)
-					.addColumn(StandardColumns.combatantTypeColumn)
-					.addColumn(columns.hpColumnWithUnresolved())
-					.addColumn(StandardColumns.mpColumn)
-					.addColumn(StandardColumns.posColumn)
-					.setItemEquivalence((a, b) -> a.getId() == b.getId())
-					.build();
-			JTable table = new JTable(combatantsTableModel);
+//			combatantsTableModel = CustomTableModel.builder(
+////							Collections::<XivCombatant>emptyList)
+//							() -> state.getCombatantsListCopy()
+//									.stream()
+//									.filter(XivCombatant::isCombative)
+//									.sorted(Comparator.comparing(XivEntity::getId))
+//									.collect(Collectors.toList()))
+//					.addColumn(StandardColumns.nameJobColumn)
+//					.addColumn(columns.statusEffectsColumn())
+//					.addColumn(StandardColumns.parentNameJobColumn)
+//					.addColumn(StandardColumns.combatantTypeColumn)
+//					.addColumn(columns.hpColumnWithUnresolved())
+//					.addColumn(StandardColumns.mpColumn)
+//					.addColumn(StandardColumns.posColumn)
+//					.setItemEquivalence((a, b) -> a.getId() == b.getId())
+//					.build();
+//			JTable table = new JTable(combatantsTableModel);
 //			JTable table = new JTable(combatantsTableModel) {
 //				@Override
 //				public TableCellRenderer getCellRenderer(int row, int column) {
@@ -433,16 +434,78 @@ public class GuiMain {
 //					return renderer;
 //				}
 //			};
-			combatantsTableModel.configureColumns(table);
-			JScrollPane scrollPane = new JScrollPane(table);
-			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-			add(scrollPane);
+//			combatantsTableModel.configureColumns(table);
+//			JScrollPane scrollPane = new JScrollPane(table);
+//			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+//			add(scrollPane);
 		}
 
 		public void refresh() {
-			combatantsTableModel.signalNewData();
+//			combatantsTableModel.signalNewData();
 		}
 	}
+
+//	private class CombatantsPanel extends TitleBorderFullsizePanel {
+//
+//		private final CustomTableModel<XivCombatant> combatantsTableModel;
+//		private final XivState state;
+//
+//		public CombatantsPanel() {
+//			super("Combatants");
+//			setLayout(new BorderLayout());
+//			state = GuiMain.this.state.get(XivState.class);
+//			/*
+//			TODO: performance issue
+//			General problem is that the HP bars are quite heavy on rendering.
+//			Plan is to look at their classes and figure out if there's any JPanel methods that could be overridden with
+//			no-ops, like the default cell renderer does.
+//
+//			Or, at some point, bite the bullet and do custom painting.
+//			 */
+//			combatantsTableModel = CustomTableModel.builder(
+////							Collections::<XivCombatant>emptyList)
+//							() -> state.getCombatantsListCopy()
+//									.stream()
+//									.filter(XivCombatant::isCombative)
+//									.sorted(Comparator.comparing(XivEntity::getId))
+//									.collect(Collectors.toList()))
+//					.addColumn(StandardColumns.nameJobColumn)
+//					.addColumn(columns.statusEffectsColumn())
+//					.addColumn(StandardColumns.parentNameJobColumn)
+//					.addColumn(StandardColumns.combatantTypeColumn)
+//					.addColumn(columns.hpColumnWithUnresolved())
+//					.addColumn(StandardColumns.mpColumn)
+//					.addColumn(StandardColumns.posColumn)
+//					.setItemEquivalence((a, b) -> a.getId() == b.getId())
+//					.build();
+//			JTable table = new JTable(combatantsTableModel);
+////			JTable table = new JTable(combatantsTableModel) {
+////				@Override
+////				public TableCellRenderer getCellRenderer(int row, int column) {
+////					TableCellRenderer renderer;
+////					{
+////						long timeBefore = System.nanoTime();
+////						renderer = super.getCellRenderer(row, column);
+////						long timeAfter = System.nanoTime();
+////						long delta = timeAfter - timeBefore;
+////						 TODO find good value for this - 100 might be a little low
+////						if (delta > 5000) {
+////							log.warn("Slow Renderer performance: took {}ns to refresh col {} row {}", delta, column, row);
+////						}
+////					}
+////					return renderer;
+////				}
+////			};
+//			combatantsTableModel.configureColumns(table);
+//			JScrollPane scrollPane = new JScrollPane(table);
+//			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+//			add(scrollPane);
+//		}
+//
+//		public void refresh() {
+//			combatantsTableModel.signalNewData();
+//		}
+//	}
 
 	private class AdvancedPanel extends JPanel implements Refreshable {
 		private final KeyValueDisplaySet displayed;
@@ -576,9 +639,9 @@ public class GuiMain {
 
 			{
 				TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Misc");
-				BooleanSettingGui showPredictedHp = new BooleanSettingGui(columns.getShowPredictedHp(), "Experimental HP Bar (Buggy and slow, don't use)");
+//				BooleanSettingGui showPredictedHp = new BooleanSettingGui(columns.getShowPredictedHp(), "Experimental HP Bar (Buggy and slow, don't use)");
 				miscPanel.setPreferredSize(new Dimension(300, 150));
-				miscPanel.add(showPredictedHp.getComponent());
+//				miscPanel.add(showPredictedHp.getComponent());
 				c.gridx++;
 				add(miscPanel, c);
 			}

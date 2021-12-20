@@ -14,12 +14,12 @@ import java.awt.*;
 public abstract class ResourceBarRendererWithMovement implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
 	protected final ResourceBar bar = new ResourceBar();
+	private final EmptyRenderer empty = new EmptyRenderer();
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		if (value instanceof CurrentMaxPredicted) {
+		if (value instanceof CurrentMaxPredicted hp) {
 			Component baseLabel = fallback.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column);
-			CurrentMaxPredicted hp = (CurrentMaxPredicted) value;
 			double percent;
 			double percentChange;
 			long actualMax = hp.getMax();
@@ -29,7 +29,7 @@ public abstract class ResourceBarRendererWithMovement implements TableCellRender
 			int effectiveCurrent;
 			int effectivePredicted;
 			if (actualMax == 0 || (actualMax < actualCurrent) || (actualMax == 1)) {
-				return baseLabel;
+				return emptyComponent(isSelected, table);
 			}
 			else {
 				effectiveMax = (int) (actualMax);
@@ -40,13 +40,12 @@ public abstract class ResourceBarRendererWithMovement implements TableCellRender
 			percentChange = (effectivePredicted - effectiveCurrent) / (double) effectiveMax;
 
 
-			Color colorRaw = getBarColor(percent, percentChange, hp);
-			Color actualColor = new Color(colorRaw.getRed(), colorRaw.getGreen(), colorRaw.getBlue(), 98);
-			bar.setColor1(actualColor);
+			Color barColor = getBarColor(percent, percentChange, hp);
+			bar.setColor1(barColor);
 			Color originalBg = baseLabel.getBackground();
 			Color bg = new Color(originalBg.getRed(), originalBg.getGreen(), originalBg.getBlue(), 128);
 			bar.setColor3(bg);
-			bar.setBorderColor(originalBg);
+			bar.setBorderColor(getBorderColor(percent, percentChange, hp, originalBg));
 			bar.setTextColor(baseLabel.getForeground());
 
 			if (percentChange == 0) {
@@ -58,9 +57,8 @@ public abstract class ResourceBarRendererWithMovement implements TableCellRender
 			else {
 				// Predicted higher than current
 				// | Current | ΔPredicted | Max - (Current + Predicted) |
-				Color predictedColorRaw = getMovementBarColor(percent, percentChange, hp);
-				Color actualPredictedColor = new Color(predictedColorRaw.getRed(), predictedColorRaw.getGreen(), predictedColorRaw.getBlue(), 98);
-				bar.setColor2(actualPredictedColor);
+				Color movementColor = getMovementBarColor(percent, percentChange, hp);
+				bar.setColor2(movementColor);
 				if (percentChange > 0) {
 					if (percent + percentChange > 1) {
 						// Cap current + predicted to 100% since you can't overheal
@@ -88,12 +86,24 @@ public abstract class ResourceBarRendererWithMovement implements TableCellRender
 
 			return bar;
 		}
-		return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+		return emptyComponent(isSelected, table);
+	}
+
+	private Component emptyComponent(boolean isSelected, JTable table) {
+		if (isSelected) {
+			empty.setBackground(table.getSelectionBackground());
+		}
+		else {
+			empty.setBackground(null);
+		}
+		return empty;
 	}
 
 	protected abstract Color getBarColor(double percent, double percentChange, CurrentMaxPredicted item);
 
 	protected abstract Color getMovementBarColor(double percent, double percentChange, CurrentMaxPredicted item);
+
+	protected abstract Color getBorderColor(double percent, double percentChange, CurrentMaxPredicted item, Color originalBg);
 
 	protected void formatLabel(CurrentMaxPredicted item) {
 		// Try to do long label, otherwise fall back to short label

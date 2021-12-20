@@ -2,6 +2,7 @@ package gg.xp.xivsupport.eventstorage;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.persistence.Compressible;
 
 import java.io.EOFException;
 import java.io.File;
@@ -58,6 +59,9 @@ public final class EventReader {
 				while (true) {
 					Event event = (Event) ois.readObject();
 					event.setImported(true);
+//					if (event instanceof Compressible) {
+//						((Compressible) event).decompress();
+//					}
 					events.add(event);
 				}
 			}

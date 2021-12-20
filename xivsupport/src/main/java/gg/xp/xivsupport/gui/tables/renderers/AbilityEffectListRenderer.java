@@ -47,7 +47,7 @@ public class AbilityEffectListRenderer implements TableCellRenderer {
 					tooltipBuilder.append('\n');
 				}
 				if (i < (count - 1)) {
-					components.add(Box.createHorizontalStrut(3));
+					allComponents.add(Box.createHorizontalStrut(3));
 				}
 			}
 

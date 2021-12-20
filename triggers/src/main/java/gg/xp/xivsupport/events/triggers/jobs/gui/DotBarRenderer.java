@@ -8,17 +8,8 @@ import java.awt.*;
 
 public class DotBarRenderer extends ResourceBarRenderer {
 
-	private static final Color colorExpired = new Color(255, 0, 0);
-	private static final Color colorGood = new Color(79, 211, 255);
-
-	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		Component tableCellRendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-		if (tableCellRendererComponent instanceof JComponent) {
-			((JComponent) tableCellRendererComponent).setOpaque(false);
-		}
-		return tableCellRendererComponent;
-	}
+	private static final Color colorExpired = new Color(255, 0, 0, 192);
+	private static final Color colorGood = new Color(53, 134, 159, 192);
 
 	@Override
 	protected void formatLabel(CurrentMaxPair item) {

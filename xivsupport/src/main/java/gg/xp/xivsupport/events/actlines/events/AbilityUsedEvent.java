@@ -17,13 +17,15 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	private final XivCombatant target;
 	private final List<AbilityEffect> effects;
 	private final long sequenceId;
+	private final long targetIndex;
 
-	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId) {
+	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId, long targetIndex) {
 		this.ability = ability;
 		this.caster = caster;
 		this.target = target;
 		this.effects = effects;
 		this.sequenceId = sequenceId;
+		this.targetIndex = targetIndex;
 	}
 
 	public XivAbility getAbility() {
@@ -53,5 +55,9 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 
 	public long getSequenceId() {
 		return sequenceId;
+	}
+
+	public long getTargetIndex() {
+		return targetIndex;
 	}
 }

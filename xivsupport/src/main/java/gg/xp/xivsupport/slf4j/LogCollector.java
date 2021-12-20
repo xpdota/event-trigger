@@ -3,7 +3,7 @@ package gg.xp.xivsupport.slf4j;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
-import gg.xp.xivsupport.events.misc.ViewForAppendOnlyList;
+import gg.xp.xivsupport.events.misc.ProxyForAppendOnlyList;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +63,7 @@ public class LogCollector extends AppenderBase<ILoggingEvent> {
 	}
 
 	public List<LogEvent> getEvents() {
-		return new ViewForAppendOnlyList<>(events);
+		return new ProxyForAppendOnlyList<>(events);
 	}
 
 	public static LogCollector getInstance() {

@@ -26,11 +26,11 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	private final ExecutorService exs = Executors.newSingleThreadExecutor();
 
 	public static class CustomTableModelBuilder<B> {
-		private final Supplier<List<B>> dataGetter;
+		private final Supplier<List<? extends B>> dataGetter;
 		private final List<CustomColumn<? super B>> columns = new ArrayList<>();
 		private BiPredicate<? super B, ? super B> selectionEquivalence = Objects::equals;
 
-		private CustomTableModelBuilder(Supplier<List<B>> dataGetter) {
+		private CustomTableModelBuilder(Supplier<List<? extends B>> dataGetter) {
 			this.dataGetter = dataGetter;
 		}
 
@@ -49,19 +49,19 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		}
 	}
 
-	public static <B> CustomTableModelBuilder<B> builder(Supplier<List<B>> dataGetter) {
+	public static <B> CustomTableModelBuilder<B> builder(Supplier<List<? extends B>> dataGetter) {
 		return new CustomTableModelBuilder<>(dataGetter);
 	}
 
 
-	private final Supplier<List<X>> dataGetter;
+	private final Supplier<List<? extends X>> dataGetter;
 	private final List<CustomColumn<? super X>> columns;
 	private List<X> data = Collections.emptyList();
 	private volatile List<X> newData = data;
 	private final BiPredicate<? super X, ? super X> selectionEquivalence;
 
 
-	private CustomTableModel(Supplier<List<X>> dataGetter, List<CustomColumn<? super X>> columns, BiPredicate<? super X, ? super X> selectionEquivalence) {
+	private CustomTableModel(Supplier<List<? extends X>> dataGetter, List<CustomColumn<? super X>> columns, BiPredicate<? super X, ? super X> selectionEquivalence) {
 		this.dataGetter = dataGetter;
 		this.columns = columns;
 		this.selectionEquivalence = selectionEquivalence;
@@ -201,8 +201,10 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		}
 	}
 
+	@SuppressWarnings("unchecked") // Safe since we are only reading the list
 	private void updateDataOnly() {
-		newData = dataGetter.get();
+		pendingRefresh.set(false);
+		newData = (List<X>) dataGetter.get();
 	}
 
 	public void fullRefresh() {
@@ -227,7 +229,6 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		else {
 			if (data.isEmpty()) {
 				// Fast path for when data is currently empty
-				pendingRefresh.set(false);
 				data = newData;
 				fireTableDataChanged();
 				return;
@@ -238,7 +239,6 @@ public class CustomTableModel<X> extends AbstractTableModel {
 					.mapToObj(i -> data.get(i))
 					.collect(Collectors.toList());
 			// TODO: smarter data provider that informs us of append-only operations
-			pendingRefresh.set(false);
 			data = newData;
 			fireTableDataChanged();
 			for (X oldItem : oldSelections) {

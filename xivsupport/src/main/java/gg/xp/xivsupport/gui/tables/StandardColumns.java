@@ -11,7 +11,7 @@ import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.MpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
-import gg.xp.xivsupport.gui.tables.renderers.StatusEffectsRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.HitPointsWithPredicted;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -77,7 +77,7 @@ public final class StandardColumns {
 
 	public CustomColumn<XivCombatant> statusEffectsColumn() {
 		return new CustomColumn<>("Statuses", entity -> statuses.statusesOnTarget(entity).stream().map(BuffApplied::getBuff).collect(Collectors.toList()), c -> {
-			c.setCellRenderer(new StatusEffectsRenderer());
+			c.setCellRenderer(new StatusEffectListRenderer());
 			c.setPreferredWidth(300);
 		});
 	}

@@ -74,7 +74,12 @@ public class ActWsLogSource implements EventSource {
 
 		@Override
 		public void onError(Exception e) {
-			log.error("WS Error!", e);
+			if (e.getMessage().equals("Connection refused: connect")) {
+				log.info("WS Connection refused, waiting then trying again");
+			}
+			else {
+				log.error("WS Error!", e);
+			}
 			// TODO: hmmm.....is an "error" always fatal here? We *should* reconnect just in case, but I just don't
 			// know how to differentiate between fatal (which we should ignore, because onClose will get called next)
 			// and non-fatal (we need to reconnect it outselves).
@@ -219,8 +224,9 @@ public class ActWsLogSource implements EventSource {
 					log.info("Ignoring request to open because we are already connected");
 					return;
 				}
-				log.info("Reconnecting");
 				try {
+					Thread.sleep(1000);
+					log.info("Reconnecting");
 					boolean connected = client.reconnectBlocking();
 					if (connected) {
 						log.info("Reconnected");

@@ -123,11 +123,11 @@ public class XivCombatant extends XivEntity {
 	}
 
 	public @Nullable HitPoints getHp() {
-		return hp;
+		return isCombative() ? hp : null;
 	}
 
 	public @Nullable ManaPoints getMp() {
-		return mp;
+		return isCombative() ? mp : null;
 	}
 
 	public @Nullable Position getPos() {

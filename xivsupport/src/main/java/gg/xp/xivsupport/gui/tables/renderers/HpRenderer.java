@@ -7,6 +7,6 @@ import java.awt.*;
 public class HpRenderer extends ResourceBarRenderer {
 	@Override
 	protected Color getBarColor(double percent, CurrentMaxPair item) {
-		return Color.getHSBColor((float) (0.33f * percent), 0.36f, 0.58f);
+		return Color.getHSBColor((float) (0.33f * percent), 0.36f, 0.52f);
 	}
 }

@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui;
 
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -24,9 +25,10 @@ public final class LaunchImportedSession {
 		CommonGuiSetup.setup();
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		EventMaster master = pico.getComponent(EventMaster.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		pers.save("gui.display-predicted-hp", "true");
-		ReplayController replayController = new ReplayController(dist, events);
+		ReplayController replayController = new ReplayController(master, events);
 		pico.addComponent(replayController);
 		dist.acceptEvent(new InitEvent());
 		RawEventStorage raw = pico.getComponent(RawEventStorage.class);

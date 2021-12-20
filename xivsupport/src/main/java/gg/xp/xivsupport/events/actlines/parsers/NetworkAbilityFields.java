@@ -22,12 +22,14 @@ enum NetworkAbilityFields {
 	public static Event convert(FieldMapper<NetworkAbilityFields> fields) {
 		XivCombatant caster = fields.getEntity(casterId, casterName, casterCurHp, casterMaxHp, casterCurMp, casterMaxMp, casterX, casterY, casterZ, casterHeading);
 		XivCombatant target = fields.getEntity(targetId, targetName, targetCurHp, targetMaxHp, targetCurMp, targetMaxMp, targetX, targetY, targetZ, targetHeading);
+		Long sequenceId = fields.getOptionalHex(NetworkAbilityFields.sequenceId);
 		return new AbilityUsedEvent(
 				fields.getAbility(abilityId, abilityName),
 				caster,
 				target,
 				fields.getAbilityEffects(targetName.ordinal() + 3, 8),
-				fields.getRawHex(44)
+				sequenceId == null ? -1 : sequenceId,
+				fields.getHex(targetIndex)
 		);
 	}
 }

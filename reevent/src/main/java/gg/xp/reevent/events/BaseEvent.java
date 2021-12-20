@@ -52,10 +52,12 @@ public abstract class BaseEvent implements Event {
 
 	@Override
 	public void setEnqueuedAt(Instant enqueuedAt) {
-		if (this.enqueuedAt != null) {
-			log.error("Event {} already has an enqueuedAt time!", this);
+		if (!isImported) {
+			if (this.enqueuedAt != null) {
+				log.error("Event {} already has an enqueuedAt time!", this);
+			}
+			this.enqueuedAt = enqueuedAt;
 		}
-		this.enqueuedAt = enqueuedAt;
 	}
 
 	@Override

@@ -21,6 +21,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.util.concurrent.atomic.AtomicLong;
 
+// TODO: also have a method for getting a config panel, much like PluginTab
 @SuppressWarnings("NumericCastThatLosesPrecision")
 public class XivOverlay {
 	private static final Logger log = LoggerFactory.getLogger(XivOverlay.class);

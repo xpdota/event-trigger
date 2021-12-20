@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui;
 
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.state.XivState;
@@ -30,7 +31,8 @@ public final class LaunchImportedActLog {
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		pers.save("gui.display-predicted-hp", "true");
-		ReplayController replayController = new ReplayController(dist, events);
+		EventMaster master = pico.getComponent(EventMaster.class);
+		ReplayController replayController = new ReplayController(master, events);
 		pico.addComponent(replayController);
 		pico.getComponent(XivState.class).setActImport(true);
 		dist.acceptEvent(new InitEvent());

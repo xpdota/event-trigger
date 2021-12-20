@@ -35,6 +35,8 @@ public class CdTrackerOverlay extends BaseCdTrackerOverlay {
 	protected List<BuffApplied> getBuffs() {
 		return this.buffRepo.getBuffsAndPreapps().stream()
 				.filter(buff -> buff.getSource().walkParentChain().isThePlayer())
+				// TODO: maybe filter out stuff on pets here?
+//				.filter(buff -> buff.getTarget())
 				.collect(Collectors.toList());
 	}
 }

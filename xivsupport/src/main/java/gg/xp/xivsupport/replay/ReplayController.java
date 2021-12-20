@@ -2,6 +2,7 @@ package gg.xp.xivsupport.replay;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
+import gg.xp.reevent.events.EventMaster;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
 import java.util.List;
@@ -17,12 +18,12 @@ public class ReplayController {
 			.build()
 	);
 
-	private final EventDistributor dist;
+	private final EventMaster master;
 	private final List<? extends Event> events;
 	private int currentIndex;
 
-	public ReplayController(EventDistributor dist, List<? extends Event> events) {
-		this.dist = dist;
+	public ReplayController(EventMaster master, List<? extends Event> events) {
+		this.master = master;
 		this.events = events;
 	}
 
@@ -36,7 +37,7 @@ public class ReplayController {
 
 	public void advanceBy(int count) {
 		for (; count-- > 0 && currentIndex < events.size(); currentIndex ++) {
-			dist.acceptEvent(events.get(currentIndex));
+			master.pushEvent(events.get(currentIndex));
 		}
 	}
 

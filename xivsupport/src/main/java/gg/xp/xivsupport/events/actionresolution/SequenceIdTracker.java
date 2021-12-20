@@ -10,6 +10,7 @@ import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffectType;
 import gg.xp.xivsupport.events.debug.DebugCommand;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import org.slf4j.Logger;
@@ -22,11 +23,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class SequenceIdTracker {
 
 	private static final Logger log = LoggerFactory.getLogger(SequenceIdTracker.class);
+	private final XivState state;
 
 	// TODO: investigate if this is performant
 	private List<AbilityUsedEvent> events = new ArrayList<>();
@@ -42,6 +43,10 @@ public class SequenceIdTracker {
 	private static final int EVENTS_TO_PRUNE = 1_000;
 	// Max age in MS before considering an action to be ghosted
 	private static final long MAX_AGE = 10_000;
+
+	public SequenceIdTracker(XivState state) {
+		this.state = state;
+	}
 
 	// TODO: make a unit dying clear unresolved actions from/to it
 
@@ -97,6 +102,7 @@ public class SequenceIdTracker {
 
 		}
 	}
+
 	@HandleEvents
 	public void clearOnZoneChange(EventContext context, ZoneChangeEvent event) {
 		synchronized (lock) {
@@ -132,12 +138,21 @@ public class SequenceIdTracker {
 		// Note that the *source* can still be environment.
 		Instant happenedAt = event.getHappenedAt();
 		Instant cutoff = happenedAt.minusMillis(MAX_AGE);
-		if (shouldRecord(event)) {
-			synchronized (lock) {
+		synchronized (lock) {
+			boolean dirty = events.removeIf(e -> e.getHappenedAt().isBefore(cutoff));
+			if (shouldRecord(event)) {
 				events.add(event);
 				// TODO: the problem with lazy time based pruning is that often we never actually get anything
 				// that would cause a prune for quite some time.
-				boolean dirty = events.removeIf(e -> e.getHappenedAt().isBefore(cutoff));
+//				dirty |= events.removeIf(e -> {
+//					if (!e.getSource().isEnvironment() && state.getCombatants().containsKey(e.getSource().getId())) {
+//						return true;
+//					}
+//					if (!e.getTarget().isEnvironment() && state.getCombatants().containsKey(e.getTarget().getId())) {
+//						return true;
+//					}
+//					return false;
+//				});
 				if (events.size() > MAX_EVENTS) {
 					log.warn("Unresolved events too big, pruning");
 					events = new ArrayList<>(events.subList(EVENTS_TO_PRUNE, events.size()));
@@ -204,8 +219,10 @@ public class SequenceIdTracker {
 	public void casterKilled(EventContext context, EntityKilledEvent event) {
 		long targetId = event.getTarget().getId();
 		synchronized (lock) {
-			events.removeIf(e -> e.getTarget().getId() == targetId || e.getSource().getId() == targetId);
-			perTargetCache.remove(event.getSource());
+			boolean removed = events.removeIf(e -> e.getTarget().getId() == targetId || e.getSource().getId() == targetId);
+			if (removed) {
+				rebuildCache();
+			}
 		}
 	}
 

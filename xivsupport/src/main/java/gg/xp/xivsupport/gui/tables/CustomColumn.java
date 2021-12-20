@@ -43,4 +43,11 @@ public class CustomColumn<X> {
 	public void configureColumn(TableColumn column) {
 		columnConfigurer.accept(column);
 	}
+
+	public CustomColumn<X> withExtraConfig(Consumer<TableColumn> extraColumnConfigurer) {
+		return new CustomColumn<>(columnName, getter, c -> {
+			columnConfigurer.accept(c);
+			extraColumnConfigurer.accept(c);
+		});
+	}
 }

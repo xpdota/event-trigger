@@ -8,43 +8,69 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class NameJobRenderer implements TableCellRenderer {
-	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
+	private final DefaultTableCellRenderer fallback = new DefaultTableCellRenderer();
 
-	private final ComponentListRenderer listRenderer = new ComponentListRenderer(1);
+	private final ComponentListRenderer listRenderer;
+	private final boolean transparent;
+
+	public NameJobRenderer() {
+		this(false, false);
+	}
+
+	public NameJobRenderer(boolean transparent, boolean reversed) {
+		this.transparent = transparent;
+		listRenderer = new ComponentListRenderer(1, reversed);
+	}
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		if (value instanceof XivPlayerCharacter) {
-			XivPlayerCharacter player = (XivPlayerCharacter) value;
-			Component defaultLabel = fallback.getTableCellRendererComponent(table, player.getName(), isSelected, false, row, column);
-			Job job = player.getJob();
-			if (job != null) {
-				Component icon = IconTextRenderer.getIconOnly(job);
-				if (icon != null) {
-					listRenderer.setComponents(List.of(icon, defaultLabel));
-					listRenderer.setToolTipText(String.format("%s - %s (0x%x, %s)", player.getName(), player.getJob(), player.getId(), player.getId()));
-					if (isSelected) {
-						listRenderer.setBackground(table.getSelectionBackground());
-					}
-					else {
-						listRenderer.setBackground(null);
-					}
-					return listRenderer;
-				}
+		if (isSelected) {
+			listRenderer.setBackground(table.getSelectionBackground());
+		}
+		else {
+			listRenderer.setBackground(null);
+		}
+		final Component icon;
+		final Component label;
+		final String tooltip;
+		if (value instanceof XivEntity entity) {
+			label = fallback.getTableCellRendererComponent(table, entity.getName(), isSelected, false, row, column);
+			Job job;
+			if (value instanceof XivPlayerCharacter player && (job = player.getJob()) != null) {
+				icon = IconTextRenderer.getIconOnly(job);
+				tooltip = (String.format("%s - %s (0x%x, %s)", player.getName(), player.getJob(), player.getId(), player.getId()));
 			}
-			RenderUtils.setTooltip(defaultLabel, String.format("%s (0x%x, %s)", player.getName(), player.getId(), player.getId()));
-			return defaultLabel;
+			else {
+				tooltip = String.format("%s (0x%x, %s)", entity.getName(), entity.getId(), entity.getId());
+				icon = null;
+			}
 		}
-		if (value instanceof XivEntity) {
-			Component component = fallback.getTableCellRendererComponent(table, ((XivEntity) value).getName(), isSelected, hasFocus, row, column);
-			RenderUtils.setTooltip(component, String.format("%s (0x%x, %s)", ((XivEntity) value).getName(), ((XivEntity) value).getId(), ((XivEntity) value).getId()));
-			return component;
+		else if (value == null) {
+			tooltip = null;
+			label = null;
+			icon = null;
 		}
-		Component defaultLabel = fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-		RenderUtils.setTooltip(defaultLabel, null);
-		return defaultLabel;
+		else {
+			tooltip = null;
+			label = fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			icon = null;
+		}
+		if (transparent && label instanceof JComponent jc) {
+			jc.setOpaque(false);
+		}
+		List<Component> components = new ArrayList<>(2);
+		if (icon != null) {
+			components.add(icon);
+		}
+		if (label != null) {
+			components.add(label);
+		}
+		listRenderer.setComponents(components);
+		listRenderer.setToolTipText(tooltip);
+		return listRenderer;
 	}
 }

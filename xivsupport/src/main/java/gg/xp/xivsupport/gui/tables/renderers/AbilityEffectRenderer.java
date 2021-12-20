@@ -96,6 +96,6 @@ public class AbilityEffectRenderer {
 			components.add(IconTextRenderer.getComponent(icon, defaultLabel, true, false, true));
 			components.add(fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column));
 		}
-		return components;
+		return Collections.unmodifiableList(components);
 	}
 }

@@ -8,21 +8,21 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
-public class Line37Parser extends AbstractACTLineParser<Line37Parser.Fields> {
+public class Line39Parser extends AbstractACTLineParser<Line39Parser.Fields> {
 
-	public Line37Parser(XivState state) {
-		super(state,  37, Fields.class);
+	public Line39Parser(XivState state) {
+		super(state,  39, Fields.class);
 	}
 
 	enum Fields {
-		id, name, sequenceId,
+		id, name,
 		targetCurHp, targetMaxHp, targetCurMp, targetMaxMp, targetUnknown1, targetUnknown2, targetX, targetY, targetZ, targetHeading
 	}
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		fields.setTrustedHp(true);
-		XivCombatant target = fields.getEntity(Fields.id, Fields.name, Fields.targetCurHp, Fields.targetMaxHp, Fields.targetCurMp, Fields.targetMaxMp, Fields.targetX, Fields.targetY, Fields.targetZ, Fields.targetHeading);
-		return new ActionSyncEvent(target, fields.getHex(Fields.sequenceId));
+		fields.getEntity(Fields.id, Fields.name, Fields.targetCurHp, Fields.targetMaxHp, Fields.targetCurMp, Fields.targetMaxMp, Fields.targetX, Fields.targetY, Fields.targetZ, Fields.targetHeading);
+		return null;
 	}
 }

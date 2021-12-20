@@ -83,7 +83,7 @@ public class ActWsHandlers {
 					}
 				}
 			});
-			combatantsLoopThread.start();
+//			combatantsLoopThread.start();
 		}
 
 	}
@@ -145,11 +145,7 @@ public class ActWsHandlers {
 	public static void actWsLogLine(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("LogLine".equals(jsonMsg.getType())) {
 			String rawLine = jsonMsg.getJson().get("rawLine").textValue();
-			// Just going to specifically ignore 39-lines since they take up memory and don't do anything the combatants data doesn't do
-			// They're not even guaranteed
-			if (!rawLine.startsWith("39|")) {
-				context.enqueue(new ACTLogLineEvent(rawLine));
-			}
+			context.accept(new ACTLogLineEvent(rawLine));
 		}
 	}
 
@@ -161,7 +157,7 @@ public class ActWsHandlers {
 		if ("ChangePrimaryPlayer".equals(jsonMsg.getType())) {
 			long id = jsonMsg.getJson().get("charID").intValue();
 			String name = jsonMsg.getJson().get("charName").textValue();
-			context.enqueue(new RawPlayerChangeEvent(new XivEntity(id, name)));
+			context.accept(new RawPlayerChangeEvent(new XivEntity(id, name)));
 		}
 	}
 
@@ -170,7 +166,7 @@ public class ActWsHandlers {
 		if ("ChangeZone".equals(jsonMsg.getType())) {
 			long id = jsonMsg.getJson().get("zoneID").intValue();
 			String name = jsonMsg.getJson().get("zoneName").textValue();
-			context.enqueue(new ZoneChangeEvent(new XivZone(id, name)));
+			context.accept(new ZoneChangeEvent(new XivZone(id, name)));
 		}
 	}
 
@@ -191,7 +187,7 @@ public class ActWsHandlers {
 //				members.add(new RawXivPartyInfo(id, name, world, job, level));
 //			}
 			log.info("Party changed: {}", jsonMsg);
-			context.enqueue(new PartyChangeEvent(members));
+			context.accept(new PartyChangeEvent(members));
 		}
 	}
 
@@ -199,7 +195,7 @@ public class ActWsHandlers {
 //	@HandleEvents(order = -100)
 //	public static void actWsWipe(EventContext context, ActWsJsonMsg jsonMsg) {
 //		if ("onPartyWipe".equals(jsonMsg.getType())) {
-//			context.enqueue(new WipeEvent());
+//			context.accept(new WipeEvent());
 //		}
 //	}
 
@@ -233,7 +229,7 @@ public class ActWsHandlers {
 				}
 			}).filter(Objects::nonNull).collect(Collectors.toList());
 			if (hasUpdate.getValue()) {
-				context.enqueue(new CombatantsUpdateRaw(optimizedCombatantMaps, fullRefresh));
+				context.accept(new CombatantsUpdateRaw(optimizedCombatantMaps, fullRefresh));
 			}
 		}
 	}

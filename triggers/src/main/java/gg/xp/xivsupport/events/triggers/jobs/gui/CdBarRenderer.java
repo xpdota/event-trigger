@@ -3,22 +3,17 @@ package gg.xp.xivsupport.events.triggers.jobs.gui;
 import gg.xp.xivsupport.gui.tables.renderers.ResourceBarRenderer;
 import gg.xp.xivsupport.models.CurrentMaxPair;
 
-import javax.swing.*;
 import java.awt.*;
+import java.io.Serial;
 
 public class CdBarRenderer extends ResourceBarRenderer {
+	@Serial
+	private static final long serialVersionUID = 3685102734093696924L;
 
-	private static final Color colorExpired = new Color(255, 0, 0);
-	private static final Color colorGood = new Color(79, 211, 255);
+	private static final Color colorActive = new Color(19, 8, 201, 192);
+	private static final Color colorReady = new Color(55, 182, 67, 192);
+	private static final Color colorOnCd = new Color(192, 0, 0, 192);
 
-	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		Component tableCellRendererComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-		if (tableCellRendererComponent instanceof JComponent) {
-			((JComponent) tableCellRendererComponent).setOpaque(false);
-		}
-		return tableCellRendererComponent;
-	}
 
 	@Override
 	protected void formatLabel(CurrentMaxPair item) {
@@ -34,19 +29,19 @@ public class CdBarRenderer extends ResourceBarRenderer {
 	protected Color getBarColor(double percent, CurrentMaxPair item) {
 		if (item instanceof VisualCdInfo) {
 			if (((VisualCdInfo) item).getBuffApplied() != null) {
-				return Color.BLUE;
+				return colorActive;
 			}
 			if (percent > 0.999d) {
-				return Color.GREEN;
+				return colorReady;
 			}
 			else {
-				return Color.RED;
+				return colorOnCd;
 			}
 
 		}
 		if (percent > 0.999d) {
-			return colorExpired;
+			return colorOnCd;
 		}
-		return colorGood;
+		return colorActive;
 	}
 }
