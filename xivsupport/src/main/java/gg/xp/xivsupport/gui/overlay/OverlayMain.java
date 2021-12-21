@@ -62,8 +62,17 @@ public class OverlayMain {
 	private boolean windowActive;
 	private boolean editing;
 	private final BooleanSetting forceShow;
+	// TODO: Linux support
+	private final boolean isNonWindows;
 
 	public OverlayMain(PicoContainer container, EventDistributor dist, PersistenceProvider persistence) {
+		if (!System.getProperty("os.name").contains("Windows")) {
+			log.warn("Not running on Windows - disabling overlay support");
+			isNonWindows = true;
+		}
+		else {
+			isNonWindows = false;
+		}
 		show = new BooleanSetting(persistence, "xiv-overlay.show", false);
 		show.addListener(this::recalc);
 		forceShow = new BooleanSetting(persistence, "xiv-overlay.force-show", false);
@@ -93,6 +102,9 @@ public class OverlayMain {
 	}
 
 	private boolean isGameWindowActive() {
+		if (isNonWindows) {
+			return false;
+		}
 		String window = getActiveWindowText();
 		return window.startsWith("FINAL FANTASY XIV") || this.overlays.stream().anyMatch(o -> o.getTitle().equals(window));
 	}
@@ -133,6 +145,9 @@ public class OverlayMain {
 	}
 
 	private void recalc() {
+		if (isNonWindows) {
+			return;
+		}
 		// Do this again, otherwise it may flash away when you finish editing
 		windowActive = isGameWindowActive();
 		// Always show if editing
