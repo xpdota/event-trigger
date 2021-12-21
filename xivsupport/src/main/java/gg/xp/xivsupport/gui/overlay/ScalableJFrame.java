@@ -15,12 +15,7 @@ public class ScalableJFrame extends JFrame implements Scaled {
 
 	private ScalableJFrame(String title, GraphicsConfiguration gc, MutableDouble scaleFactor) throws HeadlessException {
 		super(title, gc);
-		if (gc == null) {
-			this.fakeGraphics = getGraphicsConfiguration();
-		}
-		else {
-			this.fakeGraphics = gc;
-		}
+		this.fakeGraphics = gc;
 		this.scaleFactor = scaleFactor;
 	}
 
@@ -31,7 +26,7 @@ public class ScalableJFrame extends JFrame implements Scaled {
 			return new ScalableJFrame(title, new FakeGraphicsConfiguration(scaleFactor), scaleFactor);
 		}
 		else {
-			return new ScalableJFrame(title, null, scaleFactor);
+			return new ScalableJFrame(title, new JFrame().getGraphicsConfiguration(), scaleFactor);
 		}
 	}
 
