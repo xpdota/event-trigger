@@ -1,22 +1,14 @@
 package gg.xp.xivsupport.models;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class Position implements Serializable {
+public record Position(double x, double y, double z, double heading) implements Serializable {
+	@Serial
 	private static final long serialVersionUID = -5539446233772501577L;
-	private final double x;
-	private final double y;
-	private final double z;
-	private final double heading;
 
-	public Position(double x, double y, double z, double heading) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.heading = heading;
-	}
-
+	// TODO: these aren't really needed with record
 	public double getX() {
 		return x;
 	}

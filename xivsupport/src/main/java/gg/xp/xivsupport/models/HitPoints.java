@@ -3,15 +3,8 @@ package gg.xp.xivsupport.models;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class HitPoints implements CurrentMaxPair, Serializable {
+public record HitPoints(long current, long max) implements CurrentMaxPair, Serializable {
 	private static final long serialVersionUID = 5725036718136891291L;
-	private final long current;
-	private final long max;
-
-	public HitPoints(long current, long max) {
-		this.current = current;
-		this.max = max;
-	}
 
 	@Override
 	public long getCurrent() {

@@ -1,18 +1,14 @@
 package gg.xp.xivsupport.models;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class ManaPoints implements CurrentMaxPair, Serializable {
+public record ManaPoints(long current, long max) implements CurrentMaxPair, Serializable {
+	@Serial
 	private static final long serialVersionUID = 5725036718136891291L;
-	private final long current;
-	private final long max;
 
-	private ManaPoints(long current, long max) {
-		this.current = current;
-		this.max = max;
-	}
-
+	// Re-usable instance to save memory
 	private static final ManaPoints FULL = new ManaPoints(10_000, 10_000);
 
 	public static ManaPoints of(long current, long max) {
@@ -50,7 +46,6 @@ public final class ManaPoints implements CurrentMaxPair, Serializable {
 		return Objects.hash(current, max);
 	}
 
-	// Re-usable instance to save memory
 
 }
 

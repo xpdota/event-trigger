@@ -7,6 +7,11 @@ import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Renders a list of components.
+ * <p>
+ * Note that it DOES rubber-stamp like table cell renderers, so you can add the same component multiple times safely.
+ */
 public class ComponentListRenderer extends JComponent {
 	@Serial
 	private static final long serialVersionUID = -124182066710853800L;

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,13 @@ public class ActionIcon implements HasIconURL {
 	public static void main(String[] args) {
 		readCsv();
 		csvValues.values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
+	}
+
+	public static Map<Long, Long> getCsvValues() {
+		if (!loaded) {
+			readCsv();
+		}
+		return Collections.unmodifiableMap(csvValues);
 	}
 
 	public static void readAltCsv(File file) {
