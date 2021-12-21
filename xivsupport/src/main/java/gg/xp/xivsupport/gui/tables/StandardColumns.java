@@ -300,7 +300,7 @@ public final class StandardColumns {
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 //			Component comp = defaultRenderer.getTableCellRendererComponent(table, value, isSelected, false, row, column);
 			JCheckBox checkbox = new BooleanSettingGui((BooleanSetting) value, null, false).getComponent();
-			checkbox.setEnabled(enabledBy.get());
+			checkbox.setEnabled(enabledBy == null || enabledBy.get());
 			checkbox.setOpaque(true);
 //			checkbox.setBackground(comp.getBackground());
 			checkbox.setBackground(table.getSelectionBackground());
