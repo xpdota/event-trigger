@@ -2,9 +2,10 @@ package gg.xp.xivsupport.persistence;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 
-public final class UserDataDir {
-	private UserDataDir() {
+public final class Platform {
+	private Platform() {
 	}
 
 	public static Path getTriggeventDir() {
@@ -35,5 +36,9 @@ public final class UserDataDir {
 			userDataDir = Paths.get(appData, "Advanced Combat Tracker", "FFXIVLogs");
 		}
 		return userDataDir;
+	}
+
+	public static boolean isWindows() {
+		return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 	}
 }

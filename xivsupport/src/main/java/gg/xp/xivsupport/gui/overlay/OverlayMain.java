@@ -7,6 +7,7 @@ import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -66,7 +67,7 @@ public class OverlayMain {
 	private final boolean isNonWindows;
 
 	public OverlayMain(PicoContainer container, EventDistributor dist, PersistenceProvider persistence) {
-		if (!System.getProperty("os.name").contains("Windows")) {
+		if (!Platform.isWindows()) {
 			log.warn("Not running on Windows - disabling overlay support");
 			isNonWindows = true;
 		}

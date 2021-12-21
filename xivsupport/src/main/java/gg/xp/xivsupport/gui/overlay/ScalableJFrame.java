@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.overlay;
 
+import gg.xp.xivsupport.persistence.Platform;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import javax.swing.*;
@@ -12,15 +13,26 @@ public class ScalableJFrame extends JFrame implements Scaled {
 	private final MutableDouble scaleFactor;
 	private final GraphicsConfiguration fakeGraphics;
 
-	private ScalableJFrame(String title, FakeGraphicsConfiguration gc, MutableDouble scaleFactor) throws HeadlessException {
+	private ScalableJFrame(String title, GraphicsConfiguration gc, MutableDouble scaleFactor) throws HeadlessException {
 		super(title, gc);
-		this.fakeGraphics = gc;
+		if (gc == null) {
+			this.fakeGraphics = getGraphicsConfiguration();
+		}
+		else {
+			this.fakeGraphics = gc;
+		}
 		this.scaleFactor = scaleFactor;
 	}
 
 	public static ScalableJFrame construct(String title, double defaultScaleFactor) {
 		MutableDouble scaleFactor = new MutableDouble(defaultScaleFactor);
-		return new ScalableJFrame(title, new FakeGraphicsConfiguration(scaleFactor), scaleFactor);
+		// TODO: find a better way for this
+		if (Platform.isWindows()) {
+			return new ScalableJFrame(title, new FakeGraphicsConfiguration(scaleFactor), scaleFactor);
+		}
+		else {
+			return new ScalableJFrame(title, null, scaleFactor);
+		}
 	}
 
 
@@ -76,6 +88,7 @@ public class ScalableJFrame extends JFrame implements Scaled {
 		return scaleFactor.getValue();
 	}
 
+	// TODO: find an X11-friendly system for this
 	private static final class FakeGraphicsConfiguration extends GraphicsConfiguration {
 		private final GraphicsConfiguration wrapped;
 		private final MutableDouble scaleFactor;

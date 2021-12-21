@@ -3,7 +3,7 @@ package gg.xp.xivsupport.gui;
 import gg.xp.xivsupport.eventstorage.EventReader;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
-import gg.xp.xivsupport.persistence.UserDataDir;
+import gg.xp.xivsupport.persistence.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ public final class GuiImportLaunch {
 			frame.setLocationByPlatform(true);
 			JPanel panel = new TitleBorderFullsizePanel("Import");
 
-			Path sessionsDir = Paths.get(UserDataDir.getTriggeventDir().toString(), "sessions");
+			Path sessionsDir = Paths.get(Platform.getTriggeventDir().toString(), "sessions");
 			JFileChooser sessionChooser = new JFileChooser(sessionsDir.toString());
 			sessionChooser.setPreferredSize(new Dimension(800, 600));
 			JButton importSessionButton = new JButton("Import Session");
@@ -44,7 +44,7 @@ public final class GuiImportLaunch {
 			});
 
 
-			Path actLogDir = UserDataDir.getActDir();
+			Path actLogDir = Platform.getActDir();
 			JFileChooser actLogChooser = new JFileChooser(actLogDir.toString());
 			JButton importActLogButton = new JButton("Import ACT Log");
 			importActLogButton.addActionListener(e -> {
