@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.util;
 
+import gg.xp.xivsupport.persistence.UserDataDir;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,9 +42,7 @@ public final class CatchFatalError {
 			c.fill = GridBagConstraints.BOTH;
 			JTextArea textArea = new JTextArea();
 			textArea.setText("You should report this as a bug and include log files in " +
-					System.getenv("APPDATA") +
-					System.getProperty("file.separator") +
-					"triggevent" +
+					UserDataDir.getTriggeventDir() +
 					" as well as this error message." +
 					"\n\n" +
 					"You can also try moving/renaming the properties files in that directory to see if this error is being caused by a problem with your settings." +

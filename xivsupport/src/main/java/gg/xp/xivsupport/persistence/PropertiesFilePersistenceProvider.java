@@ -35,9 +35,9 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 		return inUserDataFolder(baseName, false);
 	}
 	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName, boolean readOnly) {
-		String userDataDir = System.getenv("APPDATA");
-		log.info("Appdata: {}", userDataDir);
-		File file = Paths.get(userDataDir, "triggevent", baseName + ".properties").toFile();
+		String userDataDir = UserDataDir.getTriggeventDir().toString();
+		log.info("Data dir: {}", userDataDir);
+		File file = Paths.get(userDataDir, baseName + ".properties").toFile();
 		log.info("Using file: {}", file);
 		return new PropertiesFilePersistenceProvider(file, readOnly);
 	}

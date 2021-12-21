@@ -8,6 +8,7 @@
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+<!--        TODO this breaks on *nix-->
         <file>${APPDATA}/triggevent/triggevent.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
