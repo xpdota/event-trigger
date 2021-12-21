@@ -54,15 +54,7 @@ public class XivStateImpl implements XivState {
 	private volatile Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
 	private boolean isActImport;
 
-
 	private Job previousPlayerJob;
-//	@SuppressWarnings("unused")
-//	@Deprecated
-//	XivState() {
-//		// TODO: this is still needed for tests
-//		log.warn("Using old XivState ctor");
-//		this.master = null;
-//	}
 
 	public XivStateImpl(EventMaster master) {
 		this.master = master;

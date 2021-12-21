@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -23,7 +22,7 @@ public final class MakeCoolDowns {
 	public static void main(String[] args) throws IOException, URISyntaxException {
 
 		List<Map<String, Object>> maps = ReadData.readData();
-		List<String[]> csvRaw = ReadCsv.cells("/xiv/actions/Action.csv");
+		List<String[]> csvRaw = ReadCsv.cellsFromResource("/xiv/actions/Action.csv");
 		Map<Long, String[]> csvData = new HashMap<>(csvRaw.size());
 		csvRaw.forEach(row -> {
 			try {
