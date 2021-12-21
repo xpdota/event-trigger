@@ -33,12 +33,12 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>reevent</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>xivdata</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -76,7 +76,7 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>deps</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.hamcrest/hamcrest-all -->
         <!--        TODO: probably doesn't need to be hamcrest-*all*-->

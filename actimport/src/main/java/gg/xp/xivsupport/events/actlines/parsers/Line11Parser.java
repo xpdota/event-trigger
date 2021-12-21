@@ -4,7 +4,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.ActImportOnly;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
-import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.XivStateImpl;
 import org.assertj.core.util.Strings;
 
 import java.time.ZonedDateTime;
@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 @SuppressWarnings("unused")
 public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> implements ActImportOnly {
 
-	public Line11Parser(XivState state) {
+	public Line11Parser(XivStateImpl state) {
 		super(state, 11, Fields.class, true);
 	}
 

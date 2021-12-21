@@ -180,4 +180,10 @@ public enum Cooldown {
 	public double getCooldown() {
 		return cooldown;
 	}
+
+	// Purposefully saying "primary" here - as some might require multiple CDs (see: Raw/Nascent)
+	public long getPrimaryAbilityId() {
+		return abilityId;
+	}
+
 }

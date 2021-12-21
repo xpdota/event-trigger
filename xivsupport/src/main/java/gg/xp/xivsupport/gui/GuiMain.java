@@ -10,7 +10,6 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivdata.jobs.XivMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
-import gg.xp.xivsupport.events.actlines.events.AbilityResolvedEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
@@ -26,6 +25,7 @@ import gg.xp.xivsupport.events.misc.Stats;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
@@ -75,12 +75,9 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
-import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.reflect.Field;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -151,7 +148,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedPanel()));
 //		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", getImportExportTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", new MapPanel(state.get(XivState.class))));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", new MapPanel(state.get(XivStateImpl.class))));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Topology", new PluginTopologyPanel()));
 //		container.addComponent(OverlayMain.class);
 //		container.getComponent(OverlayMain.class);
@@ -290,7 +287,7 @@ public class GuiMain {
 							"Name",
 							new JLabel(),
 							() -> {
-								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
+								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
 								return player == null ? "null" : player.getName();
 							},
 							JLabel::setText
@@ -299,7 +296,7 @@ public class GuiMain {
 							"Zone",
 							new JLabel(),
 							() -> {
-								XivZone zone = state.get(XivState.class).getZone();
+								XivZone zone = state.get(XivStateImpl.class).getZone();
 								return zone == null ? "null" : zone.getName();
 							},
 							JLabel::setText
@@ -308,7 +305,7 @@ public class GuiMain {
 							"Map",
 							new JLabel(),
 							() -> {
-								XivMap map = state.get(XivState.class).getMap();
+								XivMap map = state.get(XivStateImpl.class).getMap();
 								return map == null ? "null" : map.getPlace();
 							},
 							JLabel::setText
@@ -317,7 +314,7 @@ public class GuiMain {
 							"Job",
 							new JLabel(),
 							() -> {
-								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
+								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
 								return player == null ? "null" : player.getJob().getFriendlyName();
 							},
 							JLabel::setText
@@ -326,7 +323,7 @@ public class GuiMain {
 							"Level",
 							new JLabel(),
 							() -> {
-								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
+								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
 								return player == null ? "null" : Long.toString(player.getLevel());
 							},
 							JLabel::setText
@@ -335,7 +332,7 @@ public class GuiMain {
 							"World",
 							new JLabel(),
 							() -> {
-								XivPlayerCharacter player = state.get(XivState.class).getPlayer();
+								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
 								return player == null ? "null" : player.getWorld().toString();
 							},
 							JLabel::setText
@@ -360,7 +357,7 @@ public class GuiMain {
 			super("Party Status");
 			setLayout(new BorderLayout());
 			partyTableModel = CustomTableModel.builder(
-							() -> state.get(XivState.class).getPartyList())
+							() -> state.get(XivStateImpl.class).getPartyList())
 					.addColumn(StandardColumns.nameJobColumn)
 					.addColumn(columns.statusEffectsColumn())
 					.addColumn(columns.hpColumnWithUnresolved())
@@ -455,7 +452,7 @@ public class GuiMain {
 		public CombatantsPanel() {
 			super("Combatants");
 			setLayout(new BorderLayout());
-			state = GuiMain.this.state.get(XivState.class);
+			state = GuiMain.this.state.get(XivStateImpl.class);
 			/*
 			TODO: performance issue
 			General problem is that the HP bars are quite heavy on rendering.
@@ -723,7 +720,7 @@ public class GuiMain {
 	private JPanel getCombatantsPanel() {
 		// TODO: jump to parent button
 		// Main table
-		XivState state = container.getComponent(XivState.class);
+		XivState state = container.getComponent(XivStateImpl.class);
 		StatusEffectRepository statuses = container.getComponent(StatusEffectRepository.class);
 		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Combatants",
 						() -> state.getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),

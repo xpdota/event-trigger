@@ -6,6 +6,7 @@ import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -52,7 +53,7 @@ public class AutoMarkHandler {
 
 	@HandleEvents
 	public void doAutoMark(EventContext context, AutoMarkRequest event) {
-		XivState xivState = context.getStateInfo().get(XivState.class);
+		XivState xivState = context.getStateInfo().get(XivStateImpl.class);
 		XivPlayerCharacter player = event.getPlayerToMark();
 		int index = xivState.getPartySlotOf(player);
 		if (index >= 0) {

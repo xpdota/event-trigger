@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
@@ -162,7 +163,7 @@ public class FieldMapper<K extends Enum<K>> {
 	public XivCombatant getEntity(K idKey, K nameKey) {
 		long id = getHex(idKey);
 		String name = getString(nameKey);
-		XivState xivState = context.getStateInfo().get(XivState.class);
+		XivState xivState = context.getStateInfo().get(XivStateImpl.class);
 		XivCombatant xivCombatant = xivState.getCombatants().get(id);
 		if (xivCombatant == null) {
 			xivCombatant = xivState.getDeadCombatant(id);

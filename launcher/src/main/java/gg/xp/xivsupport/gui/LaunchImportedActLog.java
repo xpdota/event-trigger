@@ -5,7 +5,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
-import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.XivMain;
@@ -34,7 +34,7 @@ public final class LaunchImportedActLog {
 		EventMaster master = pico.getComponent(EventMaster.class);
 		ReplayController replayController = new ReplayController(master, events);
 		pico.addComponent(replayController);
-		pico.getComponent(XivState.class).setActImport(true);
+		pico.getComponent(XivStateImpl.class).setActImport(true);
 		dist.acceptEvent(new InitEvent());
 		RawEventStorage raw = pico.getComponent(RawEventStorage.class);
 		raw.getMaxEventsStoredSetting().set(1_000_000);

@@ -8,7 +8,7 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
-import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.XivEntity;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ public class Uwu implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return context.getStateInfo().get(XivState.class).zoneIs(0x309L);
+		return context.getStateInfo().get(XivStateImpl.class).zoneIs(0x309L);
 	}
 
 

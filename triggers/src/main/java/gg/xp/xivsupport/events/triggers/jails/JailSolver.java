@@ -21,11 +21,9 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.EnumListSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
-import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

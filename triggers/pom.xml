@@ -15,7 +15,7 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>

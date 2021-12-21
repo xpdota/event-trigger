@@ -85,11 +85,11 @@ public class CdTracker {
 	}
 
 	@SystemEvent
-	private static class DelayedCdCallout extends BaseDelayedEvent {
+	static class DelayedCdCallout extends BaseDelayedEvent {
 
 		private static final long serialVersionUID = 6817565445334081296L;
-		private final AbilityUsedEvent originalEvent;
-		private final int originalKey;
+		final AbilityUsedEvent originalEvent;
+		final int originalKey;
 
 		protected DelayedCdCallout(AbilityUsedEvent originalEvent, int originalKey, long delayMs) {
 			super(delayMs);

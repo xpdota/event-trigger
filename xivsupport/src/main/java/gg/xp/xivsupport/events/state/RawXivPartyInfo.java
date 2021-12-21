@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.state;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.xivsupport.models.XivEntity;
@@ -12,6 +13,15 @@ public class RawXivPartyInfo extends XivEntity {
 	private final int level;
 	private final boolean inParty;
 
+	public RawXivPartyInfo(long id, String name, int worldId, int jobId, int level, boolean inParty) {
+		super(id, name);
+		this.worldId = worldId;
+		this.jobId = jobId;
+		this.level = level;
+		this.inParty = inParty;
+	}
+
+	@JsonCreator
 	public RawXivPartyInfo(
 			@JsonProperty("id") String idRaw,
 			@JsonProperty("name") String name,
@@ -19,7 +29,7 @@ public class RawXivPartyInfo extends XivEntity {
 			@JsonProperty("job") int jobId,
 			@JsonProperty("level") int level,
 			@JsonProperty("inParty") boolean inParty
-			) {
+	) {
 		super(Long.parseLong(idRaw, 16), name);
 		this.worldId = worldId;
 		this.jobId = jobId;

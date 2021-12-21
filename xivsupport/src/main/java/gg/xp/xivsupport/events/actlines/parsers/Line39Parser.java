@@ -1,16 +1,14 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
-import gg.xp.xivsupport.events.actlines.events.ActionSyncEvent;
-import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.events.state.XivStateImpl;
 
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
 public class Line39Parser extends AbstractACTLineParser<Line39Parser.Fields> {
 
-	public Line39Parser(XivState state) {
+	public Line39Parser(XivStateImpl state) {
 		super(state,  39, Fields.class);
 	}
 

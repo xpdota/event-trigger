@@ -12,7 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeOutEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.misc.ProxyForAppendOnlyList;
-import gg.xp.xivsupport.events.misc.RawEventStorage;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CombatantType;
 

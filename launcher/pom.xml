@@ -104,7 +104,7 @@
                             <resources>
                                 <resource>
                                     <directory>${project.build.directory}</directory>
-                                    <includes>launcher-1.0-SNAPSHOT.jar</includes>
+                                    <includes>launcher-${project.version}.jar</includes>
                                 </resource>
                             </resources>
                         </configuration>
@@ -252,12 +252,12 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>triggers</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.swingexplorer</groupId>
@@ -268,7 +268,7 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>actimport</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

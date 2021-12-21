@@ -5,6 +5,7 @@ import gg.xp.reevent.events.BasicEventQueue;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -163,7 +164,7 @@ public class WsHandlerTests {
 						"}"
 		));
 		StateStore stateStore = pico.getComponent(StateStore.class);
-		XivState xivState = stateStore.get(XivState.class);
+		XivState xivState = stateStore.get(XivStateImpl.class);
 
 		try {
 			Thread.sleep(1000);

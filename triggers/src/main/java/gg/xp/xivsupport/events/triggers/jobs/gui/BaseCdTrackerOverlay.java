@@ -102,7 +102,7 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 				Cooldown cd = k.getCooldown();
 				BuffApplied buffApplied = newCurrentBuffs.stream()
 						.filter(b -> cd.buffIdMatches(b.getBuff().getId()))
-						.filter(b -> b.getSource().equals(abilityUsed.getSource()))
+						.filter(b -> b.getSource().walkParentChain().equals(abilityUsed.getSource().walkParentChain()))
 						.findFirst()
 						.orElse(null);
 				VisualCdInfo vci = new VisualCdInfo(cd, abilityUsed, buffApplied);

@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;

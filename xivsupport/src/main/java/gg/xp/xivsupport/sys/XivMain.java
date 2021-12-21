@@ -7,7 +7,7 @@ import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.topology.TopoInfoImpl;
 import gg.xp.xivsupport.events.state.PicoStateStore;
-import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.AutoHandlerScan;
@@ -46,7 +46,7 @@ public final class XivMain {
 		pico.addComponent(EventMaster.class);
 		pico.addComponent(BasicEventQueue.class);
 		pico.addComponent(PicoStateStore.class);
-		pico.addComponent(XivState.class);
+		pico.addComponent(XivStateImpl.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
 		pico.addComponent(TopoInfoImpl.class);
 		pico.addComponent(pico);
@@ -88,7 +88,7 @@ public final class XivMain {
 		pico.addComponent(BasicEventDistributor.class);
 		pico.addComponent(EventMaster.class);
 		pico.addComponent(PicoStateStore.class);
-		pico.addComponent(XivState.class);
+		pico.addComponent(XivStateImpl.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
 		pico.addComponent(AutoHandlerConfig.class);
 		pico.addComponent(InMemoryMapPersistenceProvider.class);

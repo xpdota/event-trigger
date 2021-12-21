@@ -13,9 +13,9 @@ import java.util.Collections;
  */
 public final class ActStateReader implements ActImportOnly {
 
-	private final XivState xivState;
+	private final XivStateImpl xivState;
 
-	public ActStateReader(XivState xivState) {
+	public ActStateReader(XivStateImpl xivState) {
 		this.xivState = xivState;
 	}
 
