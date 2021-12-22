@@ -2,11 +2,13 @@ package gg.xp.xivsupport.events.state;
 
 import gg.xp.reevent.events.BaseEvent;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class PartyChangeEvent extends BaseEvent {
+	@Serial
 	private static final long serialVersionUID = -9103783238842156824L;
 	private final List<RawXivPartyInfo> members;
 

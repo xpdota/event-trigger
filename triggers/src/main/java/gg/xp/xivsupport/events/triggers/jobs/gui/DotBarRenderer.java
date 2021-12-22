@@ -3,7 +3,6 @@ package gg.xp.xivsupport.events.triggers.jobs.gui;
 import gg.xp.xivsupport.gui.tables.renderers.ResourceBarRenderer;
 import gg.xp.xivsupport.models.CurrentMaxPair;
 
-import javax.swing.*;
 import java.awt.*;
 
 public class DotBarRenderer extends ResourceBarRenderer {

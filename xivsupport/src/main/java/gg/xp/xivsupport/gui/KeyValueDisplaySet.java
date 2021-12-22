@@ -44,6 +44,7 @@ class KeyValueDisplaySet extends JPanel implements Refreshable {
 
 	}
 
+	@Override
 	public void refresh() {
 		log.trace("Refreshing");
 		displayed.forEach(KeyValuePairDisplay::refresh);

@@ -157,6 +157,7 @@ public final class CommonGuiSetup {
 			return lastStackTrace;
 		}
 
+		@SuppressWarnings("BusyWait")
 		@Override
 		public void run() {
 			log.info("Starting monitor for thread {}", threadToWatch);

@@ -1,13 +1,10 @@
 package gg.xp.xivsupport.events.triggers.duties;
 
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
-import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.debug.DebugCommand;
-import gg.xp.xivsupport.events.state.XivState;
 
 @CalloutRepo("Dummy (/e c:testcall)")
 public class DummyTestFight {

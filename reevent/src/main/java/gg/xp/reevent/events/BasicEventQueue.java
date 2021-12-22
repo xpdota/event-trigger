@@ -1,6 +1,6 @@
 package gg.xp.reevent.events;
 
-import gg.xp.xivsupport.events.misc.TimeUtils;
+import gg.xp.reevent.time.TimeUtils;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

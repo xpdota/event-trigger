@@ -4,8 +4,11 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 
+import java.io.Serial;
+
 public class AbilityCastCancel extends BaseEvent implements HasSourceEntity, HasAbility {
 
+	@Serial
 	private static final long serialVersionUID = -5704173639583049362L;
 	private final XivCombatant source;
 	private final XivAbility ability;
@@ -22,6 +25,7 @@ public class AbilityCastCancel extends BaseEvent implements HasSourceEntity, Has
 		return source;
 	}
 
+	@Override
 	public XivAbility getAbility() {
 		return ability;
 	}

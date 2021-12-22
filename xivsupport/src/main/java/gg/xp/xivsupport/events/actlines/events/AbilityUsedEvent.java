@@ -6,11 +6,13 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 
+import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
 public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects {
 
+	@Serial
 	private static final long serialVersionUID = -4539070760062288496L;
 	private final XivAbility ability;
 	private final XivCombatant caster;
@@ -28,6 +30,7 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 		this.targetIndex = targetIndex;
 	}
 
+	@Override
 	public XivAbility getAbility() {
 		return ability;
 	}

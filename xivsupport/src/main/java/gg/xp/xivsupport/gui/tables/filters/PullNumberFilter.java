@@ -7,7 +7,6 @@ import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import javax.swing.*;
 import java.awt.*;
 import java.time.Instant;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class PullNumberFilter implements VisualFilter<Event> {

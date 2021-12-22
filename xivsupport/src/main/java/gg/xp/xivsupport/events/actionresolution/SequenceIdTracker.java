@@ -30,7 +30,7 @@ public class SequenceIdTracker {
 	private final XivState state;
 
 	// TODO: investigate if this is performant
-	private List<AbilityUsedEvent> events = new ArrayList<>();
+	private volatile List<AbilityUsedEvent> events = new ArrayList<>();
 
 	// TODO: this has some potential for other uses
 	private final Map<XivEntity, List<AbilityUsedEvent>> perTargetCache = new HashMap<>();

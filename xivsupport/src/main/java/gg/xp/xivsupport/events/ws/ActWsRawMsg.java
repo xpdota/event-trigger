@@ -6,10 +6,11 @@ import gg.xp.xivsupport.events.misc.Compressor;
 import gg.xp.xivsupport.persistence.Compressible;
 import org.intellij.lang.annotations.Language;
 
-import java.time.Instant;
+import java.io.Serial;
 
 @SystemEvent
 public class ActWsRawMsg extends BaseEvent implements Compressible {
+	@Serial
 	private static final long serialVersionUID = -7390177233308577948L;
 	private String rawMsgData;
 	private byte[] compressed;

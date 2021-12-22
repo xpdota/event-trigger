@@ -2,8 +2,11 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
 
+import java.io.Serial;
+
 public class ActorControlEvent extends BaseEvent {
 
+	@Serial
 	private static final long serialVersionUID = 4887874439217409590L;
 	private final long instance;
 	private final long command;

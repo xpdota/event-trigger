@@ -24,6 +24,7 @@ public class KeyValuePairDisplay<C extends Component, D> extends JPanel implemen
 //			add(component);
 	}
 
+	@Override
 	public void refresh() {
 		D newData = dataGetter.get();
 		guiUpdater.accept(component, newData);

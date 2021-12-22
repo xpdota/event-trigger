@@ -2,7 +2,10 @@ package gg.xp.xivsupport.models;
 
 import gg.xp.xivdata.jobs.Job;
 
+import java.io.Serial;
+
 public class XivPlayerCharacter extends XivCombatant {
+	@Serial
 	private static final long serialVersionUID = 8719229961190925919L;
 	private final Job job;
 	private final XivWorld world;

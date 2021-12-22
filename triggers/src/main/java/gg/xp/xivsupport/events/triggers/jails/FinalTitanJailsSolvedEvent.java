@@ -3,11 +3,13 @@ package gg.xp.xivsupport.events.triggers.jails;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class FinalTitanJailsSolvedEvent extends BaseEvent {
+	@Serial
 	private static final long serialVersionUID = 3966119066157989985L;
 	private final List<XivPlayerCharacter> jailedPlayers;
 

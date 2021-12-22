@@ -344,6 +344,7 @@ public class GuiMain {
 			refresh();
 		}
 
+		@Override
 		public void refresh() {
 			refreshables.forEach(r -> SwingUtilities.invokeLater(r::refresh));
 		}
@@ -376,6 +377,7 @@ public class GuiMain {
 			refresh();
 		}
 
+		@Override
 		public void refresh() {
 			partyTableModel.signalNewData();
 		}
@@ -695,6 +697,7 @@ public class GuiMain {
 			tabs.forEach(tab -> SwingUtilities.invokeLater(() -> addTab(tab)));
 		}
 
+		@SuppressWarnings("BusyWait")
 		private void getAndAddTabs() {
 			while (true) {
 				// Kinda bad...
@@ -858,8 +861,7 @@ public class GuiMain {
 					c.setCellRenderer(new ActionAndStatusRenderer());
 				}))
 				.addMainColumn(new CustomColumn<>("Effects", e -> {
-					if (e instanceof HasEffects) {
-						HasEffects event = (HasEffects) e;
+					if (e instanceof HasEffects event) {
 						return event.getEffects();
 					}
 					return null;

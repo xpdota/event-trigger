@@ -1,10 +1,10 @@
 package gg.xp.xivsupport.persistence.gui;
 
-import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
 
 import javax.swing.*;
 
+@SuppressWarnings("SerializableStoresNonSerializable")
 public class DoubleSettingSlider {
 
 	private final JSlider slider;

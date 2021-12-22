@@ -5,9 +5,11 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 
+import java.io.Serial;
 import java.util.List;
 
 public class AbilityResolvedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects {
+	@Serial
 	private static final long serialVersionUID = 4043588325843768440L;
 	private final AbilityUsedEvent originalEvent;
 	private final long sequenceId;

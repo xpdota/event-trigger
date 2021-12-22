@@ -8,7 +8,6 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 public class StatusEffectListRenderer implements TableCellRenderer {
@@ -31,8 +30,7 @@ public class StatusEffectListRenderer implements TableCellRenderer {
 				coll.forEach(obj -> {
 					Component component = (renderer.getTableCellRendererComponent(table, obj, isSelected, hasFocus, row, column));
 					comps.add(component);
-					if (obj instanceof XivStatusEffect) {
-						XivStatusEffect status = (XivStatusEffect) obj;
+					if (obj instanceof XivStatusEffect status) {
 						tooltipBuilder.append(status.getName());
 						long id = status.getId();
 						tooltipBuilder.append(" (0x").append(Long.toString(id, 16))

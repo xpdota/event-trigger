@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.Serial;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -68,6 +69,7 @@ public class AutoMarkHandler {
 	}
 
 	public static final class KeyPressRequest extends BaseEvent {
+		@Serial
 		private static final long serialVersionUID = -3520916842042620376L;
 		private final int keyCode;
 

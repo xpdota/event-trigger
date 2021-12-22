@@ -29,257 +29,261 @@ public final class GuiWithTestData {
 
 		dist.acceptEvent(new ActWsRawMsg("{\"type\":\"ChangePrimaryPlayer\",\"charID\":22,\"charName\":\"Foo Bar\"}"));
 		dist.acceptEvent(new ActWsRawMsg("{\"type\":\"ChangeZone\",\"zoneID\":777,\"zoneName\":\"the Weapon's Refrain (Ultimate)\"}"));
-		dist.acceptEvent(new ActWsRawMsg("{\n" +
-				"  \"type\": \"PartyChanged\",\n" +
-				"  \"party\": [\n" +
-				"    {\n" +
-				"      \"id\": \"10\",\n" +
-				"      \"name\": \"Player One\",\n" +
-				"      \"worldId\": 63,\n" +
-				"      \"job\": 22,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"13\",\n" +
-				"      \"name\": \"Random Person\",\n" +
-				"      \"worldId\": 65,\n" +
-				"      \"job\": 21,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"12\",\n" +
-				"      \"name\": \"Who Dis\",\n" +
-				"      \"worldId\": 73,\n" +
-				"      \"job\": 25,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"11\",\n" +
-				"      \"name\": \"Some Guy\",\n" +
-				"      \"worldId\": 65,\n" +
-				"      \"job\": 26,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"14\",\n" +
-				"      \"name\": \"Other Alliance\",\n" +
-				"      \"worldId\": 79,\n" +
-				"      \"job\": 33,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"16\",\n" +
-				"      \"name\": \"Foo Bar\",\n" + // This player should be sorted first because they are the actual player
-				"      \"worldId\": 65,\n" +
-				"      \"job\": 24,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"15\",\n" +
-				"      \"name\": \"Pf Hero\",\n" +
-				"      \"worldId\": 79,\n" +
-				"      \"job\": 33,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"17\",\n" +
-				"      \"name\": \"Last Guy\",\n" +
-				"      \"worldId\": 65,\n" +
-				"      \"job\": 38,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    }\n" +
-				"  ]\n" +
-				"}\n"));
+		// This player should be sorted first because they are the actual player
+		dist.acceptEvent(new ActWsRawMsg("""
+				{
+				  "type": "PartyChanged",
+				  "party": [
+				    {
+				      "id": "10",
+				      "name": "Player One",
+				      "worldId": 63,
+				      "job": 22,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "13",
+				      "name": "Random Person",
+				      "worldId": 65,
+				      "job": 21,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "12",
+				      "name": "Who Dis",
+				      "worldId": 73,
+				      "job": 25,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "11",
+				      "name": "Some Guy",
+				      "worldId": 65,
+				      "job": 26,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "14",
+				      "name": "Other Alliance",
+				      "worldId": 79,
+				      "job": 33,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "16",
+				      "name": "Foo Bar",
+				      "worldId": 65,
+				      "job": 24,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "15",
+				      "name": "Pf Hero",
+				      "worldId": 79,
+				      "job": 33,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "17",
+				      "name": "Last Guy",
+				      "worldId": 65,
+				      "job": 38,
+				      "level": 0,
+				      "inParty": true
+				    }
+				  ]
+				}
+				"""));
 		dist.acceptEvent(new ActWsRawMsg(
-				"{\n" +
-						"  \"combatants\": [\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 65,\n" +
-						"      \"WorldID\": 65,\n" +
-						"      \"WorldName\": \"Midgardsormr\",\n" +
-						"      \"BNpcID\": 0,\n" +
-						"      \"BNpcNameID\": 0,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 16,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 1,\n" +
-						"      \"Job\": 22,\n" +
-						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Player One\",\n" +
-						"      \"CurrentHP\": 122700,\n" +
-						"      \"MaxHP\": 122700,\n" +
-						"      \"CurrentMP\": 10000,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 114.926422,\n" +
-						"      \"PosY\": -83.86734,\n" +
-						"      \"PosZ\": 44.3433,\n" +
-						"      \"Heading\": -1.66136408\n" +
-						"    },\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 65,\n" +
-						"      \"WorldID\": 65,\n" +
-						"      \"WorldName\": \"Midgardsormr\",\n" +
-						"      \"BNpcID\": 0,\n" +
-						"      \"BNpcNameID\": 0,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 17,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 1,\n" +
-						"      \"Job\": 26,\n" +
-						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Some Guy\",\n" +
-						"      \"CurrentHP\": 90700,\n" +
-						"      \"MaxHP\": 122700,\n" +
-						"      \"CurrentMP\": 10000,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 114.926422,\n" +
-						"      \"PosY\": -83.86734,\n" +
-						"      \"PosZ\": 44.3433,\n" +
-						"      \"Heading\": -1.66136408\n" +
-						"    },\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 65,\n" +
-						"      \"WorldID\": 65,\n" +
-						"      \"WorldName\": \"Midgardsormr\",\n" +
-						"      \"BNpcID\": 0,\n" +
-						"      \"BNpcNameID\": 0,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 18,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 1,\n" +
-						"      \"Job\": 25,\n" +
-						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Who Dis\",\n" +
-						"      \"CurrentHP\": 40000,\n" +
-						"      \"MaxHP\": 122700,\n" +
-						"      \"CurrentMP\": 10000,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 114.926422,\n" +
-						"      \"PosY\": -83.86734,\n" +
-						"      \"PosZ\": 44.3433,\n" +
-						"      \"Heading\": -1.66136408\n" +
-						"    },\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 65,\n" +
-						"      \"WorldID\": 65,\n" +
-						"      \"WorldName\": \"Midgardsormr\",\n" +
-						"      \"BNpcID\": 0,\n" +
-						"      \"BNpcNameID\": 0,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 19,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 1,\n" +
-						"      \"Job\": 21,\n" +
-						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Random Person\",\n" +
-						"      \"CurrentHP\": 109820,\n" +
-						"      \"MaxHP\": 122700,\n" +
-						"      \"CurrentMP\": 10000,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 114.926422,\n" +
-						"      \"PosY\": -83.86734,\n" +
-						"      \"PosZ\": 44.3433,\n" +
-						"      \"Heading\": -1.66136408\n" +
-						"    },\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 65,\n" +
-						"      \"WorldID\": 65,\n" +
-						"      \"WorldName\": \"Midgardsormr\",\n" +
-						"      \"BNpcID\": 0,\n" +
-						"      \"BNpcNameID\": 0,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 20,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 1,\n" +
-						"      \"Job\": 33,\n" +
-						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Pf Hero\",\n" +
-						"      \"CurrentHP\": 5421,\n" +
-						"      \"MaxHP\": 122700,\n" +
-						"      \"CurrentMP\": 10000,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 114.926422,\n" +
-						"      \"PosY\": -83.86734,\n" +
-						"      \"PosZ\": 44.3433,\n" +
-						"      \"Heading\": -1.66136408\n" +
-						"    },\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 65,\n" +
-						"      \"WorldID\": 65,\n" +
-						"      \"WorldName\": \"Midgardsormr\",\n" +
-						"      \"BNpcID\": 0,\n" +
-						"      \"BNpcNameID\": 0,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 21,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 1,\n" +
-						"      \"Job\": 33,\n" +
-						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Other Alliance\",\n" +
-						"      \"CurrentHP\": 65345,\n" +
-						"      \"MaxHP\": 122700,\n" +
-						"      \"CurrentMP\": 10000,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 114.926422,\n" +
-						"      \"PosY\": -83.86734,\n" +
-						"      \"PosZ\": 44.3433,\n" +
-						"      \"Heading\": -1.66136408\n" +
-						"    },\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 65,\n" +
-						"      \"WorldID\": 65,\n" +
-						"      \"WorldName\": \"Midgardsormr\",\n" +
-						"      \"BNpcID\": 0,\n" +
-						"      \"BNpcNameID\": 0,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 22,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 1,\n" +
-						"      \"Job\": 24,\n" +
-						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Foo Bar\",\n" +
-						"      \"CurrentHP\": 12270,\n" +
-						"      \"MaxHP\": 122700,\n" +
-						"      \"CurrentMP\": 10000,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 114.926422,\n" +
-						"      \"PosY\": -83.86734,\n" +
-						"      \"PosZ\": 44.3433,\n" +
-						"      \"Heading\": -1.66136408\n" +
-						"    },\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 65,\n" +
-						"      \"WorldID\": 65,\n" +
-						"      \"WorldName\": \"Midgardsormr\",\n" +
-						"      \"BNpcID\": 0,\n" +
-						"      \"BNpcNameID\": 0,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 23,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 1,\n" +
-						"      \"Job\": 38,\n" +
-						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Last Guy\",\n" +
-						"      \"CurrentHP\": 122700,\n" +
-						"      \"MaxHP\": 122700,\n" +
-						"      \"CurrentMP\": 10000,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 114.926422,\n" +
-						"      \"PosY\": -83.86734,\n" +
-						"      \"PosZ\": 44.3433,\n" +
-						"      \"Heading\": -1.66136408\n" +
-						"    }\n" +
-						"  ],\n" +
-						"  \"rseq\": 0\n" +
-						"}"
+				"""
+						{
+						  "combatants": [
+						    {
+						      "CurrentWorldID": 65,
+						      "WorldID": 65,
+						      "WorldName": "Midgardsormr",
+						      "BNpcID": 0,
+						      "BNpcNameID": 0,
+						      "PartyType": 0,
+						      "ID": 16,
+						      "OwnerID": 0,
+						      "type": 1,
+						      "Job": 22,
+						      "Level": 80,
+						      "Name": "Player One",
+						      "CurrentHP": 122700,
+						      "MaxHP": 122700,
+						      "CurrentMP": 10000,
+						      "MaxMP": 10000,
+						      "PosX": 114.926422,
+						      "PosY": -83.86734,
+						      "PosZ": 44.3433,
+						      "Heading": -1.66136408
+						    },
+						    {
+						      "CurrentWorldID": 65,
+						      "WorldID": 65,
+						      "WorldName": "Midgardsormr",
+						      "BNpcID": 0,
+						      "BNpcNameID": 0,
+						      "PartyType": 0,
+						      "ID": 17,
+						      "OwnerID": 0,
+						      "type": 1,
+						      "Job": 26,
+						      "Level": 80,
+						      "Name": "Some Guy",
+						      "CurrentHP": 90700,
+						      "MaxHP": 122700,
+						      "CurrentMP": 10000,
+						      "MaxMP": 10000,
+						      "PosX": 114.926422,
+						      "PosY": -83.86734,
+						      "PosZ": 44.3433,
+						      "Heading": -1.66136408
+						    },
+						    {
+						      "CurrentWorldID": 65,
+						      "WorldID": 65,
+						      "WorldName": "Midgardsormr",
+						      "BNpcID": 0,
+						      "BNpcNameID": 0,
+						      "PartyType": 0,
+						      "ID": 18,
+						      "OwnerID": 0,
+						      "type": 1,
+						      "Job": 25,
+						      "Level": 80,
+						      "Name": "Who Dis",
+						      "CurrentHP": 40000,
+						      "MaxHP": 122700,
+						      "CurrentMP": 10000,
+						      "MaxMP": 10000,
+						      "PosX": 114.926422,
+						      "PosY": -83.86734,
+						      "PosZ": 44.3433,
+						      "Heading": -1.66136408
+						    },
+						    {
+						      "CurrentWorldID": 65,
+						      "WorldID": 65,
+						      "WorldName": "Midgardsormr",
+						      "BNpcID": 0,
+						      "BNpcNameID": 0,
+						      "PartyType": 0,
+						      "ID": 19,
+						      "OwnerID": 0,
+						      "type": 1,
+						      "Job": 21,
+						      "Level": 80,
+						      "Name": "Random Person",
+						      "CurrentHP": 109820,
+						      "MaxHP": 122700,
+						      "CurrentMP": 10000,
+						      "MaxMP": 10000,
+						      "PosX": 114.926422,
+						      "PosY": -83.86734,
+						      "PosZ": 44.3433,
+						      "Heading": -1.66136408
+						    },
+						    {
+						      "CurrentWorldID": 65,
+						      "WorldID": 65,
+						      "WorldName": "Midgardsormr",
+						      "BNpcID": 0,
+						      "BNpcNameID": 0,
+						      "PartyType": 0,
+						      "ID": 20,
+						      "OwnerID": 0,
+						      "type": 1,
+						      "Job": 33,
+						      "Level": 80,
+						      "Name": "Pf Hero",
+						      "CurrentHP": 5421,
+						      "MaxHP": 122700,
+						      "CurrentMP": 10000,
+						      "MaxMP": 10000,
+						      "PosX": 114.926422,
+						      "PosY": -83.86734,
+						      "PosZ": 44.3433,
+						      "Heading": -1.66136408
+						    },
+						    {
+						      "CurrentWorldID": 65,
+						      "WorldID": 65,
+						      "WorldName": "Midgardsormr",
+						      "BNpcID": 0,
+						      "BNpcNameID": 0,
+						      "PartyType": 0,
+						      "ID": 21,
+						      "OwnerID": 0,
+						      "type": 1,
+						      "Job": 33,
+						      "Level": 80,
+						      "Name": "Other Alliance",
+						      "CurrentHP": 65345,
+						      "MaxHP": 122700,
+						      "CurrentMP": 10000,
+						      "MaxMP": 10000,
+						      "PosX": 114.926422,
+						      "PosY": -83.86734,
+						      "PosZ": 44.3433,
+						      "Heading": -1.66136408
+						    },
+						    {
+						      "CurrentWorldID": 65,
+						      "WorldID": 65,
+						      "WorldName": "Midgardsormr",
+						      "BNpcID": 0,
+						      "BNpcNameID": 0,
+						      "PartyType": 0,
+						      "ID": 22,
+						      "OwnerID": 0,
+						      "type": 1,
+						      "Job": 24,
+						      "Level": 80,
+						      "Name": "Foo Bar",
+						      "CurrentHP": 12270,
+						      "MaxHP": 122700,
+						      "CurrentMP": 10000,
+						      "MaxMP": 10000,
+						      "PosX": 114.926422,
+						      "PosY": -83.86734,
+						      "PosZ": 44.3433,
+						      "Heading": -1.66136408
+						    },
+						    {
+						      "CurrentWorldID": 65,
+						      "WorldID": 65,
+						      "WorldName": "Midgardsormr",
+						      "BNpcID": 0,
+						      "BNpcNameID": 0,
+						      "PartyType": 0,
+						      "ID": 23,
+						      "OwnerID": 0,
+						      "type": 1,
+						      "Job": 38,
+						      "Level": 80,
+						      "Name": "Last Guy",
+						      "CurrentHP": 122700,
+						      "MaxHP": 122700,
+						      "CurrentMP": 10000,
+						      "MaxMP": 10000,
+						      "PosX": 114.926422,
+						      "PosY": -83.86734,
+						      "PosZ": 44.3433,
+						      "Heading": -1.66136408
+						    }
+						  ],
+						  "rseq": 0
+						}"""
 		));
 
 	}

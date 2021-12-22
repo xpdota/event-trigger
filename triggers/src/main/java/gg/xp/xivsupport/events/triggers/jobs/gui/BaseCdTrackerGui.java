@@ -25,7 +25,6 @@ import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.function.Function;
 
 public abstract class BaseCdTrackerGui implements PluginTab {
 

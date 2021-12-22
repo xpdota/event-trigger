@@ -4,9 +4,12 @@ import gg.xp.reevent.scan.ForceReloadClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClassLoaderTest {
+public final class ClassLoaderTest {
 
 	private static final Logger log = LoggerFactory.getLogger(ClassLoaderTest.class);
+
+	private ClassLoaderTest() {
+	}
 
 	public static void main(String[] args) {
 		ForceReloadClassLoader cl1 = new ForceReloadClassLoader();

@@ -55,6 +55,7 @@ public class ActWsHandlers {
 
 	private Thread combatantsLoopThread;
 
+	@SuppressWarnings("BusyWait")
 	@LiveOnly
 	@HandleEvents
 	public void startCombatantsLoop(EventContext context, ActWsConnectedEvent connected) {

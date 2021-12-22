@@ -3,8 +3,11 @@ package gg.xp.xivsupport.events.triggers.marks;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 
+import java.io.Serial;
+
 public class AutoMarkRequest extends BaseEvent {
 
+	@Serial
 	private static final long serialVersionUID = -915091489094353125L;
 	private final XivPlayerCharacter playerToMark;
 	@SuppressWarnings({"unused", "FieldCanBeLocal"}) // for debugging

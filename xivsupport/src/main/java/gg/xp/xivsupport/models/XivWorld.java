@@ -1,8 +1,10 @@
 package gg.xp.xivsupport.models;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class XivWorld implements Serializable {
+	@Serial
 	private static final long serialVersionUID = 754017335186075592L;
 	private XivWorld() {}
 	private XivWorld(int stuff) {}

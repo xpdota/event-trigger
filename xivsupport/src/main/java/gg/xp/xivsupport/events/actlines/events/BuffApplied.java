@@ -5,12 +5,14 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
+import java.io.Serial;
 import java.time.Duration;
 import java.time.Instant;
 
 // TODO: track new application vs refresh
 // Note that stacks decreasing (e.g. Embolden) still counts as "Application".
 public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect {
+	@Serial
 	private static final long serialVersionUID = -3698392943125561045L;
 	private final XivStatusEffect buff;
 	private final Duration duration;

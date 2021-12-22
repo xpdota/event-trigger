@@ -1,8 +1,6 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
-import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.triggers.jobs.DotRefreshReminders;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
@@ -10,9 +8,7 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
-import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

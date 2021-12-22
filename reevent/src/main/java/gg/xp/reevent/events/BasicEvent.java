@@ -1,7 +1,10 @@
 package gg.xp.reevent.events;
 
+import java.io.Serial;
+
 public class BasicEvent extends BaseEvent {
 
+	@Serial
 	private static final long serialVersionUID = -3964771061111399357L;
 	private final String value;
 

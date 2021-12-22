@@ -219,6 +219,7 @@ public class ActWsLogSource implements EventSource {
 		});
 	}
 
+	@SuppressWarnings("SleepWhileHoldingLock")
 	private void doReconnect() {
 		taskPool.submit(() -> {
 			synchronized (connectLock) {

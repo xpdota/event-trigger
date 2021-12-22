@@ -66,6 +66,7 @@ public class AutoHandler implements EventHandler<Event> {
 		onlyInLive = method.isAnnotationPresent(LiveOnly.class) || clazz.isAnnotationPresent(LiveOnly.class);
 	}
 
+	@Override
 	public int getOrder() {
 		return order;
 	}

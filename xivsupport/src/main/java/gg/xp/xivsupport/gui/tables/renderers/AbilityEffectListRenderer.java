@@ -17,10 +17,9 @@ public class AbilityEffectListRenderer implements TableCellRenderer {
 	// TODO: test with multiple hits like the BLU spell
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		if (value instanceof List) {
+		if (value instanceof List<?> coll) {
 			List<Component> allComponents = new ArrayList<>();
-			List<?> coll = (List<?>) value;
-//			Component defaultLabel = fallback.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
+			//			Component defaultLabel = fallback.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
 			if (isSelected) {
 				listRenderer.setBackground(table.getSelectionBackground());
 			}

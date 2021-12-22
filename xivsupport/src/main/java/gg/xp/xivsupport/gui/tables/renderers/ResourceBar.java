@@ -105,6 +105,7 @@ public class ResourceBar extends JComponent {
 		checkLabel();
 	}
 
+	@SuppressWarnings("SuspiciousNameCombination")
 	@Override
 	protected void paintComponent(Graphics g) {
 		AffineTransform old = ((Graphics2D) g).getTransform();

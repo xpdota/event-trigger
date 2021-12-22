@@ -4,7 +4,6 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
-import org.jetbrains.annotations.Nullable;
 
 public final class ModifiedCalloutHandle {
 

@@ -56,7 +56,7 @@ public class ActionIcon implements HasIconURL {
 						imageId = Long.parseLong(matcher.group(1));
 					}
 					else {
-						throw new RuntimeException("Invalid image specifier: " + rawImg);
+						throw new RuntimeException("Invalid image specifier: " + rawImg, nfe);
 						// Ignore non-numeric
 //					return;
 					}

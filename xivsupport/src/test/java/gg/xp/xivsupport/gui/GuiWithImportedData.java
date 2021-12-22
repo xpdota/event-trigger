@@ -2,7 +2,6 @@ package gg.xp.xivsupport.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.reevent.events.AutoEventDistributor;
-import gg.xp.reevent.events.BasicEventQueue;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;

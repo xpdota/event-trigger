@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.replay.gui;
 
-import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.replay.ReplayController;

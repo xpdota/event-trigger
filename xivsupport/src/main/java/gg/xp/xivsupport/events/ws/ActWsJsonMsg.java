@@ -5,12 +5,14 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serial;
 import java.lang.ref.WeakReference;
 import java.time.Instant;
 
 @SystemEvent
 public class ActWsJsonMsg extends BaseEvent {
 
+	@Serial
 	private static final long serialVersionUID = -5830123394422861873L;
 	private final @Nullable String type;
 	private final Object rseq;

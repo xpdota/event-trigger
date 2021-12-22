@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ObservableSetting {
-	private final Logger log = LoggerFactory.getLogger(ObservableSetting.class);
+	private static final Logger log = LoggerFactory.getLogger(ObservableSetting.class);
 
 	private final List<Runnable> callbacks = new ArrayList<>();
 

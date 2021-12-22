@@ -1,11 +1,10 @@
 package gg.xp.xivsupport.events.debug;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.misc.EchoEvent;
 
-public class DebugEchoCommandHandler {
+public final class DebugEchoCommandHandler {
 
 	private static final String commandPrefix = "c:";
 

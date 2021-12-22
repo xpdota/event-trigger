@@ -4,8 +4,6 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 //@ScanMe
 public class ExampleOverlayWithLotsOfButtons extends XivOverlay {

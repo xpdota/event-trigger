@@ -112,6 +112,7 @@ public class XivOverlay {
 				}
 		);
 		frame.addMouseMotionListener(new MouseMotionAdapter() {
+			@Override
 			public void mouseDragged(MouseEvent evt) {
 				int newX = evt.getXOnScreen();
 				int newY = evt.getYOnScreen();

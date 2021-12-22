@@ -6,7 +6,7 @@ Makes triggers easier to develop and test.
 
 Allows triggers to have custom configuration GUIs and overlays.
 
-For the technical explanation of why I made this, see [Why](https://github.com/xpdota/event-trigger/wiki/Why%3F).
+For the technical explanation of why I made this, see [Why](https://github.com/xpdota/event-trigger/wiki/Why-I-Made-This).
 
 ## How to Download/Install
 

@@ -91,8 +91,7 @@ public class ModifiableCallout {
 			if (rawValue instanceof String) {
 				value = (String) rawValue;
 			}
-			else if (rawValue instanceof XivCombatant) {
-				XivCombatant cbt = (XivCombatant) rawValue;
+			else if (rawValue instanceof XivCombatant cbt) {
 				if (cbt.isThePlayer()) {
 					value = "YOU";
 				}

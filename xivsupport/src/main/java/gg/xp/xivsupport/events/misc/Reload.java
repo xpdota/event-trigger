@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.misc;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.TopologyReloadEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;

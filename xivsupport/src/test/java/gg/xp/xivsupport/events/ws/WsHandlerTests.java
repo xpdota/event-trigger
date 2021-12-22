@@ -43,125 +43,128 @@ public class WsHandlerTests {
 
 		master.pushEvent(new ActWsRawMsg("{\"type\":\"ChangePrimaryPlayer\",\"charID\":275160354,\"charName\":\"Foo Bar\"}"));
 		master.pushEvent(new ActWsRawMsg("{\"type\":\"ChangeZone\",\"zoneID\":129,\"zoneName\":\"Limsa Lominsa Lower Decks\"}"));
-		master.pushEvent(new ActWsRawMsg("{\n" +
-				"  \"type\": \"PartyChanged\",\n" +
-				"  \"party\": [\n" +
-				"    {\n" +
-				"      \"id\": \"106891DE\",\n" +
-				"      \"name\": \"Player One\",\n" +
-				"      \"worldId\": 63,\n" +
-				"      \"job\": 22,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"107939CF\",\n" +
-				"      \"name\": \"Some Guy\",\n" +
-				"      \"worldId\": 65,\n" +
-				"      \"job\": 27,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"107E4275\",\n" +
-				"      \"name\": \"Who Dis\",\n" +
-				"      \"worldId\": 73,\n" +
-				"      \"job\": 25,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"10801F1A\",\n" +
-				"      \"name\": \"Random Person\",\n" +
-				"      \"worldId\": 65,\n" +
-				"      \"job\": 21,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"AABBCCDD\",\n" +
-				"      \"name\": \"Other Alliance\",\n" +
-				"      \"worldId\": 79,\n" +
-				"      \"job\": 33,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": false\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"106CD17F\",\n" +
-				"      \"name\": \"Pf Hero\",\n" +
-				"      \"worldId\": 79,\n" +
-				"      \"job\": 33,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"10669D22\",\n" +
-				"      \"name\": \"Foo Bar\",\n" + // This player should be sorted first because they are the actual player
-				"      \"worldId\": 65,\n" +
-				"      \"job\": 24,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    },\n" +
-				"    {\n" +
-				"      \"id\": \"1065C635\",\n" +
-				"      \"name\": \"Last Guy\",\n" +
-				"      \"worldId\": 65,\n" +
-				"      \"job\": 38,\n" +
-				"      \"level\": 0,\n" +
-				"      \"inParty\": true\n" +
-				"    }\n" +
-				"  ]\n" +
-				"}\n"));
+		// This player should be sorted first because they are the actual player
+		master.pushEvent(new ActWsRawMsg("""
+				{
+				  "type": "PartyChanged",
+				  "party": [
+				    {
+				      "id": "106891DE",
+				      "name": "Player One",
+				      "worldId": 63,
+				      "job": 22,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "107939CF",
+				      "name": "Some Guy",
+				      "worldId": 65,
+				      "job": 27,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "107E4275",
+				      "name": "Who Dis",
+				      "worldId": 73,
+				      "job": 25,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "10801F1A",
+				      "name": "Random Person",
+				      "worldId": 65,
+				      "job": 21,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "AABBCCDD",
+				      "name": "Other Alliance",
+				      "worldId": 79,
+				      "job": 33,
+				      "level": 0,
+				      "inParty": false
+				    },
+				    {
+				      "id": "106CD17F",
+				      "name": "Pf Hero",
+				      "worldId": 79,
+				      "job": 33,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "10669D22",
+				      "name": "Foo Bar",
+				      "worldId": 65,
+				      "job": 24,
+				      "level": 0,
+				      "inParty": true
+				    },
+				    {
+				      "id": "1065C635",
+				      "name": "Last Guy",
+				      "worldId": 65,
+				      "job": 38,
+				      "level": 0,
+				      "inParty": true
+				    }
+				  ]
+				}
+				"""));
 		master.pushEvent(new ActWsRawMsg(
-				"{\n" +
-						"  \"combatants\": [\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 65,\n" +
-						"      \"WorldID\": 65,\n" +
-						"      \"WorldName\": \"Midgardsormr\",\n" +
-						"      \"BNpcID\": 0,\n" +
-						"      \"BNpcNameID\": 0,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 275160354,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 1,\n" +
-						"      \"Job\": 24,\n" +
-						"      \"Level\": 80,\n" +
-						"      \"Name\": \"Foo Bar\",\n" +
-						"      \"CurrentHP\": 122700,\n" +
-						"      \"MaxHP\": 122700,\n" +
-						"      \"CurrentMP\": 10000,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 114.926422,\n" +
-						"      \"PosY\": -83.86734,\n" +
-						"      \"PosZ\": 44.3433,\n" +
-						"      \"Heading\": -1.66136408\n" +
-						"    },\n" +
-						"    {\n" +
-						"      \"CurrentWorldID\": 0,\n" +
-						"      \"WorldID\": 0,\n" +
-						"      \"WorldName\": \"\",\n" +
-						"      \"BNpcID\": 387,\n" +
-						"      \"BNpcNameID\": 387,\n" +
-						"      \"PartyType\": 0,\n" +
-						"      \"ID\": 123456,\n" +
-						"      \"OwnerID\": 0,\n" +
-						"      \"type\": 2,\n" +
-						"      \"Job\": 0,\n" +
-						"      \"Level\": 0,\n" +
-						"      \"Name\": \"Some Boss\",\n" +
-						"      \"CurrentHP\": 0,\n" +
-						"      \"MaxHP\": 0,\n" +
-						"      \"CurrentMP\": 0,\n" +
-						"      \"MaxMP\": 10000,\n" +
-						"      \"PosX\": 116.301865,\n" +
-						"      \"PosY\": -82.89748,\n" +
-						"      \"PosZ\": 43.9826,\n" +
-						"      \"Heading\": -1.55023289\n" +
-						"    }\n" +
-						"  ],\n" +
-						"  \"rseq\":0" +
-						"}"
+				"""
+						{
+						  "combatants": [
+						    {
+						      "CurrentWorldID": 65,
+						      "WorldID": 65,
+						      "WorldName": "Midgardsormr",
+						      "BNpcID": 0,
+						      "BNpcNameID": 0,
+						      "PartyType": 0,
+						      "ID": 275160354,
+						      "OwnerID": 0,
+						      "type": 1,
+						      "Job": 24,
+						      "Level": 80,
+						      "Name": "Foo Bar",
+						      "CurrentHP": 122700,
+						      "MaxHP": 122700,
+						      "CurrentMP": 10000,
+						      "MaxMP": 10000,
+						      "PosX": 114.926422,
+						      "PosY": -83.86734,
+						      "PosZ": 44.3433,
+						      "Heading": -1.66136408
+						    },
+						    {
+						      "CurrentWorldID": 0,
+						      "WorldID": 0,
+						      "WorldName": "",
+						      "BNpcID": 387,
+						      "BNpcNameID": 387,
+						      "PartyType": 0,
+						      "ID": 123456,
+						      "OwnerID": 0,
+						      "type": 2,
+						      "Job": 0,
+						      "Level": 0,
+						      "Name": "Some Boss",
+						      "CurrentHP": 0,
+						      "MaxHP": 0,
+						      "CurrentMP": 0,
+						      "MaxMP": 10000,
+						      "PosX": 116.301865,
+						      "PosY": -82.89748,
+						      "PosZ": 43.9826,
+						      "Heading": -1.55023289
+						    }
+						  ],
+						  "rseq":0}"""
 		));
 		StateStore stateStore = pico.getComponent(StateStore.class);
 		XivState xivState = stateStore.get(XivStateImpl.class);

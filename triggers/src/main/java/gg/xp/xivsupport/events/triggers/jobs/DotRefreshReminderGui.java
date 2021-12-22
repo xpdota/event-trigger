@@ -8,7 +8,6 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
-import gg.xp.xivsupport.persistence.gui.IntSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.LongSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;

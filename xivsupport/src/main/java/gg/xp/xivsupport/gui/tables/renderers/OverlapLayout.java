@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
 import java.awt.*;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 
 	private static final int PREFERRED = 0;
 	private static final int MINIMUM = 1;
+	@Serial
 	private static final long serialVersionUID = 1200924519140167411L;
 
 	//  Indicates how a component is painted
@@ -158,12 +160,14 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	 * @param name the name of the component
 	 * @param comp the component to be added
 	 */
+	@Override
 	public void addLayoutComponent(String name, Component comp) {
 	}
 
 	/*
 	 *	Keep track of any specified constraint for the component.
 	 */
+	@Override
 	public void addLayoutComponent(Component component, Object constraint) {
 		//  Support simple Boolean constraint for painting a Component in
 		//  its "popped up" position
@@ -213,6 +217,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	 *
 	 * @param comp the component to be removed
 	 */
+	@Override
 	public void removeLayoutComponent(Component component) {
 		components.remove(component);
 		constraints.remove(component);
@@ -225,6 +230,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	 * @return the minimum dimensions needed to lay out the
 	 * subcomponents of the specified container
 	 */
+	@Override
 	public Dimension minimumLayoutSize(Container parent) {
 		synchronized (parent.getTreeLock()) {
 			return getLayoutSize(parent, MINIMUM);
@@ -238,6 +244,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	 * subcomponents of the specified container
 	 * @param     parent   the container in which to do the layout
 	 */
+	@Override
 	public Dimension preferredLayoutSize(Container parent) {
 		synchronized (parent.getTreeLock()) {
 			return getLayoutSize(parent, PREFERRED);
@@ -307,6 +314,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	 *
 	 * @param     target   the container in which to do the layout
 	 */
+	@Override
 	public void layoutContainer(Container parent) {
 		synchronized (parent.getTreeLock()) {
 			int size = components.size();
@@ -393,6 +401,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * There is no maximum.
 	 */
+	@Override
 	public Dimension maximumLayoutSize(Container target) {
 		return new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE);
 	}
@@ -400,6 +409,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Returns the alignment along the x axis.  Use center alignment.
 	 */
+	@Override
 	public float getLayoutAlignmentX(Container parent) {
 		return 0.5f;
 	}
@@ -407,6 +417,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Returns the alignment along the y axis.  Use center alignment.
 	 */
+	@Override
 	public float getLayoutAlignmentY(Container parent) {
 		return 0.5f;
 	}
@@ -415,6 +426,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	 * Invalidates the layout, indicating that if the layout manager
 	 * has cached information it should be discarded.
 	 */
+	@Override
 	public void invalidateLayout(Container target) {
 		// remove constraints here?
 	}

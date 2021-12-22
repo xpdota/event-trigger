@@ -8,6 +8,7 @@ public class BasicStateStore implements StateStore {
 
 	private final Map<Class<?>, Object> map = new ConcurrentHashMap<>();
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <X extends SubState> X get(Class<X> clazz) {
 		return (X) map.computeIfAbsent(clazz, (cls) -> {
@@ -24,6 +25,7 @@ public class BasicStateStore implements StateStore {
 		});
 	}
 
+	@Override
 	public <X> void putCustom(Class<X> clazz, X instance) {
 		map.put(clazz, instance);
 	}

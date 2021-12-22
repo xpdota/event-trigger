@@ -4,7 +4,10 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 
+import java.io.Serial;
+
 public class AbilityCastStart extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility {
+	@Serial
 	private static final long serialVersionUID = -8156458501097189982L;
 	private final XivAbility ability;
 	private final XivCombatant source;
@@ -18,14 +21,17 @@ public class AbilityCastStart extends BaseEvent implements HasSourceEntity, HasT
 		this.duration = duration;
 	}
 
+	@Override
 	public XivAbility getAbility() {
 		return ability;
 	}
 
+	@Override
 	public XivCombatant getSource() {
 		return source;
 	}
 
+	@Override
 	public XivCombatant getTarget() {
 		return target;
 	}

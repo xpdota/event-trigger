@@ -95,6 +95,7 @@ public class XivStateDummy implements XivState {
 
 	@Override
 	public int getPartySlotOf(XivEntity entity) {
+		//noinspection SuspiciousMethodCalls
 		return partyList.indexOf(entity);
 	}
 

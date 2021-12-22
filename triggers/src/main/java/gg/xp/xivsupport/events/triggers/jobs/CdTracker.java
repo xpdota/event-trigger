@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -87,6 +88,7 @@ public class CdTracker {
 	@SystemEvent
 	static class DelayedCdCallout extends BaseDelayedEvent {
 
+		@Serial
 		private static final long serialVersionUID = 6817565445334081296L;
 		final AbilityUsedEvent originalEvent;
 		final int originalKey;
@@ -120,7 +122,8 @@ public class CdTracker {
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvancePersonal.get()));
 			}
 			// TODO: party check
-			else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
+			else //noinspection SuspiciousMethodCalls
+				if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
 				log.info("Party CD used: {}", event);
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvanceParty.get()));
 			}
@@ -188,6 +191,7 @@ public class CdTracker {
 			if (!cdSetting.getOverlay().get()) {
 				return false;
 			}
+			//noinspection SuspiciousMethodCalls
 			return state.getPartyList().contains(entry.getValue().getSource().walkParentChain());
 		});
 	}

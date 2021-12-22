@@ -1,8 +1,5 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
-import gg.xp.reevent.events.Event;
-import gg.xp.reevent.events.SystemEvent;
-import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

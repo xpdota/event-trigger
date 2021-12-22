@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.state;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
 
+import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import java.util.List;
 // TODO: make this event collapsible
 public class CombatantsUpdateRaw extends BaseEvent {
 
+	@Serial
 	private static final long serialVersionUID = 6485573030632033688L;
 	private final List<RawXivCombatantInfo> combatantMaps;
 	private final boolean fullRefresh;

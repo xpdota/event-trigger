@@ -6,7 +6,6 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 
-import javax.swing.*;
 import java.awt.*;
 
 @ScanMe

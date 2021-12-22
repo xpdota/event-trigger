@@ -4,8 +4,11 @@ package gg.xp.xivsupport.models;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serial;
+
 public class XivCombatant extends XivEntity {
 
+	@Serial
 	private static final long serialVersionUID = -6395674063997151018L;
 	private final boolean isPc;
 	private final boolean isThePlayer;

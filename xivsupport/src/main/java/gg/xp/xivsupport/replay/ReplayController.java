@@ -1,10 +1,13 @@
 package gg.xp.xivsupport.replay;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
-import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.time.CurrentTimeSource;
+import gg.xp.xivsupport.events.actlines.parsers.ActTimeKeeper;
 import gg.xp.xivsupport.persistence.Compressible;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.picocontainer.PicoContainer;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -22,10 +25,12 @@ public class ReplayController {
 	private final EventMaster master;
 	private final List<? extends Event> events;
 	private final boolean decompress;
+	private final CurrentTimeSource timeSource;
 	private int currentIndex;
 
-	public ReplayController(EventMaster master, List<? extends Event> events, boolean decompress) {
-		this.master = master;
+	public ReplayController(PicoContainer container, List<? extends Event> events, boolean decompress) {
+		this.master = container.getComponent(EventMaster.class);
+		this.timeSource = container.getComponent(ActTimeKeeper.class);
 		this.events = events;
 		this.decompress = decompress;
 	}
@@ -39,7 +44,7 @@ public class ReplayController {
 	}
 
 	public void advanceBy(int count) {
-		for (; count-- > 0 && currentIndex < events.size(); currentIndex ++) {
+		for (; count-- > 0 && currentIndex < events.size(); currentIndex++) {
 			Event event = events.get(currentIndex);
 			if (decompress && event instanceof Compressible compressedEvent) {
 				compressedEvent.decompress();

@@ -1,8 +1,7 @@
-package gg.xp.xivsupport.events.misc;
+package gg.xp.reevent.time;
 
 import java.time.Instant;
 
-// TODO: this ended up in the wrong module
 public final class TimeUtils {
 
 	private static Instant last;

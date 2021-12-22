@@ -6,12 +6,14 @@ import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class RawXivCombatantInfo implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = -4500158723610391407L;
 	private final long id;
 	private final String name;

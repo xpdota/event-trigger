@@ -1,12 +1,13 @@
 package gg.xp.xivsupport.events.delaytest;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.Serial;
 
 /**
  * Example for how to make a "after A, wait X seconds then do Y, unless Z happened in the meantime" kind of trigger
@@ -25,6 +26,7 @@ public class DelayedTest {
 	private static final Logger log = LoggerFactory.getLogger(DelayedTest.class);
 
 	private static final class DelayedTestEvent extends BaseDelayedEvent {
+		@Serial
 		private static final long serialVersionUID = 3234353073228933673L;
 
 		private DelayedTestEvent(long delay) {

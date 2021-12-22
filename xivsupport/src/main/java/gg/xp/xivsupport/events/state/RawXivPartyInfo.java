@@ -5,8 +5,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.xivsupport.models.XivEntity;
 
+import java.io.Serial;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RawXivPartyInfo extends XivEntity {
+	@Serial
 	private static final long serialVersionUID = 5313136766980667451L;
 	private final int worldId;
 	private final int jobId;

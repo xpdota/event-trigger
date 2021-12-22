@@ -12,6 +12,7 @@ import java.awt.dnd.DragGestureRecognizer;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceDropEvent;
+import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -37,8 +38,10 @@ public final class RearrangeableList<X> extends JList<X> {
 	}
 
 	private class MyListDropHandler extends TransferHandler {
+		@Serial
 		private static final long serialVersionUID = -7982645171209919315L;
 
+		@Override
 		public boolean canImport(TransferSupport support) {
 			if (support.getComponent().equals(RearrangeableList.this)) {
 				JList.DropLocation dl = (JList.DropLocation) support.getDropLocation();
@@ -47,6 +50,7 @@ public final class RearrangeableList<X> extends JList<X> {
 			return false;
 		}
 
+		@Override
 		public boolean importData(TransferSupport support) {
 			if (!canImport(support)) {
 				return false;
@@ -111,6 +115,7 @@ public final class RearrangeableList<X> extends JList<X> {
 
 		}
 
+		@Override
 		public void dragGestureRecognized(DragGestureEvent dge) {
 			log.info("Drag and Drop Started");
 			currentDrag = RearrangeableList.this.getSelectedValue();
@@ -118,6 +123,7 @@ public final class RearrangeableList<X> extends JList<X> {
 			ds.startDrag(dge, DragSource.DefaultMoveDrop, transfer, this);
 		}
 
+		@Override
 		public void dragDropEnd(DragSourceDropEvent dsde) {
 			if (dsde.getDropSuccess()) {
 				log.info("Drag and Drop Succeeded");

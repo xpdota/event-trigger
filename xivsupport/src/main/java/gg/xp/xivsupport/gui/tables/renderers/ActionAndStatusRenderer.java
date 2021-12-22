@@ -45,13 +45,11 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		}
 		HasIconURL icon;
 		String tooltip;
-		if (value instanceof XivAbility) {
-			XivAbility ability = ((XivAbility) value);
+		if (value instanceof XivAbility ability) {
 			icon = ActionIcon.forId(ability.getId());
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 		}
-		else if (value instanceof XivStatusEffect) {
-			XivStatusEffect status = (XivStatusEffect) value;
+		else if (value instanceof XivStatusEffect status) {
 			icon = StatusEffectIcon.forId(status.getId());
 			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
 		}

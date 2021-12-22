@@ -27,8 +27,7 @@ public class TopologyTreeEditor extends AbstractCellEditor implements TreeCellEd
 	@Override
 	public boolean isCellEditable(EventObject event) {
 		boolean returnValue = false;
-		if (event instanceof MouseEvent) {
-			MouseEvent mouseEvent = (MouseEvent) event;
+		if (event instanceof MouseEvent mouseEvent) {
 			TreePath path = tree.getPathForLocation(mouseEvent.getX(),
 					mouseEvent.getY());
 			if (path != null) {

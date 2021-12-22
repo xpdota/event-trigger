@@ -4,10 +4,13 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 
+import java.io.Serial;
+
 
 @SystemEvent
 public class ActionSyncEvent extends BaseEvent implements HasTargetEntity {
 
+	@Serial
 	private static final long serialVersionUID = -8477450928742265164L;
 	private final XivCombatant entity;
 	private final long sequenceId;

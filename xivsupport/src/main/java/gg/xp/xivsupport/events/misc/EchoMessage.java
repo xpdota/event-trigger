@@ -1,13 +1,12 @@
 package gg.xp.xivsupport.events.misc;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EchoMessage {
+public final class EchoMessage {
 
 	private static final Logger log = LoggerFactory.getLogger(EchoMessage.class);
 

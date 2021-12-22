@@ -45,6 +45,7 @@ public class TopologyTreeModel implements TreeModel {
 
 	@Override
 	public int getIndexOfChild(Object parent, Object child) {
+		//noinspection SuspiciousMethodCalls
 		return ((TopoItem) parent).getChildren().indexOf(child);
 	}
 

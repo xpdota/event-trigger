@@ -29,6 +29,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.io.Serial;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
@@ -140,8 +141,7 @@ public final class StandardColumns {
 
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-				if (value instanceof XivCombatant) {
-					XivCombatant c = (XivCombatant) value;
+				if (value instanceof XivCombatant c) {
 					String text;
 					String tooltip;
 					if (c.isThePlayer()) {
@@ -238,9 +238,8 @@ public final class StandardColumns {
 
 				@Override
 				public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-					if (value instanceof DoubleSetting) {
+					if (value instanceof DoubleSetting setting) {
 						// TODO: range
-						DoubleSetting setting = ((DoubleSetting) value);
 						JSlider slider = new DoubleSettingSlider(name, setting, increment, false).getComponent();
 						slider.setOpaque(true);
 						slider.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column).getBackground());
@@ -258,6 +257,7 @@ public final class StandardColumns {
 	private static class DoubleSettingSliderEditor extends AbstractCellEditor implements TableCellEditor {
 
 		private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+		@Serial
 		private static final long serialVersionUID = -6990208664804878646L;
 		private final String name;
 		private final double increment;
@@ -284,6 +284,7 @@ public final class StandardColumns {
 	private static class BooleanSettingCellEditor extends AbstractCellEditor implements TableCellEditor {
 
 		private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+		@Serial
 		private static final long serialVersionUID = -6990208664804878646L;
 		private final BooleanSetting enabledBy;
 

@@ -3,7 +3,10 @@ package gg.xp.xivsupport.events.actlines.events;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivdata.jobs.XivMap;
 
+import java.io.Serial;
+
 public class MapChangeEvent extends BaseEvent implements XivStateChange {
+	@Serial
 	private static final long serialVersionUID = -5578740136371565264L;
 	private final XivMap map;
 

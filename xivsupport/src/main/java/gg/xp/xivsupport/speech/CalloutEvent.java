@@ -3,7 +3,10 @@ package gg.xp.xivsupport.speech;
 import gg.xp.reevent.events.BaseEvent;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serial;
+
 public class CalloutEvent extends BaseEvent {
+	@Serial
 	private static final long serialVersionUID = 7956006620675927571L;
 	private final String callText;
 	private final String visualText;

@@ -9,7 +9,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-public class ReadCsv {
+public final class ReadCsv {
+	private ReadCsv() {
+	}
+
 	public static List<String[]> cellsFromResource(String resourcePath) {
 		List<String[]> arrays;
 		try (CSVReader csvReader = new CSVReader(new InputStreamReader(ReadCsv.class.getResourceAsStream(resourcePath)))) {

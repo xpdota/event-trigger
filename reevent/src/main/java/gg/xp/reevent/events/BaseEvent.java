@@ -1,10 +1,12 @@
 package gg.xp.reevent.events;
 
-import gg.xp.xivsupport.events.misc.TimeUtils;
+import gg.xp.reevent.time.CurrentTimeSource;
+import gg.xp.reevent.time.TimeUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -12,6 +14,7 @@ import java.time.Instant;
 public abstract class BaseEvent implements Event {
 
 	private static final Logger log = LoggerFactory.getLogger(BaseEvent.class);
+	@Serial
 	private static final long serialVersionUID = 6147224373832437718L;
 	private Event parent;
 	private EventHandler<?> source;
@@ -22,7 +25,9 @@ public abstract class BaseEvent implements Event {
 	private Instant pumpFinishedAt;
 	private long delayedEnqueueAt;
 	private transient boolean isImported;
+	private transient CurrentTimeSource timeSource;
 
+	@Override
 	public void setParent(Event parent) {
 		if (this.parent != null) {
 			throw new IllegalStateException("Event already has a parent");
@@ -121,5 +126,13 @@ public abstract class BaseEvent implements Event {
 	@Override
 	public void setImported(boolean imported) {
 		isImported = imported;
+	}
+
+	public Instant timeNow() {
+		return timeSource.now();
+	}
+
+	public void setTimeSource(CurrentTimeSource timeSource) {
+		this.timeSource = timeSource;
 	}
 }

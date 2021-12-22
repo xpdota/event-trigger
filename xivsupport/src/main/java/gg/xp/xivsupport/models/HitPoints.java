@@ -1,9 +1,11 @@
 package gg.xp.xivsupport.models;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
 public record HitPoints(long current, long max) implements CurrentMaxPair, Serializable {
+	@Serial
 	private static final long serialVersionUID = 5725036718136891291L;
 
 	@Override

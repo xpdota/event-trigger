@@ -2,10 +2,12 @@ package gg.xp.xivsupport.models;
 
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
 public class XivAbility implements Serializable, NameIdPair {
+	@Serial
 	private static final long serialVersionUID = -6170494857373031360L;
 	private final long id;
 	private final String name;
@@ -15,10 +17,12 @@ public class XivAbility implements Serializable, NameIdPair {
 		this.name = name;
 	}
 
+	@Override
 	public long getId() {
 		return id;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

@@ -4,11 +4,8 @@ import gg.xp.xivsupport.gui.tables.renderers.ResourceBarRenderer;
 import gg.xp.xivsupport.models.CurrentMaxPair;
 
 import java.awt.*;
-import java.io.Serial;
 
 public class CdBarRenderer extends ResourceBarRenderer {
-	@Serial
-	private static final long serialVersionUID = 3685102734093696924L;
 
 	private static final Color colorActive = new Color(19, 8, 201, 192);
 	private static final Color colorReady = new Color(55, 182, 67, 192);

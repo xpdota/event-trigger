@@ -5,8 +5,11 @@ import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StandaloneOverlayTest {
+public final class StandaloneOverlayTest {
 	private static final Logger log = LoggerFactory.getLogger(StandaloneOverlayTest.class);
+
+	private StandaloneOverlayTest() {
+	}
 
 	public static void main(String[] args) throws InterruptedException {
 		CommonGuiSetup.setup();

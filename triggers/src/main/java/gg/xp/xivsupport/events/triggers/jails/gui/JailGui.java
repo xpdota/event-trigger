@@ -153,24 +153,29 @@ public class JailGui implements PluginTab {
 	}
 
 
-	private static final String helpText = "Instructions:\n" +
-			"\n" +
-			"1. Check boxes for whether you would like personal callouts and/or automarks.\n" +
-			"2. If you will be using automarks, be sure to configure automark hotkeys on the Automarks tab.\n" +
-			"3. Drag jobs in the list to configure your priority. The party list on the right shows what the effective priority will be.\n" +
-			"4. If using personal callouts, make sure everyone has the same priority (using the defaults makes this easy).\n" +
-			"\n" +
-			"To test automarks, you must in inside the UWU instance. Then, use the command 'amtest' like so:\n" +
-			"\n" +
-			"/e c:amtest 4 2 7\n" +
-			"\n" +
-			"where the numbers are which party slots you would like to put markers on. Make sure this works. Note that they will be marked in the order you put in the command, not the priority order.\n" +
-			"\n" +
-			"To test jails in general, use the command:\n" +
-			"\n" +
-			"/e c:jailtest 4 2 7\n" +
-			"\n" +
-			"where the numbers are which party slots you would like to simulate being jailed. Note that they will be marked in the chosen priority order, not the order they are written in the command. This will follow your settings for whether you want automarks and/or personal callouts (you should make sure '1' is chosen as one of the player IDs if you want to hear a personal callout).\n" +
-			"\n" +
-			"Finally, be sure to use '/e c:jailreset' to simulate a wipe.\n";
+	private static final String helpText = """
+			NOTE: You currently MUST use default party sort order to use automarks!
+
+			Instructions:
+
+			1. Check boxes for whether you would like personal callouts and/or automarks.
+			2. If you will be using automarks, be sure to configure automark hotkeys on the Automarks tab.
+			3. Drag jobs in the list to configure your priority. The party list on the right shows what the effective priority will be.
+			4. If using personal callouts, make sure everyone has the same priority (using the defaults makes this easy).
+
+			To test automarks, you must in inside the UWU instance, or check the 'Override Zone Lock' option. Then, use the command 'amtest' like so:
+
+			/e c:amtest 4 2 7
+
+			where the numbers are which party slots you would like to put markers on. Make sure this works. Note that they will be marked in the order you put in the command, not the priority order.
+
+			To test jails in general, use the command:
+
+			/e c:jailtest 4 2 7
+
+			where the numbers are which party slots you would like to simulate being jailed. Note that they will be marked in the chosen priority order, not the order they are written in the command. This will follow your settings for whether you want automarks and/or personal callouts (you should make sure '1' is chosen as one of the player IDs if you want to hear a personal callout).
+
+			Finally, be sure to use '/e c:jailreset' to simulate a wipe.
+
+			If you are not in-instance, you can check the 'Override Zone Lock' checkbox, and then do /e c:jailtest 1 1 1 to simulate getting all three jails on yourself.""";
 }

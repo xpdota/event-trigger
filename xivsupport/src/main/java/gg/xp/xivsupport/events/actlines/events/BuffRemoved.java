@@ -4,7 +4,10 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
+import java.io.Serial;
+
 public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect {
+	@Serial
 	private static final long serialVersionUID = -5438212467951183512L;
 	private final XivStatusEffect buff;
 	private final double duration;

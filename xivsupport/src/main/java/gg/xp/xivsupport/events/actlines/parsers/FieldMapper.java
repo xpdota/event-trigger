@@ -316,16 +316,12 @@ public class FieldMapper<K extends Enum<K>> {
 	}
 
 	private static HitSeverity calcSeverity(byte severity) {
-		switch (severity) {
-			case 1:
-				return HitSeverity.CRIT;
-			case 2:
-				return HitSeverity.DHIT;
-			case 3:
-				return HitSeverity.CRIT_DHIT;
-			default:
-				return HitSeverity.NORMAL;
-		}
+		return switch (severity) {
+			case 1 -> HitSeverity.CRIT;
+			case 2 -> HitSeverity.DHIT;
+			case 3 -> HitSeverity.CRIT_DHIT;
+			default -> HitSeverity.NORMAL;
+		};
 	}
 
 	@SuppressWarnings("NumericCastThatLosesPrecision")

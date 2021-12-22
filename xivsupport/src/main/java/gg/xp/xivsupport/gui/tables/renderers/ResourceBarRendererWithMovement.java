@@ -5,7 +5,6 @@ import gg.xp.xivsupport.models.CurrentMaxPredicted;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
 import java.awt.*;
 
 /**

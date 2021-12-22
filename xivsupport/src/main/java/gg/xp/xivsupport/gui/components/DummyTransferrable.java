@@ -4,9 +4,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.io.Serial;
 import java.io.Serializable;
 
 public class DummyTransferrable implements Transferable, Serializable {
+	@Serial
 	private static final long serialVersionUID = 4133123683982896282L;
 
 	DummyTransferrable() {

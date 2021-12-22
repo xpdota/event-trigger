@@ -2,11 +2,10 @@ package gg.xp.reevent.events;
 
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.scan.AutoHandler;
-import gg.xp.xivsupport.events.misc.TimeUtils;
+import gg.xp.reevent.time.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,6 +29,7 @@ public class BasicEventDistributor implements EventDistributor {
 	}
 
 	// todo: sync object doesn't cover direct access as seen in subclass
+	@Override
 	public synchronized void registerHandler(EventHandler<Event> handler) {
 		if (!(handler instanceof AutoHandler)) {
 			log.info("Added manual handler: {}", handler);
@@ -45,6 +45,7 @@ public class BasicEventDistributor implements EventDistributor {
 	}
 
 
+	@Override
 	public void setQueue(EventQueue queue) {
 		this.queue = queue;
 	}

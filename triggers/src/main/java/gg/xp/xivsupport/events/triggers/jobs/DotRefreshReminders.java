@@ -17,6 +17,7 @@ import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -133,6 +134,7 @@ public class DotRefreshReminders {
 	@SystemEvent
 	static class DelayedBuffCallout extends BaseDelayedEvent {
 
+		@Serial
 		private static final long serialVersionUID = 499685323334095132L;
 		private final BuffApplied originalEvent;
 

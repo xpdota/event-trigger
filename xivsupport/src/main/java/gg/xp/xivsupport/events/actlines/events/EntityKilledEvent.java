@@ -3,7 +3,10 @@ package gg.xp.xivsupport.events.actlines.events;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 
+import java.io.Serial;
+
 public class EntityKilledEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
+	@Serial
 	private static final long serialVersionUID = 2379855663603121468L;
 	private final XivCombatant source;
 	private final XivCombatant target;
