@@ -1,10 +1,7 @@
 package gg.xp.xivsupport.replay;
 
-import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
-import gg.xp.reevent.time.CurrentTimeSource;
-import gg.xp.xivsupport.events.actlines.parsers.ActTimeKeeper;
 import gg.xp.xivsupport.persistence.Compressible;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.picocontainer.PicoContainer;
@@ -25,12 +22,10 @@ public class ReplayController {
 	private final EventMaster master;
 	private final List<? extends Event> events;
 	private final boolean decompress;
-	private final CurrentTimeSource timeSource;
 	private int currentIndex;
 
-	public ReplayController(PicoContainer container, List<? extends Event> events, boolean decompress) {
-		this.master = container.getComponent(EventMaster.class);
-		this.timeSource = container.getComponent(ActTimeKeeper.class);
+	public ReplayController(EventMaster master, List<? extends Event> events, boolean decompress) {
+		this.master = master;
 		this.events = events;
 		this.decompress = decompress;
 	}

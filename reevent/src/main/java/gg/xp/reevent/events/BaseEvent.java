@@ -1,6 +1,5 @@
 package gg.xp.reevent.events;
 
-import gg.xp.reevent.time.CurrentTimeSource;
 import gg.xp.reevent.time.TimeUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -25,7 +24,6 @@ public abstract class BaseEvent implements Event {
 	private Instant pumpFinishedAt;
 	private long delayedEnqueueAt;
 	private transient boolean isImported;
-	private transient CurrentTimeSource timeSource;
 
 	@Override
 	public void setParent(Event parent) {
@@ -126,13 +124,5 @@ public abstract class BaseEvent implements Event {
 	@Override
 	public void setImported(boolean imported) {
 		isImported = imported;
-	}
-
-	public Instant timeNow() {
-		return timeSource.now();
-	}
-
-	public void setTimeSource(CurrentTimeSource timeSource) {
-		this.timeSource = timeSource;
 	}
 }
