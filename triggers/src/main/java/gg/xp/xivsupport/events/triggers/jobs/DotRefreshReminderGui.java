@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.jobs;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.jobs.DotBuff;
 import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivsupport.events.triggers.jobs.gui.DotTrackerOverlay;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
@@ -23,9 +24,11 @@ import java.util.stream.Collectors;
 public class DotRefreshReminderGui implements PluginTab {
 
 	private final DotRefreshReminders backend;
+	private final DotTrackerOverlay overlay;
 
-	public DotRefreshReminderGui(DotRefreshReminders backend) {
+	public DotRefreshReminderGui(DotRefreshReminders backend, DotTrackerOverlay overlay) {
 		this.backend = backend;
+		this.overlay = overlay;
 	}
 
 	@Override
@@ -51,6 +54,10 @@ public class DotRefreshReminderGui implements PluginTab {
 		settingsPanel.add(preTimeBox);
 		JCheckBox enableTts = new BooleanSettingGui(backend.getEnableTts(), "Enable TTS").getComponent();
 		settingsPanel.add(enableTts);
+		BooleanSetting enableOverlaySetting = overlay.getEnabled();
+		JCheckBox enableOverlay = new BooleanSettingGui(enableOverlaySetting, "Enable Overlay").getComponent();
+		settingsPanel.add(enableOverlay);
+		enableOverlaySetting.addListener(settingsPanel::repaint);
 		JPanel numSetting = new IntSettingSpinner(backend.getNumberToDisplay(), "Max in Overlay").getComponent();
 		settingsPanel.add(numSetting);
 

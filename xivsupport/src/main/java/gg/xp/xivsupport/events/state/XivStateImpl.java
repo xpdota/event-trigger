@@ -6,7 +6,9 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivdata.jobs.XivMap;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.OnlineStatus;
 import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
+import gg.xp.xivsupport.events.actlines.events.RawOnlineStatusChanged;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
@@ -51,6 +53,7 @@ public class XivStateImpl implements XivState {
 	private volatile @NotNull Map<Long, XivCombatant> combatantsProcessed = Collections.emptyMap();
 	private final Map<Long, HitPoints> hpOverrides = new HashMap<>();
 	private final Map<Long, Position> posOverrides = new HashMap<>();
+	private volatile OnlineStatus playerOnlineStatus = OnlineStatus.UNKNOWN;
 	private volatile Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
 	private boolean isActImport;
 
@@ -498,6 +501,20 @@ public class XivStateImpl implements XivState {
 		}
 		else {
 			setSpecificCombatants(event.getCombatantMaps());
+		}
+	}
+
+	// For now, only caring about the primary player's online status so we can hide overlays in cutscenes
+	@HandleEvents(order = Integer.MIN_VALUE)
+	public void onlineStatus(EventContext context, RawOnlineStatusChanged event) {
+		if (player != null && event.getTargetId() == player.getId()) {
+			OnlineStatus oldStatus = playerOnlineStatus;
+			OnlineStatus newStatus = OnlineStatus.forId(event.getRawStatusId());
+			if (newStatus != oldStatus) {
+				playerOnlineStatus = newStatus;
+				log.info("Player status changed: {} -> {}", oldStatus, newStatus);
+				context.accept(new PrimaryPlayerOnlineStatusChangedEvent(oldStatus, newStatus));
+			}
 		}
 	}
 }

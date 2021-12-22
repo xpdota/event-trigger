@@ -49,6 +49,7 @@ public class RawEventStorage {
 	private final Object eventsPruneLock = new Object();
 	private List<Event> events = new ArrayList<>();
 	private final BooleanSetting saveToDisk;
+	private boolean allowSave = true;
 
 	public RawEventStorage(PersistenceProvider persist) {
 		maxEventsStored = new IntSetting(persist, "raw-storage.events-to-retain", 25000);
@@ -108,9 +109,9 @@ public class RawEventStorage {
 
 	private void saveEventToDisk(Event event) {
 		if (event instanceof Compressible) {
-//			((Compressible) event).compress();
+			((Compressible) event).compress();
 		}
-		if (event.shouldSave() && saveToDisk.get()) {
+		if (event.shouldSave() && allowSave && saveToDisk.get()) {
 			try {
 				if (eventSaveStream == null) {
 					String userDataDir = System.getenv("APPDATA");
@@ -147,5 +148,9 @@ public class RawEventStorage {
 
 	public BooleanSetting getSaveToDisk() {
 		return saveToDisk;
+	}
+
+	public void setAllowSave(boolean allowSave) {
+		this.allowSave = allowSave;
 	}
 }

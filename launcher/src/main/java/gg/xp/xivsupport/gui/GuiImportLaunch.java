@@ -27,6 +27,7 @@ public final class GuiImportLaunch {
 			frame.setLocationByPlatform(true);
 			JPanel panel = new TitleBorderFullsizePanel("Import");
 
+			JCheckBox decompressCheckbox = new JCheckBox("Decompress events (uses more memory)");
 			Path sessionsDir = Paths.get(Platform.getTriggeventDir().toString(), "sessions");
 			JFileChooser sessionChooser = new JFileChooser(sessionsDir.toString());
 			sessionChooser.setPreferredSize(new Dimension(800, 600));
@@ -37,7 +38,7 @@ public final class GuiImportLaunch {
 					File file = sessionChooser.getSelectedFile();
 					// TODO: this should be async
 					CatchFatalError.run(() -> {
-						LaunchImportedSession.fromEvents(EventReader.readEventsFromFile(file));
+						LaunchImportedSession.fromEvents(EventReader.readEventsFromFile(file), decompressCheckbox.isSelected());
 					});
 					frame.setVisible(false);
 				}
@@ -53,7 +54,7 @@ public final class GuiImportLaunch {
 					File file = actLogChooser.getSelectedFile();
 					// TODO: this should be async
 					CatchFatalError.run(() -> {
-						LaunchImportedActLog.fromEvents(EventReader.readActLogFile(file));
+						LaunchImportedActLog.fromEvents(EventReader.readActLogFile(file), decompressCheckbox.isSelected());
 					});
 					frame.setVisible(false);
 				}
@@ -97,7 +98,14 @@ public final class GuiImportLaunch {
 				c.weighty = 0;
 				c.gridx = 0;
 				c.gridwidth = GridBagConstraints.REMAINDER;
-				// Filler
+
+				panel.add(decompressCheckbox, c);
+			}
+			{
+				c.gridy++;
+				c.weighty = 0;
+				c.gridx = 0;
+				c.gridwidth = GridBagConstraints.REMAINDER;
 				panel.add(new ReadOnlyText("In replay mode, the program will use your existing settings, but any changes you make will not be saved."), c);
 			}
 			{

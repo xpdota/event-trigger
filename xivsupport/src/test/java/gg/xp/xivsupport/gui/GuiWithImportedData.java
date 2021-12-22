@@ -40,7 +40,7 @@ public final class GuiWithImportedData {
 		long start = System.currentTimeMillis();
 		List<Event> events = EventReader.readEventsFromResource("/testsession5.oos.gz");
 		long read = System.currentTimeMillis();
-		ReplayController replayController = new ReplayController(master, events);
+		ReplayController replayController = new ReplayController(master, events, false);
 		pico.addComponent(replayController);
 		dist.acceptEvent(new InitEvent());
 		RawEventStorage raw = pico.getComponent(RawEventStorage.class);

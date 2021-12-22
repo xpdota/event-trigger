@@ -63,7 +63,7 @@ public class XivOverlay {
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
 		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
 		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
-		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), true);
+		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		enabled.addListener(this::recalc);
 		frame = ScalableJFrame.construct(title, scaleFactor.get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));

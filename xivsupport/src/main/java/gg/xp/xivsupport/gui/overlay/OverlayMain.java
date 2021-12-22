@@ -5,7 +5,9 @@ import com.sun.jna.platform.win32.WinDef;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.actlines.events.OnlineStatus;
 import gg.xp.xivsupport.events.debug.DebugCommand;
+import gg.xp.xivsupport.events.state.PrimaryPlayerOnlineStatusChangedEvent;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -59,9 +61,16 @@ public class OverlayMain {
 		}
 	}
 
+	@HandleEvents
+	public void handlePlayerStatusChanged(EventContext context, PrimaryPlayerOnlineStatusChangedEvent event) {
+		this.cutscene = event.getPlayerOnlineStatus() == OnlineStatus.CUTSCENE;
+		recalc();
+	}
+
 	private final BooleanSetting show;
 	private boolean windowActive;
 	private boolean editing;
+	private boolean cutscene;
 	private final BooleanSetting forceShow;
 	// TODO: Linux support
 	private final boolean isNonWindows;
@@ -74,7 +83,7 @@ public class OverlayMain {
 		else {
 			isNonWindows = false;
 		}
-		show = new BooleanSetting(persistence, "xiv-overlay.show", false);
+		show = new BooleanSetting(persistence, "xiv-overlay.show", true);
 		show.addListener(this::recalc);
 		forceShow = new BooleanSetting(persistence, "xiv-overlay.force-show", false);
 		forceShow.addListener(this::recalc);
@@ -153,7 +162,7 @@ public class OverlayMain {
 		windowActive = isGameWindowActive();
 		// Always show if editing
 		// If not editing, show if the user has turned overlay on, and ffxiv is the active window
-		boolean shouldShow = editing || (show.get() && (windowActive || forceShow.get()));
+		boolean shouldShow = editing || (show.get() && (windowActive || forceShow.get()) && !cutscene);
 		log.debug("New Overlay State: WindowActive {}; Visible {}; Editing {}", windowActive, shouldShow, editing);
 		SwingUtilities.invokeLater(() -> {
 			if (shouldShow) {

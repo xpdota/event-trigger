@@ -21,15 +21,18 @@ public final class LaunchImportedActLog {
 
 	private LaunchImportedActLog() {
 	}
-
 	public static void fromEvents(List<? extends Event> events) {
+		fromEvents(events, false);
+	}
+
+	public static void fromEvents(List<? extends Event> events, boolean decompress) {
 		CommonGuiSetup.setup();
 		MutablePicoContainer pico = XivMain.importInit();
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		pers.save("gui.display-predicted-hp", "true");
 		EventMaster master = pico.getComponent(EventMaster.class);
-		ReplayController replayController = new ReplayController(master, events);
+		ReplayController replayController = new ReplayController(master, events, decompress);
 		pico.addComponent(replayController);
 		pico.getComponent(XivStateImpl.class).setActImport(true);
 		dist.acceptEvent(new InitEvent());

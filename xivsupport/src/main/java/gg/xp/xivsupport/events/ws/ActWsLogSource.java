@@ -56,12 +56,13 @@ public class ActWsLogSource implements EventSource {
 
 		@Override
 		public void onMessage(String s) {
-			if (s.contains("LogLine") || s.contains("combatants")) {
-				log.trace("Message: {}", s);
-			}
-			else {
-				log.info("Message: {}", s);
-			}
+			log.trace("WS Message: {}", s);
+//			if (s.contains("LogLine") || s.contains("combatants")) {
+//				log.trace("Message: {}", s);
+//			}
+//			else {
+//				log.info("Message: {}", s);
+//			}
 			eventConsumer.accept(new ActWsRawMsg(s));
 		}
 
@@ -95,6 +96,7 @@ public class ActWsLogSource implements EventSource {
 			// TODO: there does not seem to be a non-cactbot alternative to this
 			send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"LogLine\"]}");
+			send("{\"call\":\"subscribe\",\"events\":[\"OnlineStatusChanged\"]}");
 			log.info("Subscribed to WS events");
 		}
 	}

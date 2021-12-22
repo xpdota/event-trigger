@@ -24,6 +24,7 @@ public class EventSerializationTests {
 		Assert.assertEquals(events.size(), 644);
 	}
 
+	@Ignore // This file had the compression bug
 	@Test
 	public void readCompressedSampleFile3() {
 		List<Event> events = EventReader.readEventsFromResource("/testsession3.oos.gz");

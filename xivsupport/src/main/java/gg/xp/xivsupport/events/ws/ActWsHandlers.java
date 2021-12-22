@@ -9,6 +9,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.RawOnlineStatusChanged;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStatus;
@@ -146,6 +147,18 @@ public class ActWsHandlers {
 		if ("LogLine".equals(jsonMsg.getType())) {
 			String rawLine = jsonMsg.getJson().get("rawLine").textValue();
 			context.accept(new ACTLogLineEvent(rawLine));
+		}
+	}
+
+	@HandleEvents(order = -100)
+	public static void actWsOnlineStatusChanged(EventContext context, ActWsJsonMsg jsonMsg) {
+		if ("OnlineStatusChanged".equals(jsonMsg.getType())) {
+			JsonNode json = jsonMsg.getJson();
+			long targetId = json.get("target").longValue();
+			int rawStatusId = json.get("rawStatus").intValue();
+			String statusName = json.get("status").textValue();
+
+			context.accept(new RawOnlineStatusChanged(targetId, rawStatusId, statusName));
 		}
 	}
 

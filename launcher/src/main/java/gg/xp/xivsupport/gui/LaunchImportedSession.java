@@ -22,14 +22,19 @@ public final class LaunchImportedSession {
 	}
 
 	public static void fromEvents(List<? extends Event> events) {
+		fromEvents(events, false);
+	}
+
+	public static void fromEvents(List<? extends Event> events, boolean decompress) {
 		CommonGuiSetup.setup();
 		MutablePicoContainer pico = XivMain.importInit();
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		pers.save("gui.display-predicted-hp", "true");
-		ReplayController replayController = new ReplayController(master, events);
+		ReplayController replayController = new ReplayController(master, events, decompress);
 		pico.addComponent(replayController);
+		pico.getComponent(RawEventStorage.class);
 		dist.acceptEvent(new InitEvent());
 		RawEventStorage raw = pico.getComponent(RawEventStorage.class);
 		raw.getMaxEventsStoredSetting().set(1_000_000);

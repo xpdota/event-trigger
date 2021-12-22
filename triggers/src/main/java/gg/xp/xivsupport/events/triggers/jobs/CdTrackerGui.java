@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.jobs;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.jobs.Cooldown;
 import gg.xp.xivsupport.events.triggers.jobs.gui.BaseCdTrackerGui;
+import gg.xp.xivsupport.events.triggers.jobs.gui.CdTrackerOverlay;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.CooldownSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
@@ -14,9 +15,11 @@ import java.util.Map;
 public class CdTrackerGui extends BaseCdTrackerGui {
 
 	private final CdTracker backend;
+	private final CdTrackerOverlay overlay;
 
-	public CdTrackerGui(CdTracker backend) {
+	public CdTrackerGui(CdTracker backend, CdTrackerOverlay overlay) {
 		this.backend = backend;
+		this.overlay = overlay;
 	}
 
 	@Override
@@ -53,5 +56,10 @@ public class CdTrackerGui extends BaseCdTrackerGui {
 	@Override
 	protected Map<Cooldown, CooldownSetting> cds() {
 		return backend.getPersonalCdSettings();
+	}
+
+	@Override
+	protected BooleanSetting enableOverlay() {
+		return overlay.getEnabled();
 	}
 }

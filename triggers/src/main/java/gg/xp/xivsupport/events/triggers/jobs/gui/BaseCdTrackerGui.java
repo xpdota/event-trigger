@@ -33,6 +33,8 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 
 	protected abstract BooleanSetting enableTts();
 
+	protected abstract BooleanSetting enableOverlay();
+
 	protected abstract IntSetting overlayMax();
 
 	protected abstract Map<Cooldown, CooldownSetting> cds();
@@ -47,7 +49,7 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
-		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Party Cooldowns");
+		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel(getTabName());
 		outerPanel.setLayout(new BorderLayout());
 
 		JPanel settingsPanel = new JPanel();
@@ -58,6 +60,9 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 		BooleanSetting enableTtsSetting = enableTts();
 		JCheckBox enableTts = new BooleanSettingGui(enableTtsSetting, "Enable TTS").getComponent();
 		settingsPanel.add(enableTts);
+		BooleanSetting enableOverlaySetting = enableOverlay();
+		JCheckBox enableOverlay = new BooleanSettingGui(enableOverlaySetting, "Enable Overlay").getComponent();
+		settingsPanel.add(enableOverlay);
 		JPanel numSetting = new IntSettingSpinner(overlayMax(), "Max in Overlay").getComponent();
 		settingsPanel.add(numSetting);
 
@@ -89,7 +94,7 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 			}
 		};
 		CustomTableModel<Cooldown> model = CustomTableModel.builder(() -> sortedCds)
-				.addColumn(StandardColumns.booleanSettingColumn("Overlay", cd -> cooldowns.get(cd).getOverlay(), 50, null))
+				.addColumn(StandardColumns.booleanSettingColumn("Overlay", cd -> cooldowns.get(cd).getOverlay(), 50, enableOverlaySetting))
 				.addColumn(StandardColumns.booleanSettingColumn("TTS", cd -> cooldowns.get(cd).getTts(), 50, enableTtsSetting))
 				.addColumn(new CustomColumn<>("Job", cd -> {
 					if (cd.getJob() != null) {
@@ -118,6 +123,7 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 			}
 		});
 		enableTtsSetting.addListener(table::repaint);
+		enableOverlaySetting.addListener(table::repaint);
 
 		JScrollPane scroll = new JScrollPane(table);
 		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
