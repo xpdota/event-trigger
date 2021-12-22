@@ -2,6 +2,7 @@ package gg.xp.reevent.events;
 
 import gg.xp.reevent.time.CurrentTimeSource;
 import gg.xp.reevent.time.TimeUtils;
+import org.apache.commons.lang3.concurrent.TimedSemaphore;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ public abstract class BaseEvent implements Event {
 	private long delayedEnqueueAt;
 	private transient boolean isImported;
 	private transient CurrentTimeSource timeSource;
+	private static final CurrentTimeSource defaultTimeSource = TimeUtils::now;
 
 	@Override
 	public void setParent(Event parent) {
@@ -33,6 +35,9 @@ public abstract class BaseEvent implements Event {
 			throw new IllegalStateException("Event already has a parent");
 		}
 		this.parent = parent;
+		if (timeSource == null && parent instanceof BaseEvent p) {
+			timeSource = p.timeSource;
+		}
 	}
 
 	@Override
@@ -128,8 +133,17 @@ public abstract class BaseEvent implements Event {
 		isImported = imported;
 	}
 
+	private CurrentTimeSource getTimeSource() {
+		if (parent != null && parent instanceof BaseEvent base) {
+			return base.getTimeSource();
+		}
+		else {
+			return timeSource == null ? defaultTimeSource : timeSource;
+		}
+	}
+
 	public Instant timeNow() {
-		return timeSource.now();
+		return getTimeSource().now();
 	}
 
 	public void setTimeSource(CurrentTimeSource timeSource) {

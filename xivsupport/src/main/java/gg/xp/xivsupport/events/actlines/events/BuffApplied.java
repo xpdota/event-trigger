@@ -55,7 +55,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	}
 
 	public Duration getEstimatedElapsedDuration() {
-		Duration delta = Duration.between(getStart(), Instant.now());
+		Duration delta = Duration.between(getStart(), timeNow());
 		// If negative, return zero. If longer than expected duration, return duration.
 		if (delta.isNegative()) {
 			return Duration.ZERO;
