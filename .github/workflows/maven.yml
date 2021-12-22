@@ -25,4 +25,8 @@ jobs:
         distribution: 'adopt'
         cache: maven
     - name: Build with Maven
-      run: xvfb-run mvn -T4 clean install
+      run: xvfb-run mvn -T5 clean install
+
+
+# TODO: artifacts
+# TODO: saint coinach auto-update of data

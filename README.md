@@ -10,7 +10,7 @@ For the technical explanation of why I made this, see [Why](https://github.com/x
 
 ## How to Download/Install
 
-READ THIS: See [Installation](https://github.com/xpdota/event-trigger/wiki/Installation)
+READ THIS: See [Installation](https://github.com/xpdota/event-trigger/wiki/Installation-and-Setup)
 
 Short version: Install Overlayplugin in your ACT, then start OverlayPlugin WSServer from within ACT.
 
