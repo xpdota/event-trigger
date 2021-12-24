@@ -36,6 +36,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: launcher/target/windows/deps/
         destination_dir: ${{ github.ref_name }}
+        keep_files: true
 
 
 
