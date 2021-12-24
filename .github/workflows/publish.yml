@@ -30,13 +30,12 @@ jobs:
         md5sum *.jar > manifest
         popd
     - name: Deploy release files
-      uses: peaceiris/actions-gh-pages@v3.8.0
+      uses: JamesIves/github-pages-deploy-action@4.1.7
 
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./launcher/target/windows/deps
-        destination_dir: test_dir
-        keep_files: true
+        folder: ./launcher/target/windows/deps
+        branch: gh-pages
+        target-folder: ${{ github.ref_name }}
 
 
 
