@@ -26,9 +26,9 @@ jobs:
       run: xvfb-run mvn -T5 clean install
     - name: Copy release files
       run: |
-        mkdir release
-        cd launcher/target/windows/deps/
+        pushd launcher/target/windows/deps/
         md5sum *.jar > manifest
+        popd
     - name: Deploy release files
       uses: peaceiris/actions-gh-pages@v3.8.0
 
