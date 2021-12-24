@@ -51,11 +51,10 @@ public class StatusEffectRepository {
 
 	@HandleEvents(order = -500)
 	public void buffPreApplication(EventContext context, AbilityUsedEvent event) {
-		List<StatusAppliedEffect> preApps = event.getEffects().stream()
-				.filter(StatusAppliedEffect.class::isInstance).map(StatusAppliedEffect.class::cast)
-				.collect(Collectors.toList());
+		List<StatusAppliedEffect> newPreApps = event.getEffects().stream()
+				.filter(StatusAppliedEffect.class::isInstance).map(StatusAppliedEffect.class::cast).toList();
 		synchronized (lock) {
-			for (StatusAppliedEffect preApp : preApps) {
+			for (StatusAppliedEffect preApp : newPreApps) {
 				BuffApplied fakeValue = new BuffApplied(event, preApp);
 				fakeValue.setParent(event);
 				fakeValue.setHappenedAt(Instant.now());

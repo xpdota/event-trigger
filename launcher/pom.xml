@@ -14,6 +14,7 @@
     <properties>
         <mainClass>gg.xp.xivsupport.gui.GuiLaunch</mainClass>
         <mainImportClass>gg.xp.xivsupport.gui.GuiImportLaunch</mainImportClass>
+        <mainUpdateClass>gg.xp.xivsupport.gui.Update</mainUpdateClass>
     </properties>
     <build>
         <plugins>
@@ -41,23 +42,6 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.3.0</version>
                 <executions>
-<!--                    <execution>-->
-<!--                        <id>fat-jar</id>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>single</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <archive>-->
-<!--                                <manifest>-->
-<!--                                    <mainClass>${mainClass}</mainClass>-->
-<!--                                </manifest>-->
-<!--                            </archive>-->
-<!--                            <descriptorRefs>-->
-<!--                                <descriptorRef>jar-with-dependencies</descriptorRef>-->
-<!--                            </descriptorRefs>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
                     <execution>
                         <id>zip-file-no-jre</id>
                         <phase>install</phase>
@@ -140,50 +124,12 @@
                             <goal>launch4j</goal>
                         </goals>
                         <configuration>
-                            <chdir>.</chdir>
-                            <downloadUrl>https://www.oracle.com/java/technologies/downloads/#jdk17-windows</downloadUrl>
-
-                            <headerType>gui</headerType>
                             <outfile>target/windows/triggevent-import.exe</outfile>
-                            <!--                            <jar>target/xivsupport-${version}-jar-with-dependencies.jar</jar>-->
-                            <jar>./launcher-${project.version}.jar</jar>
-                            <errTitle>Triggevent</errTitle>
-                            <dontWrapJar>true</dontWrapJar>
-
                             <classPath>
                                 <mainClass>${mainImportClass}</mainClass>
                                 <addDependencies>false</addDependencies>
-                                <!--                                <preCp>anything</preCp>-->
-                                <!--                                <postCp>../deps</postCp>-->
-                                <postCp>./deps/*.jar</postCp>
-                                <!--                                <postCp>./deps</postCp>-->
+                                <postCp>./preload/*.jar;./deps/*.jar;./user/*.jar</postCp>
                             </classPath>
-                            <jre>
-                                <path>jre</path>
-                                <minVersion>${java.version}</minVersion>
-                                <!--                                <opts>-->
-                                <!--                                    <opt>-Djava.endorsed.dirs=./endorsed</opt>-->
-                                <!--                                </opts>-->
-                            </jre>
-                            <versionInfo>
-                                <fileVersion>1.0.0.0</fileVersion>
-                                <txtFileVersion>txt file version</txtFileVersion>
-                                <fileDescription>description</fileDescription>
-                                <copyright>2021</copyright>
-                                <productVersion>1.0.0.0</productVersion>
-                                <txtProductVersion>1.0.0.0</txtProductVersion>
-                                <productName>Triggevent</productName>
-                                <internalName>triggevent</internalName>
-                                <originalFilename>original.exe</originalFilename>
-                            </versionInfo>
-                            <messages>
-                                <bundledJreErr>You need to download Java version 17 or higher, or download the version
-                                    of Triggevent with bundled Java.
-                                </bundledJreErr>
-                                <jreVersionErr>You need to download Java version 17 or higher, or download the version
-                                    of Triggevent with bundled Java.
-                                </jreVersionErr>
-                            </messages>
                         </configuration>
                     </execution>
                     <execution>
@@ -193,57 +139,66 @@
                             <goal>launch4j</goal>
                         </goals>
                         <configuration>
-                            <chdir>.</chdir>
-                            <downloadUrl>https://www.oracle.com/java/technologies/downloads/#jdk17-windows</downloadUrl>
-
                             <singleInstance>
                                 <mutexName>triggevent</mutexName>
                                 <windowTitle>Triggevent</windowTitle>
                             </singleInstance>
-                            <headerType>gui</headerType>
                             <outfile>target/windows/triggevent.exe</outfile>
-                            <!--                            <jar>target/xivsupport-${version}-jar-with-dependencies.jar</jar>-->
-                            <jar>./launcher-${project.version}.jar</jar>
-                            <errTitle>Triggevent</errTitle>
-                            <dontWrapJar>true</dontWrapJar>
-
                             <classPath>
                                 <mainClass>${mainClass}</mainClass>
                                 <addDependencies>false</addDependencies>
-                                <!--                                <preCp>anything</preCp>-->
-                                <!--                                <postCp>../deps</postCp>-->
-                                <postCp>./deps/*.jar</postCp>
-                                <!--                                <postCp>./deps</postCp>-->
+                                <postCp>./preload/*.jar;./deps/*.jar;./user/*.jar</postCp>
                             </classPath>
-                            <jre>
-                                <path>jre</path>
-                                <minVersion>${java.version}</minVersion>
-                                <!--                                <opts>-->
-                                <!--                                    <opt>-Djava.endorsed.dirs=./endorsed</opt>-->
-                                <!--                                </opts>-->
-                            </jre>
-                            <versionInfo>
-                                <fileVersion>1.0.0.0</fileVersion>
-                                <txtFileVersion>txt file version</txtFileVersion>
-                                <fileDescription>description</fileDescription>
-                                <copyright>2021</copyright>
-                                <productVersion>1.0.0.0</productVersion>
-                                <txtProductVersion>1.0.0.0</txtProductVersion>
-                                <productName>Triggevent</productName>
-                                <internalName>triggevent</internalName>
-                                <originalFilename>original.exe</originalFilename>
-                            </versionInfo>
-                            <messages>
-                                <bundledJreErr>You need to download Java version 17 or higher, or download the version
-                                    of Triggevent with bundled Java.
-                                </bundledJreErr>
-                                <jreVersionErr>You need to download Java version 17 or higher, or download the version
-                                    of Triggevent with bundled Java.
-                                </jreVersionErr>
-                            </messages>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>l4j-updater</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <outfile>target/windows/triggevent-upd.exe</outfile>
+                            <classPath>
+                                <mainClass>${mainUpdateClass}</mainClass>
+                                <addDependencies>false</addDependencies>
+                            </classPath>
+                        </configuration>
+                    </execution>
+
                 </executions>
+                <configuration>
+                    <!-- Common config-->
+                    <jre>
+                        <path>jre</path>
+                        <minVersion>${java.version}</minVersion>
+                    </jre>
+                    <headerType>gui</headerType>
+                    <jar>./launcher-${project.version}.jar</jar>
+                    <errTitle>Triggevent</errTitle>
+                    <dontWrapJar>true</dontWrapJar>
+                    <chdir>.</chdir>
+                    <downloadUrl>https://www.oracle.com/java/technologies/downloads/#jdk17-windows</downloadUrl>
+                    <versionInfo>
+                        <fileVersion>1.0.0.0</fileVersion>
+                        <txtFileVersion>txt file version</txtFileVersion>
+                        <fileDescription>description</fileDescription>
+                        <copyright>2021</copyright>
+                        <productVersion>1.0.0.0</productVersion>
+                        <txtProductVersion>1.0.0.0</txtProductVersion>
+                        <productName>Triggevent</productName>
+                        <internalName>triggevent</internalName>
+                        <originalFilename>original.exe</originalFilename>
+                    </versionInfo>
+                    <messages>
+                        <bundledJreErr>You need to download Java version 17 or higher, or download the version
+                            of Triggevent with bundled Java.
+                        </bundledJreErr>
+                        <jreVersionErr>You need to download Java version 17 or higher, or download the version
+                            of Triggevent with bundled Java.
+                        </jreVersionErr>
+                    </messages>
+                </configuration>
             </plugin>
         </plugins>
     </build>
