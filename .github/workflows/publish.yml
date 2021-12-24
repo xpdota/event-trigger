@@ -30,12 +30,13 @@ jobs:
         cd launcher/target/windows/deps/
         md5sum *.jar > manifest
     - name: Deploy release files
-      uses: peaceiris/actions-gh-pages@v3
+      uses: peaceiris/actions-gh-pages@v3.8.0
 
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: launcher/target/windows/deps/
-        destination_dir: ${{ github.ref_name }}
+#        destination_dir: ${{ github.ref_name }}
+        destination_dir: test_dir
         keep_files: true
 
 
