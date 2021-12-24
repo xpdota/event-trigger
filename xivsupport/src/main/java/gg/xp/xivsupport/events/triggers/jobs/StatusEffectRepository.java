@@ -10,11 +10,14 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
+import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.BuffTrackingKey;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
+import gg.xp.xivsupport.models.XivStatusEffect;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +30,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class StatusEffectRepository {
@@ -43,9 +47,11 @@ public class StatusEffectRepository {
 	private final Map<BuffTrackingKey, BuffApplied> preApps = new LinkedHashMap<>();
 	private final Map<XivEntity, Map<BuffTrackingKey, BuffApplied>> onTargetCache = new HashMap<>();
 	private final Object lock = new Object();
+	private final XivState state;
 	private final SequenceIdTracker sqid;
 
-	public StatusEffectRepository(SequenceIdTracker sqid) {
+	public StatusEffectRepository(XivState state, SequenceIdTracker sqid) {
+		this.state = state;
 		this.sqid = sqid;
 	}
 
@@ -144,6 +150,14 @@ public class StatusEffectRepository {
 		}
 		if (anyRemoved) {
 			context.accept(new XivBuffsUpdatedEvent());
+		}
+	}
+
+	@HandleEvents
+	public void workaroundForActNotRemovingCombatants(EventContext context, XivStateRecalculatedEvent event) {
+		Set<Long> combatantsThatExist = state.getCombatants().keySet();
+		synchronized (lock) {
+			buffs.keySet().removeIf(key -> !combatantsThatExist.contains(key.getTarget().getId()));
 		}
 	}
 
