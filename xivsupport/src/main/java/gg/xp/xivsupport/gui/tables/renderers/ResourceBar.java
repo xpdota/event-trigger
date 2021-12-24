@@ -126,6 +126,7 @@ public class ResourceBar extends JComponent {
 		int width2 = (int) (innerWidth * percent2);
 		int width3 = innerWidth - width1 - width2;
 
+		// TODO: missing 1px at the right of the bar
 		if (width1 > 0) {
 			g.setColor(color1);
 			g.fillRect(borderWidth, borderWidth, width1, innerHeight);

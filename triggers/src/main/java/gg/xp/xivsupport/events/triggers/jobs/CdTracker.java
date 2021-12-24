@@ -49,7 +49,7 @@ public class CdTracker {
 	public CdTracker(PersistenceProvider persistence, XivState state) {
 		this.state = state;
 		for (Cooldown cd : Cooldown.values()) {
-			personalCds.put(cd, new CooldownSetting(persistence, getKey(cd), true, false));
+			personalCds.put(cd, new CooldownSetting(persistence, getKey(cd), cd.defaultPersOverlay(), false));
 			partyCds.put(cd, new CooldownSetting(persistence, getKey(cd) + ".party", false, false));
 		}
 		enableTtsPersonal = new BooleanSetting(persistence, "cd-tracker.enable-tts", true);
