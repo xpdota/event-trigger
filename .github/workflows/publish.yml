@@ -6,13 +6,14 @@ name: Publish
 on:
   push:
   workflow_dispatch:
-    
+
 
 jobs:
   build:
 
     runs-on: self-hosted
-
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 17
@@ -30,6 +31,7 @@ jobs:
         md5sum *.jar > manifest
     - name: Deploy release files
       uses: peaceiris/actions-gh-pages@v3
+
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: launcher/target/windows/deps/
