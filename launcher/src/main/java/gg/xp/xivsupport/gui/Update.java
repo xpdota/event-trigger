@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui;
 
 import gg.xp.xivsupport.gui.util.CatchFatalError;
+import gg.xp.xivsupport.gui.util.CatchFatalErrorInUpdater;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -206,10 +207,20 @@ public class Update {
 			});
 			appendText(String.format("Updating %s files...", filesToDownload.size()));
 			localFilesToDelete.forEach(name -> {
-				boolean deleted = Paths.get(depsDir.toString(), name).toFile().delete();
-				if (!deleted) {
-					throw new RuntimeException("Could not delete file %s. Make sure it is not locked and that the application is not running.".formatted(name));
-				}
+				boolean deleted;
+				do {
+					deleted = Paths.get(depsDir.toString(), name).toFile().delete();
+					if (deleted) {
+						return;
+					}
+					appendText("Could not delete file %s. Make sure the app is not running.");
+					try {
+						Thread.sleep(5000);
+					}
+					catch (InterruptedException e) {
+
+					}
+				} while (true);
 			});
 
 			depsDir.mkdirs();
@@ -228,6 +239,14 @@ public class Update {
 			appendText("Update finished! %s files needed to be updated.".formatted(filesToDownload.size()));
 			button.setText("Close");
 			button.setEnabled(true);
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				try {
+					Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent.exe").toString());
+				}
+				catch (IOException e) {
+					e.printStackTrace();
+				}
+			}));
 		}
 		catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
@@ -235,7 +254,7 @@ public class Update {
 	}
 
 	public static void main(String[] args) {
-		CatchFatalError.run(() -> {
+		CatchFatalErrorInUpdater.run(() -> {
 			Update update = new Update();
 			try {
 				Thread.sleep(1000);
@@ -271,4 +290,5 @@ public class Update {
 		throwable.printStackTrace(pw);
 		return sw.getBuffer().toString();
 	}
+
 }

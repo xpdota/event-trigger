@@ -6,9 +6,9 @@ import java.awt.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public final class CatchFatalError {
+public final class CatchFatalErrorInUpdater {
 
-	private CatchFatalError() {
+	private CatchFatalErrorInUpdater() {
 	}
 
 	public static void run(Runnable run) {
