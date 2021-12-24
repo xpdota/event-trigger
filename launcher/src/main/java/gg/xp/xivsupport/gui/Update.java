@@ -213,7 +213,7 @@ public class Update {
 					if (deleted) {
 						return;
 					}
-					appendText("Could not delete file %s. Make sure the app is not running.");
+					appendText("Could not delete file %s. Make sure the app is not running.".formatted(name));
 					try {
 						Thread.sleep(5000);
 					}
