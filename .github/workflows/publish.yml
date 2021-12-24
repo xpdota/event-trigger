@@ -38,6 +38,7 @@ jobs:
 #        destination_dir: ./${{ github.ref_name }}
 #        destination_dir: test_dir
         keep_files: false
+        force_orphan: true
 
 
 
