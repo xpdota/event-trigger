@@ -37,7 +37,7 @@ jobs:
         publish_dir: ./launcher/target/windows/deps
 #        destination_dir: ./${{ github.ref_name }}
 #        destination_dir: test_dir
-        keep_files: true
+        keep_files: false
 
 
 
