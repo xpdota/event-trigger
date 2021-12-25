@@ -54,6 +54,9 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 				.build();
 		table = new JTable(tableModel);
 		table.setOpaque(false);
+		table.setFocusable(false);
+		table.setRowSelectionAllowed(false);
+		table.setCellSelectionEnabled(false);
 		tableModel.configureColumns(table);
 		getPanel().add(table);
 		Thread thread = new Thread(() -> {
