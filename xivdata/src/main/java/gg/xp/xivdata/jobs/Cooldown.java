@@ -36,25 +36,32 @@ public enum Cooldown {
 	Requiescat(PLD, true, 60.0, "Requiescat", CooldownType.PERSONAL_BURST, 0x1CD7, 0x558),
 	DivineVeil(PLD, true, 90.0, "Divine Veil", CooldownType.PARTY_MIT, 0xdd4, 726, 727),
 	PassageofArms(PLD, true, 120.0, "Passage of Arms", CooldownType.PARTY_MIT, 0x1cd9, 1175),
-
-	//
 	Nebula(GNB, true, 120.0, "Nebula", CooldownType.PERSONAL_MIT, 0x3f14, 1834),
 	Aurora(GNB, true, 60.0, "Aurora", CooldownType.HEAL, 0x3f17, 1835, 2065),
 	Superbolide(GNB, true, 360.0, "Superbolide", CooldownType.INVULN, 0x3f18, 1836),
 	HeartofLight(GNB, true, 90.0, "Heart of Light", CooldownType.PARTY_MIT, 0x3f20, 1839),
 	HeartofStone(GNB, true, 25.0, "Heart of Stone", CooldownType.PARTY_MIT, 0x3f21, 1840),
 	HeartofCorundum(GNB, true, 25.0, "Heart of Corundum", CooldownType.PARTY_MIT, 25758, 2683),
+	Camouflage(GNB, true, 90.0, "Camouflage", CooldownType.PERSONAL_MIT, 0x3f0c, 1832),
 	NascentFlash(WAR, true, 25.0, "Nascent Flash", CooldownType.HEAL, 0x4050, 1857, 1858),
-	DarkMissionary(DRK, true, 90.0, "Dark Missionary", CooldownType.PARTY_MIT, 0x4057, 1894),
 	ThrillofBattle(WAR, true, 90.0, "Thrill of Battle", CooldownType.PERSONAL_MIT, 0x28, 87),
 	Holmgang(WAR, true, 240.0, "Holmgang", CooldownType.INVULN, 0x2b, 409),
 	Vengeance(WAR, true, 120.0, "Vengeance", CooldownType.PERSONAL_MIT, 0x2c, 89),
-	// TODO: these do not have correct duration - need to fix
-	MagesBallad(BRD, true, 120.0, "Mage's Ballad", CooldownType.PARTY_BUFF, 0x72, 0x8a9),
-	ArmysPaeon(BRD, true, 120.0, "Army's Paeon", CooldownType.PARTY_BUFF, 0x74, 0x8aa),
-	WanderersMinuet(BRD, true, 120.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
-	BattleVoice(BRD, true, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 0x8d),
+	RawIntuition(WAR, true, 25.0, "Raw Intuition", CooldownType.PERSONAL_MIT, 0xddf, 735),
+	DarkMissionary(DRK, true, 90.0, "Dark Missionary", CooldownType.PARTY_MIT, 0x4057, 1894),
+	DarkMind(DRK, true, 60.0, "Dark Mind", CooldownType.PERSONAL_MIT, 0xe32, 746),
+	ShadowWall(DRK, true, 120.0, "Shadow Wall", CooldownType.PERSONAL_MIT, 0xe34, 747),
+	LivingDead(DRK, true, 300.0, "Living Dead", CooldownType.INVULN, 0xe36, 810),
+	ShakeItOff(WAR, true, 90.0, "Shake It Off", CooldownType.PARTY_MIT, 0x1cdc, 1457),
+	TheBlackestNight(DRK, true, 15.0, "The Blackest Night", CooldownType.PERSONAL_MIT, 0x1ce1, 0x49a),
+
+	// HEALERS
+	LucidDreaming(HEALER, false, 60.0, "Lucid Dreaming", CooldownType.PERSONAL_UTILITY, 0x1D8A, 0x4B4),
+	// TODO - check ability ID
 	Benediction(WHM, true, 180.0, "Benediction", CooldownType.HEAL, 0x8c),
+	Temperance(WHM, true, 120.0, "Temperance", CooldownType.PARTY_MIT, 0x4098, 0x750),
+	Pom(WHM, true, 120.0, "Presence of Mind", CooldownType.PERSONAL_BURST, 0x88, 0x9d),
+	Asylum(WHM, true, 45.0, "Asylum", CooldownType.HEAL, 0xDF1, 0x777),
 	SacredSoil(SCH, true, 30.0, "Sacred Soil", CooldownType.PARTY_MIT, 0xbc, 0x798, 0x12A),
 	// Summon order buffs:
 	/*
@@ -76,33 +83,6 @@ public enum Cooldown {
 	Recitation(SCH, true, 90.0, "Recitation", CooldownType.HEAL, 0x409E, 0x768),
 	DeploymentTactics(SCH, false, 90.0, "Deployment Tactics", CooldownType.PARTY_MIT, 0xE01),
 	EmergencyTactics(SCH, false, 15.0, "Emergency Tactics", CooldownType.PARTY_MIT, 0xE02, 0x318),
-	LucidDreaming(HEALER, false, 60.0, "Lucid Dreaming", CooldownType.PERSONAL_UTILITY, 0x1D8A, 0x4B4),
-	// TODO - check ability ID
-	TrickAttack(NIN, true, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
-	RawIntuition(WAR, true, 25.0, "Raw Intuition", CooldownType.PERSONAL_MIT, 0xddf, 735),
-	BattleLitany(DRG, true, 120.0, "Battle Litany", CooldownType.PARTY_BUFF, 0xde5, 786),
-	DarkMind(DRK, true, 60.0, "Dark Mind", CooldownType.PERSONAL_MIT, 0xe32, 746),
-	ShadowWall(DRK, true, 120.0, "Shadow Wall", CooldownType.PERSONAL_MIT, 0xe34, 747),
-	LivingDead(DRK, true, 300.0, "Living Dead", CooldownType.INVULN, 0xe36, 810),
-	ShakeItOff(WAR, true, 90.0, "Shake It Off", CooldownType.PARTY_MIT, 0x1cdc, 1457),
-	TheBlackestNight(DRK, true, 15.0, "The Blackest Night", CooldownType.PERSONAL_MIT, 0x1ce1, 0x49a),
-	Brotherhood(MNK, true, 90.0, "Brotherhood", CooldownType.PARTY_BUFF, 0x1ce4, 1185),
-	// TODO: devotion
-	DragonSight(DRG, true, 120.0, "Dragon Sight", CooldownType.PARTY_BUFF, 0x1ce6, 1183, 1184),
-	Troubadour(BRD, true, 120.0, "Troubadour", CooldownType.PARTY_MIT, 0x1ced, 1934),
-	Embolden(RDM, true, 120.0, "Embolden", CooldownType.PARTY_BUFF, 0x1d60, 1239, 1297),
-	Feint(MELEE_DPS, true, 90.0, "Feint", CooldownType.PARTY_MIT, 0x1d7d, 1195),
-	Addle(CASTER, true, 90.0, "Addle", CooldownType.PARTY_MIT, 0x1d88, 1203),
-	// TODO: this should only pick up on your own
-	Swiftcast(CASTER, true, 60.0, "Swiftcast", CooldownType.PERSONAL_UTILITY, 0x1d89, 167, 1325),
-	StandardStep(DNC, true, 30.0, "Standard Step", CooldownType.PARTY_BUFF, 0x3e7d, 1821, 2024),
-	TechnicalStep(DNC, true, 120.0, "Technical Step", CooldownType.PARTY_BUFF, 0x3e7e, 1819, 2049),
-	Devilment(DNC, true, 120.0, "Devilment", CooldownType.PARTY_BUFF, 0x3e8b, 1825),
-	ShieldSamba(DNC, true, 120.0, "Shield Samba", CooldownType.PARTY_MIT, 0x3e8c, 1826),
-	Camouflage(GNB, true, 90.0, "Camouflage", CooldownType.PERSONAL_MIT, 0x3f0c, 1832),
-	Divination(AST, true, 120.0, "Divination", CooldownType.PARTY_BUFF, 0x40a8, 1878),
-	Tactician(MCH, true, 120.0, "Tactician", CooldownType.PARTY_MIT, 0x41f9, 1951, 2177),
-	SearingLight(SMN, true, 120.0, "Searing Light", CooldownType.PARTY_BUFF, 25801, 2703),
 	// Sage stuff
 	Krasis(SGE, true, 60.0, "Krasis", CooldownType.HEAL, 0x5EFD, 0xA3E),
 	Pepsis(SGE, true, 30.0, "Pepsis", CooldownType.HEAL, 0x5EED),
@@ -116,7 +96,42 @@ public enum Cooldown {
 	Haima(SGE, true, 120.0, "Haima", CooldownType.SINGLE_TARGET_MIT, 0x5EF1, 0xA34),
 	Panhaima(SGE, true, 120.0, "Panhaima", CooldownType.PARTY_MIT, 0x5EF7, 0xA35),
 	Physis(SGE, true, 60.0, "Physis", CooldownType.HEAL, 0x5EEE, 0xA3C),
-	Holos(SGE, true, 120.0, "Holos", CooldownType.PARTY_MIT, 0x5EF6, 0xBBB);
+	Holos(SGE, true, 120.0, "Holos", CooldownType.PARTY_MIT, 0x5EF6, 0xBBB),
+
+	Divination(AST, true, 120.0, "Divination", CooldownType.PARTY_BUFF, 0x40a8, 1878),
+
+
+	// MELEE
+	Feint(MELEE_DPS, true, 90.0, "Feint", CooldownType.PARTY_MIT, 0x1d7d, 1195),
+	TrickAttack(NIN, true, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
+	BattleLitany(DRG, true, 120.0, "Battle Litany", CooldownType.PARTY_BUFF, 0xde5, 786),
+	Brotherhood(MNK, true, 90.0, "Brotherhood", CooldownType.PARTY_BUFF, 0x1ce4, 1185),
+	DragonSight(DRG, true, 120.0, "Dragon Sight", CooldownType.PARTY_BUFF, 0x1ce6, 1183, 1184),
+
+
+
+	// CASTER
+	// TODO: devotion
+	Addle(CASTER, true, 90.0, "Addle", CooldownType.PARTY_MIT, 0x1d88, 1203),
+	Swiftcast(CASTER, true, 60.0, "Swiftcast", CooldownType.PERSONAL_UTILITY, 0x1d89, 167, 1325),
+	Embolden(RDM, true, 120.0, "Embolden", CooldownType.PARTY_BUFF, 0x1d60, 1239, 1297),
+	SearingLight(SMN, true, 120.0, "Searing Light", CooldownType.PARTY_BUFF, 25801, 2703),
+
+
+
+	// PHYS RANGED
+	StandardStep(DNC, true, 30.0, "Standard Step", CooldownType.PARTY_BUFF, 0x3e7d, 1821, 2024),
+	TechnicalStep(DNC, true, 120.0, "Technical Step", CooldownType.PARTY_BUFF, 0x3e7e, 1819, 2049),
+	Devilment(DNC, true, 120.0, "Devilment", CooldownType.PARTY_BUFF, 0x3e8b, 1825),
+	ShieldSamba(DNC, true, 120.0, "Shield Samba", CooldownType.PARTY_MIT, 0x3e8c, 1826),
+	Troubadour(BRD, true, 120.0, "Troubadour", CooldownType.PARTY_MIT, 0x1ced, 1934),
+	// TODO: these do not have correct duration - need to fix
+	MagesBallad(BRD, true, 120.0, "Mage's Ballad", CooldownType.PARTY_BUFF, 0x72, 0x8a9),
+	ArmysPaeon(BRD, true, 120.0, "Army's Paeon", CooldownType.PARTY_BUFF, 0x74, 0x8aa),
+	WanderersMinuet(BRD, true, 120.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
+	BattleVoice(BRD, true, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 0x8d),
+	Tactician(MCH, true, 120.0, "Tactician", CooldownType.PARTY_MIT, 0x41f9, 1951, 2177);
+
 
 
 	private final boolean defaultPersOverlay;
