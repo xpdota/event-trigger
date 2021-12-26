@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.jobs.gui;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.triggers.jobs.DotRefreshReminders;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -63,25 +64,9 @@ public class DotTrackerOverlay extends XivOverlay {
 		table.setOpaque(false);
 		tableModel.configureColumns(table);
 		getPanel().add(table);
-		Thread thread = new Thread(() -> {
-			while (true) {
-				try {
-					refresh();
-					// 200ms is the optimal update interval at 100% scale - typical dot is 30 seconds, and the bar is
-					// 150 pixels wide, so we'd expect 5 updates per second. But then we also need to adjust by the
-					// scale factor.
-					//noinspection BusyWait
-					Thread.sleep((long) (200.0 / getScale()));
-				}
-				catch (Throwable e) {
-					log.error("Error refreshing dots", e);
-				}
-			}
-		});
-		thread.setName("DotRefreshOverlayThread");
+		RefreshLoop<DotTrackerOverlay> refresher = new RefreshLoop<>("DotTrackerOverlay", this, DotTrackerOverlay::refresh, dt -> (long) (200.0 / dt.getScale()));
 		repackSize();
-		//noinspection CallToThreadStartDuringObjectConstruction
-		thread.start();
+		refresher.start();
 	}
 
 	private void repackSize() {
