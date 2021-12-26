@@ -113,7 +113,7 @@ public class OverlayMain {
 
 	private boolean isGameWindowActive() {
 		if (isNonWindows) {
-			return false;
+			return true;
 		}
 		String window = getActiveWindowText();
 		return window.startsWith("FINAL FANTASY XIV") || this.overlays.stream().anyMatch(o -> o.getTitle().equals(window));
@@ -155,9 +155,6 @@ public class OverlayMain {
 	}
 
 	private void recalc() {
-		if (isNonWindows) {
-			return;
-		}
 		// Do this again, otherwise it may flash away when you finish editing
 		windowActive = isGameWindowActive();
 		// Always show if editing

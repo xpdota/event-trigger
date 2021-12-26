@@ -63,6 +63,7 @@ public class DotTrackerOverlay extends XivOverlay {
 //		table.getPreferredSize();
 		table.setOpaque(false);
 		tableModel.configureColumns(table);
+		table.setCellSelectionEnabled(false);
 		getPanel().add(table);
 		RefreshLoop<DotTrackerOverlay> refresher = new RefreshLoop<>("DotTrackerOverlay", this, DotTrackerOverlay::refresh, dt -> (long) (200.0 / dt.getScale()));
 		repackSize();
