@@ -112,7 +112,9 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		topPanel.add(autoRefresh);
 		topPanel.add(stayAtBottom);
 		topPanel.setLayout(new WrapLayout(FlowLayout.LEFT));
-		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering)).collect(Collectors.toList());
+		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
 		filters.forEach(filter -> topPanel.add(filter.getComponent()));
 		add(topPanel, BorderLayout.PAGE_START);
 

@@ -32,6 +32,10 @@ public class ReplayAdvancePseudoFilter<X extends Event> implements VisualFilter<
 
 	private volatile boolean isPlaying;
 
+	public ReplayAdvancePseudoFilter<X> getThis(Runnable run) {
+		return this;
+	}
+
 	@Override
 	public boolean passesFilter(X item) {
 		return true;
