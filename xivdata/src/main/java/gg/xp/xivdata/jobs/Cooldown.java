@@ -43,11 +43,11 @@ public enum Cooldown {
 	HeartofStone(GNB, true, 25.0, "Heart of Stone", CooldownType.PARTY_MIT, 0x3f21, 1840),
 	HeartofCorundum(GNB, true, 25.0, "Heart of Corundum", CooldownType.PARTY_MIT, 25758, 2683),
 	Camouflage(GNB, true, 90.0, "Camouflage", CooldownType.PERSONAL_MIT, 0x3f0c, 1832),
-	NascentFlash(WAR, true, 25.0, "Nascent Flash", CooldownType.HEAL, 0x4050, 1857, 1858),
+//	NascentFlash(WAR, true, 25.0, "Nascent Flash", CooldownType.HEAL, 0x4050, 1857, 1858),
 	ThrillofBattle(WAR, true, 90.0, "Thrill of Battle", CooldownType.PERSONAL_MIT, 0x28, 87),
 	Holmgang(WAR, true, 240.0, "Holmgang", CooldownType.INVULN, 0x2b, 409),
 	Vengeance(WAR, true, 120.0, "Vengeance", CooldownType.PERSONAL_MIT, 0x2c, 89),
-	RawIntuition(WAR, true, 25.0, "Raw Intuition", CooldownType.PERSONAL_MIT, 0xddf, 735),
+	RawIntuition(WAR, true, 25.0, "Raw/Nascent/Bloodwhetting", CooldownType.PERSONAL_MIT, new long[]{0xddfL, 0x4050, 0x6497}, new long[]{735L, 1857, 1858, 0xA76L}),
 	DarkMissionary(DRK, true, 90.0, "Dark Missionary", CooldownType.PARTY_MIT, 0x4057, 1894),
 	DarkMind(DRK, true, 60.0, "Dark Mind", CooldownType.PERSONAL_MIT, 0xe32, 746),
 	ShadowWall(DRK, true, 120.0, "Shadow Wall", CooldownType.PERSONAL_MIT, 0xe34, 747),
@@ -157,8 +157,19 @@ public enum Cooldown {
 	private final double cooldown;
 	private final CooldownType type;
 	private final String label;
-	private final long abilityId;
-	private final long[] buffId;
+	private final long[] abilityIds;
+	private final long[] buffIds;
+
+	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long[] abilityIds, long[] buffIds) {
+		this.job = job;
+		this.defaultPersOverlay = defaultPersOverlay;
+		this.cooldown = cooldown;
+		this.jobType = null;
+		this.type = cooldownType;
+		this.label = label;
+		this.abilityIds = abilityIds;
+		this.buffIds = buffIds;
+	}
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long abilityId, long... buffId) {
 		this.job = job;
@@ -167,8 +178,8 @@ public enum Cooldown {
 		this.jobType = null;
 		this.type = cooldownType;
 		this.label = label;
-		this.abilityId = abilityId;
-		this.buffId = buffId;
+		this.abilityIds = new long[]{abilityId};
+		this.buffIds = buffId;
 	}
 
 	Cooldown(JobType jobType, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -178,8 +189,8 @@ public enum Cooldown {
 		this.jobType = jobType;
 		this.type = cooldownType;
 		this.label = label;
-		this.abilityId = abilityId;
-		this.buffId = buffId;
+		this.abilityIds = new long[]{abilityId};
+		this.buffIds = buffId;
 	}
 
 	public Job getJob() {
@@ -195,11 +206,16 @@ public enum Cooldown {
 	}
 
 	public boolean abilityIdMatches(long abilityId) {
-		return this.abilityId == abilityId;
+		for (long id : abilityIds) {
+			if (id == abilityId) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public boolean buffIdMatches(long buffId) {
-		for (long thisBuffId : this.buffId) {
+		for (long thisBuffId : this.buffIds) {
 			if (thisBuffId == buffId) {
 				return true;
 			}
@@ -213,7 +229,7 @@ public enum Cooldown {
 
 	// Purposefully saying "primary" here - as some might require multiple CDs (see: Raw/Nascent)
 	public long getPrimaryAbilityId() {
-		return abilityId;
+		return abilityIds[0];
 	}
 
 }

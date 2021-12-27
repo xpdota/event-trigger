@@ -38,6 +38,7 @@ public class CdTracker {
 
 	private final BooleanSetting enableTtsPersonal;
 	private final BooleanSetting enableTtsParty;
+	private final BooleanSetting enableFlyingText;
 	private final LongSetting cdTriggerAdvancePersonal;
 	private final LongSetting cdTriggerAdvanceParty;
 	private final IntSetting overlayMaxPersonal;
@@ -54,6 +55,7 @@ public class CdTracker {
 		}
 		enableTtsPersonal = new BooleanSetting(persistence, "cd-tracker.enable-tts", true);
 		enableTtsParty = new BooleanSetting(persistence, "cd-tracker.enable-tts.party", false);
+		enableFlyingText = new BooleanSetting(persistence, "cd-tracker.enable-flying-text", false);
 		cdTriggerAdvancePersonal = new LongSetting(persistence, "cd-tracker.pre-call-ms", 5000L);
 		cdTriggerAdvanceParty = new LongSetting(persistence, "cd-tracker.pre-call-ms.party", 5000L);
 		overlayMaxPersonal = new IntSetting(persistence, "cd-tracker.overlay-max", 8);
@@ -162,7 +164,7 @@ public class CdTracker {
 		XivAbility originalAbility = event.originalEvent.getAbility();
 		if (event.originalKey == cdResetKey) {
 			log.info("CD callout still valid");
-			context.accept(new CalloutEvent(originalAbility.getName()));
+			context.accept(new CalloutEvent(originalAbility.getName(), enableFlyingText.get() ? originalAbility.getName() : null));
 		}
 		else {
 			log.info("Not calling {} - no longer valid", originalAbility.getName());

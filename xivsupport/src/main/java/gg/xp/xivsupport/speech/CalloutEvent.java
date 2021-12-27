@@ -12,7 +12,8 @@ public class CalloutEvent extends BaseEvent {
 	private final String callText;
 	private final String visualText;
 	private final Instant expiresAt;
-	private static final long DEFAULT_DURATION = 5000;
+	// TODO lower this
+	private static final long DEFAULT_DURATION = 15000;
 
 	public CalloutEvent(String callText) {
 		this(callText, callText, DEFAULT_DURATION);
@@ -38,6 +39,6 @@ public class CalloutEvent extends BaseEvent {
 	}
 
 	public boolean isExpired() {
-		return expiresAt.isAfter(Instant.now());
+		return expiresAt.isBefore(Instant.now());
 	}
 }

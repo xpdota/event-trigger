@@ -37,6 +37,7 @@ public class DotRefreshReminders {
 	private static final String dotKeyStub = "dot-tracker.enable-buff.";
 
 	private final BooleanSetting enableTts;
+	private final BooleanSetting enableFlyingText;
 	private final LongSetting dotRefreshAdvance;
 	private final Map<DotBuff, BooleanSetting> enabledDots = new LinkedHashMap<>();
 	private final StatusEffectRepository buffs;
@@ -51,6 +52,8 @@ public class DotRefreshReminders {
 		}
 		this.dotRefreshAdvance = new LongSetting(persistence, "dot-tracker.pre-call-ms", 5000);
 		this.enableTts = new BooleanSetting(persistence, "dot-tracker.enable-tts", true);
+		// TODO put this on UI
+		this.enableFlyingText = new BooleanSetting(persistence, "dot-tracker.enable-flying-text", false);
 		this.numberToDisplay = new IntSetting(persistence, "dot-tracker.disp-number", 8);
 	}
 
@@ -161,7 +164,7 @@ public class DotRefreshReminders {
 				Duration delta = Duration.between(lastBrdCallout, now);
 				long thisEntityId = originalEvent.getTarget().getId();
 				if (delta.toMillis() > 3500 || thisEntityId != lastEntityId) {
-					context.accept(new CalloutEvent("Dots"));
+					context.accept(new CalloutEvent("Dots", enableFlyingText.get() ? "Dots" : null));
 				}
 				lastBrdCallout = now;
 				lastEntityId = thisEntityId;
@@ -170,7 +173,7 @@ public class DotRefreshReminders {
 				if (!suppressSpamCallouts || Duration.between(lastCallout, now).toMillis() > 500) {
 					String name = originalEvent.getBuff().getName();
 					String adjustedName = adjustDotName(name);
-					context.accept(new CalloutEvent(adjustedName));
+					context.accept(new CalloutEvent(adjustedName, enableFlyingText.get() ? adjustedName : null));
 				}
 				lastCallout = now;
 			}

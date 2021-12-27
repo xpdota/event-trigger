@@ -35,7 +35,6 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 
 	private static final int BAR_WIDTH = 150;
 
-	@SuppressWarnings("BusyWait")
 	protected BaseCdTrackerOverlay(String title, String settingKeyBase, PersistenceProvider persistence, IntSetting rowSetting) {
 		super(title, settingKeyBase, persistence);
 		numberOfRows = rowSetting;
