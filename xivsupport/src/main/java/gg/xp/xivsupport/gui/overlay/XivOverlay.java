@@ -5,6 +5,7 @@ import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinUser;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
@@ -214,6 +215,10 @@ public class XivOverlay {
 	private static void setClickThrough(JFrame w, boolean clickThrough) {
 		log.trace("Click-through: {}", clickThrough);
 		w.setFocusableWindowState(!clickThrough);
+		if (!Platform.isWindows()) {
+			log.warn("Setting click-through is not supported on non-Windows platforms at this time.");
+			return;
+		}
 		WinDef.HWND hwnd = getHWnd(w);
 		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
 		if (clickThrough) {

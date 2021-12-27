@@ -205,7 +205,8 @@ public class JailSolver implements FilteredEventHandler {
 		log.info("Sorted jails: {}", jailedPlayers);
 	}
 
-	@HandleEvents
+	// Order doesn't realistically affect functionality, but is needed to have consistent behavior in tests
+	@HandleEvents(order = 2)
 	public void personalCallout(EventContext context, FinalTitanJailsSolvedEvent event) {
 		if (enableTts.get()) {
 			XivPlayerCharacter me = context.getStateInfo().get(XivState.class).getPlayer();
@@ -231,7 +232,7 @@ public class JailSolver implements FilteredEventHandler {
 		}
 	}
 
-	@HandleEvents
+	@HandleEvents(order = 1)
 	public void automarks(EventContext context, FinalTitanJailsSolvedEvent event) {
 		if (enableAutomark.get()) {
 			List<XivPlayerCharacter> playersToMark = event.getJailedPlayers();
