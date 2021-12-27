@@ -5,6 +5,7 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadFactory;
 
 public class EventMaster {
@@ -55,30 +56,55 @@ public class EventMaster {
 		stop = true;
 	}
 
+	private Runnable drainCallback;
+
 	private void eventLoop() {
 		log.info("Starting event loop");
 		while (!stop) {
-			Event event;
-			try {
-				event = queue.pull();
-			}
-			catch (Throwable t) {
-				log.error("Error pulling event", t);
-				continue;
-			}
-			try {
-				eventDistributor.acceptEvent(event);
-			}
-			catch (Throwable t) {
-				log.error("Error pumping event {}", event, t);
-			}
+			pumpOneEvent();
 		}
 		log.info("Finished event loop");
+	}
 
+	private void pumpOneEvent() {
+		Event event;
+		try {
+			event = queue.pull();
+		}
+		catch (Throwable t) {
+			log.error("Error pulling event", t);
+			return;
+		}
+		try {
+			eventDistributor.acceptEvent(event);
+		}
+		catch (Throwable t) {
+			log.error("Error pumping event {}", event, t);
+		}
+		if (drainCallback != null && queue.pendingSize() == 0) {
+			try {
+				drainCallback.run();
+			}
+			catch (Throwable t) {
+				log.error("Error running callback", t);
+			}
+		}
 	}
 
 	public void pushEvent(Event event) {
 		queue.push(event);
+	}
+
+	public void pushEventAndWait(Event event) {
+		CountDownLatch latch = new CountDownLatch(1);
+		drainCallback = latch::countDown;
+		queue.push(event);
+		try {
+			latch.await();
+		}
+		catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@SuppressWarnings({"BusyWait", "InfiniteLoopStatement"})

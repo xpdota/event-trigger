@@ -4,11 +4,11 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivsupport.persistence.Compressible;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import org.picocontainer.PicoContainer;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 public class ReplayController {
 
@@ -25,6 +25,7 @@ public class ReplayController {
 	private int currentIndex;
 
 	public ReplayController(EventMaster master, List<? extends Event> events, boolean decompress) {
+//		master.setUseLoopLock(true);
 		this.master = master;
 		this.events = events;
 		this.decompress = decompress;
@@ -38,14 +39,26 @@ public class ReplayController {
 		return currentIndex;
 	}
 
-	public void advanceBy(int count) {
+	/**
+	 * Advance by a certain number of events. While this is synchronous in the sense that it will not
+	 * return until the events have been enqueued, it is not asynchronous in the sense that events are
+	 * merely enqueued rather than processed immediately.
+	 *
+	 * @param count Count to advance by
+	 * @return Actual count advanced by, which will be less than 'count' if there were less than 'count'
+	 * events remaining in the replay.
+	 */
+	public int advanceBy(int count) {
+		int advancedBy = 0;
 		for (; count-- > 0 && currentIndex < events.size(); currentIndex++) {
 			Event event = events.get(currentIndex);
 			if (decompress && event instanceof Compressible compressedEvent) {
 				compressedEvent.decompress();
 			}
 			master.pushEvent(event);
+			advancedBy++;
 		}
+		return advancedBy;
 	}
 
 	public void advanceByAsync(int count, Runnable callback) {
@@ -55,4 +68,15 @@ public class ReplayController {
 		});
 	}
 
+	public void advanceByAsyncWhile(Supplier<Boolean> advWhile) {
+		exs.submit(() -> {
+			for (; advWhile.get() && currentIndex < events.size(); currentIndex++) {
+				Event event = events.get(currentIndex);
+				if (decompress && event instanceof Compressible compressedEvent) {
+					compressedEvent.decompress();
+				}
+				master.pushEventAndWait(event);
+			}
+		});
+	}
 }

@@ -138,8 +138,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		// modifications to the visual filters themselves. However, it's a waste if the data set is too small.
 		int numberOfThings = thingsToFilter.size();
 		List<X> out = ((numberOfThings > 1000) ? thingsToFilter.parallelStream() : thingsToFilter.stream())
-				.filter(event -> filters.stream()
-						.allMatch(filter -> filter.passesFilter(event)))
+				.filter(this::passesFilters)
 				.collect(Collectors.toList());
 		long after = System.currentTimeMillis();
 		long delta = after - before;
@@ -147,6 +146,10 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			log.warn("Slow filtering for table {}: took {}ms to filter {} items", title, delta, numberOfThings);
 		}
 		return out;
+	}
+
+	public boolean passesFilters(X item) {
+		return filters.stream().allMatch(filter -> filter.passesFilter(item));
 	}
 
 	private List<X> getFilteredData() {
@@ -279,7 +282,9 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		}
 
 		public TableWithFilterAndDetailsBuilder<X, D> addFilter(Function<Runnable, VisualFilter<? super X>> filter) {
-			this.filters.add(filter);
+			if (filter != null) {
+				this.filters.add(filter);
+			}
 			return this;
 		}
 

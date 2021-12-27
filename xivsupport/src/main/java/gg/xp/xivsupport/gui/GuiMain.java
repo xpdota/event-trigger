@@ -61,11 +61,13 @@ import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
+import gg.xp.xivsupport.replay.gui.ReplayAdvancePseudoFilter;
 import gg.xp.xivsupport.replay.gui.ReplayControllerGui;
 import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
+import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -101,6 +103,7 @@ public class GuiMain {
 	private final StateStore state;
 	private final PicoContainer container;
 	private final StandardColumns columns;
+	private final @Nullable ReplayController replay;
 	private JTabbedPane tabPane;
 
 
@@ -123,6 +126,7 @@ public class GuiMain {
 		this.state = master.getDistributor().getStateStore();
 		this.container = container;
 		columns = container.getComponent(StandardColumns.class);
+		replay = container.getComponent(ReplayController.class);
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
 			tabPane = new JTabbedPane();
@@ -132,7 +136,6 @@ public class GuiMain {
 			frame.setSize(960, 720);
 			frame.setVisible(true);
 			frame.add(tabPane);
-			ReplayController replay = container.getComponent(ReplayController.class);
 			if (replay != null) {
 				frame.add(new ReplayControllerGui(replay).getPanel(), BorderLayout.PAGE_START);
 			}
@@ -168,9 +171,12 @@ public class GuiMain {
 			c.weightx = 1;
 			c.gridwidth = GridBagConstraints.REMAINDER;
 
-			ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
-			connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
-			add(connectionStatusPanel, c);
+			if (replay == null) {
+				ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
+				connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
+				add(connectionStatusPanel, c);
+				master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
+			}
 
 			c.gridy++;
 			c.weightx = 0;
@@ -195,7 +201,6 @@ public class GuiMain {
 			c.weighty = 1;
 			add(combatantsPanel, c);
 			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
-			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
 			EventHandler<Event> update = (ctx, e) -> {
 				xivStateStatus.refresh();
 				xivPartyPanel.refresh();
@@ -824,6 +829,7 @@ public class GuiMain {
 		// Main table
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
 		PullTracker pulls = container.getComponent(PullTracker.class);
+		ReplayAdvancePseudoFilter<Event> replayPsuedoFilter = replayNextPseudoFilter(Event.class);
 		TableWithFilterAndDetails<Event, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", rawStorage::getEvents,
 						currentEvent -> {
 							if (currentEvent == null) {
@@ -884,8 +890,12 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 				.addFilter(r -> new PullNumberFilter(pulls, r))
+				.addFilter(r -> replayPsuedoFilter)
 				.setAppendOrPruneOnly(true)
 				.build();
+		if (replayPsuedoFilter != null) {
+			replayPsuedoFilter.setTable(table);
+		}
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> table.signalNewData());
 		return table;
 
@@ -893,6 +903,7 @@ public class GuiMain {
 
 	private JPanel getActLogPanel() {
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
+		ReplayAdvancePseudoFilter<ACTLogLineEvent> replayPsuedoFilter = replayNextPseudoFilter(ACTLogLineEvent.class);
 		TableWithFilterAndDetails<ACTLogLineEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("ACT Log",
 						() -> rawStorage.getEvents().stream().filter(ACTLogLineEvent.class::isInstance)
 								.map(ACTLogLineEvent.class::cast)
@@ -916,8 +927,12 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.addFilter(ActLineFilter::new)
+				.addFilter(r -> replayPsuedoFilter)
 				.setAppendOrPruneOnly(true)
 				.build();
+		if (replayPsuedoFilter != null) {
+			replayPsuedoFilter.setTable(table);
+		}
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> {
 			table.signalNewData();
 		});
@@ -1128,5 +1143,11 @@ public class GuiMain {
 		return panel;
 	}
 
+	private <X extends Event> @Nullable ReplayAdvancePseudoFilter<X> replayNextPseudoFilter(Class<X> clazz) {
+		if (replay == null) {
+			return null;
+		}
+		return new ReplayAdvancePseudoFilter<>(clazz, master, replay);
+	}
 
 }
