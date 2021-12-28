@@ -45,6 +45,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			List<CustomColumn<? super D>> detailsColumns,
 			Function<? super X, List<D>> detailsConverter,
 			List<Function<Runnable, VisualFilter<? super X>>> filterCreators,
+			List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets,
 			BiPredicate<? super X, ? super X> selectionEquivalence,
 			BiPredicate<? super D, ? super D> detailsSelectionEquivalence,
 			boolean appendOrPruneOnly) {
@@ -116,6 +117,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
 		filters.forEach(filter -> topPanel.add(filter.getComponent()));
+		widgets.stream().map(w -> w.apply(this)).forEach(topPanel::add);
 		add(topPanel, BorderLayout.PAGE_START);
 
 
@@ -262,6 +264,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		private final List<CustomColumn<? super D>> detailsColumns = new ArrayList<>();
 		private final Function<X, List<D>> detailsConverter;
 		private final List<Function<Runnable, VisualFilter<? super X>>> filters = new ArrayList<>();
+		private final List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets = new ArrayList<>();
 		private BiPredicate<? super X, ? super X> selectionEquivalence = Objects::equals;
 		private BiPredicate<? super D, ? super D> detailsSelectionEquivalence = Objects::equals;
 		private boolean appendOrPruneOnly;
@@ -290,6 +293,13 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			return this;
 		}
 
+		public TableWithFilterAndDetailsBuilder<X, D> addWidget(Function<TableWithFilterAndDetails<X, ?>, Component> widget) {
+			if (widget != null) {
+				this.widgets.add(widget);
+			}
+			return this;
+		}
+
 		public TableWithFilterAndDetailsBuilder<X, D> setSelectionEquivalence(BiPredicate<X, X> selectionEquivalence) {
 			this.selectionEquivalence = selectionEquivalence;
 			return this;
@@ -306,7 +316,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		}
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly);
+			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly);
 		}
 	}
 

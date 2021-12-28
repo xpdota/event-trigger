@@ -74,9 +74,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.reflect.Field;
@@ -91,6 +95,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -252,13 +257,30 @@ public class GuiMain {
 
 		public ActWsConnectionStatus() {
 			super("System Status");
-			JCheckBox box = new JCheckBox();
-			box.setEnabled(false);
+			JCheckBox box = new JCheckBox() {
+				@Override
+				protected void processMouseEvent(MouseEvent e) {
+					// Ignore - lets us preserve the "enabled" look while being unclickable
+				}
+			};
+			box.setFocusable(false);
+			WsState wsState = state.get(WsState.class);
+			Border defaultBorder = getBorder();
+			Border badBorder = new TitledBorder(new LineBorder(Color.RED), "System Status");
+
 			connectedDisp = new KeyValueDisplaySet(List.of(new KeyValuePairDisplay<>(
 					"Connected to ACT WS",
 					box,
-					() -> state.get(WsState.class).isConnected(),
-					AbstractButton::setSelected
+					wsState::isConnected,
+					(cb, connected) -> {
+						cb.setSelected(connected);
+						if (connected) {
+							setBorder(defaultBorder);
+						}
+						else {
+							setBorder(badBorder);
+						}
+					}
 			)));
 			add(connectedDisp);
 			JButton testTts = new JButton("Test TTS");
@@ -829,7 +851,6 @@ public class GuiMain {
 		// Main table
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
 		PullTracker pulls = container.getComponent(PullTracker.class);
-		ReplayAdvancePseudoFilter<Event> replayPsuedoFilter = replayNextPseudoFilter(Event.class);
 		TableWithFilterAndDetails<Event, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", rawStorage::getEvents,
 						currentEvent -> {
 							if (currentEvent == null) {
@@ -890,12 +911,9 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 				.addFilter(r -> new PullNumberFilter(pulls, r))
-				.addFilter(r -> replayPsuedoFilter)
+				.addWidget(replayNextPseudoFilter(Event.class))
 				.setAppendOrPruneOnly(true)
 				.build();
-		if (replayPsuedoFilter != null) {
-			replayPsuedoFilter.setTable(table);
-		}
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> table.signalNewData());
 		return table;
 
@@ -903,7 +921,6 @@ public class GuiMain {
 
 	private JPanel getActLogPanel() {
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
-		ReplayAdvancePseudoFilter<ACTLogLineEvent> replayPsuedoFilter = replayNextPseudoFilter(ACTLogLineEvent.class);
 		TableWithFilterAndDetails<ACTLogLineEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("ACT Log",
 						() -> rawStorage.getEvents().stream().filter(ACTLogLineEvent.class::isInstance)
 								.map(ACTLogLineEvent.class::cast)
@@ -927,12 +944,9 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.addFilter(ActLineFilter::new)
-				.addFilter(r -> replayPsuedoFilter)
+				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
 				.build();
-		if (replayPsuedoFilter != null) {
-			replayPsuedoFilter.setTable(table);
-		}
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> {
 			table.signalNewData();
 		});
@@ -1143,11 +1157,11 @@ public class GuiMain {
 		return panel;
 	}
 
-	private <X extends Event> @Nullable ReplayAdvancePseudoFilter<X> replayNextPseudoFilter(Class<X> clazz) {
+	private <X extends Event> @Nullable Function<TableWithFilterAndDetails<X, ?>, Component> replayNextPseudoFilter(Class<X> clazz) {
 		if (replay == null) {
 			return null;
 		}
-		return new ReplayAdvancePseudoFilter<>(clazz, master, replay);
+		return table -> new ReplayAdvancePseudoFilter<>(clazz, master, replay, table).getComponent();
 	}
 
 }

@@ -10,14 +10,15 @@ import gg.xp.xivsupport.replay.ReplayController;
 import javax.swing.*;
 import java.awt.*;
 
-public class ReplayAdvancePseudoFilter<X extends Event> implements VisualFilter<X> {
+public class ReplayAdvancePseudoFilter<X extends Event> {
 	private final ReplayController replay;
 	private final Class<X> clazz;
-	private TableWithFilterAndDetails<X, ?> table;
+	private final TableWithFilterAndDetails<X, ?> table;
 
-	public ReplayAdvancePseudoFilter(Class<X> clazz, EventMaster master, ReplayController replay) {
+	public ReplayAdvancePseudoFilter(Class<X> clazz, EventMaster master, ReplayController replay, TableWithFilterAndDetails<X, ?> table) {
 		this.replay = replay;
 		this.clazz = clazz;
+		this.table = table;
 		EventDistributor dist = master.getDistributor();
 		dist.registerHandler(clazz, (c, e) -> {
 			if (eventPassesTableFilter(e)) {
@@ -26,20 +27,7 @@ public class ReplayAdvancePseudoFilter<X extends Event> implements VisualFilter<
 		});
 	}
 
-	public void setTable(TableWithFilterAndDetails<X, ?> table) {
-		this.table = table;
-	}
-
 	private volatile boolean isPlaying;
-
-	public ReplayAdvancePseudoFilter<X> getThis(Runnable run) {
-		return this;
-	}
-
-	@Override
-	public boolean passesFilter(X item) {
-		return true;
-	}
 
 	private boolean eventPassesTableFilter(X event) {
 		if (table == null) {
@@ -51,7 +39,6 @@ public class ReplayAdvancePseudoFilter<X extends Event> implements VisualFilter<
 		return false;
 	}
 
-	@Override
 	public Component getComponent() {
 		JButton theButton = new JButton("Play to Next Matching");
 		theButton.addActionListener(l -> {
