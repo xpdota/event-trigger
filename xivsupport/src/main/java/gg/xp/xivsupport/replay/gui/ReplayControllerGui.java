@@ -23,7 +23,8 @@ public final class ReplayControllerGui {
 		panel.setBorder(new TitledBorder("Replay Controls"));
 		textBox = new TextFieldWithValidation<>(Integer::parseInt, i -> this.advanceAmount = i, "1");
 		advanceButton = new JButton("Advance");
-		advanceButton.addActionListener(e -> controller.advanceByAsync(advanceAmount, this::refresh));
+		controller.addCallback(this::refresh);
+		advanceButton.addActionListener(e -> controller.advanceByAsync(advanceAmount));
 		progressLabel = new JLabel();
 		panel.add(textBox);
 		panel.add(advanceButton);
