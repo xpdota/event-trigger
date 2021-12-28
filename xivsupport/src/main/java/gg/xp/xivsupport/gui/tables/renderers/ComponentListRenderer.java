@@ -15,7 +15,7 @@ import java.util.List;
 public class ComponentListRenderer extends JComponent {
 	@Serial
 	private static final long serialVersionUID = -124182066710853800L;
-	private List<Component> components;
+	private List<Component> components = Collections.emptyList();
 	private final int xPadding;
 	private final boolean rightToLeft;
 	private Color bg;

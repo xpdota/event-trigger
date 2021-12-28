@@ -172,6 +172,11 @@ public class XivOverlay {
 		recalc();
 	}
 
+	protected void repackSize() {
+		getFrame().revalidate();
+		redoScale();
+	}
+
 	private void recalc() {
 		if (!editMode) {
 			panel.setBorder(transparentBorder);

@@ -80,10 +80,10 @@ public class PartyOverlay extends XivOverlay {
 		repackSize();
 	}
 
-	private void repackSize() {
+	@Override
+	protected void repackSize() {
 		table.setPreferredSize(new Dimension(table.getPreferredSize().width, table.getRowHeight() * numberOfRows + 1));
-		getFrame().revalidate();
-		redoScale();
+		super.repackSize();
 	}
 
 

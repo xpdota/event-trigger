@@ -70,10 +70,10 @@ public class DotTrackerOverlay extends XivOverlay {
 		refresher.start();
 	}
 
-	private void repackSize() {
+	@Override
+	protected void repackSize() {
 		table.setPreferredSize(new Dimension(table.getPreferredSize().width, table.getRowHeight() * numberOfRows.get()));
-		getFrame().revalidate();
-		redoScale();
+		super.repackSize();
 	}
 
 

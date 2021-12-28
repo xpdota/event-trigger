@@ -64,10 +64,10 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 		refresher.start();
 	}
 
-	private void repackSize() {
+	@Override
+	protected void repackSize() {
 		table.setPreferredSize(new Dimension(table.getPreferredSize().width, table.getRowHeight() * numberOfRows.get()));
-		getFrame().revalidate();
-		redoScale();
+		super.repackSize();
 	}
 
 	protected abstract Map<CdTrackingKey, AbilityUsedEvent> getCooldowns();

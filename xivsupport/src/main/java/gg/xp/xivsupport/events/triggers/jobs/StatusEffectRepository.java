@@ -214,9 +214,8 @@ public class StatusEffectRepository {
 
 
 	public List<BuffApplied> statusesOnTarget(XivEntity entity) {
-		if (false) {
-			long id = entity.getId();
-			return getBuffs().stream().filter(s -> s.getTarget().getId() == id).collect(Collectors.toList());
+		if (entity == null) {
+			return Collections.emptyList();
 		}
 		synchronized (lock) {
 			Map<BuffTrackingKey, BuffApplied> cached = onTargetCache.get(entity);
