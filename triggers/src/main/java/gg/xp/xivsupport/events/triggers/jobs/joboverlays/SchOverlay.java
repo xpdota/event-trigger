@@ -23,6 +23,8 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,6 +38,8 @@ import java.util.stream.Collectors;
 import static gg.xp.xivdata.jobs.Job.SCH;
 
 public class SchOverlay extends JPanel implements FilteredEventHandler {
+
+	private static final Logger log = LoggerFactory.getLogger(SchOverlay.class);
 
 	private final ComponentListRenderer listRenderer = new ComponentListRenderer(4);
 	private static final int ICON_SIZE = 40;
@@ -52,7 +56,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 	private volatile List<VisualCdInfo> croppedCds = Collections.emptyList();
 
 	private enum SchSummon {
-		NONE,
+		NONE(810),
 		SELENE(0x4340),
 		EOS(0x433f),
 		SERAPH(0x40A1),
@@ -143,7 +147,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		}
 		effectiveList.addAll(pendingActionIcons);
 		listRenderer.setComponents(effectiveList);
-		repaint();
+		SwingUtilities.invokeLater(this::repaint);
 	}
 
 	private @Nullable ActionIcon summonOrderToActionMapping(BuffApplied buff) {
@@ -196,6 +200,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 
 	private void summonUpdate() {
 		summonCombatant = getSummonCombatant();
+		log.info("Summon update: {}", summonCombatant);
 		if (summonCombatant == null) {
 			if (isDissipationActive()) {
 				summon = SchSummon.DISSIPATION;
@@ -219,6 +224,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 				summon = SchSummon.SELENE;
 			}
 		}
+		log.info("Summon: {}", summon);
 		summonIcon = summon.icon;
 	}
 

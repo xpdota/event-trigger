@@ -11,6 +11,7 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.Map;
 
@@ -42,7 +43,7 @@ public class JobOverlay extends XivOverlay implements FilteredEventHandler {
 		log.info("Job Overlay Change: {} -> {}", current, newJob);
 		if (current != null) {
 			current.setVisible(false);
-			getPanel().remove(current);
+			SwingUtilities.invokeLater(() -> getPanel().remove(current));
 			current = null;
 		}
 		Class<? extends Container> newOverlayClass = jobMapping.get(newJob);
@@ -50,10 +51,11 @@ public class JobOverlay extends XivOverlay implements FilteredEventHandler {
 			return;
 		}
 		current = instanceProvider.getInstance(newOverlayClass);
-		getPanel().add(current);
-		current.setVisible(true);
-		repackSize();
-
+		SwingUtilities.invokeLater(() -> {
+			getPanel().add(current);
+			current.setVisible(true);
+			repackSize();
+		});
 	}
 
 	@Override
