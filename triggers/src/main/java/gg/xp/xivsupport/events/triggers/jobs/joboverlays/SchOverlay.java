@@ -123,6 +123,8 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		uiUpdate();
 	}
 
+	// TODO: this isn't particularly useful - what we actually need is to see the action resolve
+	// There isn't an action sync for pure heals unfortunately
 	private void summonPendingActionsUpdate() {
 		if (summonCombatant == null) {
 			pendingActionIcons = Collections.emptyList();
