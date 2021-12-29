@@ -115,6 +115,8 @@ public class CdTracker {
 	@HandleEvents
 	public void cdUsed(EventContext context, AbilityUsedEvent event) {
 		Cooldown cd;
+		// target index == 0 ensures that for abilities that can hit multiple enemies, we only start the CD tracking
+		// once.
 		if (event.getTargetIndex() == 0 && (cd = getCdInfo(event.getAbility().getId())) != null) {
 			// TODO: there's some duplicate whitelist logic
 			boolean isSelf = event.getSource().isThePlayer();
