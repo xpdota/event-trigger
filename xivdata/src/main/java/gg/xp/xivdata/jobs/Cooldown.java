@@ -120,8 +120,14 @@ public enum Cooldown {
 
 
 	// PHYS RANGED
-	StandardStep(DNC, true, 30.0, "Standard Step", CooldownType.PARTY_BUFF, 0x3e7d, 1821, 2024),
-	TechnicalStep(DNC, true, 120.0, "Technical Step", CooldownType.PARTY_BUFF, 0x3e7e, 1819, 2049),
+	// Specifically NOT providing buff IDs for standard step, since you'd want to use it off CD for damage, and
+	// the duration is longer than the CD, so you'd never actually see when you need to use it.
+	StandardStep(DNC, true, 30.0, "Standard Step", CooldownType.PARTY_BUFF, 0x3e7d),
+	// TODO: there's a lvl 82 trait that might affect this
+	// TODO: tech step is weird. The buff isn't applied by step, but rather by finish, but the cooldown starts when
+	// you step.
+	// It looks like if you fail to complete all the steps, it's still the same buff ID.
+	TechnicalStep(DNC, true, 120.0, "Technical Step", CooldownType.PARTY_BUFF, 0x3e7e, 0x71e),
 	Devilment(DNC, true, 120.0, "Devilment", CooldownType.PARTY_BUFF, 0x3e8b, 1825),
 	ShieldSamba(DNC, true, 120.0, "Shield Samba", CooldownType.PARTY_MIT, 0x3e8c, 1826),
 	Troubadour(BRD, true, 120.0, "Troubadour", CooldownType.PARTY_MIT, 0x1ced, 1934),
