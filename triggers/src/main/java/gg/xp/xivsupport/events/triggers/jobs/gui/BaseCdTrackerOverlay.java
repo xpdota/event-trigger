@@ -33,31 +33,13 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 	private volatile List<VisualCdInfo> croppedCds = Collections.emptyList();
 	private volatile List<BuffApplied> currentBuffs = Collections.emptyList();
 
-	private static final int BAR_WIDTH = 150;
-
 	protected BaseCdTrackerOverlay(String title, String settingKeyBase, PersistenceProvider persistence, IntSetting rowSetting) {
 		super(title, settingKeyBase, persistence);
 		numberOfRows = rowSetting;
 		numberOfRows.addListener(this::repackSize);
-		tableModel = CustomTableModel.builder(() -> croppedCds)
-				.addColumn(new CustomColumn<>("Icon", c -> c.getEvent().getAbility(), c -> {
-					c.setCellRenderer(new ActionAndStatusRenderer(true, false, false));
-					c.setMaxWidth(22);
-					c.setMinWidth(22);
-				}))
-				.addColumn(new CustomColumn<>("Bar", Function.identity(),
-						c -> {
-							c.setCellRenderer(new CdBarRenderer());
-							c.setMaxWidth(BAR_WIDTH);
-							c.setMinWidth(BAR_WIDTH);
-						}))
-				.build();
-		table = new JTable(tableModel);
-		table.setOpaque(false);
-		table.setFocusable(false);
-		table.setRowSelectionAllowed(false);
-		table.setCellSelectionEnabled(false);
-		tableModel.configureColumns(table);
+		BaseCdTrackerTable tableHolder = new BaseCdTrackerTable(() -> croppedCds);
+		tableModel = tableHolder.getTableModel();
+		table = tableHolder.getTable();
 		getPanel().add(table);
 		RefreshLoop<BaseCdTrackerOverlay> refresher = new RefreshLoop<>("CdTracker", this, BaseCdTrackerOverlay::refresh, dt -> Math.max((long) (50 / getScale()), 20));
 		repackSize();

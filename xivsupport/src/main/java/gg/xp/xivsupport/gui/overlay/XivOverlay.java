@@ -167,6 +167,14 @@ public class XivOverlay {
 		posSettingDirty = false;
 	}
 
+	public LongSetting getXSetting() {
+		return xSetting;
+	}
+
+	public LongSetting getYSetting() {
+		return ySetting;
+	}
+
 	public void setVisible(boolean visible) {
 		this.visible = visible;
 		recalc();
