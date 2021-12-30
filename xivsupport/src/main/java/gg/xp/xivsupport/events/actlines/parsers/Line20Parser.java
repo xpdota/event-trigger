@@ -9,8 +9,8 @@ import java.time.ZonedDateTime;
 @SuppressWarnings("unused")
 public class Line20Parser extends AbstractACTLineParser<Line20Parser.Fields> {
 
-	public Line20Parser(XivStateImpl state) {
-		super(state,  20, Fields.class);
+	public Line20Parser(org.picocontainer.PicoContainer container) {
+		super(container,  20, Fields.class);
 	}
 
 	enum Fields {

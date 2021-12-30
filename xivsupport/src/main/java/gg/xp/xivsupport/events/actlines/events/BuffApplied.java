@@ -7,7 +7,6 @@ import gg.xp.xivsupport.models.XivStatusEffect;
 
 import java.io.Serial;
 import java.time.Duration;
-import java.time.Instant;
 
 // TODO: track new application vs refresh
 // Note that stacks decreasing (e.g. Embolden) still counts as "Application".
@@ -50,12 +49,8 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		return duration;
 	}
 
-	private Instant getStart() {
-		return getPumpedAt() == null ? getHappenedAt() : getPumpedAt();
-	}
-
 	public Duration getEstimatedElapsedDuration() {
-		Duration delta = Duration.between(getStart(), timeNow());
+		Duration delta = getEffectiveTimeSince();
 		// If negative, return zero. If longer than expected duration, return duration.
 		if (delta.isNegative()) {
 			return Duration.ZERO;
@@ -73,7 +68,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	}
 
 	public Duration getEstimatedTimeSinceExpiry() {
-		Duration elapsed = Duration.between(getStart(), Instant.now());
+		Duration elapsed = getEffectiveTimeSince();
 		return elapsed.minus(duration);
 	}
 

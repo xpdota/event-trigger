@@ -3,14 +3,15 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
 public class Line35Parser extends AbstractACTLineParser<Line35Parser.Fields> {
 
-	public Line35Parser(XivState state) {
-		super(state,  35, Fields.class);
+	public Line35Parser(PicoContainer container) {
+		super(container,  35, Fields.class);
 	}
 
 	enum Fields {

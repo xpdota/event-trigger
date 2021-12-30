@@ -40,6 +40,6 @@ public final class LaunchImportedSession {
 		raw.getMaxEventsStoredSetting().set(1_000_000);
 		pico.addComponent(GuiMain.class);
 		pico.getComponent(GuiMain.class);
-		FailOnThreadViolationRepaintManager.install();
+//		FailOnThreadViolationRepaintManager.install();
 	}
 }

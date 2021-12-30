@@ -129,19 +129,38 @@ public abstract class BaseEvent implements Event {
 	}
 
 	private CurrentTimeSource getTimeSource() {
+		// Top priority - time source added to this specific event
+		if (timeSource != null) {
+			return timeSource;
+		}
 		if (parent != null && parent instanceof BaseEvent base) {
 			return base.getTimeSource();
 		}
 		else {
-			return timeSource == null ? defaultTimeSource : timeSource;
+			return defaultTimeSource;
 		}
 	}
 
-	public Instant timeNow() {
+	public Instant effectiveTimeNow() {
 		return getTimeSource().now();
 	}
 
 	public void setTimeSource(CurrentTimeSource timeSource) {
 		this.timeSource = timeSource;
+	}
+
+	public Instant getEffectiveHappenedAt() {
+		// If running live, we want the system time when the event was submitted to be the basis of the event time
+		// If replay, we want the time when the event originally happened to be the basis
+		if (getTimeSource() == defaultTimeSource) {
+			return getPumpedAt() == null ? getHappenedAt() : getPumpedAt();
+		}
+		else {
+			return getHappenedAt() != null ? getHappenedAt() : getPumpedAt();
+		}
+	}
+
+	public Duration getEffectiveTimeSince() {
+		return Duration.between(getEffectiveHappenedAt(), effectiveTimeNow());
 	}
 }

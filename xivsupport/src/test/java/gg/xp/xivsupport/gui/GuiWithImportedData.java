@@ -34,18 +34,19 @@ public final class GuiWithImportedData {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
+		EventMaster master = pico.getComponent(EventMaster.class);
 		pers.save("gui.display-predicted-hp", "true");
 		long start = System.currentTimeMillis();
 		List<Event> events = EventReader.readEventsFromResource("/testsession5.oos.gz");
 		long read = System.currentTimeMillis();
-		ReplayController replayController = new ReplayController(pico, events, false);
+		ReplayController replayController = new ReplayController(master, events, false);
 		pico.addComponent(replayController);
 		dist.acceptEvent(new InitEvent());
 		RawEventStorage raw = pico.getComponent(RawEventStorage.class);
 		raw.getMaxEventsStoredSetting().set(1_000_000);
 		pico.addComponent(GuiMain.class);
 		pico.getComponent(GuiMain.class);
-		FailOnThreadViolationRepaintManager.install();
+//		FailOnThreadViolationRepaintManager.install();
 
 		long finish = System.currentTimeMillis();
 		log.info("Imported Event Count: {}", events.size());
