@@ -28,6 +28,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
+import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapPanel;
@@ -59,22 +60,29 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
+import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
+import gg.xp.xivsupport.replay.gui.ReplayAdvancePseudoFilter;
 import gg.xp.xivsupport.replay.gui.ReplayControllerGui;
 import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
+import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.reflect.Field;
@@ -89,6 +97,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -101,6 +110,7 @@ public class GuiMain {
 	private final StateStore state;
 	private final PicoContainer container;
 	private final StandardColumns columns;
+	private final @Nullable ReplayController replay;
 	private JTabbedPane tabPane;
 
 
@@ -123,6 +133,7 @@ public class GuiMain {
 		this.state = master.getDistributor().getStateStore();
 		this.container = container;
 		columns = container.getComponent(StandardColumns.class);
+		replay = container.getComponent(ReplayController.class);
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
 			tabPane = new JTabbedPane();
@@ -132,7 +143,6 @@ public class GuiMain {
 			frame.setSize(960, 720);
 			frame.setVisible(true);
 			frame.add(tabPane);
-			ReplayController replay = container.getComponent(ReplayController.class);
 			if (replay != null) {
 				frame.add(new ReplayControllerGui(replay).getPanel(), BorderLayout.PAGE_START);
 			}
@@ -168,9 +178,12 @@ public class GuiMain {
 			c.weightx = 1;
 			c.gridwidth = GridBagConstraints.REMAINDER;
 
-			ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
-			connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
-			add(connectionStatusPanel, c);
+			if (replay == null) {
+				ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
+				connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
+				add(connectionStatusPanel, c);
+				master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
+			}
 
 			c.gridy++;
 			c.weightx = 0;
@@ -195,7 +208,6 @@ public class GuiMain {
 			c.weighty = 1;
 			add(combatantsPanel, c);
 			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
-			master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
 			EventHandler<Event> update = (ctx, e) -> {
 				xivStateStatus.refresh();
 				xivPartyPanel.refresh();
@@ -247,13 +259,30 @@ public class GuiMain {
 
 		public ActWsConnectionStatus() {
 			super("System Status");
-			JCheckBox box = new JCheckBox();
-			box.setEnabled(false);
+			JCheckBox box = new JCheckBox() {
+				@Override
+				protected void processMouseEvent(MouseEvent e) {
+					// Ignore - lets us preserve the "enabled" look while being unclickable
+				}
+			};
+			box.setFocusable(false);
+			WsState wsState = state.get(WsState.class);
+			Border defaultBorder = getBorder();
+			Border badBorder = new TitledBorder(new LineBorder(Color.RED), "System Status");
+
 			connectedDisp = new KeyValueDisplaySet(List.of(new KeyValuePairDisplay<>(
 					"Connected to ACT WS",
 					box,
-					() -> state.get(WsState.class).isConnected(),
-					AbstractButton::setSelected
+					wsState::isConnected,
+					(cb, connected) -> {
+						cb.setSelected(connected);
+						if (connected) {
+							setBorder(defaultBorder);
+						}
+						else {
+							setBorder(badBorder);
+						}
+					}
 			)));
 			add(connectedDisp);
 			JButton testTts = new JButton("Test TTS");
@@ -639,10 +668,11 @@ public class GuiMain {
 			}
 
 			{
-				TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Misc");
-//				BooleanSettingGui showPredictedHp = new BooleanSettingGui(columns.getShowPredictedHp(), "Experimental HP Bar (Buggy and slow, don't use)");
+				TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Websocket (Restart Required)");
 				miscPanel.setPreferredSize(new Dimension(300, 150));
-//				miscPanel.add(showPredictedHp.getComponent());
+				ActWsLogSource actWs = container.getComponent(ActWsLogSource.class);
+				miscPanel.add(new WsURISettingGui(actWs.getUriSetting(), "ACT WS URI").getComponent());
+				miscPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
 				c.gridx++;
 				add(miscPanel, c);
 			}
@@ -884,6 +914,7 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 				.addFilter(r -> new PullNumberFilter(pulls, r))
+				.addWidget(replayNextPseudoFilter(Event.class))
 				.setAppendOrPruneOnly(true)
 				.build();
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> table.signalNewData());
@@ -916,6 +947,7 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.addFilter(ActLineFilter::new)
+				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
 				.build();
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> {
@@ -1128,5 +1160,11 @@ public class GuiMain {
 		return panel;
 	}
 
+	private <X extends Event> @Nullable Function<TableWithFilterAndDetails<X, ?>, Component> replayNextPseudoFilter(Class<X> clazz) {
+		if (replay == null) {
+			return null;
+		}
+		return table -> new ReplayAdvancePseudoFilter<>(clazz, master, replay, table).getComponent();
+	}
 
 }

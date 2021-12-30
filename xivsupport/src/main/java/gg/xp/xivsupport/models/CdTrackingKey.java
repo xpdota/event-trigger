@@ -6,10 +6,6 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 
 import java.util.Objects;
 
-/**
- * Hashes the things that make a buff unique, as in, if the new buff matches the old buff,
- * and the old buff is not expired, then this is a buff refresh.
- */
 public final class CdTrackingKey {
 	private final XivEntity source;
 	private final XivAbility ability;
@@ -30,12 +26,12 @@ public final class CdTrackingKey {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		CdTrackingKey that = (CdTrackingKey) o;
-		return Objects.equals(source, that.source) && Objects.equals(ability, that.ability);
+		return Objects.equals(source, that.source) && cooldown == that.cooldown;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(source, ability);
+		return Objects.hash(source, cooldown);
 	}
 
 	public XivEntity getSource() {

@@ -1,9 +1,11 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.SystemEvent;
 
 import java.io.Serial;
 
+@SystemEvent
 public class RawOnlineStatusChanged extends BaseEvent {
 	@Serial
 	private static final long serialVersionUID = -5620693730040682765L;

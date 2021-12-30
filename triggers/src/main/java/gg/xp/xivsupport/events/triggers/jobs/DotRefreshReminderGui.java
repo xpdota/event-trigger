@@ -67,7 +67,7 @@ public class DotRefreshReminderGui implements PluginTab {
 		GridBagConstraints c = new GridBagConstraints();
 		Map<DotBuff, BooleanSetting> dots = backend.getEnabledDots();
 		Map<Job, List<DotBuff>> byJob = dots.keySet().stream().collect(Collectors.groupingBy(DotBuff::getJob));
-		List<Job> jobKeys = byJob.keySet().stream().sorted(Comparator.comparing(Job::getFriendlyName)).collect(Collectors.toList());
+		List<Job> jobKeys = byJob.keySet().stream().sorted(Comparator.comparing(Job::getFriendlyName)).toList();
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.CENTER;
 		c.ipadx = 50;

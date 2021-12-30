@@ -32,7 +32,7 @@ public final class LaunchImportedSession {
 		EventMaster master = pico.getComponent(EventMaster.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		pers.save("gui.display-predicted-hp", "true");
-		ReplayController replayController = new ReplayController(pico, events, decompress);
+		ReplayController replayController = new ReplayController(master, events, decompress);
 		pico.addComponent(replayController);
 		pico.getComponent(RawEventStorage.class);
 		dist.acceptEvent(new InitEvent());

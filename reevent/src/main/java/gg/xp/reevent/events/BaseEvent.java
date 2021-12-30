@@ -1,8 +1,6 @@
 package gg.xp.reevent.events;
 
-import gg.xp.reevent.time.CurrentTimeSource;
 import gg.xp.reevent.time.TimeUtils;
-import org.apache.commons.lang3.concurrent.TimedSemaphore;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +33,6 @@ public abstract class BaseEvent implements Event {
 			throw new IllegalStateException("Event already has a parent");
 		}
 		this.parent = parent;
-		if (timeSource == null && parent instanceof BaseEvent p) {
-			timeSource = p.timeSource;
-		}
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public abstract class ResourceBarRendererWithMovement implements TableCellRender
 			int effectiveMax;
 			int effectiveCurrent;
 			int effectivePredicted;
-			if (actualMax == 0 || (actualMax < actualCurrent) || (actualMax == 1)) {
+			if (actualMax == 0 || (actualMax < actualCurrent)) {
 				return emptyComponent(isSelected, table);
 			}
 			else {

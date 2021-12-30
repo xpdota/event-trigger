@@ -112,12 +112,10 @@ public class ResourceBar extends JComponent {
 		AffineTransform t = new AffineTransform(old);
 		double xScale = t.getScaleX();
 		double yScale = t.getScaleY();
-		t.scale(1 / xScale, 1 / yScale);
+//		t.scale(1 / xScale, 1 / yScale);
+		t.setTransform(1.0, 0, 0, 1.0, Math.round(t.getTranslateX()), Math.round(t.getTranslateY()));
 		((Graphics2D) g).setTransform(t);
 		int realWidth = (int) Math.floor(getWidth() * xScale);
-		if (xScale != 1.0d) {
-			realWidth--;
-		}
 		int realHeight = (int) Math.floor(getHeight() * yScale);
 		int borderWidth = getBorderWidth();
 		int innerWidth = realWidth - (2 * borderWidth);
@@ -126,6 +124,7 @@ public class ResourceBar extends JComponent {
 		int width2 = (int) (innerWidth * percent2);
 		int width3 = innerWidth - width1 - width2;
 
+		// TODO: missing 1px at the right of the bar
 		if (width1 > 0) {
 			g.setColor(color1);
 			g.fillRect(borderWidth, borderWidth, width1, innerHeight);

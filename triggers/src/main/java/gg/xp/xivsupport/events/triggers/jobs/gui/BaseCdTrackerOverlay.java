@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.jobs.gui;
 import gg.xp.xivdata.jobs.Cooldown;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -34,7 +35,6 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 
 	private static final int BAR_WIDTH = 150;
 
-	@SuppressWarnings("BusyWait")
 	protected BaseCdTrackerOverlay(String title, String settingKeyBase, PersistenceProvider persistence, IntSetting rowSetting) {
 		super(title, settingKeyBase, persistence);
 		numberOfRows = rowSetting;
@@ -54,25 +54,14 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 				.build();
 		table = new JTable(tableModel);
 		table.setOpaque(false);
+		table.setFocusable(false);
+		table.setRowSelectionAllowed(false);
+		table.setCellSelectionEnabled(false);
 		tableModel.configureColumns(table);
 		getPanel().add(table);
-		Thread thread = new Thread(() -> {
-			while (true) {
-				try {
-					refresh();
-					// Optimally calculating this would probably be wasteful, so just come up with
-					// something reasonable.
-					Thread.sleep((Math.max((long) (50 / getScale()), 20)));
-				}
-				catch (Throwable e) {
-					log.error("Error refreshing CDs", e);
-				}
-			}
-		});
-		thread.setName("CdOverlayThread");
+		RefreshLoop<BaseCdTrackerOverlay> refresher = new RefreshLoop<>("CdTracker", this, BaseCdTrackerOverlay::refresh, dt -> Math.max((long) (50 / getScale()), 20));
 		repackSize();
-		//noinspection CallToThreadStartDuringObjectConstruction
-		thread.start();
+		refresher.start();
 	}
 
 	private void repackSize() {

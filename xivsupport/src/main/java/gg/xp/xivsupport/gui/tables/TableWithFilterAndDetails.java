@@ -45,6 +45,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			List<CustomColumn<? super D>> detailsColumns,
 			Function<? super X, List<D>> detailsConverter,
 			List<Function<Runnable, VisualFilter<? super X>>> filterCreators,
+			List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets,
 			BiPredicate<? super X, ? super X> selectionEquivalence,
 			BiPredicate<? super D, ? super D> detailsSelectionEquivalence,
 			boolean appendOrPruneOnly) {
@@ -112,8 +113,11 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		topPanel.add(autoRefresh);
 		topPanel.add(stayAtBottom);
 		topPanel.setLayout(new WrapLayout(FlowLayout.LEFT));
-		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering)).collect(Collectors.toList());
+		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
 		filters.forEach(filter -> topPanel.add(filter.getComponent()));
+		widgets.stream().map(w -> w.apply(this)).forEach(topPanel::add);
 		add(topPanel, BorderLayout.PAGE_START);
 
 
@@ -138,8 +142,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		// modifications to the visual filters themselves. However, it's a waste if the data set is too small.
 		int numberOfThings = thingsToFilter.size();
 		List<X> out = ((numberOfThings > 1000) ? thingsToFilter.parallelStream() : thingsToFilter.stream())
-				.filter(event -> filters.stream()
-						.allMatch(filter -> filter.passesFilter(event)))
+				.filter(this::passesFilters)
 				.collect(Collectors.toList());
 		long after = System.currentTimeMillis();
 		long delta = after - before;
@@ -147,6 +150,10 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			log.warn("Slow filtering for table {}: took {}ms to filter {} items", title, delta, numberOfThings);
 		}
 		return out;
+	}
+
+	public boolean passesFilters(X item) {
+		return filters.stream().allMatch(filter -> filter.passesFilter(item));
 	}
 
 	private List<X> getFilteredData() {
@@ -257,6 +264,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		private final List<CustomColumn<? super D>> detailsColumns = new ArrayList<>();
 		private final Function<X, List<D>> detailsConverter;
 		private final List<Function<Runnable, VisualFilter<? super X>>> filters = new ArrayList<>();
+		private final List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets = new ArrayList<>();
 		private BiPredicate<? super X, ? super X> selectionEquivalence = Objects::equals;
 		private BiPredicate<? super D, ? super D> detailsSelectionEquivalence = Objects::equals;
 		private boolean appendOrPruneOnly;
@@ -279,7 +287,16 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		}
 
 		public TableWithFilterAndDetailsBuilder<X, D> addFilter(Function<Runnable, VisualFilter<? super X>> filter) {
-			this.filters.add(filter);
+			if (filter != null) {
+				this.filters.add(filter);
+			}
+			return this;
+		}
+
+		public TableWithFilterAndDetailsBuilder<X, D> addWidget(Function<TableWithFilterAndDetails<X, ?>, Component> widget) {
+			if (widget != null) {
+				this.widgets.add(widget);
+			}
 			return this;
 		}
 
@@ -299,7 +316,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		}
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly);
+			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly);
 		}
 	}
 

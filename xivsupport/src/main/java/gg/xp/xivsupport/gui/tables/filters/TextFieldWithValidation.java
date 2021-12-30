@@ -9,6 +9,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class TextFieldWithValidation<X> extends JTextField {
 
@@ -18,6 +19,7 @@ public class TextFieldWithValidation<X> extends JTextField {
 	private final Function<String, X> parser;
 	private final Consumer<X> consumer;
 	protected final Color invalidBackground = new Color(62, 27, 27);
+	private boolean stopUpdate;
 
 	public TextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
 		super(10);

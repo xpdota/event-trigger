@@ -1,21 +1,19 @@
 # This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-name: Build and Test
+name: Publish
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
   workflow_dispatch:
-    
+
 
 jobs:
   build:
 
     runs-on: self-hosted
-
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 17
@@ -26,6 +24,18 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: xvfb-run mvn -T5 clean install
+    - name: Copy release files
+      run: |
+        pushd launcher/target/windows/deps/
+        md5sum *.jar > manifest
+        popd
+    - name: Deploy release files
+      uses: JamesIves/github-pages-deploy-action@4.1.7
+
+      with:
+        folder: ./launcher/target/windows/deps
+        branch: gh-pages
+        target-folder: ${{ github.ref_name }}
 
 
 

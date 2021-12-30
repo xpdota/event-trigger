@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 public class AutoBottomScrollHelper extends JScrollPane {
 
@@ -11,6 +13,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 	private boolean autoScrollEnabled;
 	private volatile int oldMax;
 	private volatile int oldValue;
+	private volatile int oldExtent;
 
 	// TODO: technically, this no longer needs a table
 	public AutoBottomScrollHelper(JTable table, Runnable forceOffCallback) {
@@ -21,10 +24,32 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		setPreferredSize(getMaximumSize());
 		JScrollBar bar = getVerticalScrollBar();
 		setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				super.componentResized(e);
+			}
+
+			@Override
+			public void componentMoved(ComponentEvent e) {
+				super.componentMoved(e);
+			}
+
+			@Override
+			public void componentShown(ComponentEvent e) {
+				super.componentShown(e);
+			}
+
+			@Override
+			public void componentHidden(ComponentEvent e) {
+				super.componentHidden(e);
+			}
+		});
 		bar.addAdjustmentListener(event -> SwingUtilities.invokeLater(() -> {
 			int newMax = bar.getMaximum();
-			int newValue = bar.getValue();
-			if (newMax != oldMax) {
+			int newExtent = bar.getModel().getExtent();
+			int newValue = bar.getValue() + newExtent;
+			if (newMax != oldMax || newExtent != oldExtent) {
 				doScrollIfEnabled();
 			}
 			else {
@@ -35,6 +60,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 			log.trace("Value: {} -> {} ; Max: {} -> {}", oldValue, newValue, oldMax, newMax);
 			oldMax = newMax;
 			oldValue = newValue;
+			oldExtent = newExtent;
 		}));
 
 	}

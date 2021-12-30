@@ -5,6 +5,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.ActImportOnly;
 import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
+import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 
 import java.util.Collections;
 
@@ -19,11 +20,10 @@ public final class ActStateReader implements ActImportOnly {
 		this.xivState = xivState;
 	}
 
-//	@HandleEvents(order = Integer.MIN_VALUE)
-//	public void zoneChange(EventContext context, ZoneChangeEvent event) {
-//		xivState.setZone(event.getZone());
-//		context.accept(new RefreshCombatantsRequest());
-//	}
+	@HandleEvents(order = Integer.MIN_VALUE)
+	public void clearCombatantsOnZoneChange(EventContext context, ZoneChangeEvent event) {
+		xivState.setCombatants(Collections.emptyList());
+	}
 //
 //	@HandleEvents(order = Integer.MIN_VALUE)
 //	public void playerChange(EventContext context, RawPlayerChangeEvent event) {
