@@ -4,6 +4,7 @@ import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
+import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -28,6 +29,7 @@ public final class LaunchImportedActLog {
 	public static void fromEvents(List<? extends Event> events, boolean decompress) {
 		CommonGuiSetup.setup();
 		MutablePicoContainer pico = XivMain.importInit();
+		pico.addComponent(FakeACTTimeSource.class);
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		pers.save("gui.display-predicted-hp", "true");
@@ -40,6 +42,6 @@ public final class LaunchImportedActLog {
 		raw.getMaxEventsStoredSetting().set(1_000_000);
 		pico.addComponent(GuiMain.class);
 		pico.getComponent(GuiMain.class);
-		FailOnThreadViolationRepaintManager.install();
+//		FailOnThreadViolationRepaintManager.install();
 	}
 }

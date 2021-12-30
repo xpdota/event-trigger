@@ -6,6 +6,7 @@ import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import org.assertj.core.util.Strings;
+import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -15,8 +16,8 @@ import java.util.stream.IntStream;
 @SuppressWarnings("unused")
 public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> implements ActImportOnly {
 
-	public Line11Parser(XivStateImpl state) {
-		super(state, 11, Fields.class, true);
+	public Line11Parser(PicoContainer container) {
+		super(container, 11, Fields.class, true);
 	}
 
 	enum Fields {

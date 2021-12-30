@@ -236,6 +236,11 @@ public class XivStateImpl implements XivState {
 			if (ownerId != 0) {
 				c.setParent(combatantsProcessed.get(ownerId));
 			}
+			// TODO: find a place for this logic to live
+			// Early star is a badly-behaved NPC - it doesn't properly remove itself or buffs that happened to be on it
+			if (c.getbNpcId() == 7245) {
+				c.setFake(true);
+			}
 		});
 		// TODO: just doing a simple diff of this would be a great way to synthesize
 		// add/remove combatant events
