@@ -14,8 +14,8 @@ public class Line03Parser extends AbstractACTLineParser<Line03Parser.Fields> {
 
 	private static final Logger log = LoggerFactory.getLogger(Line03Parser.class);
 
-	public Line03Parser(XivStateImpl state) {
-		super(state,  3, Fields.class);
+	public Line03Parser(org.picocontainer.PicoContainer container) {
+		super(container,  3, Fields.class);
 	}
 
 	enum Fields {

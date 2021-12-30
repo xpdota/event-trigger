@@ -12,6 +12,9 @@ import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.WsURISetting;
 import gg.xp.xivsupport.speech.TtsRequest;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.java_websocket.client.WebSocketClient;
@@ -19,8 +22,17 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.net.URI;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,16 +46,48 @@ public class ActWsLogSource implements EventSource {
 	private static final Logger log = LoggerFactory.getLogger(ActWsLogSource.class);
 	private static final ExecutorService taskPool = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("ActWsLogPool-%d").build());
 	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final URI defaultUri = URI.create("ws://127.0.0.1:10501/ws");
 	private final Object connectLock = new Object();
+	private final WsURISetting uriSetting;
+	private final BooleanSetting allowBadCert;
 
 	private final class ActWsClientInternal extends WebSocketClient {
 
 		public ActWsClientInternal() {
-			super(URI.create("ws://127.0.0.1:10501/ws"));
-		}
+			super(uriSetting.get());
+			if (allowBadCert.get() && "wss".equalsIgnoreCase(getURI().getScheme())) {
 
-		public ActWsClientInternal(String uriStr) {
-			super(URI.create(uriStr));
+
+				TrustManager tm = new X509TrustManager() {
+					@Override
+					public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+
+					}
+
+					@Override
+					public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+
+					}
+
+					@Override
+					public X509Certificate[] getAcceptedIssuers() {
+						return new X509Certificate[0];
+					}
+				};
+
+				SSLContext sslContext;
+				try {
+					sslContext = SSLContext.getInstance("TLS");
+					sslContext.init(null, new TrustManager[]{tm}, null);
+				}
+				catch (NoSuchAlgorithmException | KeyManagementException e) {
+					throw new RuntimeException(e);
+				}
+
+				SSLSocketFactory factory = sslContext.getSocketFactory();
+
+				setSocketFactory(factory);
+			}
 		}
 
 		@Override
@@ -57,12 +101,6 @@ public class ActWsLogSource implements EventSource {
 		@Override
 		public void onMessage(String s) {
 			log.trace("WS Message: {}", s);
-//			if (s.contains("LogLine") || s.contains("combatants")) {
-//				log.trace("Message: {}", s);
-//			}
-//			else {
-//				log.info("Message: {}", s);
-//			}
 			eventConsumer.accept(new ActWsRawMsg(s));
 		}
 
@@ -105,7 +143,9 @@ public class ActWsLogSource implements EventSource {
 	private final ActWsClientInternal client;
 	private final WsState state = new WsState();
 
-	public ActWsLogSource(EventMaster master, StateStore stateStore) {
+	public ActWsLogSource(EventMaster master, StateStore stateStore, PersistenceProvider pers) {
+		this.uriSetting = new WsURISetting(pers, "actws-uri", defaultUri);
+		this.allowBadCert = new BooleanSetting(pers, "acts-allow-bad-cert", false);
 		this.eventConsumer = master::pushEvent;
 		this.client = new ActWsClientInternal();
 		stateStore.putCustom(WsState.class, state);
@@ -325,4 +365,11 @@ public class ActWsLogSource implements EventSource {
 		}
 	}
 
+	public WsURISetting getUriSetting() {
+		return uriSetting;
+	}
+
+	public BooleanSetting getAllowBadCert() {
+		return allowBadCert;
+	}
 }

@@ -28,6 +28,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
+import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapPanel;
@@ -59,6 +60,7 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
+import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayAdvancePseudoFilter;
@@ -666,10 +668,11 @@ public class GuiMain {
 			}
 
 			{
-				TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Misc");
-//				BooleanSettingGui showPredictedHp = new BooleanSettingGui(columns.getShowPredictedHp(), "Experimental HP Bar (Buggy and slow, don't use)");
+				TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Websocket (Restart Required)");
 				miscPanel.setPreferredSize(new Dimension(300, 150));
-//				miscPanel.add(showPredictedHp.getComponent());
+				ActWsLogSource actWs = container.getComponent(ActWsLogSource.class);
+				miscPanel.add(new WsURISettingGui(actWs.getUriSetting(), "ACT WS URI").getComponent());
+				miscPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
 				c.gridx++;
 				add(miscPanel, c);
 			}

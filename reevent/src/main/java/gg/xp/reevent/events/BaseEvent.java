@@ -24,6 +24,8 @@ public abstract class BaseEvent implements Event {
 	private Instant pumpFinishedAt;
 	private long delayedEnqueueAt;
 	private transient boolean isImported;
+	private transient CurrentTimeSource timeSource;
+	private static final CurrentTimeSource defaultTimeSource = TimeUtils::now;
 
 	@Override
 	public void setParent(Event parent) {
@@ -124,5 +126,41 @@ public abstract class BaseEvent implements Event {
 	@Override
 	public void setImported(boolean imported) {
 		isImported = imported;
+	}
+
+	private CurrentTimeSource getTimeSource() {
+		// Top priority - time source added to this specific event
+		if (timeSource != null) {
+			return timeSource;
+		}
+		if (parent != null && parent instanceof BaseEvent base) {
+			return base.getTimeSource();
+		}
+		else {
+			return defaultTimeSource;
+		}
+	}
+
+	public Instant effectiveTimeNow() {
+		return getTimeSource().now();
+	}
+
+	public void setTimeSource(CurrentTimeSource timeSource) {
+		this.timeSource = timeSource;
+	}
+
+	public Instant getEffectiveHappenedAt() {
+		// If running live, we want the system time when the event was submitted to be the basis of the event time
+		// If replay, we want the time when the event originally happened to be the basis
+		if (getTimeSource() == defaultTimeSource) {
+			return getPumpedAt() == null ? getHappenedAt() : getPumpedAt();
+		}
+		else {
+			return getHappenedAt() != null ? getHappenedAt() : getPumpedAt();
+		}
+	}
+
+	public Duration getEffectiveTimeSince() {
+		return Duration.between(getEffectiveHappenedAt(), effectiveTimeNow());
 	}
 }
