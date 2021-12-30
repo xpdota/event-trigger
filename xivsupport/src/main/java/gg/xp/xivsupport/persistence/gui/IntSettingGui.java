@@ -9,23 +9,23 @@ import java.awt.*;
 
 public class IntSettingGui {
 
-	private final TextFieldWithValidation<Integer> checkBox;
+	private final TextFieldWithValidation<Integer> textBox;
 	private final String label;
 	private JLabel jLabel;
 
 	public IntSettingGui(IntSetting setting, String label) {
-		checkBox = new TextFieldWithValidation<>(Integer::parseInt, setting::set, Long.toString(setting.get()));
+		textBox = new TextFieldWithValidation<>(Integer::parseInt, setting::set, Long.toString(setting.get()));
 		this.label = label;
 	}
 
 	public Component getTextBoxOnly() {
-		return checkBox;
+		return textBox;
 	}
 
 	public Component getLabelOnly() {
 		if (jLabel == null) {
 			jLabel = new JLabel(label);
-			jLabel.setLabelFor(checkBox);
+			jLabel.setLabelFor(textBox);
 		}
 		return jLabel;
 	}
