@@ -9,23 +9,23 @@ import java.awt.*;
 
 public class LongSettingGui {
 
-	private final TextFieldWithValidation<Long> checkBox;
+	private final TextFieldWithValidation<Long> textBox;
 	private final String label;
 	private JLabel jLabel;
 
 	public LongSettingGui(LongSetting setting, String label) {
-		checkBox = new TextFieldWithValidation<>(Long::parseLong, setting::set, Long.toString(setting.get()));
+		textBox = new TextFieldWithValidation<>(Long::parseLong, setting::set, Long.toString(setting.get()));
 		this.label = label;
 	}
 
 	public Component getTextBoxOnly() {
-		return checkBox;
+		return textBox;
 	}
 
 	public Component getLabelOnly() {
 		if (jLabel == null) {
 			jLabel = new JLabel(label);
-			jLabel.setLabelFor(checkBox);
+			jLabel.setLabelFor(textBox);
 		}
 		return jLabel;
 	}

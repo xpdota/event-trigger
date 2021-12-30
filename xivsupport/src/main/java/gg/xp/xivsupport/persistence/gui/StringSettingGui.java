@@ -10,23 +10,23 @@ import java.util.function.Function;
 
 public class StringSettingGui {
 
-	private final TextFieldWithValidation<String> checkBox;
+	private final TextFieldWithValidation<String> textBox;
 	private final String label;
 	private JLabel jLabel;
 
 	public StringSettingGui(StringSetting setting, String label) {
-		checkBox = new TextFieldWithValidation<>(Function.identity(), setting::set, setting.get());
+		textBox = new TextFieldWithValidation<>(Function.identity(), setting::set, setting.get());
 		this.label = label;
 	}
 
 	public Component getTextBoxOnly() {
-		return checkBox;
+		return textBox;
 	}
 
 	public Component getLabelOnly() {
 		if (jLabel == null) {
 			jLabel = new JLabel(label);
-			jLabel.setLabelFor(checkBox);
+			jLabel.setLabelFor(textBox);
 		}
 		return jLabel;
 	}
