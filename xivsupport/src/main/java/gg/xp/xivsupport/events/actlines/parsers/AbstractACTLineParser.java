@@ -60,14 +60,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 		try {
 			String line = event.getLogLine();
 			if (line.startsWith(lineStart)) {
-				String[] splits;
-				if (splitAll) {
-					splits = line.split("\\|");
-				}
-				else {
-					int numSplits = groups.size() + 3;
-					splits = line.split("\\|", numSplits);
-				}
+				String[] splits = event.getRawFields();
 				Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
 				// TODO: validate number of fields
 				for (int i = 0; i < groups.size(); i++) {
