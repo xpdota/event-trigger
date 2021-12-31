@@ -13,7 +13,6 @@ public class XivCombatant extends XivEntity {
 	private final boolean isPc;
 	private final boolean isThePlayer;
 	private final long rawType;
-	// Marking as nullable for now until I figure out party members more
 	private final @Nullable HitPoints hp;
 	private final @Nullable ManaPoints mp;
 	private final @Nullable Position pos;
@@ -23,9 +22,7 @@ public class XivCombatant extends XivEntity {
 	private final long level;
 	private final long ownerId;
 	private boolean isFake;
-	private XivCombatant parent;
-	// TODO: location/heading
-	// TODO: hp info
+	private @Nullable XivCombatant parent;
 
 	public XivCombatant(
 			long id,
