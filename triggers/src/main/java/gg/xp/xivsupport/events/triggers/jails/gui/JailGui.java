@@ -6,6 +6,7 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
+import gg.xp.xivsupport.events.state.PlayerChangedJobEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
@@ -144,10 +145,11 @@ public class JailGui implements PluginTab {
 		return panel;
 	}
 
-	// TODO: this should only happen on a party update, not a normal state recalc
-	// TODO: test new logic
+	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
+	// determine exactly what should trigger it. Maybe better to just stick it on a timer that only applies when the
+	// tab is visible?
 	@HandleEvents(order = 20_000)
-	public void updatePartyList(EventContext context, PartyChangeEvent event) {
+	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
 		SwingUtilities.invokeLater(() -> {
 			if (partyTableModel != null) {
 				partyTableModel.fullRefresh();
