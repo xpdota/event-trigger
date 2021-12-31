@@ -202,7 +202,6 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 
 	private void summonUpdate() {
 		summonCombatant = getSummonCombatant();
-		log.info("Summon update: {}", summonCombatant);
 		if (summonCombatant == null) {
 			if (isDissipationActive()) {
 				summon = SchSummon.DISSIPATION;
@@ -226,7 +225,6 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 				summon = SchSummon.SELENE;
 			}
 		}
-		log.info("Summon: {}", summon);
 		summonIcon = summon.icon;
 	}
 
@@ -269,6 +267,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		if (player == null) {
 			return null;
 		}
+		// TODO: cooldowns should really just have a method that takes a key
 		return cooldowns.getCds((e) -> e.getValue().getSource().equals(player) && e.getValue().getAbility().getId() == 0xa6)
 				.values().stream().findFirst().orElse(null);
 	}

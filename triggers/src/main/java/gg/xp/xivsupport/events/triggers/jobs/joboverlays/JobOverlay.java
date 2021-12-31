@@ -6,8 +6,10 @@ import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.state.PlayerChangedJobEvent;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,41 +24,65 @@ public class JobOverlay extends XivOverlay implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(JobOverlay.class);
 
 	private final AutoHandlerInstanceProvider instanceProvider;
+	private final XivState state;
 	private Container current;
+	private volatile Job previous;
 	private static final Map<Job, Class<? extends Container>> jobMapping
 			= Map.of(
 			SCH, SchOverlay.class
 	);
 
-	public JobOverlay(PersistenceProvider persistence, AutoHandlerInstanceProvider instanceProvider) {
+	public JobOverlay(PersistenceProvider persistence, AutoHandlerInstanceProvider instanceProvider, XivState state) {
 		super("Job-Specific", "job-specific-overlay", persistence);
 		this.instanceProvider = instanceProvider;
+		this.state = state;
 	}
 
 	@HandleEvents
 	public void jobChange(EventContext context, PlayerChangedJobEvent event) {
-		Job newJob = event.getNewJob();
-		changeJob(newJob);
+		changeJob(state.getPlayerJob());
 	}
 
 	private void changeJob(Job newJob) {
-		log.info("Job Overlay Change: {} -> {}", current, newJob);
-		if (current != null) {
-			current.setVisible(false);
-			SwingUtilities.invokeLater(() -> getPanel().remove(current));
-			current = null;
-		}
-		Class<? extends Container> newOverlayClass = jobMapping.get(newJob);
-		if (newOverlayClass == null) {
+		log.info("Job Overlay Change: {} -> {}", previous, newJob);
+		if (previous == newJob) {
 			return;
 		}
-		current = instanceProvider.getInstance(newOverlayClass);
+		previous = newJob;
+		@Nullable Container newCurrent;
+		if (newJob == null) {
+			newCurrent = null;
+		}
+		else {
+			Class<? extends Container> newOverlayClass = jobMapping.get(newJob);
+			if (newOverlayClass == null) {
+				newCurrent = null;
+			}
+			else {
+				newCurrent = instanceProvider.getInstance(newOverlayClass);
+			}
+		}
 		SwingUtilities.invokeLater(() -> {
-			getPanel().add(current);
-			current.setVisible(true);
-			repackSize();
+			if (current != null) {
+				current.setVisible(false);
+				getPanel().remove(current);
+			}
+			current = newCurrent;
+			if (current != null) {
+				getPanel().add(current);
+				current.setVisible(true);
+				repackSize();
+			}
 		});
 	}
+
+//	@Override
+//	public void setVisible(boolean visible) {
+//		if (visible) {
+//			changeJob(state.getPlayerJob());
+//		}
+//		super.setVisible(visible);
+//	}
 
 	@Override
 	public boolean enabled(EventContext context) {
