@@ -5,6 +5,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
@@ -143,8 +144,10 @@ public class JailGui implements PluginTab {
 		return panel;
 	}
 
-	@HandleEvents
-	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
+	// TODO: this should only happen on a party update, not a normal state recalc
+	// TODO: test new logic
+	@HandleEvents(order = 20_000)
+	public void updatePartyList(EventContext context, PartyChangeEvent event) {
 		SwingUtilities.invokeLater(() -> {
 			if (partyTableModel != null) {
 				partyTableModel.fullRefresh();

@@ -108,17 +108,23 @@ public class DotTrackerOverlay extends XivOverlay {
 							}
 						}))
 						.forEach((k, v) -> {
+							BuffApplied first = v.get(0);
 							if (v.size() == 1) {
-								BuffApplied thisBuff = v.get(0);
-								if (thisBuff.getTarget().isThePlayer()) {
-									out.add(new VisualDotInfo(thisBuff, thisBuff.getBuff().getName()));
+								if (first.getTarget().isThePlayer()) {
+									out.add(new VisualDotInfo(first, first.getBuff().getName()));
 								}
 								else {
-									out.add(new VisualDotInfo(thisBuff));
+									out.add(new VisualDotInfo(first));
 								}
 							}
 							else {
-								out.add(new VisualDotInfo(v.get(0), String.format("%s Targets", v.size())));
+								String firstTargetName = first.getTarget().getName();
+								if (v.stream().allMatch(e -> e.getTarget().getName().equals(firstTargetName))) {
+									out.add(new VisualDotInfo(first, String.format("%s x%s", firstTargetName, v.size())));
+								}
+								else {
+									out.add(new VisualDotInfo(first, String.format("%s Targets", v.size())));
+								}
 							}
 						});
 				buffs.sort(Comparator.comparing(BuffApplied::getEstimatedRemainingDuration));
