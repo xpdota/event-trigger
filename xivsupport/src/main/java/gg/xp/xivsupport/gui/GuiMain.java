@@ -2,7 +2,6 @@ package gg.xp.xivsupport.gui;
 
 import ch.qos.logback.classic.Level;
 import gg.xp.reevent.context.StateStore;
-import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
@@ -21,14 +20,12 @@ import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
-import gg.xp.xivsupport.events.misc.Stats;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
-import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapPanel;
@@ -50,17 +47,14 @@ import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
-import gg.xp.xivsupport.gui.tree.TopologyTreeEditor;
-import gg.xp.xivsupport.gui.tree.TopologyTreeModel;
-import gg.xp.xivsupport.gui.tree.TopologyTreeRenderer;
+import gg.xp.xivsupport.gui.tabs.AdvancedTab;
+import gg.xp.xivsupport.gui.tabs.PluginTopologyPanel;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
-import gg.xp.xivsupport.persistence.gui.IntSettingGui;
-import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayAdvancePseudoFilter;
@@ -68,6 +62,7 @@ import gg.xp.xivsupport.replay.gui.ReplayControllerGui;
 import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
+import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
@@ -83,8 +78,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -105,7 +98,7 @@ import java.util.stream.Stream;
 public class GuiMain {
 
 	private static final Logger log = LoggerFactory.getLogger(GuiMain.class);
-	private static final ExecutorService exs = Executors.newCachedThreadPool();
+	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("GuiMain"));
 	private final EventMaster master;
 	private final StateStore state;
 	private final PicoContainer container;
@@ -122,8 +115,6 @@ public class GuiMain {
 			MutablePicoContainer pico = XivMain.masterInit();
 			pico.addComponent(GuiMain.class);
 			pico.getComponent(GuiMain.class);
-			// TODO: make this a setting
-//			FailOnThreadViolationRepaintManager.install();
 		});
 	}
 
@@ -155,13 +146,9 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("ACT Log", getActLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("System Log", getSystemLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedPanel()));
-//		SwingUtilities.invokeLater(() -> tabPane.addTab("Import/Export", getImportExportTab()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", new MapPanel(state.get(XivStateImpl.class))));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Topology", new PluginTopologyPanel()));
-//		container.addComponent(OverlayMain.class);
-//		container.getComponent(OverlayMain.class);
 	}
 
 
@@ -191,7 +178,6 @@ public class GuiMain {
 			XivStateStatus xivStateStatus = new XivStateStatus();
 			xivStateStatus.setMinimumSize(new Dimension(250, 200));
 			xivStateStatus.setPreferredSize(xivStateStatus.getMinimumSize());
-//			xivStateStatus.setPreferredSize(new Dimension(100, 250));
 			add(xivStateStatus, c);
 
 			c.gridx++;
@@ -212,44 +198,11 @@ public class GuiMain {
 				xivStateStatus.refresh();
 				xivPartyPanel.refresh();
 				combatantsPanel.refresh();
-//				SwingUtilities.invokeLater(xivStateStatus::refresh);
-//				SwingUtilities.invokeLater(xivPartyPanel::refresh);
-//				SwingUtilities.invokeLater(combatantsPanel::refresh);
 			};
 			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, update);
-			// This *should* result in an XivStateRecalculatedEvent, so no need to listen separately
-//			master.getDistributor().registerHandler(AbilityResolvedEvent.class, update);
 			master.getDistributor().registerHandler(AbilityUsedEvent.class, update);
 			master.getDistributor().registerHandler(BuffApplied.class, update);
 			master.getDistributor().registerHandler(BuffRemoved.class, update);
-//			master.getDistributor().registerHandler(AbilityResolvedEvent.class, (ctx, e) -> {
-//				SwingUtilities.invokeLater(() -> {
-//					xivPartyPanel.refreshCombatant(e.getSource());
-//					combatantsPanel.refreshCombatant(e.getSource());
-//					xivPartyPanel.refreshCombatant(e.getTarget());
-//					combatantsPanel.refreshCombatant(e.getTarget());
-//				});
-//			});
-//			master.getDistributor().registerHandler(AbilityUsedEvent.class, (ctx, e) -> {
-//				SwingUtilities.invokeLater(() -> {
-//					xivPartyPanel.refreshCombatant(e.getSource());
-//					combatantsPanel.refreshCombatant(e.getSource());
-//					xivPartyPanel.refreshCombatant(e.getTarget());
-//					combatantsPanel.refreshCombatant(e.getTarget());
-//				});
-//			});
-//			master.getDistributor().registerHandler(BuffApplied.class, (ctx, e) -> {
-//				SwingUtilities.invokeLater(() -> {
-//					xivPartyPanel.refreshCombatant(e.getTarget());
-//					combatantsPanel.refreshCombatant(e.getTarget());
-//				});
-//			});
-//			master.getDistributor().registerHandler(BuffRemoved.class, (ctx, e) -> {
-//				SwingUtilities.invokeLater(() -> {
-//					xivPartyPanel.refreshCombatant(e.getTarget());
-//					combatantsPanel.refreshCombatant(e.getTarget());
-//				});
-//			});
 		}
 	}
 
@@ -288,9 +241,6 @@ public class GuiMain {
 			JButton testTts = new JButton("Test TTS");
 			testTts.addActionListener(e -> master.pushEvent(new TtsRequest("Test")));
 			add(testTts);
-//			setMinimumSize(new Dimension(500, 500));
-//			setMaximumSize(new Dimension(500, 500));
-//			repaint();
 			updateGui();
 		}
 
@@ -399,10 +349,8 @@ public class GuiMain {
 
 			partyMembersTable.setModel(partyTableModel);
 			partyTableModel.configureColumns(partyMembersTable);
-//			right.setLayout(new BorderLayout());
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
 			add(scrollPane);
-//			add(right);
 			refresh();
 		}
 
@@ -412,68 +360,6 @@ public class GuiMain {
 		}
 	}
 
-	private class CombatantsPanelDummy extends TitleBorderFullsizePanel {
-
-//		private final CustomTableModel<XivCombatant> combatantsTableModel;
-//		private final XivState state;
-
-		public CombatantsPanelDummy() {
-			super("Combatants");
-			setLayout(new BorderLayout());
-			add(new JLabel("This has been moved to its own tab, as it slows down the UI"), BorderLayout.PAGE_START);
-//			state = GuiMain.this.state.get(XivState.class);
-			/*
-			TODO: performance issue
-			General problem is that the HP bars are quite heavy on rendering.
-			Plan is to look at their classes and figure out if there's any JPanel methods that could be overridden with
-			no-ops, like the default cell renderer does.
-
-			Or, at some point, bite the bullet and do custom painting.
-			 */
-//			combatantsTableModel = CustomTableModel.builder(
-////							Collections::<XivCombatant>emptyList)
-//							() -> state.getCombatantsListCopy()
-//									.stream()
-//									.filter(XivCombatant::isCombative)
-//									.sorted(Comparator.comparing(XivEntity::getId))
-//									.collect(Collectors.toList()))
-//					.addColumn(StandardColumns.nameJobColumn)
-//					.addColumn(columns.statusEffectsColumn())
-//					.addColumn(StandardColumns.parentNameJobColumn)
-//					.addColumn(StandardColumns.combatantTypeColumn)
-//					.addColumn(columns.hpColumnWithUnresolved())
-//					.addColumn(StandardColumns.mpColumn)
-//					.addColumn(StandardColumns.posColumn)
-//					.setItemEquivalence((a, b) -> a.getId() == b.getId())
-//					.build();
-//			JTable table = new JTable(combatantsTableModel);
-//			JTable table = new JTable(combatantsTableModel) {
-//				@Override
-//				public TableCellRenderer getCellRenderer(int row, int column) {
-//					TableCellRenderer renderer;
-//					{
-//						long timeBefore = System.nanoTime();
-//						renderer = super.getCellRenderer(row, column);
-//						long timeAfter = System.nanoTime();
-//						long delta = timeAfter - timeBefore;
-//						 TODO find good value for this - 100 might be a little low
-//						if (delta > 5000) {
-//							log.warn("Slow Renderer performance: took {}ns to refresh col {} row {}", delta, column, row);
-//						}
-//					}
-//					return renderer;
-//				}
-//			};
-//			combatantsTableModel.configureColumns(table);
-//			JScrollPane scrollPane = new JScrollPane(table);
-//			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-//			add(scrollPane);
-		}
-
-		public void refresh() {
-//			combatantsTableModel.signalNewData();
-		}
-	}
 
 	private class CombatantsPanel extends TitleBorderFullsizePanel {
 
@@ -484,16 +370,7 @@ public class GuiMain {
 			super("Combatants");
 			setLayout(new BorderLayout());
 			state = GuiMain.this.state.get(XivStateImpl.class);
-			/*
-			TODO: performance issue
-			General problem is that the HP bars are quite heavy on rendering.
-			Plan is to look at their classes and figure out if there's any JPanel methods that could be overridden with
-			no-ops, like the default cell renderer does.
-
-			Or, at some point, bite the bullet and do custom painting.
-			 */
 			combatantsTableModel = CustomTableModel.builder(
-//							Collections::<XivCombatant>emptyList)
 							() -> state.getCombatantsListCopy()
 									.stream()
 									.filter(XivCombatant::isCombative)
@@ -509,23 +386,6 @@ public class GuiMain {
 					.setItemEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable table = new JTable(combatantsTableModel);
-//			JTable table = new JTable(combatantsTableModel) {
-//				@Override
-//				public TableCellRenderer getCellRenderer(int row, int column) {
-//					TableCellRenderer renderer;
-//					{
-//						long timeBefore = System.nanoTime();
-//						renderer = super.getCellRenderer(row, column);
-//						long timeAfter = System.nanoTime();
-//						long delta = timeAfter - timeBefore;
-//						 TODO find good value for this - 100 might be a little low
-//						if (delta > 5000) {
-//							log.warn("Slow Renderer performance: took {}ns to refresh col {} row {}", delta, column, row);
-//						}
-//					}
-//					return renderer;
-//				}
-//			};
 			combatantsTableModel.configureColumns(table);
 			JScrollPane scrollPane = new JScrollPane(table);
 			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -537,182 +397,15 @@ public class GuiMain {
 		}
 	}
 
-	private class AdvancedPanel extends JPanel implements Refreshable {
-		private final KeyValueDisplaySet displayed;
-		private final KeyValueDisplaySet mem;
 
-		public AdvancedPanel() {
-			setLayout(new GridBagLayout());
-
-			GridBagConstraints c = new GridBagConstraints();
-			c.gridx = 0;
-			c.gridy = 0;
-			c.anchor = GridBagConstraints.NORTH;
-			c.weightx = 1;
-			c.weighty = 0;
-			c.fill = GridBagConstraints.HORIZONTAL;
-
-			RawEventStorage storage = container.getComponent(RawEventStorage.class);
-			{
-				Stats stats = container.getComponent(Stats.class);
-
-				JPanel statsPanel = new TitleBorderFullsizePanel("Stats");
-				statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
-				JButton refreshButton = new JButton("Refresh");
-				refreshButton.addActionListener(e -> refresh());
-				List<KeyValuePairDisplay<?, ?>> leftItems = List.of(
-						new KeyValuePairDisplay<>(
-								"Duration",
-								new JTextArea(1, 15),
-								() -> stats.getDuration().toString(),
-								JTextArea::setText
-						),
-						new KeyValuePairDisplay<>(
-								"Total",
-								new JTextArea(1, 15),
-								() -> String.valueOf(stats.getTotal()),
-								JTextArea::setText
-						),
-						new KeyValuePairDisplay<>(
-								"Primo",
-								new JTextArea(1, 15),
-								() -> String.valueOf(stats.getPrimogenitor()),
-								JTextArea::setText
-						),
-						new KeyValuePairDisplay<>(
-								"Synthetic",
-								new JTextArea(1, 15),
-								() -> String.valueOf(stats.getSynthetic()),
-								JTextArea::setText
-						),
-						new KeyValuePairDisplay<>(
-								"In-Memory",
-								new JTextArea(1, 15),
-								() -> String.valueOf(storage.getEvents().size()),
-								JTextArea::setText
-						)
-				);
-				displayed = new KeyValueDisplaySet(leftItems);
-				statsPanel.add(new WrapperPanel(refreshButton));
-				statsPanel.add(displayed);
-				statsPanel.add(new IntSettingGui(storage.getMaxEventsStoredSetting(), "Max In-Memory Events").getComponent());
-				statsPanel.setPreferredSize(new Dimension(300, 300));
-				add(statsPanel, c);
-			}
-
-
-			{
-				TitleBorderFullsizePanel memoryPanel = new TitleBorderFullsizePanel("Memory Info");
-				memoryPanel.setLayout(new BoxLayout(memoryPanel, BoxLayout.PAGE_AXIS));
-
-				MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-				List<KeyValuePairDisplay<?, ?>> memoryItems = List.of(
-						new KeyValuePairDisplay<>(
-								"Heap Used",
-								new JTextArea(1, 15),
-								() -> (memoryMXBean.getHeapMemoryUsage().getUsed() >> 20) + "M",
-								JTextArea::setText
-						),
-						new KeyValuePairDisplay<>(
-								"Heap Committed",
-								new JTextArea(1, 15),
-								() -> (memoryMXBean.getHeapMemoryUsage().getCommitted() >> 20) + "M",
-								JTextArea::setText
-						),
-						new KeyValuePairDisplay<>(
-								"Heap Max",
-								new JTextArea(1, 15),
-								() -> (memoryMXBean.getHeapMemoryUsage().getMax() >> 20) + "M",
-								JTextArea::setText
-						),
-						new KeyValuePairDisplay<>(
-								"Other Used",
-								new JTextArea(1, 15),
-								() -> (memoryMXBean.getNonHeapMemoryUsage().getUsed() >> 20) + "M",
-								JTextArea::setText
-						),
-						new KeyValuePairDisplay<>(
-								"Other Committed",
-								new JTextArea(1, 15),
-								() -> (memoryMXBean.getNonHeapMemoryUsage().getCommitted() >> 20) + "M",
-								JTextArea::setText
-						)
-				);
-				// TODO: also add a button to force a full refresh on all tables
-				JButton forceGcButton = new JButton("Force GC");
-				forceGcButton.addActionListener(l -> {
-					exs.submit(System::gc);
-					exs.submit(() -> SwingUtilities.invokeLater(this::refresh));
-				});
-				memoryPanel.add(new WrapperPanel(forceGcButton));
-				mem = new KeyValueDisplaySet(memoryItems);
-				memoryPanel.add(mem);
-				memoryPanel.setPreferredSize(new Dimension(300, 300));
-				c.gridx++;
-				add(memoryPanel, c);
-			}
-
-			{
-				JPanel diskStoragePanel = new TitleBorderFullsizePanel("Disk Storage");
-				BooleanSettingGui saveCheckbox = new BooleanSettingGui(storage.getSaveToDisk(), "Save to Disk");
-				diskStoragePanel.setLayout(new BoxLayout(diskStoragePanel, BoxLayout.PAGE_AXIS));
-				diskStoragePanel.add(new WrapperPanel(saveCheckbox.getComponent()));
-				JButton flushButton = new JButton("Flush");
-				flushButton.addActionListener(l -> storage.flushToDisk());
-				diskStoragePanel.add(new WrapperPanel(flushButton));
-				diskStoragePanel.setPreferredSize(new Dimension(300, 150));
-				c.gridx = 0;
-				c.gridy++;
-				c.weighty = 1;
-				add(diskStoragePanel, c);
-			}
-
-			{
-				TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Websocket (Restart Required)");
-				miscPanel.setPreferredSize(new Dimension(300, 150));
-				ActWsLogSource actWs = container.getComponent(ActWsLogSource.class);
-				miscPanel.add(new WsURISettingGui(actWs.getUriSetting(), "ACT WS URI").getComponent());
-				miscPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
-				c.gridx++;
-				add(miscPanel, c);
-			}
-
-
-			refresh();
-		}
-
-		@Override
-		public void refresh() {
-			displayed.refresh();
-			mem.refresh();
-		}
-	}
-
-	private class PluginTopologyPanel extends TitleBorderFullsizePanel {
-
-		public PluginTopologyPanel() {
-			super("Topology");
-			setLayout(new BorderLayout());
-			JTree tree = new JTree(new TopologyTreeModel(container.getComponent(AutoEventDistributor.class)));
-			TopologyTreeRenderer renderer = new TopologyTreeRenderer();
-			tree.setCellRenderer(renderer);
-			tree.setCellEditor(new TopologyTreeEditor(tree));
-			tree.setEditable(true);
-			JScrollPane scrollPane = new JScrollPane(tree);
-//			scrollPane.setBorder(new LineBorder(Color.BLUE));
-			scrollPane.setPreferredSize(scrollPane.getMaximumSize());
-			add(scrollPane);
-		}
-	}
-
-	private class PluginSettingsPanel extends TitleBorderFullsizePanel {
+	private class PluginSettingsPanel extends JPanel {
 
 		private final JTabbedPane tabPanel;
 
 		public PluginSettingsPanel() {
-			super("Plugin Settings");
+//			super("Plugin Settings");
 			setLayout(new BorderLayout());
-			tabPanel = new JTabbedPane();
+			tabPanel = new JTabbedPane(SwingConstants.LEFT);
 			add(tabPanel);
 			exs.submit(this::getAndAddTabs);
 		}
@@ -754,10 +447,8 @@ public class GuiMain {
 		// TODO: jump to parent button
 		// Main table
 		XivState state = container.getComponent(XivStateImpl.class);
-		StatusEffectRepository statuses = container.getComponent(StatusEffectRepository.class);
 		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Combatants",
 						() -> state.getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
-//						Collections::<XivCombatant>emptyList,
 						combatant -> {
 							if (combatant == null) {
 								return Collections.emptyList();
@@ -785,18 +476,12 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 				.setDetailsSelectionEquivalence((a, b) -> a.getKey().equals(b.getKey()))
-//				.addFilter(EventTypeFilter::new)
-//				.addFilter(SystemEventFilter::new)
-//				.addFilter(EventClassFilterFilter::new)
 				.addFilter(EventEntityFilter::selfFilter)
 				.addFilter(NonCombatEntityFilter::new)
-//				.addFilter(EventEntityFilter::targetFilter)
-//				.addFilter(EventAbilityOrBuffFilter::new)
 				.build();
 		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalNewData());
 		master.getDistributor().registerHandler(AbilityUsedEvent.class, (ctx, e) -> table.signalNewData());
-//		master.getDistributor().registerHandler(AbilityResolvedEvent.class, (ctx, e) -> table.signalNewData());
 		master.getDistributor().registerHandler(BuffApplied.class, (ctx, e) -> table.signalNewData());
 		master.getDistributor().registerHandler(BuffRemoved.class, (ctx, e) -> table.signalNewData());
 		return table;
@@ -819,7 +504,6 @@ public class GuiMain {
 										.collect(Collectors.toList());
 							}
 						})
-//				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Buff/Ability", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer())))
@@ -905,8 +589,6 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
-				// TODO: time range filter
-//				.addFilter(EventTypeFilter::new)
 				.addFilter(SystemEventFilter::new)
 				.addFilter(EventClassFilterFilter::new)
 				.addFilter(AbilityResolutionFilter::new)
@@ -1058,7 +740,7 @@ public class GuiMain {
 				.addMainColumn(new CustomColumn<>("Zone", p -> p.getZone().getName(), col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addMainColumn(new CustomColumn<>("Status", Pull::getStatus, col -> {
+				.addMainColumn(new CustomColumn<>("Status", pull -> pull.getStatus().getFriendlyName(), col -> {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
 					col.setResizable(false);
@@ -1089,10 +771,6 @@ public class GuiMain {
 			}
 		}).start();
 		return table;
-	}
-
-	private JPanel getImportExportTab() {
-		return new TitleBorderFullsizePanel("Import/Export", new JLabel("Coming Soon!"));
 	}
 
 	private JPanel getOverlayConfigTab() {
