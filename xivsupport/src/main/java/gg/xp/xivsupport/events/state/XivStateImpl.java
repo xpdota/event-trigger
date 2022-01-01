@@ -185,7 +185,7 @@ public class XivStateImpl implements XivState {
 					value.setFake(true);
 				}
 				else {
-					combatantsByNpcName.computeIfAbsent(value.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(value);
+//					combatantsByNpcName.computeIfAbsent(value.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(value);
 				}
 			}
 			combatantsProcessed.put(id, value);
