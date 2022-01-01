@@ -11,6 +11,7 @@ import static gg.xp.xivdata.jobs.Job.MNK;
 import static gg.xp.xivdata.jobs.Job.NIN;
 import static gg.xp.xivdata.jobs.Job.PLD;
 import static gg.xp.xivdata.jobs.Job.RDM;
+import static gg.xp.xivdata.jobs.Job.RPR;
 import static gg.xp.xivdata.jobs.Job.SCH;
 import static gg.xp.xivdata.jobs.Job.SGE;
 import static gg.xp.xivdata.jobs.Job.SMN;
@@ -36,6 +37,7 @@ public enum Cooldown {
 	Requiescat(PLD, true, 60.0, "Requiescat", CooldownType.PERSONAL_BURST, 0x1CD7, 0x558),
 	DivineVeil(PLD, true, 90.0, "Divine Veil", CooldownType.PARTY_MIT, 0xdd4, 726, 727),
 	PassageofArms(PLD, true, 120.0, "Passage of Arms", CooldownType.PARTY_MIT, 0x1cd9, 1175),
+	Expiacion(PLD, true, 30.0, "Expiacion", CooldownType.PERSONAL_BURST, 0x6493),
 	Nebula(GNB, true, 120.0, "Nebula", CooldownType.PERSONAL_MIT, 0x3f14, 1834),
 	Aurora(GNB, true, 60.0, "Aurora", CooldownType.HEAL, 0x3f17, 1835, 2065),
 	Superbolide(GNB, true, 360.0, "Superbolide", CooldownType.INVULN, 0x3f18, 1836),
@@ -48,6 +50,7 @@ public enum Cooldown {
 	Holmgang(WAR, true, 240.0, "Holmgang", CooldownType.INVULN, 0x2b, 409),
 	Vengeance(WAR, true, 120.0, "Vengeance", CooldownType.PERSONAL_MIT, 0x2c, 89),
 	RawIntuition(WAR, true, 25.0, "Raw/Nascent/Bloodwhetting", CooldownType.PERSONAL_MIT, new long[]{0xddfL, 0x4050, 0x6497}, new long[]{735L, 1857, 1858, 0xA76L}),
+	Upheaval(WAR, true, 30.0, "Upheaval/Orogeny", CooldownType.PERSONAL_BURST, new long[]{0x1CDB, 0x6498}, new long[]{}),
 	DarkMissionary(DRK, true, 90.0, "Dark Missionary", CooldownType.PARTY_MIT, 0x4057, 1894),
 	DarkMind(DRK, true, 60.0, "Dark Mind", CooldownType.PERSONAL_MIT, 0xe32, 746),
 	ShadowWall(DRK, true, 120.0, "Shadow Wall", CooldownType.PERSONAL_MIT, 0xe34, 747),
@@ -107,14 +110,24 @@ public enum Cooldown {
 	BattleLitany(DRG, true, 120.0, "Battle Litany", CooldownType.PARTY_BUFF, 0xde5, 786),
 	Brotherhood(MNK, true, 90.0, "Brotherhood", CooldownType.PARTY_BUFF, 0x1ce4, 1185),
 	DragonSight(DRG, true, 120.0, "Dragon Sight", CooldownType.PARTY_BUFF, 0x1ce6, 1183, 1184),
+	ArcaneCircle(RPR, true, 120.0, "Arcane Circle", CooldownType.PARTY_BUFF, 0x5F55, 0xA27),
+	ArcaneCrest(RPR, true, 30.0, "Arcane Crest", CooldownType.PERSONAL_MIT, 0x5F54, 0xA24),
+
 
 
 
 	// CASTER
-	// TODO: devotion
 	Addle(CASTER, true, 90.0, "Addle", CooldownType.PARTY_MIT, 0x1d88, 1203),
 	Swiftcast(CASTER, true, 60.0, "Swiftcast", CooldownType.PERSONAL_UTILITY, 0x1d89, 167, 1325),
 	Embolden(RDM, true, 120.0, "Embolden", CooldownType.PARTY_BUFF, 0x1d60, 1239, 1297),
+	Manafication(RDM, true, 110.0, "Manafication", CooldownType.PERSONAL_BURST, 0x1D61, 0x7b3),
+	MagicBarrier(RDM, true, 120.0, "Magic Barrier", CooldownType.PARTY_MIT, 0x6501, 0xA93),
+	Acceleration(RDM, true, 55.0, "Acceleration", CooldownType.PERSONAL_BURST, 0x1D5E, 0x4D6),
+	Fleche(RDM, true, 25.0, "Fleche", CooldownType.PERSONAL_BURST, 0x1D5D),
+	ContreSixte(RDM, true, 35.0, "Contre Sixte", CooldownType.PERSONAL_BURST, 0x1D5F),
+	// TODO: can't add these yet because they are charges
+//	CorpsACorps(RDM, true, 35.0, "Corps-a-Corps", CooldownType.PERSONAL_BURST, 0x1D52),
+//	Displacement(RDM, true, 35.0, "Displace/Engage", CooldownType.PERSONAL_BURST, new long[]{0x1D5B, 0x408F}, new long[]{}),
 	SearingLight(SMN, true, 120.0, "Searing Light", CooldownType.PARTY_BUFF, 25801, 2703),
 
 
@@ -136,6 +149,8 @@ public enum Cooldown {
 	ArmysPaeon(BRD, true, 120.0, "Army's Paeon", CooldownType.PARTY_BUFF, 0x74, 0x8aa),
 	WanderersMinuet(BRD, true, 120.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
 	BattleVoice(BRD, true, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 0x8d),
+	// TODO need buff ID
+	RadiantFinale(BRD, true, 110.0, "Radiant Finale", CooldownType.PARTY_BUFF, 25785),
 	Tactician(MCH, true, 120.0, "Tactician", CooldownType.PARTY_MIT, 0x41f9, 1951, 2177);
 
 
