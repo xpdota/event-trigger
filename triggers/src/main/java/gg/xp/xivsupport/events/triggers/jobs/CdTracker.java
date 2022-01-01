@@ -158,6 +158,7 @@ public class CdTracker {
 
 	@HandleEvents
 	public void jobChange(EventContext context, PlayerChangedJobEvent job) {
+		// TODO: job change should only clear your own CDs
 		reset();
 	}
 

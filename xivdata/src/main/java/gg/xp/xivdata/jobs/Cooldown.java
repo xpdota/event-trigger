@@ -22,6 +22,9 @@ import static gg.xp.xivdata.jobs.JobType.MELEE_DPS;
 import static gg.xp.xivdata.jobs.JobType.TANK;
 
 public enum Cooldown {
+
+	// DO NOT change enum member names - they are used as settings keys
+
 	// List of ALL buffs to track - WL/BL will be done by user settings
 	// TANKS
 	Rampart(TANK, true, 90.0, "Rampart", CooldownType.PERSONAL_MIT, 0x1d6b, 1191),
@@ -75,7 +78,8 @@ public enum Cooldown {
 		Seraphic Illumination: 0x7AC
 	 */
 	WhisperingDawn(SCH, true, 60.0, "Whispering Dawn", CooldownType.HEAL, 0x4099, 0x13b, 0x752),
-	FeyIllumination(SCH, true, 120.0, "Fey Illumination", CooldownType.PARTY_MIT, 0x409A, 0x13d, 0x753),
+	FeyIllumination(SCH, true, 120.0, "Fey Blessing", CooldownType.PARTY_MIT, 0x409A, 0x13d, 0x753),
+	FeyBlessing(SCH, true, 60.0, "Fey Illumination", CooldownType.HEAL, 0x409F),
 	Expedient(SCH, true, 120.0, "Expedient", CooldownType.PARTY_UTILITY, 0x650C, 0xA97, 0xA98),
 	ChainStratagem(SCH, true, 120.0, "Chain Stratagem", CooldownType.PARTY_BUFF, 0x1d0c, 1221),
 	Protraction(SCH, true, 60.0, "Protraction", CooldownType.HEAL, 0x650b, 0xA96),

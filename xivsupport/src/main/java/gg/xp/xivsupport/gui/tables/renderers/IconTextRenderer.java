@@ -86,7 +86,7 @@ public final class IconTextRenderer {
 		return panel;
 	}
 
-	private static class ScaledImageComponent extends Component {
+	public static class ScaledImageComponent extends Component {
 		@Serial
 		private static final long serialVersionUID = -6148301310440811739L;
 		private final Image image;
@@ -111,6 +111,10 @@ public final class IconTextRenderer {
 		}
 
 		public ScaledImageComponent cloneThis() {
+			return new ScaledImageComponent(image, size, cache);
+		}
+
+		public ScaledImageComponent withNewSize(int size) {
 			return new ScaledImageComponent(image, size, cache);
 		}
 

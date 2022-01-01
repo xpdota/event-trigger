@@ -57,7 +57,7 @@ public class XivStateImpl implements XivState {
 	private volatile Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
 	private boolean isActImport;
 
-	private Job previousPlayerJob;
+	private Job lastPlayerJob;
 
 	public XivStateImpl(EventMaster master) {
 		this.master = master;
@@ -307,10 +307,10 @@ public class XivStateImpl implements XivState {
 			master.getQueue().push(new XivStateRecalculatedEvent());
 			if (player != null) {
 				Job newJob = player.getJob();
-				if (previousPlayerJob != null && previousPlayerJob != newJob) {
-					master.getQueue().push(new PlayerChangedJobEvent(previousPlayerJob, newJob));
+				if (lastPlayerJob != newJob) {
+					master.getQueue().push(new PlayerChangedJobEvent(lastPlayerJob, newJob));
 				}
-				previousPlayerJob = newJob;
+				lastPlayerJob = newJob;
 			}
 		}
 		combatantsProcessed.forEach((id, cbt) -> graveyard.putIfAbsent(id, new SoftReference<>(cbt)));
