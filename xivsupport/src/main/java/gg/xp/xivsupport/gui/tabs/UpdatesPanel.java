@@ -43,7 +43,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		JButton button = new JButton("Check for Updates and Restart");
 		button.addActionListener(l -> {
 			try {
-				Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent-upd.exe").toString());
+				Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent-upd.exe").toString(), null, installDir);
 			}
 			catch (IOException e) {
 				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe.");
@@ -71,5 +71,6 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		add(openInstallDirButton, c);
 		c.gridy++;
 		c.weighty = 1;
+		add(new JPanel());
 	}
 }
