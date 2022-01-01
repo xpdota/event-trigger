@@ -180,7 +180,13 @@ public class XivStateImpl implements XivState {
 						combatant.getPartyType(),
 						combatant.getLevel(),
 						combatant.getOwnerId());
-				combatantsByNpcName.computeIfAbsent(value.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(value);
+				// 9020 seems to be a guaranteed fake
+				if (combatant.getBnpcId() == 9020) {
+					value.setFake(true);
+				}
+				else {
+					combatantsByNpcName.computeIfAbsent(value.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(value);
+				}
 			}
 			combatantsProcessed.put(id, value);
 		});
