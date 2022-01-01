@@ -6,7 +6,6 @@ import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.SimplifiedPropertiesFilePersistenceProvider;
 import gg.xp.xivsupport.persistence.gui.StringSettingGui;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
-import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +14,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.prefs.PreferenceChangeEvent;
 
 public class UpdatesPanel extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
@@ -75,6 +73,6 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		add(openInstallDirButton, c);
 		c.gridy++;
 		c.weighty = 1;
-		add(new JPanel());
+		add(new JPanel(), c);
 	}
 }
