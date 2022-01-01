@@ -15,6 +15,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.prefs.PreferenceChangeEvent;
 
 public class UpdatesPanel extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
@@ -43,9 +44,15 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		JButton button = new JButton("Check for Updates and Restart");
 		button.addActionListener(l -> {
 			try {
-				Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent-upd.exe").toString(), null, installDir);
+				ProcessBuilder process = new ProcessBuilder("triggevent-upd.exe")
+						.redirectError(ProcessBuilder.Redirect.INHERIT)
+						.redirectOutput(ProcessBuilder.Redirect.INHERIT)
+						.directory(installDir);
+				Process proc = process.start();
+//				Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent-upd.exe").toString(), null, installDir);
 			}
 			catch (IOException e) {
+				log.error("Error launching updater", e);
 				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe.");
 				return;
 			}
