@@ -15,6 +15,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.prefs.PreferenceChangeEvent;
 
 public class UpdatesPanel extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
@@ -43,9 +44,12 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		JButton button = new JButton("Check for Updates and Restart");
 		button.addActionListener(l -> {
 			try {
-				Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent-upd.exe").toString());
+				// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
+				// can relaunch the application correctly.
+				Desktop.getDesktop().open(Paths.get(installDir.toString(), "triggevent-upd.exe").toFile());
 			}
 			catch (IOException e) {
+				log.error("Error launching updater", e);
 				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe.");
 				return;
 			}
@@ -71,5 +75,6 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		add(openInstallDirButton, c);
 		c.gridy++;
 		c.weighty = 1;
+		add(new JPanel());
 	}
 }
