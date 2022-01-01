@@ -44,12 +44,9 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		JButton button = new JButton("Check for Updates and Restart");
 		button.addActionListener(l -> {
 			try {
-				ProcessBuilder process = new ProcessBuilder("triggevent-upd.exe")
-						.redirectError(ProcessBuilder.Redirect.INHERIT)
-						.redirectOutput(ProcessBuilder.Redirect.INHERIT)
-						.directory(installDir);
-				Process proc = process.start();
-//				Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent-upd.exe").toString(), null, installDir);
+				// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
+				// can relaunch the application correctly.
+				Desktop.getDesktop().open(Paths.get(installDir.toString(), "triggevent-upd.exe").toFile());
 			}
 			catch (IOException e) {
 				log.error("Error launching updater", e);
