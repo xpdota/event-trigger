@@ -4,14 +4,15 @@ import gg.xp.reevent.events.Event;
 import gg.xp.xivdata.jobs.XivMap;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
 public class Line40Parser extends AbstractACTLineParser<Line40Parser.Fields> {
 
-	public Line40Parser(XivState state) {
-		super(state, 40, Fields.class);
+	public Line40Parser(PicoContainer container) {
+		super(container, 40, Fields.class);
 	}
 
 	enum Fields {

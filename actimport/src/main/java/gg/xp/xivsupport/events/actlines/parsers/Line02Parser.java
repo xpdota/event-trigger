@@ -5,14 +5,15 @@ import gg.xp.xivsupport.events.ActImportOnly;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.XivEntity;
+import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
 public class Line02Parser extends AbstractACTLineParser<Line02Parser.Fields> implements ActImportOnly {
 
-	public Line02Parser(XivStateImpl state) {
-		super(state, 2, Fields.class);
+	public Line02Parser(PicoContainer container) {
+		super(container, 2, Fields.class);
 	}
 
 	enum Fields {

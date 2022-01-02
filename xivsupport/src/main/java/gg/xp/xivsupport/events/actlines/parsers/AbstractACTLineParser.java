@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
@@ -7,6 +8,7 @@ import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import gg.xp.xivsupport.events.state.XivState;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,17 +30,19 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	private final List<@Nullable F> groups;
 	private final XivState state;
 	private final boolean splitAll;
+	private final @Nullable FakeACTTimeSource fakeTimeSource;
 
-	AbstractACTLineParser(XivState state, int logLineNumber, Class<F> enumCls) {
-		this(state, logLineNumber, enumCls, false);
+	AbstractACTLineParser(PicoContainer container, int logLineNumber, Class<F> enumCls) {
+		this(container, logLineNumber, enumCls, false);
 	}
-	AbstractACTLineParser(XivState state, int logLineNumber, Class<F> enumCls, boolean splitAll) {
-		this(state, logLineNumber, Arrays.asList(enumCls.getEnumConstants()), splitAll);
+	AbstractACTLineParser(PicoContainer container, int logLineNumber, Class<F> enumCls, boolean splitAll) {
+		this(container, logLineNumber, Arrays.asList(enumCls.getEnumConstants()), splitAll);
 	}
 
 	@SuppressWarnings({"ConstantConditions", "unchecked"})
-	AbstractACTLineParser(XivState state, int logLineNumber, List<@Nullable F> groups, boolean splitAll) {
-		this.state = state;
+	AbstractACTLineParser(PicoContainer container, int logLineNumber, List<@Nullable F> groups, boolean splitAll) {
+		this.state = Objects.requireNonNull(container.getComponent(XivState.class), "XivState is required");
+		this.fakeTimeSource = container.getComponent(FakeACTTimeSource.class);
 		this.splitAll = splitAll;
 		if (groups.isEmpty()) {
 			// TODO: could some of them make sense as empty?
@@ -84,6 +88,13 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				}
 				if (outgoingEvent != null) {
 					outgoingEvent.setHappenedAt(zdt.toInstant());
+					// TODO: is there also value in setting this on the ACT line event itself?
+					if (fakeTimeSource != null) {
+						fakeTimeSource.setNewTime(outgoingEvent.getHappenedAt());
+						if (outgoingEvent instanceof BaseEvent bev) {
+							bev.setTimeSource(fakeTimeSource);
+						}
+					}
 					context.accept(outgoingEvent);
 				}
 			}

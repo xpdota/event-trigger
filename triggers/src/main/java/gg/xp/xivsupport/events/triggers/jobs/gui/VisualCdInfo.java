@@ -45,9 +45,7 @@ public class VisualCdInfo implements CurrentMaxPair, LabelOverride {
 		if (buffApplied != null) {
 			return buffApplied.getEstimatedRemainingDuration().toMillis();
 		}
-		Instant start = getEvent().getPumpedAt();
-		Instant now = Instant.now();
-		long durMillis = Duration.between(start, now).toMillis();
+		long durMillis = getEvent().getEffectiveTimeSince().toMillis();
 		return Math.min(Math.max(0, durMillis), getMax());
 	}
 
@@ -68,7 +66,8 @@ public class VisualCdInfo implements CurrentMaxPair, LabelOverride {
 
 		// TODO: make hang time a setting
 		return (buffApplied != null
-				|| Duration.between(abilityEvent.getEnqueuedAt().plusMillis((long) (cd.getCooldown() * 1000L)), Instant.now()).toMillis() < 10_000);
+				|| getEvent().getEffectiveTimeSince().toMillis() < (cd.getCooldown() * 1000L) + 10_000L);
+//				|| Duration.between(abilityEvent.getEnqueuedAt().plusMillis((long) (cd.getCooldown() * 1000L)), Instant.now()).toMillis() < 10_000);
 	}
 
 }

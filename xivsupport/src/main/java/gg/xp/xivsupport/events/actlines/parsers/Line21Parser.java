@@ -8,8 +8,8 @@ import java.time.ZonedDateTime;
 @SuppressWarnings("unused")
 public class Line21Parser extends AbstractACTLineParser<NetworkAbilityFields> {
 
-	public Line21Parser(XivStateImpl state) {
-		super(state, 21, NetworkAbilityFields.class, true);
+	public Line21Parser(org.picocontainer.PicoContainer container) {
+		super(container, 21, NetworkAbilityFields.class, true);
 	}
 
 	@Override

@@ -81,6 +81,7 @@ public class DotRefreshReminders {
 				context.enqueue(new DelayedBuffCallout(event, event.getInitialDuration().toMillis() - dotRefreshAdvance.get()));
 			}
 			synchronized (myDotsLock) {
+				log.info("Foo");
 				myDots.put(BuffTrackingKey.of(event), event);
 				recheckMyDots();
 			}
@@ -94,8 +95,7 @@ public class DotRefreshReminders {
 			List<StatusAppliedEffect> preApps = event.getEffects().stream()
 					.filter(StatusAppliedEffect.class::isInstance).map(StatusAppliedEffect.class::cast)
 					.filter(StatusAppliedEffect::isOnTarget)
-					.filter(effect -> isWhitelisted(effect.getStatus().getId()))
-					.collect(Collectors.toList());
+					.filter(effect -> isWhitelisted(effect.getStatus().getId())).toList();
 			synchronized (myDotsLock) {
 				for (StatusAppliedEffect preApp : preApps) {
 					BuffApplied value = new BuffApplied(event, preApp);
@@ -115,6 +115,13 @@ public class DotRefreshReminders {
 			// OR if it is inactive but would be past expiry,
 			// but not by more than 5 seconds.
 			if (buffFromRepo != null) {
+				// TODO: find more universal solution for this
+				// Sometimes a combatant does not get removed correctly by ACT.
+				// This is a last-resort way of removing dots on such combatants.
+				//noinspection RedundantIfStatement
+				if (buffFromRepo.getEstimatedTimeSinceExpiry().compareTo(Duration.of(15, ChronoUnit.SECONDS)) > 0) {
+					return true;
+				}
 				return false;
 			}
 			if (buffs.getPreApp(e.getKey()) != null) {
@@ -122,11 +129,6 @@ public class DotRefreshReminders {
 			}
 			Duration timeSinceExpiry = e.getValue().getEstimatedTimeSinceExpiry();
 			Duration timeRemaining = e.getValue().getEstimatedRemainingDuration();
-//			// TODO: this is a total hack - we need to not remove our own preapps
-//			boolean isPreApp = e.getValue().getParent() instanceof AbilityUsedEvent;
-//			if (isPreApp) {
-//				return e.getValue().getEstimatedElapsedDuration().toMillis() > 2000;
-//			}
 			// Keep showing the buff as "expired" for 5 seconds, but also allow for a bit of slop
 			// in the other direction.
 			return timeRemaining.compareTo(Duration.of(2, ChronoUnit.SECONDS)) > 0

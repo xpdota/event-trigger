@@ -57,7 +57,7 @@ public class XivStateImpl implements XivState {
 	private volatile Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
 	private boolean isActImport;
 
-	private Job previousPlayerJob;
+	private Job lastPlayerJob;
 
 	public XivStateImpl(EventMaster master) {
 		this.master = master;
@@ -180,7 +180,15 @@ public class XivStateImpl implements XivState {
 						combatant.getPartyType(),
 						combatant.getLevel(),
 						combatant.getOwnerId());
-				combatantsByNpcName.computeIfAbsent(value.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(value);
+				// 9020 seems to be a guaranteed fake
+				if (combatant.getBnpcId() == 9020) {
+					value.setFake(true);
+				}
+				// For 70 and above, it seems like 9020 fake detection is fine. If lower than that, fall back to
+				// NPC name + HP detection.
+				else if (combatant.getLevel() < 70) {
+					combatantsByNpcName.computeIfAbsent(value.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(value);
+				}
 			}
 			combatantsProcessed.put(id, value);
 		});
@@ -235,6 +243,11 @@ public class XivStateImpl implements XivState {
 			long ownerId = c.getOwnerId();
 			if (ownerId != 0) {
 				c.setParent(combatantsProcessed.get(ownerId));
+			}
+			// TODO: find a place for this logic to live
+			// Early star is a badly-behaved NPC - it doesn't properly remove itself or buffs that happened to be on it
+			if (c.getbNpcId() == 7245) {
+				c.setFake(true);
 			}
 		});
 		// TODO: just doing a simple diff of this would be a great way to synthesize
@@ -302,10 +315,10 @@ public class XivStateImpl implements XivState {
 			master.getQueue().push(new XivStateRecalculatedEvent());
 			if (player != null) {
 				Job newJob = player.getJob();
-				if (previousPlayerJob != null && previousPlayerJob != newJob) {
-					master.getQueue().push(new PlayerChangedJobEvent(previousPlayerJob, newJob));
+				if (lastPlayerJob != newJob) {
+					master.getQueue().push(new PlayerChangedJobEvent(lastPlayerJob, newJob));
 				}
-				previousPlayerJob = newJob;
+				lastPlayerJob = newJob;
 			}
 		}
 		combatantsProcessed.forEach((id, cbt) -> graveyard.putIfAbsent(id, new SoftReference<>(cbt)));
