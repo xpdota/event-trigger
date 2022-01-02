@@ -65,6 +65,8 @@ public enum Cooldown {
 	Temperance(WHM, true, 120.0, "Temperance", CooldownType.PARTY_MIT, 0x4098, 0x750),
 	Pom(WHM, true, 120.0, "Presence of Mind", CooldownType.PERSONAL_BURST, 0x88, 0x9d),
 	Asylum(WHM, true, 45.0, "Asylum", CooldownType.HEAL, 0xDF1, 0x777),
+	Aquaveil(WHM, true, 60.0, "Aquaveil", CooldownType.PERSONAL_MIT, 0x6505, 0xA94),
+	Bell(WHM, true, 180.0, "Liturgy of the Bell", CooldownType.HEAL, 0x6506, 0xA95),
 	SacredSoil(SCH, true, 30.0, "Sacred Soil", CooldownType.PARTY_MIT, 0xbc, 0x798, 0x12A),
 	// Summon order buffs:
 	/*
