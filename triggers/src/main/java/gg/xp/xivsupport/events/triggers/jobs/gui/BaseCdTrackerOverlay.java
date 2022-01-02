@@ -64,7 +64,6 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 			}
 			currentCds = newCurrentCds;
 			currentBuffs = newCurrentBuffs;
-			// TODO: make limit configurable
 			List<VisualCdInfo> out = new ArrayList<>();
 			currentCds.forEach((k, abilityUsed) -> {
 				Cooldown cd = k.getCooldown();

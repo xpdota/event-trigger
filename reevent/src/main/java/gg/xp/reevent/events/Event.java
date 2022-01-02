@@ -10,12 +10,6 @@ import java.util.Map;
 
 /**
  * Marker interface for events
- * <p>
- * TODO: make a base class that handles timestamping
- * and provenance
- *
- * TODO: figure out if also tracking child events might use too much memory.
- * Perhaps SoftReference would be appropriate?
  */
 public interface Event extends Serializable {
 
