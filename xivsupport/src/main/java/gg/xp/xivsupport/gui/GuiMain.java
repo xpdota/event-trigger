@@ -345,7 +345,6 @@ public class GuiMain {
 					.setItemEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable partyMembersTable = new JTable(8, 3);
-			// TODO: see above todo, remove this when done
 
 			partyMembersTable.setModel(partyTableModel);
 			partyTableModel.configureColumns(partyMembersTable);

@@ -34,7 +34,6 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 			add(new JLabel("There was an error. You can try running the updater manually by running triggevent-upd.exe."));
 			return;
 		}
-//		setLayout(new BorderLayout());
 		setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridy = 0;
@@ -46,7 +45,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 				// can relaunch the application correctly.
 				Desktop.getDesktop().open(Paths.get(installDir.toString(), "triggevent-upd.exe").toFile());
 			}
-			catch (IOException e) {
+			catch (Throwable e) {
 				log.error("Error launching updater", e);
 				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe.");
 				return;

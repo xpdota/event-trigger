@@ -88,7 +88,6 @@ public class DotTrackerOverlay extends XivOverlay {
 				currentDots = Collections.emptyList();
 			}
 			currentDots = newCurrentDots;
-			// TODO: make limit configurable
 			Map<Long, List<BuffApplied>> dotsForBuffId = newCurrentDots
 					.stream()
 					.collect(Collectors.groupingBy(dot -> dot.getBuff().getId()));
