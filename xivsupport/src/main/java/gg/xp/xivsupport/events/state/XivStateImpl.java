@@ -223,16 +223,16 @@ public class XivStateImpl implements XivState {
 			}
 			if (potentialFakes.size() >= 2) {
 				XivCombatant firstPossibleFake = potentialFakes.get(0);
-//				boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getPos() != null && p.getPos().equals(firstPossibleFake.getPos()));
-//				if (allMatch) {
-				potentialFakes.forEach(fake -> {
-					fake.setFake(true);
-					// Also use Parent field to link to real NPC if it doesn't already have a real owner
-					if (fake.getParent() == null) {
-						fake.setParent(primaryCombatant);
-					}
-				});
-//				}
+				boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getPos() != null && p.getPos().equals(firstPossibleFake.getPos()));
+				if (allMatch) {
+					potentialFakes.forEach(fake -> {
+						fake.setFake(true);
+						// Also use Parent field to link to real NPC if it doesn't already have a real owner
+						if (fake.getParent() == null) {
+							fake.setParent(primaryCombatant);
+						}
+					});
+				}
 			}
 		});
 		// lazy but works
