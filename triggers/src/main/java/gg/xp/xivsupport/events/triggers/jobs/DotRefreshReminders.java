@@ -81,6 +81,7 @@ public class DotRefreshReminders {
 				context.enqueue(new DelayedBuffCallout(event, event.getInitialDuration().toMillis() - dotRefreshAdvance.get()));
 			}
 			synchronized (myDotsLock) {
+				log.info("Foo");
 				myDots.put(BuffTrackingKey.of(event), event);
 				recheckMyDots();
 			}
