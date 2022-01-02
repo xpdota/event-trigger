@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.state;
 
 import gg.xp.reevent.context.SubState;
+import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivdata.jobs.XivMap;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
@@ -43,6 +44,16 @@ public interface XivState extends SubState {
 	void flushProvidedValues();
 
 	@Nullable XivCombatant getDeadCombatant(long id);
+
+	default @Nullable Job getPlayerJob() {
+		XivPlayerCharacter player = getPlayer();
+		if (player == null) {
+			return null;
+		}
+		else {
+			return player.getJob();
+		}
+	}
 
 	boolean isActImport();
 

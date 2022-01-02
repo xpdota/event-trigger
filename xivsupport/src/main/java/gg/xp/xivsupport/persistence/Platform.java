@@ -1,5 +1,8 @@
 package gg.xp.xivsupport.persistence;
 
+import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
+
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
@@ -40,5 +43,19 @@ public final class Platform {
 
 	public static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
+	}
+
+	public static File getInstallDir() {
+		File jarLocation;
+		try {
+			jarLocation = new File(UpdatesPanel.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+			if (jarLocation.isFile()) {
+				jarLocation = jarLocation.getParentFile();
+			}
+			return jarLocation.getParentFile();
+		}
+		catch (Throwable e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
