@@ -1,4 +1,4 @@
 package gg.xp.xivsupport.events.triggers.duties.timelines;
 
-public record Window(double start, double end) {
+public record TimelineWindow(double start, double end) {
 }

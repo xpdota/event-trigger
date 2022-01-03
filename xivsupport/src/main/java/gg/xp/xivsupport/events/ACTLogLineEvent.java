@@ -4,6 +4,7 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
 
 import java.io.Serial;
+import java.time.ZonedDateTime;
 
 @SystemEvent
 public class ACTLogLineEvent extends BaseEvent {
@@ -12,10 +13,13 @@ public class ACTLogLineEvent extends BaseEvent {
 	private static final long serialVersionUID = -5255204546093791693L;
 	private final String logLine;
 	private final String[] rawFields;
+	private final ZonedDateTime timestamp;
 
 	public ACTLogLineEvent(String logLine) {
 		this.logLine = logLine;
 		rawFields = logLine.split("\\|");
+		this.timestamp = ZonedDateTime.parse(rawFields[1]);
+		setHappenedAt(timestamp.toInstant());
 	}
 
 	public String getLogLine() {
@@ -24,6 +28,10 @@ public class ACTLogLineEvent extends BaseEvent {
 
 	public String[] getRawFields() {
 		return rawFields;
+	}
+
+	public ZonedDateTime getTimestamp() {
+		return timestamp;
 	}
 
 	public String getEmulatedActLogLine() {
@@ -38,7 +46,6 @@ public class ACTLogLineEvent extends BaseEvent {
 			case 4 -> "RemoveCombatant";
 			case 11 -> "PartyList";
 			case 12 -> "PlayerStats";
-			case 13 -> "StartsCasting";
 			case 20 -> "StartsCasting";
 			case 21 -> "ActionEffect";
 			case 22 -> "AOEActionEffect";
@@ -69,12 +76,12 @@ public class ACTLogLineEvent extends BaseEvent {
 			case 254 -> "Error";
 			default -> "";
 		};
-		String typeString = String.format("%02X", msgNum);
+		String typeString = String.format("%s %02X", messageName, msgNum);
 		StringBuilder lineBuilder = new StringBuilder();
 		// Just faking the timestamp for now
 		lineBuilder.append("[12:34:56.789] ").append(typeString);
 		// ACT log lines do not have the checksum at the end
-		for (int i = 0; i < rawFields.length - 1; i++) {
+		for (int i = 2; i < rawFields.length - 1; i++) {
 			String rawField = rawFields[i];
 			lineBuilder.append(":").append(rawField);
 		}

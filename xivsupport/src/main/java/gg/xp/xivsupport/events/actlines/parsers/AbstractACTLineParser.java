@@ -71,7 +71,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 					// i + 2 is because the first two are the line number and timestamp.
 					out.put(groups.get(i), splits[i + 2]);
 				}
-				ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
+				ZonedDateTime zdt = event.getTimestamp();
 				FieldMapper<F> mapper = new FieldMapper<>(out, state, context, entityLookupMissBehavior(), splits);
 				Event outgoingEvent;
 				try {
@@ -88,12 +88,9 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				}
 				if (outgoingEvent != null) {
 					outgoingEvent.setHappenedAt(zdt.toInstant());
-					// TODO: is there also value in setting this on the ACT line event itself?
 					if (fakeTimeSource != null) {
 						fakeTimeSource.setNewTime(outgoingEvent.getHappenedAt());
-						if (outgoingEvent instanceof BaseEvent bev) {
-							bev.setTimeSource(fakeTimeSource);
-						}
+						event.setTimeSource(fakeTimeSource);
 					}
 					context.accept(outgoingEvent);
 				}

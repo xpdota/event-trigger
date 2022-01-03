@@ -85,7 +85,7 @@ public class JailExampleTest {
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 
 		List<? extends Event> finalEvents = collector.getEventsOf(eventsWeCareAbout);
-		log.info("Final number of events (filtered): {}", finalEvents.size());
+		log.info("Final time of events (filtered): {}", finalEvents.size());
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
@@ -247,7 +247,7 @@ public class JailExampleTest {
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 
 		List<? extends Event> finalEvents = collector.getEventsOf(eventsWeCareAbout);
-		log.info("Final number of events (filtered): {}", finalEvents.size());
+		log.info("Final time of events (filtered): {}", finalEvents.size());
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
@@ -326,7 +326,7 @@ public class JailExampleTest {
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 
 		List<? extends Event> finalEvents = collector.getEventsOf(eventsWeCareAbout);
-		log.info("Final number of events (filtered): {}", finalEvents.size());
+		log.info("Final time of events (filtered): {}", finalEvents.size());
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
@@ -410,7 +410,7 @@ public class JailExampleTest {
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 
 		List<? extends Event> finalEvents = collector.getEventsOf(eventsWeCareAbout);
-		log.info("Final number of events (filtered): {}", finalEvents.size());
+		log.info("Final time of events (filtered): {}", finalEvents.size());
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
@@ -501,7 +501,7 @@ public class JailExampleTest {
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 
 		List<? extends Event> finalEvents = collector.getEventsOf(eventsWeCareAbout);
-		log.info("Final number of events (filtered): {}", finalEvents.size());
+		log.info("Final time of events (filtered): {}", finalEvents.size());
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
@@ -620,7 +620,7 @@ public class JailExampleTest {
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 
 		List<? extends Event> finalEvents = collector.getEventsOf(eventsWeCareAbout);
-		log.info("Final number of events (filtered): {}", finalEvents.size());
+		log.info("Final time of events (filtered): {}", finalEvents.size());
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
@@ -718,7 +718,7 @@ public class JailExampleTest {
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|11|Some Guy|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|cd69a51d5f584b836fa20c4a5b356612"));
 
 		List<? extends Event> finalEvents = collector.getEventsOf(eventsWeCareAbout);
-		log.info("Final number of events (filtered): {}", finalEvents.size());
+		log.info("Final time of events (filtered): {}", finalEvents.size());
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
