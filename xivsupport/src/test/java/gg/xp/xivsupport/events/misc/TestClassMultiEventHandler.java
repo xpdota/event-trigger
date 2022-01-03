@@ -15,14 +15,14 @@ public class TestClassMultiEventHandler {
 
 	@HandleEvents
 	public void firstHandler(EventContext context, ACTLogLineEvent logLineEvent) {
-		if (logLineEvent.getLogLine().equals("Stuff")) {
+		if (logLineEvent.getLogLine().startsWith("123")) {
 			context.accept(new DiagEvent("Foo", source));
 		}
 	}
 
 	@HandleEvents
 	public void secondHandler(EventContext context, ACTLogLineEvent logLineEvent) {
-		if (logLineEvent.getLogLine().equals("Stuff")) {
+		if (logLineEvent.getLogLine().startsWith("123")) {
 			context.accept(new DiagEvent("Bar", source));
 		}
 	}

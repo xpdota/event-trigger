@@ -13,7 +13,7 @@ public class TimelineParserTest {
 		Assert.assertEquals(rawTimelineEntry.name(), "Firebomb");
 		Assert.assertNull(rawTimelineEntry.sync());
 		Assert.assertNull(rawTimelineEntry.duration());
-		Assert.assertNull(rawTimelineEntry.timelineWindow());
+		assertDefaultTimelineWindow(rawTimelineEntry);
 		Assert.assertNull(rawTimelineEntry.jump());
 	}
 
@@ -25,7 +25,7 @@ public class TimelineParserTest {
 		Assert.assertEquals(rawTimelineEntry.name(), "Shield Skewer");
 		Assert.assertEquals(rawTimelineEntry.sync().pattern(), " 1[56]:[^:]*:Rhitahtyn sas Arvina:471:");
 		Assert.assertNull(rawTimelineEntry.duration());
-		Assert.assertNull(rawTimelineEntry.timelineWindow());
+		assertDefaultTimelineWindow(rawTimelineEntry);
 		Assert.assertNull(rawTimelineEntry.jump());
 	}
 
@@ -65,7 +65,7 @@ public class TimelineParserTest {
 		Assert.assertEquals(rawTimelineEntry.name(), "J Storm + Waves x16");
 		Assert.assertEquals(rawTimelineEntry.sync().pattern(), " 1[56]:[^:]*:Brute Justice:4876:");
 		Assert.assertEquals(rawTimelineEntry.duration(), (Double) 50.0d);
-		Assert.assertNull(rawTimelineEntry.timelineWindow());
+		assertDefaultTimelineWindow(rawTimelineEntry);
 		Assert.assertNull(rawTimelineEntry.jump());
 	}
 
@@ -81,7 +81,12 @@ public class TimelineParserTest {
 		Assert.assertEquals(rawTimelineEntry.timelineWindow().start(), 600.0d);
 		Assert.assertEquals(rawTimelineEntry.timelineWindow().end(), 0.0d);
 		Assert.assertNull(rawTimelineEntry.jump());
+	}
 
+	private void assertDefaultTimelineWindow(RawTimelineEntry entry) {
+		Assert.assertNotNull(entry.timelineWindow());
+		Assert.assertEquals(entry.timelineWindow().start(), 2.5d);
+		Assert.assertEquals(entry.timelineWindow().end(), 2.5d);
 	}
 
 }
