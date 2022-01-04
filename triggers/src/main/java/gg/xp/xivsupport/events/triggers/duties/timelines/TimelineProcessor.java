@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class TimelineProcessor {
 
@@ -17,7 +18,7 @@ public class TimelineProcessor {
 	private final List<RawTimelineEntry> entries;
 	private TimelineSync lastSync;
 
-	private record TimelineSync(ACTLogLineEvent line, double lastSyncTime) {}
+	private record TimelineSync(ACTLogLineEvent line, double lastSyncTime, RawTimelineEntry original) {}
 
 	private TimelineProcessor(List<RawTimelineEntry> entries) {
 		this.entries = entries;
@@ -47,12 +48,34 @@ public class TimelineProcessor {
 		String emulatedActLogLine = event.getEmulatedActLogLine();
 		Optional<RawTimelineEntry> newSync = entries.stream().filter(entry -> entry.shouldSync(getEffectiveTime(), emulatedActLogLine)).findFirst();
 		newSync.ifPresent(rawTimelineEntry -> {
-			lastSync = new TimelineSync(event, rawTimelineEntry.time());
-			log.info("New Sync: {} {}", rawTimelineEntry, emulatedActLogLine);
+			double timeToSyncTo = rawTimelineEntry.getSyncToTime();
+			lastSync = new TimelineSync(event, timeToSyncTo, rawTimelineEntry);
+			log.info("New Sync: {} -> {} ({})", rawTimelineEntry, timeToSyncTo, emulatedActLogLine);
 		});
 	}
 
 	public List<RawTimelineEntry> getEntries() {
 		return Collections.unmodifiableList(entries);
+	}
+
+	public List<VisualTimelineEntry> getCurrentTimelineEntries() {
+		double effectiveLastSyncTime;
+		if (lastSync == null) {
+			effectiveLastSyncTime = 0.0d;
+		}
+		else {
+			effectiveLastSyncTime = lastSync.lastSyncTime + lastSync.line.getEffectiveTimeSince().toMillis() / 1000.0;
+		}
+		// TODO: make these settings
+		return entries.stream()
+				.filter(entry -> isLastSync(entry) || (entry.time() > (effectiveLastSyncTime - 10) && entry.time() < (effectiveLastSyncTime + 30)))
+				.map(entry -> {
+					return new VisualTimelineEntry(entry, isLastSync(entry), entry.time() - effectiveLastSyncTime);
+				})
+				.collect(Collectors.toList());
+	}
+
+	private boolean isLastSync(RawTimelineEntry entry) {
+		return lastSync != null && lastSync.original == entry;
 	}
 }

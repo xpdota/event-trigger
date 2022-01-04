@@ -1,44 +1,36 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.xivsupport.gui.tables.renderers.ResourceBarRenderer;
-import gg.xp.xivsupport.models.CurrentMaxPair;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
-public class CdBarRenderer extends ResourceBarRenderer {
+public class CdBarRenderer extends ResourceBarRenderer<VisualCdInfo> {
 
 	private static final Color colorActive = new Color(19, 8, 201, 192);
 	private static final Color colorReady = new Color(55, 182, 67, 192);
 	private static final Color colorOnCd = new Color(192, 0, 0, 192);
 
-
-	@Override
-	protected void formatLabel(CurrentMaxPair item) {
-		if (item instanceof LabelOverride) {
-			bar.setTextOptions(((LabelOverride) item).getLabel());
-		}
-		else {
-			super.formatLabel(item);
-		}
+	public CdBarRenderer() {
+		super(VisualCdInfo.class);
 	}
 
 	@Override
-	protected Color getBarColor(double percent, CurrentMaxPair item) {
-		if (item instanceof VisualCdInfo) {
-			if (((VisualCdInfo) item).getBuffApplied() != null) {
-				return colorActive;
-			}
-			if (percent > 0.999d) {
-				return colorReady;
-			}
-			else {
-				return colorOnCd;
-			}
+	protected void formatLabel(@NotNull VisualCdInfo item) {
+		bar.setTextOptions(((LabelOverride) item).getLabel());
+	}
 
+	@Override
+	protected Color getBarColor(double percent, @NotNull VisualCdInfo item) {
+		if (item.getBuffApplied() != null) {
+			return colorActive;
 		}
 		if (percent > 0.999d) {
+			return colorReady;
+		}
+		else {
 			return colorOnCd;
 		}
-		return colorActive;
+
 	}
 }

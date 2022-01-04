@@ -5,24 +5,34 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.IntSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TimelineManager {
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineManager.class);
 	private static final Map<Long, String> zoneIdToTimelineFile = new HashMap<>();
+	private final IntSetting rowsToDisplay;
 
 	static {
 		zoneIdToTimelineFile.put(332L, "cape_westwind.txt");
+		zoneIdToTimelineFile.put(0x309L, "ultima_weapon_ultimate.txt");
 	}
 
 	private TimelineProcessor currentTimeline;
+
+	public TimelineManager(PersistenceProvider pers) {
+		rowsToDisplay = new IntSetting(pers, "timeline-overlay.max-displayed", 6);
+	}
 
 	@HandleEvents
 	public void changeZone(EventContext context, ZoneChangeEvent zoneChangeEvent) {
@@ -62,5 +72,15 @@ public class TimelineManager {
 		log.info("Loaded timeline for zone '{}', {} timeline entries", zoneId, currentTimeline.getEntries().size());
 	}
 
+	public List<VisualTimelineEntry> getCurrentDisplayEntries() {
+		TimelineProcessor currentTimeline = this.currentTimeline;
+		if (currentTimeline == null) {
+			return Collections.emptyList();
+		}
+		return currentTimeline.getCurrentTimelineEntries();
+	}
 
+	public IntSetting getRowsToDisplay() {
+		return rowsToDisplay;
+	}
 }

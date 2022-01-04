@@ -146,16 +146,6 @@ public class ResourceBar extends JComponent {
 		}
 
 		((Graphics2D) g).setTransform(old);
-
-//		g.setColor(textColor);
-//
-//		g.setFont(label.getFont());
-//		g.drawString(label.getText(), (width / 2) - (label.getPreferredSize().width / 2), height);
-
-//		label.paintImmediately(g);
-
-//		super.paintChildren(g);
-//		super.paintComponent(g);
 	}
 
 	public Color getTextColor() {

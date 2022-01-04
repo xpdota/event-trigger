@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
 import gg.xp.xivsupport.models.CurrentMaxPredicted;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -10,14 +11,21 @@ import java.awt.*;
 /**
  * Bar that shows "movement", like that white are on a bar that shows how much HP you just lost.
  */
-public abstract class ResourceBarRendererWithMovement implements TableCellRenderer {
+public abstract class ResourceBarRendererWithMovement<X extends CurrentMaxPredicted> implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
 	protected final ResourceBar bar = new ResourceBar();
 	private final EmptyRenderer empty = new EmptyRenderer();
+	private final Class<X> dataCls;
 
+	protected ResourceBarRendererWithMovement(Class<X> dataCls) {
+		this.dataCls = dataCls;
+	}
+
+	@SuppressWarnings("unchecked")
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		if (value instanceof CurrentMaxPredicted hp) {
+		if (dataCls.isInstance(value)) {
+			X hp = ((X) value);
 			Component baseLabel = fallback.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column);
 			double percent;
 			double percentChange;
@@ -98,13 +106,13 @@ public abstract class ResourceBarRendererWithMovement implements TableCellRender
 		return empty;
 	}
 
-	protected abstract Color getBarColor(double percent, double percentChange, CurrentMaxPredicted item);
+	protected abstract Color getBarColor(double percent, double percentChange, @NotNull X item);
 
-	protected abstract Color getMovementBarColor(double percent, double percentChange, CurrentMaxPredicted item);
+	protected abstract Color getMovementBarColor(double percent, double percentChange, @NotNull X item);
 
-	protected abstract Color getBorderColor(double percent, double percentChange, CurrentMaxPredicted item, Color originalBg);
+	protected abstract Color getBorderColor(double percent, double percentChange, @NotNull X item, Color originalBg);
 
-	protected void formatLabel(CurrentMaxPredicted item) {
+	protected void formatLabel(@NotNull X item) {
 		// Try to do long label, otherwise fall back to short label
 		String longText = String.format("%s / %s", item.getPredicted(), item.getMax());
 		bar.setTextOptions(longText, String.valueOf(item.getPredicted()));

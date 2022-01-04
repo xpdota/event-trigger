@@ -64,6 +64,7 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 		settingsPanel.add(enableOverlay);
 		JPanel numSetting = new IntSettingSpinner(overlayMax(), "Max in Overlay").getComponent();
 		settingsPanel.add(numSetting);
+		// TODO: bug here - doesn't cancel editing, so current cell enabled/disabled is stuck
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 
@@ -116,6 +117,12 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 		model.configureColumns(table);
 
 		enableTtsSetting.addListener(() -> {
+			TableCellEditor cellEditor = table.getCellEditor();
+			if (cellEditor != null) {
+				cellEditor.stopCellEditing();
+			}
+		});
+		enableOverlaySetting.addListener(() -> {
 			TableCellEditor cellEditor = table.getCellEditor();
 			if (cellEditor != null) {
 				cellEditor.stopCellEditing();

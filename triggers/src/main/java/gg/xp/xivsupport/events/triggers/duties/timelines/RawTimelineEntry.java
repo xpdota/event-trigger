@@ -29,6 +29,15 @@ public record RawTimelineEntry(
 		return currentTime >= getMinTime() && currentTime <= getMaxTime() && sync.matcher(line).find();
 	}
 
+	public double getSyncToTime() {
+		if (jump == null) {
+			return time;
+		}
+		else {
+			return jump;
+		}
+	}
+
 	@Override
 	public String toString() {
 		return "RawTimelineEntry{" +

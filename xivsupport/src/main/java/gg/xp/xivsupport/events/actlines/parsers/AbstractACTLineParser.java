@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -86,12 +87,20 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				if (mapper.isRecalcNeeded()) {
 					state.flushProvidedValues();
 				}
+				if (fakeTimeSource != null) {
+					// For 00-lines, the timestamp only has second-level precision, compared to millisecond-level
+					// precision for everything else. This causes time to jump around, which we don't want.
+					// Thus, for 00-lines, just copy
+					if (zdt.get(ChronoField.MILLI_OF_SECOND) == 0) {
+						event.setHappenedAt(fakeTimeSource.now());
+					}
+					else {
+						fakeTimeSource.setNewTime(zdt.toInstant());
+					}
+					event.setTimeSource(fakeTimeSource);
+				}
 				if (outgoingEvent != null) {
 					outgoingEvent.setHappenedAt(zdt.toInstant());
-					if (fakeTimeSource != null) {
-						fakeTimeSource.setNewTime(outgoingEvent.getHappenedAt());
-						event.setTimeSource(fakeTimeSource);
-					}
 					context.accept(outgoingEvent);
 				}
 			}
