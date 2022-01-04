@@ -137,17 +137,27 @@ public class MakeEverything {
 		}
 	}
 
-	private void copyIcon(long iconId, List<String> dest) {
+	private void copyIconIfExists(long iconId, List<String> dest) {
 		String dirName = String.format("%06d", Math.floorDiv(iconId, 1000) * 1000);
 		String iconName = String.format("%06d_hr1.png", iconId);
-		copyFile(List.of("ui", dirName, iconName), dest);
+		try {
+			copyFile(List.of("ui", "icon", dirName, iconName), dest);
+		}
+		catch (Throwable t) {
+			if (t.getMessage().contains("FileNotFound")) {
+				//
+			}
+			else {
+				throw t;
+			}
+		}
 	}
 
 	private void extractIconRange(Collection<Long> icons) {
 		LongSummaryStatistics statusStats = icons.stream().mapToLong(Long::longValue).summaryStatistics();
 		long min = statusStats.getMin();
 		long max = statusStats.getMax();
-
+		extractIconRange(min, max);
 	}
 
 	private void extractIconRange(long min, long max) {
@@ -205,13 +215,16 @@ public class MakeEverything {
 			StatusEffectIcon.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
 			Map<Long, Long> statusCsvMap = StatusEffectIcon.getCsvValues();
 			List<Long> statusIcons;
+			// TODO: it looks like the way status effects work is that there is one icon for each stack value.
+			// Maximum stack amounts are defined in Status.csv. Maybe it's time to improve the CSV reading?
+			// There's also fields for whether it can be dispelled or not.
 			{
 				statusIcons = statusCsvMap.values().stream().distinct().toList();
 				System.out.println("Number of status effect icons: " + statusIcons.size());
 				maker.extractIconRange(statusCsvMap.values());
 				System.out.println("Copying Icons");
 				List<String> statusIconDir = List.of("xiv", "statuseffect", "icons");
-				statusIcons.stream().parallel().forEach(iconNumber -> maker.copyIcon(iconNumber, statusIconDir));
+				statusIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, statusIconDir));
 			}
 		}
 		// ACTIONS/ABILITIES
@@ -225,7 +238,7 @@ public class MakeEverything {
 				maker.extractIconRange(actionCsvMap.values());
 				System.out.println("Copying Icons");
 				List<String> actionIconDir = List.of("xiv", "actions", "icons");
-				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIcon(iconNumber, actionIconDir));
+				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, actionIconDir));
 			}
 		}
 	}
