@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -64,21 +65,14 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 		try {
 			String line = event.getLogLine();
 			if (line.startsWith(lineStart)) {
-				String[] splits;
-				if (splitAll) {
-					splits = line.split("\\|");
-				}
-				else {
-					int numSplits = groups.size() + 3;
-					splits = line.split("\\|", numSplits);
-				}
+				String[] splits = event.getRawFields();
 				Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
 				// TODO: validate number of fields
 				for (int i = 0; i < groups.size(); i++) {
 					// i + 2 is because the first two are the line number and timestamp.
 					out.put(groups.get(i), splits[i + 2]);
 				}
-				ZonedDateTime zdt = ZonedDateTime.parse(splits[1]);
+				ZonedDateTime zdt = event.getTimestamp();
 				FieldMapper<F> mapper = new FieldMapper<>(out, state, context, entityLookupMissBehavior(), splits);
 				Event outgoingEvent;
 				try {
@@ -93,15 +87,20 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				if (mapper.isRecalcNeeded()) {
 					state.flushProvidedValues();
 				}
+				if (fakeTimeSource != null) {
+					// For 00-lines, the timestamp only has second-level precision, compared to millisecond-level
+					// precision for everything else. This causes time to jump around, which we don't want.
+					// Thus, for 00-lines, just copy
+					if (zdt.get(ChronoField.MILLI_OF_SECOND) == 0) {
+						event.setHappenedAt(fakeTimeSource.now());
+					}
+					else {
+						fakeTimeSource.setNewTime(zdt.toInstant());
+					}
+					event.setTimeSource(fakeTimeSource);
+				}
 				if (outgoingEvent != null) {
 					outgoingEvent.setHappenedAt(zdt.toInstant());
-					// TODO: is there also value in setting this on the ACT line event itself?
-					if (fakeTimeSource != null) {
-						fakeTimeSource.setNewTime(outgoingEvent.getHappenedAt());
-						if (outgoingEvent instanceof BaseEvent bev) {
-							bev.setTimeSource(fakeTimeSource);
-						}
-					}
 					context.accept(outgoingEvent);
 				}
 			}

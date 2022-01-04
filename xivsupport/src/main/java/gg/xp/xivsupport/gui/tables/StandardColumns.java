@@ -99,6 +99,9 @@ public final class StandardColumns {
 				return null;
 			}
 			long pending;
+			// TODO: this is buggy - when damage resolves, it will briefly flash up to the higher value, because the
+			// predicted HP is constantly updated every time it renders, while the HP is only updated when the event
+			// is actually processed.
 			if (showPredictedHp.get()) {
 				List<AbilityUsedEvent> events = sqidTracker.getEventsTargetedOnEntity(combatant);
 				long dmg = 0;

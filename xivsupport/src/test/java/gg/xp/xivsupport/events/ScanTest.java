@@ -39,7 +39,7 @@ public class ScanTest {
 		EventDistributor dist = XivMain.testingMasterInit().getComponent(EventDistributor.class);
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
-		dist.acceptEvent(new ACTLogLineEvent("Stuff"));
+		dist.acceptEvent(new ACTLogLineEvent("123|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan"));
 
 		Assert.assertEquals(collector.getEvents().size(), 3);
 		List<DiagEvent> events = collector.getEventsOf(List.of(DiagEvent.class));

@@ -142,12 +142,5 @@ public class DotTrackerOverlay extends XivOverlay {
 	private void refresh() {
 		getAndSort();
 		tableModel.fullRefresh();
-//		tableModel.overlayHackRefresh();
-//		getFrame().paint(getFrame().getGraphics());
-//		RepaintManager repaintManager = RepaintManager.currentManager(table);
-//		repaintManager.addDirtyRegion(table, 0, 0, table.getSize().width, table.getSize().height);
-//		repaintManager.paintDirtyRegions();
-//		table.paintImmediately(table.getBounds());
-//		table.repaint();
 	}
 }
