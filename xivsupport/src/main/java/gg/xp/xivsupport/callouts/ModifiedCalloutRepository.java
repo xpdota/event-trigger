@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,15 +34,19 @@ public class ModifiedCalloutRepository {
 	public void handleEvent(EventContext context, InitEvent init) {
 		List<Object> objects = container.getComponents(Object.class)
 				.stream()
-				.filter(o -> o.getClass().isAnnotationPresent(CalloutRepo.class))
-				.collect(Collectors.toList());
+				.filter(o -> o.getClass().isAnnotationPresent(CalloutRepo.class)).sorted(Comparator.comparing(o -> {
+					String canonicalName = o.getClass().getCanonicalName();
+					if (canonicalName == null) {
+						return "";
+					}
+					return canonicalName;
+				})).toList();
 
 		objects.forEach(o -> {
 			Class<?> clazz = o.getClass();
 			String description = clazz.getAnnotation(CalloutRepo.class).value();
 			List<ModifiedCalloutHandle> callouts = new ArrayList<>();
-			List<Field> fields = Arrays.stream(clazz.getDeclaredFields()).filter(f -> ModifiableCallout.class.isAssignableFrom(f.getType()))
-					.collect(Collectors.toList());
+			List<Field> fields = Arrays.stream(clazz.getDeclaredFields()).filter(f -> ModifiableCallout.class.isAssignableFrom(f.getType())).toList();
 			String classPropStub = "callouts." + clazz.getCanonicalName();
 			String topLevelPropStub = "callouts.group." + clazz.getCanonicalName();
 			fields.forEach(f -> {
