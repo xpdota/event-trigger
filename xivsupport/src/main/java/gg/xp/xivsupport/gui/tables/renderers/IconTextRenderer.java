@@ -32,6 +32,9 @@ public final class IconTextRenderer {
 
 	public static @Nullable ScaledImageComponent getIconOnly(HasIconURL value) {
 		return cache.computeIfAbsent(value, (ignored1) -> {
+			if (value == null) {
+				return null;
+			}
 			URL imageUrl = value.getIcon();
 			if (imageUrl == null) {
 				return null;
