@@ -115,6 +115,7 @@ public class CalloutsConfigTab implements PluginTab {
 		innerPanel.add(new JPanel(), c);
 		innerPanel.setPreferredSize(innerPanel.getMinimumSize());
 		JScrollPane scroll = new JScrollPane(innerPanel);
+		scroll.getVerticalScrollBar().setUnitIncrement(20);
 		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		outerPanel.add(scroll);
 		return outerPanel;

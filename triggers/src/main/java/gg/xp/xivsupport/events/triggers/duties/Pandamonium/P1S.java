@@ -1,11 +1,13 @@
 package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CombatantType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 @CalloutRepo("P1S")
-public class P1S {
+public class P1S implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P1S.class);
 
 	private final ModifiableCallout wardensWrath = new ModifiableCallout("Warden's Wrath", "Raidwide");
@@ -144,6 +146,11 @@ public class P1S {
 			}
 			context.accept(call.getModified());
 		}
+	}
+
+	@Override
+	public boolean enabled(EventContext context) {
+		return context.getStateInfo().get(XivState.class).zoneIs(0x3EB);
 	}
 
 }
