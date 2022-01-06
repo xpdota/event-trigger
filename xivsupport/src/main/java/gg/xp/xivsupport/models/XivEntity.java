@@ -18,6 +18,7 @@ public class XivEntity implements Serializable, NameIdPair {
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
+		// TODO: do we actually want the class check?
 		if (o == null || getClass() != o.getClass()) return false;
 		XivEntity xivEntity = (XivEntity) o;
 		return id == xivEntity.id;

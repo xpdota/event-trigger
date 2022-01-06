@@ -123,10 +123,10 @@ public class P1S implements FilteredEventHandler {
 			else if (id == 0x65F7) {
 				call = rightToLeft;
 			}
-			else if (id == 0x65F8) {
+			else if (id == 0x65F8 || id == 0x65F9) {
 				call = outThenIn;
 			}
-			else if (id == 0x65F9) {
+			else if (id == 0x65FA || id == 0x65FB) {
 				call = inThenOut;
 			}
 			else if (id == 0x6629) {

@@ -77,7 +77,7 @@ public class XivCombatant extends XivEntity {
 		if (isEnvironment()) {
 			return super.toString();
 		}
-		return String.format("XivCombatant(0x%X:%s)", getId(), getName());
+		return String.format("XivCombatant(0x%X:%s:%s:%s)", getId(), getName(), getType(), getPos());
 	}
 
 	// TODO: replace the others with this
