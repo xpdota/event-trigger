@@ -126,7 +126,7 @@ public class P1S implements FilteredEventHandler {
 			else if (id == 0x65F8) {
 				call = outThenIn;
 			}
-			else if (id == 0x65FB) {
+			else if (id == 0x65F9) {
 				call = inThenOut;
 			}
 			else if (id == 0x6629) {
