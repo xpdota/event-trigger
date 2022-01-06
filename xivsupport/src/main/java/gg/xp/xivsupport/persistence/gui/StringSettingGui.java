@@ -19,7 +19,7 @@ public class StringSettingGui {
 		this.label = label;
 	}
 
-	public Component getTextBoxOnly() {
+	public JTextField getTextBoxOnly() {
 		return textBox;
 	}
 

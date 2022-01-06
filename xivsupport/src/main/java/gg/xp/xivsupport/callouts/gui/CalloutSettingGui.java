@@ -16,9 +16,9 @@ public class CalloutSettingGui {
 	private final JPanel ttsPanel;
 	private final JPanel textPanel;
 	private final JCheckBox ttsCheckbox;
-	private final Component ttsTextBox;
+	private final JTextField ttsTextBox;
 	private final JCheckBox textCheckbox;
-	private final Component textTextBox;
+	private final JTextField textTextBox;
 	private boolean enabledByParent = true;
 
 	public CalloutSettingGui(ModifiedCalloutHandle call) {

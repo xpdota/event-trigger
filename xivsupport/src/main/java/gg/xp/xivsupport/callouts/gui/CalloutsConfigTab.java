@@ -64,11 +64,11 @@ public class CalloutsConfigTab implements PluginTab {
 			c.gridx = 0;
 			c.weightx = 0;
 			// left filler
-			c.gridwidth = 1;
-			innerPanel.add(new JPanel(), c);
+//			c.gridwidth = 1;
+//			innerPanel.add(new JPanel(), c);
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			JCheckBox topLevelCheckbox = new BooleanSettingGui(group.getEnabled(), group.getName()).getComponent();
-			c.gridx++;
+//			c.gridx++;
 			c.weightx = 1;
 			innerPanel.add(topLevelCheckbox, c);
 			c.weightx = 0;
@@ -84,16 +84,21 @@ public class CalloutsConfigTab implements PluginTab {
 
 
 				innerPanel.add(csg.getCallCheckbox(), c);
+				c.weightx = 0;
 
 				c.gridx++;
+				c.weightx = 1;
 				innerPanel.add(csg.getTtsPanel(), c);
+				c.weightx = 0;
 				c.gridx++;
 				JPanel padding = new JPanel();
 				padding.setSize(20, 1);
 				innerPanel.add(padding, c);
 				c.gridx++;
+				c.weightx = 1;
 				innerPanel.add(csg.getTextPanel(), c);
 				c.gridx++;
+				c.weightx = 0;
 				c.gridwidth = GridBagConstraints.REMAINDER;
 				innerPanel.add(new JPanel(), c);
 				c.gridwidth = 1;
