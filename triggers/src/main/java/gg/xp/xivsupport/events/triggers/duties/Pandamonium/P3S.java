@@ -7,6 +7,7 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
@@ -15,6 +16,7 @@ import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +63,13 @@ public class P3S implements FilteredEventHandler {
 
 	private final ModifiableCallout tetheredToBird = new ModifiableCallout("Tethered to Bird + Player", "Tethered to {birdspot} bird and {otherplayer}");
 	private final ModifiableCallout tetheredToPlayer = new ModifiableCallout("Tethered to Player", "Tethered to {otherplayer} ({birdspot} bird)");
+
+	private final ModifiableCallout deathsToll1 = new ModifiableCallout("Death's Toll (1)", "1 Stack (Cardinal)");
+	private final ModifiableCallout deathsToll2 = new ModifiableCallout("Death's Toll (2)", "2 Stacks (Intercard)");
+	private final ModifiableCallout deathsToll4 = new ModifiableCallout("Death's Toll (4)", "4 Stacks (Middle)");
+	private final ModifiableCallout deathsTollN = new ModifiableCallout("Death's Toll (?)", "{stacks} Stacks");
+
+
 	private final XivState state;
 
 	public P3S(XivState state) {
@@ -268,6 +277,21 @@ public class P3S implements FilteredEventHandler {
 			else {
 				return "?";
 			}
+		}
+	}
+
+	@HandleEvents
+	public void deathsToll(EventContext context, BuffApplied buff) {
+		// Stack counting down would be considered a refresh
+		if (buff.getBuff().getId() == 0xACA && buff.getTarget().isThePlayer() && !buff.isRefresh()) {
+			long stacks = buff.getStacks();
+			CalloutEvent callout = switch ((int) stacks) {
+				case 1 -> deathsToll1.getModified();
+				case 2 -> deathsToll2.getModified();
+				case 4 -> deathsToll4.getModified();
+				default -> deathsTollN.getModified(Map.of("stacks", stacks));
+			};
+			context.accept(callout);
 		}
 	}
 

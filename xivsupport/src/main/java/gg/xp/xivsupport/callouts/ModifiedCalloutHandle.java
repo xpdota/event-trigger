@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.callouts;
 
+import gg.xp.xivsupport.gui.overlay.FlyingTextOverlay;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
@@ -14,9 +15,13 @@ public final class ModifiedCalloutHandle {
 	private final StringSetting textSetting;
 	private final LongSetting hangTimeSetting;
 	private final ModifiableCallout original;
+	private final BooleanSetting allTts;
+	private final BooleanSetting allText;
 	private boolean isEnabledByParent = true;
 
-	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout original) {
+	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout original, BooleanSetting allTts, BooleanSetting allText) {
+		this.allTts = allTts;
+		this.allText = allText;
 		enable = new BooleanSetting(persistenceProvider, propStub + ".enabled", true);
 		enableTts = new BooleanSetting(persistenceProvider, propStub + ".tts-enabled", true);
 		ttsSetting = new StringSetting(persistenceProvider, propStub + ".tts", original.getOriginalTts());
@@ -62,5 +67,21 @@ public final class ModifiedCalloutHandle {
 
 	public boolean isEffectivelyEnabled() {
 		return getEnable().get() && isEnabledByParent;
+	}
+
+	public boolean isTtsEffectivelyEnabled() {
+		return isEffectivelyEnabled() && allTts.get() && getEnableTts().get();
+	}
+
+	public boolean isTextEffectivelyEnabled() {
+		return isEffectivelyEnabled() && allText.get() && getEnableText().get();
+	}
+
+	public BooleanSetting getAllTextEnabled() {
+		return allText;
+	}
+
+	public BooleanSetting getAllTtsEnabled() {
+		return allTts;
 	}
 }

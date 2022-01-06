@@ -64,13 +64,9 @@ public class ModifiableCallout {
 			callText = defaultTtsText;
 			visualText = defaultVisualText;
 		}
-		else if (handle.isEffectivelyEnabled()) {
-			callText = handle.getEnableTts().get() ? handle.getTtsSetting().get() : null;
-			visualText = handle.getEnableText().get() ? handle.getTextSetting().get() : null;
-		}
 		else {
-			callText = null;
-			visualText = null;
+			callText = handle.isTtsEffectivelyEnabled() ? handle.getTtsSetting().get() : null;
+			visualText = handle.isTextEffectivelyEnabled() ? handle.getTextSetting().get() : null;
 		}
 		callText = applyReplacements(callText, arguments);
 		visualText = applyReplacements(visualText, arguments);

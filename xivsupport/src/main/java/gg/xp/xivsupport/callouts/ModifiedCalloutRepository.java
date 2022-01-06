@@ -3,7 +3,9 @@ package gg.xp.xivsupport.callouts;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.gui.overlay.FlyingTextOverlay;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +24,14 @@ public class ModifiedCalloutRepository {
 
 	private final PicoContainer container;
 	private final PersistenceProvider persistence;
+	private final BooleanSetting enableTts;
+	private final BooleanSetting enableOverlay;
 
-	public ModifiedCalloutRepository(PicoContainer container, PersistenceProvider persistence) {
+	public ModifiedCalloutRepository(PicoContainer container, PersistenceProvider persistence, FlyingTextOverlay overlay) {
 		this.container = container;
 		this.persistence = persistence;
+		enableOverlay = overlay.getEnabled();
+		enableTts = new BooleanSetting(persistence, "enable-tts-callouts", true);
 	}
 
 	private final List<CalloutGroup> allCallouts = new ArrayList<>();
@@ -60,7 +66,7 @@ public class ModifiedCalloutRepository {
 				catch (IllegalAccessException e) {
 					throw new RuntimeException(e);
 				}
-				ModifiedCalloutHandle modified = new ModifiedCalloutHandle(persistence, fullPropStub, original);
+				ModifiedCalloutHandle modified = new ModifiedCalloutHandle(persistence, fullPropStub, original, enableTts, enableOverlay);
 				original.attachHandle(modified);
 				callouts.add(modified);
 			});
@@ -71,5 +77,13 @@ public class ModifiedCalloutRepository {
 
 	public List<CalloutGroup> getAllCallouts() {
 		return Collections.unmodifiableList(allCallouts);
+	}
+
+	public BooleanSetting getEnableOverlay() {
+		return enableOverlay;
+	}
+
+	public BooleanSetting getEnableTts() {
+		return enableTts;
 	}
 }

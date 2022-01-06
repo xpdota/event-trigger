@@ -2,6 +2,7 @@ package gg.xp.xivsupport.callouts;
 
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -9,6 +10,7 @@ import org.testng.annotations.Test;
 import java.util.Map;
 
 public class CalloutTests {
+
 
 	@Test
 	void testNonModifiedCallout() {
@@ -22,7 +24,8 @@ public class CalloutTests {
 	void testModifiedCallout() {
 		ModifiableCallout mc = new ModifiableCallout("Foo", "Bar");
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
-		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc);
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
 		mc.attachHandle(mch);
 		{
 			CalloutEvent modified = mc.getModified();
@@ -77,7 +80,9 @@ public class CalloutTests {
 	@Test
 	void testReplacements() {
 		ModifiableCallout mc = new ModifiableCallout("Foo", "Tankbuster on {target}");
-		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(new InMemoryMapPersistenceProvider(), "fooCallout", mc);
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
 		mc.attachHandle(mch);
 		{
 			CalloutEvent modified = mc.getModified();

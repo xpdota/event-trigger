@@ -7,7 +7,6 @@ import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class CalloutSettingGui {
@@ -19,6 +18,8 @@ public class CalloutSettingGui {
 	private final JTextField ttsTextBox;
 	private final JCheckBox textCheckbox;
 	private final JTextField textTextBox;
+	private final BooleanSetting allText;
+	private final BooleanSetting allTts;
 	private boolean enabledByParent = true;
 
 	public CalloutSettingGui(ModifiedCalloutHandle call) {
@@ -27,6 +28,8 @@ public class CalloutSettingGui {
 		StringSetting ttsSetting = call.getTtsSetting();
 		BooleanSetting enableText = call.getEnableText();
 		StringSetting textSetting = call.getTextSetting();
+		this.allText = call.getAllTextEnabled();
+		this.allTts = call.getAllTtsEnabled();
 
 		{
 			ttsPanel = new JPanel();
@@ -51,16 +54,31 @@ public class CalloutSettingGui {
 		callCheckbox.addActionListener(l);
 		ttsCheckbox.addActionListener(l);
 		textCheckbox.addActionListener(l);
+		allText.addListener(this::recalcEnabledDisabledStatus);
+		allTts.addListener(this::recalcEnabledDisabledStatus);
 	}
 
 	private void recalcEnabledDisabledStatus() {
 		callCheckbox.setEnabled(enabledByParent);
 		boolean effectivelyEnabled = callCheckbox.isSelected() && enabledByParent;
 		if (effectivelyEnabled) {
-			ttsCheckbox.setEnabled(true);
-			ttsTextBox.setEnabled(ttsCheckbox.isSelected());
-			textCheckbox.setEnabled(true);
-			textTextBox.setEnabled(textCheckbox.isSelected());
+			if (allTts.get()) {
+				ttsCheckbox.setEnabled(true);
+				ttsTextBox.setEnabled(ttsCheckbox.isSelected());
+			}
+			else {
+				ttsCheckbox.setEnabled(false);
+				ttsTextBox.setEnabled(false);
+			}
+			if (allText.get()) {
+				textCheckbox.setEnabled(true);
+				textTextBox.setEnabled(textCheckbox.isSelected());
+			}
+			else {
+				textCheckbox.setEnabled(false);
+				textTextBox.setEnabled(false);
+
+			}
 		}
 		else {
 			ttsCheckbox.setEnabled(false);
