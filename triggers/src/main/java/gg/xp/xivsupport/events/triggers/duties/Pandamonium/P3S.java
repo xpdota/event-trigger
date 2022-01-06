@@ -7,6 +7,7 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CombatantType;
 
@@ -44,6 +45,11 @@ public class P3S implements FilteredEventHandler {
 	}
 
 	private Long firstHeadmark;
+
+	@HandleEvents
+	public void resetAll(EventContext context, DutyCommenceEvent event) {
+		firstHeadmark = null;
+	}
 
 	@HandleEvents
 	public void sequentialHeadmarkSolver(EventContext context, HeadMarkerEvent event) {
