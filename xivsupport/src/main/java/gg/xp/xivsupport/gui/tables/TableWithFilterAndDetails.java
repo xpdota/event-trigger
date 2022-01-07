@@ -8,7 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +50,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			Function<? super X, List<D>> detailsConverter,
 			List<Function<Runnable, VisualFilter<? super X>>> filterCreators,
 			List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets,
+			List<CustomRightClickOption> rightClickOptions,
 			BiPredicate<? super X, ? super X> selectionEquivalence,
 			BiPredicate<? super D, ? super D> detailsSelectionEquivalence,
 			boolean appendOrPruneOnly) {
@@ -124,6 +129,53 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		JTable detailsTable = new JTable(detailsModel);
 		JScrollPane detailsScroller = new JScrollPane(detailsTable);
 		detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
+
+		if (!rightClickOptions.isEmpty()) {
+			JPopupMenu popupMenu = new JPopupMenu();
+			popupMenu.addPopupMenuListener(new PopupMenuListener() {
+				@Override
+				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+					popupMenu.removeAll();
+					for (CustomRightClickOption rightClickOption : rightClickOptions) {
+						if (rightClickOption.shouldAppear(mainModel)) {
+
+							JMenuItem menuItem = new JMenuItem(rightClickOption.getLabel());
+							menuItem.addActionListener(l -> {
+								rightClickOption.doAction(mainModel);
+							});
+							popupMenu.add(menuItem);
+						}
+					}
+					popupMenu.revalidate();
+
+				}
+
+				@Override
+				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+
+				}
+
+				@Override
+				public void popupMenuCanceled(PopupMenuEvent e) {
+
+				}
+			});
+			table.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mousePressed(MouseEvent e) {
+					if (e.getButton() == MouseEvent.BUTTON3) {
+						JTable source = (JTable) e.getSource();
+						int row = source.rowAtPoint(e.getPoint());
+						int column = source.columnAtPoint(e.getPoint());
+
+						if (!source.isRowSelected(row)) {
+							source.changeSelection(row, column, false, false);
+						}
+					}
+				}
+			});
+			table.setComponentPopupMenu(popupMenu);
+		}
 
 		// Split pane
 		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
@@ -265,6 +317,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		private final Function<X, List<D>> detailsConverter;
 		private final List<Function<Runnable, VisualFilter<? super X>>> filters = new ArrayList<>();
 		private final List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets = new ArrayList<>();
+		private final List<CustomRightClickOption> rightClickOptions = new ArrayList<>();
 		private BiPredicate<? super X, ? super X> selectionEquivalence = Objects::equals;
 		private BiPredicate<? super D, ? super D> detailsSelectionEquivalence = Objects::equals;
 		private boolean appendOrPruneOnly;
@@ -283,6 +336,11 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 		public TableWithFilterAndDetailsBuilder<X, D> addDetailsColumn(CustomColumn<D> detailsColumn) {
 			this.detailsColumns.add(detailsColumn);
+			return this;
+		}
+
+		public TableWithFilterAndDetailsBuilder<X, D> addRightClickOption(CustomRightClickOption rightClickOption) {
+			this.rightClickOptions.add(rightClickOption);
 			return this;
 		}
 
@@ -316,7 +374,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		}
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly);
+			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, rightClickOptions, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly);
 		}
 	}
 

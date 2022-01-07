@@ -63,4 +63,15 @@ public interface Event extends Serializable {
 	boolean isImported();
 
 	void setImported(boolean imported);
+
+	default <X> @Nullable X getThisOrParentOfType(Class<X> clazz) {
+		Event current = this;
+		do {
+			if (clazz.isInstance(current)) {
+				return (X) current;
+			}
+		} while ((current = current.getParent()) != null);
+		return null;
+
+	}
 }

@@ -26,12 +26,14 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
+import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapPanel;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -48,8 +50,8 @@ import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
-import gg.xp.xivsupport.gui.tabs.PluginTopologyPanel;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -588,6 +590,21 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy Net Line", Event.class, e -> {
+					return e.getThisOrParentOfType(ACTLogLineEvent.class);
+				}, line -> {
+					GuiUtil.copyTextToClipboard(line.getLogLine());
+				}))
+				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy Emulated ACT Line", Event.class, e -> {
+					return e.getThisOrParentOfType(ACTLogLineEvent.class);
+				}, line -> {
+					GuiUtil.copyTextToClipboard(line.getEmulatedActLogLine());
+				}))
+				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy WS JSON", Event.class, e -> {
+					return e.getThisOrParentOfType(ActWsRawMsg.class);
+				}, line -> {
+					GuiUtil.copyTextToClipboard(line.getRawMsgData());
+				}))
 				.addFilter(SystemEventFilter::new)
 				.addFilter(EventClassFilterFilter::new)
 				.addFilter(AbilityResolutionFilter::new)
@@ -627,11 +644,17 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.addRightClickOption(CustomRightClickOption.forRow("Copy Net Line", ACTLogLineEvent.class, line -> {
+					GuiUtil.copyTextToClipboard(line.getLogLine());
+				}))
+				.addRightClickOption(CustomRightClickOption.forRow("Copy Emulated ACT Line", ACTLogLineEvent.class, line -> {
+					GuiUtil.copyTextToClipboard(line.getEmulatedActLogLine());
+				}))
 				.addFilter(ActLineFilter::new)
 				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
 				.build();
-		master.getDistributor().registerHandler(Event.class, (ctx, e) -> {
+		master.getDistributor().registerHandler(ACTLogLineEvent.class, (ctx, e) -> {
 			table.signalNewData();
 		});
 		return table;

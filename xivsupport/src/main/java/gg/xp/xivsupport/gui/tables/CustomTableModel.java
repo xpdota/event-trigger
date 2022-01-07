@@ -297,6 +297,16 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		return data.get(row);
 	}
 
+	public @Nullable X getSelectedValue() {
+		JTable table = getTable();
+		if (table != null) {
+			int selectedRow = table.getSelectedRow();
+			if (selectedRow >= 0) {
+				return data.get(selectedRow);
+			}
+		}
+		return null;
+	}
 
 	@Override
 	public @Nullable Object getValueAt(int rowIndex, int columnIndex) {
