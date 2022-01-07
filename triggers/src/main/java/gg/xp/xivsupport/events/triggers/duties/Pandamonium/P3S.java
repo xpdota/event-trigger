@@ -35,6 +35,7 @@ public class P3S implements FilteredEventHandler {
 	private final ModifiableCallout heatOfCondemnation = new ModifiableCallout("Heat of Condemnation", "Tank Tethers");
 	private final ModifiableCallout deadRebirth = new ModifiableCallout("Dead Rebirth", "Big Aoe");
 
+	private final ModifiableCallout darkenedFire = new ModifiableCallout("Darkened Fire", "Partners");
 	private final ModifiableCallout number1 = new ModifiableCallout("#1", "1");
 	private final ModifiableCallout number2 = new ModifiableCallout("#2", "2");
 	private final ModifiableCallout number3 = new ModifiableCallout("#3", "3");
@@ -95,6 +96,9 @@ public class P3S implements FilteredEventHandler {
 			}
 			else if (id == 0x6703) {
 				call = leftWingBad;
+			}
+			else if (id == 0x66B9) {
+				call = darkenedFire;
 			}
 			else if (id == 0x66BE) {
 				call = expFpOut;
