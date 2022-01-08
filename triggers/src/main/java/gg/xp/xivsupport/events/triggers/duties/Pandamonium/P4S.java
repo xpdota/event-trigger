@@ -7,6 +7,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.ArenaPos;
@@ -27,6 +28,10 @@ public class P4S implements FilteredEventHandler {
 	private final ModifiableCallout evisceration = new ModifiableCallout("Elegant Evisceration", "Tankbuster on {target}");
 
 	private final ModifiableCallout pinax = new ModifiableCallout("Pinax Mechanic + Safespot", "{mech1} into {mech2}, {safespot} safe");
+
+	private final ModifiableCallout shift = new ModifiableCallout("Sword/Cape", "{direction} {cleavekb}");
+
+	private final ModifiableCallout acting = new ModifiableCallout("Acting Role", "Acting {role}");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
@@ -53,6 +58,54 @@ public class P4S implements FilteredEventHandler {
 				return;
 			}
 			context.accept(call.getModified(Map.of("target", event.getTarget())));
+		}
+	}
+
+	// TODO: integrate this into safespot call
+	@HandleEvents
+	public void directionlyShift(EventContext context, AbilityCastStart event) {
+		if (event.getSource().getType() == CombatantType.NPC) {
+			final boolean isSword;
+			final ArenaSector where;
+			int id = (int) event.getAbility().getId();
+			switch (id) {
+				case 0x6A02 -> {
+					isSword = true;
+					where = ArenaSector.NORTH;
+				}
+				case 0x6A03 -> {
+					isSword = true;
+					where = ArenaSector.SOUTH;
+				}
+				case 0x6A04 -> {
+					isSword = true;
+					where = ArenaSector.EAST;
+				}
+				case 0x6A05 -> {
+					isSword = true;
+					where = ArenaSector.WEST;
+				}
+				case 0x69FD -> {
+					isSword = false;
+					where = ArenaSector.NORTH;
+				}
+				case 0x69FE -> {
+					isSword = false;
+					where = ArenaSector.SOUTH;
+				}
+				case 0x69FF -> {
+					isSword = false;
+					where = ArenaSector.EAST;
+				}
+				case 0x6A00 -> {
+					isSword = false;
+					where = ArenaSector.WEST;
+				}
+				default -> {
+					return;
+				}
+			}
+			context.accept(shift.getModified(Map.of("direction", where.getFriendlyName(), "cleavekb", isSword ? "Cleave" : "Knockback")));
 		}
 	}
 
@@ -107,7 +160,7 @@ public class P4S implements FilteredEventHandler {
 
 	@HandleEvents
 	public void pinaxSolved(EventContext context, PinaxSet event) {
-		String stackSpread = event.pinaxKnockbackProx.getAbility().getId() == 0x69D4 ? "Spread" : "Light Parties";
+		String stackSpread = event.pinaxStackSpread.getAbility().getId() == 0x69D4 ? "Spread" : "Light Parties";
 		String knockbackProx = event.pinaxKnockbackProx.getAbility().getId() == 0x69D6 ? "Knockback" : "Away";
 		ArenaSector badspot1 = arenaPos.forCombatant(event.pinaxKnockbackProx.getSource());
 		ArenaSector badspot2 = arenaPos.forCombatant(event.pinaxStackSpread.getSource());
@@ -146,5 +199,21 @@ public class P4S implements FilteredEventHandler {
 		}
 	}
 
+	@HandleEvents
+	public void actingRole(EventContext context, BuffApplied event) {
+		if (event.getTarget().isThePlayer()) {
+			int id = (int) event.getBuff().getId();
+			final String role;
+			switch (id) {
+				case 0xB6D -> role = "DPS";
+				case 0xB6E -> role = "Healer";
+				case 0xB6F -> role = "Tank";
+				default -> {
+					return;
+				}
+			}
+			context.accept(acting.getModified(Map.of("role", role)));
+		}
+	}
 
 }
