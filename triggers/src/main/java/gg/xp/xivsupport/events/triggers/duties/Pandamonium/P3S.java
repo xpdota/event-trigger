@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
@@ -70,6 +71,8 @@ public class P3S implements FilteredEventHandler {
 	private final ModifiableCallout deathsToll4 = new ModifiableCallout("Death's Toll (4)", "4 Stacks (Middle)");
 	private final ModifiableCallout deathsTollN = new ModifiableCallout("Death's Toll (?)", "{stacks} Stacks");
 
+	// TODO: test this, make sure it didn't break
+	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
 	private final XivState state;
 
@@ -216,7 +219,7 @@ public class P3S implements FilteredEventHandler {
 						tetheredSorted.sort(Comparator.comparing(XivEntity::getId));
 						bird = tetheredSorted.get(1);
 						otherPlayer = tetheredSorted.get(0);
-						String birdSpot = arenaDir(bird);
+						String birdSpot = arenaPos.forCombatant(bird).getFriendlyName();
 						context.accept(this.tetheredToBird.getModified(Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
 					}
 					else if (tetheredToPlayer.size() == 1) {
@@ -228,7 +231,7 @@ public class P3S implements FilteredEventHandler {
 							return;
 						}
 						bird = tetheredToOtherPlayer.iterator().next();
-						String birdSpot = arenaDir(bird);
+						String birdSpot = arenaPos.forCombatant(bird).getFriendlyName();
 						context.accept(this.tetheredToPlayer.getModified(Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
 					}
 					else {
@@ -238,48 +241,6 @@ public class P3S implements FilteredEventHandler {
 					birdTethers.clear();
 				}
 
-			}
-		}
-	}
-
-	// TODO: make a common place for this
-	private static String arenaDir(XivCombatant cbt) {
-		if (cbt.getPos() == null) {
-			return "?";
-		}
-		double x = cbt.getPos().getX();
-		double y = cbt.getPos().getY();
-		if (x > 108) {
-			if (y > 108) {
-				return "Southeast";
-			}
-			else if (y < 92) {
-				return "Northeast";
-			}
-			else {
-				return "East";
-			}
-		}
-		else if (x < 92) {
-			if (y > 108) {
-				return "Southwest";
-			}
-			else if (y < 92) {
-				return "Northwest";
-			}
-			else {
-				return "West";
-			}
-		}
-		else {
-			if (y > 108) {
-				return "South";
-			}
-			else if (y < 92) {
-				return "North";
-			}
-			else {
-				return "?";
 			}
 		}
 	}

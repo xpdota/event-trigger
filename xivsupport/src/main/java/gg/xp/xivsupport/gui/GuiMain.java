@@ -726,6 +726,9 @@ public class GuiMain {
 					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded, col -> {
 						col.setPreferredWidth(900);
 					}))
+					.addRightClickOption(CustomRightClickOption.forRow("Copy", LogEvent.class, tp -> {
+						GuiUtil.copyTextToClipboard(tp.getEncoded());
+					}))
 					.addDetailsColumn(StandardColumns.fieldName)
 					.addDetailsColumn(StandardColumns.fieldValue)
 					.addDetailsColumn(StandardColumns.identity)
