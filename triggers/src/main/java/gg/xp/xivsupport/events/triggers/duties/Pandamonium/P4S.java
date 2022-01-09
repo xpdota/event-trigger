@@ -9,13 +9,14 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
-import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.CombatantType;
+import gg.xp.xivsupport.models.Position;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
@@ -37,7 +38,8 @@ public class P4S implements FilteredEventHandler {
 	private final ModifiableCallout acting = new ModifiableCallout("Acting Role", "Acting {role}");
 
 	private final ModifiableCallout red = new ModifiableCallout("Red Marker", "Red");
-	private final ModifiableCallout purpleHealer = new ModifiableCallout("Purple Healer Marker", "Purple");
+	private final ModifiableCallout teal = new ModifiableCallout("Teal Marker", "Teal");
+	private final ModifiableCallout purple = new ModifiableCallout("Purple Marker", "Purple");
 	private final ModifiableCallout blue = new ModifiableCallout("Blue Marker", "Blue");
 
 	// TODO: tankbuster in/out, safe spots for act 1/2
@@ -228,8 +230,8 @@ public class P4S implements FilteredEventHandler {
 	private boolean isPhase2;
 
 	@HandleEvents
-	public void act2start(EventContext context, AbilityCastStart event) {
-		if (event.getAbility().getId() == 0x6EB4) {
+	public void phase2start(EventContext context, AbilityCastStart event) {
+		if (event.getAbility().getId() == 0x6A2D) {
 			firstHeadmark = null;
 			isPhase2 = true;
 		}
@@ -250,7 +252,7 @@ public class P4S implements FilteredEventHandler {
 
 
 	@HandleEvents
-	public void sequentialHeadmarkSolver(EventContext context, HeadMarkerEvent event) {
+	public void act2headmark(EventContext context, HeadMarkerEvent event) {
 		// This is done unconditionally to create the headmarker offset
 		int headmarkOffset = getHeadmarkOffset(event);
 		// But after that, we only want the actual player
@@ -262,8 +264,10 @@ public class P4S implements FilteredEventHandler {
 			case 0:
 				yield red;
 			case -1:
-				yield purpleHealer;
+				yield teal;
 			case -2:
+				yield purple;
+			case -3:
 				yield blue;
 			default:
 				yield null;
@@ -273,9 +277,26 @@ public class P4S implements FilteredEventHandler {
 		}
 	}
 
-	@HandleEvents
-	public void act2headmark(EventContext context, HeadMarkerEvent event) {
+	private TetherEvent lastTether;
 
+	@HandleEvents
+	public void tetherHandler(EventContext context, TetherEvent tether) {
+		// Ignore repeated tethers - we only care about first tether.
+		if (isPhase2 && tether.getId() == 173 && (lastTether == null || lastTether.getEffectiveTimeSince().toMillis() > 20_000)) {
+			lastTether = tether;
+			Position tetherPos = tether.getSource().getPos();
+			if (tetherPos == null) {
+				return;
+			}
+			// TODO: floating point equality memes
+			// TODO: weird tethers right before Wreath of Thorns cast start? This probably doesn't work right yet.
+			if (tetherPos.getX() == 100.0d) {
+				// east/west first
+			}
+			else if (tetherPos.getY() == 100.0d) {
+				// north/south first
+			}
+		}
 	}
 
 }
