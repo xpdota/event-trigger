@@ -8,6 +8,9 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.ArenaPos;
@@ -32,6 +35,12 @@ public class P4S implements FilteredEventHandler {
 	private final ModifiableCallout shift = new ModifiableCallout("Sword/Cape", "{direction} {cleavekb}");
 
 	private final ModifiableCallout acting = new ModifiableCallout("Acting Role", "Acting {role}");
+
+	private final ModifiableCallout red = new ModifiableCallout("Red Marker", "Red");
+	private final ModifiableCallout purpleHealer = new ModifiableCallout("Purple Healer Marker", "Purple");
+	private final ModifiableCallout blue = new ModifiableCallout("Blue Marker", "Blue");
+
+	// TODO: tankbuster in/out, safe spots for act 1/2
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
@@ -214,6 +223,59 @@ public class P4S implements FilteredEventHandler {
 			}
 			context.accept(acting.getModified(Map.of("role", role)));
 		}
+	}
+
+	private boolean isPhase2;
+
+	@HandleEvents
+	public void act2start(EventContext context, AbilityCastStart event) {
+		if (event.getAbility().getId() == 0x6EB4) {
+			firstHeadmark = null;
+			isPhase2 = true;
+		}
+	}
+
+	@HandleEvents
+	public void zoneChange(EventContext context, DutyCommenceEvent event) {
+		isPhase2 = false;
+	}
+
+	private Long firstHeadmark;
+	private int getHeadmarkOffset(HeadMarkerEvent event) {
+		if (firstHeadmark == null) {
+			firstHeadmark = event.getMarkerId();
+		}
+		return (int) (event.getMarkerId() - firstHeadmark);
+	}
+
+
+	@HandleEvents
+	public void sequentialHeadmarkSolver(EventContext context, HeadMarkerEvent event) {
+		// This is done unconditionally to create the headmarker offset
+		int headmarkOffset = getHeadmarkOffset(event);
+		// But after that, we only want the actual player
+		if (!event.getTarget().isThePlayer()) {
+			return;
+		}
+		// TODO: tank with no tether
+		ModifiableCallout call = switch (headmarkOffset) {
+			case 0:
+				yield red;
+			case -1:
+				yield purpleHealer;
+			case -2:
+				yield blue;
+			default:
+				yield null;
+		};
+		if (call != null) {
+			context.accept(call.getModified());
+		}
+	}
+
+	@HandleEvents
+	public void act2headmark(EventContext context, HeadMarkerEvent event) {
+
 	}
 
 }
