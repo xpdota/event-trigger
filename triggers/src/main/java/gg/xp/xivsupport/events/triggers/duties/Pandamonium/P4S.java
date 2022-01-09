@@ -8,6 +8,7 @@ import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
@@ -54,7 +55,11 @@ public class P4S implements FilteredEventHandler {
 	private final ModifiableCallout teal = new ModifiableCallout("Teal Marker (Other)", "Teal");
 	private final ModifiableCallout purple = new ModifiableCallout("Purple Marker (Other)", "Purple");
 	private final ModifiableCallout blue = new ModifiableCallout("Blue Marker (Other)", "Blue");
-	// TODO: tankbuster in/out, safe spots for act 1/2
+
+	private final ModifiableCallout finaleOrder = new ModifiableCallout("Finale Order", "Soak tower {number}");
+	private final ModifiableCallout finaleTower = new ModifiableCallout("Finale Tower", "Soak {towerspot} tower");
+
+	private final ModifiableCallout curtainOrder = new ModifiableCallout("Curtain Order", "{number} set");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
@@ -273,6 +278,9 @@ public class P4S implements FilteredEventHandler {
 		isPhase2 = false;
 		currentAct = Act.PRE;
 		firstHeadmark = null;
+		fleetingImpulseDebuffCount = 0;
+		myFleetingImpulseNumber = 0;
+		fleetingImpulseTetherCount = 0;
 	}
 
 	private Long firstHeadmark;
@@ -357,10 +365,10 @@ public class P4S implements FilteredEventHandler {
 			else if (event.getAbility().getId() == 0x6A27) {
 				Job playerJob = state.getPlayerJob();
 				if (playerJob != null && playerJob.isTank()) {
-					call = nearsightTank;
+					call = farsightTank;
 				}
 				else {
-					call = nearsightParty;
+					call = farsightParty;
 				}
 			}
 			else {
@@ -369,6 +377,55 @@ public class P4S implements FilteredEventHandler {
 			context.accept(call.getModified());
 		}
 	}
+
+	private int fleetingImpulseDebuffCount;
+	private int fleetingImpulseTetherCount;
+	private int myFleetingImpulseNumber;
+
+	@HandleEvents
+	public void fleetingImpulseCounter(EventContext context, AbilityUsedEvent event) {
+		if (event.getAbility().getId() == 0x6A1C) {
+			fleetingImpulseDebuffCount++;
+			if (event.getTarget().isThePlayer()) {
+				context.accept(finaleOrder.getModified(Map.of("number", fleetingImpulseDebuffCount)));
+				myFleetingImpulseNumber = fleetingImpulseDebuffCount;
+			}
+		}
+	}
+
+	@HandleEvents
+	public void fleetingImpulseTether(EventContext context, TetherEvent tether) {
+		// TODO: this should really just look at first tower and compute based off of that
+		if (currentAct == Act.FINALE && tether.getId() == 0xad) {
+			fleetingImpulseTetherCount++;
+			if (fleetingImpulseTetherCount == myFleetingImpulseNumber) {
+				ArenaSector arenaSector = arenaPos.forCombatant(tether.getSource());
+				context.accept(finaleTower.getModified(Map.of("towerspot", arenaSector.getFriendlyName())));
+			}
+		}
+	}
+
+	@HandleEvents
+	public void curtainCallNumber(EventContext context, BuffApplied event) {
+		if (currentAct == Act.CURTAIN && event.getBuff().getId() == 0xAF4 && event.getTarget().isThePlayer()) {
+			long dur = event.getInitialDuration().toSeconds();
+			final String number;
+			if (dur < 15) {
+				number = "First";
+			}
+			else if (dur < 25) {
+				number = "Second";
+			}
+			else if (dur < 35) {
+				number = "Third";
+			}
+			else {
+				number = "Last";
+			}
+			context.accept(curtainOrder.getModified(Map.of("number", number)));
+		}
+	}
+
 
 	@HandleEvents
 	public void actTracker(EventContext context, AbilityCastStart event) {
