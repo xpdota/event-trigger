@@ -170,24 +170,15 @@ public class P3S implements FilteredEventHandler {
 			return;
 		}
 		ModifiableCallout call = switch (headmarkOffset) {
-			case 0:
-				yield number1;
-			case 1:
-				yield number2;
-			case 2:
-				yield number3;
-			case 3:
-				yield number4;
-			case 4:
-				yield number5;
-			case 5:
-				yield number6;
-			case 6:
-				yield number7;
-			case 7:
-				yield number8;
-			default:
-				yield null;
+			case 0 -> number1;
+			case 1 -> number2;
+			case 2 -> number3;
+			case 3 -> number4;
+			case 4 -> number5;
+			case 5 -> number6;
+			case 6 -> number7;
+			case 7 -> number8;
+			default -> null;
 		};
 		if (call != null) {
 			context.accept(call.getModified());
@@ -237,7 +228,8 @@ public class P3S implements FilteredEventHandler {
 					else {
 						log.error("Expected to be tethered to one or two other entities, but was tethered to: {}", tetheredToPlayer);
 					}
-				} finally {
+				}
+				finally {
 					birdTethers.clear();
 				}
 

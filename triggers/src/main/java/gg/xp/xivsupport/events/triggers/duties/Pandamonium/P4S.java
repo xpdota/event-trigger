@@ -4,6 +4,7 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
@@ -37,14 +38,43 @@ public class P4S implements FilteredEventHandler {
 
 	private final ModifiableCallout acting = new ModifiableCallout("Acting Role", "Acting {role}");
 
-	private final ModifiableCallout red = new ModifiableCallout("Red Marker", "Red");
-	private final ModifiableCallout teal = new ModifiableCallout("Teal Marker", "Teal");
-	private final ModifiableCallout purple = new ModifiableCallout("Purple Marker", "Purple");
-	private final ModifiableCallout blue = new ModifiableCallout("Blue Marker", "Blue");
+	private final ModifiableCallout nearsightParty = new ModifiableCallout("Nearsight (Non-Tank)", "Party Out");
+	private final ModifiableCallout nearsightTank = new ModifiableCallout("Nearsight (Tank)", "Tanks In");
+	private final ModifiableCallout farsightParty = new ModifiableCallout("Farsight (Non-Tank)", "Party In");
+	private final ModifiableCallout farsightTank = new ModifiableCallout("Farsight (Tank)", "Tanks Out");
 
+	private final ModifiableCallout redAct2 = new ModifiableCallout("Red Marker (Act 2)", "Red");
+	private final ModifiableCallout tealAct2 = new ModifiableCallout("Teal Marker (Act 2)", "Teal");
+	private final ModifiableCallout purpleAct2 = new ModifiableCallout("Purple Marker (Act 2)", "Purple");
+
+	private final ModifiableCallout purpleAct4 = new ModifiableCallout("Purple Marker (Act 4)", "Purple");
+	private final ModifiableCallout blueAct4 = new ModifiableCallout("Blue Marker (Act 4)", "Blue");
+
+	private final ModifiableCallout red = new ModifiableCallout("Red Marker (Other)", "Red");
+	private final ModifiableCallout teal = new ModifiableCallout("Teal Marker (Other)", "Teal");
+	private final ModifiableCallout purple = new ModifiableCallout("Purple Marker (Other)", "Purple");
+	private final ModifiableCallout blue = new ModifiableCallout("Blue Marker (Other)", "Blue");
 	// TODO: tankbuster in/out, safe spots for act 1/2
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
+
+	public P4S(XivState state) {
+		this.state = state;
+	}
+
+	private enum Act {
+		PRE,
+		ONE,
+		TWO,
+		THREE,
+		FOUR,
+		FINALE,
+		CURTAIN
+	}
+
+	private Act currentAct = Act.PRE;
+
+	private final XivState state;
 
 	@Override
 	public boolean enabled(EventContext context) {
@@ -53,6 +83,7 @@ public class P4S implements FilteredEventHandler {
 
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
+		// TODO: tb in/out
 		if (event.getSource().getType() == CombatantType.NPC) {
 			long id = event.getAbility().getId();
 			ModifiableCallout call;
@@ -229,20 +260,23 @@ public class P4S implements FilteredEventHandler {
 
 	private boolean isPhase2;
 
+	// Resetting HM counter on phase 2 since there are other HMs in p1
 	@HandleEvents
 	public void phase2start(EventContext context, AbilityCastStart event) {
 		if (event.getAbility().getId() == 0x6A2D) {
-			firstHeadmark = null;
 			isPhase2 = true;
 		}
 	}
 
 	@HandleEvents
-	public void zoneChange(EventContext context, DutyCommenceEvent event) {
+	public void reset(EventContext context, DutyCommenceEvent event) {
 		isPhase2 = false;
+		currentAct = Act.PRE;
+		firstHeadmark = null;
 	}
 
 	private Long firstHeadmark;
+
 	private int getHeadmarkOffset(HeadMarkerEvent event) {
 		if (firstHeadmark == null) {
 			firstHeadmark = event.getMarkerId();
@@ -260,17 +294,25 @@ public class P4S implements FilteredEventHandler {
 			return;
 		}
 		// TODO: tank with no tether
-		ModifiableCallout call = switch (headmarkOffset) {
-			case 0:
-				yield red;
-			case -1:
-				yield teal;
-			case -2:
-				yield purple;
-			case -3:
-				yield blue;
-			default:
-				yield null;
+		ModifiableCallout call = switch (currentAct) {
+			case TWO -> switch (headmarkOffset) {
+				case 0 -> redAct2;
+				case -1 -> tealAct2;
+				case -2 -> purpleAct2;
+				default -> null;
+			};
+			case FOUR -> switch (headmarkOffset) {
+				case -2 -> purpleAct4;
+				case -3 -> blueAct4;
+				default -> null;
+			};
+			default -> switch (headmarkOffset) {
+				case 0 -> red;
+				case -1 -> teal;
+				case -2 -> purple;
+				case -3 -> blue;
+				default -> null;
+			};
 		};
 		if (call != null) {
 			context.accept(call.getModified());
@@ -297,6 +339,51 @@ public class P4S implements FilteredEventHandler {
 				// north/south first
 			}
 		}
+	}
+
+	@HandleEvents
+	public void nearFarSight(EventContext context, AbilityCastStart event) {
+		if (event.getSource().getType() == CombatantType.NPC) {
+			final ModifiableCallout call;
+			if (event.getAbility().getId() == 0x6A26) {
+				Job playerJob = state.getPlayerJob();
+				if (playerJob != null && playerJob.isTank()) {
+					call = nearsightTank;
+				}
+				else {
+					call = nearsightParty;
+				}
+			}
+			else if (event.getAbility().getId() == 0x6A27) {
+				Job playerJob = state.getPlayerJob();
+				if (playerJob != null && playerJob.isTank()) {
+					call = nearsightTank;
+				}
+				else {
+					call = nearsightParty;
+				}
+			}
+			else {
+				return;
+			}
+			context.accept(call.getModified());
+		}
+	}
+
+	@HandleEvents
+	public void actTracker(EventContext context, AbilityCastStart event) {
+		if (event.getSource().getType() == CombatantType.NPC) {
+			int id = (int) event.getAbility().getId();
+			switch (id) {
+				case 0x6A0C -> currentAct = Act.ONE;
+				case 0x6EB4 -> currentAct = Act.TWO;
+				case 0x6EB5 -> currentAct = Act.THREE;
+				case 0x6EB6 -> currentAct = Act.FOUR;
+				case 0x6EB7 -> currentAct = Act.FINALE;
+				case 0x6A36 -> currentAct = Act.CURTAIN;
+			}
+		}
+
 	}
 
 }
