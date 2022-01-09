@@ -32,6 +32,7 @@ public class P4S implements FilteredEventHandler {
 	private final ModifiableCallout decollation = new ModifiableCallout("Decollation", "Raidwide");
 	private final ModifiableCallout bloodrake = new ModifiableCallout("Bloodrake", "Half Raidwide");
 	private final ModifiableCallout evisceration = new ModifiableCallout("Elegant Evisceration", "Tankbuster on {target}");
+	private final ModifiableCallout searing = new ModifiableCallout("Searing Stream", "Raidwide");
 
 	private final ModifiableCallout pinax = new ModifiableCallout("Pinax Mechanic + Safespot", "{mech1} into {mech2}, {safespot} safe");
 
@@ -267,8 +268,9 @@ public class P4S implements FilteredEventHandler {
 
 	// Resetting HM counter on phase 2 since there are other HMs in p1
 	@HandleEvents
-	public void phase2start(EventContext context, AbilityCastStart event) {
+	public void searing(EventContext context, AbilityCastStart event) {
 		if (event.getAbility().getId() == 0x6A2D) {
+			context.accept(searing.getModified());
 			isPhase2 = true;
 		}
 	}
