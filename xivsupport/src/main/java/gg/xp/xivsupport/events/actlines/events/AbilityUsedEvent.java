@@ -20,14 +20,16 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	private final List<AbilityEffect> effects;
 	private final long sequenceId;
 	private final long targetIndex;
+	private final long numberOfTargets;
 
-	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId, long targetIndex) {
+	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId, long targetIndex, long numberOfTargets) {
 		this.ability = ability;
 		this.caster = caster;
 		this.target = target;
 		this.effects = effects;
 		this.sequenceId = sequenceId;
 		this.targetIndex = targetIndex;
+		this.numberOfTargets = numberOfTargets;
 	}
 
 	@Override
@@ -62,5 +64,13 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 
 	public long getTargetIndex() {
 		return targetIndex;
+	}
+
+	public long getNumberOfTargets() {
+		return numberOfTargets;
+	}
+
+	public boolean isLastTarget() {
+		return targetIndex >= numberOfTargets - 1;
 	}
 }

@@ -4,6 +4,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
@@ -45,6 +46,14 @@ public class TimelineManager {
 		TimelineProcessor currentTimeline = this.currentTimeline;
 		if (currentTimeline != null) {
 			currentTimeline.processActLine(event);
+		}
+	}
+
+	@HandleEvents(order = 40_000)
+	public void newPull(EventContext context, PullStartedEvent event) {
+		TimelineProcessor currentTimeline = this.currentTimeline;
+		if (currentTimeline != null) {
+			currentTimeline.reset();
 		}
 	}
 

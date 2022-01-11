@@ -36,7 +36,8 @@ public class CdTrackerTest {
 			theBoss,
 			Collections.singletonList(new StatusAppliedEffect(1193, true)),
 			123,
-			0
+			0,
+			1
 	);
 	private final AbilityUsedEvent reprisalUsedByPcSecondTarget = new AbilityUsedEvent(
 			new XivAbility(cd.getPrimaryAbilityId(), "Reprisal"),
@@ -44,6 +45,7 @@ public class CdTrackerTest {
 			theBoss,
 			Collections.singletonList(new StatusAppliedEffect(1193, true)),
 			123,
+			1,
 			1
 	);
 	private final AbilityUsedEvent reprisalUsedByPartyMember = new AbilityUsedEvent(
@@ -52,7 +54,8 @@ public class CdTrackerTest {
 			theBoss,
 			Collections.singletonList(new StatusAppliedEffect(1193, true)),
 			123,
-			0
+			0,
+			1
 	);
 	private final AbilityUsedEvent reprisalUsedByNonMember = new AbilityUsedEvent(
 			new XivAbility(cd.getPrimaryAbilityId(), "Reprisal"),
@@ -60,7 +63,8 @@ public class CdTrackerTest {
 			theBoss,
 			Collections.singletonList(new StatusAppliedEffect(1193, true)),
 			123,
-			0
+			0,
+			1
 	);
 
 

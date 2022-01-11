@@ -203,7 +203,7 @@ public class SequenceIdTracker {
 		}
 		if (event.getEffects().stream().noneMatch(effect -> {
 			AbilityEffectType type = effect.getEffectType();
-			return type == AbilityEffectType.DAMAGE || type == AbilityEffectType.APPLY_STATUS || type == AbilityEffectType.BLOCKED || type == AbilityEffectType.PARRIED;
+			return type == AbilityEffectType.DAMAGE || type == AbilityEffectType.APPLY_STATUS || type == AbilityEffectType.BLOCKED || type == AbilityEffectType.PARRIED || type == AbilityEffectType.HEAL;
 		})) {
 			return false;
 		}

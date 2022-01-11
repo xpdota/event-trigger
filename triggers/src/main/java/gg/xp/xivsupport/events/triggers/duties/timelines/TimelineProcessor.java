@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.duties.timelines;
 
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,11 +13,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class TimelineProcessor {
+public final class TimelineProcessor {
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineProcessor.class);
 	private final List<RawTimelineEntry> entries;
-	private TimelineSync lastSync;
+	private @Nullable TimelineSync lastSync;
 
 	private record TimelineSync(ACTLogLineEvent line, double lastSyncTime, RawTimelineEntry original) {}
 
@@ -78,4 +79,9 @@ public class TimelineProcessor {
 	private boolean isLastSync(RawTimelineEntry entry) {
 		return lastSync != null && lastSync.original == entry;
 	}
+
+	public void reset() {
+		lastSync = null;
+	}
+
 }
