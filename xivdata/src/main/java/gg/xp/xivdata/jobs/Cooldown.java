@@ -156,7 +156,7 @@ public enum Cooldown {
 	WanderersMinuet(BRD, true, 120.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
 	BattleVoice(BRD, true, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 0x8d),
 	// TODO need buff ID
-	RadiantFinale(BRD, true, 110.0, "Radiant Finale", CooldownType.PARTY_BUFF, 25785),
+	RadiantFinale(BRD, true, 110.0, "Radiant Finale", CooldownType.PARTY_BUFF, 0x64B9, 0xB94),
 	Tactician(MCH, true, 120.0, "Tactician", CooldownType.PARTY_MIT, 0x41f9, 1951, 2177);
 
 
