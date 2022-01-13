@@ -16,8 +16,11 @@ public class JavaPanel extends TitleBorderFullsizePanel {
 		SingleFlatFileProvider provider = new SingleFlatFileProvider(Paths.get(Platform.getInstallDir().toString(), "args.txt").toFile());
 		setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0;
 		c.gridy = 0;
 		c.weighty = 0;
+		c.weightx = 1;
+		c.gridwidth = GridBagConstraints.REMAINDER;
 		{
 			JLabel label = new JLabel("Java Command Line Options:");
 			add(label, c);
@@ -25,7 +28,6 @@ public class JavaPanel extends TitleBorderFullsizePanel {
 				JTextField textbox = new JTextField();
 				label.setLabelFor(textbox);
 				textbox.setPreferredSize(new Dimension(textbox.getMaximumSize().width, textbox.getPreferredSize().height));
-//				textbox.setText("Foo");
 				textbox.setText(provider.read());
 				textbox.getDocument().addDocumentListener(new DocumentListener() {
 					// TODO: make a thing for these
@@ -45,8 +47,10 @@ public class JavaPanel extends TitleBorderFullsizePanel {
 					}
 				});
 				c.gridy++;
+				c.gridwidth = 1;
 				add(textbox, c);
 				c.gridy++;
+				c.gridwidth = GridBagConstraints.REMAINDER;
 				JLabel label2 = new JLabel("WARNING: This can break things if you set bad values. These are stored in args.txt in your install dir.");
 				add(label2, c);
 			}
