@@ -110,6 +110,24 @@
 
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-config-file</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/classes</directory>
+                                    <includes>args.txt</includes>
+                                </resource>
+                            </resources>
+
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -172,6 +190,7 @@
                     <jre>
                         <path>jre</path>
                         <minVersion>${java.version}</minVersion>
+                        <opts><opt>@args.txt</opt></opts>
                     </jre>
                     <headerType>gui</headerType>
                     <jar>./launcher-${project.version}.jar</jar>

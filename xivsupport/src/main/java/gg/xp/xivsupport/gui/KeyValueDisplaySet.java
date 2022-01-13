@@ -17,16 +17,24 @@ public class KeyValueDisplaySet extends JPanel implements Refreshable {
 		super();
 		setLayout(new GridBagLayout());
 		displayed = new ArrayList<>(keyValues);
-		int row = 0;
 		GridBagConstraints c = new GridBagConstraints();
 		c.ipadx = 2;
 		c.ipady = 2;
+		c.gridy = 0;
+		c.gridx = 0;
 		for (KeyValuePairDisplay<?, ?> d : displayed) {
 			c.gridx = 0;
-			c.gridy = row++;
+			c.weightx = 0.1;
+			add(Box.createHorizontalGlue(), c);
 			add(d.getLabel(), c);
+			add(Box.createHorizontalGlue(), c);
+			c.weightx = 1;
 			c.gridx = 1;
-			add(d.getComponent(), c);
+			Component component = d.getComponent();
+			add(component, c);
+			c.gridy++;
+			c.weightx = 0.1;
+			add(Box.createHorizontalGlue(), c);
 		}
 		refresh();
 		this.setMaximumSize(getPreferredSize());
