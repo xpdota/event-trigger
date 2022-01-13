@@ -324,7 +324,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			long timeAfter = System.nanoTime();
 			long delta = timeAfter - timeBefore;
 			// TODO find good value for this - 100 might be a little low
-			if (delta > 500_000) {
+			if (delta > 1_000_000) {
 				log.warn("Slow getValueAt performance: took {}ns to get value at row {} col {}", delta, rowIndex, columnIndex);
 			}
 			return value;

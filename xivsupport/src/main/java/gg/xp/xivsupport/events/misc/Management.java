@@ -47,7 +47,7 @@ public class Management {
 
 	private static String makeHeapDumpFilename() {
 		String template = "heapdump%s.hprof";
-		return template.formatted(System.currentTimeMillis());
+		return Platform.getInstallDir() + File.separator + template.formatted(System.currentTimeMillis());
 
 	}
 
@@ -55,8 +55,8 @@ public class Management {
 		log.info("Heap dump requested");
 		try {
 			String heapDumpFileName = makeHeapDumpFilename();
-			HeapDumper.dumpHeap("./" + heapDumpFileName, true);
-			return "Heap dumped to " + Platform.getInstallDir() + File.separator + heapDumpFileName;
+			HeapDumper.dumpHeap(heapDumpFileName, true);
+			return "Heap dumped to " + heapDumpFileName;
 		}
 		catch (Throwable t) {
 			log.error("Error dumping heap", t);

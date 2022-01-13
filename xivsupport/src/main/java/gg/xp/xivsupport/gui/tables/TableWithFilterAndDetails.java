@@ -236,7 +236,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			int sizeAfter = dataAfter.size();
 			if (sizeAfter == 0 || sizeBefore == 0) {
 				dataFiltered = doFiltering(dataAfter);
-				// A full refresh technically isn't always needed here, but it doesn't really and simplifies the code
+				// A full refresh technically isn't always needed here, but it doesn't really hurt and simplifies the code
 				refreshNeeded = RefreshType.FULL;
 				return;
 			}
@@ -251,6 +251,10 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 					dataFiltered.addAll(doFiltering(newData));
 					refreshNeeded = RefreshType.APPEND;
 				}
+			}
+			else {
+				dataFiltered = doFiltering(dataAfter);
+				refreshNeeded = RefreshType.FULL;
 			}
 		}
 		else {
