@@ -84,10 +84,19 @@ public class RawEventStorage {
 		}
 	}
 
+	@HandleEvents
+	public void compressEvents(EventContext context, Event event) {
+		exs.submit(() -> {
+			compressEvent(event);
+		});
+	}
+
 	@LiveOnly
 	@HandleEvents(order = Integer.MAX_VALUE)
 	public void writeEventToDisk(EventContext context, Event event) {
-		exs.submit(() -> this.saveEventToDisk(event));
+		exs.submit(() -> {
+			this.saveEventToDisk(event);
+		});
 	}
 
 	@HandleEvents
@@ -107,10 +116,13 @@ public class RawEventStorage {
 		return maxEventsStored;
 	}
 
-	private void saveEventToDisk(Event event) {
+	private static void compressEvent(Event event) {
 		if (event instanceof Compressible) {
 			((Compressible) event).compress();
 		}
+	}
+
+	private void saveEventToDisk(Event event) {
 		if (event.shouldSave() && allowSave && saveToDisk.get()) {
 			try {
 				if (eventSaveStream == null) {

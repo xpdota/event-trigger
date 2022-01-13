@@ -2,12 +2,13 @@ package gg.xp.xivsupport.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
+import gg.xp.xivsupport.persistence.Compressible;
 
 import java.io.Serial;
 import java.time.ZonedDateTime;
 
 @SystemEvent
-public class ACTLogLineEvent extends BaseEvent {
+public class ACTLogLineEvent extends BaseEvent implements Compressible {
 
 	@Serial
 	private static final long serialVersionUID = -5255204546093791693L;
@@ -86,5 +87,19 @@ public class ACTLogLineEvent extends BaseEvent {
 			lineBuilder.append(":").append(rawField);
 		}
 		return lineBuilder.toString();
+	}
+
+	@Override
+	public void compress() {
+		for (int i = 0; i < rawFields.length; i++) {
+			if (rawFields[i].length() <= 16) {
+				rawFields[i] = rawFields[i].intern();
+			}
+		}
+	}
+
+	@Override
+	public void decompress() {
+		// Nothing to do
 	}
 }
