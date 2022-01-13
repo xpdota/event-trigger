@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tabs;
 
+import gg.xp.xivsupport.events.misc.Management;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.Stats;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
@@ -9,6 +10,7 @@ import gg.xp.xivsupport.gui.KeyValuePairDisplay;
 import gg.xp.xivsupport.gui.Refreshable;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapperPanel;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
 import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
@@ -54,31 +56,31 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 			List<KeyValuePairDisplay<?, ?>> leftItems = List.of(
 					new KeyValuePairDisplay<>(
 							"Duration",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> stats.getDuration().toString(),
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Total",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> String.valueOf(stats.getTotal()),
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Primo",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> String.valueOf(stats.getPrimogenitor()),
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Synthetic",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> String.valueOf(stats.getSynthetic()),
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"In-Memory",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> String.valueOf(storage.getEvents().size()),
 							JTextArea::setText
 					)
@@ -96,31 +98,31 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 			List<KeyValuePairDisplay<?, ?>> memoryItems = List.of(
 					new KeyValuePairDisplay<>(
 							"Heap Used",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> (memoryMXBean.getHeapMemoryUsage().getUsed() >> 20) + "M",
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Heap Committed",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> (memoryMXBean.getHeapMemoryUsage().getCommitted() >> 20) + "M",
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Heap Max",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> (memoryMXBean.getHeapMemoryUsage().getMax() >> 20) + "M",
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Other Used",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> (memoryMXBean.getNonHeapMemoryUsage().getUsed() >> 20) + "M",
 							JTextArea::setText
 					),
 					new KeyValuePairDisplay<>(
 							"Other Committed",
-							new JTextArea(1, 15),
+							makeTextArea(),
 							() -> (memoryMXBean.getNonHeapMemoryUsage().getCommitted() >> 20) + "M",
 							JTextArea::setText
 					)
@@ -134,6 +136,14 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 			memoryPanel.add(new WrapperPanel(forceGcButton));
 			mem = new KeyValueDisplaySet(memoryItems);
 			memoryPanel.add(mem);
+			Management management = container.getComponent(Management.class);
+			memoryPanel.add(new WrapperPanel(new BooleanSettingGui(management.getGcOnNewPullEnabled(), "GC on new pull").getComponent()));
+			JButton heapDumpButton = new JButton("Dump Heap");
+			memoryPanel.add(new WrapperPanel(heapDumpButton));
+			heapDumpButton.addActionListener(l -> {
+				String body = management.dumpHeap();
+				JOptionPane.showMessageDialog(this, body, "Heap Dump", JOptionPane.INFORMATION_MESSAGE);
+			});
 			memoryPanel.setPreferredSize(new Dimension(300, 300));
 			c.gridx++;
 			statsAndMemory.add(memoryPanel, c);
@@ -149,7 +159,7 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 			c.gridy++;
 			c.weighty = 1;
 			statsAndMemory.add(diskStoragePanel, c);
-			addTab("Stats and Memory", statsAndMemory);
+			addTab("System", statsAndMemory);
 		}
 
 		{
@@ -166,7 +176,18 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 		{
 			addTab("Updates", new UpdatesPanel());
 		}
+		{
+			addTab("Java", new JavaPanel());
+		}
 		refresh();
+		new Timer(5000, l -> this.refresh()).start();
+	}
+
+	private JTextArea makeTextArea() {
+//		JTextArea textArea = new ReadOnlyText("");
+		JTextArea textArea = new JTextArea(1, 15);
+		textArea.setPreferredSize(textArea.getPreferredSize());
+		return textArea;
 	}
 
 	@Override
