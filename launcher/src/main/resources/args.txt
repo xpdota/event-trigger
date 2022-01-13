@@ -1,1 +1,1 @@
--Xmx2048m -XX:MaxHeapFreeRatio=30 -XX:MinHeapFreeRatio=10 -XX:+UseStringDeduplication
+-Xmx2048m -XX:MaxHeapFreeRatio=30 -XX:MinHeapFreeRatio=10
