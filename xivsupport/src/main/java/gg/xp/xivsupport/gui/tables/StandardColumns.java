@@ -31,6 +31,7 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.io.Serial;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -78,7 +79,7 @@ public final class StandardColumns {
 	});
 
 	public CustomColumn<XivCombatant> statusEffectsColumn() {
-		return new CustomColumn<>("Statuses", entity -> statuses.statusesOnTarget(entity).stream().map(BuffApplied::getBuff).collect(Collectors.toList()), c -> {
+		return new CustomColumn<>("Statuses", statuses::statusesOnTarget, c -> {
 			c.setCellRenderer(new StatusEffectListRenderer());
 			c.setPreferredWidth(300);
 		});

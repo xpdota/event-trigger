@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,9 +47,7 @@ public class PartyOverlay extends XivOverlay {
 		c.setPreferredWidth(125);
 	});
 	private CustomColumn<XivCombatant> statusEffectsColumn() {
-		return new CustomColumn<>("Statuses", entity -> statuses.statusesOnTarget(entity).stream()
-				.map(BuffApplied::getBuff)
-				.collect(Collectors.toList()), c -> {
+		return new CustomColumn<>("Statuses", entity -> new ArrayList<>(statuses.statusesOnTarget(entity)), c -> {
 			c.setCellRenderer(new StatusEffectListRenderer());
 			c.setPreferredWidth(300);
 		});

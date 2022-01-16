@@ -1,6 +1,7 @@
 package gg.xp.xivdata;
 
 import gg.xp.xivdata.jobs.ActionIcon;
+import gg.xp.xivdata.jobs.StatusEffectCsvData;
 import gg.xp.xivdata.jobs.StatusEffectIcon;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -213,15 +214,15 @@ public class MakeEverything {
 		// STATUS EFFECTS
 		{
 			StatusEffectIcon.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
-			Map<Long, Long> statusCsvMap = StatusEffectIcon.getCsvValues();
+			Map<Long, StatusEffectCsvData> statusCsvMap = StatusEffectIcon.getCsvValues();
 			List<Long> statusIcons;
 			// TODO: it looks like the way status effects work is that there is one icon for each stack value.
 			// Maximum stack amounts are defined in Status.csv. Maybe it's time to improve the CSV reading?
 			// There's also fields for whether it can be dispelled or not.
 			{
-				statusIcons = statusCsvMap.values().stream().distinct().toList();
+				statusIcons = statusCsvMap.values().stream().flatMap((data) -> data.getAllIconIds().stream()).distinct().toList();
 				System.out.println("Number of status effect icons: " + statusIcons.size());
-				maker.extractIconRange(statusCsvMap.values());
+				maker.extractIconRange(statusIcons);
 				System.out.println("Copying Icons");
 				List<String> statusIconDir = List.of("xiv", "statuseffect", "icons");
 				statusIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, statusIconDir));

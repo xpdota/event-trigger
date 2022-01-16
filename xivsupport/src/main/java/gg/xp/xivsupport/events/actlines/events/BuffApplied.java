@@ -17,7 +17,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	private final Duration duration;
 	private final XivCombatant source;
 	private final XivCombatant target;
-	private final long stacks;
+	private final long rawStacks;
 	private final boolean isPreApp;
 	private boolean isRefresh;
 
@@ -36,7 +36,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		this.duration = Duration.ofMillis((long) (durationRaw * 1000.0));
 		this.source = source;
 		this.target = target;
-		this.stacks = stacks;
+		this.rawStacks = stacks;
 		this.isPreApp = isPreApp;
 	}
 
@@ -82,8 +82,18 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		return target;
 	}
 
+	public long getRawStacks() {
+		return rawStacks;
+	}
+
+	@Override
 	public long getStacks() {
-		return stacks;
+		if (rawStacks >= 0 && rawStacks <= 16) {
+			return rawStacks;
+		}
+		else {
+			return 0;
+		}
 	}
 
 	public boolean isRefresh() {
@@ -105,7 +115,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 				", duration=" + duration +
 				", source=" + source +
 				", target=" + target +
-				", stacks=" + stacks +
+				", stacks=" + rawStacks +
 				", isRefresh=" + isRefresh +
 				'}';
 	}

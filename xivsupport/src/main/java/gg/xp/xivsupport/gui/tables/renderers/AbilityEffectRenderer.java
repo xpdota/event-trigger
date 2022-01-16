@@ -72,12 +72,12 @@ public class AbilityEffectRenderer {
 		}
 		else if (value instanceof StatusAppliedEffect) {
 			text = "+";
-			icon = StatusEffectIcon.forId(((StatusAppliedEffect) value).getStatus().getId());
+			icon = StatusEffectIcon.forId(((StatusAppliedEffect) value).getStatus().getId(), 1);
 			textOnRight = true;
 		}
 		else if (value instanceof StatusNoEffect) {
 			text = "X";
-			icon = StatusEffectIcon.forId(((StatusNoEffect) value).getStatus().getId());
+			icon = StatusEffectIcon.forId(((StatusNoEffect) value).getStatus().getId(), 1);
 			textOnRight = true;
 		}
 		else {

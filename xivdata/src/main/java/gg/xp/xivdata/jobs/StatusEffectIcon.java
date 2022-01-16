@@ -1,5 +1,6 @@
 package gg.xp.xivdata.jobs;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,7 @@ public class StatusEffectIcon implements HasIconURL {
 
 	private static boolean loaded;
 	private static final Map<Long, StatusEffectIcon> cache = new HashMap<>();
-	private static final Map<Long, Long> csvValues = new HashMap<>();
+	private static final Map<Long, StatusEffectCsvData> csvValues = new HashMap<Long, StatusEffectCsvData>();
 
 	private static void readCsv() {
 		readCsv(() -> ReadCsv.cellsFromResource("/xiv/statuseffect/Status.csv"));
@@ -43,10 +44,13 @@ public class StatusEffectIcon implements HasIconURL {
 					return;
 				}
 				String rawImg = row[3];
+				String stacks = row[5];
 				if (rawImg.isEmpty()) {
 					return;
 				}
 				long imageId;
+				long maxStacks;
+				maxStacks = Long.parseLong(stacks);
 				try {
 					imageId = Long.parseLong(rawImg);
 				}
@@ -62,7 +66,7 @@ public class StatusEffectIcon implements HasIconURL {
 					}
 				}
 				if (imageId != 0) {
-					csvValues.put(id, imageId);
+					csvValues.put(id, new StatusEffectCsvData(imageId, maxStacks));
 				}
 			});
 		}
@@ -83,7 +87,7 @@ public class StatusEffectIcon implements HasIconURL {
 		csvValues.values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
 	}
 
-	public static Map<Long, Long> getCsvValues() {
+	public static Map<Long, StatusEffectCsvData> getCsvValues() {
 		if (!loaded) {
 			readCsv();
 		}
@@ -106,12 +110,17 @@ public class StatusEffectIcon implements HasIconURL {
 		}
 	}
 
-	public static StatusEffectIcon forId(long id) {
+	public static @Nullable StatusEffectIcon forId(long id, long stacks) {
 		if (!loaded) {
 			readCsv();
 		}
+		StatusEffectCsvData iconId = csvValues.get(id);
+		if (iconId == null) {
+			return null;
+		}
+		long effectiveIconId = iconId.iconForStackCount(stacks);
 		StatusEffectIcon result = cache.computeIfAbsent(id, missingId -> {
-			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/statuseffect/icons/%06d_hr1.png", csvValues.get(missingId)));
+			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/statuseffect/icons/%06d_hr1.png", effectiveIconId));
 			if (resource == null) {
 				return NULL_MARKER;
 			}

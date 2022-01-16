@@ -284,6 +284,7 @@ public class FieldMapper<K extends Enum<K>> {
 				case 20: //14
 					out.add(new StatusNoEffect(value >> 16));
 					break;
+					// 1d,0x60000 = reflect?
 				case 27:
 					// Not sure - seems to do "combo" as well as certain boss mechanics like "Subtract" from the math boss
 					break;
