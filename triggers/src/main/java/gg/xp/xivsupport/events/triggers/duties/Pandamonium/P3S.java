@@ -34,7 +34,8 @@ public class P3S implements FilteredEventHandler {
 
 	private final ModifiableCallout scorchedExaltation = new ModifiableCallout("Scorched Exaltation", "Raidwide");
 	private final ModifiableCallout heatOfCondemnation = new ModifiableCallout("Heat of Condemnation", "Tank Tethers");
-	private final ModifiableCallout deadRebirth = new ModifiableCallout("Dead Rebirth", "Big Aoe");
+	private final ModifiableCallout deadRebirth = new ModifiableCallout("Dead Rebirth", "Big Raidwide");
+	private final ModifiableCallout firestorms = new ModifiableCallout("Firestorms of Asphodelus", "Big Raidwide");
 
 	private final ModifiableCallout darkenedFire = new ModifiableCallout("Darkened Fire", "Partners");
 	private final ModifiableCallout number1 = new ModifiableCallout("#1", "1");
@@ -93,6 +94,9 @@ public class P3S implements FilteredEventHandler {
 			}
 			else if (id == 0x66E4) {
 				call = deadRebirth;
+			}
+			else if (id == 0x66F0) {
+				call = firestorms;
 			}
 			else if (id == 0x6702) {
 				call = rightWingBad;
