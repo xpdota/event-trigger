@@ -23,7 +23,7 @@ public class StatusEffectIcon implements HasIconURL {
 
 	private static boolean loaded;
 	private static final Map<Long, StatusEffectIcon> cache = new HashMap<>();
-	private static final Map<Long, StatusEffectCsvData> csvValues = new HashMap<Long, StatusEffectCsvData>();
+	private static final Map<Long, StatusEffectCsvData> csvValues = new HashMap<>();
 
 	private static void readCsv() {
 		readCsv(() -> ReadCsv.cellsFromResource("/xiv/statuseffect/Status.csv"));
@@ -119,8 +119,8 @@ public class StatusEffectIcon implements HasIconURL {
 			return null;
 		}
 		long effectiveIconId = iconId.iconForStackCount(stacks);
-		StatusEffectIcon result = cache.computeIfAbsent(id, missingId -> {
-			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/statuseffect/icons/%06d_hr1.png", effectiveIconId));
+		StatusEffectIcon result = cache.computeIfAbsent(effectiveIconId, missingId -> {
+			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/statuseffect/icons/%06d_hr1.png", missingId));
 			if (resource == null) {
 				return NULL_MARKER;
 			}

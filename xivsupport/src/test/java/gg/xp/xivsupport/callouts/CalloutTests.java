@@ -37,6 +37,12 @@ public class CalloutTests {
 		{
 			CalloutEvent modified = mc.getModified();
 			Assert.assertEquals(modified.getCallText(), "123");
+			Assert.assertEquals(modified.getVisualText(), "123");
+		}
+		mch.getSameText().set(false);
+		{
+			CalloutEvent modified = mc.getModified();
+			Assert.assertEquals(modified.getCallText(), "123");
 			Assert.assertEquals(modified.getVisualText(), "456");
 		}
 		mch.getEnableTts().set(false);

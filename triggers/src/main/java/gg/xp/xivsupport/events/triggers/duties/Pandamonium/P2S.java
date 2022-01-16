@@ -11,6 +11,8 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +42,12 @@ public class P2S implements FilteredEventHandler {
 	private final ModifiableCallout shockwave = new ModifiableCallout("Shockwave", "Knockback");
 	private final ModifiableCallout sewageDeluge = new ModifiableCallout("Sewage Deluge", "Raidwide");
 	private final ModifiableCallout murkyDepths = new ModifiableCallout("Murky Depths", "Raidwide");
+	private final ModifiableCallout taintedFlood = new ModifiableCallout("Tainted Flood", "Spread");
+	private final ModifiableCallout winged = new ModifiableCallout("Winged Cataract", "Go In Front of Head");
+	private final ModifiableCallout spoken = new ModifiableCallout("Spoken Cataract", "Go Behind Head");
+
+	private final ModifiableCallout dissociationWestSafe = new ModifiableCallout("Dissociation (W safe)", "West Safe");
+	private final ModifiableCallout dissociationEastSafe = new ModifiableCallout("Dissociation (E safe)", "East Safe");
 
 	private final ModifiableCallout stack = new ModifiableCallout("Mark of the Depths", "Stack on {target}");
 	private final ModifiableCallout tides = new ModifiableCallout("Mark of the Tides", "Get Away");
@@ -119,7 +127,9 @@ public class P2S implements FilteredEventHandler {
 	public void simpleAbilities(EventContext context, AbilityCastStart event) {
 		long id = event.getAbility().getId();
 		if (id == 0x682F) {
-			context.accept(shockwave.getModified(event));
+			CalloutEvent sw = shockwave.getModified(event);
+			sw.setDelayedEnqueueOffset((long) (event.getDuration() * 1000L) - 6000L);
+			context.accept(sw);
 		}
 		else if (id == 0x6810) {
 			context.accept(sewageDeluge.getModified(event));
@@ -127,8 +137,41 @@ public class P2S implements FilteredEventHandler {
 		else if (id == 0x6833) {
 			context.accept(murkyDepths.getModified(event));
 		}
+		else if (id == 0x6838) {
+			context.accept(taintedFlood.getModified(event));
+		}
 	}
 
+	@HandleEvents
+	public void cataract(EventContext context, AbilityCastStart event) {
+		if (event.getSource().getbNpcId() == 0x359b) {
+			long id = event.getAbility().getId();
+			// TODO: are the various unique IDs perhaps the directions?
+			if (id == 0x6817 || id == 0x6811 || id == 0x6812 || id == 0x6813) {
+				context.accept(spoken.getModified(event));
+			}
+			else if (id == 0x6814 || id == 0x6815 || id == 0x6818 || id == 0x6816) {
+				context.accept(winged.getModified(event));
+			}
+		}
+	}
+
+	@HandleEvents
+	public void dissociation(EventContext context, AbilityCastStart event) {
+		if (event.getSource().getbNpcId() == 0x386a && event.getAbility().getId() == 0x682E) {
+			Position pos = event.getSource().getPos();
+			if (pos == null) {
+				return;
+			}
+			double x = pos.getX();
+			if (x > 100) {
+				context.accept(dissociationWestSafe.getModified(event));
+			}
+			else {
+				context.accept(dissociationEastSafe.getModified(event));
+			}
+		}
+	}
 	private Long firstHeadmark;
 
 	@HandleEvents
