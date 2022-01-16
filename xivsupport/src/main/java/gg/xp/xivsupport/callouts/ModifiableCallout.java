@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.callouts;
 
+import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Contract;
@@ -56,6 +57,15 @@ public class ModifiableCallout {
 		return getModified(Collections.emptyMap());
 	}
 
+	public CalloutEvent getModified(Event event) {
+		return getModified(event, Collections.emptyMap());
+	}
+
+	public CalloutEvent getModified(Event event, Map<String, Object> arguments) {
+		// TODO
+		return getModified(arguments);
+	}
+
 	public CalloutEvent getModified(Map<String, Object> arguments) {
 		String callText;
 		String visualText;
@@ -65,8 +75,8 @@ public class ModifiableCallout {
 			visualText = defaultVisualText;
 		}
 		else {
-			callText = handle.isTtsEffectivelyEnabled() ? handle.getTtsSetting().get() : null;
-			visualText = handle.isTextEffectivelyEnabled() ? handle.getTextSetting().get() : null;
+			callText = handle.getEffectiveTts();
+			visualText = handle.getEffectiveText();
 		}
 		callText = applyReplacements(callText, arguments);
 		visualText = applyReplacements(visualText, arguments);

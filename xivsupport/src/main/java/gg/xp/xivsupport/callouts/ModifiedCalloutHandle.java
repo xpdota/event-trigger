@@ -5,6 +5,7 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
+import org.jetbrains.annotations.Nullable;
 
 public final class ModifiedCalloutHandle {
 
@@ -12,6 +13,7 @@ public final class ModifiedCalloutHandle {
 	private final BooleanSetting enableTts;
 	private final StringSetting ttsSetting;
 	private final BooleanSetting enableText;
+	private final BooleanSetting sameText;
 	private final StringSetting textSetting;
 	private final LongSetting hangTimeSetting;
 	private final ModifiableCallout original;
@@ -27,7 +29,8 @@ public final class ModifiedCalloutHandle {
 		ttsSetting = new StringSetting(persistenceProvider, propStub + ".tts", original.getOriginalTts());
 		enableText = new BooleanSetting(persistenceProvider, propStub + ".text-enabled", true);
 		textSetting = new StringSetting(persistenceProvider, propStub + ".text", original.getOriginalVisualText());
-		// TODO 5000
+		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", ttsSetting.get().equals(textSetting.get()) && (ttsSetting.isSet() == textSetting.isSet()));
+		sameText.set(sameText.get());
 		hangTimeSetting = new LongSetting(persistenceProvider, propStub + ".text.hangtime", 5000L);
 		this.original = original;
 	}
@@ -53,8 +56,35 @@ public final class ModifiedCalloutHandle {
 		return enableText;
 	}
 
+	public BooleanSetting getSameText() {
+		return sameText;
+	}
+
 	public LongSetting getHangTimeSetting() {
 		return hangTimeSetting;
+	}
+
+	public @Nullable String getEffectiveTts() {
+		if (isTtsEffectivelyEnabled()) {
+			return ttsSetting.get();
+		}
+		else {
+			return null;
+		}
+	}
+
+	public @Nullable String getEffectiveText() {
+		if (isTextEffectivelyEnabled()) {
+			if (sameText.get()) {
+				return ttsSetting.get();
+			}
+			else {
+				return textSetting.get();
+			}
+		}
+		else {
+			return null;
+		}
 	}
 
 	public String getDescription() {

@@ -31,8 +31,8 @@ public class P1S implements FilteredEventHandler {
 	private final ModifiableCallout flailOfGrace = new ModifiableCallout("Pitiless Flail of Grace", "Buster, Knockback, Stack");
 	private final ModifiableCallout flailOfPurgation = new ModifiableCallout("Pitiless Flail of Purgation", "Buster, Knockback, Flare");
 
-	private final ModifiableCallout shacklesOfTime_you = new ModifiableCallout("Shackles of Time on You", "Stand on Red");
-	private final ModifiableCallout shacklesOfTime_notYou = new ModifiableCallout("Shackles of Time - Not You", "Party on Blue");
+	private final ModifiableCallout shacklesOfTime_you = new ModifiableCallout("Shackles of Time on You", "Opposite Color from Party");
+	private final ModifiableCallout shacklesOfTime_notYou = new ModifiableCallout("Shackles of Time - Not You", "Stack with Party");
 
 	private final ModifiableCallout shacklesPrep = new ModifiableCallout("Shackles Prep", "Shackles");
 
@@ -47,6 +47,9 @@ public class P1S implements FilteredEventHandler {
 	private final ModifiableCallout shacklesPurp8 = new ModifiableCallout("Purple Shackle 2 (8s)", "In 2");
 	private final ModifiableCallout shacklesPurp13 = new ModifiableCallout("Purple Shackle 3 (13s)", "In 3");
 	private final ModifiableCallout shacklesPurp18 = new ModifiableCallout("Purple Shackle 4 (18s)", "In 4");
+
+	private final ModifiableCallout greenSafe = new ModifiableCallout("Green/Light Safe", "Light Safe");
+	private final ModifiableCallout redSafe = new ModifiableCallout("Red/Fire Safe", "Fire Safe");
 
 	@HandleEvents
 	public void shackles(EventContext context, BuffApplied buff) {
@@ -88,17 +91,29 @@ public class P1S implements FilteredEventHandler {
 		else {
 			return;
 		}
-		context.accept(call.getModified());
+		context.accept(call.getModified(buff));
 	}
 
 	@HandleEvents
 	public void shacklesOfTime(EventContext context, BuffApplied buff) {
 		if (buff.getBuff().getId() == 0xAB5) {
 			if (buff.getTarget().isThePlayer()) {
-				context.accept(shacklesOfTime_you.getModified());
+				context.accept(shacklesOfTime_you.getModified(buff));
 			}
 			else {
-				context.accept(shacklesOfTime_notYou.getModified(Map.of("target", buff.getTarget())));
+				context.accept(shacklesOfTime_notYou.getModified(buff, Map.of("target", buff.getTarget())));
+			}
+		}
+	}
+
+	@HandleEvents
+	public void redGreenSafeSpot(EventContext context, BuffApplied buff) {
+		if (buff.getTarget().getType() == CombatantType.NPC && buff.getBuff().getId() == 0x893) {
+			if (buff.getRawStacks() == 0x14C) {
+				context.accept(greenSafe.getModified(buff));
+			}
+			else {
+				context.accept(redSafe.getModified(buff));
 			}
 		}
 	}
@@ -144,7 +159,7 @@ public class P1S implements FilteredEventHandler {
 			else {
 				return;
 			}
-			context.accept(call.getModified());
+			context.accept(call.getModified(event));
 		}
 	}
 

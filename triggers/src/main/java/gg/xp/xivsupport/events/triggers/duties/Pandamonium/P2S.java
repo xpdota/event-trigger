@@ -57,12 +57,12 @@ public class P2S implements FilteredEventHandler {
 				// First check if the player has a spread debuff on them
 				Optional<BuffApplied> spreadOnYou = stackSpreadBuffs.stream().filter(ba -> ba.getTarget().isThePlayer() && ba.getBuff().getId() == 0xAD0).findAny();
 				if (spreadOnYou.isPresent()) {
-					context.accept(tides.getModified());
+					context.accept(tides.getModified(event));
 				}
 				else {
 					Optional<BuffApplied> anyStack = stackSpreadBuffs.stream().filter(ba -> ba.getBuff().getId() == 0xAD1).findAny();
 					if (anyStack.isPresent()) {
-						context.accept(stack.getModified(Map.of("target", anyStack.get().getTarget())));
+						context.accept(stack.getModified(event, Map.of("target", anyStack.get().getTarget())));
 					}
 					else {
 						log.warn("Found no stack! Events: {}", stackSpreadBuffs);
@@ -111,7 +111,7 @@ public class P2S implements FilteredEventHandler {
 				return;
 			}
 			String durationText = event.getInitialDuration().getSeconds() > 15 ? "Long" : "Short";
-			context.accept(call.getModified(Map.of("longshort", durationText)));
+			context.accept(call.getModified(event, Map.of("longshort", durationText)));
 		}
 	}
 
@@ -119,13 +119,13 @@ public class P2S implements FilteredEventHandler {
 	public void simpleAbilities(EventContext context, AbilityCastStart event) {
 		long id = event.getAbility().getId();
 		if (id == 0x682F) {
-			context.accept(shockwave.getModified());
+			context.accept(shockwave.getModified(event));
 		}
 		else if (id == 0x6810) {
-			context.accept(sewageDeluge.getModified());
+			context.accept(sewageDeluge.getModified(event));
 		}
 		else if (id == 0x6833) {
-			context.accept(murkyDepths.getModified());
+			context.accept(murkyDepths.getModified(event));
 		}
 	}
 
@@ -151,7 +151,7 @@ public class P2S implements FilteredEventHandler {
 			default: yield null;
 		};
 		if (call != null) {
-			context.accept(call.getModified());
+			context.accept(call.getModified(event));
 		}
 	}
 

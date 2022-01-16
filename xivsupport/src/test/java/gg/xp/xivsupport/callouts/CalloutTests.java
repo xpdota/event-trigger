@@ -89,7 +89,7 @@ public class CalloutTests {
 			Assert.assertEquals(modified.getCallText(), "Tankbuster on {target}");
 			Assert.assertEquals(modified.getVisualText(), "Tankbuster on {target}");
 
-			CalloutEvent modifiedWithArgs = mc.getModified(Map.of("target", "Foo"));
+			CalloutEvent modifiedWithArgs = mc.getModified(modified, Map.of("target", "Foo"));
 			Assert.assertEquals(modifiedWithArgs.getCallText(), "Tankbuster on Foo");
 			Assert.assertEquals(modifiedWithArgs.getVisualText(), "Tankbuster on Foo");
 

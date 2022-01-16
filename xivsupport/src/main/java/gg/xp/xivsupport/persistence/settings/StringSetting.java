@@ -15,6 +15,10 @@ public class StringSetting {
 		this.dflt = dflt;
 	}
 
+	public boolean isSet() {
+		return persistence.get(settingKey, String.class, null) != null;
+	}
+
 	public String get() {
 		if (cached == null) {
 			return cached = persistence.get(settingKey, String.class, dflt);

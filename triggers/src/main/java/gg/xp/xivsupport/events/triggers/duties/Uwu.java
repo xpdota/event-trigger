@@ -36,7 +36,7 @@ public class Uwu implements FilteredEventHandler {
 	@HandleEvents
 	public void slipStream(EventContext context, AbilityCastStart event) {
 		if (event.getAbility().getId() == 0x2B53) {
-			context.accept(slipStream.getModified());
+			context.accept(slipStream.getModified(event));
 		}
 	}
 
@@ -49,7 +49,7 @@ public class Uwu implements FilteredEventHandler {
 			mistralTargets.add(event.getTarget());
 		}
 		if (mistralTargets.size() >= 2) {
-			context.accept(mistral.getModified(Map.of("target1", mistralTargets.get(0), "target2", mistralTargets.get(1))));
+			context.accept(mistral.getModified(event, Map.of("target1", mistralTargets.get(0), "target2", mistralTargets.get(1))));
 			mistralTargets.clear();
 		}
 	}
@@ -62,7 +62,7 @@ public class Uwu implements FilteredEventHandler {
 	@HandleEvents
 	public void searingWind(EventContext context, AbilityCastStart event) {
 		if (event.getAbility().getId() == 0x2B5B) {
-			context.accept(searingWind.getModified(Map.of("target", event.getTarget())));
+			context.accept(searingWind.getModified(event, Map.of("target", event.getTarget())));
 		}
 	}
 

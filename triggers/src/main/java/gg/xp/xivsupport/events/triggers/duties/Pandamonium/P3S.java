@@ -131,7 +131,7 @@ public class P3S implements FilteredEventHandler {
 			else {
 				return;
 			}
-			context.accept(call.getModified());
+			context.accept(call.getModified(event));
 		}
 	}
 
@@ -149,7 +149,7 @@ public class P3S implements FilteredEventHandler {
 			else {
 				return;
 			}
-			context.accept(call.getModified());
+			context.accept(call.getModified(event));
 		}
 	}
 
@@ -181,7 +181,7 @@ public class P3S implements FilteredEventHandler {
 			default -> null;
 		};
 		if (call != null) {
-			context.accept(call.getModified());
+			context.accept(call.getModified(event));
 		}
 	}
 
@@ -211,7 +211,7 @@ public class P3S implements FilteredEventHandler {
 						bird = tetheredSorted.get(1);
 						otherPlayer = tetheredSorted.get(0);
 						String birdSpot = arenaPos.forCombatant(bird).getFriendlyName();
-						context.accept(this.tetheredToBird.getModified(Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
+						context.accept(this.tetheredToBird.getModified(tether, Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
 					}
 					else if (tetheredToPlayer.size() == 1) {
 						otherPlayer = tetheredToPlayer.iterator().next();
@@ -223,7 +223,7 @@ public class P3S implements FilteredEventHandler {
 						}
 						bird = tetheredToOtherPlayer.iterator().next();
 						String birdSpot = arenaPos.forCombatant(bird).getFriendlyName();
-						context.accept(this.tetheredToPlayer.getModified(Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
+						context.accept(this.tetheredToPlayer.getModified(tether, Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
 					}
 					else {
 						log.error("Expected to be tethered to one or two other entities, but was tethered to: {}", tetheredToPlayer);
@@ -243,10 +243,10 @@ public class P3S implements FilteredEventHandler {
 		if (buff.getBuff().getId() == 0xACA && buff.getTarget().isThePlayer() && !buff.isRefresh()) {
 			long stacks = buff.getStacks();
 			CalloutEvent callout = switch ((int) stacks) {
-				case 1 -> deathsToll1.getModified();
-				case 2 -> deathsToll2.getModified();
-				case 4 -> deathsToll4.getModified();
-				default -> deathsTollN.getModified(Map.of("stacks", stacks));
+				case 1 -> deathsToll1.getModified(buff);
+				case 2 -> deathsToll2.getModified(buff);
+				case 4 -> deathsToll4.getModified(buff);
+				default -> deathsTollN.getModified(buff, Map.of("stacks", stacks));
 			};
 			context.accept(callout);
 		}

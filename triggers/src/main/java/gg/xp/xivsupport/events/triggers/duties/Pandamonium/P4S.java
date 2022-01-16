@@ -19,6 +19,7 @@ import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
@@ -33,17 +34,24 @@ public class P4S implements FilteredEventHandler {
 	private final ModifiableCallout bloodrake = new ModifiableCallout("Bloodrake", "Half Raidwide");
 	private final ModifiableCallout evisceration = new ModifiableCallout("Elegant Evisceration", "Tankbuster on {target}");
 	private final ModifiableCallout searing = new ModifiableCallout("Searing Stream", "Raidwide");
+	private final ModifiableCallout ultimaImpulse = new ModifiableCallout("Ultima Impulse", "Big Raidwide");
+
+	private final ModifiableCallout hellsSting = new ModifiableCallout("Hell's Sting", "Protean, dodge in");
 
 	private final ModifiableCallout pinax = new ModifiableCallout("Pinax Mechanic + Safespot", "{mech1} into {mech2}, {safespot} safe");
 
 	private final ModifiableCallout shift = new ModifiableCallout("Sword/Cape", "{direction} {cleavekb}");
 
 	private final ModifiableCallout acting = new ModifiableCallout("Acting Role", "Acting {role}");
+	private final ModifiableCallout belone = new ModifiableCallout("Belone Bursts", "Orb Positions");
+	private final ModifiableCallout periaktoi = new ModifiableCallout("Periaktoi", "{element} safe ({safespot})");
 
 	private final ModifiableCallout nearsightParty = new ModifiableCallout("Nearsight (Non-Tank)", "Party Out");
 	private final ModifiableCallout nearsightTank = new ModifiableCallout("Nearsight (Tank)", "Tanks In");
 	private final ModifiableCallout farsightParty = new ModifiableCallout("Farsight (Non-Tank)", "Party In");
 	private final ModifiableCallout farsightTank = new ModifiableCallout("Farsight (Tank)", "Tanks Out");
+	private final ModifiableCallout demigodDouble = new ModifiableCallout("Demigod Double", "Shared buster on {target}");
+	private final ModifiableCallout heartStake = new ModifiableCallout("Heart Stake", "Bleed buster on {target}");
 
 	private final ModifiableCallout redAct2 = new ModifiableCallout("Red Marker (Act 2)", "Red");
 	private final ModifiableCallout tealAct2 = new ModifiableCallout("Teal Marker (Act 2)", "Teal");
@@ -89,7 +97,6 @@ public class P4S implements FilteredEventHandler {
 
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
-		// TODO: tb in/out
 		if (event.getSource().getType() == CombatantType.NPC) {
 			long id = event.getAbility().getId();
 			ModifiableCallout call;
@@ -102,10 +109,25 @@ public class P4S implements FilteredEventHandler {
 			else if (id == 0x6A08) {
 				call = evisceration;
 			}
+			else if (id == 0x6A2B) {
+				call = heartStake;
+			}
+			else if (id == 0x6A2C) {
+				call = ultimaImpulse;
+			}
+			else if (id == 0x6E78) {
+				call = demigodDouble;
+			}
+			else if (id == 0x69D9) {
+				call = belone;
+			}
+			else if (id == 0x6A1E) {
+				call = hellsSting;
+			}
 			else {
 				return;
 			}
-			context.accept(call.getModified(Map.of("target", event.getTarget())));
+			context.accept(call.getModified(event, Map.of("target", event.getTarget())));
 		}
 	}
 
@@ -153,7 +175,7 @@ public class P4S implements FilteredEventHandler {
 					return;
 				}
 			}
-			context.accept(shift.getModified(Map.of("direction", where.getFriendlyName(), "cleavekb", isSword ? "Cleave" : "Knockback")));
+			context.accept(shift.getModified(event, Map.of("direction", where.getFriendlyName(), "cleavekb", isSword ? "Cleave" : "Knockback")));
 		}
 	}
 
@@ -232,7 +254,7 @@ public class P4S implements FilteredEventHandler {
 		args.put("mech1", knockbackProx);
 		args.put("mech2", stackSpread);
 		args.put("safespot", safespots);
-		context.accept(pinax.getModified(args));
+		context.accept(pinax.getModified(event, args));
 	}
 
 	private static final class PinaxSet extends BaseEvent {
@@ -260,8 +282,24 @@ public class P4S implements FilteredEventHandler {
 					return;
 				}
 			}
-			context.accept(acting.getModified(Map.of("role", role)));
+			context.accept(acting.getModified(event, Map.of("role", role)));
 		}
+	}
+
+	@HandleEvents
+	public void periaktoi(EventContext context, AbilityCastStart event) {
+		int id = (int) event.getAbility().getId();
+		final String safespot;
+		switch (id) {
+			case 0x69F5 -> safespot = "Acid";
+			case 0x69F6 -> safespot = "Fire";
+			case 0x69F7 -> safespot = "Water";
+			case 0x69F8 -> safespot = "Lightning";
+			default -> {
+				return;
+			}
+		}
+		context.accept(periaktoi.getModified(event, Map.of("element", safespot, "safespot", arenaPos.forCombatant(event.getSource()).getFriendlyName())));
 	}
 
 	private boolean isPhase2;
@@ -270,7 +308,7 @@ public class P4S implements FilteredEventHandler {
 	@HandleEvents
 	public void searing(EventContext context, AbilityCastStart event) {
 		if (event.getAbility().getId() == 0x6A2D) {
-			context.accept(searing.getModified());
+			context.accept(searing.getModified(event));
 			isPhase2 = true;
 		}
 	}
@@ -325,7 +363,7 @@ public class P4S implements FilteredEventHandler {
 			};
 		};
 		if (call != null) {
-			context.accept(call.getModified());
+			context.accept(call.getModified(event));
 		}
 	}
 
@@ -376,7 +414,7 @@ public class P4S implements FilteredEventHandler {
 			else {
 				return;
 			}
-			context.accept(call.getModified());
+			context.accept(call.getModified(event));
 		}
 	}
 
@@ -389,7 +427,7 @@ public class P4S implements FilteredEventHandler {
 		if (event.getAbility().getId() == 0x6A1C) {
 			fleetingImpulseDebuffCount++;
 			if (event.getTarget().isThePlayer()) {
-				context.accept(finaleOrder.getModified(Map.of("number", fleetingImpulseDebuffCount)));
+				context.accept(finaleOrder.getModified(event, Map.of("number", fleetingImpulseDebuffCount)));
 				myFleetingImpulseNumber = fleetingImpulseDebuffCount;
 			}
 		}
@@ -402,7 +440,7 @@ public class P4S implements FilteredEventHandler {
 			fleetingImpulseTetherCount++;
 			if (fleetingImpulseTetherCount == myFleetingImpulseNumber) {
 				ArenaSector arenaSector = arenaPos.forCombatant(tether.getSource());
-				context.accept(finaleTower.getModified(Map.of("towerspot", arenaSector.getFriendlyName())));
+				context.accept(finaleTower.getModified(tether, Map.of("towerspot", arenaSector.getFriendlyName())));
 			}
 		}
 	}
@@ -424,7 +462,7 @@ public class P4S implements FilteredEventHandler {
 			else {
 				number = "Last";
 			}
-			context.accept(curtainOrder.getModified(Map.of("number", number)));
+			context.accept(curtainOrder.getModified(event, Map.of("number", number)));
 		}
 	}
 

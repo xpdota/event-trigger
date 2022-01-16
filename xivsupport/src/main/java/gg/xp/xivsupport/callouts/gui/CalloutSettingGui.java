@@ -17,6 +17,7 @@ public class CalloutSettingGui {
 	private final JCheckBox ttsCheckbox;
 	private final JTextField ttsTextBox;
 	private final JCheckBox textCheckbox;
+	private final JCheckBox sameCheckBox;
 	private final JTextField textTextBox;
 	private final BooleanSetting allText;
 	private final BooleanSetting allTts;
@@ -27,6 +28,7 @@ public class CalloutSettingGui {
 		BooleanSetting enableTts = call.getEnableTts();
 		StringSetting ttsSetting = call.getTtsSetting();
 		BooleanSetting enableText = call.getEnableText();
+		BooleanSetting sameText = call.getSameText();
 		StringSetting textSetting = call.getTextSetting();
 		this.allText = call.getAllTextEnabled();
 		this.allTts = call.getAllTtsEnabled();
@@ -43,9 +45,15 @@ public class CalloutSettingGui {
 		{
 			textPanel = new JPanel();
 			textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.LINE_AXIS));
+
 			textCheckbox = new BooleanSettingGui(enableText, "Text:").getComponent();
 			textCheckbox.setHorizontalTextPosition(SwingConstants.LEFT);
 			textPanel.add(textCheckbox);
+
+			sameCheckBox = new BooleanSettingGui(sameText, "Same as TTS:").getComponent();
+			sameCheckBox.setHorizontalTextPosition(SwingConstants.LEFT);
+			textPanel.add(sameCheckBox);
+
 			textTextBox = new StringSettingGui(textSetting, null).getTextBoxOnly();
 			textPanel.add(textTextBox);
 		}
@@ -54,6 +62,7 @@ public class CalloutSettingGui {
 		callCheckbox.addActionListener(l);
 		ttsCheckbox.addActionListener(l);
 		textCheckbox.addActionListener(l);
+		sameCheckBox.addActionListener(l);
 		allText.addListener(this::recalcEnabledDisabledStatus);
 		allTts.addListener(this::recalcEnabledDisabledStatus);
 	}
@@ -72,12 +81,13 @@ public class CalloutSettingGui {
 			}
 			if (allText.get()) {
 				textCheckbox.setEnabled(true);
-				textTextBox.setEnabled(textCheckbox.isSelected());
+				sameCheckBox.setEnabled(textCheckbox.isEnabled());
+				textTextBox.setEnabled(textCheckbox.isSelected() && !sameCheckBox.isSelected());
 			}
 			else {
 				textCheckbox.setEnabled(false);
 				textTextBox.setEnabled(false);
-
+				sameCheckBox.setEnabled(false);
 			}
 		}
 		else {
@@ -85,6 +95,7 @@ public class CalloutSettingGui {
 			textCheckbox.setEnabled(false);
 			ttsTextBox.setEnabled(false);
 			textTextBox.setEnabled(false);
+			sameCheckBox.setEnabled(false);
 		}
 	}
 

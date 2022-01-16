@@ -55,7 +55,7 @@ public class CalloutsConfigTab implements PluginTab {
 		List<CalloutGroup> calloutMap = backend.getAllCallouts();
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.LINE_START;
-		c.ipadx = 20;
+		c.ipadx = 5;
 		c.gridy = 3;
 		calloutMap.forEach((group) -> {
 			List<ModifiedCalloutHandle> callouts = group.getCallouts();
@@ -73,9 +73,10 @@ public class CalloutsConfigTab implements PluginTab {
 			c.gridwidth = 1;
 			List<CalloutSettingGui> csgs = new ArrayList<>();
 			callouts.forEach(call -> {
+				c.weightx = 0;
 				c.gridy++;
 				c.gridx = 1;
-				innerPanel.add(new JPanel(), c);
+				innerPanel.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
 				CalloutSettingGui csg = new CalloutSettingGui(call);
 				csgs.add(csg);
@@ -89,17 +90,15 @@ public class CalloutsConfigTab implements PluginTab {
 				innerPanel.add(csg.getTtsPanel(), c);
 				c.weightx = 0;
 				c.gridx++;
-				JPanel padding = new JPanel();
-				padding.setSize(20, 1);
-				innerPanel.add(padding, c);
+				innerPanel.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
 				c.weightx = 1;
 				innerPanel.add(csg.getTextPanel(), c);
-				c.gridx++;
-				c.weightx = 0;
-				c.gridwidth = GridBagConstraints.REMAINDER;
-				innerPanel.add(new JPanel(), c);
-				c.gridwidth = 1;
+//				c.gridx++;
+//				c.weightx = 0;
+//				c.gridwidth = GridBagConstraints.REMAINDER;
+//				innerPanel.add(Box.createHorizontalStrut(1), c);
+//				c.gridwidth = 1;
 			});
 			csgs.forEach(csg -> csg.setEnabledByParent(topLevelCheckbox.isSelected()));
 			topLevelCheckbox.addActionListener(l -> {
@@ -107,11 +106,10 @@ public class CalloutsConfigTab implements PluginTab {
 				group.updateChildren();
 			});
 			c.gridx++;
-			c.weightx = 1;
+			c.weightx = 0;
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			// Add dummy to pad out the right side
-			JPanel dummyPanel = new JPanel();
-			innerPanel.add(dummyPanel, c);
+			innerPanel.add(Box.createHorizontalStrut(2), c);
 			c.gridy++;
 		});
 		c.weighty = 1;

@@ -48,7 +48,7 @@ public class Odin implements FilteredEventHandler {
 			// ModifiableCallout.getModified() returns a CalloutEvent with whatever user-specified modifications
 			// applied (e.g. the text can be altered, you can pick TTS/Text/Both, or disable it entirely).
 			// EventContext.accept(Event) - submit the new event to be processed immediately.
-			context.accept(valknut.getModified());
+			context.accept(valknut.getModified(event));
 		}
 	}
 }

@@ -225,9 +225,9 @@ public class JailSolver implements FilteredEventHandler {
 				log.info("Jail index of player: {}", myIndex);
 			}
 			switch (myIndex) {
-				case 1 -> context.accept(first.getModified());
-				case 2 -> context.accept(second.getModified());
-				case 3 -> context.accept(third.getModified());
+				case 1 -> context.accept(first.getModified(event));
+				case 2 -> context.accept(second.getModified(event));
+				case 3 -> context.accept(third.getModified(event));
 			}
 		}
 	}
