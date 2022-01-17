@@ -12,9 +12,9 @@ import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.jobs.CdTracker;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
-import gg.xp.xivsupport.events.triggers.jobs.gui.BaseCdTrackerOverlay;
 import gg.xp.xivsupport.events.triggers.jobs.gui.BaseCdTrackerTable;
 import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfo;
+import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfoMain;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
@@ -278,7 +278,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 			croppedCds = Collections.emptyList();
 		}
 		else {
-			VisualCdInfo vci = new VisualCdInfo(Cooldown.Aetherflow, event, null);
+			VisualCdInfo vci = new VisualCdInfoMain(Cooldown.Aetherflow, event, null, null);
 			croppedCds = Collections.singletonList(vci);
 		}
 	}

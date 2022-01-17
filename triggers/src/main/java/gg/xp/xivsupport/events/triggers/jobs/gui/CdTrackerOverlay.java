@@ -7,7 +7,9 @@ import gg.xp.xivsupport.events.triggers.jobs.CdTracker;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,6 +24,11 @@ public class CdTrackerOverlay extends BaseCdTrackerOverlay {
 		super("Cd Tracker", "cd-tracker.overlay", persistence, cdTracker.getOverlayMaxPersonal());
 		this.cdTracker = cdTracker;
 		this.buffRepo = buffRepo;
+	}
+
+	@Override
+	protected @Nullable Instant chargesReplenishedAt(CdTrackingKey key) {
+		return cdTracker.getReplenishedAt(key);
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package gg.xp.xivdata.jobs;
 
+import java.time.Duration;
+
 import static gg.xp.xivdata.jobs.Job.AST;
 import static gg.xp.xivdata.jobs.Job.BRD;
 import static gg.xp.xivdata.jobs.Job.DNC;
@@ -106,6 +108,7 @@ public enum Cooldown {
 	Panhaima(SGE, true, 120.0, "Panhaima", CooldownType.PARTY_MIT, 0x5EF7, 0xA35),
 	Physis(SGE, true, 60.0, "Physis", CooldownType.HEAL, 0x5EEE, 0xA3C),
 	Holos(SGE, true, 120.0, "Holos", CooldownType.PARTY_MIT, 0x5EF6, 0xBBB),
+	Phlegma(SGE, true, 45.0,2,  "Phlegma", CooldownType.PERSONAL_BURST, 0x5EF9),
 
 	Divination(AST, true, 120.0, "Divination", CooldownType.PARTY_BUFF, 0x40a8, 1878),
 
@@ -186,6 +189,7 @@ public enum Cooldown {
 	private final String label;
 	private final long[] abilityIds;
 	private final long[] buffIds;
+	private final int maxCharges;
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long[] abilityIds, long[] buffIds) {
 		this.job = job;
@@ -196,6 +200,7 @@ public enum Cooldown {
 		this.label = label;
 		this.abilityIds = abilityIds;
 		this.buffIds = buffIds;
+		this.maxCharges = 1;
 	}
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -207,6 +212,7 @@ public enum Cooldown {
 		this.label = label;
 		this.abilityIds = new long[]{abilityId};
 		this.buffIds = buffId;
+		this.maxCharges = 1;
 	}
 
 	Cooldown(JobType jobType, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -218,6 +224,19 @@ public enum Cooldown {
 		this.label = label;
 		this.abilityIds = new long[]{abilityId};
 		this.buffIds = buffId;
+		this.maxCharges = 1;
+	}
+
+	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, int charges, String label, CooldownType cooldownType, long abilityId, long... buffId) {
+		this.job = job;
+		this.defaultPersOverlay = defaultPersOverlay;
+		this.cooldown = cooldown;
+		this.jobType = null;
+		this.type = cooldownType;
+		this.label = label;
+		this.abilityIds = new long[]{abilityId};
+		this.buffIds = buffId;
+		this.maxCharges = charges;
 	}
 
 	public Job getJob() {
@@ -254,9 +273,16 @@ public enum Cooldown {
 		return cooldown;
 	}
 
+	public Duration getCooldownAsDuration() {
+		return Duration.ofMillis((long) (cooldown * 1000L));
+	}
+
 	// Purposefully saying "primary" here - as some might require multiple CDs (see: Raw/Nascent)
 	public long getPrimaryAbilityId() {
 		return abilityIds[0];
 	}
 
+	public int getMaxCharges() {
+		return maxCharges;
+	}
 }

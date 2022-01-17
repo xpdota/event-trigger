@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,6 +72,7 @@ public class CdTracker {
 
 	private final Object cdLock = new Object();
 	private final Map<CdTrackingKey, AbilityUsedEvent> cds = new HashMap<>();
+	private final Map<CdTrackingKey, Instant> chargesReplenishedAt = new HashMap<>();
 
 	private static @Nullable Cooldown getCdInfo(long id) {
 		return Arrays.stream(Cooldown.values())
@@ -112,6 +114,7 @@ public class CdTracker {
 		return partyCdSetting != null && partyCdSetting.getTts().get();
 	}
 
+	@SuppressWarnings({"SuspiciousMethodCalls", "NumericCastThatLosesPrecision"})
 	@HandleEvents
 	public void cdUsed(EventContext context, AbilityUsedEvent event) {
 		Cooldown cd;
@@ -122,17 +125,26 @@ public class CdTracker {
 			boolean isSelf = event.getSource().isThePlayer();
 			if (enableTtsPersonal.get() && isEnabledForPersonalTts(cd) && isSelf) {
 				log.info("Personal CD used: {}", event);
-				//noinspection NumericCastThatLosesPrecision
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvancePersonal.get()));
 			}
-			// TODO: party check
-			else //noinspection SuspiciousMethodCalls
-				if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
+			else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
 				log.info("Party CD used: {}", event);
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvanceParty.get()));
 			}
 			synchronized (cdLock) {
-				cds.put(CdTrackingKey.of(event, cd), event);
+				CdTrackingKey key = CdTrackingKey.of(event, cd);
+				cds.put(key, event);
+				Instant existing = chargesReplenishedAt.get(key);
+				// Logic - track when the CD will be fully replenished
+				// If there is no existing tracking info, or the existing info says that the CDs would be fully
+				// replenished in the past, then set the "replenished at" to now + cooldown time.
+				if (existing == null || existing.isBefore(event.effectiveTimeNow())) {
+					chargesReplenishedAt.put(key, event.effectiveTimeNow().plus(cd.getCooldownAsDuration()));
+				}
+				// If there is an existing tracker, just add the duration to that.
+				else {
+					chargesReplenishedAt.put(key, existing.plus(cd.getCooldownAsDuration()));
+				}
 			}
 		}
 	}
@@ -143,6 +155,7 @@ public class CdTracker {
 		synchronized (cdLock) {
 			log.debug("Clearing {} cds", cds.size());
 			cds.clear();
+			chargesReplenishedAt.clear();
 		}
 	}
 
@@ -227,6 +240,11 @@ public class CdTracker {
 		return cdTriggerAdvanceParty;
 	}
 
+	public @Nullable Instant getReplenishedAt(CdTrackingKey key) {
+		synchronized (cdLock) {
+			return chargesReplenishedAt.get(key);
+		}
+	}
 
 	public Map<Cooldown, CooldownSetting> getPersonalCdSettings() {
 		return Collections.unmodifiableMap(personalCds);
