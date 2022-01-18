@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.misc.pulls;
 
 import gg.xp.reevent.context.SubState;
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
@@ -38,7 +39,7 @@ public class PullTracker implements SubState {
 		doPullStart(context, event);
 	}
 
-	private void doPullStart(EventContext context, Event event) {
+	private void doPullStart(EventContext context, BaseEvent event) {
 		if (currentPull != null) {
 			currentPull.setEnd(event);
 		}

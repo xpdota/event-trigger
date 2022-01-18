@@ -56,6 +56,7 @@ public class ActorControlEventHandler {
 		else {
 			return;
 		}
+		event.setHappenedAt(acEvent.getHappenedAt());
 		context.accept(event);
 	}
 
