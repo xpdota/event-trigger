@@ -4,13 +4,13 @@ import gg.xp.xivsupport.events.misc.Management;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.Stats;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
-import gg.xp.xivsupport.gui.GuiMain;
 import gg.xp.xivsupport.gui.KeyValueDisplaySet;
 import gg.xp.xivsupport.gui.KeyValuePairDisplay;
 import gg.xp.xivsupport.gui.Refreshable;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapperPanel;
-import gg.xp.xivsupport.gui.components.ReadOnlyText;
+import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
 import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
@@ -44,7 +44,7 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 			c.anchor = GridBagConstraints.NORTH;
 			c.weightx = 1;
 			c.weighty = 0;
-			c.fill = GridBagConstraints.HORIZONTAL;
+			c.fill = GridBagConstraints.BOTH;
 
 			RawEventStorage storage = container.getComponent(RawEventStorage.class);
 			Stats stats = container.getComponent(Stats.class);
@@ -128,37 +128,79 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 					)
 			);
 			// TODO: also add a button to force a full refresh on all tables
-			JButton forceGcButton = new JButton("Force GC");
-			forceGcButton.addActionListener(l -> {
-				exs.submit(System::gc);
-				exs.submit(() -> SwingUtilities.invokeLater(this::refresh));
-			});
-			memoryPanel.add(new WrapperPanel(forceGcButton));
-			mem = new KeyValueDisplaySet(memoryItems);
-			memoryPanel.add(mem);
-			Management management = container.getComponent(Management.class);
-			memoryPanel.add(new WrapperPanel(new BooleanSettingGui(management.getGcOnNewPullEnabled(), "GC on new pull").getComponent()));
-			JButton heapDumpButton = new JButton("Dump Heap");
-			memoryPanel.add(new WrapperPanel(heapDumpButton));
-			heapDumpButton.addActionListener(l -> {
-				String body = management.dumpHeap();
-				JOptionPane.showMessageDialog(this, body, "Heap Dump", JOptionPane.INFORMATION_MESSAGE);
-			});
+			{
+				JButton forceGcButton = new JButton("Force GC");
+				forceGcButton.addActionListener(l -> {
+					exs.submit(System::gc);
+					exs.submit(() -> SwingUtilities.invokeLater(this::refresh));
+				});
+				memoryPanel.add(new WrapperPanel(forceGcButton));
+			}
+			{
+				mem = new KeyValueDisplaySet(memoryItems);
+				memoryPanel.add(mem);
+			}
+			{
+				Management management = container.getComponent(Management.class);
+				memoryPanel.add(new WrapperPanel(new BooleanSettingGui(management.getGcOnNewPullEnabled(), "GC on new pull").getComponent()));
+				JButton heapDumpButton = new JButton("Dump Heap");
+				memoryPanel.add(new WrapperPanel(heapDumpButton));
+				heapDumpButton.addActionListener(l -> {
+					String body = management.dumpHeap();
+					JOptionPane.showMessageDialog(this, body, "Heap Dump", JOptionPane.INFORMATION_MESSAGE);
+				});
+			}
 			memoryPanel.setPreferredSize(new Dimension(300, 300));
 			c.gridx++;
 			statsAndMemory.add(memoryPanel, c);
-			JPanel diskStoragePanel = new TitleBorderFullsizePanel("Disk Storage");
-			BooleanSettingGui saveCheckbox = new BooleanSettingGui(storage.getSaveToDisk(), "Save to Disk");
-			diskStoragePanel.setLayout(new BoxLayout(diskStoragePanel, BoxLayout.PAGE_AXIS));
-			diskStoragePanel.add(new WrapperPanel(saveCheckbox.getComponent()));
-			JButton flushButton = new JButton("Flush");
-			flushButton.addActionListener(l -> storage.flushToDisk());
-			diskStoragePanel.add(new WrapperPanel(flushButton));
-			diskStoragePanel.setPreferredSize(new Dimension(300, 150));
+			{
+				JPanel diskStoragePanel = new TitleBorderFullsizePanel("Disk Storage");
+				BooleanSettingGui saveCheckbox = new BooleanSettingGui(storage.getSaveToDisk(), "Save to Disk");
+				diskStoragePanel.setLayout(new BoxLayout(diskStoragePanel, BoxLayout.PAGE_AXIS));
+				diskStoragePanel.add(new WrapperPanel(saveCheckbox.getComponent()));
+				JButton flushButton = new JButton("Flush");
+				flushButton.addActionListener(l -> storage.flushToDisk());
+				diskStoragePanel.add(new WrapperPanel(flushButton));
+				diskStoragePanel.setPreferredSize(null);
+				c.gridx = 0;
+				c.gridy++;
+//				c.fill = GridBagConstraints.BOTH;
+				statsAndMemory.add(diskStoragePanel, c);
+			}
+
+			{
+				JPanel dirsPanel = new TitleBorderFullsizePanel("Directories");
+				dirsPanel.setLayout(new BoxLayout(dirsPanel, BoxLayout.PAGE_AXIS));
+				{
+					JButton button = new JButton("Open Install Dir");
+					button.addActionListener(l -> GuiUtil.openFile(Platform.getInstallDir()));
+					dirsPanel.add(new WrapperPanel(button));
+				}
+				{
+					JButton button = new JButton("Open Settings Dir");
+					button.addActionListener(l -> GuiUtil.openFile(Platform.getTriggeventDir().toFile()));
+					dirsPanel.add(new WrapperPanel(button));
+				}
+				{
+					JButton button = new JButton("Open Sessions Dir");
+					button.addActionListener(l -> GuiUtil.openFile(Platform.getSessionsDir().toFile()));
+					dirsPanel.add(new WrapperPanel(button));
+				}
+				{
+					JButton button = new JButton("Open ACT Log Dir");
+					button.addActionListener(l -> GuiUtil.openFile(Platform.getActDir().toFile()));
+					dirsPanel.add(new WrapperPanel(button));
+				}
+
+				dirsPanel.setPreferredSize(null);
+				c.gridx++;
+				statsAndMemory.add(dirsPanel, c);
+
+			}
 			c.gridx = 0;
 			c.gridy++;
 			c.weighty = 1;
-			statsAndMemory.add(diskStoragePanel, c);
+			statsAndMemory.add(Box.createGlue(), c);
 			addTab("System", statsAndMemory);
 		}
 

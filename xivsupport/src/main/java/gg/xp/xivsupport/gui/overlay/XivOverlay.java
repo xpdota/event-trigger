@@ -81,7 +81,10 @@ public class XivOverlay {
 		frame.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT));
 		frame.getContentPane().add(panel);
 		frame.setAlwaysOnTop(true);
-		frame.setLocation((int) xSetting.get(), (int) ySetting.get());
+		resetPositionFromSettings();
+		xSetting.addListener(this::resetPositionFromSettings);
+		ySetting.addListener(this::resetPositionFromSettings);
+		scaleFactor.addListener(this::redoScale);
 		frame.setOpacity((float) opacity.get());
 		frame.addMouseListener(new MouseAdapter() {
 			@Override
@@ -127,6 +130,13 @@ public class XivOverlay {
 		});
 	}
 
+	public void resetPositionFromSettings() {
+		if (posSettingDirty) {
+			return;
+		}
+		frame.setLocation((int) xSetting.get(), (int) ySetting.get());
+	}
+
 	public void finishInit() {
 		redoScale();
 	}
@@ -152,10 +162,10 @@ public class XivOverlay {
 	}
 
 	public void setPosition(int x, int y) {
+		posSettingDirty = true;
 		this.x = x;
 		this.y = y;
 		frame.setLocation(x, y);
-		posSettingDirty = true;
 	}
 
 	private void flushPosition() {
@@ -214,12 +224,15 @@ public class XivOverlay {
 		boolean wasVisible = frame.isVisible();
 		frame.setVisible(false);
 		this.scaleFactor.set(scale);
-		redoScale();
 		frame.setVisible(wasVisible);
 	}
 
 	public double getScale() {
 		return scaleFactor.get();
+	}
+
+	public DoubleSetting getScaleSetting() {
+		return scaleFactor;
 	}
 
 	// https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles

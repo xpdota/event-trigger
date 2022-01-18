@@ -841,9 +841,9 @@ public class GuiMain {
 			CustomTableModel<XivOverlay> tableModel = CustomTableModel.builder(overlayMain::getOverlays)
 					.addColumn(StandardColumns.booleanSettingColumn("On", XivOverlay::getEnabled, 50, visibleSetting))
 					.addColumn(new CustomColumn<>("Name", XivOverlay::getTitle, col -> col.setCellEditor(new NoCellEditor())))
-					.addColumn(new CustomColumn<>("X", o -> o.getXSetting().get(), col -> col.setCellEditor(new NoCellEditor())))
-					.addColumn(new CustomColumn<>("Y", o -> o.getYSetting().get(), col -> col.setCellEditor(new NoCellEditor())))
-					.addColumn(new CustomColumn<>("Scale", o -> o.getScale(), col -> col.setCellEditor(new NoCellEditor())))
+					.addColumn(StandardColumns.longSettingBoxColumn("X", XivOverlay::getXSetting, 100))
+					.addColumn(StandardColumns.longSettingBoxColumn("Y", XivOverlay::getYSetting, 100))
+					.addColumn(StandardColumns.doubleSettingBoxColumn("Scale (0.8 minimum)", XivOverlay::getScaleSetting, 100))
 					.addColumn(StandardColumns.doubleSettingSliderColumn("Opacity", XivOverlay::opacity, 200, 0.05))
 					.build();
 			table.setModel(tableModel);

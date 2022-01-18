@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tabs;
 
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.SimplifiedPropertiesFilePersistenceProvider;
@@ -60,15 +61,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		add(content, c);
 		c.gridy++;
 		JButton openInstallDirButton = new JButton("Open Install Dir");
-		openInstallDirButton.addActionListener(l -> {
-			try {
-				Desktop.getDesktop().open(installDir);
-			}
-			catch (IOException e) {
-				log.error("Error opening install dir", e);
-				throw new RuntimeException(e);
-			}
-		});
+		openInstallDirButton.addActionListener(l -> GuiUtil.openFile(installDir));
 		add(openInstallDirButton, c);
 		c.gridy++;
 		c.weighty = 1;

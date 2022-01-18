@@ -3,7 +3,6 @@ package gg.xp.xivsupport.gui.tables;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
-import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
 import gg.xp.xivsupport.gui.tables.renderers.HpPredictedRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
@@ -19,9 +18,12 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.DoubleSettingGui;
 import gg.xp.xivsupport.persistence.gui.DoubleSettingSlider;
+import gg.xp.xivsupport.persistence.gui.LongSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
+import gg.xp.xivsupport.persistence.settings.LongSetting;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -31,11 +33,9 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.io.Serial;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @ScanMe
 public final class StandardColumns {
@@ -257,6 +257,45 @@ public final class StandardColumns {
 			col.setCellEditor(new DoubleSettingSliderEditor(name, increment));
 		});
 	}
+	public static <X> CustomColumn<X> doubleSettingBoxColumn(String name, Function<X, DoubleSetting> settingGetter, int prefWidth) {
+		return (new CustomColumn<>(name, settingGetter::apply, col -> {
+			col.setPreferredWidth(prefWidth);
+			col.setCellEditor(new DoubleSettingBoxEditor());
+			col.setCellRenderer(new TableCellRenderer() {
+				private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+
+				@Override
+				public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+					if (value instanceof DoubleSetting setting) {
+						return defaultRenderer.getTableCellRendererComponent(table, setting.get(), isSelected, hasFocus, row, column);
+					}
+					else {
+						return defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+					}
+				}
+			});
+		}));
+	}
+
+	public static <X> CustomColumn<X> longSettingBoxColumn(String name, Function<X, LongSetting> settingGetter, int prefWidth) {
+					return (new CustomColumn<>(name, settingGetter::apply, col -> {
+						col.setPreferredWidth(prefWidth);
+						col.setCellEditor(new LongSettingBoxEditor());
+						col.setCellRenderer(new TableCellRenderer() {
+							private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+
+							@Override
+							public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+								if (value instanceof LongSetting setting) {
+									return defaultRenderer.getTableCellRendererComponent(table, setting.get(), isSelected, hasFocus, row, column);
+								}
+								else {
+									return defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+								}
+							}
+						});
+					}));
+	}
 
 	private static class DoubleSettingSliderEditor extends AbstractCellEditor implements TableCellEditor {
 
@@ -285,6 +324,7 @@ public final class StandardColumns {
 			return slider;
 		}
 	}
+
 	private static class BooleanSettingCellEditor extends AbstractCellEditor implements TableCellEditor {
 
 		private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
@@ -312,4 +352,36 @@ public final class StandardColumns {
 			return checkbox;
 		}
 	}
-}
+
+	public static class LongSettingBoxEditor extends AbstractCellEditor implements TableCellEditor {
+
+		@Serial
+		private static final long serialVersionUID = 7982660247670929851L;
+
+		@Override
+		public Object getCellEditorValue() {
+			return null;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			LongSetting setting = (LongSetting) value;
+			return new LongSettingGui(setting, "N/A").getTextBoxOnly();
+		}
+	}
+	public static class DoubleSettingBoxEditor extends AbstractCellEditor implements TableCellEditor {
+
+		@Serial
+		private static final long serialVersionUID = 7982660247670929851L;
+
+		@Override
+		public Object getCellEditorValue() {
+			return null;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			DoubleSetting setting = (DoubleSetting) value;
+			return new DoubleSettingGui(setting, "N/A").getTextBoxOnly();
+		}
+	}}

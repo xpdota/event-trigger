@@ -26,6 +26,10 @@ public final class Platform {
 		return userDataDir;
 	}
 
+	public static Path getSessionsDir() {
+		return Paths.get(getTriggeventDir().toString(), "sessions");
+	}
+
 	public static Path getActDir() {
 		String appData = System.getenv("APPDATA");
 		Path userDataDir;
