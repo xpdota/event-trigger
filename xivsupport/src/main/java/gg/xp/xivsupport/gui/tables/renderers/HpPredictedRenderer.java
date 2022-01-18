@@ -17,7 +17,7 @@ public class HpPredictedRenderer extends ResourceBarRendererWithMovement<HitPoin
 	@Override
 	protected Color getBarColor(double percent, double percentChange, @NotNull HitPointsWithPredicted item) {
 		Color raw = Color.getHSBColor((float) (0.33f * percent), 0.36f, 0.52f);
-		return new Color(raw.getRed(), raw.getGreen(), raw.getBlue(), 128);
+		return new Color(raw.getRed(), raw.getGreen(), raw.getBlue(), 160);
 	}
 
 	@Override
