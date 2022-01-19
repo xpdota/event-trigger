@@ -137,7 +137,8 @@ public class P2S implements FilteredEventHandler {
 		else if (id == 0x6833) {
 			context.accept(murkyDepths.getModified(event));
 		}
-		else if (id == 0x6838) {
+		else if (id == 0x6838 && event.getTarget().isThePlayer()) {
+			// TODO: check this
 			context.accept(taintedFlood.getModified(event));
 		}
 	}

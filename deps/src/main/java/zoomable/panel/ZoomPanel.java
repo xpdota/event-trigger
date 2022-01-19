@@ -89,9 +89,7 @@ public class ZoomPanel extends JPanel implements MouseWheelListener, MouseListen
 		xOffset += xDiff;
 		yOffset += yDiff;
 		startPoint = curPoint;
-
 		repaint();
-
 	}
 
 	@Override

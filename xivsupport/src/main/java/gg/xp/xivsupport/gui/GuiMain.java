@@ -29,7 +29,7 @@ import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.map.MapPanel;
+import gg.xp.xivsupport.gui.map.MapTab;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -150,7 +150,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", new MapPanel(state.get(XivStateImpl.class))));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", container.getComponent(MapTab.class)));
 	}
 
 
@@ -832,10 +832,7 @@ public class GuiMain {
 				@Override
 				public boolean isCellEditable(int row, int column) {
 					// TODO: make this more official
-					if (getCellEditor(row, column) instanceof NoCellEditor) {
-						return false;
-					}
-					return true;
+					return !(getCellEditor(row, column) instanceof NoCellEditor);
 				}
 			};
 			CustomTableModel<XivOverlay> tableModel = CustomTableModel.builder(overlayMain::getOverlays)

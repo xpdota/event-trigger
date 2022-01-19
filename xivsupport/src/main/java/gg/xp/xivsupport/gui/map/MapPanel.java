@@ -1,10 +1,13 @@
 package gg.xp.xivsupport.gui.map;
 
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.jobs.ActionIcon;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivdata.jobs.XivMap;
+import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.OverlapLayout;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
@@ -18,50 +21,61 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.io.Serial;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-public class MapPanel extends TitleBorderFullsizePanel {
+public class MapPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener {
 
 	private static final Logger log = LoggerFactory.getLogger(MapPanel.class);
 	@Serial
 	private static final long serialVersionUID = 6804697839463860552L;
 
-	private final JPanel mapPanel;
 	private final Map<Long, PlayerDoohickey> things = new HashMap<>();
-	private static final int MAP_SIZE = 400;
-	private static final int MAP_UI_OFFSET = MAP_SIZE / 2;
+	private double zoomFactor = 1;
+	private volatile int curXpan;
+	private volatile int curYpan;
+	private volatile Point dragPoint;
 	private final XivState state;
 	private XivMap map = XivMap.UNKNOWN;
 
 	public MapPanel(XivState state) {
-		super("Map");
 		this.state = state;
-		// TODO: revisit zooming later
-		setPreferredSize(getMaximumSize());
-		setLayout(new FlowLayout());
-//		JPanel zoomPanel = new ZoomPanel();
-//		zoomPanel.setPreferredSize(getMaximumSize());
-//		zoomPanel.add(new JLabel("Test Text Here"));
-//		add(zoomPanel);
-		mapPanel = new JPanel();
-		mapPanel.setLayout(null);
-		mapPanel.setPreferredSize(new Dimension(MAP_SIZE, MAP_SIZE));
-//		mapPanel.setSize(new Dimension(400, 400));
-		mapPanel.setBorder(new LineBorder(Color.BLUE, 2));
-		add(mapPanel);
-		Insets insets = mapPanel.getInsets();
-//		mapPanel.repaint();
+//		setLayout(new FlowLayout());
+		setLayout(null);
+//		setPreferredSize(new Dimension(MAP_SIZE, MAP_SIZE));
+//		mapPanel.setBorder(new LineBorder(Color.BLUE, 2));
+		setBackground(new Color(168, 153, 114));
 		// TODO: this isn't a very good way of doing it, because it runs the entire thing in the EDT whereas we really
 		// don't need the computational parts to be on the EDT.
 		// TODO: lower this back down alter
-		new Timer(1000, e -> {
-			this.refresh();
+		new Timer(100, e -> {
+			if (this.isShowing()) {
+				this.refresh();
+			}
 		}).start();
+		addMouseWheelListener(this);
+		addMouseMotionListener(this);
+		addMouseListener(this);
+	}
+
+	@HandleEvents
+	public void mapChange(EventContext context, MapChangeEvent event) {
+		resetPanAndZoom();
+	}
+
+	private void resetPanAndZoom() {
+		curXpan = 0;
+		curYpan = 0;
+		zoomFactor = 1;
+		SwingUtilities.invokeLater(this::refresh);
 	}
 
 	private void refresh() {
@@ -84,8 +98,7 @@ public class MapPanel extends TitleBorderFullsizePanel {
 				});
 
 		Set<Long> allKeys = things.keySet();
-		List<Long> keysToRemove = allKeys.stream().filter(v -> combatants.stream().noneMatch(c -> c.getId() == v))
-				.collect(Collectors.toList());
+		List<Long> keysToRemove = allKeys.stream().filter(v -> combatants.stream().noneMatch(c -> c.getId() == v)).toList();
 		keysToRemove.forEach(k -> {
 			PlayerDoohickey toRemove = things.remove(k);
 			toRemove.setVisible(false);
@@ -97,7 +110,7 @@ public class MapPanel extends TitleBorderFullsizePanel {
 
 	private PlayerDoohickey createNew(XivCombatant cbt) {
 		PlayerDoohickey player = new PlayerDoohickey(cbt);
-		mapPanel.add(player);
+		add(player);
 		return player;
 	}
 
@@ -105,15 +118,85 @@ public class MapPanel extends TitleBorderFullsizePanel {
 		// Already divided by 100
 		double c = map.getScaleFactor();
 		double x = (originalX + map.getOffsetX()) * c * 200;
-		return (int) (((41.0 / c) * ((x + 1024) / 2048) + 1) * 100) / 100 + MAP_UI_OFFSET;
-//		return (int) ((x + map.getOffsetX()) * map.getScaleFactor() + MAP_UI_OFFSET);
+		return (int) (((((41.0 / c) * ((x + 1024) / 2048) + 1) * 100) / 100 * zoomFactor) + curXpan + getWidth() / 2.0);
 	}
 
 	private int translateY(double originalY) {
 		double c = map.getScaleFactor();
 		double y = (originalY + map.getOffsetY()) * c * 200;
-		return (int) (((41.0 / c) * ((y + 1024) / 2048) + 1) * 100) / 100 + MAP_UI_OFFSET;
-//		return (int) ((y + map.getOffsetY()) * map.getScaleFactor() + MAP_UI_OFFSET);
+		return (int) (((((41.0 / c) * ((y + 1024) / 2048) + 1) * 100) / 100 * zoomFactor) + curYpan + getHeight() / 2.0);
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		Point curPoint = e.getLocationOnScreen();
+		double xDiff = curPoint.x - dragPoint.x;
+		double yDiff = curPoint.y - dragPoint.y;
+		curXpan += xDiff;
+		curYpan += yDiff;
+//		log.info("Map Panel Drag: {},{}", xDiff, yDiff);
+		dragPoint = curPoint;
+		refresh();
+	}
+
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		double prevZoomFactor = zoomFactor;
+		//Zoom in
+		if (e.getWheelRotation() < 0) {
+			zoomFactor *= 1.1;
+		}
+		//Zoom out
+		if (e.getWheelRotation() > 0) {
+			zoomFactor /= 1.1;
+		}
+		double xRel = MouseInfo.getPointerInfo().getLocation().getX() - getLocationOnScreen().getX() - getWidth() / 2.0;
+		double yRel = MouseInfo.getPointerInfo().getLocation().getY() - getLocationOnScreen().getY() - getHeight() / 2.0;
+//		log.info("Wheel move: xrel/yrel: {} {}", xRel, yRel);
+
+		double zoomDiv = zoomFactor / prevZoomFactor;
+
+//		log.info("Before: {} {}", curXpan, curYpan);
+		curXpan = (int) ((zoomDiv) * (curXpan) + (1 - zoomDiv) * xRel);
+		curYpan = (int) ((zoomDiv) * (curYpan) + (1 - zoomDiv) * yRel);
+//		log.info("After: {} {}", curXpan, curYpan);
+//		log.info("New map zoom factor: {} (rel {})", zoomFactor, zoomDiv);
+		refresh();
+
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent e) {
+
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+//		log.info("Pressed");
+		dragPoint = MouseInfo.getPointerInfo().getLocation();
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+//		log.info("Released");
+		refresh();
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+//		log.info("Entered");
+
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+//		log.info("Exit");
+
 	}
 
 	// TODO: name....
@@ -131,8 +214,11 @@ public class MapPanel extends TitleBorderFullsizePanel {
 			setLayout(new OverlapLayout());
 			setOpaque(false);
 			defaultLabel = new JLabel(cbt.getName());
-			addIcon(cbt);
+			formatComponent(cbt);
 			RenderUtils.setTooltip(this, String.format("%s (0x%x, %s)", cbt.getName(), cbt.getId(), cbt.getId()));
+			addMouseWheelListener(MapPanel.this);
+			addMouseMotionListener(MapPanel.this);
+			addMouseListener(MapPanel.this);
 		}
 
 		public void update(XivCombatant cbt) {
@@ -147,23 +233,29 @@ public class MapPanel extends TitleBorderFullsizePanel {
 				Job newJob = ((XivPlayerCharacter) cbt).getJob();
 				if (newJob != oldJob) {
 					remove(icon);
-					addIcon(cbt);
+					formatComponent(cbt);
 				}
 				oldJob = newJob;
 			}
 		}
 
-		private void addIcon(XivCombatant cbt) {
+		private void formatComponent(XivCombatant cbt) {
 			if (cbt instanceof XivPlayerCharacter) {
 				Job job = ((XivPlayerCharacter) cbt).getJob();
 				setBorder(new LineBorder(new Color(168, 243, 243)));
+				setBackground((new Color(168, 243, 243)));
 //				log.info("JOB: {}", job);
 				icon = IconTextRenderer.getComponent(job, defaultLabel, true, false, true);
+				setOpaque(true);
+				// TODO: this doesn't work because it hasn't been added to the container yet
+//				MapPanel.this.setComponentZOrder(this, 0);
 			}
 			else {
 				setBorder(new LineBorder(new Color(128, 0, 0)));
+				setOpaque(false);
 				// TODO: find good icon
 				icon = IconTextRenderer.getComponent(ActionIcon.forId(2246), defaultLabel, true, false, true);
+//				MapPanel.this.setComponentZOrder(this, 5);
 			}
 			add(icon);
 			validate();
