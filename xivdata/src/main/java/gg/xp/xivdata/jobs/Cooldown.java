@@ -117,9 +117,20 @@ public enum Cooldown {
 
 	Divination(AST, true, 120.0, "Divination", CooldownType.PARTY_BUFF, 0x40a8, 1878),
 	Draw(AST, true, 30.0, 2, "Draw", CooldownType.PARTY_BUFF, 0xE06),
-	MinorArcana(AST, true, 30.0, "Draw", CooldownType.PARTY_BUFF, 0x1D13),
-	// TODO: The rest of AST CDs
+	MinorArcana(AST, true, 60.0, "Draw", CooldownType.PARTY_BUFF, 0x1D13),
+	// TODO: active status on charge-based abilities?
+	CelInt(AST, true, 30.0, 2, "Celestial Intersection", CooldownType.HEAL, 0x40AC),
 	// Star is an interesting one due to having two stages - perhaps this would be a good use of making a 4th bar color (maybe purple)?
+	Copp(AST, true, 60.0, "Celestial Opposition", CooldownType.HEAL, 0x40A9, 0x757),
+	Lightspeed(AST, false, 90.0, "Light Speed", CooldownType.PERSONAL_UTILITY, 0xE16, 0x349),
+	// TODO: synastry
+	Edig(AST, false, 40.0, 2, "Essential Dignity", CooldownType.HEAL, 0xE1E),
+	Horoscope(AST, false, 60.0, "Horoscope", CooldownType.HEAL, 0x40AD, 0x762, 0x763),
+	Star(AST, true, 60.0, "Earthly Star", CooldownType.HEAL, 0x1D0F, 0x4C8, 0x4E0),
+	// Not sure if I should actually put a buff in for this one, since there's three, and they all mean something slightly different
+	Cunc(AST, false, 60.0, "Collective Unconscious", CooldownType.PARTY_MIT, 0xE1D),
+	Exaltation(AST, false, 60.0, "Exaltation", CooldownType.SINGLE_TARGET_MIT, 0x6511, 0xA9D),
+	Neutral(AST, false, 120.0, "Neutral Sect", CooldownType.HEAL, 0x40AF, 0x764),
 
 
 	// MELEE
