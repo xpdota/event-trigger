@@ -169,4 +169,7 @@ public enum Job implements HasIconURL {
 		return category.isMeleeDps();
 	}
 
+	public JobType getCategory() {
+		return category;
+	}
 }

@@ -39,6 +39,7 @@ public class XivStateImpl implements XivState {
 
 	private static final Logger log = LoggerFactory.getLogger(XivStateImpl.class);
 	private final EventMaster master;
+	private final PartySortOrder pso;
 
 	private XivZone zone;
 	private XivMap map = XivMap.UNKNOWN;
@@ -59,8 +60,9 @@ public class XivStateImpl implements XivState {
 
 	private Job lastPlayerJob;
 
-	public XivStateImpl(EventMaster master) {
+	public XivStateImpl(EventMaster master, PartySortOrder pso) {
 		this.master = master;
+		this.pso = pso;
 	}
 
 	// Note: can be null until we have all the required data, but this should only happen very early on in init
@@ -300,7 +302,7 @@ public class XivStateImpl implements XivState {
 			}
 			else {
 				// TODO: customizable party sorting
-				return p.getJob().defaultPartySortOrder();
+				return pso.getSortOrder(p.getJob());
 			}
 		}));
 		if (partyListProcessed.isEmpty() && player != null) {
