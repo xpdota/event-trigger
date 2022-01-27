@@ -60,7 +60,7 @@ public enum Cooldown {
 	ShakeItOff(WAR, true, 90.0, "Shake It Off", CooldownType.PARTY_MIT, 0x1cdc, 1457),
 	Equilibrium(WAR, false, 60.0, "Equilibrium", CooldownType.HEAL, 0xDE0),
 	// TODO: infuriate requires CD reduction support
-	Onslaught(WAR, true, 30.0, "Onslaught", CooldownType.PERSONAL_UTILITY, 0x1CDA),
+	Onslaught(WAR, true, 30.0, 3, "Onslaught", CooldownType.PERSONAL_UTILITY, 0x1CDA),
 
 	DarkMissionary(DRK, true, 90.0, "Dark Missionary", CooldownType.PARTY_MIT, 0x4057, 1894),
 	DarkMind(DRK, true, 60.0, "Dark Mind", CooldownType.PERSONAL_MIT, 0xe32, 746),
@@ -117,7 +117,7 @@ public enum Cooldown {
 
 	Divination(AST, true, 120.0, "Divination", CooldownType.PARTY_BUFF, 0x40a8, 1878),
 	Draw(AST, true, 30.0, 2, "Draw", CooldownType.PARTY_BUFF, 0xE06),
-	MinorArcana(AST, true, 60.0, "Draw", CooldownType.PARTY_BUFF, 0x1D13),
+	MinorArcana(AST, true, 60.0, "Minor Arcana", CooldownType.PARTY_BUFF, 0x1D13),
 	// TODO: active status on charge-based abilities?
 	CelInt(AST, true, 30.0, 2, "Celestial Intersection", CooldownType.HEAL, 0x40AC),
 	// Star is an interesting one due to having two stages - perhaps this would be a good use of making a 4th bar color (maybe purple)?
