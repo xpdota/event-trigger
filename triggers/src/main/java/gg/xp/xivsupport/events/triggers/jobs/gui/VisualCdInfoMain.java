@@ -6,7 +6,6 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -88,6 +87,11 @@ public class VisualCdInfoMain implements VisualCdInfo {
 		else {
 			return Collections.singletonList(this);
 		}
+	}
+
+	@Override
+	public Cooldown getCd() {
+		return cd;
 	}
 
 	@Override

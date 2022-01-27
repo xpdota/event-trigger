@@ -79,6 +79,11 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	}
 
 	@Override
+	public Cooldown getCd() {
+		return cd;
+	}
+
+	@Override
 	public boolean stillValid() {
 		// TODO: does this need to exist? remove from interface maybe?
 		return true;

@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
+import gg.xp.xivdata.jobs.Cooldown;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.models.CurrentMaxPair;
@@ -19,6 +20,8 @@ public interface VisualCdInfo extends CurrentMaxPair, LabelOverride {
 	long getMax();
 
 	boolean useChargeDisplay();
+
+	Cooldown getCd();
 
 	boolean stillValid();
 }

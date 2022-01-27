@@ -18,6 +18,7 @@ import java.awt.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -64,6 +65,7 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 		Map<CdTrackingKey, AbilityUsedEvent> newCurrentCds = getCooldowns();
 		List<BuffApplied> newCurrentBuffs = getBuffs();
 		if (!newCurrentCds.equals(currentCds) || !newCurrentBuffs.equals(currentBuffs)) {
+			// TODO: figure out a reasonable way of sorting
 			if (newCurrentCds.isEmpty()) {
 				currentCds = Collections.emptyMap();
 			}
@@ -85,6 +87,7 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 			});
 
 			croppedCds = out.stream()
+					.sorted(Comparator.comparing(VisualCdInfo::getCd))
 					.limit(numberOfRows.get())
 					.collect(Collectors.toList());
 		}

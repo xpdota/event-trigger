@@ -50,17 +50,22 @@ public enum Cooldown {
 	HeartofStone(GNB, true, 25.0, "Heart of Stone", CooldownType.PARTY_MIT, 0x3f21, 1840),
 	HeartofCorundum(GNB, true, 25.0, "Heart of Corundum", CooldownType.PARTY_MIT, 25758, 2683),
 	Camouflage(GNB, true, 90.0, "Camouflage", CooldownType.PERSONAL_MIT, 0x3f0c, 1832),
-//	NascentFlash(WAR, true, 25.0, "Nascent Flash", CooldownType.HEAL, 0x4050, 1857, 1858),
+	//	NascentFlash(WAR, true, 25.0, "Nascent Flash", CooldownType.HEAL, 0x4050, 1857, 1858),
+	InnerRelease(WAR, true, 60.0, "Inner Release", CooldownType.PERSONAL_BURST, 0x1CDD, 0x499),
 	ThrillofBattle(WAR, true, 90.0, "Thrill of Battle", CooldownType.PERSONAL_MIT, 0x28, 87),
 	Holmgang(WAR, true, 240.0, "Holmgang", CooldownType.INVULN, 0x2b, 409),
 	Vengeance(WAR, true, 120.0, "Vengeance", CooldownType.PERSONAL_MIT, 0x2c, 89),
 	RawIntuition(WAR, true, 25.0, "Raw/Nascent/Bloodwhetting", CooldownType.PERSONAL_MIT, new long[]{0xddfL, 0x4050, 0x6497}, new long[]{735L, 1857, 1858, 0xA76L}),
 	Upheaval(WAR, true, 30.0, "Upheaval/Orogeny", CooldownType.PERSONAL_BURST, new long[]{0x1CDB, 0x6498}, new long[]{}),
+	ShakeItOff(WAR, true, 90.0, "Shake It Off", CooldownType.PARTY_MIT, 0x1cdc, 1457),
+	Equilibrium(WAR, false, 60.0, "Equilibrium", CooldownType.HEAL, 0xDE0),
+	// TODO: infuriate requires CD reduction support
+	Onslaught(WAR, true, 30.0, "Onslaught", CooldownType.PERSONAL_UTILITY, 0x1CDA),
+
 	DarkMissionary(DRK, true, 90.0, "Dark Missionary", CooldownType.PARTY_MIT, 0x4057, 1894),
 	DarkMind(DRK, true, 60.0, "Dark Mind", CooldownType.PERSONAL_MIT, 0xe32, 746),
 	ShadowWall(DRK, true, 120.0, "Shadow Wall", CooldownType.PERSONAL_MIT, 0xe34, 747),
 	LivingDead(DRK, true, 300.0, "Living Dead", CooldownType.INVULN, 0xe36, 810),
-	ShakeItOff(WAR, true, 90.0, "Shake It Off", CooldownType.PARTY_MIT, 0x1cdc, 1457),
 	TheBlackestNight(DRK, true, 15.0, "The Blackest Night", CooldownType.PERSONAL_MIT, 0x1ce1, 0x49a),
 
 	// HEALERS
@@ -95,6 +100,7 @@ public enum Cooldown {
 	DeploymentTactics(SCH, false, 90.0, "Deployment Tactics", CooldownType.PARTY_MIT, 0xE01),
 	EmergencyTactics(SCH, false, 15.0, "Emergency Tactics", CooldownType.PARTY_MIT, 0xE02, 0x318),
 	// Sage stuff
+	Phlegma(SGE, true, 45.0, 2, "Phlegma", CooldownType.PERSONAL_BURST, 0x5EF9),
 	Krasis(SGE, true, 60.0, "Krasis", CooldownType.HEAL, 0x5EFD, 0xA3E),
 	Pepsis(SGE, true, 30.0, "Pepsis", CooldownType.HEAL, 0x5EED),
 	Rhizomata(SGE, true, 90.0, "Rhizomata", CooldownType.PERSONAL_UTILITY, 0x5EF5),
@@ -108,9 +114,12 @@ public enum Cooldown {
 	Panhaima(SGE, true, 120.0, "Panhaima", CooldownType.PARTY_MIT, 0x5EF7, 0xA35),
 	Physis(SGE, true, 60.0, "Physis", CooldownType.HEAL, 0x5EEE, 0xA3C),
 	Holos(SGE, true, 120.0, "Holos", CooldownType.PARTY_MIT, 0x5EF6, 0xBBB),
-	Phlegma(SGE, true, 45.0,2,  "Phlegma", CooldownType.PERSONAL_BURST, 0x5EF9),
 
 	Divination(AST, true, 120.0, "Divination", CooldownType.PARTY_BUFF, 0x40a8, 1878),
+	Draw(AST, true, 30.0, 2, "Draw", CooldownType.PARTY_BUFF, 0xE06),
+	MinorArcana(AST, true, 30.0, "Draw", CooldownType.PARTY_BUFF, 0x1D13),
+	// TODO: The rest of AST CDs
+	// Star is an interesting one due to having two stages - perhaps this would be a good use of making a 4th bar color (maybe purple)?
 
 
 	// MELEE
@@ -121,8 +130,6 @@ public enum Cooldown {
 	DragonSight(DRG, true, 120.0, "Dragon Sight", CooldownType.PARTY_BUFF, 0x1ce6, 1183, 1184),
 	ArcaneCircle(RPR, true, 120.0, "Arcane Circle", CooldownType.PARTY_BUFF, 0x5F55, 0xA27),
 	ArcaneCrest(RPR, true, 30.0, "Arcane Crest", CooldownType.PERSONAL_MIT, 0x5F54, 0xA24),
-
-
 
 
 	// CASTER
@@ -138,7 +145,6 @@ public enum Cooldown {
 //	CorpsACorps(RDM, true, 35.0, "Corps-a-Corps", CooldownType.PERSONAL_BURST, 0x1D52),
 //	Displacement(RDM, true, 35.0, "Displace/Engage", CooldownType.PERSONAL_BURST, new long[]{0x1D5B, 0x408F}, new long[]{}),
 	SearingLight(SMN, true, 120.0, "Searing Light", CooldownType.PARTY_BUFF, 25801, 2703),
-
 
 
 	// PHYS RANGED
@@ -161,7 +167,6 @@ public enum Cooldown {
 	// TODO need buff ID
 	RadiantFinale(BRD, true, 110.0, "Radiant Finale", CooldownType.PARTY_BUFF, 0x64B9, 0xB94),
 	Tactician(MCH, true, 120.0, "Tactician", CooldownType.PARTY_MIT, 0x41f9, 1951, 2177);
-
 
 
 	private final boolean defaultPersOverlay;
