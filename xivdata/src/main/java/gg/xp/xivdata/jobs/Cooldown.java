@@ -131,6 +131,7 @@ public enum Cooldown {
 	Cunc(AST, false, 60.0, "Collective Unconscious", CooldownType.PARTY_MIT, 0xE1D),
 	Exaltation(AST, false, 60.0, "Exaltation", CooldownType.SINGLE_TARGET_MIT, 0x6511, 0xA9D),
 	Neutral(AST, false, 120.0, "Neutral Sect", CooldownType.HEAL, 0x40AF, 0x764),
+	Macrocosmos(AST, false, 180.0, "Macrocosmos", CooldownType.HEAL, 0x6512, 0xA9E),
 
 
 	// MELEE
