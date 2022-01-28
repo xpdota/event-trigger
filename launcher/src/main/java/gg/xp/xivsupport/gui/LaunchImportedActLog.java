@@ -36,8 +36,8 @@ public final class LaunchImportedActLog {
 		EventMaster master = pico.getComponent(EventMaster.class);
 		ReplayController replayController = new ReplayController(master, events, decompress);
 		pico.addComponent(replayController);
-		pico.getComponent(XivStateImpl.class).setActImport(true);
 		dist.acceptEvent(new InitEvent());
+		pico.getComponent(XivStateImpl.class).setActImport(true);
 		RawEventStorage raw = pico.getComponent(RawEventStorage.class);
 		raw.getMaxEventsStoredSetting().set(1_000_000);
 		pico.addComponent(GuiMain.class);

@@ -203,6 +203,9 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 			statsAndMemory.add(Box.createGlue(), c);
 			addTab("System", statsAndMemory);
 		}
+		{
+			addTab("Party", container.getComponent(PartyConfigTab.class));
+		}
 
 		{
 			TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Websocket (Restart Required)");

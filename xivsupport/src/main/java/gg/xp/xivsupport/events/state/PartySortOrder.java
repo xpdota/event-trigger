@@ -5,6 +5,7 @@ import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivdata.jobs.JobType;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.EnumListSetting;
+import gg.xp.xivsupport.persistence.settings.ObservableSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @ScanMe
-public class PartySortOrder {
+public class PartySortOrder extends ObservableSetting {
 	private static final Logger log = LoggerFactory.getLogger(PartySortOrder.class);
 	private final EnumListSetting<JobType> categorySortSetting;
 	private final Map<JobType, EnumListSetting<Job>> sortWithinCategory;
@@ -27,12 +28,14 @@ public class PartySortOrder {
 	public PartySortOrder(PersistenceProvider pers) {
 		List<JobType> defaultCategorySort = List.of(JobType.TANK, JobType.HEALER, JobType.MELEE_DPS, JobType.PRANGED, JobType.CASTER);
 		categorySortSetting = new EnumListSetting<>(JobType.class, pers, "party-sort.categories.order", EnumListSetting.BadKeyBehavior.RETURN_DEFAULT, defaultCategorySort);
+		categorySortSetting.addListener(this::updateSortOrderCache);
 
 		sortWithinCategory = new EnumMap<>(JobType.class);
 
 		for (JobType jobType : defaultCategorySort) {
 			List<Job> defaultSortForThisCategory = Arrays.stream(Job.values()).filter(j -> j.getCategory() == jobType).sorted(Comparator.comparing(Job::defaultPartySortOrder)).toList();
 			EnumListSetting<Job> setting = new EnumListSetting<>(Job.class, pers, String.format("party-sort.categories.%s.order", jobType), EnumListSetting.BadKeyBehavior.RETURN_DEFAULT, defaultSortForThisCategory);
+			setting.addListener(this::updateSortOrderCache);
 			sortWithinCategory.put(jobType, setting);
 			boolean dirty = false;
 			List<Job> currentSortForThisCategory = new ArrayList<>(setting.get());
@@ -51,6 +54,7 @@ public class PartySortOrder {
 
 	@SuppressWarnings("Convert2streamapi") // Just looks worse and is probably slower
 	private void updateSortOrderCache() {
+		log.info("Updating party sort order cache");
 		List<Job> jobs = new ArrayList<>(Arrays.asList(Job.values()));
 		jobs.sort(Comparator.comparing(job -> {
 			int catSort;
@@ -86,6 +90,7 @@ public class PartySortOrder {
 			newCachedSortOrder.put(jobs.get(i), i);
 		}
 		cachedSortOrder = newCachedSortOrder;
+		notifyListeners();
 	}
 
 	public Comparator<Job> compare() {
@@ -96,4 +101,11 @@ public class PartySortOrder {
 		return cachedSortOrder.get(job);
 	}
 
+	public EnumListSetting<JobType> getCategorySortSetting() {
+		return categorySortSetting;
+	}
+
+	public Map<JobType, EnumListSetting<Job>> getSortWithinCategories() {
+		return Collections.unmodifiableMap(sortWithinCategory);
+	}
 }

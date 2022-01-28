@@ -63,6 +63,9 @@ public class XivStateImpl implements XivState {
 	public XivStateImpl(EventMaster master, PartySortOrder pso) {
 		this.master = master;
 		this.pso = pso;
+		// This might technically have a very slight concurrency issue, but it's doubtful
+		// that it would ever become a real issue.
+		pso.addListener(this::recalcState);
 	}
 
 	// Note: can be null until we have all the required data, but this should only happen very early on in init
