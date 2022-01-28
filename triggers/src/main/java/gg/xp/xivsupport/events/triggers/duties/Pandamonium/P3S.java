@@ -47,6 +47,15 @@ public class P3S implements FilteredEventHandler {
 	private final ModifiableCallout number7 = new ModifiableCallout("#7", "7");
 	private final ModifiableCallout number8 = new ModifiableCallout("#8", "8");
 
+	private final ModifiableCallout ff1West = new ModifiableCallout("Fledling Flight 1 West", "Go West");
+	private final ModifiableCallout ff1East = new ModifiableCallout("Fledling Flight 1 East", "Go East");
+	private final ModifiableCallout ff1North = new ModifiableCallout("Fledling Flight 1 North", "Go North");
+	private final ModifiableCallout ff1South = new ModifiableCallout("Fledling Flight 1 South", "Go South");
+	private final ModifiableCallout ff2West = new ModifiableCallout("Fledling Flight 2 West", "Go West");
+	private final ModifiableCallout ff2East = new ModifiableCallout("Fledling Flight 2 East", "Go East");
+	private final ModifiableCallout ff2North = new ModifiableCallout("Fledling Flight 2 North", "Go North");
+	private final ModifiableCallout ff2South = new ModifiableCallout("Fledling Flight 2 South", "Go South");
+
 	private final ModifiableCallout expFpShiva = new ModifiableCallout("Experimental Fireplume (Shiva)", "Middle then Shiva Circles");
 	private final ModifiableCallout expFpOut = new ModifiableCallout("Experimental Fireplume (Out)", "Middle then Out");
 
@@ -158,11 +167,13 @@ public class P3S implements FilteredEventHandler {
 	}
 
 	private Long firstHeadmark;
+	private boolean isDeathsToll;
 
 	@HandleEvents
 	public void resetAll(EventContext context, DutyCommenceEvent event) {
 		firstHeadmark = null;
 		birdTethers.clear();
+		isDeathsToll = false;
 	}
 
 	@HandleEvents
@@ -182,6 +193,10 @@ public class P3S implements FilteredEventHandler {
 			case 5 -> number6;
 			case 6 -> number7;
 			case 7 -> number8;
+			case 28 -> isDeathsToll ? ff2West : ff1East;
+			case 29 -> isDeathsToll ? ff2East : ff1West;
+			case 30 -> isDeathsToll ? ff2North : ff1South;
+			case 31 -> isDeathsToll ? ff2South : ff1North;
 			default -> null;
 		};
 		if (call != null) {
@@ -201,40 +216,35 @@ public class P3S implements FilteredEventHandler {
 	@HandleEvents
 	public void birdTether(EventContext context, TetherEvent tether) {
 		XivPlayerCharacter player = state.getPlayer();
-		if (tether.getId() == 0x39) {
+		if (tether.getId() == 0x39 || tether.getId() == 0x1) {
 			birdTethers.add(tether);
 			if (birdTethers.size() == 8) {
-				try {
-					// Two possibilities: you are tied to a bird and a player, or you are tied to another player and they are tied to a bird
-					Set<XivCombatant> tetheredToPlayer = TetherEvent.getUnitsTetheredTo(player, birdTethers);
-					final XivCombatant bird;
-					final XivCombatant otherPlayer;
-					if (tetheredToPlayer.size() == 2) {
-						List<XivCombatant> tetheredSorted = new ArrayList<>(tetheredToPlayer);
-						tetheredSorted.sort(Comparator.comparing(XivEntity::getId));
-						bird = tetheredSorted.get(1);
-						otherPlayer = tetheredSorted.get(0);
-						String birdSpot = arenaPos.forCombatant(bird).getFriendlyName();
-						context.accept(this.tetheredToBird.getModified(tether, Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
-					}
-					else if (tetheredToPlayer.size() == 1) {
-						otherPlayer = tetheredToPlayer.iterator().next();
-						Set<XivCombatant> tetheredToOtherPlayer = TetherEvent.getUnitsTetheredTo(otherPlayer, birdTethers);
-						tetheredToOtherPlayer.remove(player);
-						if (tetheredToOtherPlayer.size() != 1) {
-							log.error("Error doing bird tethers: expected other player to be tethered to 1 bird, but they were tethered to: {}", tetheredToOtherPlayer);
-							return;
-						}
-						bird = tetheredToOtherPlayer.iterator().next();
-						String birdSpot = arenaPos.forCombatant(bird).getFriendlyName();
-						context.accept(this.tetheredToPlayer.getModified(tether, Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
-					}
-					else {
-						log.error("Expected to be tethered to one or two other entities, but was tethered to: {}", tetheredToPlayer);
-					}
+				// Two possibilities: you are tied to a bird and a player, or you are tied to another player and they are tied to a bird
+				Set<XivCombatant> tetheredToPlayer = TetherEvent.getUnitsTetheredTo(player, birdTethers);
+				final XivCombatant bird;
+				final XivCombatant otherPlayer;
+				if (tetheredToPlayer.size() == 2) {
+					List<XivCombatant> tetheredSorted = new ArrayList<>(tetheredToPlayer);
+					tetheredSorted.sort(Comparator.comparing(XivEntity::getId));
+					bird = tetheredSorted.get(1);
+					otherPlayer = tetheredSorted.get(0);
+					String birdSpot = arenaPos.forCombatant(bird).getFriendlyName();
+					context.accept(this.tetheredToBird.getModified(tether, Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
 				}
-				finally {
-					birdTethers.clear();
+				else if (tetheredToPlayer.size() == 1) {
+					otherPlayer = tetheredToPlayer.iterator().next();
+					Set<XivCombatant> tetheredToOtherPlayer = TetherEvent.getUnitsTetheredTo(otherPlayer, birdTethers);
+					tetheredToOtherPlayer.remove(player);
+					if (tetheredToOtherPlayer.size() != 1) {
+						log.error("Error doing bird tethers: expected other player to be tethered to 1 bird, but they were tethered to: {}", tetheredToOtherPlayer);
+						return;
+					}
+					bird = tetheredToOtherPlayer.iterator().next();
+					String birdSpot = arenaPos.forCombatant(bird).getFriendlyName();
+					context.accept(this.tetheredToPlayer.getModified(tether, Map.of("otherplayer", otherPlayer, "birdspot", birdSpot)));
+				}
+				else {
+					log.error("Expected to be tethered to one or two other entities, but was tethered to: {}", tetheredToPlayer);
 				}
 
 			}
@@ -244,16 +254,18 @@ public class P3S implements FilteredEventHandler {
 	@HandleEvents
 	public void deathsToll(EventContext context, BuffApplied buff) {
 		// Stack counting down would be considered a refresh
-		if (buff.getBuff().getId() == 0xACA && buff.getTarget().isThePlayer() && !buff.isRefresh()) {
-			long stacks = buff.getStacks();
-			CalloutEvent callout = switch ((int) stacks) {
-				case 1 -> deathsToll1.getModified(buff);
-				case 2 -> deathsToll2.getModified(buff);
-				case 4 -> deathsToll4.getModified(buff);
-				default -> deathsTollN.getModified(buff, Map.of("stacks", stacks));
-			};
-			context.accept(callout);
-		}
+		if (buff.getBuff().getId() == 0xACA)
+			isDeathsToll = true;
+			if (buff.getTarget().isThePlayer() && !buff.isRefresh()) {
+				long stacks = buff.getStacks();
+				CalloutEvent callout = switch ((int) stacks) {
+					case 1 -> deathsToll1.getModified(buff);
+					case 2 -> deathsToll2.getModified(buff);
+					case 4 -> deathsToll4.getModified(buff);
+					default -> deathsTollN.getModified(buff, Map.of("stacks", stacks));
+				};
+				context.accept(callout);
+			}
 	}
 
 	@Override
