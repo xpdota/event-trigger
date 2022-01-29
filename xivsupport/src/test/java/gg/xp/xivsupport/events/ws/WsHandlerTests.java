@@ -3,7 +3,9 @@ package gg.xp.xivsupport.events.ws;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.BasicEventQueue;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivsupport.events.state.PartySortOrder;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.CombatantType;
@@ -166,8 +168,9 @@ public class WsHandlerTests {
 						  ],
 						  "rseq":0}"""
 		));
+		master.getQueue().waitDrain();
 		StateStore stateStore = pico.getComponent(StateStore.class);
-		XivState xivState = stateStore.get(XivStateImpl.class);
+		XivState xivState = pico.getComponent(XivState.class);
 
 		try {
 			Thread.sleep(1000);
@@ -177,7 +180,6 @@ public class WsHandlerTests {
 			// The purpose of doing those async is to eventually implement event merging if needed for performance.
 		}
 
-		((BasicEventQueue) master.getQueue()).waitDrain();
 		log.info("Queue size: {}", master.getQueue().pendingSize());
 
 		XivZone zone = xivState.getZone();
