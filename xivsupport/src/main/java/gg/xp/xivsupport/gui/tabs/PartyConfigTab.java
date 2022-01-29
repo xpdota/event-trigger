@@ -9,6 +9,7 @@ import gg.xp.xivsupport.events.state.PartySortOrder;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
+import gg.xp.xivsupport.gui.components.RearrangeableEnumListSetting;
 import gg.xp.xivsupport.gui.components.RearrangeableList;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -67,26 +68,19 @@ public class PartyConfigTab extends TitleBorderFullsizePanel {
 				.build();
 
 		EnumListSetting<JobType> catSort = pso.getCategorySortSetting();
-		List<JobType> jobTypes = catSort.get();
 		{
-			RearrangeableList<JobType> categoryList = new RearrangeableList<>(jobTypes, l -> {
-				catSort.set(l);
-				log.info("Changed category order: {}", l.stream().map(Enum::name).collect(Collectors.joining(", ")));
-			});
+			RearrangeableList<JobType> categoryList = new RearrangeableEnumListSetting<>(catSort).getListGui();
 			JScrollPane scroll = new JScrollPane(categoryList);
 			scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-//			add(new TitleBorderFullsizePanel("Foo"), c);
 			add(scroll, c);
 			resetButton.addActionListener(l -> catSort.delete());
 			catSort.addListener(partyTableModel::fullRefresh);
 		}
+		List<JobType> jobTypes = catSort.getDefault();
 		for (JobType jobType : jobTypes) {
 			c.gridx++;
 			EnumListSetting<Job> setting = pso.getSortWithinCategories().get(jobType);
-			RearrangeableList<Job> jobsList = new RearrangeableList<>(setting.get(), l -> {
-				setting.set(l);
-				log.info("Changed order for category {}: {}", jobType, l.stream().map(Enum::name).collect(Collectors.joining(", ")));
-			});
+			RearrangeableList<Job> jobsList = new RearrangeableEnumListSetting<>(setting).getListGui();
 			jobsList.setCellRenderer(new JobRenderer());
 			JScrollPane scroll = new JScrollPane(jobsList);
 			scroll.setMinimumSize(new Dimension(10, 10));
@@ -113,7 +107,7 @@ public class PartyConfigTab extends TitleBorderFullsizePanel {
 		add(scroller, c);
 
 		// TODO: this really shouldn't require a restart, I'm just being lazy
-		resetButton.addActionListener(l -> JOptionPane.showMessageDialog(this, "Party Order Reset, Please Restart"));
+//		resetButton.addActionListener(l -> JOptionPane.showMessageDialog(this, "Party Order Reset, Please Restart"));
 	}
 
 	@HandleEvents(order = 20_000)
