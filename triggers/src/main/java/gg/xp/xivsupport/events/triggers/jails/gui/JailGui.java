@@ -107,17 +107,11 @@ public class JailGui implements PluginTab {
 		instructions.setFocusable(false);
 		panel.add(instructions, c);
 
-
-		JPanel dragger = new JPanel();
-		dragger.setBorder(new LineBorder(Color.PINK));
-		dragger.setAlignmentX(0);
-		dragger.setLayout(new FlowLayout(FlowLayout.LEFT));
 		jobList.setCellRenderer(new JobRenderer());
 		JScrollPane scroll = new JScrollPane(jobList);
 		Dimension size = new Dimension(100, 50);
 		scroll.setMinimumSize(size);
 		scroll.setPreferredSize(size);
-		dragger.add(scroll);
 		c.gridwidth = 1;
 		c.weighty = 1;
 		c.gridy++;
