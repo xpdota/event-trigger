@@ -18,45 +18,46 @@ import java.util.Map;
 public class P1S implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P1S.class);
 
-	private final ModifiableCallout wardensWrath = new ModifiableCallout("Warden's Wrath", "Raidwide");
-	private final ModifiableCallout shiningCells = new ModifiableCallout("Shining Cells", "Raidwide");
-	private final ModifiableCallout slamShut = new ModifiableCallout("Slam Shut", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> wardensWrath = ModifiableCallout.durationBasedCall("Warden's Wrath", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> shiningCells = ModifiableCallout.durationBasedCall("Shining Cells", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> slamShut = ModifiableCallout.durationBasedCall("Slam Shut", "Raidwide");
 
-	private final ModifiableCallout leftToRight = new ModifiableCallout("Flail: Left, Right", "Left to Right");
-	private final ModifiableCallout rightToLeft = new ModifiableCallout("Flail: Right, Left", "Right to Left");
-	private final ModifiableCallout outThenIn = new ModifiableCallout("Flail: Out, In", "Out then In");
-	private final ModifiableCallout inThenOut = new ModifiableCallout("Flail: In, Out", "In then Out");
+	private final ModifiableCallout<AbilityCastStart> leftToRight = ModifiableCallout.durationBasedCall("Flail: Left, Right", "Left to Right");
+	private final ModifiableCallout<AbilityCastStart> rightToLeft = ModifiableCallout.durationBasedCall("Flail: Right, Left", "Right to Left");
+	private final ModifiableCallout<AbilityCastStart> outThenIn = ModifiableCallout.durationBasedCall("Flail: Out, In", "Out then In");
+	private final ModifiableCallout<AbilityCastStart> inThenOut = ModifiableCallout.durationBasedCall("Flail: In, Out", "In then Out");
 
-	private final ModifiableCallout heavyHand = new ModifiableCallout("Heavy Hand", "Tankbuster");
-	private final ModifiableCallout flailOfGrace = new ModifiableCallout("Pitiless Flail of Grace", "Buster, Knockback, Stack");
-	private final ModifiableCallout flailOfPurgation = new ModifiableCallout("Pitiless Flail of Purgation", "Buster, Knockback, Flare");
+	private final ModifiableCallout<AbilityCastStart> heavyHand = ModifiableCallout.durationBasedCall("Heavy Hand", "Tankbuster");
+	private final ModifiableCallout<AbilityCastStart> flailOfGrace = ModifiableCallout.durationBasedCall("Pitiless Flail of Grace", "Buster, Knockback, Stack");
+	private final ModifiableCallout<AbilityCastStart> flailOfPurgation = ModifiableCallout.durationBasedCall("Pitiless Flail of Purgation", "Buster, Knockback, Flare");
 
-	private final ModifiableCallout shacklesOfTime_you = new ModifiableCallout("Shackles of Time on You", "Opposite Color from Party");
-	private final ModifiableCallout shacklesOfTime_notYou = new ModifiableCallout("Shackles of Time - Not You", "Stack with Party");
+	private final ModifiableCallout<BuffApplied> shacklesOfTime_you = ModifiableCallout.durationBasedCall("Shackles of Time on You", "Opposite Color from Party");
+	private final ModifiableCallout<BuffApplied> shacklesOfTime_notYou = ModifiableCallout.durationBasedCall("Shackles of Time - Not You", "Stack with Party");
 
-	private final ModifiableCallout shacklesPrep = new ModifiableCallout("Shackles Prep", "Shackles");
+	private final ModifiableCallout<AbilityCastStart> shacklesPrep = ModifiableCallout.durationBasedCall("Shackles Prep", "Shackles");
 
-	private final ModifiableCallout shacklesRedGeneric = new ModifiableCallout("Red Shackle", "Out");
-	private final ModifiableCallout shacklesPurpleGeneric = new ModifiableCallout("Purple Shackle", "In");
+	private final ModifiableCallout<BuffApplied> shacklesRedGeneric = ModifiableCallout.durationBasedCall("Red Shackle", "Out");
+	private final ModifiableCallout<BuffApplied> shacklesPurpleGeneric = ModifiableCallout.durationBasedCall("Purple Shackle", "In");
 
-	private final ModifiableCallout shacklesRed3 = new ModifiableCallout("Red Shackle 1 (3s)", "Out 1");
-	private final ModifiableCallout shacklesRed8 = new ModifiableCallout("Red Shackle 2 (8s)", "Out 2");
-	private final ModifiableCallout shacklesRed13 = new ModifiableCallout("Red Shackle 3 (13s)", "Out 3");
-	private final ModifiableCallout shacklesRed18 = new ModifiableCallout("Red Shackle 4 (18s)", "Out 4");
-	private final ModifiableCallout shacklesPurp3 = new ModifiableCallout("Purple Shackle 1 (3s)", "In 1");
-	private final ModifiableCallout shacklesPurp8 = new ModifiableCallout("Purple Shackle 2 (8s)", "In 2");
-	private final ModifiableCallout shacklesPurp13 = new ModifiableCallout("Purple Shackle 3 (13s)", "In 3");
-	private final ModifiableCallout shacklesPurp18 = new ModifiableCallout("Purple Shackle 4 (18s)", "In 4");
+	private final ModifiableCallout<BuffApplied> shacklesRed3 = ModifiableCallout.durationBasedCall("Red Shackle 1 (3s)", "Out 1");
+	private final ModifiableCallout<BuffApplied> shacklesRed8 = ModifiableCallout.durationBasedCall("Red Shackle 2 (8s)", "Out 2");
+	private final ModifiableCallout<BuffApplied> shacklesRed13 = ModifiableCallout.durationBasedCall("Red Shackle 3 (13s)", "Out 3");
+	private final ModifiableCallout<BuffApplied> shacklesRed18 = ModifiableCallout.durationBasedCall("Red Shackle 4 (18s)", "Out 4");
+	private final ModifiableCallout<BuffApplied> shacklesPurp3 = ModifiableCallout.durationBasedCall("Purple Shackle 1 (3s)", "In 1");
+	private final ModifiableCallout<BuffApplied> shacklesPurp8 = ModifiableCallout.durationBasedCall("Purple Shackle 2 (8s)", "In 2");
+	private final ModifiableCallout<BuffApplied> shacklesPurp13 = ModifiableCallout.durationBasedCall("Purple Shackle 3 (13s)", "In 3");
+	private final ModifiableCallout<BuffApplied> shacklesPurp18 = ModifiableCallout.durationBasedCall("Purple Shackle 4 (18s)", "In 4");
 
-	private final ModifiableCallout greenSafe = new ModifiableCallout("Green/Light Safe", "Light Safe");
-	private final ModifiableCallout redSafe = new ModifiableCallout("Red/Fire Safe", "Fire Safe");
+	// Specifically NOT making these duration-based
+	private final ModifiableCallout<BuffApplied> greenSafe = new ModifiableCallout<>("Green/Light Safe", "Light Safe");
+	private final ModifiableCallout<BuffApplied> redSafe = new ModifiableCallout<>("Red/Fire Safe", "Fire Safe");
 
 	@HandleEvents
 	public void shackles(EventContext context, BuffApplied buff) {
 		if (!buff.getTarget().isThePlayer()) {
 			return;
 		}
-		final ModifiableCallout call;
+		final ModifiableCallout<BuffApplied> call;
 		long id = buff.getBuff().getId();
 		if (id == 0xAB6) {
 			call = shacklesPurpleGeneric;
@@ -122,7 +123,7 @@ public class P1S implements FilteredEventHandler {
 	public void startsCasting(EventContext context, AbilityCastStart event) {
 		if (event.getSource().getType() == CombatantType.NPC) {
 			long id = event.getAbility().getId();
-			ModifiableCallout call;
+			ModifiableCallout<AbilityCastStart> call;
 			if (id == 0x662A) {
 				call = wardensWrath;
 			}

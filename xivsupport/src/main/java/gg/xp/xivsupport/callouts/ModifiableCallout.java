@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,7 +25,7 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class ModifiableCallout<X extends Event> {
+public class ModifiableCallout<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(ModifiableCallout.class);
 
@@ -46,7 +47,7 @@ public class ModifiableCallout<X extends Event> {
 		this.defaultTtsText = tts;
 		this.defaultVisualText = text;
 		this.expiry = expiry;
-		this.defaultVisualHangTime = 5000;
+		this.defaultVisualHangTime = 5000L;
 		conditions = Collections.emptyList();
 	}
 
@@ -138,7 +139,7 @@ public class ModifiableCallout<X extends Event> {
 			return new DynamicCalloutEvent(
 					modifiedCallText,
 					() -> applyReplacements(visualText, arguments),
-					5000L
+					defaultVisualHangTime
 			);
 		}
 	}
@@ -178,7 +179,8 @@ public class ModifiableCallout<X extends Event> {
 					return "Error";
 				}
 			});
-		} finally {
+		}
+		finally {
 			replacements.forEach((k, v) -> {
 				try {
 					interpreter.unset(k);
@@ -206,6 +208,9 @@ public class ModifiableCallout<X extends Event> {
 			}
 		}
 		else if (rawValue instanceof Duration dur) {
+			if (dur.isZero()) {
+				return "NOW";
+			}
 			return String.format("%.01f", dur.toMillis() / 1000.0);
 		}
 		else {
@@ -217,6 +222,10 @@ public class ModifiableCallout<X extends Event> {
 
 	/**
 	 * Used for things like water stack in TEA or P2S where the callout is based on a buff time or castbar.
+	 * <p>
+	 * Just because something *can* be used with this method doesn't mean it should - many buff/castbar mechanics
+	 * do not warrant this. e.g. if the initial cast merely tells you what you need to do, or if it is expected
+	 * that the buff will.
 	 *
 	 * @param desc The description.
 	 * @param text The base text. For the visual text, the duration will be appended in parenthesis.
@@ -225,8 +234,9 @@ public class ModifiableCallout<X extends Event> {
 	 * @return the ModifiableCallout
 	 */
 	public static <Y extends Event & HasDuration> ModifiableCallout<Y> durationBasedCall(String desc, String text) {
-		return new ModifiableCallout<>(desc, text, text + " ({event.getEstimatedRemainingDuration()})", HasDuration::wouldBeExpired);
+		return new ModifiableCallout<>(desc, text, text + " ({event.getEstimatedRemainingDuration()})", hd -> hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0);
 	}
 
+	private static final Duration defaultLingerTime = Duration.of(3, ChronoUnit.SECONDS);
 
 }

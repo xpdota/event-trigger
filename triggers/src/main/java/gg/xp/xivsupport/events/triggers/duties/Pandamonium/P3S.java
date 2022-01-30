@@ -17,7 +17,6 @@ import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
-import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,54 +31,55 @@ public class P3S implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(P3S.class);
 
-	private final ModifiableCallout scorchedExaltation = new ModifiableCallout("Scorched Exaltation", "Raidwide");
-	private final ModifiableCallout heatOfCondemnation = new ModifiableCallout("Heat of Condemnation", "Tank Tethers");
-	private final ModifiableCallout deadRebirth = new ModifiableCallout("Dead Rebirth", "Big Raidwide");
-	private final ModifiableCallout firestorms = new ModifiableCallout("Firestorms of Asphodelus", "Big Raidwide");
+	private final ModifiableCallout<AbilityCastStart> scorchedExaltation = ModifiableCallout.durationBasedCall("Scorched Exaltation", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> heatOfCondemnation = ModifiableCallout.durationBasedCall("Heat of Condemnation", "Tank Tethers");
+	private final ModifiableCallout<AbilityCastStart> deadRebirth = ModifiableCallout.durationBasedCall("Dead Rebirth", "Big Raidwide");
+	private final ModifiableCallout<AbilityCastStart> firestorms = ModifiableCallout.durationBasedCall("Firestorms of Asphodelus", "Big Raidwide");
 
-	private final ModifiableCallout darkenedFire = new ModifiableCallout("Darkened Fire", "Partners");
-	private final ModifiableCallout number1 = new ModifiableCallout("#1", "1");
-	private final ModifiableCallout number2 = new ModifiableCallout("#2", "2");
-	private final ModifiableCallout number3 = new ModifiableCallout("#3", "3");
-	private final ModifiableCallout number4 = new ModifiableCallout("#4", "4");
-	private final ModifiableCallout number5 = new ModifiableCallout("#5", "5");
-	private final ModifiableCallout number6 = new ModifiableCallout("#6", "6");
-	private final ModifiableCallout number7 = new ModifiableCallout("#7", "7");
-	private final ModifiableCallout number8 = new ModifiableCallout("#8", "8");
+	private final ModifiableCallout<AbilityCastStart> darkenedFire = ModifiableCallout.durationBasedCall("Darkened Fire", "Partners");
+	private final ModifiableCallout<HeadMarkerEvent> number1 = new ModifiableCallout<>("#1", "1");
+	private final ModifiableCallout<HeadMarkerEvent> number2 = new ModifiableCallout<>("#2", "2");
+	private final ModifiableCallout<HeadMarkerEvent> number3 = new ModifiableCallout<>("#3", "3");
+	private final ModifiableCallout<HeadMarkerEvent> number4 = new ModifiableCallout<>("#4", "4");
+	private final ModifiableCallout<HeadMarkerEvent> number5 = new ModifiableCallout<>("#5", "5");
+	private final ModifiableCallout<HeadMarkerEvent> number6 = new ModifiableCallout<>("#6", "6");
+	private final ModifiableCallout<HeadMarkerEvent> number7 = new ModifiableCallout<>("#7", "7");
+	private final ModifiableCallout<HeadMarkerEvent> number8 = new ModifiableCallout<>("#8", "8");
 
-	private final ModifiableCallout ff1West = new ModifiableCallout("Fledling Flight 1 West", "Go West");
-	private final ModifiableCallout ff1East = new ModifiableCallout("Fledling Flight 1 East", "Go East");
-	private final ModifiableCallout ff1North = new ModifiableCallout("Fledling Flight 1 North", "Go North");
-	private final ModifiableCallout ff1South = new ModifiableCallout("Fledling Flight 1 South", "Go South");
-	private final ModifiableCallout ff2West = new ModifiableCallout("Fledling Flight 2 West", "Go West");
-	private final ModifiableCallout ff2East = new ModifiableCallout("Fledling Flight 2 East", "Go East");
-	private final ModifiableCallout ff2North = new ModifiableCallout("Fledling Flight 2 North", "Go North");
-	private final ModifiableCallout ff2South = new ModifiableCallout("Fledling Flight 2 South", "Go South");
+	private final ModifiableCallout<HeadMarkerEvent> ff1West = new ModifiableCallout<>("Fledling Flight 1 West", "Go West");
+	private final ModifiableCallout<HeadMarkerEvent> ff1East = new ModifiableCallout<>("Fledling Flight 1 East", "Go East");
+	private final ModifiableCallout<HeadMarkerEvent> ff1North = new ModifiableCallout<>("Fledling Flight 1 North", "Go North");
+	private final ModifiableCallout<HeadMarkerEvent> ff1South = new ModifiableCallout<>("Fledling Flight 1 South", "Go South");
+	private final ModifiableCallout<HeadMarkerEvent> ff2West = new ModifiableCallout<>("Fledling Flight 2 West", "Go West");
+	private final ModifiableCallout<HeadMarkerEvent> ff2East = new ModifiableCallout<>("Fledling Flight 2 East", "Go East");
+	private final ModifiableCallout<HeadMarkerEvent> ff2North = new ModifiableCallout<>("Fledling Flight 2 North", "Go North");
+	private final ModifiableCallout<HeadMarkerEvent> ff2South = new ModifiableCallout<>("Fledling Flight 2 South", "Go South");
 
-	private final ModifiableCallout expFpShiva = new ModifiableCallout("Experimental Fireplume (Shiva)", "Middle then Shiva Circles");
-	private final ModifiableCallout expFpOut = new ModifiableCallout("Experimental Fireplume (Out)", "Middle then Out");
+	private final ModifiableCallout<AbilityCastStart> expFpShiva = new ModifiableCallout<>("Experimental Fireplume (Shiva)", "Middle then Shiva Circles");
+	private final ModifiableCallout<AbilityCastStart> expFpOut = new ModifiableCallout<>("Experimental Fireplume (Out)", "Middle then Out");
 
-	private final ModifiableCallout expGpShiva = new ModifiableCallout("Experimental Gloryplume (Shiva)", "Shiva Circles");
-	private final ModifiableCallout expGpOut = new ModifiableCallout("Experimental Gloryplume (Out)", "Out");
-	private final ModifiableCallout expGpSpread = new ModifiableCallout("Experimental Gloryplume (Spread)", "Spread");
-	private final ModifiableCallout expGpLightParties = new ModifiableCallout("Experimental Gloryplume (Light Parties)", "Light Parties");
+	// Not going to make these duration-based
+	private final ModifiableCallout<AbilityCastStart> expGpShiva = new ModifiableCallout<>("Experimental Gloryplume (Shiva)", "Shiva Circles");
+	private final ModifiableCallout<AbilityCastStart> expGpOut = new ModifiableCallout<>("Experimental Gloryplume (Out)", "Out");
+	private final ModifiableCallout<AbilityUsedEvent> expGpSpread = new ModifiableCallout<>("Experimental Gloryplume (Spread)", "Spread");
+	private final ModifiableCallout<AbilityUsedEvent> expGpLightParties = new ModifiableCallout<>("Experimental Gloryplume (Light Parties)", "Light Parties");
 
-	private final ModifiableCallout expApSpread = new ModifiableCallout("Experimental Ashplume (Spread)", "Spread");
-	private final ModifiableCallout expApLightParties = new ModifiableCallout("Experimental Ashplume (Light Parties)", "Light Parties");
+	private final ModifiableCallout<AbilityCastStart> expApSpread = new ModifiableCallout<>("Experimental Ashplume (Spread)", "Spread");
+	private final ModifiableCallout<AbilityCastStart> expApLightParties = new ModifiableCallout<>("Experimental Ashplume (Light Parties)", "Light Parties");
 
-	private final ModifiableCallout diveSidesSpread = new ModifiableCallout("Divebomb (Quickmarch)", "Sides and Spread");
-	private final ModifiableCallout diveMiddlePairs = new ModifiableCallout("Divebomb (Middle+Partners)", "Middle and Pairs");
+	private final ModifiableCallout<AbilityCastStart> diveSidesSpread = new ModifiableCallout<>("Divebomb (Quickmarch)", "Sides and Spread");
+	private final ModifiableCallout<AbilityCastStart> diveMiddlePairs = new ModifiableCallout<>("Divebomb (Middle+Partners)", "Middle and Pairs");
 
-	private final ModifiableCallout leftWingBad = new ModifiableCallout("Left Wing Bad", "Go Right");
-	private final ModifiableCallout rightWingBad = new ModifiableCallout("Right Wing Bad", "Go Left");
+	private final ModifiableCallout<AbilityCastStart> leftWingBad = ModifiableCallout.durationBasedCall("Left Wing Bad", "Go Right");
+	private final ModifiableCallout<AbilityCastStart> rightWingBad = ModifiableCallout.durationBasedCall("Right Wing Bad", "Go Left");
 
-	private final ModifiableCallout tetheredToBird = new ModifiableCallout("Tethered to Bird + Player", "Tethered to {birdspot} bird and {otherplayer}");
-	private final ModifiableCallout tetheredToPlayer = new ModifiableCallout("Tethered to Player", "Tethered to {otherplayer} ({birdspot} bird)");
+	private final ModifiableCallout<TetherEvent> tetheredToBird = new ModifiableCallout<>("Tethered to Bird + Player", "Tethered to {birdspot} bird and {otherplayer}");
+	private final ModifiableCallout<TetherEvent> tetheredToPlayer = new ModifiableCallout<>("Tethered to Player", "Tethered to {otherplayer} ({birdspot} bird)");
 
-	private final ModifiableCallout deathsToll1 = new ModifiableCallout("Death's Toll (1)", "1 Stack (Cardinal)");
-	private final ModifiableCallout deathsToll2 = new ModifiableCallout("Death's Toll (2)", "2 Stacks (Intercard)");
-	private final ModifiableCallout deathsToll4 = new ModifiableCallout("Death's Toll (4)", "4 Stacks (Middle)");
-	private final ModifiableCallout deathsTollN = new ModifiableCallout("Death's Toll (?)", "{stacks} Stacks");
+	private final ModifiableCallout<BuffApplied> deathsToll1 = new ModifiableCallout<>("Death's Toll (1)", "1 Stack (Cardinal)");
+	private final ModifiableCallout<BuffApplied> deathsToll2 = new ModifiableCallout<>("Death's Toll (2)", "2 Stacks (Intercard)");
+	private final ModifiableCallout<BuffApplied> deathsToll4 = new ModifiableCallout<>("Death's Toll (4)", "4 Stacks (Middle)");
+	private final ModifiableCallout<BuffApplied> deathsTollN = new ModifiableCallout<>("Death's Toll (?)", "{stacks} Stacks");
 
 	// TODO: test this, make sure it didn't break
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
@@ -94,7 +94,7 @@ public class P3S implements FilteredEventHandler {
 	public void startsCasting(EventContext context, AbilityCastStart event) {
 		if (event.getSource().getType() == CombatantType.NPC) {
 			long id = event.getAbility().getId();
-			ModifiableCallout call;
+			ModifiableCallout<AbilityCastStart> call;
 			if (id == 0x6706) {
 				call = scorchedExaltation;
 			}
@@ -152,7 +152,7 @@ public class P3S implements FilteredEventHandler {
 	public void actualCast(EventContext context, AbilityUsedEvent event) {
 		if (event.getSource().getType() == CombatantType.NPC) {
 			long id = event.getAbility().getId();
-			ModifiableCallout call;
+			ModifiableCallout<AbilityUsedEvent> call;
 			if (id == 0x66C8) {
 				call = expGpSpread;
 			}
@@ -184,7 +184,7 @@ public class P3S implements FilteredEventHandler {
 		if (!event.getTarget().isThePlayer()) {
 			return;
 		}
-		ModifiableCallout call = switch (headmarkOffset) {
+		ModifiableCallout<HeadMarkerEvent> call = switch (headmarkOffset) {
 			case 0 -> number1;
 			case 1 -> number2;
 			case 2 -> number3;
@@ -256,16 +256,16 @@ public class P3S implements FilteredEventHandler {
 		// Stack counting down would be considered a refresh
 		if (buff.getBuff().getId() == 0xACA)
 			isDeathsToll = true;
-			if (buff.getTarget().isThePlayer() && !buff.isRefresh()) {
-				long stacks = buff.getStacks();
-				CalloutEvent callout = switch ((int) stacks) {
-					case 1 -> deathsToll1.getModified(buff);
-					case 2 -> deathsToll2.getModified(buff);
-					case 4 -> deathsToll4.getModified(buff);
-					default -> deathsTollN.getModified(buff, Map.of("stacks", stacks));
-				};
-				context.accept(callout);
-			}
+		if (buff.getTarget().isThePlayer() && !buff.isRefresh()) {
+			long stacks = buff.getStacks();
+			ModifiableCallout<BuffApplied> callout = switch ((int) stacks) {
+				case 1 -> deathsToll1;
+				case 2 -> deathsToll2;
+				case 4 -> deathsToll4;
+				default -> deathsTollN;
+			};
+			context.accept(callout.getModified(buff, Map.of("stacks", stacks)));
+		}
 	}
 
 	@Override

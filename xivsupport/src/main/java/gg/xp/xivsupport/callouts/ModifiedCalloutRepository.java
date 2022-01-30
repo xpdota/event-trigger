@@ -59,9 +59,9 @@ public class ModifiedCalloutRepository {
 				String fieldName = f.getName();
 				String fullPropStub = classPropStub + "." + fieldName;
 				f.setAccessible(true);
-				ModifiableCallout original;
+				ModifiableCallout<?> original;
 				try {
-					original = (ModifiableCallout) f.get(o);
+					original = (ModifiableCallout<?>) f.get(o);
 				}
 				catch (IllegalAccessException e) {
 					throw new RuntimeException(e);

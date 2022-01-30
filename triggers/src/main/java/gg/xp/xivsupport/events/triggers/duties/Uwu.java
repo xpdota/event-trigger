@@ -31,7 +31,7 @@ public class Uwu implements FilteredEventHandler {
 		mistralTargets.clear();
 	}
 
-	private final ModifiableCallout slipStream = new ModifiableCallout("Slipstream (Cleave)", "Slipstream");
+	private final ModifiableCallout<AbilityCastStart> slipStream = ModifiableCallout.durationBasedCall("Slipstream (Cleave)", "Slipstream");
 
 	@HandleEvents
 	public void slipStream(EventContext context, AbilityCastStart event) {
@@ -41,7 +41,7 @@ public class Uwu implements FilteredEventHandler {
 	}
 
 	// TODO: since these come in pairs, might be a good idea to finally do instance replacement
-	private final ModifiableCallout mistral = new ModifiableCallout("Mistral (Headmark)", "Mistral");
+	private final ModifiableCallout<HeadMarkerEvent> mistral = new ModifiableCallout<>("Mistral (Headmark)", "Mistral");
 
 	@HandleEvents
 	public void mistral(EventContext context, HeadMarkerEvent event) {
@@ -57,7 +57,8 @@ public class Uwu implements FilteredEventHandler {
 	// TODO: we will need better combatant add/remove support
 
 
-	private final ModifiableCallout searingWind = new ModifiableCallout("Searing Wind", "Searing Wind on {target}");
+	private final ModifiableCallout<AbilityCastStart> searingWind = ModifiableCallout.durationBasedCall("Searing Wind", "Searing Wind on {target}");
+	// TODO: display debuff duration after
 
 	@HandleEvents
 	public void searingWind(EventContext context, AbilityCastStart event) {

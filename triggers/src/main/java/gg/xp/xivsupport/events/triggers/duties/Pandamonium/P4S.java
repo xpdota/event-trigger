@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
@@ -33,52 +34,52 @@ import java.util.Map;
 @CalloutRepo("P4S")
 public class P4S implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P4S.class);
-	private final ModifiableCallout decollation = new ModifiableCallout("Decollation", "Raidwide");
-	private final ModifiableCallout bloodrake = new ModifiableCallout("Bloodrake", "Half Raidwide");
-	private final ModifiableCallout evisceration = new ModifiableCallout("Elegant Evisceration", "Tankbuster on {target}");
-	private final ModifiableCallout searing = new ModifiableCallout("Searing Stream", "Raidwide");
-	private final ModifiableCallout ultimaImpulse = new ModifiableCallout("Ultima Impulse", "Big Raidwide");
+	private final ModifiableCallout<AbilityCastStart> decollation = ModifiableCallout.durationBasedCall("Decollation", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> bloodrake = ModifiableCallout.durationBasedCall("Bloodrake", "Half Raidwide");
+	private final ModifiableCallout<AbilityCastStart> evisceration = ModifiableCallout.durationBasedCall("Elegant Evisceration", "Tankbuster on {target}");
+	private final ModifiableCallout<AbilityCastStart> searing = ModifiableCallout.durationBasedCall("Searing Stream", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> ultimaImpulse = ModifiableCallout.durationBasedCall("Ultima Impulse", "Big Raidwide");
 
-	private final ModifiableCallout neither = new ModifiableCallout("Neither Mechanic", "Nothing");
-	private final ModifiableCallout tethers = new ModifiableCallout("Get Tethers", "Tethers");
-	private final ModifiableCallout rot = new ModifiableCallout("Get Rot", "Rot");
-	private final ModifiableCallout tethersAndRot = new ModifiableCallout("Get Tethers and Rot", "Both");
-	private final ModifiableCallout towers = new ModifiableCallout("Get Towers", "Towers");
-	private final ModifiableCallout towersAndTethers = new ModifiableCallout("Get Towers and Tethers", "Towers and Tethers");
+	private final ModifiableCallout<Event> neither = new ModifiableCallout<>("Neither Mechanic", "Nothing");
+	private final ModifiableCallout<Event> tethers = new ModifiableCallout<>("Get Tethers", "Tethers");
+	private final ModifiableCallout<Event> rot = new ModifiableCallout<>("Get Rot", "Rot");
+	private final ModifiableCallout<Event> tethersAndRot = new ModifiableCallout<>("Get Tethers and Rot", "Both");
+	private final ModifiableCallout<Event> towers = new ModifiableCallout<>("Get Towers", "Towers");
+	private final ModifiableCallout<Event> towersAndTethers = new ModifiableCallout<>("Get Towers and Tethers", "Towers and Tethers");
 
-	private final ModifiableCallout hellsSting = new ModifiableCallout("Hell's Sting", "Protean, dodge in");
+	private final ModifiableCallout<AbilityCastStart> hellsSting = ModifiableCallout.durationBasedCall("Hell's Sting", "Protean, dodge in");
 
-	private final ModifiableCallout pinax = new ModifiableCallout("Pinax Mechanic + Safespot", "{mech1} into {mech2}, {safespot} safe");
+	private final ModifiableCallout<PinaxSet> pinax = new ModifiableCallout<>("Pinax Mechanic + Safespot", "{mech1} into {mech2}, {safespot} safe");
 
-	private final ModifiableCallout shift = new ModifiableCallout("Sword/Cape", "{direction} {cleavekb}");
+	private final ModifiableCallout<AbilityCastStart> shift = ModifiableCallout.durationBasedCall("Sword/Cape", "{direction} {cleavekb}");
 
-	private final ModifiableCallout acting = new ModifiableCallout("Acting Role", "Acting {role}");
-	private final ModifiableCallout belone = new ModifiableCallout("Belone Bursts", "Orb Positions");
-	private final ModifiableCallout periaktoi = new ModifiableCallout("Periaktoi", "{element} safe ({safespot})");
+	private final ModifiableCallout<BuffApplied> acting = new ModifiableCallout<>("Acting Role", "Acting {role}");
+	private final ModifiableCallout<AbilityCastStart> belone = new ModifiableCallout<>("Belone Bursts", "Orb Positions");
+	private final ModifiableCallout<AbilityCastStart> periaktoi = new ModifiableCallout<>("Periaktoi", "{element} safe ({safespot})");
 
-	private final ModifiableCallout nearsightParty = new ModifiableCallout("Nearsight (Non-Tank)", "Party Out");
-	private final ModifiableCallout nearsightTank = new ModifiableCallout("Nearsight (Tank)", "Tanks In");
-	private final ModifiableCallout farsightParty = new ModifiableCallout("Farsight (Non-Tank)", "Party In");
-	private final ModifiableCallout farsightTank = new ModifiableCallout("Farsight (Tank)", "Tanks Out");
-	private final ModifiableCallout demigodDouble = new ModifiableCallout("Demigod Double", "Shared buster on {target}");
-	private final ModifiableCallout heartStake = new ModifiableCallout("Heart Stake", "Bleed buster on {target}");
+	private final ModifiableCallout<AbilityCastStart> nearsightParty = ModifiableCallout.durationBasedCall("Nearsight (Non-Tank)", "Party Out");
+	private final ModifiableCallout<AbilityCastStart> nearsightTank = ModifiableCallout.durationBasedCall("Nearsight (Tank)", "Tanks In");
+	private final ModifiableCallout<AbilityCastStart> farsightParty = ModifiableCallout.durationBasedCall("Farsight (Non-Tank)", "Party In");
+	private final ModifiableCallout<AbilityCastStart> farsightTank = ModifiableCallout.durationBasedCall("Farsight (Tank)", "Tanks Out");
+	private final ModifiableCallout<AbilityCastStart> demigodDouble = ModifiableCallout.durationBasedCall("Demigod Double", "Shared buster on {target}");
+	private final ModifiableCallout<AbilityCastStart> heartStake = ModifiableCallout.durationBasedCall("Heart Stake", "Bleed buster on {target}");
 
-	private final ModifiableCallout redAct2 = new ModifiableCallout("Red Marker (Act 2)", "Red");
-	private final ModifiableCallout tealAct2 = new ModifiableCallout("Teal Marker (Act 2)", "Teal");
-	private final ModifiableCallout purpleAct2 = new ModifiableCallout("Purple Marker (Act 2)", "Purple");
+	private final ModifiableCallout<HeadMarkerEvent> redAct2 = new ModifiableCallout<>("Red Marker (Act 2)", "Red");
+	private final ModifiableCallout<HeadMarkerEvent> tealAct2 = new ModifiableCallout<>("Teal Marker (Act 2)", "Teal");
+	private final ModifiableCallout<HeadMarkerEvent> purpleAct2 = new ModifiableCallout<>("Purple Marker (Act 2)", "Purple");
 
-	private final ModifiableCallout purpleAct4 = new ModifiableCallout("Purple Marker (Act 4)", "Purple");
-	private final ModifiableCallout blueAct4 = new ModifiableCallout("Blue Marker (Act 4)", "Blue");
+	private final ModifiableCallout<HeadMarkerEvent> purpleAct4 = new ModifiableCallout<>("Purple Marker (Act 4)", "Purple");
+	private final ModifiableCallout<HeadMarkerEvent> blueAct4 = new ModifiableCallout<>("Blue Marker (Act 4)", "Blue");
 
-	private final ModifiableCallout red = new ModifiableCallout("Red Marker (Other)", "Red");
-	private final ModifiableCallout teal = new ModifiableCallout("Teal Marker (Other)", "Teal");
-	private final ModifiableCallout purple = new ModifiableCallout("Purple Marker (Other)", "Purple");
-	private final ModifiableCallout blue = new ModifiableCallout("Blue Marker (Other)", "Blue");
+	private final ModifiableCallout<HeadMarkerEvent> red = new ModifiableCallout<>("Red Marker (Other)", "Red");
+	private final ModifiableCallout<HeadMarkerEvent> teal = new ModifiableCallout<>("Teal Marker (Other)", "Teal");
+	private final ModifiableCallout<HeadMarkerEvent> purple = new ModifiableCallout<>("Purple Marker (Other)", "Purple");
+	private final ModifiableCallout<HeadMarkerEvent> blue = new ModifiableCallout<>("Blue Marker (Other)", "Blue");
 
-	private final ModifiableCallout finaleOrder = new ModifiableCallout("Finale Order", "Soak tower {number}");
-	private final ModifiableCallout finaleTower = new ModifiableCallout("Finale Tower", "Soak {towerspot} tower");
+	private final ModifiableCallout<Event> finaleOrder = new ModifiableCallout<>("Finale Order", "Soak tower {number}");
+	private final ModifiableCallout<Event> finaleTower = new ModifiableCallout<>("Finale Tower", "Soak {towerspot} tower");
 
-	private final ModifiableCallout curtainOrder = new ModifiableCallout("Curtain Order", "{number} set");
+	private final ModifiableCallout<BuffApplied> curtainOrder = ModifiableCallout.durationBasedCall("Curtain Order", "{number} set");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
@@ -109,7 +110,7 @@ public class P4S implements FilteredEventHandler {
 	public void startsCasting(EventContext context, AbilityCastStart event) {
 		if (event.getSource().getType() == CombatantType.NPC) {
 			long id = event.getAbility().getId();
-			ModifiableCallout call;
+			ModifiableCallout<AbilityCastStart> call;
 			if (id == 0x6A09) {
 				call = decollation;
 			}
@@ -198,7 +199,7 @@ public class P4S implements FilteredEventHandler {
 				RoleCategory playerRole = playerRole();
 				boolean playerTether = playerRole == tetherRole;
 				boolean playerRot = playerRole == rotRole;
-				final ModifiableCallout call;
+				final ModifiableCallout<Event> call;
 				if (playerRot) {
 					call = playerTether ? tethersAndRot : rot;
 				}
@@ -229,7 +230,7 @@ public class P4S implements FilteredEventHandler {
 		else {
 			return;
 		}
-		final ModifiableCallout call;
+		final ModifiableCallout<Event> call;
 		beloneSuppress = true;
 		RoleCategory pr = playerRole();
 		if (beloneCoilsCounter == 1) {
@@ -471,7 +472,7 @@ public class P4S implements FilteredEventHandler {
 			return;
 		}
 		// TODO: tank with no tether
-		ModifiableCallout call = switch (currentAct) {
+		ModifiableCallout<HeadMarkerEvent> call = switch (currentAct) {
 			case TWO -> switch (headmarkOffset) {
 				case 0 -> redAct2;
 				case -1 -> tealAct2;
@@ -498,6 +499,7 @@ public class P4S implements FilteredEventHandler {
 
 	private TetherEvent lastTether;
 
+	@SuppressWarnings("FloatingPointEquality")
 	@HandleEvents
 	public void tetherHandler(EventContext context, TetherEvent tether) {
 		// Ignore repeated tethers - we only care about first tether.
@@ -521,7 +523,7 @@ public class P4S implements FilteredEventHandler {
 	@HandleEvents
 	public void nearFarSight(EventContext context, AbilityCastStart event) {
 		if (event.getSource().getType() == CombatantType.NPC) {
-			final ModifiableCallout call;
+			final ModifiableCallout<AbilityCastStart> call;
 			if (event.getAbility().getId() == 0x6A26) {
 				Job playerJob = state.getPlayerJob();
 				if (playerJob != null && playerJob.isTank()) {

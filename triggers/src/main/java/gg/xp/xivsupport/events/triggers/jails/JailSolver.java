@@ -35,9 +35,9 @@ import java.util.stream.Collectors;
 
 @CalloutRepo("Titan Gaols")
 public class JailSolver implements FilteredEventHandler {
-	private final ModifiableCallout first = new ModifiableCallout("First Jail", "First");
-	private final ModifiableCallout second = new ModifiableCallout("Second Jail", "Second");
-	private final ModifiableCallout third = new ModifiableCallout("Third Jail", "Third");
+	private final ModifiableCallout<FinalTitanJailsSolvedEvent> first = new ModifiableCallout<>("First Jail", "First");
+	private final ModifiableCallout<FinalTitanJailsSolvedEvent> second = new ModifiableCallout<>("Second Jail", "Second");
+	private final ModifiableCallout<FinalTitanJailsSolvedEvent> third = new ModifiableCallout<>("Third Jail", "Third");
 	private static final Logger log = LoggerFactory.getLogger(JailSolver.class);
 
 	private final List<XivPlayerCharacter> jailedPlayers = new ArrayList<>();
@@ -107,7 +107,7 @@ public class JailSolver implements FilteredEventHandler {
 			currentJailSort = allValidJobs
 					.stream()
 					.sorted(defaultJailSortComparator)
-					.collect(Collectors.toUnmodifiableList());
+					.toList();
 		}
 		this.state = state;
 		jailClearDelay = new LongSetting(persistence, "jail-solver.clear-delay", 10000L);
@@ -264,7 +264,7 @@ public class JailSolver implements FilteredEventHandler {
 	public void resetJailSort() {
 		this.currentJailSort = currentJailSort.stream()
 				.sorted(defaultJailSortComparator)
-				.collect(Collectors.toUnmodifiableList());
+				.toList();
 		sortSetting.delete();
 	}
 

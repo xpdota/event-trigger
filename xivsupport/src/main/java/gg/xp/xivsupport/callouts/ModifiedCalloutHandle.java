@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.callouts;
 
-import gg.xp.xivsupport.gui.overlay.FlyingTextOverlay;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;

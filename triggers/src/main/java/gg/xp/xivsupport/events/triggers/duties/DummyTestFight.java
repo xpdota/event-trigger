@@ -9,7 +9,7 @@ import gg.xp.xivsupport.events.debug.DebugCommand;
 @CalloutRepo("Dummy (/e c:testcall)")
 public class DummyTestFight {
 
-	private final ModifiableCallout dummy = new ModifiableCallout("Dummy Callout to Test UI", "Test");
+	private final ModifiableCallout<DebugCommand> dummy = new ModifiableCallout<>("Dummy Callout to Test UI", "Test");
 
 	@HandleEvents
 	public void dummyCall(EventContext context, DebugCommand event) {

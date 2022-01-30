@@ -8,7 +8,7 @@ import java.io.Serial;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class ParentedCalloutEvent<X extends Event> extends BaseEvent implements CalloutEvent {
+public class ParentedCalloutEvent<X> extends BaseEvent implements CalloutEvent {
 
 	@Serial
 	private static final long serialVersionUID = 6842512228516345067L;
