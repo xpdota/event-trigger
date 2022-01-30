@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
@@ -128,7 +129,9 @@ public class P2S implements FilteredEventHandler {
 		long id = event.getAbility().getId();
 		if (id == 0x682F) {
 			CalloutEvent sw = shockwave.getModified(event);
-			sw.setDelayedEnqueueOffset((long) (event.getDuration() * 1000L) - 6000L);
+			if (sw instanceof BaseEvent be) {
+				be.setDelayedEnqueueOffset((long) (event.getDuration() * 1000L) - 6000L);
+			}
 			context.accept(sw);
 		}
 		else if (id == 0x6810) {
@@ -173,6 +176,7 @@ public class P2S implements FilteredEventHandler {
 			}
 		}
 	}
+
 	private Long firstHeadmark;
 
 	@HandleEvents
@@ -184,15 +188,24 @@ public class P2S implements FilteredEventHandler {
 			return;
 		}
 		ModifiableCallout call = switch (headmarkOffset) {
-			case -114: yield blue1;
-			case -113: yield blue2;
-			case -112: yield blue3;
-			case -111: yield blue4;
-			case -110: yield purp1;
-			case -109: yield purp2;
-			case -108: yield purp3;
-			case -107: yield purp4;
-			default: yield null;
+			case -114:
+				yield blue1;
+			case -113:
+				yield blue2;
+			case -112:
+				yield blue3;
+			case -111:
+				yield blue4;
+			case -110:
+				yield purp1;
+			case -109:
+				yield purp2;
+			case -108:
+				yield purp3;
+			case -107:
+				yield purp4;
+			default:
+				yield null;
 		};
 		if (call != null) {
 			context.accept(call.getModified(event));

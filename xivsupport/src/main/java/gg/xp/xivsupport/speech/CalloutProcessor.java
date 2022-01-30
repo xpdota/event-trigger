@@ -90,7 +90,7 @@ public class CalloutProcessor {
 	@HandleEvents
 	public void ttsDebugCommand(EventContext context, DebugCommand echo) {
 		if (echo.getCommand().equals("tts")) {
-			context.accept(new CalloutEvent("test"));
+			context.accept(new BasicCalloutEvent("test"));
 		}
 	}
 }

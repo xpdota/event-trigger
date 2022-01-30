@@ -11,6 +11,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivStatusEffect;
 import gg.xp.xivsupport.models.XivWorld;
+import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
@@ -99,7 +100,7 @@ public class DotRefreshReminderTest {
 		{
 			List<BaseDelayedEvent> delayedEvents = coll.getEventsOf(BaseDelayedEvent.class);
 			Assert.assertEquals(delayedEvents.size(), 3);
-			List<CalloutEvent> callouts = coll.getEventsOf(CalloutEvent.class);
+			List<CalloutEvent> callouts = coll.getEventsOf(BasicCalloutEvent.class);
 			List<String> calloutData = callouts.stream().map(CalloutEvent::getCallText).collect(Collectors.toList());
 			MatcherAssert.assertThat(calloutData, Matchers.contains("Foo2", "Dosis"));
 			List<TtsRequest> ttsEvents = coll.getEventsOf(TtsRequest.class);
@@ -112,7 +113,7 @@ public class DotRefreshReminderTest {
 		{
 			List<BaseDelayedEvent> delayedEvents = coll.getEventsOf(BaseDelayedEvent.class);
 			Assert.assertEquals(delayedEvents.size(), 1);
-			List<CalloutEvent> callouts = coll.getEventsOf(CalloutEvent.class);
+			List<CalloutEvent> callouts = coll.getEventsOf(BasicCalloutEvent.class);
 			List<String> calloutData = callouts.stream().map(CalloutEvent::getCallText).collect(Collectors.toList());
 			MatcherAssert.assertThat(calloutData, Matchers.contains("Bar"));
 			List<TtsRequest> ttsEvents = coll.getEventsOf(TtsRequest.class);

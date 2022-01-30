@@ -2,7 +2,12 @@ package gg.xp.xivsupport.callouts;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.DynamicCalloutEvent;
+import jdk.jshell.JShell;
+import jdk.jshell.SnippetEvent;
+import jdk.jshell.execution.LocalExecutionControlProvider;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -10,8 +15,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class ModifiableCallout {
 
@@ -63,7 +71,9 @@ public class ModifiableCallout {
 
 	public CalloutEvent getModified(Event event, Map<String, Object> arguments) {
 		// TODO
-		return getModified(arguments);
+		Map<String, Object> map = new HashMap<>(arguments);
+		map.put("event", event);
+		return getModified(map);
 	}
 
 	public CalloutEvent getModified(Map<String, Object> arguments) {
@@ -78,39 +88,87 @@ public class ModifiableCallout {
 			callText = handle.getEffectiveTts();
 			visualText = handle.getEffectiveText();
 		}
-		callText = applyReplacements(callText, arguments);
-		visualText = applyReplacements(visualText, arguments);
-		return new CalloutEvent(
-				callText,
-				visualText);
+		String modifiedCallText = applyReplacements(callText, arguments);
+		String modifiedVisualText = applyReplacements(visualText, arguments);
+		if (Objects.equals(modifiedVisualText, visualText)) {
+			return new BasicCalloutEvent(
+					modifiedCallText,
+					modifiedVisualText);
+		}
+		else {
+			return new DynamicCalloutEvent(
+					modifiedCallText,
+					() -> applyReplacements(visualText, arguments),
+					5000L
+			);
+		}
 	}
 
+	// Not stupid if it works, probably
+	// This is the easiest (only?) way to pass variables into a jshell instance.
+	private static final JShell shell = JShell.builder().executionEngine(new LocalExecutionControlProvider(), Collections.emptyMap()).build();
+	private static final Object lock = new Object();
+	public static final Map<String, Object> context = new HashMap<>();
+
+	Pattern replacer = Pattern.compile("\\{(.+?)}");
+
 	@Contract("null, _ -> null")
-	public static @Nullable String applyReplacements(@Nullable String input, Map<String, Object> replacements) {
+	public @Nullable String applyReplacements(@Nullable String input, Map<String, Object> replacements) {
 		if (input == null) {
 			return null;
 		}
-		for (Map.Entry<String, Object> entry : replacements.entrySet()) {
-			String key = entry.getKey();
-			Object rawValue = entry.getValue();
-			String value;
-			if (rawValue instanceof String) {
-				value = (String) rawValue;
+		if (!input.contains("{")) {
+			return input;
+		}
+		synchronized (lock) {
+			try {
+				context.clear();
+				String thisClassName = getClass().getCanonicalName();
+				shell.eval(String.format("Map<String, Object> context = %s.context ;", thisClassName));
+				replacements.forEach((k, v) -> {
+					context.put(k, v);
+					String canonicalName = v.getClass().getCanonicalName();
+					if (canonicalName == null) {
+						// Fallback
+						canonicalName = "Object";
+					}
+					shell.eval(String.format("%s %s = (%s) %s.context.get(\"%s\") ;", canonicalName, k, canonicalName, thisClassName, k));
+				});
+				return replacer.matcher(input).replaceAll(m -> {
+					List<SnippetEvent> snippets = shell.eval(String.format("%s.singleReplacement(%s)", thisClassName, m.group(1)));
+					// TODO: improve logging
+					String value = snippets.get(snippets.size() - 1).value();
+					// If null, leave it untouched. e.g. '{target}' would still be literally '{target}'
+					value = value == null ? m.group(0) : value;
+					if (value.startsWith("\"") && value.endsWith("\"")) {
+						value = value.substring(1, value.length() - 1);
+					}
+					return value;
+				});
 			}
-			else if (rawValue instanceof XivCombatant cbt) {
-				if (cbt.isThePlayer()) {
-					value = "YOU";
-				}
-				else {
-					value = cbt.getName();
-				}
+			finally {
+				shell.snippets().forEach(shell::drop);
+			}
+		}
+	}
+
+	@SuppressWarnings("unused")
+	public static String singleReplacement(Object rawValue) {
+		String value;
+		if (rawValue instanceof String) {
+			value = (String) rawValue;
+		}
+		else if (rawValue instanceof XivCombatant cbt) {
+			if (cbt.isThePlayer()) {
+				value = "YOU";
 			}
 			else {
-				value = rawValue.toString();
+				value = cbt.getName();
 			}
-			String searchString = String.format("\\{%s\\}", key);
-			input = input.replaceAll(searchString, value);
 		}
-		return input;
+		else {
+			value = rawValue.toString();
+		}
+		return value;
 	}
 }

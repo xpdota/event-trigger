@@ -1,14 +1,19 @@
 package misc;
 
+import gg.xp.xivsupport.callouts.CalloutTests;
+import jdk.jshell.JShell;
+import jdk.jshell.execution.LocalExecutionControlProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import javax.script.ScriptEngineManager;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -305,5 +310,56 @@ public class Benchmarks {
 
 		log.info("Bytes: {} -> {}", inBytes.length, outBytes.length);
 		log.info("UTF-8: {} -> {}", inStr.length(), outStr.length());
+	}
+
+	@Test
+	public void testJShell() {
+		try (JShell shell = JShell.builder().executionEngine(new LocalExecutionControlProvider(), Collections.emptyMap()).build()){
+			shell.eval("Foo");
+		}
+
+	}
+
+	@Test
+	public void timeJShell() {
+		int count = 1_000;
+		timeIt("JShell", () -> {
+			for (int i = 0; i < count; i++) {
+				testJShell();
+			}
+		});
+	}
+
+	@Test
+	public void timeJShellEvail() {
+		try (JShell shell = JShell.builder().executionEngine(new LocalExecutionControlProvider(), Collections.emptyMap()).build()){
+			timeIt("JShell Init", () -> {
+				shell.eval("Foo");
+			});
+			int count = 1_00;
+			timeIt("JShell Loop", () -> {
+				for (int i = 0; i < count; i++) {
+					shell.eval("123 + 456");
+				}
+			});
+//			timeIt("JShell Var");
+		}
+	}
+
+	@Test
+	public void timeReplacements() {
+		int count = 1_0;
+		timeIt("Callout Initial", CalloutTests::testReplacementsAdvanced);
+		timeIt("Advanced Callout Replacement", () -> {
+			for (int i = 0; i < count; i++) {
+				CalloutTests.testReplacementsAdvanced();
+			}
+		});
+	}
+
+	@Test
+	public void testScriptEngine() {
+		ScriptEngineManager sem = new ScriptEngineManager();
+		sem.getEngineFactories();
 	}
 }
