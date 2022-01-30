@@ -122,6 +122,7 @@ public class FlyingTextOverlay extends XivOverlay {
 	private void refreshCallouts() {
 		synchronized (lock) {
 			currentCallouts.removeIf(VisualCalloutItem::isExpired);
+			currentCallouts.forEach(VisualCalloutItem::recheckText);
 		}
 	}
 

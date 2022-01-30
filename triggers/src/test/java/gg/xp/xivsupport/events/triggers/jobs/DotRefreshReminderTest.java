@@ -100,7 +100,7 @@ public class DotRefreshReminderTest {
 		{
 			List<BaseDelayedEvent> delayedEvents = coll.getEventsOf(BaseDelayedEvent.class);
 			Assert.assertEquals(delayedEvents.size(), 3);
-			List<CalloutEvent> callouts = coll.getEventsOf(BasicCalloutEvent.class);
+			List<CalloutEvent> callouts = coll.getEventsOf(CalloutEvent.class);
 			List<String> calloutData = callouts.stream().map(CalloutEvent::getCallText).collect(Collectors.toList());
 			MatcherAssert.assertThat(calloutData, Matchers.contains("Foo2", "Dosis"));
 			List<TtsRequest> ttsEvents = coll.getEventsOf(TtsRequest.class);
@@ -113,7 +113,7 @@ public class DotRefreshReminderTest {
 		{
 			List<BaseDelayedEvent> delayedEvents = coll.getEventsOf(BaseDelayedEvent.class);
 			Assert.assertEquals(delayedEvents.size(), 1);
-			List<CalloutEvent> callouts = coll.getEventsOf(BasicCalloutEvent.class);
+			List<CalloutEvent> callouts = coll.getEventsOf(CalloutEvent.class);
 			List<String> calloutData = callouts.stream().map(CalloutEvent::getCallText).collect(Collectors.toList());
 			MatcherAssert.assertThat(calloutData, Matchers.contains("Bar"));
 			List<TtsRequest> ttsEvents = coll.getEventsOf(TtsRequest.class);

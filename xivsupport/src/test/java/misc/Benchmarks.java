@@ -348,7 +348,7 @@ public class Benchmarks {
 
 	@Test
 	public void timeReplacements() {
-		int count = 1_0;
+		int count = 1_000;
 		timeIt("Callout Initial", CalloutTests::testReplacementsAdvanced);
 		timeIt("Advanced Callout Replacement", () -> {
 			for (int i = 0; i < count; i++) {

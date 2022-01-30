@@ -32,4 +32,8 @@ public class StringSetting {
 		cached = newValue;
 		persistence.save(settingKey, newValue);
 	}
+
+	public String getDefault() {
+		return dflt;
+	}
 }

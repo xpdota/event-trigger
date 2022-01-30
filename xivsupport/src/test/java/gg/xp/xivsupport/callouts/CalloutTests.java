@@ -7,6 +7,7 @@ import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.testng.Assert;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
@@ -98,8 +99,8 @@ public class CalloutTests {
 			CalloutEvent scratch = mc.getModified(Map.of("target", "Foo"));
 
 			CalloutEvent modified = mc.getModified();
-			Assert.assertEquals(modified.getCallText(), "Tankbuster on {target}");
-			Assert.assertEquals(modified.getVisualText(), "Tankbuster on {target}");
+			Assert.assertEquals(modified.getCallText(), "Tankbuster on Error");
+			Assert.assertEquals(modified.getVisualText(), "Tankbuster on Error");
 
 
 			CalloutEvent modifiedWithArgs = mc.getModified(modified, Map.of("target", "Foo"));
@@ -118,7 +119,7 @@ public class CalloutTests {
 
 	@Test
 	public static void testReplacementsAdvanced() {
-		ModifiableCallout mc = new ModifiableCallout("Foo", "{event.getBuff().getId()}:{event.getBuff().getName()} {event.getInitialDuration().toSeconds()} {event.getStacks()} {event.isRefresh()} {event.getSource().getId()}:{event.getSource().getName()} {event.getTarget().getId()}:{event.getTarget().getName()}");
+		ModifiableCallout mc = new ModifiableCallout("Foo", "{event.getBuff().getId()}:{event.getBuff().getName().toUpperCase()} {event.getInitialDuration()} {event.getStacks()} {event.isRefresh()} {event.getSource().getId()}:{event.getSource().getName()} {event.getTarget().getId()}:{event.getTarget().getName()}");
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
 		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
 		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
@@ -128,21 +129,42 @@ public class CalloutTests {
 
 			CalloutEvent modified = mc.getModified(ba);
 			{
-				Assert.assertEquals(modified.getCallText(), "123:FooStatus 15 5 false 1:Cbt1 2:Cbt2");
-				Assert.assertEquals(modified.getVisualText(), "123:FooStatus 15 5 false 1:Cbt1 2:Cbt2");
+				Assert.assertEquals(modified.getCallText(), "123:FOOSTATUS 15.0 5 false 1:Cbt1 2:Cbt2");
+				Assert.assertEquals(modified.getVisualText(), "123:FOOSTATUS 15.0 5 false 1:Cbt1 2:Cbt2");
 			}
 
 			ba.setIsRefresh(true);
 			{
 				// Same callout - should update visual text only
-				Assert.assertEquals(modified.getCallText(), "123:FooStatus 15 5 false 1:Cbt1 2:Cbt2");
-				Assert.assertEquals(modified.getVisualText(), "123:FooStatus 15 5 true 1:Cbt1 2:Cbt2");
+				Assert.assertEquals(modified.getCallText(), "123:FOOSTATUS 15.0 5 false 1:Cbt1 2:Cbt2");
+				Assert.assertEquals(modified.getVisualText(), "123:FOOSTATUS 15.0 5 true 1:Cbt1 2:Cbt2");
 			}
 			{
 				// New callout - should update both
 				CalloutEvent modified2 = mc.getModified(ba);
-				Assert.assertEquals(modified2.getCallText(), "123:FooStatus 15 5 true 1:Cbt1 2:Cbt2");
-				Assert.assertEquals(modified2.getVisualText(), "123:FooStatus 15 5 true 1:Cbt1 2:Cbt2");
+				Assert.assertEquals(modified2.getCallText(), "123:FOOSTATUS 15.0 5 true 1:Cbt1 2:Cbt2");
+				Assert.assertEquals(modified2.getVisualText(), "123:FOOSTATUS 15.0 5 true 1:Cbt1 2:Cbt2");
+			}
+		}
+	}
+	@Test
+	@Ignore // This doesn't seem to work well
+	public static void testReplacementsAdvanced2() {
+//		ModifiableCallout mc = new ModifiableCallout("Foo", "{String.format(\"%.02X\", event.getBuff().getId()}");
+		ModifiableCallout mc = new ModifiableCallout("Foo", "{String.format(\"%X\", event.getBuff().getId(), 123L)} : {\"%X\".formatted(event.getBuff().getId())} : {\"asdf\".toUpperCase()}");
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+		mc.attachHandle(mch);
+		{
+			BuffApplied ba = new BuffApplied(new XivStatusEffect(123, "FooStatus"), 15, new XivCombatant(1, "Cbt1"), new XivCombatant(2, "Cbt2"), 5);
+			String.format("%X", ba.getBuff().getId());
+			"X".formatted(ba.getBuff().getId());
+
+			CalloutEvent modified = mc.getModified(ba);
+			{
+				Assert.assertEquals(modified.getCallText(), "123:FooStatus 15 5 false 1:Cbt1 2:Cbt2");
+				Assert.assertEquals(modified.getVisualText(), "123:FooStatus 15 5 false 1:Cbt1 2:Cbt2");
 			}
 		}
 	}

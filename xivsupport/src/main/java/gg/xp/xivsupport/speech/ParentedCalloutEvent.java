@@ -1,21 +1,27 @@
 package gg.xp.xivsupport.speech;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.Event;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Instant;
+import java.io.Serial;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class DynamicCalloutEvent extends BaseEvent implements CalloutEvent {
+public class ParentedCalloutEvent<X extends Event> extends BaseEvent implements CalloutEvent {
 
+	@Serial
+	private static final long serialVersionUID = 6842512228516345067L;
+	private final X event;
 	private final String callText;
 	private final Supplier<String> visualText;
-	private final Instant expiresAt;
+	private final Predicate<X> expiryCheck;
 
-	public DynamicCalloutEvent(String callText, Supplier<String> visualText, long hangTime) {
+	public ParentedCalloutEvent(X event, String callText, Supplier<String> visualText, Predicate<X> expiryCheck) {
+		this.event = event;
 		this.callText = callText;
 		this.visualText = visualText;
-		expiresAt = Instant.now().plusMillis(hangTime);
+		this.expiryCheck = expiryCheck;
 	}
 
 	@Override
@@ -31,6 +37,6 @@ public class DynamicCalloutEvent extends BaseEvent implements CalloutEvent {
 
 	@Override
 	public boolean isExpired() {
-		return expiresAt.isBefore(Instant.now());
+		return expiryCheck.test(event);
 	}
 }
