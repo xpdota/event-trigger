@@ -1,13 +1,12 @@
 package gg.xp.xivsupport.callouts;
 
+import bsh.EvalError;
+import bsh.Interpreter;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.DynamicCalloutEvent;
-import jdk.jshell.JShell;
-import jdk.jshell.SnippetEvent;
-import jdk.jshell.execution.LocalExecutionControlProvider;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -104,13 +103,7 @@ public class ModifiableCallout {
 		}
 	}
 
-	// Not stupid if it works, probably
-	// This is the easiest (only?) way to pass variables into a jshell instance.
-	private static final JShell shell = JShell.builder().executionEngine(new LocalExecutionControlProvider(), Collections.emptyMap()).build();
-	private static final Object lock = new Object();
-	public static final Map<String, Object> context = new HashMap<>();
-
-	Pattern replacer = Pattern.compile("\\{(.+?)}");
+	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
 
 	@Contract("null, _ -> null")
 	public @Nullable String applyReplacements(@Nullable String input, Map<String, Object> replacements) {
@@ -120,36 +113,24 @@ public class ModifiableCallout {
 		if (!input.contains("{")) {
 			return input;
 		}
-		synchronized (lock) {
+		Interpreter interpreter = new Interpreter();
+		replacements.forEach((k, v) -> {
 			try {
-				context.clear();
-				String thisClassName = getClass().getCanonicalName();
-				shell.eval(String.format("Map<String, Object> context = %s.context ;", thisClassName));
-				replacements.forEach((k, v) -> {
-					context.put(k, v);
-					String canonicalName = v.getClass().getCanonicalName();
-					if (canonicalName == null) {
-						// Fallback
-						canonicalName = "Object";
-					}
-					shell.eval(String.format("%s %s = (%s) %s.context.get(\"%s\") ;", canonicalName, k, canonicalName, thisClassName, k));
-				});
-				return replacer.matcher(input).replaceAll(m -> {
-					List<SnippetEvent> snippets = shell.eval(String.format("%s.singleReplacement(%s)", thisClassName, m.group(1)));
-					// TODO: improve logging
-					String value = snippets.get(snippets.size() - 1).value();
-					// If null, leave it untouched. e.g. '{target}' would still be literally '{target}'
-					value = value == null ? m.group(0) : value;
-					if (value.startsWith("\"") && value.endsWith("\"")) {
-						value = value.substring(1, value.length() - 1);
-					}
-					return value;
-				});
+				interpreter.set(k, v);
 			}
-			finally {
-				shell.snippets().forEach(shell::drop);
+			catch (EvalError e) {
+				log.error("Error setting variable in bsh", e);
 			}
-		}
+		});
+		return replacer.matcher(input).replaceAll(m -> {
+			try {
+				return interpreter.eval(m.group(1)).toString();
+			}
+			catch (EvalError e) {
+				log.error("Eval error", e);
+				return "Error";
+			}
+		});
 	}
 
 	@SuppressWarnings("unused")
