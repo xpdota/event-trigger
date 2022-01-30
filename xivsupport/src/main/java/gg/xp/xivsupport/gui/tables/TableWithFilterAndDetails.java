@@ -77,11 +77,6 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		// Main table
 		JTable table = new JTable(mainModel);
 		mainModel.configureColumns(table);
-//		for (int i = 0; i < mainColumns.size(); i++) {
-//			TableColumn column = table.getColumnModel().getColumn(i);
-//			CustomColumn<X> customColumn = mainColumns.get(i);
-//			customColumn.configureColumn(column);
-//		}
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ListSelectionModel selectionModel = table.getSelectionModel();
 		selectionModel.addListSelectionListener(e -> {
@@ -177,15 +172,22 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			table.setComponentPopupMenu(popupMenu);
 		}
 
-		// Split pane
-		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
-		add(splitPane);
-		SwingUtilities.invokeLater(() -> {
-			splitPane.setDividerLocation(0.7);
-			splitPane.setResizeWeight(1);
-			splitPane.setOneTouchExpandable(true);
-			updateAll();
-		});
+		// If no details, don't bother with a splitpane
+		// TODO: also cut out some of the selection logic
+		if (detailsColumns.isEmpty()) {
+			add(scroller);
+		}
+		else {
+			// Split pane
+			JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
+			add(splitPane);
+			SwingUtilities.invokeLater(() -> {
+				splitPane.setDividerLocation(0.7);
+				splitPane.setResizeWeight(1);
+				splitPane.setOneTouchExpandable(true);
+				updateAll();
+			});
+		}
 	}
 
 	private List<X> doFiltering(List<X> thingsToFilter) {
