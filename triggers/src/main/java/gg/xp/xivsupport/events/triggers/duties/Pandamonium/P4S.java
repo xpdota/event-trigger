@@ -19,8 +19,10 @@ import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.Position;
-import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
 import java.util.ArrayList;
@@ -30,11 +32,19 @@ import java.util.Map;
 
 @CalloutRepo("P4S")
 public class P4S implements FilteredEventHandler {
+	private static final Logger log = LoggerFactory.getLogger(P4S.class);
 	private final ModifiableCallout decollation = new ModifiableCallout("Decollation", "Raidwide");
 	private final ModifiableCallout bloodrake = new ModifiableCallout("Bloodrake", "Half Raidwide");
 	private final ModifiableCallout evisceration = new ModifiableCallout("Elegant Evisceration", "Tankbuster on {target}");
 	private final ModifiableCallout searing = new ModifiableCallout("Searing Stream", "Raidwide");
 	private final ModifiableCallout ultimaImpulse = new ModifiableCallout("Ultima Impulse", "Big Raidwide");
+
+	private final ModifiableCallout neither = new ModifiableCallout("Neither Mechanic", "Nothing");
+	private final ModifiableCallout tethers = new ModifiableCallout("Get Tethers", "Tethers");
+	private final ModifiableCallout rot = new ModifiableCallout("Get Rot", "Rot");
+	private final ModifiableCallout tethersAndRot = new ModifiableCallout("Get Tethers and Rot", "Both");
+	private final ModifiableCallout towers = new ModifiableCallout("Get Towers", "Towers");
+	private final ModifiableCallout towersAndTethers = new ModifiableCallout("Get Towers and Tethers", "Towers and Tethers");
 
 	private final ModifiableCallout hellsSting = new ModifiableCallout("Hell's Sting", "Protean, dodge in");
 
@@ -104,6 +114,7 @@ public class P4S implements FilteredEventHandler {
 				call = decollation;
 			}
 			else if (id == 0x69D8) {
+				bloodrakeCounter++;
 				call = bloodrake;
 			}
 			else if (id == 0x6A08) {
@@ -119,6 +130,8 @@ public class P4S implements FilteredEventHandler {
 				call = demigodDouble;
 			}
 			else if (id == 0x69D9) {
+				beloneCoilsCounter++;
+				beloneSuppress = false;
 				call = belone;
 			}
 			else if (id == 0x6A1E) {
@@ -129,6 +142,118 @@ public class P4S implements FilteredEventHandler {
 			}
 			context.accept(call.getModified(event, Map.of("target", event.getTarget())));
 		}
+	}
+
+	private enum RoleCategory {
+		TANK_HEALER("Tank/Healer"),
+		DPS("DPS");
+
+		private final String friendlyName;
+
+		RoleCategory(String friendlyName) {
+			this.friendlyName = friendlyName;
+		}
+
+		public String getFriendlyName() {
+			return friendlyName;
+		}
+
+		public RoleCategory opposite() {
+			return this == TANK_HEALER ? DPS : TANK_HEALER;
+		}
+	}
+
+	private RoleCategory tetherRole;
+	private RoleCategory rotRole;
+	private int bloodrakeCounter;
+	private int beloneCoilsCounter;
+	private boolean beloneSuppress;
+
+	private RoleCategory playerRole() {
+		return roleForCombatant(state.getPlayer());
+	}
+
+	private static RoleCategory roleForCombatant(XivPlayerCharacter pc) {
+		return pc.getJob().isDps() ? RoleCategory.DPS : RoleCategory.TANK_HEALER;
+	}
+
+	@HandleEvents
+	public void bloodrakeHandler(EventContext context, AbilityUsedEvent event) {
+		if (event.getSource().getType() == CombatantType.NPC
+				&& event.getAbility().getId() == 0x69D8
+				&& bloodrakeCounter <= 2
+				&& event.getTargetIndex() == 0
+				&& event.getTarget() instanceof XivPlayerCharacter targetPlayer) {
+			RoleCategory rakedRole = roleForCombatant(targetPlayer);
+			if (bloodrakeCounter == 1) {
+				tetherRole = rakedRole.opposite();
+				// TODO call? or not useful?
+			}
+			else if (bloodrakeCounter == 2) {
+				rotRole = rakedRole.opposite();
+				if (tetherRole == null || rotRole == null) {
+					log.error("Error in roles: Expected both roles to be non-null but got: {}/{}", tetherRole, rotRole);
+					return;
+				}
+				RoleCategory playerRole = playerRole();
+				boolean playerTether = playerRole == tetherRole;
+				boolean playerRot = playerRole == rotRole;
+				final ModifiableCallout call;
+				if (playerRot) {
+					call = playerTether ? tethersAndRot : rot;
+				}
+				else {
+					call = playerTether ? tethers : neither;
+				}
+				context.accept(call.getModified(event));
+			}
+			else {
+				log.error("Unexpected bloodrakeCounter: {}", bloodrakeCounter);
+			}
+		}
+	}
+
+	@HandleEvents
+	public void beloneHandler(EventContext context, AbilityCastStart event) {
+		if (beloneSuppress) {
+			return;
+		}
+		long id = event.getAbility().getId();
+		RoleCategory towerRole;
+		if (id == 0x69DE) {
+			towerRole = RoleCategory.DPS;
+		}
+		else if (id == 0x69DF) {
+			towerRole = RoleCategory.TANK_HEALER;
+		}
+		else {
+			return;
+		}
+		final ModifiableCallout call;
+		beloneSuppress = true;
+		RoleCategory pr = playerRole();
+		if (beloneCoilsCounter == 1) {
+			tetherRole = towerRole.opposite();
+			call = pr == tetherRole ? tethers : towers;
+		}
+		else if (beloneCoilsCounter == 2) {
+			rotRole = towerRole.opposite();
+			boolean isTether = pr == tetherRole;
+			if (pr == towerRole) {
+				call = isTether ? towersAndTethers : towers;
+			}
+			else if (isTether) {
+				call = tethersAndRot;
+			}
+			else {
+				call = rot;
+			}
+		}
+		else {
+			log.error("Bad beloneCoilsCounter: {}", beloneCoilsCounter);
+			return;
+		}
+		context.accept(call.getModified(event));
 	}
 
 	// TODO: integrate this into safespot call
@@ -186,6 +311,10 @@ public class P4S implements FilteredEventHandler {
 	public void clear(EventContext context, PullStartedEvent newPull) {
 		pinaxStackSpreadTmp = null;
 		pinaxKnockbackProxTmp = null;
+		bloodrakeCounter = 0;
+		beloneCoilsCounter = 0;
+		tetherRole = null;
+		rotRole = null;
 	}
 	/*
 			else if (id == 0x69D4) {
