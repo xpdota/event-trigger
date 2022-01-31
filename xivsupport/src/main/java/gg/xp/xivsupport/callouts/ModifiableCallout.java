@@ -200,7 +200,7 @@ public class ModifiableCallout<X> {
 			});
 			return replacer.matcher(input).replaceAll(m -> {
 				try {
-					Object rawEval = interpreter.eval(getClass().getCanonicalName() + ".singleReplacement( " + m.group(1) + ")");
+					Object rawEval = interpreter.eval(getClass().getCanonicalName() + ".singleReplacement(" + m.group(1) + ")");
 					if (rawEval == null) {
 						return m.group(0);
 					}
