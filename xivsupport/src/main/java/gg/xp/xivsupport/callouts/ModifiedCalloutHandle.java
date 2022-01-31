@@ -28,7 +28,7 @@ public final class ModifiedCalloutHandle {
 		ttsSetting = new StringSetting(persistenceProvider, propStub + ".tts", original.getOriginalTts());
 		enableText = new BooleanSetting(persistenceProvider, propStub + ".text-enabled", true);
 		textSetting = new StringSetting(persistenceProvider, propStub + ".text", original.getOriginalVisualText());
-		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", ttsSetting.get().equals(textSetting.get()) && (ttsSetting.isSet() == textSetting.isSet()) && ttsSetting.getDefault().equals(textSetting.getDefault()));
+		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", false);
 		sameText.set(sameText.get());
 		hangTimeSetting = new LongSetting(persistenceProvider, propStub + ".text.hangtime", 5000L);
 		this.original = original;

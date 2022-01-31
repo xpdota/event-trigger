@@ -2,7 +2,9 @@ package gg.xp.xivsupport.callouts;
 
 import bsh.EvalError;
 import bsh.Interpreter;
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.time.TimeUtils;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
@@ -15,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +38,10 @@ public class ModifiableCallout<X> {
 	private final Predicate<X> expiry;
 	private final List<CalloutCondition> conditions;
 	private final long defaultVisualHangTime;
+	private int errorCount;
+	private static final int maxErrors = 10;
+
+	private static final Duration defaultHangDuration = Duration.of(5, ChronoUnit.SECONDS);
 
 	private volatile ModifiedCalloutHandle handle;
 
@@ -57,7 +64,15 @@ public class ModifiableCallout<X> {
 		defaultVisualText = text;
 		this.conditions = new ArrayList<>(conditions);
 		defaultVisualHangTime = 5000L;
-		this.expiry = null;
+		Instant defaultExpiryAt = TimeUtils.now().plus(defaultHangDuration);
+		this.expiry = eventItem -> {
+			if (eventItem instanceof BaseEvent be) {
+				return be.getEffectiveTimeSince().compareTo(defaultHangDuration) > 0;
+			}
+			else {
+				return defaultExpiryAt.isBefore(Instant.now());
+			}
+		};
 	}
 
 	public void attachHandle(ModifiedCalloutHandle handle) {
@@ -144,6 +159,20 @@ public class ModifiableCallout<X> {
 		}
 	}
 
+	private boolean shouldLogError() {
+		errorCount++;
+		if (errorCount < maxErrors) {
+			return true;
+		}
+		else if (errorCount == maxErrors) {
+			log.error("Hit the maximum number of logged errors for ModifiableCallout '{}', silencing future errors", description);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
 	private static final ThreadLocal<Interpreter> interpreterTl = ThreadLocal.withInitial(Interpreter::new);
 
@@ -163,7 +192,10 @@ public class ModifiableCallout<X> {
 					interpreter.set(k, v);
 				}
 				catch (EvalError e) {
-					log.error("Error setting variable in bsh", e);
+					errorCount++;
+					if (shouldLogError()) {
+						log.error("Error setting variable in bsh", e);
+					}
 				}
 			});
 			return replacer.matcher(input).replaceAll(m -> {
@@ -175,7 +207,9 @@ public class ModifiableCallout<X> {
 					return rawEval.toString();
 				}
 				catch (EvalError e) {
-					log.error("Eval error", e);
+					if (shouldLogError()) {
+						log.error("Eval error", e);
+					}
 					return "Error";
 				}
 			});
@@ -186,7 +220,9 @@ public class ModifiableCallout<X> {
 					interpreter.unset(k);
 				}
 				catch (EvalError e) {
-					log.error("Error unsetting variable in bsh", e);
+					if (shouldLogError()) {
+						log.error("Error unsetting variable in bsh", e);
+					}
 				}
 			});
 		}

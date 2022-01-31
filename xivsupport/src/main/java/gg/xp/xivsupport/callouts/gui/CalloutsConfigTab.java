@@ -50,6 +50,8 @@ public class CalloutsConfigTab implements PluginTab {
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 
 		JPanel innerPanel = new JPanel();
+		enableTts.addActionListener(l -> innerPanel.repaint());
+		enableOverlay.addActionListener(l -> innerPanel.repaint());
 		innerPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		List<CalloutGroup> calloutMap = backend.getAllCallouts();
