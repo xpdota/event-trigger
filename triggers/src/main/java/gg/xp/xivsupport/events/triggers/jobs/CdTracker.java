@@ -17,7 +17,7 @@ import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.CooldownSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
-import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,7 +180,7 @@ public class CdTracker {
 		XivAbility originalAbility = event.originalEvent.getAbility();
 		if (event.originalKey == cdResetKey) {
 			log.info("CD callout still valid");
-			context.accept(new CalloutEvent(originalAbility.getName(), enableFlyingText.get() ? originalAbility.getName() : null));
+			context.accept(new BasicCalloutEvent(originalAbility.getName(), enableFlyingText.get() ? originalAbility.getName() : null));
 		}
 		else {
 			log.info("Not calling {} - no longer valid", originalAbility.getName());

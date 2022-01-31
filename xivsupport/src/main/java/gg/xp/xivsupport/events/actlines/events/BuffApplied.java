@@ -10,7 +10,7 @@ import java.time.Duration;
 
 // TODO: track new application vs refresh
 // Note that stacks decreasing (e.g. Embolden) still counts as "Application".
-public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect {
+public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect, HasDuration {
 	@Serial
 	private static final long serialVersionUID = -3698392943125561045L;
 	private final XivStatusEffect buff;
@@ -45,32 +45,11 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		return buff;
 	}
 
+	@Override
 	public Duration getInitialDuration() {
 		return duration;
 	}
 
-	public Duration getEstimatedElapsedDuration() {
-		Duration delta = getEffectiveTimeSince();
-		// If negative, return zero. If longer than expected duration, return duration.
-		if (delta.isNegative()) {
-			return Duration.ZERO;
-		}
-		else if (delta.compareTo(duration) > 0) {
-			return duration;
-		}
-		else {
-			return delta;
-		}
-	}
-
-	public Duration getEstimatedRemainingDuration() {
-		return getInitialDuration().minus(getEstimatedElapsedDuration());
-	}
-
-	public Duration getEstimatedTimeSinceExpiry() {
-		Duration elapsed = getEffectiveTimeSince();
-		return elapsed.minus(duration);
-	}
 
 	@Override
 	public XivCombatant getSource() {

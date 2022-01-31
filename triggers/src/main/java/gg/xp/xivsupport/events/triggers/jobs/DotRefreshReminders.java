@@ -13,7 +13,7 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
-import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
 public class DotRefreshReminders {
@@ -165,7 +164,7 @@ public class DotRefreshReminders {
 				Duration delta = Duration.between(lastBrdCallout, now);
 				long thisEntityId = originalEvent.getTarget().getId();
 				if (delta.toMillis() > 3500 || thisEntityId != lastEntityId) {
-					context.accept(new CalloutEvent("Dots", enableFlyingText.get() ? "Dots" : null));
+					context.accept(new BasicCalloutEvent("Dots", enableFlyingText.get() ? "Dots" : null));
 				}
 				lastBrdCallout = now;
 				lastEntityId = thisEntityId;
@@ -174,7 +173,7 @@ public class DotRefreshReminders {
 				if (!suppressSpamCallouts || Duration.between(lastCallout, now).toMillis() > 500) {
 					String name = originalEvent.getBuff().getName();
 					String adjustedName = adjustDotName(name);
-					context.accept(new CalloutEvent(adjustedName, enableFlyingText.get() ? adjustedName : null));
+					context.accept(new BasicCalloutEvent(adjustedName, enableFlyingText.get() ? adjustedName : null));
 				}
 				lastCallout = now;
 			}

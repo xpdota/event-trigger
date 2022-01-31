@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events.delaytest;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,7 @@ public class DelayedTest {
 	public void handleEnd(EventContext context, DelayedTestEvent event) {
 		log.info("Delay test end");
 		if (pending == event) {
-			context.accept(new CalloutEvent("Foo"));
+			context.accept(new BasicCalloutEvent("Foo"));
 		}
 	}
 

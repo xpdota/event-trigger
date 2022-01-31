@@ -2,6 +2,7 @@ package gg.xp.xivsupport.persistence.gui;
 
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
+import gg.xp.xivsupport.persistence.settings.ResetMenuOption;
 import gg.xp.xivsupport.persistence.settings.WsURISetting;
 
 import javax.swing.*;
@@ -15,6 +16,7 @@ public class WsURISettingGui {
 	private final WsURISetting setting;
 	private final String label;
 	private JLabel jLabel;
+	private volatile boolean resetInProgress;
 
 	public WsURISettingGui(WsURISetting setting, String label) {
 		this.setting = setting;
@@ -27,9 +29,27 @@ public class WsURISettingGui {
 			else {
 				throw new IllegalArgumentException("Protocol must be WS or WSS");
 			}
-		}, setting::set, setting.get().toString());
+		}, this::setNewValue, setting.get().toString());
 		textBox.setColumns(20);
+		textBox.setComponentPopupMenu(ResetMenuOption.resetOnlyMenu(setting, this::reset));
 		this.label = label;
+	}
+
+	private void setNewValue(URI newValue) {
+		if (!resetInProgress) {
+			setting.set(newValue);
+		}
+	}
+
+	private void reset() {
+		resetInProgress = true;
+		try {
+			textBox.setText(setting.getDefault().toString());
+			setting.delete();
+		}
+		finally {
+			resetInProgress = false;
+		}
 	}
 
 	public Component getTextBoxOnly() {

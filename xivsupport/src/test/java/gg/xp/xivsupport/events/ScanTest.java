@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
-import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
@@ -30,7 +30,7 @@ public class ScanTest {
 		EventDistributor dist = XivMain.testingMasterInit().getComponent(EventDistributor.class);
 		TestEventCollector collector = new TestEventCollector();
 		dist.registerHandler(collector);
-		dist.acceptEvent(new CalloutEvent("Foo Bar"));
+		dist.acceptEvent(new BasicCalloutEvent("Foo Bar"));
 		collector.getEvents();
 	}
 

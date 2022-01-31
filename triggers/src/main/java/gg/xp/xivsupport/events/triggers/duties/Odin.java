@@ -21,7 +21,7 @@ import gg.xp.xivsupport.events.state.XivState;
 public class Odin implements FilteredEventHandler {
 
 	// Since we have @CalloutRepo
-	private final ModifiableCallout valknut = new ModifiableCallout("Valknut (Out)", "Out");
+	private final ModifiableCallout<AbilityCastStart> valknut = ModifiableCallout.durationBasedCall("Valknut (Out)", "Out");
 
 	// This comes from FilteredEventHandler. In this case, we want to restrict this set of triggers to a specific
 	// zone (Urth's Fount, in this case, Zone ID 394).

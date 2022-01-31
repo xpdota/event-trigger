@@ -24,7 +24,7 @@ public class CalloutSettingGui {
 	private boolean enabledByParent = true;
 
 	public CalloutSettingGui(ModifiedCalloutHandle call) {
-		callCheckbox = new BooleanSettingGui(call.getEnable(), call.getDescription()).getComponent();
+		callCheckbox = new BooleanSettingGui(call.getEnable(), call.getDescription(), () -> enabledByParent).getComponent();
 		BooleanSetting enableTts = call.getEnableTts();
 		StringSetting ttsSetting = call.getTtsSetting();
 		BooleanSetting enableText = call.getEnableText();
@@ -34,27 +34,37 @@ public class CalloutSettingGui {
 		this.allTts = call.getAllTtsEnabled();
 
 		{
-			ttsPanel = new JPanel();
+			ttsPanel = new JPanel() {
+				@Override
+				public boolean isEnabled() {
+					return CalloutSettingGui.this.isThisCallEnabled() && allTts.get();
+				}
+			};
 			ttsPanel.setLayout(new BoxLayout(ttsPanel, BoxLayout.LINE_AXIS));
-			ttsCheckbox = new BooleanSettingGui(enableTts, "TTS:").getComponent();
+			ttsCheckbox = new BooleanSettingGui(enableTts, "TTS:", ttsPanel::isEnabled).getComponent();
 			ttsCheckbox.setHorizontalTextPosition(SwingConstants.LEFT);
 			ttsPanel.add(ttsCheckbox);
-			ttsTextBox = new StringSettingGui(ttsSetting, null).getTextBoxOnly();
+			ttsTextBox = new StringSettingGui(ttsSetting, null, () -> ttsPanel.isEnabled() && ttsCheckbox.isSelected()).getTextBoxOnly();
 			ttsPanel.add(ttsTextBox);
 		}
 		{
-			textPanel = new JPanel();
+			textPanel = new JPanel() {
+				@Override
+				public boolean isEnabled() {
+					return CalloutSettingGui.this.isThisCallEnabled() && allText.get();
+				}
+			};
 			textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.LINE_AXIS));
 
-			textCheckbox = new BooleanSettingGui(enableText, "Text:").getComponent();
+			textCheckbox = new BooleanSettingGui(enableText, "Text:", textPanel::isEnabled).getComponent();
 			textCheckbox.setHorizontalTextPosition(SwingConstants.LEFT);
 			textPanel.add(textCheckbox);
 
-			sameCheckBox = new BooleanSettingGui(sameText, "Same as TTS:").getComponent();
+			sameCheckBox = new BooleanSettingGui(sameText, "Same as TTS:", () -> textPanel.isEnabled() && textCheckbox.isSelected()).getComponent();
 			sameCheckBox.setHorizontalTextPosition(SwingConstants.LEFT);
 			textPanel.add(sameCheckBox);
 
-			textTextBox = new StringSettingGui(textSetting, null).getTextBoxOnly();
+			textTextBox = new StringSettingGui(textSetting, null, () -> textPanel.isEnabled() && textCheckbox.isSelected() && !sameCheckBox.isSelected()).getTextBoxOnly();
 			textPanel.add(textTextBox);
 		}
 		recalcEnabledDisabledStatus();
@@ -67,36 +77,20 @@ public class CalloutSettingGui {
 		allTts.addListener(this::recalcEnabledDisabledStatus);
 	}
 
+	private boolean isThisCallEnabled() {
+		return callCheckbox.isSelected() && enabledByParent;
+	}
+
 	private void recalcEnabledDisabledStatus() {
-		callCheckbox.setEnabled(enabledByParent);
-		boolean effectivelyEnabled = callCheckbox.isSelected() && enabledByParent;
-		if (effectivelyEnabled) {
-			if (allTts.get()) {
-				ttsCheckbox.setEnabled(true);
-				ttsTextBox.setEnabled(ttsCheckbox.isSelected());
-			}
-			else {
-				ttsCheckbox.setEnabled(false);
-				ttsTextBox.setEnabled(false);
-			}
-			if (allText.get()) {
-				textCheckbox.setEnabled(true);
-				sameCheckBox.setEnabled(textCheckbox.isEnabled());
-				textTextBox.setEnabled(textCheckbox.isSelected() && !sameCheckBox.isSelected());
-			}
-			else {
-				textCheckbox.setEnabled(false);
-				textTextBox.setEnabled(false);
-				sameCheckBox.setEnabled(false);
-			}
-		}
-		else {
-			ttsCheckbox.setEnabled(false);
-			textCheckbox.setEnabled(false);
-			ttsTextBox.setEnabled(false);
-			textTextBox.setEnabled(false);
-			sameCheckBox.setEnabled(false);
-		}
+//		SwingUtilities.invokeLater(() -> {
+//			ttsPanel.setVisible(false);
+//			ttsPanel.setVisible(true);
+//			textPanel.setVisible(false);
+//			textPanel.setVisible(true);
+//		});
+		callCheckbox.repaint();
+		ttsPanel.repaint();
+		textPanel.repaint();
 	}
 
 	public void setEnabledByParent(boolean enabledByParent) {
