@@ -5,6 +5,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.gui.CommonGuiSetup;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 
 import javax.swing.*;
@@ -16,6 +17,7 @@ import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class FlyingTextOverlay extends XivOverlay {
 
@@ -45,6 +47,7 @@ public class FlyingTextOverlay extends XivOverlay {
 	private final class VisualCalloutItem {
 		private final CalloutEvent event;
 		private final JTextPane text;
+		private String prevText = "";
 		private final int leftGradientBound;
 		private final int rightGradientBound;
 		private final int heightOfThisItem;
@@ -55,7 +58,7 @@ public class FlyingTextOverlay extends XivOverlay {
 			this.event = event;
 			text = new JTextPane();
 			text.setParagraphAttributes(attribs, false);
-			text.setText(event.getVisualText());
+			recheckText();
 			text.setAlignmentX(Component.CENTER_ALIGNMENT);
 			text.setOpaque(false);
 			text.setFont(font);
@@ -100,6 +103,13 @@ public class FlyingTextOverlay extends XivOverlay {
 		public int getHeight() {
 			return text.getPreferredSize().height;
 		}
+
+		public void recheckText() {
+			String newText = event.getVisualText();
+			if (!Objects.equals(newText, prevText)) {
+				text.setText(prevText = newText);
+			}
+		}
 	}
 
 
@@ -109,9 +119,10 @@ public class FlyingTextOverlay extends XivOverlay {
 		}
 	}
 
-	private void removeExpiredCallouts() {
+	private void refreshCallouts() {
 		synchronized (lock) {
 			currentCallouts.removeIf(VisualCalloutItem::isExpired);
+			currentCallouts.forEach(VisualCalloutItem::recheckText);
 		}
 	}
 
@@ -154,7 +165,7 @@ public class FlyingTextOverlay extends XivOverlay {
 
 
 	private void refresh() {
-		removeExpiredCallouts();
+		refreshCallouts();
 		synchronized (lock) {
 			currentCalloutsTmp = new ArrayList<>(currentCallouts);
 		}
@@ -172,17 +183,17 @@ public class FlyingTextOverlay extends XivOverlay {
 			overlay.getEnabled().set(true);
 			double scaleFactor = 1.5;
 			overlay.setScale(scaleFactor);
-			overlay.addCallout(new CalloutEvent(null, "One", 5000));
-			overlay.addCallout(new CalloutEvent(null, "This second callout is longer", 15000));
-			overlay.addCallout(new CalloutEvent(null, "Three", 255000));
-			overlay.addCallout(new CalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new CalloutEvent(null, "This one is so long, it isn't going to fit on the screen", 255000));
-			overlay.addCallout(new CalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new CalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new CalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new CalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new CalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new CalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "One", 5000));
+			overlay.addCallout(new BasicCalloutEvent(null, "This second callout is longer", 15000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Three", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "This one is so long, it isn't going to fit on the screen", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
 		}
 
 	}

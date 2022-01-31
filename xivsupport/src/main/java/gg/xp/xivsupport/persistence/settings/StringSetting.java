@@ -2,7 +2,7 @@ package gg.xp.xivsupport.persistence.settings;
 
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 
-public class StringSetting {
+public class StringSetting extends ObservableSetting implements Resettable {
 
 	private final PersistenceProvider persistence;
 	private final String settingKey;
@@ -15,6 +15,7 @@ public class StringSetting {
 		this.dflt = dflt;
 	}
 
+	@Override
 	public boolean isSet() {
 		return persistence.get(settingKey, String.class, null) != null;
 	}
@@ -28,8 +29,20 @@ public class StringSetting {
 		}
 	}
 
+	@Override
+	public void delete() {
+		persistence.delete(settingKey);
+		cached = null;
+		notifyListeners();
+	}
+
 	public void set(String newValue) {
 		cached = newValue;
 		persistence.save(settingKey, newValue);
+		notifyListeners();
+	}
+
+	public String getDefault() {
+		return dflt;
 	}
 }

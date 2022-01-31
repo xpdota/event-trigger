@@ -2,9 +2,9 @@ package gg.xp.xivsupport.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.BasicEventQueue;
-import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivdata.jobs.Job;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -23,6 +23,7 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.ParentedCalloutEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
 import org.hamcrest.MatcherAssert;
@@ -49,7 +50,7 @@ public class JailExampleTest {
 			AbilityUsedEvent.class,
 			UnsortedTitanJailsSolvedEvent.class,
 			FinalTitanJailsSolvedEvent.class,
-			CalloutEvent.class,
+			ParentedCalloutEvent.class,
 			TtsRequest.class,
 			AutoMarkRequest.class,
 			ClearAutoMarkRequest.class,
@@ -103,7 +104,7 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				CalloutEvent.class,
+				ParentedCalloutEvent.class,
 				// Key Presses
 				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
 				// TTS
@@ -342,7 +343,7 @@ public class JailExampleTest {
 				// Finally, we have the three players that got jailed, but sorted in whatever order (currently just alphabetical)
 				FinalTitanJailsSolvedEvent.class,
 				// Personal callout since the player was one of the three
-				CalloutEvent.class,
+				ParentedCalloutEvent.class,
 				// TTS
 				TtsRequest.class
 
@@ -428,7 +429,7 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				CalloutEvent.class,
+				ParentedCalloutEvent.class,
 				// Key Presses
 				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
 				// TTS
@@ -519,7 +520,7 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				CalloutEvent.class,
+				ParentedCalloutEvent.class,
 				// Key Presses
 				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
 				// TTS
@@ -638,7 +639,7 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				CalloutEvent.class,
+				ParentedCalloutEvent.class,
 				// Key Presses
 				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
 				// TTS
@@ -736,7 +737,7 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				CalloutEvent.class,
+				ParentedCalloutEvent.class,
 				// Key Presses
 				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
 				// TTS

@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.callouts;
 
-import gg.xp.xivsupport.gui.overlay.FlyingTextOverlay;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
@@ -16,12 +15,12 @@ public final class ModifiedCalloutHandle {
 	private final BooleanSetting sameText;
 	private final StringSetting textSetting;
 	private final LongSetting hangTimeSetting;
-	private final ModifiableCallout original;
+	private final ModifiableCallout<?> original;
 	private final BooleanSetting allTts;
 	private final BooleanSetting allText;
 	private boolean isEnabledByParent = true;
 
-	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout original, BooleanSetting allTts, BooleanSetting allText) {
+	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, BooleanSetting allTts, BooleanSetting allText) {
 		this.allTts = allTts;
 		this.allText = allText;
 		enable = new BooleanSetting(persistenceProvider, propStub + ".enabled", true);
@@ -29,7 +28,7 @@ public final class ModifiedCalloutHandle {
 		ttsSetting = new StringSetting(persistenceProvider, propStub + ".tts", original.getOriginalTts());
 		enableText = new BooleanSetting(persistenceProvider, propStub + ".text-enabled", true);
 		textSetting = new StringSetting(persistenceProvider, propStub + ".text", original.getOriginalVisualText());
-		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", ttsSetting.get().equals(textSetting.get()) && (ttsSetting.isSet() == textSetting.isSet()));
+		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", false);
 		sameText.set(sameText.get());
 		hangTimeSetting = new LongSetting(persistenceProvider, propStub + ".text.hangtime", 5000L);
 		this.original = original;

@@ -45,20 +45,30 @@ public class DotRefreshReminderGui implements PluginTab {
 		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Dots and Buffs");
 //		outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.PAGE_AXIS));
 		outerPanel.setLayout(new BorderLayout());
+		BooleanSetting enableTtsSetting = backend.getEnableTts();
+		BooleanSetting enableOverlaySetting = overlay.getEnabled();
 
 		JPanel settingsPanel = new JPanel();
 		settingsPanel.setLayout(new WrapLayout());
 
-		JPanel preTimeBox = new LongSettingGui(backend.getDotRefreshAdvance(), "Time before expiry to call out (milliseconds)").getComponent();
-		settingsPanel.add(preTimeBox);
-		JCheckBox enableTts = new BooleanSettingGui(backend.getEnableTts(), "Enable TTS").getComponent();
-		settingsPanel.add(enableTts);
-		BooleanSetting enableOverlaySetting = overlay.getEnabled();
-		JCheckBox enableOverlay = new BooleanSettingGui(enableOverlaySetting, "Enable Overlay").getComponent();
-		settingsPanel.add(enableOverlay);
-		enableOverlaySetting.addListener(settingsPanel::repaint);
-		JPanel numSetting = new IntSettingSpinner(backend.getNumberToDisplay(), "Max in Overlay").getComponent();
-		settingsPanel.add(numSetting);
+		{
+			JPanel preTimeBox = new LongSettingGui(backend.getDotRefreshAdvance(), "Time before expiry to call out (milliseconds)").getComponent();
+			settingsPanel.add(preTimeBox);
+		}
+		{
+			enableTtsSetting.addListener(outerPanel::repaint);
+			JCheckBox enableTts = new BooleanSettingGui(enableTtsSetting, "Enable TTS").getComponent();
+			settingsPanel.add(enableTts);
+		}
+		{
+			JCheckBox enableOverlay = new BooleanSettingGui(enableOverlaySetting, "Enable Overlay").getComponent();
+			settingsPanel.add(enableOverlay);
+			enableOverlaySetting.addListener(outerPanel::repaint);
+		}
+		{
+			JPanel numSetting = new IntSettingSpinner(backend.getNumberToDisplay(), "Max in Overlay").getComponent();
+			settingsPanel.add(numSetting);
+		}
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 
@@ -85,7 +95,7 @@ public class DotRefreshReminderGui implements PluginTab {
 			dotsForJob.forEach(dot -> {
 				c.gridx++;
 				BooleanSetting setting = dots.get(dot);
-				JCheckBox checkbox = new BooleanSettingGui(setting, dot.getLabel()).getComponent();
+				JCheckBox checkbox = new BooleanSettingGui(setting, dot.getLabel(), () -> enableTtsSetting.get() || enableOverlaySetting.get()).getComponent();
 				innerPanel.add(checkbox, c);
 			});
 			c.gridx++;
