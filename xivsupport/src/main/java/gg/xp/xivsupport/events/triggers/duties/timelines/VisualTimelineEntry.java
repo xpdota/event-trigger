@@ -15,6 +15,10 @@ public record VisualTimelineEntry(
 		return String.format("%s%s %.01f", originalTimelineEntry.name(), isCurrentSync ? "*" : "", active > 0 ? active : timeUntil);
 	}
 
+	public boolean shouldDisplay() {
+		return originalTimelineEntry.name() != null;
+	}
+
 	@Override
 	public long getCurrent() {
 		if (remainingActiveTime() > 0) {

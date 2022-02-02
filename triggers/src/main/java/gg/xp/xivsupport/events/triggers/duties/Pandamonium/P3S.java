@@ -254,18 +254,20 @@ public class P3S implements FilteredEventHandler {
 	@HandleEvents
 	public void deathsToll(EventContext context, BuffApplied buff) {
 		// Stack counting down would be considered a refresh
-		if (buff.getBuff().getId() == 0xACA)
+		if (buff.getBuff().getId() == 0xACA) {
 			isDeathsToll = true;
-		if (buff.getTarget().isThePlayer() && !buff.isRefresh()) {
-			long stacks = buff.getStacks();
-			ModifiableCallout<BuffApplied> callout = switch ((int) stacks) {
-				case 1 -> deathsToll1;
-				case 2 -> deathsToll2;
-				case 4 -> deathsToll4;
-				default -> deathsTollN;
-			};
-			context.accept(callout.getModified(buff, Map.of("stacks", stacks)));
+			if (buff.getTarget().isThePlayer() && !buff.isRefresh()) {
+				long stacks = buff.getStacks();
+				ModifiableCallout<BuffApplied> callout = switch ((int) stacks) {
+					case 1 -> deathsToll1;
+					case 2 -> deathsToll2;
+					case 4 -> deathsToll4;
+					default -> deathsTollN;
+				};
+				context.accept(callout.getModified(buff, Map.of("stacks", stacks)));
+			}
 		}
+
 	}
 
 	@Override

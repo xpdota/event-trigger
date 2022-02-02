@@ -7,7 +7,9 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,7 @@ public class TimelineManager {
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineManager.class);
 	private static final Map<Long, String> zoneIdToTimelineFile = new HashMap<>();
+	private final BooleanSetting debugMode;
 	private final IntSetting rowsToDisplay;
 
 	static {
@@ -222,6 +225,28 @@ public class TimelineManager {
 
 	public TimelineManager(PersistenceProvider pers) {
 		rowsToDisplay = new IntSetting(pers, "timeline-overlay.max-displayed", 6);
+		debugMode = new BooleanSetting(pers, "timeline-overlay.debug-mode", false);
+	}
+
+	public static @Nullable TimelineProcessor getTimeline(long zoneId) {
+		String filename = zoneIdToTimelineFile.get(zoneId);
+		if (filename == null) {
+			log.info("No timeline found for zone {}", zoneId);
+			return null;
+		}
+		URL resource = TimelineManager.class.getResource("/timeline/" + filename);
+		if (resource == null) {
+			log.info("Timeline file '{}' for zone '{}' is missing", filename, zoneId);
+			return null;
+		}
+		try {
+			return TimelineProcessor.of(new File(resource.toURI()));
+		}
+		catch (Throwable e) {
+			log.error("Error loading timeline", e);
+			return null;
+		}
+
 	}
 
 	@HandleEvents
@@ -247,27 +272,17 @@ public class TimelineManager {
 	}
 
 	private void doZoneChange(XivZone zoneId) {
-		String filename = zoneIdToTimelineFile.get(zoneId.getId());
-		if (filename == null) {
-			log.info("No timeline found for new zone {}", zoneId);
-			currentTimeline = null;
-			return;
+		currentTimeline = getTimeline(zoneId.getId());
+		if (currentTimeline == null) {
+			log.info("No timeline for zone '{}'", zoneId);
 		}
-		URL resource = TimelineManager.class.getResource("/timeline/" + filename);
-		if (resource == null) {
-			log.info("Timeline file '{}' for zone '{}' is missing", filename, zoneId);
-			currentTimeline = null;
-			return;
+		else {
+			log.info("Loaded timeline for zone '{}', {} timeline entries", zoneId, currentTimeline.getEntries().size());
 		}
-		try {
-			currentTimeline = TimelineProcessor.of(new File(resource.toURI()));
-		}
-		catch (Throwable e) {
-			log.error("Error loading timeline file", e);
-			currentTimeline = null;
-			return;
-		}
-		log.info("Loaded timeline for zone '{}', {} timeline entries", zoneId, currentTimeline.getEntries().size());
+	}
+
+	public static Map<Long, String> getTimelines() {
+		return Collections.unmodifiableMap(zoneIdToTimelineFile);
 	}
 
 	public List<VisualTimelineEntry> getCurrentDisplayEntries() {
@@ -275,10 +290,19 @@ public class TimelineManager {
 		if (currentTimeline == null) {
 			return Collections.emptyList();
 		}
-		return currentTimeline.getCurrentTimelineEntries();
+		if (debugMode.get()) {
+			return currentTimeline.getCurrentTimelineEntries();
+		}
+		else {
+			return currentTimeline.getCurrentTimelineEntries().stream().filter(e -> (e.timeUntil() >= 0 || e.remainingActiveTime() > 0) && e.shouldDisplay()).toList();
+		}
 	}
 
 	public IntSetting getRowsToDisplay() {
 		return rowsToDisplay;
+	}
+
+	public BooleanSetting getDebugMode() {
+		return debugMode;
 	}
 }

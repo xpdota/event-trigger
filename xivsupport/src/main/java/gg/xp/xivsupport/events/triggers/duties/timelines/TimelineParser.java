@@ -31,7 +31,7 @@ public class TimelineParser {
 		Matcher matcher = timelinePatternLong.matcher(line);
 		Pattern sync;
 		if (matcher.matches()) {
-			log.info("Matching line: {}", line);
+			log.trace("Matching line: {}", line);
 			String timeRaw = matcher.group("time");
 			String title = matcher.group("title");
 			String syncRaw = matcher.group("sync");
@@ -59,7 +59,7 @@ public class TimelineParser {
 			return new RawTimelineEntry(Double.parseDouble(timeRaw), title, sync, doubleOrNull(durationRaw), window, doubleOrNull(jumpRaw));
 		}
 		else {
-			log.info("Line did not match: {}", line);
+			log.trace("Line did not match: {}", line);
 			return null;
 		}
 	}
