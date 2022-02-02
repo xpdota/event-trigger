@@ -12,6 +12,7 @@ public class IntSettingSpinner {
 	private final String label;
 	private JLabel jLabel;
 
+	// TODO: something weird going on with insets with this class
 	public IntSettingSpinner(IntSetting setting, String label) {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setValue(setting.get());
@@ -42,7 +43,7 @@ public class IntSettingSpinner {
 
 	public JPanel getComponent() {
 		JPanel box = new JPanel();
-		box.setLayout(new WrapLayout());
+		box.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
 		box.add(getSpinnerOnly());
 		box.add(getLabelOnly());
 		box.setMaximumSize(box.getPreferredSize());
