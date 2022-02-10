@@ -53,7 +53,7 @@ public class DotRefreshReminders {
 		this.enableTts = new BooleanSetting(persistence, "dot-tracker.enable-tts", true);
 		// TODO put this on UI
 		this.enableFlyingText = new BooleanSetting(persistence, "dot-tracker.enable-flying-text", false);
-		this.numberToDisplay = new IntSetting(persistence, "dot-tracker.disp-time", 8);
+		this.numberToDisplay = new IntSetting(persistence, "dot-tracker.disp-time", 8, 1, 32);
 	}
 
 	private static String getKey(DotBuff buff) {

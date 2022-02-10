@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.tables.renderers;
 import gg.xp.xivdata.jobs.ActionIcon;
 import gg.xp.xivdata.jobs.HasIconURL;
 import gg.xp.xivdata.jobs.StatusEffectIcon;
+import gg.xp.xivdata.jobs.URLIcon;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
@@ -13,6 +14,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.net.URL;
 
 public class ActionAndStatusRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
@@ -50,6 +52,10 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		else if (value instanceof XivStatusEffect status) {
 			icon = StatusEffectIcon.forId(status.getId(), 1);
 			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
+		}
+		else if (value instanceof URL url) {
+			icon = new URLIcon(url);
+			tooltip = "";
 		}
 		else if (value instanceof HasAbility hasAbility) {
 			XivAbility ability = hasAbility.getAbility();

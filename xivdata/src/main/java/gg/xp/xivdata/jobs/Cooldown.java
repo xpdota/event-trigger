@@ -150,7 +150,7 @@ public enum Cooldown {
 	Embolden(RDM, true, 120.0, "Embolden", CooldownType.PARTY_BUFF, 0x1d60, 1239, 1297),
 	Manafication(RDM, true, 110.0, "Manafication", CooldownType.PERSONAL_BURST, 0x1D61, 0x7b3),
 	MagicBarrier(RDM, true, 120.0, "Magic Barrier", CooldownType.PARTY_MIT, 0x6501, 0xA93),
-	Acceleration(RDM, true, 55.0, "Acceleration", CooldownType.PERSONAL_BURST, 0x1D5E, 0x4D6),
+	Acceleration(RDM, true, 55.0, 2, "Acceleration", CooldownType.PERSONAL_BURST, 0x1D5E, 0x4D6),
 	Fleche(RDM, true, 25.0, "Fleche", CooldownType.PERSONAL_BURST, 0x1D5D),
 	ContreSixte(RDM, true, 35.0, "Contre Sixte", CooldownType.PERSONAL_BURST, 0x1D5F),
 	// TODO: can't add these yet because they are charges

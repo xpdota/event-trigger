@@ -50,12 +50,12 @@ public class TextFieldWithValidation<X> extends JTextField {
 		boolean validationError;
 		String currentRawText = getText();
 		try {
-			X rawText = parser.apply(currentRawText);
+			X parsedValue = parser.apply(currentRawText);
 			try {
-				consumer.accept(rawText);
+				consumer.accept(parsedValue);
 				validationError = false;
 			} catch (Throwable e) {
-				log.error("Error consuming new value ({})", rawText, e);
+				log.error("Error consuming new value ({})", parsedValue, e);
 				validationError = true;
 			}
 		}

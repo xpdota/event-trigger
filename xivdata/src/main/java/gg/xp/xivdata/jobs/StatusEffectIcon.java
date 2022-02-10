@@ -23,7 +23,7 @@ public class StatusEffectIcon implements HasIconURL {
 
 	private static boolean loaded;
 	private static final Map<Long, StatusEffectIcon> cache = new HashMap<>();
-	private static final Map<Long, StatusEffectCsvData> csvValues = new HashMap<>();
+	private static final Map<Long, StatusEffectInfo> csvValues = new HashMap<>();
 
 	private static void readCsv() {
 		readCsv(() -> ReadCsv.cellsFromResource("/xiv/statuseffect/Status.csv"));
@@ -66,7 +66,7 @@ public class StatusEffectIcon implements HasIconURL {
 					}
 				}
 				if (imageId != 0) {
-					csvValues.put(id, new StatusEffectCsvData(imageId, maxStacks));
+					csvValues.put(id, new StatusEffectInfo(imageId, maxStacks, row[1], row[2]));
 				}
 			});
 		}
@@ -87,7 +87,7 @@ public class StatusEffectIcon implements HasIconURL {
 		csvValues.values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
 	}
 
-	public static Map<Long, StatusEffectCsvData> getCsvValues() {
+	public static Map<Long, StatusEffectInfo> getCsvValues() {
 		if (!loaded) {
 			readCsv();
 		}
@@ -114,13 +114,13 @@ public class StatusEffectIcon implements HasIconURL {
 		if (!loaded) {
 			readCsv();
 		}
-		StatusEffectCsvData iconId = csvValues.get(id);
+		StatusEffectInfo iconId = csvValues.get(id);
 		if (iconId == null) {
 			return null;
 		}
 		long effectiveIconId = iconId.iconForStackCount(stacks);
 		StatusEffectIcon result = cache.computeIfAbsent(effectiveIconId, missingId -> {
-			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/statuseffect/icons/%06d_hr1.png", missingId));
+			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/icon/%06d_hr1.png", missingId));
 			if (resource == null) {
 				return NULL_MARKER;
 			}

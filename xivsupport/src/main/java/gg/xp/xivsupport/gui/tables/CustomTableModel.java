@@ -212,6 +212,9 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		SwingUtilities.invokeLater(this::processNewDataFull);
 	}
 
+	public List<X> getData() {
+		return Collections.unmodifiableList(data);
+	}
 
 	// Experimenting, don't use
 	public void overlayHackRefresh() {
@@ -306,6 +309,33 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			}
 		}
 		return null;
+	}
+
+	public void setSelectedValue(@Nullable X value) {
+		JTable table = getTable();
+		if (value == null) {
+			table.clearSelection();
+		}
+		else {
+			int index = data.indexOf(value);
+			if (index >= 0) {
+				table.addRowSelectionInterval(index, index);
+			}
+			else {
+				table.clearSelection();
+			}
+		}
+	}
+
+	public void scrollToSelectedValue() {
+		SwingUtilities.invokeLater(() -> {
+			JTable table = getTable();
+			int row = table.getSelectedRow();
+			if (row >= 0) {
+				table.scrollRectToVisible(table.getCellRect(row, 0, true));
+			}
+		});
+
 	}
 
 	@Override

@@ -27,6 +27,7 @@ public class TimelineOverlay extends XivOverlay {
 
 	public TimelineOverlay(PersistenceProvider persistence, TimelineManager timeline) {
 		super("Timeline", "timeline-overlay", persistence);
+		// TODO: fix the timer getting truncated. Just left-justify text and right-justify timer like on cactbot
 		this.timeline = timeline;
 		this.numberOfRows = timeline.getRowsToDisplay();
 		numberOfRows.addListener(this::repackSize);

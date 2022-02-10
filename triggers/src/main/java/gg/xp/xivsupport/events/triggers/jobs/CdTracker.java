@@ -59,8 +59,8 @@ public class CdTracker {
 		enableFlyingText = new BooleanSetting(persistence, "cd-tracker.enable-flying-text", false);
 		cdTriggerAdvancePersonal = new LongSetting(persistence, "cd-tracker.pre-call-ms", 5000L);
 		cdTriggerAdvanceParty = new LongSetting(persistence, "cd-tracker.pre-call-ms.party", 5000L);
-		overlayMaxPersonal = new IntSetting(persistence, "cd-tracker.overlay-max", 8);
-		overlayMaxParty = new IntSetting(persistence, "cd-tracker.overlay-max.party", 8);
+		overlayMaxPersonal = new IntSetting(persistence, "cd-tracker.overlay-max", 8, 1, 32);
+		overlayMaxParty = new IntSetting(persistence, "cd-tracker.overlay-max.party", 8, 1, 32);
 	}
 
 	private static String getKey(Cooldown buff) {

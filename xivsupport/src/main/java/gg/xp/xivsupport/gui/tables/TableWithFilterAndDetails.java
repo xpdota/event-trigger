@@ -125,52 +125,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		JScrollPane detailsScroller = new JScrollPane(detailsTable);
 		detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
 
-		if (!rightClickOptions.isEmpty()) {
-			JPopupMenu popupMenu = new JPopupMenu();
-			popupMenu.addPopupMenuListener(new PopupMenuListener() {
-				@Override
-				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-					popupMenu.removeAll();
-					for (CustomRightClickOption rightClickOption : rightClickOptions) {
-						if (rightClickOption.shouldAppear(mainModel)) {
-
-							JMenuItem menuItem = new JMenuItem(rightClickOption.getLabel());
-							menuItem.addActionListener(l -> {
-								rightClickOption.doAction(mainModel);
-							});
-							popupMenu.add(menuItem);
-						}
-					}
-					popupMenu.revalidate();
-
-				}
-
-				@Override
-				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-
-				}
-
-				@Override
-				public void popupMenuCanceled(PopupMenuEvent e) {
-
-				}
-			});
-			table.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mousePressed(MouseEvent e) {
-					if (e.getButton() == MouseEvent.BUTTON3) {
-						JTable source = (JTable) e.getSource();
-						int row = source.rowAtPoint(e.getPoint());
-						int column = source.columnAtPoint(e.getPoint());
-
-						if (!source.isRowSelected(row)) {
-							source.changeSelection(row, column, false, false);
-						}
-					}
-				}
-			});
-			table.setComponentPopupMenu(popupMenu);
-		}
+		CustomRightClickOption.configureTable(table, mainModel, rightClickOptions);
 
 		// If no details, don't bother with a splitpane
 		// TODO: also cut out some of the selection logic
