@@ -85,7 +85,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 
 		c.gridy++;
-		c.weightx = 0;
+		c.weightx = 0.2;
 		c.weighty = 1;
 		c.gridwidth = 1;
 		c.gridheight = 1;
@@ -97,7 +97,11 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setMinWidth(50);
 					col.setMaxWidth(50);
 				}))
-				.addColumn(new CustomColumn<>("File", Map.Entry::getValue))
+				.addColumn(new CustomColumn<>("File", Map.Entry::getValue, col -> {
+					col.setMinWidth(50);
+					col.setMaxWidth(300);
+					col.setPreferredWidth(100);
+				}))
 				.build();
 
 		JTable timelineChooserTable = new JTable(timelineChooserModel);
@@ -106,7 +110,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 
 		JScrollPane chooserScroller = new JScrollPane(timelineChooserTable);
-		chooserScroller.setMinimumSize(new Dimension(200, 200));
+		chooserScroller.setPreferredSize(new Dimension(200, 32768));
+		chooserScroller.setMinimumSize(new Dimension(100, 200));
 		this.add(chooserScroller, c);
 
 		int numColMinWidth = 50;
