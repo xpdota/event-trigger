@@ -15,6 +15,7 @@ public class WsURISetting extends ObservableSetting implements Resettable {
 		this.settingKey = settingKey;
 		this.dflt = dflt;
 	}
+
 	public URI get() {
 		if (cached == null) {
 			return cached = persistence.get(settingKey, URI.class, dflt);

@@ -9,11 +9,10 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-public class TextFieldWithValidation<X> extends JTextField {
+public class MultiLineTextFieldWithValidation<X> extends JTextArea {
 
-	private static final Logger log = LoggerFactory.getLogger(TextFieldWithValidation.class);
+	private static final Logger log = LoggerFactory.getLogger(MultiLineTextFieldWithValidation.class);
 
 	protected final Color originalBackground;
 	private final Function<String, X> parser;
@@ -21,8 +20,8 @@ public class TextFieldWithValidation<X> extends JTextField {
 	protected final Color invalidBackground = new Color(62, 27, 27);
 	private boolean stopUpdate;
 
-	public TextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
-		super(10);
+	public MultiLineTextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
+		super(30, 30);
 		this.parser = parser;
 		this.consumer = consumer;
 		setText(initialValue);
@@ -50,12 +49,12 @@ public class TextFieldWithValidation<X> extends JTextField {
 		boolean validationError;
 		String currentRawText = getText();
 		try {
-			X parsedValue = parser.apply(currentRawText);
+			X rawText = parser.apply(currentRawText);
 			try {
-				consumer.accept(parsedValue);
+				consumer.accept(rawText);
 				validationError = false;
 			} catch (Throwable e) {
-				log.error("Error consuming new value ({})", parsedValue, e);
+				log.error("Error consuming new value ({})", rawText, e);
 				validationError = true;
 			}
 		}

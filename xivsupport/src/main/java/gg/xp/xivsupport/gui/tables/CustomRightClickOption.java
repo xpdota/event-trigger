@@ -2,6 +2,12 @@ package gg.xp.xivsupport.gui.tables;
 
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -56,5 +62,56 @@ public final class CustomRightClickOption {
 
 	public void doAction(CustomTableModel<?> object) {
 		action.accept(object);
+	}
+
+	public static void configureTable(JTable table, CustomTableModel<?> model, List<CustomRightClickOption> options) {
+		if (options.isEmpty()) {
+			return;
+		}
+		JPopupMenu popupMenu = new JPopupMenu();
+		popupMenu.addPopupMenuListener(new PopupMenuListener() {
+			@Override
+			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+				popupMenu.removeAll();
+				for (CustomRightClickOption rightClickOption : options) {
+					if (rightClickOption.shouldAppear(model)) {
+
+						JMenuItem menuItem = new JMenuItem(rightClickOption.getLabel());
+						menuItem.addActionListener(l -> {
+							rightClickOption.doAction(model);
+						});
+						popupMenu.add(menuItem);
+					}
+				}
+				popupMenu.revalidate();
+
+			}
+
+			@Override
+			public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+
+			}
+
+			@Override
+			public void popupMenuCanceled(PopupMenuEvent e) {
+
+			}
+		});
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					JTable source = (JTable) e.getSource();
+					int row = source.rowAtPoint(e.getPoint());
+					int column = source.columnAtPoint(e.getPoint());
+
+					if (!source.isRowSelected(row)) {
+						source.changeSelection(row, column, false, false);
+					}
+				}
+			}
+		});
+		table.setComponentPopupMenu(popupMenu);
+
 	}
 }

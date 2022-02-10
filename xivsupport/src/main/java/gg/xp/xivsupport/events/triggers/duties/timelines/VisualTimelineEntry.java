@@ -5,14 +5,13 @@ import gg.xp.xivsupport.models.CurrentMaxPair;
 
 @SuppressWarnings("NumericCastThatLosesPrecision")
 public record VisualTimelineEntry(
-		RawTimelineEntry originalTimelineEntry,
+		TimelineEntry originalTimelineEntry,
 		boolean isCurrentSync,
 		double timeUntil
 ) implements LabelOverride, CurrentMaxPair {
 	@Override
 	public String getLabel() {
-		double active = remainingActiveTime();
-		return String.format("%s%s %.01f", originalTimelineEntry.name(), isCurrentSync ? "*" : "", active > 0 ? active : timeUntil);
+		return String.format("%s%s", originalTimelineEntry.name(), isCurrentSync ? "*" : "");
 	}
 
 	public boolean shouldDisplay() {

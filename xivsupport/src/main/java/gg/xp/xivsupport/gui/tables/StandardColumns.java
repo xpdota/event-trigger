@@ -4,6 +4,7 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
+import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.renderers.HpPredictedRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
@@ -33,9 +34,13 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.io.Serial;
 import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 @ScanMe
 public final class StandardColumns {
@@ -257,6 +262,7 @@ public final class StandardColumns {
 			col.setCellEditor(new DoubleSettingSliderEditor(name, increment));
 		});
 	}
+
 	public static <X> CustomColumn<X> doubleSettingBoxColumn(String name, Function<X, DoubleSetting> settingGetter, int prefWidth) {
 		return (new CustomColumn<>(name, settingGetter::apply, col -> {
 			col.setPreferredWidth(prefWidth);
@@ -278,23 +284,23 @@ public final class StandardColumns {
 	}
 
 	public static <X> CustomColumn<X> longSettingBoxColumn(String name, Function<X, LongSetting> settingGetter, int prefWidth) {
-					return (new CustomColumn<>(name, settingGetter::apply, col -> {
-						col.setPreferredWidth(prefWidth);
-						col.setCellEditor(new LongSettingBoxEditor());
-						col.setCellRenderer(new TableCellRenderer() {
-							private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+		return (new CustomColumn<>(name, settingGetter::apply, col -> {
+			col.setPreferredWidth(prefWidth);
+			col.setCellEditor(new LongSettingBoxEditor());
+			col.setCellRenderer(new TableCellRenderer() {
+				private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
 
-							@Override
-							public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-								if (value instanceof LongSetting setting) {
-									return defaultRenderer.getTableCellRendererComponent(table, setting.get(), isSelected, hasFocus, row, column);
-								}
-								else {
-									return defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-								}
-							}
-						});
-					}));
+				@Override
+				public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+					if (value instanceof LongSetting setting) {
+						return defaultRenderer.getTableCellRendererComponent(table, setting.get(), isSelected, hasFocus, row, column);
+					}
+					else {
+						return defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+					}
+				}
+			});
+		}));
 	}
 
 	private static class DoubleSettingSliderEditor extends AbstractCellEditor implements TableCellEditor {
@@ -369,6 +375,7 @@ public final class StandardColumns {
 			return new LongSettingGui(setting, "N/A").getTextBoxOnly();
 		}
 	}
+
 	public static class DoubleSettingBoxEditor extends AbstractCellEditor implements TableCellEditor {
 
 		@Serial
@@ -384,4 +391,65 @@ public final class StandardColumns {
 			DoubleSetting setting = (DoubleSetting) value;
 			return new DoubleSettingGui(setting, "N/A").getTextBoxOnly();
 		}
-	}}
+	}
+
+	public static <X> TableCellEditor doubleEditorEmptyToNull(BiConsumer<X, Double> writer) {
+		return new CustomEditor<>(writer, s -> s.isEmpty() ? null : Double.parseDouble(s));
+	}
+
+	public static <X> TableCellEditor doubleEditorNonNull(BiConsumer<X, Double> writer) {
+		return new CustomEditor<>(writer, Double::parseDouble);
+	}
+
+	public static <X> TableCellEditor stringEditorNonNull(BiConsumer<X, String> writer) {
+		return new CustomEditor<>(writer, Function.identity());
+	}
+
+	public static <X> TableCellEditor stringEditorEmptyToNull(BiConsumer<X, @Nullable String> writer) {
+		return new CustomEditor<>(writer, s -> s.isEmpty() ? null : s);
+	}
+
+	public static <X> TableCellEditor urlEditorEmptyToNull(BiConsumer<X, @Nullable URL> writer) {
+		return new CustomEditor<>(writer, s -> s.isEmpty() ? null : makeUrl(s));
+	}
+
+	private static URL makeUrl(String url) {
+		try {
+			return new URL(url);
+		}
+		catch (MalformedURLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static <X> TableCellEditor regexEditorEmptyToNull(BiConsumer<X, @Nullable Pattern> writer) {
+		return new CustomEditor<>(writer, s -> s.isEmpty() ? null : Pattern.compile(s));
+	}
+
+	private static class CustomEditor<X, Y> extends AbstractCellEditor implements TableCellEditor {
+
+		@Serial
+		private static final long serialVersionUID = -3743763426515940614L;
+		private final BiConsumer<X, Y> writer;
+		private final Function<String, Y> parser;
+
+		public CustomEditor(BiConsumer<X, Y> writer, Function<String, Y> parser) {
+			this.writer = writer;
+			this.parser = parser;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			CustomTableModel<X> model = (CustomTableModel<X>) table.getModel();
+			X valueForRow = model.getValueForRow(row);
+			return new TextFieldWithValidation<>(parser, s -> writer.accept(valueForRow, s), value == null ? "" : String.valueOf(value));
+		}
+
+		@Override
+		public Object getCellEditorValue() {
+			return null;
+		}
+	}
+}
+
+

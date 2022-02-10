@@ -308,6 +308,22 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		return null;
 	}
 
+	public void setSelectedValue(@Nullable X value) {
+		JTable table = getTable();
+		if (value == null) {
+			table.clearSelection();
+		}
+		else {
+			int index = data.indexOf(value);
+			if (index >= 0) {
+				table.addRowSelectionInterval(index, index);
+			}
+			else {
+				table.clearSelection();
+			}
+		}
+	}
+
 	@Override
 	public @Nullable Object getValueAt(int rowIndex, int columnIndex) {
 		X item;

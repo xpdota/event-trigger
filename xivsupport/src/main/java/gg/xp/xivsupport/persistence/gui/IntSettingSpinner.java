@@ -23,8 +23,14 @@ public class IntSettingSpinner {
 				setting.set(newValue);
 			}
 		});
-		model.setMinimum(1);
-		model.setMaximum(32);
+		Integer min;
+		if ((min = setting.getMin()) != null) {
+			model.setMinimum(min);
+		}
+		Integer max;
+		if ((max = setting.getMax()) != null) {
+			model.setMaximum(max);
+		}
 		spinner = new JSpinner(model);
 		this.label = label;
 	}

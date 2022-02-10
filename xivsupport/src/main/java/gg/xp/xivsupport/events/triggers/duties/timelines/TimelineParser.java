@@ -18,11 +18,11 @@ public class TimelineParser {
 	// TODO: there are also windows that do not have a start + end, only a single number
 	private static final Pattern timelinePatternLong = Pattern.compile("(?<time>\\d*\\.?\\d*) \"(?<title>.*)\"(?: sync /(?<sync>.*)/)?(?: window (?<windowStart>\\d*\\.?\\d*),(?<windowEnd>\\d*\\.?\\d*))?(?: jump (?<jump>\\d*\\.?\\d*))?(?: duration (?<duration>\\d*\\.?\\d*))?");
 
-	public static List<RawTimelineEntry> parseMultiple(Collection<String> line) {
+	public static List<TextFileTimelineEntry> parseMultiple(Collection<String> line) {
 		return line.stream().map(TimelineParser::parseRaw).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
-	public static @Nullable RawTimelineEntry parseRaw(String line) {
+	public static @Nullable TextFileTimelineEntry parseRaw(String line) {
 		// Skip these for now
 		if (line.trim().isEmpty() || line.startsWith("hideall")) {
 			return null;
@@ -54,9 +54,9 @@ public class TimelineParser {
 				window = new TimelineWindow(Double.parseDouble(windowStartRaw), Double.parseDouble(windowEndRaw));
 			}
 			else {
-				window = new TimelineWindow(2.5d, 2.5d);
+				window = TimelineWindow.DEFAULT;
 			}
-			return new RawTimelineEntry(Double.parseDouble(timeRaw), title, sync, doubleOrNull(durationRaw), window, doubleOrNull(jumpRaw));
+			return new TextFileTimelineEntry(Double.parseDouble(timeRaw), title, sync, doubleOrNull(durationRaw), window, doubleOrNull(jumpRaw));
 		}
 		else {
 			log.trace("Line did not match: {}", line);
