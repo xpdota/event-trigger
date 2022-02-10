@@ -3,13 +3,17 @@ package gg.xp.xivsupport.events.triggers.duties.timelines;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,10 +39,10 @@ public final class TimelineProcessor {
 		debugMode = manager.getDebugMode();
 	}
 
-	public static TimelineProcessor of(TimelineManager manager, File file, List<? extends TimelineEntry> extra) {
+	public static TimelineProcessor of(TimelineManager manager, InputStream file, List<? extends TimelineEntry> extra) {
 		List<TextFileTimelineEntry> timelineEntries;
 		try {
-			timelineEntries = TimelineParser.parseMultiple(Files.readAllLines(file.toPath()));
+			timelineEntries = TimelineParser.parseMultiple(IOUtils.readLines(file, StandardCharsets.UTF_8));
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);

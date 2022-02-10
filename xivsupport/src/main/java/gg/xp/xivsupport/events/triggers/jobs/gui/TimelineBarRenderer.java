@@ -1,21 +1,24 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
+import gg.xp.xivdata.jobs.URLIcon;
 import gg.xp.xivsupport.events.triggers.duties.timelines.VisualTimelineEntry;
 import gg.xp.xivsupport.gui.tables.renderers.EmptyRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.ResourceBarSplitText;
+import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.TimelineBar;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.net.URL;
 
 public class TimelineBarRenderer implements TableCellRenderer {
 
 	private static final Color colorActive = new Color(255, 0, 0, 192);
 	private static final Color colorExpired = new Color(128, 0, 128, 192);
 	private static final Color colorUpcoming = new Color(53, 134, 159, 192);
-	private final ResourceBarSplitText bar = new ResourceBarSplitText();
+	private final TimelineBar bar = new TimelineBar();
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
 
 	@Override
@@ -59,6 +62,13 @@ public class TimelineBarRenderer implements TableCellRenderer {
 		double active = item.remainingActiveTime();
 		bar.setLeftTextOptions(String.format("%s%s", item.originalTimelineEntry().name(), item.isCurrentSync() ? "*" : ""));
 		bar.setRightText(String.format("%.1f", active > 0 ? active : item.timeUntil()));
+		URL url = item.originalTimelineEntry().icon();
+		if (url == null) {
+			bar.seticon(null);
+		}
+		else {
+			bar.seticon(IconTextRenderer.getIconOnly(new URLIcon(url)));
+		}
 	}
 
 	protected Color getBarColor(double percent, @NotNull VisualTimelineEntry item) {

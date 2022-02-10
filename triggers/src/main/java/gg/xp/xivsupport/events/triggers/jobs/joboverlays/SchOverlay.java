@@ -19,6 +19,7 @@ import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -70,7 +71,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		}
 
 		SchSummon(long actionIdForIcon) {
-			IconTextRenderer.ScaledImageComponent icon = IconTextRenderer.getIconOnly(ActionIcon.forId(actionIdForIcon));
+			ScaledImageComponent icon = IconTextRenderer.getIconOnly(ActionIcon.forId(actionIdForIcon));
 			if (icon == null) {
 				this.icon = null;
 			}

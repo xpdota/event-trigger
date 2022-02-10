@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.timelines;
 
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.duties.timelines.CustomTimelineEntry;
 import gg.xp.xivsupport.events.triggers.duties.timelines.TimelineCustomizations;
 import gg.xp.xivsupport.events.triggers.duties.timelines.TimelineEntry;
@@ -18,6 +19,7 @@ import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconUrlRenderer;
+import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import org.jetbrains.annotations.Nullable;
@@ -35,16 +37,18 @@ import java.util.stream.Collectors;
 public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab {
 	private final TimelineManager backend;
 	private final TimelineOverlay overlay;
+	private final XivState state;
 	private final CustomTableModel<Map.Entry<Long, String>> timelineChooserModel;
 	private CustomTableModel<TimelineEntry> timelineModel;
 	private Long currentZone;
 	private TimelineProcessor currentTimeline;
 	private TimelineCustomizations currentCust;
 
-	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay) {
+	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state) {
 		super("Timelines");
 		this.backend = backend;
 		this.overlay = overlay;
+		this.state = state;
 		this.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
@@ -84,7 +88,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		c.weightx = 0;
 		c.weighty = 1;
 		c.gridwidth = 1;
-		c.gridheight = 2;
+		c.gridheight = 1;
 
 		// TODO: searching
 		timelineChooserModel = CustomTableModel.builder(() -> TimelineManager.getTimelines().entrySet()
@@ -128,7 +132,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				}))
 				.addColumn(new CustomColumn<>("Icon", TimelineEntry::icon, col -> {
 					col.setCellEditor(StandardColumns.urlEditorEmptyToNull((item, value) -> ((CustomTimelineEntry) item).icon = value));
-					col.setCellRenderer(new IconUrlRenderer());
+					col.setCellRenderer(new ActionAndStatusRenderer());
 					col.setMinWidth(32);
 					col.setMaxWidth(32);
 					col.setPreferredWidth(32);
@@ -228,7 +232,24 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		this.add(scroll, c);
 
 		c.gridy++;
+
+		c.gridx = 0;
 		c.weighty = 0;
+		c.weightx = 0;
+		JButton selectCurrentButton = new JButton("Select Current");
+		selectCurrentButton.addActionListener(l -> {
+			XivZone zone = state.getZone();
+			if (zone != null) {
+				long zoneId = zone.getId();
+				timelineChooserModel.getData().stream().filter(e -> e.getKey() == zoneId).findFirst().ifPresent(value -> {
+					timelineChooserModel.setSelectedValue(value);
+					timelineChooserModel.scrollToSelectedValue();
+				});
+			}
+		});
+		this.add(new WrapperPanel(selectCurrentButton), c);
+		c.weighty = 0;
+		c.gridx++;
 
 		JButton newButton = new JButton("Add New Timeline Entry") {
 			@Override

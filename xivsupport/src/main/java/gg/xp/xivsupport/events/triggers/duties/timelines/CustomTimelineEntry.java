@@ -93,8 +93,9 @@ public class CustomTimelineEntry implements TimelineEntry {
 		return jump;
 	}
 
+	@Override
 	@JsonProperty
-	public URL getIcon() {
+	public URL icon() {
 		return icon;
 	}
 

@@ -5,13 +5,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-public class StatusEffectCsvData {
+public class StatusEffectInfo {
 	private final long baseIconId;
 	private final long numStacks;
+	private final String name;
+	private final String description;
 
-	public StatusEffectCsvData(long baseIconId, long numStacks) {
+	public StatusEffectInfo(long baseIconId, long numStacks, String name, String description) {
 		this.baseIconId = baseIconId;
 		this.numStacks = numStacks;
+		this.name = name;
+		this.description = description;
 	}
 
 	public long getBaseIconId() {
@@ -38,5 +42,13 @@ public class StatusEffectCsvData {
 		else {
 			return baseIconId + stacks - 1;
 		}
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getDescription() {
+		return description;
 	}
 }

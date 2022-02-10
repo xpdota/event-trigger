@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
-public class ResourceBarSplitText extends JComponent {
+public class TimelineBar extends JComponent {
 
 	private final JLabel label = new JLabel("", SwingConstants.LEFT);
 	private final JLabel rightLabel = new JLabel("", SwingConstants.LEFT);
@@ -17,8 +17,9 @@ public class ResourceBarSplitText extends JComponent {
 	private double percent1;
 	private double percent2;
 	private String[] textOptions;
+	private ScaledImageComponent icon;
 
-	public ResourceBarSplitText() {
+	public TimelineBar() {
 		setLeftTextOptions("");
 		add(label);
 		label.setOpaque(false);
@@ -35,6 +36,10 @@ public class ResourceBarSplitText extends JComponent {
 	public void setRightText(String rightText) {
 		rightLabel.setText(rightText);
 		rightLabel.revalidate();
+	}
+
+	public void seticon(ScaledImageComponent component) {
+		this.icon = component;
 	}
 
 	public Color getColor1() {
@@ -88,9 +93,16 @@ public class ResourceBarSplitText extends JComponent {
 	private void checkLabel() {
 		// Leave some space on the edges
 		int space = 5;
-		int fullWidth = getWidth() - 2 * space;
+		int leftBound = space;
+		int fullWidth = getWidth();
+		int rightBound = fullWidth - space;
+		// TODO: just redo this to make the left + right components both dynamic
+		if (icon != null) {
+			leftBound += icon.getPreferredSize().width;
+		}
 		int rightWidth = rightLabel.getPreferredSize().width;
-		int remainingWidth = fullWidth - rightWidth;
+		rightBound -= rightWidth;
+		int remainingWidth = rightBound - leftBound;
 		for (String text : textOptions) {
 			label.setText(text);
 			if (label.getPreferredSize().width <= (remainingWidth - (2 * getBorderWidth()))) {
@@ -98,8 +110,8 @@ public class ResourceBarSplitText extends JComponent {
 			}
 		}
 		int height = getHeight();
-		label.setBounds(space, 0, remainingWidth, height);
-		rightLabel.setBounds(fullWidth - rightWidth + space, 0, rightWidth + space, height);
+		label.setBounds(leftBound, 0, remainingWidth, height);
+		rightLabel.setBounds(fullWidth - rightWidth - space, 0, rightWidth + space, height);
 //		rightLabel.revalidate();
 	}
 
@@ -115,6 +127,14 @@ public class ResourceBarSplitText extends JComponent {
 	@Override
 	public void validate() {
 		checkLabel();
+	}
+
+	@Override
+	protected void paintChildren(Graphics g) {
+		super.paintChildren(g);
+		if (icon != null) {
+			icon.paint(g);
+		}
 	}
 
 	@SuppressWarnings("SuspiciousNameCombination")

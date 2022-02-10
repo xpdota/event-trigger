@@ -15,7 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -243,13 +246,13 @@ public class TimelineManager {
 			log.info("No timeline found for zone {}", zoneId);
 			return null;
 		}
-		URL resource = TimelineManager.class.getResource("/timeline/" + filename);
+		InputStream resource = TimelineManager.class.getResourceAsStream("/timeline/" + filename);
 		if (resource == null) {
 			log.info("Timeline file '{}' for zone '{}' is missing", filename, zoneId);
 			return null;
 		}
 		try {
-			return TimelineProcessor.of(this, new File(resource.toURI()), getCustomEntries(zoneId));
+			return TimelineProcessor.of(this, resource, getCustomEntries(zoneId));
 		}
 		catch (Throwable e) {
 			log.error("Error loading timeline", e);
