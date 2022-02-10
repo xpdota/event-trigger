@@ -120,7 +120,7 @@ public class StatusEffectIcon implements HasIconURL {
 		}
 		long effectiveIconId = iconId.iconForStackCount(stacks);
 		StatusEffectIcon result = cache.computeIfAbsent(effectiveIconId, missingId -> {
-			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/statuseffect/icons/%06d_hr1.png", missingId));
+			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/icon/%06d_hr1.png", missingId));
 			if (resource == null) {
 				return NULL_MARKER;
 			}

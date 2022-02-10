@@ -224,7 +224,7 @@ public class MakeEverything {
 				System.out.println("Number of status effect icons: " + statusIcons.size());
 				maker.extractIconRange(statusIcons);
 				System.out.println("Copying Icons");
-				List<String> statusIconDir = List.of("xiv", "statuseffect", "icons");
+				List<String> statusIconDir = List.of("xiv", "icon");
 				statusIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, statusIconDir));
 			}
 		}
@@ -238,7 +238,7 @@ public class MakeEverything {
 				System.out.println("Number of action icons: " + actionIcons.size());
 				maker.extractIconRange(actionCsvMap.values());
 				System.out.println("Copying Icons");
-				List<String> actionIconDir = List.of("xiv", "actions", "icons");
+				List<String> actionIconDir = List.of("xiv", "icon");
 				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, actionIconDir));
 			}
 		}
