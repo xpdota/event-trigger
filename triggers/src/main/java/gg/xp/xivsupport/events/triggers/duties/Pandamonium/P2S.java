@@ -132,8 +132,11 @@ public class P2S implements FilteredEventHandler {
 			CalloutEvent sw = shockwave.getModified(event);
 			if (sw instanceof BaseEvent be) {
 				be.setDelayedEnqueueOffset(event.getInitialDuration().minus(6, ChronoUnit.SECONDS));
+				context.enqueue(be);
 			}
-			context.accept(sw);
+			else {
+				context.accept(sw);
+			}
 		}
 		else if (id == 0x6810) {
 			context.accept(sewageDeluge.getModified(event));

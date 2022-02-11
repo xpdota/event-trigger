@@ -565,13 +565,14 @@ public class GuiMain {
 				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> {
-					if (e instanceof HasAbility) {
-						return ((HasAbility) e).getAbility();
-					}
-					if (e instanceof HasStatusEffect) {
-						return ((HasStatusEffect) e).getBuff();
-					}
-					return null;
+					return e;
+//					if (e instanceof HasAbility) {
+//						return ((HasAbility) e).getAbility();
+//					}
+//					if (e instanceof HasStatusEffect) {
+//						return ((HasStatusEffect) e).getBuff();
+//					}
+//					return null;
 				}, c -> {
 					c.setCellRenderer(new ActionAndStatusRenderer());
 				}))

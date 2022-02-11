@@ -285,7 +285,7 @@ public class FieldMapper<K extends Enum<K>> {
 					out.add(new StatusNoEffect(value >> 16));
 					break;
 					// 1d,0x60000 = reflect?
-				case 27:
+				case 27: //1B
 					// Not sure - seems to do "combo" as well as certain boss mechanics like "Subtract" from the math boss
 					break;
 				case 32:
@@ -332,12 +332,12 @@ public class FieldMapper<K extends Enum<K>> {
 		}
 		// Get the left two bytes as damage.
 		// Check for third byte == 0x40.
-		byte[] data = new byte[4];
+		int[] data = new int[4];
 		long damageRawTmp = damageRaw;
-		data[3] = (byte) damageRawTmp;
-		data[2] = (byte) (damageRawTmp >>= 8);
-		data[1] = (byte) (damageRawTmp >>= 8);
-		data[0] = (byte) (damageRawTmp >> 8);
+		data[3] = 0xff & (byte) damageRawTmp;
+		data[2] = 0xff & (byte) (damageRawTmp >>= 8);
+		data[1] = 0xff & (byte) (damageRawTmp >>= 8);
+		data[0] = 0xff & (byte) (damageRawTmp >> 8);
 		if (data[2] == 0x40) {
 			return (long) (data[3] << 16) + (data[0] << 8) + (data[1] - data[3]);
 		}

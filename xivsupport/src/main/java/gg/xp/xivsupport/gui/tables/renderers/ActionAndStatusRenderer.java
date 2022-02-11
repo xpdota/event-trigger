@@ -35,45 +35,52 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 
-		Component defaultLabel;
-		if (value instanceof NameIdPair && !iconOnly) {
-			defaultLabel = fallback.getTableCellRendererComponent(table, ((NameIdPair) value).getName(), isSelected, hasFocus, row, column);
-		}
-		else {
-			defaultLabel = fallback.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
-		}
 
-		HasIconURL icon;
-		String tooltip;
+		final HasIconURL icon;
+		final String tooltip;
+		final String text;
 		if (value instanceof XivAbility ability) {
+			text = ability.getName();
 			icon = ActionIcon.forId(ability.getId());
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 		}
 		else if (value instanceof XivStatusEffect status) {
+			text = status.getName();
 			icon = StatusEffectIcon.forId(status.getId(), 1);
 			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
 		}
 		else if (value instanceof URL url) {
+			text = "";
 			icon = new URLIcon(url);
 			tooltip = "";
 		}
 		else if (value instanceof HasAbility hasAbility) {
 			XivAbility ability = hasAbility.getAbility();
+			text = ability.getName();
 			icon = ActionIcon.forId(ability.getId());
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 		}
 		else if (value instanceof HasStatusEffect hasStatus) {
 			XivStatusEffect status = hasStatus.getBuff();
+			// TODO: duration?
 			long stacks = hasStatus.getStacks();
+			if (stacks > 0) {
+				text = String.format("%s (%s)", status.getName(), stacks);
+			}
+			else {
+				text = String.format("%s", status.getName());
+			}
 			icon = StatusEffectIcon.forId(status.getId(), stacks);
 			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
 		}
+		else if (value instanceof NameIdPair pair) {
+			return fallback.getTableCellRendererComponent(table, pair.getName(), isSelected, hasFocus, row, column);
+		}
 		else {
-			return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			return fallback.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
 		}
-		if (icon == null) {
-			return defaultLabel;
-		}
+		Component defaultLabel;
+		defaultLabel = fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
 
 		Component component = IconTextRenderer.getComponent(icon, defaultLabel, iconOnly, false, bypassCache);
 		if (enableTooltips) {

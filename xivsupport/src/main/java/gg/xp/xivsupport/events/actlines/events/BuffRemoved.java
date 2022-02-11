@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivdata.jobs.StatusEffectIcon;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
@@ -13,14 +14,22 @@ public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTarget
 	private final double duration;
 	private final XivCombatant source;
 	private final XivCombatant target;
+	private final long rawStacks;
 	private final long stacks;
 
-	public BuffRemoved(XivStatusEffect buff, double duration, XivCombatant source, XivCombatant target, long stacks) {
+	public BuffRemoved(XivStatusEffect buff, double duration, XivCombatant source, XivCombatant target, long rawStacks) {
 		this.buff = buff;
 		this.duration = duration;
 		this.source = source;
 		this.target = target;
-		this.stacks = stacks;
+		this.rawStacks = rawStacks;
+		long maxStacks = StatusEffectIcon.getCsvValues().get(buff.getId()).getNumStacks();
+		if (rawStacks >= 0 && rawStacks <= maxStacks) {
+			stacks = rawStacks;
+		}
+		else {
+			stacks = 0;
+		}
 	}
 
 	@Override
@@ -47,6 +56,10 @@ public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTarget
 		return stacks;
 	}
 
+	public long getRawStacks() {
+		return rawStacks;
+	}
+
 	@Override
 	public String toString() {
 		return "BuffRemoved{" +
@@ -54,7 +67,7 @@ public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTarget
 				", duration=" + duration +
 				", source=" + source +
 				", target=" + target +
-				", stacks=" + stacks +
+				", stacks=" + rawStacks +
 				'}';
 	}
 }

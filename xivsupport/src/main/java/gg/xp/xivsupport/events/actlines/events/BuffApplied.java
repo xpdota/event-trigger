@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivdata.jobs.ActionIcon;
+import gg.xp.xivdata.jobs.StatusEffectIcon;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
@@ -17,6 +19,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	private final Duration duration;
 	private final XivCombatant source;
 	private final XivCombatant target;
+	private final long stacks;
 	private final long rawStacks;
 	private final boolean isPreApp;
 	private boolean isRefresh;
@@ -31,12 +34,19 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		this(buff, durationRaw, source, target, stacks, false);
 	}
 
-	public BuffApplied(XivStatusEffect buff, double durationRaw, XivCombatant source, XivCombatant target, long stacks, boolean isPreApp) {
+	public BuffApplied(XivStatusEffect buff, double durationRaw, XivCombatant source, XivCombatant target, long rawStacks, boolean isPreApp) {
 		this.buff = buff;
 		this.duration = Duration.ofMillis((long) (durationRaw * 1000.0));
 		this.source = source;
 		this.target = target;
-		this.rawStacks = stacks;
+		this.rawStacks = rawStacks;
+		long maxStacks = StatusEffectIcon.getCsvValues().get(buff.getId()).getNumStacks();
+		if (rawStacks >= 0 && rawStacks <= maxStacks) {
+			stacks = rawStacks;
+		}
+		else {
+			stacks = 0;
+		}
 		this.isPreApp = isPreApp;
 	}
 
@@ -67,12 +77,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 
 	@Override
 	public long getStacks() {
-		if (rawStacks >= 0 && rawStacks <= 16) {
-			return rawStacks;
-		}
-		else {
-			return 0;
-		}
+		return stacks;
 	}
 
 	public boolean isRefresh() {
