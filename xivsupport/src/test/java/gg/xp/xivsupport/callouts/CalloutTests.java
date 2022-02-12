@@ -132,7 +132,7 @@ public class CalloutTests {
 		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
 		mc.attachHandle(mch);
 		{
-			BuffApplied ba = new BuffApplied(new XivStatusEffect(123, "FooStatus"), 15, new XivCombatant(1, "Cbt1"), new XivCombatant(2, "Cbt2"), 5);
+			BuffApplied ba = new BuffApplied(new XivStatusEffect(123, "FooStatus"), 15, new XivCombatant(1, "Cbt1"), new XivCombatant(2, "Cbt2"), 5, 5, false);
 
 			CalloutEvent modified = mc.getModified(ba);
 			{

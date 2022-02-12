@@ -34,6 +34,22 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		this(buff, durationRaw, source, target, stacks, false);
 	}
 
+	// Testing only
+	public BuffApplied(XivStatusEffect buff, double durationRaw, XivCombatant source, XivCombatant target, long rawStacks, long maxStacks, boolean isPreApp) {
+		this.buff = buff;
+		this.duration = Duration.ofMillis((long) (durationRaw * 1000.0));
+		this.source = source;
+		this.target = target;
+		this.rawStacks = rawStacks;
+		if (rawStacks >= 0 && rawStacks <= maxStacks) {
+			stacks = rawStacks;
+		}
+		else {
+			stacks = 0;
+		}
+		this.isPreApp = isPreApp;
+	}
+
 	public BuffApplied(XivStatusEffect buff, double durationRaw, XivCombatant source, XivCombatant target, long rawStacks, boolean isPreApp) {
 		this.buff = buff;
 		this.duration = Duration.ofMillis((long) (durationRaw * 1000.0));
