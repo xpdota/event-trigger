@@ -15,6 +15,7 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ public class DotTrackerOverlay extends XivOverlay {
 	private final JTable table;
 	private volatile List<BuffApplied> currentDots = Collections.emptyList();
 	private volatile List<VisualDotInfo> croppedDots = Collections.emptyList();
+	private final BooleanSetting showTicks;
 	private volatile boolean tickUpdatePending;
 
 	private static final int BAR_WIDTH = 150;
@@ -51,6 +53,7 @@ public class DotTrackerOverlay extends XivOverlay {
 	public DotTrackerOverlay(PersistenceProvider persistence, DotRefreshReminders dots, TickTracker ticker) {
 		super("Dot Tracker", "dot-tracker.overlay", persistence);
 		this.numberOfRows = dots.getNumberToDisplay();
+		this.showTicks = new BooleanSetting(persistence, "dot-tracker.overlay.show-ticks", true);
 		this.ticker = ticker;
 		numberOfRows.addListener(this::repackSize);
 		this.dots = dots;
@@ -81,7 +84,9 @@ public class DotTrackerOverlay extends XivOverlay {
 
 	@HandleEvents
 	public void ticksUpdated(EventContext context, TickUpdatedEvent event) {
-		tickUpdatePending = true;
+		if (showTicks.get()) {
+			tickUpdatePending = true;
+		}
 	}
 
 	@Override
@@ -129,7 +134,7 @@ public class DotTrackerOverlay extends XivOverlay {
 									out.add(new VisualDotInfo(first, first.getBuff().getName(), null));
 								}
 								else {
-									TickInfo tick = ticker.getTick(first.getTarget());
+									TickInfo tick = showTicks.get() ? ticker.getTick(first.getTarget()) : null;
 									out.add(new VisualDotInfo(first, null, tick));
 								}
 							}
@@ -159,5 +164,9 @@ public class DotTrackerOverlay extends XivOverlay {
 	private void refresh() {
 		getAndSort();
 		tableModel.fullRefresh();
+	}
+
+	public BooleanSetting showTicks() {
+		return showTicks;
 	}
 }

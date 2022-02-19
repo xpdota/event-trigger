@@ -20,9 +20,12 @@ public class TickTracker {
 
 	@HandleEvents
 	public void tickEvent(EventContext context, TickEvent tick) {
-		TickEvent old = map.put(tick.getTarget(), tick);
-		if (old == null) {
-			context.accept(new TickUpdatedEvent());
+		// Non-zero indicates a ground effect, which is not what we're interested in.
+		if (tick.getRawEffectId() == 0) {
+			TickEvent old = map.put(tick.getTarget(), tick);
+			if (old == null) {
+				context.accept(new TickUpdatedEvent());
+			}
 		}
 	}
 

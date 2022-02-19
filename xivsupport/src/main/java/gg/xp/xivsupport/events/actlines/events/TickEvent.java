@@ -23,4 +23,20 @@ public class TickEvent extends BaseEvent implements HasTargetEntity {
 	public XivCombatant getTarget() {
 		return combatant;
 	}
+
+	public XivCombatant getCombatant() {
+		return combatant;
+	}
+
+	public TickType getType() {
+		return type;
+	}
+
+	public long getDamage() {
+		return damage;
+	}
+
+	public long getRawEffectId() {
+		return rawEffectId;
+	}
 }

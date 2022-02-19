@@ -47,6 +47,7 @@ public class DotRefreshReminderGui implements PluginTab {
 		outerPanel.setLayout(new BorderLayout());
 		BooleanSetting enableTtsSetting = backend.getEnableTts();
 		BooleanSetting enableOverlaySetting = overlay.getEnabled();
+		BooleanSetting showTicksSetting = overlay.showTicks();
 
 		JPanel settingsPanel = new JPanel();
 		settingsPanel.setLayout(new WrapLayout());
@@ -68,6 +69,11 @@ public class DotRefreshReminderGui implements PluginTab {
 		{
 			JPanel numSetting = new IntSettingSpinner(backend.getNumberToDisplay(), "Max in Overlay").getComponent();
 			settingsPanel.add(numSetting);
+		}
+		{
+			JCheckBox showTicks = new BooleanSettingGui(showTicksSetting, "Show Ticks", enableOverlaySetting::get).getComponent();
+			settingsPanel.add(showTicks);
+			showTicksSetting.addListener(outerPanel::repaint);
 		}
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
