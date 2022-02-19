@@ -1,7 +1,13 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
+import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.state.combatstate.TickInfo;
+import gg.xp.xivsupport.events.state.combatstate.TickTracker;
+import gg.xp.xivsupport.events.state.combatstate.TickUpdatedEvent;
 import gg.xp.xivsupport.events.triggers.jobs.DotRefreshReminders;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
@@ -30,19 +36,22 @@ public class DotTrackerOverlay extends XivOverlay {
 	private static final Logger log = LoggerFactory.getLogger(DotTrackerOverlay.class);
 
 	private final IntSetting numberOfRows;
+	private final TickTracker ticker;
 
 	private final DotRefreshReminders dots;
 	private final CustomTableModel<VisualDotInfo> tableModel;
 	private final JTable table;
 	private volatile List<BuffApplied> currentDots = Collections.emptyList();
 	private volatile List<VisualDotInfo> croppedDots = Collections.emptyList();
+	private volatile boolean tickUpdatePending;
 
 	private static final int BAR_WIDTH = 150;
 
 
-	public DotTrackerOverlay(PersistenceProvider persistence, DotRefreshReminders dots) {
+	public DotTrackerOverlay(PersistenceProvider persistence, DotRefreshReminders dots, TickTracker ticker) {
 		super("Dot Tracker", "dot-tracker.overlay", persistence);
 		this.numberOfRows = dots.getNumberToDisplay();
+		this.ticker = ticker;
 		numberOfRows.addListener(this::repackSize);
 		this.dots = dots;
 		tableModel = CustomTableModel.builder(() -> croppedDots)
@@ -70,6 +79,11 @@ public class DotTrackerOverlay extends XivOverlay {
 		refresher.start();
 	}
 
+	@HandleEvents
+	public void ticksUpdated(EventContext context, TickUpdatedEvent event) {
+		tickUpdatePending = true;
+	}
+
 	@Override
 	protected void repackSize() {
 		table.setPreferredSize(new Dimension(table.getPreferredSize().width, table.getRowHeight() * numberOfRows.get()));
@@ -83,7 +97,9 @@ public class DotTrackerOverlay extends XivOverlay {
 			return;
 		}
 		List<BuffApplied> newCurrentDots = dots.getCurrentDots();
-		if (!newCurrentDots.equals(currentDots)) {
+		if (!newCurrentDots.equals(currentDots) || tickUpdatePending) {
+			// Technically, there's a concurrency issue here, but not enough to make a practical difference
+			tickUpdatePending = false;
 			if (newCurrentDots.isEmpty()) {
 				currentDots = Collections.emptyList();
 			}
@@ -110,19 +126,20 @@ public class DotTrackerOverlay extends XivOverlay {
 							BuffApplied first = v.get(0);
 							if (v.size() == 1) {
 								if (first.getTarget().isThePlayer()) {
-									out.add(new VisualDotInfo(first, first.getBuff().getName()));
+									out.add(new VisualDotInfo(first, first.getBuff().getName(), null));
 								}
 								else {
-									out.add(new VisualDotInfo(first));
+									TickInfo tick = ticker.getTick(first.getTarget());
+									out.add(new VisualDotInfo(first, null, tick));
 								}
 							}
 							else {
 								String firstTargetName = first.getTarget().getName();
 								if (v.stream().allMatch(e -> e.getTarget().getName().equals(firstTargetName))) {
-									out.add(new VisualDotInfo(first, String.format("%s x%s", firstTargetName, v.size())));
+									out.add(new VisualDotInfo(first, String.format("%s x%s", firstTargetName, v.size()), null));
 								}
 								else {
-									out.add(new VisualDotInfo(first, String.format("%s Targets", v.size())));
+									out.add(new VisualDotInfo(first, String.format("%s Targets", v.size()), null));
 								}
 							}
 						});
