@@ -1,5 +1,7 @@
 package gg.xp.xivdata.jobs;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.time.Duration;
 
 import static gg.xp.xivdata.jobs.Job.AST;
@@ -172,9 +174,9 @@ public enum Cooldown {
 	ShieldSamba(DNC, true, 120.0, "Shield Samba", CooldownType.PARTY_MIT, 0x3e8c, 1826),
 	Troubadour(BRD, true, 120.0, "Troubadour", CooldownType.PARTY_MIT, 0x1ced, 1934),
 	// TODO: these do not have correct duration - need to fix
-	MagesBallad(BRD, true, 120.0, "Mage's Ballad", CooldownType.PARTY_BUFF, 0x72, 0x8a9),
-	ArmysPaeon(BRD, true, 120.0, "Army's Paeon", CooldownType.PARTY_BUFF, 0x74, 0x8aa),
-	WanderersMinuet(BRD, true, 120.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
+	MagesBallad(BRD, true, 120.0, 45.0, "Mage's Ballad", CooldownType.PARTY_BUFF, 0x72, 0x8a9),
+	ArmysPaeon(BRD, true, 120.0, 45.0, "Army's Paeon", CooldownType.PARTY_BUFF, 0x74, 0x8aa),
+	WanderersMinuet(BRD, true, 120.0, 45.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
 	BattleVoice(BRD, true, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 0x8d),
 	// TODO need buff ID
 	RadiantFinale(BRD, true, 110.0, "Radiant Finale", CooldownType.PARTY_BUFF, 0x64B9, 0xB94),
@@ -182,6 +184,7 @@ public enum Cooldown {
 
 
 	private final boolean defaultPersOverlay;
+	private final @Nullable Double durationOverride;
 
 	public boolean defaultPersOverlay() {
 		return this.defaultPersOverlay;
@@ -218,6 +221,7 @@ public enum Cooldown {
 		this.abilityIds = abilityIds;
 		this.buffIds = buffIds;
 		this.maxCharges = 1;
+		durationOverride = null;
 	}
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -230,6 +234,20 @@ public enum Cooldown {
 		this.abilityIds = new long[]{abilityId};
 		this.buffIds = buffId;
 		this.maxCharges = 1;
+		durationOverride = null;
+	}
+
+	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, double durationOverride, String label, CooldownType cooldownType, long abilityId, long... buffId) {
+		this.job = job;
+		this.defaultPersOverlay = defaultPersOverlay;
+		this.cooldown = cooldown;
+		this.jobType = null;
+		this.type = cooldownType;
+		this.label = label;
+		this.abilityIds = new long[]{abilityId};
+		this.buffIds = buffId;
+		this.maxCharges = 1;
+		this.durationOverride = durationOverride;
 	}
 
 	Cooldown(JobType jobType, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -242,6 +260,7 @@ public enum Cooldown {
 		this.abilityIds = new long[]{abilityId};
 		this.buffIds = buffId;
 		this.maxCharges = 1;
+		durationOverride = null;
 	}
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, int charges, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -254,6 +273,7 @@ public enum Cooldown {
 		this.abilityIds = new long[]{abilityId};
 		this.buffIds = buffId;
 		this.maxCharges = charges;
+		durationOverride = null;
 	}
 
 	public Job getJob() {
@@ -301,5 +321,9 @@ public enum Cooldown {
 
 	public int getMaxCharges() {
 		return maxCharges;
+	}
+
+	public @Nullable Double getDurationOverride() {
+		return durationOverride;
 	}
 }

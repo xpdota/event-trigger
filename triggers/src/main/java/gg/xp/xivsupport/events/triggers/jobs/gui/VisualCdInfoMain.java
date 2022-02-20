@@ -40,6 +40,13 @@ public class VisualCdInfoMain implements VisualCdInfo {
 			return String.format("%.1f", ((double) (getMax() - getCurrent())) / 1000.0f);
 		}
 		else {
+			Double durOvr = cd.getDurationOverride();
+			if (durOvr != null) {
+				// TODO: move this into buff tracking, so we can have correct buff info everywhere
+				long durOvrMs = (long) (durOvr * 1000);
+				long effectiveDur = Math.max(0, durOvrMs - abilityEvent.getEffectiveTimeSince().toMillis());
+				return String.format("%.1f", effectiveDur / 1000.0);
+			}
 			if (buffApplied.isPreApp()) {
 				return "...";
 			}
@@ -50,6 +57,12 @@ public class VisualCdInfoMain implements VisualCdInfo {
 	@Override
 	public long getCurrent() {
 		if (buffApplied != null) {
+			Double durOvr = cd.getDurationOverride();
+			if (durOvr != null) {
+				// TODO: move this into buff tracking, so we can have correct buff info everywhere
+				long durOvrMs = (long) (durOvr * 1000);
+				return Math.max(0, durOvrMs - abilityEvent.getEffectiveTimeSince().toMillis());
+			}
 			return buffApplied.getEstimatedRemainingDuration().toMillis();
 		}
 		long durMillis = getEvent().getEffectiveTimeSince().toMillis();
@@ -64,6 +77,10 @@ public class VisualCdInfoMain implements VisualCdInfo {
 	@Override
 	public long getMax() {
 		if (buffApplied != null) {
+			Double durOvr = cd.getDurationOverride();
+			if (durOvr != null) {
+				return (long) (durOvr * 1000.0);
+			}
 			return buffApplied.getInitialDuration().toMillis();
 		}
 		//noinspection NumericCastThatLosesPrecision
