@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
+// TODO: move this new functionality back into ResourceBar
 public class TimelineBar extends JComponent {
 
 	private final JLabel label = new JLabel("", SwingConstants.LEFT);

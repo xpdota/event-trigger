@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.triggers.jobs;
+package gg.xp.xivsupport.events.state.combatstate;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;

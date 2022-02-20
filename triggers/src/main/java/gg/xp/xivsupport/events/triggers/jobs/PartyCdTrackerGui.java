@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.jobs;
 
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.jobs.Cooldown;
+import gg.xp.xivsupport.events.state.combatstate.CdTracker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.BaseCdTrackerGui;
 import gg.xp.xivsupport.events.triggers.jobs.gui.PartyCdTrackerOverlay;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;

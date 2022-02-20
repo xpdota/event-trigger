@@ -1,20 +1,20 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.state.combatstate.TickInfo;
 import gg.xp.xivsupport.models.CurrentMaxPair;
+import org.jetbrains.annotations.Nullable;
 
 public class VisualDotInfo implements CurrentMaxPair, LabelOverride {
 
 	private final BuffApplied buff;
 	private final String labelOverride;
+	private final @Nullable TickInfo tick;
 
-	public VisualDotInfo(BuffApplied buff, String labelOverride) {
+	public VisualDotInfo(BuffApplied buff, String labelOverride, @Nullable TickInfo tick) {
 		this.buff = buff;
 		this.labelOverride = labelOverride;
-	}
-
-	public VisualDotInfo(BuffApplied buff) {
-		this(buff, null);
+		this.tick = tick;
 	}
 
 	public BuffApplied getEvent() {
@@ -39,5 +39,10 @@ public class VisualDotInfo implements CurrentMaxPair, LabelOverride {
 	@Override
 	public long getMax() {
 		return buff.getInitialDuration().toMillis();
+	}
+
+
+	public @Nullable TickInfo getTick() {
+		return tick;
 	}
 }

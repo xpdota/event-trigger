@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.triggers.jobs;
+package gg.xp.xivsupport.events.state.combatstate;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -17,7 +17,6 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.BuffTrackingKey;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
-import gg.xp.xivsupport.models.XivStatusEffect;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class StatusEffectRepository {
 

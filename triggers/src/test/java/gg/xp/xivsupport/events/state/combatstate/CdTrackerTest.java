@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.triggers.jobs;
+package gg.xp.xivsupport.events.state.combatstate;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivdata.jobs.Cooldown;
@@ -7,6 +7,7 @@ import gg.xp.xivsupport.events.TestEventContext;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.state.XivStateDummy;
+import gg.xp.xivsupport.events.state.combatstate.CdTracker;
 import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
