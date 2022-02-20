@@ -64,8 +64,13 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 			JCheckBox enableOverlay = new BooleanSettingGui(overlay.getEnabled(), "Enable Overlay").getComponent();
 			settingsPanel.add(enableOverlay);
+			// TODO: just add description to the settings themselves
 			JCheckBox debugMode = new BooleanSettingGui(backend.getDebugMode(), "Debug Mode").getComponent();
+			debugMode.setToolTipText("Debug mode will cause the last sync to always be displayed, and will cause sync-only entries to be displayed as well.");
 			settingsPanel.add(debugMode);
+			JCheckBox showPrePull = new BooleanSettingGui(backend.getPrePullSetting(), "Show Pre-Pull").getComponent();
+			showPrePull.setToolTipText("Timeline will show prior to there being a valid sync.");
+			settingsPanel.add(showPrePull);
 			JPanel numSetting = new IntSettingSpinner(backend.getRowsToDisplay(), "Max in Overlay").getComponent();
 			settingsPanel.add(numSetting);
 			JPanel futureSetting = new IntSettingSpinner(backend.getSecondsFuture(), "Seconds in Future").getComponent();

@@ -1,10 +1,12 @@
 package gg.xp.xivsupport.events.triggers.duties.timelines;
 
+import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -30,6 +32,7 @@ public class TimelineManager {
 	private static final Logger log = LoggerFactory.getLogger(TimelineManager.class);
 	private static final Map<Long, String> zoneIdToTimelineFile = new HashMap<>();
 	private final BooleanSetting debugMode;
+	private final BooleanSetting prePullShow;
 	private final PersistenceProvider pers;
 	private final IntSetting rowsToDisplay;
 	private final IntSetting secondsPast;
@@ -237,6 +240,7 @@ public class TimelineManager {
 		secondsPast = new IntSetting(pers, "timeline-overlay.seconds-past", 0, 0, null);
 		secondsFuture = new IntSetting(pers, "timeline-overlay.seconds-future", 60, 0, null);
 		debugMode = new BooleanSetting(pers, "timeline-overlay.debug-mode", false);
+		prePullShow = new BooleanSetting(pers, "timeline-overlay.show-pre-pull", false);
 		this.pers = pers;
 	}
 
@@ -315,6 +319,12 @@ public class TimelineManager {
 		resetCurrent();
 	}
 
+	// TODO: "Pull Ended" event?
+	@HandleEvents(order = 40_000)
+	public void pullEnded(EventContext context, VictoryEvent event) {
+		resetCurrent();
+	}
+
 	private void resetCurrent() {
 		TimelineProcessor currentTimeline = this.currentTimeline;
 		if (currentTimeline != null) {
@@ -368,5 +378,9 @@ public class TimelineManager {
 
 	public IntSetting getSecondsPast() {
 		return secondsPast;
+	}
+
+	public BooleanSetting getPrePullSetting() {
+		return prePullShow;
 	}
 }

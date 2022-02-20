@@ -8,12 +8,9 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,15 +25,18 @@ public final class TimelineProcessor {
 	private final IntSetting secondsFuture;
 	private final IntSetting secondsPast;
 	private final BooleanSetting debugMode;
+	private final BooleanSetting showPrePull;
 	private @Nullable TimelineSync lastSync;
 
-	record TimelineSync(ACTLogLineEvent line, double lastSyncTime, TimelineEntry original) {}
+	record TimelineSync(ACTLogLineEvent line, double lastSyncTime, TimelineEntry original) {
+	}
 
 	private TimelineProcessor(TimelineManager manager, List<TimelineEntry> entries) {
 		this.entries = entries;
 		secondsFuture = manager.getSecondsFuture();
 		secondsPast = manager.getSecondsPast();
 		debugMode = manager.getDebugMode();
+		showPrePull = manager.getPrePullSetting();
 	}
 
 	public static TimelineProcessor of(TimelineManager manager, InputStream file, List<? extends TimelineEntry> extra) {
@@ -87,15 +87,19 @@ public final class TimelineProcessor {
 		double effectiveLastSyncTime;
 		if (lastSync == null) {
 			effectiveLastSyncTime = 0.0d;
+			if (!showPrePull.get()) {
+				return Collections.emptyList();
+			}
 		}
 		else {
 			effectiveLastSyncTime = lastSync.lastSyncTime + lastSync.line.getEffectiveTimeSince().toMillis() / 1000.0;
 		}
-		// TODO: make these settings
+		boolean debug = debugMode.get();
 		return entries.stream()
-				.filter(entry -> isLastSync(entry) && debugMode.get()
+				.filter(entry -> isLastSync(entry) && debug
 						|| (entry.time() > (effectiveLastSyncTime - secondsPast.get())
-						&& entry.time() < (effectiveLastSyncTime + secondsFuture.get())))
+						&& entry.time() < (effectiveLastSyncTime + secondsFuture.get())
+						&& entry.name() != null || debug))
 				.map(entry -> new VisualTimelineEntry(entry, isLastSync(entry), entry.time() - effectiveLastSyncTime))
 				.collect(Collectors.toList());
 	}
