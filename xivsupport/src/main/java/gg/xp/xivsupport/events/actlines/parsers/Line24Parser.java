@@ -40,7 +40,7 @@ public class Line24Parser extends AbstractACTLineParser<Line24Parser.Fields> {
 				return null;
 			}
 		}
-		return new TickEvent(target, type, fields.getHex(Fields.effectId), fields.getHex(Fields.damage));
+		return new TickEvent(target, type, fields.getHex(Fields.damage), fields.getHex(Fields.effectId));
 		// TODO: is HP coming from network for this? Or memory? If the former, could be trusted.
 	}
 }
