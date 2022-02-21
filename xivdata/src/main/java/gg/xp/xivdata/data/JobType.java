@@ -1,4 +1,4 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 public enum JobType {
 	// Try to not use this directly - rather, query the isX methods

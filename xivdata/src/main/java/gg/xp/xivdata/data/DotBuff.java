@@ -1,8 +1,8 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 import java.util.Set;
 
-import static gg.xp.xivdata.jobs.Job.*;
+import static gg.xp.xivdata.data.Job.*;
 
 public enum DotBuff {
 	// List of ALL buffs to track - WL/BL will be done by user settings

@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.jobs.HasIconURL;
+import gg.xp.xivdata.data.HasIconURL;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -26,7 +26,7 @@ public final class IconTextRenderer {
 			if (value == null) {
 				return null;
 			}
-			URL imageUrl = value.getIcon();
+			URL imageUrl = value.getIconUrl();
 			if (imageUrl == null) {
 				return null;
 			}

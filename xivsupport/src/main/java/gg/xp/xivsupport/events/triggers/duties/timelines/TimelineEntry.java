@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.events.triggers.duties.timelines;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import gg.xp.xivdata.jobs.HasIconURL;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

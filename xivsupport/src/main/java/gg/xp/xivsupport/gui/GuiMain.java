@@ -7,7 +7,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
-import gg.xp.xivdata.jobs.XivMap;
+import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -48,6 +48,7 @@ import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
+import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -149,6 +150,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", container.getComponent(MapTab.class)));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", new LibraryTab(container)));
 	}
 
 

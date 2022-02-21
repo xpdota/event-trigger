@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.jobs.URLIcon;
+import gg.xp.xivdata.data.URLIcon;
 import gg.xp.xivsupport.events.triggers.duties.timelines.VisualTimelineEntry;
 import gg.xp.xivsupport.gui.tables.renderers.EmptyRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;

@@ -1,9 +1,10 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.jobs.ActionIcon;
-import gg.xp.xivdata.jobs.HasIconURL;
-import gg.xp.xivdata.jobs.StatusEffectIcon;
-import gg.xp.xivdata.jobs.URLIcon;
+import gg.xp.xivdata.data.ActionIcon;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.HasIconURL;
+import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.URLIcon;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
@@ -41,12 +42,12 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		final String text;
 		if (value instanceof XivAbility ability) {
 			text = ability.getName();
-			icon = ActionIcon.forId(ability.getId());
+			icon = ActionLibrary.iconForId(ability.getId());
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 		}
 		else if (value instanceof XivStatusEffect status) {
 			text = status.getName();
-			icon = StatusEffectIcon.forId(status.getId(), 1);
+			icon = StatusEffectLibrary.iconForId(status.getId(), 1);
 			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
 		}
 		else if (value instanceof URL url) {
@@ -57,7 +58,7 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		else if (value instanceof HasAbility hasAbility) {
 			XivAbility ability = hasAbility.getAbility();
 			text = ability.getName();
-			icon = ActionIcon.forId(ability.getId());
+			icon = ActionLibrary.iconForId(ability.getId());
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 		}
 		else if (value instanceof HasStatusEffect hasStatus) {
@@ -70,7 +71,7 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 			else {
 				text = String.format("%s", status.getName());
 			}
-			icon = StatusEffectIcon.forId(status.getId(), stacks);
+			icon = StatusEffectLibrary.iconForId(status.getId(), stacks);
 			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
 		}
 		else if (value instanceof NameIdPair pair) {

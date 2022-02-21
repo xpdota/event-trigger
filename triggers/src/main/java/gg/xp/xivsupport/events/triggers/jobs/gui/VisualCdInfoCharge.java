@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.jobs.Cooldown;
+import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import org.jetbrains.annotations.NotNull;
@@ -8,9 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 // TODO: value in supporting buffs?
 public class VisualCdInfoCharge implements VisualCdInfo {

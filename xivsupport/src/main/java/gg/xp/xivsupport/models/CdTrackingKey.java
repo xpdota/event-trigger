@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.models;
 
-import gg.xp.xivdata.jobs.Cooldown;
+import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 

@@ -1,4 +1,4 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,7 +115,7 @@ public enum Job implements HasIconURL {
 	}
 
 	@Override
-	public URL getIcon() {
+	public URL getIconUrl() {
 		// Fine for now
 		String fileName = getFriendlyName().replaceAll(" ", "") + ".png";
 		return Job.class.getResource("/xiv/jobicons/" + fileName);

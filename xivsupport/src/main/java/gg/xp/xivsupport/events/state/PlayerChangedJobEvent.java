@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.state;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.Job;
 
 public class PlayerChangedJobEvent extends BaseEvent {
 

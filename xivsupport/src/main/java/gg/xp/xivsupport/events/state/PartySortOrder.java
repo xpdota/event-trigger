@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.events.state;
 
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.jobs.Job;
-import gg.xp.xivdata.jobs.JobType;
+import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.JobType;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.EnumListSetting;
 import gg.xp.xivsupport.persistence.settings.ObservableSetting;

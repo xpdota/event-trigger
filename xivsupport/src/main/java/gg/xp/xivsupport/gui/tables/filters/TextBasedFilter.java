@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 		filterUpdatedCallback.run();
 	}
 
-	protected @Nullable Predicate<X> getFilterForInput(String input) {
+	protected @Nullable Predicate<X> getFilterForInput(@NotNull String input) {
 		validationError = false;
 		if (input.isEmpty()) {
 			return null;

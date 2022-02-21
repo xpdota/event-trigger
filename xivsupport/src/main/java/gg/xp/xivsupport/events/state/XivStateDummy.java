@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.events.state;
 
-import gg.xp.xivdata.jobs.Job;
-import gg.xp.xivdata.jobs.XivMap;
+import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;

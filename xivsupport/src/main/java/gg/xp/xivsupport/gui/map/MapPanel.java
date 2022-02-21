@@ -2,10 +2,10 @@ package gg.xp.xivsupport.gui.map;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.jobs.ActionIcon;
-import gg.xp.xivdata.jobs.Job;
-import gg.xp.xivdata.jobs.XivMap;
+import gg.xp.xivdata.data.ActionIcon;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -254,7 +254,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				setBorder(new LineBorder(new Color(128, 0, 0)));
 				setOpaque(false);
 				// TODO: find good icon
-				icon = IconTextRenderer.getComponent(ActionIcon.forId(2246), defaultLabel, true, false, true);
+				icon = IconTextRenderer.getComponent(ActionLibrary.iconForId(2246), defaultLabel, true, false, true);
 //				MapPanel.this.setComponentZOrder(this, 5);
 			}
 			add(icon);

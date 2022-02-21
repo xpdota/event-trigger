@@ -1,8 +1,9 @@
 package gg.xp.xivdata;
 
-import gg.xp.xivdata.jobs.ActionIcon;
-import gg.xp.xivdata.jobs.StatusEffectInfo;
-import gg.xp.xivdata.jobs.StatusEffectIcon;
+import gg.xp.xivdata.data.ActionInfo;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.StatusEffectInfo;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
@@ -213,8 +214,8 @@ public class MakeEverything {
 
 		// STATUS EFFECTS
 		{
-			StatusEffectIcon.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
-			Map<Long, StatusEffectInfo> statusCsvMap = StatusEffectIcon.getCsvValues();
+			StatusEffectLibrary.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
+			Map<Long, StatusEffectInfo> statusCsvMap = StatusEffectLibrary.getAll();
 			List<Long> statusIcons;
 			// TODO: it looks like the way status effects work is that there is one icon for each stack value.
 			// Maximum stack amounts are defined in Status.csv. Maybe it's time to improve the CSV reading?
@@ -230,13 +231,13 @@ public class MakeEverything {
 		}
 		// ACTIONS/ABILITIES
 		{
-			ActionIcon.readAltCsv(maker.getTargetFile("xiv", "actions", "Action.csv"));
-			Map<Long, Long> actionCsvMap = ActionIcon.getCsvValues();
+			ActionLibrary.readAltCsv(maker.getTargetFile("xiv", "actions", "Action.csv"));
+			Map<Long, ActionInfo> actionCsvMap = ActionLibrary.getAll();
 			List<Long> actionIcons;
 			{
-				actionIcons = actionCsvMap.values().stream().distinct().toList();
+				actionIcons = actionCsvMap.values().stream().mapToLong(ActionInfo::iconId).distinct().boxed().toList();
 				System.out.println("Number of action icons: " + actionIcons.size());
-				maker.extractIconRange(actionCsvMap.values());
+				maker.extractIconRange(actionIcons);
 				System.out.println("Copying Icons");
 				List<String> actionIconDir = List.of("xiv", "icon");
 				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, actionIconDir));

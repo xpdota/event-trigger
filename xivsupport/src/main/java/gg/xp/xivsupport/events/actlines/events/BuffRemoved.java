@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivdata.jobs.StatusEffectIcon;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
@@ -23,7 +23,7 @@ public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTarget
 		this.source = source;
 		this.target = target;
 		this.rawStacks = rawStacks;
-		long maxStacks = StatusEffectIcon.getCsvValues().get(buff.getId()).getNumStacks();
+		long maxStacks = StatusEffectLibrary.forId(buff.getId()).maxStacks();
 		if (rawStacks >= 0 && rawStacks <= maxStacks) {
 			stacks = rawStacks;
 		}

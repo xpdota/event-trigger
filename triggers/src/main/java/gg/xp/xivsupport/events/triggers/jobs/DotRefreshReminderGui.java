@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.events.triggers.jobs;
 
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.jobs.DotBuff;
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.DotBuff;
+import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.events.triggers.jobs.gui.DotTrackerOverlay;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;

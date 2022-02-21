@@ -1,4 +1,4 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -15,18 +15,15 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StatusEffectIcon implements HasIconURL {
-
-	private static final Logger log = LoggerFactory.getLogger(StatusEffectIcon.class);
-
-	private final URL url;
+public class ActionLibrary {
+	private static final Logger log = LoggerFactory.getLogger(ActionLibrary.class);
 
 	private static boolean loaded;
-	private static final Map<Long, StatusEffectIcon> cache = new HashMap<>();
-	private static final Map<Long, StatusEffectInfo> csvValues = new HashMap<>();
+	private static final Map<Long, ActionIcon> cache = new HashMap<>();
+	private static final Map<Long, ActionInfo> csvValues = new HashMap<>();
 
 	private static void readCsv() {
-		readCsv(() -> ReadCsv.cellsFromResource("/xiv/statuseffect/Status.csv"));
+		readCsv(() -> ReadCsv.cellsFromResource("/xiv/actions/Action.csv"));
 	}
 
 	// TODO: this is kind of jank
@@ -44,13 +41,10 @@ public class StatusEffectIcon implements HasIconURL {
 					return;
 				}
 				String rawImg = row[3];
-				String stacks = row[5];
 				if (rawImg.isEmpty()) {
 					return;
 				}
 				long imageId;
-				long maxStacks;
-				maxStacks = Long.parseLong(stacks);
 				try {
 					imageId = Long.parseLong(rawImg);
 				}
@@ -66,7 +60,7 @@ public class StatusEffectIcon implements HasIconURL {
 					}
 				}
 				if (imageId != 0) {
-					csvValues.put(id, new StatusEffectInfo(imageId, maxStacks, row[1], row[2]));
+					csvValues.put(id, new ActionInfo(id, row[1], imageId));
 				}
 			});
 		}
@@ -77,6 +71,7 @@ public class StatusEffectIcon implements HasIconURL {
 		finally {
 			loaded = true;
 		}
+
 		// If we fail, it's always going to fail, so continue without icons.
 	}
 
@@ -87,11 +82,18 @@ public class StatusEffectIcon implements HasIconURL {
 		csvValues.values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
 	}
 
-	public static Map<Long, StatusEffectInfo> getCsvValues() {
+	public static Map<Long, ActionInfo> getAll() {
 		if (!loaded) {
 			readCsv();
 		}
 		return Collections.unmodifiableMap(csvValues);
+	}
+
+	public static @Nullable ActionInfo forId(long id) {
+		if (!loaded) {
+			readCsv();
+		}
+		return csvValues.get(id);
 	}
 
 	public static void readAltCsv(File file) {
@@ -99,32 +101,31 @@ public class StatusEffectIcon implements HasIconURL {
 	}
 
 	// Special value to indicate no icon
-	private static final StatusEffectIcon NULL_MARKER;
+	private static final ActionIcon NULL_MARKER;
 
 	static {
 		try {
-			NULL_MARKER = new StatusEffectIcon(new URL("http://bar/"));
+			NULL_MARKER = new ActionIcon(new URL("http://bar/"));
 		}
 		catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public static @Nullable StatusEffectIcon forId(long id, long stacks) {
-		if (!loaded) {
-			readCsv();
-		}
-		StatusEffectInfo iconId = csvValues.get(id);
-		if (iconId == null) {
-			return null;
-		}
-		long effectiveIconId = iconId.iconForStackCount(stacks);
-		StatusEffectIcon result = cache.computeIfAbsent(effectiveIconId, missingId -> {
-			URL resource = StatusEffectIcon.class.getResource(String.format("/xiv/icon/%06d_hr1.png", missingId));
+	// Unlike status effects, which are more complicated due to multi-icon for different stack numbers, this maps
+	// the ability ID to icon directly, skipping the "icon ID" step.
+	public static @Nullable ActionIcon iconForId(long id) {
+		ActionIcon result = cache.computeIfAbsent(id, missingId -> {
+			ActionInfo actionInfo = forId(missingId);
+			if (actionInfo == null) {
+				return NULL_MARKER;
+			}
+			long iconId = actionInfo.iconId();
+			URL resource = ActionIcon.class.getResource(String.format("/xiv/icon/%06d_hr1.png", iconId));
 			if (resource == null) {
 				return NULL_MARKER;
 			}
-			return new StatusEffectIcon(resource);
+			return new ActionIcon(resource);
 		});
 		if (result == NULL_MARKER) {
 			return null;
@@ -132,12 +133,19 @@ public class StatusEffectIcon implements HasIconURL {
 		return result;
 	}
 
-	private StatusEffectIcon(URL url) {
-		this.url = url;
-	}
+	static @Nullable ActionIcon iconForInfo(ActionInfo info) {
+		ActionIcon result = cache.computeIfAbsent(info.actionid(), missingId -> {
+			long iconId = info.iconId();
+			URL resource = ActionIcon.class.getResource(String.format("/xiv/icon/%06d_hr1.png", iconId));
+			if (resource == null) {
+				return NULL_MARKER;
+			}
+			return new ActionIcon(resource);
+		});
+		if (result == NULL_MARKER) {
+			return null;
+		}
+		return result;
 
-	@Override
-	public URL getIcon() {
-		return url;
 	}
 }

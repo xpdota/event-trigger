@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.jobs.URLIcon;
+import gg.xp.xivdata.data.URLIcon;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;

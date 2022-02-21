@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.Job;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
