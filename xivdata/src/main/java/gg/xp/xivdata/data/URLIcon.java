@@ -1,4 +1,4 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 import java.net.URL;
 import java.util.Objects;
@@ -11,7 +11,7 @@ public class URLIcon implements HasIconURL {
 	}
 
 	@Override
-	public URL getIcon() {
+	public URL getIconUrl() {
 		return url;
 	}
 

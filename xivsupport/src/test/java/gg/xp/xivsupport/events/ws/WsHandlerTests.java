@@ -1,13 +1,9 @@
 package gg.xp.xivsupport.events.ws;
 
 import gg.xp.reevent.context.StateStore;
-import gg.xp.reevent.events.BasicEventQueue;
 import gg.xp.reevent.events.EventMaster;
-import gg.xp.reevent.events.InitEvent;
-import gg.xp.xivdata.jobs.Job;
-import gg.xp.xivsupport.events.state.PartySortOrder;
+import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -25,13 +21,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static gg.xp.xivdata.jobs.Job.WHM;
-import static gg.xp.xivdata.jobs.Job.AST;
-import static gg.xp.xivdata.jobs.Job.BLM;
-import static gg.xp.xivdata.jobs.Job.DNC;
-import static gg.xp.xivdata.jobs.Job.DRG;
-import static gg.xp.xivdata.jobs.Job.SMN;
-import static gg.xp.xivdata.jobs.Job.WAR;
+import static gg.xp.xivdata.data.Job.WHM;
+import static gg.xp.xivdata.data.Job.AST;
+import static gg.xp.xivdata.data.Job.BLM;
+import static gg.xp.xivdata.data.Job.DNC;
+import static gg.xp.xivdata.data.Job.DRG;
+import static gg.xp.xivdata.data.Job.SMN;
+import static gg.xp.xivdata.data.Job.WAR;
 
 public class WsHandlerTests {
 

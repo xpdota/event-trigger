@@ -6,7 +6,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.TestEventCollector;
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;

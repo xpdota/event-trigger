@@ -4,7 +4,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoHandlerInstanceProvider;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.events.state.PlayerChangedJobEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
@@ -17,7 +17,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Map;
 
-import static gg.xp.xivdata.jobs.Job.SCH;
+import static gg.xp.xivdata.data.Job.SCH;
 
 public class JobOverlay extends XivOverlay implements FilteredEventHandler {
 

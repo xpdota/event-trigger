@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.models;
 
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.Job;
 
 import java.io.Serial;
 

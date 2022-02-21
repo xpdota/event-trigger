@@ -1,4 +1,4 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.json.JsonReadFeature;

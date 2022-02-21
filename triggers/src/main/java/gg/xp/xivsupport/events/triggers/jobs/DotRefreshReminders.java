@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events.triggers.jobs;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.jobs.DotBuff;
+import gg.xp.xivdata.data.DotBuff;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;

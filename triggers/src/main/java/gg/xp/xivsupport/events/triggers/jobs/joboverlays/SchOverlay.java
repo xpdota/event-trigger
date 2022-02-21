@@ -3,8 +3,9 @@ package gg.xp.xivsupport.events.triggers.jobs.joboverlays;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.jobs.ActionIcon;
-import gg.xp.xivdata.jobs.Cooldown;
+import gg.xp.xivdata.data.ActionIcon;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
@@ -36,7 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static gg.xp.xivdata.jobs.Job.SCH;
+import static gg.xp.xivdata.data.Job.SCH;
 
 public class SchOverlay extends JPanel implements FilteredEventHandler {
 
@@ -71,7 +72,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		}
 
 		SchSummon(long actionIdForIcon) {
-			ScaledImageComponent icon = IconTextRenderer.getIconOnly(ActionIcon.forId(actionIdForIcon));
+			ScaledImageComponent icon = IconTextRenderer.getIconOnly(ActionLibrary.iconForId(actionIdForIcon));
 			if (icon == null) {
 				this.icon = null;
 			}
@@ -198,7 +199,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		else {
 			return null;
 		}
-		return ActionIcon.forId(actionId);
+		return ActionLibrary.iconForId(actionId);
 	}
 
 	private void summonUpdate() {

@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.jobs.Cooldown;
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.Cooldown;
+import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;

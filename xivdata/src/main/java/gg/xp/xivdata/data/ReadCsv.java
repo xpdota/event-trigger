@@ -1,4 +1,4 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;

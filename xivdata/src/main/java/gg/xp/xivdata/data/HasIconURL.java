@@ -1,7 +1,7 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 import java.net.URL;
 
 public interface HasIconURL {
-	URL getIcon();
+	URL getIconUrl();
 }

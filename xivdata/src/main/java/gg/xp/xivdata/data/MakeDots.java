@@ -1,4 +1,4 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

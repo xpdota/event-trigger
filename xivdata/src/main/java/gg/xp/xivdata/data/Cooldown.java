@@ -1,30 +1,30 @@
-package gg.xp.xivdata.jobs;
+package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-import static gg.xp.xivdata.jobs.Job.AST;
-import static gg.xp.xivdata.jobs.Job.BRD;
-import static gg.xp.xivdata.jobs.Job.DNC;
-import static gg.xp.xivdata.jobs.Job.DRG;
-import static gg.xp.xivdata.jobs.Job.DRK;
-import static gg.xp.xivdata.jobs.Job.GNB;
-import static gg.xp.xivdata.jobs.Job.MCH;
-import static gg.xp.xivdata.jobs.Job.MNK;
-import static gg.xp.xivdata.jobs.Job.NIN;
-import static gg.xp.xivdata.jobs.Job.PLD;
-import static gg.xp.xivdata.jobs.Job.RDM;
-import static gg.xp.xivdata.jobs.Job.RPR;
-import static gg.xp.xivdata.jobs.Job.SCH;
-import static gg.xp.xivdata.jobs.Job.SGE;
-import static gg.xp.xivdata.jobs.Job.SMN;
-import static gg.xp.xivdata.jobs.Job.WAR;
-import static gg.xp.xivdata.jobs.Job.WHM;
-import static gg.xp.xivdata.jobs.JobType.CASTER;
-import static gg.xp.xivdata.jobs.JobType.HEALER;
-import static gg.xp.xivdata.jobs.JobType.MELEE_DPS;
-import static gg.xp.xivdata.jobs.JobType.TANK;
+import static gg.xp.xivdata.data.Job.AST;
+import static gg.xp.xivdata.data.Job.BRD;
+import static gg.xp.xivdata.data.Job.DNC;
+import static gg.xp.xivdata.data.Job.DRG;
+import static gg.xp.xivdata.data.Job.DRK;
+import static gg.xp.xivdata.data.Job.GNB;
+import static gg.xp.xivdata.data.Job.MCH;
+import static gg.xp.xivdata.data.Job.MNK;
+import static gg.xp.xivdata.data.Job.NIN;
+import static gg.xp.xivdata.data.Job.PLD;
+import static gg.xp.xivdata.data.Job.RDM;
+import static gg.xp.xivdata.data.Job.RPR;
+import static gg.xp.xivdata.data.Job.SCH;
+import static gg.xp.xivdata.data.Job.SGE;
+import static gg.xp.xivdata.data.Job.SMN;
+import static gg.xp.xivdata.data.Job.WAR;
+import static gg.xp.xivdata.data.Job.WHM;
+import static gg.xp.xivdata.data.JobType.CASTER;
+import static gg.xp.xivdata.data.JobType.HEALER;
+import static gg.xp.xivdata.data.JobType.MELEE_DPS;
+import static gg.xp.xivdata.data.JobType.TANK;
 
 public enum Cooldown {
 

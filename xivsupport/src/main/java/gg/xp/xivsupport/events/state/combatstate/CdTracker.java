@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events.state.combatstate;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.jobs.Cooldown;
+import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;

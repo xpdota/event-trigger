@@ -1,8 +1,9 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.jobs.ActionIcon;
-import gg.xp.xivdata.jobs.HasIconURL;
-import gg.xp.xivdata.jobs.StatusEffectIcon;
+import gg.xp.xivdata.data.ActionIcon;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.HasIconURL;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
@@ -41,43 +42,43 @@ public class AbilityEffectRenderer {
 		boolean textOnRight = false;
 		if (value instanceof DamageTakenEffect) {
 			text = ((DamageTakenEffect) value).getSeverity().getSymbol() + ((DamageTakenEffect) value).getAmount();
-			icon = ActionIcon.forId(9);
+			icon = ActionLibrary.iconForId(9);
 		}
 		else if (value instanceof HealEffect) {
 			text = ((HealEffect) value).getSeverity().getSymbol() + ((HealEffect) value).getAmount();
-			icon = ActionIcon.forId(3594);
+			icon = ActionLibrary.iconForId(3594);
 		}
 		else if (value instanceof MpGain) {
 			text = "+" + ((MpGain) value).getAmount();
-			icon = ActionIcon.forId(7562);
+			icon = ActionLibrary.iconForId(7562);
 		}
 		else if (value instanceof MpLoss) {
 			text = "-" + ((MpLoss) value).getAmount();
-			icon = ActionIcon.forId(7562);
+			icon = ActionLibrary.iconForId(7562);
 		}
 		else if (value instanceof ParriedDamageEffect) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
 			text = Long.toString(((ParriedDamageEffect) value).getAmount());
-			icon = ActionIcon.forId(16140);
+			icon = ActionLibrary.iconForId(16140);
 		}
 		else if (value instanceof BlockedDamageEffect) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
 			text = Long.toString(((BlockedDamageEffect) value).getAmount());
-			icon = ActionIcon.forId(3542);
+			icon = ActionLibrary.iconForId(3542);
 		}
 		else if (value instanceof InvulnBlockedDamageEffect) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
 			text = Long.toString(((InvulnBlockedDamageEffect) value).getAmount());
-			icon = ActionIcon.forId(30);
+			icon = ActionLibrary.iconForId(30);
 		}
 		else if (value instanceof StatusAppliedEffect) {
 			text = "+";
-			icon = StatusEffectIcon.forId(((StatusAppliedEffect) value).getStatus().getId(), 1);
+			icon = StatusEffectLibrary.iconForId(((StatusAppliedEffect) value).getStatus().getId(), 1);
 			textOnRight = true;
 		}
 		else if (value instanceof StatusNoEffect) {
 			text = "X";
-			icon = StatusEffectIcon.forId(((StatusNoEffect) value).getStatus().getId(), 1);
+			icon = StatusEffectLibrary.iconForId(((StatusNoEffect) value).getStatus().getId(), 1);
 			textOnRight = true;
 		}
 		else {

@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.tables.filters;
 
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ public class EventAbilityOrBuffFilter extends TextBasedFilter<Object> {
 	}
 
 	@Override
-	protected @Nullable Predicate<Object> getFilterForInput(String input) {
+	protected @Nullable Predicate<Object> getFilterForInput(@NotNull String input) {
 		if (input.startsWith("0x")) {
 			validationError = false;
 			// TODO: this is also inefficient because we should just be parsing the input text

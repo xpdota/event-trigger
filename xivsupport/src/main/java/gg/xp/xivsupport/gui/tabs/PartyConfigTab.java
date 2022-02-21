@@ -2,13 +2,12 @@ package gg.xp.xivsupport.gui.tabs;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.jobs.Job;
-import gg.xp.xivdata.jobs.JobType;
+import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.JobType;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.state.PartySortOrder;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
-import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.components.RearrangeableEnumListSetting;
 import gg.xp.xivsupport.gui.components.RearrangeableList;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -24,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PartyConfigTab extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(PartyConfigTab.class);

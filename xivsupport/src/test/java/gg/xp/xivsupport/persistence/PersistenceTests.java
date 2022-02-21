@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.persistence;
 
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.EnumListSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
