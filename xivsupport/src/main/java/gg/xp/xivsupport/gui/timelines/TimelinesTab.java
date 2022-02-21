@@ -18,7 +18,6 @@ import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.IconUrlRenderer;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
@@ -36,10 +35,8 @@ import java.util.stream.Collectors;
 @ScanMe
 public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab {
 	private final TimelineManager backend;
-	private final TimelineOverlay overlay;
-	private final XivState state;
 	private final CustomTableModel<Map.Entry<Long, String>> timelineChooserModel;
-	private CustomTableModel<TimelineEntry> timelineModel;
+	private final CustomTableModel<TimelineEntry> timelineModel;
 	private Long currentZone;
 	private TimelineProcessor currentTimeline;
 	private TimelineCustomizations currentCust;
@@ -47,8 +44,6 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state) {
 		super("Timelines");
 		this.backend = backend;
-		this.overlay = overlay;
-		this.state = state;
 		this.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
@@ -62,29 +57,45 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			JPanel settingsPanel = new JPanel();
 			settingsPanel.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
 
-			JCheckBox enableOverlay = new BooleanSettingGui(overlay.getEnabled(), "Enable Overlay").getComponent();
-			settingsPanel.add(enableOverlay);
-			// TODO: just add description to the settings themselves
-			JCheckBox debugMode = new BooleanSettingGui(backend.getDebugMode(), "Debug Mode").getComponent();
-			debugMode.setToolTipText("Debug mode will cause the last sync to always be displayed, and will cause sync-only entries to be displayed as well.");
-			settingsPanel.add(debugMode);
-			JCheckBox showPrePull = new BooleanSettingGui(backend.getPrePullSetting(), "Show Pre-Pull").getComponent();
-			showPrePull.setToolTipText("Timeline will show prior to there being a valid sync.");
-			settingsPanel.add(showPrePull);
-			JPanel numSetting = new IntSettingSpinner(backend.getRowsToDisplay(), "Max in Overlay").getComponent();
-			settingsPanel.add(numSetting);
-			JPanel futureSetting = new IntSettingSpinner(backend.getSecondsFuture(), "Seconds in Future").getComponent();
-			settingsPanel.add(futureSetting);
-			JPanel pastSetting = new IntSettingSpinner(backend.getSecondsPast(), "Seconds in Past").getComponent();
-			settingsPanel.add(pastSetting);
+			{
+				JCheckBox enableOverlay = new BooleanSettingGui(overlay.getEnabled(), "Enable Overlay").getComponent();
+				settingsPanel.add(enableOverlay);
+			}
+			{
+				// TODO: just add description to the settings themselves
+				JCheckBox debugMode = new BooleanSettingGui(backend.getDebugMode(), "Debug Mode").getComponent();
+				debugMode.setToolTipText("Debug mode will cause the last sync to always be displayed, and will cause sync-only entries to be displayed as well.");
+				settingsPanel.add(debugMode);
+			}
+			{
+				JCheckBox showPrePull = new BooleanSettingGui(backend.getPrePullSetting(), "Show Pre-Pull").getComponent();
+				showPrePull.setToolTipText("Timeline will show prior to there being a valid sync.");
+				settingsPanel.add(showPrePull);
+			}
+			{
+				JCheckBox resetOnMapChange = new BooleanSettingGui(backend.getResetOnMapChangeSetting(), "Reset on Map Change").getComponent();
+				resetOnMapChange.setToolTipText("Reset on map change - this is NOT a zone change! The timeline will always reset on zone changes.\n\nResetting on a map change is sometimes desirable (e.g. raids with doorbosses, dungeons), but breaks others if they use multiple maps (e.g. O3N) and their post-map-change syncs don't have a big enough window.");
+				settingsPanel.add(resetOnMapChange);
+			}
+			{
+				JPanel numSetting = new IntSettingSpinner(backend.getRowsToDisplay(), "Max in Overlay").getComponent();
+				settingsPanel.add(numSetting);
+			}
+			{
+				JPanel futureSetting = new IntSettingSpinner(backend.getSecondsFuture(), "Seconds in Future").getComponent();
+				settingsPanel.add(futureSetting);
+			}
+			{
+				JPanel pastSetting = new IntSettingSpinner(backend.getSecondsPast(), "Seconds in Past").getComponent();
+				settingsPanel.add(pastSetting);
+			}
 
 			this.add(settingsPanel, c);
 		}
 		c.gridy++;
 
 		{
-			ReadOnlyText text = new ReadOnlyText("This feature is beta and very buggy. For dungeons/24 man raids, or anything else" +
-					"with trash, you may need to use /e c:splitpull to force it to reset after each encounter.");
+			ReadOnlyText text = new ReadOnlyText("This feature is beta and very buggy. For now, you can only add your own custom entries, but not edit anything coming from the original timeline files.");
 			this.add(text, c);
 		}
 

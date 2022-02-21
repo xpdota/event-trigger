@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.duties.timelines;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
@@ -16,11 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +28,7 @@ public class TimelineManager {
 	private static final Map<Long, String> zoneIdToTimelineFile = new HashMap<>();
 	private final BooleanSetting debugMode;
 	private final BooleanSetting prePullShow;
+	private final BooleanSetting resetOnMapChange;
 	private final PersistenceProvider pers;
 	private final IntSetting rowsToDisplay;
 	private final IntSetting secondsPast;
@@ -241,6 +237,7 @@ public class TimelineManager {
 		secondsFuture = new IntSetting(pers, "timeline-overlay.seconds-future", 60, 0, null);
 		debugMode = new BooleanSetting(pers, "timeline-overlay.debug-mode", false);
 		prePullShow = new BooleanSetting(pers, "timeline-overlay.show-pre-pull", false);
+		resetOnMapChange = new BooleanSetting(pers, "timeline-overlay.reset-on-map-change", false);
 		this.pers = pers;
 	}
 
@@ -269,7 +266,7 @@ public class TimelineManager {
 		return getCustomSettings(zoneId).getEntries();
 	}
 
-	private String propStubForZoneId(long zoneId) {
+	private static String propStubForZoneId(long zoneId) {
 		return String.format("timeline.custom.zone-%s.custom-entries", zoneId);
 	}
 
@@ -311,7 +308,9 @@ public class TimelineManager {
 
 	@HandleEvents(order = 40_000)
 	public void mapChange(EventContext context, MapChangeEvent event) {
-		resetCurrent();
+		if (resetOnMapChange.get()) {
+			resetCurrent();
+		}
 	}
 
 	@HandleEvents(order = 40_000)
@@ -382,5 +381,9 @@ public class TimelineManager {
 
 	public BooleanSetting getPrePullSetting() {
 		return prePullShow;
+	}
+
+	public BooleanSetting getResetOnMapChangeSetting() {
+		return resetOnMapChange;
 	}
 }
