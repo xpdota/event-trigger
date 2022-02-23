@@ -147,10 +147,10 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("ACT Log", getActLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("System Log", getSystemLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", container.getComponent(MapTab.class)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", new LibraryTab(container)));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 	}
 
 

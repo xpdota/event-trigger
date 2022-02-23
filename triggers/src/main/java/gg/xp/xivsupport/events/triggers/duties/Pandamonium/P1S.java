@@ -22,6 +22,9 @@ public class P1S implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> shiningCells = ModifiableCallout.durationBasedCall("Shining Cells", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> slamShut = ModifiableCallout.durationBasedCall("Slam Shut", "Raidwide");
 
+	private final ModifiableCallout<AbilityCastStart> topFirst = ModifiableCallout.durationBasedCall("Intemp Top First", "Top First");
+	private final ModifiableCallout<AbilityCastStart> bottomFirst = ModifiableCallout.durationBasedCall("Intemp Bottom First", "Bottom First");
+
 	private final ModifiableCallout<AbilityCastStart> leftToRight = ModifiableCallout.durationBasedCall("Flail: Left, Right", "Left to Right");
 	private final ModifiableCallout<AbilityCastStart> rightToLeft = ModifiableCallout.durationBasedCall("Flail: Right, Left", "Right to Left");
 	private final ModifiableCallout<AbilityCastStart> outThenIn = ModifiableCallout.durationBasedCall("Flail: Out, In", "Out then In");
@@ -132,6 +135,12 @@ public class P1S implements FilteredEventHandler {
 			}
 			else if (id == 0x6617) {
 				call = slamShut;
+			}
+			else if (id == 0x661F) {
+				call = bottomFirst;
+			}
+			else if (id == 0x6620) {
+				call = topFirst;
 			}
 			else if (id == 0x65F6) {
 				call = leftToRight;
