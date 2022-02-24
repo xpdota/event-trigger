@@ -17,7 +17,6 @@ public class IntSettingSpinner {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setValue(setting.get());
 		model.addChangeListener(e -> {
-			// TODO: should this logic just be part of the setting?
 			Integer newValue = (Integer) model.getValue();
 			if (newValue != setting.get()) {
 				setting.set(newValue);

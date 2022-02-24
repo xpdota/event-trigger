@@ -1,12 +1,14 @@
 package gg.xp.xivsupport.gui;
 
 import ch.qos.logback.classic.Level;
+import com.formdev.flatlaf.util.ScaledImageIcon;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -46,7 +48,9 @@ import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
@@ -445,7 +449,6 @@ public class GuiMain {
 	}
 
 	private JPanel getCombatantsPanel() {
-		// TODO: jump to parent button
 		// Main table
 		XivState state = container.getComponent(XivStateImpl.class);
 		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Combatants",
@@ -680,7 +683,6 @@ public class GuiMain {
 										Utils.dumpAllFields(e.getEvent()).entrySet().stream()
 								).collect(Collectors.toList());
 							})
-					// TODO: timestamp?
 					.addMainColumn(new CustomColumn<>("Time",
 							e -> Instant.ofEpochMilli(e.getEvent().getTimeStamp())
 									.atZone(ZoneId.systemDefault())

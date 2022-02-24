@@ -19,9 +19,20 @@ public class StatusEffectLibrary {
 
 	private static final Logger log = LoggerFactory.getLogger(StatusEffectLibrary.class);
 
-	private static boolean loaded;
+	private static volatile boolean loaded;
+	private static final Object lock = new Object();
 	private static final Map<Long, StatusEffectInfo> csvValues = new HashMap<>();
 	private static final Map<Long, StatusEffectIcon> cache = new HashMap<>();
+
+	private static void ensureLoaded() {
+		if (!loaded) {
+			synchronized (lock) {
+				if (!loaded) {
+					readCsv();
+				}
+			}
+		}
+	}
 
 	private static void readCsv() {
 		readCsv(() -> ReadCsv.cellsFromResource("/xiv/statuseffect/Status.csv"));
@@ -81,14 +92,12 @@ public class StatusEffectLibrary {
 	private static final Pattern texFilePattern = Pattern.compile("(\\d+)\\.tex");
 
 	public static void main(String[] args) {
-		readCsv();
-		csvValues.values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
+		ensureLoaded();
+		csvValues.values().stream().distinct().sorted().map(s -> String.format("%06d", s.statusEffectId())).forEach(System.out::println);
 	}
 
 	public static Map<Long, StatusEffectInfo> getAll() {
-		if (!loaded) {
-			readCsv();
-		}
+		ensureLoaded();
 		return Collections.unmodifiableMap(csvValues);
 	}
 
@@ -98,9 +107,7 @@ public class StatusEffectLibrary {
 
 
 	public static @Nullable StatusEffectInfo forId(long id) {
-		if (!loaded) {
-			readCsv();
-		}
+		ensureLoaded();
 		return csvValues.get(id);
 	}
 
