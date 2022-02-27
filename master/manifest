@@ -30,5 +30,5 @@ bb851f071c70445825724f821e1b7c0b  opencsv-5.5.2.jar
 1d0070839d825f57fe6f4d8e2a82989b  reflections-0.10.2.jar
 fbcf58513bc25b80f075d812aad3e3cf  slf4j-api-1.7.32.jar
 2cec2ac1e273d09fc7d1ddbbdc5e4f42  triggers-1.0-SNAPSHOT.jar
-10fcb980576ec9e7a4ef45321f80ed2b  xivdata-1.0-SNAPSHOT.jar
-dda63ede23146c52e14fd6a4876b981d  xivsupport-1.0-SNAPSHOT.jar
+80f15ba517f61f2656c95443ad141d60  xivdata-1.0-SNAPSHOT.jar
+673ba1e63ec344be642ca3f28a5719ed  xivsupport-1.0-SNAPSHOT.jar
