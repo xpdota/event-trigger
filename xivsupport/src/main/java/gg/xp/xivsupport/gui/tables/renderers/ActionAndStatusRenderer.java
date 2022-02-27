@@ -37,7 +37,7 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 
 
-		final HasIconURL icon;
+		HasIconURL icon;
 		final String tooltip;
 		final String text;
 		if (value instanceof XivAbility ability) {
@@ -82,6 +82,10 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		}
 		Component defaultLabel;
 		defaultLabel = fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
+
+		if (icon == null && iconOnly) {
+			icon = StatusEffectLibrary.iconForId(760, 0);
+		}
 
 		Component component = IconTextRenderer.getComponent(icon, defaultLabel, iconOnly, false, bypassCache);
 		if (enableTooltips) {

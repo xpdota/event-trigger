@@ -27,6 +27,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.io.Serial;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private volatile Point dragPoint;
 	private final XivState state;
 	private XivMap map = XivMap.UNKNOWN;
+	private Image backgroundImage;
 
 	public MapPanel(XivState state) {
 		this.state = state;
@@ -66,9 +68,36 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		addMouseListener(this);
 	}
 
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		if (backgroundImage != null) {
+			g.drawImage(
+					backgroundImage,
+					// Image is 2048x2048, and 0,0 is the top left, but our internal coords treat 0,0 as the center
+					translateXscrn(-1024),
+					translateYscrn(-1024),
+					(int) (2048 * zoomFactor),
+					(int) (2048 * zoomFactor),
+					getBackground(),
+					null);
+		}
+	}
+
 	@HandleEvents
 	public void mapChange(EventContext context, MapChangeEvent event) {
+		setNewBackgroundImage(event.getMap());
 		resetPanAndZoom();
+	}
+
+	private void setNewBackgroundImage(XivMap map) {
+		URL image = map.getImage();
+		if (image == null) {
+			this.backgroundImage = null;
+		}
+		else {
+			this.backgroundImage = Toolkit.getDefaultToolkit().getImage(image);
+		}
 	}
 
 	private void resetPanAndZoom() {
@@ -114,17 +143,31 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		return player;
 	}
 
-	private int translateX(double originalX) {
+	private double translateXmap(double originalX) {
 		// Already divided by 100
 		double c = map.getScaleFactor();
-		double x = (originalX + map.getOffsetX()) * c * 200;
-		return (int) (((((41.0 / c) * ((x + 1024) / 2048) + 1) * 100) / 100 * zoomFactor) + curXpan + getWidth() / 2.0);
+		return (originalX + map.getOffsetX()) * c;
+	}
+
+	private double translateYmap(double originalY) {
+		double c = map.getScaleFactor();
+		return (originalY + map.getOffsetY()) * c;
+	}
+
+	private int translateXscrn(double originalX) {
+		return (int) ((originalX * zoomFactor) + curXpan + getWidth() / 2.0);
+	}
+
+	private int translateYscrn(double originalY) {
+		return (int) ((originalY * zoomFactor) + curYpan + getHeight() / 2.0);
+	}
+
+	private int translateX(double originalX) {
+		return translateXscrn(translateXmap(originalX));
 	}
 
 	private int translateY(double originalY) {
-		double c = map.getScaleFactor();
-		double y = (originalY + map.getOffsetY()) * c * 200;
-		return (int) (((((41.0 / c) * ((y + 1024) / 2048) + 1) * 100) / 100 * zoomFactor) + curYpan + getHeight() / 2.0);
+		return translateYscrn(translateYmap(originalY));
 	}
 
 	@Override
