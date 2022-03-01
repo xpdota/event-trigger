@@ -106,6 +106,7 @@ public class BasicEventDistributor implements EventDistributor {
 										e.setParent(current);
 										e.setEnqueuedAt(TimeUtils.now());
 										e.setSourceEventHandler(handler);
+										e.setHappenedAt(current.getHappenedAt());
 										log.trace("Event {} triggered new event {}", current, e);
 										eventsForImmediateProcessing.add(e);
 									}

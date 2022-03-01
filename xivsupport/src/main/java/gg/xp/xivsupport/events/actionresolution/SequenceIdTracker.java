@@ -179,7 +179,7 @@ public class SequenceIdTracker {
 				AbilityUsedEvent next = iterator.next();
 				if (next.getSequenceId() == event.getSequenceId() && next.getTarget().getId() == event.getTarget().getId()) {
 					AbilityResolvedEvent newEvent = new AbilityResolvedEvent(next);
-					newEvent.setHappenedAt(event.getHappenedAt());
+//					newEvent.setHappenedAt(event.getHappenedAt());
 					context.accept(newEvent);
 					iterator.remove();
 					break;

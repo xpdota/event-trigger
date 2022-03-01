@@ -17,7 +17,7 @@ public class RefreshLoop<X> {
 	private final Thread thread;
 	private volatile boolean stop;
 
-	public RefreshLoop(String threadName, X item, Consumer<X> periodicTask, Function<X, Long> interval) {
+	public RefreshLoop(String threadNameStub, X item, Consumer<X> periodicTask, Function<X, Long> interval) {
 		this.item = new WeakReference<>(item);
 		thread = new Thread(() -> {
 			while (!stop) {
@@ -37,7 +37,7 @@ public class RefreshLoop<X> {
 			}
 		});
 		thread.setDaemon(true);
-		thread.setName(threadName + '-' + threadIdCounter.getAndIncrement());
+		thread.setName(threadNameStub + '-' + threadIdCounter.getAndIncrement());
 
 	}
 

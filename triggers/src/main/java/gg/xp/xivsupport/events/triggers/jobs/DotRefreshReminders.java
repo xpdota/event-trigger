@@ -99,7 +99,7 @@ public class DotRefreshReminders {
 				for (StatusAppliedEffect preApp : preApps) {
 					BuffApplied value = new BuffApplied(event, preApp);
 					value.setParent(event);
-					value.setHappenedAt(Instant.now());
+					value.setHappenedAt(event.getHappenedAt());
 					myDots.put(new BuffTrackingKey(event.getSource(), event.getTarget(), preApp.getStatus()), value);
 				}
 				recheckMyDots();

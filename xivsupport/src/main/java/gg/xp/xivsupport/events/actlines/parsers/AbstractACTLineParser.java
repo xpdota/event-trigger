@@ -100,7 +100,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 					event.setTimeSource(fakeTimeSource);
 				}
 				if (outgoingEvent != null) {
-					outgoingEvent.setHappenedAt(zdt.toInstant());
+//					outgoingEvent.setHappenedAt(zdt.toInstant());
 					context.accept(outgoingEvent);
 				}
 			}

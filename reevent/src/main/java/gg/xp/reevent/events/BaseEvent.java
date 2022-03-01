@@ -18,7 +18,8 @@ public abstract class BaseEvent implements Event {
 	private Event parent;
 	private EventHandler<?> source;
 
-	private Instant happenedAt = TimeUtils.now();
+	private final transient Instant createdAt = TimeUtils.now();
+	private Instant happenedAt;
 	private Instant enqueuedAt;
 	private Instant pumpedAt;
 	private Instant pumpFinishedAt;
@@ -42,7 +43,11 @@ public abstract class BaseEvent implements Event {
 
 	@Override
 	public Instant getHappenedAt() {
-		return happenedAt;
+		return happenedAt == null ? createdAt : happenedAt;
+	}
+
+	public Instant getCreatedAt() {
+		return createdAt;
 	}
 
 	@Override

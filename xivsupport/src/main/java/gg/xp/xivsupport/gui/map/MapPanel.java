@@ -2,12 +2,12 @@ package gg.xp.xivsupport.gui.map;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.ActionIcon;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.OverlapLayout;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
@@ -48,6 +48,11 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private XivMap map = XivMap.UNKNOWN;
 	private Image backgroundImage;
 
+	private static final Color enemyColor = new Color(128, 0, 0);
+	private static final Color otherPlayerColor = new Color(82, 204, 82);
+	private static final Color partyMemberColor = new Color(104, 120, 222);
+	private static final Color localPcColor = new Color(150, 199, 255);
+
 	public MapPanel(XivState state) {
 		this.state = state;
 //		setLayout(new FlowLayout());
@@ -58,11 +63,13 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		// TODO: this isn't a very good way of doing it, because it runs the entire thing in the EDT whereas we really
 		// don't need the computational parts to be on the EDT.
 		// TODO: lower this back down alter
-		new Timer(100, e -> {
-			if (this.isShowing()) {
-				this.refresh();
-			}
-		}).start();
+		new RefreshLoop<>("MapRefresh", this, map -> {
+			SwingUtilities.invokeLater(() -> {
+				if (map.isShowing()) {
+					map.refresh();
+				}
+			});
+		}, unused -> 100L).start();
 		addMouseWheelListener(this);
 		addMouseMotionListener(this);
 		addMouseListener(this);
@@ -182,6 +189,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		refresh();
 	}
 
+	@SuppressWarnings({"NonAtomicOperationOnVolatileField", "NumericCastThatLosesPrecision"})
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		double prevZoomFactor = zoomFactor;
@@ -193,17 +201,17 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		if (e.getWheelRotation() > 0) {
 			zoomFactor /= 1.1;
 		}
+		// Roundoff error - make sure it actually snaps back to exactly 1.0 if it's somewhere close to that.
+		if (zoomFactor > 0.94 && zoomFactor < 1.06) {
+			zoomFactor = 1.0;
+		}
 		double xRel = MouseInfo.getPointerInfo().getLocation().getX() - getLocationOnScreen().getX() - getWidth() / 2.0;
 		double yRel = MouseInfo.getPointerInfo().getLocation().getY() - getLocationOnScreen().getY() - getHeight() / 2.0;
-//		log.info("Wheel move: xrel/yrel: {} {}", xRel, yRel);
 
 		double zoomDiv = zoomFactor / prevZoomFactor;
 
-//		log.info("Before: {} {}", curXpan, curYpan);
 		curXpan = (int) ((zoomDiv) * (curXpan) + (1 - zoomDiv) * xRel);
 		curYpan = (int) ((zoomDiv) * (curYpan) + (1 - zoomDiv) * yRel);
-//		log.info("After: {} {}", curXpan, curYpan);
-//		log.info("New map zoom factor: {} (rel {})", zoomFactor, zoomDiv);
 		refresh();
 
 	}
@@ -215,7 +223,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-
+		if (e.getButton() == MouseEvent.BUTTON2) {
+			resetPanAndZoom();
+		}
 	}
 
 	@Override
@@ -242,6 +252,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	}
 
+	private static String formatTooltip(XivCombatant cbt) {
+		return String.format("%s (0x%x, %s)", cbt.getName(), cbt.getId(), cbt.getId());
+	}
+
 	// TODO: name....
 	private class PlayerDoohickey extends JPanel {
 
@@ -252,20 +266,19 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		private Component icon;
 
 		public PlayerDoohickey(XivCombatant cbt) {
-//			setPreferredSize(new Dimension(50, 50));
 			setBorder(new LineBorder(Color.PINK, 2));
 			setLayout(new OverlapLayout());
 			setOpaque(false);
 			defaultLabel = new JLabel(cbt.getName());
 			formatComponent(cbt);
-			RenderUtils.setTooltip(this, String.format("%s (0x%x, %s)", cbt.getName(), cbt.getId(), cbt.getId()));
+			RenderUtils.setTooltip(this, formatTooltip(cbt));
 			addMouseWheelListener(MapPanel.this);
 			addMouseMotionListener(MapPanel.this);
 			addMouseListener(MapPanel.this);
 		}
 
 		public void update(XivCombatant cbt) {
-			RenderUtils.setTooltip(this, String.format("%s (0x%x, %s)", cbt.getName(), cbt.getId(), cbt.getId()));
+			RenderUtils.setTooltip(this, formatTooltip(cbt));
 			Position pos = cbt.getPos();
 			if (pos != null) {
 				this.x = pos.getX();
@@ -285,16 +298,23 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		private void formatComponent(XivCombatant cbt) {
 			if (cbt instanceof XivPlayerCharacter) {
 				Job job = ((XivPlayerCharacter) cbt).getJob();
-				setBorder(new LineBorder(new Color(168, 243, 243)));
-				setBackground((new Color(168, 243, 243)));
-//				log.info("JOB: {}", job);
+				if (cbt.isThePlayer()) {
+					setBorder(new LineBorder(localPcColor));
+					setBackground(localPcColor);
+				} else if (state.getPartyList().contains(cbt)) {
+					setBorder(new LineBorder(partyMemberColor));
+					setBackground(partyMemberColor);
+				} else {
+					setBorder(new LineBorder(otherPlayerColor));
+					setBackground(otherPlayerColor);
+				}
 				icon = IconTextRenderer.getComponent(job, defaultLabel, true, false, true);
 				setOpaque(true);
 				// TODO: this doesn't work because it hasn't been added to the container yet
 //				MapPanel.this.setComponentZOrder(this, 0);
 			}
 			else {
-				setBorder(new LineBorder(new Color(128, 0, 0)));
+				setBorder(new LineBorder(enemyColor));
 				setOpaque(false);
 				// TODO: find good icon
 				icon = IconTextRenderer.getComponent(ActionLibrary.iconForId(2246), defaultLabel, true, false, true);

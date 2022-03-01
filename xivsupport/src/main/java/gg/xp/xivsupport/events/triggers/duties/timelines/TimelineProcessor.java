@@ -70,6 +70,9 @@ public final class TimelineProcessor {
 	}
 
 	public void processActLine(ACTLogLineEvent event) {
+		if (lastSync != null && lastSync.line.getEffectiveTimeSince().toMillis() < 10) {
+			return;
+		}
 		String emulatedActLogLine = event.getEmulatedActLogLine();
 		Optional<TimelineEntry> newSync = entries.stream().filter(entry -> entry.shouldSync(getEffectiveTime(), emulatedActLogLine)).findFirst();
 		newSync.ifPresent(rawTimelineEntry -> {
@@ -99,7 +102,7 @@ public final class TimelineProcessor {
 				.filter(entry -> isLastSync(entry) && debug
 						|| (entry.time() > (effectiveLastSyncTime - secondsPast.get())
 						&& entry.time() < (effectiveLastSyncTime + secondsFuture.get())
-						&& entry.name() != null || debug))
+						&& (entry.name() != null || debug)))
 				.map(entry -> new VisualTimelineEntry(entry, isLastSync(entry), entry.time() - effectiveLastSyncTime))
 				.collect(Collectors.toList());
 	}
