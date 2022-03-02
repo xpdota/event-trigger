@@ -25,7 +25,9 @@ import gg.xp.xivsupport.persistence.gui.LongSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
+import gg.xp.xivsupport.replay.ReplayController;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -49,8 +51,9 @@ public final class StandardColumns {
 	private final StatusEffectRepository statuses;
 	private final SequenceIdTracker sqidTracker;
 
-	public StandardColumns(PersistenceProvider persist, StatusEffectRepository statuses, SequenceIdTracker sqidTracker) {
-		showPredictedHp = new BooleanSetting(persist, "gui.display-predicted-hp-2", false);
+	public StandardColumns(PicoContainer container, PersistenceProvider persist, StatusEffectRepository statuses, SequenceIdTracker sqidTracker) {
+		// Setting is there for legacy reasons (old version of launcher)
+		showPredictedHp = new BooleanSetting(persist, "gui.display-predicted-hp-2", container.getComponent(ReplayController.class) != null);
 		this.statuses = statuses;
 		this.sqidTracker = sqidTracker;
 	}
@@ -204,11 +207,6 @@ public final class StandardColumns {
 			= new CustomColumn<>("Field Type", e -> e.getKey().getGenericType());
 	public static final CustomColumn<Map.Entry<Field, Object>> fieldDeclaredIn
 			= new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName());
-
-
-	public BooleanSetting getShowPredictedHp() {
-		return showPredictedHp;
-	}
 
 	public static <X> CustomColumn<X> booleanSettingColumn(String name, Function<X, BooleanSetting> settingGetter, int width, @Nullable BooleanSetting enabledBy) {
 		return new CustomColumn<>(name, settingGetter::apply, col -> {

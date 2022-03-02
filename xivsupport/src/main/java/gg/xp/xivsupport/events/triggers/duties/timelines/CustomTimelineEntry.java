@@ -26,7 +26,7 @@ public class CustomTimelineEntry implements TimelineEntry {
 	public @Nullable Double jump;
 	public @Nullable URL icon;
 	private @Nullable TimelineReference replaces;
-	public boolean enabled;
+	public boolean enabled = true;
 
 	public CustomTimelineEntry() {
 		name = "Name Goes Here";
