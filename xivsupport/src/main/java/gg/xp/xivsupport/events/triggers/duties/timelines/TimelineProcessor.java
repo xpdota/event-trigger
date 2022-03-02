@@ -48,6 +48,10 @@ public final class TimelineProcessor {
 			throw new RuntimeException(e);
 		}
 		List<TimelineEntry> all = new ArrayList<>(timelineEntries);
+		// Remove things that have been overridden
+		for (TimelineEntry customEntry : extra) {
+			all.removeIf(customEntry::shouldSupersede);
+		}
 		all.addAll(extra);
 		all.sort(Comparator.naturalOrder());
 		return new TimelineProcessor(manager, all);

@@ -15,7 +15,7 @@ public record TextFileTimelineEntry(
 ) implements TimelineEntry {
 	@Override
 	public String toString() {
-		return "RawTimelineEntry{" +
+		return "TextFileTimelineEntry{" +
 				"time=" + time +
 				", name='" + name + '\'' +
 				", sync=" + sync +

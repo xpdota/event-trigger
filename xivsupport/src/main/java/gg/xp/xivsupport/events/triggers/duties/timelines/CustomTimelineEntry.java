@@ -18,13 +18,14 @@ public class CustomTimelineEntry implements TimelineEntry {
 
 	// TODO: encapsulate these better
 	public double time;
-	public String name;
-	public Pattern sync;
-	public Double duration;
-	public Double windowStart;
-	public Double windowEnd;
-	public Double jump;
-	public URL icon;
+	public @Nullable String name;
+	public @Nullable Pattern sync;
+	public @Nullable Double duration;
+	public @Nullable Double windowStart;
+	public @Nullable Double windowEnd;
+	public @Nullable Double jump;
+	public @Nullable URL icon;
+	private @Nullable TimelineReference replaces;
 
 	public CustomTimelineEntry() {
 		name = "Name Goes Here";
@@ -38,7 +39,8 @@ public class CustomTimelineEntry implements TimelineEntry {
 			@JsonProperty("duration") @Nullable Double duration,
 			@JsonProperty("timelineWindow") @NotNull TimelineWindow timelineWindow,
 			@JsonProperty("jump") @Nullable Double jump,
-			@JsonProperty("icon") @Nullable URL icon) {
+			@JsonProperty("icon") @Nullable URL icon,
+			@JsonProperty("replaces") @Nullable TimelineReference replaces) {
 		this.time = time;
 		this.name = name;
 		this.sync = sync;
@@ -47,6 +49,7 @@ public class CustomTimelineEntry implements TimelineEntry {
 		this.windowEnd = timelineWindow.end();
 		this.jump = jump;
 		this.icon = icon;
+		this.replaces = replaces;
 	}
 
 	@Override
@@ -118,5 +121,24 @@ public class CustomTimelineEntry implements TimelineEntry {
 	@Override
 	public int hashCode() {
 		return Objects.hash(time, name, sync, duration, windowStart, windowEnd, jump, icon);
+	}
+
+	@JsonProperty
+	@Override
+	public @Nullable TimelineReference replaces() {
+		return replaces;
+	}
+
+	public static CustomTimelineEntry overrideFor(TimelineEntry other) {
+		return new CustomTimelineEntry(
+				other.time(),
+				other.name(),
+				other.sync(),
+				other.duration(),
+				other.timelineWindow(),
+				other.jump(),
+				other.icon(),
+				new TimelineReference(other.time(), other.name())
+		);
 	}
 }

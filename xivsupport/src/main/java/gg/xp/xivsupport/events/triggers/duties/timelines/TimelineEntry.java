@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public interface TimelineEntry extends Comparable<TimelineEntry> {
@@ -62,5 +63,18 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 
 	default @Nullable URL icon() {
 		return null;
+	}
+
+	default @Nullable TimelineReference replaces() {
+		return null;
+	}
+
+	default boolean shouldSupersede(TimelineEntry that) {
+		TimelineReference overrides = this.replaces();
+		if (overrides == null) {
+			return false;
+		}
+		return Objects.equals(overrides.name(), that.name())
+				&& Objects.equals(overrides.time(), that.time());
 	}
 }

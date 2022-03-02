@@ -441,8 +441,7 @@ public final class StandardColumns {
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 			CustomTableModel<X> model = (CustomTableModel<X>) table.getModel();
-			X valueForRow = model.getValueForRow(row);
-			return new TextFieldWithValidation<>(parser, s -> writer.accept(valueForRow, s), value == null ? "" : String.valueOf(value));
+			return new TextFieldWithValidation<>(parser, s -> writer.accept(model.getValueForRow(row), s), value == null ? "" : String.valueOf(value));
 		}
 
 		@Override
