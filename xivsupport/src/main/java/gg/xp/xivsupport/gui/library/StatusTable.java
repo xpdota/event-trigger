@@ -9,6 +9,7 @@ import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,8 +52,8 @@ public final class StatusTable {
 				.build();
 	}
 
-	public static void showChooser(Consumer<StatusEffectInfo> callback) {
+	public static void showChooser(Window frame, Consumer<StatusEffectInfo> callback) {
 		TableWithFilterAndDetails<StatusEffectInfo, Object> table = table();
-		ChooserDialog.showChooser(table, callback);
+		ChooserDialog.showChooser(frame, table, callback);
 	}
 }

@@ -26,11 +26,13 @@ public class CustomTimelineEntry implements TimelineEntry {
 	public @Nullable Double jump;
 	public @Nullable URL icon;
 	private @Nullable TimelineReference replaces;
+	public boolean enabled;
 
 	public CustomTimelineEntry() {
 		name = "Name Goes Here";
 	}
 
+	@SuppressWarnings("NegativelyNamedBooleanVariable")
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 	public CustomTimelineEntry(
 			@JsonProperty("time") double time,
@@ -40,7 +42,8 @@ public class CustomTimelineEntry implements TimelineEntry {
 			@JsonProperty("timelineWindow") @NotNull TimelineWindow timelineWindow,
 			@JsonProperty("jump") @Nullable Double jump,
 			@JsonProperty("icon") @Nullable URL icon,
-			@JsonProperty("replaces") @Nullable TimelineReference replaces) {
+			@JsonProperty("replaces") @Nullable TimelineReference replaces,
+			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled) {
 		this.time = time;
 		this.name = name;
 		this.sync = sync;
@@ -50,6 +53,7 @@ public class CustomTimelineEntry implements TimelineEntry {
 		this.jump = jump;
 		this.icon = icon;
 		this.replaces = replaces;
+		this.enabled = !disabled;
 	}
 
 	@Override
@@ -120,13 +124,24 @@ public class CustomTimelineEntry implements TimelineEntry {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(time, name, sync, duration, windowStart, windowEnd, jump, icon);
+		return Objects.hash(time, name, sync, duration, windowStart, windowEnd, jump, icon, replaces, enabled);
 	}
 
 	@JsonProperty
 	@Override
 	public @Nullable TimelineReference replaces() {
 		return replaces;
+	}
+
+	@Override
+	public boolean enabled() {
+		return enabled;
+	}
+
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+	public boolean disabled() {
+		return !enabled;
 	}
 
 	public static CustomTimelineEntry overrideFor(TimelineEntry other) {
@@ -138,7 +153,8 @@ public class CustomTimelineEntry implements TimelineEntry {
 				other.timelineWindow(),
 				other.jump(),
 				other.icon(),
-				new TimelineReference(other.time(), other.name())
+				new TimelineReference(other.time(), other.name()),
+				false
 		);
 	}
 }

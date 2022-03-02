@@ -26,12 +26,13 @@ import java.util.stream.Collectors;
 public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 	private static final Logger log = LoggerFactory.getLogger(TableWithFilterAndDetails.class);
-	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
+	private final ExecutorService exs = Executors.newSingleThreadExecutor();
 
 	private final Supplier<List<X>> dataGetter;
 	private final List<VisualFilter<? super X>> filters;
 	private final CustomTableModel<X> mainModel;
 	private final @Nullable JCheckBox stayAtBottom;
+	private final JTable table;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
 	private List<X> dataFiltered = Collections.emptyList();
@@ -73,7 +74,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 
 		// Main table
-		JTable table = new JTable(mainModel);
+		table = new JTable(mainModel);
 		mainModel.configureColumns(table);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ListSelectionModel selectionModel = table.getSelectionModel();
@@ -184,6 +185,10 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 	public CustomTableModel<X> getMainModel() {
 		return mainModel;
+	}
+
+	public JTable getMainTable() {
+		return table;
 	}
 
 	private enum RefreshType {

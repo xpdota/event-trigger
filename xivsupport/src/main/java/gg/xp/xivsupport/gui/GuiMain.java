@@ -140,7 +140,7 @@ public class GuiMain {
 			frame.setVisible(true);
 			frame.add(tabPane);
 			if (replay != null) {
-				frame.add(new ReplayControllerGui(replay).getPanel(), BorderLayout.PAGE_START);
+				frame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
 			}
 		});
 		SwingUtilities.invokeLater(() -> tabPane.addTab("General", new SystemTabPanel()));

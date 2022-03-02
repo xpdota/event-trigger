@@ -22,6 +22,7 @@ public final class TimelineProcessor {
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineProcessor.class);
 	private final List<TimelineEntry> entries;
+	private final List<TimelineEntry> rawEntries;
 	private final IntSetting secondsFuture;
 	private final IntSetting secondsPast;
 	private final BooleanSetting debugMode;
@@ -32,7 +33,8 @@ public final class TimelineProcessor {
 	}
 
 	private TimelineProcessor(TimelineManager manager, List<TimelineEntry> entries) {
-		this.entries = entries;
+		this.rawEntries = entries;
+		this.entries = entries.stream().filter(TimelineEntry::enabled).collect(Collectors.toList());
 		secondsFuture = manager.getSecondsFuture();
 		secondsPast = manager.getSecondsPast();
 		debugMode = manager.getDebugMode();
@@ -88,6 +90,10 @@ public final class TimelineProcessor {
 
 	public List<TimelineEntry> getEntries() {
 		return Collections.unmodifiableList(entries);
+	}
+
+	public List<TimelineEntry> getRawEntries() {
+		return Collections.unmodifiableList(rawEntries);
 	}
 
 	public List<VisualTimelineEntry> getCurrentTimelineEntries() {

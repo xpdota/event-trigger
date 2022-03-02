@@ -30,8 +30,6 @@ public final class LaunchImportedSession {
 		MutablePicoContainer pico = XivMain.importInit();
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
-		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
-		pers.save("gui.display-predicted-hp", "true");
 		ReplayController replayController = new ReplayController(master, events, decompress);
 		pico.addComponent(replayController);
 		pico.getComponent(RawEventStorage.class);

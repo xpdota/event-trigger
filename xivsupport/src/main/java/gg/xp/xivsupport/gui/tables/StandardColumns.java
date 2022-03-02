@@ -50,7 +50,7 @@ public final class StandardColumns {
 	private final SequenceIdTracker sqidTracker;
 
 	public StandardColumns(PersistenceProvider persist, StatusEffectRepository statuses, SequenceIdTracker sqidTracker) {
-		showPredictedHp = new BooleanSetting(persist, "gui.display-predicted-hp", false);
+		showPredictedHp = new BooleanSetting(persist, "gui.display-predicted-hp-2", false);
 		this.statuses = statuses;
 		this.sqidTracker = sqidTracker;
 	}
@@ -449,6 +449,50 @@ public final class StandardColumns {
 			return null;
 		}
 	}
+
+	public static class CustomCheckboxEditor<X, Y> extends AbstractCellEditor implements TableCellEditor {
+
+		@Serial
+		private static final long serialVersionUID = -3743763426515940614L;
+		private final BiConsumer<X, Boolean> writer;
+
+		public CustomCheckboxEditor(BiConsumer<X, Boolean> writer) {
+			this.writer = writer;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			CustomTableModel<X> model = (CustomTableModel<X>) table.getModel();
+			JCheckBox box = new JCheckBox();
+			box.setSelected((boolean) value);
+			box.addActionListener(l -> {
+				writer.accept(model.getValueForRow(row), box.isSelected());
+			});
+			return box;
+		}
+
+		@Override
+		public Object getCellEditorValue() {
+			return null;
+		}
+	}
+
+	public static TableCellRenderer checkboxRenderer = new TableCellRenderer() {
+		private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+			if (value instanceof Boolean boolVal) {
+				JCheckBox cb = new JCheckBox();
+				cb.setSelected(boolVal);
+				cb.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column).getBackground());
+				return cb;
+			}
+			else {
+				return null;
+			}
+		}
+	};
 }
 
 

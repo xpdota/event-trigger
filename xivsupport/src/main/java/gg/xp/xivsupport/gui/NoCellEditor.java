@@ -7,6 +7,7 @@ import java.awt.*;
 import java.util.EventObject;
 
 public class NoCellEditor implements TableCellEditor {
+	public static final NoCellEditor INSTANCE = new NoCellEditor();
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 		return null;

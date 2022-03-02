@@ -8,6 +8,7 @@ import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,8 +51,8 @@ public final class ActionTable {
 				.build();
 	}
 
-	public static void showChooser(Consumer<ActionInfo> callback) {
+	public static void showChooser(Window owner, Consumer<ActionInfo> callback) {
 		TableWithFilterAndDetails<ActionInfo, Object> table = table();
-		ChooserDialog.showChooser(table, callback);
+		ChooserDialog.showChooser(owner, table, callback);
 	}
 }
