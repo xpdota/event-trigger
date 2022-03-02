@@ -2,8 +2,8 @@ package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
 public class MissEffect extends AbilityEffect {
 
-	public MissEffect() {
-		super(AbilityEffectType.MISS);
+	public MissEffect(long flags, long value) {
+		super(flags, value, AbilityEffectType.MISS);
 	}
 
 	@Override

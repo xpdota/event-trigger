@@ -25,7 +25,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 
 	// Only for pre-apps
 	public BuffApplied(AbilityUsedEvent event, StatusAppliedEffect effect) {
-		this(effect.getStatus(), 9999, event.getSource(), event.getTarget(), 1, true);
+		this(effect.getStatus(), 9999, event.getSource(), event.getTarget(), effect.getRawStacks(), true);
 	}
 
 	public BuffApplied(XivStatusEffect buff, double durationRaw, XivCombatant source, XivCombatant target, long stacks) {
@@ -54,27 +54,8 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		this.source = source;
 		this.target = target;
 		this.rawStacks = rawStacks;
-		// There are two main considerations here.
-		// Sometimes, the 'stacks' value is used to represent something other than stacks (like on NIN)
-		// Therefore, we have to assume that it is a garbage value and assume 0 stacks (i.e. not a stacking buff)
-		// if rawStacks > maxStacks.
-		// However, there are also unknown status effects, therefore we just assume 16 is the max for those, since that
-		// seems to be the max for any legitimate buff.
-		StatusEffectInfo statusEffectInfo = StatusEffectLibrary.forId(buff.getId());
-		long maxStacks;
-		if (statusEffectInfo == null) {
-			maxStacks = 16;
-		}
-		else {
-			maxStacks = statusEffectInfo.maxStacks();
-		}
-		if (rawStacks >= 0 && rawStacks <= maxStacks) {
-			stacks = rawStacks;
-		}
-		else {
-			stacks = 0;
-		}
 		this.isPreApp = isPreApp;
+		this.stacks = StatusEffectLibrary.calcActualStacks(buff.getId(), rawStacks);
 	}
 
 	@Override
