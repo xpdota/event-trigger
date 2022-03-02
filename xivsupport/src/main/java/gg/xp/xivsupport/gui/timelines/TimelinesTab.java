@@ -1,6 +1,10 @@
 package gg.xp.xivsupport.gui.timelines;
 
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivdata.data.ActionIcon;
+import gg.xp.xivdata.data.ActionInfo;
+import gg.xp.xivdata.data.StatusEffectIcon;
+import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.duties.timelines.CustomTimelineEntry;
 import gg.xp.xivsupport.events.triggers.duties.timelines.TimelineCustomizations;
@@ -13,6 +17,8 @@ import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.WrapperPanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.library.ActionTable;
+import gg.xp.xivsupport.gui.library.StatusTable;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -42,6 +48,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private final TimelineManager backend;
 	private final CustomTableModel<Map.Entry<Long, String>> timelineChooserModel;
 	private final CustomTableModel<TimelineEntry> timelineModel;
+	private final JTable timelineTable;
 	private Long currentZone;
 	private TimelineProcessor currentTimeline;
 	private TimelineCustomizations currentCust;
@@ -214,18 +221,14 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		)));
 		CustomRightClickOption delete = CustomRightClickOption.forRow("Delete", CustomTimelineEntry.class, this::deleteEntry);
 
-		JTable timelineTable = new JTable(timelineModel) {
+		CustomRightClickOption chooseAbilityIcon = CustomRightClickOption.forRow("Use Ability Icon", TimelineEntry.class, this::chooseActionIcon);
+		CustomRightClickOption chooseStatusIcon = CustomRightClickOption.forRow("Use Status Icon", TimelineEntry.class, this::chooseStatusInfo);
+
+		timelineTable = new JTable(timelineModel) {
 
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				if (column == 6) {
-					return false;
-				}
-//				TimelineEntry selected = timelineModel.getValueForRow(row);
-//				if (selected != null && !(selected instanceof CustomTimelineEntry)) {
-//					addNewEntry(CustomTimelineEntry.overrideFor(selected));
-//				}
-				return true;
+				return column != 6;
 			}
 
 			@Override
@@ -252,14 +255,11 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 		timelineChooserTable.getSelectionModel().addListSelectionListener(l -> {
 			timelineModel.setSelectedValue(null);
-			TableCellEditor editor = timelineTable.getCellEditor();
-			if (editor != null) {
-				editor.cancelCellEditing();
-			}
+			stopEditing();
 			updateTab();
 		});
 
-		CustomRightClickOption.configureTable(timelineTable, timelineModel, List.of(clone, delete));
+		CustomRightClickOption.configureTable(timelineTable, timelineModel, List.of(clone, delete, chooseAbilityIcon, chooseStatusIcon));
 
 		c.gridx++;
 		c.weightx = 1;
@@ -303,6 +303,33 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			addNewEntry(newEntry);
 		});
 		this.add(new WrapperPanel(newButton), c);
+	}
+
+	private void stopEditing() {
+		TableCellEditor editor = timelineTable.getCellEditor();
+		if (editor != null) {
+			editor.cancelCellEditing();
+		}
+	}
+
+	private void chooseActionIcon(TimelineEntry te) {
+		stopEditing();
+		ActionTable.showChooser(action -> this.<ActionInfo>safeEditTimelineEntry((ce, actionInfo) -> {
+					ActionIcon icon = actionInfo.getIcon();
+					ce.icon = icon == null ? null : icon.getIconUrl();
+				}).accept(te, action)
+		);
+		updateTab();
+	}
+
+	private void chooseStatusInfo(TimelineEntry te) {
+		stopEditing();
+		StatusTable.showChooser(status -> this.<StatusEffectInfo>safeEditTimelineEntry((ce, statusInfo) -> {
+			StatusEffectIcon icon = statusInfo.getIcon(0);
+			ce.icon = icon == null ? null : icon.getIconUrl();
+				}).accept(te, status)
+		);
+		updateTab();
 	}
 
 	/**

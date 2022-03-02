@@ -4,15 +4,12 @@ import gg.xp.xivsupport.gui.GuiGlobals;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.VisualFilter;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,7 +23,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
+public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 	private static final Logger log = LoggerFactory.getLogger(TableWithFilterAndDetails.class);
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
@@ -34,7 +31,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 	private final Supplier<List<X>> dataGetter;
 	private final List<VisualFilter<? super X>> filters;
 	private final CustomTableModel<X> mainModel;
-	private final JCheckBox stayAtBottom;
+	private final @Nullable JCheckBox stayAtBottom;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
 	private List<X> dataFiltered = Collections.emptyList();
@@ -53,7 +50,8 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			List<CustomRightClickOption> rightClickOptions,
 			BiPredicate<? super X, ? super X> selectionEquivalence,
 			BiPredicate<? super D, ? super D> detailsSelectionEquivalence,
-			boolean appendOrPruneOnly) {
+			boolean appendOrPruneOnly,
+			boolean fixedData) {
 		super(title);
 		this.title = title;
 		// TODO: add count of events
@@ -92,26 +90,34 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			SwingUtilities.invokeLater(detailsModel::fullRefresh);
 //			detailsModel.fireTableDataChanged();
 		});
-		JButton refreshButton = new JButton("Refresh");
-		refreshButton.addActionListener(e -> {
-			updateAll();
-		});
-		JCheckBox autoRefresh = new JCheckBox("Auto Refresh");
-		autoRefresh.addItemListener(e -> {
-			isAutoRefreshEnabled = autoRefresh.isSelected();
-		});
-		autoRefresh.setSelected(true);
-
-		stayAtBottom = new JCheckBox("Scroll to Bottom");
-		AutoBottomScrollHelper scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
-		stayAtBottom.addItemListener(e -> scroller.setAutoScrollEnabled(stayAtBottom.isSelected()));
-		stayAtBottom.setSelected(true);
 
 		// Top panel
 		JPanel topPanel = new JPanel();
-		topPanel.add(refreshButton);
-		topPanel.add(autoRefresh);
-		topPanel.add(stayAtBottom);
+
+		{
+			JButton refreshButton = new JButton(fixedData ? "Load" : "Refresh");
+			refreshButton.addActionListener(e -> updateAll());
+			topPanel.add(refreshButton);
+		}
+
+		JScrollPane scroller;
+		if (!fixedData) {
+			JCheckBox autoRefresh = new JCheckBox("Auto Refresh");
+			autoRefresh.addItemListener(e -> isAutoRefreshEnabled = autoRefresh.isSelected());
+			autoRefresh.setSelected(true);
+
+			stayAtBottom = new JCheckBox("Scroll to Bottom");
+			scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
+			stayAtBottom.addItemListener(e -> ((AutoBottomScrollHelper) scroller).setAutoScrollEnabled(stayAtBottom.isSelected()));
+			stayAtBottom.setSelected(true);
+			topPanel.add(autoRefresh);
+			topPanel.add(stayAtBottom);
+		}
+		else {
+			scroller = new JScrollPane(table);
+			stayAtBottom = null;
+			isAutoRefreshEnabled = true;
+		}
 		topPanel.setLayout(new WrapLayout(FlowLayout.LEFT));
 		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
 				.filter(Objects::nonNull)
@@ -174,6 +180,10 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		List<X> out = doFiltering(raw);
 		refreshNeeded = RefreshType.FULL;
 		dataFiltered = out;
+	}
+
+	public CustomTableModel<X> getMainModel() {
+		return mainModel;
 	}
 
 	private enum RefreshType {
@@ -270,6 +280,10 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		updateModel();
 	}
 
+	public @Nullable X getCurrentSelection() {
+		return currentSelection;
+	}
+
 	public static final class TableWithFilterAndDetailsBuilder<X, D> {
 		private final String title;
 		private final Supplier<List<X>> dataGetter;
@@ -282,6 +296,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		private BiPredicate<? super X, ? super X> selectionEquivalence = Objects::equals;
 		private BiPredicate<? super D, ? super D> detailsSelectionEquivalence = Objects::equals;
 		private boolean appendOrPruneOnly;
+		private boolean fixedData;
 
 
 		private TableWithFilterAndDetailsBuilder(String title, Supplier<List<X>> dataGetter, Function<X, List<D>> detailsConverter) {
@@ -335,7 +350,13 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		}
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, rightClickOptions, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly);
+			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, rightClickOptions, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly, fixedData);
+		}
+
+		public TableWithFilterAndDetailsBuilder<X, D> setFixedData(boolean fixedData) {
+			setAppendOrPruneOnly(true);
+			this.fixedData = fixedData;
+			return this;
 		}
 	}
 
@@ -344,6 +365,8 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 	}
 
 	public void setBottomScroll(boolean value) {
-		stayAtBottom.setSelected(value);
+		if (stayAtBottom != null) {
+			stayAtBottom.setSelected(value);
+		}
 	}
 }
