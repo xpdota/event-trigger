@@ -68,9 +68,10 @@ public final class CatchFatalError {
 				frame.setVisible(false);
 				frame.dispose();
 			});
-			JPanel buttons = new JPanel(new WrapLayout());
+			JPanel buttons = new JPanel(new WrapLayout(WrapLayout.CENTER));
 			buttons.add(exit);
 			buttons.add(tryContinue);
+			c.fill = GridBagConstraints.HORIZONTAL;
 			panel.add(buttons, c);
 			frame.add(panel);
 			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
