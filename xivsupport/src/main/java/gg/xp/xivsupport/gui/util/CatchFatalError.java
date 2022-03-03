@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.util;
 
+import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.persistence.Platform;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -62,7 +63,15 @@ public final class CatchFatalError {
 			c.fill = GridBagConstraints.NONE;
 			JButton exit = new JButton("Exit");
 			exit.addActionListener(l -> System.exit(1));
-			panel.add(exit, c);
+			JButton tryContinue = new JButton("Try to Continue Anyway");
+			tryContinue.addActionListener(l -> {
+				frame.setVisible(false);
+				frame.dispose();
+			});
+			JPanel buttons = new JPanel(new WrapLayout());
+			buttons.add(exit);
+			buttons.add(tryContinue);
+			panel.add(buttons, c);
 			frame.add(panel);
 			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 			frame.validate();
