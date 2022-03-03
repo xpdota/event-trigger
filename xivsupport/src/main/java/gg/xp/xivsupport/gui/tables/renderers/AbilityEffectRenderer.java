@@ -71,12 +71,13 @@ public class AbilityEffectRenderer {
 			text = Long.toString(((InvulnBlockedDamageEffect) value).getAmount());
 			icon = ActionLibrary.iconForId(30);
 		}
-		else if (value instanceof StatusAppliedEffect) {
+		else if (value instanceof StatusAppliedEffect statusApplied) {
 			text = "+";
-			icon = StatusEffectLibrary.iconForId(((StatusAppliedEffect) value).getStatus().getId(), 1);
+			icon = StatusEffectLibrary.iconForId(statusApplied.getStatus().getId(), statusApplied.getStacks());
 			textOnRight = true;
 		}
 		else if (value instanceof StatusNoEffect) {
+			// TODO: does this also have a 'stacks' value?
 			text = "X";
 			icon = StatusEffectLibrary.iconForId(((StatusNoEffect) value).getStatus().getId(), 1);
 			textOnRight = true;

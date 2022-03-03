@@ -34,7 +34,7 @@ public class CdTrackerTest {
 			new XivAbility(cd.getPrimaryAbilityId(), "Reprisal"),
 			player,
 			theBoss,
-			Collections.singletonList(new StatusAppliedEffect(1193, true)),
+			Collections.singletonList(new StatusAppliedEffect(0, 0, 1193, 0, true)),
 			123,
 			0,
 			1
@@ -43,7 +43,7 @@ public class CdTrackerTest {
 			new XivAbility(cd.getPrimaryAbilityId(), "Reprisal"),
 			player,
 			theBoss,
-			Collections.singletonList(new StatusAppliedEffect(1193, true)),
+			Collections.singletonList(new StatusAppliedEffect(0, 0, 1193, 0, true)),
 			123,
 			1,
 			1
@@ -52,7 +52,7 @@ public class CdTrackerTest {
 			new XivAbility(cd.getPrimaryAbilityId(), "Reprisal"),
 			otherCharInParty,
 			theBoss,
-			Collections.singletonList(new StatusAppliedEffect(1193, true)),
+			Collections.singletonList(new StatusAppliedEffect(0, 0, 1193, 0, true)),
 			123,
 			0,
 			1
@@ -61,7 +61,7 @@ public class CdTrackerTest {
 			new XivAbility(cd.getPrimaryAbilityId(), "Reprisal"),
 			otherCharNotInParty,
 			theBoss,
-			Collections.singletonList(new StatusAppliedEffect(1193, true)),
+			Collections.singletonList(new StatusAppliedEffect(0, 0, 1193, 0, true)),
 			123,
 			0,
 			1

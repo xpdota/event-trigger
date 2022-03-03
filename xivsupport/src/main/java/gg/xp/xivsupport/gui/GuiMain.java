@@ -140,7 +140,7 @@ public class GuiMain {
 			frame.setVisible(true);
 			frame.add(tabPane);
 			if (replay != null) {
-				frame.add(new ReplayControllerGui(replay).getPanel(), BorderLayout.PAGE_START);
+				frame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
 			}
 		});
 		SwingUtilities.invokeLater(() -> tabPane.addTab("General", new SystemTabPanel()));
@@ -153,7 +153,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", container.getComponent(MapTab.class)));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", new LibraryTab(container)));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", new LibraryTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 	}
 

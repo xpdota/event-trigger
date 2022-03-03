@@ -3,8 +3,8 @@ package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 public class ParriedDamageEffect extends AbilityEffect implements DamageEffect {
 	private final long amount;
 
-	public ParriedDamageEffect(long amount) {
-		super(AbilityEffectType.PARRIED);
+	public ParriedDamageEffect(long flags, long value, long amount) {
+		super(flags, value, AbilityEffectType.PARRIED);
 		this.amount = amount;
 	}
 
@@ -19,7 +19,7 @@ public class ParriedDamageEffect extends AbilityEffect implements DamageEffect {
 	}
 
 	@Override
-	public String getDescription() {
+	public String getBaseDescription() {
 		return String.format("Parried: %s", amount);
 	}
 }

@@ -246,43 +246,67 @@ public class FieldMapper<K extends Enum<K>> {
 					// nothing
 					continue;
 				case 1:
-					out.add(new MissEffect());
+					out.add(new MissEffect(flags, value));
 					break;
 				case 2:
-					out.add(new FullyResistedEffect());
+					out.add(new FullyResistedEffect(flags, value));
 					break;
 				case 3:
-					out.add(new DamageTakenEffect(calcSeverity(severityByte), calcDamage(value)));
+					out.add(new DamageTakenEffect(flags, value, calcSeverity(severityByte), calcDamage(value)));
 					break;
 				case 4:
-					out.add(new HealEffect(calcSeverity(healSeverityByte), calcDamage(value)));
+					out.add(new HealEffect(flags, value, calcSeverity(healSeverityByte), calcDamage(value)));
 					break;
 				case 5:
-					out.add(new BlockedDamageEffect(calcDamage(value)));
+					out.add(new BlockedDamageEffect(flags, value, calcDamage(value)));
 					break;
 				case 6:
-					out.add(new ParriedDamageEffect(calcDamage(value)));
+					out.add(new ParriedDamageEffect(flags, value, calcDamage(value)));
 					break;
 				case 7:
-					out.add(new InvulnBlockedDamageEffect(calcDamage(value)));
+					out.add(new InvulnBlockedDamageEffect(flags, value, calcDamage(value)));
 					break;
 				case 8:
-					out.add(new NoEffect());
+					out.add(new NoEffect(flags, value));
 					break;
 				case 10:
-					out.add(new MpLoss(calcDamage(value)));
+					out.add(new MpLoss(flags, value, calcDamage(value)));
 					break;
 				case 11:
-					out.add(new MpGain(calcDamage(value)));
+					out.add(new MpGain(flags, value, calcDamage(value)));
 					break;
+
+				/*
+					Notes specific to 0e/0f:
+					flags:
+					stacks, a, b, 0e/0f
+					value: status id MSB, status id LSB, x, y
+
+					a = ?
+					b = ?
+					x = ?
+					y = ?
+
+					Examples:
+					00F4300E 0A380000: E Dosis (single target, instant, on target, no stacks, 30s)
+					0000F60E 0A3A0000: Kera mit (aoe, on target, no stacks, 15s)
+					00F4F20E 0B7A0000: Kera regen (aoe, on target, no stacks, 15s)
+					0300000F 076E8000: Royal Auth/Sword Oath (st, instant, on self, 3 stacks, 30s)
+					00C9090E 0A350000: panhaima persistent buff (aoe, on target, no stacks, 15s)
+					05C9090E 0A530000: panhaima stack buff (aoe, on target, 5 stacks, 15s)
+					0000000E 00520000: halloed (st, 10s, no stacks)
+
+				 */
+
+
 				case 14: //0e
-					out.add(new StatusAppliedEffect(value >> 16, true));
+					out.add(new StatusAppliedEffect(flags, value, value >> 16, unknownByte, true));
 					break;
 				case 15: //0f
-					out.add(new StatusAppliedEffect(value >> 16, false));
+					out.add(new StatusAppliedEffect(flags, value, value >> 16, unknownByte, false));
 					break;
 				case 20: //14
-					out.add(new StatusNoEffect(value >> 16));
+					out.add(new StatusNoEffect(flags, value, value >> 16));
 					break;
 					// 1d,0x60000 = reflect?
 				case 27: //1B

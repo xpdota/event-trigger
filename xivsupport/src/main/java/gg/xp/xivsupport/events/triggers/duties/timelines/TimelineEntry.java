@@ -56,6 +56,8 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 
 	@Nullable Double jump();
 
+	boolean enabled();
+
 	@Override
 	default int compareTo(@NotNull TimelineEntry o) {
 		return Double.compare(this.time(), o.time());

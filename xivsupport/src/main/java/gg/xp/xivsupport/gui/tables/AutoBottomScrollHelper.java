@@ -24,27 +24,27 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		setPreferredSize(getMaximumSize());
 		JScrollBar bar = getVerticalScrollBar();
 		setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				super.componentResized(e);
-			}
-
-			@Override
-			public void componentMoved(ComponentEvent e) {
-				super.componentMoved(e);
-			}
-
-			@Override
-			public void componentShown(ComponentEvent e) {
-				super.componentShown(e);
-			}
-
-			@Override
-			public void componentHidden(ComponentEvent e) {
-				super.componentHidden(e);
-			}
-		});
+//		addComponentListener(new ComponentAdapter() {
+//			@Override
+//			public void componentResized(ComponentEvent e) {
+//				super.componentResized(e);
+//			}
+//
+//			@Override
+//			public void componentMoved(ComponentEvent e) {
+//				super.componentMoved(e);
+//			}
+//
+//			@Override
+//			public void componentShown(ComponentEvent e) {
+//				super.componentShown(e);
+//			}
+//
+//			@Override
+//			public void componentHidden(ComponentEvent e) {
+//				super.componentHidden(e);
+//			}
+//		});
 		bar.addAdjustmentListener(event -> SwingUtilities.invokeLater(() -> {
 			int newMax = bar.getMaximum();
 			int newExtent = bar.getModel().getExtent();

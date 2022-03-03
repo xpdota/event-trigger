@@ -32,7 +32,6 @@ public final class LaunchImportedActLog {
 		pico.addComponent(FakeACTTimeSource.class);
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
-		pers.save("gui.display-predicted-hp", "true");
 		EventMaster master = pico.getComponent(EventMaster.class);
 		ReplayController replayController = new ReplayController(master, events, decompress);
 		pico.addComponent(replayController);

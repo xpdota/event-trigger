@@ -24,4 +24,9 @@ public record TextFileTimelineEntry(
 				", jump=" + jump +
 				'}';
 	}
+
+	@Override
+	public boolean enabled() {
+		return true;
+	}
 }

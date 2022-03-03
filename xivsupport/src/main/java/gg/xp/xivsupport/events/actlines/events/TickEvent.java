@@ -51,10 +51,10 @@ public class TickEvent extends BaseEvent implements HasTargetEntity, HasEffects 
 	@Override
 	public List<AbilityEffect> getEffects() {
 		if (type == TickType.HOT) {
-			return Collections.singletonList(new HealEffect(HitSeverity.NORMAL, damage));
+			return Collections.singletonList(new HealEffect(0, 0, HitSeverity.NORMAL, damage));
 		}
 		else {
-			return Collections.singletonList(new DamageTakenEffect(HitSeverity.NORMAL, damage));
+			return Collections.singletonList(new DamageTakenEffect(0, 0, HitSeverity.NORMAL, damage));
 		}
 	}
 }

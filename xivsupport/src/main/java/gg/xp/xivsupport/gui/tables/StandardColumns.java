@@ -25,7 +25,9 @@ import gg.xp.xivsupport.persistence.gui.LongSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
+import gg.xp.xivsupport.replay.ReplayController;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -49,8 +51,9 @@ public final class StandardColumns {
 	private final StatusEffectRepository statuses;
 	private final SequenceIdTracker sqidTracker;
 
-	public StandardColumns(PersistenceProvider persist, StatusEffectRepository statuses, SequenceIdTracker sqidTracker) {
-		showPredictedHp = new BooleanSetting(persist, "gui.display-predicted-hp", false);
+	public StandardColumns(PicoContainer container, PersistenceProvider persist, StatusEffectRepository statuses, SequenceIdTracker sqidTracker) {
+		// Setting is there for legacy reasons (old version of launcher)
+		showPredictedHp = new BooleanSetting(persist, "gui.display-predicted-hp-2", container.getComponent(ReplayController.class) != null);
 		this.statuses = statuses;
 		this.sqidTracker = sqidTracker;
 	}
@@ -204,11 +207,6 @@ public final class StandardColumns {
 			= new CustomColumn<>("Field Type", e -> e.getKey().getGenericType());
 	public static final CustomColumn<Map.Entry<Field, Object>> fieldDeclaredIn
 			= new CustomColumn<>("Declared In", e -> e.getKey().getDeclaringClass().getSimpleName());
-
-
-	public BooleanSetting getShowPredictedHp() {
-		return showPredictedHp;
-	}
 
 	public static <X> CustomColumn<X> booleanSettingColumn(String name, Function<X, BooleanSetting> settingGetter, int width, @Nullable BooleanSetting enabledBy) {
 		return new CustomColumn<>(name, settingGetter::apply, col -> {
@@ -449,6 +447,50 @@ public final class StandardColumns {
 			return null;
 		}
 	}
+
+	public static class CustomCheckboxEditor<X, Y> extends AbstractCellEditor implements TableCellEditor {
+
+		@Serial
+		private static final long serialVersionUID = -3743763426515940614L;
+		private final BiConsumer<X, Boolean> writer;
+
+		public CustomCheckboxEditor(BiConsumer<X, Boolean> writer) {
+			this.writer = writer;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			CustomTableModel<X> model = (CustomTableModel<X>) table.getModel();
+			JCheckBox box = new JCheckBox();
+			box.setSelected((boolean) value);
+			box.addActionListener(l -> {
+				writer.accept(model.getValueForRow(row), box.isSelected());
+			});
+			return box;
+		}
+
+		@Override
+		public Object getCellEditorValue() {
+			return null;
+		}
+	}
+
+	public static TableCellRenderer checkboxRenderer = new TableCellRenderer() {
+		private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+			if (value instanceof Boolean boolVal) {
+				JCheckBox cb = new JCheckBox();
+				cb.setSelected(boolVal);
+				cb.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column).getBackground());
+				return cb;
+			}
+			else {
+				return null;
+			}
+		}
+	};
 }
 
 
