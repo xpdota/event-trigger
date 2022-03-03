@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 
@@ -43,6 +44,11 @@ public class PullNumberFilter implements VisualFilter<Event> {
 		// Intentionally mismatching pumped-at vs pump-finished-at to allow for some leeway
 		// Using ! and backwards comparisons also takes care of them being exactly equal.
 		return e -> !e.getPumpFinishedAt().isBefore(earliest) && !e.getPumpedAt().isAfter(latest);
+	}
+
+	// TODO: is there a better way?
+	public void setPullNumberExternally(int pullNum) {
+		textBox.setText(Integer.toString(pullNum));
 	}
 
 	@Override

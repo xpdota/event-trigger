@@ -97,6 +97,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @SuppressWarnings({"ReturnOfNull", "CodeBlock2Expr"})
@@ -106,7 +107,7 @@ public class GuiMain {
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("GuiMain"));
 	private final EventMaster master;
 	private final StateStore state;
-	private final PicoContainer container;
+	private final MutablePicoContainer container;
 	private final StandardColumns columns;
 	private final @Nullable ReplayController replay;
 	private JTabbedPane tabPane;
@@ -615,7 +616,11 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::eventSourceFilter)
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
-				.addFilter(r -> new PullNumberFilter(pulls, r))
+				.addFilter(r -> {
+					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);
+					container.addComponent(pullNumberFilter);
+					return pullNumberFilter;
+				})
 				.addWidget(replayNextPseudoFilter(Event.class))
 				.setAppendOrPruneOnly(true)
 				.build();
@@ -784,6 +789,15 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.addRightClickOption(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
+					PullNumberFilter pnf = container.getComponent(PullNumberFilter.class);
+					pnf.setPullNumberExternally(pull.getPullNum());
+					// TODO: messy
+					IntStream.range(0, tabPane.getTabCount())
+							.filter(i -> tabPane.getTitleAt(i).equals("Events"))
+							.findFirst()
+							.ifPresentOrElse(tabPane::setSelectedIndex, () -> log.error("Couldn't find Events tab"));
+				}))
 //				.addFilter(LogLevelVisualFilter::new)
 				.setAppendOrPruneOnly(false)
 				.build();
