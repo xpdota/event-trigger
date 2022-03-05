@@ -26,14 +26,20 @@ jobs:
       run: xvfb-run mvn -T5 clean install
     - name: Copy release files
       run: |
-        pushd launcher/target/windows/deps/
-        md5sum *.jar > manifest
+        pushd launcher/target/windows/
+        mkdir -p updater_data/v2
+        md5sum *.exe deps/*.jar > updater_data/v2/manifest
+        cp -r *.exe deps/ updater_data/v2/
+        # Legacy updater
+        cd deps
+        md5sum *.jar > ../updater_data/manifest
+        cp *.jar ../updater_data/
         popd
     - name: Deploy release files
       uses: JamesIves/github-pages-deploy-action@4.1.7
 
       with:
-        folder: ./launcher/target/windows/deps
+        folder: ./launcher/target/windows/updater_data
         branch: gh-pages
         target-folder: ${{ github.ref_name }}
 

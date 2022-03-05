@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui;
 
-import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.gui.util.CatchFatalErrorInUpdater;
 
 import javax.swing.*;
@@ -23,10 +22,11 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -39,9 +39,12 @@ public class Update {
 
 	private static final String updaterUrlTemplate = "https://xpdota.github.io/event-trigger/%s/%s";
 	private static final String defaultBranch = "stable";
+	private final boolean updateTheUpdaterItself;
 	private String branch;
 	private static final String manifestFile = "manifest";
 	private static final String propsOverrideFileName = "update.properties";
+	private static final String updaterFilename = "triggevent-upd.exe";
+	private static final String updaterFilenameBackup = "triggevent-upd.bak";
 	private final File installDir;
 	private final File depsDir;
 	private final File propsOverride;
@@ -97,7 +100,7 @@ public class Update {
 	}
 
 	private Path getLocalFile(String name) {
-		return Paths.get(depsDir.toString(), name);
+		return Paths.get(installDir.toString(), name);
 	}
 
 	private final JFrame frame;
@@ -106,13 +109,16 @@ public class Update {
 	private final StringBuilder logText = new StringBuilder();
 	private final HttpClient client = HttpClient.newHttpClient();
 
-	private Update() {
+	private Update(boolean updateTheUpdaterItself) {
 
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		}
-		catch (Throwable e) {
-			// Ignore
+		this.updateTheUpdaterItself = updateTheUpdaterItself;
+		if (!updateTheUpdaterItself) {
+			try {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			}
+			catch (Throwable e) {
+				// Ignore
+			}
 		}
 		frame = new JFrame("Triggevent Updater");
 		frame.setSize(new Dimension(800, 500));
@@ -170,17 +176,33 @@ public class Update {
 			}
 			String body = manifestResponse.body();
 			Map<String, String> expectedFiles = body.lines().map(line -> line.split("\s+")).collect(Collectors.toMap(s -> s[1], s -> s[0]));
-			File[] depsFiles = depsDir.listFiles();
-			Map<String, String> actualFiles;
+			Map<String, String> actualFiles = new HashMap<>();
 			appendText("Hashing Local Files...");
-			if (depsFiles == null) {
-				actualFiles = Collections.emptyMap();
+			{
+				File[] mainFiles = installDir.listFiles((dir, name) -> name.toLowerCase(Locale.ROOT).endsWith(".exe"));
+				File[] depsFiles = depsDir.listFiles();
+				if (mainFiles == null) {
+					throw new RuntimeException("Error checking local main files. Try reinstalling.");
+				}
+				else if (depsFiles == null) {
+					throw new RuntimeException("Error checking local deps files. Try reinstalling.");
+				}
+				for (File mainFile : mainFiles) {
+					actualFiles.put(mainFile.getName(), md5sum(mainFile));
+				}
+				for (File depsFile : depsFiles) {
+					actualFiles.put("deps/" + depsFile.getName(), md5sum(depsFile));
+				}
+			}
+			List<String> updaterFiles = List.of(updaterFilename, updaterFilenameBackup);
+			// Updater will not be able to update itself
+			if (updateTheUpdaterItself) {
+				actualFiles.keySet().retainAll(updaterFiles);
+				expectedFiles.keySet().retainAll(updaterFiles);
 			}
 			else {
-				actualFiles = Arrays.stream(depsFiles)
-						.parallel()
-						.filter(File::isFile)
-						.collect(Collectors.toMap(File::getName, Update::md5sum));
+				actualFiles.keySet().removeAll(updaterFiles);
+				expectedFiles.keySet().remove(updaterFiles);
 			}
 			List<String> allKeys = new ArrayList<>();
 			allKeys.addAll(actualFiles.keySet());
@@ -209,7 +231,7 @@ public class Update {
 			localFilesToDelete.forEach(name -> {
 				boolean deleted;
 				do {
-					deleted = Paths.get(depsDir.toString(), name).toFile().delete();
+					deleted = Paths.get(installDir.toString(), name).toFile().delete();
 					if (deleted) {
 						return;
 					}
@@ -255,7 +277,7 @@ public class Update {
 
 	public static void main(String[] args) {
 		CatchFatalErrorInUpdater.run(() -> {
-			Update update = new Update();
+			Update update = new Update(false);
 			try {
 				Thread.sleep(1000);
 			}
@@ -264,6 +286,11 @@ public class Update {
 			}
 			update.doUpdateCheck();
 		});
+	}
+
+	@SuppressWarnings("unused")
+	public static void updateTheUpdater() {
+		new Update(true).doUpdateCheck();
 	}
 
 	private static String md5sum(File file) {
