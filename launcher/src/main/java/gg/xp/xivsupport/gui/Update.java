@@ -152,6 +152,10 @@ public class Update {
 				if (jarLocation.isFile()) {
 					jarLocation = jarLocation.getParentFile();
 				}
+				// Special case for updating the updater itself
+				if (jarLocation.getName().equals("deps") && updateTheUpdaterItself) {
+					jarLocation = jarLocation.getParentFile();
+				}
 				this.installDir = jarLocation;
 			}
 			catch (URISyntaxException e) {
