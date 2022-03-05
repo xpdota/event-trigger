@@ -1,14 +1,12 @@
 package gg.xp.xivsupport.gui;
 
 import ch.qos.logback.classic.Level;
-import com.formdev.flatlaf.util.ScaledImageIcon;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
-import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -42,15 +40,14 @@ import gg.xp.xivsupport.gui.tables.filters.ActLineFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventAbilityOrBuffFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
+import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
@@ -71,7 +68,6 @@ import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
-import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -616,6 +612,8 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::eventSourceFilter)
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
+//				.addFilter(FreeformEventFilter::new)
+				.addFilter(GroovyFilter.forClass(Event.class))
 				.addFilter(r -> {
 					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);
 					container.addComponent(pullNumberFilter);

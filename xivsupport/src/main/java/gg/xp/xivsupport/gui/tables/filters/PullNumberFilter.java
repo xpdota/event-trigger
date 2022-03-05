@@ -59,7 +59,7 @@ public class PullNumberFilter implements VisualFilter<Event> {
 	@Override
 	public Component getComponent() {
 		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		JLabel label = new JLabel("Pull: ");
 		label.setLabelFor(textBox);
 		panel.add(label);

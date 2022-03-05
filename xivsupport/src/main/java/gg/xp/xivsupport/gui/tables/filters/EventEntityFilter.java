@@ -131,7 +131,7 @@ public final class EventEntityFilter<I, X> implements VisualFilter<I> {
 	@Override
 	public Component getComponent() {
 		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		JLabel label = new JLabel(labelText + ": ");
 		label.setLabelFor(comboBox);
 		panel.add(label);

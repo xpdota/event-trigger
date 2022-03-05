@@ -1,7 +1,5 @@
 package gg.xp.xivsupport.callouts;
 
-import bsh.EvalError;
-import bsh.Interpreter;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.time.TimeUtils;
@@ -11,6 +9,8 @@ import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.DynamicCalloutEvent;
 import gg.xp.xivsupport.speech.ParentedCalloutEvent;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -25,12 +25,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class ModifiableCallout<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(ModifiableCallout.class);
+
+	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
+	private final Map<String, Script> scriptCache = new ConcurrentHashMap<>();
+	private final GroovyShell interpreter = new GroovyShell();
 
 	private final String description;
 	private final String defaultTtsText;
@@ -173,8 +178,9 @@ public class ModifiableCallout<X> {
 		}
 	}
 
-	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
-	private static final ThreadLocal<Interpreter> interpreterTl = ThreadLocal.withInitial(Interpreter::new);
+	private Script compile(String input) {
+		return interpreter.parse(input);
+	}
 
 	@Contract("null, _ -> null")
 	public @Nullable String applyReplacements(@Nullable String input, Map<String, Object> replacements) {
@@ -198,13 +204,13 @@ public class ModifiableCallout<X> {
 		Performance here isn't an automatic dealbreaker, since text overlay updates happen on their own thread, but
 		may still be worth looking into at some point.
 		 */
-		Interpreter interpreter = interpreterTl.get();
+//		GroovyShell interpreter = interpreterTl.get();
 		try {
 			replacements.forEach((k, v) -> {
 				try {
-					interpreter.set(k, v);
+					interpreter.setVariable(k, v);
 				}
-				catch (EvalError e) {
+				catch (Throwable e) {
 					errorCount++;
 					if (shouldLogError()) {
 						log.error("Error setting variable in bsh", e);
@@ -213,13 +219,13 @@ public class ModifiableCallout<X> {
 			});
 			return replacer.matcher(input).replaceAll(m -> {
 				try {
-					Object rawEval = interpreter.eval(getClass().getCanonicalName() + ".singleReplacement(" + m.group(1) + ")");
+					Object rawEval = scriptCache.computeIfAbsent(m.group(1), this::compile).run();
 					if (rawEval == null) {
 						return m.group(0);
 					}
-					return rawEval.toString();
+					return singleReplacement(rawEval);
 				}
-				catch (EvalError e) {
+				catch (Throwable e) {
 					if (shouldLogError()) {
 						log.error("Eval error", e);
 					}
@@ -230,9 +236,9 @@ public class ModifiableCallout<X> {
 		finally {
 			replacements.forEach((k, v) -> {
 				try {
-					interpreter.unset(k);
+					interpreter.removeVariable(k);
 				}
-				catch (EvalError e) {
+				catch (Throwable e) {
 					if (shouldLogError()) {
 						log.error("Error unsetting variable in bsh", e);
 					}

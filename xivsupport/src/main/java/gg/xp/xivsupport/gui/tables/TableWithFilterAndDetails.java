@@ -3,12 +3,14 @@ package gg.xp.xivsupport.gui.tables;
 import gg.xp.xivsupport.gui.GuiGlobals;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.tables.filters.SplitVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.VisualFilter;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +60,9 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		// TODO: add count of events
 		this.dataGetter = dataGetter;
 		this.appendOrPruneOnly = appendOrPruneOnly;
-		setLayout(new BorderLayout());
+		// TODO: the layout is being weird when I resize. Even with GBL it takes a second to change.
+		GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0);
+		setLayout(new GridBagLayout());
 
 		CustomTableModel.CustomTableModelBuilder<D> detailsBuilder = CustomTableModel.builder(() -> detailsConverter.apply(this.currentSelection));
 		detailsColumns.forEach(detailsBuilder::addColumn);
@@ -93,12 +97,13 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		});
 
 		// Top panel
-		JPanel topPanel = new JPanel();
+		JPanel topBasicPanel = new JPanel();
+		List<Component> extraPanels = new ArrayList<>();
 
 		{
 			JButton refreshButton = new JButton(fixedData ? "Load" : "Refresh");
 			refreshButton.addActionListener(e -> updateAll());
-			topPanel.add(refreshButton);
+			topBasicPanel.add(refreshButton);
 		}
 
 		JScrollPane scroller;
@@ -111,22 +116,49 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
 			stayAtBottom.addItemListener(e -> ((AutoBottomScrollHelper) scroller).setAutoScrollEnabled(stayAtBottom.isSelected()));
 			stayAtBottom.setSelected(true);
-			topPanel.add(autoRefresh);
-			topPanel.add(stayAtBottom);
+			topBasicPanel.add(autoRefresh);
+			topBasicPanel.add(stayAtBottom);
 		}
 		else {
 			scroller = new JScrollPane(table);
 			stayAtBottom = null;
 			isAutoRefreshEnabled = true;
 		}
-		topPanel.setLayout(new WrapLayout(FlowLayout.LEFT));
+		topBasicPanel.setLayout(new WrapLayout(FlowLayout.LEFT, 7, 7));
 		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
-		filters.forEach(filter -> topPanel.add(filter.getComponent()));
-		widgets.stream().map(w -> w.apply(this)).forEach(topPanel::add);
-		add(topPanel, BorderLayout.PAGE_START);
+		filters.forEach(filter -> {
+			if (filter instanceof SplitVisualFilter<?> splitFilter) {
+				JPanel component = splitFilter.getComponent();
+				component.setBorder(new EmptyBorder(0, 7, 7, 7));
+				extraPanels.add(component);
+				component.setVisible(false);
+				JButton button = new JButton("Show/Hide " + splitFilter.getName());
+				topBasicPanel.add(button);
+				button.addActionListener(l -> component.setVisible(!component.isVisible()));
+			}
+			else {
+				topBasicPanel.add(filter.getComponent());
+			}
 
+		});
+		widgets.stream().map(w -> w.apply(this)).forEach(topBasicPanel::add);
+
+//		JPanel topPanel = new JPanel();
+//		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.PAGE_AXIS));
+//
+//		topPanel.add(topBasicPanel);
+//		extraPanels.forEach(topPanel::add);
+//
+//		add(topPanel, BorderLayout.PAGE_START);
+		add(topBasicPanel, c);
+		c.gridy++;
+		extraPanels.forEach(panel -> {
+			add(panel, c);
+			c.gridy++;
+		});
+		c.weighty = 1;
 
 		JTable detailsTable = new JTable(detailsModel);
 		JScrollPane detailsScroller = new JScrollPane(detailsTable);
@@ -137,12 +169,12 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		// If no details, don't bother with a splitpane
 		// TODO: also cut out some of the selection logic
 		if (detailsColumns.isEmpty()) {
-			add(scroller);
+			add(scroller, c);
 		}
 		else {
 			// Split pane
 			JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
-			add(splitPane);
+			add(splitPane, c);
 			SwingUtilities.invokeLater(() -> {
 				splitPane.setDividerLocation(0.7);
 				splitPane.setResizeWeight(1);

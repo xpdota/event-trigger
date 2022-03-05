@@ -1,6 +1,12 @@
 package misc;
 
+import bsh.EvalError;
+import bsh.Interpreter;
 import gg.xp.xivsupport.callouts.CalloutTests;
+import groovy.lang.Closure;
+import groovy.lang.GString;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import jdk.jshell.JShell;
 import jdk.jshell.execution.LocalExecutionControlProvider;
 import org.slf4j.Logger;
@@ -314,7 +320,7 @@ public class Benchmarks {
 
 	@Test
 	public void testJShell() {
-		try (JShell shell = JShell.builder().executionEngine(new LocalExecutionControlProvider(), Collections.emptyMap()).build()){
+		try (JShell shell = JShell.builder().executionEngine(new LocalExecutionControlProvider(), Collections.emptyMap()).build()) {
 			shell.eval("Foo");
 		}
 
@@ -331,8 +337,8 @@ public class Benchmarks {
 	}
 
 	@Test
-	public void timeJShellEvail() {
-		try (JShell shell = JShell.builder().executionEngine(new LocalExecutionControlProvider(), Collections.emptyMap()).build()){
+	public void timeJShellEval() {
+		try (JShell shell = JShell.builder().executionEngine(new LocalExecutionControlProvider(), Collections.emptyMap()).build()) {
 			timeIt("JShell Init", () -> {
 				shell.eval("Foo");
 			});
@@ -342,8 +348,100 @@ public class Benchmarks {
 					shell.eval("123 + 456");
 				}
 			});
-//			timeIt("JShell Var");
 		}
+	}
+
+	@Test
+	public void timeBshNewInterp() {
+		int count = 1_000;
+		timeIt("Bsh Loop, new interpreter on every iteration", () -> {
+			for (int i = 0; i < count; i++) {
+				Interpreter shell = new Interpreter();
+				try {
+					shell.set("i", i);
+					shell.eval("i + 456");
+				}
+				catch (EvalError e) {
+					log.error("Error", e);
+				}
+			}
+		});
+	}
+
+	@Test
+	public void timeBshSameInterp() {
+		int count = 100_000;
+		timeIt("Bsh Loop", () -> {
+			Interpreter shell = new Interpreter();
+			for (int i = 0; i < count; i++) {
+				try {
+					shell.set("i", i);
+					shell.eval("123 + 456");
+					shell.unset("i");
+				}
+				catch (EvalError e) {
+					log.error("Error", e);
+				}
+			}
+		});
+	}
+
+	@Test
+	public void timeGroovySameInterp() {
+		int count = 1_000;
+		timeIt("Groovy Loop", () -> {
+			GroovyShell shell = new GroovyShell();
+			for (int i = 0; i < count; i++) {
+				shell.setVariable("i", 456);
+				shell.evaluate("i + 456");
+				shell.removeVariable("i");
+			}
+		});
+	}
+
+	@Test
+	public void timeGroovyClosure() {
+		int count = 100_000;
+		timeIt("Groovy Loop, Compiled Closure", () -> {
+			GroovyShell shell = new GroovyShell();
+			Script script = shell.parse("i + 456");
+			for (int i = 0; i < count; i++) {
+				shell.setVariable("i", i);
+				Object run = script.run();
+				shell.removeVariable("i");
+			}
+		});
+	}
+
+	@Test
+	public void timeGroovyClosure2() {
+		int count = 100_000;
+		timeIt("Groovy Loop, Compiled Closure", () -> {
+			GroovyShell shell = new GroovyShell();
+			Script script = shell.parse("s.toUpperCase();");
+			for (int i = 0; i < count; i++) {
+				shell.setVariable("s", "FooBar");
+				Object run = script.run();
+				shell.removeVariable("s");
+			}
+		});
+	}
+
+	@Test
+	public void timeGroovyClosure3() {
+		int count = 100_000;
+		timeIt("Groovy Loop, Compiled Closure", () -> {
+			GroovyShell shell = new GroovyShell();
+			GString string = GString.EMPTY.plus("${s.toUpperCase()}");
+//			Script script = shell.parse("s.toUpperCase();");
+			for (int i = 0; i < count; i++) {
+				string.setProperty("s", "FooBar");
+//				string.setVariable("s", "FooBar");
+
+				Object run = string.toString();
+				shell.removeVariable("s");
+			}
+		});
 	}
 
 	@Test
