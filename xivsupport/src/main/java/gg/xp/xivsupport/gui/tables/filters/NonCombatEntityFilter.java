@@ -40,7 +40,7 @@ public class NonCombatEntityFilter implements VisualFilter<XivCombatant> {
 	@Override
 	public Component getComponent() {
 		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		checkBox.setText("Show Non-Combat Entities");
 		panel.add(checkBox);
 		return panel;

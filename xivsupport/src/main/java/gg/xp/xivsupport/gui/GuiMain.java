@@ -1,14 +1,12 @@
 package gg.xp.xivsupport.gui;
 
 import ch.qos.logback.classic.Level;
-import com.formdev.flatlaf.util.ScaledImageIcon;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
-import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -42,15 +40,14 @@ import gg.xp.xivsupport.gui.tables.filters.ActLineFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventAbilityOrBuffFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
+import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
@@ -71,7 +68,6 @@ import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
-import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +93,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @SuppressWarnings({"ReturnOfNull", "CodeBlock2Expr"})
@@ -106,7 +103,7 @@ public class GuiMain {
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("GuiMain"));
 	private final EventMaster master;
 	private final StateStore state;
-	private final PicoContainer container;
+	private final MutablePicoContainer container;
 	private final StandardColumns columns;
 	private final @Nullable ReplayController replay;
 	private JTabbedPane tabPane;
@@ -615,7 +612,13 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::eventSourceFilter)
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
-				.addFilter(r -> new PullNumberFilter(pulls, r))
+//				.addFilter(FreeformEventFilter::new)
+				.addFilter(GroovyFilter.forClass(Event.class))
+				.addFilter(r -> {
+					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);
+					container.addComponent(pullNumberFilter);
+					return pullNumberFilter;
+				})
 				.addWidget(replayNextPseudoFilter(Event.class))
 				.setAppendOrPruneOnly(true)
 				.build();
@@ -784,6 +787,15 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.addRightClickOption(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
+					PullNumberFilter pnf = container.getComponent(PullNumberFilter.class);
+					pnf.setPullNumberExternally(pull.getPullNum());
+					// TODO: messy
+					IntStream.range(0, tabPane.getTabCount())
+							.filter(i -> tabPane.getTitleAt(i).equals("Events"))
+							.findFirst()
+							.ifPresentOrElse(tabPane::setSelectedIndex, () -> log.error("Couldn't find Events tab"));
+				}))
 //				.addFilter(LogLevelVisualFilter::new)
 				.setAppendOrPruneOnly(false)
 				.build();

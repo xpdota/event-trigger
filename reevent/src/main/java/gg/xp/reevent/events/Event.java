@@ -68,7 +68,7 @@ public interface Event extends Serializable {
 		Event current = this;
 		do {
 			if (clazz.isInstance(current)) {
-				return (X) current;
+				return clazz.cast(current);
 			}
 		} while ((current = current.getParent()) != null);
 		return null;

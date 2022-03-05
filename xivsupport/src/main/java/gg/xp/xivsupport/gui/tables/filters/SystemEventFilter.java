@@ -41,7 +41,7 @@ public class SystemEventFilter implements VisualFilter<Event> {
 	@Override
 	public Component getComponent() {
 		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		checkBox.setText("Show System Events");
 		panel.add(checkBox);
 		return panel;

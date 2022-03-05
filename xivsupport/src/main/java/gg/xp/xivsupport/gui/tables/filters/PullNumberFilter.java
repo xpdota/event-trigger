@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 
@@ -45,6 +46,11 @@ public class PullNumberFilter implements VisualFilter<Event> {
 		return e -> !e.getPumpFinishedAt().isBefore(earliest) && !e.getPumpedAt().isAfter(latest);
 	}
 
+	// TODO: is there a better way?
+	public void setPullNumberExternally(int pullNum) {
+		textBox.setText(Integer.toString(pullNum));
+	}
+
 	@Override
 	public boolean passesFilter(Event item) {
 		return filter.test(item);
@@ -53,7 +59,7 @@ public class PullNumberFilter implements VisualFilter<Event> {
 	@Override
 	public Component getComponent() {
 		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		JLabel label = new JLabel("Pull: ");
 		label.setLabelFor(textBox);
 		panel.add(label);

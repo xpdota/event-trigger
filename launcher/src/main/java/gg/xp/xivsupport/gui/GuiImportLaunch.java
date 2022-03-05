@@ -47,6 +47,7 @@ public final class GuiImportLaunch {
 
 			Path actLogDir = Platform.getActDir();
 			JFileChooser actLogChooser = new JFileChooser(actLogDir.toString());
+			actLogChooser.setPreferredSize(new Dimension(800, 600));
 			JButton importActLogButton = new JButton("Import ACT Log");
 			importActLogButton.addActionListener(e -> {
 				int result = actLogChooser.showOpenDialog(panel);
