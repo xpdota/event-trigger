@@ -41,6 +41,15 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		c.weighty = 0;
 		JButton button = new JButton("Check for Updates and Restart");
 		button.addActionListener(l -> {
+			// First, try to update the updater itself
+			try {
+				Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.Update");
+				clazz.getMethod("updateTheUpdater").invoke(null);
+			}
+			catch (Throwable e) {
+				log.error("Error updating the updater - you may not have a recent enough version.", e);
+				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error updating the updater. This may fix itself after updates. ");
+			}
 			try {
 				// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
 				// can relaunch the application correctly.
@@ -48,7 +57,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 			}
 			catch (Throwable e) {
 				log.error("Error launching updater", e);
-				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe.");
+				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe, or reinstall if that doesn't work.");
 				return;
 			}
 			System.exit(0);

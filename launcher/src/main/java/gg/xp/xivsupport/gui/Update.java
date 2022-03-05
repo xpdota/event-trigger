@@ -22,7 +22,6 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,7 +36,7 @@ import java.util.stream.Collectors;
 // ...which is also why the code is complete shit, no external libraries.
 public class Update {
 
-	private static final String updaterUrlTemplate = "https://xpdota.github.io/event-trigger/%s/%s";
+	private static final String updaterUrlTemplate = "https://xpdota.github.io/event-trigger/%s/v2/%s";
 	private static final String defaultBranch = "stable";
 	private final boolean updateTheUpdaterItself;
 	private String branch;
@@ -143,15 +142,27 @@ public class Update {
 		JPanel buttonHolder = new JPanel();
 		buttonHolder.add(button);
 		content.add(buttonHolder, BorderLayout.PAGE_END);
-		try {
-			File jarLocation = new File(Update.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-			if (jarLocation.isFile()) {
-				jarLocation = jarLocation.getParentFile();
-			}
-			this.installDir = jarLocation;
+		String override = System.getProperty("triggevent-update-override-dir");
+		if (override == null) {
+			override = System.getenv("triggevent-update-override-dir");
 		}
-		catch (URISyntaxException e) {
-			throw new RuntimeException(e);
+		if (override == null) {
+			try {
+				File jarLocation = new File(Update.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+				if (jarLocation.isFile()) {
+					jarLocation = jarLocation.getParentFile();
+				}
+				this.installDir = jarLocation;
+			}
+			catch (URISyntaxException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		else {
+			this.installDir = new File(override);
+			if (!installDir.isDirectory()) {
+				throw new RuntimeException("Not a directory: " + installDir);
+			}
 		}
 		depsDir = Paths.get(installDir.toString(), "deps").toFile();
 		propsOverride = Paths.get(installDir.toString(), propsOverrideFileName).toFile();
@@ -202,7 +213,7 @@ public class Update {
 			}
 			else {
 				actualFiles.keySet().removeAll(updaterFiles);
-				expectedFiles.keySet().remove(updaterFiles);
+				expectedFiles.keySet().removeAll(updaterFiles);
 			}
 			List<String> allKeys = new ArrayList<>();
 			allKeys.addAll(actualFiles.keySet());
