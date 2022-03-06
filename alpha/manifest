@@ -14,6 +14,7 @@ c1c130c369aa86bfe4f7a7a920bc0223  commons-text-1.9.jar
 5b262d95fc1faa9ae72858ce63ddc9d0  deps-1.0-SNAPSHOT.jar
 c9072b4cc7477c4f6b46822f5f1ae5d1  fest-util-1.2.5.jar
 a505520330896ca3b1a606190689a350  flatlaf-1.6.2.jar
+71a237cf62fae69018bd6a7e81036845  groovy-3.0.9.jar
 16c7a1094270a27013fd58df7f6800f7  jackson-annotations-2.12.4.jar
 58ffcb451f0bf6beb78e306cfe5d46f3  jackson-core-2.12.4.jar
 7bf7ed4119602e8a7b23356dc0fba920  jackson-databind-2.12.4.jar
@@ -22,13 +23,14 @@ a505520330896ca3b1a606190689a350  flatlaf-1.6.2.jar
 2b884b01ad2f62d4f5dd11387a8bf799  jna-5.10.0.jar
 c1ab841070c388ec32b77cdc05f084fb  jna-platform-5.10.0.jar
 dd83accb899363c32b07d7a1b2e4ce40  jsr305-3.0.2.jar
+fc000d8dee06e0c5ee15309002f47a20  launcher-1.0-SNAPSHOT.jar
 196b120a3c9f01a5b9b2ed5220359963  logback-classic-1.2.6.jar
 b1930b5651377477a06ade2319f70dfc  logback-core-1.2.6.jar
 bb851f071c70445825724f821e1b7c0b  opencsv-5.5.2.jar
 462404f92bdbd710aa2abf6fc1168247  picocontainer-2.15.jar
-24cbfeb37fa0be9afc00eea6a79f39f5  reevent-1.0-SNAPSHOT.jar
+9afeebe7d8fade8af08a977505c706bb  reevent-1.0-SNAPSHOT.jar
 1d0070839d825f57fe6f4d8e2a82989b  reflections-0.10.2.jar
 fbcf58513bc25b80f075d812aad3e3cf  slf4j-api-1.7.32.jar
 6efa177268787c893e2cac46a3bdb885  triggers-1.0-SNAPSHOT.jar
 61937a678f037f53ea1f5ce606fd77ee  xivdata-1.0-SNAPSHOT.jar
-9d64aa4903c2407cec20f516a823e4ce  xivsupport-1.0-SNAPSHOT.jar
+dae75fef2092c09433b919315af24599  xivsupport-1.0-SNAPSHOT.jar
