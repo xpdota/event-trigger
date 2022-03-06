@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui;
 
 import gg.xp.xivsupport.gui.util.CatchFatalErrorInUpdater;
+import groovyjarjarantlr4.v4.misc.Graph;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 // This one will NOT be launched with the full classpath - it NEEDS to be self-sufficient
@@ -38,7 +40,9 @@ public class Update {
 
 	private static final String updaterUrlTemplate = "https://xpdota.github.io/event-trigger/%s/v2/%s";
 	private static final String defaultBranch = "stable";
+	private final Consumer<String> logging;
 	private final boolean updateTheUpdaterItself;
+	private final boolean noop;
 	private String branch;
 	private static final String manifestFile = "manifest";
 	private static final String propsOverrideFileName = "update.properties";
@@ -47,7 +51,6 @@ public class Update {
 	private final File installDir;
 	private final File depsDir;
 	private final File propsOverride;
-	private final JTextArea textArea;
 
 	private URI makeUrl(String filename) {
 		try {
@@ -102,46 +105,12 @@ public class Update {
 		return Paths.get(installDir.toString(), name);
 	}
 
-	private final JFrame frame;
-	private final JPanel content;
-	private final JButton button;
-	private final StringBuilder logText = new StringBuilder();
 	private final HttpClient client = HttpClient.newHttpClient();
 
-	private Update(boolean updateTheUpdaterItself) {
-
+	private Update(Consumer<String> logging, boolean updateTheUpdaterItself, boolean onlyCheck) {
+		this.logging = logging;
 		this.updateTheUpdaterItself = updateTheUpdaterItself;
-		if (!updateTheUpdaterItself) {
-			try {
-				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			}
-			catch (Throwable e) {
-				// Ignore
-			}
-		}
-		frame = new JFrame("Triggevent Updater");
-		frame.setSize(new Dimension(800, 500));
-		frame.setLocationRelativeTo(null);
-		content = new JPanel();
-		content.setBorder(new EmptyBorder(10, 10, 10, 10));
-		content.setLayout(new BorderLayout());
-		frame.add(content);
-		textArea = new JTextArea();
-		textArea.setEditable(false);
-		textArea.setLineWrap(true);
-		textArea.setWrapStyleWord(true);
-		textArea.setCaretPosition(0);
-		textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-		JScrollPane scroll = new JScrollPane(textArea);
-		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		content.add(scroll, BorderLayout.CENTER);
-		button = new JButton("Wait");
-		button.setPreferredSize(new Dimension(80, button.getPreferredSize().height));
-		button.addActionListener(l -> System.exit(0));
-		JPanel buttonHolder = new JPanel();
-		buttonHolder.add(button);
-		content.add(buttonHolder, BorderLayout.PAGE_END);
+		this.noop = onlyCheck;
 		String override = System.getProperty("triggevent-update-override-dir");
 		if (override == null) {
 			override = System.getenv("triggevent-update-override-dir");
@@ -170,20 +139,75 @@ public class Update {
 		}
 		depsDir = Paths.get(installDir.toString(), "deps").toFile();
 		propsOverride = Paths.get(installDir.toString(), propsOverrideFileName).toFile();
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		button.setEnabled(false);
 		appendText("Install dir: " + installDir);
 		appendText("Starting update check...");
 	}
 
-	private synchronized void appendText(String text) {
-		logText.append(text).append('\n');
-		textArea.setText(logText.toString());
-		textArea.setCaretPosition(textArea.getDocument().getLength());
+	private static class GraphicalUpdater {
+		private final JFrame frame;
+		private final JPanel content;
+		private final JButton button;
+		private final StringBuilder logText = new StringBuilder();
+		private final JTextArea textArea;
+		private final Update updater;
+
+		GraphicalUpdater(boolean updateTheUpdater) {
+			if (!updateTheUpdater) {
+				try {
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+				}
+				catch (Throwable e) {
+					// Ignore
+				}
+			}
+			frame = new JFrame("Triggevent Updater");
+			frame.setSize(new Dimension(800, 500));
+			frame.setLocationRelativeTo(null);
+			content = new JPanel();
+			content.setBorder(new EmptyBorder(10, 10, 10, 10));
+			content.setLayout(new BorderLayout());
+			frame.add(content);
+			textArea = new JTextArea();
+			textArea.setEditable(false);
+			textArea.setLineWrap(true);
+			textArea.setWrapStyleWord(true);
+			textArea.setCaretPosition(0);
+			textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+			JScrollPane scroll = new JScrollPane(textArea);
+			scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+			scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+			content.add(scroll, BorderLayout.CENTER);
+			button = new JButton("Wait");
+			button.setPreferredSize(new Dimension(80, button.getPreferredSize().height));
+			button.addActionListener(l -> System.exit(0));
+			JPanel buttonHolder = new JPanel();
+			buttonHolder.add(button);
+			content.add(buttonHolder, BorderLayout.PAGE_END);
+			frame.setVisible(true);
+			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+			button.setEnabled(false);
+			updater = new Update(this::logText, updateTheUpdater, false);
+		}
+
+		public void run() {
+			updater.doUpdateCheck();
+			button.setText("Close");
+			button.setEnabled(true);
+		}
+
+		void logText(String text) {
+			logText.append(text).append('\n');
+			textArea.setText(logText.toString());
+			textArea.setCaretPosition(textArea.getDocument().getLength());
+		}
 	}
 
-	private void doUpdateCheck() {
+
+	private synchronized void appendText(String text) {
+		logging.accept(text);
+	}
+
+	private boolean doUpdateCheck() {
 		try {
 			HttpResponse<String> manifestResponse = client.send(HttpRequest.newBuilder().GET().uri(makeUrl(manifestFile)).build(), HttpResponse.BodyHandlers.ofString());
 			if (manifestResponse.statusCode() != 200) {
@@ -210,14 +234,17 @@ public class Update {
 				}
 			}
 			List<String> updaterFiles = List.of(updaterFilename, updaterFilenameBackup);
-			// Updater will not be able to update itself
-			if (updateTheUpdaterItself) {
-				actualFiles.keySet().retainAll(updaterFiles);
-				expectedFiles.keySet().retainAll(updaterFiles);
-			}
-			else {
-				actualFiles.keySet().removeAll(updaterFiles);
-				expectedFiles.keySet().removeAll(updaterFiles);
+			// For a no-op (i.e. just check for updates without applying anything), then we should check everything
+			if (!noop) {
+				// Updater will not be able to update itself
+				if (updateTheUpdaterItself) {
+					actualFiles.keySet().retainAll(updaterFiles);
+					expectedFiles.keySet().retainAll(updaterFiles);
+				}
+				else {
+					actualFiles.keySet().removeAll(updaterFiles);
+					expectedFiles.keySet().removeAll(updaterFiles);
+				}
 			}
 			List<String> allKeys = new ArrayList<>();
 			allKeys.addAll(actualFiles.keySet());
@@ -225,7 +252,10 @@ public class Update {
 			allKeys.sort(String::compareTo);
 			Set<String> allKeysSet = new LinkedHashSet<>(allKeys);
 			allKeysSet.forEach(key -> {
-				appendText("%32s -> %32s %s".formatted(actualFiles.get(key), expectedFiles.get(key), key));
+				String localHash = actualFiles.get(key);
+				String remoteHash = expectedFiles.get(key);
+				String separator = localHash.equals(remoteHash) ? "==" : "->";
+				appendText("%32s %s %32s %s".formatted(localHash, separator, remoteHash, key));
 			});
 			appendText("Calculating update...");
 			List<String> localFilesToDelete = new ArrayList<>();
@@ -274,16 +304,18 @@ public class Update {
 				appendText(String.format("Downloaded %s / %s files", downloaded.incrementAndGet(), filesToDownload.size()));
 			});
 			appendText("Update finished! %s files needed to be updated.".formatted(filesToDownload.size()));
-			button.setText("Close");
-			button.setEnabled(true);
-			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-				try {
-					Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent.exe").toString());
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-			}));
+			if (!updateTheUpdaterItself) {
+				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+					try {
+						Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent.exe").toString());
+					}
+					catch (IOException e) {
+						e.printStackTrace();
+					}
+				}));
+			}
+			// Chances of a file being deleted without anything else being touched are essentially zero
+			return !filesToDownload.isEmpty();
 		}
 		catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
@@ -292,20 +324,25 @@ public class Update {
 
 	public static void main(String[] args) {
 		CatchFatalErrorInUpdater.run(() -> {
-			Update update = new Update(false);
+			GraphicalUpdater gupdate = new GraphicalUpdater(false);
 			try {
 				Thread.sleep(1000);
 			}
 			catch (InterruptedException e) {
 
 			}
-			update.doUpdateCheck();
+			gupdate.run();
 		});
 	}
 
 	@SuppressWarnings("unused")
 	public static void updateTheUpdater() {
-		new Update(true).doUpdateCheck();
+		new GraphicalUpdater(true).run();
+	}
+
+	@SuppressWarnings("unused")
+	public static boolean justCheck(Consumer<String> logging) {
+		return new Update(logging, true, true).doUpdateCheck();
 	}
 
 	private static String md5sum(File file) {

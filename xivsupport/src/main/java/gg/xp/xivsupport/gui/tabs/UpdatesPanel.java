@@ -7,18 +7,23 @@ import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.SimplifiedPropertiesFilePersistenceProvider;
 import gg.xp.xivsupport.persistence.gui.StringSettingGui;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
+import gg.xp.xivsupport.sys.Threading;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 public class UpdatesPanel extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
 	private static final String propsOverrideFileName = "update.properties";
+	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("UpdateCheck"));
+	private JLabel checkingLabel;
 	private File installDir;
 	private File propsOverride;
 	private PersistenceProvider updatePropsFilePers;
@@ -39,6 +44,11 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridy = 0;
 		c.weighty = 0;
+		{
+			checkingLabel = new JLabel("Update Status");
+			doUpdateCheckInBackground();
+			add(checkingLabel, c);
+		}
 		JButton button = new JButton("Check for Updates and Restart");
 		button.addActionListener(l -> {
 			// First, try to update the updater itself
@@ -62,10 +72,13 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 			}
 			System.exit(0);
 		});
+		c.gridy++;
 		add(new JLabel("Install Dir: " + installDir), c);
 		c.gridy++;
 		JPanel content = new JPanel();
-		content.add(new StringSettingGui(new StringSetting(updatePropsFilePers, "branch", "stable"), "Branch").getComponent());
+		StringSetting setting = new StringSetting(updatePropsFilePers, "branch", "stable");
+		content.add(new StringSettingGui(setting, "Branch").getComponent());
+		setting.addListener(this::doUpdateCheckInBackground);
 		content.add(button);
 		add(content, c);
 		c.gridy++;
@@ -75,5 +88,25 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		c.gridy++;
 		c.weighty = 1;
 		add(new JPanel(), c);
+	}
+
+	private void doUpdateCheckInBackground() {
+		exs.submit(() -> {
+			checkingLabel.setText("Checking for updates...");
+			try {
+				Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.Update");
+				boolean result = (boolean) clazz.getMethod("justCheck", Consumer.class).invoke(null, (Consumer<String>) s -> log.info("From Updater: {}", s));
+				if (result) {
+					checkingLabel.setText("There are updates available!");
+				}
+				else {
+					checkingLabel.setText("It looks like you are up to date.");
+				}
+			}
+			catch (Throwable e) {
+				log.error("Error checking for updates - you may not have a recent enough version.", e);
+				checkingLabel.setText("Automatic Check Failed, but you can try updating anyway.");
+			}
+		});
 	}
 }
