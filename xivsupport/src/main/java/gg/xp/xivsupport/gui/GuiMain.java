@@ -50,6 +50,7 @@ import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
+import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -129,7 +130,7 @@ public class GuiMain {
 		replay = container.getComponent(ReplayController.class);
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
-			tabPane = new JTabbedPane();
+			tabPane = new SmartTabbedPane();
 			frame.setLayout(new BorderLayout());
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setLocationByPlatform(true);
@@ -407,7 +408,7 @@ public class GuiMain {
 		public PluginSettingsPanel() {
 //			super("Plugin Settings");
 			setLayout(new BorderLayout());
-			tabPanel = new JTabbedPane(SwingConstants.LEFT);
+			tabPanel = new SmartTabbedPane(SwingConstants.LEFT);
 			add(tabPanel);
 			exs.submit(this::getAndAddTabs);
 		}

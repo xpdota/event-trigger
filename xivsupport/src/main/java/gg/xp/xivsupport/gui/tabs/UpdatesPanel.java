@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tabs;
 
+import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -19,14 +20,24 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-public class UpdatesPanel extends TitleBorderFullsizePanel {
+public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
 	private static final String propsOverrideFileName = "update.properties";
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("UpdateCheck"));
+	private volatile UpdateCheckStatus updateCheckStatus = UpdateCheckStatus.NOT_STARTED;
 	private JLabel checkingLabel;
 	private File installDir;
 	private File propsOverride;
 	private PersistenceProvider updatePropsFilePers;
+	private static final boolean isIde = Platform.isInIDE();
+
+	private enum UpdateCheckStatus {
+		NOT_STARTED,
+		IN_PROGRESS,
+		UPDATE_AVAILABLE,
+		NO_UPDATE,
+		ERROR
+	}
 
 	public UpdatesPanel() {
 		super("Updates");
@@ -95,17 +106,41 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		add(new JPanel(), c);
 	}
 
+	private void setUpdateCheckStatus(UpdateCheckStatus updateCheckStatus) {
+		this.updateCheckStatus = updateCheckStatus;
+		checkingLabel.setText(
+				switch (updateCheckStatus) {
+					case NOT_STARTED -> "Update Status";
+					case IN_PROGRESS -> "Checking for updates...";
+					case NO_UPDATE -> "It looks like you are up to date.";
+					case UPDATE_AVAILABLE -> "There are updates available!";
+					case ERROR -> "Automatic Check Failed, but you can try updating anyway. Perhaps the branch does not exist?";
+				}
+		);
+		if (updateCheckStatus != UpdateCheckStatus.IN_PROGRESS) {
+			notifyParents();
+		}
+	}
+
+	@Override
+	public boolean hasWarning() {
+		if (isIde) {
+			return false;
+		}
+		return updateCheckStatus == UpdateCheckStatus.UPDATE_AVAILABLE || updateCheckStatus == UpdateCheckStatus.ERROR;
+	}
+
 	private void doUpdateCheckInBackground() {
 		exs.submit(() -> {
-			checkingLabel.setText("Checking for updates...");
+			setUpdateCheckStatus(UpdateCheckStatus.IN_PROGRESS);
 			try {
 				Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.Update");
 				boolean result = (boolean) clazz.getMethod("justCheck", Consumer.class).invoke(null, (Consumer<String>) s -> log.info("From Updater: {}", s));
 				if (result) {
-					checkingLabel.setText("There are updates available!");
+					setUpdateCheckStatus(UpdateCheckStatus.UPDATE_AVAILABLE);
 				}
 				else {
-					checkingLabel.setText("It looks like you are up to date.");
+					setUpdateCheckStatus(UpdateCheckStatus.NO_UPDATE);
 				}
 			}
 			catch (Throwable firstError) {
@@ -114,14 +149,14 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.UpdateCopyForLegacyMigration");
 					boolean result = (boolean) clazz.getMethod("justCheck", Consumer.class).invoke(null, (Consumer<String>) s -> log.info("From Updater: {}", s));
 					if (result) {
-						checkingLabel.setText("There are updates available!");
+						setUpdateCheckStatus(UpdateCheckStatus.UPDATE_AVAILABLE);
 					}
 					else {
-						checkingLabel.setText("It looks like you are up to date.");
+						setUpdateCheckStatus(UpdateCheckStatus.NO_UPDATE);
 					}
 				} catch (Throwable e) {
 					log.error("Error checking for updates - you may not have a recent enough version.", e);
-					checkingLabel.setText("Automatic Check Failed, but you can try updating anyway. Perhaps the branch does not exist?");
+					setUpdateCheckStatus(UpdateCheckStatus.ERROR);
 				}
 			}
 		});

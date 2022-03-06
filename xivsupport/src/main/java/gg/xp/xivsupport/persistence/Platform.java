@@ -49,6 +49,17 @@ public final class Platform {
 		return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 	}
 
+	public static boolean isInIDE() {
+		File jarLocation;
+		try {
+			jarLocation = new File(UpdatesPanel.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+			return jarLocation.isDirectory();
+		}
+		catch (Throwable e) {
+			return false;
+		}
+	}
+
 	public static File getInstallDir() {
 		File jarLocation;
 		try {

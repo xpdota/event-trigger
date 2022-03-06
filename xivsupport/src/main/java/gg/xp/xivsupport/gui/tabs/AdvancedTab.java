@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AdvancedTab extends JTabbedPane implements Refreshable {
+public class AdvancedTab extends SmartTabbedPane implements Refreshable, TabAware {
 
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("AdvancedTab"));
 	private final KeyValueDisplaySet displayed;
@@ -52,7 +52,7 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 			JPanel statsPanel = new TitleBorderFullsizePanel("Stats");
 			statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
 			JButton refreshButton = new JButton("Refresh");
-			refreshButton.addActionListener(e -> refresh());
+			refreshButton.addActionListener(e -> recheckTabs());
 			List<KeyValuePairDisplay<?, ?>> leftItems = List.of(
 					new KeyValuePairDisplay<>(
 							"Duration",
@@ -132,7 +132,7 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 				JButton forceGcButton = new JButton("Force GC");
 				forceGcButton.addActionListener(l -> {
 					exs.submit(System::gc);
-					exs.submit(() -> SwingUtilities.invokeLater(this::refresh));
+					exs.submit(() -> SwingUtilities.invokeLater(this::recheckTabs));
 				});
 				memoryPanel.add(new WrapperPanel(forceGcButton));
 			}
@@ -224,12 +224,11 @@ public class AdvancedTab extends JTabbedPane implements Refreshable {
 		{
 			addTab("Java", new JavaPanel());
 		}
-		refresh();
-		new Timer(5000, l -> this.refresh()).start();
+		recheckTabs();
+		new Timer(5000, l -> this.recheckTabs()).start();
 	}
 
 	private JTextArea makeTextArea() {
-//		JTextArea textArea = new ReadOnlyText("");
 		JTextArea textArea = new JTextArea(1, 15);
 		textArea.setPreferredSize(textArea.getPreferredSize());
 		return textArea;
