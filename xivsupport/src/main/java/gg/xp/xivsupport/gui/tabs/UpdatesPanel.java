@@ -53,8 +53,13 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 		button.addActionListener(l -> {
 			// First, try to update the updater itself
 			try {
-				Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.Update");
-				clazz.getMethod("updateTheUpdater").invoke(null);
+				try {
+					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.Update");
+					clazz.getMethod("updateTheUpdater").invoke(null);
+				} catch (Throwable e) {
+					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.UpdateCopyForLegacyMigration");
+					clazz.getMethod("updateTheUpdater").invoke(null);
+				}
 			}
 			catch (Throwable e) {
 				log.error("Error updating the updater - you may not have a recent enough version.", e);
