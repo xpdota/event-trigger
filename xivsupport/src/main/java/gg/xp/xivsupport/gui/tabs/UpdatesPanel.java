@@ -103,9 +103,21 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 					checkingLabel.setText("It looks like you are up to date.");
 				}
 			}
-			catch (Throwable e) {
-				log.error("Error checking for updates - you may not have a recent enough version.", e);
-				checkingLabel.setText("Automatic Check Failed, but you can try updating anyway. Perhaps the branch does not exist?");
+			catch (Throwable firstError) {
+				log.error("Error updating, will try backup updater", firstError);
+				try {
+					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.UpdateCopyForLegacyMigration");
+					boolean result = (boolean) clazz.getMethod("justCheck", Consumer.class).invoke(null, (Consumer<String>) s -> log.info("From Updater: {}", s));
+					if (result) {
+						checkingLabel.setText("There are updates available!");
+					}
+					else {
+						checkingLabel.setText("It looks like you are up to date.");
+					}
+				} catch (Throwable e) {
+					log.error("Error checking for updates - you may not have a recent enough version.", e);
+					checkingLabel.setText("Automatic Check Failed, but you can try updating anyway. Perhaps the branch does not exist?");
+				}
 			}
 		});
 	}
