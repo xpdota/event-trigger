@@ -77,7 +77,6 @@ public class PersistenceTests {
 		// Wait for file flush
 		Thread.sleep(200);
 		testPersistenceRead(PropertiesFilePersistenceProvider.inUserDataFolder("integration-test"));
-
 	}
 
 

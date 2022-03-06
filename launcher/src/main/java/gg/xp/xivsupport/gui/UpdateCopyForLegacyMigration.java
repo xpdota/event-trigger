@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 // This one will NOT be launched with the full classpath - it NEEDS to be self-sufficient
 // ...which is also why the code is complete shit, no external libraries.
-public class Update {
+public class UpdateCopyForLegacyMigration {
 
 	private static final String updaterUrlTemplate = "https://xpdota.github.io/event-trigger/%s/v2/%s";
 	private static final String defaultBranch = "stable";
@@ -106,7 +106,7 @@ public class Update {
 
 	private final HttpClient client = HttpClient.newHttpClient();
 
-	private Update(Consumer<String> logging, boolean updateTheUpdaterItself, boolean onlyCheck) {
+	private UpdateCopyForLegacyMigration(Consumer<String> logging, boolean updateTheUpdaterItself, boolean onlyCheck) {
 		this.logging = logging;
 		this.updateTheUpdaterItself = updateTheUpdaterItself;
 		this.noop = onlyCheck;
@@ -116,7 +116,7 @@ public class Update {
 		}
 		if (override == null) {
 			try {
-				File jarLocation = new File(Update.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+				File jarLocation = new File(UpdateCopyForLegacyMigration.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
 				if (jarLocation.isFile()) {
 					jarLocation = jarLocation.getParentFile();
 				}
@@ -148,7 +148,7 @@ public class Update {
 		private final JButton button;
 		private final StringBuilder logText = new StringBuilder();
 		private final JTextArea textArea;
-		private final Update updater;
+		private final UpdateCopyForLegacyMigration updater;
 
 		GraphicalUpdater(boolean updateTheUpdater) {
 			if (!updateTheUpdater) {
@@ -185,7 +185,7 @@ public class Update {
 			frame.setVisible(true);
 			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 			button.setEnabled(false);
-			updater = new Update(this::logText, updateTheUpdater, false);
+			updater = new UpdateCopyForLegacyMigration(this::logText, updateTheUpdater, false);
 		}
 
 		public void run() {
@@ -343,7 +343,7 @@ public class Update {
 
 	@SuppressWarnings("unused")
 	public static boolean justCheck(Consumer<String> logging) {
-		return new Update(logging, true, true).doUpdateCheck();
+		return new UpdateCopyForLegacyMigration(logging, true, true).doUpdateCheck();
 	}
 
 	private static String md5sum(File file) {

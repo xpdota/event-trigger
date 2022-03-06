@@ -15,6 +15,9 @@
         <mainClass>gg.xp.xivsupport.gui.GuiLaunch</mainClass>
         <mainImportClass>gg.xp.xivsupport.gui.GuiImportLaunch</mainImportClass>
         <mainUpdateClass>gg.xp.xivsupport.gui.Update</mainUpdateClass>
+        <launcherJar>./launcher-${project.version}.jar</launcherJar>
+        <launcherJarRelativeToPom>./target/windows/launcher-${project.version}.jar</launcherJarRelativeToPom>
+        <preCp>./userdata;./preload/*.jar;./deps/*.jar;./user/*.jar;${launcherJar}</preCp>
     </properties>
     <build>
         <plugins>
@@ -94,6 +97,23 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>copy-jar-secondary</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows/deps</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>launcher-${project.version}.jar</includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-jre</id>
                         <!-- here the phase you need -->
                         <phase>package</phase>
@@ -146,8 +166,9 @@
                             <classPath>
                                 <mainClass>${mainImportClass}</mainClass>
                                 <addDependencies>false</addDependencies>
-                                <postCp>./preload/*.jar;./deps/*.jar;./user/*.jar</postCp>
+                                <preCp>${preCp}</preCp>
                             </classPath>
+                            <jar>./nonexistent.jar</jar>
                         </configuration>
                     </execution>
                     <execution>
@@ -165,8 +186,9 @@
                             <classPath>
                                 <mainClass>${mainClass}</mainClass>
                                 <addDependencies>false</addDependencies>
-                                <postCp>./preload/*.jar;./deps/*.jar;./user/*.jar</postCp>
+                                <preCp>${preCp}</preCp>
                             </classPath>
+                            <jar>./nonexistent.jar</jar>
                         </configuration>
                     </execution>
                     <execution>
@@ -181,6 +203,8 @@
                                 <mainClass>${mainUpdateClass}</mainClass>
                                 <addDependencies>false</addDependencies>
                             </classPath>
+                            <jar>${launcherJarRelativeToPom}</jar>
+                            <dontWrapJar>false</dontWrapJar>
                         </configuration>
                     </execution>
 
@@ -193,7 +217,6 @@
                         <opts><opt>@args.txt</opt></opts>
                     </jre>
                     <headerType>gui</headerType>
-                    <jar>./launcher-${project.version}.jar</jar>
                     <errTitle>Triggevent</errTitle>
                     <dontWrapJar>true</dontWrapJar>
                     <chdir>.</chdir>
