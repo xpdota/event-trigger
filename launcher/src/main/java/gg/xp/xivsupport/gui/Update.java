@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.gui;
 
 import gg.xp.xivsupport.gui.util.CatchFatalErrorInUpdater;
-import groovyjarjarantlr4.v4.misc.Graph;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -272,47 +271,49 @@ public class Update {
 					filesToDownload.add(name);
 				}
 			});
-			appendText(String.format("Updating %s files...", filesToDownload.size()));
-			localFilesToDelete.forEach(name -> {
-				boolean deleted;
-				do {
-					deleted = Paths.get(installDir.toString(), name).toFile().delete();
-					if (deleted) {
-						return;
-					}
-					appendText("Could not delete file %s. Make sure the app is not running.".formatted(name));
-					try {
-						Thread.sleep(5000);
-					}
-					catch (InterruptedException e) {
+			if (!noop) {
+				appendText(String.format("Updating %s files...", filesToDownload.size()));
+				localFilesToDelete.forEach(name -> {
+					boolean deleted;
+					do {
+						deleted = Paths.get(installDir.toString(), name).toFile().delete();
+						if (deleted) {
+							return;
+						}
+						appendText("Could not delete file %s. Make sure the app is not running.".formatted(name));
+						try {
+							Thread.sleep(5000);
+						}
+						catch (InterruptedException e) {
 
-					}
-				} while (true);
-			});
+						}
+					} while (true);
+				});
 
-			depsDir.mkdirs();
-			depsDir.mkdir();
-			AtomicInteger downloaded = new AtomicInteger();
-			filesToDownload.parallelStream().forEach((name) -> {
-				HttpResponse.BodyHandler<Path> handler = HttpResponse.BodyHandlers.ofFile(getLocalFile(name));
-				try {
-					client.send(HttpRequest.newBuilder().GET().uri(makeUrl(name)).build(), handler);
-				}
-				catch (IOException | InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-				appendText(String.format("Downloaded %s / %s files", downloaded.incrementAndGet(), filesToDownload.size()));
-			});
-			appendText("Update finished! %s files needed to be updated.".formatted(filesToDownload.size()));
-			if (!updateTheUpdaterItself) {
-				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				depsDir.mkdirs();
+				depsDir.mkdir();
+				AtomicInteger downloaded = new AtomicInteger();
+				filesToDownload.parallelStream().forEach((name) -> {
+					HttpResponse.BodyHandler<Path> handler = HttpResponse.BodyHandlers.ofFile(getLocalFile(name));
 					try {
-						Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent.exe").toString());
+						client.send(HttpRequest.newBuilder().GET().uri(makeUrl(name)).build(), handler);
 					}
-					catch (IOException e) {
-						e.printStackTrace();
+					catch (IOException | InterruptedException e) {
+						throw new RuntimeException(e);
 					}
-				}));
+					appendText(String.format("Downloaded %s / %s files", downloaded.incrementAndGet(), filesToDownload.size()));
+				});
+				appendText("Update finished! %s files needed to be updated.".formatted(filesToDownload.size()));
+				if (!updateTheUpdaterItself) {
+					Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+						try {
+							Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent.exe").toString());
+						}
+						catch (IOException e) {
+							e.printStackTrace();
+						}
+					}));
+				}
 			}
 			// Chances of a file being deleted without anything else being touched are essentially zero
 			return !filesToDownload.isEmpty();

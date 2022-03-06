@@ -105,7 +105,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel {
 			}
 			catch (Throwable e) {
 				log.error("Error checking for updates - you may not have a recent enough version.", e);
-				checkingLabel.setText("Automatic Check Failed, but you can try updating anyway.");
+				checkingLabel.setText("Automatic Check Failed, but you can try updating anyway. Perhaps the branch does not exist?");
 			}
 		});
 	}
