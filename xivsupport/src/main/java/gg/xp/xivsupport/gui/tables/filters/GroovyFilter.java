@@ -1,20 +1,32 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
+import gg.xp.reevent.events.Event;
 import groovy.lang.GroovyShell;
+import groovy.transform.CompileStatic;
+import groovy.transform.TypeChecked;
+import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.jetbrains.annotations.Nullable;
+import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import static org.reflections.scanners.Scanners.SubTypes;
 
 public class GroovyFilter<X> implements SplitVisualFilter<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(GroovyFilter.class);
-	private final GroovyShell shell = new GroovyShell();
+	private final GroovyShell shell;
 	private final TextFieldWithValidation<?> textBox;
 	private final String shortClassName;
 	private final String longClassName;
@@ -36,6 +48,26 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		this.shortClassName = dataType.getSimpleName();
 		this.longClassName = dataType.getCanonicalName();
 		this.varName = shortClassName.toLowerCase(Locale.ROOT);
+		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+		ImportCustomizer importCustomizer = new ImportCustomizer();
+		importCustomizer.addImports(
+				Predicate.class.getCanonicalName(),
+				CompileStatic.class.getCanonicalName(),
+				TypeChecked.class.getCanonicalName(),
+				longClassName);
+		importCustomizer.addStarImports("gg.xp.xivsupport.events.actlines.events");
+		Reflections reflections = new Reflections(
+				new ConfigurationBuilder()
+						.setUrls(ClasspathHelper.forJavaClassPath())
+						.setScanners(Scanners.SubTypes));
+		reflections.get(SubTypes.of(Event.class).asClass())
+				.stream()
+				.map(Class::getCanonicalName)
+				.filter(Objects::nonNull)
+				.forEach(importCustomizer::addImports);
+
+		compilerConfiguration.addCompilationCustomizers(importCustomizer);
+		shell = new GroovyShell(compilerConfiguration);
 	}
 
 	private @Nullable Predicate<X> makeFilter(@Nullable String filterText) {
@@ -47,19 +79,14 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 			String checkType = strict ? "@CompileStatic" : "";
 			String inJavaForm =
 					"""
-					import java.util.function.Predicate;
-					import %s;
-					import groovy.transform.CompileStatic;
-					import groovy.transform.TypeChecked;
-					
-					new Predicate<%s>() {
-						%s
-						@Override
-						public boolean test(%s %s) {
-							%s
-						}
-					};
-					""".formatted(longClassName, shortClassName, checkType, shortClassName, varName, filterText);
+							new Predicate<%s>() {
+								%s
+								@Override
+								public boolean test(%s %s) {
+									%s
+								}
+							};
+							""".formatted(shortClassName, checkType, shortClassName, varName, filterText);
 			Predicate<X> compiled = (Predicate<X>) shell.evaluate(inJavaForm);
 			textBox.setToolTipText(null);
 			return compiled;
@@ -102,12 +129,13 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		JCheckBox cb = new JCheckBox("Strict");
 		cb.addActionListener(l -> {
 			strict = cb.isSelected();
-			setFilter(makeFilter(lastFilterText));
+			textBox.recheck();
 		});
 		panel.add(label, BorderLayout.WEST);
 		panel.add(textBox, BorderLayout.CENTER);
 		panel.add(cb, BorderLayout.EAST);
 		cb.setSelected(true);
+		strict = cb.isSelected();
 		return panel;
 	}
 

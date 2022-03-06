@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
 public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 	private static final Logger log = LoggerFactory.getLogger(TableWithFilterAndDetails.class);
-	private final ExecutorService exs = Executors.newSingleThreadExecutor();
+	private final ExecutorService refresherPool = Executors.newSingleThreadExecutor();
+//	private final ExecutorService filteringPool = Executors.newSingleThreadExecutor();
 
 	private final Supplier<List<X>> dataGetter;
 	private final List<VisualFilter<? super X>> filters;
@@ -290,7 +291,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			// This setup allows for there to be exactly one refresh in progress, and one pending after that
 			boolean skipRefresh = pendingRefresh.compareAndExchange(false, true);
 			if (!skipRefresh) {
-				exs.submit(() -> {
+				refresherPool.submit(() -> {
 					SwingUtilities.invokeLater(this::updateAll);
 					try {
 						// Cap updates to 1000/x fps, while not delaying updates
@@ -307,14 +308,18 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	}
 
 	private void updateFiltering() {
-		filterFully();
-		updateModel();
+		refresherPool.submit(() -> {
+			filterFully();
+			updateModel();
+		});
 	}
 
 	private void updateAll() {
-		pendingRefresh.set(false);
-		updateAndFilterData();
-		updateModel();
+		refresherPool.submit(() -> {
+			pendingRefresh.set(false);
+			updateAndFilterData();
+			updateModel();
+		});
 	}
 
 	public @Nullable X getCurrentSelection() {

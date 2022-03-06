@@ -5,6 +5,7 @@ import bsh.Interpreter;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import org.apache.commons.logging.Log;
+import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

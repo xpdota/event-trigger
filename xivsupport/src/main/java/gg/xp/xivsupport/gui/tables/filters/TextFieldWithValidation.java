@@ -46,6 +46,10 @@ public class TextFieldWithValidation<X> extends JTextField {
 		originalBackground = getBackground();
 	}
 
+	public void recheck() {
+		update();
+	}
+
 	private void update() {
 		boolean validationError;
 		String currentRawText = getText();

@@ -9,7 +9,9 @@ import gg.xp.xivsupport.persistence.Compressible;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import gg.xp.xivsupport.replay.ReplayController;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +53,20 @@ public class RawEventStorage {
 	private final BooleanSetting saveToDisk;
 	private boolean allowSave = true;
 
-	public RawEventStorage(PersistenceProvider persist) {
-		maxEventsStored = new IntSetting(persist, "raw-storage.events-to-retain", 25000);
+	public RawEventStorage(PicoContainer container, PersistenceProvider persist) {
+		boolean isReplay = container.getComponent(ReplayController.class) != null;
+		IntSetting maxEventsStoredLegacy = new IntSetting(persist, "raw-storage.events-to-retain", 1_000_000);
+		int defaultMaxEvents;
+		if (isReplay) {
+			defaultMaxEvents = 1_000_000;
+		}
+		else if (maxEventsStoredLegacy.get() != 1_000_000) {
+			defaultMaxEvents = maxEventsStoredLegacy.get();
+		}
+		else {
+			defaultMaxEvents = 100_000;
+		}
+		maxEventsStored = new IntSetting(persist, "raw-storage.events-to-retain-" + (isReplay ? "replay" : "live"), defaultMaxEvents);
 		saveToDisk = new BooleanSetting(persist, "raw-storage.save-to-disk", false);
 		dirName = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		sessionName = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));

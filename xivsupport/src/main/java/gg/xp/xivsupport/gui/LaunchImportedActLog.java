@@ -37,6 +37,7 @@ public final class LaunchImportedActLog {
 		dist.acceptEvent(new InitEvent());
 		pico.getComponent(XivStateImpl.class).setActImport(true);
 		RawEventStorage raw = pico.getComponent(RawEventStorage.class);
+		// TODO: replay is no longer always read-only
 		raw.getMaxEventsStoredSetting().set(1_000_000);
 		pico.addComponent(GuiMain.class);
 		pico.getComponent(GuiMain.class);

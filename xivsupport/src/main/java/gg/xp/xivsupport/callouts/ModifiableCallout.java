@@ -191,20 +191,6 @@ public class ModifiableCallout<X> {
 			return input;
 		}
 
-		/*
-		TODO: this doesn't present a performance challenge *yet*, but may if I decide to expand this to more areas
-		At first, this was using JShell which was horribly slow and overly complicated.
-		Beanshell seems to be a lot faster than JShell, but still isn't all that fast.
-		Options:
-		1. Look into Groovy. It can compile cached scripts and is more advanced in general. Shouldn't miss out on as
-		   many newer Java features.
-		2. Rather than evaluating every time, just have Beanshell crank out a lambda one time, then call that lambda.
-		   This should theoretically improve performance significantly, but that should be tested.
-
-		Performance here isn't an automatic dealbreaker, since text overlay updates happen on their own thread, but
-		may still be worth looking into at some point.
-		 */
-//		GroovyShell interpreter = interpreterTl.get();
 		try {
 			replacements.forEach((k, v) -> {
 				try {
