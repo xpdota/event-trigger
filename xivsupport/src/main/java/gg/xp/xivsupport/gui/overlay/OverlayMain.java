@@ -191,6 +191,7 @@ public class OverlayMain {
 		char[] chars = new char[length + 1];
 		u32.GetWindowText(hwnd, chars, length + 1);
 		String window = new String(chars).substring(0, length);
+//		log.info("Window title: [{}]", window);
 		return window;
 	}
 
