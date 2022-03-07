@@ -1,7 +1,12 @@
 package gg.xp.xivsupport.eventstorage;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.fflogs.FflogsMasterDataEvent;
+import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
 import gg.xp.xivsupport.persistence.Compressible;
 
 import java.io.EOFException;
@@ -13,9 +18,12 @@ import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 public final class EventReader {
@@ -79,7 +87,8 @@ public final class EventReader {
 		List<String> lines;
 		try {
 			lines = Files.readAllLines(Path.of(EventReader.class.getResource(resourcePath).toURI()));
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			throw new RuntimeException(t);
 		}
 		return lines.stream()
@@ -92,12 +101,36 @@ public final class EventReader {
 		List<String> lines;
 		try {
 			lines = Files.readAllLines(file.toPath());
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			throw new RuntimeException(t);
 		}
 		return lines.stream()
 				.filter(s -> !s.isEmpty())
 				.map(ACTLogLineEvent::new)
 				.collect(Collectors.toList());
+	}
+
+	public static List<Event> readFflogsJson(JsonNode rootNode) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		JsonNode startTimeNode = rootNode.at("/reportData/report/startTime");
+		Instant start = Instant.ofEpochMilli(mapper.convertValue(startTimeNode, Long.class));
+
+		JsonNode masterNode = rootNode.at("/reportData/report/masterData");
+		List<Event> out = new ArrayList<>();
+		out.add(mapper.convertValue(masterNode, FflogsMasterDataEvent.class));
+
+		JsonNode eventsNode = rootNode.at("/reportData/report/events/data");
+		List<Map<String, Object>> maps = mapper.convertValue(eventsNode, new TypeReference<>() {
+		});
+		out.addAll(maps.stream().map(map -> {
+			FflogsRawEvent raw = new FflogsRawEvent(map);
+			Long timeOffset = raw.getTypedField("timestamp", Long.class);
+			Instant actualTime = start.plusMillis(timeOffset);
+			raw.setHappenedAt(actualTime);
+			return raw;
+		}).toList());
+		return out;
 	}
 }

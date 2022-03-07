@@ -56,7 +56,6 @@ public class XivStateImpl implements XivState {
 	private final Map<Long, Position> posOverrides = new HashMap<>();
 	private volatile OnlineStatus playerOnlineStatus = OnlineStatus.UNKNOWN;
 	private volatile Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
-	private boolean isActImport;
 
 	private Job lastPlayerJob;
 
@@ -466,16 +465,6 @@ public class XivStateImpl implements XivState {
 			return null;
 		}
 		return ref.get();
-	}
-
-	@Override
-	public boolean isActImport() {
-		return isActImport;
-	}
-
-	@Override
-	public void setActImport(boolean actImport) {
-		this.isActImport = actImport;
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
