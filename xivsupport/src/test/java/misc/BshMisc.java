@@ -4,17 +4,17 @@ import bsh.EvalError;
 import bsh.Interpreter;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
-import org.apache.commons.logging.Log;
-import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import java.util.function.Function;
 
+@Ignore
 public class BshMisc {
 	private static final Logger log = LoggerFactory.getLogger(BshMisc.class);
+
 	@Test
 	void bshLambda() throws EvalError {
 		Interpreter interpreter = new Interpreter();
@@ -40,7 +40,36 @@ public class BshMisc {
 		Script script = interpreter.parse("Foo Bar Baz 123");
 		Object result = script.run();
 		log.info("Result: {}", result);
-
-
 	}
+
+//	public static void main(String[] args) {
+//		new BshMisc().testGroovyConsole();
+//	}
+//
+//	@Test
+//	void testGroovyConsole() {
+//		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+//		ImportCustomizer importCustomizer = new ImportCustomizer();
+//		importCustomizer.addImports(
+//				Predicate.class.getCanonicalName(),
+//				CompileStatic.class.getCanonicalName(),
+//				TypeChecked.class.getCanonicalName());
+//		importCustomizer.addStarImports("gg.xp.xivsupport.events.actlines.events");
+//		Reflections reflections = new Reflections(
+//				new ConfigurationBuilder()
+//						.setUrls(ClasspathHelper.forJavaClassPath())
+//						.setScanners(Scanners.SubTypes));
+//		reflections.get(SubTypes.of(Event.class).asClass())
+//				.stream()
+//				.map(Class::getCanonicalName)
+//				.filter(Objects::nonNull)
+//				.forEach(importCustomizer::addImports);
+//
+//		compilerConfiguration.addCompilationCustomizers(importCustomizer);
+//		Binding binding = new Binding();
+//		binding.setVariable("foo", 123);
+//		Console console = new Console(BshMisc.class.getClassLoader(), binding, compilerConfiguration);
+//		console.run();
+//
+//	}
 }

@@ -41,7 +41,7 @@ public final class GuiWithImportedData {
 		pico.addComponent(replayController);
 		dist.acceptEvent(new InitEvent());
 		RawEventStorage raw = pico.getComponent(RawEventStorage.class);
-		raw.getMaxEventsStoredSetting().set(1_000_000);
+//		raw.getMaxEventsStoredSetting().set(1_000_000);
 		pico.addComponent(GuiMain.class);
 		pico.getComponent(GuiMain.class);
 //		FailOnThreadViolationRepaintManager.install();
