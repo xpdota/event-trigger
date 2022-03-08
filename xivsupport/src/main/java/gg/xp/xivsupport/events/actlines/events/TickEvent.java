@@ -25,12 +25,27 @@ public class TickEvent extends BaseEvent implements HasTargetEntity, HasEffects,
 	private final TickType type;
 	private final long damage;
 	private final long rawEffectId;
+	private final XivStatusEffect statusEffect;
+
+	public TickEvent(XivCombatant combatant, TickType type, long damageOrHeal, XivStatusEffect statusEffect) {
+		this.combatant = combatant;
+		this.type = type;
+		this.damage = damageOrHeal;
+		this.rawEffectId = statusEffect.getId();
+		this.statusEffect = statusEffect;
+	}
 
 	public TickEvent(XivCombatant combatant, TickType type, long damageOrHeal, long rawEffectId) {
 		this.combatant = combatant;
 		this.type = type;
 		this.damage = damageOrHeal;
 		this.rawEffectId = rawEffectId;
+		if (rawEffectId == 0) {
+			this.statusEffect = new XivStatusEffect(0, type == TickType.HOT ? "Combined HoT" : "Combined DoT");
+		}
+		else {
+			this.statusEffect = new XivStatusEffect(rawEffectId);
+		}
 	}
 
 	@Override
@@ -66,20 +81,7 @@ public class TickEvent extends BaseEvent implements HasTargetEntity, HasEffects,
 
 	@Override
 	public XivStatusEffect getBuff() {
-		final String statusName;
-		if (rawEffectId == 0) {
-			statusName = type == TickType.HOT ? "Combined HoT" : "Combined DoT";
-		}
-		else {
-			StatusEffectInfo actionInfo = StatusEffectLibrary.forId(rawEffectId);
-			if (actionInfo == null) {
-				statusName = String.format("Unknown_%x", rawEffectId);
-			}
-			else {
-				statusName = actionInfo.name();
-			}
-		}
-		return new XivStatusEffect(rawEffectId, statusName);
+		return statusEffect;
 	}
 
 	@Override

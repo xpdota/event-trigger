@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.fflogs.FflogsMasterDataEvent;
 import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
+import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.Compressible;
 
 import java.io.EOFException;
@@ -23,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 public final class EventReader {
@@ -117,20 +118,34 @@ public final class EventReader {
 		JsonNode startTimeNode = rootNode.at("/reportData/report/startTime");
 		Instant start = Instant.ofEpochMilli(mapper.convertValue(startTimeNode, Long.class));
 
-		JsonNode masterNode = rootNode.at("/reportData/report/masterData");
 		List<Event> out = new ArrayList<>();
-		out.add(mapper.convertValue(masterNode, FflogsMasterDataEvent.class));
 
-		JsonNode eventsNode = rootNode.at("/reportData/report/events/data");
-		List<Map<String, Object>> maps = mapper.convertValue(eventsNode, new TypeReference<>() {
-		});
-		out.addAll(maps.stream().map(map -> {
-			FflogsRawEvent raw = new FflogsRawEvent(map);
-			Long timeOffset = raw.getTypedField("timestamp", Long.class);
-			Instant actualTime = start.plusMillis(timeOffset);
-			raw.setHappenedAt(actualTime);
-			return raw;
-		}).toList());
+		{
+			JsonNode masterNode = rootNode.at("/reportData/report/masterData");
+			out.add(mapper.convertValue(masterNode, FflogsMasterDataEvent.class));
+		}
+
+		{
+			JsonNode zoneIdNode = rootNode.at("/reportData/report/fights/0/gameZone/id");
+			Long zoneId = mapper.convertValue(zoneIdNode, Long.class);
+			JsonNode zoneNameNode = rootNode.at("/reportData/report/fights/0/gameZone/id");
+			String zoneName = mapper.convertValue(zoneNameNode, String.class);
+			ZoneChangeEvent zce = new ZoneChangeEvent(new XivZone(zoneId, zoneName));
+			out.add(zce);
+		}
+
+		{
+			JsonNode eventsNode = rootNode.at("/reportData/report/events/data");
+			List<Map<String, Object>> maps = mapper.convertValue(eventsNode, new TypeReference<>() {
+			});
+			out.addAll(maps.stream().map(map -> {
+				FflogsRawEvent raw = new FflogsRawEvent(map);
+				Long timeOffset = raw.getTypedField("timestamp", Long.class);
+				Instant actualTime = start.plusMillis(timeOffset);
+				raw.setHappenedAt(actualTime);
+				return raw;
+			}).toList());
+		}
 		return out;
 	}
 }

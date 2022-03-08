@@ -105,7 +105,10 @@ public class FflogsEventProcessor {
 					XivCombatant target = getCombatant(rawEvent.targetID());
 					Long amount = rawEvent.getTypedField("amount", Long.class, 0L);
 					if (rawEvent.getTypedField("tick", boolean.class, false)) {
-						context.accept(new TickEvent(target, TickType.DOT, amount, rawEvent.abilityId() % 1_000_000));
+						long rawEffectId = rawEvent.abilityId();
+						// 500k is "combined"
+						long effectId = rawEffectId == 500_000 ? 0 : rawEffectId % 1_000_000;
+						context.accept(new TickEvent(target, TickType.DOT, amount, effectId));
 					}
 					else {
 						// TODO: severity
@@ -119,7 +122,17 @@ public class FflogsEventProcessor {
 					XivCombatant target = getCombatant(rawEvent.targetID());
 					Long amount = rawEvent.getTypedField("amount", Long.class, 0L);
 					if (rawEvent.getTypedField("tick", boolean.class, false)) {
-						context.accept(new TickEvent(target, TickType.HOT, amount, rawEvent.abilityId() % 1_000_000));
+						XivStatusEffect status;
+						long rawEffectId = rawEvent.abilityId();
+						// 500k is "combined", 0x516 is passive regen
+						if (rawEffectId == 0x516) {
+							status = new XivStatusEffect(0, "Passive Regen");
+						}
+						else {
+							long effectId = rawEffectId == 500_000 ? 0 : rawEffectId % 1_000_000;
+							status = new XivStatusEffect(effectId);
+						}
+						context.accept(new TickEvent(target, TickType.HOT, amount, status));
 					}
 					else {
 						// TODO: severity

@@ -36,6 +36,12 @@ public class FflogsController {
 				   code
 				   startTime
 				   endTime
+				   fights(fightIDs:[%s]) {
+				   	gameZone {
+				     id
+				   	 name
+				   	}
+				   }
 				   masterData {
 				    actors {
 				      gameID,
@@ -55,7 +61,7 @@ public class FflogsController {
 				 }
 				}
 					
-				""", reportLocator.report(), reportLocator.fight());
+				""", reportLocator.report(), reportLocator.fight(), reportLocator.fight());
 		return client.queryV2(query);
 
 
