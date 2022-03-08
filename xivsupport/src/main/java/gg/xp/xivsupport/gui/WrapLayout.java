@@ -120,8 +120,8 @@ public class WrapLayout extends FlowLayout {
 				Component m = target.getComponent(i);
 
 				if (m.isVisible()) {
-					Dimension d = preferred ? m.getPreferredSize() : m.getMinimumSize();
-
+//					Dimension d = preferred ? m.getPreferredSize() : m.getMinimumSize();
+					Dimension d = m.getPreferredSize();
 					//  Can't add the component to current row. Start a new row.
 
 					if (rowWidth + d.width > maxWidth) {

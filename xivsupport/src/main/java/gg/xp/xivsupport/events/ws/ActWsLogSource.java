@@ -142,6 +142,7 @@ public class ActWsLogSource implements EventSource {
 	}
 
 	private final Consumer<Event> eventConsumer;
+	private final PrimaryLogSource pls;
 	private final ActWsClientInternal client;
 	private final WsState state = new WsState();
 
@@ -149,9 +150,9 @@ public class ActWsLogSource implements EventSource {
 		this.uriSetting = new WsURISetting(pers, "actws-uri", defaultUri);
 		this.allowBadCert = new BooleanSetting(pers, "acts-allow-bad-cert", false);
 		this.eventConsumer = master::pushEvent;
+		this.pls = pls;
 		this.client = new ActWsClientInternal();
 		stateStore.putCustom(WsState.class, state);
-		pls.setLogSource(KnownLogSource.WEBSOCKET_LIVE);
 	}
 
 	private final AtomicInteger rseqCounter = new AtomicInteger();
@@ -292,6 +293,7 @@ public class ActWsLogSource implements EventSource {
 		// TODO: auto retry and reconnection
 		log.info("Attempting connection");
 		doOpen();
+		pls.setLogSource(KnownLogSource.WEBSOCKET_LIVE);
 	}
 
 	private static final String allCbtRequest;

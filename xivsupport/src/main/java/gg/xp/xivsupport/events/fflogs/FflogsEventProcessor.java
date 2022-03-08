@@ -168,7 +168,10 @@ public class FflogsEventProcessor {
 				}
 				case "applybuff":
 				case "applybuffstack":
+				case "applydebuff":
+				case "applydebuffstack":
 				case "removebuffstack":
+				case "removedebuffstack":
 				case "refreshbuff": {
 					// TODO
 					int stacks = rawEvent.getTypedField("stacks", int.class, 0);
@@ -189,7 +192,8 @@ public class FflogsEventProcessor {
 					));
 					break;
 				}
-				case "removebuff": {
+				case "removebuff":
+				case "removedebuff": {
 					context.accept(new BuffRemoved(
 							new XivStatusEffect(rawEvent.abilityId() % 1_000_000),
 							0,

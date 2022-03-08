@@ -3,7 +3,6 @@ package gg.xp.xivsupport.sys;
 import gg.xp.reevent.context.SubState;
 import gg.xp.reevent.scan.ScanMe;
 
-@ScanMe
 public class PrimaryLogSource implements SubState {
 
 	private KnownLogSource logSource = KnownLogSource.UNKNOWN;

@@ -100,6 +100,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		// Top panel
 		JPanel topBasicPanel = new JPanel();
 		List<Component> extraPanels = new ArrayList<>();
+		topBasicPanel.setLayout(new WrapLayout(WrapLayout.LEFT, 7, 7));
 
 		{
 			JButton refreshButton = new JButton(fixedData ? "Load" : "Refresh");
@@ -125,7 +126,6 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			stayAtBottom = null;
 			isAutoRefreshEnabled = true;
 		}
-		topBasicPanel.setLayout(new WrapLayout(FlowLayout.LEFT, 7, 7));
 		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
