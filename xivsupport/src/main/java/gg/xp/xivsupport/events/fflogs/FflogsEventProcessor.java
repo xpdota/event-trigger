@@ -1,5 +1,8 @@
 package gg.xp.xivsupport.events.fflogs;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.Job;
@@ -10,16 +13,24 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.TickEvent;
 import gg.xp.xivsupport.events.actlines.events.TickType;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
+import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
+import gg.xp.xivsupport.events.actlines.parsers.FakeFflogsTimeSource;
 import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
+import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import gg.xp.xivsupport.events.state.XivStateImpl;
+import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivStatusEffect;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,13 +40,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class FflogsEventProcessor {
 	private static final Logger log = LoggerFactory.getLogger(FflogsEventProcessor.class);
+	private static final ObjectMapper mapper = new ObjectMapper();
 	private final AtomicInteger counter = new AtomicInteger();
 	private final Map<Long, Long> combatantIdToGameId = new HashMap<>();
+	private final List<XivPlayerCharacter> partyList = new ArrayList<>();
+	private FflogsRawEvent currentEvent;
 	private final XivStateImpl state;
+	private final @Nullable FakeFflogsTimeSource fakeTimeSource;
 
 	// TODO: move more stuff to XivState interface
-	public FflogsEventProcessor(XivStateImpl state) {
+	public FflogsEventProcessor(PicoContainer container, XivStateImpl state) {
 		this.state = state;
+		fakeTimeSource = container.getComponent(FakeFflogsTimeSource.class);
 	}
 
 	// TODO: multiple instances
@@ -57,6 +73,45 @@ public class FflogsEventProcessor {
 		else {
 			return knownCbt;
 		}
+	}
+
+	private double convertCoordinate(long rawCoord) {
+		return (rawCoord ) / 100.0;
+	}
+
+	private @Nullable XivCombatant getCombatant(@Nullable Long id, @Nullable Object resourcesRaw) {
+		XivCombatant cbt = getCombatant(id);
+		if (cbt != null && resourcesRaw != null) {
+			RawResources resources = mapper.convertValue(resourcesRaw, RawResources.class);
+			HitPoints hp = new HitPoints(resources.hitPoints, resources.maxHitPoints);
+			Position pos = new Position(convertCoordinate(resources.x), convertCoordinate(resources.y), resources.z, resources.facing / 1000.0 * Math.PI);
+			state.provideCombatantHP(cbt, hp);
+			state.provideCombatantPos(cbt, pos);
+		}
+		return cbt;
+	}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	private record RawResources(
+			long hitPoints,
+			long maxHitPoints,
+			long mp,
+			long maxMP,
+			long x,
+			long y,
+			long z,
+			long facing
+	) {
+	}
+
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	private record CombatantsInfoAura(
+			long source,
+			long ability,
+			long stacks,
+			String name
+	) {
 	}
 
 	private Job convertJob(String jobName) {
@@ -91,18 +146,36 @@ public class FflogsEventProcessor {
 
 	@HandleEvents
 	public void processFflogsEvent(EventContext context, FflogsRawEvent rawEvent) {
+		currentEvent = rawEvent;
+		if (fakeTimeSource != null) {
+			fakeTimeSource.setNewTime(rawEvent.getHappenedAt());
+			rawEvent.setTimeSource(fakeTimeSource);
+		}
+
 		Object rawType = rawEvent.getField("type");
+		XivCombatant source = getCombatant(rawEvent.sourceID(), rawEvent.getField("sourceResources"));
+		XivCombatant target = getCombatant(rawEvent.targetID(), rawEvent.getField("targetResources"));
 		if (rawType instanceof String type) {
 			switch (type) {
 				// Leaving possible NPEs in place because those wouldn't make sense anyway
 				case "combatantinfo": {
-					// TODO
+					Object aurasRaw = rawEvent.getField("auras");
+					if (aurasRaw != null) {
+						List<CombatantsInfoAura> auras = mapper.convertValue(aurasRaw, new TypeReference<>() {
+						});
+						auras.forEach(aura -> {
+							XivCombatant auraSource = getCombatant(aura.source);
+							context.accept(new BuffApplied(convertStatus(aura.ability % 1_000_000), 9999, auraSource, source, aura.stacks));
+						});
+					}
+					if (source instanceof XivPlayerCharacter pc) {
+						partyList.add(pc);
+						state.setPartyList(partyList.stream().map(pm -> new RawXivPartyInfo(pm.getId(), pm.getName(), 0, pm.getJob().getId(), (int) pm.getLevel(), true)).toList());
+					}
 					break;
 				}
 				case "damage":
 				case "calculateddamage": {
-					XivCombatant source = getCombatant(rawEvent.sourceID());
-					XivCombatant target = getCombatant(rawEvent.targetID());
 					Long amount = rawEvent.getTypedField("amount", Long.class, 0L);
 					if (rawEvent.getTypedField("tick", boolean.class, false)) {
 						long rawEffectId = rawEvent.abilityId();
@@ -118,8 +191,6 @@ public class FflogsEventProcessor {
 				}
 				case "heal":
 				case "calculatedheal": {
-					XivCombatant source = getCombatant(rawEvent.sourceID());
-					XivCombatant target = getCombatant(rawEvent.targetID());
 					Long amount = rawEvent.getTypedField("amount", Long.class, 0L);
 					if (rawEvent.getTypedField("tick", boolean.class, false)) {
 						XivStatusEffect status;
@@ -151,15 +222,15 @@ public class FflogsEventProcessor {
 					}
 					context.accept(new AbilityCastStart(
 							new XivAbility(rawEvent.abilityId()),
-							getCombatant(rawEvent.sourceID()),
-							getCombatant(rawEvent.targetID()),
+							source,
+							target,
 							duration));
 				}
 				case "cast": {
 					context.accept(new AbilityUsedEvent(
 							new XivAbility(rawEvent.abilityId()),
-							getCombatant(rawEvent.sourceID()),
-							getCombatant(rawEvent.targetID()),
+							source,
+							target,
 							Collections.emptyList(),
 							counter.getAndIncrement(),
 							0,
@@ -172,9 +243,10 @@ public class FflogsEventProcessor {
 				case "applydebuffstack":
 				case "removebuffstack":
 				case "removedebuffstack":
-				case "refreshbuff": {
+				case "refreshbuff":
+				case "refreshdebuff": {
 					// TODO
-					int stacks = rawEvent.getTypedField("stacks", int.class, 0);
+					int stacks = rawEvent.getTypedField("stack", int.class, 0);
 					double duration;
 					Double durationRaw = rawEvent.getTypedField("duration", Double.class);
 					if (durationRaw == null) {
@@ -184,18 +256,19 @@ public class FflogsEventProcessor {
 						duration = durationRaw / 1000.0;
 					}
 					context.accept(new BuffApplied(
-							new XivStatusEffect(rawEvent.abilityId() % 1_000_000),
+							convertStatus(rawEvent.abilityId()),
 							duration,
-							getCombatant(rawEvent.getTypedField("sourceID", Long.class)),
-							getCombatant(rawEvent.getTypedField("targetID", Long.class)),
+							source,
+							target,
 							stacks
 					));
 					break;
 				}
+				case "dispel":
 				case "removebuff":
 				case "removedebuff": {
 					context.accept(new BuffRemoved(
-							new XivStatusEffect(rawEvent.abilityId() % 1_000_000),
+							convertStatus(rawEvent.abilityId()),
 							0,
 							getCombatant(rawEvent.getTypedField("sourceID", Long.class)),
 							getCombatant(rawEvent.getTypedField("targetID", Long.class)),
@@ -215,6 +288,11 @@ public class FflogsEventProcessor {
 		else {
 			log.error("Encountered fflogs event with missing or malformed event type: {}", rawEvent.getFields());
 		}
+		state.flushProvidedValues();
 
+	}
+
+	private XivStatusEffect convertStatus(long rawStatus) {
+		return new XivStatusEffect(rawStatus % 1_000_000);
 	}
 }

@@ -6,12 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.xivsupport.eventstorage.EventReader;
 import org.intellij.lang.annotations.Language;
 
+import java.util.Collections;
+
 public class GuiWithFflogsData {
 
 	public static void main(String[] args) throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode root = mapper.readTree(theString);
-		LaunchImportedFflogs.fromEvents(EventReader.readFflogsJson(root));
+		LaunchImportedFflogs.fromEvents(EventReader.readFflogsJson(Collections.singletonList(root)));
 	}
 
 	@Language("JSON")

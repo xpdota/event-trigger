@@ -6,18 +6,20 @@ import gg.xp.xivsupport.events.actlines.events.HasEffects;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 
+import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
 // Hack for fflogs support, don't depend on this sticking around
 public class GenericDamageEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects {
 
+	@Serial
+	private static final long serialVersionUID = -2140156831784781493L;
 	private final XivCombatant source;
 	private final XivCombatant target;
 	private final XivAbility ability;

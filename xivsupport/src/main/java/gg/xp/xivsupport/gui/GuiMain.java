@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
@@ -352,6 +353,9 @@ public class GuiMain {
 
 			partyMembersTable.setModel(partyTableModel);
 			partyTableModel.configureColumns(partyMembersTable);
+			CustomRightClickOption.configureTable(partyMembersTable, partyTableModel, List.of(
+					CustomRightClickOption.forRow("Set As Primary Player", XivPlayerCharacter.class, p -> state.get(XivStateImpl.class).setPlayerTmpOverride(p))
+			));
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
 			add(scrollPane);
 			refresh();
@@ -606,6 +610,11 @@ public class GuiMain {
 					return e.getThisOrParentOfType(ActWsRawMsg.class);
 				}, line -> {
 					GuiUtil.copyTextToClipboard(line.getRawMsgData());
+				}))
+				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy FFLogs Fields", Event.class, e -> {
+					return e.getThisOrParentOfType(FflogsRawEvent.class);
+				}, line -> {
+					GuiUtil.copyTextToClipboard(line.getFields().toString());
 				}))
 				.addFilter(SystemEventFilter::new)
 				.addFilter(EventClassFilterFilter::new)

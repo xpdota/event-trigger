@@ -86,8 +86,9 @@ public final class GuiImportLaunch {
 				return result;
 			}, locator::setValue, "Paste your FFLogs URL here");
 			importFflogsButton.addActionListener(l -> {
+				FflogsReportLocator fight = locator.getValue();
 				CatchFatalError.run(() -> {
-					LaunchImportedFflogs.fromUrl(locator.getValue());
+					LaunchImportedFflogs.fromUrl(fight);
 				});
 				frame.setVisible(false);
 			});

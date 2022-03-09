@@ -30,6 +30,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public class FflogsClient {
@@ -41,7 +42,7 @@ public class FflogsClient {
 	private final String authLine;
 
 	// TODO: find a way to make cache weakref-based
-	private final ConcurrentCacheMap<String, JsonNode> v2cache = new ConcurrentCacheMap<>(this::queryV2internal);
+	private final ConcurrentCacheMap<String, JsonNode> v2cache = new ConcurrentCacheMap<>(d -> queryV2internal(d, Collections.emptyMap()));
 	public static final ObjectMapper mapper = new ObjectMapper();
 	private HttpClient hc;
 	private String accessToken;
@@ -70,14 +71,22 @@ public class FflogsClient {
 
 	public JsonNode queryV2(String queryBody, boolean bypassCache) {
 		if (bypassCache) {
-			return queryV2internal(queryBody);
+			return queryV2internal(queryBody, Collections.emptyMap());
 		} else {
 			return v2cache.get(queryBody);
 		}
 	}
 
-	public JsonNode queryV2internal(String queryBody) {
-		Map<String, String> queryMap = Collections.singletonMap("query", queryBody);
+	public JsonNode queryV2internal(String queryBody, Map<String, Object> vars) {
+		Map<String, Object> queryMap = new HashMap<>();
+
+		queryMap.put("query", queryBody);
+
+		if (!vars.isEmpty()) {
+			queryMap.put("variables", vars);
+		}
+
+
 		String actualBody;
 		try {
 			actualBody = mapper.writeValueAsString(queryMap);
