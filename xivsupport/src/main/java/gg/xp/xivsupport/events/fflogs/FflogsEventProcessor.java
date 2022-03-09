@@ -13,7 +13,6 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.TickEvent;
 import gg.xp.xivsupport.events.actlines.events.TickType;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
-import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
 import gg.xp.xivsupport.events.actlines.parsers.FakeFflogsTimeSource;
 import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
@@ -44,7 +43,6 @@ public class FflogsEventProcessor {
 	private final AtomicInteger counter = new AtomicInteger();
 	private final Map<Long, Long> combatantIdToGameId = new HashMap<>();
 	private final List<XivPlayerCharacter> partyList = new ArrayList<>();
-	private FflogsRawEvent currentEvent;
 	private final XivStateImpl state;
 	private final @Nullable FakeFflogsTimeSource fakeTimeSource;
 
@@ -76,7 +74,7 @@ public class FflogsEventProcessor {
 	}
 
 	private double convertCoordinate(long rawCoord) {
-		return (rawCoord ) / 100.0;
+		return (rawCoord) / 100.0;
 	}
 
 	private @Nullable XivCombatant getCombatant(@Nullable Long id, @Nullable Object resourcesRaw) {
@@ -146,7 +144,6 @@ public class FflogsEventProcessor {
 
 	@HandleEvents
 	public void processFflogsEvent(EventContext context, FflogsRawEvent rawEvent) {
-		currentEvent = rawEvent;
 		if (fakeTimeSource != null) {
 			fakeTimeSource.setNewTime(rawEvent.getHappenedAt());
 			rawEvent.setTimeSource(fakeTimeSource);
@@ -245,7 +242,6 @@ public class FflogsEventProcessor {
 				case "removedebuffstack":
 				case "refreshbuff":
 				case "refreshdebuff": {
-					// TODO
 					int stacks = rawEvent.getTypedField("stack", int.class, 0);
 					double duration;
 					Double durationRaw = rawEvent.getTypedField("duration", Double.class);
