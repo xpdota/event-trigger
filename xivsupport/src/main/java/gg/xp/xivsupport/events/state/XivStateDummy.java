@@ -7,6 +7,8 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.sys.KnownLogSource;
+import gg.xp.xivsupport.sys.PrimaryLogSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,8 +27,12 @@ public class XivStateDummy implements XivState {
 	private XivMap map;
 	private List<XivPlayerCharacter> partyList = Collections.emptyList();
 	private Map<Long, XivCombatant> combatants = new HashMap<>();
-	private boolean isActImport;
 
+	private final PrimaryLogSource pls;
+
+	public XivStateDummy(PrimaryLogSource pls) {
+		this.pls = pls;
+	}
 
 	@Override
 	public XivPlayerCharacter getPlayer() {
@@ -120,13 +126,4 @@ public class XivStateDummy implements XivState {
 		return null;
 	}
 
-	@Override
-	public boolean isActImport() {
-		return isActImport;
-	}
-
-	@Override
-	public void setActImport(boolean isActImport) {
-		this.isActImport = isActImport;
-	}
 }

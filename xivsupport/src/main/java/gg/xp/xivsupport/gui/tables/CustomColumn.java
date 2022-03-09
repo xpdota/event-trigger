@@ -32,6 +32,15 @@ public class CustomColumn<X> {
 		this.columnConfigurer = columnConfigurer;
 	}
 
+	public CustomColumn(String columnName, Function<X, @Nullable Object> getter, int fixedWidth) {
+		this.columnName = columnName;
+		this.getter = getter;
+		this.columnConfigurer = c -> {
+			c.setMinWidth(fixedWidth);
+			c.setMaxWidth(fixedWidth);
+		};
+	}
+
 	public String getColumnName() {
 		return columnName;
 	}

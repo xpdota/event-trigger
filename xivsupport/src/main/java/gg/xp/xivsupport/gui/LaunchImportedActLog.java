@@ -9,6 +9,8 @@ import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.replay.ReplayController;
+import gg.xp.xivsupport.sys.KnownLogSource;
+import gg.xp.xivsupport.sys.PrimaryLogSource;
 import gg.xp.xivsupport.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
@@ -30,17 +32,12 @@ public final class LaunchImportedActLog {
 		MutablePicoContainer pico = XivMain.importInit();
 		pico.addComponent(FakeACTTimeSource.class);
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
-		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		ReplayController replayController = new ReplayController(master, events, decompress);
 		pico.addComponent(replayController);
+		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.ACT_LOG_FILE);
 		dist.acceptEvent(new InitEvent());
-		pico.getComponent(XivStateImpl.class).setActImport(true);
-		RawEventStorage raw = pico.getComponent(RawEventStorage.class);
-		// TODO: replay is no longer always read-only
-//		raw.getMaxEventsStoredSetting().set(1_000_000);
 		pico.addComponent(GuiMain.class);
 		pico.getComponent(GuiMain.class);
-//		FailOnThreadViolationRepaintManager.install();
 	}
 }

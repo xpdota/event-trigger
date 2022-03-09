@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.models;
 
+import gg.xp.xivdata.data.StatusEffectInfo;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 
 import java.io.Serial;
@@ -11,6 +13,17 @@ public class XivStatusEffect implements Serializable, NameIdPair {
 	private static final long serialVersionUID = -408717295208496811L;
 	private final long id;
 	private final String name;
+
+	public XivStatusEffect(long id) {
+		this.id = id;
+		StatusEffectInfo statusInfo = StatusEffectLibrary.forId(id);
+		if (statusInfo == null) {
+			name = String.format("Unknown_%x", id);
+		}
+		else {
+			name = statusInfo.name();
+		}
+	}
 
 	public XivStatusEffect(long id, String name) {
 		this.id = id;

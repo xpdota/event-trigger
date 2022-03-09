@@ -36,6 +36,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	private final CustomTableModel<X> mainModel;
 	private final @Nullable JCheckBox stayAtBottom;
 	private final JTable table;
+	private final @Nullable AutoBottomScrollHelper scroller;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
 	private List<X> dataFiltered = Collections.emptyList();
@@ -100,6 +101,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		// Top panel
 		JPanel topBasicPanel = new JPanel();
 		List<Component> extraPanels = new ArrayList<>();
+		topBasicPanel.setLayout(new WrapLayout(WrapLayout.LEFT, 7, 7));
 
 		{
 			JButton refreshButton = new JButton(fixedData ? "Load" : "Refresh");
@@ -114,7 +116,8 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			autoRefresh.setSelected(true);
 
 			stayAtBottom = new JCheckBox("Scroll to Bottom");
-			scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
+			this.scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
+			scroller = this.scroller;
 			stayAtBottom.addItemListener(e -> ((AutoBottomScrollHelper) scroller).setAutoScrollEnabled(stayAtBottom.isSelected()));
 			stayAtBottom.setSelected(true);
 			topBasicPanel.add(autoRefresh);
@@ -122,10 +125,10 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		}
 		else {
 			scroller = new JScrollPane(table);
+			this.scroller = null;
 			stayAtBottom = null;
 			isAutoRefreshEnabled = true;
 		}
-		topBasicPanel.setLayout(new WrapLayout(FlowLayout.LEFT, 7, 7));
 		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
@@ -273,7 +276,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	private void updateModel() {
 		switch (refreshNeeded) {
 			case NONE:
-				break;
+				return;
 			case APPEND:
 				mainModel.appendOnlyRefresh();
 				break;
@@ -309,8 +312,14 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 	private void updateFiltering() {
 		refresherPool.submit(() -> {
+			Integer offset = mainModel.getSelectedItemViewportOffsetIfVisible();
 			filterFully();
 			updateModel();
+			// Only scroll back to selected item if auto scroll is disabled
+			if (scroller != null && !scroller.isAutoScrollEnabled() && offset != null) {
+				mainModel.setVisibleItemScrollOffset(offset);
+				log.info("Offset: {}", offset);
+			}
 		});
 	}
 
@@ -400,6 +409,10 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			this.fixedData = fixedData;
 			return this;
 		}
+	}
+
+	public static <X, D> TableWithFilterAndDetailsBuilder<X, D> builder(String title, Supplier<List<X>> dataGetter) {
+		return new TableWithFilterAndDetailsBuilder<>(title, dataGetter, (i) -> Collections.emptyList());
 	}
 
 	public static <X, D> TableWithFilterAndDetailsBuilder<X, D> builder(String title, Supplier<List<X>> dataGetter, Function<X, List<D>> detailsConverter) {

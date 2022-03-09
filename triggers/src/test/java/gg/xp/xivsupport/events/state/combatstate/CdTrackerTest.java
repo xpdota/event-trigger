@@ -16,6 +16,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivWorld;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
+import gg.xp.xivsupport.sys.PrimaryLogSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -69,7 +70,7 @@ public class CdTrackerTest {
 
 
 	private CdTracker makeState() {
-		XivStateDummy state = new XivStateDummy();
+		XivStateDummy state = new XivStateDummy(new PrimaryLogSource());
 		state.setPlayer(player);
 		state.setCombatants(List.of(
 				player, otherCharInParty, otherCharNotInParty, theBoss

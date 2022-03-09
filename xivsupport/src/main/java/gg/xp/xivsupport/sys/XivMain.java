@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.AutoHandlerScan;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
@@ -49,6 +50,7 @@ public final class XivMain {
 		pico.addComponent(XivStateImpl.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
 		pico.addComponent(TopoInfoImpl.class);
+		pico.addComponent(PrimaryLogSource.class);
 		pico.addComponent(pico);
 		return pico;
 
@@ -129,15 +131,19 @@ public final class XivMain {
 
 	public static MutablePicoContainer importInit() {
 		MutablePicoContainer pico = requiredComponents();
-		if (isRealLauncher()) {
-			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent", true));
-		}
-		else {
-			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing", true));
-		}
+		pico.addComponent(persistenceProvider());
 		pico.getComponent(AutoHandlerConfig.class).setNotLive(true);
 		pico.getComponent(EventMaster.class).start();
 		return pico;
+	}
+
+	public static PersistenceProvider persistenceProvider() {
+		if (isRealLauncher()) {
+			return PropertiesFilePersistenceProvider.inUserDataFolder("triggevent", true);
+		}
+		else {
+			return PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing", true);
+		}
 	}
 
 }
