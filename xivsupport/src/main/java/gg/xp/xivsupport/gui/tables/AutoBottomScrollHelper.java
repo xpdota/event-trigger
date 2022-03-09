@@ -65,6 +65,10 @@ public class AutoBottomScrollHelper extends JScrollPane {
 
 	}
 
+	public boolean isAutoScrollEnabled() {
+		return autoScrollEnabled;
+	}
+
 	private void doScrollIfEnabled() {
 		log.trace("doScrollIfEnabled");
 		if (autoScrollEnabled) {

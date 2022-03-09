@@ -1,9 +1,15 @@
 package gg.xp.xivsupport.gui;
 
+import gg.xp.xivsupport.events.fflogs.FflogsController;
+import gg.xp.xivsupport.events.fflogs.FflogsReportLocator;
 import gg.xp.xivsupport.eventstorage.EventReader;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
+import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.persistence.Platform;
+import gg.xp.xivsupport.sys.XivMain;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,12 +67,42 @@ public final class GuiImportLaunch {
 				}
 			});
 
+			FflogsController fflogsController = new FflogsController(XivMain.persistenceProvider());
+			boolean hasApiKey = !(fflogsController.clientSecret().get().isEmpty()
+					|| fflogsController.clientSecret().get().isEmpty());
+
+			JButton importFflogsButton = new JButton("Import from FFLogs");
+			Mutable<FflogsReportLocator> locator = new MutableObject<>();
+			TextFieldWithValidation<FflogsReportLocator> fflogsUrlField = new TextFieldWithValidation<>(url -> {
+				FflogsReportLocator result;
+				try {
+					result = FflogsReportLocator.fromURL(url);
+				}
+				catch (Throwable t) {
+					importFflogsButton.setEnabled(false);
+					throw t;
+				}
+				importFflogsButton.setEnabled(true);
+				return result;
+			}, locator::setValue, "Paste your FFLogs URL here");
+			importFflogsButton.addActionListener(l -> {
+				FflogsReportLocator fight = locator.getValue();
+				CatchFatalError.run(() -> {
+					LaunchImportedFflogs.fromUrl(fight);
+				});
+				frame.setVisible(false);
+			});
+			fflogsUrlField.setEnabled(hasApiKey);
+			importFflogsButton.setEnabled(hasApiKey);
+			ReadOnlyText fflogsImportText = new ReadOnlyText("In order to use FFLogs importing, launch the client normally, and then enter your API keys in Advanced > FFLogs.");
+
 			panel.setLayout(new GridBagLayout());
 			GridBagConstraints c = new GridBagConstraints();
 
 			c.gridx = 0;
 			c.gridy = 0;
-			c.insets = new Insets(10, 10, 10, 10);
+			Insets fullInsets = new Insets(10, 10, 10, 10);
+			c.insets = fullInsets;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			{
 				c.weightx = 1;
@@ -93,22 +129,44 @@ public final class GuiImportLaunch {
 				c.gridx++;
 				c.weightx = 1;
 				panel.add(new JLabel("Import an ACT Log file"), c);
+			}{
+				c.gridx = 0;
+				c.gridy++;
+				c.gridwidth = GridBagConstraints.REMAINDER;
+				panel.add(fflogsUrlField, c);
+				c.insets = new Insets(0, 10, 10, 10);
+				c.gridy++;
+				c.gridx = 0;
+				c.gridwidth = 1;
+				c.weightx = 0;
+				panel.add(importFflogsButton, c);
+				c.gridx++;
+				c.weightx = 1;
+				panel.add(new JLabel("Import an FFLogs URL"), c);
+				if (!hasApiKey) {
+					c.gridx = 0;
+					c.gridy++;
+					c.gridwidth = GridBagConstraints.REMAINDER;
+					panel.add(fflogsImportText, c);
+				}
 			}
 			{
+				c.insets = fullInsets;
 				c.gridy++;
 				c.weighty = 0;
 				c.gridx = 0;
+				c.gridwidth = 1;
 				c.gridwidth = GridBagConstraints.REMAINDER;
 
 				panel.add(decompressCheckbox, c);
 			}
-			{
-				c.gridy++;
-				c.weighty = 0;
-				c.gridx = 0;
-				c.gridwidth = GridBagConstraints.REMAINDER;
-				panel.add(new ReadOnlyText("In replay mode, the program will use your existing settings, but any changes you make will not be saved."), c);
-			}
+//			{
+//				c.gridy++;
+//				c.weighty = 0;
+//				c.gridx = 0;
+//				c.gridwidth = GridBagConstraints.REMAINDER;
+//				panel.add(new ReadOnlyText("In replay mode, the program will use your existing settings, but any changes you make will not be saved."), c);
+//			}
 			{
 				c.gridy++;
 				c.weighty = 1;

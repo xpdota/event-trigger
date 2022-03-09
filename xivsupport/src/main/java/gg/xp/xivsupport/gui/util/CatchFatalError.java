@@ -70,7 +70,7 @@ public final class CatchFatalError {
 			});
 			JPanel buttons = new JPanel(new WrapLayout(WrapLayout.CENTER));
 			buttons.add(exit);
-			buttons.add(tryContinue);
+//			buttons.add(tryContinue);
 			c.fill = GridBagConstraints.HORIZONTAL;
 			panel.add(buttons, c);
 			frame.add(panel);

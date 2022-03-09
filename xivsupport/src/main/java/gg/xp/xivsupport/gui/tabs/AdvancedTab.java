@@ -208,12 +208,12 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable, TabAwar
 		}
 
 		{
-			TitleBorderFullsizePanel miscPanel = new TitleBorderFullsizePanel("Websocket (Restart Required)");
-			miscPanel.setPreferredSize(new Dimension(300, 150));
+			TitleBorderFullsizePanel wsPanel = new TitleBorderFullsizePanel("Websocket (Restart Required)");
+			wsPanel.setPreferredSize(new Dimension(300, 150));
 			ActWsLogSource actWs = container.getComponent(ActWsLogSource.class);
-			miscPanel.add(new WsURISettingGui(actWs.getUriSetting(), "ACT WS URI").getComponent());
-			miscPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
-			addTab("Websocket", miscPanel);
+			wsPanel.add(new WsURISettingGui(actWs.getUriSetting(), "ACT WS URI").getComponent());
+			wsPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
+			addTab("Websocket", wsPanel);
 		}
 		{
 			addTab("Topology", new PluginTopologyPanel(container));
@@ -223,6 +223,9 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable, TabAwar
 		}
 		{
 			addTab("Java", new JavaPanel());
+		}
+		{
+			addTab("FFLogs", new FflogsPanel(container));
 		}
 		recheckTabs();
 		new Timer(5000, l -> this.recheckTabs()).start();

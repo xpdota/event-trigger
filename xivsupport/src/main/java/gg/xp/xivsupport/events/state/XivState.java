@@ -55,7 +55,4 @@ public interface XivState extends SubState {
 		}
 	}
 
-	boolean isActImport();
-
-	void setActImport(boolean actImport);
 }

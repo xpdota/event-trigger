@@ -47,6 +47,8 @@ public class XivStateImpl implements XivState {
 	private XivEntity playerPartial;
 	// FULL player info after we get the stuff we need
 	private XivPlayerCharacter player;
+	// For override
+	private XivEntity playerTmpOverride;
 	// TODO: see if same-world parties with out-of-zone players would break this
 	private volatile @NotNull List<RawXivPartyInfo> partyListRaw = Collections.emptyList();
 	private volatile @NotNull List<XivPlayerCharacter> partyListProcessed = Collections.emptyList();
@@ -56,7 +58,6 @@ public class XivStateImpl implements XivState {
 	private final Map<Long, Position> posOverrides = new HashMap<>();
 	private volatile OnlineStatus playerOnlineStatus = OnlineStatus.UNKNOWN;
 	private volatile Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
-	private boolean isActImport;
 
 	private Job lastPlayerJob;
 
@@ -77,6 +78,16 @@ public class XivStateImpl implements XivState {
 	public void setPlayer(XivEntity player) {
 		log.info("Player changed to {}", player);
 		this.playerPartial = player;
+		recalcState();
+	}
+
+	/**
+	 * Set a temporary (as in, not persisted across app starts) override for who to consider the primary player.
+	 *
+	 * @param player The new primary player. Only the ID matters.
+	 */
+	public void setPlayerTmpOverride(XivEntity player) {
+		this.playerTmpOverride = player;
 		recalcState();
 	}
 
@@ -117,11 +128,17 @@ public class XivStateImpl implements XivState {
 	// TODO: emit events after state is recalculated reflecting actual changes
 	// Probably requires proper equals/hashcode on everything so we can actually compare them
 	private void recalcState() {
-		// *Shouldn't* happen, but no reason to fail when we'll get the data soon anyway
-		if (playerPartial == null) {
+		final long playerId;
+		if (playerTmpOverride != null) {
+			playerId = playerTmpOverride.getId();
+		}
+		else if (playerPartial != null) {
+			playerId = playerPartial.getId();
+		}
+		else {
+			// These shouldn't both be null for very long, so just wait until we get the data.
 			return;
 		}
-		long playerId = playerPartial.getId();
 		{
 			RawXivCombatantInfo playerCombatantInfo = combatantsRaw.get(playerId);
 			if (playerCombatantInfo != null) {
@@ -466,16 +483,6 @@ public class XivStateImpl implements XivState {
 			return null;
 		}
 		return ref.get();
-	}
-
-	@Override
-	public boolean isActImport() {
-		return isActImport;
-	}
-
-	@Override
-	public void setActImport(boolean actImport) {
-		this.isActImport = actImport;
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
