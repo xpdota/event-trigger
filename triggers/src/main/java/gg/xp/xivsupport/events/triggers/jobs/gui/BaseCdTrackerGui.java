@@ -95,7 +95,8 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 		};
 		CustomTableModel<Cooldown> model = CustomTableModel.builder(() -> sortedCds)
 				.addColumn(StandardColumns.booleanSettingColumn("Overlay", cd -> cooldowns.get(cd).getOverlay(), 50, enableOverlaySetting))
-				.addColumn(StandardColumns.booleanSettingColumn("TTS", cd -> cooldowns.get(cd).getTts(), 50, enableTtsSetting))
+				.addColumn(StandardColumns.booleanSettingColumn("TTS (Ready)", cd -> cooldowns.get(cd).getTtsReady(), 80, enableTtsSetting))
+				.addColumn(StandardColumns.booleanSettingColumn("TTS (On Use)", cd -> cooldowns.get(cd).getTtsOnUse(), 80, enableTtsSetting))
 				.addColumn(new CustomColumn<>("Job", cd -> {
 					if (cd.getJob() != null) {
 						return cd.getJob();
