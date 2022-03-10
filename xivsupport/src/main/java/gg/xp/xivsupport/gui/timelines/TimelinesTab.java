@@ -421,6 +421,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	}
 
 	private void addNewEntry(CustomTimelineEntry newEntry) {
+		stopEditing();
 		Long zone = this.currentZone;
 		TimelineCustomizations stuff = backend.getCustomSettings(zone);
 		List<CustomTimelineEntry> currentEntries = stuff.getEntries();
@@ -433,6 +434,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	}
 
 	private void deleteEntry(CustomTimelineEntry toDelete) {
+		stopEditing();
 		Long zone = this.currentZone;
 		TimelineCustomizations stuff = backend.getCustomSettings(zone);
 		List<CustomTimelineEntry> currentEntries = stuff.getEntries();
@@ -444,6 +446,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	}
 
 	private void resetAll() {
+		stopEditing();
 		Long zone = this.currentZone;
 		TimelineCustomizations stuff = backend.getCustomSettings(zone);
 		stuff.setEntries(Collections.emptyList());
