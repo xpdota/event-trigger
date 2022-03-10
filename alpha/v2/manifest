@@ -1,12 +1,13 @@
-34fddf061b4f03655e5283a1d21a3227  triggevent.exe
-a052a393124108a04418dac8a0362afe  triggevent-import.exe
-3bd675d0dc044e5d201358949d567ab7  triggevent-upd.exe
-5e4a0193b2091c8d6bb7148014c4963f  deps/actimport-1.0-SNAPSHOT.jar
+7275aefc45a758a05bad15889d23410b  triggevent.exe
+4865d523b25665d9a5ecfcff172012b9  triggevent-import.exe
+3c463def02ec53c9e749d6f201b49316  triggevent-upd.exe
+3cb164613bb4762d820227707e40337b  deps/actimport-1.0-SNAPSHOT.jar
 2d957179cd65a8f074573ce2d5937a42  deps/annotations-22.0.0.jar
 ec550f8b7586e1bb699d4069afa1eb30  deps/assertj-core-3.17.2.jar
 fe59d763f904dc8ff49121aeeb640769  deps/assertj-swing-3.17.1.jar
 02f72336919d06a8491e82346e10b4d5  deps/bsh-2.0b5.jar
 07dc532ee316fe1f2f0323e9bd2f8df4  deps/commons-beanutils-1.9.4.jar
+567159b1ae257a43e1391a8f59d24cfe  deps/commons-codec-1.11.jar
 f54a8510f834a1a57166970bfc982e94  deps/commons-collections-3.2.2.jar
 4a37023740719b391f10030362c86be6  deps/commons-collections4-4.4.jar
 3b4b7ccfaeceeac240b804839ee1a1ca  deps/commons-io-2.11.0.jar
@@ -18,6 +19,9 @@ c1c130c369aa86bfe4f7a7a920bc0223  deps/commons-text-1.9.jar
 c9072b4cc7477c4f6b46822f5f1ae5d1  deps/fest-util-1.2.5.jar
 a505520330896ca3b1a606190689a350  deps/flatlaf-1.6.2.jar
 71a237cf62fae69018bd6a7e81036845  deps/groovy-3.0.9.jar
+40d6b9075fbd28fa10292a45a0db9457  deps/httpclient-4.5.13.jar
+e07a248f61c52776a2366c075dcd4963  deps/httpcore-4.4.13.jar
+3f0c1ef2c9dc47b62b780192f54b0c18  deps/httpmime-4.5.13.jar
 16c7a1094270a27013fd58df7f6800f7  deps/jackson-annotations-2.12.4.jar
 58ffcb451f0bf6beb78e306cfe5d46f3  deps/jackson-core-2.12.4.jar
 7bf7ed4119602e8a7b23356dc0fba920  deps/jackson-databind-2.12.4.jar
@@ -26,7 +30,7 @@ a505520330896ca3b1a606190689a350  deps/flatlaf-1.6.2.jar
 2b884b01ad2f62d4f5dd11387a8bf799  deps/jna-5.10.0.jar
 c1ab841070c388ec32b77cdc05f084fb  deps/jna-platform-5.10.0.jar
 dd83accb899363c32b07d7a1b2e4ce40  deps/jsr305-3.0.2.jar
-e3796aaa0ff01be60c461b0e271d71e4  deps/launcher-1.0-SNAPSHOT.jar
+436ec5708c84619cd4b9b05bc884f9af  deps/launcher-1.0-SNAPSHOT.jar
 196b120a3c9f01a5b9b2ed5220359963  deps/logback-classic-1.2.6.jar
 b1930b5651377477a06ade2319f70dfc  deps/logback-core-1.2.6.jar
 bb851f071c70445825724f821e1b7c0b  deps/opencsv-5.5.2.jar
@@ -35,5 +39,5 @@ bb851f071c70445825724f821e1b7c0b  deps/opencsv-5.5.2.jar
 1d0070839d825f57fe6f4d8e2a82989b  deps/reflections-0.10.2.jar
 fbcf58513bc25b80f075d812aad3e3cf  deps/slf4j-api-1.7.32.jar
 6efa177268787c893e2cac46a3bdb885  deps/triggers-1.0-SNAPSHOT.jar
-61937a678f037f53ea1f5ce606fd77ee  deps/xivdata-1.0-SNAPSHOT.jar
-10a27477ea1674b8cbcebe681f7524c9  deps/xivsupport-1.0-SNAPSHOT.jar
+14a1c6973ab0a0e8c171b814b02217dc  deps/xivdata-1.0-SNAPSHOT.jar
+45b22e362a8e8107fd13f5ee44dbc3fa  deps/xivsupport-1.0-SNAPSHOT.jar
