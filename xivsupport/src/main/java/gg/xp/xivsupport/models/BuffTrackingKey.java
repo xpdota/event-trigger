@@ -18,7 +18,15 @@ public class BuffTrackingKey {
 	public BuffTrackingKey(XivEntity source, XivEntity target, XivStatusEffect buff) {
 		this.source = source;
 		this.target = target;
-		this.buff = buff;
+		// TODO: this is really not the place for this logic
+		// Goring Blade and Blade of Valor are mutually exclusive, so they should be tracked as if they were the same
+		// for dot timing purposes
+		if (buff.getId() == 0xaa1) {
+			this.buff = new XivStatusEffect(0x2D5);
+		}
+		else {
+			this.buff = buff;
+		}
 	}
 
 	public static <X extends HasSourceEntity & HasTargetEntity & HasStatusEffect> BuffTrackingKey of(X event) {

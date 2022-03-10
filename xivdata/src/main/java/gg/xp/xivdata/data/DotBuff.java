@@ -14,10 +14,12 @@ public enum DotBuff {
 	DRG_ChaosThrust(DRG, "Chaos Thrust", 0x76L),
 	MNK_Demolish(MNK, "Demolish", 0xf6L),
 	NIN_ShadowFang(NIN, "Shadow Fang", 0x1fcL),
-	PLD_GoringBlade(PLD, "Goring Blade", 0x2d5L),
+	// TODO: These are mutually exclusive, tracker doesn't handle that all too well at the moment
+	// It looks awkward due to preapp, and also if your SkS is too low, the buff expires, and the
+	// expired one stays in red status for a bit.
+	PLD_GoringBlade(PLD, "Goring/Valor", 0x2d5L, 0xAA1L),
 	WAR_StormsEye(WAR, "Storm's Eye", 0x5AL, 0xa75L),
 	SAM_Higanbana(SAM, "Higanbana", 0x4ccL),
-	// TODO: this isn't really a dot, but it's something you'd want 100% uptime on
 	SAM_Fugetsu(SAM, "Fugetsu", 0x512L),
 	SAM_Fuka(SAM, "Fuka", 0x513L),
 	SCH_Bio(SCH, "Bio/II/Biolysis", 0xb3L, 0xbdL, 0x767L),
