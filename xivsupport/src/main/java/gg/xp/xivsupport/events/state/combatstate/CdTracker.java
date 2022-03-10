@@ -106,12 +106,22 @@ public class CdTracker {
 
 	private boolean isEnabledForPersonalTts(Cooldown cd) {
 		CooldownSetting personalCdSetting = personalCds.get(cd);
-		return personalCdSetting != null && personalCdSetting.getTts().get();
+		return personalCdSetting != null && personalCdSetting.getTtsReady().get();
 	}
 
 	private boolean isEnabledForPartyTts(Cooldown cd) {
 		CooldownSetting partyCdSetting = partyCds.get(cd);
-		return partyCdSetting != null && partyCdSetting.getTts().get();
+		return partyCdSetting != null && partyCdSetting.getTtsReady().get();
+	}
+
+	private boolean isEnabledForPersonalTtsOnUse(Cooldown cd) {
+		CooldownSetting personalCdSetting = personalCds.get(cd);
+		return personalCdSetting != null && personalCdSetting.getTtsOnUse().get();
+	}
+
+	private boolean isEnabledForPartyTtsOnUse(Cooldown cd) {
+		CooldownSetting partyCdSetting = partyCds.get(cd);
+		return partyCdSetting != null && partyCdSetting.getTtsOnUse().get();
 	}
 
 	@SuppressWarnings({"SuspiciousMethodCalls", "NumericCastThatLosesPrecision"})
@@ -124,12 +134,20 @@ public class CdTracker {
 			// TODO: there's some duplicate whitelist logic
 			boolean isSelf = event.getSource().isThePlayer();
 			if (enableTtsPersonal.get() && isEnabledForPersonalTts(cd) && isSelf) {
-				log.info("Personal CD used: {}", event);
+				log.debug("Personal CD delayed: {}", event);
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvancePersonal.get()));
 			}
 			else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
-				log.info("Party CD used: {}", event);
+				log.debug("Party CD delayed: {}", event);
 				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvanceParty.get()));
+			}
+			if (enableTtsPersonal.get() && isEnabledForPersonalTtsOnUse(cd) && isSelf) {
+				log.debug("Personal CD immediate: {}", event);
+				context.accept(makeCallout(event.getAbility()));
+			}
+			else if (enableTtsParty.get() && isEnabledForPartyTtsOnUse(cd) && state.getPartyList().contains(event.getSource())) {
+				log.debug("Party CD immediate: {}", event);
+				context.accept(makeCallout(event.getAbility()));
 			}
 			synchronized (cdLock) {
 				CdTrackingKey key = CdTrackingKey.of(event, cd);
@@ -180,11 +198,15 @@ public class CdTracker {
 		XivAbility originalAbility = event.originalEvent.getAbility();
 		if (event.originalKey == cdResetKey) {
 			log.info("CD callout still valid");
-			context.accept(new BasicCalloutEvent(originalAbility.getName(), enableFlyingText.get() ? originalAbility.getName() : null));
+			context.accept(makeCallout(originalAbility));
 		}
 		else {
 			log.info("Not calling {} - no longer valid", originalAbility.getName());
 		}
+	}
+
+	private BasicCalloutEvent makeCallout(XivAbility ability) {
+		return new BasicCalloutEvent(ability.getName(), enableFlyingText.get() ? ability.getName() : null);
 	}
 
 	public Map<CdTrackingKey, AbilityUsedEvent> getOverlayPersonalCds() {

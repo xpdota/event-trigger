@@ -4,17 +4,19 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 
 public class CooldownSetting {
 	private final BooleanSetting overlay;
-	private final BooleanSetting tts;
+	private final BooleanSetting ttsOnUse;
+	private final BooleanSetting ttsWhenReady;
 
 	public CooldownSetting(PersistenceProvider persistence, String settingKeyBase, boolean defaultOverlay, boolean defaultTts) {
 		BooleanSetting legacySetting = new BooleanSetting(persistence, settingKeyBase, defaultOverlay);
 		this.overlay = new BooleanSetting(persistence, settingKeyBase + ".overlay", defaultOverlay);
-		this.tts = new BooleanSetting(persistence, settingKeyBase + ".tts", defaultTts);
+		this.ttsWhenReady = new BooleanSetting(persistence, settingKeyBase + ".tts", defaultTts);
+		this.ttsOnUse = new BooleanSetting(persistence, settingKeyBase + ".tts-on-use", false);
 		if (legacySetting.isSet() && !overlay.isSet()) {
 			overlay.set(legacySetting.get());
 		}
-		if (legacySetting.isSet() && !tts.isSet()) {
-			tts.set(legacySetting.get());
+		if (legacySetting.isSet() && !ttsWhenReady.isSet()) {
+			ttsWhenReady.set(legacySetting.get());
 		}
 	}
 
@@ -22,11 +24,11 @@ public class CooldownSetting {
 		return overlay;
 	}
 
-	public BooleanSetting getTts() {
-		return tts;
+	public BooleanSetting getTtsOnUse() {
+		return ttsOnUse;
 	}
 
-	public boolean shouldTrack() {
-		return overlay.get() || tts.get();
+	public BooleanSetting getTtsReady() {
+		return ttsWhenReady;
 	}
 }
