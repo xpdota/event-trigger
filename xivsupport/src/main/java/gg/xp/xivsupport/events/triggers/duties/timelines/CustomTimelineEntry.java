@@ -24,6 +24,9 @@ public class CustomTimelineEntry implements TimelineEntry {
 	public @Nullable Double windowStart;
 	public @Nullable Double windowEnd;
 	public @Nullable Double jump;
+	// TODO: this uses the absolute path to the JAR, which means icons will break if the user moves their install location.
+	// Best solution is to probably make our own little class that lets you specify an ability/status ID in addition to
+	// plain URLs.
 	public @Nullable URL icon;
 	private @Nullable TimelineReference replaces;
 	public boolean enabled = true;
