@@ -79,4 +79,12 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		return Objects.equals(overrides.name(), that.name())
 				&& Objects.equals(overrides.time(), that.time());
 	}
+
+	boolean callout();
+
+	double calloutPreTime();
+
+	default double effectiveCalloutTime() {
+		return time() - calloutPreTime();
+	}
 }

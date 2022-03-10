@@ -37,6 +37,7 @@ public class AbilityCastStart extends BaseEvent implements HasSourceEntity, HasT
 		return target;
 	}
 
+	@Override
 	public Duration getInitialDuration() {
 		return duration;
 	}

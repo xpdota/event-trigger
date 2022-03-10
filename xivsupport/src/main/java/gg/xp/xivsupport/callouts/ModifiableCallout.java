@@ -207,7 +207,8 @@ public class ModifiableCallout<X> {
 				try {
 					Object rawEval = scriptCache.computeIfAbsent(m.group(1), this::compile).run();
 					if (rawEval == null) {
-						return m.group(0);
+						return "null";
+//						return m.group(0);
 					}
 					return singleReplacement(rawEval);
 				}
@@ -274,8 +275,12 @@ public class ModifiableCallout<X> {
 	 *             down.
 	 * @return the ModifiableCallout
 	 */
-	public static <Y extends Event & HasDuration> ModifiableCallout<Y> durationBasedCall(String desc, String text) {
+	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCall(String desc, String text) {
 		return new ModifiableCallout<>(desc, text, text + " ({event.getEstimatedRemainingDuration()})", hd -> hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0);
+	}
+
+	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCallWithoutDurationText(String desc, String text) {
+		return new ModifiableCallout<>(desc, text, text, hd -> hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0);
 	}
 
 	private static final Duration defaultLingerTime = Duration.of(3, ChronoUnit.SECONDS);

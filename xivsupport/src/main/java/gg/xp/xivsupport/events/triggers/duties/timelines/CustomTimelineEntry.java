@@ -30,6 +30,8 @@ public class CustomTimelineEntry implements TimelineEntry {
 	public @Nullable URL icon;
 	private @Nullable TimelineReference replaces;
 	public boolean enabled = true;
+	public boolean callout;
+	public double calloutPreTime;
 
 	public CustomTimelineEntry() {
 		name = "Name Goes Here";
@@ -46,12 +48,17 @@ public class CustomTimelineEntry implements TimelineEntry {
 			@JsonProperty("jump") @Nullable Double jump,
 			@JsonProperty("icon") @Nullable URL icon,
 			@JsonProperty("replaces") @Nullable TimelineReference replaces,
-			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled) {
+			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled,
+			@JsonProperty(value = "callout", defaultValue = "false") boolean callout,
+			@JsonProperty(value = "calloutPreTime", defaultValue = "0") double calloutPreTime
+	) {
 		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
 		// but it works.
 		this.time = time;
 		this.name = name;
 		this.sync = sync;
+		this.callout = callout;
+		this.calloutPreTime = calloutPreTime;
 		this.duration = duration;
 		this.windowStart = timelineWindow.start();
 		this.windowEnd = timelineWindow.end();
@@ -159,7 +166,23 @@ public class CustomTimelineEntry implements TimelineEntry {
 				other.jump(),
 				other.icon(),
 				new TimelineReference(other.time(), other.name()),
-				false
+				false,
+				false,
+				0
 		);
+	}
+
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+	@Override
+	public boolean callout() {
+		return callout;
+	}
+
+	@Override
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+	public double calloutPreTime() {
+		return calloutPreTime;
 	}
 }

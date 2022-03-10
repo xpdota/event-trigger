@@ -120,7 +120,7 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 
 	@Override
 	protected void setValue(@NotNull String key, @Nullable String value) {
-		String truncated = StringUtils.abbreviate(value, 200);
+		String truncated = StringUtils.abbreviate(value, 300);
 		log.info("Setting changed: {} -> {}", key, truncated);
 		properties.setProperty(key, value);
 		writeChangesToDisk();

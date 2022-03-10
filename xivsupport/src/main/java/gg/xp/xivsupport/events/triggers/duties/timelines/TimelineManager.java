@@ -1,7 +1,10 @@
 package gg.xp.xivsupport.events.triggers.duties.timelines;
 
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
@@ -11,6 +14,7 @@ import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +34,12 @@ public class TimelineManager {
 	private final BooleanSetting prePullShow;
 	private final BooleanSetting resetOnMapChange;
 	private final PersistenceProvider pers;
+	private final EventMaster master;
 	private final IntSetting rowsToDisplay;
 	private final IntSetting secondsPast;
 	private final IntSetting secondsFuture;
+	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutNow = ModifiableCallout.durationBasedCallWithoutDurationText("Timeline Callout (Immediate)", "{event.getEntry().name()}");
+	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutPre = ModifiableCallout.durationBasedCall("Timeline Callout (Precall)", "{event.getEntry().name()}");
 
 	static {
 		zoneIdToTimelineFile.put(134L, "test.txt");
@@ -231,13 +238,16 @@ public class TimelineManager {
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
 
-	public TimelineManager(PersistenceProvider pers) {
+	public TimelineManager(EventMaster master, PersistenceProvider pers) {
+		this.master = master;
 		rowsToDisplay = new IntSetting(pers, "timeline-overlay.max-displayed", 6, 1, 32);
 		secondsPast = new IntSetting(pers, "timeline-overlay.seconds-past", 0, 0, null);
 		secondsFuture = new IntSetting(pers, "timeline-overlay.seconds-future", 60, 0, null);
 		debugMode = new BooleanSetting(pers, "timeline-overlay.debug-mode", false);
 		prePullShow = new BooleanSetting(pers, "timeline-overlay.show-pre-pull", false);
 		resetOnMapChange = new BooleanSetting(pers, "timeline-overlay.reset-on-map-change", false);
+		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutNow, pers, "timeline-support.trigger-call-now");
+		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutPre, pers, "timeline-support.trigger-call-pre");
 		this.pers = pers;
 	}
 
@@ -362,6 +372,18 @@ public class TimelineManager {
 		}
 		return currentTimeline.getCurrentTimelineEntries();
 	}
+
+	void doTriggerCall(TimelineProcessor.UpcomingCall upc) {
+		CalloutEvent event;
+		if (upc.isPreCall()) {
+			event = timelineTriggerCalloutPre.getModified(upc);
+		}
+		else {
+			event = timelineTriggerCalloutNow.getModified(upc);
+		}
+		master.pushEvent(event);
+	}
+
 
 	public IntSetting getRowsToDisplay() {
 		return rowsToDisplay;

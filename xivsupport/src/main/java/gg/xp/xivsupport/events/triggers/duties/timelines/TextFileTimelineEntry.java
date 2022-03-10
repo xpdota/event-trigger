@@ -29,4 +29,14 @@ public record TextFileTimelineEntry(
 	public boolean enabled() {
 		return true;
 	}
+
+	@Override
+	public boolean callout() {
+		return false;
+	}
+
+	@Override
+	public double calloutPreTime() {
+		return 0;
+	}
 }

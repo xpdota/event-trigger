@@ -226,19 +226,44 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setMaxWidth(timeColMaxWidth);
 					col.setPreferredWidth(timeColPrefWidth);
 				}))
+				.addColumn(new CustomColumn<>("Trig", TimelineEntry::callout, col -> {
+					col.setCellRenderer(StandardColumns.checkboxRenderer);
+					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<>(safeEditTimelineEntry((entry, value) -> {
+						entry.callout = value;
+						stopEditing();
+						commitSettings();
+					})));
+					col.setMinWidth(30);
+					col.setMaxWidth(30);
+				}))
+				.addColumn(new CustomColumn<>("Pre", TimelineEntry::calloutPreTime, col -> {
+					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry((item, value) -> {
+						if (value == null) {
+							item.calloutPreTime = 0.0;
+						}
+						else {
+							item.calloutPreTime = value;
+						}
+					})));
+					col.setMinWidth(numColMinWidth);
+					col.setMaxWidth(numColMaxWidth);
+					col.setPreferredWidth(numColPrefWidth);
+				}))
 				.setItemEquivalence((one, two) -> one == two)
 				.build();
 
 		CustomRightClickOption clone = CustomRightClickOption.forRow("Clone", TimelineEntry.class, e -> addNewEntry(new CustomTimelineEntry(
 				e.time(),
-				e.name(),
+				e.name() + " copy",
 				e.sync(),
 				e.duration(),
 				e.timelineWindow(),
 				e.jump(),
 				e.icon(),
 				null,
-				false
+				false,
+				false,
+				0
 		)));
 		CustomRightClickOption delete = CustomRightClickOption.forRow("Delete", CustomTimelineEntry.class, this::deleteEntry);
 
@@ -404,9 +429,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		stuff.setEntries(newCurrentEntries);
 		backend.commitCustomSettings(currentZone);
 		updateTab();
-		SwingUtilities.invokeLater(() -> {
-			timelineModel.setSelectedValue(newEntry);
-		});
+		SwingUtilities.invokeLater(() -> timelineModel.setSelectedValue(newEntry));
 	}
 
 	private void deleteEntry(CustomTimelineEntry toDelete) {
@@ -498,7 +521,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		}
 	}
 
-	private class DoubleTimeRenderer extends DefaultTableCellRenderer {
+	private static class DoubleTimeRenderer extends DefaultTableCellRenderer {
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 			if (value instanceof Double time) {
@@ -512,7 +535,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 	private static final DecimalFormat truncateTrailingZeroes = new DecimalFormat("00.###");
 
-	private String formatTimeDouble(double time) {
+	private static String formatTimeDouble(double time) {
 		int minutes = (int) (time / 60);
 		double seconds = (time % 60);
 		return String.format("%s (%s:%s)", time, minutes, truncateTrailingZeroes.format(seconds));
