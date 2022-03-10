@@ -47,6 +47,8 @@ public class CustomTimelineEntry implements TimelineEntry {
 			@JsonProperty("icon") @Nullable URL icon,
 			@JsonProperty("replaces") @Nullable TimelineReference replaces,
 			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled) {
+		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
+		// but it works.
 		this.time = time;
 		this.name = name;
 		this.sync = sync;
