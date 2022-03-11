@@ -47,6 +47,7 @@ public class EasyTriggersTab implements PluginTab {
 
 		model = CustomTableModel.builder(backend::getTriggers)
 				.addColumn(new CustomColumn<>("Name", EasyTrigger::getName))
+				.addColumn(new CustomColumn<>("Event Type", t -> t.getEventType().getSimpleName()))
 				.addColumn(new CustomColumn<>("Conditions", t -> t.getConditions().size()))
 				.addColumn(new CustomColumn<>("TTS", EasyTrigger::getTts))
 				.addColumn(new CustomColumn<>("Text", EasyTrigger::getText))
@@ -176,6 +177,7 @@ public class EasyTriggersTab implements PluginTab {
 		TriggerConfigPanel(EasyTrigger<?> trigger) {
 			setLayout(new GridBagLayout());
 			GridBagConstraints c = GuiUtil.defaultGbc();
+			c.insets = new Insets(1, 2, 1, 2);
 			c.anchor = GridBagConstraints.NORTH;
 
 			this.trigger = trigger;
@@ -190,10 +192,22 @@ public class EasyTriggersTab implements PluginTab {
 			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setText), trigger.getText());
 
 			TitleBorderFullsizePanel conditionsPanel = new TitleBorderFullsizePanel("Conditions");
+			{
+				conditionsPanel.setLayout(new BoxLayout(conditionsPanel, BoxLayout.PAGE_AXIS));
+				conditionsPanel.add(new JButton("New Condition"));
+			}
 
-			add(GuiUtil.labelFor("Name", nameField), c);
+			c.weightx = 0;
+			JLabel firstLabel = GuiUtil.labelFor("Name", nameField);
+			Dimension pref = firstLabel.getPreferredSize();
+			Dimension newSize = new Dimension(pref.width + 20, pref.height);
+			firstLabel.setPreferredSize(newSize);
+			firstLabel.setMaximumSize(newSize);
+			add(firstLabel, c);
+			c.weightx = 1;
 			c.gridx++;
 			add(nameField, c);
+			c.weightx = 0;
 			c.gridx = 0;
 			c.gridy++;
 			add(GuiUtil.labelFor("TTS", ttsField), c);
