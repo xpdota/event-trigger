@@ -134,10 +134,11 @@ public class ActWsLogSource implements EventSource {
 			send("{\"call\":\"subscribe\",\"events\":[\"PartyChanged\"]}");
 //		send("{\"call\":\"subscribe\",\"events\":[\"onPlayerChangedEvent\"]}");
 			// TODO: there does not seem to be a non-cactbot alternative to this
-			send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
+//			send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"LogLine\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"InCombat\"]}");
-			send("{\"call\":\"subscribe\",\"events\":[\"EnmityTargetData\"]}");
+			// EnmityTargetData is spammy even if there is no change
+//			send("{\"call\":\"subscribe\",\"events\":[\"EnmityTargetData\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"OnlineStatusChanged\"]}");
 			log.info("Subscribed to WS events");
 		}

@@ -485,6 +485,19 @@ public class XivStateImpl implements XivState {
 		return ref.get();
 	}
 
+	private volatile boolean inCombat;
+
+	@Override
+	public boolean inCombat() {
+		return inCombat;
+	}
+
+	@HandleEvents(order = Integer.MIN_VALUE)
+	public void inCombatChange(EventContext context, InCombatChangeEvent event) {
+		this.inCombat = event.isInCombat();
+	}
+
+
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public void zoneChange(EventContext context, ZoneChangeEvent event) {
 		setZone(event.getZone());
