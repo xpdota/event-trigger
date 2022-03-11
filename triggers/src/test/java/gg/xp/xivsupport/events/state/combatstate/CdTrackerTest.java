@@ -85,7 +85,7 @@ public class CdTrackerTest {
 		CdTracker tracker = makeState();
 		TestEventContext context = new TestEventContext();
 		// Should default to over
-		tracker.getPersonalCdSettings().get(cd).getTts().set(true);
+		tracker.getPersonalCdSettings().get(cd).getTtsReady().set(true);
 		tracker.getPersonalCdSettings().get(cd).getOverlay().set(false);
 		tracker.cdUsed(context, reprisalUsedByPc);
 		List<Event> events = context.getEnqueued();
@@ -103,7 +103,7 @@ public class CdTrackerTest {
 		CdTracker tracker = makeState();
 		TestEventContext context = new TestEventContext();
 		// Should default to over
-		tracker.getPersonalCdSettings().get(cd).getTts().set(false);
+		tracker.getPersonalCdSettings().get(cd).getTtsReady().set(false);
 		tracker.getPersonalCdSettings().get(cd).getOverlay().set(true);
 		tracker.cdUsed(context, reprisalUsedByPc);
 		List<Event> events = context.getEnqueued();
