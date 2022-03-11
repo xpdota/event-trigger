@@ -404,7 +404,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			Object value = columns.get(columnIndex).getValue(item);
 			long timeAfter = System.nanoTime();
 			long delta = timeAfter - timeBefore;
-			// TODO find good value for this - 100 might be a little low
+			// TODO make this value customizable
 			if (delta > 1_000_000) {
 				log.warn("Slow getValueAt performance: took {}ns to get value at row {} col {}", delta, rowIndex, columnIndex);
 			}

@@ -135,7 +135,7 @@ public class GuiMain {
 			frame.setLayout(new BorderLayout());
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setLocationByPlatform(true);
-			frame.setSize(960, 720);
+			frame.setSize(1280, 800);
 			frame.setVisible(true);
 			frame.add(tabPane);
 			if (replay != null) {

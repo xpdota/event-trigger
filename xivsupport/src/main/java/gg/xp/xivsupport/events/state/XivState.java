@@ -55,4 +55,6 @@ public interface XivState extends SubState {
 		}
 	}
 
+	boolean inCombat();
+
 }

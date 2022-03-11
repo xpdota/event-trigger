@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.overlay;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.gui.CommonGuiSetup;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -130,6 +131,13 @@ public class FlyingTextOverlay extends XivOverlay {
 	public void handleEvent(EventContext context, CalloutEvent event) {
 		if (event.getVisualText() != null) {
 			addCallout(event);
+		}
+	}
+
+	@HandleEvents
+	public void pullEnded(EventContext context, PullStartedEvent pse) {
+		synchronized (lock) {
+			currentCallouts.clear();
 		}
 	}
 

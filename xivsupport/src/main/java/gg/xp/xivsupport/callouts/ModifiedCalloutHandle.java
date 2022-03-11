@@ -16,11 +16,11 @@ public final class ModifiedCalloutHandle {
 	private final StringSetting textSetting;
 	private final LongSetting hangTimeSetting;
 	private final ModifiableCallout<?> original;
-	private final BooleanSetting allTts;
-	private final BooleanSetting allText;
+	private final @Nullable BooleanSetting allTts;
+	private final @Nullable BooleanSetting allText;
 	private boolean isEnabledByParent = true;
 
-	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, BooleanSetting allTts, BooleanSetting allText) {
+	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
 		this.allTts = allTts;
 		this.allText = allText;
 		enable = new BooleanSetting(persistenceProvider, propStub + ".enabled", true);
@@ -32,6 +32,16 @@ public final class ModifiedCalloutHandle {
 		sameText.set(sameText.get());
 		hangTimeSetting = new LongSetting(persistenceProvider, propStub + ".text.hangtime", 5000L);
 		this.original = original;
+	}
+
+	@SuppressWarnings("UnusedReturnValue")
+	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub) {
+		return installHandle(original, pers, propStub, null, null);
+	}
+	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
+		ModifiedCalloutHandle modified = new ModifiedCalloutHandle(pers, propStub, original, allTts, allText);
+		original.attachHandle(modified);
+		return modified;
 	}
 
 	// TODO: enable/disable
@@ -99,11 +109,11 @@ public final class ModifiedCalloutHandle {
 	}
 
 	public boolean isTtsEffectivelyEnabled() {
-		return isEffectivelyEnabled() && allTts.get() && getEnableTts().get();
+		return isEffectivelyEnabled() && (allTts == null || allTts.get()) && getEnableTts().get();
 	}
 
 	public boolean isTextEffectivelyEnabled() {
-		return isEffectivelyEnabled() && allText.get() && getEnableText().get();
+		return isEffectivelyEnabled() && (allText == null || allText.get()) && getEnableText().get();
 	}
 
 	public BooleanSetting getAllTextEnabled() {

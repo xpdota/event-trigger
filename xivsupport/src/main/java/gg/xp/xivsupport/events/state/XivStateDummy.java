@@ -126,4 +126,10 @@ public class XivStateDummy implements XivState {
 		return null;
 	}
 
+
+	// TODO
+	@Override
+	public boolean inCombat() {
+		return true;
+	}
 }
