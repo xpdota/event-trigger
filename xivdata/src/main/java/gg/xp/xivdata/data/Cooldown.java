@@ -140,7 +140,7 @@ public enum Cooldown {
 	Feint(MELEE_DPS, true, 90.0, "Feint", CooldownType.PARTY_MIT, 0x1d7d, 1195),
 	TrickAttack(NIN, true, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
 	BattleLitany(DRG, true, 120.0, "Battle Litany", CooldownType.PARTY_BUFF, 0xde5, 786),
-	Brotherhood(MNK, true, 90.0, "Brotherhood", CooldownType.PARTY_BUFF, 0x1ce4, 1185),
+	Brotherhood(MNK, true, 120.0, "Brotherhood", CooldownType.PARTY_BUFF, 0x1ce4, 1185),
 	DragonSight(DRG, true, 120.0, "Dragon Sight", CooldownType.PARTY_BUFF, 0x1ce6, 1183, 1184),
 	ArcaneCircle(RPR, true, 120.0, "Arcane Circle", CooldownType.PARTY_BUFF, 0x5F55, 0xA27),
 	ArcaneCrest(RPR, true, 30.0, "Arcane Crest", CooldownType.PERSONAL_MIT, 0x5F54, 0xA24),
