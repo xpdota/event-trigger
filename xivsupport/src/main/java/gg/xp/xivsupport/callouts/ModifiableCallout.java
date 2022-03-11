@@ -64,8 +64,12 @@ public class ModifiableCallout<X> {
 	}
 
 	public ModifiableCallout(String description, String text, List<CalloutCondition> conditions) {
+		this(description, text, text, conditions);
+	}
+
+	public ModifiableCallout(String description, String tts, String text, List<CalloutCondition> conditions) {
 		this.description = description;
-		defaultTtsText = text;
+		defaultTtsText = tts;
 		defaultVisualText = text;
 		this.conditions = new ArrayList<>(conditions);
 		defaultVisualHangTime = 5000L;
@@ -111,7 +115,8 @@ public class ModifiableCallout<X> {
 		String callText;
 		String visualText;
 		if (handle == null) {
-			log.warn("ModifiableCallout does not have handle yet ({})", description);
+			// TODO: consider splitting out some logic here so that we can make these easily without worrying about handles
+			log.trace("ModifiableCallout does not have handle yet ({})", description);
 			callText = defaultTtsText;
 			visualText = defaultVisualText;
 		}

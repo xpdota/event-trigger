@@ -415,4 +415,10 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			return "INTERNAL ERROR";
 		}
 	}
+
+	public JTable makeTable() {
+		JTable table = new JTable(this);
+		configureColumns(table);
+		return table;
+	}
 }
