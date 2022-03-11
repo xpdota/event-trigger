@@ -86,6 +86,7 @@ public class ActWsHandlers {
 					}
 				}
 			});
+			// TODO: should this be turned back on?
 //			combatantsLoopThread.start();
 		}
 
