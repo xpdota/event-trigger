@@ -136,6 +136,8 @@ public class ActWsLogSource implements EventSource {
 			// TODO: there does not seem to be a non-cactbot alternative to this
 			send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"LogLine\"]}");
+			send("{\"call\":\"subscribe\",\"events\":[\"InCombat\"]}");
+			send("{\"call\":\"subscribe\",\"events\":[\"EnmityTargetData\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"OnlineStatusChanged\"]}");
 			log.info("Subscribed to WS events");
 		}
