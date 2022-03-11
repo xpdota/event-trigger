@@ -14,6 +14,7 @@ public class RefreshLoop<X> {
 	private static final AtomicInteger threadIdCounter = new AtomicInteger();
 
 	private final WeakReference<X> item;
+	private final Object sleepLock = new Object();
 	private final Thread thread;
 	private volatile boolean stop;
 
@@ -28,8 +29,10 @@ public class RefreshLoop<X> {
 						return;
 					}
 					periodicTask.accept(actualItem);
-					//noinspection BusyWait
-					Thread.sleep(interval.apply(actualItem));
+					long sleepTime = interval.apply(actualItem);
+					synchronized (sleepLock) {
+						sleepLock.wait(sleepTime);
+					}
 				}
 				catch (Throwable t) {
 					log.error("Error in periodic refresh", t);
@@ -47,6 +50,13 @@ public class RefreshLoop<X> {
 
 	public void stop() {
 		stop = true;
+	}
+
+	public void refreshNow() {
+		synchronized (sleepLock) {
+			//noinspection NakedNotify
+			sleepLock.notifyAll();
+		}
 	}
 
 }

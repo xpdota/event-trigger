@@ -66,8 +66,7 @@ public class ModifiedCalloutRepository {
 				catch (IllegalAccessException e) {
 					throw new RuntimeException(e);
 				}
-				ModifiedCalloutHandle modified = new ModifiedCalloutHandle(persistence, fullPropStub, original, enableTts, enableOverlay);
-				original.attachHandle(modified);
+				ModifiedCalloutHandle modified = ModifiedCalloutHandle.installHandle(original, persistence, fullPropStub, enableTts, enableOverlay);
 				callouts.add(modified);
 			});
 			allCallouts.add(new CalloutGroup(description, topLevelPropStub, persistence, callouts));

@@ -15,6 +15,7 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStatus;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.CombatantsUpdateRaw;
+import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
@@ -202,6 +203,14 @@ public class ActWsHandlers {
 //			}
 			log.info("Party changed: {}", jsonMsg);
 			context.accept(new PartyChangeEvent(members));
+		}
+	}
+
+	@HandleEvents(order = -100)
+	public static void inCombatChange(EventContext context, ActWsJsonMsg jsonMsg) {
+		if ("InCombat".equals(jsonMsg.getType())) {
+			boolean inCombat = jsonMsg.getJson().get("inGameCombat").booleanValue();
+			context.accept(new InCombatChangeEvent(inCombat));
 		}
 	}
 
