@@ -190,17 +190,6 @@ public class ActWsHandlers {
 		if ("PartyChanged".equals(jsonMsg.getType())) {
 			List<RawXivPartyInfo> members = mapper.convertValue(jsonMsg.getJson().path("party"), new TypeReference<>() {
 			});
-//			// TODO: consider using automatic deserialization rather than doing it manually
-//
-//			for (JsonNode partyMember : jsonMsg.getJson().get("party")) {
-//				mapper.convertValue(partyMember)
-//				String name = partyMember.get("name").textValue();
-//				long id = Long.parseLong(partyMember.get("id").textValue(), 16);
-//				int world = partyMember.get("worldId").intValue();
-//				int job = partyMember.get("job").intValue();
-//				int level = partyMember.get("level").intValue();
-//				members.add(new RawXivPartyInfo(id, name, world, job, level));
-//			}
 			log.info("Party changed: {}", jsonMsg);
 			context.accept(new PartyChangeEvent(members));
 		}
