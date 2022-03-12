@@ -4,7 +4,6 @@ import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
-import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;

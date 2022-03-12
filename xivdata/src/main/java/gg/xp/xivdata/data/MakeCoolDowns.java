@@ -48,22 +48,14 @@ public final class MakeCoolDowns {
 			cdData.fullName = item.get("name").toString();
 			String jobRaw = item.get("job").toString().toUpperCase(Locale.ROOT);
 			switch (jobRaw) {
-				case "TANK":
-					cdData.jobType = JobType.TANK;
-					break;
+				case "TANK" -> cdData.jobType = JobType.TANK;
+
 				// TODO: zeffUI has "Caster" which means healer and caster DPS
 				// Maybe just ignore it for healers since they would be less likely
 				// to use it as part of their normal rotation?
-				case "CASTER":
-				case "CASTERDPS":
-					cdData.jobType = JobType.CASTER;
-					break;
-				case "MELEEDPS":
-					cdData.jobType = JobType.MELEE_DPS;
-					break;
-				default:
-					cdData.job = Job.valueOf(jobRaw);
-					break;
+				case "CASTER", "CASTERDPS" -> cdData.jobType = JobType.CASTER;
+				case "MELEEDPS" -> cdData.jobType = JobType.MELEE_DPS;
+				default -> cdData.job = Job.valueOf(jobRaw);
 			}
 
 			String typeRaw = item.get("type").toString();

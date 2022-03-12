@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
 import gg.xp.reevent.events.Event;
-import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 

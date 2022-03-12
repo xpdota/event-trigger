@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.duties.timelines;
 
-import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;

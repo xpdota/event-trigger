@@ -285,7 +285,7 @@ public class Update {
 							Thread.sleep(5000);
 						}
 						catch (InterruptedException e) {
-
+							// ignore
 						}
 					} while (true);
 				});
@@ -330,7 +330,7 @@ public class Update {
 				Thread.sleep(1000);
 			}
 			catch (InterruptedException e) {
-
+				// ignore
 			}
 			gupdate.run();
 		});

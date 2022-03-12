@@ -2,14 +2,12 @@ package gg.xp.xivsupport.events.state.combatstate;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.TickEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@SuppressWarnings({"AssignmentOrReturnOfFieldWithMutableType"})
+@SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
 public class EnumListSetting<X extends Enum<X>> extends ObservableSetting {
 
 	private static final Logger log = LoggerFactory.getLogger(EnumListSetting.class);

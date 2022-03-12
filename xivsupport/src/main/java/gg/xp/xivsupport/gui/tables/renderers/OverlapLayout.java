@@ -29,10 +29,10 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	private Insets popupInsets = new Insets(0, 0, 0, 0);
 
 	//  Track original order in which the components where added
-	private final List<Component> components = new ArrayList<Component>();
+	private final List<Component> components = new ArrayList<>();
 
 	//  Track a constraint added to a component
-	private final HashMap<Component, Boolean> constraints = new HashMap<Component, Boolean>();
+	private final HashMap<Component, Boolean> constraints = new HashMap<>();
 
 	/**
 	 * Convenience constructor to provide for "stacking" of components. Each
@@ -298,14 +298,11 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	}
 
 	private Dimension getDimension(Component component, int type) {
-		switch (type) {
-			case PREFERRED:
-				return component.getPreferredSize();
-			case MINIMUM:
-				return component.getMinimumSize();
-			default:
-				return new Dimension(0, 0);
-		}
+		return switch (type) {
+			case PREFERRED -> component.getPreferredSize();
+			case MINIMUM -> component.getMinimumSize();
+			default -> new Dimension(0, 0);
+		};
 	}
 
 	/**

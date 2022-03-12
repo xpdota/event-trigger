@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.data.ActionIcon;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivdata.data.StatusEffectLibrary;

@@ -1,14 +1,5 @@
 package gg.xp.xivsupport.events.triggers.duties.timelines;
 
-import gg.xp.xivsupport.persistence.PersistenceProvider;
-import gg.xp.xivsupport.persistence.settings.BasicCustomSettingDefaultNull;
-import gg.xp.xivsupport.persistence.settings.RegexSetting;
-import gg.xp.xivsupport.persistence.settings.StringSetting;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.regex.Pattern;
-
 public class CustomTimelineEntryOld {
 //
 //	private final StringSetting name;

@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.tabs;
 
-import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -89,9 +88,11 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 			System.exit(0);
 		});
 		c.gridy++;
+		//noinspection InstanceVariableUsedBeforeInitialized
 		add(new JLabel("Install Dir: " + installDir), c);
 		c.gridy++;
 		JPanel content = new JPanel();
+		//noinspection InstanceVariableUsedBeforeInitialized
 		StringSetting setting = new StringSetting(updatePropsFilePers, "branch", "stable");
 		content.add(new StringSettingGui(setting, "Branch").getComponent());
 		setting.addListener(this::doUpdateCheckInBackground);

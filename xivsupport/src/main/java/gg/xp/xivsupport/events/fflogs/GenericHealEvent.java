@@ -6,7 +6,6 @@ import gg.xp.xivsupport.events.actlines.events.HasEffects;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
 import gg.xp.xivsupport.models.XivAbility;
