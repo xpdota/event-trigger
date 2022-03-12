@@ -2,7 +2,6 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 
 import java.util.ArrayList;
@@ -15,9 +14,9 @@ public class EasyTrigger<X> {
 
 	private Class<X> eventType = (Class<X>) Event.class;
 	private List<Condition<? super X>> conditions = Collections.emptyList();
-	private String name = "Name Goes Here";
-	private String tts = "TTS";
-	private String text = "Text";
+	private String name = "Give me a name";
+	private String tts = "The text that you want read out loud (or leave empty)";
+	private String text = "The text that you want displayed (or leave empty). Supports Groovy expressions in curly braces.";
 
 	public EasyTrigger() {
 		recalc();
@@ -52,15 +51,20 @@ public class EasyTrigger<X> {
 		this.conditions = new ArrayList<>(conditions);
 	}
 
-	@SuppressWarnings({"unchecked", "CollectionDeclaredAsConcreteClass"})
-	public void addCondition(Condition<? super X> condition) {
-		if (conditions instanceof ArrayList conditions) {
-			conditions.add(condition);
-		}
-		else {
+	private void makeWritable() {
+		if (!(conditions instanceof ArrayList)) {
 			conditions = new ArrayList<>(conditions);
-			conditions.add(condition);
 		}
+	}
+
+	public void addCondition(Condition<? super X> condition) {
+		makeWritable();
+		conditions.add(condition);
+	}
+
+	public void removeCondition(Condition<? super X> condition) {
+		makeWritable();
+		conditions.remove(condition);
 	}
 
 	public String getTts() {

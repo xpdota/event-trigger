@@ -1,9 +1,11 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
+import gg.xp.xivsupport.gui.util.HasFriendlyName;
+
 import java.util.function.BiPredicate;
 
 @SuppressWarnings("FloatingPointEquality")
-public enum NumericOperator {
+public enum NumericOperator implements HasFriendlyName {
 	EQ("Equal To", "=", (a, b) -> a.longValue() == b.longValue(), (a, b) -> a.doubleValue() == b.doubleValue()),
 	NE("Not Equal To", "!=", (a, b) -> a.longValue() != b.longValue(), (a, b) -> a.doubleValue() != b.doubleValue()),
 	GREATER_THAN("Greater Than", ">", (a, b) -> a > b, (a, b) -> a > b),
@@ -31,5 +33,8 @@ public enum NumericOperator {
 		return doublePredicate.test(a, b);
 	}
 
-
+	@Override
+	public String getFriendlyName() {
+		return shortLabel;
+	}
 }

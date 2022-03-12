@@ -72,7 +72,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				}
 			}
 			catch (Throwable e) {
-				log.error("Error updating the updater - you may not have a recent enough version.", e);
+				log.error("Error updating the updater - you may not have a recent enough version (or are running in an IDE).", e);
 				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error updating the updater. This may fix itself after updates. ");
 			}
 			try {
@@ -156,7 +156,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 						setUpdateCheckStatus(UpdateCheckStatus.NO_UPDATE);
 					}
 				} catch (Throwable e) {
-					log.error("Error checking for updates - you may not have a recent enough version.", e);
+					log.error("Error checking for updates - you may not have a recent enough version (or are running in an IDE).", e);
 					setUpdateCheckStatus(UpdateCheckStatus.ERROR);
 				}
 			}

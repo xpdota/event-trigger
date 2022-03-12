@@ -16,7 +16,13 @@ import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.AbilityIdFilter;
+import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
+import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityTypeFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityTypeFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
@@ -34,10 +40,6 @@ public class EasyTriggers {
 	private static final String settingKey = "easy-triggers.my-triggers";
 	private static final ObjectMapper mapper = new ObjectMapper();
 
-	static {
-//		mapper.enableDefaultTyping();
-	}
-
 	private final PersistenceProvider pers;
 
 	private List<EasyTrigger<?>> triggers;
@@ -54,7 +56,9 @@ public class EasyTriggers {
 				});
 			}
 			catch (JsonProcessingException e) {
-				throw new RuntimeException(e);
+				log.error("Error loading Easy Triggers", e);
+				log.error("Dump of trigger data:\n{}", strVal);
+				throw new RuntimeException("There was an error loading Easy Triggers. Check the log.", e);
 			}
 		}
 	}
@@ -62,12 +66,16 @@ public class EasyTriggers {
 	private void save() {
 		try {
 			String triggersSerialized = mapper.writeValueAsString(triggers);
-			log.info("Saving triggers: {}", triggersSerialized);
+//			log.info("Saving triggers: {}", triggersSerialized);
 			pers.save(settingKey, triggersSerialized);
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public void commit() {
+		save();
 	}
 
 	@HandleEvents
@@ -121,15 +129,23 @@ public class EasyTriggers {
 			new EventDescription(ACTLogLineEvent.class, "Any log line, in text form. Use as a last resort.")
 	);
 
-	private static final List<ConditionDescription<?>> conditions = List.of(
-			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Filter by ability ID", c -> null)
+	private static final List<ConditionDescription<?, ?>> conditions = List.of(
+			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, (cond, trigger) -> new GenericFieldEditor(cond)),
+			new ConditionDescription<>(SourceEntityTypeFilter.class, HasSourceEntity.class, "Source Combatant", SourceEntityTypeFilter::new, (cond, trigger) -> new GenericFieldEditor(cond)),
+			new ConditionDescription<>(TargetEntityTypeFilter.class, HasTargetEntity.class, "Target Combatant", TargetEntityTypeFilter::new, (cond, trigger) -> new GenericFieldEditor(cond))
 	);
 
 	public static List<EventDescription> getEventDescriptions() {
 		return eventTypes;
 	}
 
-	public static List<ConditionDescription<?>> getConditions() {
+	public static List<ConditionDescription<?, ?>> getConditions() {
 		return conditions;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <X extends Condition<Y>, Y> ConditionDescription<X, Y> getConditionDescription(Class<X> cond) {
+		ConditionDescription<?, ?> conditionDescription = conditions.stream().filter(item -> item.clazz().equals(cond)).findFirst().orElse(null);
+		return (ConditionDescription<X, Y>) conditionDescription;
 	}
 }

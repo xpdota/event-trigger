@@ -5,7 +5,7 @@ import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivsupport.events.ExampleSetup;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.AbilityIdFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 import gg.xp.xivsupport.models.XivAbility;

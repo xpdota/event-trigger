@@ -3,11 +3,13 @@ package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -19,6 +21,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @ScanMe
 public class EasyTriggersTab implements PluginTab {
@@ -40,7 +43,15 @@ public class EasyTriggersTab implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
-		outer = new TitleBorderFullsizePanel("Easy Triggers");
+		outer = new TitleBorderFullsizePanel("Easy Triggers") {
+			@Override
+			public void setVisible(boolean aFlag) {
+				if (!aFlag && backend != null) {
+					backend.commit();
+				}
+				super.setVisible(aFlag);
+			}
+		};
 		outer.setLayout(new GridBagLayout());
 		GridBagConstraints c = GuiUtil.defaultGbc();
 		c.weighty = 1;
@@ -48,7 +59,7 @@ public class EasyTriggersTab implements PluginTab {
 		model = CustomTableModel.builder(backend::getTriggers)
 				.addColumn(new CustomColumn<>("Name", EasyTrigger::getName))
 				.addColumn(new CustomColumn<>("Event Type", t -> t.getEventType().getSimpleName()))
-				.addColumn(new CustomColumn<>("Conditions", t -> t.getConditions().size()))
+				.addColumn(new CustomColumn<>("Conditions", t -> String.format("(%d) %s", t.getConditions().size(), t.getConditions().stream().map(Condition::describe).collect(Collectors.joining("; ")))))
 				.addColumn(new CustomColumn<>("TTS", EasyTrigger::getTts))
 				.addColumn(new CustomColumn<>("Text", EasyTrigger::getText))
 				.build();
@@ -56,6 +67,7 @@ public class EasyTriggersTab implements PluginTab {
 		triggerChooserTable.getSelectionModel().addListSelectionListener(l -> {
 			refreshSelection();
 		});
+		// TODO: multi-select would actually be very useful here
 		triggerChooserTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		JPanel bottomPanel = new JPanel(new BorderLayout());
@@ -102,10 +114,21 @@ public class EasyTriggersTab implements PluginTab {
 		}
 
 		JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(triggerChooserTable), bottomPanel);
+		split.setOneTouchExpandable(true);
 		outer.add(split, c);
+		split.setResizeWeight(0.5);
+		split.setDividerLocation(300);
 
+		RefreshLoop<EasyTriggersTab> refresher = new RefreshLoop<>("EasyTriggerAutoSave", this, ett -> {
+			if (outer.isVisible()) {
+				ett.backend.commit();
+			}
+		}, (unused) -> 5000L);
+
+		refresher.start();
 		return outer;
 	}
+
 
 	private void refreshSelection() {
 		setSelection(model.getSelectedValue());
@@ -143,6 +166,7 @@ public class EasyTriggersTab implements PluginTab {
 		TableWithFilterAndDetails<EventDescription, Object> table = TableWithFilterAndDetails.builder("Choose Event Type", EasyTriggers::getEventDescriptions)
 				.addMainColumn(new CustomColumn<>("Event", d -> d.type().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Description", EventDescription::description))
+				.setFixedData(true)
 				.build();
 		// TODO: owner
 		EventDescription eventDescription = ChooserDialog.chooserReturnItem(SwingUtilities.getWindowAncestor(outer), table);
@@ -182,6 +206,8 @@ public class EasyTriggersTab implements PluginTab {
 
 			this.trigger = trigger;
 
+			JTextField eventTypeField = new JTextField(trigger.getEventType().getSimpleName());
+			eventTypeField.setEditable(false);
 			TextFieldWithValidation<String> nameField = new TextFieldWithValidation<>(str -> {
 				if (str.isBlank()) {
 					throw new IllegalArgumentException("Cannot be blank");
@@ -191,11 +217,7 @@ public class EasyTriggersTab implements PluginTab {
 			TextFieldWithValidation<String> ttsField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setTts), trigger.getTts());
 			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setText), trigger.getText());
 
-			TitleBorderFullsizePanel conditionsPanel = new TitleBorderFullsizePanel("Conditions");
-			{
-				conditionsPanel.setLayout(new BoxLayout(conditionsPanel, BoxLayout.PAGE_AXIS));
-				conditionsPanel.add(new JButton("New Condition"));
-			}
+			JPanel conditionsPanel = new ConditionsPanel("Conditions", trigger);
 
 			c.weightx = 0;
 			JLabel firstLabel = GuiUtil.labelFor("Name", nameField);
@@ -208,6 +230,11 @@ public class EasyTriggersTab implements PluginTab {
 			c.gridx++;
 			add(nameField, c);
 			c.weightx = 0;
+			c.gridx = 0;
+			c.gridy++;
+			add(GuiUtil.labelFor("Event", eventTypeField), c);
+			c.gridx++;
+			add(eventTypeField, c);
 			c.gridx = 0;
 			c.gridy++;
 			add(GuiUtil.labelFor("TTS", ttsField), c);
