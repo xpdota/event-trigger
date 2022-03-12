@@ -57,7 +57,7 @@ public class XivStateImpl implements XivState {
 	private final Map<Long, HitPoints> hpOverrides = new HashMap<>();
 	private final Map<Long, Position> posOverrides = new HashMap<>();
 	private volatile OnlineStatus playerOnlineStatus = OnlineStatus.UNKNOWN;
-	private volatile Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
+	private final Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
 
 	private Job lastPlayerJob;
 

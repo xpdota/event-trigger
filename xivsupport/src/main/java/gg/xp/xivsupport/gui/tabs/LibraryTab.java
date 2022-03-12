@@ -2,7 +2,6 @@ package gg.xp.xivsupport.gui.tabs;
 
 import gg.xp.xivsupport.gui.library.ActionTable;
 import gg.xp.xivsupport.gui.library.StatusTable;
-import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
 

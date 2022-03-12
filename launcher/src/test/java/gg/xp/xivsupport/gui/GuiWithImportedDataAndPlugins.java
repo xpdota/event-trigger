@@ -1,8 +1,6 @@
 package gg.xp.xivsupport.gui;
 
 import gg.xp.xivsupport.eventstorage.EventReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class GuiWithImportedDataAndPlugins {
 

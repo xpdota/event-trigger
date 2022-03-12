@@ -67,6 +67,7 @@ public class LogCollector extends AppenderBase<ILoggingEvent> {
 	}
 
 	public static LogCollector getInstance() {
+		//noinspection StaticVariableUsedBeforeInitialization
 		return instance;
 	}
 

@@ -2,7 +2,6 @@ package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
-import gg.xp.xivsupport.events.state.XivState;
 import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;

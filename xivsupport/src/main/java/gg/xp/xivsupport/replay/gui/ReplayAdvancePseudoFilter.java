@@ -4,7 +4,6 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
-import gg.xp.xivsupport.gui.tables.filters.VisualFilter;
 import gg.xp.xivsupport.replay.ReplayController;
 
 import javax.swing.*;

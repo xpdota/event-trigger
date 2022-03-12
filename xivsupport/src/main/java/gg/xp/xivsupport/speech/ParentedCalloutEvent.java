@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.speech;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.reevent.events.Event;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;

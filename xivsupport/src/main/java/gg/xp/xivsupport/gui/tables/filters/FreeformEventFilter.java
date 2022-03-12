@@ -3,14 +3,12 @@ package gg.xp.xivsupport.gui.tables.filters;
 import gg.xp.reevent.events.Event;
 import groovy.lang.Closure;
 import groovy.lang.GroovyShell;
-import groovy.lang.Script;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.function.Predicate;
 
 public class FreeformEventFilter implements VisualFilter<Event> {
 

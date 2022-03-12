@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.overlay;
 
-import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 
 import javax.swing.*;

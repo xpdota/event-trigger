@@ -4,6 +4,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.TickEvent;
 import gg.xp.xivsupport.events.actlines.events.TickType;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,7 @@ public class Line24Parser extends AbstractACTLineParser<Line24Parser.Fields> {
 
 	private static final Logger log = LoggerFactory.getLogger(Line24Parser.class);
 
-	public Line24Parser(org.picocontainer.PicoContainer container) {
+	public Line24Parser(PicoContainer container) {
 		super(container, 24, Fields.class);
 	}
 

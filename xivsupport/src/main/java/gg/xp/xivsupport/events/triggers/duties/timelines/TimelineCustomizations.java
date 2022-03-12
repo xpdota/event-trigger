@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.duties.timelines;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.xivsupport.persistence.UseJsonSer;
 

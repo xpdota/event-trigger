@@ -5,13 +5,16 @@ import com.sun.management.HotSpotDiagnosticMXBean;
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
 
-public class HeapDumper {
+public final class HeapDumper {
 	// This is the name of the HotSpot Diagnostic MBean
 	private static final String HOTSPOT_BEAN_NAME =
 			"com.sun.management:type=HotSpotDiagnostic";
 
 	// field to store the hotspot diagnostic MBean
 	private static volatile HotSpotDiagnosticMXBean hotspotMBean;
+
+	private HeapDumper() {
+	}
 
 
 	/**

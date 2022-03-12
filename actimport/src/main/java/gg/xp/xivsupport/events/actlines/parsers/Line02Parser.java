@@ -3,7 +3,6 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.ActImportOnly;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
-import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.XivEntity;
 import org.picocontainer.PicoContainer;
 

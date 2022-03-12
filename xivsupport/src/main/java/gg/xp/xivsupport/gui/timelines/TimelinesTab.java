@@ -106,12 +106,12 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 			this.add(settingsPanel, c);
 		}
-		c.gridy++;
-
-		{
-			ReadOnlyText text = new ReadOnlyText("This feature is beta and very buggy. For now, you can only add your own custom entries, but not edit anything coming from the original timeline files.");
-			this.add(text, c);
-		}
+//		c.gridy++;
+//
+//		{
+//			ReadOnlyText text = new ReadOnlyText("This feature is beta and very buggy. For now, you can only add your own custom entries, but not edit anything coming from the original timeline files.");
+//			this.add(text, c);
+//		}
 
 
 		c.gridy++;

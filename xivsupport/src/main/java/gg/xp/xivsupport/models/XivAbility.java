@@ -2,8 +2,6 @@ package gg.xp.xivsupport.models;
 
 import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.StatusEffectInfo;
-import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 
 import java.io.Serial;
