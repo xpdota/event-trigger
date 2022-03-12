@@ -208,7 +208,9 @@ public class Update {
 
 	private boolean doUpdateCheck() {
 		try {
-			HttpResponse<String> manifestResponse = client.send(HttpRequest.newBuilder().GET().uri(makeUrl(manifestFile)).build(), HttpResponse.BodyHandlers.ofString());
+			// Adding random junk to bypass cache
+			URI uri = makeUrl(manifestFile + "?q=" + System.currentTimeMillis() % 1000);
+			HttpResponse<String> manifestResponse = client.send(HttpRequest.newBuilder().GET().uri(uri).build(), HttpResponse.BodyHandlers.ofString());
 			if (manifestResponse.statusCode() != 200) {
 				throw new RuntimeException("Bad response: %s: %s".formatted(manifestResponse.statusCode(), manifestResponse));
 			}
