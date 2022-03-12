@@ -9,8 +9,8 @@ public class IntSetting extends ObservableSetting {
 	private final String settingKey;
 	private final int dflt;
 	private Integer cached;
-	private Integer min;
-	private Integer max;
+	private final Integer min;
+	private final Integer max;
 
 	public IntSetting(PersistenceProvider persistence, String settingKey, int dflt) {
 		this(persistence, settingKey, dflt, null, null);

@@ -2,8 +2,6 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 

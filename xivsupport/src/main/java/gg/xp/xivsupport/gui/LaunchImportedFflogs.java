@@ -5,9 +5,7 @@ import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
-import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
 import gg.xp.xivsupport.events.actlines.parsers.FakeFflogsTimeSource;
-import gg.xp.xivsupport.events.fflogs.FflogsClient;
 import gg.xp.xivsupport.events.fflogs.FflogsController;
 import gg.xp.xivsupport.events.fflogs.FflogsFight;
 import gg.xp.xivsupport.events.fflogs.FflogsReportLocator;
@@ -15,7 +13,6 @@ import gg.xp.xivsupport.eventstorage.EventReader;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
-import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
@@ -25,7 +22,6 @@ import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.text.DecimalFormat;
 import java.util.List;
 

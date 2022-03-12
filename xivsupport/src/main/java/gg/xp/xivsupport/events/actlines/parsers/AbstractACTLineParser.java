@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
-import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
@@ -79,6 +78,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 					outgoingEvent = convert(mapper, lineNumber, zdt);
 				}
 				catch (Throwable t) {
+					//noinspection ThrowCaughtLocally
 					throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
 				}
 				mapper.getCombatantsToUpdate().forEach(id -> {

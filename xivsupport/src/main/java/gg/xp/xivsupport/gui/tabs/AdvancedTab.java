@@ -16,6 +16,7 @@ import gg.xp.xivsupport.persistence.gui.IntSettingGui;
 import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
 import gg.xp.xivsupport.sys.Threading;
 import org.picocontainer.PicoContainer;
+import org.swingexplorer.Launcher;
 
 import javax.swing.*;
 import java.awt.*;
@@ -196,6 +197,16 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable, TabAwar
 				c.gridx++;
 				statsAndMemory.add(dirsPanel, c);
 
+			}
+			c.gridx = 0;
+			c.gridy++;
+			{
+				JPanel devToolsPanel = new TitleBorderFullsizePanel("Dev Tools");
+				JButton swexpButton = new JButton("Launch Swing Explorer");
+				swexpButton.addActionListener((l) -> exs.submit(Launcher::launch));
+				devToolsPanel.add(swexpButton);
+				devToolsPanel.setPreferredSize(null);
+				statsAndMemory.add(devToolsPanel, c);
 			}
 			c.gridx = 0;
 			c.gridy++;

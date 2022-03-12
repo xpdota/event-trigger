@@ -1,5 +1,6 @@
 package gg.xp.reevent.scan;
 
+import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
@@ -9,11 +10,16 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.reflections.scanners.Scanners.MethodsAnnotated;
@@ -27,6 +33,8 @@ public class AutoHandlerScan {
 	private static final Logger log_topo = LoggerFactory.getLogger(AutoHandlerScan.class.getCanonicalName() + ".Topology");
 	private final AutoHandlerInstanceProvider instanceProvider;
 	private final AutoHandlerConfig config;
+	private static final Pattern jarFileName = Pattern.compile("([a-zA-Z0-9\\-.]+)\\.jar");
+	private static final List<String> scanBlacklist = List.of("groovy", "jna", "jackson", "javaassist", "httpclient", "commons", "xivdata", "sfl4j", "logback", "picocontainer", "opencsv", "Java-WebSocket", "reflections", "annotations", "httpcore");
 
 	public AutoHandlerScan(AutoHandlerInstanceProvider instanceProvider, AutoHandlerConfig config) {
 		this.instanceProvider = instanceProvider;
@@ -38,6 +46,7 @@ public class AutoHandlerScan {
 		List<AutoHandler> out = new ArrayList<>();
 //		ClassLoader loader = new ForceReloadClassLoader();
 //		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
+		//noinspection EmptyFinallyBlock
 		try {
 			// TODO: Reload of existing classes is broken because reloading basic classes such as 'Event'
 			// in a new classloader causes the JVM to no longer see it as the same class, causing signature
@@ -45,11 +54,24 @@ public class AutoHandlerScan {
 			// This will become significantly less of an issue when stuff is built into separate JARs, but for
 			// now, only hot add/remove will be supported, no hot modify.
 //			Thread.currentThread().setContextClassLoader(loader);
+			Collection<URL> urls = ClasspathHelper.forJavaClassPath();
+			// TODO: make package blacklist a setting
+			urls = urls.stream().filter(u -> {
+				String jarName = getJarName(u.toString());
+				if (jarName == null) {
+					return true;
+				}
+				else {
+					return scanBlacklist.stream().noneMatch(jarName::startsWith);
+				}
+			}).collect(Collectors.toList());
+			log.info("URLs: {}", urls);
 			Reflections reflections = new Reflections(
 					new ConfigurationBuilder()
 //							.setClassLoaders(new ClassLoader[]{loader})
 //						.addClassLoaders(new ForceReloadClassLoader(Thread.currentThread().getContextClassLoader()))
-							.setUrls(ClasspathHelper.forJavaClassPath())
+							.setUrls(urls)
+							.setParallel(true)
 //							.forPackages("")
 							.setScanners(Scanners.TypesAnnotated, Scanners.MethodsAnnotated, Scanners.SubTypes));
 			Set<Method> annotatedMethods = reflections.get(MethodsAnnotated.with(HandleEvents.class).as(Method.class));
@@ -123,5 +145,15 @@ public class AutoHandlerScan {
 	// Filter out interfaces and abstract classes
 	private static boolean isClassInstantiable(Class<?> clazz) {
 		return !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers());
+	}
+
+	private static @Nullable String getJarName(String uriStr) {
+		Matcher matcher = jarFileName.matcher(uriStr);
+		if (matcher.find()) {
+			return matcher.group(1);
+		}
+		else {
+			return null;
+		}
 	}
 }

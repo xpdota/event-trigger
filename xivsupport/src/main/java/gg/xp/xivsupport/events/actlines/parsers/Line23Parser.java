@@ -2,14 +2,14 @@ package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
-import gg.xp.xivsupport.events.state.XivStateImpl;
+import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
 public class Line23Parser extends AbstractACTLineParser<Line23Parser.Fields> {
 
-	public Line23Parser(org.picocontainer.PicoContainer container) {
+	public Line23Parser(PicoContainer container) {
 		super(container,  23, Fields.class);
 	}
 

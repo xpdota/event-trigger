@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;

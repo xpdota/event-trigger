@@ -26,7 +26,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 	protected volatile Predicate<X> currentFilter;
 	protected boolean validationError;
 	protected final String fieldLabel;
-	protected final boolean ignoreCase = true;
+	protected static final boolean ignoreCase = true;
 	protected final Color invalidBackground = new Color(62, 27, 27);
 
 	public TextBasedFilter(Runnable filterUpdatedCallback, String fieldLabel, Function<X, String> textExtractor) {

@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.callouts;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.time.TimeUtils;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.models.XivCombatant;

@@ -32,7 +32,7 @@ public final class ResetMenuOption {
 
 	public static JPopupMenu resetOnlyMenu(Resettable setting, Runnable resetAction) {
 		JPopupMenu menu = new JPopupMenu();
-		JMenuItem reset = ResetMenuOption.resetSetting(setting, resetAction);
+		JMenuItem reset = resetSetting(setting, resetAction);
 		menu.add(reset);
 		return menu;
 	}

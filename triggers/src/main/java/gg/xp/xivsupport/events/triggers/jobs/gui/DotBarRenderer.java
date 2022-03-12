@@ -7,7 +7,6 @@ import gg.xp.xivsupport.gui.tables.renderers.TickRenderInfo;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.time.Duration;
 import java.time.Instant;
 
 public class DotBarRenderer extends ResourceBarRenderer<VisualDotInfo> {

@@ -97,12 +97,12 @@
             <artifactId>picocontainer</artifactId>
             <version>2.15</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.freeplane.bulenkov/darcula -->
-        <dependency>
-            <groupId>org.freeplane.bulenkov</groupId>
-            <artifactId>darcula</artifactId>
-            <version>2021.7</version>
-        </dependency>
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.freeplane.bulenkov/darcula &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.freeplane.bulenkov</groupId>-->
+<!--            <artifactId>darcula</artifactId>-->
+<!--            <version>2021.7</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.formdev</groupId>
@@ -123,16 +123,21 @@
             <version>5.10.0</version>
         </dependency>
         <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-swing</artifactId>
-            <version>3.17.1</version>
+            <groupId>org.swingexplorer</groupId>
+            <artifactId>swingexplorer-core</artifactId>
+            <version>1.7.0</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.assertj</groupId>-->
+<!--            <artifactId>assertj-swing</artifactId>-->
+<!--            <version>3.17.1</version>-->
+<!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.beanshell/bsh -->
-        <dependency>
-            <groupId>org.beanshell</groupId>
-            <artifactId>bsh</artifactId>
-            <version>2.0b5</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.beanshell</groupId>-->
+<!--            <artifactId>bsh</artifactId>-->
+<!--            <version>2.0b5</version>-->
+<!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy -->
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
