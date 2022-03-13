@@ -10,9 +10,9 @@ import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class MultiLineTextFieldWithValidation<X> extends JTextArea {
+public class MultiLineTextAreaWithValidation<X> extends JTextArea {
 
-	private static final Logger log = LoggerFactory.getLogger(MultiLineTextFieldWithValidation.class);
+	private static final Logger log = LoggerFactory.getLogger(MultiLineTextAreaWithValidation.class);
 
 	protected final Color originalBackground;
 	private final Function<String, X> parser;
@@ -20,7 +20,7 @@ public class MultiLineTextFieldWithValidation<X> extends JTextArea {
 	protected final Color invalidBackground = new Color(62, 27, 27);
 	private boolean stopUpdate;
 
-	public MultiLineTextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
+	public MultiLineTextAreaWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
 		super(30, 30);
 		this.parser = parser;
 		this.consumer = consumer;

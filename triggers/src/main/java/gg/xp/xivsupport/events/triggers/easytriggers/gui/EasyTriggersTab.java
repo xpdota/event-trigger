@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
@@ -12,13 +11,18 @@ import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
+import gg.xp.xivsupport.gui.tables.filters.MultiLineTextAreaWithValidation;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -57,13 +61,27 @@ public class EasyTriggersTab implements PluginTab {
 		c.weighty = 1;
 
 		model = CustomTableModel.builder(backend::getTriggers)
+				.addColumn(new CustomColumn<>("En", EasyTrigger::isEnabled, col -> {
+					col.setCellRenderer(StandardColumns.checkboxRenderer);
+					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<EasyTrigger<?>>(EasyTrigger::setEnabled));
+					col.setMinWidth(22);
+					col.setMaxWidth(22);
+				}))
 				.addColumn(new CustomColumn<>("Name", EasyTrigger::getName))
 				.addColumn(new CustomColumn<>("Event Type", t -> t.getEventType().getSimpleName()))
-				.addColumn(new CustomColumn<>("Conditions", t -> String.format("(%d) %s", t.getConditions().size(), t.getConditions().stream().map(Condition::describe).collect(Collectors.joining("; ")))))
+				.addColumn(new CustomColumn<>("Conditions", t -> String.format("(%d) %s", t.getConditions().size(), t.getConditions().stream().map(Condition::dynamicLabel).collect(Collectors.joining("; ")))))
 				.addColumn(new CustomColumn<>("TTS", EasyTrigger::getTts))
 				.addColumn(new CustomColumn<>("Text", EasyTrigger::getText))
+				.addColumn(new CustomColumn<>("Hit", EasyTrigger::getHits, 80))
+				.addColumn(new CustomColumn<>("Miss", EasyTrigger::getMisses, 80))
 				.build();
-		JTable triggerChooserTable = model.makeTable();
+		JTable triggerChooserTable = new JTable(model) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return column == 0;
+			}
+		};
+		model.configureColumns(triggerChooserTable);
 		triggerChooserTable.getSelectionModel().addListSelectionListener(l -> {
 			refreshSelection();
 		});
@@ -99,6 +117,26 @@ public class EasyTriggersTab implements PluginTab {
 				controlsPanel.add(cloneTriggerButton);
 				cloneTriggerButton.addActionListener(l -> cloneCurrent());
 			}
+			{
+				JButton exportTriggerButton = new JButton("Export Trigger") {
+					@Override
+					public boolean isEnabled() {
+						return selection != null;
+					}
+				};
+				controlsPanel.add(exportTriggerButton);
+				exportTriggerButton.addActionListener(l -> exportCurrent());
+			}
+			{
+				JButton importTriggerButton = new JButton("Import Trigger") {
+					@Override
+					public boolean isEnabled() {
+						return selection != null;
+					}
+				};
+				controlsPanel.add(importTriggerButton);
+				importTriggerButton.addActionListener(l -> showImportDialog());
+			}
 			bottomPanel.add(controlsPanel, BorderLayout.NORTH);
 		}
 
@@ -120,8 +158,13 @@ public class EasyTriggersTab implements PluginTab {
 		split.setDividerLocation(300);
 
 		RefreshLoop<EasyTriggersTab> refresher = new RefreshLoop<>("EasyTriggerAutoSave", this, ett -> {
-			if (outer.isVisible()) {
+			if (outer.isShowing()) {
 				ett.backend.commit();
+				saveAnyway = true;
+			}
+			else if (saveAnyway) {
+				ett.backend.commit();
+				saveAnyway = false;
 			}
 		}, (unused) -> 5000L);
 
@@ -129,6 +172,33 @@ public class EasyTriggersTab implements PluginTab {
 		return outer;
 	}
 
+	private void showImportDialog() {
+		Mutable<List<EasyTrigger<?>>> value = new MutableObject<>();
+		MultiLineTextAreaWithValidation<List<EasyTrigger<?>>> field = new MultiLineTextAreaWithValidation<>(EasyTriggers::importFromString, value::setValue, "");
+		field.setPreferredSize(new Dimension(500, 500));
+		field.setLineWrap(true);
+		field.setWrapStyleWord(true);
+		JOptionPane opt = new JOptionPane(field, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+		JDialog dialog = opt.createDialog("Import Triggers");
+		dialog.setVisible(true);
+		Object dialogResult = opt.getValue();
+		if (dialogResult instanceof Integer dr && dr == JOptionPane.OK_OPTION && value.getValue() != null) {
+			addImports(value.getValue());
+		}
+	}
+
+	private void exportCurrent() {
+		EasyTrigger<?> selection = this.selection;
+		if (selection != null) {
+			GuiUtil.copyToClipboard(EasyTriggers.exportToString(selection));
+		}
+		JOptionPane.showMessageDialog(outer, "Copied to clipboard");
+	}
+
+	// Basically, since I didn't think about a good way to auto-save, the auto-save loop saves continuously when the tab
+	// is showing, immediately when the tab is no longer visible, BUT that visibility check only counts for the direct
+	// parent tab, not the main tab bar. Thus, we need another check to do one more save when we are no longer showing.
+	private boolean saveAnyway;
 
 	private void refreshSelection() {
 		setSelection(model.getSelectedValue());
@@ -163,18 +233,25 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private void addnew() {
-		TableWithFilterAndDetails<EventDescription, Object> table = TableWithFilterAndDetails.builder("Choose Event Type", EasyTriggers::getEventDescriptions)
+		TableWithFilterAndDetails<EventDescription<?>, Object> table = TableWithFilterAndDetails.builder("Choose Event Type", EasyTriggers::getEventDescriptions)
 				.addMainColumn(new CustomColumn<>("Event", d -> d.type().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Description", EventDescription::description))
 				.setFixedData(true)
 				.build();
 		// TODO: owner
-		EventDescription eventDescription = ChooserDialog.chooserReturnItem(SwingUtilities.getWindowAncestor(outer), table);
-		EasyTrigger<Event> newTrigger = new EasyTrigger<>();
-		newTrigger.setEventType((Class<Event>) eventDescription.type());
-		backend.addTrigger(newTrigger);
+		EventDescription<?> eventDescription = ChooserDialog.chooserReturnItem(SwingUtilities.getWindowAncestor(outer), table);
+		if (eventDescription != null) {
+			EasyTrigger<?> newTrigger = eventDescription.newInst();
+			backend.addTrigger(newTrigger);
+			refresh();
+			SwingUtilities.invokeLater(() -> model.setSelectedValue(newTrigger));
+			setSelection(newTrigger);
+		}
+	}
+
+	private void addImports(List<EasyTrigger<?>> toAdd) {
+		toAdd.forEach(backend::addTrigger);
 		refresh();
-		setSelection(newTrigger);
 	}
 
 	private void delete() {

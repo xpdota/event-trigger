@@ -1,5 +1,8 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
@@ -10,6 +13,12 @@ import java.util.List;
 
 public class EasyTrigger<X> {
 
+	@JsonIgnore
+	private long misses;
+	@JsonIgnore
+	private long hits;
+
+	private boolean enabled = true;
 	private ModifiableCallout<X> call;
 
 	private Class<X> eventType = (Class<X>) Event.class;
@@ -23,10 +32,14 @@ public class EasyTrigger<X> {
 	}
 
 	public void handleEvent(EventContext context, Event event) {
-		if (eventType != null && eventType.isInstance(event)) {
+		if (enabled && eventType != null && eventType.isInstance(event)) {
 			X typedEvent = eventType.cast(event);
 			if (conditions.stream().allMatch(cond -> cond.test(typedEvent))) {
 				context.accept(call.getModified(typedEvent));
+				hits++;
+			}
+			else {
+				misses++;
 			}
 		}
 	}
@@ -91,6 +104,23 @@ public class EasyTrigger<X> {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public long getHits() {
+		return hits;
+	}
+
+	public long getMisses() {
+		return misses;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 
 	public EasyTrigger<X> duplicate() {

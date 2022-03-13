@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(ConditionsPanel.class);
@@ -46,10 +45,9 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 	}
 
 	private void addNewCondition() {
-		TableWithFilterAndDetails<ConditionDescription<?, ?>, Object> table = TableWithFilterAndDetails.builder("Choose Condition Type", () -> {
-					List<ConditionDescription<?, ?>> conditions = EasyTriggers.getConditions();
-					return conditions.stream().filter(cdesc -> cdesc.appliesTo(trigger.getEventType())).toList();
-				})
+		TableWithFilterAndDetails<ConditionDescription<?, ?>, Object> table = TableWithFilterAndDetails.builder(
+						"Choose Condition Type",
+						() -> EasyTriggers.getConditionsApplicableTo(trigger))
 				.addMainColumn(new CustomColumn<>("Condition", c -> c.clazz().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Description", ConditionDescription::description))
 				.setFixedData(true)
@@ -83,7 +81,7 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 //			add(buttonHolder, c);
 			add(deleteButton, c);
 			c.gridx++;
-			JLabel labelLabel = new JLabel(condition.label());
+			JLabel labelLabel = new JLabel(condition.fixedLabel());
 			add(labelLabel, c);
 			c.gridx++;
 			c.weightx = 1;

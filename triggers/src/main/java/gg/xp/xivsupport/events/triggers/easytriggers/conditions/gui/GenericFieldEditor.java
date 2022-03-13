@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui;
 
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
@@ -7,10 +8,12 @@ import gg.xp.xivsupport.gui.util.GuiUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 public class GenericFieldEditor extends JPanel {
 
@@ -26,14 +29,30 @@ public class GenericFieldEditor extends JPanel {
 	}
 
 	private void addField(Field field) {
-		String name = field.getName();
+		String name;
+		Description annotation = field.getAnnotation(Description.class);
+		if (annotation == null) {
+			name = field.getName();
+		}
+		else {
+			name = annotation.value();
+		}
 		Class<?> type = field.getType();
 		final Component editorComponent;
 		if (type.equals(long.class) || type.equals(Long.class)) {
 			editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), getField(field).toString());
 		}
+		else if (type.equals(int.class) || type.equals(Integer.class)) {
+			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), getField(field).toString());
+		}
 		else if (type.equals(String.class)) {
 			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), getField(field).toString());
+		}
+		else if (type.equals(Pattern.class)) {
+			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), getField(field).toString());
+			textField.setColumns(30);
+			editorComponent = textField;
+//			editorComponent.setPreferredSize(new Dimension(2500, editorComponent.getPreferredSize().height));
 		}
 		else if (type.isEnum()) {
 			JComboBox<?> comboBox = new JComboBox<>(type.getEnumConstants());

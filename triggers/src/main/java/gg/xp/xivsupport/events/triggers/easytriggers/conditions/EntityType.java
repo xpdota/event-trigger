@@ -6,6 +6,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 
 import java.util.function.Predicate;
 
+@SuppressWarnings("unused")
 public enum EntityType implements HasFriendlyName, Predicate<XivCombatant> {
 	ANY("Anything", unused -> true),
 	THE_PLAYER("The Player", XivCombatant::isThePlayer),

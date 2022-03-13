@@ -448,7 +448,7 @@ public final class StandardColumns {
 		}
 	}
 
-	public static class CustomCheckboxEditor<X, Y> extends AbstractCellEditor implements TableCellEditor {
+	public static class CustomCheckboxEditor<X> extends AbstractCellEditor implements TableCellEditor {
 
 		@Serial
 		private static final long serialVersionUID = -3743763426515940614L;

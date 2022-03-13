@@ -1,7 +1,13 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
-public record EventDescription(
-		Class<?> type,
-		String description
-) {
+public interface EventDescription<X> {
+	Class<X> type();
+
+	String description();
+
+	String defaultTts();
+
+	String defaultText();
+
+	EasyTrigger<X> newInst();
 }
