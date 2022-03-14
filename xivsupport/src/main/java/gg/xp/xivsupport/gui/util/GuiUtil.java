@@ -30,4 +30,10 @@ public final class GuiUtil {
 		}
 
 	}
+
+	public static void copyToClipboard(String contents) {
+		StringSelection stringSelection = new StringSelection(contents);
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		clipboard.setContents(stringSelection, null);
+	}
 }
