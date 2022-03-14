@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -35,6 +38,7 @@ public class EasyTriggersTab implements PluginTab {
 	private CustomTableModel<EasyTrigger<?>> model;
 	private TitleBorderFullsizePanel outer;
 	private EasyTrigger<?> selection;
+	private List<EasyTrigger<?>> multiSelections = Collections.emptyList();
 
 	public EasyTriggersTab(EasyTriggers backend) {
 		this.backend = backend;
@@ -85,12 +89,12 @@ public class EasyTriggersTab implements PluginTab {
 		triggerChooserTable.getSelectionModel().addListSelectionListener(l -> {
 			refreshSelection();
 		});
-		// TODO: multi-select would actually be very useful here
-		triggerChooserTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		triggerChooserTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
 		JPanel bottomPanel = new JPanel(new BorderLayout());
 
 		{
+			// TODO: most of these could also be right click options
 			JPanel controlsPanel = new JPanel(new FlowLayout());
 			{
 				JButton newTriggerButton = new JButton("New Trigger");
@@ -98,10 +102,10 @@ public class EasyTriggersTab implements PluginTab {
 				newTriggerButton.addActionListener(l -> addnew());
 			}
 			{
-				JButton deleteTriggerButton = new JButton("Delete Trigger") {
+				JButton deleteTriggerButton = new JButton("Delete Selected") {
 					@Override
 					public boolean isEnabled() {
-						return selection != null;
+						return !multiSelections.isEmpty();
 					}
 				};
 				controlsPanel.add(deleteTriggerButton);
@@ -111,31 +115,31 @@ public class EasyTriggersTab implements PluginTab {
 				JButton cloneTriggerButton = new JButton("Clone Trigger") {
 					@Override
 					public boolean isEnabled() {
-						return selection != null;
+						return multiSelections.size() == 1;
 					}
 				};
 				controlsPanel.add(cloneTriggerButton);
 				cloneTriggerButton.addActionListener(l -> cloneCurrent());
 			}
 			{
-				JButton exportTriggerButton = new JButton("Export Trigger") {
+				JButton exportTriggerButton = new JButton("Export Selected") {
 					@Override
 					public boolean isEnabled() {
-						return selection != null;
+						return !multiSelections.isEmpty();
 					}
 				};
 				controlsPanel.add(exportTriggerButton);
 				exportTriggerButton.addActionListener(l -> exportCurrent());
 			}
 			{
-				JButton importTriggerButton = new JButton("Import Trigger") {
-					@Override
-					public boolean isEnabled() {
-						return selection != null;
-					}
-				};
+				JButton importTriggerButton = new JButton("Import Triggers");
 				controlsPanel.add(importTriggerButton);
 				importTriggerButton.addActionListener(l -> showImportDialog());
+			}
+			{
+				JButton importLegacyTriggerButton = new JButton("Import Legacy ACT Triggers");
+				controlsPanel.add(importLegacyTriggerButton);
+				importLegacyTriggerButton.addActionListener(l -> showActImportDialog());
 			}
 			bottomPanel.add(controlsPanel, BorderLayout.NORTH);
 		}
@@ -187,12 +191,29 @@ public class EasyTriggersTab implements PluginTab {
 		}
 	}
 
-	private void exportCurrent() {
-		EasyTrigger<?> selection = this.selection;
-		if (selection != null) {
-			GuiUtil.copyToClipboard(EasyTriggers.exportToString(selection));
+	@SuppressWarnings("unchecked")
+	private void showActImportDialog() {
+		Mutable<List<EasyTrigger<ACTLogLineEvent>>> value = new MutableObject<>();
+		MultiLineTextAreaWithValidation<List<EasyTrigger<ACTLogLineEvent>>> field = new MultiLineTextAreaWithValidation<>(ActLegacyTriggerImport::parseMultipleTriggerXml, value::setValue, "");
+		field.setPreferredSize(new Dimension(500, 500));
+		field.setLineWrap(true);
+		field.setWrapStyleWord(true);
+		JOptionPane opt = new JOptionPane(field, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+		JDialog dialog = opt.createDialog("Import Legacy ACT Triggers");
+		dialog.setVisible(true);
+		Object dialogResult = opt.getValue();
+		List<EasyTrigger<ACTLogLineEvent>> newTriggers = value.getValue();
+		if (dialogResult instanceof Integer dr && dr == JOptionPane.OK_OPTION && newTriggers != null) {
+			// :clown_emoji:
+			addImports((List<EasyTrigger<?>>) (Object) newTriggers);
 		}
-		JOptionPane.showMessageDialog(outer, "Copied to clipboard");
+	}
+
+	private void exportCurrent() {
+		if (!multiSelections.isEmpty()) {
+			GuiUtil.copyToClipboard(EasyTriggers.exportToString(multiSelections));
+			JOptionPane.showMessageDialog(outer, "Copied to clipboard");
+		}
 	}
 
 	// Basically, since I didn't think about a good way to auto-save, the auto-save loop saves continuously when the tab
@@ -201,11 +222,8 @@ public class EasyTriggersTab implements PluginTab {
 	private boolean saveAnyway;
 
 	private void refreshSelection() {
-		setSelection(model.getSelectedValue());
-	}
-
-	private void setSelection(@Nullable EasyTrigger<?> selection) {
-		this.selection = selection;
+		this.multiSelections = model.getSelectedValues();
+		this.selection = multiSelections.size() == 1 ? multiSelections.get(0) : null;
 		SwingUtilities.invokeLater(() -> {
 			detailsInner.removeAll();
 			if (selection != null) {
@@ -228,8 +246,9 @@ public class EasyTriggersTab implements PluginTab {
 		}
 		EasyTrigger<?> newTrigger = selectedValue.duplicate();
 		backend.addTrigger(newTrigger);
-		setSelection(newTrigger);
 		refresh();
+		model.setSelectedValue(newTrigger);
+//		refreshSelection();
 	}
 
 	private void addnew() {
@@ -244,8 +263,10 @@ public class EasyTriggersTab implements PluginTab {
 			EasyTrigger<?> newTrigger = eventDescription.newInst();
 			backend.addTrigger(newTrigger);
 			refresh();
-			SwingUtilities.invokeLater(() -> model.setSelectedValue(newTrigger));
-			setSelection(newTrigger);
+			SwingUtilities.invokeLater(() -> {
+				model.setSelectedValue(newTrigger);
+				refreshSelection();
+			});
 		}
 	}
 
@@ -255,21 +276,14 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private void delete() {
-		EasyTrigger<?> selectedValue = model.getSelectedValue();
-		if (selectedValue == null) {
-			return;
-		}
-		backend.removeTrigger(selectedValue);
+		multiSelections.forEach(backend::removeTrigger);
 		refresh();
 		model.setSelectedValue(null);
 	}
 
 	private void requestSave() {
-
+		// TODO figure out what the plan is here
 	}
-
-
-	// TODO: autosave
 
 	private class TriggerConfigPanel extends JPanel {
 

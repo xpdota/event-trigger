@@ -101,9 +101,9 @@ public class EasyTriggers {
 		}
 	}
 
-	public static String exportToString(EasyTrigger<?> selection) {
+	public static String exportToString(List<EasyTrigger<?>> toExport) {
 		try {
-			return mapper.writeValueAsString(Collections.singletonList(selection));
+			return mapper.writeValueAsString(toExport);
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException("Error exporting trigger", e);
@@ -185,7 +185,7 @@ public class EasyTriggers {
 			new EventDescriptionImpl<>(AbilityResolvedEvent.class, "An ability has actually applied. Corresponds to ACT 37 lines.", "{event.getAbility().getName()} resolved"),
 			new EventDescriptionImpl<>(ActorControlEvent.class, "Conveys various state changes, such as wiping or finishing a raid. Corresponds to ACT 33 lines.", "Actor control {event.getCommand()}"),
 			new EventDescriptionImpl<>(ACTLogLineEvent.class, "Any log line, in text form. Use as a last resort.", "Log Line {event.getRawFields()[0]}"),
-			new EventDescriptionImpl<>(ChatLineEvent.class, "In-game chat lines", "Chat Line {event.getRawFields()[0]}")
+			new EventDescriptionImpl<>(ChatLineEvent.class, "In-game chat lines", "{event.getName()} says {event.getLine()}", "Chat Line {event.getName()}: {event.getLine()}")
 	);
 
 
@@ -193,7 +193,7 @@ public class EasyTriggers {
 		return new GenericFieldEditor(cond);
 	}
 
-	// DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
+	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
 	private static final List<ConditionDescription<?, ?>> conditions = List.of(
 			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, EasyTriggers::generic),

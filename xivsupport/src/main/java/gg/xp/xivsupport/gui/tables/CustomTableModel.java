@@ -362,6 +362,16 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		return null;
 	}
 
+	public List<X> getSelectedValues() {
+		JTable table = getTable();
+		if (table != null) {
+			return Arrays.stream(table.getSelectedRows())
+					.mapToObj(data::get)
+					.toList();
+		}
+		return Collections.emptyList();
+	}
+
 	public void setSelectedValue(@Nullable X value) {
 		JTable table = getTable();
 		if (value == null) {
@@ -370,11 +380,12 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		else {
 			int index = data.indexOf(value);
 			if (index >= 0) {
-				table.addRowSelectionInterval(index, index);
+				table.setRowSelectionInterval(index, index);
 			}
 			else {
 				table.clearSelection();
 			}
+
 		}
 	}
 
