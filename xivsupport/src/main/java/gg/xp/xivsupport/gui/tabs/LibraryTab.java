@@ -14,9 +14,6 @@ public class LibraryTab extends JTabbedPane {
 		}
 		{
 			addTab("Actions/Abilities", ActionTable.table());
-
 		}
 	}
-
-
 }
