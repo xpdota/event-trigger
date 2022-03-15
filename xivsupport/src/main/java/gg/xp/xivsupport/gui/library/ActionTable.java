@@ -3,10 +3,14 @@ package gg.xp.xivsupport.gui.library;
 import gg.xp.xivdata.data.ActionIcon;
 import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
+import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.models.XivAbility;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -21,6 +25,7 @@ public final class ActionTable {
 	}
 
 	public static TableWithFilterAndDetails<ActionInfo, Object> table() {
+		// TODO: "initial load on filter update" would be nice
 		return TableWithFilterAndDetails.builder("Actions/Abilities", () -> {
 					Map<Long, ActionInfo> csvValues = ActionLibrary.getAll();
 					List<ActionInfo> values = new ArrayList<>(csvValues.values());
@@ -47,6 +52,17 @@ public final class ActionTable {
 					col.setPreferredWidth(500);
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
+				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon URL", ActionInfo.class, ai -> {
+					GuiUtil.copyToClipboard(ai.getXivapiUrl().toString());
+				}))
+				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Markdown", ActionInfo.class, ai -> {
+					String md = String.format("![%s](%s)", ai.name(), ai.getXivapiUrl());
+					GuiUtil.copyToClipboard(md);
+				}))
+//				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
+//					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
+//					GuiUtil.copyToClipboard(md);
+//				}))
 				.setFixedData(true)
 				.build();
 	}
