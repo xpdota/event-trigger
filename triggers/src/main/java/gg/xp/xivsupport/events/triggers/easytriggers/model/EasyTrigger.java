@@ -2,7 +2,6 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class EasyTrigger<X> {
+public class EasyTrigger<X> implements HasMutableConditions<X> {
 
 	@JsonIgnore
 	private long misses;
@@ -56,10 +55,12 @@ public class EasyTrigger<X> {
 		this.eventType = eventType;
 	}
 
+	@Override
 	public List<Condition<? super X>> getConditions() {
 		return Collections.unmodifiableList(conditions);
 	}
 
+	@Override
 	public void setConditions(List<Condition<? super X>> conditions) {
 		this.conditions = new ArrayList<>(conditions);
 	}
@@ -70,11 +71,18 @@ public class EasyTrigger<X> {
 		}
 	}
 
+	@Override
+	public Class<X> classForConditions() {
+		return eventType;
+	}
+
+	@Override
 	public void addCondition(Condition<? super X> condition) {
 		makeWritable();
 		conditions.add(condition);
 	}
 
+	@Override
 	public void removeCondition(Condition<? super X> condition) {
 		makeWritable();
 		conditions.remove(condition);

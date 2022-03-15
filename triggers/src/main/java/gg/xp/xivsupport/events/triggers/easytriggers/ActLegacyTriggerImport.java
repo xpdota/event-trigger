@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ActLegacyTriggerImport {
-	private static final Pattern parsePattern = Pattern.compile(" ([A-Za-z]{1,2})=\"([^\"]*)\"");
+	private static final Pattern parsePattern = Pattern.compile(" ([A-Za-z]+)=\"([^\"]*)\"");
 
 	public static List<EasyTrigger<ACTLogLineEvent>> parseMultipleTriggerXml(String triggerXmlMultiLine) {
 		return triggerXmlMultiLine.lines()
@@ -50,17 +50,27 @@ public class ActLegacyTriggerImport {
 		String regex = map.get("R");
 		String output = map.get("SD");
 
+		if (regex == null) {
+			regex = map.get("Regex");
+		}
+		if (output == null) {
+			output = map.get("SoundData");
+		}
 		if (regex == null || output == null) {
 			throw new IllegalArgumentException("Did not have required fields: " + triggerXml);
 		}
 
+		// Java doesn't support PCRE regex comments, so strip them.
+		// They look like this: (?#-- Comment goes here --)
+		regex = regex.replaceAll("\\(\\?#--.*?--\\)", "");
+
 		EasyTrigger<ACTLogLineEvent> trigger = new EasyTrigger<>();
 		trigger.setEventType(ACTLogLineEvent.class);
-		trigger.setName("Imported Legacy ACT Trigger");
+		trigger.setName(regex);
 		trigger.setText(output);
 		trigger.setTts(output);
 		LogLineRegexFilter cond = new LogLineRegexFilter();
-		cond.regex = Pattern.compile(regex);
+		cond.regex = Pattern.compile(regex, Pattern.COMMENTS);
 		cond.lineType = LogLineRegexFilter.LogLineType.PARSED;
 
 		trigger.addCondition(cond);

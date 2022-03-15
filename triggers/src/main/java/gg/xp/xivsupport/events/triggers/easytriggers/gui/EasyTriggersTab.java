@@ -15,6 +15,7 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
+import gg.xp.xivsupport.gui.tables.filters.InputValidationState;
 import gg.xp.xivsupport.gui.tables.filters.MultiLineTextAreaWithValidation;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -134,7 +135,7 @@ public class EasyTriggersTab implements PluginTab {
 			{
 				JButton importTriggerButton = new JButton("Import Triggers");
 				controlsPanel.add(importTriggerButton);
-				importTriggerButton.addActionListener(l -> showImportDialog());
+				importTriggerButton.addActionListener(l -> showEasyImportDialog());
 			}
 			{
 				JButton importLegacyTriggerButton = new JButton("Import Legacy ACT Triggers");
@@ -170,47 +171,48 @@ public class EasyTriggersTab implements PluginTab {
 				ett.backend.commit();
 				saveAnyway = false;
 			}
-		}, (unused) -> 5000L);
+		}, (unused) -> 15000L);
 
 		refresher.start();
 		return outer;
 	}
 
-	private void showImportDialog() {
-		// TODO: OK button should be disabled if input is invalid
-		Mutable<List<EasyTrigger<?>>> value = new MutableObject<>();
-		MultiLineTextAreaWithValidation<List<EasyTrigger<?>>> field = new MultiLineTextAreaWithValidation<>(EasyTriggers::importFromString, value::setValue, "");
-		field.setPreferredSize(new Dimension(500, 500));
-		field.setLineWrap(true);
-		field.setWrapStyleWord(true);
-		JScrollPane scrollPane = new JScrollPane(field);
-		scrollPane.setPreferredSize(new Dimension(720, 480));
-		JOptionPane opt = new JOptionPane(scrollPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
-		JDialog dialog = opt.createDialog("Import Triggers");
-		dialog.setVisible(true);
-		Object dialogResult = opt.getValue();
-		if (dialogResult instanceof Integer dr && dr == JOptionPane.OK_OPTION && value.getValue() != null) {
-			addImports(value.getValue());
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private void showActImportDialog() {
-		// TODO: OK button should be disabled if input is invalid
-		Mutable<List<EasyTrigger<ACTLogLineEvent>>> value = new MutableObject<>();
-		MultiLineTextAreaWithValidation<List<EasyTrigger<ACTLogLineEvent>>> field = new MultiLineTextAreaWithValidation<>(ActLegacyTriggerImport::parseMultipleTriggerXml, value::setValue, "");
-//		field.setPreferredSize(new Dimension(500, 500));
+	private static <X> @Nullable X doImportDialog(String title, Function<String, X> converter) {
+		Mutable<X> value = new MutableObject<>();
+		JButton okButton = new JButton("Import");
+		MultiLineTextAreaWithValidation<X> field = new MultiLineTextAreaWithValidation<>(converter, value::setValue, "", (vs -> okButton.setEnabled(vs == InputValidationState.VALID)));
+		JButton cancelButton = new JButton("Cancel");
 		field.setPreferredSize(null);
 		field.setLineWrap(true);
 		field.setWrapStyleWord(true);
 		JScrollPane scrollPane = new JScrollPane(field);
 		scrollPane.setPreferredSize(new Dimension(720, 480));
-		JOptionPane opt = new JOptionPane(scrollPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
-		JDialog dialog = opt.createDialog("Import Legacy ACT Triggers");
+		JOptionPane opt = new JOptionPane(scrollPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null, new Object[]{okButton, cancelButton});
+		okButton.addActionListener(l -> opt.setValue(JOptionPane.OK_OPTION));
+		cancelButton.addActionListener(l -> opt.setValue(JOptionPane.CANCEL_OPTION));
+		JDialog dialog = opt.createDialog(title);
 		dialog.setVisible(true);
 		Object dialogResult = opt.getValue();
-		List<EasyTrigger<ACTLogLineEvent>> newTriggers = value.getValue();
-		if (dialogResult instanceof Integer dr && dr == JOptionPane.OK_OPTION && newTriggers != null) {
+		X theValue = value.getValue();
+		if (dialogResult instanceof Integer dr && dr == JOptionPane.OK_OPTION && theValue != null) {
+			return theValue;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private void showEasyImportDialog() {
+		List<EasyTrigger<?>> newTriggers = doImportDialog("Import Triggers", EasyTriggers::importFromString);
+		if (newTriggers != null && !newTriggers.isEmpty()) {
+			addImports(newTriggers);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void showActImportDialog() {
+		List<EasyTrigger<ACTLogLineEvent>> newTriggers = doImportDialog("Import Legacy Triggers", ActLegacyTriggerImport::parseMultipleTriggerXml);
+		if (newTriggers != null && !newTriggers.isEmpty()) {
 			// :clown_emoji:
 			addImports((List<EasyTrigger<?>>) (Object) newTriggers);
 		}

@@ -4,6 +4,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -17,9 +18,9 @@ import java.awt.*;
 
 public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(ConditionsPanel.class);
-	private final EasyTrigger<X> trigger;
+	private final HasMutableConditions<X> trigger;
 
-	public ConditionsPanel(String label, EasyTrigger<X> trigger) {
+	public ConditionsPanel(String label, HasMutableConditions<X> trigger) {
 		super(label);
 		this.trigger = trigger;
 		setPreferredSize(null);

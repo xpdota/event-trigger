@@ -40,6 +40,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -221,8 +222,8 @@ public class EasyTriggers {
 		return conditions;
 	}
 
-	public static <X> List<ConditionDescription<?, ?>> getConditionsApplicableTo(EasyTrigger<X> trigger) {
-		return conditions.stream().filter(cdesc -> cdesc.appliesTo(trigger.getEventType())).toList();
+	public static <X> List<ConditionDescription<?, ?>> getConditionsApplicableTo(HasMutableConditions<X> trigger) {
+		return conditions.stream().filter(cdesc -> cdesc.appliesTo(trigger.classForConditions())).toList();
 	}
 
 	@SuppressWarnings("unchecked")
