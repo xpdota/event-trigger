@@ -14,7 +14,7 @@ public class ActLegacyImportTest {
 		Assert.assertEquals(trigger.getEventType(), ACTLogLineEvent.class);
 		Assert.assertEquals(trigger.getText(), "\"qwer\"");
 		Assert.assertEquals(trigger.getTts(), "\"qwer\"");
-		Assert.assertEquals(trigger.getName(), "Imported Legacy ACT Trigger");
+		Assert.assertEquals(trigger.getName(), "asdf");
 		Assert.assertEquals(trigger.getConditions().size(), 1);
 		LogLineRegexFilter condition = (LogLineRegexFilter) trigger.getConditions().get(0);
 		Assert.assertEquals(condition.regex.pattern(), "asdf");
