@@ -25,6 +25,7 @@ public final class ActionTable {
 	}
 
 	public static TableWithFilterAndDetails<ActionInfo, Object> table() {
+		// TODO: "initial load on filter update" would be nice
 		return TableWithFilterAndDetails.builder("Actions/Abilities", () -> {
 					Map<Long, ActionInfo> csvValues = ActionLibrary.getAll();
 					List<ActionInfo> values = new ArrayList<>(csvValues.values());
@@ -58,6 +59,10 @@ public final class ActionTable {
 					String md = String.format("![%s](%s)", ai.name(), ai.getXivapiUrl());
 					GuiUtil.copyToClipboard(md);
 				}))
+//				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
+//					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
+//					GuiUtil.copyToClipboard(md);
+//				}))
 				.setFixedData(true)
 				.build();
 	}
