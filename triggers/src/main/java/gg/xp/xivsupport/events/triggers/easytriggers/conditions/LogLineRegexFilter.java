@@ -36,7 +36,7 @@ public class LogLineRegexFilter implements Condition<ACTLogLineEvent> {
 
 	@Override
 	public String dynamicLabel() {
-		return lineType.getFriendlyName() + " matches regex " + regex.pattern();
+		return lineType.getFriendlyName() + " matches regex '" + regex.pattern() + '\'';
 	}
 
 	@Override

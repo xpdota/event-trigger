@@ -11,8 +11,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ActLegacyTriggerImport {
+public final class ActLegacyTriggerImport {
 	private static final Pattern parsePattern = Pattern.compile(" ([A-Za-z]+)=\"([^\"]*)\"");
+
+	private ActLegacyTriggerImport() {
+	}
 
 	public static List<EasyTrigger<ACTLogLineEvent>> parseMultipleTriggerXml(String triggerXmlMultiLine) {
 		return triggerXmlMultiLine.lines()
@@ -20,6 +23,14 @@ public class ActLegacyTriggerImport {
 				.filter(s -> s.startsWith("<Trigger"))
 				.map(ActLegacyTriggerImport::parseTriggerXml)
 				.toList();
+	}
+
+	public static List<EasyTrigger<ACTLogLineEvent>> parseMultipleTriggerXmlNonEmpty(String triggerXmlMultiLine) {
+		List<EasyTrigger<ACTLogLineEvent>> triggers = parseMultipleTriggerXml(triggerXmlMultiLine);
+		if (triggers.isEmpty()) {
+			throw new AssertionError("No valid triggers found in the input text");
+		}
+		return triggers;
 	}
 
 	public static EasyTrigger<ACTLogLineEvent> parseTriggerXml(String triggerXml) {

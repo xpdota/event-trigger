@@ -211,7 +211,7 @@ public class EasyTriggersTab implements PluginTab {
 
 	@SuppressWarnings("unchecked")
 	private void showActImportDialog() {
-		List<EasyTrigger<ACTLogLineEvent>> newTriggers = doImportDialog("Import Legacy Triggers", ActLegacyTriggerImport::parseMultipleTriggerXml);
+		List<EasyTrigger<ACTLogLineEvent>> newTriggers = doImportDialog("Import Legacy Triggers", ActLegacyTriggerImport::parseMultipleTriggerXmlNonEmpty);
 		if (newTriggers != null && !newTriggers.isEmpty()) {
 			// :clown_emoji:
 			addImports((List<EasyTrigger<?>>) (Object) newTriggers);
