@@ -177,12 +177,15 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private void showImportDialog() {
+		// TODO: OK button should be disabled if input is invalid
 		Mutable<List<EasyTrigger<?>>> value = new MutableObject<>();
 		MultiLineTextAreaWithValidation<List<EasyTrigger<?>>> field = new MultiLineTextAreaWithValidation<>(EasyTriggers::importFromString, value::setValue, "");
 		field.setPreferredSize(new Dimension(500, 500));
 		field.setLineWrap(true);
 		field.setWrapStyleWord(true);
-		JOptionPane opt = new JOptionPane(field, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+		JScrollPane scrollPane = new JScrollPane(field);
+		scrollPane.setPreferredSize(new Dimension(720, 480));
+		JOptionPane opt = new JOptionPane(scrollPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
 		JDialog dialog = opt.createDialog("Import Triggers");
 		dialog.setVisible(true);
 		Object dialogResult = opt.getValue();
@@ -193,12 +196,16 @@ public class EasyTriggersTab implements PluginTab {
 
 	@SuppressWarnings("unchecked")
 	private void showActImportDialog() {
+		// TODO: OK button should be disabled if input is invalid
 		Mutable<List<EasyTrigger<ACTLogLineEvent>>> value = new MutableObject<>();
 		MultiLineTextAreaWithValidation<List<EasyTrigger<ACTLogLineEvent>>> field = new MultiLineTextAreaWithValidation<>(ActLegacyTriggerImport::parseMultipleTriggerXml, value::setValue, "");
-		field.setPreferredSize(new Dimension(500, 500));
+//		field.setPreferredSize(new Dimension(500, 500));
+		field.setPreferredSize(null);
 		field.setLineWrap(true);
 		field.setWrapStyleWord(true);
-		JOptionPane opt = new JOptionPane(field, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+		JScrollPane scrollPane = new JScrollPane(field);
+		scrollPane.setPreferredSize(new Dimension(720, 480));
+		JOptionPane opt = new JOptionPane(scrollPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
 		JDialog dialog = opt.createDialog("Import Legacy ACT Triggers");
 		dialog.setVisible(true);
 		Object dialogResult = opt.getValue();

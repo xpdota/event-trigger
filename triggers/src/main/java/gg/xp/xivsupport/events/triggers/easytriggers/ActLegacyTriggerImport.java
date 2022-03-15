@@ -15,7 +15,9 @@ public class ActLegacyTriggerImport {
 	private static final Pattern parsePattern = Pattern.compile(" ([A-Za-z]{1,2})=\"([^\"]*)\"");
 
 	public static List<EasyTrigger<ACTLogLineEvent>> parseMultipleTriggerXml(String triggerXmlMultiLine) {
-		return triggerXmlMultiLine.lines().filter(s -> !s.isBlank())
+		return triggerXmlMultiLine.lines()
+				.map(String::trim)
+				.filter(s -> s.startsWith("<Trigger"))
 				.map(ActLegacyTriggerImport::parseTriggerXml)
 				.toList();
 	}
@@ -31,6 +33,10 @@ public class ActLegacyTriggerImport {
 		// TN: timer/tab name
 		// Ta: Add Results Tab
 		// <Trigger R="asdf" SD="qwer" ST="2" CR="F" C="zxcv" T="F" TN="tyui" Ta="T" />
+
+		// TODO: there's also a "long form" of these, looks like this:
+		// <Trigger Active="True" Regex="(?#-- Thermionic Beam -&gt; Lunar Dynamo : Stack &amp; In --)Take fire, O hallowed moon!" SoundData="Stack &amp; In" SoundType="3" CategoryRestrict="False" Category="Nael RP Quotes" Timer="False" TimerName="" Tabbed="False" />
+
 		Matcher matcher = parsePattern.matcher(triggerXml);
 
 		Map<String, String> map = new HashMap<>(8);
