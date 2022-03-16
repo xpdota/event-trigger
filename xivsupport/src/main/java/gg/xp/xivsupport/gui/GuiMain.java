@@ -134,8 +134,9 @@ public class GuiMain {
 			tabPane = new SmartTabbedPane();
 			frame.setLayout(new BorderLayout());
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setLocationByPlatform(true);
-			frame.setSize(1280, 800);
+//			frame.setLocationByPlatform(true);
+			frame.setSize(1280, 960);
+			frame.setLocationRelativeTo(null);
 			frame.setVisible(true);
 			frame.add(tabPane);
 			if (replay != null) {

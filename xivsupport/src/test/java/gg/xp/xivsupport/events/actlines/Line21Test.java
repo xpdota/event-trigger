@@ -73,7 +73,7 @@ public class Line21Test extends AbstractACTLineTest<AbilityUsedEvent> {
 
 	@Test
 	public void testHugeDamage() {
-		String goodLine = "22|2022-01-20T18:11:59.9720000-08:00|40031036|Sparkfledged|66E6|Ashen Eye|10679943|Sensha Desu|3|967F4098|1B|66E68000|0|0|0|0|0|0|0|0|0|0|0|0|61186|61186|10000|10000|||100.14|91.29|-0.02|3.08|69200|69200|10000|10000|||100.11|106.76|0.00|3.14|000133E7|2|4|64f5cd5254f9f411";
+		String goodLine = "22|2022-01-20T18:11:59.9720000-08:00|40031036|Sparkfledged|66E6|Ashen Eye|10679943|Foo Bar|3|967F4098|1B|66E68000|0|0|0|0|0|0|0|0|0|0|0|0|61186|61186|10000|10000|||100.14|91.29|-0.02|3.08|69200|69200|10000|10000|||100.11|106.76|0.00|3.14|000133E7|2|4|64f5cd5254f9f411";
 		AbilityUsedEvent event = expectEvent(goodLine);
 		long damage = event.getDamage();
 		MatcherAssert.assertThat(damage, Matchers.greaterThan(0L));

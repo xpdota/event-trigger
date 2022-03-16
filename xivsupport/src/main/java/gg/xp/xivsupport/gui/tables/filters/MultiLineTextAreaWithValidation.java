@@ -10,20 +10,23 @@ import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class MultiLineTextFieldWithValidation<X> extends JTextArea {
+public class MultiLineTextAreaWithValidation<X> extends JTextArea {
 
-	private static final Logger log = LoggerFactory.getLogger(MultiLineTextFieldWithValidation.class);
+	private static final Logger log = LoggerFactory.getLogger(MultiLineTextAreaWithValidation.class);
 
 	protected final Color originalBackground;
 	private final Function<String, X> parser;
 	private final Consumer<X> consumer;
+	private final Consumer<InputValidationState> validationUpdatedCallback;
 	protected final Color invalidBackground = new Color(62, 27, 27);
 	private boolean stopUpdate;
+	private InputValidationState state = InputValidationState.INITIAL;
 
-	public MultiLineTextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
+	public MultiLineTextAreaWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue, Consumer<InputValidationState> validationUpdatedCallback) {
 		super(30, 30);
 		this.parser = parser;
 		this.consumer = consumer;
+		this.validationUpdatedCallback = validationUpdatedCallback;
 		setText(initialValue);
 		setEditable(true);
 		getDocument().addDocumentListener(new DocumentListener() {
@@ -43,7 +46,13 @@ public class MultiLineTextFieldWithValidation<X> extends JTextArea {
 			}
 		});
 		originalBackground = getBackground();
+		updateValidationCallback();
 	}
+
+	private void updateValidationCallback() {
+		validationUpdatedCallback.accept(state);
+	}
+
 
 	private void update() {
 		boolean validationError;
@@ -63,9 +72,16 @@ public class MultiLineTextFieldWithValidation<X> extends JTextArea {
 		}
 		if (validationError) {
 			setBackground(invalidBackground);
+			state = InputValidationState.INVALID;
 		}
 		else {
 			setBackground(originalBackground);
+			state = InputValidationState.VALID;
 		}
+		updateValidationCallback();
+	}
+
+	public InputValidationState getValidationState() {
+		return state;
 	}
 }

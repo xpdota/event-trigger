@@ -129,7 +129,7 @@ public class FlyingTextOverlay extends XivOverlay {
 
 	@HandleEvents
 	public void handleEvent(EventContext context, CalloutEvent event) {
-		if (event.getVisualText() != null) {
+		if (event.getVisualText() != null && !event.getVisualText().isBlank()) {
 			addCallout(event);
 		}
 	}

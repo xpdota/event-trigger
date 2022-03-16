@@ -29,6 +29,7 @@ public final class ModifiedCalloutHandle {
 		enableText = new BooleanSetting(persistenceProvider, propStub + ".text-enabled", true);
 		textSetting = new StringSetting(persistenceProvider, propStub + ".text", original.getOriginalVisualText());
 		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", false);
+		// TODO: this was a legacy compat hack, not necessary anymore
 		sameText.set(sameText.get());
 		hangTimeSetting = new LongSetting(persistenceProvider, propStub + ".text.hangtime", 5000L);
 		this.original = original;

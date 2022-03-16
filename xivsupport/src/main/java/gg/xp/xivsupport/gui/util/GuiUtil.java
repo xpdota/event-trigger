@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -29,6 +30,16 @@ public final class GuiUtil {
 			throw new RuntimeException(e);
 		}
 
+	}
+
+	public static GridBagConstraints defaultGbc() {
+		return new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0);
+	}
+
+	public static JLabel labelFor(String text, Component component) {
+		JLabel label = new JLabel(text);
+		label.setLabelFor(component);
+		return label;
 	}
 
 	public static void copyToClipboard(String contents) {
