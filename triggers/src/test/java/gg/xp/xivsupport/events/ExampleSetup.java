@@ -6,6 +6,8 @@ import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
+import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
@@ -13,6 +15,17 @@ import org.testng.Assert;
 
 public final class ExampleSetup {
 	private ExampleSetup() {
+	}
+
+	public static MutablePicoContainer setup(PersistenceProvider pers) {
+		// TODO: make this a template for integration testing
+		MutablePicoContainer container = XivMain.testingMasterInit();
+		container.removeComponent(InMemoryMapPersistenceProvider.class);
+		container.addComponent(pers);
+		EventDistributor dist = container.getComponent(EventDistributor.class);
+		doEvents(dist);
+		finishSetup(container);
+		return container;
 	}
 
 	public static MutablePicoContainer setup() {
@@ -23,6 +36,7 @@ public final class ExampleSetup {
 		finishSetup(container);
 		return container;
 	}
+
 	private static void finishSetup(PicoContainer container) {
 		BasicEventQueue queue = container.getComponent(BasicEventQueue.class);
 		queue.waitDrain();
