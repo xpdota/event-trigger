@@ -214,23 +214,26 @@
                     <jre>
                         <path>jre</path>
                         <minVersion>${java.version}</minVersion>
-                        <opts><opt>@args.txt</opt></opts>
+                        <opts>
+                            <opt>@args.txt</opt>
+                        </opts>
                     </jre>
                     <headerType>gui</headerType>
                     <errTitle>Triggevent</errTitle>
                     <dontWrapJar>true</dontWrapJar>
                     <chdir>.</chdir>
                     <downloadUrl>https://www.oracle.com/java/technologies/downloads/#jdk17-windows</downloadUrl>
+                    <!-- This info is really only filled in because AVs complain less.-->
                     <versionInfo>
-                        <fileVersion>1.0.0.0</fileVersion>
-                        <txtFileVersion>txt file version</txtFileVersion>
-                        <fileDescription>description</fileDescription>
-                        <copyright>2021</copyright>
-                        <productVersion>1.0.0.0</productVersion>
-                        <txtProductVersion>1.0.0.0</txtProductVersion>
+                        <fileVersion>1.3.2.1</fileVersion>
+                        <txtFileVersion>1.3.2.1</txtFileVersion>
+                        <fileDescription>Triggevent</fileDescription>
+                        <copyright>2022</copyright>
+                        <productVersion>1.3.2.1</productVersion>
+                        <txtProductVersion>1.3.2.1</txtProductVersion>
                         <productName>Triggevent</productName>
                         <internalName>triggevent</internalName>
-                        <originalFilename>original.exe</originalFilename>
+                        <originalFilename>triggevent.exe</originalFilename>
                     </versionInfo>
                     <messages>
                         <bundledJreErr>You need to download Java version 17 or higher, or download the version
