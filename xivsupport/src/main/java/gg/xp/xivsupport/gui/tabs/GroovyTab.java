@@ -83,12 +83,7 @@ public class GroovyTab extends JPanel {
 				.forEach(importCustomizer::addImports);
 
 		compilerConfiguration.addCompilationCustomizers(importCustomizer);
-		Binding binding = new Binding() {
-			@Override
-			public Object getProperty(String property) {
-				return super.getProperty(property);
-			}
-		};
+		Binding binding = new Binding();
 		shell = new GroovyShell(binding, compilerConfiguration);
 		container.getComponents().forEach(item -> {
 			String simpleName = item.getClass().getSimpleName();
@@ -230,6 +225,8 @@ public class GroovyTab extends JPanel {
 			For example, I can see that there are currently ${rawEventStorage.getEvents().size()} events on record. The current player name is ${xivState.getPlayer()?.getName()}.
 
 			Your return type can be a String, a List, Map, or Swing Component. The value will be rendered differently according to its type. In this case, it is a String.
+			
+			Variables defined here will be scoped locally. If you want it to be persistent across multiple executions, then use binding.setVariable("name", value).
 			
 			This does NOT have any sandboxing, so don't run random stuff you found on the internet. It can do anything to your system that compiled Java code would be able to do. \"""
 			""";
