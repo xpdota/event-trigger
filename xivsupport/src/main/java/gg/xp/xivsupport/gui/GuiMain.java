@@ -50,6 +50,7 @@ import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
+import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
@@ -154,6 +155,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", container.getComponent(MapTab.class)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", new LibraryTab()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Groovy", new GroovyTab(container)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 	}
 
