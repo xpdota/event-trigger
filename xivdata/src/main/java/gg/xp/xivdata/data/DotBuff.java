@@ -13,6 +13,7 @@ public enum DotBuff {
 	BRD_CombinedDots(BRD, "Bard DoTs", 0x4b0L, 0x4b1L, 0x7cL, 0x81L),
 	DRG_ChaosThrust(DRG, "Chaos Thrust", 0x76L),
 	MNK_Demolish(MNK, "Demolish", 0xf6L),
+	MNK_Twinsnakes(MNK, "Twin Snakes", 0xbb9L),
 	NIN_ShadowFang(NIN, "Shadow Fang", 0x1fcL),
 	// TODO: These are mutually exclusive, tracker doesn't handle that all too well at the moment
 	// It looks awkward due to preapp, and also if your SkS is too low, the buff expires, and the
