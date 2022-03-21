@@ -196,7 +196,7 @@ public class EasyTriggers {
 	}
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
-	private static final List<ConditionDescription<?, ?>> conditions = List.<ConditionDescription<?, ?>>of(
+	private static final List<ConditionDescription<?, ?>> conditions = List.of(
 			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(StatusStacksFilter.class, HasStatusEffect.class, "Status Effect Stack Count", StatusStacksFilter::new, EasyTriggers::generic),
@@ -207,7 +207,7 @@ public class EasyTriggers {
 			new ConditionDescription<>(LogLineNumberFilter.class, ACTLogLineEvent.class, "Log Line Number", LogLineNumberFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, EasyTriggers::generic),
-			new ConditionDescription<GroovyEventFilter, Event>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", GroovyEventFilter::new, (a, b) -> new GroovyFilterEditor<Event>(a, (EasyTrigger<Event>) b))
+			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", GroovyEventFilter::new, (a, b) -> new GroovyFilterEditor<Event>(a, (EasyTrigger<Event>) b))
 	);
 
 	public static List<EventDescription<?>> getEventDescriptions() {
