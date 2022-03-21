@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +10,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class TextFieldWithValidation<X> extends JTextField {
 
@@ -19,12 +21,18 @@ public class TextFieldWithValidation<X> extends JTextField {
 	private final Consumer<X> consumer;
 	protected final Color invalidBackground = new Color(62, 27, 27);
 	private boolean stopUpdate;
+	private Supplier<String> valueGetter;
 
 	public TextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
+		this(parser, consumer, () -> initialValue);
+	}
+
+	public TextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, Supplier<String> valueGetter) {
 		super(10);
 		this.parser = parser;
 		this.consumer = consumer;
-		setText(initialValue);
+		this.valueGetter = valueGetter;
+		resetText();
 		setEditable(true);
 		getDocument().addDocumentListener(new DocumentListener() {
 			@Override
@@ -45,8 +53,30 @@ public class TextFieldWithValidation<X> extends JTextField {
 		originalBackground = getBackground();
 	}
 
+	private volatile boolean ignoreUpdate;
+
+	public void resetText() {
+		ignoreUpdate = true;
+		try {
+			setText(valueGetter.get());
+		}
+		finally {
+			ignoreUpdate = false;
+		}
+	}
+
 	public void recheck() {
 		update();
+	}
+
+	private @Nullable String validationErrorMessage;
+
+	@Override
+	public String getToolTipText() {
+		if (validationErrorMessage != null) {
+			return validationErrorMessage;
+		}
+		return super.getToolTipText();
 	}
 
 	private void update() {
@@ -55,12 +85,21 @@ public class TextFieldWithValidation<X> extends JTextField {
 		try {
 			X parsedValue = parser.apply(currentRawText);
 			try {
-				consumer.accept(parsedValue);
+				if (!ignoreUpdate) {
+					consumer.accept(parsedValue);
+				}
 				validationError = false;
+			} catch (ValidationError e) {
+				validationError = true;
+				validationErrorMessage = e.getMessage();
 			} catch (Throwable e) {
 				log.error("Error consuming new value ({})", parsedValue, e);
 				validationError = true;
 			}
+		}
+		catch (ValidationError e) {
+			validationError = true;
+			validationErrorMessage = e.getMessage();
 		}
 		catch (Throwable e) {
 			validationError = true;
@@ -70,6 +109,7 @@ public class TextFieldWithValidation<X> extends JTextField {
 		}
 		else {
 			setBackground(originalBackground);
+			validationErrorMessage = null;
 		}
 	}
 }
