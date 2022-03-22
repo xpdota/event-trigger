@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +54,16 @@ public class MultiLineTextAreaWithValidation<X> extends JTextArea {
 		validationUpdatedCallback.accept(state);
 	}
 
+	private @Nullable String validationErrorMessage;
+
+	@Override
+	public String getToolTipText() {
+		if (validationErrorMessage != null) {
+			return validationErrorMessage;
+		}
+		return super.getToolTipText();
+	}
+
 
 	private void update() {
 		boolean validationError;
@@ -62,10 +73,19 @@ public class MultiLineTextAreaWithValidation<X> extends JTextArea {
 			try {
 				consumer.accept(rawText);
 				validationError = false;
-			} catch (Throwable e) {
+			}
+			catch (ValidationError e) {
+				validationError = true;
+				validationErrorMessage = e.getMessage();
+			}
+			catch (Throwable e) {
 				log.error("Error consuming new value ({})", rawText, e);
 				validationError = true;
 			}
+		}
+		catch (ValidationError e) {
+			validationError = true;
+			validationErrorMessage = e.getMessage();
 		}
 		catch (Throwable e) {
 			validationError = true;
@@ -77,6 +97,7 @@ public class MultiLineTextAreaWithValidation<X> extends JTextArea {
 		else {
 			setBackground(originalBackground);
 			state = InputValidationState.VALID;
+			validationErrorMessage = null;
 		}
 		updateValidationCallback();
 	}

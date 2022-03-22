@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EasyTrigger<X> implements HasMutableConditions<X> {
 
 	@JsonIgnore
@@ -17,6 +19,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 	@JsonIgnore
 	private long hits;
 
+	@JsonProperty(defaultValue = "true")
 	private boolean enabled = true;
 	private ModifiableCallout<X> call;
 

@@ -42,17 +42,16 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
+import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ScanMe
 public class EasyTriggers {
@@ -118,7 +117,7 @@ public class EasyTriggers {
 			});
 		}
 		catch (JsonProcessingException e) {
-			throw new RuntimeException("Error importing trigger", e);
+			throw new ValidationError("Error importing trigger: " + e.getMessage(), e);
 		}
 	}
 
