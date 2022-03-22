@@ -100,5 +100,6 @@
         <module>launcher</module>
         <module>triggers</module>
         <module>actimport</module>
+        <module>timelines</module>
     </modules>
 </project>
