@@ -150,14 +150,14 @@ public class JailGui implements PluginTab {
 
 
 	private static final String helpText = """
-			NOTE: You currently MUST use default party sort order to use automarks!
-
 			Instructions:
 
 			1. Check boxes for whether you would like personal callouts and/or automarks.
 			2. If you will be using automarks, be sure to configure automark hotkeys on the Automarks tab.
 			3. Drag jobs in the list to configure your priority. The party list on the right shows what the effective priority will be.
 			4. If using personal callouts, make sure everyone has the same priority (using the defaults makes this easy).
+			5. Also be sure to check Advanced > Party to make sure the party sort is correct (it should match the in-game party list, not your Gaol priority).
+			6. If using Automarks, also check the Help button on the Automarks if you need help setting up the macros.
 
 			To test automarks, you must in inside the UWU instance, or check the 'Override Zone Lock' option. Then, use the command 'amtest' like so:
 
