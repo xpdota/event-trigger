@@ -275,7 +275,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
-								return player == null ? "null" : player.getName();
+								return player == null ? "?" : player.getName();
 							},
 							JLabel::setText
 					),
@@ -284,7 +284,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivZone zone = state.get(XivStateImpl.class).getZone();
-								return zone == null ? "null" : zone.getName();
+								return zone == null ? "?" : zone.getName();
 							},
 							JLabel::setText
 					),
@@ -293,7 +293,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivMap map = state.get(XivStateImpl.class).getMap();
-								return map == null ? "null" : map.getPlace();
+								return map == null ? "?" : map.getPlace();
 							},
 							JLabel::setText
 					),
@@ -302,7 +302,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
-								return player == null ? "null" : player.getJob().getFriendlyName();
+								return player == null ? "?" : player.getJob().getFriendlyName();
 							},
 							JLabel::setText
 					),
@@ -311,16 +311,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
-								return player == null ? "null" : Long.toString(player.getLevel());
-							},
-							JLabel::setText
-					),
-					new KeyValuePairDisplay<>(
-							"World",
-							new JLabel(),
-							() -> {
-								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
-								return player == null ? "null" : player.getWorld().toString();
+								return player == null ? "?" : Long.toString(player.getLevel());
 							},
 							JLabel::setText
 					)
