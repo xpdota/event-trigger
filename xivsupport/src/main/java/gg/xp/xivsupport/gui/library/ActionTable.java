@@ -11,6 +11,7 @@ import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivAbility;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -70,5 +71,9 @@ public final class ActionTable {
 	public static void showChooser(Window owner, Consumer<ActionInfo> callback) {
 		TableWithFilterAndDetails<ActionInfo, Object> table = table();
 		ChooserDialog.showChooser(owner, table, callback);
+	}
+
+	public static @Nullable ActionInfo pickItem(Window owner) {
+		return ChooserDialog.chooserReturnItem(owner, table());
 	}
 }

@@ -136,7 +136,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 		newTrigger.setEventType(eventType);
 		newTrigger.setName(name + " copy");
 		newTrigger.setTts(tts);
-		newTrigger.setTts(text);
+		newTrigger.setText(text);
 		newTrigger.setConditions(new ArrayList<>(conditions));
 		return newTrigger;
 	}

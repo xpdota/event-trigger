@@ -35,6 +35,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusStacksFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityTypeFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
@@ -198,7 +199,7 @@ public class EasyTriggers {
 	private static final List<ConditionDescription<?, ?>> conditions = List.of(
 			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(StatusStacksFilter.class, HasStatusEffect.class, "Status Effect ID", StatusStacksFilter::new, EasyTriggers::generic),
+			new ConditionDescription<>(StatusStacksFilter.class, HasStatusEffect.class, "Status Effect Stack Count", StatusStacksFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(SourceEntityTypeFilter.class, HasSourceEntity.class, "Source Combatant", SourceEntityTypeFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(TargetEntityTypeFilter.class, HasTargetEntity.class, "Target Combatant", TargetEntityTypeFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(DurationFilter.class, HasDuration.class, "Castbar or Status Duration", DurationFilter::new, EasyTriggers::generic),
@@ -206,7 +207,7 @@ public class EasyTriggers {
 			new ConditionDescription<>(LogLineNumberFilter.class, ACTLogLineEvent.class, "Log Line Number", LogLineNumberFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(GroovyEventFilter.class, Object.class, "Make your own filter code with Groovy", GroovyEventFilter::new, (a, b) -> new JLabel("Not Implemented Yet"))
+			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", GroovyEventFilter::new, (a, b) -> new GroovyFilterEditor<Event>(a, (EasyTrigger<Event>) b))
 	);
 
 	public static List<EventDescription<?>> getEventDescriptions() {

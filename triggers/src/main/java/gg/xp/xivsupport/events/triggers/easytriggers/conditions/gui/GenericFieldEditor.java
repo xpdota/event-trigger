@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui;
 
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdPicker;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdType;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
@@ -8,7 +10,6 @@ import gg.xp.xivsupport.gui.util.GuiUtil;
 
 import javax.swing.*;
 import java.awt.*;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -28,9 +29,16 @@ public class GenericFieldEditor extends JPanel {
 				.forEach(this::addField);
 	}
 
+	@Override
+	public Dimension getPreferredSize() {
+		return super.getPreferredSize();
+//		return new Dimension(getMaximumSize().width, super.getPreferredSize().height);
+	}
+
 	private void addField(Field field) {
 		String name;
 		Description annotation = field.getAnnotation(Description.class);
+		IdType idPick = field.getAnnotation(IdType.class);
 		if (annotation == null) {
 			name = field.getName();
 		}
@@ -40,7 +48,12 @@ public class GenericFieldEditor extends JPanel {
 		Class<?> type = field.getType();
 		final Component editorComponent;
 		if (type.equals(long.class) || type.equals(Long.class)) {
-			editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), getField(field).toString());
+			if (idPick == null) {
+				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), getField(field).toString());
+			}
+			else {
+				editorComponent = IdPicker.pickerFor(idPick.value(), () -> (long) getField(field), l -> setField(field, l));
+			}
 		}
 		else if (type.equals(int.class) || type.equals(Integer.class)) {
 			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), getField(field).toString());
