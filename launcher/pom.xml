@@ -270,6 +270,11 @@
             <artifactId>actimport</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>timelines</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

@@ -56,4 +56,8 @@ public final class StatusTable {
 		TableWithFilterAndDetails<StatusEffectInfo, Object> table = table();
 		ChooserDialog.showChooser(frame, table, callback);
 	}
+
+	public static StatusEffectInfo pickItem(Window window) {
+		return ChooserDialog.chooserReturnItem(window, table());
+	}
 }
