@@ -155,7 +155,7 @@ public class FlyingTextOverlay extends XivOverlay {
 			Graphics2D graphics = (Graphics2D) g;
 			AffineTransform oldTransform = graphics.getTransform();
 			AffineTransform newTransform = new AffineTransform(oldTransform);
-			g.clearRect(0, 0, getWidth(), getHeight());
+//			g.clearRect(0, 0, getWidth(), getHeight());
 			int curY = 0;
 			for (VisualCalloutItem ce : currentCalloutsTmp) {
 				if (curY + ce.getHeight() > getHeight()) {

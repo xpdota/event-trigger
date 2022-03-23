@@ -43,7 +43,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>zip-file-no-jre</id>
@@ -77,7 +76,6 @@
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
                 <executions>
                     <execution>
                         <id>copy-jar</id>
@@ -153,7 +151,6 @@
             <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <artifactId>launch4j-maven-plugin</artifactId>
-                <version>2.1.2</version>
                 <executions>
                     <execution>
                         <id>l4j-import-gui</id>
@@ -252,28 +249,23 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>triggers</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.swingexplorer</groupId>
             <artifactId>swingexplorer-core</artifactId>
-            <version>1.7.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>actimport</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>timelines</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
