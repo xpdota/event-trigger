@@ -8,7 +8,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.io.Serial;
 import java.util.List;
 
-public class AbilityResolvedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects {
+public class AbilityResolvedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects, HasTargetIndex {
 	@Serial
 	private static final long serialVersionUID = 4043588325843768440L;
 	private final AbilityUsedEvent originalEvent;
@@ -41,5 +41,15 @@ public class AbilityResolvedEvent extends BaseEvent implements HasSourceEntity, 
 
 	public long getSequenceId() {
 		return sequenceId;
+	}
+
+	@Override
+	public long getTargetIndex() {
+		return originalEvent.getTargetIndex();
+	}
+
+	@Override
+	public long getNumberOfTargets() {
+		return originalEvent.getNumberOfTargets();
 	}
 }

@@ -9,7 +9,7 @@ import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
-public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects {
+public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects, HasTargetIndex {
 
 	@Serial
 	private static final long serialVersionUID = -4539070760062288496L;
@@ -55,14 +55,17 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 		return sequenceId;
 	}
 
+	@Override
 	public long getTargetIndex() {
 		return targetIndex;
 	}
 
+	@Override
 	public long getNumberOfTargets() {
 		return numberOfTargets;
 	}
 
+	@Override
 	public boolean isLastTarget() {
 		return targetIndex >= numberOfTargets - 1;
 	}

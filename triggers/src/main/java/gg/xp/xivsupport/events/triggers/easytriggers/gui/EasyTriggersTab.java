@@ -1,7 +1,9 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 
+import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
@@ -12,7 +14,9 @@ import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.InputValidationState;
@@ -41,8 +45,18 @@ public class EasyTriggersTab implements PluginTab {
 	private EasyTrigger<?> selection;
 	private List<EasyTrigger<?>> multiSelections = Collections.emptyList();
 
-	public EasyTriggersTab(EasyTriggers backend) {
+	public EasyTriggersTab(EasyTriggers backend, RightClickOptionRepo rightClicks) {
 		this.backend = backend;
+		rightClicks.addOption(CustomRightClickOption.forRow(
+				"Make Easy Trigger",
+				Event.class,
+				this::makeTriggerFromEvent));
+		// TODO
+		// TODO: good candidate for sub-menus
+//				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Make Easy Trigger", Event.class, Function.identity(), e -> {
+//					container.getComponent(EasyTrig)
+//					GuiUtil.copyTextToClipboard(line.getFields().toString());
+//				}))
 	}
 
 	@Override
@@ -260,6 +274,12 @@ public class EasyTriggersTab implements PluginTab {
 //		refreshSelection();
 	}
 
+	private void addExisting(EasyTrigger<?> trigger) {
+		backend.addTrigger(trigger);
+		refresh();
+		model.setSelectedValue(trigger);
+	}
+
 	private void addnew() {
 		TableWithFilterAndDetails<EventDescription<?>, Object> table = TableWithFilterAndDetails.builder("Choose Event Type", EasyTriggers::getEventDescriptions)
 				.addMainColumn(new CustomColumn<>("Event", d -> d.type().getSimpleName()))
@@ -358,5 +378,18 @@ public class EasyTriggersTab implements PluginTab {
 			return modification.andThen((unused) -> requestSave());
 		}
 	}
+
+
+	private void makeTriggerFromEvent(Event event) {
+		EasyTrigger<?> newTrigger = EasyTriggers.makeTriggerFromEvent(event);
+		if (newTrigger == null) {
+			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(outer), "Unfortunately, this event type is not possible to automatically make a trigger for.");
+		}
+		else {
+			addExisting(newTrigger);
+			GuiUtil.bringToFront(outer);
+		}
+	}
+
 
 }

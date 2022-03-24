@@ -17,7 +17,6 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
-import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
@@ -25,7 +24,6 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
-import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapTab;
@@ -34,6 +32,7 @@ import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.AbilityResolutionFilter;
@@ -109,7 +108,9 @@ public class GuiMain {
 	private final MutablePicoContainer container;
 	private final StandardColumns columns;
 	private final @Nullable ReplayController replay;
+	private final RightClickOptionRepo rightClicks;
 	private JTabbedPane tabPane;
+	private Component eventPanel;
 
 
 	public static void main(String[] args) {
@@ -128,6 +129,7 @@ public class GuiMain {
 		this.master = master;
 		this.state = master.getDistributor().getStateStore();
 		this.container = container;
+		this.rightClicks = container.getComponent(RightClickOptionRepo.class);
 		columns = container.getComponent(StandardColumns.class);
 		replay = container.getComponent(ReplayController.class);
 		SwingUtilities.invokeLater(() -> {
@@ -148,7 +150,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Plugin Settings", new PluginSettingsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Combatants", getCombatantsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Buffs", getStatusEffectsPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Events", getEventsPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Events", (eventPanel = getEventsPanel())));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("ACT Log", getActLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("System Log", getSystemLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
@@ -347,9 +349,12 @@ public class GuiMain {
 
 			partyMembersTable.setModel(partyTableModel);
 			partyTableModel.configureColumns(partyMembersTable);
-			CustomRightClickOption.configureTable(partyMembersTable, partyTableModel, List.of(
-					CustomRightClickOption.forRow("Set As Primary Player", XivPlayerCharacter.class, p -> state.get(XivStateImpl.class).setPlayerTmpOverride(p))
-			));
+			RightClickOptionRepo.of(
+					CustomRightClickOption.forRow(
+							"Set As Primary Player",
+							XivPlayerCharacter.class,
+							p -> state.get(XivStateImpl.class).setPlayerTmpOverride(p))
+			).configureTable(partyMembersTable, partyTableModel);
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
 			add(scrollPane);
 			refresh();
@@ -590,26 +595,7 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
-				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy Net Line", Event.class, e -> {
-					return e.getThisOrParentOfType(ACTLogLineEvent.class);
-				}, line -> {
-					GuiUtil.copyTextToClipboard(line.getLogLine());
-				}))
-				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy Emulated ACT Line", Event.class, e -> {
-					return e.getThisOrParentOfType(ACTLogLineEvent.class);
-				}, line -> {
-					GuiUtil.copyTextToClipboard(line.getEmulatedActLogLine());
-				}))
-				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy WS JSON", Event.class, e -> {
-					return e.getThisOrParentOfType(ActWsRawMsg.class);
-				}, line -> {
-					GuiUtil.copyTextToClipboard(line.getRawMsgData());
-				}))
-				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy FFLogs Fields", Event.class, e -> {
-					return e.getThisOrParentOfType(FflogsRawEvent.class);
-				}, line -> {
-					GuiUtil.copyTextToClipboard(line.getFields().toString());
-				}))
+				.withRightClickRepo(rightClicks)
 				.addFilter(SystemEventFilter::new)
 				.addFilter(EventClassFilterFilter::new)
 				.addFilter(AbilityResolutionFilter::new)
@@ -655,12 +641,7 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
-				.addRightClickOption(CustomRightClickOption.forRow("Copy Net Line", ACTLogLineEvent.class, line -> {
-					GuiUtil.copyTextToClipboard(line.getLogLine());
-				}))
-				.addRightClickOption(CustomRightClickOption.forRow("Copy Emulated ACT Line", ACTLogLineEvent.class, line -> {
-					GuiUtil.copyTextToClipboard(line.getEmulatedActLogLine());
-				}))
+				.withRightClickRepo(rightClicks)
 				.addFilter(ActLineFilter::new)
 				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
@@ -736,9 +717,7 @@ public class GuiMain {
 					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded, col -> {
 						col.setPreferredWidth(900);
 					}))
-					.addRightClickOption(CustomRightClickOption.forRow("Copy", LogEvent.class, tp -> {
-						GuiUtil.copyTextToClipboard(tp.getEncoded());
-					}))
+					.withRightClickRepo(rightClicks)
 					.addDetailsColumn(StandardColumns.fieldName)
 					.addDetailsColumn(StandardColumns.fieldValue)
 					.addDetailsColumn(StandardColumns.identity)
@@ -791,15 +770,16 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
-				.addRightClickOption(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
+				.withRightClickRepo(RightClickOptionRepo.of(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
 					PullNumberFilter pnf = container.getComponent(PullNumberFilter.class);
 					pnf.setPullNumberExternally(pull.getPullNum());
 					// TODO: messy
+					GuiUtil.bringToFront(eventPanel);
 					IntStream.range(0, tabPane.getTabCount())
 							.filter(i -> tabPane.getTitleAt(i).equals("Events"))
 							.findFirst()
 							.ifPresentOrElse(tabPane::setSelectedIndex, () -> log.error("Couldn't find Events tab"));
-				}))
+				})))
 //				.addFilter(LogLevelVisualFilter::new)
 				.setAppendOrPruneOnly(false)
 				.build();

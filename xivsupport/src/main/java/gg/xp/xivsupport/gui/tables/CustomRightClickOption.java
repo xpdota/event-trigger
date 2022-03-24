@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public final class CustomRightClickOption {
 	private final String label;
@@ -65,17 +66,17 @@ public final class CustomRightClickOption {
 	}
 
 	public static void configureTable(JTable table, CustomTableModel<?> model, List<CustomRightClickOption> options) {
-		if (options.isEmpty()) {
-			return;
-		}
+		configureTable(table, model, () -> options);
+	}
+
+	public static void configureTable(JTable table, CustomTableModel<?> model, Supplier<List<CustomRightClickOption>> optionsProvier) {
 		JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.addPopupMenuListener(new PopupMenuListener() {
 			@Override
 			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 				popupMenu.removeAll();
-				for (CustomRightClickOption rightClickOption : options) {
+				for (CustomRightClickOption rightClickOption : optionsProvier.get()) {
 					if (rightClickOption.shouldAppear(model)) {
-
 						JMenuItem menuItem = new JMenuItem(rightClickOption.getLabel());
 						menuItem.addActionListener(l -> {
 							rightClickOption.doAction(model);

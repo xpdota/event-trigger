@@ -52,7 +52,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			Function<? super X, List<D>> detailsConverter,
 			List<Function<Runnable, VisualFilter<? super X>>> filterCreators,
 			List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets,
-			List<CustomRightClickOption> rightClickOptions,
+			RightClickOptionRepo rightClickOptions,
 			BiPredicate<? super X, ? super X> selectionEquivalence,
 			BiPredicate<? super D, ? super D> detailsSelectionEquivalence,
 			boolean appendOrPruneOnly,
@@ -168,7 +168,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		JScrollPane detailsScroller = new JScrollPane(detailsTable);
 		detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
 
-		CustomRightClickOption.configureTable(table, mainModel, rightClickOptions);
+		rightClickOptions.configureTable(table, mainModel);
 
 		// If no details, don't bother with a splitpane
 		// TODO: also cut out some of the selection logic
@@ -343,11 +343,11 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		private final Function<X, List<D>> detailsConverter;
 		private final List<Function<Runnable, VisualFilter<? super X>>> filters = new ArrayList<>();
 		private final List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets = new ArrayList<>();
-		private final List<CustomRightClickOption> rightClickOptions = new ArrayList<>();
 		private BiPredicate<? super X, ? super X> selectionEquivalence = Objects::equals;
 		private BiPredicate<? super D, ? super D> detailsSelectionEquivalence = Objects::equals;
 		private boolean appendOrPruneOnly;
 		private boolean fixedData;
+		private RightClickOptionRepo rightClickOptionRepo = RightClickOptionRepo.EMPTY;
 
 
 		private TableWithFilterAndDetailsBuilder(String title, Supplier<List<X>> dataGetter, Function<X, List<D>> detailsConverter) {
@@ -366,8 +366,8 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			return this;
 		}
 
-		public TableWithFilterAndDetailsBuilder<X, D> addRightClickOption(CustomRightClickOption rightClickOption) {
-			this.rightClickOptions.add(rightClickOption);
+		public TableWithFilterAndDetailsBuilder<X, D> withRightClickRepo(RightClickOptionRepo rightClickOptionRepo) {
+			this.rightClickOptionRepo = rightClickOptionRepo;
 			return this;
 		}
 
@@ -401,7 +401,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		}
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, rightClickOptions, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly, fixedData);
+			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, rightClickOptionRepo, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly, fixedData);
 		}
 
 		public TableWithFilterAndDetailsBuilder<X, D> setFixedData(boolean fixedData) {
