@@ -4,6 +4,8 @@ import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tabs.GroovyTab;
+import gg.xp.xivsupport.gui.util.EasyAction;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +16,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.InputEvent;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,25 +34,58 @@ public class GroovyPanel extends JPanel {
 
 	private final JTextArea entryArea;
 	private final JScrollPane resultScroll;
+	private final GroovyManager mgr;
+	private final GroovyTab tab;
 	private final GroovyScriptHolder script;
 
 	public String getName() {
-		return script.scriptName;
+		return script.getScriptName();
 	}
 
-	// TODO: global groovy binding
-	public GroovyPanel(GroovyScriptHolder script) {
+	public GroovyScriptHolder getScript() {
+		return script;
+	}
+
+	public GroovyPanel(GroovyManager mgr, GroovyTab tab, GroovyScriptHolder script) {
+		this.mgr = mgr;
+		this.tab = tab;
 		this.script = script;
+		EasyAction newScript = new EasyAction("New", this::newScript, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
+		EasyAction save = new EasyAction("Save", this::save, script::isSaveable, KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+		EasyAction saveAs = new EasyAction("Save As...", this::saveAs, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+		// TODO
+		EasyAction rename = new EasyAction("Rename", this::reload, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK | InputEvent.ALT_DOWN_MASK));
+		EasyAction reloadOne = new EasyAction("Reload", this::reload, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
+		EasyAction reloadAll = new EasyAction("Reload All", this::reloadAll, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+		EasyAction run = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK));
+		newScript.configureComponent(this);
+		save.configureComponent(this);
+		saveAs.configureComponent(this);
+		run.configureComponent(this);
+		rename.configureComponent(this);
+		reloadOne.configureComponent(this);
+		reloadAll.configureComponent(this);
 		setLayout(new BorderLayout());
 		setBorder(new TitledBorder("Groovy"));
 		JSplitPane split;
+		JToolBar toolbar;
 		JPanel top;
 		JPanel bottom;
 
 		{
+			toolbar = new JToolBar();
+			toolbar.add(newScript.asButton());
+			toolbar.add(save.asButton());
+			toolbar.add(saveAs.asButton());
+			toolbar.add(rename.asButton());
+			toolbar.add(reloadOne.asButton());
+			toolbar.add(reloadAll.asButton());
+			add(toolbar, BorderLayout.NORTH);
+		}
+
+		{
 			top = new JPanel(new BorderLayout());
-//			top.setPreferredSize(top.getMaximumSize());
-			entryArea = new JTextArea(script.scriptContent);
+			entryArea = new JTextArea(script.getScriptContent());
 			entryArea.getDocument().addDocumentListener(new DocumentListener() {
 				@Override
 				public void insertUpdate(DocumentEvent e) {
@@ -72,23 +106,13 @@ public class GroovyPanel extends JPanel {
 			JScrollPane entryScroll = new JScrollPane(entryArea);
 			top.add(entryScroll, BorderLayout.CENTER);
 			{
-				JButton runButton = new JButton("Execute (Ctrl-Enter)");
+				JButton runButton = run.asButtonWithKeyLabel();
 				JPanel buttonHolder = new JPanel(new WrapLayout(WrapLayout.LEFT));
 				buttonHolder.add(runButton);
 				top.add(buttonHolder, BorderLayout.SOUTH);
-				runButton.addActionListener(l -> submit());
+//				runButton.addActionListener(l -> submit());
 			}
 			top.add(new ReadOnlyText("DO NOT run random scripts from the internet!"), BorderLayout.NORTH);
-			entryArea.addKeyListener(new KeyAdapter() {
-				@Override
-				public void keyPressed(KeyEvent e) {
-					int code = e.getKeyCode();
-					if (code == KeyEvent.VK_ENTER && e.getModifiersEx() == InputEvent.CTRL_DOWN_MASK) {
-						submit();
-					}
-					super.keyPressed(e);
-				}
-			});
 		}
 		{
 			this.resultScroll = new JScrollPane();
@@ -104,10 +128,38 @@ public class GroovyPanel extends JPanel {
 			split.setDividerSize(10);
 			add(split, BorderLayout.CENTER);
 		}
+		GroovyScriptResult result = script.getLastResult();
+		if (result != null) {
+			setResult(result);
+		}
+	}
+
+	private void newScript() {
+		ScriptNameDialog dialog = new ScriptNameDialog("New Script", mgr, this, newNameAndFile -> {
+			GroovyScriptHolder newScript = mgr.createAndAddNew(newNameAndFile);
+			tab.selectScript(newScript);
+		});
+		dialog.setVisible(true);
+	}
+
+	private void reload() {
+		JOptionPane.showMessageDialog(this, "Not implemented yet");
+	}
+
+	private void reloadAll() {
+		JOptionPane.showMessageDialog(this, "Not implemented yet");
+	}
+
+	private void save() {
+		script.save();
+	}
+
+	private void saveAs() {
+		mgr.saveAll();
 	}
 
 	private void update() {
-		script.scriptContent = entryArea.getText();
+		script.setScriptContent(entryArea.getText());
 	}
 
 	private JTextArea textDisplayComponent(String text) {
@@ -184,7 +236,8 @@ public class GroovyPanel extends JPanel {
 				//noinspection ConstantConditions
 				setResultDisplay(errorDisplayComponent(ExceptionUtils.getStackTrace(resultHolder.failure())));
 			}
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			setResultDisplay(errorDisplayComponent(ExceptionUtils.getStackTrace(t)));
 		}
 	}
