@@ -25,6 +25,67 @@ public class CalloutTests {
 	}
 
 	@Test
+	void testSameFlag1() {
+		ModifiableCallout mc = new ModifiableCallout("Foo", "Bar");
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		{
+			ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+			mc.attachHandle(mch);
+			Assert.assertTrue(mch.getSameText().get());
+			Assert.assertTrue(mch.getSameText().isSet());
+		}
+	}
+
+	@Test
+	void testSameFlag2() {
+		ModifiableCallout mc = new ModifiableCallout("Foo", "Bar", "Bar2", (e) -> true);
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		{
+			ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+			mc.attachHandle(mch);
+			Assert.assertFalse(mch.getSameText().get());
+			Assert.assertFalse(mch.getSameText().isSet());
+			Assert.assertEquals(mch.getEffectiveTts(), "Bar");
+			Assert.assertEquals(mch.getEffectiveText(), "Bar2");
+			mch.getTextSetting().set("Bar");
+			Assert.assertEquals(mch.getEffectiveTts(), "Bar");
+			Assert.assertEquals(mch.getEffectiveText(), "Bar");
+		}
+		{
+			ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+			mc.attachHandle(mch);
+			Assert.assertTrue(mch.getSameText().get());
+			Assert.assertTrue(mch.getSameText().isSet());
+			Assert.assertEquals(mch.getEffectiveTts(), "Bar");
+			Assert.assertEquals(mch.getEffectiveText(), "Bar");
+			mch.getTtsSetting().set("Bar3");
+			Assert.assertEquals(mch.getEffectiveTts(), "Bar3");
+			Assert.assertEquals(mch.getEffectiveText(), "Bar3");
+		}
+		{
+			ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+			mc.attachHandle(mch);
+			Assert.assertTrue(mch.getSameText().get());
+			Assert.assertTrue(mch.getSameText().isSet());
+			Assert.assertEquals(mch.getEffectiveTts(), "Bar3");
+			Assert.assertEquals(mch.getEffectiveText(), "Bar3");
+			mch.getSameText().set(false);
+			Assert.assertEquals(mch.getEffectiveTts(), "Bar3");
+			Assert.assertEquals(mch.getEffectiveText(), "Bar");
+		}
+		{
+			ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+			mc.attachHandle(mch);
+			Assert.assertFalse(mch.getSameText().get());
+			Assert.assertTrue(mch.getSameText().isSet());
+			Assert.assertEquals(mch.getEffectiveTts(), "Bar3");
+			Assert.assertEquals(mch.getEffectiveText(), "Bar");
+		}
+	}
+
+	@Test
 	void testModifiedCallout() {
 		ModifiableCallout mc = new ModifiableCallout("Foo", "Bar");
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
@@ -41,7 +102,7 @@ public class CalloutTests {
 		{
 			CalloutEvent modified = mc.getModified();
 			Assert.assertEquals(modified.getCallText(), "123");
-			Assert.assertEquals(modified.getVisualText(), "456");
+			Assert.assertEquals(modified.getVisualText(), "123");
 		}
 		mch.getSameText().set(false);
 		{
@@ -153,6 +214,7 @@ public class CalloutTests {
 			}
 		}
 	}
+
 	@Test
 	@Ignore // This doesn't seem to work well
 	public static void testReplacementsAdvanced2() {

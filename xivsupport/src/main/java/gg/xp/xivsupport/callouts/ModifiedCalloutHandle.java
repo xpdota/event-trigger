@@ -6,6 +6,8 @@ import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 public final class ModifiedCalloutHandle {
 
 	private final BooleanSetting enable;
@@ -29,8 +31,16 @@ public final class ModifiedCalloutHandle {
 		enableText = new BooleanSetting(persistenceProvider, propStub + ".text-enabled", true);
 		textSetting = new StringSetting(persistenceProvider, propStub + ".text", original.getOriginalVisualText());
 		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", false);
-		// TODO: this was a legacy compat hack, not necessary anymore
-		sameText.set(sameText.get());
+		// Logic for defaulting the "same as TTS" setting:
+		// If sameText is already set (regardless of the value it is set to, do nothing)
+		if (!sameText.isSet()) {
+			// If the settings are identical, set it
+			if (Objects.equals(ttsSetting.get(), textSetting.get())) {
+				sameText.set(true);
+			}
+			// Note that this will apply even if the tts/text have been customized. That is, if, down the line, you
+			// happen to set them to the same value.
+		}
 		hangTimeSetting = new LongSetting(persistenceProvider, propStub + ".text.hangtime", 5000L);
 		this.original = original;
 	}
@@ -39,6 +49,7 @@ public final class ModifiedCalloutHandle {
 	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub) {
 		return installHandle(original, pers, propStub, null, null);
 	}
+
 	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
 		ModifiedCalloutHandle modified = new ModifiedCalloutHandle(pers, propStub, original, allTts, allText);
 		original.attachHandle(modified);
