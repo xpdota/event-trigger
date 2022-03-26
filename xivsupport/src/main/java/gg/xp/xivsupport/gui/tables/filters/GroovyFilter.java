@@ -59,6 +59,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		Reflections reflections = new Reflections(
 				new ConfigurationBuilder()
 						.setUrls(ClasspathHelper.forJavaClassPath())
+						.setParallel(true)
 						.setScanners(Scanners.SubTypes));
 		reflections.get(SubTypes.of(Event.class).asClass())
 				.stream()

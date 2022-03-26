@@ -33,7 +33,7 @@ public class GroovyEventFilter implements Condition<Event> {
 		ImportCustomizer importCustomizer = new ImportCustomizer();
 		importCustomizer.addImports(Predicate.class.getCanonicalName(), CompileStatic.class.getCanonicalName(), TypeChecked.class.getCanonicalName());
 		importCustomizer.addStarImports("gg.xp.xivsupport.events.actlines.events", "javax.swing", "gg.xp.xivsupport.gui", "gg.xp.xivsupport.gui.tables");
-		Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forJavaClassPath()).setScanners(Scanners.SubTypes));
+		Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forJavaClassPath()).setParallel(true).setScanners(Scanners.SubTypes));
 		reflections.get(SubTypes.of(Event.class).asClass()).stream().map(Class::getCanonicalName).filter(Objects::nonNull).forEach(importCustomizer::addImports);
 
 		compilerConfiguration.addCompilationCustomizers(importCustomizer);

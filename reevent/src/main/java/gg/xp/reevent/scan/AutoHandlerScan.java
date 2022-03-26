@@ -66,6 +66,7 @@ public class AutoHandlerScan {
 				}
 			}).collect(Collectors.toList());
 			log.info("URLs: {}", urls);
+			// TODO: make this public so that we aren't doing as much re-scanning
 			Reflections reflections = new Reflections(
 					new ConfigurationBuilder()
 //							.setClassLoaders(new ClassLoader[]{loader})
