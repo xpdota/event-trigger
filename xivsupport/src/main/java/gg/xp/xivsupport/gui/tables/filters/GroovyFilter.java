@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import groovy.lang.GroovyShell;
 import groovy.transform.CompileStatic;
 import groovy.transform.TypeChecked;
@@ -48,25 +49,27 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		this.shortClassName = dataType.getSimpleName();
 		this.longClassName = dataType.getCanonicalName();
 		this.varName = shortClassName.toLowerCase(Locale.ROOT);
-		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
-		ImportCustomizer importCustomizer = new ImportCustomizer();
-		importCustomizer.addImports(
-				Predicate.class.getCanonicalName(),
-				CompileStatic.class.getCanonicalName(),
-				TypeChecked.class.getCanonicalName(),
-				longClassName);
-		importCustomizer.addStarImports("gg.xp.xivsupport.events.actlines.events");
-		Reflections reflections = new Reflections(
-				new ConfigurationBuilder()
-						.setUrls(ClasspathHelper.forJavaClassPath())
-						.setScanners(Scanners.SubTypes));
-		reflections.get(SubTypes.of(Event.class).asClass())
-				.stream()
-				.map(Class::getCanonicalName)
-				.filter(Objects::nonNull)
-				.forEach(importCustomizer::addImports);
+		CompilerConfiguration compilerConfiguration = GroovyManager.getCompilerConfig();
+//		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+//		ImportCustomizer importCustomizer = new ImportCustomizer();
+//		importCustomizer.addImports(
+//				Predicate.class.getCanonicalName(),
+//				CompileStatic.class.getCanonicalName(),
+//				TypeChecked.class.getCanonicalName(),
+//				longClassName);
+//		importCustomizer.addStarImports("gg.xp.xivsupport.events.actlines.events");
+//		Reflections reflections = new Reflections(
+//				new ConfigurationBuilder()
+//						.setUrls(ClasspathHelper.forJavaClassPath())
+//						.setParallel(true)
+//						.setScanners(Scanners.SubTypes));
+//		reflections.get(SubTypes.of(Event.class).asClass())
+//				.stream()
+//				.map(Class::getCanonicalName)
+//				.filter(Objects::nonNull)
+//				.forEach(importCustomizer::addImports);
 
-		compilerConfiguration.addCompilationCustomizers(importCustomizer);
+//		compilerConfiguration.addCompilationCustomizers(importCustomizer);
 		shell = new GroovyShell(compilerConfiguration);
 	}
 
@@ -86,7 +89,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 									%s
 								}
 							};
-							""".formatted(shortClassName, checkType, shortClassName, varName, filterText);
+							""".formatted(longClassName, checkType, longClassName, varName, filterText);
 			Predicate<X> compiled = (Predicate<X>) shell.evaluate(inJavaForm);
 			textBox.setToolTipText(null);
 			return compiled;

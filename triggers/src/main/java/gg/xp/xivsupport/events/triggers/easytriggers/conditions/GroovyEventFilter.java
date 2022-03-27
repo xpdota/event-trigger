@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.transform.CompileStatic;
@@ -29,14 +30,15 @@ public class GroovyEventFilter implements Condition<Event> {
 	private static final GroovyShell shell;
 
 	static {
-		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
-		ImportCustomizer importCustomizer = new ImportCustomizer();
-		importCustomizer.addImports(Predicate.class.getCanonicalName(), CompileStatic.class.getCanonicalName(), TypeChecked.class.getCanonicalName());
-		importCustomizer.addStarImports("gg.xp.xivsupport.events.actlines.events", "javax.swing", "gg.xp.xivsupport.gui", "gg.xp.xivsupport.gui.tables");
-		Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forJavaClassPath()).setScanners(Scanners.SubTypes));
-		reflections.get(SubTypes.of(Event.class).asClass()).stream().map(Class::getCanonicalName).filter(Objects::nonNull).forEach(importCustomizer::addImports);
-
-		compilerConfiguration.addCompilationCustomizers(importCustomizer);
+//		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+//		ImportCustomizer importCustomizer = new ImportCustomizer();
+//		importCustomizer.addImports(Predicate.class.getCanonicalName(), CompileStatic.class.getCanonicalName(), TypeChecked.class.getCanonicalName());
+//		importCustomizer.addStarImports("gg.xp.xivsupport.events.actlines.events", "javax.swing", "gg.xp.xivsupport.gui", "gg.xp.xivsupport.gui.tables");
+//		Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forJavaClassPath()).setParallel(true).setScanners(Scanners.SubTypes));
+//		reflections.get(SubTypes.of(Event.class).asClass()).stream().map(Class::getCanonicalName).filter(Objects::nonNull).forEach(importCustomizer::addImports);
+//
+//		compilerConfiguration.addCompilationCustomizers(importCustomizer);
+		CompilerConfiguration compilerConfiguration = GroovyManager.getCompilerConfig();
 		Binding binding = new Binding();
 		shell = new GroovyShell(binding, compilerConfiguration);
 	}

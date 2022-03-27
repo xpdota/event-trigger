@@ -22,6 +22,7 @@ public class TextFieldWithValidation<X> extends JTextField {
 	protected final Color invalidBackground = new Color(62, 27, 27);
 	private boolean stopUpdate;
 	private Supplier<String> valueGetter;
+	private boolean validationError;
 
 	public TextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
 		this(parser, consumer, () -> initialValue);
@@ -79,8 +80,11 @@ public class TextFieldWithValidation<X> extends JTextField {
 		return super.getToolTipText();
 	}
 
+	public boolean hasValidationError() {
+		return validationError;
+	}
+
 	private void update() {
-		boolean validationError;
 		String currentRawText = getText();
 		try {
 			X parsedValue = parser.apply(currentRawText);

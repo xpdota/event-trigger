@@ -36,6 +36,7 @@ public final class XivMain {
 
 	// Just the required stuff, doesn't start anything
 	private static MutablePicoContainer requiredComponents() {
+		log.info("Assembling required components");
 		MutablePicoContainer pico = new PicoBuilder()
 				.withCaching()
 				.withLifecycle()
@@ -52,6 +53,7 @@ public final class XivMain {
 		pico.addComponent(TopoInfoImpl.class);
 		pico.addComponent(PrimaryLogSource.class);
 		pico.addComponent(pico);
+		log.info("Required components done");
 		return pico;
 
 	}
@@ -114,7 +116,6 @@ public final class XivMain {
 
 		MutablePicoContainer pico = requiredComponents();
 		pico.addComponent(ActWsLogSource.class);
-		// TODO: replace with on-disk storage when done
 		if (isRealLauncher()) {
 			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent"));
 		}
@@ -123,7 +124,9 @@ public final class XivMain {
 		}
 
 		// TODO: use "Startable" interface?
-		pico.getComponent(AutoEventDistributor.class).acceptEvent(new InitEvent());
+		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		log.info("Init start");
+		dist.acceptEvent(new InitEvent());
 		pico.getComponent(EventMaster.class).start();
 		pico.getComponent(ActWsLogSource.class).start();
 		log.info("Everything seems to have started successfully");
