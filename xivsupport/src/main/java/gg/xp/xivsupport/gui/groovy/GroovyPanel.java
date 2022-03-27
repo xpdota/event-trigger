@@ -17,6 +17,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -52,18 +53,23 @@ public class GroovyPanel extends JPanel {
 		this.script = script;
 		EasyAction newScript = new EasyAction("New", this::newScript, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
 		EasyAction save = new EasyAction("Save", this::save, script::isSaveable, KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+		EasyAction saveAll = new EasyAction("Save All", this::saveAll, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.ALT_DOWN_MASK));
 		EasyAction saveAs = new EasyAction("Save As...", this::saveAs, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
 		// TODO
-		EasyAction rename = new EasyAction("Rename", this::reload, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK | InputEvent.ALT_DOWN_MASK));
-		EasyAction reloadOne = new EasyAction("Reload", this::reload, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
+		EasyAction delete = new EasyAction("Delete", this::deleteSelf, script::isDeletable, null);
+		EasyAction rename = new EasyAction("Rename", this::rename, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK | InputEvent.ALT_DOWN_MASK));
+//		EasyAction reloadOne = new EasyAction("Reload", this::reload, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
 		EasyAction reloadAll = new EasyAction("Reload All", this::reloadAll, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
+		EasyAction openExt = new EasyAction("Open in External Editor", this::openExt, () -> true, null);
 		EasyAction run = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK));
 		newScript.configureComponent(this);
 		save.configureComponent(this);
+		saveAll.configureComponent(this);
 		saveAs.configureComponent(this);
 		run.configureComponent(this);
+		delete.configureComponent(this);
 		rename.configureComponent(this);
-		reloadOne.configureComponent(this);
+//		reloadOne.configureComponent(this);
 		reloadAll.configureComponent(this);
 		setLayout(new BorderLayout());
 		setBorder(new TitledBorder("Groovy"));
@@ -77,9 +83,12 @@ public class GroovyPanel extends JPanel {
 			toolbar.add(newScript.asButton());
 			toolbar.add(save.asButton());
 			toolbar.add(saveAs.asButton());
+			toolbar.add(saveAll.asButton());
+			toolbar.add(delete.asButton());
 			toolbar.add(rename.asButton());
-			toolbar.add(reloadOne.asButton());
+//			toolbar.add(reloadOne.asButton());
 			toolbar.add(reloadAll.asButton());
+			toolbar.add(openExt.asButton());
 			add(toolbar, BorderLayout.NORTH);
 		}
 
@@ -134,28 +143,56 @@ public class GroovyPanel extends JPanel {
 		}
 	}
 
+	private void deleteSelf() {
+		// TODO: confirmation dialog
+		mgr.delete(script);
+	}
+
 	private void newScript() {
-		ScriptNameDialog dialog = new ScriptNameDialog("New Script", mgr, this, newNameAndFile -> {
+		ScriptNameDialog dialog = new ScriptNameDialog("New Script", null, mgr, this, newNameAndFile -> {
 			GroovyScriptHolder newScript = mgr.createAndAddNew(newNameAndFile);
 			tab.selectScript(newScript);
 		});
 		dialog.setVisible(true);
 	}
-
-	private void reload() {
-		JOptionPane.showMessageDialog(this, "Not implemented yet");
-	}
+//
+//	private void reload() {
+//		mgr.reloadScript(script);
+//	}
 
 	private void reloadAll() {
-		JOptionPane.showMessageDialog(this, "Not implemented yet");
+		mgr.reloadAll();
 	}
 
 	private void save() {
 		script.save();
 	}
 
-	private void saveAs() {
+	private void saveAll() {
 		mgr.saveAll();
+	}
+
+	private void saveAs() {
+		ScriptNameDialog dialog = new ScriptNameDialog("Save As", script.getScriptName() + " copy", mgr, this, newNameAndFile -> {
+			GroovyScriptHolder newScript = mgr.cloneAs(script, newNameAndFile);
+			tab.selectScript(newScript);
+		});
+		dialog.setVisible(true);
+	}
+
+	private void rename() {
+		ScriptNameDialog dialog = new ScriptNameDialog("Rename", script.getScriptName(), mgr, this,
+				newNameAndFile -> mgr.renameScript(script, newNameAndFile));
+		dialog.setVisible(true);
+	}
+
+	private void openExt() {
+		try {
+			Desktop.getDesktop().open(script.getFile());
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void update() {

@@ -113,20 +113,22 @@ public class AutoHandlerScan {
 			log.info("Methods: {}", methodCount);
 
 
+			log.info("Preloading instances");
 			StringBuilder topo = new StringBuilder();
 			classMethodMap.forEach((clazz, unused) -> {
 				// Preload class instances
 				instanceProvider.preAdd(clazz);
 			});
+			log.info("Preloaded instances");
 			classMethodMap.forEach((clazz, methods) -> {
 				// TODO: error handling
-				topo.append("Class: ").append(clazz.getSimpleName()).append("\n");
+				topo.append("Class: ").append(clazz.getSimpleName()).append('\n');
 				// TODO: move this to AutoHandler so scope can be implemented
 				Object clazzInstance = instanceProvider.getInstance(clazz);
 				for (Method method : methods) {
 					AutoHandler rawEvh = new AutoHandler(clazz, method, clazzInstance, config);
 					out.add(rawEvh);
-					topo.append(" - Method: ").append(rawEvh.getTopoLabel()).append("\n");
+					topo.append(" - Method: ").append(rawEvh.getTopoLabel()).append('\n');
 				}
 			});
 			if (out.isEmpty()) {

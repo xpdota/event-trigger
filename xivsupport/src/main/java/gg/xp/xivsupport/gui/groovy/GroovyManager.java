@@ -55,6 +55,15 @@ public class GroovyManager {
 
 	public GroovyManager(PicoContainer container) {
 		this.container = container;
+		loadScripts();
+	}
+
+	public List<GroovyScriptHolder> getScripts() {
+		return Collections.unmodifiableList(scripts);
+	}
+
+	private void loadScripts() {
+		scripts.clear();
 		{
 			GroovyScriptHolder defaultScript = new GroovyScriptHolder();
 			defaultScript.setScriptName("Scratch");
@@ -92,15 +101,21 @@ public class GroovyManager {
 					.filter(Objects::nonNull)
 					.forEachOrdered(this::addScript);
 		}
+		obs.notifyListeners();
 	}
 
-	public List<GroovyScriptHolder> getScripts() {
-		return Collections.unmodifiableList(scripts);
+	public void reloadAll() {
+		loadScripts();
 	}
 
 	private void addScript(GroovyScriptHolder holder) {
 		configureScriptHolder(holder);
 		scripts.add(holder);
+		obs.notifyListeners();
+	}
+
+	private void removeScript(GroovyScriptHolder holder) {
+		scripts.remove(holder);
 		obs.notifyListeners();
 	}
 
@@ -147,6 +162,41 @@ public class GroovyManager {
 		log.info("Creating new script '{}' at '{}'", scriptName, script.getFile());
 		addScript(script);
 		return script;
+	}
+
+	public GroovyScriptHolder cloneAs(GroovyScriptHolder existing, ScriptNameAndFileStub newNameAndFile) {
+		String scriptName = newNameAndFile.name();
+		String filenameStub = newNameAndFile.fileStub();
+		validateNewScriptName(scriptName);
+		validateNewScriptFile(filenameStub);
+		GroovyScriptHolder script = existing.copyAs(scriptName, getFileForStub(filenameStub));
+		log.info("Creating new script '{}' at '{}'", scriptName, script.getFile());
+		addScript(script);
+		return script;
+	}
+
+	public void renameScript(GroovyScriptHolder holder, ScriptNameAndFileStub newNameAndFile) {
+		String scriptName = newNameAndFile.name();
+		String filenameStub = newNameAndFile.fileStub();
+		validateNewScriptName(scriptName);
+		validateNewScriptFile(filenameStub);
+		holder.setScriptName(scriptName);
+		holder.setFile(getFileForStub(filenameStub));
+		obs.notifyListeners();
+	}
+
+	public void delete(GroovyScriptHolder scriptToDelete) {
+		File file = scriptToDelete.getFile();
+		if (file == null) {
+			throw new IllegalArgumentException("Cannot delete a script that doesn't have a file");
+		}
+		if (file.exists()) {
+			boolean deleted = file.delete();
+			if (!deleted) {
+				throw new IllegalArgumentException("Failed to delete file '" + file + '\'');
+			}
+		}
+		removeScript(scriptToDelete);
 	}
 
 	private File getFileForStub(String stub) {
@@ -220,6 +270,11 @@ public class GroovyManager {
 		}
 	}
 
+	public void reloadScript(GroovyScriptHolder script) {
+		GroovyScriptHolder newScript = readFile(script.getFile());
+		script.setScriptContent(newScript.getScriptContent());
+	}
+
 	private void configureScriptHolder(GroovyScriptHolder holder) {
 		if (holder.getManager() == null) {
 			holder.setManager(this);
@@ -229,7 +284,7 @@ public class GroovyManager {
 	private static final Object cclock = new Object();
 	private static volatile @Nullable CompilerConfiguration compilerConfig;
 
-	private static CompilerConfiguration getCompilerConfig() {
+	public static CompilerConfiguration getCompilerConfig() {
 		if (compilerConfig == null) {
 			synchronized (cclock) {
 				if (compilerConfig == null) {
@@ -241,14 +296,18 @@ public class GroovyManager {
 	}
 
 	private static CompilerConfiguration makeCompilerConfig() {
+		log.info("Setting up Groovy CompilerConfiguration");
 		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
 		ImportCustomizer importCustomizer = new ImportCustomizer();
 		importCustomizer.addImports(
 				Predicate.class.getCanonicalName(),
+				Event.class.getCanonicalName(),
 				CompileStatic.class.getCanonicalName(),
 				TypeChecked.class.getCanonicalName());
 		importCustomizer.addStarImports(
 				"gg.xp.xivsupport.events.actlines.events",
+				"javax.util",
+				"javax.util.function",
 				"javax.swing",
 				"gg.xp.xivsupport.gui",
 				"gg.xp.xivsupport.gui.tables"
@@ -265,6 +324,7 @@ public class GroovyManager {
 				.forEach(importCustomizer::addImports);
 
 		compilerConfiguration.addCompilationCustomizers(importCustomizer);
+		log.info("Done with CompilerConfiguration");
 		return compilerConfiguration;
 	}
 

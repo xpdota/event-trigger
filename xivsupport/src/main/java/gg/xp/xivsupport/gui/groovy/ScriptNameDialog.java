@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.groovy;
 
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,10 +16,16 @@ public class ScriptNameDialog extends JDialog {
 	private final TextFieldWithValidation<String> nameField;
 	private final JButton selectButton;
 	private final Consumer<ScriptNameAndFileStub> consumer;
-	private String name = "New Script";
+	private String name;
 
-	public ScriptNameDialog(String title, GroovyManager mgr, Component parent, Consumer<ScriptNameAndFileStub> consumer) {
+	public ScriptNameDialog(String title, @Nullable String existingName, GroovyManager mgr, Component parent, Consumer<ScriptNameAndFileStub> consumer) {
 		super(SwingUtilities.getWindowAncestor(parent), title);
+		if (existingName == null) {
+			name = "New Script";
+		}
+		else {
+			name = existingName;
+		}
 		this.consumer = consumer;
 		Container pane = getContentPane();
 		pane.setLayout(new BorderLayout());

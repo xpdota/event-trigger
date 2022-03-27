@@ -52,6 +52,26 @@ public class GroovyScriptHolder {
 		dirty = false;
 	}
 
+	public GroovyScriptHolder copyAs(String newName, File newFile) {
+		GroovyScriptHolder copy = new GroovyScriptHolder();
+		copy.scriptName = newName;
+		copy.scriptContent = scriptContent;
+		copy.file = newFile;
+		copy.strict = strict;
+		copy.dirty = true;
+		copy.manager = manager;
+		return copy;
+	}
+
+	// TODO: this is janky - really should separate out metadata
+	public void reverseCopy(GroovyScriptHolder other) {
+		scriptName = other.scriptName;
+		scriptContent = other.scriptContent;
+		file = other.file;
+		strict = other.strict;
+		dirty = other.dirty;
+	}
+
 	private GroovyManager getMgr() {
 		if (getManager() == null) {
 			throw new IllegalStateException("Neither Shell nor GroovyManager set");
@@ -60,6 +80,11 @@ public class GroovyScriptHolder {
 	}
 
 	public boolean isSaveable() {
+		// Can't factor "dirty" into here because the toolbar doesn't auto update. might look into that.
+		return getFile() != null;
+	}
+
+	public boolean isDeletable() {
 		return getFile() != null;
 	}
 

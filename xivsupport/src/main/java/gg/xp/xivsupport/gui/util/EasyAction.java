@@ -21,8 +21,10 @@ public class EasyAction {
 	}
 
 	public void configureComponent(JComponent component) {
-		component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(key, this);
-		component.getActionMap().put(this, asAction());
+		if (key != null) {
+			component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(key, this);
+			component.getActionMap().put(this, asAction());
+		}
 	}
 
 	public Action asAction() {
@@ -73,7 +75,9 @@ public class EasyAction {
 
 	public JButton asButton() {
 		JButton button = new JButton(asAction());
-		button.setToolTipText(button.getText() + " (" + getHotkeyAsString() + ')');
+		if (key != null) {
+			button.setToolTipText(button.getText() + " (" + getHotkeyAsString() + ')');
+		}
 		return button;
 	}
 }
