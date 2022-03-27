@@ -2,6 +2,9 @@ package gg.xp.xivsupport.gui.overlay;
 
 import gg.xp.xivsupport.gui.CommonGuiSetup;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.sys.XivMain;
+import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +16,12 @@ public final class StandaloneOverlayTest {
 
 	public static void main(String[] args) throws InterruptedException {
 		CommonGuiSetup.setup();
+		MutablePicoContainer pico = XivMain.testingMinimalInit();
+		pico.addComponent(OverlayMain.class);
+		OverlayConfig oc = pico.getComponent(OverlayConfig.class);
+		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		{
-			XivOverlay overlay = new ExampleOverlayWithLotsOfButtons(new InMemoryMapPersistenceProvider());
+			XivOverlay overlay = new ExampleOverlayWithLotsOfButtons(new InMemoryMapPersistenceProvider(), oc);
 			overlay.finishInit();
 			overlay.setVisible(true);
 			overlay.setEditMode(true);
@@ -23,7 +30,7 @@ public final class StandaloneOverlayTest {
 			overlay.setScale(scaleFactor);
 		}
 		{
-			XivOverlay overlay = new ExampleOverlayWithLotsOfButtons(new InMemoryMapPersistenceProvider());
+			XivOverlay overlay = new ExampleOverlayWithLotsOfButtons(new InMemoryMapPersistenceProvider(), oc);
 			overlay.finishInit();
 			overlay.setVisible(true);
 			overlay.setEditMode(true);

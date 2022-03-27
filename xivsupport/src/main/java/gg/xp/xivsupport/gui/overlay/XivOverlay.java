@@ -8,6 +8,7 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
+import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +33,15 @@ public class XivOverlay {
 	private final TitledBorder editBorder;
 	private static final Border transparentBorderLine = new LineBorder(new Color(0, 0, 0, 0), 5);
 	private static final TitledBorder transparentBorder = new TitledBorder(transparentBorderLine, "Foo");
+	public static final String bufferNumSettingKey = "xiv-overlay.buffer-strategy";
 
 	static {
 		transparentBorder.setTitleColor(new Color(0, 0, 0, 0));
 	}
+
+	private final OverlayConfig oc;
+	private long minFrameTime;
+	private long maxFrameTime;
 
 	private int dragX;
 	private int dragY;
@@ -58,15 +64,18 @@ public class XivOverlay {
 	private static final AtomicLong nextDefaultPos = new AtomicLong(200);
 
 
-	public XivOverlay(String title, String settingKeyBase, PersistenceProvider persistence) {
+	public XivOverlay(String title, String settingKeyBase, OverlayConfig oc, PersistenceProvider persistence) {
 		editBorder = new TitledBorder(editBorderPink, title);
+		this.oc = oc;
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), nextDefaultPos.get());
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
 		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
 		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
+		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
 		enabled.addListener(this::recalc);
-		frame = ScalableJFrame.construct(title, scaleFactor.get());
+		frame = ScalableJFrame.construct(title, scaleFactor.get(), numBuffers);
+		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
 		this.title = title;
@@ -128,6 +137,9 @@ public class XivOverlay {
 				dragY = newY;
 			}
 		});
+		calcFrameTimes();
+		oc.getMaxFps().addListener(this::calcFrameTimes);
+		oc.getMinFps().addListener(this::calcFrameTimes);
 	}
 
 	public void resetPositionFromSettings() {
@@ -267,4 +279,18 @@ public class XivOverlay {
 		hwnd.setPointer(Native.getComponentPointer(w));
 		return hwnd;
 	}
+
+	private void calcFrameTimes() {
+		minFrameTime = 1000 / oc.getMaxFps().get();
+		maxFrameTime = 1000 / oc.getMinFps().get();
+	}
+
+	protected long calculateScaledFrameTime(long basis) {
+		return Math.min(Math.max((long) (basis / getScale()), maxFrameTime), minFrameTime);
+	}
+
+	protected long calculateUnscaledFrameTime(long basis) {
+		return Math.min(Math.max(basis, maxFrameTime), minFrameTime);
+	}
+
 }

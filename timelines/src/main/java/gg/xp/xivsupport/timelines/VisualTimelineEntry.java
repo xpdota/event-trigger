@@ -3,6 +3,8 @@ package gg.xp.xivsupport.timelines;
 import gg.xp.xivsupport.events.triggers.jobs.gui.LabelOverride;
 import gg.xp.xivsupport.models.CurrentMaxPair;
 
+import java.util.Objects;
+
 @SuppressWarnings("NumericCastThatLosesPrecision")
 public record VisualTimelineEntry(
 		TimelineEntry originalTimelineEntry,
@@ -46,5 +48,18 @@ public record VisualTimelineEntry(
 		}
 		// timeUntil will be negative, so we want to add.
 		return Math.min(timelineDuration, Math.max(0, timelineDuration + timeUntil));
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		VisualTimelineEntry that = (VisualTimelineEntry) o;
+		return isCurrentSync() == that.isCurrentSync() && originalTimelineEntry.equals(that.originalTimelineEntry);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(originalTimelineEntry, isCurrentSync());
 	}
 }

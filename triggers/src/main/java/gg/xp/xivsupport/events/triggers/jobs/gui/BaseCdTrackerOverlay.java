@@ -3,7 +3,9 @@ package gg.xp.xivsupport.events.triggers.jobs.gui;
 import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
+import gg.xp.xivsupport.gui.overlay.RefreshType;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.models.CdTrackingKey;
@@ -33,15 +35,19 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 	private volatile List<VisualCdInfo> croppedCds = Collections.emptyList();
 	private volatile List<BuffApplied> currentBuffs = Collections.emptyList();
 
-	protected BaseCdTrackerOverlay(String title, String settingKeyBase, PersistenceProvider persistence, IntSetting rowSetting) {
-		super(title, settingKeyBase, persistence);
+	protected BaseCdTrackerOverlay(String title, String settingKeyBase, OverlayConfig oc, PersistenceProvider persistence, IntSetting rowSetting) {
+		super(title, settingKeyBase, oc, persistence);
 		numberOfRows = rowSetting;
 		numberOfRows.addListener(this::repackSize);
 		BaseCdTrackerTable tableHolder = new BaseCdTrackerTable(() -> croppedCds);
 		tableModel = tableHolder.getTableModel();
 		table = tableHolder.getTable();
 		getPanel().add(table);
-		RefreshLoop<BaseCdTrackerOverlay> refresher = new RefreshLoop<>("CdTracker", this, BaseCdTrackerOverlay::refresh, dt -> Math.max((long) (50 / getScale()), 20));
+		// Logic: try to pick optimal framerate based on bar size, but clamp between 15 and 60 FPS (66 and 16 ms per frame).
+		// Upper bound is necessary to avoid performance hits from excessively fast refreshes
+		// Lower bound is necessary to avoid the numerical counter not updating quickly enough
+		// For the non-clamped amount, we assume 30 seconds
+		RefreshLoop<BaseCdTrackerOverlay> refresher = new RefreshLoop<>("CdTracker", this, BaseCdTrackerOverlay::refresh, ct -> ct.calculateScaledFrameTime(200));
 		repackSize();
 		refresher.start();
 	}
@@ -55,20 +61,29 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 	// TODO: move this all to CdTracker itself? Would make it easier to deal with
 	// charge vs non-charge.
 	protected abstract Map<CdTrackingKey, AbilityUsedEvent> getCooldowns();
+
 	protected abstract List<BuffApplied> getBuffs();
 
 	protected @Nullable Instant chargesReplenishedAt(CdTrackingKey key) {
 		return null;
 	}
 
-	private void getAndSort() {
+	private RefreshType getAndSort() {
+		if (!getEnabled().get()) {
+			croppedCds = Collections.emptyList();
+			return RefreshType.NONE;
+		}
 		Map<CdTrackingKey, AbilityUsedEvent> newCurrentCds = getCooldowns();
 		List<BuffApplied> newCurrentBuffs = getBuffs();
-		if (!newCurrentCds.equals(currentCds) || !newCurrentBuffs.equals(currentBuffs)) {
-			// TODO: figure out a reasonable way of sorting
-			if (newCurrentCds.isEmpty()) {
-				currentCds = Collections.emptyMap();
+		if (newCurrentCds.equals(currentCds) && newCurrentBuffs.equals(currentBuffs)) {
+			if (newCurrentCds.isEmpty() && newCurrentBuffs.isEmpty()) {
+				return RefreshType.NONE;
 			}
+			if (croppedCds.isEmpty()) {
+				return RefreshType.REPAINT;
+			}
+		}
+		else {
 			currentCds = newCurrentCds;
 			currentBuffs = newCurrentBuffs;
 			List<VisualCdInfo> out = new ArrayList<>();
@@ -94,11 +109,15 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 		if (croppedCds.stream().noneMatch(VisualCdInfo::stillValid)) {
 			croppedCds = Collections.emptyList();
 		}
+		return RefreshType.FULL;
 	}
 
 
 	private void refresh() {
-		getAndSort();
-		SwingUtilities.invokeLater(tableModel::fullRefresh);
+		RefreshType refreshTypeNeeded = getAndSort();
+		switch (refreshTypeNeeded) {
+			case FULL -> tableModel.fullRefresh();
+			case REPAINT -> table.repaint();
+		}
 	}
 }

@@ -8,7 +8,9 @@ import gg.xp.xivsupport.events.state.combatstate.TickInfo;
 import gg.xp.xivsupport.events.state.combatstate.TickTracker;
 import gg.xp.xivsupport.events.state.combatstate.TickUpdatedEvent;
 import gg.xp.xivsupport.events.triggers.jobs.DotRefreshReminders;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
+import gg.xp.xivsupport.gui.overlay.RefreshType;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -49,8 +51,8 @@ public class DotTrackerOverlay extends XivOverlay {
 	private static final int BAR_WIDTH = 150;
 
 
-	public DotTrackerOverlay(PersistenceProvider persistence, DotRefreshReminders dots, TickTracker ticker) {
-		super("Dot Tracker", "dot-tracker.overlay", persistence);
+	public DotTrackerOverlay(PersistenceProvider persistence, DotRefreshReminders dots, OverlayConfig oc, TickTracker ticker) {
+		super("Dot Tracker", "dot-tracker.overlay", oc, persistence);
 		this.numberOfRows = dots.getNumberToDisplay();
 		this.showTicks = new BooleanSetting(persistence, "dot-tracker.overlay.show-ticks", true);
 		this.ticker = ticker;
@@ -76,7 +78,9 @@ public class DotTrackerOverlay extends XivOverlay {
 		tableModel.configureColumns(table);
 		table.setCellSelectionEnabled(false);
 		getPanel().add(table);
-		RefreshLoop<DotTrackerOverlay> refresher = new RefreshLoop<>("DotTrackerOverlay", this, DotTrackerOverlay::refresh, dt -> (long) (200.0 / dt.getScale()));
+		// Logic behind 200ms refresh basis: 150 pixel bar with a standard 30 second dot means each pixel would
+		// represent 200ms. However, we need to factor scaling into the equation.
+		RefreshLoop<DotTrackerOverlay> refresher = new RefreshLoop<>("DotTrackerOverlay", this, DotTrackerOverlay::refresh, dt -> dt.calculateScaledFrameTime(200));
 		repackSize();
 		refresher.start();
 	}
@@ -95,17 +99,30 @@ public class DotTrackerOverlay extends XivOverlay {
 	}
 
 
-	private void getAndSort() {
+	private RefreshType getAndSort() {
 		if (!getEnabled().get()) {
 			croppedDots = Collections.emptyList();
-			return;
+			return RefreshType.NONE;
 		}
 		List<BuffApplied> newCurrentDots = dots.getCurrentDots();
-		if (!newCurrentDots.equals(currentDots) || tickUpdatePending) {
+		// Logic for determining refresh type:
+		// If data changed, do a full table model refresh
+		// If nothing changed, but we have data, do a repaint only
+		// If there's just plain nothing, do nothing. Unless it was the first time we saw nothing, in which case we
+		// still need to do the table model refresh.
+		if (newCurrentDots.equals(currentDots) && !tickUpdatePending) {
+			if (newCurrentDots.isEmpty()) {
+				return RefreshType.NONE;
+			}
+			return RefreshType.REPAINT;
+		}
+		else {
 			// Technically, there's a concurrency issue here, but not enough to make a practical difference
 			tickUpdatePending = false;
 			if (newCurrentDots.isEmpty()) {
 				currentDots = Collections.emptyList();
+				croppedDots = Collections.emptyList();
+				return RefreshType.FULL;
 			}
 			currentDots = newCurrentDots;
 			Map<Long, List<BuffApplied>> dotsForBuffId = newCurrentDots
@@ -156,13 +173,17 @@ public class DotTrackerOverlay extends XivOverlay {
 							.thenComparing(event -> event.getEvent().getTarget().getId()))
 					.limit(numberOfRows.get())
 					.collect(Collectors.toList());
+			return RefreshType.FULL;
 		}
 	}
 
 
 	private void refresh() {
-		getAndSort();
-		tableModel.fullRefresh();
+		RefreshType refreshTypeNeeded = getAndSort();
+		switch (refreshTypeNeeded) {
+			case FULL -> tableModel.fullRefresh();
+			case REPAINT -> table.repaint();
+		}
 	}
 
 	public BooleanSetting showTicks() {

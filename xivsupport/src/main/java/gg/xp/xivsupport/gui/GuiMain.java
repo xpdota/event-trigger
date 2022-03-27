@@ -29,6 +29,7 @@ import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapTab;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -60,6 +61,7 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayAdvancePseudoFilter;
@@ -819,6 +821,7 @@ public class GuiMain {
 
 	private JPanel getOverlayConfigTab() {
 		OverlayMain overlayMain = container.getComponent(OverlayMain.class);
+		OverlayConfig oc = container.getComponent(OverlayConfig.class);
 		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Overlays");
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -827,7 +830,7 @@ public class GuiMain {
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
 		c.gridy = 0;
-		BooleanSetting visibleSetting = overlayMain.getVisibleSetting();
+		BooleanSetting visibleSetting = oc.getShow();
 		{
 			JPanel allOverlayControls = new JPanel();
 			allOverlayControls.setLayout(new WrapLayout());
@@ -839,7 +842,10 @@ public class GuiMain {
 			edit.addActionListener(e -> overlayMain.setEditing(edit.isSelected()));
 			allOverlayControls.add(edit);
 
-			allOverlayControls.add(new BooleanSettingGui(overlayMain.forceShow(), "Force Visible Even When Game Inactive").getComponent());
+			allOverlayControls.add(new BooleanSettingGui(oc.getForceShow(), "Force Visible Even When Game Inactive").getComponent());
+
+			allOverlayControls.add(new IntSettingSpinner(oc.getMinFps(), "Min Overlay FPS").getComponent());
+			allOverlayControls.add(new IntSettingSpinner(oc.getMaxFps(), "Max Overlay FPS").getComponent());
 
 			panel.add(allOverlayControls, c);
 			c.gridy++;

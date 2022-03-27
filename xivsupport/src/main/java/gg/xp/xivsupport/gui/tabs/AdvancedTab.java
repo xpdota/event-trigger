@@ -9,10 +9,12 @@ import gg.xp.xivsupport.gui.KeyValuePairDisplay;
 import gg.xp.xivsupport.gui.Refreshable;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapperPanel;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
+import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
 import gg.xp.xivsupport.sys.Threading;
 import org.picocontainer.PicoContainer;
@@ -208,10 +210,21 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable, TabAwar
 				devToolsPanel.setPreferredSize(null);
 				statsAndMemory.add(devToolsPanel, c);
 			}
-			c.gridx = 0;
+			c.gridx++;
+			{
+				JPanel graphicsPannel = new TitleBorderFullsizePanel("Graphics (Restart Required)");
+				JPanel bufferSettingGui = new IntSettingSpinner(container.getComponent(OverlayConfig.class).getBufferSetting(), "Buffers (0 for default)").getComponent();
+				graphicsPannel.add(bufferSettingGui);
+				JCheckBox repaintIgnoreGui = new BooleanSettingGui(container.getComponent(OverlayConfig.class).getIgnoreRepaint(), "Ignore External Repaint").getComponent();
+				graphicsPannel.add(repaintIgnoreGui);
+				statsAndMemory.add(graphicsPannel, c);
+			}
 			c.gridy++;
+			c.gridx = 0;
 			c.weighty = 1;
-			statsAndMemory.add(Box.createGlue(), c);
+			{
+				statsAndMemory.add(Box.createGlue(), c);
+			}
 			addTab("System", statsAndMemory);
 		}
 		{

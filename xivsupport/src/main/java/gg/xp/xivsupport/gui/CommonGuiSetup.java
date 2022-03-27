@@ -20,7 +20,7 @@ public final class CommonGuiSetup {
 	private enum RenderMode {
 		// D3D9 + software image scaling
 		D3D,
-		// D3D999999999 + hardware image scaling
+		// D3D9 + hardware image scaling
 		D3D_HWSCALE,
 		// OpenGL
 		OPENGL,
@@ -28,7 +28,7 @@ public final class CommonGuiSetup {
 		SOFTWARE
 	}
 
-	private static final RenderMode mode = RenderMode.SOFTWARE;
+	private static final RenderMode mode = RenderMode.OPENGL;
 	private static final int GUI_WARN_MS = 100;
 
 	private CommonGuiSetup() {
