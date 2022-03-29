@@ -44,6 +44,7 @@ public class ModifiableCallout<X> {
 	private final Predicate<X> expiry;
 	private final List<CalloutCondition> conditions;
 	private final long defaultVisualHangTime;
+	private final Object interpLock = new Object();
 	private int errorCount;
 	private static final int maxErrors = 10;
 
@@ -199,46 +200,50 @@ public class ModifiableCallout<X> {
 			return input;
 		}
 
-		try {
-			replacements.forEach((k, v) -> {
-				try {
-					interpreter.setVariable(k, v);
-				}
-				catch (Throwable e) {
-					errorCount++;
-					if (shouldLogError()) {
-						log.error("Error setting variable in bsh", e);
+		synchronized (interpLock) {
+			try {
+				replacements.forEach((k, v) -> {
+					try {
+						interpreter.setVariable(k, v);
 					}
-				}
-			});
-			return replacer.matcher(input).replaceAll(m -> {
-				try {
-					Object rawEval = scriptCache.computeIfAbsent(m.group(1), this::compile).run();
-					if (rawEval == null) {
-						return "null";
+					catch (Throwable e) {
+						errorCount++;
+						if (shouldLogError()) {
+							log.error("Error setting variable in bsh", e);
+						}
+					}
+				});
+				return replacer.matcher(input).replaceAll(m -> {
+					try {
+						// TODO: scripts have a setBinding method. That might be easier.
+						Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
+						Object rawEval = script.run();
+						if (rawEval == null) {
+							return "null";
 //						return m.group(0);
+						}
+						return singleReplacement(rawEval);
 					}
-					return singleReplacement(rawEval);
-				}
-				catch (Throwable e) {
-					if (shouldLogError()) {
-						log.error("Eval error for input '{}'", input, e);
+					catch (Throwable e) {
+						if (shouldLogError()) {
+							log.error("Eval error for input '{}'", input, e);
+						}
+						return "Error";
 					}
-					return "Error";
-				}
-			});
-		}
-		finally {
-			replacements.forEach((k, v) -> {
-				try {
-					interpreter.removeVariable(k);
-				}
-				catch (Throwable e) {
-					if (shouldLogError()) {
-						log.error("Error unsetting variable in bsh", e);
+				});
+			}
+			finally {
+				replacements.forEach((k, v) -> {
+					try {
+						interpreter.removeVariable(k);
 					}
-				}
-			});
+					catch (Throwable e) {
+						if (shouldLogError()) {
+							log.error("Error unsetting variable in bsh", e);
+						}
+					}
+				});
+			}
 		}
 	}
 
