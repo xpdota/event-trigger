@@ -3,6 +3,7 @@ package gg.xp.xivsupport.callouts;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.time.TimeUtils;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
+import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -10,6 +11,7 @@ import gg.xp.xivsupport.speech.DynamicCalloutEvent;
 import gg.xp.xivsupport.speech.ParentedCalloutEvent;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.apache.http.NameValuePair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -218,7 +220,7 @@ public class ModifiableCallout<X> {
 				}
 				catch (Throwable e) {
 					if (shouldLogError()) {
-						log.error("Eval error", e);
+						log.error("Eval error for input '{}'", input, e);
 					}
 					return "Error";
 				}
@@ -252,6 +254,9 @@ public class ModifiableCallout<X> {
 			else {
 				value = cbt.getName();
 			}
+		}
+		else if (rawValue instanceof NameIdPair pair) {
+			return pair.getName();
 		}
 		else if (rawValue instanceof Duration dur) {
 			if (dur.isZero()) {

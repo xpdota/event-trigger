@@ -176,17 +176,18 @@ public class EasyTriggers {
 	}
 
 	// Be sure to add new types to EasyTriggersTest
+	// TODO: might be nice to wire some of the "single value replacement" logic from ModifiableCallout into here, to skip the need for .name on everything
 	private static final List<EventDescription<?>> eventTypes = List.of(
-			new EventDescriptionImpl<>(AbilityCastStart.class, "An ability has started casting. Corresponds to ACT 20 lines.", "{event.getAbility().getName()}", "{event.getAbility().getName()} ({event.getEstimatedRemainingDuration()})"),
-			new EventDescriptionImpl<>(AbilityUsedEvent.class, "An ability has snapshotted. Corresponds to ACT 21/22 lines.", "{event.getAbility().getName()}"),
-			new EventDescriptionImpl<>(AbilityCastCancel.class, "An ability was interrupted while casting. Corresponds to ACT 23 lines.", "{event.getAbility().getName()} interrupted"),
-			new EventDescriptionImpl<>(EntityKilledEvent.class, "Something died. Corresponds to ACT 25 lines.", "{event.getTarget().getName()} died"),
-			new EventDescriptionImpl<>(BuffApplied.class, "A buff or debuff has been applied. Corresponds to ACT 26 lines.", "{event.getBuff().getName()} on {event.getTarget().getName()}"),
-			new EventDescriptionImpl<>(BuffRemoved.class, "A buff or debuff has been removed. Corresponds to ACT 30 lines.", "{event.getBuff().getName()} lost from {event.getTarget().getName()}"),
-			new EventDescriptionImpl<>(AbilityResolvedEvent.class, "An ability has actually applied. Corresponds to ACT 37 lines.", "{event.getAbility().getName()} resolved"),
-			new EventDescriptionImpl<>(ActorControlEvent.class, "Conveys various state changes, such as wiping or finishing a raid. Corresponds to ACT 33 lines.", "Actor control {event.getCommand()}"),
-			new EventDescriptionImpl<>(ACTLogLineEvent.class, "Any log line, in text form. Use as a last resort.", "Log Line {event.getRawFields()[0]}"),
-			new EventDescriptionImpl<>(ChatLineEvent.class, "In-game chat lines", "{event.getName()} says {event.getLine()}", "Chat Line {event.getName()}: {event.getLine()}")
+			new EventDescriptionImpl<>(AbilityCastStart.class, "An ability has started casting. Corresponds to ACT 20 lines.", "{event.ability}", "{event.ability} ({event.estimatedRemainingDuration})"),
+			new EventDescriptionImpl<>(AbilityUsedEvent.class, "An ability has snapshotted. Corresponds to ACT 21/22 lines.", "{event.ability}"),
+			new EventDescriptionImpl<>(AbilityCastCancel.class, "An ability was interrupted while casting. Corresponds to ACT 23 lines.", "{event.ability} interrupted"),
+			new EventDescriptionImpl<>(EntityKilledEvent.class, "Something died. Corresponds to ACT 25 lines.", "{event.target} died"),
+			new EventDescriptionImpl<>(BuffApplied.class, "A buff or debuff has been applied. Corresponds to ACT 26 lines.", "{event.buff} on {event.target}"),
+			new EventDescriptionImpl<>(BuffRemoved.class, "A buff or debuff has been removed. Corresponds to ACT 30 lines.", "{event.buff} lost from {event.target}"),
+			new EventDescriptionImpl<>(AbilityResolvedEvent.class, "An ability has actually applied. Corresponds to ACT 37 lines.", "{event.ability} resolved"),
+			new EventDescriptionImpl<>(ActorControlEvent.class, "Conveys various state changes, such as wiping or finishing a raid. Corresponds to ACT 33 lines.", "Actor control {event.command}"),
+			new EventDescriptionImpl<>(ACTLogLineEvent.class, "Any log line, in text form. Use as a last resort.", "Log Line {event.rawFields[0]}"),
+			new EventDescriptionImpl<>(ChatLineEvent.class, "In-game chat lines", "{event.name} says {event.line}", "Chat Line {event.name}: {event.line}")
 	);
 
 
