@@ -28,7 +28,7 @@ public final class CommonGuiSetup {
 		SOFTWARE
 	}
 
-	private static final RenderMode mode = RenderMode.OPENGL;
+	private static final RenderMode mode = RenderMode.SOFTWARE;
 	private static final int GUI_WARN_MS = 100;
 
 	private CommonGuiSetup() {

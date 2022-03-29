@@ -188,6 +188,8 @@ public class ModifiableCallout<X> {
 		return interpreter.parse(input);
 	}
 
+	// TODO: there is a concurrency issue here. The TTS thread and visual callout processing thread can call this
+	// at the same time.
 	@Contract("null, _ -> null")
 	public @Nullable String applyReplacements(@Nullable String input, Map<String, Object> replacements) {
 		if (input == null) {
