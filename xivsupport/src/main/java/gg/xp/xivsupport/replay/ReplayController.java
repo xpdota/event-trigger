@@ -71,7 +71,7 @@ public class ReplayController {
 	 */
 	public int advanceBy(int count) {
 		int advancedBy = 0;
-		for (; count-- > 0 && currentIndex < events.size(); currentIndex++) {
+		for (; count-- > 0 && hasMoreEvents(); currentIndex++) {
 			Event event = events.get(currentIndex);
 			if (decompress && event instanceof Compressible compressedEvent) {
 				compressedEvent.decompress();
@@ -92,7 +92,7 @@ public class ReplayController {
 
 	public void advanceByAsyncWhile(Supplier<Boolean> advWhile) {
 		exs.submit(() -> {
-			for (; advWhile.get() && currentIndex < events.size(); currentIndex++) {
+			for (; advWhile.get() && hasMoreEvents(); currentIndex++) {
 				Event event = events.get(currentIndex);
 				if (decompress && event instanceof Compressible compressedEvent) {
 					compressedEvent.decompress();
@@ -101,5 +101,9 @@ public class ReplayController {
 			}
 			notifyCallbacks();
 		});
+	}
+
+	public boolean hasMoreEvents() {
+		return currentIndex < events.size();
 	}
 }

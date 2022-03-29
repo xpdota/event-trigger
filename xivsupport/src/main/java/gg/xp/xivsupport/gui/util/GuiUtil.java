@@ -47,4 +47,19 @@ public final class GuiUtil {
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
 	}
+
+	public static void bringToFront(Component component) {
+		if (component.isShowing()) {
+			return;
+		}
+		Component current = component;
+		Component parent = component.getParent();
+		while (parent != null) {
+			if (parent instanceof JTabbedPane pane) {
+				pane.setSelectedComponent(current);
+			}
+			current = parent;
+			parent = current.getParent();
+		}
+	}
 }

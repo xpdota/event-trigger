@@ -16,6 +16,7 @@ import gg.xp.xivsupport.gui.library.StatusTable;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
@@ -294,7 +295,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			updateTab();
 		});
 
-		CustomRightClickOption.configureTable(timelineTable, timelineModel, List.of(clone, delete, chooseAbilityIcon, chooseStatusIcon));
+		RightClickOptionRepo.of(clone, delete, chooseAbilityIcon, chooseStatusIcon).configureTable(timelineTable, timelineModel);
 
 		c.gridx++;
 		c.weightx = 1;
