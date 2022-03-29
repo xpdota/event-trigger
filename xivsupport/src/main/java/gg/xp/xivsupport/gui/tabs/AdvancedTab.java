@@ -10,6 +10,7 @@ import gg.xp.xivsupport.gui.Refreshable;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapperPanel;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AdvancedTab extends SmartTabbedPane implements Refreshable, TabAware {
+public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("AdvancedTab"));
 	private final KeyValueDisplaySet displayed;
@@ -55,7 +56,7 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable, TabAwar
 			JPanel statsPanel = new TitleBorderFullsizePanel("Stats");
 			statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
 			JButton refreshButton = new JButton("Refresh");
-			refreshButton.addActionListener(e -> recheckTabs());
+			refreshButton.addActionListener(e -> refresh());
 			List<KeyValuePairDisplay<?, ?>> leftItems = List.of(
 					new KeyValuePairDisplay<>(
 							"Duration",
@@ -135,7 +136,7 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable, TabAwar
 				JButton forceGcButton = new JButton("Force GC");
 				forceGcButton.addActionListener(l -> {
 					exs.submit(System::gc);
-					exs.submit(() -> SwingUtilities.invokeLater(this::recheckTabs));
+					exs.submit(() -> SwingUtilities.invokeLater(this::refresh));
 				});
 				memoryPanel.add(new WrapperPanel(forceGcButton));
 			}
@@ -251,8 +252,9 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable, TabAwar
 		{
 			addTab("FFLogs", new FflogsPanel(container));
 		}
+		refresh();
 		recheckTabs();
-		new Timer(5000, l -> this.recheckTabs()).start();
+		new RefreshLoop<>("AdvancedTabRefresher", this, AdvancedTab::refresh, (unused) -> 5000L).start();
 	}
 
 	private JTextArea makeTextArea() {
