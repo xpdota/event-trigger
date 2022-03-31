@@ -30,6 +30,6 @@ b1930b5651377477a06ade2319f70dfc  logback-core-1.2.6.jar
 1d0070839d825f57fe6f4d8e2a82989b  reflections-0.10.2.jar
 fbcf58513bc25b80f075d812aad3e3cf  slf4j-api-1.7.32.jar
 392bdbca550081c94de74f3af3f0f88f  timelines-1.0-SNAPSHOT.jar
-546354797e72a46ca099746522b3d186  triggers-1.0-SNAPSHOT.jar
+8745723c477171c998e4216a90399603  triggers-1.0-SNAPSHOT.jar
 9061c580367af5bcf5c9ba62ae511252  xivdata-1.0-SNAPSHOT.jar
-2c4c2a171fcb301edb1f15714d009f78  xivsupport-1.0-SNAPSHOT.jar
+f4bee92642b25f8a9380455fc2d6581f  xivsupport-1.0-SNAPSHOT.jar
