@@ -130,4 +130,8 @@ public class PullTracker implements SubState {
 			return currentPull.getStatus();
 		}
 	}
+
+	public Pull getCurrentPull() {
+		return currentPull;
+	}
 }
