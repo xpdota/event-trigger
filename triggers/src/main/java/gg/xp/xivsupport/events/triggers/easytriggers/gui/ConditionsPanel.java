@@ -19,9 +19,11 @@ import java.awt.*;
 public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(ConditionsPanel.class);
 	private final HasMutableConditions<X> trigger;
+	private final EasyTriggers backend;
 
-	public ConditionsPanel(String label, HasMutableConditions<X> trigger) {
+	public ConditionsPanel(EasyTriggers backend, String label, HasMutableConditions<X> trigger) {
 		super(label);
+		this.backend = backend;
 		this.trigger = trigger;
 		setPreferredSize(null);
 //		setLayout(new GridBagLayout());
@@ -48,7 +50,7 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 	private void addNewCondition() {
 		TableWithFilterAndDetails<ConditionDescription<?, ?>, Object> table = TableWithFilterAndDetails.builder(
 						"Choose Condition Type",
-						() -> EasyTriggers.getConditionsApplicableTo(trigger))
+						() -> backend.getConditionsApplicableTo(trigger))
 				.addMainColumn(new CustomColumn<>("Condition", c -> c.clazz().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Description", ConditionDescription::description))
 				.setFixedData(true)
@@ -90,7 +92,7 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 			deleteButton.addActionListener(l -> this.delete());
 			Component component;
 			Class<? extends Condition> condClass = condition.getClass();
-			ConditionDescription<Condition<Y>, Y> desc = EasyTriggers.getConditionDescription(condClass);
+			ConditionDescription<Condition<Y>, Y> desc = backend.getConditionDescription(condClass);
 			try {
 				if (desc == null) {
 					component = new JLabel("Error: cannot find component");

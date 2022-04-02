@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
+import gg.xp.xivsupport.gui.ResettableField;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class TextFieldWithValidation<X> extends JTextField {
+public class TextFieldWithValidation<X> extends JTextField implements ResettableField {
 
 	private static final Logger log = LoggerFactory.getLogger(TextFieldWithValidation.class);
 
@@ -64,6 +65,11 @@ public class TextFieldWithValidation<X> extends JTextField {
 		finally {
 			ignoreUpdate = false;
 		}
+	}
+
+	@Override
+	public void reset() {
+		resetText();
 	}
 
 	public void recheck() {

@@ -2,6 +2,9 @@ package gg.xp.xivsupport.events.triggers.easytriggers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.BeanProperty;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.Event;
@@ -24,7 +27,9 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityNameFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineTypeFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DurationFilter;
@@ -40,6 +45,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetCountFilte
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityNpcIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityTypeFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetIndexFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
@@ -53,6 +59,7 @@ import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,14 +73,22 @@ public class EasyTriggers {
 	private static final Logger log = LoggerFactory.getLogger(EasyTriggers.class);
 	private static final String settingKey = "easy-triggers.my-triggers";
 	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers";
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private final ObjectMapper mapper = new ObjectMapper();
 
 	private final PersistenceProvider pers;
+	private final PicoContainer pico;
 
 	private List<EasyTrigger<?>> triggers;
 
-	public EasyTriggers(PersistenceProvider pers) {
+	public EasyTriggers(PicoContainer pico, PersistenceProvider pers) {
 		this.pers = pers;
+		this.pico = pico;
+		mapper.setInjectableValues(new InjectableValues() {
+			@Override
+			public Object findInjectableValue(Object o, DeserializationContext deserializationContext, BeanProperty beanProperty, Object o1) {
+				return getInjectionInstance(beanProperty.getType().getRawClass());
+			}
+		});
 		String strVal = pers.get(settingKey, String.class, null);
 		triggers = new ArrayList<>();
 		if (strVal != null) {
@@ -110,7 +125,11 @@ public class EasyTriggers {
 		}
 	}
 
-	public static String exportToString(List<EasyTrigger<?>> toExport) {
+	private <X> X getInjectionInstance(Class<X> clazz) {
+		return pico.getComponent(clazz);
+	}
+
+	public String exportToString(List<EasyTrigger<?>> toExport) {
 		try {
 			return mapper.writeValueAsString(toExport);
 		}
@@ -119,7 +138,7 @@ public class EasyTriggers {
 		}
 	}
 
-	public static List<EasyTrigger<?>> importFromString(String string) {
+	public List<EasyTrigger<?>> importFromString(String string) {
 		try {
 			return mapper.readValue(string, new TypeReference<>() {
 			});
@@ -204,8 +223,9 @@ public class EasyTriggers {
 	}
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
-	private static final List<ConditionDescription<?, ?>> conditions = List.of(
+	private final List<ConditionDescription<?, ?>> conditions = List.of(
 			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, EasyTriggers::generic),
+			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(StatusStacksFilter.class, HasStatusEffect.class, "Status Effect Stack Count", StatusStacksFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(SourceEntityTypeFilter.class, HasSourceEntity.class, "Source Combatant", SourceEntityTypeFilter::new, EasyTriggers::generic),
@@ -219,7 +239,8 @@ public class EasyTriggers {
 			new ConditionDescription<>(LogLineNumberFilter.class, ACTLogLineEvent.class, "Log Line Number", LogLineNumberFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", GroovyEventFilter::new, (a, b) -> new GroovyFilterEditor<>(a, (EasyTrigger<Event>) b))
+			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", GroovyEventFilter::new, (a, b) -> new GroovyFilterEditor<>(a, (EasyTrigger<Event>) b)),
+			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic)
 	);
 
 	public static List<EventDescription<?>> getEventDescriptions() {
@@ -231,16 +252,16 @@ public class EasyTriggers {
 		return (EventDescription<X>) eventTypes.stream().filter(desc -> desc.type().equals(event)).findFirst().orElse(null);
 	}
 
-	public static List<ConditionDescription<?, ?>> getConditions() {
+	public List<ConditionDescription<?, ?>> getConditions() {
 		return conditions;
 	}
 
-	public static <X> List<ConditionDescription<?, ?>> getConditionsApplicableTo(HasMutableConditions<X> trigger) {
+	public <X> List<ConditionDescription<?, ?>> getConditionsApplicableTo(HasMutableConditions<X> trigger) {
 		return conditions.stream().filter(cdesc -> cdesc.appliesTo(trigger.classForConditions())).toList();
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <X extends Condition<Y>, Y> ConditionDescription<X, Y> getConditionDescription(Class<X> cond) {
+	public <X extends Condition<Y>, Y> ConditionDescription<X, Y> getConditionDescription(Class<X> cond) {
 		ConditionDescription<?, ?> conditionDescription = conditions.stream().filter(item -> item.clazz().equals(cond)).findFirst().orElse(null);
 		return (ConditionDescription<X, Y>) conditionDescription;
 	}

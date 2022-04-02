@@ -3,7 +3,6 @@ package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
-import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
@@ -217,7 +216,7 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private void showEasyImportDialog() {
-		List<EasyTrigger<?>> newTriggers = doImportDialog("Import Triggers", EasyTriggers::importFromString);
+		List<EasyTrigger<?>> newTriggers = doImportDialog("Import Triggers", backend::importFromString);
 		if (newTriggers != null && !newTriggers.isEmpty()) {
 			addImports(newTriggers);
 		}
@@ -234,7 +233,7 @@ public class EasyTriggersTab implements PluginTab {
 
 	private void exportCurrent() {
 		if (!multiSelections.isEmpty()) {
-			GuiUtil.copyToClipboard(EasyTriggers.exportToString(multiSelections));
+			GuiUtil.copyToClipboard(backend.exportToString(multiSelections));
 			JOptionPane.showMessageDialog(outer, "Copied to clipboard");
 		}
 	}
@@ -267,7 +266,8 @@ public class EasyTriggersTab implements PluginTab {
 		if (selectedValue == null) {
 			return;
 		}
-		EasyTrigger<?> newTrigger = selectedValue.duplicate();
+		List<EasyTrigger<?>> newTriggers = backend.importFromString(backend.exportToString(Collections.singletonList(selectedValue)));
+		EasyTrigger<?> newTrigger = newTriggers.get(0);
 		backend.addTrigger(newTrigger);
 		refresh();
 		model.setSelectedValue(newTrigger);
@@ -337,7 +337,7 @@ public class EasyTriggersTab implements PluginTab {
 			TextFieldWithValidation<String> ttsField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setTts), trigger.getTts());
 			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setText), trigger.getText());
 
-			JPanel conditionsPanel = new ConditionsPanel("Conditions", trigger);
+			JPanel conditionsPanel = new ConditionsPanel(backend, "Conditions", trigger);
 
 			c.weightx = 0;
 			JLabel firstLabel = GuiUtil.labelFor("Name", nameField);

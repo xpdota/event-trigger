@@ -1,24 +1,30 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui;
 
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EditorIgnore;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdPicker;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdType;
+import gg.xp.xivsupport.gui.ResettableField;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.persistence.settings.Resettable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class GenericFieldEditor extends JPanel {
 
 	private final Object object;
+	private final List<ResettableField> resettables = new ArrayList<>();
 
 	public GenericFieldEditor(Object object) {
 		setLayout(new WrapLayout(0, 10, 0));
@@ -26,6 +32,7 @@ public class GenericFieldEditor extends JPanel {
 		Field[] fields = object.getClass().getFields();
 		Arrays.stream(fields)
 				.filter(field -> !Modifier.isStatic(field.getModifiers()))
+				.filter(field -> !field.isAnnotationPresent(EditorIgnore.class))
 				.forEach(this::addField);
 	}
 
@@ -37,6 +44,7 @@ public class GenericFieldEditor extends JPanel {
 
 	private void addField(Field field) {
 		String name;
+		boolean useLabel = true;
 		Description annotation = field.getAnnotation(Description.class);
 		IdType idPick = field.getAnnotation(IdType.class);
 		if (annotation == null) {
@@ -49,20 +57,20 @@ public class GenericFieldEditor extends JPanel {
 		final Component editorComponent;
 		if (type.equals(long.class) || type.equals(Long.class)) {
 			if (idPick == null) {
-				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), getField(field).toString());
+				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), () -> getField(field).toString());
 			}
 			else {
 				editorComponent = IdPicker.pickerFor(idPick.value(), () -> (long) getField(field), l -> setField(field, l));
 			}
 		}
 		else if (type.equals(int.class) || type.equals(Integer.class)) {
-			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), getField(field).toString());
+			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), () -> getField(field).toString());
 		}
-		else if (type.equals(String.class)) {
-			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), getField(field).toString());
+		else if (String.class.isAssignableFrom(type)) {
+			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> getField(field).toString());
 		}
 		else if (type.equals(Pattern.class)) {
-			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), getField(field).toString());
+			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), () -> getField(field).toString());
 			textField.setColumns(30);
 			editorComponent = textField;
 //			editorComponent.setPreferredSize(new Dimension(2500, editorComponent.getPreferredSize().height));
@@ -74,15 +82,29 @@ public class GenericFieldEditor extends JPanel {
 			comboBox.setRenderer(new FriendlyNameListCellRenderer());
 			editorComponent = comboBox;
 		}
+		else if (Runnable.class.isAssignableFrom(type)) {
+			JButton button = new JButton(name);
+			button.addActionListener(l -> {
+				((Runnable) getField(field)).run();
+				resettables.forEach(ResettableField::reset);
+			});
+			editorComponent = button;
+			useLabel = false;
+		}
 		else {
 			editorComponent = new JLabel("No editor for " + type.getSimpleName());
 		}
 		JPanel panel = new JPanel();
-		JLabel nameLabel = GuiUtil.labelFor(name + ':', editorComponent);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
-		panel.add(nameLabel);
+		if (useLabel) {
+			JLabel nameLabel = GuiUtil.labelFor(name + ':', editorComponent);
+			panel.add(nameLabel);
+		}
 		panel.add(editorComponent);
 		add(panel);
+		if (editorComponent instanceof ResettableField rb) {
+			resettables.add(rb);
+		}
 	}
 
 	private Object getField(Field field) {
