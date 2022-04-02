@@ -64,10 +64,10 @@ public class GenericFieldEditor extends JPanel {
 			}
 		}
 		else if (type.equals(int.class) || type.equals(Integer.class)) {
-			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), () -> getField(field).toString());
+			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), () -> String.valueOf(getField(field)));
 		}
 		else if (String.class.isAssignableFrom(type)) {
-			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> getField(field).toString());
+			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> String.valueOf(getField(field)));
 		}
 		else if (type.equals(Pattern.class)) {
 			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), () -> getField(field).toString());
