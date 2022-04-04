@@ -50,7 +50,7 @@ typing names. It supports both automark and personal callouts, so you don't have
 
 ### Triggers
 
-Triggers can be writte as code (like Cactbot) or with a simple point-and-click interface. Both options let you write
+Triggers can be written as code (like Cactbot) or with a simple point-and-click interface. Both options let you write
 clear conditions, rather than stuffing everything into a hard-to-understand regex.
 
 For example, consider this small bit of code here:
@@ -58,7 +58,7 @@ For example, consider this small bit of code here:
 ![image](https://user-images.githubusercontent.com/14287379/158666921-7bcc2ee2-f80c-44c3-9750-7e09c0f2b8f2.png)
 
 The conditions are all easier to read than a regex - it triggers on a buff application, with an ID of 0xACA, where the
-target is the player, and it is not a buff refresh. Then, we want to switch our callout based on the number of stacks fo
+target is the player, and it is not a buff refresh. Then, we want to switch our callout based on the number of stacks of
 the buff.
 
 On top of that, it puts configurable callouts on the UI: will result in you having four easily configurable callouts,
