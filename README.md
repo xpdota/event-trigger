@@ -71,6 +71,10 @@ regexes, since everything is parsed for you:
 
 ![image](https://user-images.githubusercontent.com/14287379/158667347-286d6afa-3392-4526-a8ff-0fe7a7879144.png)
 
+You can even right click an event and select "Make Easy Trigger", and it will try to fill out the data for you:
+
+![image](https://cdn.discordapp.com/attachments/551476873717088279/956345688432721920/unknown.png)
+
 In addition, any trigger attached to an event with a duration (buffs, castbars) can easily display a countdown until the
 event takes place, if you have the on-screen callout overlay:
 

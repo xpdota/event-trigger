@@ -8,6 +8,8 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
+import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -52,8 +54,8 @@ public class PartyOverlay extends XivOverlay {
 		});
 	}
 
-	public PartyOverlay(PersistenceProvider persistence, EventDistributor dist, XivState state, StatusEffectRepository statuses, StandardColumns columns) {
-		super("Party Overlay", "party-overlay", persistence);
+	public PartyOverlay(PersistenceProvider persistence, EventDistributor dist, OverlayConfig oc, XivState state, StatusEffectRepository statuses, StandardColumns columns) {
+		super("Party Overlay", "party-overlay", oc, persistence);
 		this.state = state;
 		this.statuses = statuses;
 		tableModel = CustomTableModel.builder(() -> party)

@@ -22,7 +22,6 @@
             <artifactId>testng</artifactId>
             <!-- 7.4.0 Breaks stuff-->
             <!--suppress MavenPackageUpdate -->
-            <version>7.3.0</version>
             <scope>test</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.hamcrest/hamcrest-all -->
@@ -30,7 +29,11 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
-            <version>1.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>actimport</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

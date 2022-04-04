@@ -33,10 +33,10 @@ public class FlyingTextOverlay extends XivOverlay {
 	private static final Color transparentColor = new Color(0, 0, 0, 0);
 	private final InnerPanel innerPanel;
 
-	public FlyingTextOverlay(PersistenceProvider pers) {
-		super("Callout Text", "callout-text-overlay", pers);
+	public FlyingTextOverlay(PersistenceProvider pers, OverlayConfig oc) {
+		super("Callout Text", "callout-text-overlay", oc, pers);
 		font = new JLabel().getFont().deriveFont(new AffineTransform(2, 0, 0, 2, 0, 0));
-		RefreshLoop<FlyingTextOverlay> refresher = new RefreshLoop<>("CalloutOverlay", this, FlyingTextOverlay::refresh, unused -> 100L);
+		RefreshLoop<FlyingTextOverlay> refresher = new RefreshLoop<>("CalloutOverlay", this, FlyingTextOverlay::refresh, i -> i.calculateUnscaledFrameTime(50));
 		innerPanel = new InnerPanel();
 		innerPanel.setPreferredSize(new Dimension(400, 220));
 		getPanel().add(innerPanel);
@@ -152,10 +152,13 @@ public class FlyingTextOverlay extends XivOverlay {
 
 		@Override
 		public void paint(Graphics g) {
+			if (currentCalloutsTmp.isEmpty()) {
+				return;
+			}
 			Graphics2D graphics = (Graphics2D) g;
 			AffineTransform oldTransform = graphics.getTransform();
 			AffineTransform newTransform = new AffineTransform(oldTransform);
-			g.clearRect(0, 0, getWidth(), getHeight());
+//			g.clearRect(0, 0, getWidth(), getHeight());
 			int curY = 0;
 			for (VisualCalloutItem ce : currentCalloutsTmp) {
 				if (curY + ce.getHeight() > getHeight()) {
@@ -184,24 +187,25 @@ public class FlyingTextOverlay extends XivOverlay {
 	public static void main(String[] args) {
 		CommonGuiSetup.setup();
 		{
-			FlyingTextOverlay overlay = new FlyingTextOverlay(new InMemoryMapPersistenceProvider());
-			overlay.finishInit();
-			overlay.setVisible(true);
-			overlay.setEditMode(true);
-			overlay.getEnabled().set(true);
-			double scaleFactor = 1.5;
-			overlay.setScale(scaleFactor);
-			overlay.addCallout(new BasicCalloutEvent(null, "One", 5000));
-			overlay.addCallout(new BasicCalloutEvent(null, "This second callout is longer", 15000));
-			overlay.addCallout(new BasicCalloutEvent(null, "Three", 255000));
-			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new BasicCalloutEvent(null, "This one is so long, it isn't going to fit on the screen", 255000));
-			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+//			InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+//			FlyingTextOverlay overlay = new FlyingTextOverlay(pers);
+//			overlay.finishInit();
+//			overlay.setVisible(true);
+//			overlay.setEditMode(true);
+//			overlay.getEnabled().set(true);
+//			double scaleFactor = 1.5;
+//			overlay.setScale(scaleFactor);
+//			overlay.addCallout(new BasicCalloutEvent(null, "One", 5000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "This second callout is longer", 15000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "Three", 255000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "This one is so long, it isn't going to fit on the screen", 255000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
 		}
 
 	}

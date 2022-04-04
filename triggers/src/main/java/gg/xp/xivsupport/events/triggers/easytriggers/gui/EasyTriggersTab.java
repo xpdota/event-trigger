@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 
+import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
@@ -12,7 +13,9 @@ import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.InputValidationState;
@@ -41,8 +44,18 @@ public class EasyTriggersTab implements PluginTab {
 	private EasyTrigger<?> selection;
 	private List<EasyTrigger<?>> multiSelections = Collections.emptyList();
 
-	public EasyTriggersTab(EasyTriggers backend) {
+	public EasyTriggersTab(EasyTriggers backend, RightClickOptionRepo rightClicks) {
 		this.backend = backend;
+		rightClicks.addOption(CustomRightClickOption.forRow(
+				"Make Easy Trigger",
+				Event.class,
+				this::makeTriggerFromEvent));
+		// TODO
+		// TODO: good candidate for sub-menus
+//				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Make Easy Trigger", Event.class, Function.identity(), e -> {
+//					container.getComponent(EasyTrig)
+//					GuiUtil.copyTextToClipboard(line.getFields().toString());
+//				}))
 	}
 
 	@Override
@@ -203,7 +216,7 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private void showEasyImportDialog() {
-		List<EasyTrigger<?>> newTriggers = doImportDialog("Import Triggers", EasyTriggers::importFromString);
+		List<EasyTrigger<?>> newTriggers = doImportDialog("Import Triggers", backend::importFromString);
 		if (newTriggers != null && !newTriggers.isEmpty()) {
 			addImports(newTriggers);
 		}
@@ -220,7 +233,7 @@ public class EasyTriggersTab implements PluginTab {
 
 	private void exportCurrent() {
 		if (!multiSelections.isEmpty()) {
-			GuiUtil.copyToClipboard(EasyTriggers.exportToString(multiSelections));
+			GuiUtil.copyToClipboard(backend.exportToString(multiSelections));
 			JOptionPane.showMessageDialog(outer, "Copied to clipboard");
 		}
 	}
@@ -253,11 +266,18 @@ public class EasyTriggersTab implements PluginTab {
 		if (selectedValue == null) {
 			return;
 		}
-		EasyTrigger<?> newTrigger = selectedValue.duplicate();
+		List<EasyTrigger<?>> newTriggers = backend.importFromString(backend.exportToString(Collections.singletonList(selectedValue)));
+		EasyTrigger<?> newTrigger = newTriggers.get(0);
 		backend.addTrigger(newTrigger);
 		refresh();
 		model.setSelectedValue(newTrigger);
 //		refreshSelection();
+	}
+
+	private void addExisting(EasyTrigger<?> trigger) {
+		backend.addTrigger(trigger);
+		refresh();
+		model.setSelectedValue(trigger);
 	}
 
 	private void addnew() {
@@ -317,7 +337,7 @@ public class EasyTriggersTab implements PluginTab {
 			TextFieldWithValidation<String> ttsField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setTts), trigger.getTts());
 			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setText), trigger.getText());
 
-			JPanel conditionsPanel = new ConditionsPanel("Conditions", trigger);
+			JPanel conditionsPanel = new ConditionsPanel(backend, "Conditions", trigger);
 
 			c.weightx = 0;
 			JLabel firstLabel = GuiUtil.labelFor("Name", nameField);
@@ -358,5 +378,18 @@ public class EasyTriggersTab implements PluginTab {
 			return modification.andThen((unused) -> requestSave());
 		}
 	}
+
+
+	private void makeTriggerFromEvent(Event event) {
+		EasyTrigger<?> newTrigger = EasyTriggers.makeTriggerFromEvent(event);
+		if (newTrigger == null) {
+			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(outer), "Unfortunately, this event type is not possible to automatically make a trigger for.");
+		}
+		else {
+			addExisting(newTrigger);
+			GuiUtil.bringToFront(outer);
+		}
+	}
+
 
 }

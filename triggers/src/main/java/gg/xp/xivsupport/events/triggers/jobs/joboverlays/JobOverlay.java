@@ -7,6 +7,8 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.events.state.PlayerChangedJobEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
+import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.jetbrains.annotations.Nullable;
@@ -32,8 +34,8 @@ public class JobOverlay extends XivOverlay implements FilteredEventHandler {
 			SCH, SchOverlay.class
 	);
 
-	public JobOverlay(PersistenceProvider persistence, AutoHandlerInstanceProvider instanceProvider, XivState state) {
-		super("Job-Specific", "job-specific-overlay", persistence);
+	public JobOverlay(PersistenceProvider persistence, AutoHandlerInstanceProvider instanceProvider, OverlayConfig oc, XivState state) {
+		super("Job-Specific", "job-specific-overlay", oc, persistence);
 		this.instanceProvider = instanceProvider;
 		this.state = state;
 	}

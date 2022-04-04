@@ -59,7 +59,9 @@ public class EasyTriggersTest {
 	private static final ACTLogLineEvent logLine = new ACTLogLineEvent("22|2022-01-20T18:11:59.9720000-08:00|40031036|Sparkfledged|66E6|Ashen Eye|10679943|Player Name|3|967F4098|1B|66E68000|0|0|0|0|0|0|0|0|0|0|0|0|61186|61186|10000|10000|||100.14|91.29|-0.02|3.08|69200|69200|10000|10000|||100.11|106.76|0.00|3.14|000133E7|2|4|64f5cd5254f9f411");
 
 
-	@DataProvider(parallel = true)
+	// TODO: why doesn't parallel work here? Everything should have its own instances, so thread safety should be
+	// completely irrelevant.
+	@DataProvider(parallel = false)
 	private Object[] testCases() {
 		return new TestCase[]{
 				new TestCase<>(castStart, AbilityCastStart.class, "Foo Ability (4.5)", "Foo Ability"),
@@ -84,7 +86,7 @@ public class EasyTriggersTest {
 
 	@Test(dataProvider = "testCases")
 	@Parameters
-	<X extends Event> void defaultCastStart(TestCase<X> testCase) {
+	<X extends Event> void defaultCallouts(TestCase<X> testCase) {
 		PersistenceProvider pers;
 		{
 			MutablePicoContainer pico = ExampleSetup.setup();

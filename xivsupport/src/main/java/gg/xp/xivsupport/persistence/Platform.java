@@ -30,6 +30,10 @@ public final class Platform {
 		return Paths.get(getTriggeventDir().toString(), "sessions");
 	}
 
+	public static Path getGroovyDir() {
+		return Paths.get(getTriggeventDir().toString(), "userscripts");
+	}
+
 	public static Path getActDir() {
 		String appData = System.getenv("APPDATA");
 		Path userDataDir;

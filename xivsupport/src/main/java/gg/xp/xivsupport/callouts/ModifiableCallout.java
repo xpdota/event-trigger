@@ -3,6 +3,7 @@ package gg.xp.xivsupport.callouts;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.time.TimeUtils;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
+import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -10,6 +11,7 @@ import gg.xp.xivsupport.speech.DynamicCalloutEvent;
 import gg.xp.xivsupport.speech.ParentedCalloutEvent;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.apache.http.NameValuePair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -42,6 +44,7 @@ public class ModifiableCallout<X> {
 	private final Predicate<X> expiry;
 	private final List<CalloutCondition> conditions;
 	private final long defaultVisualHangTime;
+	private final Object interpLock = new Object();
 	private int errorCount;
 	private static final int maxErrors = 10;
 
@@ -186,6 +189,8 @@ public class ModifiableCallout<X> {
 		return interpreter.parse(input);
 	}
 
+	// TODO: there is a concurrency issue here. The TTS thread and visual callout processing thread can call this
+	// at the same time.
 	@Contract("null, _ -> null")
 	public @Nullable String applyReplacements(@Nullable String input, Map<String, Object> replacements) {
 		if (input == null) {
@@ -195,46 +200,50 @@ public class ModifiableCallout<X> {
 			return input;
 		}
 
-		try {
-			replacements.forEach((k, v) -> {
-				try {
-					interpreter.setVariable(k, v);
-				}
-				catch (Throwable e) {
-					errorCount++;
-					if (shouldLogError()) {
-						log.error("Error setting variable in bsh", e);
+		synchronized (interpLock) {
+			try {
+				replacements.forEach((k, v) -> {
+					try {
+						interpreter.setVariable(k, v);
 					}
-				}
-			});
-			return replacer.matcher(input).replaceAll(m -> {
-				try {
-					Object rawEval = scriptCache.computeIfAbsent(m.group(1), this::compile).run();
-					if (rawEval == null) {
-						return "null";
+					catch (Throwable e) {
+						errorCount++;
+						if (shouldLogError()) {
+							log.error("Error setting variable in bsh", e);
+						}
+					}
+				});
+				return replacer.matcher(input).replaceAll(m -> {
+					try {
+						// TODO: scripts have a setBinding method. That might be easier.
+						Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
+						Object rawEval = script.run();
+						if (rawEval == null) {
+							return "null";
 //						return m.group(0);
+						}
+						return singleReplacement(rawEval);
 					}
-					return singleReplacement(rawEval);
-				}
-				catch (Throwable e) {
-					if (shouldLogError()) {
-						log.error("Eval error", e);
+					catch (Throwable e) {
+						if (shouldLogError()) {
+							log.error("Eval error for input '{}'", input, e);
+						}
+						return "Error";
 					}
-					return "Error";
-				}
-			});
-		}
-		finally {
-			replacements.forEach((k, v) -> {
-				try {
-					interpreter.removeVariable(k);
-				}
-				catch (Throwable e) {
-					if (shouldLogError()) {
-						log.error("Error unsetting variable in bsh", e);
+				});
+			}
+			finally {
+				replacements.forEach((k, v) -> {
+					try {
+						interpreter.removeVariable(k);
 					}
-				}
-			});
+					catch (Throwable e) {
+						if (shouldLogError()) {
+							log.error("Error unsetting variable in bsh", e);
+						}
+					}
+				});
+			}
 		}
 	}
 
@@ -252,6 +261,9 @@ public class ModifiableCallout<X> {
 			else {
 				value = cbt.getName();
 			}
+		}
+		else if (rawValue instanceof NameIdPair pair) {
+			return pair.getName();
 		}
 		else if (rawValue instanceof Duration dur) {
 			if (dur.isZero()) {

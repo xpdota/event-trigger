@@ -11,6 +11,7 @@ import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconUrlRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
+import gg.xp.xivsupport.models.XivZone;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

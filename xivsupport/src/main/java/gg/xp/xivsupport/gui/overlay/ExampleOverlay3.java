@@ -8,8 +8,8 @@ import java.awt.*;
 //@ScanMe
 public class ExampleOverlay3 extends XivOverlay {
 
-	public ExampleOverlay3(PersistenceProvider persistence) {
-		super("Example Overlay", "example-overlay3", persistence);
+	public ExampleOverlay3(PersistenceProvider persistence, OverlayConfig oc) {
+		super("Example Overlay", "example-overlay3", oc, persistence);
 		JPanel panel = new JPanel();
 		JButton button = new JButton("Bar");
 		button.addActionListener(l -> this.dummyMethodForBreakpoint());

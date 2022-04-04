@@ -5,6 +5,8 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.combatstate.CdTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
+import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.jetbrains.annotations.Nullable;
@@ -20,8 +22,8 @@ public class CdTrackerOverlay extends BaseCdTrackerOverlay {
 	private final CdTracker cdTracker;
 	private final StatusEffectRepository buffRepo;
 
-	public CdTrackerOverlay(PersistenceProvider persistence, CdTracker cdTracker, StatusEffectRepository buffRepo) {
-		super("Cd Tracker", "cd-tracker.overlay", persistence, cdTracker.getOverlayMaxPersonal());
+	public CdTrackerOverlay(PersistenceProvider persistence, CdTracker cdTracker, OverlayConfig oc, StatusEffectRepository buffRepo) {
+		super("Cd Tracker", "cd-tracker.overlay", oc, persistence, cdTracker.getOverlayMaxPersonal());
 		this.cdTracker = cdTracker;
 		this.buffRepo = buffRepo;
 	}

@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
+import gg.xp.xivsupport.gui.ResettableField;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class TextFieldWithValidation<X> extends JTextField {
+public class TextFieldWithValidation<X> extends JTextField implements ResettableField {
 
 	private static final Logger log = LoggerFactory.getLogger(TextFieldWithValidation.class);
 
@@ -22,6 +23,7 @@ public class TextFieldWithValidation<X> extends JTextField {
 	protected final Color invalidBackground = new Color(62, 27, 27);
 	private boolean stopUpdate;
 	private Supplier<String> valueGetter;
+	private boolean validationError;
 
 	public TextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
 		this(parser, consumer, () -> initialValue);
@@ -65,6 +67,11 @@ public class TextFieldWithValidation<X> extends JTextField {
 		}
 	}
 
+	@Override
+	public void reset() {
+		resetText();
+	}
+
 	public void recheck() {
 		update();
 	}
@@ -79,8 +86,11 @@ public class TextFieldWithValidation<X> extends JTextField {
 		return super.getToolTipText();
 	}
 
+	public boolean hasValidationError() {
+		return validationError;
+	}
+
 	private void update() {
-		boolean validationError;
 		String currentRawText = getText();
 		try {
 			X parsedValue = parser.apply(currentRawText);

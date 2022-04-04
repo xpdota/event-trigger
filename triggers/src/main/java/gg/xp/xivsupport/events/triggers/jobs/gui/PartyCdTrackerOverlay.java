@@ -6,6 +6,7 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.CdTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.slf4j.Logger;
@@ -23,8 +24,8 @@ public class PartyCdTrackerOverlay extends BaseCdTrackerOverlay {
 	private final StatusEffectRepository buffRepo;
 	private final XivState state;
 
-	public PartyCdTrackerOverlay(PersistenceProvider persistence, CdTracker cdTracker, StatusEffectRepository buffRepo, XivState state) {
-		super("Party Cd Tracker", "party-cd-tracker.overlay", persistence, cdTracker.getOverlayMaxParty());
+	public PartyCdTrackerOverlay(PersistenceProvider persistence, CdTracker cdTracker, OverlayConfig oc, StatusEffectRepository buffRepo, XivState state) {
+		super("Party Cd Tracker", "party-cd-tracker.overlay", oc, persistence, cdTracker.getOverlayMaxParty());
 		this.cdTracker = cdTracker;
 		this.buffRepo = buffRepo;
 		this.state = state;

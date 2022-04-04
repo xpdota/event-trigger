@@ -25,6 +25,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 
 	private Class<X> eventType = (Class<X>) Event.class;
 	private List<Condition<? super X>> conditions = Collections.emptyList();
+	// TODO: hangtime conditions
 	private String name = "Give me a name";
 	private String tts = "The text that you want read out loud (or leave empty)";
 	private String text = "The text that you want displayed (or leave empty). Supports Groovy expressions in curly braces.";

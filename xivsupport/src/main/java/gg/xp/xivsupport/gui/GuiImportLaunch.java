@@ -10,14 +10,25 @@ import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.sys.XivMain;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetListener;
+import java.awt.dnd.InvalidDnDOperationException;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 public final class GuiImportLaunch {
 	private static final Logger log = LoggerFactory.getLogger(GuiImportLaunch.class);
@@ -179,6 +190,58 @@ public final class GuiImportLaunch {
 			frame.setSize(new Dimension(400, 400));
 			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 			frame.setVisible(true);
+
+			// adapted from https://stackoverflow.com/a/39415436
+			frame.setTransferHandler(new TransferHandler() {
+				@Override
+				public boolean canImport(TransferSupport support) {
+					try {
+						return Arrays.stream(support.getDataFlavors()).anyMatch(DataFlavor::isFlavorJavaFileListType)
+								&& verifyAndGetFile(support) != null;
+					}
+					// https://coderanch.com/t/664525/java/Invalid-Drag-Drop-Exception
+					catch (InvalidDnDOperationException ignored) {
+						return true;
+					}
+				}
+
+				private @Nullable File verifyAndGetFile(TransferSupport support) {
+					List<File> files;
+					try {
+						files = (List<File>) support.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+					}
+					catch (UnsupportedFlavorException | IOException e) {
+						return null;
+					}
+					// Not supporting multi-file import yet
+					if (files.size() == 1) {
+						File theFile = files.get(0);
+						if (theFile.getName().toLowerCase(Locale.ROOT).endsWith(".log")) {
+							return theFile;
+						}
+						else {
+							return null;
+						}
+					}
+					else {
+						return null;
+					}
+				}
+
+				@Override
+				public boolean importData(TransferSupport support) {
+					File file = verifyAndGetFile(support);
+					if (file == null) {
+						return false;
+					}
+					// do import
+					CatchFatalError.run(() -> {
+						LaunchImportedActLog.fromEvents(EventReader.readActLogFile(file), decompressCheckbox.isSelected());
+					});
+					frame.setVisible(false);
+					return true;
+				}
+			});
 		}));
 
 	}
