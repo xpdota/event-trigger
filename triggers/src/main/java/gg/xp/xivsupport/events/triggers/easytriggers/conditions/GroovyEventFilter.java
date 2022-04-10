@@ -1,47 +1,25 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
+import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
-import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
-import groovy.transform.CompileStatic;
-import groovy.transform.TypeChecked;
-import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.reflections.Reflections;
-import org.reflections.scanners.Scanners;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
 import java.util.function.Predicate;
-
-import static org.reflections.scanners.Scanners.SubTypes;
 
 public class GroovyEventFilter implements Condition<Event> {
 	private static final Logger log = LoggerFactory.getLogger(GroovyEventFilter.class);
 
-	private static final GroovyShell shell;
+	private final GroovyManager mgr;
+	private @Nullable GroovyShell shell;
 
-	static {
-//		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
-//		ImportCustomizer importCustomizer = new ImportCustomizer();
-//		importCustomizer.addImports(Predicate.class.getCanonicalName(), CompileStatic.class.getCanonicalName(), TypeChecked.class.getCanonicalName());
-//		importCustomizer.addStarImports("gg.xp.xivsupport.events.actlines.events", "javax.swing", "gg.xp.xivsupport.gui", "gg.xp.xivsupport.gui.tables");
-//		Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forJavaClassPath()).setParallel(true).setScanners(Scanners.SubTypes));
-//		reflections.get(SubTypes.of(Event.class).asClass()).stream().map(Class::getCanonicalName).filter(Objects::nonNull).forEach(importCustomizer::addImports);
-//
-//		compilerConfiguration.addCompilationCustomizers(importCustomizer);
-		CompilerConfiguration compilerConfiguration = GroovyManager.getCompilerConfig();
-		Binding binding = new Binding();
-		shell = new GroovyShell(binding, compilerConfiguration);
-	}
 
 	public Class<? extends Event> eventType = Event.class;
 	private String groovyScript = "event != null";
@@ -49,16 +27,20 @@ public class GroovyEventFilter implements Condition<Event> {
 	@JsonIgnore
 	private Predicate<? extends Event> groovyCompiledScript;
 
-	public GroovyEventFilter() {
+	public GroovyEventFilter(@JacksonInject GroovyManager mgr) {
+		this.mgr = mgr;
 	}
 
 	@JsonCreator
 	public GroovyEventFilter(@JsonProperty("groovyScript") String groovyScript,
 	                         @JsonProperty("strict") boolean strict,
-	                         @JsonProperty("eventType") Class<? extends Event> eventType) {
+	                         @JsonProperty("eventType") Class<? extends Event> eventType,
+	                         @JacksonInject GroovyManager mgr
+	) {
+		this(mgr);
 		this.strict = strict;
 		this.eventType = eventType;
-		setGroovyScript(groovyScript);
+		this.groovyScript = groovyScript;
 	}
 
 	public boolean isStrict() {
@@ -93,6 +75,9 @@ public class GroovyEventFilter implements Condition<Event> {
 	}
 
 	private Predicate<? extends Event> compile(String script) {
+		if (shell == null) {
+			shell = mgr.makeShell();
+		}
 		String longClassName = eventType.getCanonicalName();
 		String shortClassName = eventType.getSimpleName();
 		String varName = "event";
@@ -125,7 +110,13 @@ public class GroovyEventFilter implements Condition<Event> {
 	@Override
 	public boolean test(Event event) {
 		if (groovyCompiledScript == null) {
-			groovyCompiledScript = compile(groovyScript);
+			try {
+				groovyCompiledScript = compile(groovyScript);
+			}
+			catch (Throwable t) {
+				log.error("Error compiling script, disabling", t);
+				groovyCompiledScript = (e) -> false;
+			}
 		}
 		if (eventType.isInstance(event)) {
 			return ((Predicate<Event>) groovyCompiledScript).test(event);

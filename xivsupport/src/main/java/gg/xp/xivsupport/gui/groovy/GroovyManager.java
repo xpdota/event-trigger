@@ -309,6 +309,7 @@ public class GroovyManager {
 				"javax.util",
 				"javax.util.function",
 				"javax.swing",
+				"gg.xp.xivdata.data",
 				"gg.xp.xivsupport.gui",
 				"gg.xp.xivsupport.gui.tables"
 		);
@@ -328,7 +329,7 @@ public class GroovyManager {
 		return compilerConfiguration;
 	}
 
-	GroovyShell makeShell() {
+	public GroovyShell makeShell() {
 		Binding binding = new Binding();
 		GroovyShell shell = new GroovyShell(binding, getCompilerConfig());
 		container.getComponents().forEach(item -> {

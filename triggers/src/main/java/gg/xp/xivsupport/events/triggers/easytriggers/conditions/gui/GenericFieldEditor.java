@@ -42,6 +42,15 @@ public class GenericFieldEditor extends JPanel {
 //		return new Dimension(getMaximumSize().width, super.getPreferredSize().height);
 	}
 
+	private String valueToString(Object value) {
+		if (value == null) {
+			return "";
+		}
+		else {
+			return String.valueOf(value);
+		}
+	}
+
 	private void addField(Field field) {
 		String name;
 		boolean useLabel = true;
@@ -55,29 +64,30 @@ public class GenericFieldEditor extends JPanel {
 		}
 		Class<?> type = field.getType();
 		final Component editorComponent;
+		Object fieldValue = getField(field);
 		if (type.equals(long.class) || type.equals(Long.class)) {
 			if (idPick == null) {
-				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), () -> getField(field).toString());
+				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), () -> valueToString(fieldValue.toString()));
 			}
 			else {
-				editorComponent = IdPicker.pickerFor(idPick.value(), () -> (long) getField(field), l -> setField(field, l));
+				editorComponent = IdPicker.pickerFor(idPick.value(), () -> (long) fieldValue, l -> setField(field, l));
 			}
 		}
 		else if (type.equals(int.class) || type.equals(Integer.class)) {
-			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), () -> String.valueOf(getField(field)));
+			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), () -> valueToString(String.valueOf(fieldValue)));
 		}
 		else if (String.class.isAssignableFrom(type)) {
-			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> String.valueOf(getField(field)));
+			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> valueToString(String.valueOf(fieldValue)));
 		}
 		else if (type.equals(Pattern.class)) {
-			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), () -> getField(field).toString());
+			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), () -> valueToString(fieldValue.toString()));
 			textField.setColumns(30);
 			editorComponent = textField;
 //			editorComponent.setPreferredSize(new Dimension(2500, editorComponent.getPreferredSize().height));
 		}
 		else if (type.isEnum()) {
 			JComboBox<?> comboBox = new JComboBox<>(type.getEnumConstants());
-			comboBox.setSelectedItem(getField(field));
+			comboBox.setSelectedItem(fieldValue);
 			comboBox.addItemListener(l -> setField(field, comboBox.getSelectedItem()));
 			comboBox.setRenderer(new FriendlyNameListCellRenderer());
 			editorComponent = comboBox;
@@ -85,10 +95,17 @@ public class GenericFieldEditor extends JPanel {
 		else if (Runnable.class.isAssignableFrom(type)) {
 			JButton button = new JButton(name);
 			button.addActionListener(l -> {
-				((Runnable) getField(field)).run();
+				((Runnable) fieldValue).run();
 				resettables.forEach(ResettableField::reset);
 			});
 			editorComponent = button;
+			useLabel = false;
+		}
+		else if (boolean.class.equals(type)) {
+			JCheckBox cb = new JCheckBox(name);
+			cb.setSelected((boolean) fieldValue);
+			cb.addActionListener(l -> setField(field, cb.isSelected()));
+			editorComponent = cb;
 			useLabel = false;
 		}
 		else {

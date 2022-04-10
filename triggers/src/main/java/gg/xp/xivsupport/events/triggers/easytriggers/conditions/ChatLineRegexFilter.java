@@ -18,7 +18,7 @@ public class ChatLineRegexFilter implements Condition<ChatLineEvent> {
 
 	@Override
 	public String dynamicLabel() {
-		return +' ' + regex.pattern();
+		return "Chat Line Matching " + regex.pattern();
 	}
 
 	@Override
