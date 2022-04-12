@@ -138,7 +138,11 @@ public enum Cooldown {
 
 	// MELEE
 	Feint(MELEE_DPS, true, 90.0, "Feint", CooldownType.PARTY_MIT, 0x1d7d, 1195),
-	TrickAttack(NIN, true, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
+//	TrickAttack(NIN, true, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
+	// TODO
+	TrickAttackNew(NIN, true, 60.0, "Trick Attack", CooldownType.PERSONAL_BURST, 0x8d2, 3254),
+	// TODO
+	Mug(NIN, true, 120.0, "Mug", CooldownType.PARTY_BUFF, 0x8C8, 3183),
 	BattleLitany(DRG, true, 120.0, "Battle Litany", CooldownType.PARTY_BUFF, 0xde5, 786),
 	Brotherhood(MNK, true, 120.0, "Brotherhood", CooldownType.PARTY_BUFF, 0x1ce4, 1185),
 	RiddleOfWind(MNK, true, 90.0, "Riddle of Wind", CooldownType.PERSONAL_BURST, 0x64A6, 2687),
