@@ -342,9 +342,11 @@ public class FieldMapper<K extends Enum<K>> {
 
 	private static HitSeverity calcSeverity(byte severity) {
 		return switch (severity) {
-			case 1 -> HitSeverity.CRIT;
-			case 2 -> HitSeverity.DHIT;
-			case 3 -> HitSeverity.CRIT_DHIT;
+			case 0x20, 1 -> HitSeverity.CRIT;
+			case 0x40, 2 -> HitSeverity.DHIT;
+			case 0x60, 3 -> HitSeverity.CRIT_DHIT;
+			// For loading pre-6.1 logs
+
 			default -> HitSeverity.NORMAL;
 		};
 	}
