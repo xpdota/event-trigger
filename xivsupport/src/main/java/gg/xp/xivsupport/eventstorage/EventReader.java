@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -89,10 +91,14 @@ public final class EventReader {
 	public static List<ACTLogLineEvent> readActLogResource(String resourcePath) {
 		List<String> lines;
 		try {
-			lines = Files.readAllLines(Path.of(EventReader.class.getResource(resourcePath).toURI()));
+			URL resource = EventReader.class.getResource(resourcePath);
+			if (resource == null) {
+				throw new IllegalArgumentException("The resource '%s' does not exist".formatted(resourcePath));
+			}
+			lines = Files.readAllLines(Path.of(resource.toURI()));
 		}
-		catch (Throwable t) {
-			throw new RuntimeException(t);
+		catch (IOException | URISyntaxException e) {
+			throw new RuntimeException(e);
 		}
 		return lines.stream()
 				.filter(s -> !s.isEmpty())

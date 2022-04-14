@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> implements ActImportOnly {
 
 	public Line11Parser(PicoContainer container) {
-		super(container, 11, Fields.class, true);
+		super(container, 11, Fields.class);
 	}
 
 	enum Fields {

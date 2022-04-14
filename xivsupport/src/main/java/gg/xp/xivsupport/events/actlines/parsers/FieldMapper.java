@@ -1,23 +1,7 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
-import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.FullyResistedEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.InvulnBlockedDamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.MissEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpGain;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpLoss;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.NoEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.OtherEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
@@ -40,16 +24,14 @@ public class FieldMapper<K extends Enum<K>> {
 
 	private final Map<K, String> raw;
 	private final XivState state;
-	private final EventContext context;
 	private final EntityLookupMissBehavior entityLookupMissBehavior;
 	private final String[] rawLineSplit;
 	private final List<Long> combatantsToUpdate = new ArrayList<>();
 	private boolean recalcNeeded;
 
-	public FieldMapper(Map<K, String> raw, XivState state, EventContext context, EntityLookupMissBehavior entityLookupMissBehavior, String[] rawLineSplit) {
+	public FieldMapper(Map<K, String> raw, XivState state, EntityLookupMissBehavior entityLookupMissBehavior, String[] rawLineSplit) {
 		this.raw = new EnumMap<>(raw);
 		this.state = state;
-		this.context = context;
 		this.entityLookupMissBehavior = entityLookupMissBehavior;
 		this.rawLineSplit = rawLineSplit;
 	}
@@ -124,6 +106,8 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public XivCombatant getEntity(K idKey, K nameKey, K currentHpKey, K maxHpKey, K currentMpKey, K maxMpKey, K posXKey, K posYKey, K posZKey, K headingKey) {
 		XivCombatant cbt = getEntity(idKey, nameKey);
+		long id = cbt.getId();
+		boolean dirty = false;
 		if (cbt.getHp() == null || trustedHp) {
 			if (currentHpKey != null && maxHpKey != null) {
 				Long curHp = getOptionalLong(currentHpKey);
@@ -133,14 +117,14 @@ public class FieldMapper<K extends Enum<K>> {
 					if (maxHp != null) {
 						// TODO: collect these all then do them once at the end
 						state.provideCombatantHP(cbt, new HitPoints(curHp, maxHp));
-						recalcNeeded = true;
+						dirty = true;
 					}
 					// Plan B - we only have current available, so use stored max and assume it's the same (since max HP changes
 					// are not that common).
 					else {
 						if (cbt.getHp() != null) {
 							state.provideCombatantHP(cbt, new HitPoints(curHp, cbt.getHp().getMax()));
-							recalcNeeded = true;
+							dirty = true;
 						}
 					}
 				}
@@ -154,7 +138,16 @@ public class FieldMapper<K extends Enum<K>> {
 
 			if (x != null && y != null && z != null && h != null) {
 				state.provideCombatantPos(cbt, new Position(x, y, z, h));
-				recalcNeeded = true;
+				dirty = true;
+			}
+		}
+		if (dirty) {
+			// If we actually touched anything, then what we need to do is
+			state.flushProvidedValues();
+//			flushStateOverrides();
+			XivCombatant stateCbt = state.getCombatants().get(id);
+			if (stateCbt != null) {
+				return stateCbt;
 			}
 		}
 		return cbt;
@@ -163,10 +156,9 @@ public class FieldMapper<K extends Enum<K>> {
 	public XivCombatant getEntity(K idKey, K nameKey) {
 		long id = getHex(idKey);
 		String name = getString(nameKey);
-		XivState xivState = context.getStateInfo().get(XivStateImpl.class);
-		XivCombatant xivCombatant = xivState.getCombatants().get(id);
+		XivCombatant xivCombatant = state.getCombatants().get(id);
 		if (xivCombatant == null) {
-			xivCombatant = xivState.getDeadCombatant(id);
+			xivCombatant = state.getDeadCombatant(id);
 		}
 		if (xivCombatant != null) {
 			return xivCombatant;
@@ -176,8 +168,6 @@ public class FieldMapper<K extends Enum<K>> {
 				return XivCombatant.ENVIRONMENT;
 			}
 			switch (entityLookupMissBehavior) {
-				// TODO: seems we need a "graveyard" of sorts since removed combatants can still have lingering
-				// references to them.
 				case GET_AND_WARN:
 					log.trace("Did not find combatant info for id {} name '{}', guessing", Long.toString(id, 16), name);
 				case GET:
@@ -227,156 +217,24 @@ public class FieldMapper<K extends Enum<K>> {
 		for (int i = startIndex; i < startIndex + 2 * count; i += 2) {
 			long flags = getRawHex(i);
 			long value = getRawHex(i + 1);
-
-			byte effectTypeByte;
-			byte severityByte;
-			byte healSeverityByte;
-			byte unknownByte;
-			long flagsTmp = flags;
-			effectTypeByte = (byte) flagsTmp;
-			severityByte = (byte) (flagsTmp >>= 8);
-			healSeverityByte = (byte) (flagsTmp >>= 8);
-			unknownByte = (byte) (flagsTmp >> 8);
-
-			// TODO: it's unclear which of these need the "lots of damage" calculation applied - IDs that point to an
-			// ability or status will probably be safe for the forseeable future, since there's nowhere close to
-			// 65536 statuses.
-			switch (effectTypeByte) {
-				case 0:
-					// nothing
-					continue;
-				case 1:
-					out.add(new MissEffect(flags, value));
-					break;
-				case 2:
-					out.add(new FullyResistedEffect(flags, value));
-					break;
-				case 3:
-					out.add(new DamageTakenEffect(flags, value, calcSeverity(severityByte), calcDamage(value)));
-					break;
-				case 4:
-					out.add(new HealEffect(flags, value, calcSeverity(healSeverityByte), calcDamage(value)));
-					break;
-				case 5:
-					out.add(new BlockedDamageEffect(flags, value, calcDamage(value)));
-					break;
-				case 6:
-					out.add(new ParriedDamageEffect(flags, value, calcDamage(value)));
-					break;
-				case 7:
-					out.add(new InvulnBlockedDamageEffect(flags, value, calcDamage(value)));
-					break;
-				case 8:
-					out.add(new NoEffect(flags, value));
-					break;
-				case 10:
-					out.add(new MpLoss(flags, value, calcDamage(value)));
-					break;
-				case 11:
-					out.add(new MpGain(flags, value, calcDamage(value)));
-					break;
-
-				/*
-					Notes specific to 0e/0f:
-					flags:
-					stacks, a, b, 0e/0f
-					value: status id MSB, status id LSB, x, y
-
-					a = ?
-					b = ?
-					x = ?
-					y = ?
-
-					Examples:
-					00F4300E 0A380000: E Dosis (single target, instant, on target, no stacks, 30s)
-					0000F60E 0A3A0000: Kera mit (aoe, on target, no stacks, 15s)
-					00F4F20E 0B7A0000: Kera regen (aoe, on target, no stacks, 15s)
-					0300000F 076E8000: Royal Auth/Sword Oath (st, instant, on self, 3 stacks, 30s)
-					00C9090E 0A350000: panhaima persistent buff (aoe, on target, no stacks, 15s)
-					05C9090E 0A530000: panhaima stack buff (aoe, on target, 5 stacks, 15s)
-					0000000E 00520000: halloed (st, 10s, no stacks)
-
-				 */
-
-
-				case 14: //0e
-					out.add(new StatusAppliedEffect(flags, value, value >> 16, unknownByte, true));
-					break;
-				case 15: //0f
-					out.add(new StatusAppliedEffect(flags, value, value >> 16, unknownByte, false));
-					break;
-				case 20: //14
-					out.add(new StatusNoEffect(flags, value, value >> 16));
-					break;
-					// 1d,0x60000 = reflect?
-				case 27: //1B
-					// Not sure - seems to do "combo" as well as certain boss mechanics like "Subtract" from the math boss
-					break;
-				case 32:
-					// Super cyclone did it
-				case 40:
-//					 mount -- TODO maybe use the actual mount icons?
-//					break;
-				case 60:
-//					// bunch of random stuff like Aether Compass
-//					break;
-				case 61:
-//					// Gauge build?
-//					break;
-//
-				case 74:
-					// Don't know - saw it on Superbolide
-					// Okay, not HP set - saw it on Machinist Hypercharge + other MCH abilities
-//					out.add(new CurrentHpSetEffect(calcDamage(value)));
-
-				default:
-					out.add(new OtherEffect(flags, value));
-					break;
-
+			AbilityEffect effect = AbilityEffects.of(flags, value);
+			if (effect != null) {
+				out.add(effect);
 			}
-
 		}
 		out.trimToSize();
 		return out;
 	}
 
-	private static HitSeverity calcSeverity(byte severity) {
-		return switch (severity) {
-			case 0x20, 1 -> HitSeverity.CRIT;
-			case 0x40, 2 -> HitSeverity.DHIT;
-			case 0x60, 3 -> HitSeverity.CRIT_DHIT;
-			// For loading pre-6.1 logs
-
-			default -> HitSeverity.NORMAL;
-		};
-	}
-
-	@SuppressWarnings("NumericCastThatLosesPrecision")
-	private static long calcDamage(long damageRaw) {
-		if (damageRaw < 65536) {
-			return 0;
-		}
-		// Get the left two bytes as damage.
-		// Check for third byte == 0x40.
-		int[] data = new int[4];
-		long damageRawTmp = damageRaw;
-		data[3] = 0xff & (byte) damageRawTmp;
-		data[2] = 0xff & (byte) (damageRawTmp >>= 8);
-		data[1] = 0xff & (byte) (damageRawTmp >>= 8);
-		data[0] = 0xff & (byte) (damageRawTmp >> 8);
-		if (data[2] == 0x40) {
-			return (long) (data[3] << 16) + (data[0] << 8) + (data[1] - data[3]);
-		}
-		else {
-			return damageRaw >> 16;
-		}
-	}
 
 	public List<Long> getCombatantsToUpdate() {
 		return Collections.unmodifiableList(combatantsToUpdate);
 	}
 
-	public boolean isRecalcNeeded() {
-		return recalcNeeded;
+	public void flushStateOverrides() {
+		if (recalcNeeded) {
+			state.flushProvidedValues();
+		}
+		recalcNeeded = false;
 	}
 }

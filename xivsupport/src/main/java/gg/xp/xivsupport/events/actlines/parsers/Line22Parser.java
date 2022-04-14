@@ -9,7 +9,7 @@ import java.time.ZonedDateTime;
 public class Line22Parser extends AbstractACTLineParser<NetworkAbilityFields> {
 
 	public Line22Parser(PicoContainer container) {
-		super(container, 22, NetworkAbilityFields.class, true);
+		super(container, 22, NetworkAbilityFields.class);
 	}
 
 	@Override

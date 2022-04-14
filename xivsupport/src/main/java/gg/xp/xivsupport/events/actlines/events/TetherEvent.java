@@ -2,11 +2,14 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
 
@@ -38,6 +41,22 @@ public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTarget
 
 	public boolean eitherTargetMatches(XivCombatant cbt) {
 		return source.equals(cbt) || target.equals(cbt);
+	}
+
+	public List<XivCombatant> getTargets() {
+		return List.of(source, target);
+	}
+
+	public @Nullable XivCombatant getTargetMatching(Predicate<XivCombatant> targetCondition) {
+		if (targetCondition.test(source)) {
+			return source;
+		}
+		else if (targetCondition.test(target)) {
+			return target;
+		}
+		else {
+			return null;
+		}
 	}
 
 	public static Set<XivCombatant> getUnitsTetheredTo(XivCombatant combatant, Collection<TetherEvent> tethers) {

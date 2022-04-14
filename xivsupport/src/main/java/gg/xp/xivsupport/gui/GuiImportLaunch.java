@@ -118,7 +118,7 @@ public final class GuiImportLaunch {
 			{
 				c.weightx = 1;
 				c.gridwidth = GridBagConstraints.REMAINDER;
-				JLabel importLabel = new JLabel("Please select a file to import");
+				JLabel importLabel = new JLabel("Please select a file to import, or drag and drop a file onto this window.");
 				panel.add(importLabel, c);
 			}
 			{
