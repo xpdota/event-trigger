@@ -6,7 +6,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
-import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.ArenaPos;
@@ -33,10 +33,15 @@ public class EX3 implements FilteredEventHandler {
 
 	private final ModifiableCallout<TetherEvent> tetherCall = new ModifiableCallout<>("Tether Break", "Break Tether (with {otherTarget})");
 
-	private final ModifiableCallout<HeadMarkerEvent> donut = new ModifiableCallout<>("Donut Marker", "Donut");
-	private final ModifiableCallout<HeadMarkerEvent> stack = new ModifiableCallout<>("Stack Marker", "Stack");
-	private final ModifiableCallout<HeadMarkerEvent> flare = new ModifiableCallout<>("Flare Marker", "Flare");
-	private final ModifiableCallout<HeadMarkerEvent> spread = new ModifiableCallout<>("Spread Marker", "Spread");
+//	private final ModifiableCallout<HeadMarkerEvent> donut = new ModifiableCallout<>("Donut Marker", "Donut");
+//	private final ModifiableCallout<HeadMarkerEvent> stack = new ModifiableCallout<>("Stack Marker", "Stack");
+//	private final ModifiableCallout<HeadMarkerEvent> flare = new ModifiableCallout<>("Flare Marker", "Flare");
+//	private final ModifiableCallout<HeadMarkerEvent> spread = new ModifiableCallout<>("Spread Marker", "Spread");
+
+	private final ModifiableCallout<BuffApplied> donut = ModifiableCallout.durationBasedCall("Donut Marker", "Donut");
+	private final ModifiableCallout<BuffApplied> stack = ModifiableCallout.durationBasedCall("Stack Marker", "Stack");
+	private final ModifiableCallout<BuffApplied> flare = ModifiableCallout.durationBasedCall("Flare Marker", "Flare");
+	private final ModifiableCallout<BuffApplied> spread = ModifiableCallout.durationBasedCall("Spread Marker", "Spread");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
@@ -97,25 +102,25 @@ public class EX3 implements FilteredEventHandler {
 		}
 	}
 
-	private Long firstHeadmark;
-
-	private int getHeadmarkOffset(HeadMarkerEvent event) {
-		if (firstHeadmark == null) {
-			firstHeadmark = event.getMarkerId();
-		}
-		return (int) (event.getMarkerId() - firstHeadmark);
-	}
-
+//	private Long firstHeadmark;
+//
+//	private int getHeadmarkOffset(HeadMarkerEvent event) {
+//		if (firstHeadmark == null) {
+//			firstHeadmark = event.getMarkerId();
+//		}
+//		return (int) (event.getMarkerId() - firstHeadmark);
+//	}
+//
 
 	@HandleEvents
-	public void headmark(EventContext context, HeadMarkerEvent event) {
+	public void buffs(EventContext context, BuffApplied event) {
 		// This is done unconditionally to create the headmarker offset
-		int headmarkOffset = getHeadmarkOffset(event);
 		// But after that, we only want the actual player
 		if (!event.getTarget().isThePlayer()) {
 			return;
 		}
 
+		// Headmarkers:
 		/*
 			326 (0) - Tether precursor
 			344 (+18) - Tank buster
@@ -134,15 +139,14 @@ public class EX3 implements FilteredEventHandler {
 			324 (-2) - ?
 
 		 */
+		int buffId = (int) event.getBuff().getId();
 
-		// TODO: tank with no tether
-		ModifiableCallout<HeadMarkerEvent> call =
-				switch (headmarkOffset) {
-					case -8 -> stack;
-					case -4 -> donut;
-					case 1 -> flare;
-					case 2 -> spread;
-
+		ModifiableCallout<BuffApplied> call =
+				switch (buffId) {
+					case 0xBAD -> donut;
+					case 0xBAE -> spread;
+					case 0xBAF -> flare;
+					case 0xBB0 -> stack;
 					default -> null;
 				};
 		if (call != null) {
