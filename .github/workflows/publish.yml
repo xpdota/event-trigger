@@ -28,8 +28,8 @@ jobs:
       run: |
         pushd launcher/target/windows/
         mkdir -p updater_data/v2
-        md5sum *.exe deps/*.jar > updater_data/v2/manifest
-        cp -r *.exe deps/ updater_data/v2/
+        md5sum *.exe *.dll deps/*.jar > updater_data/v2/manifest
+        cp -r *.exe *.dll deps/ updater_data/v2/
         # Legacy updater
         cd deps
         md5sum *.jar > ../updater_data/manifest
