@@ -108,3 +108,29 @@ that FFLogs support requires you to supply your own API key - I don't have a way
 
 See [Feature Ideas](https://github.com/xpdota/event-trigger/wiki/Feature-Ideas) for what I plan to implement down the
 line.
+
+## Why Would I Use This? (Short Version)
+
+### For Normal Users
+
+* Lots of built-in features - jail plugin that doesn't suck, multi target dot+tick tracking, and a lot more
+  - Ever wanted to put your entire mit plan, with icons, on a timeline? Now you can.
+* Better customizability of callouts without needing to edit triggers
+* Extremely easy to make basic triggers - making triggers doesn't require any knowledge of log lines nor regular expressions (and shouldn't - [because it was never the right tool for the job](https://github.com/xpdota/event-trigger/wiki/Why-is-Regex-Bad-for-Triggers%3F)!)
+  - Most of it can be done by right clicking on the event you want to make a trigger from, and selecting "Make Easy Trigger". It's not perfect all the time, but you can edit the trigger if anything is off.
+
+### For Developers and Power Users
+* Better tools for creating and testing triggers
+  - Certain types of triggers can be tested without a log file - you can use an FFLogs report instead!
+  - You can write test cases for triggers
+* Zero regex means much more readable conditions and triggers
+* Much better abstraction of incoming data out of the box
+  - Specifically, log lines are parsed into rich objects that can be queried as needed
+  - Everything is converted to appropriate data types, both in terms of primitive values (i.e. no more worrying about hex/dec conversions), as well as rich types (such as combatants and abilities)
+  - Events can be further abstracted into more refined events - for example, Titan Jails have their own event, so anyone wanting to provide more forms of Jail plugins need only listen for that specific event.
+  - The trigger shouldn't need to worry about any low-level details - it should be abstracted to that absolute minimum (e.g. `call out "Raidwide" when ability 0x123 starts casting`
+* Plugins can have their own custom configuration GUIs (see the jail config GUI for a great example)
+* Run scripts within the app, for any purpose:
+  - Prototyping code that will go inside the app
+  - Log analysis
+  - Bulk changing of settings and the like
