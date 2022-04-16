@@ -79,6 +79,7 @@ public enum Cooldown {
 	Asylum(WHM, true, 45.0, "Asylum", CooldownType.HEAL, 0xDF1, 0x777),
 	Aquaveil(WHM, true, 60.0, "Aquaveil", CooldownType.PERSONAL_MIT, 0x6505, 0xA94),
 	Bell(WHM, true, 180.0, "Liturgy of the Bell", CooldownType.HEAL, 0x6506, 0xA95),
+	Assize(WHM, true, 45.0, "Assize", CooldownType.PERSONAL_BURST, 0xdf3),
 	SacredSoil(SCH, true, 30.0, "Sacred Soil", CooldownType.PARTY_MIT, 0xbc, 0x798, 0x12A),
 	// Summon order buffs:
 	/*
