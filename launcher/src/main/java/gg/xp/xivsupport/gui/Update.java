@@ -219,7 +219,10 @@ public class Update {
 			Map<String, String> actualFiles = new HashMap<>();
 			appendText("Hashing Local Files...");
 			{
-				File[] mainFiles = installDir.listFiles((dir, name) -> name.toLowerCase(Locale.ROOT).endsWith(".exe"));
+				File[] mainFiles = installDir.listFiles((dir, name) -> {
+					String nameLower = name.toLowerCase(Locale.ROOT);
+					return nameLower.endsWith(".exe") || nameLower.endsWith(".dll");
+				});
 				File[] depsFiles = depsDir.listFiles();
 				if (mainFiles == null) {
 					throw new RuntimeException("Error checking local main files. Try reinstalling.");
