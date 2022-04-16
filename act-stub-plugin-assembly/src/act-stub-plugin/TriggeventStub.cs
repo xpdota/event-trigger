@@ -25,7 +25,7 @@ namespace ACT_Plugin
         /// <summary> 
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private IContainer components = null;
 
         /// <summary> 
         /// Clean up any resources being used.
@@ -94,9 +94,9 @@ namespace ACT_Plugin
 
         // private TextBox textBox1;
 
-        private System.Windows.Forms.Label label1;
+        private Label label1;
 
-        private System.Windows.Forms.Button relaunchButton;
+        private Button relaunchButton;
 
         #endregion
 
@@ -107,8 +107,7 @@ namespace ACT_Plugin
 
         Label lblStatus; // The status label that appears in ACT's Plugin tab
 
-        string settingsFile = Path.Combine(ActGlobals.oFormActMain.AppDataFolder.FullName,
-            "Config\\PluginSample.config.xml");
+        // string settingsFile = Path.Combine(ActGlobals.oFormActMain.AppDataFolder.FullName, "Config\\PluginSample.config.xml");
 
         // SettingsSerializer xmlSettings;
 
@@ -141,7 +140,7 @@ namespace ACT_Plugin
             exePath = Path.Combine(dllDir, "triggevent.exe");
             lblStatus = pluginStatusText; // Hand the status label's reference to our local var
             pluginScreenSpace.Controls.Add(this); // Add this UserControl to the tab ACT provides
-            this.Dock = DockStyle.Fill; // Expand the UserControl to fill the tab's client space
+            Dock = DockStyle.Fill; // Expand the UserControl to fill the tab's client space
             // xmlSettings = new SettingsSerializer(this); // Create a new settings serializer and pass it this instance
             // LoadSettings();
 
