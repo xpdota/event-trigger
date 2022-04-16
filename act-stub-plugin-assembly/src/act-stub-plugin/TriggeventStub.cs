@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
-using System.Data;
 using System.Diagnostics;
-using System.Text;
 using System.Windows.Forms;
 using Advanced_Combat_Tracker;
 using System.IO;
 using System.Reflection;
-using System.Xml;
+using RainbowMage.OverlayPlugin;
 
 [assembly: AssemblyTitle("Triggevent Stub Launcher")]
 [assembly: AssemblyDescription("A simple plugin that allows Triggevent to be launched via ACT")]
@@ -49,41 +45,29 @@ namespace ACT_Plugin
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
+            this._label1 = new System.Windows.Forms.Label();
             // this.textBox1 = new System.Windows.Forms.TextBox();
-            relaunchButton = new Button();
-            relaunchButton.Text = "(Re)Launch";
-            relaunchButton.Click += (sender, args) => { launchTE(); };
-            relaunchButton.Location = new System.Drawing.Point(3, 50);
-            relaunchButton.TabIndex = 1;
+            _relaunchButton = new Button();
+            _relaunchButton.Text = "(Re)Launch";
+            _relaunchButton.Click += (sender, args) => { LaunchTe(); };
+            _relaunchButton.Location = new System.Drawing.Point(3, 50);
+            _relaunchButton.TabIndex = 1;
 
             this.SuspendLayout();
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(434, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text =
+            this._label1.AutoSize = true;
+            this._label1.Location = new System.Drawing.Point(3, 0);
+            this._label1.Name = "_label1";
+            this._label1.Size = new System.Drawing.Size(434, 13);
+            this._label1.TabIndex = 0;
+            this._label1.Text =
                 "This plugin acts as a stub so that you can automatically launch Triggernometry when you start ACT.";
-            // 
-            // textBox1
-            // 
-            // this.textBox1.Location = new System.Drawing.Point(6, 16);
-            // this.textBox1.Name = "textBox1";
-            // this.textBox1.Size = new System.Drawing.Size(431, 20);
-            // this.textBox1.TabIndex = 1;
-            // this.textBox1.Text = "Sample TextBox that has its value stored to the settings file automatically.";
-            // 
-            // PluginSample
-            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            // this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.relaunchButton);
+            this.Controls.Add(this._label1);
+            this.Controls.Add(this._relaunchButton);
             this.Name = "PluginSample";
             this.Size = new System.Drawing.Size(686, 384);
             this.ResumeLayout(false);
@@ -94,9 +78,11 @@ namespace ACT_Plugin
 
         // private TextBox textBox1;
 
-        private Label label1;
+        private Label _label1;
 
-        private Button relaunchButton;
+        private Button _relaunchButton;
+
+        // private TinyIoCContainer container;
 
         #endregion
 
@@ -105,115 +91,101 @@ namespace ACT_Plugin
             InitializeComponent();
         }
 
-        Label lblStatus; // The status label that appears in ACT's Plugin tab
+        Label _lblStatus; // The status label that appears in ACT's Plugin tab
 
         // string settingsFile = Path.Combine(ActGlobals.oFormActMain.AppDataFolder.FullName, "Config\\PluginSample.config.xml");
 
         // SettingsSerializer xmlSettings;
 
-        private String exePath;
-        private Process proc;
+        private string _exePath;
+        private Process _proc;
 
-        private void launchTE()
+        private void LaunchTe()
         {
-            if (isLaunched())
+            if (IsLaunched())
             {
-                proc.CloseMainWindow();
+                _proc.CloseMainWindow();
             }
 
-            proc = Process.Start(exePath);
+            _proc = Process.Start(_exePath);
         }
 
-        private bool isLaunched()
+        private bool IsLaunched()
         {
-            return proc != null && !proc.HasExited;
+            return _proc != null && !_proc.HasExited;
         }
 
         #region IActPluginV1 Members
 
         public void InitPlugin(TabPage pluginScreenSpace, Label pluginStatusText)
         {
-            // String location = typeof(TriggeventStub).Assembly.CodeBase;
-            // String location = Assembly.GetExecutingAssembly().Location;
-            String location = ActGlobals.oFormActMain.PluginGetSelfData(this).pluginFile.ToString();
+            string location = ActGlobals.oFormActMain.PluginGetSelfData(this).pluginFile.ToString();
             string dllDir = Path.GetDirectoryName(location);
-            exePath = Path.Combine(dllDir, "triggevent.exe");
-            lblStatus = pluginStatusText; // Hand the status label's reference to our local var
+            _exePath = Path.Combine(dllDir, "triggevent.exe");
+            _lblStatus = pluginStatusText; // Hand the status label's reference to our local var
             pluginScreenSpace.Controls.Add(this); // Add this UserControl to the tab ACT provides
             Dock = DockStyle.Fill; // Expand the UserControl to fill the tab's client space
-            // xmlSettings = new SettingsSerializer(this); // Create a new settings serializer and pass it this instance
-            // LoadSettings();
 
-            launchTE();
+            LaunchTe();
 
-            lblStatus.Text = (isLaunched() ? "Plugin Started: " : "Not Started: ") + exePath;
+            string warning = null;
+
+            try
+            {
+                TinyIoCContainer container = null;
+                foreach (var entry in ActGlobals.oFormActMain.ActPlugins)
+                {
+                    if (entry.pluginObj != null &&
+                        entry.pluginObj.GetType().FullName == "RainbowMage.OverlayPlugin.PluginLoader")
+                    {
+                        try
+                        {
+                            container = (TinyIoCContainer) entry.pluginObj.GetType().GetProperty("Container")
+                                .GetValue(entry.pluginObj);
+                        }
+                        catch (Exception e)
+                        {
+                            MessageBox.Show("Unexpected error while looking for OverlayPlugin:\n" + e.Message);
+                        }
+
+                        break;
+                    }
+                }
+
+                if (container == null)
+                {
+                    warning = "ERROR - OverlayPlugin must be installed, and must be earlier in your plugin order";
+                }
+                else
+                {
+                    IPluginConfig config = container.Resolve<IPluginConfig>();
+                    if (!config.WSServerRunning)
+                    {
+                        warning = "ERROR - OverlayPlugin WSServer must be running";
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                warning = "ERROR - " + e;
+            }
+
+
+            _lblStatus.Text = (IsLaunched() ? "Plugin Started: " : "Not Started: ") + _exePath;
+            if (warning != null)
+            {
+                _lblStatus.Text += "\n" + warning;
+            }
         }
 
         public void DeInitPlugin()
         {
-            // Unsubscribe from any events you listen to when exiting!
-            // ActGlobals.oFormActMain.AfterCombatAction -= oFormActMain_AfterCombatAction;
-
-            // SaveSettings();
-            lblStatus.Text = "Plugin Exited";
-            proc.CloseMainWindow();
+            _lblStatus.Text = "Plugin Exited";
+            // TODO: this doesn't actually work, because launch4j starts a separate java process
+            _proc.CloseMainWindow();
         }
 
         #endregion
 
-        // void oFormActMain_AfterCombatAction(bool isImport, CombatActionEventArgs actionInfo)
-        // {
-        //     throw new NotImplementedException();
-        // }
-        //
-        // void LoadSettings()
-        // {
-        //     // Add any controls you want to save the state of
-        //     xmlSettings.AddControlSetting(textBox1.Name, textBox1);
-        //
-        //     if (File.Exists(settingsFile))
-        //     {
-        //         FileStream fs = new FileStream(settingsFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        //         XmlTextReader xReader = new XmlTextReader(fs);
-        //
-        //         try
-        //         {
-        //             while (xReader.Read())
-        //             {
-        //                 if (xReader.NodeType == XmlNodeType.Element)
-        //                 {
-        //                     if (xReader.LocalName == "SettingsSerializer")
-        //                     {
-        //                         xmlSettings.ImportFromXml(xReader);
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             lblStatus.Text = "Error loading settings: " + ex.Message;
-        //         }
-        //
-        //         xReader.Close();
-        //     }
-        // }
-        //
-        // void SaveSettings()
-        // {
-        //     FileStream fs = new FileStream(settingsFile, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
-        //     XmlTextWriter xWriter = new XmlTextWriter(fs, Encoding.UTF8);
-        //     xWriter.Formatting = Formatting.Indented;
-        //     xWriter.Indentation = 1;
-        //     xWriter.IndentChar = '\t';
-        //     xWriter.WriteStartDocument(true);
-        //     xWriter.WriteStartElement("Config"); // <Config>
-        //     xWriter.WriteStartElement("SettingsSerializer"); // <Config><SettingsSerializer>
-        //     xmlSettings.ExportToXml(xWriter); // Fill the SettingsSerializer XML
-        //     xWriter.WriteEndElement(); // </SettingsSerializer>
-        //     xWriter.WriteEndElement(); // </Config>
-        //     xWriter.WriteEndDocument(); // Tie up loose ends (shouldn't be any)
-        //     xWriter.Flush(); // Flush the file buffer to disk
-        //     xWriter.Close();
-        // }
     }
 }

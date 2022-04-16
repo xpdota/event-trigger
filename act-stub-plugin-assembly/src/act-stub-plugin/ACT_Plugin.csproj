@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ACT_Plugin</RootNamespace>
     <AssemblyName>Triggevent_Stub</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <StartupObject>
     </StartupObject>
@@ -34,7 +34,7 @@
     <StartWorkingDirectory>C:\Program Files (x86)\Advanced Combat Tracker\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-<!--    <DebugType>none</DebugType>-->
+    <!--    <DebugType>none</DebugType>-->
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
@@ -43,12 +43,12 @@
   </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+         Other similar extension points exist, see Microsoft.Common.targets.
+    <Target Name="BeforeBuild">
+    </Target>
+    <Target Name="AfterBuild">
+    </Target>
+    -->
   <ItemGroup>
     <Reference Include="Advanced Combat Tracker">
       <HintPath>C:\Program Files (x86)\Advanced Combat Tracker\Advanced Combat Tracker.exe</HintPath>
@@ -59,10 +59,24 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="OverlayPlugin.Common">
+      <HintPath>./OverlayPlugin.Common.dll</HintPath>
+    </Reference>
+    <!--        <Reference Include="OverlayPlugin.Core, Version=0.11.4.0, Culture=neutral, processorArchitecture=MSIL">-->
+    <!--            <SpecificVersion>False</SpecificVersion>-->
+    <!--            <HintPath>..\ThirdParty\OverlayPlugin\libs\OverlayPlugin.Core.dll</HintPath>-->
+    <!--        </Reference>-->
+    <!--        <Reference Include="OverlayPlugin.Updater, Version=0.12.2.0, Culture=neutral, processorArchitecture=MSIL">-->
+    <!--            <SpecificVersion>False</SpecificVersion>-->
+    <!--            <HintPath>..\ThirdParty\OverlayPlugin\libs\OverlayPlugin.Updater.dll</HintPath>-->
+    <!--        </Reference>-->
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TriggeventStub.cs">
       <SubType>UserControl</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="OverlayPlugin.Common.dll" />
   </ItemGroup>
 </Project>
