@@ -10,7 +10,6 @@ import java.util.List;
 public enum ArenaSector {
 
 
-	CENTER("Center"),
 	NORTH("North"),
 	NORTHEAST("Northeast"),
 	EAST("East"),
@@ -19,6 +18,7 @@ public enum ArenaSector {
 	SOUTHWEST("Southwest"),
 	WEST("West"),
 	NORTHWEST("Northwest"),
+	CENTER("Center"),
 	UNKNOWN("?");
 
 	private static final Logger log = LoggerFactory.getLogger(ArenaSector.class);
@@ -61,4 +61,19 @@ public enum ArenaSector {
 			default -> null;
 		};
 	}
+
+	public ArenaSector opposite() {
+		return values()[(ordinal() + 4) % 8];
+	}
+
+	public ArenaSector plusEighths(int eights) {
+		if (this == CENTER || this == UNKNOWN) {
+			return this;
+		}
+		if (eights < 0) {
+			eights += 8;
+		}
+		return values()[(ordinal() + eights) % 8];
+	}
+
 }

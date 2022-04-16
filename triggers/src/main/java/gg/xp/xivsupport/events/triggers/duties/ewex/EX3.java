@@ -6,19 +6,33 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasDuration;
+import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.ArenaPos;
+import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.speech.CalloutEvent;
+import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 @CalloutRepo("Endsinger Extreme")
 public class EX3 implements FilteredEventHandler {
 
-	// TODO: all the complex mechanics, and the party stack
+	// TODO: all the complex mechanics
 
 	private final ModifiableCallout<AbilityCastStart> elegeia = ModifiableCallout.durationBasedCall("Elegeia", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> telos = ModifiableCallout.durationBasedCall("Telos", "Big Raidwide");
@@ -27,9 +41,12 @@ public class EX3 implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> elenchosSides = ModifiableCallout.durationBasedCall("Elenchos (Sides)", "Sides");
 	private final ModifiableCallout<AbilityCastStart> elenchosMiddle = ModifiableCallout.durationBasedCall("Elenchos (Middle)", "Middle");
 	private final ModifiableCallout<AbilityCastStart> hubris = ModifiableCallout.durationBasedCall("Hubris", "Tankbuster");
+	private final ModifiableCallout<AbilityCastStart> eironeia = ModifiableCallout.durationBasedCall("Eironeia", "Healer Stacks");
 
-	private final ModifiableCallout<AbilityCastStart> blueStar = ModifiableCallout.durationBasedCall("Blue Star", "Knockback from {starDir}");
-	private final ModifiableCallout<AbilityCastStart> redStar = ModifiableCallout.durationBasedCall("Red Star", "Away from {starDir}");
+	private final ModifiableCallout<HasDuration> blueStar = ModifiableCallout.durationBasedCall("Blue Star", "Knockback from {safeSpot}");
+	private final ModifiableCallout<HasDuration> redStar = ModifiableCallout.durationBasedCall("Red Star", "{safeSpot} safe");
+
+	private final ModifiableCallout<AbilityUsedEvent> combinedCall = new ModifiableCallout<>("Multiple Star", "{event1.safeSpot} then {event2.safeSpot}", "{event1.safeSpot}, then {event2.safeSpot} ({event2.estimatedRemainingDuration})", Collections.emptyList());
 
 	private final ModifiableCallout<TetherEvent> tetherCall = new ModifiableCallout<>("Tether Break", "Break Tether (with {otherTarget})");
 
@@ -46,6 +63,10 @@ public class EX3 implements FilteredEventHandler {
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
 	private final XivState state;
+	private int headPhase;
+
+	// TODO: timeline
+	// TODO: what is 0x7005? Cactbot doesn't mention it, but it certainly seems to be a star collision
 
 	public EX3(XivState state) {
 		this.state = state;
@@ -67,6 +88,7 @@ public class EX3 implements FilteredEventHandler {
 				case 0x7020 -> elenchosMiddle;
 				case 0x7022 -> elenchosSides;
 				case 0x702C -> hubris;
+				case 0x702F, 0x7030 -> eironeia;
 				default -> null;
 			};
 			if (call != null) {
@@ -76,18 +98,84 @@ public class EX3 implements FilteredEventHandler {
 	}
 
 	@HandleEvents
+	public void newPull(EventContext context, PullStartedEvent pse) {
+		starEvents.clear();
+		rewindPlayerBuffs.clear();
+		headPhase = 0;
+		lastStarEvent = null;
+	}
+
+
+	// Because the position is not necessarily correct the first time, we need to wait until we have a proper position
+	// for the star.
+	private final List<StarData> starEvents = new ArrayList<>();
+	private @Nullable StarData lastStarEvent;
+
+	// Rewind debuff collection
+	private final List<BuffApplied> rewindPlayerBuffs = new ArrayList<>();
+
+	@HandleEvents
 	public void starCollisions(EventContext context, AbilityCastStart event) {
-		ModifiableCallout<AbilityCastStart> call;
+		ModifiableCallout<HasDuration> call;
 		if (event.getSource().getType() == CombatantType.NPC || event.getSource().getbNpcId() == 9020) {
 			int id = (int) event.getAbility().getId();
 			call = switch (id) {
-				case 0x6FFA, 0x7003 -> redStar;
-				case 0x6FFB, 0x7005 -> blueStar;
+				case 0x6FFA -> redStar;
+				case 0x6FFB -> blueStar;
 				default -> null;
 			};
 			if (call != null) {
-				context.accept(call.getModified(event, Map.of("starDir", arenaPos.forCombatant(event.getSource()))));
+				starEvents.add(new StarData(event));
+				recheckStar(context);
 			}
+		}
+	}
+
+	@HandleEvents
+	public void cbtUpdate(EventContext context, XivStateRecalculatedEvent event) {
+		recheckStar(context);
+	}
+
+	// This is to handle the fact that we might not have position data for a star at the time when we get the call
+	private void recheckStar(EventContext context) {
+		if (starEvents.isEmpty()) {
+			return;
+		}
+		StarData event = starEvents.get(0);
+		ArenaSector position = event.getSector();
+		if (position == ArenaSector.UNKNOWN) {
+			return;
+		}
+		context.accept(event.getCallout());
+		starEvents.remove(0);
+		recheckStar(context);
+	}
+
+	private List<StarData> pendingMultiStar = new ArrayList<>();
+
+	@HandleEvents
+	public void multiStar(EventContext context, AbilityUsedEvent event) {
+		int id = (int) event.getAbility().getId();
+		double delay;
+		switch (id) {
+			case 0x6FFE, 0x7000 -> delay = 0;
+			case 0x6FFF, 0x7001 -> delay = 6.5;
+			default -> {
+				return;
+			}
+		}
+		if (lastStarEvent != null && lastStarEvent.getEffectiveTimeSince().getSeconds() > 20) {
+			// TODO: logic might not be right
+//			delay += 2;
+		}
+		StarData newStarData = new StarData(event, Duration.ofMillis((long) (delay * 1000)));
+		lastStarEvent = newStarData;
+		pendingMultiStar.add(newStarData);
+		if (pendingMultiStar.size() == 2) {
+			pendingMultiStar.sort(Comparator.comparing(data -> (int) data.getEstimatedRemainingDuration().toMillis()));
+			CalloutEvent call = combinedCall.getModified(event, Map.of("event1", pendingMultiStar.get(0), "event2", pendingMultiStar.get(1)));
+			context.accept(call);
+			pendingMultiStar.clear();
 		}
 	}
 
@@ -150,7 +238,106 @@ public class EX3 implements FilteredEventHandler {
 					default -> null;
 				};
 		if (call != null) {
+			rewindPlayerBuffs.add(event);
 			context.accept(call.getModified(event));
+		}
+	}
+
+	private enum StarType {
+		AoE,
+		Knockback
+	}
+
+	private final class StarData implements HasDuration {
+		private final HasAbility event;
+		private final long combatantId;
+		private final StarType startType;
+		private ArenaSector sector;
+		private HasDuration durationDelegate;
+
+		private <X extends HasAbility & HasSourceEntity> StarData(X event, HasDuration durationDelegate) {
+			this.event = event;
+			this.durationDelegate = durationDelegate;
+			combatantId = event.getSource().getId();
+			int id = (int) event.getAbility().getId();
+			startType = switch (id) {
+				case 0x6FF8, 0x6FFA, 0x6FFE, 0x6FFF, 0x7003 -> StarType.AoE;
+				case 0x6FF9, 0x6FFB, 0x7000, 0x7001, 0x7005 -> StarType.Knockback;
+				default -> throw new IllegalArgumentException("Not a valid star ability: " + event.getAbility());
+			};
+		}
+
+		StarData(AbilityCastStart event) {
+			this(event, event);
+		}
+
+		StarData(AbilityUsedEvent event, Duration duration) {
+			this(event, new HasDuration() {
+				@Override
+				public Duration getInitialDuration() {
+					return duration;
+				}
+
+				@Override
+				public Duration getEffectiveTimeSince() {
+					return event.getEffectiveTimeSince();
+				}
+			});
+
+		}
+
+		public ArenaSector getSector() {
+			if (sector != null) {
+				return sector;
+			}
+			XivCombatant newCbtData = state.getCombatants().get(combatantId);
+			ArenaSector newSector;
+			newSector = arenaPos.forCombatant(newCbtData);
+			if (newSector == ArenaSector.CENTER || newSector == ArenaSector.UNKNOWN) {
+				newSector = ArenaPos.combatantFacing(newCbtData);
+			}
+			if (newSector == ArenaSector.CENTER || newSector == ArenaSector.UNKNOWN) {
+				return ArenaSector.UNKNOWN;
+			}
+			else {
+				return sector = newSector;
+			}
+		}
+
+		public ArenaSector getSafeSpot() {
+			ArenaSector starSector = getSector();
+			if (starSector == ArenaSector.UNKNOWN) {
+				return ArenaSector.UNKNOWN;
+			}
+			else {
+				if (startType == StarType.AoE) {
+					return starSector.opposite();
+				}
+				else {
+					return starSector;
+				}
+			}
+		}
+
+
+		public CalloutEvent getCallout() {
+			Map<String, Object> extraArgs = Map.of("starDir", getSector(), "safeSpot", getSafeSpot());
+			if (startType == StarType.AoE) {
+				return redStar.getModified(durationDelegate, extraArgs);
+			}
+			else {
+				return blueStar.getModified(durationDelegate, extraArgs);
+			}
+		}
+
+		@Override
+		public Duration getInitialDuration() {
+			return durationDelegate.getInitialDuration();
+		}
+
+		@Override
+		public Duration getEffectiveTimeSince() {
+			return durationDelegate.getEffectiveTimeSince();
 		}
 	}
 
