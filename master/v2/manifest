@@ -1,6 +1,7 @@
-63b9b9e8275276b36c4b0ec9533129f1  triggevent.exe
-c4599e544de9d8839a35fbf17e2d188c  triggevent-import.exe
-1574ab67b626bf2dab00827a9c7df937  triggevent-upd.exe
+1d802e4ad91788058bdc905013afe10a  triggevent.exe
+51c0874267a19611d37abe09fa5be9ec  triggevent-import.exe
+c2b65a63399b08c9588aedf286a33a27  triggevent-upd.exe
+1c34da67f6cb9c636acfa4349470c2c0  Triggevent_Stub.dll
 8155e02d8ee9bc85bbc9c12ee014cba0  deps/actimport-1.0-SNAPSHOT.jar
 8484cd17d040d837983323f760b2c660  deps/annotations-23.0.0.jar
 07dc532ee316fe1f2f0323e9bd2f8df4  deps/commons-beanutils-1.9.4.jar
@@ -24,7 +25,7 @@ c56433d75479665998ccbd50678480fa  deps/jackson-core-2.13.2.jar
 2b884b01ad2f62d4f5dd11387a8bf799  deps/jna-5.10.0.jar
 c1ab841070c388ec32b77cdc05f084fb  deps/jna-platform-5.10.0.jar
 dd83accb899363c32b07d7a1b2e4ce40  deps/jsr305-3.0.2.jar
-d1e0dd0a4c084fce29fdf6b96925c83b  deps/launcher-1.0-SNAPSHOT.jar
+f93859515aa8c8bb09a583316d062ed1  deps/launcher-1.0-SNAPSHOT.jar
 196b120a3c9f01a5b9b2ed5220359963  deps/logback-classic-1.2.6.jar
 b1930b5651377477a06ade2319f70dfc  deps/logback-core-1.2.6.jar
 29418013eb2b66fbf9bcd48a2dcd7543  deps/opencsv-5.6.jar
