@@ -41,7 +41,7 @@ public class EX3Test extends CalloutVerificationTest {
 				call(394137, "SOUTHWEST safe", "SOUTHWEST safe (6.7)"),
 				call(399942, "Healer Stacks", "Healer Stacks (4.7)"),
 				call(416234, "SOUTHWEST then NORTHEAST", "SOUTHWEST, then NORTHEAST (6.5)"),
-				call(426358, "SOUTHEAST then NORTHWEST", "SOUTHEAST, then NORTHWEST (6.5)"),
+				call(426358, "NORTHWEST then SOUTHEAST", "NORTHWEST, then SOUTHEAST (6.5)"),
 				call(441529, "Sides", "Sides (5.7)"),
 				call(525701, "Middle", "Middle (5.7)"),
 				call(535799, "Tankbuster", "Tankbuster (4.7)")
