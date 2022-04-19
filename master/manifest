@@ -15,7 +15,7 @@ e07a248f61c52776a2366c075dcd4963  httpcore-4.4.13.jar
 3f0c1ef2c9dc47b62b780192f54b0c18  httpmime-4.5.13.jar
 2352a291fc39d23cfe5c100728de1ea7  jackson-annotations-2.13.2.jar
 c56433d75479665998ccbd50678480fa  jackson-core-2.13.2.jar
-307ceaef2394e6ec9cfae77045546778  jackson-databind-2.13.2.jar
+b66a191219300cdb6113af6a6360326d  jackson-databind-2.13.2.1.jar
 1a2dd8c76321cef26cc2669fe70a2557  javassist-3.28.0-GA.jar
 8a2f8c473c9a8548dc307d040fabcf2e  Java-WebSocket-1.5.2.jar
 2b884b01ad2f62d4f5dd11387a8bf799  jna-5.10.0.jar
@@ -29,7 +29,7 @@ b1930b5651377477a06ade2319f70dfc  logback-core-1.2.6.jar
 340bd6731044eb6a2fb3839a473add22  reevent-1.0-SNAPSHOT.jar
 1d0070839d825f57fe6f4d8e2a82989b  reflections-0.10.2.jar
 fbcf58513bc25b80f075d812aad3e3cf  slf4j-api-1.7.32.jar
-392bdbca550081c94de74f3af3f0f88f  timelines-1.0-SNAPSHOT.jar
+e28b6e291ba07c3afa8411726336032e  timelines-1.0-SNAPSHOT.jar
 9b2b762c337d32117b71caca41476d0d  triggers-1.0-SNAPSHOT.jar
 56da42e0ef3b314a4de4808dfb87c809  xivdata-1.0-SNAPSHOT.jar
 ac21f284887e783084690c3c0b296e7a  xivsupport-1.0-SNAPSHOT.jar
