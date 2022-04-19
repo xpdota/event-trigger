@@ -11,6 +11,7 @@ public class TimelineCsvReader {
 	private static boolean loaded;
 	private static List<TimelineInfo> csvValues = Collections.emptyList();
 
+	@SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
 	public static List<TimelineInfo> readCsv() {
 		if (loaded) {
 			return csvValues;
@@ -24,6 +25,7 @@ public class TimelineCsvReader {
 			out.add(new TimelineInfo(zoneId, filename));
 		});
 		csvValues = Collections.unmodifiableList(out);
+		loaded = true;
 		return csvValues;
 
 	}
