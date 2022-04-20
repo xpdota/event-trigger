@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 
 public final class TimelineProcessor {
 
+	// TODO: we can use in/out of combat now
+
 	private static final Logger log = LoggerFactory.getLogger(TimelineProcessor.class);
 	private final List<TimelineEntry> entries;
 	private final TimelineManager manager;
@@ -134,6 +136,7 @@ public final class TimelineProcessor {
 		boolean debug = debugMode.get();
 		return entries.stream()
 				.filter(entry -> isLastSync(entry) && debug
+						// TODO: this doesn't show 'active' timeline entries
 						|| (entry.time() > (effectiveLastSyncTime - secondsPast.get())
 						&& entry.time() < (effectiveLastSyncTime + secondsFuture.get())
 						&& (entry.name() != null || debug)))
