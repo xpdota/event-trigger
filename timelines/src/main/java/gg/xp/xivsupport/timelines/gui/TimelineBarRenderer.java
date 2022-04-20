@@ -15,7 +15,7 @@ import java.net.URL;
 
 public class TimelineBarRenderer implements TableCellRenderer {
 
-	private static final Color colorActive = new Color(255, 0, 0, 192);
+	private static final Color colorActive = new Color(87, 149, 16, 192);
 	private static final Color colorExpired = new Color(128, 0, 128, 192);
 	private static final Color colorUpcoming = new Color(53, 134, 159, 192);
 	private final TimelineBar bar = new TimelineBar();

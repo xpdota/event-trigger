@@ -137,7 +137,7 @@ public final class TimelineProcessor {
 		return entries.stream()
 				.filter(entry -> isLastSync(entry) && debug
 						// TODO: this doesn't show 'active' timeline entries
-						|| (entry.time() > (effectiveLastSyncTime - secondsPast.get())
+						|| (entry.time() + (entry.duration() == null ? 0 : entry.duration()) > (effectiveLastSyncTime - secondsPast.get())
 						&& entry.time() < (effectiveLastSyncTime + secondsFuture.get())
 						&& (entry.name() != null || debug)))
 				.map(entry -> new VisualTimelineEntry(entry, isLastSync(entry), entry.time() - effectiveLastSyncTime))
