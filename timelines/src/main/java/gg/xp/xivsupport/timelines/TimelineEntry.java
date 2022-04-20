@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.timelines;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,8 +77,23 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		if (overrides == null) {
 			return false;
 		}
-		return Objects.equals(overrides.name(), that.name())
-				&& Objects.equals(overrides.time(), that.time());
+		// Rules:
+		// 1. Time must match
+		// 2. Name must match
+		// 3. Sync must match
+		// 4. For backwards compatibility, treat replacing an empty/null pattern as always matching
+		String desiredName = overrides.name();
+		if (overrides.time() == that.time()) {
+			String thatPattern = that.sync() == null ? null : that.sync().pattern();
+			if (!Objects.equals(desiredName, that.name())) {
+				return false;
+			}
+			if (overrides.pattern() == null || overrides.pattern().isBlank()) {
+				return true;
+			}
+			return (Objects.equals(overrides.pattern(), thatPattern));
+		}
+		return false;
 	}
 
 	boolean callout();

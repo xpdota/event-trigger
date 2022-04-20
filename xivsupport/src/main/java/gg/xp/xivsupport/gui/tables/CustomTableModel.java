@@ -214,6 +214,11 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		SwingUtilities.invokeLater(this::processNewDataFull);
 	}
 
+	public void fullRefreshSync() {
+		updateDataOnly();
+		processNewDataFull();
+	}
+
 	public List<X> getData() {
 		return Collections.unmodifiableList(data);
 	}

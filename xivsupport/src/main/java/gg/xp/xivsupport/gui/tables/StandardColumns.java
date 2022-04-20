@@ -424,6 +424,11 @@ public final class StandardColumns {
 		return new CustomEditor<>(writer, s -> s.isEmpty() ? null : Pattern.compile(s));
 	}
 
+	public static <X> TableCellEditor regexEditorEmptyToNull(BiConsumer<X, @Nullable Pattern> writer, int flags) {
+		return new CustomEditor<>(writer, s -> s.isEmpty() ? null : Pattern.compile(s, flags));
+	}
+
+
 	private static class CustomEditor<X, Y> extends AbstractCellEditor implements TableCellEditor {
 
 		@Serial

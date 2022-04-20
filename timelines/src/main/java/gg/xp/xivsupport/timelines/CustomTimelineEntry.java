@@ -38,11 +38,40 @@ public class CustomTimelineEntry implements TimelineEntry {
 	}
 
 	@SuppressWarnings("NegativelyNamedBooleanVariable")
+	public CustomTimelineEntry(
+			double time,
+			@Nullable String name,
+			@Nullable Pattern sync,
+			@Nullable Double duration,
+			@NotNull TimelineWindow timelineWindow,
+			@Nullable Double jump,
+			@Nullable URL icon,
+			@Nullable TimelineReference replaces,
+			 boolean disabled,
+			 boolean callout,
+			 double calloutPreTime
+	) {
+		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
+		// but it works.
+		this.time = time;
+		this.name = name;
+		this.sync = sync;
+		this.callout = callout;
+		this.calloutPreTime = calloutPreTime;
+		this.duration = duration;
+		this.windowStart = timelineWindow.start();
+		this.windowEnd = timelineWindow.end();
+		this.jump = jump;
+		this.icon = icon;
+		this.replaces = replaces;
+		this.enabled = !disabled;
+	}
+
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 	public CustomTimelineEntry(
 			@JsonProperty("time") double time,
 			@JsonProperty("name") @Nullable String name,
-			@JsonProperty("sync") @Nullable Pattern sync,
+			@JsonProperty("sync") @Nullable String sync,
 			@JsonProperty("duration") @Nullable Double duration,
 			@JsonProperty("timelineWindow") @NotNull TimelineWindow timelineWindow,
 			@JsonProperty("jump") @Nullable Double jump,
@@ -56,7 +85,7 @@ public class CustomTimelineEntry implements TimelineEntry {
 		// but it works.
 		this.time = time;
 		this.name = name;
-		this.sync = sync;
+		this.sync = sync == null ? null : Pattern.compile(sync, Pattern.CASE_INSENSITIVE);
 		this.callout = callout;
 		this.calloutPreTime = calloutPreTime;
 		this.duration = duration;
@@ -165,7 +194,7 @@ public class CustomTimelineEntry implements TimelineEntry {
 				other.timelineWindow(),
 				other.jump(),
 				other.icon(),
-				new TimelineReference(other.time(), other.name()),
+				new TimelineReference(other.time(), other.name(), other.sync() == null ? null : other.sync().pattern()),
 				false,
 				false,
 				0
