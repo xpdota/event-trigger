@@ -11,7 +11,6 @@ import gg.xp.xivsupport.speech.DynamicCalloutEvent;
 import gg.xp.xivsupport.speech.ParentedCalloutEvent;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
-import org.apache.http.NameValuePair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -75,10 +74,14 @@ public class ModifiableCallout<X> {
 		defaultVisualText = text;
 		this.conditions = new ArrayList<>(conditions);
 		defaultVisualHangTime = 5000L;
-		Instant defaultExpiryAt = TimeUtils.now().plus(defaultHangDuration);
-		this.expiry = eventItem -> {
+		this.expiry = expiresIn(defaultHangDuration);
+	}
+
+	public static <X> Predicate<X> expiresIn(Duration dur) {
+		Instant defaultExpiryAt = TimeUtils.now().plus(dur);
+		return eventItem -> {
 			if (eventItem instanceof BaseEvent be) {
-				return be.getEffectiveTimeSince().compareTo(defaultHangDuration) > 0;
+				return be.getEffectiveTimeSince().compareTo(dur) > 0;
 			}
 			else {
 				return defaultExpiryAt.isBefore(Instant.now());

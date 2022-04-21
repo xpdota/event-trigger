@@ -24,7 +24,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +45,7 @@ public class EX3 implements FilteredEventHandler {
 	private final ModifiableCallout<HasDuration> blueStar = ModifiableCallout.durationBasedCall("Blue Star", "Knockback from {safeSpot}");
 	private final ModifiableCallout<HasDuration> redStar = ModifiableCallout.durationBasedCall("Red Star", "{safeSpot} safe");
 
-	private final ModifiableCallout<AbilityUsedEvent> combinedCall = new ModifiableCallout<>("Multiple Star", "{event1.safeSpot} then {event2.safeSpot}", "{event1.safeSpot}, then {event2.safeSpot} ({event2.estimatedRemainingDuration})", Collections.emptyList());
+	private final ModifiableCallout<AbilityUsedEvent> combinedCall = new ModifiableCallout<>("Multiple Star", "{event1.safeSpot} then {event2.safeSpot}", "{event1.safeSpot}, then {event2.safeSpot} ({event2.estimatedRemainingDuration})", ModifiableCallout.expiresIn(Duration.ofSeconds(8)));
 
 	private final ModifiableCallout<TetherEvent> tetherCall = new ModifiableCallout<>("Tether Break", "Break Tether (with {otherTarget})");
 
