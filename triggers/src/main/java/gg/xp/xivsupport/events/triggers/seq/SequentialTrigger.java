@@ -1,13 +1,13 @@
 package gg.xp.xivsupport.events.triggers.seq;
 
-import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
-public class SequentialTrigger<X extends Event> {
+public class SequentialTrigger<X extends BaseEvent> {
 
 	private @Nullable SequentialTriggerController<X> instance;
 	private final int timeoutMs;
@@ -38,7 +38,6 @@ public class SequentialTrigger<X extends Event> {
 			}
 		}
 	}
-
 
 
 }

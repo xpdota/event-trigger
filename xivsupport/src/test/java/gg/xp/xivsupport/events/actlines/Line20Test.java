@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.actlines;
 
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.models.Position;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -24,6 +25,15 @@ public class Line20Test extends AbstractACTLineTest<AbilityCastStart> {
 		Assert.assertFalse(event.getSource().isEnvironment());
 		Assert.assertEquals(event.getTarget().getName(), "ENVIRONMENT");
 		Assert.assertTrue(event.getTarget().isEnvironment());
+
+		Assert.assertEquals(event.getInitialDuration().toMillis(), 2700);
+
+		Position pos = event.getSource().getPos();
+		Assert.assertNotNull(pos);
+		Assert.assertEquals(pos.x(), 8.055649);
+		Assert.assertEquals(pos.y(), -17.03842);
+		Assert.assertEquals(pos.z(), 10.58736);
+		Assert.assertEquals(pos.heading(), -4.792213E-05);
 	}
 
 	@Test

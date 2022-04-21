@@ -63,7 +63,7 @@ public class AsphodelosTriggersTest extends CalloutVerificationTest {
 				callAppend(364_855, "Stack on WTM Main", "(23.0)"),
 				callAppend(380_279, "Go In Front of Head", "(7.7)"),
 				call(380_503, "West Safe"),
-				call(411_164, "West Safe"),
+				call(411_164, "East Safe"),
 				callAppend(422_667, "Spread", "(4.7)"),
 				callAppend(455_986, "Raidwide", "(4.7)"),
 				callAppend(473_811, "Raidwide", "(4.7)"),

@@ -148,7 +148,6 @@ public class XivStateImpl implements XivState {
 						Job.getById(playerCombatantInfo.getJobId()),
 						// TODO
 						XivWorld.of(),
-						// TODO
 						true,
 						playerCombatantInfo.getRawType(),
 						hpOverrides.getOrDefault(playerCombatantInfo.getId(), playerCombatantInfo.getHP()),
@@ -175,7 +174,6 @@ public class XivStateImpl implements XivState {
 						Job.getById(jobId),
 						// TODO
 						XivWorld.of(),
-						// TODO
 						false,
 						combatant.getRawType(),
 						hpOverrides.getOrDefault(combatant.getId(), combatant.getHP()),
@@ -384,6 +382,8 @@ public class XivStateImpl implements XivState {
 			if (id == 0xE0000000L) {
 				return;
 			}
+			combatant.getPos();
+			posOverrides.remove(combatant.getId());
 			combatantsRaw.put(id, combatant);
 		});
 		log.trace("Received info on {} combatants", combatants.size());
@@ -464,8 +464,8 @@ public class XivStateImpl implements XivState {
 					return;
 				}
 			}
-			dirtyOverrides = true;
 		}
+		dirtyOverrides = true;
 	}
 
 	@Override
@@ -555,4 +555,12 @@ public class XivStateImpl implements XivState {
 			}
 		}
 	}
+
+	// TODO: make a single class with all the overrides and data sources as mutable fields, so that you don't have to
+	// recalculate all state every time
+
+//
+//	private static class CombatantData {
+//
+//	}
 }
