@@ -12,4 +12,9 @@ public class TtsRequest extends BaseEvent {
 	public String getTtsString() {
 		return ttsString;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("TtsRequest('%s')", ttsString);
+	}
 }
