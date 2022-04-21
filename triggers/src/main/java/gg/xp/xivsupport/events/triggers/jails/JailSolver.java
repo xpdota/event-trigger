@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,11 +51,17 @@ public class JailSolver implements FilteredEventHandler {
 	private final EnumListSetting<Job> sortSetting;
 	private final LongSetting jailClearDelay;
 
+	private final Set<Job> squelchWarningsForJobs = new HashSet<>();
+
 	private final Comparator<XivPlayerCharacter> playerJailSortComparator = Comparator.<XivPlayerCharacter, Integer>comparing(player -> {
-		int index = currentJailSort.indexOf(player.getJob());
+		Job job = player.getJob();
+		int index = currentJailSort.indexOf(job);
 		if (index == -1) {
+			boolean firstWarning = squelchWarningsForJobs.add(job);
+			if (firstWarning) {
+				log.warn("Couldn't determine jail prio for player {}", player);
+			}
 			// Return a big value so it sorts last
-			log.warn("Couldn't determine jail prio for player {}", player);
 			return 65536;
 		}
 		return index;

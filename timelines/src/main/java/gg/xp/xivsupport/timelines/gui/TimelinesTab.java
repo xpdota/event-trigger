@@ -23,6 +23,7 @@ import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
+import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.timelines.CustomTimelineEntry;
 import gg.xp.xivsupport.timelines.TimelineCustomizations;
 import gg.xp.xivsupport.timelines.TimelineEntry;
@@ -31,6 +32,8 @@ import gg.xp.xivsupport.timelines.TimelineManager;
 import gg.xp.xivsupport.timelines.TimelineOverlay;
 import gg.xp.xivsupport.timelines.TimelineProcessor;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -42,17 +45,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @ScanMe
 public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab {
+	private static final Logger log = LoggerFactory.getLogger(TimelinesTab.class);
 	private final TimelineManager backend;
 	private final CustomTableModel<TimelineInfo> timelineChooserModel;
 	private final CustomTableModel<TimelineEntry> timelineModel;
+	private volatile List<TimelineEntry> timelineEntries;
 	private final JTable timelineTable;
+	private final ExecutorService exs = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("TimelinesTab"));
 	private Long currentZone;
 	private TimelineProcessor currentTimeline;
 	private TimelineCustomizations currentCust;
@@ -163,10 +171,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				})
 				.addColumn(new CustomColumn<>("En", TimelineEntry::enabled, col -> {
 					col.setCellRenderer(StandardColumns.checkboxRenderer);
-					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<>(safeEditTimelineEntry((entry, value) -> {
+					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<>(safeEditTimelineEntry(true, (entry, value) -> {
 						entry.enabled = value;
-						stopEditing();
-						commitSettings();
 					})));
 					col.setMinWidth(22);
 					col.setMaxWidth(22);
@@ -179,38 +185,38 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				}))
 				.addColumn(new CustomColumn<>("Time", TimelineEntry::time, col -> {
 					col.setCellRenderer(new DoubleTimeRenderer());
-					col.setCellEditor(StandardColumns.doubleEditorNonNull(safeEditTimelineEntry((item, value) -> item.time = value)));
+					col.setCellEditor(StandardColumns.doubleEditorNonNull(safeEditTimelineEntry(false, (item, value) -> item.time = value)));
 					col.setMinWidth(timeColMinWidth);
 					col.setMaxWidth(timeColMaxWidth);
 					col.setPreferredWidth(timeColPrefWidth);
 				}))
 				.addColumn(new CustomColumn<>("Icon", TimelineEntry::icon, col -> {
-					col.setCellEditor(StandardColumns.urlEditorEmptyToNull(safeEditTimelineEntry((item, value) -> item.icon = value)));
+					col.setCellEditor(StandardColumns.urlEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.icon = value)));
 					col.setCellRenderer(new ActionAndStatusRenderer());
 					col.setMinWidth(32);
 					col.setMaxWidth(32);
 					col.setPreferredWidth(32);
 				}))
 				.addColumn(new CustomColumn<>("Text/Name", TimelineEntry::name, col -> {
-					col.setCellEditor(StandardColumns.stringEditorEmptyToNull(safeEditTimelineEntry((item, value) -> item.name = value)));
+					col.setCellEditor(StandardColumns.stringEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.name = value)));
 				}))
 				.addColumn(new CustomColumn<>("Pattern", TimelineEntry::sync, col -> {
-					col.setCellEditor(StandardColumns.regexEditorEmptyToNull(safeEditTimelineEntry((item, value) -> item.sync = value)));
+					col.setCellEditor(StandardColumns.regexEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.sync = value), Pattern.CASE_INSENSITIVE));
 				}))
 				.addColumn(new CustomColumn<>("Duration", TimelineEntry::duration, col -> {
-					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry((item, value) -> item.duration = value)));
+					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.duration = value)));
 					col.setMinWidth(numColMinWidth);
 					col.setMaxWidth(numColMaxWidth);
 					col.setPreferredWidth(numColPrefWidth);
 				}))
 				.addColumn(new CustomColumn<>("Win Start", e -> e.timelineWindow().start(), col -> {
-					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry((item, value) -> item.windowStart = value)));
+					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.windowStart = value)));
 					col.setMinWidth(numColMinWidth);
 					col.setMaxWidth(numColMaxWidth);
 					col.setPreferredWidth(numColPrefWidth);
 				}))
 				.addColumn(new CustomColumn<>("Win End", e -> e.timelineWindow().end(), col -> {
-					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry((item, value) -> item.windowEnd = value)));
+					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.windowEnd = value)));
 					col.setMinWidth(numColMinWidth);
 					col.setMaxWidth(numColMaxWidth);
 					col.setPreferredWidth(numColPrefWidth);
@@ -223,14 +229,14 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				}))
 				.addColumn(new CustomColumn<>("Jump", TimelineEntry::jump, col -> {
 					col.setCellRenderer(new DoubleTimeRenderer());
-					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry((item, value) -> item.jump = value)));
+					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.jump = value)));
 					col.setMinWidth(timeColMinWidth);
 					col.setMaxWidth(timeColMaxWidth);
 					col.setPreferredWidth(timeColPrefWidth);
 				}))
 				.addColumn(new CustomColumn<>("Trig", TimelineEntry::callout, col -> {
 					col.setCellRenderer(StandardColumns.checkboxRenderer);
-					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<>(safeEditTimelineEntry((entry, value) -> {
+					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<>(safeEditTimelineEntry(true, (entry, value) -> {
 						entry.callout = value;
 						stopEditing();
 						commitSettings();
@@ -239,7 +245,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setMaxWidth(30);
 				}))
 				.addColumn(new CustomColumn<>("Pre", TimelineEntry::calloutPreTime, col -> {
-					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry((item, value) -> {
+					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> {
 						if (value == null) {
 							item.calloutPreTime = 0.0;
 						}
@@ -267,7 +273,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				false,
 				0
 		)));
-		CustomRightClickOption delete = CustomRightClickOption.forRow("Delete", CustomTimelineEntry.class, this::deleteEntry);
+		CustomRightClickOption delete = CustomRightClickOption.forRow("Delete/Revert", CustomTimelineEntry.class, this::deleteEntry);
 
 		CustomRightClickOption chooseAbilityIcon = CustomRightClickOption.forRow("Use Ability Icon", TimelineEntry.class, this::chooseActionIcon);
 		CustomRightClickOption chooseStatusIcon = CustomRightClickOption.forRow("Use Status Icon", TimelineEntry.class, this::chooseStatusInfo);
@@ -282,7 +288,13 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			@Override
 			public void editingStopped(ChangeEvent e) {
 				super.editingStopped(e);
-				commitSettings();
+				commitEdit();
+			}
+
+			@Override
+			public void editingCanceled(ChangeEvent e) {
+				super.editingCanceled(e);
+				cancelEdit();
 			}
 		};
 
@@ -378,29 +390,34 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private void stopEditing() {
 		TableCellEditor editor = timelineTable.getCellEditor();
 		if (editor != null) {
-			editor.cancelCellEditing();
+			editor.stopCellEditing();
 		}
 	}
 
 	private void chooseActionIcon(TimelineEntry te) {
 		stopEditing();
-		ActionTable.showChooser(SwingUtilities.getWindowAncestor(this), action -> this.<ActionInfo>safeEditTimelineEntry((ce, actionInfo) -> {
+		ActionTable.showChooser(SwingUtilities.getWindowAncestor(this), action -> this.<ActionInfo>safeEditTimelineEntry(false, (ce, actionInfo) -> {
 					ActionIcon icon = actionInfo.getIcon();
 					ce.icon = icon == null ? null : icon.getIconUrl();
 				}).accept(te, action)
 		);
+		commitEdit();
 		updateTab();
 	}
 
 	private void chooseStatusInfo(TimelineEntry te) {
 		stopEditing();
-		StatusTable.showChooser(SwingUtilities.getWindowAncestor(this), status -> this.<StatusEffectInfo>safeEditTimelineEntry((ce, statusInfo) -> {
+		StatusTable.showChooser(SwingUtilities.getWindowAncestor(this), status -> this.<StatusEffectInfo>safeEditTimelineEntry(false, (ce, statusInfo) -> {
 					StatusEffectIcon icon = statusInfo.getIcon(0);
 					ce.icon = icon == null ? null : icon.getIconUrl();
 				}).accept(te, status)
 		);
+		commitEdit();
 		updateTab();
 	}
+
+	private static final Runnable NOTHING = () -> {};
+	private volatile Runnable pendingEdit = NOTHING;
 
 	/**
 	 * Wraps the given editing function to make it create an override first if needed
@@ -409,18 +426,38 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	 * @param <X>      The type for the cell
 	 * @return The lambda
 	 */
-	private <X> BiConsumer<Object, X> safeEditTimelineEntry(BiConsumer<CustomTimelineEntry, X> editFunc) {
+	private <X> BiConsumer<Object, X> safeEditTimelineEntry(boolean stopEditing, BiConsumer<CustomTimelineEntry, X> editFunc) {
 		return (item, value) -> {
-			if (item instanceof CustomTimelineEntry custom) {
-				editFunc.accept(custom, value);
-			}
-			else {
-				CustomTimelineEntry custom = CustomTimelineEntry.overrideFor((TimelineEntry) item);
-				editFunc.accept(custom, value);
-				addNewEntry(custom);
+			pendingEdit = () -> {
+				if (item instanceof CustomTimelineEntry custom) {
+					editFunc.accept(custom, value);
+				}
+				else {
+					CustomTimelineEntry custom = CustomTimelineEntry.overrideFor((TimelineEntry) item);
+					editFunc.accept(custom, value);
+					addNewEntry(custom);
+				}
+				commitSettings();
+			};
+			if (stopEditing) {
+				stopEditing();
 			}
 		};
 	}
+
+	private void commitEdit() {
+		log.info("Committing edit");
+		pendingEdit.run();
+		pendingEdit = NOTHING;
+		updateTab();
+	}
+
+	private void cancelEdit() {
+		log.info("Cancelling edit");
+		pendingEdit = NOTHING;
+		updateTab();
+	}
+
 
 	private void addNewEntry(CustomTimelineEntry newEntry) {
 		stopEditing();
@@ -468,7 +505,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 	private void updateTab() {
 		setCurrentZoneToSelected();
-		timelineModel.fullRefresh();
+		timelineModel.fullRefreshSync();
 		repaint();
 	}
 
@@ -478,10 +515,12 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		if (currentZone == null) {
 			currentTimeline = null;
 			currentCust = null;
+			timelineEntries = Collections.emptyList();
 		}
 		else {
 			currentTimeline = backend.getTimeline(currentZone);
 			currentCust = backend.getCustomSettings(currentZone);
+			timelineEntries = new ArrayList<>(currentTimeline.getRawEntries());
 		}
 	}
 

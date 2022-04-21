@@ -47,7 +47,7 @@ public class TimelineParser {
 				sync = null;
 			}
 			else {
-				sync = Pattern.compile(syncRaw);
+				sync = Pattern.compile(syncRaw, Pattern.CASE_INSENSITIVE);
 			}
 			TimelineWindow window;
 			if (windowStartRaw != null && windowEndRaw != null) {
