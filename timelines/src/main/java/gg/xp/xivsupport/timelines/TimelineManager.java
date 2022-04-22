@@ -10,6 +10,7 @@ import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
+import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -149,6 +150,13 @@ public class TimelineManager {
 	@HandleEvents(order = 40_000)
 	public void pullEnded(EventContext context, VictoryEvent event) {
 		resetCurrent();
+	}
+
+	@HandleEvents(order = 40_000)
+	public void inCombatStatusChange(EventContext context, InCombatChangeEvent icce) {
+		if (!icce.isInCombat()) {
+			resetCurrent();
+		}
 	}
 
 	private void resetCurrent() {
