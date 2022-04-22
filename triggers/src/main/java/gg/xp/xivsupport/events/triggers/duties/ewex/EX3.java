@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 @CalloutRepo("Endsinger Extreme")
 public class EX3 implements FilteredEventHandler {
@@ -68,10 +69,15 @@ public class EX3 implements FilteredEventHandler {
 	private final ModifiableCallout<HasDuration> flare = ModifiableCallout.durationBasedCall("Flare Marker", "Flare");
 	private final ModifiableCallout<HasDuration> spread = ModifiableCallout.durationBasedCall("Spread Marker", "Spread");
 
-	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
+	private final ModifiableCallout<AbilityUsedEvent> fiveHeadSafeSpots = new ModifiableCallout<>("5Head Safe Spot (First 3)", "{safeSpot1}, {safeSpot2}, {safeSpot3}");
+	private final ModifiableCallout<AbilityUsedEvent> fiveHeadSafeSpotFinal = new ModifiableCallout<>("5Head Safe Spot (Final)", "{safeSpot}");
+	private final ModifiableCallout<AbilityUsedEvent> fiveHeadSafeSpotError = new ModifiableCallout<>("5Head Safe Spot (Error)", "Error!");
+
+	private final ModifiableCallout<?> sixHeadSafeSpots = new ModifiableCallout<>("6Head Safe Spots", "{safeSpot1} and {safeSpot2} safe");
+
+	private final ArenaPos arenaPos = new ArenaPos(100, 100, 6.5, 6.5);
 
 	private final XivState state;
-	private int headPhase;
 
 	// TODO: timeline
 	// TODO: what is 0x7005? Cactbot doesn't mention it, but it certainly seems to be a star collision
@@ -109,7 +115,6 @@ public class EX3 implements FilteredEventHandler {
 	public void newPull(EventContext context, PullStartedEvent pse) {
 		starEvents.clear();
 		rewindPlayerBuffs.clear();
-		headPhase = 0;
 		lastStarEvent = null;
 	}
 
@@ -240,8 +245,11 @@ public class EX3 implements FilteredEventHandler {
 			int recallIndex = (int) (0x17E - event.getRawStacks());
 			BuffApplied buff = rewindPlayerBuffs.get(recallIndex);
 			ModifiableCallout<HasDuration> call = callForBuffId((int) buff.getBuff().getId());
+			BuffApplied fakeEvent = new BuffApplied(buff.getBuff(), 12.0, buff.getSource(), buff.getTarget(), 0);
+			fakeEvent.setParent(buff);
+			fakeEvent.setHappenedAt(event.getEffectiveHappenedAt());
 			//noinspection ConstantConditions
-			context.accept(call.getModified(new BuffApplied(buff.getBuff(), 12.0, buff.getSource(), buff.getTarget(), 0)));
+			context.accept(call.getModified(fakeEvent));
 		}
 		else if (rewindPlayerBuffs.size() < 3) {
 			ModifiableCallout<HasDuration> call = callForBuffId(buffId);
@@ -378,9 +386,6 @@ public class EX3 implements FilteredEventHandler {
 	}
 
 	private static final Set<Long> headAbilities = Set.of(0x6FFCL, 0x7006L, 0x7009L, 0x700AL);
-	private final ModifiableCallout<AbilityUsedEvent> fiveHeadSafeSpots = new ModifiableCallout<>("5Head Safe Spot (First 3)", "{safeSpot1}, {safeSpot2}, {safeSpot3}");
-	private final ModifiableCallout<AbilityUsedEvent> fiveHeadSafeSpotFinal = new ModifiableCallout<>("5Head Safe Spot (Final)", "{safeSpot}");
-	private final ModifiableCallout<AbilityUsedEvent> fiveHeadSafeSpotError = new ModifiableCallout<>("5Head Safe Spot (Error)", "Error!");
 
 	private final SequentialTrigger<BaseEvent> fiveHead = new SequentialTrigger<>(60_000, BaseEvent.class, (e) -> e instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x7007, (e1, s) -> {
 
@@ -456,11 +461,54 @@ public class EX3 implements FilteredEventHandler {
 		s.accept(fiveHeadSafeSpotError.getModified());
 	});
 
+	private XivState getState() {
+		return state;
+	}
+
+
+	private final SequentialTrigger<BaseEvent> sixHead = new SequentialTrigger<>(25_000, BaseEvent.class, (e) -> {
+		if (e instanceof AbilityUsedEvent aue) {
+			long id = aue.getAbility().getId();
+			return id == 0x72B1 || id == 0x701C;
+		}
+		else {
+			return false;
+		}
+	}, (e1, s) -> {
+		// Grab 4 tethers
+		List<XivCombatant> tetheredHeads = IntStream.range(0, 4)
+				.mapToObj((i) -> s.waitEvent(TetherEvent.class, t -> t.getId() == 0x00BD || t.getId() == 0x00B5))
+				.map(TetherEvent::getSource)
+				.toList();
+		// It's okay for this to loop because it has a timeout
+		while (true) {
+			List<ArenaSector> occupied = tetheredHeads.stream()
+					.map(head -> getState().getLatestCombatantData(head))
+					.map(arenaPos::forCombatant)
+					.toList();
+			// CENTER means we don't have position data for that combatant yet
+			if (occupied.stream().anyMatch(sector -> sector == ArenaSector.CENTER)) {
+				// Just wait for literally anything, since we're really actually waiting for
+				s.waitEvent(BaseEvent.class, (e) -> true);
+			}
+			else {
+				List<ArenaSector> safeSpots = new ArrayList<>(List.of(ArenaSector.SOUTHWEST, ArenaSector.WEST, ArenaSector.NORTHWEST, ArenaSector.NORTHEAST, ArenaSector.EAST, ArenaSector.SOUTHEAST));
+				occupied.forEach(safeSpots::remove);
+				if (safeSpots.size() == 2) {
+					s.accept(sixHeadSafeSpots.getModified(Map.of("safeSpot1", safeSpots.get(0), "safeSpot2", safeSpots.get(1))));
+					return;
+				}
+				else {
+					log.error("Expected exactly two safe spots, got: {}", safeSpots);
+				}
+			}
+		}
+	});
+
 	@HandleEvents
 	public void feedHeads(EventContext context, BaseEvent event) {
-//		if (event instanceof AbilityCastStart || event instanceof BuffApplied) {
 		fiveHead.feed(context, event);
-//		}
+		sixHead.feed(context, event);
 	}
 
 }
