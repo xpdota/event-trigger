@@ -32,6 +32,14 @@ public interface XivState extends SubState {
 
 	Map<Long, XivCombatant> getCombatants();
 
+	default XivCombatant getCombatant(long id) {
+		return getCombatants().get(id);
+	}
+
+	default XivCombatant getLatestCombatantData(XivCombatant cbt) {
+		return getCombatant(cbt.getId());
+	}
+
 	// TODO: does this still need to be a copy?
 	List<XivCombatant> getCombatantsListCopy();
 

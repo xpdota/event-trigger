@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.duties.ewex;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
@@ -15,21 +16,30 @@ import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.CombatantType;
+import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 @CalloutRepo("Endsinger Extreme")
 public class EX3 implements FilteredEventHandler {
+
+	private static final Logger log = LoggerFactory.getLogger(EX3.class);
 
 	// TODO: all the complex mechanics
 
@@ -54,15 +64,20 @@ public class EX3 implements FilteredEventHandler {
 //	private final ModifiableCallout<HeadMarkerEvent> flare = new ModifiableCallout<>("Flare Marker", "Flare");
 //	private final ModifiableCallout<HeadMarkerEvent> spread = new ModifiableCallout<>("Spread Marker", "Spread");
 
-	private final ModifiableCallout<BuffApplied> donut = ModifiableCallout.durationBasedCall("Donut Marker", "Donut");
-	private final ModifiableCallout<BuffApplied> stack = ModifiableCallout.durationBasedCall("Stack Marker", "Stack");
-	private final ModifiableCallout<BuffApplied> flare = ModifiableCallout.durationBasedCall("Flare Marker", "Flare");
-	private final ModifiableCallout<BuffApplied> spread = ModifiableCallout.durationBasedCall("Spread Marker", "Spread");
+	private final ModifiableCallout<HasDuration> donut = ModifiableCallout.durationBasedCall("Donut Marker", "Donut");
+	private final ModifiableCallout<HasDuration> stack = ModifiableCallout.durationBasedCall("Stack Marker", "Stack");
+	private final ModifiableCallout<HasDuration> flare = ModifiableCallout.durationBasedCall("Flare Marker", "Flare");
+	private final ModifiableCallout<HasDuration> spread = ModifiableCallout.durationBasedCall("Spread Marker", "Spread");
 
-	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
+	private final ModifiableCallout<AbilityUsedEvent> fiveHeadSafeSpots = new ModifiableCallout<>("5Head Safe Spot (First 3)", "{safeSpot1}, {safeSpot2}, {safeSpot3}");
+	private final ModifiableCallout<AbilityUsedEvent> fiveHeadSafeSpotFinal = new ModifiableCallout<>("5Head Safe Spot (Final)", "{safeSpot}");
+	private final ModifiableCallout<AbilityUsedEvent> fiveHeadSafeSpotError = new ModifiableCallout<>("5Head Safe Spot (Error)", "Error!");
+
+	private final ModifiableCallout<?> sixHeadSafeSpots = new ModifiableCallout<>("6Head Safe Spots", "{safeSpot1} and {safeSpot2} safe");
+
+	private final ArenaPos arenaPos = new ArenaPos(100, 100, 6.5, 6.5);
 
 	private final XivState state;
-	private int headPhase;
 
 	// TODO: timeline
 	// TODO: what is 0x7005? Cactbot doesn't mention it, but it certainly seems to be a star collision
@@ -100,7 +115,6 @@ public class EX3 implements FilteredEventHandler {
 	public void newPull(EventContext context, PullStartedEvent pse) {
 		starEvents.clear();
 		rewindPlayerBuffs.clear();
-		headPhase = 0;
 		lastStarEvent = null;
 	}
 
@@ -227,20 +241,36 @@ public class EX3 implements FilteredEventHandler {
 
 		 */
 		int buffId = (int) event.getBuff().getId();
-
-		ModifiableCallout<BuffApplied> call =
-				switch (buffId) {
-					case 0xBAD -> donut;
-					case 0xBAE -> spread;
-					case 0xBAF -> flare;
-					case 0xBB0 -> stack;
-					default -> null;
-				};
-		if (call != null) {
-			rewindPlayerBuffs.add(event);
-			context.accept(call.getModified(event));
+		if (buffId == 0x95D) {
+			int recallIndex = (int) (0x17E - event.getRawStacks());
+			BuffApplied buff = rewindPlayerBuffs.get(recallIndex);
+			ModifiableCallout<HasDuration> call = callForBuffId((int) buff.getBuff().getId());
+			BuffApplied fakeEvent = new BuffApplied(buff.getBuff(), 12.0, buff.getSource(), buff.getTarget(), 0);
+			fakeEvent.setParent(buff);
+			fakeEvent.setHappenedAt(event.getEffectiveHappenedAt());
+			//noinspection ConstantConditions
+			context.accept(call.getModified(fakeEvent));
+		}
+		else if (rewindPlayerBuffs.size() < 3) {
+			ModifiableCallout<HasDuration> call = callForBuffId(buffId);
+			if (call != null) {
+				rewindPlayerBuffs.add(event);
+				context.accept(call.getModified(event));
+			}
 		}
 	}
+
+	@Nullable
+	private ModifiableCallout<HasDuration> callForBuffId(int buffId) {
+		return switch (buffId) {
+			case 0xBAD -> donut;
+			case 0xBAE -> spread;
+			case 0xBAF -> flare;
+			case 0xBB0 -> stack;
+			default -> null;
+		};
+	}
+
 
 	private enum StarType {
 		AoE,
@@ -338,6 +368,147 @@ public class EX3 implements FilteredEventHandler {
 		public Duration getEffectiveTimeSince() {
 			return durationDelegate.getEffectiveTimeSince();
 		}
+	}
+
+	private enum FiveHeadMech {
+		DONUT,
+		AOE,
+		CLEAVE;
+
+		static @Nullable FiveHeadMech forAbility(XivAbility ability) {
+			return switch ((int) ability.getId()) {
+				case 0x6FFC, 0x7006 -> CLEAVE;
+				case 0x7009 -> AOE;
+				case 0x700A -> DONUT;
+				default -> null;
+			};
+		}
+	}
+
+	private static final Set<Long> headAbilities = Set.of(0x6FFCL, 0x7006L, 0x7009L, 0x700AL);
+
+	private final SequentialTrigger<BaseEvent> fiveHead = new SequentialTrigger<>(60_000, BaseEvent.class, (e) -> e instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x7007, (e1, s) -> {
+
+		// Map of head to list of what it did on each set
+		Map<XivCombatant, List<FiveHeadMech>> collectedMechanics = new HashMap<>();
+
+		// Three sets of mechanics
+		outer:
+		for (int j = 0; j < 3; j++) {
+			ArenaSector cleaveDir = null;
+			// Collect 5 head casts (includes cleave)
+			for (int i = 0; i < 5; i++) {
+				AbilityCastStart headCast = s.waitEvent(AbilityCastStart.class, acs -> headAbilities.contains(acs.getAbility().getId()));
+				FiveHeadMech mech = FiveHeadMech.forAbility(headCast.getAbility());
+				collectedMechanics.computeIfAbsent(headCast.getSource(), k -> new ArrayList<>()).add(mech);
+				if (mech == FiveHeadMech.CLEAVE) {
+					cleaveDir = ArenaPos.combatantFacing(headCast.getSource());
+				}
+			}
+			if (cleaveDir == null) {
+				log.error("No safespot! {}", collectedMechanics);
+				s.accept(fiveHeadSafeSpotError.getModified());
+				continue;
+			}
+			ArenaSector safeDir = cleaveDir.opposite();
+			for (var entry : collectedMechanics.entrySet()) {
+				if (entry.getValue().get(j) != FiveHeadMech.DONUT) {
+					continue;
+				}
+				ArenaSector pos = arenaPos.forCombatant(entry.getKey());
+				if (pos.isStrictlyAdjacentTo(safeDir)) {
+					if (j == 0) {
+						s.accept(fiveHeadSafeSpots.getModified(Map.of("safeSpot1", pos, "safeSpot2", pos.plusQuads(1), "safeSpot3", pos.plusQuads(2))));
+					}
+					continue outer;
+				}
+			}
+			log.error("No donut!");
+			s.accept(fiveHeadSafeSpotError.getModified());
+		}
+		Map<XivCombatant, FiveHeadMech> rewoundMechs = new HashMap<>();
+		ArenaSector cleaveDir = null;
+		ArenaSector safeDir;
+		for (int i = 0; i < 5; i++) {
+			BuffApplied rewindBuff = s.waitEvent(BuffApplied.class, ba -> ba.getBuff().getId() == 0x808);
+			int mechanicIndex = (int) (0x17A - rewindBuff.getRawStacks());
+			XivCombatant cbt = rewindBuff.getTarget();
+			FiveHeadMech mech = collectedMechanics.get(cbt).get(mechanicIndex);
+			rewoundMechs.put(cbt, mech);
+			if (mech == FiveHeadMech.CLEAVE) {
+				cleaveDir = ArenaPos.combatantFacing(cbt).plusQuads(-2 + mechanicIndex);
+			}
+		}
+		if (cleaveDir == null) {
+			log.error("No safespot! {}", rewoundMechs);
+			s.accept(fiveHeadSafeSpotError.getModified());
+			return;
+		}
+		else {
+			safeDir = cleaveDir.opposite();
+		}
+		for (var entry : rewoundMechs.entrySet()) {
+			if (entry.getValue() != FiveHeadMech.DONUT) {
+				continue;
+			}
+			ArenaSector pos = arenaPos.forCombatant(entry.getKey());
+			if (pos.isStrictlyAdjacentTo(safeDir)) {
+				s.accept(fiveHeadSafeSpotFinal.getModified(Map.of("safeSpot", pos)));
+				return;
+			}
+		}
+		log.error("No donut!");
+		s.accept(fiveHeadSafeSpotError.getModified());
+	});
+
+	private XivState getState() {
+		return state;
+	}
+
+
+	private final SequentialTrigger<BaseEvent> sixHead = new SequentialTrigger<>(25_000, BaseEvent.class, (e) -> {
+		if (e instanceof AbilityUsedEvent aue) {
+			long id = aue.getAbility().getId();
+			return id == 0x72B1 || id == 0x701C;
+		}
+		else {
+			return false;
+		}
+	}, (e1, s) -> {
+		// Grab 4 tethers
+		List<XivCombatant> tetheredHeads = IntStream.range(0, 4)
+				.mapToObj((i) -> s.waitEvent(TetherEvent.class, t -> t.getId() == 0x00BD || t.getId() == 0x00B5))
+				.map(TetherEvent::getSource)
+				.toList();
+		// It's okay for this to loop because it has a timeout
+		while (true) {
+			List<ArenaSector> occupied = tetheredHeads.stream()
+					.map(head -> getState().getLatestCombatantData(head))
+					.map(arenaPos::forCombatant)
+					.toList();
+			// CENTER means we don't have position data for that combatant yet
+			if (occupied.stream().anyMatch(sector -> sector == ArenaSector.CENTER)) {
+				// Just wait for literally anything, since we're really actually waiting for
+				s.waitEvent(BaseEvent.class, (e) -> true);
+			}
+			else {
+				List<ArenaSector> safeSpots = new ArrayList<>(List.of(ArenaSector.SOUTHWEST, ArenaSector.WEST, ArenaSector.NORTHWEST, ArenaSector.NORTHEAST, ArenaSector.EAST, ArenaSector.SOUTHEAST));
+				occupied.forEach(safeSpots::remove);
+				if (safeSpots.size() == 2) {
+					s.accept(sixHeadSafeSpots.getModified(Map.of("safeSpot1", safeSpots.get(0), "safeSpot2", safeSpots.get(1))));
+					return;
+				}
+				else {
+					log.error("Expected exactly two safe spots, got: {}", safeSpots);
+				}
+			}
+		}
+	});
+
+	@HandleEvents
+	public void feedHeads(EventContext context, BaseEvent event) {
+		fiveHead.feed(context, event);
+		sixHead.feed(context, event);
 	}
 
 }

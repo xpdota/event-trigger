@@ -108,6 +108,7 @@ public class FieldMapper<K extends Enum<K>> {
 		XivCombatant cbt = getEntity(idKey, nameKey);
 		long id = cbt.getId();
 		boolean dirty = false;
+		// Only bother with HP if we either have no idea what it is, or this is a 'trusted' hp line (i.e. not just reading from memory)
 		if (cbt.getHp() == null || trustedHp) {
 			if (currentHpKey != null && maxHpKey != null) {
 				Long curHp = getOptionalLong(currentHpKey);
@@ -137,8 +138,10 @@ public class FieldMapper<K extends Enum<K>> {
 			Double h = getOptionalDouble(headingKey);
 
 			if (x != null && y != null && z != null && h != null) {
-				state.provideCombatantPos(cbt, new Position(x, y, z, h));
+				Position pos = new Position(x, y, z, h);
+				state.provideCombatantPos(cbt, pos);
 				dirty = true;
+				cbt = new XivCombatant(cbt.getId(), cbt.getName(), cbt.isPc(), cbt.isThePlayer(), cbt.getRawType(), cbt.getHp(), cbt.getMp(), pos, cbt.getbNpcId(), cbt.getbNpcNameId(), cbt.getPartyType(), cbt.getLevel(), cbt.getOwnerId());
 			}
 		}
 		if (dirty) {

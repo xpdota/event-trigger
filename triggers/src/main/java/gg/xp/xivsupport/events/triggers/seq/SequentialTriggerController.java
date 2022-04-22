@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.seq;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import org.slf4j.Logger;
@@ -8,13 +9,15 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
-public class SequentialTriggerController<X extends Event> {
+public class SequentialTriggerController<X extends BaseEvent> {
 
 	private static final Logger log = LoggerFactory.getLogger(SequentialTriggerController.class);
 	private static final AtomicInteger threadIdCounter = new AtomicInteger();
-	private final Instant expiresAt;
+//	private final Instant expiresAt;
+	private final BooleanSupplier expired;
 	private final Thread thread;
 	private final Object lock = new Object();
 	private volatile X currentEvent;
@@ -25,11 +28,15 @@ public class SequentialTriggerController<X extends Event> {
 
 	// To be called from external thread
 	public SequentialTriggerController(EventContext initialEventContext, X initialEvent, BiConsumer<X, SequentialTriggerController<X>> triggerCode, int timeout) {
-		expiresAt = initialEvent.getHappenedAt().plusMillis(timeout);
+		expired = () -> initialEvent.getEffectiveTimeSince().toMillis() > timeout;
+//		expiresAt = initialEvent.getHappenedAt().plusMillis(timeout);
 		context = initialEventContext;
 		thread = new Thread(() -> {
 			try {
 				triggerCode.accept(initialEvent, this);
+			}
+			catch (Throwable t) {
+				log.error("Error in sequential trigger", t);
 			}
 			finally {
 				synchronized (lock) {
@@ -67,7 +74,6 @@ public class SequentialTriggerController<X extends Event> {
 
 	// To be called from internal thread
 	private X waitEvent() {
-		log.info("Waiting for event");
 		synchronized (lock) {
 			processing = false;
 			currentEvent = null;
@@ -100,7 +106,9 @@ public class SequentialTriggerController<X extends Event> {
 	// To be called from external thread
 	public void provideEvent(EventContext ctx, X event) {
 		synchronized (lock) {
-			if (event.getHappenedAt().isAfter(expiresAt)) {
+			if (expired.getAsBoolean()) {
+//			if (event.getHappenedAt().isAfter(expiresAt)) {
+				log.info("Sequential trigger expired by event: {}", event);
 				die = true;
 				lock.notifyAll();
 				return;

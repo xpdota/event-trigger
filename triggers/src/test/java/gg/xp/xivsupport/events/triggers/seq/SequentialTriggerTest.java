@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.seq;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.TtsRequest;
@@ -132,7 +133,7 @@ public class SequentialTriggerTest {
 		// Second event
 		dist.acceptEvent(secondMatchingEvent);
 		// The third event should time out
-		Thread.sleep(1000);
+		Thread.sleep(6000);
 		dist.acceptEvent(altMatchingEventInFuture);
 		// First event
 		dist.acceptEvent(firstMatchingEvent);
