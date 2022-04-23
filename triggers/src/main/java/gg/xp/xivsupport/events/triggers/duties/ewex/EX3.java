@@ -488,7 +488,7 @@ public class EX3 implements FilteredEventHandler {
 					.toList();
 			// CENTER means we don't have position data for that combatant yet
 			if (occupied.stream().anyMatch(sector -> sector == ArenaSector.CENTER)) {
-				// Just wait for literally anything, since we're really actually waiting for
+				// Send a WS combatants update request
 				s.waitEvent(BaseEvent.class, (e) -> true);
 			}
 			else {
