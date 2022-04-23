@@ -18,21 +18,21 @@ public class EventAbilityOrBuffFilter extends TextBasedFilter<Object> {
 	}
 
 	private static String getNameForItem(Object item) {
-		if (item instanceof HasAbility) {
-			return (((HasAbility) item).getAbility().getName());
+		if (item instanceof HasAbility ha) {
+			return ha.getAbility().getName();
 		}
-		if (item instanceof HasStatusEffect) {
-			return (((HasStatusEffect) item).getBuff().getName());
+		if (item instanceof HasStatusEffect hse) {
+			return hse.getBuff().getName();
 		}
 		throw new IllegalStateException("Item not correct class - should have been pre-filtered");
 	}
 
 	private static long getIdForItem(Object item) {
-		if (item instanceof HasAbility) {
-			return (((HasAbility) item).getAbility().getId());
+		if (item instanceof HasAbility hasAbility) {
+			return hasAbility.getAbility().getId();
 		}
-		if (item instanceof HasStatusEffect) {
-			return (((HasStatusEffect) item).getBuff().getId());
+		if (item instanceof HasStatusEffect hse) {
+			return hse.getBuff().getId();
 		}
 		throw new IllegalStateException("Item not correct class - should have been pre-filtered");
 	}
@@ -58,7 +58,7 @@ public class EventAbilityOrBuffFilter extends TextBasedFilter<Object> {
 	@Override
 	public boolean preFilter(Object item) {
 		// Pre-filter
-		return (item instanceof HasAbility || item instanceof HasStatusEffect);
+		return item instanceof HasAbility || item instanceof HasStatusEffect;
 	}
 
 }

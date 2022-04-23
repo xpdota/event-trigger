@@ -132,8 +132,8 @@ public final class StandardColumns {
 
 	public static final CustomColumn<XivCombatant> mpColumn
 			= new CustomColumn<>("MP", xivCombatant -> {
-		if (xivCombatant instanceof XivPlayerCharacter) {
-			if (((XivPlayerCharacter) xivCombatant).getJob().isCombatJob()) {
+		if (xivCombatant instanceof XivPlayerCharacter pc) {
+			if (pc.getJob().isCombatJob()) {
 				return xivCombatant.getMp();
 			}
 		}
@@ -217,13 +217,13 @@ public final class StandardColumns {
 
 				@Override
 				public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-					if (value instanceof BooleanSetting) {
+					if (value instanceof BooleanSetting bs) {
 						JCheckBox cb = new JCheckBox();
 						if (enabledBy != null) {
 							cb.setEnabled(enabledBy.get());
 						}
 //						cb.setOpaque(false);
-						cb.setSelected(((BooleanSetting) value).get());
+						cb.setSelected(bs.get());
 						cb.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column).getBackground());
 						return cb;
 					}

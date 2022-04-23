@@ -39,35 +39,35 @@ public class AbilityEffectRenderer {
 		String text;
 		HasIconURL icon;
 		boolean textOnRight = false;
-		if (value instanceof DamageTakenEffect) {
-			text = ((DamageTakenEffect) value).getSeverity().getSymbol() + ((DamageTakenEffect) value).getAmount();
+		if (value instanceof DamageTakenEffect dte) {
+			text = dte.getSeverity().getSymbol() + dte.getAmount();
 			icon = ActionLibrary.iconForId(9);
 		}
-		else if (value instanceof HealEffect) {
-			text = ((HealEffect) value).getSeverity().getSymbol() + ((HealEffect) value).getAmount();
+		else if (value instanceof HealEffect heal) {
+			text = heal.getSeverity().getSymbol() + heal.getAmount();
 			icon = ActionLibrary.iconForId(3594);
 		}
-		else if (value instanceof MpGain) {
-			text = "+" + ((MpGain) value).getAmount();
+		else if (value instanceof MpGain mpGain) {
+			text = "+" + mpGain.getAmount();
 			icon = ActionLibrary.iconForId(7562);
 		}
-		else if (value instanceof MpLoss) {
-			text = "-" + ((MpLoss) value).getAmount();
+		else if (value instanceof MpLoss mpLoss) {
+			text = "-" + mpLoss.getAmount();
 			icon = ActionLibrary.iconForId(7562);
 		}
-		else if (value instanceof ParriedDamageEffect) {
+		else if (value instanceof ParriedDamageEffect pde) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
-			text = Long.toString(((ParriedDamageEffect) value).getAmount());
+			text = Long.toString(pde.getAmount());
 			icon = ActionLibrary.iconForId(16140);
 		}
-		else if (value instanceof BlockedDamageEffect) {
+		else if (value instanceof BlockedDamageEffect bde) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
-			text = Long.toString(((BlockedDamageEffect) value).getAmount());
+			text = Long.toString(bde.getAmount());
 			icon = ActionLibrary.iconForId(3542);
 		}
-		else if (value instanceof InvulnBlockedDamageEffect) {
+		else if (value instanceof InvulnBlockedDamageEffect invuln) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
-			text = Long.toString(((InvulnBlockedDamageEffect) value).getAmount());
+			text = Long.toString(invuln.getAmount());
 			icon = ActionLibrary.iconForId(30);
 		}
 		else if (value instanceof StatusAppliedEffect statusApplied) {
@@ -75,10 +75,10 @@ public class AbilityEffectRenderer {
 			icon = StatusEffectLibrary.iconForId(statusApplied.getStatus().getId(), statusApplied.getStacks());
 			textOnRight = true;
 		}
-		else if (value instanceof StatusNoEffect) {
+		else if (value instanceof StatusNoEffect sne) {
 			// TODO: does this also have a 'stacks' value?
 			text = "X";
-			icon = StatusEffectLibrary.iconForId(((StatusNoEffect) value).getStatus().getId(), 1);
+			icon = StatusEffectLibrary.iconForId(sne.getStatus().getId(), 1);
 			textOnRight = true;
 		}
 		else {

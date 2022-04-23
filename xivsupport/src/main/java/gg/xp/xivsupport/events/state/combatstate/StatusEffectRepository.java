@@ -206,8 +206,8 @@ public class StatusEffectRepository {
 					return true;
 				}
 				Event parent = v.getParent();
-				if (parent instanceof AbilityUsedEvent) {
-					return !sqid.isEventStillPending((AbilityUsedEvent) parent);
+				if (parent instanceof AbilityUsedEvent originalAbility) {
+					return !sqid.isEventStillPending(originalAbility);
 				}
 				return false;
 			});

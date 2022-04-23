@@ -285,8 +285,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				this.y = pos.getY();
 				setCenterPoint();
 			}
-			if (cbt instanceof XivPlayerCharacter) {
-				Job newJob = ((XivPlayerCharacter) cbt).getJob();
+			if (cbt instanceof XivPlayerCharacter pc) {
+				Job newJob = pc.getJob();
 				if (newJob != oldJob) {
 					remove(icon);
 					formatComponent(cbt);
@@ -296,8 +296,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 
 		private void formatComponent(XivCombatant cbt) {
-			if (cbt instanceof XivPlayerCharacter) {
-				Job job = ((XivPlayerCharacter) cbt).getJob();
+			if (cbt instanceof XivPlayerCharacter pc) {
+				Job job = pc.getJob();
 				if (cbt.isThePlayer()) {
 					setBorder(new LineBorder(localPcColor));
 					setBackground(localPcColor);

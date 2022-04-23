@@ -175,8 +175,8 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 		if (constraint == null) {
 			constraints.remove(component);
 		}
-		else if (constraint instanceof Boolean) {
-			constraints.put(component, (Boolean) constraint);
+		else if (constraint instanceof Boolean bool) {
+			constraints.put(component, bool);
 		}
 		else {
 			String message = "Constraint parameter must be of type Boolean";

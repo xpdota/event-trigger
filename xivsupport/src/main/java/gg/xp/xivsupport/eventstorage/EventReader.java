@@ -72,8 +72,8 @@ public final class EventReader {
 				while (true) {
 					Event event = (Event) ois.readObject();
 					event.setImported(true);
-					if (event instanceof Compressible) {
-						((Compressible) event).decompress();
+					if (event instanceof Compressible compressible) {
+						compressible.decompress();
 					}
 					events.add(event);
 				}

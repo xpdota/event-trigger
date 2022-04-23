@@ -37,10 +37,10 @@ public class Topology extends BaseToggleableTopo {
 		Map<Class<?>, List<TopoMethod>> classesTemp = new HashMap<>();
 		List<TopoMethod> manuallyAdded = new ArrayList<>();
 		handlers.forEach(handler -> {
-			if (handler instanceof AutoHandler) {
-				Class<?> clazz = ((AutoHandler) handler).getHandlerClass();
+			if (handler instanceof AutoHandler ah) {
+				Class<?> clazz = ah.getHandlerClass();
 				classesTemp.computeIfAbsent(clazz, c -> new ArrayList<>())
-						.add(new TopoAutoMethod((AutoHandler) handler, topoInfo));
+						.add(new TopoAutoMethod(ah, topoInfo));
 			}
 			else {
 				manuallyAdded.add(new TopoManualMethod(handler.toString()));
