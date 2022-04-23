@@ -124,13 +124,6 @@ public class XivStateDummy implements XivState {
 		throw new UnsupportedOperationException("not supported");
 	}
 
-	@Override
-	public @Nullable XivCombatant getDeadCombatant(long id) {
-		// TODO
-		return null;
-	}
-
-
 	// TODO
 	@Override
 	public boolean inCombat() {

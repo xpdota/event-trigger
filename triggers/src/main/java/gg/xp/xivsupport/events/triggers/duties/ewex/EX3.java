@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.duties.ewex;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
@@ -15,6 +16,8 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
+import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
+import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.ArenaPos;
@@ -488,8 +491,11 @@ public class EX3 implements FilteredEventHandler {
 					.toList();
 			// CENTER means we don't have position data for that combatant yet
 			if (occupied.stream().anyMatch(sector -> sector == ArenaSector.CENTER)) {
-				// Send a WS combatants update request
-				s.waitEvent(BaseEvent.class, (e) -> true);
+				// Send a WS combatants update request and wait for new state
+				s.accept(new RefreshSpecificCombatantsRequest(tetheredHeads.stream().map(XivCombatant::getId).toList()));
+				// TODO: This poses a problem for testing
+//				s.waitEvent(XivStateRecalculatedEvent.class, (e) -> true);
+				s.waitEvent(BaseEvent.class, (e) -> !(e instanceof RefreshSpecificCombatantsRequest));
 			}
 			else {
 				List<ArenaSector> safeSpots = new ArrayList<>(List.of(ArenaSector.SOUTHWEST, ArenaSector.WEST, ArenaSector.NORTHWEST, ArenaSector.NORTHEAST, ArenaSector.EAST, ArenaSector.SOUTHEAST));

@@ -22,16 +22,20 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivWorld;
 import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.sys.EnhancedReadWriteReentrantLock;
+import gg.xp.xivsupport.sys.LockAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -66,6 +70,10 @@ public class XivStateImpl implements XivState {
 	}
 
 	// Note: can be null until we have all the required data, but this should only happen very early on in init
+
+	/**
+	 * @return The current local player, or null if we don't have a player yet
+	 */
 	@Override
 	public XivPlayerCharacter getPlayer() {
 		CombatantData data = getData(getPlayerId());
@@ -76,6 +84,9 @@ public class XivStateImpl implements XivState {
 		return null;
 	}
 
+	/**
+	 * @param player Set the current player. Realistically, only the ID matters here.
+	 */
 	public void setPlayer(XivEntity player) {
 		log.info("Player changed to {}", player);
 		this.playerPartial = player;
@@ -93,32 +104,58 @@ public class XivStateImpl implements XivState {
 	}
 
 	// Note: can be null until we've seen a 01-line
+
+	/**
+	 * @return The current zone. May be null until the data has been seen.
+	 */
 	@Override
 	public XivZone getZone() {
 		return zone;
 	}
 
+	/**
+	 * @return The current map. Very likely to be null until a map change.
+	 */
 	@Override
 	public XivMap getMap() {
 		return map;
 	}
 
+	/**
+	 * Set the current zone
+	 *
+	 * @param zone The new zone
+	 */
 	public void setZone(XivZone zone) {
 		log.info("Zone changed to {}", zone);
 		this.zone = zone;
 	}
 
+	/**
+	 * Set the current map
+	 *
+	 * @param map The new map
+	 */
 	public void setMap(XivMap map) {
 		log.info("Map changed to {}", map);
 		this.map = map;
 	}
 
+	/**
+	 * Set the party list
+	 *
+	 * @param partyList Party info like what you would get from OP WS
+	 */
 	public void setPartyList(List<RawXivPartyInfo> partyList) {
 		this.partyListRaw = new ArrayList<>(partyList);
 		recalcState();
 		log.info("Party list changed to {}", this.partyListProcessed.stream().map(XivEntity::getName).collect(Collectors.joining(", ")));
 	}
 
+	/**
+	 * @return The current party. Note that unlike ACT/OP, this will report the primary player as being in the party
+	 * even if you aren't actually in a party.
+	 */
 	@Override
 	public List<XivPlayerCharacter> getPartyList() {
 		return new ArrayList<>(partyListProcessed);
@@ -139,132 +176,155 @@ public class XivStateImpl implements XivState {
 
 	private boolean recomputeAll() {
 		boolean changed = false;
-		for (CombatantData data : combatantData.values()) {
-			changed = data.recomputeIfDirty() || changed;
+		try (LockAdapter ignored = lock.read()){
+			for (CombatantData data : combatantData.values()) {
+				changed = data.recomputeIfDirty() || changed;
+			}
 		}
 		return changed;
 	}
 
-	// TODO: concurrency issues?
 	// TODO: emit events after state is recalculated reflecting actual changes
 	// Probably requires proper equals/hashcode on everything so we can actually compare them
 	private void recalcState() {
 
-		boolean changed = recomputeAll();
-		if (!changed) {
+		try (LockAdapter ignored = lock.write()){
+			// First, move removed stuff from the main map to the graveyard
+			Iterator<Map.Entry<Long, CombatantData>> iter = combatantData.entrySet().iterator();
+			while (iter.hasNext()) {
+				Map.Entry<Long, CombatantData> next = iter.next();
+				if (next.getValue().isRemoved()) {
+					graveyard.put(next.getKey(), new WeakReference<>(next.getValue().getComputed()));
+					iter.remove();
+				}
+			}
+			// Then, give everything an initial pass
+			recomputeAll();
+//		if (!changed) {
 //			return;
-		}
-		XivPlayerCharacter player = getPlayer();
-		Map<Long, List<CombatantData>> combatantsByNpcName = new HashMap<>();
-		combatantData.values().forEach(c -> {
-			XivCombatant computed = c.getComputed();
-			long ownerId = computed.getOwnerId();
-			if (ownerId != 0) {
-				c.setOwner(getCombatant(ownerId));
-			}
-			if (computed.getType() == CombatantType.NPC && computed.getLevel() < 70) {
-				combatantsByNpcName.computeIfAbsent(computed.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(c);
-			}
-		});
-		combatantsByNpcName.forEach((name, values) -> {
-			if (values.size() <= 2) {
-				// Skip if only one, nothing to do
-				// With two, unfortunately we can't really confirm if it's a fake or not,
-				// because we don't have any other alleged fakes to compare it to.
-				return;
-			}
-			// Sort highest HP first
-			values.sort(Comparator.<CombatantData, Long>comparing(npc -> npc.getComputed().getHp() != null ? npc.getComputed().getHp().getMax() : 0).reversed());
-			XivCombatant primaryCombatant = values.get(0).getComputed();
-			if (primaryCombatant.getHp() == null) {
-				return;
-			}
-			List<CombatantData> potentialFakes = new ArrayList<>();
-			for (CombatantData otherCombatant : values.subList(1, values.size())) {
-				XivCombatant computed = otherCombatant.getComputed();
-				if (computed.getHp() == null) {
-					continue;
+//		}
+			Map<Long, List<CombatantData>> combatantsByNpcName = new HashMap<>();
+			combatantData.values().forEach(c -> {
+				XivCombatant computed = c.getComputed();
+				long ownerId = computed.getOwnerId();
+				if (ownerId != 0) {
+					c.setOwner(getCombatant(ownerId));
 				}
-				if (computed.getHp().getMax() < primaryCombatant.getHp().getMax()
-						&& computed.getbNpcId() != primaryCombatant.getbNpcId()) {
-					potentialFakes.add(otherCombatant);
+				if (computed.getType() == CombatantType.NPC && computed.getLevel() < 70) {
+					combatantsByNpcName.computeIfAbsent(computed.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(c);
 				}
-			}
-			if (potentialFakes.size() >= 2) {
-				XivCombatant firstPossibleFake = potentialFakes.get(0).getComputed();
-				boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getComputed().getPos() != null && p.getComputed().getPos().equals(firstPossibleFake.getPos()));
-				if (allMatch) {
-					potentialFakes.forEach(fake -> {
-						fake.setFake(true);
-						// Also use Parent field to link to real NPC if it doesn't already have a real owner
-						if (fake.owner == null) {
-							fake.setOwner(primaryCombatant);
-						}
-					});
+			});
+			combatantsByNpcName.forEach((name, values) -> {
+				if (values.size() <= 2) {
+					// Skip if only one, nothing to do
+					// With two, unfortunately we can't really confirm if it's a fake or not,
+					// because we don't have any other alleged fakes to compare it to.
+					return;
 				}
-			}
-		});
-		// TODO: just doing a simple diff of this would be a great way to synthesize
-		// add/remove combatant events
-		List<XivPlayerCharacter> partyListProcessed = new ArrayList<>(partyListRaw.size());
-		partyListRaw.forEach(rawPartyMember -> {
-			if (!rawPartyMember.isInParty()) {
-				// Member of different alliance, ignore
-				// TODO: is there value in supporting alliance stuff?
-				return;
-			}
-			long id = rawPartyMember.getId();
-			CombatantData data = getOrCreateData(id);
-			data.setFromPartyInfo(rawPartyMember);
-			XivCombatant fullCombatant = data.getComputed();
-			if (fullCombatant instanceof XivPlayerCharacter xpc) {
-				partyListProcessed.add(xpc);
+				// Sort highest HP first
+				values.sort(Comparator.<CombatantData, Long>comparing(npc -> npc.getComputed().getHp() != null ? npc.getComputed().getHp().getMax() : 0).reversed());
+				XivCombatant primaryCombatant = values.get(0).getComputed();
+				if (primaryCombatant.getHp() == null) {
+					return;
+				}
+				List<CombatantData> potentialFakes = new ArrayList<>();
+				for (CombatantData otherCombatant : values.subList(1, values.size())) {
+					XivCombatant computed = otherCombatant.getComputed();
+					if (computed.getHp() == null) {
+						continue;
+					}
+					if (computed.getHp().getMax() < primaryCombatant.getHp().getMax()
+							&& computed.getbNpcId() != primaryCombatant.getbNpcId()) {
+						potentialFakes.add(otherCombatant);
+					}
+				}
+				if (potentialFakes.size() >= 2) {
+					XivCombatant firstPossibleFake = potentialFakes.get(0).getComputed();
+					boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getComputed().getPos() != null && p.getComputed().getPos().equals(firstPossibleFake.getPos()));
+					if (allMatch) {
+						potentialFakes.forEach(fake -> {
+							fake.setFake(true);
+							// Also use Parent field to link to real NPC if it doesn't already have a real owner
+							if (fake.owner == null) {
+								fake.setOwner(primaryCombatant);
+							}
+						});
+					}
+				}
+			});
+			// TODO: just doing a simple diff of this would be a great way to synthesize
+			// add/remove combatant events
+			List<XivPlayerCharacter> partyListProcessed = new ArrayList<>(partyListRaw.size());
+			partyListRaw.forEach(rawPartyMember -> {
+				if (!rawPartyMember.isInParty()) {
+					// Member of different alliance, ignore
+					// TODO: is there value in supporting alliance stuff?
+					return;
+				}
+				long id = rawPartyMember.getId();
+				CombatantData data = getOrCreateData(id);
+				data.setFromPartyInfo(rawPartyMember);
+				XivCombatant fullCombatant = data.getComputed();
+				if (fullCombatant instanceof XivPlayerCharacter xpc) {
+					partyListProcessed.add(xpc);
+				}
+				else {
+					log.warn("Party member was not a PC? {}", fullCombatant);
+				}
+			});
+			combatantCache = combatantData.values().stream()
+					.filter(CombatantData::includeInList)
+					.peek(CombatantData::recomputeIfDirty)
+					.collect(Collectors.toMap(CombatantData::getId, CombatantData::getComputed));
+			partyListProcessed.sort(Comparator.comparing(p -> {
+				if (getPlayerId() == p.getId()) {
+					// Always sort main player first
+					return -1;
+				}
+				else {
+					return pso.getSortOrder(p.getJob());
+				}
+			}));
+			XivPlayerCharacter player = getPlayer();
+			if (partyListProcessed.isEmpty() && player != null) {
+				this.partyListProcessed = List.of(player);
 			}
 			else {
-				log.warn("Party member was not a PC? {}", fullCombatant);
+				this.partyListProcessed = partyListProcessed;
 			}
-		});
-		combatantCache = combatantData.values().stream()
-				.filter(CombatantData::includeInList)
-				.peek(CombatantData::recomputeIfDirty)
-				.collect(Collectors.toMap(CombatantData::getId, CombatantData::getComputed));
-		partyListProcessed.sort(Comparator.comparing(p -> {
-			if (getPlayerId() == p.getId()) {
-				// Always sort main player first
-				return -1;
-			}
-			else {
-				return pso.getSortOrder(p.getJob());
-			}
-		}));
-		if (partyListProcessed.isEmpty() && player != null) {
-			this.partyListProcessed = List.of(player);
-		}
-		else {
-			this.partyListProcessed = partyListProcessed;
-		}
-		log.trace("Recalculated state, player is {}, party is {}", player, partyListProcessed);
-		// TODO: improve this
-		if (master != null) {
-			master.getQueue().push(new XivStateRecalculatedEvent());
-			//noinspection ReuseOfLocalVariable
-			player = getPlayer();
-			if (player != null) {
-				Job newJob = player.getJob();
-				if (lastPlayerJob != newJob) {
-					master.getQueue().push(new PlayerChangedJobEvent(lastPlayerJob, newJob));
+			log.trace("Recalculated state, player is {}, party is {}", player, partyListProcessed);
+			// TODO: improve this
+			if (master != null) {
+				master.getQueue().push(new XivStateRecalculatedEvent());
+				if (player != null) {
+					Job newJob = player.getJob();
+					if (lastPlayerJob != newJob) {
+						master.getQueue().push(new PlayerChangedJobEvent(lastPlayerJob, newJob));
+					}
+					lastPlayerJob = newJob;
 				}
-				lastPlayerJob = newJob;
 			}
 		}
 	}
 
+	/**
+	 * Check whether the current zone matches the given zone ID
+	 *
+	 * @param zoneId Zone ID to check against
+	 * @return true/false if it matches
+	 */
 	@Override
 	public boolean zoneIs(long zoneId) {
 		XivZone zone = getZone();
 		return zone != null && zone.getId() == zoneId;
 	}
 
+	/**
+	 * Provide state info for ALL combatants. Anything that was seen previously that is not in this list will be
+	 * considered to have been removed.
+	 *
+	 * @param combatants The list of all combatants
+	 */
 	public void setCombatants(List<RawXivCombatantInfo> combatants) {
 		Set<Long> processed = new HashSet<>(combatants.size());
 		combatants.forEach(combatant -> {
@@ -272,7 +332,7 @@ public class XivStateImpl implements XivState {
 			if (id == 0xE0000000L) {
 				return;
 			}
-			boolean alreadyProcessed = processed.add(id);
+			boolean alreadyProcessed = !processed.add(id);
 			if (alreadyProcessed) {
 				log.warn("Duplicate combatant data for id {}: ({})", id, combatant);
 			}
@@ -356,19 +416,16 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
-	public @Nullable XivCombatant getDeadCombatant(long id) {
-		CombatantData ref = getData(id);
-		if (ref == null) {
-			return null;
-		}
-		return ref.getComputed();
-	}
-
-	@Override
 	public @Nullable XivCombatant getCombatant(long id) {
 		CombatantData cbt = combatantData.get(id);
 		if (cbt == null) {
-			return null;
+			WeakReference<XivCombatant> graveyardCbtRef = graveyard.get(id);
+			if (graveyardCbtRef != null) {
+				return graveyardCbtRef.get();
+			}
+			else {
+				return null;
+			}
 		}
 		else {
 			return cbt.getComputed();
@@ -451,14 +508,22 @@ public class XivStateImpl implements XivState {
 	}
 
 	private final Map<Long, CombatantData> combatantData = new HashMap<>();
+	// This lock is ONLY for adding/removing entries to the map. Individual values have their own locks.
+	private final EnhancedReadWriteReentrantLock lock = new EnhancedReadWriteReentrantLock();
 	private Map<Long, XivCombatant> combatantCache = Collections.emptyMap();
+	private final Map<Long, WeakReference<XivCombatant>> graveyard = new HashMap<>();
 
 	private CombatantData getData(long cbtId) {
-		return combatantData.get(cbtId);
+		// TODO: make something like
+		try (LockAdapter ignored = lock.read()){
+			return combatantData.get(cbtId);
+		}
 	}
 
 	private CombatantData getOrCreateData(long cbtId) {
-		return combatantData.computeIfAbsent(cbtId, CombatantData::new);
+		try (LockAdapter ignored = lock.write()){
+			return combatantData.computeIfAbsent(cbtId, CombatantData::new);
+		}
 	}
 
 	//

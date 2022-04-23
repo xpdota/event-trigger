@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
 public class ReplayController {
@@ -90,8 +91,8 @@ public class ReplayController {
 		});
 	}
 
-	public void advanceByAsyncWhile(Supplier<Boolean> advWhile) {
-		exs.submit(() -> {
+	public Future<?> advanceByAsyncWhile(Supplier<Boolean> advWhile) {
+		return exs.submit(() -> {
 			for (; advWhile.get() && hasMoreEvents(); currentIndex++) {
 				Event event = events.get(currentIndex);
 				if (decompress && event instanceof Compressible compressedEvent) {
