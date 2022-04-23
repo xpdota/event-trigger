@@ -49,6 +49,8 @@ public interface XivState extends SubState {
 
 	void provideCombatantPos(XivCombatant target, Position newPos);
 
+	void provideActFallbackCombatant(XivCombatant cbt);
+
 	void flushProvidedValues();
 
 	@Nullable XivCombatant getDeadCombatant(long id);

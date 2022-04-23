@@ -13,7 +13,9 @@ import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
@@ -25,13 +27,15 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -45,19 +49,11 @@ public class XivStateImpl implements XivState {
 	private XivMap map = XivMap.UNKNOWN;
 	// EARLY player info before we have combatant data
 	private XivEntity playerPartial;
-	// FULL player info after we get the stuff we need
-	private XivPlayerCharacter player;
 	// For override
 	private XivEntity playerTmpOverride;
 	// TODO: see if same-world parties with out-of-zone players would break this
 	private volatile @NotNull List<RawXivPartyInfo> partyListRaw = Collections.emptyList();
 	private volatile @NotNull List<XivPlayerCharacter> partyListProcessed = Collections.emptyList();
-	private volatile @NotNull Map<Long, RawXivCombatantInfo> combatantsRaw = Collections.emptyMap();
-	private volatile @NotNull Map<Long, XivCombatant> combatantsProcessed = Collections.emptyMap();
-	private final Map<Long, HitPoints> hpOverrides = new HashMap<>();
-	private final Map<Long, Position> posOverrides = new HashMap<>();
-	private volatile OnlineStatus playerOnlineStatus = OnlineStatus.UNKNOWN;
-	private final Map<Long, SoftReference<XivCombatant>> graveyard = new HashMap<>();
 
 	private Job lastPlayerJob;
 
@@ -72,7 +68,12 @@ public class XivStateImpl implements XivState {
 	// Note: can be null until we have all the required data, but this should only happen very early on in init
 	@Override
 	public XivPlayerCharacter getPlayer() {
-		return player;
+		CombatantData data = getData(getPlayerId());
+		XivCombatant cbt = data != null ? data.getComputed() : null;
+		if (cbt instanceof XivPlayerCharacter xpc) {
+			return xpc;
+		}
+		return null;
 	}
 
 	public void setPlayer(XivEntity player) {
@@ -123,99 +124,46 @@ public class XivStateImpl implements XivState {
 		return new ArrayList<>(partyListProcessed);
 	}
 
+	private long getPlayerId() {
+		if (playerTmpOverride != null) {
+			return playerTmpOverride.getId();
+		}
+		else if (playerPartial != null) {
+			return playerPartial.getId();
+		}
+		else {
+			// These shouldn't both be null for very long, so just wait until we get the data.
+			return -1;
+		}
+	}
+
+	private boolean recomputeAll() {
+		boolean changed = false;
+		for (CombatantData data : combatantData.values()) {
+			changed = data.recomputeIfDirty() || changed;
+		}
+		return changed;
+	}
 
 	// TODO: concurrency issues?
 	// TODO: emit events after state is recalculated reflecting actual changes
 	// Probably requires proper equals/hashcode on everything so we can actually compare them
 	private void recalcState() {
-		final long playerId;
-		if (playerTmpOverride != null) {
-			playerId = playerTmpOverride.getId();
+
+		boolean changed = recomputeAll();
+		if (!changed) {
+//			return;
 		}
-		else if (playerPartial != null) {
-			playerId = playerPartial.getId();
-		}
-		else {
-			// These shouldn't both be null for very long, so just wait until we get the data.
-			return;
-		}
-		{
-			RawXivCombatantInfo playerCombatantInfo = combatantsRaw.get(playerId);
-			if (playerCombatantInfo != null) {
-				player = new XivPlayerCharacter(
-						playerCombatantInfo.getId(),
-						playerCombatantInfo.getName(),
-						Job.getById(playerCombatantInfo.getJobId()),
-						// TODO
-						XivWorld.of(),
-						true,
-						playerCombatantInfo.getRawType(),
-						hpOverrides.getOrDefault(playerCombatantInfo.getId(), playerCombatantInfo.getHP()),
-						playerCombatantInfo.getMP(),
-						posOverrides.getOrDefault(playerCombatantInfo.getId(), playerCombatantInfo.getPos()),
-						playerCombatantInfo.getBnpcId(),
-						playerCombatantInfo.getBnpcNameId(),
-						playerCombatantInfo.getPartyType(),
-						playerCombatantInfo.getLevel(),
-						playerCombatantInfo.getOwnerId());
-			}
-		}
-		Map<Long, XivCombatant> combatantsProcessed = new HashMap<>(combatantsRaw.size());
-		Map<Long, List<XivCombatant>> combatantsByNpcName = new HashMap<>();
-		combatantsRaw.forEach((unused, combatant) -> {
-			long id = combatant.getId();
-			long jobId = combatant.getJobId();
-			long rawType = combatant.getRawType();
-			XivCombatant value;
-			if (rawType == 1) {
-				value = new XivPlayerCharacter(
-						id,
-						combatant.getName(),
-						Job.getById(jobId),
-						// TODO
-						XivWorld.of(),
-						false,
-						combatant.getRawType(),
-						hpOverrides.getOrDefault(combatant.getId(), combatant.getHP()),
-						combatant.getMP(),
-						posOverrides.getOrDefault(combatant.getId(), combatant.getPos()),
-						combatant.getBnpcId(),
-						combatant.getBnpcNameId(),
-						combatant.getPartyType(),
-						combatant.getLevel(),
-						combatant.getOwnerId());
-			}
-			else {
-				value = new XivCombatant(
-						id,
-						combatant.getName(),
-						false,
-						false,
-						combatant.getRawType(),
-						hpOverrides.getOrDefault(combatant.getId(), combatant.getHP()),
-						combatant.getMP(),
-						posOverrides.getOrDefault(combatant.getId(), combatant.getPos()),
-						combatant.getBnpcId(),
-						combatant.getBnpcNameId(),
-						combatant.getPartyType(),
-						combatant.getLevel(),
-						combatant.getOwnerId());
-				// 9020 seems to be a guaranteed fake
-				if (combatant.getBnpcId() == 9020) {
-					value.setFake(true);
-				}
-				// For 70 and above, it seems like 9020 fake detection is fine. If lower than that, fall back to
-				// NPC name + HP detection.
-				else if (combatant.getLevel() < 70) {
-					combatantsByNpcName.computeIfAbsent(value.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(value);
-				}
-			}
-			combatantsProcessed.put(id, value);
-		});
-		combatantsProcessed.values().forEach(c -> {
-			long ownerId = c.getOwnerId();
+		XivPlayerCharacter player = getPlayer();
+		Map<Long, List<CombatantData>> combatantsByNpcName = new HashMap<>();
+		combatantData.values().forEach(c -> {
+			XivCombatant computed = c.getComputed();
+			long ownerId = computed.getOwnerId();
 			if (ownerId != 0) {
-				c.setParent(combatantsProcessed.get(ownerId));
+				c.setOwner(getCombatant(ownerId));
+			}
+			if (computed.getType() == CombatantType.NPC && computed.getLevel() < 70) {
+				combatantsByNpcName.computeIfAbsent(computed.getbNpcNameId(), (ignore) -> new ArrayList<>()).add(c);
 			}
 		});
 		combatantsByNpcName.forEach((name, values) -> {
@@ -226,55 +174,39 @@ public class XivStateImpl implements XivState {
 				return;
 			}
 			// Sort highest HP first
-			values.sort(Comparator.<XivCombatant, Long>comparing(npc -> npc.getHp() != null ? npc.getHp().getMax() : 0).reversed());
-			XivCombatant primaryCombatant = values.get(0);
+			values.sort(Comparator.<CombatantData, Long>comparing(npc -> npc.getComputed().getHp() != null ? npc.getComputed().getHp().getMax() : 0).reversed());
+			XivCombatant primaryCombatant = values.get(0).getComputed();
 			if (primaryCombatant.getHp() == null) {
 				return;
 			}
-			List<XivCombatant> potentialFakes = new ArrayList<>();
-			for (XivCombatant otherCombatant : values.subList(1, values.size())) {
-				if (otherCombatant.getHp() == null) {
+			List<CombatantData> potentialFakes = new ArrayList<>();
+			for (CombatantData otherCombatant : values.subList(1, values.size())) {
+				XivCombatant computed = otherCombatant.getComputed();
+				if (computed.getHp() == null) {
 					continue;
 				}
-				if (otherCombatant.getHp().getMax() < primaryCombatant.getHp().getMax()
-						&& otherCombatant.getbNpcId() != primaryCombatant.getbNpcId()) {
+				if (computed.getHp().getMax() < primaryCombatant.getHp().getMax()
+						&& computed.getbNpcId() != primaryCombatant.getbNpcId()) {
 					potentialFakes.add(otherCombatant);
 				}
 			}
 			if (potentialFakes.size() >= 2) {
-				XivCombatant firstPossibleFake = potentialFakes.get(0);
-				boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getPos() != null && p.getPos().equals(firstPossibleFake.getPos()));
+				XivCombatant firstPossibleFake = potentialFakes.get(0).getComputed();
+				boolean allMatch = potentialFakes.subList(1, potentialFakes.size()).stream().allMatch(p -> p.getComputed().getPos() != null && p.getComputed().getPos().equals(firstPossibleFake.getPos()));
 				if (allMatch) {
 					potentialFakes.forEach(fake -> {
 						fake.setFake(true);
 						// Also use Parent field to link to real NPC if it doesn't already have a real owner
-						if (fake.getParent() == null) {
-							fake.setParent(primaryCombatant);
+						if (fake.owner == null) {
+							fake.setOwner(primaryCombatant);
 						}
 					});
 				}
 			}
 		});
-		// lazy but works
-		if (player != null) {
-			combatantsProcessed.put(playerId, player);
-		}
-		combatantsProcessed.values().forEach(c -> {
-			long ownerId = c.getOwnerId();
-			if (ownerId != 0) {
-				c.setParent(combatantsProcessed.get(ownerId));
-			}
-			// TODO: find a place for this logic to live
-			// Early star is a badly-behaved NPC - it doesn't properly remove itself or buffs that happened to be on it
-			if (c.getbNpcId() == 7245) {
-				c.setFake(true);
-			}
-		});
 		// TODO: just doing a simple diff of this would be a great way to synthesize
 		// add/remove combatant events
-		this.combatantsProcessed = combatantsProcessed;
 		List<XivPlayerCharacter> partyListProcessed = new ArrayList<>(partyListRaw.size());
-		List<RawXivPartyInfo> partyMembersNotInCombatants = new ArrayList<>();
 		partyListRaw.forEach(rawPartyMember -> {
 			if (!rawPartyMember.isInParty()) {
 				// Member of different alliance, ignore
@@ -282,44 +214,26 @@ public class XivStateImpl implements XivState {
 				return;
 			}
 			long id = rawPartyMember.getId();
-			XivCombatant fullCombatant = combatantsProcessed.get(id);
-			if (fullCombatant instanceof XivPlayerCharacter) {
-				partyListProcessed.add((XivPlayerCharacter) fullCombatant);
+			CombatantData data = getOrCreateData(id);
+			data.setFromPartyInfo(rawPartyMember);
+			XivCombatant fullCombatant = data.getComputed();
+			if (fullCombatant instanceof XivPlayerCharacter xpc) {
+				partyListProcessed.add(xpc);
 			}
 			else {
-				partyMembersNotInCombatants.add(rawPartyMember);
-				partyListProcessed.add(new XivPlayerCharacter(
-						rawPartyMember.getId(),
-						rawPartyMember.getName(),
-						Job.getById(rawPartyMember.getJobId()),
-						XivWorld.createXivWorld(rawPartyMember.getWorldId()),
-						false,
-						0,
-						null,
-						null,
-						null,
-						0,
-						0,
-						0,
-						0,
-						0
-				));
+				log.warn("Party member was not a PC? {}", fullCombatant);
 			}
 		});
-		if (!partyMembersNotInCombatants.isEmpty()) {
-			if (log.isTraceEnabled()) {
-				log.trace("Party member(s) not in combatants: {}", partyMembersNotInCombatants.stream()
-						.map(raw -> raw.getName() != null && !raw.getName().isEmpty() ? raw.getName() : ("0x" + Long.toString(raw.getId(), 16)))
-						.collect(Collectors.joining(", ")));
-			}
-		}
+		combatantCache = combatantData.values().stream()
+				.filter(CombatantData::includeInList)
+				.peek(CombatantData::recomputeIfDirty)
+				.collect(Collectors.toMap(CombatantData::getId, CombatantData::getComputed));
 		partyListProcessed.sort(Comparator.comparing(p -> {
-			if (player != null && player.getId() == p.getId()) {
+			if (getPlayerId() == p.getId()) {
 				// Always sort main player first
 				return -1;
 			}
 			else {
-				// TODO: customizable party sorting
 				return pso.getSortOrder(p.getJob());
 			}
 		}));
@@ -333,6 +247,8 @@ public class XivStateImpl implements XivState {
 		// TODO: improve this
 		if (master != null) {
 			master.getQueue().push(new XivStateRecalculatedEvent());
+			//noinspection ReuseOfLocalVariable
+			player = getPlayer();
 			if (player != null) {
 				Job newJob = player.getJob();
 				if (lastPlayerJob != newJob) {
@@ -341,7 +257,6 @@ public class XivStateImpl implements XivState {
 				lastPlayerJob = newJob;
 			}
 		}
-		combatantsProcessed.forEach((id, cbt) -> graveyard.putIfAbsent(id, new SoftReference<>(cbt)));
 	}
 
 	@Override
@@ -351,64 +266,56 @@ public class XivStateImpl implements XivState {
 	}
 
 	public void setCombatants(List<RawXivCombatantInfo> combatants) {
-		Map<Long, RawXivCombatantInfo> combatantsRaw = new HashMap<>(combatants.size());
+		Set<Long> processed = new HashSet<>(combatants.size());
 		combatants.forEach(combatant -> {
 			long id = combatant.getId();
-			// Fake/environment actors
-			// TODO: should we still be doing this?
 			if (id == 0xE0000000L) {
 				return;
 			}
-			RawXivCombatantInfo old = combatantsRaw.put(id, combatant);
-			if (old != null) {
-				log.warn("Duplicate combatant data for id {}: old ({}) vs new ({})", id, old, combatant);
+			boolean alreadyProcessed = processed.add(id);
+			if (alreadyProcessed) {
+				log.warn("Duplicate combatant data for id {}: ({})", id, combatant);
+			}
+			CombatantData data = getOrCreateData(id);
+			data.setRaw(combatant);
+		});
+		combatantData.values().forEach(cbtInfo -> {
+			if (!processed.contains(cbtInfo.getId())) {
+				cbtInfo.setRemoved(true);
 			}
 		});
 		log.trace("Received info on {} combatants", combatants.size());
-		this.combatantsRaw = combatantsRaw;
-//		hpOverrides.clear();
-		posOverrides.clear();
 		recalcState();
 	}
 
 	public void setSpecificCombatants(List<RawXivCombatantInfo> combatants) {
-		Map<Long, RawXivCombatantInfo> combatantsRaw = new HashMap<>(this.combatantsRaw.size() + combatants.size());
-		combatantsRaw.putAll(this.combatantsRaw);
 		combatants.forEach(combatant -> {
 			long id = combatant.getId();
-//			hpOverrides.remove(id);
-			// Fake/environment actors
-			// TODO: should we still be doing this?
 			if (id == 0xE0000000L) {
 				return;
 			}
-			combatant.getPos();
-			posOverrides.remove(combatant.getId());
-			combatantsRaw.put(id, combatant);
+			CombatantData data = getOrCreateData(id);
+			data.setRaw(combatant);
 		});
 		log.trace("Received info on {} combatants", combatants.size());
-		this.combatantsRaw = combatantsRaw;
 		recalcState();
 	}
 
 	@Override
 	public void removeSpecificCombatant(long idToRemove) {
-		combatantsRaw.remove(idToRemove);
-		XivCombatant cbt = combatantsProcessed.get(idToRemove);
-		if (cbt != null) {
-			graveyard.put(cbt.getId(), new SoftReference<>(cbt));
-		}
+		getOrCreateData(idToRemove).setRemoved(true);
+		recalcState();
 	}
 
 	@Override
 	public Map<Long, XivCombatant> getCombatants() {
-		return Collections.unmodifiableMap(combatantsProcessed);
+		return Collections.unmodifiableMap(combatantCache);
 	}
 
 	// TODO: does this still need to be a copy?
 	@Override
 	public List<XivCombatant> getCombatantsListCopy() {
-		return new ArrayList<>(combatantsProcessed.values());
+		return new ArrayList<>(combatantCache.values());
 	}
 
 	@Override
@@ -424,47 +331,19 @@ public class XivStateImpl implements XivState {
 
 	@Override
 	public void provideCombatantHP(XivCombatant target, @NotNull HitPoints hitPoints) {
-		HitPoints oldOverride = hpOverrides.put(target.getId(), hitPoints);
-		// Only trigger refresh if something actually changed, or there is already a pending refresh
-		if (dirtyOverrides) {
-			return;
-		}
-		// The only time we want to completely ignore an update is if the new override has no real effect.
-		// i.e. it is the same as the current HP, and either there is no previous override, or the previous override is
-		// the same as the current.
-
-		// Old override
-		if (oldOverride == null || oldOverride.equals(hitPoints)) {
-			// If there was no previous override, and the HP from WS == HP from the event, ignore
-			XivCombatant cbt = combatantsProcessed.get(target.getId());
-			if (cbt != null) {
-				// new override = existing WS hp
-				HitPoints existingHp = cbt.getHp();
-				if (hitPoints.equals(existingHp)) {
-					return;
-				}
-			}
-		}
+		getOrCreateData(target.getId()).setHpOverride(hitPoints);
 		dirtyOverrides = true;
 	}
 
 	@Override
 	public void provideCombatantPos(XivCombatant target, Position newPos) {
-		Position oldOverride = posOverrides.put(target.getId(), newPos);
-		// Only trigger refresh if something actually changed, or there is already a pending refresh
-		if (dirtyOverrides) {
-			return;
-		}
-		if (oldOverride == null || oldOverride.equals(newPos)) {
-			// If there was no previous override, and the HP from WS == HP from the event, ignore
-			XivCombatant cbt = combatantsProcessed.get(target.getId());
-			if (oldOverride == null && cbt != null) {
-				Position existingPos = cbt.getPos();
-				if (newPos.equals(existingPos)) {
-					return;
-				}
-			}
-		}
+		getOrCreateData(target.getId()).setPosOverride(newPos);
+		dirtyOverrides = true;
+	}
+
+	@Override
+	public void provideActFallbackCombatant(XivCombatant cbt) {
+		getOrCreateData(cbt.getId()).setFromOtherActLine(cbt);
 		dirtyOverrides = true;
 	}
 
@@ -478,11 +357,22 @@ public class XivStateImpl implements XivState {
 
 	@Override
 	public @Nullable XivCombatant getDeadCombatant(long id) {
-		SoftReference<XivCombatant> ref = graveyard.get(id);
+		CombatantData ref = getData(id);
 		if (ref == null) {
 			return null;
 		}
-		return ref.get();
+		return ref.getComputed();
+	}
+
+	@Override
+	public @Nullable XivCombatant getCombatant(long id) {
+		CombatantData cbt = combatantData.get(id);
+		if (cbt == null) {
+			return null;
+		}
+		else {
+			return cbt.getComputed();
+		}
 	}
 
 	private volatile boolean inCombat;
@@ -496,7 +386,6 @@ public class XivStateImpl implements XivState {
 	public void inCombatChange(EventContext context, InCombatChangeEvent event) {
 		this.inCombat = event.isInCombat();
 	}
-
 
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public void zoneChange(EventContext context, ZoneChangeEvent event) {
@@ -519,12 +408,19 @@ public class XivStateImpl implements XivState {
 
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public void combatantAdded(EventContext context, RawAddCombatantEvent event) {
+		getOrCreateData(event.getEntity().getId()).setRawFromAct(event.getFullInfo());
 		context.accept(new RefreshSpecificCombatantsRequest(Collections.singletonList(event.getEntity().getId())));
+		recalcState();
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public void combatantRemoved(EventContext context, RawRemoveCombatantEvent event) {
+		CombatantData data = getData(event.getEntity().getId());
+		if (data != null) {
+			data.setRemoved(true);
+		}
 		context.accept(new RefreshCombatantsRequest());
+		recalcState();
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
@@ -545,22 +441,210 @@ public class XivStateImpl implements XivState {
 	// For now, only caring about the primary player's online status so we can hide overlays in cutscenes
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public void onlineStatus(EventContext context, RawOnlineStatusChanged event) {
-		if (player != null && event.getTargetId() == player.getId()) {
-			OnlineStatus oldStatus = playerOnlineStatus;
-			OnlineStatus newStatus = OnlineStatus.forId(event.getRawStatusId());
-			if (newStatus != oldStatus) {
-				playerOnlineStatus = newStatus;
-				log.info("Player status changed: {} -> {}", oldStatus, newStatus);
-				context.accept(new PrimaryPlayerOnlineStatusChangedEvent(oldStatus, newStatus));
-			}
+		CombatantData data = getOrCreateData(event.getTargetId());
+		OnlineStatus oldStatus = data.getStatus();
+		OnlineStatus newStatus = OnlineStatus.forId(event.getRawStatusId());
+		data.setStatus(newStatus);
+		if (event.getTargetId() == getPlayerId()) {
+			context.accept(new PrimaryPlayerOnlineStatusChangedEvent(oldStatus, newStatus));
 		}
 	}
 
-	// TODO: make a single class with all the overrides and data sources as mutable fields, so that you don't have to
-	// recalculate all state every time
+	private final Map<Long, CombatantData> combatantData = new HashMap<>();
+	private Map<Long, XivCombatant> combatantCache = Collections.emptyMap();
 
-//
-//	private static class CombatantData {
-//
-//	}
+	private CombatantData getData(long cbtId) {
+		return combatantData.get(cbtId);
+	}
+
+	private CombatantData getOrCreateData(long cbtId) {
+		return combatantData.computeIfAbsent(cbtId, CombatantData::new);
+	}
+
+	//
+	private final class CombatantData {
+		// TODO: add party info?
+		private final long id;
+		private @Nullable RawXivCombatantInfo raw;
+		private @Nullable Position posOverride;
+		private @Nullable HitPoints hpOverride;
+		private @Nullable XivCombatant fromOtherActLine;
+		private @Nullable RawXivPartyInfo fromPartyInfo;
+		private OnlineStatus status = OnlineStatus.UNKNOWN;
+		private XivCombatant computed;
+		private boolean fake;
+		private volatile boolean dirty;
+		private boolean removed;
+		private XivCombatant owner;
+
+		private CombatantData(long id) {
+			this.id = id;
+		}
+
+		public long getId() {
+			return id;
+		}
+
+		public void setFake(boolean fake) {
+			if (fake != this.fake) {
+				this.fake = fake;
+				dirty = true;
+			}
+		}
+
+		public void setStatus(OnlineStatus status) {
+			if (this.status != status) {
+				this.status = status;
+				dirty = true;
+			}
+		}
+
+		public void setRawFromAct(@Nullable RawXivCombatantInfo raw) {
+			if (this.raw == null) {
+				setRaw(raw);
+			}
+		}
+
+		public void setRaw(@Nullable RawXivCombatantInfo raw) {
+			if (!Objects.equals(this.raw, raw)) {
+				this.raw = raw;
+				this.posOverride = null;
+				dirty = true;
+			}
+		}
+
+		public void setFromPartyInfo(RawXivPartyInfo fromPartyInfo) {
+			this.fromPartyInfo = fromPartyInfo;
+			dirty = true;
+		}
+
+		public void setPosOverride(@Nullable Position posOverride) {
+			if (!Objects.equals(this.posOverride, posOverride)) {
+				this.posOverride = posOverride;
+				dirty = true;
+			}
+		}
+
+		public void setHpOverride(@Nullable HitPoints hpOverride) {
+			if (!Objects.equals(this.hpOverride, hpOverride)) {
+				this.hpOverride = hpOverride;
+				dirty = true;
+			}
+		}
+
+		public void setFromOtherActLine(XivCombatant fromOtherActLine) {
+			this.fromOtherActLine = fromOtherActLine;
+			dirty = true;
+		}
+
+		public void setRemoved(boolean removed) {
+			this.removed = removed;
+			dirty = true;
+		}
+
+		public void setOwner(XivCombatant combatant) {
+			this.owner = combatant;
+			dirty = true;
+		}
+
+		public OnlineStatus getStatus() {
+			return status;
+		}
+
+		public boolean hasSufficientData() {
+			return raw != null;
+		}
+
+		public boolean isRemoved() {
+			return removed;
+		}
+
+		public boolean includeInList() {
+			return !removed && hasSufficientData();
+		}
+
+		public boolean recomputeIfDirty() {
+			if (dirty) {
+				recompute();
+				return true;
+			}
+			return false;
+		}
+
+		private synchronized void recompute() {
+			RawXivCombatantInfo raw = this.raw;
+			// Each data element has a different "priority" for each field
+			XivCombatant fromOther = fromOtherActLine;
+			RawXivPartyInfo fromPartyInfo = this.fromPartyInfo;
+			String name = raw != null ? raw.getName() : (fromOther != null ? fromOther.getName() : (fromPartyInfo != null ? fromPartyInfo.getName() : "Error: No Name"));
+			long jobId = raw != null ? raw.getJobId() : (fromPartyInfo != null ? fromPartyInfo.getJobId() : 0);
+			XivWorld world = XivWorld.of();
+			long rawType = raw != null ? raw.getRawType() : (id >= 0x4000_0000 ? 2 : 1);
+
+			// HP prefers trusted ACT hp lines
+			HitPoints hp = hpOverride != null ? hpOverride : raw != null ? raw.getHP() : null;
+			ManaPoints mp = raw != null ? raw.getMP() : null;
+			Position pos = posOverride != null ? posOverride : raw != null ? raw.getPos() : fromOther != null ? fromOther.getPos() : null;
+
+			XivCombatant computed;
+			long bnpcId = raw != null ? raw.getBnpcId() : 0;
+			long bnpcNameId = raw != null ? raw.getBnpcNameId() : 0;
+			long partyType = raw != null ? raw.getPartyType() : 0;
+			long level = raw != null ? raw.getLevel() : fromPartyInfo != null ? fromPartyInfo.getLevel() : 90;
+			long ownerId = raw != null ? raw.getOwnerId() : 0;
+			// TODO: changing primary player should dirty this
+			boolean isPlayer = rawType == 1;
+			if (isPlayer) {
+				computed = new XivPlayerCharacter(
+						id,
+						name,
+						Job.getById(jobId),
+						world,
+						id == getPlayerId(),
+						rawType,
+						hp,
+						mp,
+						pos,
+						bnpcId,
+						bnpcNameId,
+						partyType,
+						level,
+						ownerId
+				);
+			}
+			else {
+				computed = new XivCombatant(
+						id,
+						name,
+						false,
+						false,
+						rawType,
+						hp,
+						mp,
+						pos,
+						bnpcId,
+						bnpcNameId,
+						partyType,
+						level,
+						ownerId
+				);
+				if (bnpcId == 9020) {
+					fake = true;
+				}
+			}
+			// Earthly star workaround
+			if (fake || computed.getbNpcId() == 7245) {
+				fake = true;
+				computed.setFake(true);
+			}
+			this.computed = computed;
+			dirty = false;
+		}
+
+		// TODO: sync, or just update atomically?
+		public synchronized XivCombatant getComputed() {
+			recomputeIfDirty();
+			return computed;
+		}
+	}
 }

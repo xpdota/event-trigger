@@ -154,8 +154,12 @@ public class StatusEffectRepository {
 	@HandleEvents
 	public void workaroundForActNotRemovingCombatants(EventContext context, XivStateRecalculatedEvent event) {
 		Set<Long> combatantsThatExist = state.getCombatants().keySet();
-		synchronized (lock) {
-			buffs.keySet().removeIf(key -> !combatantsThatExist.contains(key.getTarget().getId()));
+		// Size will be 0 in situations such as unit testing where we'd rather not have this behavior
+		// TODO: we track dead stuff, just do that instead?
+		if (!combatantsThatExist.isEmpty()) {
+			synchronized (lock) {
+				buffs.keySet().removeIf(key -> !combatantsThatExist.contains(key.getTarget().getId()));
+			}
 		}
 	}
 

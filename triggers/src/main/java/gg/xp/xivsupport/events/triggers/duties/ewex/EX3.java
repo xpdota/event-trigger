@@ -319,7 +319,7 @@ public class EX3 implements FilteredEventHandler {
 			if (sector != null) {
 				return sector;
 			}
-			XivCombatant newCbtData = state.getCombatants().get(combatantId);
+			XivCombatant newCbtData = state.getCombatant(combatantId);
 			ArenaSector newSector;
 			newSector = arenaPos.forCombatant(newCbtData);
 			if (newSector == ArenaSector.CENTER || newSector == ArenaSector.UNKNOWN) {

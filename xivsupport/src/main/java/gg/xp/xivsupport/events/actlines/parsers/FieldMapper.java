@@ -106,8 +106,10 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public XivCombatant getEntity(K idKey, K nameKey, K currentHpKey, K maxHpKey, K currentMpKey, K maxMpKey, K posXKey, K posYKey, K posZKey, K headingKey) {
 		XivCombatant cbt = getEntity(idKey, nameKey);
+		if (cbt.isEnvironment()) {
+			return cbt;
+		}
 		long id = cbt.getId();
-		boolean dirty = false;
 		// Only bother with HP if we either have no idea what it is, or this is a 'trusted' hp line (i.e. not just reading from memory)
 		if (cbt.getHp() == null || trustedHp) {
 			if (currentHpKey != null && maxHpKey != null) {
@@ -118,14 +120,12 @@ public class FieldMapper<K extends Enum<K>> {
 					if (maxHp != null) {
 						// TODO: collect these all then do them once at the end
 						state.provideCombatantHP(cbt, new HitPoints(curHp, maxHp));
-						dirty = true;
 					}
 					// Plan B - we only have current available, so use stored max and assume it's the same (since max HP changes
 					// are not that common).
 					else {
 						if (cbt.getHp() != null) {
 							state.provideCombatantHP(cbt, new HitPoints(curHp, cbt.getHp().getMax()));
-							dirty = true;
 						}
 					}
 				}
@@ -140,18 +140,13 @@ public class FieldMapper<K extends Enum<K>> {
 			if (x != null && y != null && z != null && h != null) {
 				Position pos = new Position(x, y, z, h);
 				state.provideCombatantPos(cbt, pos);
-				dirty = true;
-				cbt = new XivCombatant(cbt.getId(), cbt.getName(), cbt.isPc(), cbt.isThePlayer(), cbt.getRawType(), cbt.getHp(), cbt.getMp(), pos, cbt.getbNpcId(), cbt.getbNpcNameId(), cbt.getPartyType(), cbt.getLevel(), cbt.getOwnerId());
+//				cbt = new XivCombatant(cbt.getId(), cbt.getName(), cbt.isPc(), cbt.isThePlayer(), cbt.getRawType(), cbt.getHp(), cbt.getMp(), pos, cbt.getbNpcId(), cbt.getbNpcNameId(), cbt.getPartyType(), cbt.getLevel(), cbt.getOwnerId());
 			}
 		}
-		if (dirty) {
-			// If we actually touched anything, then what we need to do is
-			state.flushProvidedValues();
-//			flushStateOverrides();
-			XivCombatant stateCbt = state.getCombatants().get(id);
-			if (stateCbt != null) {
-				return stateCbt;
-			}
+		state.provideActFallbackCombatant(cbt);
+		XivCombatant stateCbt = state.getCombatant(id);
+		if (stateCbt != null) {
+			return stateCbt;
 		}
 		return cbt;
 	}
@@ -159,10 +154,7 @@ public class FieldMapper<K extends Enum<K>> {
 	public XivCombatant getEntity(K idKey, K nameKey) {
 		long id = getHex(idKey);
 		String name = getString(nameKey);
-		XivCombatant xivCombatant = state.getCombatants().get(id);
-		if (xivCombatant == null) {
-			xivCombatant = state.getDeadCombatant(id);
-		}
+		XivCombatant xivCombatant = state.getCombatant(id);
 		if (xivCombatant != null) {
 			return xivCombatant;
 		}
@@ -176,7 +168,10 @@ public class FieldMapper<K extends Enum<K>> {
 				case GET:
 					combatantsToUpdate.add(id);
 			}
-			return new XivCombatant(id, name);
+			XivCombatant cbt = new XivCombatant(id, name);
+			state.provideActFallbackCombatant(cbt);
+			XivCombatant stateCbtNew = state.getCombatant(id);
+			return stateCbtNew == null ? cbt : stateCbtNew;
 		}
 	}
 
@@ -235,9 +230,6 @@ public class FieldMapper<K extends Enum<K>> {
 	}
 
 	public void flushStateOverrides() {
-		if (recalcNeeded) {
-			state.flushProvidedValues();
-		}
-		recalcNeeded = false;
+		state.flushProvidedValues();
 	}
 }
