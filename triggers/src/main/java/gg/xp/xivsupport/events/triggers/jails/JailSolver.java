@@ -191,8 +191,8 @@ public class JailSolver implements FilteredEventHandler {
 			return;
 		}
 		XivCombatant target = event.getTarget();
-		if (target instanceof XivPlayerCharacter) {
-			jailedPlayers.add((XivPlayerCharacter) target);
+		if (target instanceof XivPlayerCharacter pc) {
+			jailedPlayers.add(pc);
 		}
 		log.info("Jailed Players: {}", jailedPlayers.stream().map(XivEntity::getName).collect(Collectors.joining(", ")));
 

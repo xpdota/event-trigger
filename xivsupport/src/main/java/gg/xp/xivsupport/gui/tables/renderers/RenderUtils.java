@@ -8,8 +8,8 @@ public final class RenderUtils {
 	}
 
 	public static void setTooltip(Component component, String tooltip) {
-		if (component instanceof JComponent) {
-			((JComponent) component).setToolTipText(tooltip);
+		if (component instanceof JComponent jc) {
+			jc.setToolTipText(tooltip);
 		}
 	}
 }

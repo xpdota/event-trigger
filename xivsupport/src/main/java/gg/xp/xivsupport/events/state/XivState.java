@@ -32,7 +32,7 @@ public interface XivState extends SubState {
 
 	Map<Long, XivCombatant> getCombatants();
 
-	default XivCombatant getCombatant(long id) {
+	default @Nullable XivCombatant getCombatant(long id) {
 		return getCombatants().get(id);
 	}
 
@@ -49,9 +49,9 @@ public interface XivState extends SubState {
 
 	void provideCombatantPos(XivCombatant target, Position newPos);
 
-	void flushProvidedValues();
+	void provideActFallbackCombatant(XivCombatant cbt);
 
-	@Nullable XivCombatant getDeadCombatant(long id);
+	void flushProvidedValues();
 
 	default @Nullable Job getPlayerJob() {
 		XivPlayerCharacter player = getPlayer();

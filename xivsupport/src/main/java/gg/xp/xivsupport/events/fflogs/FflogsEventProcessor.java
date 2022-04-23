@@ -64,7 +64,7 @@ public class FflogsEventProcessor {
 		if (realId == null) {
 			return new XivCombatant(id, "Combatant " + id);
 		}
-		XivCombatant knownCbt = state.getCombatants().get(realId);
+		XivCombatant knownCbt = state.getCombatant(realId);
 		if (knownCbt == null) {
 			return new XivCombatant(id, "Combatant " + id);
 		}

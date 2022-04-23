@@ -76,7 +76,7 @@ public class SequentialTriggerTest {
 	}
 
 	@Test
-	void backToBackTest() {
+	void backToBackTest() throws InterruptedException {
 		SequentialTrigger<AbilityUsedEvent> mySeqTrig = new SequentialTrigger<>(5000, AbilityUsedEvent.class, e -> e.getAbility().getId() == 123, (e1, s) -> {
 			s.accept(new TtsRequest("Foo: " + e1.getSequenceId()));
 			AbilityUsedEvent e2 = s.waitEvent(AbilityUsedEvent.class, e -> e.getAbility().getId() == 123);
@@ -98,6 +98,7 @@ public class SequentialTriggerTest {
 		dist.acceptEvent(secondMatchingEvent);
 		// The third event
 		dist.acceptEvent(altMatchingEvent);
+		Thread.sleep(100);
 		// First event
 		dist.acceptEvent(firstMatchingEvent);
 		// Second event

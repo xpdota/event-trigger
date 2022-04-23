@@ -131,8 +131,8 @@ public class RawEventStorage {
 	}
 
 	private static void compressEvent(Event event) {
-		if (event instanceof Compressible) {
-			((Compressible) event).compress();
+		if (event instanceof Compressible compressible) {
+			compressible.compress();
 		}
 	}
 

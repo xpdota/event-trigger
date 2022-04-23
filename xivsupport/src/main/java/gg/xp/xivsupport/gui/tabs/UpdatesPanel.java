@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tabs;
 
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
@@ -66,7 +67,8 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				try {
 					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.Update");
 					clazz.getMethod("updateTheUpdater").invoke(null);
-				} catch (Throwable e) {
+				}
+				catch (Throwable e) {
 					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.UpdateCopyForLegacyMigration");
 					clazz.getMethod("updateTheUpdater").invoke(null);
 				}
@@ -105,6 +107,13 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		c.gridy++;
 		c.weighty = 1;
 		add(new JPanel(), c);
+		new RefreshLoop<>(
+				"UpdatePeriodicCheck",
+				this,
+				i -> doUpdateCheckInBackground(),
+				// 15 minutes * 60 seconds * 1000 ms
+				i -> 15 * 60 * 1000L
+				).start();
 	}
 
 	private void setUpdateCheckStatus(UpdateCheckStatus updateCheckStatus) {
@@ -115,7 +124,8 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 					case IN_PROGRESS -> "Checking for updates...";
 					case NO_UPDATE -> "It looks like you are up to date.";
 					case UPDATE_AVAILABLE -> "There are updates available!";
-					case ERROR -> "Automatic Check Failed, but you can try updating anyway. Perhaps the branch does not exist?";
+					case ERROR ->
+							"Automatic Check Failed, but you can try updating anyway. Perhaps the branch does not exist?";
 				}
 		);
 		if (updateCheckStatus != UpdateCheckStatus.IN_PROGRESS) {
@@ -155,7 +165,8 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 					else {
 						setUpdateCheckStatus(UpdateCheckStatus.NO_UPDATE);
 					}
-				} catch (Throwable e) {
+				}
+				catch (Throwable e) {
 					log.error("Error checking for updates - you may not have a recent enough version (or are running in an IDE).", e);
 					setUpdateCheckStatus(UpdateCheckStatus.ERROR);
 				}

@@ -60,6 +60,11 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		context.accept(event);
 	}
 
+	public void enqueue(Event event) {
+		log.info("Enqueueing: {}", event);
+		context.enqueue(event);
+	}
+
 	// To be called from internal thread
 	public <Y extends X> Y waitEvent(Class<Y> eventClass, Predicate<Y> eventFilter) {
 		log.info("Waiting for specific event");

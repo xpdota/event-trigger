@@ -254,8 +254,8 @@ public class ModifiableCallout<X> {
 	@SuppressWarnings("unused")
 	public static String singleReplacement(Object rawValue) {
 		String value;
-		if (rawValue instanceof String) {
-			value = (String) rawValue;
+		if (rawValue instanceof String strVal) {
+			value = strVal;
 		}
 		else if (rawValue instanceof XivCombatant cbt) {
 			if (cbt.isThePlayer()) {

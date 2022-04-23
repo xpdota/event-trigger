@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 public abstract class CalloutVerificationTest {
 
@@ -38,7 +39,7 @@ public abstract class CalloutVerificationTest {
 	}
 
 	@Test
-	void doTheTest() {
+	void doTheTest() throws ExecutionException, InterruptedException {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		String fileName = getFileName();
 		ReplayController replayController = new ReplayController(pico.getComponent(EventMaster.class), EventReader.readActLogResource(fileName), false);
@@ -72,8 +73,9 @@ public abstract class CalloutVerificationTest {
 		});
 
 
+		// TODO: This causes issues with timing, since enqueued events don't have the proper timestamp
+//		replayController.advanceByAsyncWhile(() -> true).get();
 		replayController.advanceBy(Integer.MAX_VALUE);
-//		replayController.advanceBy(50_000);
 
 		pico.getComponent(EventMaster.class).getQueue().waitDrain();
 
