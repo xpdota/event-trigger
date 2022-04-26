@@ -30,6 +30,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<HeadMarkerEvent> p1_firstCleaveMarker = new ModifiableCallout<>("Quad Marker", "Marker ({set} set)");
 	private final ModifiableCallout<AbilityCastStart> p1_holiestOfHoly = ModifiableCallout.durationBasedCall("Holiest of Holy", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> p1_emptyDimension = ModifiableCallout.durationBasedCall("Empty Dimension", "Donut");
+	private final ModifiableCallout<AbilityCastStart> p1_fullDimension = ModifiableCallout.durationBasedCall("Empty Dimension", "Out");
 	private final ModifiableCallout<AbilityCastStart> p1_heavensblaze = ModifiableCallout.durationBasedCall("Heavensblaze", "Stack on {event.target}");
 	private final ModifiableCallout<AbilityCastStart> p1_holiestHallowing = ModifiableCallout.durationBasedCall("Holiest Hallowing", "Interrupt {event.source}");
 	private final ModifiableCallout<BuffApplied> p1_brightwing = ModifiableCallout.durationBasedCall("Brightwing", "Pair Cleaves");
@@ -56,6 +57,7 @@ public class Dragonsong implements FilteredEventHandler {
 		switch (id) {
 			case 0x62D4 -> call = p1_holiestOfHoly;
 			case 0x62DA -> call = p1_emptyDimension;
+			case 0x62DB -> call = p1_fullDimension;
 			case 0x62DD -> call = p1_heavensblaze;
 			case 0x62D0 -> {
 				//noinspection ConstantConditions
