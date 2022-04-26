@@ -10,6 +10,7 @@ import org.apache.commons.io.LineIterator;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,6 +62,7 @@ public class MakeEverything {
 			ProcessBuilder process = new ProcessBuilder(allArgs)
 					.redirectError(ProcessBuilder.Redirect.INHERIT)
 					.redirectOutput(ProcessBuilder.Redirect.INHERIT)
+					.redirectInput(ProcessBuilder.Redirect.PIPE)
 //					.redirectError(ProcessBuilder.Redirect.PIPE)
 //					.redirectOutput(ProcessBuilder.Redirect.PIPE)
 					.directory(scDir);
@@ -69,6 +71,9 @@ public class MakeEverything {
 				processes.add(proc);
 			}
 			long pid = proc.pid();
+			OutputStream stdin = proc.getOutputStream();
+			stdin.write("n\r\n".getBytes(StandardCharsets.UTF_8));
+			stdin.flush();
 			System.out.println("Started pid " + pid);
 //			proc.getInputStream()
 			return proc;
