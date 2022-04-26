@@ -98,7 +98,8 @@ public class SequentialTriggerTest {
 		dist.acceptEvent(secondMatchingEvent);
 		// The third event
 		dist.acceptEvent(altMatchingEvent);
-		Thread.sleep(100);
+//		Thread.sleep(100);
+		// TODO: the reason this is sometimes failing is because the above event gets the timeout, NOT an issue of waiting!
 		// First event
 		dist.acceptEvent(firstMatchingEvent);
 		// Second event

@@ -51,6 +51,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			}
 		}, "SequentialTrigger-" + threadIdCounter.getAndIncrement());
 		thread.setDaemon(true);
+		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
 		synchronized (lock) {
 			waitProcessingDone();
