@@ -30,6 +30,6 @@ d5e9e73cca01cf1675f415653e7f9e38  reevent-1.0-SNAPSHOT.jar
 1d0070839d825f57fe6f4d8e2a82989b  reflections-0.10.2.jar
 fbcf58513bc25b80f075d812aad3e3cf  slf4j-api-1.7.32.jar
 d740add4c95627e62358479720b60879  timelines-1.0-SNAPSHOT.jar
-f88f4e5b50cbe471d76142a19016e72f  triggers-1.0-SNAPSHOT.jar
-9428cee0e16cdc0c1ec6dcb19627a8d6  xivdata-1.0-SNAPSHOT.jar
+024db5a205d4e612352c0ad50c14753a  triggers-1.0-SNAPSHOT.jar
+baa64f64ae5d975d3c30b9a225d352e2  xivdata-1.0-SNAPSHOT.jar
 6a886ff8eceab0e3d2d1841696a22cf5  xivsupport-1.0-SNAPSHOT.jar
