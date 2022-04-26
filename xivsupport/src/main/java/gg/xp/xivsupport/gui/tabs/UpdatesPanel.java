@@ -57,7 +57,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		c.weighty = 0;
 		{
 			checkingLabel = new JLabel("Update Status");
-			doUpdateCheckInBackground();
+//			doUpdateCheckInBackground();
 			add(checkingLabel, c);
 		}
 		JButton button = new JButton("Check for Updates and Restart");
