@@ -1,0 +1,4315 @@
+{
+  "party": [
+    {
+      "name": "DRK",
+      "id": 0
+    },
+    {
+      "name": "GNB",
+      "id": 1
+    },
+    {
+      "name": "SGE",
+      "id": 2
+    },
+    {
+      "name": "AST",
+      "id": 3
+    },
+    {
+      "name": "BRD",
+      "id": 4
+    },
+    {
+      "name": "SMN",
+      "id": 5
+    },
+    {
+      "name": "DRG",
+      "id": 6
+    },
+    {
+      "name": "NIN",
+      "id": 7
+    }
+  ],
+  "events": [
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "00:15",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "00:16",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "00:17",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Doubled Impact",
+      "offset": "00:26",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Sewage Deluge",
+      "offset": "00:38",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Sewage Deluge",
+      "offset": "00:39",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Winged Cataract",
+      "offset": "01:01",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "01:21",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "01:22",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "01:23",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "01:24",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "01:25",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "01:38",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "01:39",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Ominous Bubbling",
+      "offset": "01:44",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Shockwave",
+      "offset": "01:55",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Shockwave",
+      "offset": "01:56",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Ominous Bubbling",
+      "offset": "01:59",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Ominous Bubbling",
+      "offset": "02:00",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Predatory Avarice",
+      "offset": "02:14",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Spoken Cataract",
+      "offset": "02:32",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Spoken Cataract",
+      "offset": "02:32",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Hard Water",
+      "offset": "02:38",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Deadly Current",
+      "offset": "02:38",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Channeling Flow",
+      "offset": "02:51",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Great Typhoon",
+      "offset": "03:06",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Crash",
+      "offset": "03:07",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Great Typhoon",
+      "offset": "03:07",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Crash",
+      "offset": "03:08",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Doubled Impact",
+      "offset": "03:21",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Doubled Impact",
+      "offset": "03:22",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "03:32",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "03:33",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Sewage Deluge",
+      "offset": "03:48",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Sewage Deluge",
+      "offset": "03:49",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Shockwave",
+      "offset": "04:06",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Shockwave",
+      "offset": "04:07",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Kampeos Harma",
+      "offset": "04:19",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Kampeos Harma",
+      "offset": "04:20",
+      "tags": [],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Kampeos Harma",
+      "offset": "04:21",
+      "tags": [],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Kampeos Harma",
+      "offset": "04:22",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Kampeos Harma",
+      "offset": "04:23",
+      "tags": [],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Kampeos Harma",
+      "offset": "04:24",
+      "tags": [],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Kampeos Harma",
+      "offset": "04:25",
+      "tags": [],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Kampeos Harma",
+      "offset": "04:26",
+      "tags": [],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Doubled Impact",
+      "offset": "04:41",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Doubled Impact",
+      "offset": "04:42",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "04:50",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "04:51",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "04:52",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Channeling Overflow",
+      "offset": "05:04",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Tainted Flood",
+      "offset": "05:11",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Tainted Flood",
+      "offset": "05:18",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Tainted Flood",
+      "offset": "05:19",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Great Typhoon",
+      "offset": "05:19",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Crash",
+      "offset": "05:20",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Great Typhoon",
+      "offset": "05:20",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Tainted Flood",
+      "offset": "05:27",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Tainted Flood",
+      "offset": "05:34",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Great Typhoon",
+      "offset": "05:34",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Crash",
+      "offset": "05:35",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Great Typhoon",
+      "offset": "05:35",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Winged Cataract",
+      "offset": "05:45",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Predatory Avarice",
+      "offset": "06:04",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Dissociation",
+      "offset": "06:10",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Deadly Current",
+      "offset": "06:28",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Hard Water",
+      "offset": "06:28",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Spoken Cataract",
+      "offset": "06:28",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Hard Water",
+      "offset": "06:29",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Dissociation",
+      "offset": "06:29",
+      "tags": [],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Dissociation",
+      "offset": "06:42",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Sewage Eruption",
+      "offset": "06:55",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Dissociation",
+      "offset": "06:59",
+      "tags": [],
+      "damageType": "Physical"
+    },
+    {
+      "source": "boss",
+      "name": "Sewage Eruption",
+      "offset": "06:59",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Tainted Flood",
+      "offset": "07:01",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Sewage Eruption",
+      "offset": "07:01",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Sewage Eruption",
+      "offset": "07:03",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Tainted Flood",
+      "offset": "07:08",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Tainted Flood",
+      "offset": "07:09",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "07:17",
+      "tags": [],
+      "damageType": "None"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "07:18",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "07:19",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "07:21",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Coherence",
+      "offset": "07:22",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Doubled Impact",
+      "offset": "07:33",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "07:41",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "07:42",
+      "tags": [
+        "AoE"
+      ],
+      "damageType": "Magical"
+    },
+    {
+      "source": "boss",
+      "name": "Murky Depths",
+      "offset": "07:43",
+      "tags": [],
+      "damageType": "Magical"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "00:00"
+    },
+    {
+      "source": 7,
+      "guid": 2264,
+      "name": "Kassatsu",
+      "offset": "00:00"
+    },
+    {
+      "source": 1,
+      "guid": 16164,
+      "name": "Bloodfest",
+      "offset": "00:00"
+    },
+    {
+      "source": 4,
+      "guid": 3559,
+      "name": "The Wanderer's Minuet",
+      "offset": "00:01"
+    },
+    {
+      "source": 3,
+      "guid": 3606,
+      "name": "Lightspeed",
+      "offset": "00:01"
+    },
+    {
+      "source": 1,
+      "guid": 16138,
+      "name": "No Mercy",
+      "offset": "00:01"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "00:01"
+    },
+    {
+      "source": 4,
+      "guid": 101,
+      "name": "Raging Strikes",
+      "offset": "00:01"
+    },
+    {
+      "source": 0,
+      "guid": 3625,
+      "name": "Blood Weapon",
+      "offset": "00:02"
+    },
+    {
+      "source": 6,
+      "guid": 10032,
+      "name": "Dragon Sight",
+      "target": 7,
+      "offset": "00:03"
+    },
+    {
+      "source": 5,
+      "guid": 25801,
+      "name": "Searing Light",
+      "offset": "00:03"
+    },
+    {
+      "source": 6,
+      "guid": 85,
+      "name": "Lance Charge",
+      "offset": "00:03"
+    },
+    {
+      "source": 0,
+      "guid": 3639,
+      "name": "Salted Earth",
+      "offset": "00:04"
+    },
+    {
+      "source": 0,
+      "guid": 7390,
+      "name": "Delirium",
+      "offset": "00:04"
+    },
+    {
+      "source": 7,
+      "guid": 2248,
+      "name": "Mug",
+      "offset": "00:04"
+    },
+    {
+      "source": 5,
+      "guid": 16508,
+      "name": "Energy Drain",
+      "offset": "00:04"
+    },
+    {
+      "source": 6,
+      "guid": 3557,
+      "name": "Battle Litany",
+      "offset": "00:04"
+    },
+    {
+      "source": 4,
+      "guid": 25785,
+      "name": "Radiant Finale",
+      "offset": "00:05"
+    },
+    {
+      "source": 7,
+      "guid": 16493,
+      "name": "Bunshin",
+      "offset": "00:05"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "00:05"
+    },
+    {
+      "source": 4,
+      "guid": 118,
+      "name": "Battle Voice",
+      "offset": "00:05"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "00:06"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "00:06"
+    },
+    {
+      "source": 4,
+      "guid": 3562,
+      "name": "Sidewinder",
+      "offset": "00:07"
+    },
+    {
+      "source": 7,
+      "guid": 2258,
+      "name": "Trick Attack",
+      "offset": "00:07"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "00:07"
+    },
+    {
+      "source": 4,
+      "guid": 107,
+      "name": "Barrage",
+      "offset": "00:07"
+    },
+    {
+      "source": 3,
+      "guid": 16552,
+      "name": "Divination",
+      "offset": "00:07"
+    },
+    {
+      "source": 0,
+      "guid": 16472,
+      "name": "Living Shadow",
+      "offset": "00:08"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "00:09"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "00:09"
+    },
+    {
+      "source": 7,
+      "guid": 3566,
+      "name": "Dream Within a Dream",
+      "offset": "00:10"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "00:10"
+    },
+    {
+      "source": 3,
+      "guid": 25870,
+      "name": "Astrodyne",
+      "offset": "00:10"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "00:10"
+    },
+    {
+      "source": 0,
+      "guid": 3643,
+      "name": "Carve and Spit",
+      "offset": "00:11"
+    },
+    {
+      "source": 1,
+      "guid": 16159,
+      "name": "Bow Shock",
+      "offset": "00:11"
+    },
+    {
+      "source": 3,
+      "guid": 7443,
+      "name": "Minor Arcana",
+      "offset": "00:12"
+    },
+    {
+      "source": 6,
+      "guid": 96,
+      "name": "Dragonfire Dive",
+      "offset": "00:12"
+    },
+    {
+      "source": 7,
+      "guid": 7403,
+      "name": "Ten Chi Jin",
+      "offset": "00:12"
+    },
+    {
+      "source": 1,
+      "guid": 7535,
+      "name": "Reprisal",
+      "offset": "00:13"
+    },
+    {
+      "source": 0,
+      "guid": 25755,
+      "name": "Salt and Darkness",
+      "offset": "00:13"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "00:14"
+    },
+    {
+      "source": 6,
+      "guid": 95,
+      "name": "Spineshatter Dive",
+      "offset": "00:15"
+    },
+    {
+      "source": 7,
+      "guid": 16489,
+      "name": "Meisui",
+      "offset": "00:16"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "00:16"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "00:17"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "00:17"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "00:18"
+    },
+    {
+      "source": 6,
+      "guid": 95,
+      "name": "Spineshatter Dive",
+      "offset": "00:20"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "00:20"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "00:22"
+    },
+    {
+      "source": 1,
+      "guid": 16152,
+      "name": "Superbolide",
+      "offset": "00:23"
+    },
+    {
+      "source": 0,
+      "guid": 25754,
+      "name": "Oblation",
+      "target": 1,
+      "offset": "00:13"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "00:24"
+    },
+    {
+      "source": 1,
+      "guid": 25758,
+      "name": "Heart of Corundum",
+      "target": 1,
+      "offset": "00:25"
+    },
+    {
+      "source": 3,
+      "guid": 16556,
+      "name": "Celestial Intersection",
+      "offset": "00:25"
+    },
+    {
+      "source": 1,
+      "guid": 16151,
+      "name": "Aurora",
+      "target": 1,
+      "offset": "00:25"
+    },
+    {
+      "source": 2,
+      "guid": 24285,
+      "name": "Kardia",
+      "target": 1,
+      "offset": "00:26"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "00:27"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "00:27"
+    },
+    {
+      "source": 3,
+      "guid": 27999,
+      "name": "Medicine",
+      "offset": "00:00"
+    },
+    {
+      "source": 2,
+      "guid": 27999,
+      "name": "Medicine",
+      "offset": "00:00"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "00:29"
+    },
+    {
+      "source": 3,
+      "guid": 3614,
+      "name": "Essential Dignity",
+      "target": 1,
+      "offset": "00:29"
+    },
+    {
+      "source": 4,
+      "guid": 27996,
+      "name": "Medicine",
+      "offset": "00:00"
+    },
+    {
+      "source": 5,
+      "guid": 25799,
+      "name": "Radiant Aegis",
+      "offset": "00:30"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "00:30"
+    },
+    {
+      "source": 7,
+      "guid": 7549,
+      "name": "Feint",
+      "offset": "00:31"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "00:31"
+    },
+    {
+      "source": 3,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "00:31"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "00:32"
+    },
+    {
+      "source": 5,
+      "guid": 7561,
+      "name": "Swiftcast",
+      "offset": "00:33"
+    },
+    {
+      "source": 0,
+      "guid": 7535,
+      "name": "Reprisal",
+      "offset": "00:33"
+    },
+    {
+      "source": 7,
+      "guid": 27996,
+      "name": "Medicine",
+      "offset": "00:03"
+    },
+    {
+      "source": 1,
+      "guid": 27995,
+      "name": "Medicine",
+      "offset": "00:04"
+    },
+    {
+      "source": 0,
+      "guid": 16471,
+      "name": "Dark Missionary",
+      "offset": "00:40"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "00:35"
+    },
+    {
+      "source": 2,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "00:36"
+    },
+    {
+      "source": 4,
+      "guid": 7405,
+      "name": "Troubadour",
+      "offset": "00:36"
+    },
+    {
+      "source": 3,
+      "guid": 3613,
+      "name": "Collective Unconscious",
+      "offset": "00:37"
+    },
+    {
+      "source": 5,
+      "guid": 7560,
+      "name": "Addle",
+      "offset": "00:37"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "00:37"
+    },
+    {
+      "source": 0,
+      "guid": 27995,
+      "name": "Medicine",
+      "offset": "00:07"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "00:37"
+    },
+    {
+      "source": 5,
+      "guid": 27998,
+      "name": "Medicine",
+      "offset": "00:08"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "00:38"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "00:40"
+    },
+    {
+      "source": 4,
+      "guid": 114,
+      "name": "Mage's Ballad",
+      "offset": "00:44"
+    },
+    {
+      "source": 5,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "00:46"
+    },
+    {
+      "source": 3,
+      "guid": 7561,
+      "name": "Swiftcast",
+      "offset": "00:55"
+    },
+    {
+      "source": 3,
+      "guid": 7439,
+      "name": "Earthly Star",
+      "offset": "00:57"
+    },
+    {
+      "source": 7,
+      "guid": 2264,
+      "name": "Kassatsu",
+      "offset": "01:01"
+    },
+    {
+      "source": 6,
+      "guid": 85,
+      "name": "Lance Charge",
+      "offset": "01:03"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "01:04"
+    },
+    {
+      "source": 0,
+      "guid": 7390,
+      "name": "Delirium",
+      "offset": "01:04"
+    },
+    {
+      "source": 5,
+      "guid": 16508,
+      "name": "Energy Drain",
+      "offset": "01:04"
+    },
+    {
+      "source": 1,
+      "guid": 16138,
+      "name": "No Mercy",
+      "offset": "01:04"
+    },
+    {
+      "source": 0,
+      "guid": 3625,
+      "name": "Blood Weapon",
+      "offset": "01:05"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "01:05"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "01:05"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "01:07"
+    },
+    {
+      "source": 4,
+      "guid": 3562,
+      "name": "Sidewinder",
+      "offset": "01:07"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "01:07"
+    },
+    {
+      "source": 7,
+      "guid": 2258,
+      "name": "Trick Attack",
+      "offset": "01:07"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "01:08"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "01:08"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "01:09"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "01:09"
+    },
+    {
+      "source": 5,
+      "guid": 16518,
+      "name": "Revelation",
+      "offset": "01:10"
+    },
+    {
+      "source": 7,
+      "guid": 3566,
+      "name": "Dream Within a Dream",
+      "offset": "01:11"
+    },
+    {
+      "source": 0,
+      "guid": 3643,
+      "name": "Carve and Spit",
+      "offset": "01:11"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "01:11"
+    },
+    {
+      "source": 3,
+      "guid": 7443,
+      "name": "Minor Arcana",
+      "offset": "01:12"
+    },
+    {
+      "source": 1,
+      "guid": 16159,
+      "name": "Bow Shock",
+      "offset": "01:12"
+    },
+    {
+      "source": 6,
+      "guid": 16480,
+      "name": "Stardiver",
+      "offset": "01:13"
+    },
+    {
+      "source": 6,
+      "guid": 95,
+      "name": "Spineshatter Dive",
+      "offset": "01:15"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "01:16"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "01:16"
+    },
+    {
+      "source": 1,
+      "guid": 7531,
+      "name": "Rampart",
+      "offset": "01:17"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "01:17"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "01:18"
+    },
+    {
+      "source": 2,
+      "guid": 24311,
+      "name": "Panhaima",
+      "offset": "01:18"
+    },
+    {
+      "source": 1,
+      "guid": 16160,
+      "name": "Heart of Light",
+      "offset": "01:18"
+    },
+    {
+      "source": 0,
+      "guid": 3634,
+      "name": "Dark Mind",
+      "offset": "01:18"
+    },
+    {
+      "source": 0,
+      "guid": 7393,
+      "name": "The Blackest Night",
+      "target": 0,
+      "offset": "01:19"
+    },
+    {
+      "source": 4,
+      "guid": 116,
+      "name": "Army's Paeon",
+      "offset": "01:19"
+    },
+    {
+      "source": 1,
+      "guid": 25758,
+      "name": "Heart of Corundum",
+      "target": 1,
+      "offset": "01:21"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "01:23"
+    },
+    {
+      "source": 2,
+      "guid": 24299,
+      "name": "Ixochole",
+      "offset": "01:26"
+    },
+    {
+      "source": 6,
+      "guid": 7549,
+      "name": "Feint",
+      "offset": "01:29"
+    },
+    {
+      "source": 0,
+      "guid": 25754,
+      "name": "Oblation",
+      "target": 1,
+      "offset": "01:36"
+    },
+    {
+      "source": 5,
+      "guid": 25799,
+      "name": "Radiant Aegis",
+      "offset": "01:30"
+    },
+    {
+      "source": 3,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "01:32"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "01:33"
+    },
+    {
+      "source": 7,
+      "guid": 16493,
+      "name": "Bunshin",
+      "offset": "01:35"
+    },
+    {
+      "source": 0,
+      "guid": 3639,
+      "name": "Salted Earth",
+      "offset": "01:35"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "01:35"
+    },
+    {
+      "source": 1,
+      "guid": 7535,
+      "name": "Reprisal",
+      "offset": "01:36"
+    },
+    {
+      "source": 0,
+      "guid": 25755,
+      "name": "Salt and Darkness",
+      "offset": "01:37"
+    },
+    {
+      "source": 2,
+      "guid": 24302,
+      "name": "Physis II",
+      "offset": "01:38"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "01:38"
+    },
+    {
+      "source": 1,
+      "guid": 16164,
+      "name": "Bloodfest",
+      "offset": "01:38"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "01:39"
+    },
+    {
+      "source": 2,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "01:40"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "01:41"
+    },
+    {
+      "source": 3,
+      "guid": 16553,
+      "name": "Celestial Opposition",
+      "offset": "01:42"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "01:43"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "01:45"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "01:50"
+    },
+    {
+      "source": 2,
+      "guid": 7559,
+      "name": "Surecast",
+      "offset": "01:50"
+    },
+    {
+      "source": 5,
+      "guid": 7559,
+      "name": "Surecast",
+      "offset": "01:50"
+    },
+    {
+      "source": 3,
+      "guid": 7559,
+      "name": "Surecast",
+      "offset": "01:51"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "01:52"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "01:54"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "01:55"
+    },
+    {
+      "source": 5,
+      "guid": 25799,
+      "name": "Radiant Aegis",
+      "offset": "01:55"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "01:57"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "01:57"
+    },
+    {
+      "source": 3,
+      "guid": 7439,
+      "name": "Earthly Star",
+      "offset": "01:58"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "01:59"
+    },
+    {
+      "source": 4,
+      "guid": 3559,
+      "name": "The Wanderer's Minuet",
+      "offset": "02:01"
+    },
+    {
+      "source": 7,
+      "guid": 2264,
+      "name": "Kassatsu",
+      "offset": "02:01"
+    },
+    {
+      "source": 4,
+      "guid": 101,
+      "name": "Raging Strikes",
+      "offset": "02:02"
+    },
+    {
+      "source": 3,
+      "guid": 3606,
+      "name": "Lightspeed",
+      "offset": "02:02"
+    },
+    {
+      "source": 2,
+      "guid": 24299,
+      "name": "Ixochole",
+      "offset": "02:03"
+    },
+    {
+      "source": 5,
+      "guid": 25801,
+      "name": "Searing Light",
+      "offset": "02:03"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "02:03"
+    },
+    {
+      "source": 6,
+      "guid": 10032,
+      "name": "Dragon Sight",
+      "target": 7,
+      "offset": "02:04"
+    },
+    {
+      "source": 6,
+      "guid": 85,
+      "name": "Lance Charge",
+      "offset": "02:04"
+    },
+    {
+      "source": 0,
+      "guid": 7390,
+      "name": "Delirium",
+      "offset": "02:04"
+    },
+    {
+      "source": 5,
+      "guid": 16508,
+      "name": "Energy Drain",
+      "offset": "02:04"
+    },
+    {
+      "source": 7,
+      "guid": 2248,
+      "name": "Mug",
+      "offset": "02:05"
+    },
+    {
+      "source": 1,
+      "guid": 16138,
+      "name": "No Mercy",
+      "offset": "02:05"
+    },
+    {
+      "source": 0,
+      "guid": 3625,
+      "name": "Blood Weapon",
+      "offset": "02:05"
+    },
+    {
+      "source": 6,
+      "guid": 3557,
+      "name": "Battle Litany",
+      "offset": "02:05"
+    },
+    {
+      "source": 4,
+      "guid": 25785,
+      "name": "Radiant Finale",
+      "offset": "02:06"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "02:06"
+    },
+    {
+      "source": 4,
+      "guid": 118,
+      "name": "Battle Voice",
+      "offset": "02:07"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "02:07"
+    },
+    {
+      "source": 7,
+      "guid": 2258,
+      "name": "Trick Attack",
+      "offset": "02:08"
+    },
+    {
+      "source": 3,
+      "guid": 16552,
+      "name": "Divination",
+      "offset": "02:08"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "02:08"
+    },
+    {
+      "source": 4,
+      "guid": 3562,
+      "name": "Sidewinder",
+      "offset": "02:09"
+    },
+    {
+      "source": 0,
+      "guid": 16472,
+      "name": "Living Shadow",
+      "offset": "02:09"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "02:09"
+    },
+    {
+      "source": 3,
+      "guid": 25870,
+      "name": "Astrodyne",
+      "offset": "02:09"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "02:10"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "02:10"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "02:10"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "02:12"
+    },
+    {
+      "source": 0,
+      "guid": 3643,
+      "name": "Carve and Spit",
+      "offset": "02:12"
+    },
+    {
+      "source": 1,
+      "guid": 16159,
+      "name": "Bow Shock",
+      "offset": "02:12"
+    },
+    {
+      "source": 4,
+      "guid": 107,
+      "name": "Barrage",
+      "offset": "02:12"
+    },
+    {
+      "source": 7,
+      "guid": 3566,
+      "name": "Dream Within a Dream",
+      "offset": "02:13"
+    },
+    {
+      "source": 6,
+      "guid": 96,
+      "name": "Dragonfire Dive",
+      "offset": "02:13"
+    },
+    {
+      "source": 3,
+      "guid": 7443,
+      "name": "Minor Arcana",
+      "offset": "02:14"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "02:14"
+    },
+    {
+      "source": 7,
+      "guid": 7403,
+      "name": "Ten Chi Jin",
+      "offset": "02:15"
+    },
+    {
+      "source": 6,
+      "guid": 16480,
+      "name": "Stardiver",
+      "offset": "02:16"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "02:16"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "02:17"
+    },
+    {
+      "source": 6,
+      "guid": 95,
+      "name": "Spineshatter Dive",
+      "offset": "02:18"
+    },
+    {
+      "source": 7,
+      "guid": 16489,
+      "name": "Meisui",
+      "offset": "02:19"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "02:21"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "02:24"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "02:27"
+    },
+    {
+      "source": 3,
+      "guid": 7561,
+      "name": "Swiftcast",
+      "offset": "02:27"
+    },
+    {
+      "source": 5,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "02:28"
+    },
+    {
+      "source": 6,
+      "guid": 27995,
+      "name": "Medicine",
+      "offset": "01:59"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "02:29"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "02:30"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "02:31"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "02:32"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "02:32"
+    },
+    {
+      "source": 3,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "02:32"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "02:33"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "02:36"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "02:38"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "02:38"
+    },
+    {
+      "source": 3,
+      "guid": 16557,
+      "name": "Horoscope",
+      "offset": "02:39"
+    },
+    {
+      "source": 0,
+      "guid": 25754,
+      "name": "Oblation",
+      "target": 1,
+      "offset": "02:40"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "02:42"
+    },
+    {
+      "source": 2,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "02:43"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "02:44"
+    },
+    {
+      "source": 2,
+      "guid": 24299,
+      "name": "Ixochole",
+      "offset": "02:45"
+    },
+    {
+      "source": 4,
+      "guid": 114,
+      "name": "Mage's Ballad",
+      "offset": "02:45"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "03:00"
+    },
+    {
+      "source": 3,
+      "guid": 7439,
+      "name": "Earthly Star",
+      "offset": "03:00"
+    },
+    {
+      "source": 7,
+      "guid": 7549,
+      "name": "Feint",
+      "offset": "03:00"
+    },
+    {
+      "source": 7,
+      "guid": 2264,
+      "name": "Kassatsu",
+      "offset": "03:02"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "03:03"
+    },
+    {
+      "source": 0,
+      "guid": 7390,
+      "name": "Delirium",
+      "offset": "03:05"
+    },
+    {
+      "source": 7,
+      "guid": 16493,
+      "name": "Bunshin",
+      "offset": "03:05"
+    },
+    {
+      "source": 1,
+      "guid": 7531,
+      "name": "Rampart",
+      "offset": "03:09"
+    },
+    {
+      "source": 6,
+      "guid": 85,
+      "name": "Lance Charge",
+      "offset": "03:09"
+    },
+    {
+      "source": 7,
+      "guid": 2258,
+      "name": "Trick Attack",
+      "offset": "03:09"
+    },
+    {
+      "source": 5,
+      "guid": 16508,
+      "name": "Energy Drain",
+      "offset": "03:09"
+    },
+    {
+      "source": 1,
+      "guid": 16138,
+      "name": "No Mercy",
+      "offset": "03:10"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "03:10"
+    },
+    {
+      "source": 2,
+      "guid": 24302,
+      "name": "Physis II",
+      "offset": "03:10"
+    },
+    {
+      "source": 0,
+      "guid": 3625,
+      "name": "Blood Weapon",
+      "offset": "03:10"
+    },
+    {
+      "source": 4,
+      "guid": 3562,
+      "name": "Sidewinder",
+      "offset": "03:11"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "03:11"
+    },
+    {
+      "source": 0,
+      "guid": 3639,
+      "name": "Salted Earth",
+      "offset": "03:12"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "03:12"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "03:12"
+    },
+    {
+      "source": 0,
+      "guid": 3643,
+      "name": "Carve and Spit",
+      "offset": "03:12"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "03:12"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "03:14"
+    },
+    {
+      "source": 0,
+      "guid": 25755,
+      "name": "Salt and Darkness",
+      "offset": "03:14"
+    },
+    {
+      "source": 7,
+      "guid": 3566,
+      "name": "Dream Within a Dream",
+      "offset": "03:15"
+    },
+    {
+      "source": 1,
+      "guid": 16159,
+      "name": "Bow Shock",
+      "offset": "03:15"
+    },
+    {
+      "source": 5,
+      "guid": 16518,
+      "name": "Revelation",
+      "offset": "03:15"
+    },
+    {
+      "source": 3,
+      "guid": 7443,
+      "name": "Minor Arcana",
+      "offset": "03:15"
+    },
+    {
+      "source": 1,
+      "guid": 16164,
+      "name": "Bloodfest",
+      "offset": "03:16"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "03:17"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "03:17"
+    },
+    {
+      "source": 0,
+      "guid": 3634,
+      "name": "Dark Mind",
+      "offset": "03:19"
+    },
+    {
+      "source": 6,
+      "guid": 16480,
+      "name": "Stardiver",
+      "offset": "03:19"
+    },
+    {
+      "source": 1,
+      "guid": 16148,
+      "name": "Nebula",
+      "offset": "03:19"
+    },
+    {
+      "source": 0,
+      "guid": 7393,
+      "name": "The Blackest Night",
+      "target": 0,
+      "offset": "03:20"
+    },
+    {
+      "source": 0,
+      "guid": 7531,
+      "name": "Rampart",
+      "offset": "03:21"
+    },
+    {
+      "source": 6,
+      "guid": 95,
+      "name": "Spineshatter Dive",
+      "offset": "03:22"
+    },
+    {
+      "source": 1,
+      "guid": 25758,
+      "name": "Heart of Corundum",
+      "target": 1,
+      "offset": "03:22"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "03:22"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "03:23"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "03:24"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "03:24"
+    },
+    {
+      "source": 2,
+      "guid": 24299,
+      "name": "Ixochole",
+      "offset": "03:25"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "03:27"
+    },
+    {
+      "source": 4,
+      "guid": 116,
+      "name": "Army's Paeon",
+      "offset": "03:29"
+    },
+    {
+      "source": 3,
+      "guid": 3613,
+      "name": "Collective Unconscious",
+      "offset": "03:29"
+    },
+    {
+      "source": 1,
+      "guid": 7535,
+      "name": "Reprisal",
+      "offset": "03:31"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "03:32"
+    },
+    {
+      "source": 3,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "03:33"
+    },
+    {
+      "source": 5,
+      "guid": 25799,
+      "name": "Radiant Aegis",
+      "offset": "03:33"
+    },
+    {
+      "source": 3,
+      "guid": 16553,
+      "name": "Celestial Opposition",
+      "offset": "03:36"
+    },
+    {
+      "source": 2,
+      "guid": 24300,
+      "name": "Zoe",
+      "offset": "03:37"
+    },
+    {
+      "source": 2,
+      "guid": 24318,
+      "name": "Pneuma",
+      "offset": "03:39"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "03:40"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "03:42"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "03:43"
+    },
+    {
+      "source": 0,
+      "guid": 7535,
+      "name": "Reprisal",
+      "offset": "03:43"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "03:44"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "03:44"
+    },
+    {
+      "source": 2,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "03:45"
+    },
+    {
+      "source": 0,
+      "guid": 16471,
+      "name": "Dark Missionary",
+      "offset": "03:45"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "03:47"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "03:47"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "03:47"
+    },
+    {
+      "source": 5,
+      "guid": 7560,
+      "name": "Addle",
+      "offset": "03:48"
+    },
+    {
+      "source": 0,
+      "guid": 25754,
+      "name": "Oblation",
+      "target": 1,
+      "offset": "03:48"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "03:49"
+    },
+    {
+      "source": 6,
+      "guid": 16480,
+      "name": "Stardiver",
+      "offset": "03:50"
+    },
+    {
+      "source": 3,
+      "guid": 16557,
+      "name": "Horoscope",
+      "offset": "03:50"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "03:50"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "03:52"
+    },
+    {
+      "source": 2,
+      "guid": 24299,
+      "name": "Ixochole",
+      "offset": "03:55"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "03:55"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "04:00"
+    },
+    {
+      "source": 3,
+      "guid": 7559,
+      "name": "Surecast",
+      "offset": "04:01"
+    },
+    {
+      "source": 2,
+      "guid": 7559,
+      "name": "Surecast",
+      "offset": "04:02"
+    },
+    {
+      "source": 5,
+      "guid": 7559,
+      "name": "Surecast",
+      "offset": "04:02"
+    },
+    {
+      "source": 3,
+      "guid": 7439,
+      "name": "Earthly Star",
+      "offset": "04:03"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "04:05"
+    },
+    {
+      "source": 0,
+      "guid": 7390,
+      "name": "Delirium",
+      "offset": "04:06"
+    },
+    {
+      "source": 7,
+      "guid": 2248,
+      "name": "Mug",
+      "offset": "04:06"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "04:08"
+    },
+    {
+      "source": 3,
+      "guid": 25870,
+      "name": "Astrodyne",
+      "offset": "04:08"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "04:10"
+    },
+    {
+      "source": 5,
+      "guid": 16508,
+      "name": "Energy Drain",
+      "offset": "04:10"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "04:10"
+    },
+    {
+      "source": 2,
+      "guid": 24302,
+      "name": "Physis II",
+      "offset": "04:13"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "04:14"
+    },
+    {
+      "source": 3,
+      "guid": 7443,
+      "name": "Minor Arcana",
+      "offset": "04:15"
+    },
+    {
+      "source": 3,
+      "guid": 16559,
+      "name": "Neutral Sect",
+      "offset": "04:19"
+    },
+    {
+      "source": 5,
+      "guid": 25799,
+      "name": "Radiant Aegis",
+      "offset": "04:25"
+    },
+    {
+      "source": 0,
+      "guid": 16472,
+      "name": "Living Shadow",
+      "offset": "04:28"
+    },
+    {
+      "source": 7,
+      "guid": 2264,
+      "name": "Kassatsu",
+      "offset": "04:28"
+    },
+    {
+      "source": 0,
+      "guid": 3625,
+      "name": "Blood Weapon",
+      "offset": "04:29"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "04:30"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "04:31"
+    },
+    {
+      "source": 0,
+      "guid": 3643,
+      "name": "Carve and Spit",
+      "offset": "04:32"
+    },
+    {
+      "source": 3,
+      "guid": 3606,
+      "name": "Lightspeed",
+      "offset": "04:32"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "04:32"
+    },
+    {
+      "source": 7,
+      "guid": 2258,
+      "name": "Trick Attack",
+      "offset": "04:33"
+    },
+    {
+      "source": 6,
+      "guid": 3557,
+      "name": "Battle Litany",
+      "offset": "04:33"
+    },
+    {
+      "source": 3,
+      "guid": 16552,
+      "name": "Divination",
+      "offset": "04:33"
+    },
+    {
+      "source": 5,
+      "guid": 25801,
+      "name": "Searing Light",
+      "offset": "04:33"
+    },
+    {
+      "source": 1,
+      "guid": 16138,
+      "name": "No Mercy",
+      "offset": "04:33"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "04:34"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "04:34"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "04:34"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "04:35"
+    },
+    {
+      "source": 4,
+      "guid": 3559,
+      "name": "The Wanderer's Minuet",
+      "offset": "04:35"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "04:36"
+    },
+    {
+      "source": 7,
+      "guid": 3566,
+      "name": "Dream Within a Dream",
+      "offset": "04:36"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "04:36"
+    },
+    {
+      "source": 6,
+      "guid": 10032,
+      "name": "Dragon Sight",
+      "target": 7,
+      "offset": "04:36"
+    },
+    {
+      "source": 4,
+      "guid": 101,
+      "name": "Raging Strikes",
+      "offset": "04:36"
+    },
+    {
+      "source": 6,
+      "guid": 85,
+      "name": "Lance Charge",
+      "offset": "04:36"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "04:36"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "04:37"
+    },
+    {
+      "source": 4,
+      "guid": 25785,
+      "name": "Radiant Finale",
+      "offset": "04:37"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "04:38"
+    },
+    {
+      "source": 6,
+      "guid": 96,
+      "name": "Dragonfire Dive",
+      "offset": "04:38"
+    },
+    {
+      "source": 1,
+      "guid": 16159,
+      "name": "Bow Shock",
+      "offset": "04:38"
+    },
+    {
+      "source": 4,
+      "guid": 118,
+      "name": "Battle Voice",
+      "offset": "04:38"
+    },
+    {
+      "source": 0,
+      "guid": 3636,
+      "name": "Shadow Wall",
+      "offset": "04:38"
+    },
+    {
+      "source": 7,
+      "guid": 16493,
+      "name": "Bunshin",
+      "offset": "04:39"
+    },
+    {
+      "source": 0,
+      "guid": 3634,
+      "name": "Dark Mind",
+      "offset": "04:39"
+    },
+    {
+      "source": 1,
+      "guid": 16140,
+      "name": "Camouflage",
+      "offset": "04:40"
+    },
+    {
+      "source": 4,
+      "guid": 3562,
+      "name": "Sidewinder",
+      "offset": "04:40"
+    },
+    {
+      "source": 3,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "04:40"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "04:40"
+    },
+    {
+      "source": 1,
+      "guid": 7531,
+      "name": "Rampart",
+      "offset": "04:40"
+    },
+    {
+      "source": 7,
+      "guid": 7403,
+      "name": "Ten Chi Jin",
+      "offset": "04:41"
+    },
+    {
+      "source": 3,
+      "guid": 25870,
+      "name": "Astrodyne",
+      "offset": "04:42"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "04:43"
+    },
+    {
+      "source": 0,
+      "guid": 3639,
+      "name": "Salted Earth",
+      "offset": "04:43"
+    },
+    {
+      "source": 2,
+      "guid": 24294,
+      "name": "Soteria",
+      "offset": "04:43"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "04:44"
+    },
+    {
+      "source": 4,
+      "guid": 107,
+      "name": "Barrage",
+      "offset": "04:44"
+    },
+    {
+      "source": 3,
+      "guid": 3614,
+      "name": "Essential Dignity",
+      "target": 1,
+      "offset": "04:44"
+    },
+    {
+      "source": 7,
+      "guid": 16489,
+      "name": "Meisui",
+      "offset": "04:45"
+    },
+    {
+      "source": 0,
+      "guid": 25755,
+      "name": "Salt and Darkness",
+      "offset": "04:45"
+    },
+    {
+      "source": 2,
+      "guid": 24317,
+      "name": "Krasis",
+      "target": 1,
+      "offset": "04:46"
+    },
+    {
+      "source": 6,
+      "guid": 95,
+      "name": "Spineshatter Dive",
+      "offset": "04:46"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "04:46"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "04:46"
+    },
+    {
+      "source": 1,
+      "guid": 7535,
+      "name": "Reprisal",
+      "offset": "04:47"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "04:48"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "04:48"
+    },
+    {
+      "source": 0,
+      "guid": 25754,
+      "name": "Oblation",
+      "target": 1,
+      "offset": "04:49"
+    },
+    {
+      "source": 3,
+      "guid": 3613,
+      "name": "Collective Unconscious",
+      "offset": "04:49"
+    },
+    {
+      "source": 1,
+      "guid": 16164,
+      "name": "Bloodfest",
+      "offset": "04:50"
+    },
+    {
+      "source": 6,
+      "guid": 16480,
+      "name": "Stardiver",
+      "offset": "04:50"
+    },
+    {
+      "source": 5,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "04:52"
+    },
+    {
+      "source": 2,
+      "guid": 24299,
+      "name": "Ixochole",
+      "offset": "04:53"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "04:58"
+    },
+    {
+      "source": 2,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "04:58"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "04:59"
+    },
+    {
+      "source": 4,
+      "guid": 27996,
+      "name": "Medicine",
+      "offset": "04:32"
+    },
+    {
+      "source": 3,
+      "guid": 7439,
+      "name": "Earthly Star",
+      "offset": "05:05"
+    },
+    {
+      "source": 0,
+      "guid": 7390,
+      "name": "Delirium",
+      "offset": "05:06"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "05:10"
+    },
+    {
+      "source": 5,
+      "guid": 16508,
+      "name": "Energy Drain",
+      "offset": "05:10"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "05:11"
+    },
+    {
+      "source": 5,
+      "guid": 16518,
+      "name": "Revelation",
+      "offset": "05:11"
+    },
+    {
+      "source": 3,
+      "guid": 7561,
+      "name": "Swiftcast",
+      "offset": "05:12"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "05:12"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "05:12"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "05:14"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "05:16"
+    },
+    {
+      "source": 4,
+      "guid": 114,
+      "name": "Mage's Ballad",
+      "offset": "05:17"
+    },
+    {
+      "source": 2,
+      "guid": 24302,
+      "name": "Physis II",
+      "offset": "05:21"
+    },
+    {
+      "source": 1,
+      "guid": 16160,
+      "name": "Heart of Light",
+      "offset": "05:21"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "05:23"
+    },
+    {
+      "source": 3,
+      "guid": 7443,
+      "name": "Minor Arcana",
+      "offset": "05:25"
+    },
+    {
+      "source": 2,
+      "guid": 24299,
+      "name": "Ixochole",
+      "offset": "05:26"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "05:29"
+    },
+    {
+      "source": 7,
+      "guid": 2264,
+      "name": "Kassatsu",
+      "offset": "05:30"
+    },
+    {
+      "source": 0,
+      "guid": 3625,
+      "name": "Blood Weapon",
+      "offset": "05:30"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "05:32"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "05:32"
+    },
+    {
+      "source": 0,
+      "guid": 3643,
+      "name": "Carve and Spit",
+      "offset": "05:32"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "05:34"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "05:34"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "05:36"
+    },
+    {
+      "source": 6,
+      "guid": 85,
+      "name": "Lance Charge",
+      "offset": "05:37"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "05:37"
+    },
+    {
+      "source": 7,
+      "guid": 2258,
+      "name": "Trick Attack",
+      "offset": "05:37"
+    },
+    {
+      "source": 6,
+      "guid": 95,
+      "name": "Spineshatter Dive",
+      "offset": "05:37"
+    },
+    {
+      "source": 1,
+      "guid": 16138,
+      "name": "No Mercy",
+      "offset": "05:38"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "05:38"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "05:39"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "05:40"
+    },
+    {
+      "source": 7,
+      "guid": 3566,
+      "name": "Dream Within a Dream",
+      "offset": "05:40"
+    },
+    {
+      "source": 4,
+      "guid": 3562,
+      "name": "Sidewinder",
+      "offset": "05:41"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "05:42"
+    },
+    {
+      "source": 3,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "05:42"
+    },
+    {
+      "source": 1,
+      "guid": 16159,
+      "name": "Bow Shock",
+      "offset": "05:42"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "05:42"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "05:43"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "05:44"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "05:45"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "05:49"
+    },
+    {
+      "source": 3,
+      "guid": 16553,
+      "name": "Celestial Opposition",
+      "offset": "05:49"
+    },
+    {
+      "source": 6,
+      "guid": 16480,
+      "name": "Stardiver",
+      "offset": "05:50"
+    },
+    {
+      "source": 4,
+      "guid": 116,
+      "name": "Army's Paeon",
+      "offset": "05:51"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "05:52"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "05:53"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "05:53"
+    },
+    {
+      "source": 0,
+      "guid": 25754,
+      "name": "Oblation",
+      "target": 1,
+      "offset": "05:54"
+    },
+    {
+      "source": 5,
+      "guid": 25799,
+      "name": "Radiant Aegis",
+      "offset": "06:00"
+    },
+    {
+      "source": 3,
+      "guid": 7439,
+      "name": "Earthly Star",
+      "offset": "06:05"
+    },
+    {
+      "source": 0,
+      "guid": 7390,
+      "name": "Delirium",
+      "offset": "06:06"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "06:06"
+    },
+    {
+      "source": 7,
+      "guid": 2248,
+      "name": "Mug",
+      "offset": "06:07"
+    },
+    {
+      "source": 7,
+      "guid": 16493,
+      "name": "Bunshin",
+      "offset": "06:09"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "06:10"
+    },
+    {
+      "source": 5,
+      "guid": 16508,
+      "name": "Energy Drain",
+      "offset": "06:10"
+    },
+    {
+      "source": 2,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "06:11"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "06:12"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "06:12"
+    },
+    {
+      "source": 0,
+      "guid": 3639,
+      "name": "Salted Earth",
+      "offset": "06:13"
+    },
+    {
+      "source": 0,
+      "guid": 25755,
+      "name": "Salt and Darkness",
+      "offset": "06:15"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "06:16"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "06:17"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "06:17"
+    },
+    {
+      "source": 0,
+      "guid": 7531,
+      "name": "Rampart",
+      "offset": "06:18"
+    },
+    {
+      "source": 0,
+      "guid": 3634,
+      "name": "Dark Mind",
+      "offset": "06:22"
+    },
+    {
+      "source": 0,
+      "guid": 7393,
+      "name": "The Blackest Night",
+      "target": 0,
+      "offset": "06:23"
+    },
+    {
+      "source": 1,
+      "guid": 16164,
+      "name": "Bloodfest",
+      "offset": "06:24"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "06:26"
+    },
+    {
+      "source": 3,
+      "guid": 3613,
+      "name": "Collective Unconscious",
+      "offset": "06:26"
+    },
+    {
+      "source": 0,
+      "guid": 16472,
+      "name": "Living Shadow",
+      "offset": "06:28"
+    },
+    {
+      "source": 3,
+      "guid": 7443,
+      "name": "Minor Arcana",
+      "offset": "06:29"
+    },
+    {
+      "source": 1,
+      "guid": 25758,
+      "name": "Heart of Corundum",
+      "target": 0,
+      "offset": "06:29"
+    },
+    {
+      "source": 0,
+      "guid": 25754,
+      "name": "Oblation",
+      "target": 0,
+      "offset": "06:30"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "06:31"
+    },
+    {
+      "source": 2,
+      "guid": 24302,
+      "name": "Physis II",
+      "offset": "06:31"
+    },
+    {
+      "source": 7,
+      "guid": 2264,
+      "name": "Kassatsu",
+      "offset": "06:31"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "06:32"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "06:33"
+    },
+    {
+      "source": 0,
+      "guid": 3625,
+      "name": "Blood Weapon",
+      "offset": "06:33"
+    },
+    {
+      "source": 2,
+      "guid": 24299,
+      "name": "Ixochole",
+      "offset": "06:33"
+    },
+    {
+      "source": 3,
+      "guid": 3606,
+      "name": "Lightspeed",
+      "offset": "06:33"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "06:34"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "06:34"
+    },
+    {
+      "source": 3,
+      "guid": 16552,
+      "name": "Divination",
+      "offset": "06:35"
+    },
+    {
+      "source": 0,
+      "guid": 3643,
+      "name": "Carve and Spit",
+      "offset": "06:35"
+    },
+    {
+      "source": 6,
+      "guid": 3557,
+      "name": "Battle Litany",
+      "offset": "06:35"
+    },
+    {
+      "source": 5,
+      "guid": 25801,
+      "name": "Searing Light",
+      "offset": "06:35"
+    },
+    {
+      "source": 4,
+      "guid": 3559,
+      "name": "The Wanderer's Minuet",
+      "offset": "06:36"
+    },
+    {
+      "source": 4,
+      "guid": 101,
+      "name": "Raging Strikes",
+      "offset": "06:37"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "06:37"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "06:37"
+    },
+    {
+      "source": 6,
+      "guid": 10032,
+      "name": "Dragon Sight",
+      "target": 7,
+      "offset": "06:37"
+    },
+    {
+      "source": 7,
+      "guid": 2258,
+      "name": "Trick Attack",
+      "offset": "06:37"
+    },
+    {
+      "source": 6,
+      "guid": 85,
+      "name": "Lance Charge",
+      "offset": "06:38"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "06:38"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "06:39"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "06:39"
+    },
+    {
+      "source": 4,
+      "guid": 25785,
+      "name": "Radiant Finale",
+      "offset": "06:40"
+    },
+    {
+      "source": 6,
+      "guid": 96,
+      "name": "Dragonfire Dive",
+      "offset": "06:40"
+    },
+    {
+      "source": 4,
+      "guid": 118,
+      "name": "Battle Voice",
+      "offset": "06:40"
+    },
+    {
+      "source": 7,
+      "guid": 3566,
+      "name": "Dream Within a Dream",
+      "offset": "06:40"
+    },
+    {
+      "source": 3,
+      "guid": 25870,
+      "name": "Astrodyne",
+      "offset": "06:41"
+    },
+    {
+      "source": 4,
+      "guid": 3562,
+      "name": "Sidewinder",
+      "offset": "06:42"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "06:43"
+    },
+    {
+      "source": 1,
+      "guid": 16138,
+      "name": "No Mercy",
+      "offset": "06:44"
+    },
+    {
+      "source": 3,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "06:45"
+    },
+    {
+      "source": 4,
+      "guid": 107,
+      "name": "Barrage",
+      "offset": "06:45"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "06:45"
+    },
+    {
+      "source": 7,
+      "guid": 7403,
+      "name": "Ten Chi Jin",
+      "offset": "06:46"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "06:46"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "06:46"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "06:47"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "06:48"
+    },
+    {
+      "source": 1,
+      "guid": 16159,
+      "name": "Bow Shock",
+      "offset": "06:48"
+    },
+    {
+      "source": 7,
+      "guid": 16489,
+      "name": "Meisui",
+      "offset": "06:49"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "06:50"
+    },
+    {
+      "source": 6,
+      "guid": 16480,
+      "name": "Stardiver",
+      "offset": "06:50"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "06:52"
+    },
+    {
+      "source": 5,
+      "guid": 7561,
+      "name": "Swiftcast",
+      "offset": "06:52"
+    },
+    {
+      "source": 6,
+      "guid": 95,
+      "name": "Spineshatter Dive",
+      "offset": "06:53"
+    },
+    {
+      "source": 5,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "06:53"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "06:55"
+    },
+    {
+      "source": 3,
+      "guid": 7561,
+      "name": "Swiftcast",
+      "offset": "06:56"
+    },
+    {
+      "source": 3,
+      "guid": 25874,
+      "name": "Macrocosmos",
+      "offset": "06:58"
+    },
+    {
+      "source": 2,
+      "guid": 24311,
+      "name": "Panhaima",
+      "offset": "07:00"
+    },
+    {
+      "source": 6,
+      "guid": 27995,
+      "name": "Medicine",
+      "offset": "06:31"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "07:03"
+    },
+    {
+      "source": 7,
+      "guid": 27996,
+      "name": "Medicine",
+      "offset": "06:34"
+    },
+    {
+      "source": 3,
+      "guid": 27999,
+      "name": "Medicine",
+      "offset": "06:36"
+    },
+    {
+      "source": 0,
+      "guid": 7390,
+      "name": "Delirium",
+      "offset": "07:07"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "07:08"
+    },
+    {
+      "source": 3,
+      "guid": 7439,
+      "name": "Earthly Star",
+      "offset": "07:08"
+    },
+    {
+      "source": 7,
+      "guid": 2241,
+      "name": "Shade Shift",
+      "offset": "07:08"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "07:10"
+    },
+    {
+      "source": 5,
+      "guid": 16508,
+      "name": "Energy Drain",
+      "offset": "07:10"
+    },
+    {
+      "source": 0,
+      "guid": 3636,
+      "name": "Shadow Wall",
+      "offset": "07:11"
+    },
+    {
+      "source": 2,
+      "guid": 24310,
+      "name": "Holos",
+      "offset": "07:11"
+    },
+    {
+      "source": 1,
+      "guid": 27995,
+      "name": "Medicine",
+      "offset": "06:41"
+    },
+    {
+      "source": 0,
+      "guid": 7393,
+      "name": "The Blackest Night",
+      "target": 0,
+      "offset": "07:14"
+    },
+    {
+      "source": 4,
+      "guid": 7405,
+      "name": "Troubadour",
+      "offset": "07:15"
+    },
+    {
+      "source": 1,
+      "guid": 16160,
+      "name": "Heart of Light",
+      "offset": "07:15"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "07:16"
+    },
+    {
+      "source": 7,
+      "guid": 7549,
+      "name": "Feint",
+      "offset": "07:16"
+    },
+    {
+      "source": 5,
+      "guid": 16518,
+      "name": "Revelation",
+      "offset": "07:17"
+    },
+    {
+      "source": 1,
+      "guid": 7531,
+      "name": "Rampart",
+      "offset": "07:17"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "07:19"
+    },
+    {
+      "source": 4,
+      "guid": 114,
+      "name": "Mage's Ballad",
+      "offset": "07:19"
+    },
+    {
+      "source": 1,
+      "guid": 25758,
+      "name": "Heart of Corundum",
+      "target": 1,
+      "offset": "07:20"
+    },
+    {
+      "source": 2,
+      "guid": 24299,
+      "name": "Ixochole",
+      "offset": "07:21"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "07:22"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "07:22"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "07:23"
+    },
+    {
+      "source": 2,
+      "guid": 24300,
+      "name": "Zoe",
+      "offset": "07:23"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "07:25"
+    },
+    {
+      "source": 2,
+      "guid": 24318,
+      "name": "Pneuma",
+      "offset": "07:25"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "07:25"
+    },
+    {
+      "source": 2,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "07:26"
+    },
+    {
+      "source": 3,
+      "guid": 7443,
+      "name": "Minor Arcana",
+      "offset": "07:29"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "07:30"
+    },
+    {
+      "source": 0,
+      "guid": 3634,
+      "name": "Dark Mind",
+      "offset": "07:30"
+    },
+    {
+      "source": 7,
+      "guid": 7402,
+      "name": "Bhavacakra",
+      "offset": "07:30"
+    },
+    {
+      "source": 1,
+      "guid": 16152,
+      "name": "Superbolide",
+      "offset": "07:31"
+    },
+    {
+      "source": 7,
+      "guid": 2264,
+      "name": "Kassatsu",
+      "offset": "07:32"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "07:33"
+    },
+    {
+      "source": 1,
+      "guid": 16151,
+      "name": "Aurora",
+      "target": 1,
+      "offset": "07:34"
+    },
+    {
+      "source": 0,
+      "guid": 3643,
+      "name": "Carve and Spit",
+      "offset": "07:35"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "07:35"
+    },
+    {
+      "source": 0,
+      "guid": 3625,
+      "name": "Blood Weapon",
+      "offset": "07:36"
+    },
+    {
+      "source": 5,
+      "guid": 25799,
+      "name": "Radiant Aegis",
+      "offset": "07:36"
+    },
+    {
+      "source": 0,
+      "guid": 3640,
+      "name": "Plunge",
+      "offset": "07:37"
+    },
+    {
+      "source": 7,
+      "guid": 2258,
+      "name": "Trick Attack",
+      "offset": "07:37"
+    },
+    {
+      "source": 5,
+      "guid": 25836,
+      "name": "Mountain Buster",
+      "offset": "07:38"
+    },
+    {
+      "source": 3,
+      "guid": 3613,
+      "name": "Collective Unconscious",
+      "offset": "07:38"
+    },
+    {
+      "source": 6,
+      "guid": 7549,
+      "name": "Feint",
+      "offset": "07:38"
+    },
+    {
+      "source": 7,
+      "guid": 16493,
+      "name": "Bunshin",
+      "offset": "07:39"
+    },
+    {
+      "source": 6,
+      "guid": 85,
+      "name": "Lance Charge",
+      "offset": "07:39"
+    },
+    {
+      "source": 0,
+      "guid": 7535,
+      "name": "Reprisal",
+      "offset": "07:39"
+    },
+    {
+      "source": 6,
+      "guid": 25773,
+      "name": "Wyrmwind Thrust",
+      "offset": "07:40"
+    },
+    {
+      "source": 3,
+      "guid": 3614,
+      "name": "Essential Dignity",
+      "target": 1,
+      "offset": "07:40"
+    },
+    {
+      "source": 2,
+      "guid": 7561,
+      "name": "Swiftcast",
+      "offset": "07:41"
+    },
+    {
+      "source": 1,
+      "guid": 7535,
+      "name": "Reprisal",
+      "offset": "07:41"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "07:42"
+    },
+    {
+      "source": 7,
+      "guid": 3566,
+      "name": "Dream Within a Dream",
+      "offset": "07:42"
+    },
+    {
+      "source": 4,
+      "guid": 3562,
+      "name": "Sidewinder",
+      "offset": "07:43"
+    },
+    {
+      "source": 6,
+      "guid": 95,
+      "name": "Spineshatter Dive",
+      "offset": "07:43"
+    },
+    {
+      "source": 5,
+      "guid": 27998,
+      "name": "Medicine",
+      "offset": "07:14"
+    },
+    {
+      "source": 0,
+      "guid": 3639,
+      "name": "Salted Earth",
+      "offset": "07:44"
+    },
+    {
+      "source": 1,
+      "guid": 16138,
+      "name": "No Mercy",
+      "offset": "07:44"
+    },
+    {
+      "source": 2,
+      "guid": 24298,
+      "name": "Kerachole",
+      "offset": "07:46"
+    },
+    {
+      "source": 6,
+      "guid": 16478,
+      "name": "High Jump",
+      "offset": "07:46"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "07:47"
+    },
+    {
+      "source": 0,
+      "guid": 25755,
+      "name": "Salt and Darkness",
+      "offset": "07:47"
+    },
+    {
+      "source": 1,
+      "guid": 16159,
+      "name": "Bow Shock",
+      "offset": "07:48"
+    },
+    {
+      "source": 6,
+      "guid": 83,
+      "name": "Life Surge",
+      "offset": "07:48"
+    },
+    {
+      "source": 1,
+      "guid": 16154,
+      "name": "Rough Divide",
+      "offset": "07:49"
+    },
+    {
+      "source": 0,
+      "guid": 16470,
+      "name": "Edge of Shadow",
+      "offset": "07:49"
+    },
+    {
+      "source": 6,
+      "guid": 3555,
+      "name": "Geirskogul",
+      "offset": "07:50"
+    },
+    {
+      "source": 3,
+      "guid": 7562,
+      "name": "Lucid Dreaming",
+      "offset": "07:50"
+    },
+    {
+      "source": 0,
+      "guid": 27995,
+      "name": "Medicine",
+      "offset": "07:21"
+    },
+    {
+      "source": 6,
+      "guid": 16480,
+      "name": "Stardiver",
+      "offset": "07:52"
+    },
+    {
+      "source": 1,
+      "guid": 16165,
+      "name": "Blasting Zone",
+      "offset": "07:52"
+    },
+    {
+      "source": 3,
+      "guid": 25870,
+      "name": "Astrodyne",
+      "offset": "07:52"
+    },
+    {
+      "source": 5,
+      "guid": 7561,
+      "name": "Swiftcast",
+      "offset": "07:53"
+    },
+    {
+      "source": 4,
+      "guid": 116,
+      "name": "Army's Paeon",
+      "offset": "07:53"
+    },
+    {
+      "source": 1,
+      "guid": 16164,
+      "name": "Bloodfest",
+      "offset": "07:54"
+    }
+  ]
+}
