@@ -14,6 +14,7 @@ import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> p1_holiestHallowing = ModifiableCallout.durationBasedCall("Holiest Hallowing", "Interrupt {event.source}");
 	private final ModifiableCallout<BuffApplied> p1_brightwing = ModifiableCallout.durationBasedCall("Brightwing", "Pair Cleaves");
 
-	private final ModifiableCallout<HeadMarkerEvent> p1_wtfAreTheseMarkers = new ModifiableCallout<>("The Other P1 Markers", "({adjustedId}) marker with {partner}");
+	private final ModifiableCallout<HeadMarkerEvent> p1_playstationMarkers = new ModifiableCallout<>("PS Markers", "{marker} marker with {partner}");
 
 	private final ModifiableCallout<TetherEvent> p1_genericTether = new ModifiableCallout<>("P1 Generic Tethers", "Tether on you", "Tether on you {event.id}", Collections.emptyList());
 
@@ -114,6 +115,22 @@ public class Dragonsong implements FilteredEventHandler {
 		p1_pairsOfMarkers.feed(context, event);
 	}
 
+	private enum P1PsMarker {
+		Circle,
+		Triangle,
+		Square,
+		Cross;
+
+		static @Nullable P1PsMarker forOffset(int offset) {
+			if (offset >= 47 && offset <= 50) {
+				return values()[offset - 47];
+			}
+			else {
+				return null;
+			}
+		}
+	}
+
 	private final SequentialTrigger<BaseEvent> p1_fourHeadMark = new SequentialTrigger<>(30_000, BaseEvent.class,
 			e -> (e instanceof AbilityCastStart acs) && acs.getAbility().getId() == 0x62DD,
 			(e1, s) -> {
@@ -143,9 +160,11 @@ public class Dragonsong implements FilteredEventHandler {
 							Optional<HeadMarkerEvent> partnerMarker = marks.stream().filter(e -> !e.getTarget().isThePlayer() && e.getMarkerId() == myMark.getMarkerId())
 									.findAny();
 							int adjustedId = getHeadmarkOffset(myMark);
+							P1PsMarker marker = P1PsMarker.forOffset(adjustedId);
 							XivCombatant partner = partnerMarker.map(HeadMarkerEvent::getTarget).orElse(null);
-							s.accept(p1_wtfAreTheseMarkers.getModified(Map.of(
-									"adjustedId", adjustedId,
+							//noinspection ConstantConditions
+							s.accept(p1_playstationMarkers.getModified(Map.of(
+									"marker", marker,
 									"partner", partner == null ? "nobody" : partner)));
 						}, () -> log.error("No personal headmarker! Collected: [{}]", marks));
 			}
