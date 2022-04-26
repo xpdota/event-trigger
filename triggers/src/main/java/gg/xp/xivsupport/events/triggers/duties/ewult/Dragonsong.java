@@ -7,13 +7,16 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +32,8 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> p1_heavensblaze = ModifiableCallout.durationBasedCall("Heavensblaze", "Stack on {event.target}");
 
 	private final ModifiableCallout<HeadMarkerEvent> p1_wtfAreTheseMarkers = new ModifiableCallout<>("The Other P1 Markers", "({adjustedId}) marker with {partner}");
+
+	private final ModifiableCallout<TetherEvent> p1_genericTether = new ModifiableCallout<>("P1 Generic Tethers", "Tether on you", "Tether on you {event.id}", Collections.emptyList());
 
 	private final XivState state;
 
@@ -49,6 +54,8 @@ public class Dragonsong implements FilteredEventHandler {
 			case 0x62D4 -> call = p1_holiestOfHoly;
 			case 0x62DA -> call = p1_emptyDimension;
 			case 0x62DD -> call = p1_heavensblaze;
+			// TODO: what should this call actually be?
+//			case 0x62D6 -> call = p1_hyper;
 			default -> {
 				return;
 			}
@@ -63,6 +70,15 @@ public class Dragonsong implements FilteredEventHandler {
 			firstHeadmark = event.getMarkerId();
 		}
 		return (int) (event.getMarkerId() - firstHeadmark);
+	}
+
+	@HandleEvents
+	public void p1_genericTether(EventContext context, TetherEvent event) {
+		long id = event.getId();
+		if (event.eitherTargetMatches(XivCombatant::isThePlayer)
+				&& (id == 0x54 || id == 0x1)) {
+			context.accept(p1_genericTether.getModified(event));
+		}
 	}
 
 	@HandleEvents(order = -50_000)
@@ -93,7 +109,7 @@ public class Dragonsong implements FilteredEventHandler {
 			});
 
 	private final SequentialTrigger<BaseEvent> p1_pairsOfMarkers = new SequentialTrigger<>(20_000, BaseEvent.class,
-			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x62D0,
+			e -> e instanceof AbilityUsedEvent acs && acs.getAbility().getId() == 0x62D5,
 			(e1, s) -> {
 				List<HeadMarkerEvent> marks = s.waitEventsUntil(8, HeadMarkerEvent.class, e -> {
 					int headmarkOffset = getHeadmarkOffset(e);
