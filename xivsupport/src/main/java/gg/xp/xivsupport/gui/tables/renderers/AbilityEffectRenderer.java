@@ -73,6 +73,9 @@ public class AbilityEffectRenderer {
 		else if (value instanceof StatusAppliedEffect statusApplied) {
 			text = "+";
 			icon = StatusEffectLibrary.iconForId(statusApplied.getStatus().getId(), statusApplied.getStacks());
+			if (icon == null) {
+				icon = StatusEffectLibrary.iconForId(760, 0);
+			}
 			textOnRight = true;
 		}
 		else if (value instanceof StatusNoEffect sne) {

@@ -8,6 +8,7 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
@@ -30,6 +31,8 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> p1_holiestOfHoly = ModifiableCallout.durationBasedCall("Holiest of Holy", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> p1_emptyDimension = ModifiableCallout.durationBasedCall("Empty Dimension", "Donut");
 	private final ModifiableCallout<AbilityCastStart> p1_heavensblaze = ModifiableCallout.durationBasedCall("Heavensblaze", "Stack on {event.target}");
+	private final ModifiableCallout<AbilityCastStart> p1_holiestHallowing = ModifiableCallout.durationBasedCall("Holiest Hallowing", "Interrupt {event.source}");
+	private final ModifiableCallout<BuffApplied> p1_brightwing = ModifiableCallout.durationBasedCall("Brightwing", "Pair Cleaves");
 
 	private final ModifiableCallout<HeadMarkerEvent> p1_wtfAreTheseMarkers = new ModifiableCallout<>("The Other P1 Markers", "({adjustedId}) marker with {partner}");
 
@@ -54,6 +57,15 @@ public class Dragonsong implements FilteredEventHandler {
 			case 0x62D4 -> call = p1_holiestOfHoly;
 			case 0x62DA -> call = p1_emptyDimension;
 			case 0x62DD -> call = p1_heavensblaze;
+			case 0x62D0 -> {
+				//noinspection ConstantConditions
+				if (state.getPlayerJob().caresAboutInterrupt()) {
+					call = p1_holiestHallowing;
+				}
+				else {
+					return;
+				}
+			}
 			// TODO: what should this call actually be?
 //			case 0x62D6 -> call = p1_hyper;
 			default -> {
@@ -61,6 +73,14 @@ public class Dragonsong implements FilteredEventHandler {
 			}
 		}
 		context.accept(call.getModified(event));
+	}
+
+	@HandleEvents
+	public void buffApplied(EventContext context, BuffApplied event) {
+		// Brightwing
+		if (event.getBuff().getId() == 0x6316) {
+			context.accept(p1_brightwing.getModified(event));
+		}
 	}
 
 	private Long firstHeadmark;
@@ -123,8 +143,8 @@ public class Dragonsong implements FilteredEventHandler {
 							int adjustedId = getHeadmarkOffset(myMark);
 							XivCombatant partner = partnerMarker.map(HeadMarkerEvent::getTarget).orElse(null);
 							s.accept(p1_wtfAreTheseMarkers.getModified(Map.of(
-											"adjustedId", adjustedId,
-											"partner", partner == null ? "nobody" : partner)));
+									"adjustedId", adjustedId,
+									"partner", partner == null ? "nobody" : partner)));
 						}, () -> log.error("No personal headmarker! Collected: [{}]", marks));
 			}
 	);
