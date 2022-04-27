@@ -9,6 +9,7 @@ import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivStatusEffect;
+import gg.xp.xivsupport.speech.CalloutEvent;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -71,10 +72,20 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 				text = String.format("%s", status.getName());
 			}
 			icon = StatusEffectLibrary.iconForId(status.getId(), stacks);
+			if (icon == null && status.getId() != 0) {
+				icon = StatusEffectLibrary.iconForId(760, 0);
+			}
+
 			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
 		}
 		else if (value instanceof NameIdPair pair) {
 			return fallback.getTableCellRendererComponent(table, pair.getName(), isSelected, hasFocus, row, column);
+		}
+		// Ehhh, really not the place for this, but it can move later
+		else if (value instanceof CalloutEvent call) {
+			// Using call text since it is fixed rather than dynamic
+			tooltip = text = call.getCallText();
+			icon = null;
 		}
 		else {
 			return fallback.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);

@@ -53,7 +53,7 @@ public enum Job implements HasIconURL {
 	GNB(37, false, JobType.TANK, "Gunbreaker"),
 	DNC(38, false, JobType.PRANGED, "Dancer"),
 	RPR(39, false, JobType.MELEE_DPS, "Reaper"),
-//	SAG(40, false, JobType.HEALER, "The Cooler SCH");
+	//	SAG(40, false, JobType.HEALER, "The Cooler SCH");
 	SGE(40, false, JobType.HEALER, "Sage");
 
 	private static final Logger log = LoggerFactory.getLogger(Job.class);
@@ -171,5 +171,9 @@ public enum Job implements HasIconURL {
 
 	public JobType getCategory() {
 		return category;
+	}
+
+	public boolean caresAboutInterrupt() {
+		return category == JobType.TANK || category == JobType.PRANGED;
 	}
 }

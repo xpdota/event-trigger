@@ -7,10 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 public class SequentialTriggerController<X extends BaseEvent> {
 
@@ -48,6 +51,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			}
 		}, "SequentialTrigger-" + threadIdCounter.getAndIncrement());
 		thread.setDaemon(true);
+		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
 		synchronized (lock) {
 			waitProcessingDone();
@@ -66,7 +70,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	}
 
 	// To be called from internal thread
-	public <Y extends X> Y waitEvent(Class<Y> eventClass, Predicate<Y> eventFilter) {
+	public <Y> Y waitEvent(Class<Y> eventClass, Predicate<Y> eventFilter) {
 		log.info("Waiting for specific event");
 		while (true) {
 			X event = waitEvent();
@@ -74,6 +78,32 @@ public class SequentialTriggerController<X extends BaseEvent> {
 				log.info("Done waiting for specific event, got: {}", event);
 				return (Y) event;
 			}
+		}
+	}
+
+	public <Y> List<Y> waitEvents(int events, Class<Y> eventClass, Predicate<Y> eventFilter) {
+		return IntStream.range(0, events)
+				.mapToObj(i -> waitEvent(eventClass, eventFilter))
+				.toList();
+	}
+
+	public <Y, Z> List<Y> waitEventsUntil(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {
+		List<Y> out = new ArrayList<>();
+		while (true) {
+			X event = waitEvent();
+			// First possibility - event we're interested int
+			if (eventClass.isInstance(event) && eventFilter.test((Y) event)) {
+				out.add((Y) event);
+				// If we have reached the limit, return it now
+				if (out.size() >= limit) {
+					return out;
+				}
+			}
+			// Second possibility - hit our stop trigger
+			else if (stopOnType.isInstance(event) && stopOn.test((Z) event)) {
+				return out;
+			}
+			// Third possibility - keep looking
 		}
 	}
 

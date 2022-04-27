@@ -59,6 +59,10 @@ public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTarget
 		}
 	}
 
+	public boolean eitherTargetMatches(Predicate<XivCombatant> targetCondition) {
+		return targetCondition.test(source) || targetCondition.test(target);
+	}
+
 	public static Set<XivCombatant> getUnitsTetheredTo(XivCombatant combatant, Collection<TetherEvent> tethers) {
 		Set<XivCombatant> tetheredCombatants = new HashSet<>();
 		for (TetherEvent tether : tethers) {
