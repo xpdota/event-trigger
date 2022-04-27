@@ -45,10 +45,10 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> p1_puddleBait = ModifiableCallout.durationBasedCall("Puddle", "Puddle on you");
 
 	// TODO
-//	private final ModifiableCallout<HeadMarkerEvent> Circle = new ModifiableCallout<>("Circle", "Red Circle with {partner}");
-//	private final ModifiableCallout<HeadMarkerEvent> Triangle = new ModifiableCallout<>("Triangle", "Green Triangle with {partner}");
-//	private final ModifiableCallout<HeadMarkerEvent> Square = new ModifiableCallout<>("Square", "Purple Square with {partner}");
-//	private final ModifiableCallout<HeadMarkerEvent> Cross = new ModifiableCallout<>("Cross", "Blue Cross with {partner}");
+	private final ModifiableCallout<HeadMarkerEvent> circle = new ModifiableCallout<>("Circle", "Red Circle with {partner}");
+	private final ModifiableCallout<HeadMarkerEvent> triangle = new ModifiableCallout<>("Triangle", "Green Triangle with {partner}");
+	private final ModifiableCallout<HeadMarkerEvent> square = new ModifiableCallout<>("Square", "Purple Square with {partner}");
+	private final ModifiableCallout<HeadMarkerEvent> cross = new ModifiableCallout<>("Cross", "Blue Cross with {partner}");
 
 	private final XivState state;
 
@@ -180,6 +180,16 @@ public class Dragonsong implements FilteredEventHandler {
 							Optional<HeadMarkerEvent> partnerMarker = marks.stream().filter(e -> !e.getTarget().isThePlayer() && e.getMarkerId() == myMark.getMarkerId())
 									.findAny();
 							int adjustedId = getHeadmarkOffset(myMark);
+							final ModifiableCallout<HeadMarkerEvent> call;
+							switch (adjustedId) {
+								case 47 -> call = circle;
+								case 48 -> call = triangle;
+								case 49 -> call = square;
+								case 50 -> call = cross;
+								default -> {
+									return;
+								}
+							}
 							P1PsMarker marker = P1PsMarker.forOffset(adjustedId);
 							XivCombatant partner = partnerMarker.map(HeadMarkerEvent::getTarget).orElse(null);
 							//noinspection ConstantConditions
