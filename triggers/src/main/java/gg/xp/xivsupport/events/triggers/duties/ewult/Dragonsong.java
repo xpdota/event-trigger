@@ -29,7 +29,8 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(Dragonsong.class);
 
-	private final ModifiableCallout<HeadMarkerEvent> p1_firstCleaveMarker = new ModifiableCallout<>("Quad Marker", "Marker ({set} set)");
+	private final ModifiableCallout<HeadMarkerEvent> p1_firstCleaveMarker = new ModifiableCallout<>("Quad Marker (1st set)", "Marker, First Set");
+	private final ModifiableCallout<HeadMarkerEvent> p1_secondCleaveMarker = new ModifiableCallout<>("Quad Marker (2nd set)", "Second Set");
 	private final ModifiableCallout<AbilityCastStart> p1_holiestOfHoly = ModifiableCallout.durationBasedCall("Holiest of Holy", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> p1_emptyDimension = ModifiableCallout.durationBasedCall("Empty Dimension", "Donut");
 	private final ModifiableCallout<AbilityCastStart> p1_fullDimension = ModifiableCallout.durationBasedCall("Empty Dimension", "Out");
@@ -39,7 +40,15 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private final ModifiableCallout<HeadMarkerEvent> p1_playstationMarkers = new ModifiableCallout<>("PS Markers", "{marker} marker with {partner}");
 
-	private final ModifiableCallout<TetherEvent> p1_genericTether = new ModifiableCallout<>("P1 Generic Tethers", "Tether on you", "Tether on you {event.id}", Collections.emptyList());
+//	private final ModifiableCallout<TetherEvent> p1_genericTether = new ModifiableCallout<>("P1 Generic Tethers", "Tether on you", "Tether on you {event.id}", Collections.emptyList());
+
+	private final ModifiableCallout<BuffApplied> p1_puddleBait = ModifiableCallout.durationBasedCall("Puddle", "Puddle on you");
+
+	// TODO
+//	private final ModifiableCallout<HeadMarkerEvent> Circle = new ModifiableCallout<>("Circle", "Red Circle with {partner}");
+//	private final ModifiableCallout<HeadMarkerEvent> Triangle = new ModifiableCallout<>("Triangle", "Green Triangle with {partner}");
+//	private final ModifiableCallout<HeadMarkerEvent> Square = new ModifiableCallout<>("Square", "Purple Square with {partner}");
+//	private final ModifiableCallout<HeadMarkerEvent> Cross = new ModifiableCallout<>("Cross", "Blue Cross with {partner}");
 
 	private final XivState state;
 
@@ -85,6 +94,9 @@ public class Dragonsong implements FilteredEventHandler {
 		if (event.getBuff().getId() == 0x6316) {
 			context.accept(p1_brightwing.getModified(event));
 		}
+		else if (event.getBuff().getId() == 0xA65 && event.getTarget().isThePlayer()) {
+			context.accept(p1_puddleBait.getModified(event));
+		}
 	}
 
 	private Long firstHeadmark;
@@ -109,14 +121,14 @@ public class Dragonsong implements FilteredEventHandler {
 	}
 
 
-	@HandleEvents
-	public void p1_genericTether(EventContext context, TetherEvent event) {
-		long id = event.getId();
-		if (event.eitherTargetMatches(XivCombatant::isThePlayer)
-				&& (id == 0x54 || id == 0x1)) {
-			context.accept(p1_genericTether.getModified(event));
-		}
-	}
+//	@HandleEvents
+//	public void p1_genericTether(EventContext context, TetherEvent event) {
+//		long id = event.getId();
+//		if (event.eitherTargetMatches(XivCombatant::isThePlayer)
+//				&& (id == 0x54 || id == 0x1)) {
+//			context.accept(p1_genericTether.getModified(event));
+//		}
+//	}
 
 	@HandleEvents
 	public void feedSeq(EventContext context, BaseEvent event) {
@@ -148,12 +160,11 @@ public class Dragonsong implements FilteredEventHandler {
 				// If you aren't one of the first 4, you're one of the second four
 				if (s.waitEvents(4, HeadMarkerEvent.class, event -> getHeadmarkOffset(event) == 0)
 						.stream().anyMatch(e -> e.getTarget().isThePlayer())) {
-					set = "first";
+					s.accept(p1_firstCleaveMarker.getModified());
 				}
 				else {
-					set = "second";
+					s.accept(p1_secondCleaveMarker.getModified());
 				}
-				s.accept(p1_firstCleaveMarker.getModified(Map.of("set", set)));
 			});
 
 	private final SequentialTrigger<BaseEvent> p1_pairsOfMarkers = new SequentialTrigger<>(20_000, BaseEvent.class,
