@@ -11,6 +11,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -88,12 +89,25 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private Long firstHeadmark;
 
+	@HandleEvents
+	public void reset(EventContext context, PullStartedEvent event) {
+		firstHeadmark = null;
+	}
+
+	// TODO: need a secondary reset trigger for final boss
+
 	private int getHeadmarkOffset(HeadMarkerEvent event) {
 		if (firstHeadmark == null) {
 			firstHeadmark = event.getMarkerId();
 		}
 		return (int) (event.getMarkerId() - firstHeadmark);
 	}
+
+	@HandleEvents(order = -50_000)
+	public void sequentialHeadmarkSolver(EventContext context, HeadMarkerEvent event) {
+		getHeadmarkOffset(event);
+	}
+
 
 	@HandleEvents
 	public void p1_genericTether(EventContext context, TetherEvent event) {
@@ -102,11 +116,6 @@ public class Dragonsong implements FilteredEventHandler {
 				&& (id == 0x54 || id == 0x1)) {
 			context.accept(p1_genericTether.getModified(event));
 		}
-	}
-
-	@HandleEvents(order = -50_000)
-	public void sequentialHeadmarkSolver(EventContext context, HeadMarkerEvent event) {
-		getHeadmarkOffset(event);
 	}
 
 	@HandleEvents
