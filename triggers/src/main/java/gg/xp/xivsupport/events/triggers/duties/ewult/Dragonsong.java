@@ -10,16 +10,14 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
-import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.XivCombatant;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -99,14 +97,27 @@ public class Dragonsong implements FilteredEventHandler {
 		}
 	}
 
-	private Long firstHeadmark;
 
 	@HandleEvents
 	public void reset(EventContext context, PullStartedEvent event) {
 		firstHeadmark = null;
 	}
 
-	// TODO: need a secondary reset trigger for final boss
+	@HandleEvents
+	public void zoneChange(EventContext context, ZoneChangeEvent zce) {
+		isSecondPhase = false;
+	}
+
+	@HandleEvents
+	public void finalBoss(EventContext context, AbilityUsedEvent event) {
+		if (event.getSource().getbNpcId() == 0x313C) {
+			isSecondPhase = true;
+			firstHeadmark = null;
+		}
+	}
+
+	private boolean isSecondPhase;
+	private Long firstHeadmark;
 
 	private int getHeadmarkOffset(HeadMarkerEvent event) {
 		if (firstHeadmark == null) {
@@ -134,22 +145,6 @@ public class Dragonsong implements FilteredEventHandler {
 	public void feedSeq(EventContext context, BaseEvent event) {
 		p1_fourHeadMark.feed(context, event);
 		p1_pairsOfMarkers.feed(context, event);
-	}
-
-	private enum P1PsMarker {
-		Circle,
-		Triangle,
-		Square,
-		Cross;
-
-		static @Nullable P1PsMarker forOffset(int offset) {
-			if (offset >= 47 && offset <= 50) {
-				return values()[offset - 47];
-			}
-			else {
-				return null;
-			}
-		}
 	}
 
 	private final SequentialTrigger<BaseEvent> p1_fourHeadMark = new SequentialTrigger<>(30_000, BaseEvent.class,
@@ -190,14 +185,13 @@ public class Dragonsong implements FilteredEventHandler {
 									return;
 								}
 							}
-							P1PsMarker marker = P1PsMarker.forOffset(adjustedId);
 							XivCombatant partner = partnerMarker.map(HeadMarkerEvent::getTarget).orElse(null);
-							//noinspection ConstantConditions
-							s.accept(p1_playstationMarkers.getModified(Map.of(
-									"marker", marker,
-									"partner", partner == null ? "nobody" : partner)));
+							s.accept(call.getModified(Map.of("partner", partner == null ? "nobody" : partner)));
 						}, () -> log.error("No personal headmarker! Collected: [{}]", marks));
 			}
 	);
+
+//	private final SequentialTrigger<BaseEvent> thordan_firstTrio_markers = new SequentialTrigger<>(20_000, BaseEvent.class,
+//			)
 
 }
