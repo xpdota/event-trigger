@@ -11,6 +11,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
@@ -18,13 +19,11 @@ import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,6 +57,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<?> thordan_trio1_nothing = new ModifiableCallout<>("First Trio: Nothing", "Nothing");
 	private final ModifiableCallout<HeadMarkerEvent> thordan_trio1_blueMarker = new ModifiableCallout<>("First Trio: Blue Marker", "Blue Marker");
 	private final ModifiableCallout<?> thordan_trio1_tank = new ModifiableCallout<>("First Trio: Tank", "Take Tether");
+	private final ModifiableCallout<?> thordan_trio1_wheresThordan = new ModifiableCallout<>("First Trio: Where is Thordan", "Thordan {wheresThordan}");
 
 	private final XivState state;
 
@@ -265,16 +265,21 @@ public class Dragonsong implements FilteredEventHandler {
 									() -> s.accept(thordan_trio1_nothing.getModified()));
 				}
 
-				// TODO: where is thordan ?
-				Object wheresThordan = getState().getCombatants().values().stream()
-						.filter(cbt -> cbt.getbNpcId() == 0x313C)
-						.map(arenaPos::forCombatant)
-						.findAny()
-						.map(Object.class::cast)
-						.orElse("?");
-
-				Map<String, Object> params = Map.of("wheresThordan", wheresThordan);
-
+				while (true) {
+					Optional<ArenaSector> wheresThordan = getState().getCombatants().values().stream()
+							.filter(cbt -> cbt.getbNpcId() == 0x313C)
+							.map(arenaPos::forCombatant)
+							.filter(ArenaSector::isOutside)
+							.findAny();
+					if (wheresThordan.isPresent()) {
+						Map<String, Object> params = Map.of("wheresThordan", wheresThordan.get());
+						s.accept(thordan_trio1_wheresThordan.getModified(params));
+						break;
+					}
+					else {
+						s.waitEvent(XivStateRecalculatedEvent.class);
+					}
+				}
 			});
 
 	private XivState getState() {

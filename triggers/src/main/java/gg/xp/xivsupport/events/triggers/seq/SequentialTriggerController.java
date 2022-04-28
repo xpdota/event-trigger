@@ -70,6 +70,11 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	}
 
 	// To be called from internal thread
+	public <Y> Y waitEvent(Class<Y> eventClass) {
+		return waitEvent(eventClass, (e) -> true);
+	}
+
+	// To be called from internal thread
 	public <Y> Y waitEvent(Class<Y> eventClass, Predicate<Y> eventFilter) {
 		log.info("Waiting for specific event");
 		while (true) {
@@ -81,6 +86,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	// To be called from internal thread
 	public <Y> List<Y> waitEvents(int events, Class<Y> eventClass, Predicate<Y> eventFilter) {
 		return IntStream.range(0, events)
 				.mapToObj(i -> waitEvent(eventClass, eventFilter))

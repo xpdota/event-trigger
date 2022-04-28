@@ -4,6 +4,7 @@ import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
+import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
@@ -32,6 +33,7 @@ public final class LaunchImportedSession {
 		EventMaster master = pico.getComponent(EventMaster.class);
 		ReplayController replayController = new ReplayController(master, events, decompress);
 		pico.addComponent(replayController);
+		pico.addComponent(FakeACTTimeSource.class);
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.WEBSOCKET_REPLAY);
 		dist.acceptEvent(new InitEvent());
 		pico.addComponent(GuiMain.class);
