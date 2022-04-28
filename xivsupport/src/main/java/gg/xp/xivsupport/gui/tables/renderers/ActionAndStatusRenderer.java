@@ -5,11 +5,11 @@ import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivdata.data.URLIcon;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivStatusEffect;
-import gg.xp.xivsupport.speech.CalloutEvent;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -82,9 +82,9 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 			return fallback.getTableCellRendererComponent(table, pair.getName(), isSelected, hasFocus, row, column);
 		}
 		// Ehhh, really not the place for this, but it can move later
-		else if (value instanceof CalloutEvent call) {
+		else if (value instanceof HasPrimaryValue hasPrimaryValue) {
 			// Using call text since it is fixed rather than dynamic
-			tooltip = text = call.getCallText();
+			tooltip = text = hasPrimaryValue.getPrimaryValue();
 			icon = null;
 		}
 		else {

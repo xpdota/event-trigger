@@ -5,7 +5,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 
 import java.io.Serial;
 
-public class HeadMarkerEvent extends BaseEvent implements HasTargetEntity {
+public class HeadMarkerEvent extends BaseEvent implements HasTargetEntity, HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = -413687601479469145L;
@@ -24,5 +24,16 @@ public class HeadMarkerEvent extends BaseEvent implements HasTargetEntity {
 
 	public long getMarkerId() {
 		return markerId;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("HeadMarkerEvent(%s on %s)", markerId, target);
+	}
+
+
+	@Override
+	public String getPrimaryValue() {
+		return String.format("HM %d", markerId);
 	}
 }

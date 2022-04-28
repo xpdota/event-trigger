@@ -11,7 +11,6 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
-import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
@@ -58,6 +57,13 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<HeadMarkerEvent> thordan_trio1_blueMarker = new ModifiableCallout<>("First Trio: Blue Marker", "Blue Marker");
 	private final ModifiableCallout<?> thordan_trio1_tank = new ModifiableCallout<>("First Trio: Tank", "Take Tether");
 	private final ModifiableCallout<?> thordan_trio1_wheresThordan = new ModifiableCallout<>("First Trio: Where is Thordan", "Thordan {wheresThordan}");
+
+	private final ModifiableCallout<?> thordan_trio2_swordMark = new ModifiableCallout<>("Second Trio: Swords", "{sword1} and {sword2}");
+	private final ModifiableCallout<HeadMarkerEvent> thordan_trio2_meteorMark = new ModifiableCallout<>("Second Trio: Meteors", "Meteor on you");
+
+	private final ModifiableCallout<HeadMarkerEvent> estinhog_headmark1 = new ModifiableCallout<>("Estinhog: Headmark", "One");
+	private final ModifiableCallout<HeadMarkerEvent> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Headmark", "Two");
+	private final ModifiableCallout<HeadMarkerEvent> estinhog_headmark3 = new ModifiableCallout<>("Estinhog: Headmark", "Three");
 
 	private final XivState state;
 
@@ -122,7 +128,8 @@ public class Dragonsong implements FilteredEventHandler {
 
 	@HandleEvents
 	public void finalBoss(EventContext context, AbilityUsedEvent event) {
-		if (event.getSource().getbNpcId() == 0x313C) {
+		// Covers transition from first to second phase
+		if (event.getSource().getbNpcId() == 0x313C && !isSecondPhase) {
 			isSecondPhase = true;
 			firstHeadmark = null;
 		}
@@ -158,14 +165,12 @@ public class Dragonsong implements FilteredEventHandler {
 		p1_fourHeadMark.feed(context, event);
 		p1_pairsOfMarkers.feed(context, event);
 		thordan_firstTrio.feed(context, event);
+		thordan_secondTrio.feed(context, event);
 	}
 
 	private final SequentialTrigger<BaseEvent> p1_fourHeadMark = new SequentialTrigger<>(30_000, BaseEvent.class,
 			e -> (e instanceof AbilityCastStart acs) && acs.getAbility().getId() == 0x62DD,
 			(e1, s) -> {
-				// 2-4 markers
-				String set;
-				// If you aren't one of the first 4, you're one of the second four
 				if (s.waitEvents(4, HeadMarkerEvent.class, event -> getHeadmarkOffset(event) == 0)
 						.stream().anyMatch(e -> e.getTarget().isThePlayer())) {
 					s.accept(p1_firstCleaveMarker.getModified());
@@ -277,10 +282,56 @@ public class Dragonsong implements FilteredEventHandler {
 						break;
 					}
 					else {
-						s.waitEvent(XivStateRecalculatedEvent.class);
+						s.waitEvent(BaseEvent.class);
 					}
 				}
 			});
+
+	private final SequentialTrigger<BaseEvent> thordan_secondTrio = new SequentialTrigger<>(35_000, BaseEvent.class,
+			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x63E1,
+			(e1, s) -> {
+				log.info("Thordan Trio 2: Start");
+
+				List<HeadMarkerEvent> swordMarks = s.waitEventsUntil(2,
+						HeadMarkerEvent.class, e -> {
+							int offSet = getHeadmarkOffset(e);
+							log.info("Thordan Trio 2: Headmark offset {}", offSet);
+							return offSet == -280 || offSet == -279;
+						},
+						AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x63D0);
+
+				XivCombatant first = swordMarks.stream().filter(mark -> getHeadmarkOffset(mark) == -280)
+						.map(HeadMarkerEvent::getTarget)
+						.findAny()
+						.orElse(null);
+				XivCombatant second = swordMarks.stream().filter(mark -> getHeadmarkOffset(mark) == -279)
+						.map(HeadMarkerEvent::getTarget)
+						.findAny()
+						.orElse(null);
+
+				log.info("Thordan Trio 2: Got Markers {}", swordMarks);
+				s.accept(thordan_trio2_swordMark.getModified(Map.of(
+						"sword1", first == null ? "?" : first,
+						"sword2", second == null ? "?" : second)));
+
+			});
+
+	@HandleEvents
+	public void genericHeadMarksOnYou(EventContext context, HeadMarkerEvent event) {
+		if (event.getTarget().isThePlayer()) {
+			ModifiableCallout<HeadMarkerEvent> call;
+			switch (getHeadmarkOffset(event)) {
+				case -45 -> call = thordan_trio2_meteorMark;
+				case -11 -> call = estinhog_headmark1;
+				case -10 -> call = estinhog_headmark2;
+				case -9 -> call = estinhog_headmark3;
+				default -> {
+					return;
+				}
+			}
+			context.accept(call.getModified(event));
+		}
+	}
 
 	private XivState getState() {
 		return state;
