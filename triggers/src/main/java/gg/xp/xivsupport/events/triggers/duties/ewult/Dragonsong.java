@@ -15,13 +15,20 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.models.ArenaPos;
+import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @CalloutRepo("Dragonsong's Reprise")
 public class Dragonsong implements FilteredEventHandler {
@@ -48,9 +55,9 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> thordan_cleaveBait = ModifiableCallout.durationBasedCall("Ascalon's Mercy", "Cleave Bait");
 
-	private final ModifiableCallout<?> thordan_trio1_nothing = new ModifiableCallout<>("First Trio: Nothing", "Nothing");
+	private final ModifiableCallout<?> thordan_trio1_nothing = new ModifiableCallout<>("First Trio: Nothing", "Nothing (Thordan {wheresThordan}");
 	private final ModifiableCallout<HeadMarkerEvent> thordan_trio1_blueMarker = new ModifiableCallout<>("First Trio: Blue Marker", "Blue Marker");
-	private final ModifiableCallout<?> thordan_trio1_tank = new ModifiableCallout<>("First Trio: Tank", "Take Tether");
+	private final ModifiableCallout<?> thordan_trio1_tank = new ModifiableCallout<>("First Trio: Tank", "Take Tether (Thordan {wheresThordan})");
 
 	private final XivState state;
 
@@ -197,26 +204,77 @@ public class Dragonsong implements FilteredEventHandler {
 			}
 	);
 
+	private final ArenaPos arenaPos = new ArenaPos(100, 100, 5, 5);
+
+	private final ModifiableCallout<?> nsSafe = new ModifiableCallout<>("Trio 1 N/S Safe", "North/South Safe", "North South Safe", Collections.emptyList());
+	private final ModifiableCallout<?> neSwSafe = new ModifiableCallout<>("Trio 1 NE/SW Safe", "Northeast/Southwest Safe", "Northeast Southwest Safe", Collections.emptyList());
+	private final ModifiableCallout<?> ewSafe = new ModifiableCallout<>("Trio 1 E/W Safe", "East/West Safe", "East West Safe", Collections.emptyList());
+	private final ModifiableCallout<?> seNwSafe = new ModifiableCallout<>("Trio 1 SE/NW Safe", "Southeast/Northwest Safe", "Southeast Northwest Safe", Collections.emptyList());
+
 	private final SequentialTrigger<BaseEvent> thordan_firstTrio = new SequentialTrigger<>(30_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x63D3,
 			(e1, s) -> {
 				log.info("Thordan Trio 1: Start");
+
+				List<AbilityCastStart> dashes = s.waitEvents(3, AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x63D4);
+				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.all);
+				dashes.stream()
+						.map(dash -> arenaPos.forCombatant(dash.getSource()))
+						.forEach(badSector -> {
+							log.info("Thordan Trio 1: Unsafe spot: {}", badSector);
+							safe.remove(badSector);
+							safe.remove(badSector.opposite());
+						});
+
+				ModifiableCallout<?> safeSpot = null;
+				if (safe.contains(ArenaSector.NORTH)) {
+					safeSpot = nsSafe;
+				}
+				else if (safe.contains(ArenaSector.NORTHEAST)) {
+					safeSpot = neSwSafe;
+				}
+				else if (safe.contains(ArenaSector.EAST)) {
+					safeSpot = ewSafe;
+				}
+				else if (safe.contains(ArenaSector.SOUTHEAST)) {
+					safeSpot = seNwSafe;
+				}
+				if (safeSpot != null) {
+					s.accept(safeSpot.getModified());
+				}
+				else {
+					log.error("Thordan Trio 1: Bad safespots: {}", safe);
+				}
+
+
 				List<HeadMarkerEvent> marks = s.waitEventsUntil(3,
 						HeadMarkerEvent.class, e -> getHeadmarkOffset(e) == 0,
 						AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x63DE);
+
+				Object wheresThordan = getState().getCombatants().values().stream()
+						.filter(cbt -> cbt.getbNpcId() == 0x313C)
+						.map(arenaPos::forCombatant)
+						.findAny()
+						.map(Object.class::cast)
+						.orElse("?");
+
+				Map<String, Object> params = Map.of("wheresThordan", wheresThordan);
+
 				Job job = getState().getPlayerJob();
 				log.info("Thordan Trio 1: Got Markers");
 				if (job != null && job.isTank()) {
-					s.accept(thordan_trio1_tank.getModified());
+					s.accept(thordan_trio1_tank.getModified(params));
 				}
 				else {
 					marks.stream()
 							.filter(mark -> mark.getTarget().isThePlayer())
 							.findAny()
 							.ifPresentOrElse(
-									mark -> s.accept(thordan_trio1_blueMarker.getModified(mark)),
-									() -> s.accept(thordan_trio1_nothing.getModified()));
+									mark -> s.accept(thordan_trio1_blueMarker.getModified(mark, params)),
+									() -> s.accept(thordan_trio1_nothing.getModified(params)));
 				}
+
+				// TODO: where is thordan ?
 			});
 
 	private XivState getState() {

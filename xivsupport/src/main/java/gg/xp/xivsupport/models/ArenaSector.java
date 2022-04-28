@@ -36,6 +36,7 @@ public enum ArenaSector {
 
 	public static final List<ArenaSector> cardinals = List.of(NORTH, EAST, SOUTH, WEST);
 	public static final List<ArenaSector> quadrants = List.of(NORTHEAST, SOUTHEAST, SOUTHWEST, NORTHWEST);
+	public static final List<ArenaSector> all = List.of(NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST);
 
 	public static @Nullable ArenaSector tryCombineTwoQuadrants(List<ArenaSector> quadrants) {
 		if (quadrants.size() != 2) {

@@ -35,6 +35,9 @@ public final class ModifiedCalloutHandle {
 		// If sameText is already set (regardless of the value it is set to, do nothing)
 		if (!sameText.isSet()) {
 			// If the settings are identical, set it
+			// TODO: needs to be fixed
+			// If a callout is initially the same, and the user DOES NOT CUSTOMIZE, but the underlying call changes,
+			// the same setting will still be on in the current impl.
 			if (Objects.equals(ttsSetting.get(), textSetting.get())) {
 				sameText.set(true);
 			}
