@@ -55,9 +55,9 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> thordan_cleaveBait = ModifiableCallout.durationBasedCall("Ascalon's Mercy", "Cleave Bait");
 
-	private final ModifiableCallout<?> thordan_trio1_nothing = new ModifiableCallout<>("First Trio: Nothing", "Nothing (Thordan {wheresThordan}");
+	private final ModifiableCallout<?> thordan_trio1_nothing = new ModifiableCallout<>("First Trio: Nothing", "Nothing");
 	private final ModifiableCallout<HeadMarkerEvent> thordan_trio1_blueMarker = new ModifiableCallout<>("First Trio: Blue Marker", "Blue Marker");
-	private final ModifiableCallout<?> thordan_trio1_tank = new ModifiableCallout<>("First Trio: Tank", "Take Tether (Thordan {wheresThordan})");
+	private final ModifiableCallout<?> thordan_trio1_tank = new ModifiableCallout<>("First Trio: Tank", "Take Tether");
 
 	private final XivState state;
 
@@ -251,6 +251,21 @@ public class Dragonsong implements FilteredEventHandler {
 						HeadMarkerEvent.class, e -> getHeadmarkOffset(e) == 0,
 						AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x63DE);
 
+				Job job = getState().getPlayerJob();
+				log.info("Thordan Trio 1: Got Markers");
+				if (job != null && job.isTank()) {
+					s.accept(thordan_trio1_tank.getModified());
+				}
+				else {
+					marks.stream()
+							.filter(mark -> mark.getTarget().isThePlayer())
+							.findAny()
+							.ifPresentOrElse(
+									mark -> s.accept(thordan_trio1_blueMarker.getModified(mark)),
+									() -> s.accept(thordan_trio1_nothing.getModified()));
+				}
+
+				// TODO: where is thordan ?
 				Object wheresThordan = getState().getCombatants().values().stream()
 						.filter(cbt -> cbt.getbNpcId() == 0x313C)
 						.map(arenaPos::forCombatant)
@@ -260,21 +275,6 @@ public class Dragonsong implements FilteredEventHandler {
 
 				Map<String, Object> params = Map.of("wheresThordan", wheresThordan);
 
-				Job job = getState().getPlayerJob();
-				log.info("Thordan Trio 1: Got Markers");
-				if (job != null && job.isTank()) {
-					s.accept(thordan_trio1_tank.getModified(params));
-				}
-				else {
-					marks.stream()
-							.filter(mark -> mark.getTarget().isThePlayer())
-							.findAny()
-							.ifPresentOrElse(
-									mark -> s.accept(thordan_trio1_blueMarker.getModified(mark, params)),
-									() -> s.accept(thordan_trio1_nothing.getModified(params)));
-				}
-
-				// TODO: where is thordan ?
 			});
 
 	private XivState getState() {
