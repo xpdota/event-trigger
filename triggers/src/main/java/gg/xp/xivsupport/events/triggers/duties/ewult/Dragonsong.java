@@ -197,17 +197,15 @@ public class Dragonsong implements FilteredEventHandler {
 			}
 	);
 
-	private XivState getState() {
-		return state;
-	}
-
-	private final SequentialTrigger<BaseEvent> thordan_firstTrio = new SequentialTrigger<>(20_000, BaseEvent.class,
+	private final SequentialTrigger<BaseEvent> thordan_firstTrio = new SequentialTrigger<>(30_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x63D3,
 			(e1, s) -> {
+				log.info("Thordan Trio 1: Start");
 				List<HeadMarkerEvent> marks = s.waitEventsUntil(3,
 						HeadMarkerEvent.class, e -> getHeadmarkOffset(e) == 0,
 						AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x63DE);
 				Job job = getState().getPlayerJob();
+				log.info("Thordan Trio 1: Got Markers");
 				if (job != null && job.isTank()) {
 					s.accept(thordan_trio1_tank.getModified());
 				}
@@ -220,4 +218,8 @@ public class Dragonsong implements FilteredEventHandler {
 									() -> s.accept(thordan_trio1_nothing.getModified()));
 				}
 			});
+
+	private XivState getState() {
+		return state;
+	}
 }
