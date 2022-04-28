@@ -154,6 +154,7 @@ public abstract class BaseEvent implements Event {
 		this.timeSource = timeSource;
 	}
 
+	@Override
 	public Instant getEffectiveHappenedAt() {
 		// If running live, we want the system time when the event was submitted to be the basis of the event time
 		// If replay, we want the time when the event originally happened to be the basis

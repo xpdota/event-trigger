@@ -561,7 +561,7 @@ public class GuiMain {
 							}
 						})
 				.addMainColumn(new CustomColumn<>("Time", event -> {
-					return event.getHappenedAt()
+					return event.getEffectiveHappenedAt()
 							.atZone(ZoneId.systemDefault())
 							.format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
 //					return DateTimeFormatter.ISO_TIME.format(event.getHappenedAt());

@@ -74,4 +74,8 @@ public interface Event extends Serializable {
 		return null;
 
 	}
+
+	default Instant getEffectiveHappenedAt() {
+		return getHappenedAt();
+	}
 }

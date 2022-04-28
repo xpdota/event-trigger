@@ -108,4 +108,17 @@ public enum ArenaSector {
 		return Math.abs(eighthsTo(other)) == 1;
 	}
 
+	public boolean isOutside() {
+		return ordinal() <= 7;
+	}
+
+	public boolean isCardinal() {
+		int ordinal = ordinal();
+		return ordinal <= 7 && ordinal % 2 == 0;
+	}
+
+	public boolean isIntercard() {
+		int ordinal = ordinal();
+		return ordinal <= 7 && ordinal % 2 == 1;
+	}
 }
