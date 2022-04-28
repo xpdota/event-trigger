@@ -98,7 +98,7 @@ public final class TimelineProcessor {
 			double effectiveTimeBefore = getEffectiveTime();
 			boolean firstSync = lastSync == null;
 			lastSync = new TimelineSync(event, timeToSyncTo, rawTimelineEntry);
-			log.info("New Sync: {} -> {} ({})", rawTimelineEntry, timeToSyncTo, emulatedActLogLine);
+			log.trace("New Sync: {} -> {} ({})", rawTimelineEntry, timeToSyncTo, emulatedActLogLine);
 			double effectiveTimeAfter = getEffectiveTime();
 
 			double delta = effectiveTimeAfter - effectiveTimeBefore;
