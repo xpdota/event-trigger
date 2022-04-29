@@ -100,5 +100,22 @@ public class ArenaPos {
 		}
 	}
 
+	// TWO DIMENSIONAL distance from center
+	public double distanceFromCenter(XivCombatant cbt) {
+		Position pos = cbt.getPos();
+		if (pos == null) {
+			throw new IllegalArgumentException("Position cannot be null");
+		}
+		return distanceFromCenter(pos);
+	}
+
+	public double distanceFromCenter(Position pos) {
+		double posX = pos.getX();
+		double posY = pos.getY();
+		double deltaX = posX - xCenter;
+		double deltaY = posY - yCenter;
+		return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+	}
+
 
 }
