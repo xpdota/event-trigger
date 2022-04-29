@@ -76,11 +76,11 @@ public class SequentialTriggerController<X extends BaseEvent> {
 
 	// To be called from internal thread
 	public <Y> Y waitEvent(Class<Y> eventClass, Predicate<Y> eventFilter) {
-		log.info("Waiting for specific event");
+		log.trace("Waiting for specific event");
 		while (true) {
 			X event = waitEvent();
 			if (eventClass.isInstance(event) && eventFilter.test((Y) event)) {
-				log.info("Done waiting for specific event, got: {}", event);
+				log.trace("Done waiting for specific event, got: {}", event);
 				return (Y) event;
 			}
 		}
@@ -149,7 +149,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		synchronized (lock) {
 			if (expired.getAsBoolean()) {
 //			if (event.getHappenedAt().isAfter(expiresAt)) {
-				log.info("Sequential trigger expired by event: {}", event);
+				log.warn("Sequential trigger expired by event: {}", event);
 				die = true;
 				lock.notifyAll();
 				return;

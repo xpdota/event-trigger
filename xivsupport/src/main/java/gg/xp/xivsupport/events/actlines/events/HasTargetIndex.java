@@ -6,6 +6,10 @@ public interface HasTargetIndex {
 
 	long getNumberOfTargets();
 
+	 default boolean isFirstTarget() {
+		 return getTargetIndex() == 0;
+	 }
+
 	default boolean isLastTarget() {
 		return getTargetIndex() >= getNumberOfTargets() - 1;
 	}

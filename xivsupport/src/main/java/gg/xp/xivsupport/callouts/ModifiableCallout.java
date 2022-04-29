@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 public class ModifiableCallout<X> {
@@ -273,6 +274,16 @@ public class ModifiableCallout<X> {
 				return "NOW";
 			}
 			return String.format("%.01f", dur.toMillis() / 1000.0);
+		}
+		else if (rawValue instanceof Supplier supp) {
+			Object realValue = supp.get();
+			// Prevent infinite loops if a supplier produces another supplier
+			if (realValue instanceof Supplier) {
+				return realValue.toString();
+			}
+			else {
+				return singleReplacement(realValue);
+			}
 		}
 		else {
 			value = rawValue.toString();

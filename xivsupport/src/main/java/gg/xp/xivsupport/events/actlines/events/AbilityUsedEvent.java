@@ -66,6 +66,11 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	}
 
 	@Override
+	public boolean isFirstTarget() {
+		return targetIndex == 0;
+	}
+
+	@Override
 	public boolean isLastTarget() {
 		return targetIndex >= numberOfTargets - 1;
 	}
