@@ -352,6 +352,7 @@ public class Dragonsong implements FilteredEventHandler {
 						log.error("Thordan Ice/Fire: player job was null!");
 						return;
 					}
+					// TODO : meteor partner
 					boolean playerIsDps = pj.isDps();
 					boolean meteorIsDps = marks.stream().anyMatch(mark -> mark.getTarget() instanceof XivPlayerCharacter pc && pc.getJob().isDps());
 					if (playerIsDps == meteorIsDps) {
