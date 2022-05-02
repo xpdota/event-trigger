@@ -1,3 +1,5 @@
+### Dragonsong's Reprise (aka Dragonsong War/Dragonsong Ultimate) Trigger Status: Doorboss done, Thordan 1 Done
+
 # Triggevent
 
 Triggevent is a comprehensive FFXIV addon that provides triggers, overlays, log analysis, and more. Triggers can even
