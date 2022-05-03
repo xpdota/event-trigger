@@ -7,11 +7,16 @@ import gg.xp.xivdata.data.Job;
 import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.events.state.combatstate.CastTracker;
+import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.OverlapLayout;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
+import gg.xp.xivsupport.gui.tables.renderers.ResourceBar;
 import gg.xp.xivsupport.models.CombatantType;
+import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -45,6 +50,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private volatile int curYpan;
 	private volatile Point dragPoint;
 	private final XivState state;
+	private final ActiveCastRepository acr;
 	private XivMap map = XivMap.UNKNOWN;
 	private Image backgroundImage;
 
@@ -53,8 +59,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private static final Color partyMemberColor = new Color(104, 120, 222);
 	private static final Color localPcColor = new Color(150, 199, 255);
 
-	public MapPanel(XivState state) {
+	public MapPanel(XivState state, ActiveCastRepository acr) {
 		this.state = state;
+		this.acr = acr;
 //		setLayout(new FlowLayout());
 		setLayout(null);
 //		setPreferredSize(new Dimension(MAP_SIZE, MAP_SIZE));
@@ -121,7 +128,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		combatants.stream()
 				.filter(cbt -> {
 					CombatantType type = cbt.getType();
-					return type != CombatantType.NONCOM && type != CombatantType.FAKE && type != CombatantType.GP && type != CombatantType.OTHER;
+					return type != CombatantType.NONCOM && type != CombatantType.GP && type != CombatantType.OTHER;
 				})
 //				.filter(XivCombatant::isPc)
 				.forEach(cbt -> {
@@ -253,7 +260,19 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	}
 
 	private static String formatTooltip(XivCombatant cbt) {
-		return String.format("%s (0x%x, %s)", cbt.getName(), cbt.getId(), cbt.getId());
+		StringBuilder tt = new StringBuilder();
+		tt.append(cbt.getName()).append(" (").append(String.format("0x%X, %s)", cbt.getId(), cbt.getId()));
+		if (cbt.getbNpcId() != 0) {
+			tt.append("\nNPC ID ").append(cbt.getbNpcId());
+		}
+		if (cbt.getbNpcNameId() != 0) {
+			tt.append("\nNPC Name ").append(cbt.getbNpcNameId());
+		}
+		tt.append('\n').append(cbt.getPos());
+		if (cbt.getHp() != null) {
+			tt.append("\nHP: ").append(String.format("%s / %s", cbt.getHp().getCurrent(), cbt.getHp().getMax()));
+		}
+		return tt.toString();
 	}
 
 	// TODO: name....
@@ -262,12 +281,18 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		private final JLabel defaultLabel;
 		private double x;
 		private double y;
+		private final JPanel inner;
 		private Job oldJob;
 		private Component icon;
+		private final CastBarComponent castBar;
+		private final ResourceBar hpBar;
 
 		public PlayerDoohickey(XivCombatant cbt) {
-			setBorder(new LineBorder(Color.PINK, 2));
-			setLayout(new OverlapLayout());
+			inner = new JPanel();
+			inner.setBorder(new LineBorder(Color.PINK, 2));
+			setLayout(null);
+			inner.setLayout(new OverlapLayout());
+			inner.setOpaque(false);
 			setOpaque(false);
 			defaultLabel = new JLabel(cbt.getName());
 			formatComponent(cbt);
@@ -275,6 +300,28 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			addMouseWheelListener(MapPanel.this);
 			addMouseMotionListener(MapPanel.this);
 			addMouseListener(MapPanel.this);
+			add(inner);
+			int outerSize = 100;
+			int center = 50;
+			setSize(outerSize, outerSize);
+			revalidate();
+			int innerW = inner.getPreferredSize().width;
+			int innerH = inner.getPreferredSize().height;
+			inner.setBounds(new Rectangle(center - (innerW / 2), center - (innerH / 2), innerW, innerH));
+			revalidate();
+			this.castBar = new CastBarComponent() {
+				@Override
+				public void paint(Graphics g) {
+					((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.90f));
+					super.paint(g);
+				}
+			};
+			castBar.setBounds(0, 81, 100, 19);
+			add(castBar);
+			this.hpBar = new ResourceBar();
+			hpBar.setBounds(0, 62, 100, 19);
+			hpBar.setColor3(new Color(20, 20, 20, 240));
+			add(hpBar);
 		}
 
 		public void update(XivCombatant cbt) {
@@ -288,10 +335,37 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (cbt instanceof XivPlayerCharacter pc) {
 				Job newJob = pc.getJob();
 				if (newJob != oldJob) {
-					remove(icon);
+					inner.remove(icon);
 					formatComponent(cbt);
 				}
 				oldJob = newJob;
+			}
+			CastTracker castData = acr.getCastFor(cbt);
+			if (castData == null || castData.getCast().getEstimatedTimeSinceExpiry().toMillis() > 5000) {
+				castBar.setData(null);
+			}
+			else {
+				castBar.setData(castData);
+			}
+
+			HitPoints hp = cbt.getHp();
+			if (hp == null) {
+				hpBar.setVisible(false);
+			}
+			else if (cbt.getType() == CombatantType.FAKE || hp.getMax() == 1 || hp.getCurrent() < 0) {
+				hpBar.setVisible(false);
+			}
+			else {
+				double percent = (double) hp.getCurrent() / hp.getMax();
+				// Try to do long label, otherwise fall back to short label
+				// TODO: deduplicate this with HpPredictedRenderer
+				String longText = String.format("%s / %s", hp.getCurrent(), hp.getMax());
+				hpBar.setTextOptions(longText, String.valueOf(hp.getCurrent()));
+				hpBar.setVisible(true);
+				hpBar.setPercent1(percent);
+				Color rawColor = Color.getHSBColor((float) (0.33f * percent), 0.36f, 0.52f);
+				hpBar.setColor1(new Color(rawColor.getRed(), rawColor.getGreen(), rawColor.getBlue(), 240));
+				hpBar.revalidate();
 			}
 		}
 
@@ -299,28 +373,30 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (cbt instanceof XivPlayerCharacter pc) {
 				Job job = pc.getJob();
 				if (cbt.isThePlayer()) {
-					setBorder(new LineBorder(localPcColor));
-					setBackground(localPcColor);
-				} else if (state.getPartyList().contains(cbt)) {
-					setBorder(new LineBorder(partyMemberColor));
-					setBackground(partyMemberColor);
-				} else {
-					setBorder(new LineBorder(otherPlayerColor));
-					setBackground(otherPlayerColor);
+					inner.setBorder(new LineBorder(localPcColor));
+					inner.setBackground(localPcColor);
+				}
+				else if (state.getPartyList().contains(cbt)) {
+					inner.setBorder(new LineBorder(partyMemberColor));
+					inner.setBackground(partyMemberColor);
+				}
+				else {
+					inner.setBorder(new LineBorder(otherPlayerColor));
+					inner.setBackground(otherPlayerColor);
 				}
 				icon = IconTextRenderer.getComponent(job, defaultLabel, true, false, true);
-				setOpaque(true);
+				inner.setOpaque(true);
 				// TODO: this doesn't work because it hasn't been added to the container yet
 //				MapPanel.this.setComponentZOrder(this, 0);
 			}
 			else {
-				setBorder(new LineBorder(enemyColor));
-				setOpaque(false);
+				inner.setBorder(new LineBorder(enemyColor));
+				inner.setOpaque(false);
 				// TODO: find good icon
 				icon = IconTextRenderer.getComponent(ActionLibrary.iconForId(2246), defaultLabel, true, false, true);
 //				MapPanel.this.setComponentZOrder(this, 5);
 			}
-			add(icon);
+			inner.add(icon);
 			validate();
 		}
 
