@@ -27,10 +27,18 @@ public class DamageTakenEffect extends AbilityEffect implements DamageEffect {
 	@Override
 	public String getBaseDescription() {
 		if (severity == HitSeverity.NORMAL) {
-			return String.format("Damage Taken: %s", amount);
+			return String.format("Damage Taken: %s (%s %s)", amount, getDamageAspect(), getDamageType());
 		}
 		else {
-			return String.format("Damage Taken: %s (%s)", amount, severity.getFriendlyName());
+			return String.format("Damage Taken: %s (%s) (%s %s)", amount, severity.getFriendlyName(), getDamageAspect(), getDamageType());
 		}
+	}
+
+	public DamageAspect getDamageAspect() {
+		return DamageAspect.forByte((int) (getFlags() >> 20) % 16);
+	}
+
+	public DamageType getDamageType() {
+		return DamageType.forByte((int) (getFlags() >> 16) % 16);
 	}
 }
