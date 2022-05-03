@@ -19,8 +19,8 @@ public class CastBarComponent extends ResourceBar {
 	public void setData(@Nullable CastTracker tracker) {
 		this.tracker = tracker;
 		if (tracker != null) {
-			long duration = tracker.getCast().getInitialDuration().toMillis();
-			long current = tracker.getCast().getEstimatedElapsedDuration().toMillis();
+			long duration = tracker.getCastDuration().toMillis();
+			long current = tracker.getElapsedDuration().toMillis();
 			double pct = ((double) current) / duration;
 			setPercent1(pct);
 			CastResult result = tracker.getResult();
@@ -45,5 +45,20 @@ public class CastBarComponent extends ResourceBar {
 			return;
 		}
 		super.paint(g);
+	}
+
+	@Override
+	public String getToolTipText() {
+		CastTracker tracker = this.tracker;
+		if (tracker == null) {
+			// TODO: should it be null?
+			return null;
+		}
+		return switch (tracker.getResult()) {
+			case IN_PROGRESS -> String.format("%.03fs / %.03fs", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0);
+			case SUCCESS -> String.format("Done, %.03fs", tracker.getCastDuration().toMillis() / 1000.0);
+			case INTERRUPTED -> String.format("Interrupted at %.03fs / %.03fs", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0);
+			case UNKNOWN -> String.format("??? %.03fs / %.03fs", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0);
+		};
 	}
 }

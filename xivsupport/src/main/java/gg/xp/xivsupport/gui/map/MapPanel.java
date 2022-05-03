@@ -312,6 +312,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			this.castBar = new CastBarComponent() {
 				@Override
 				public void paint(Graphics g) {
+					// Make it a little bit transparent
 					((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.90f));
 					super.paint(g);
 				}
@@ -322,6 +323,14 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			hpBar.setBounds(0, 62, 100, 19);
 			hpBar.setColor3(new Color(20, 20, 20, 240));
 			add(hpBar);
+		}
+
+		@Override
+		public String getToolTipText(MouseEvent event) {
+			if (castBar.getBounds().contains(event.getPoint())) {
+				return castBar.getToolTipText();
+			}
+			return super.getToolTipText(event);
 		}
 
 		public void update(XivCombatant cbt) {
@@ -405,6 +414,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (size.width == 0 || size.height == 0) {
 				size = getPreferredSize();
 			}
+			// TODO: automatically account for *where* in the component the icon is, since that's what matters
 			setBounds(translateX(this.x) - (size.width / 2), translateY(this.y) - (size.height / 2), size.width, size.height);
 		}
 	}

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.state.combatstate;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
@@ -40,9 +41,10 @@ public class ActiveCastRepository {
 		doEnd(used);
 	}
 
-	// TODO: I never did interrupt lines
-//	@HandleEvents(order = -50_000)
-//	public void castInterrupted(EventContext ctx, AbilityIn)
+	@HandleEvents(order = -50_000)
+	public void castInterrupted(EventContext ctx, AbilityCastCancel acc) {
+		doEnd(acc);
+	}
 
 	private <X extends Event & HasSourceEntity & HasAbility> void doEnd(X event) {
 		CastTracker tracker;

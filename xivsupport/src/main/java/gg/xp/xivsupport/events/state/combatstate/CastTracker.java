@@ -1,9 +1,12 @@
 package gg.xp.xivsupport.events.state.combatstate;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import org.jetbrains.annotations.Nullable;
+
+import java.time.Duration;
 
 public final class CastTracker {
 	private final AbilityCastStart cast;
@@ -29,10 +32,9 @@ public final class CastTracker {
 		if (end == null) {
 			return CastResult.IN_PROGRESS;
 		}
-		// TODO
-//		else if (end instanceof CastInterrupted) {
-//			return CastResult.INTERRUPTED;
-//		}
+		else if (end instanceof AbilityCastCancel) {
+			return CastResult.INTERRUPTED;
+		}
 		else if (end instanceof AbilityUsedEvent) {
 			return CastResult.SUCCESS;
 		}
@@ -42,5 +44,17 @@ public final class CastTracker {
 		else {
 			return CastResult.UNKNOWN;
 		}
+	}
+
+	public Duration getCastDuration() {
+		return cast.getInitialDuration();
+	}
+
+	public Duration getElapsedDuration() {
+		return (switch (getResult()) {
+			case SUCCESS -> getCastDuration();
+			case INTERRUPTED -> Duration.between(cast.getEffectiveHappenedAt(), end.getEffectiveHappenedAt());
+			case IN_PROGRESS, UNKNOWN -> cast.getEstimatedElapsedDuration();
+		});
 	}
 }
