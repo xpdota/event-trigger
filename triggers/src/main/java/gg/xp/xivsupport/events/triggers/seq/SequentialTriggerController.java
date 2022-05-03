@@ -172,10 +172,12 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		long failAt = startTime + 100;
 		while (processing) {
 			try {
-				lock.wait(100);
-				if (System.currentTimeMillis() > failAt) {
+				long timeLeft = failAt - System.currentTimeMillis();
+				if (timeLeft <= 0) {
 					throw new SequentialTriggerTimeoutException("Cycle processing time max (100ms) exceeded");
 				}
+				//noinspection WaitNotifyWhileNotSynced
+				lock.wait(timeLeft);
 			}
 			catch (InterruptedException e) {
 				throw new RuntimeException(e);

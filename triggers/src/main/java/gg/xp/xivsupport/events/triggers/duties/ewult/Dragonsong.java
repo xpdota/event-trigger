@@ -405,6 +405,7 @@ public class Dragonsong implements FilteredEventHandler {
 			// Start on final chorus
 			e -> e instanceof AbilityUsedEvent a && a.getAbility().getId() == 0x6709 && a.isFirstTarget(),
 			(e1, s) -> {
+				// first/second/third in line
 				BuffApplied inLineBuffApplied = s.waitEvent(BuffApplied.class, ba -> {
 					long id = ba.getBuff().getId();
 					return ba.getTarget().isThePlayer() && id >= 0xBBC && id <= 0xBBE;
@@ -416,6 +417,7 @@ public class Dragonsong implements FilteredEventHandler {
 					case 3 -> s.accept(estinhog_headmark3.getModified(inLineBuffApplied));
 				}
 
+				// on/front/back
 				BuffApplied diveBuffApplied = s.waitEvent(BuffApplied.class, ba -> {
 					long id = ba.getBuff().getId();
 					return ba.getTarget().isThePlayer() && id >= 0xAC3 && id <= 0xAC5;
@@ -455,10 +457,11 @@ public class Dragonsong implements FilteredEventHandler {
 				if (linePos == 2) {
 					s.accept(estinhog_soakThird_asSecond.getModified());
 				}
-				// Whoever still has 'first in line' also needs to soak one of these, so check if the player still has it
+				// 0xB56 is the fire resist down. If you were first in line, and do NOT have this, you are soaking
+				// the extra for 3rd tower.
 				else if (linePos == 1 && getBuffs().statusesOnTarget(getState().getPlayer())
 						.stream()
-						.anyMatch(buff -> buff.getBuff().getId() == 0xBBC)) {
+						.noneMatch(buff -> buff.getBuff().getId() == 0xB56)) {
 					s.accept(estinhog_soakThird_asFirst.getModified());
 				}
 			});
@@ -468,11 +471,10 @@ public class Dragonsong implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void buffRemoved(EventContext ctx, BuffRemoved br) {
-		if (br.getTarget().isThePlayer()) {
-			long id = br.getBuff().getId();
-			if (id >= 0xBBC && id <= 0xBBE) {
-				ctx.accept(estinhog_baitGeir.getModified(br));
+	public void geirskogul(EventContext ctx, AbilityCastStart acs) {
+		if (acs.getAbility().getId() == 0x670A) {
+			if (buffs.statusesOnTarget(state.getPlayer()).stream().anyMatch(buff -> buff.getBuff().getId() == 0xB56)) {
+				ctx.accept(estinhog_baitGeir.getModified());
 			}
 		}
 	}

@@ -20,6 +20,9 @@ import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +47,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	@Serial
 	private static final long serialVersionUID = 6804697839463860552L;
 
-	private final Map<Long, PlayerDoohickey> things = new HashMap<>();
+	private final Object thingsLock = new Object();
+	private final Map<Long, Mutable<PlayerDoohickey>> things = new HashMap<>();
+	private final RefreshLoop<MapPanel> refresher;
 	private double zoomFactor = 1;
 	private volatile int curXpan;
 	private volatile int curYpan;
@@ -62,24 +67,20 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	public MapPanel(XivState state, ActiveCastRepository acr) {
 		this.state = state;
 		this.acr = acr;
-//		setLayout(new FlowLayout());
 		setLayout(null);
-//		setPreferredSize(new Dimension(MAP_SIZE, MAP_SIZE));
-//		mapPanel.setBorder(new LineBorder(Color.BLUE, 2));
 		setBackground(new Color(168, 153, 114));
-		// TODO: this isn't a very good way of doing it, because it runs the entire thing in the EDT whereas we really
-		// don't need the computational parts to be on the EDT.
-		// TODO: lower this back down alter
-		new RefreshLoop<>("MapRefresh", this, map -> {
+		refresher = new RefreshLoop<>("MapRefresh", this, map -> {
 			SwingUtilities.invokeLater(() -> {
 				if (map.isShowing()) {
-					map.refresh();
+					refresh();
 				}
 			});
-		}, unused -> 100L).start();
+		}, unused -> 100L);
+		refresher.start();
 		addMouseWheelListener(this);
 		addMouseMotionListener(this);
 		addMouseListener(this);
+		setIgnoreRepaint(true);
 	}
 
 	@Override
@@ -118,42 +119,65 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		curXpan = 0;
 		curYpan = 0;
 		zoomFactor = 1;
-		SwingUtilities.invokeLater(this::refresh);
+		triggerRefresh();
 	}
+
+	private void triggerRefresh() {
+		refresher.refreshNow();
+	}
+
 
 	private void refresh() {
 //		log.info("Map refresh");
 		List<XivCombatant> combatants = state.getCombatantsListCopy();
 		map = state.getMap();
-		combatants.stream()
+		combatants.parallelStream()
 				.filter(cbt -> {
 					CombatantType type = cbt.getType();
 					return type != CombatantType.NONCOM && type != CombatantType.GP && type != CombatantType.OTHER;
 				})
-//				.filter(XivCombatant::isPc)
 				.forEach(cbt -> {
 					long id = cbt.getId();
 					if (cbt.getPos() == null) {
 						return;
 					}
-					things.computeIfAbsent(id, (unused) -> createNew(cbt))
-							.update(cbt);
+					// Only lock for checking if it's there
+					Mutable<PlayerDoohickey> mut;
+					synchronized (thingsLock) {
+						mut = things.computeIfAbsent(id, (unused) -> new MutableObject<>());
+					}
+					PlayerDoohickey pdh;
+					if (mut.getValue() == null) {
+						mut.setValue(pdh = createNew(cbt));
+					}
+					else {
+						pdh = mut.getValue();
+					}
+					@Nullable CastTracker cast = acr.getCastFor(cbt);
+
+					SwingUtilities.invokeLater(() -> {
+						pdh.update(cbt, cast);
+					});
 				});
 
 		Set<Long> allKeys = things.keySet();
 		List<Long> keysToRemove = allKeys.stream().filter(v -> combatants.stream().noneMatch(c -> c.getId() == v)).toList();
 		keysToRemove.forEach(k -> {
-			PlayerDoohickey toRemove = things.remove(k);
-			toRemove.setVisible(false);
-			remove(toRemove);
+			PlayerDoohickey toRemove = things.remove(k).getValue();
+			SwingUtilities.invokeLater(() -> {
+				toRemove.setVisible(false);
+				remove(toRemove);
+			});
 		});
-		revalidate();
-		repaint();
+		SwingUtilities.invokeLater(() -> {
+			revalidate();
+			repaint();
+		});
 	}
 
 	private PlayerDoohickey createNew(XivCombatant cbt) {
 		PlayerDoohickey player = new PlayerDoohickey(cbt);
-		add(player);
+		SwingUtilities.invokeLater(() -> add(player));
 		return player;
 	}
 
@@ -193,7 +217,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		curYpan += yDiff;
 //		log.info("Map Panel Drag: {},{}", xDiff, yDiff);
 		dragPoint = curPoint;
-		refresh();
+		triggerRefresh();
 	}
 
 	@SuppressWarnings({"NonAtomicOperationOnVolatileField", "NumericCastThatLosesPrecision"})
@@ -219,7 +243,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 		curXpan = (int) ((zoomDiv) * (curXpan) + (1 - zoomDiv) * xRel);
 		curYpan = (int) ((zoomDiv) * (curYpan) + (1 - zoomDiv) * yRel);
-		refresh();
+		triggerRefresh();
 
 	}
 
@@ -244,7 +268,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	@Override
 	public void mouseReleased(MouseEvent e) {
 //		log.info("Released");
-		refresh();
+		triggerRefresh();
 	}
 
 	@Override
@@ -333,7 +357,11 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			return super.getToolTipText(event);
 		}
 
-		public void update(XivCombatant cbt) {
+		// Setting to -2 so it will never match initially
+		long oldHpCurrent = -2;
+		long oldHpMax = -2;
+
+		public void update(XivCombatant cbt, @Nullable CastTracker castData) {
 			RenderUtils.setTooltip(this, formatTooltip(cbt));
 			Position pos = cbt.getPos();
 			if (pos != null) {
@@ -349,7 +377,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				}
 				oldJob = newJob;
 			}
-			CastTracker castData = acr.getCastFor(cbt);
 			if (castData == null || castData.getCast().getEstimatedTimeSinceExpiry().toMillis() > 5000) {
 				castBar.setData(null);
 			}
@@ -358,6 +385,14 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			}
 
 			HitPoints hp = cbt.getHp();
+			long hpCurrent = hp == null ? -1 : hp.getCurrent();
+			long hpMax = hp == null ? -1 : hp.getMax();
+			// Ignore updates where nothing changed
+			if (hpCurrent == oldHpCurrent && hpMax == oldHpMax) {
+				return;
+			}
+			oldHpCurrent = hpCurrent;
+			oldHpMax = hpMax;
 			if (hp == null) {
 				hpBar.setVisible(false);
 			}
