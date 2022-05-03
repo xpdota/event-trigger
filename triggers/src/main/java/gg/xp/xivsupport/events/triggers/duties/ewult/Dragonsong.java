@@ -19,6 +19,7 @@ import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.XivStatusEffect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,9 +71,15 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<?> thordan_trio2_kbImmune = new ModifiableCallout<>("Second Trio: Knockback Immune", "Knockback Immune in Tower");
 	private final ModifiableCallout<?> thordan_trio2_getKnockedBack = new ModifiableCallout<>("Second Trio: Knockback Immune", "Take knockback into tower");
 
-	private final ModifiableCallout<HeadMarkerEvent> estinhog_headmark1 = new ModifiableCallout<>("Estinhog: Headmark", "One");
-	private final ModifiableCallout<HeadMarkerEvent> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Headmark", "Two");
-	private final ModifiableCallout<HeadMarkerEvent> estinhog_headmark3 = new ModifiableCallout<>("Estinhog: Headmark", "Three");
+	private final ModifiableCallout<BuffApplied> estinhog_headmark1 = new ModifiableCallout<>("Estinhog: First in Line", "One");
+	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Second in Line", "Two");
+	private final ModifiableCallout<BuffApplied> estinhog_headmark3 = new ModifiableCallout<>("Estinhog: Third in Line", "Three");
+
+	private final ModifiableCallout<BuffApplied> estinhog_highJump = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Tower on You");
+	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "Tower behind you");
+	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Tower in front of you");
+
+
 
 	private final ModifiableCallout<AbilityCastStart> estinhog_gnashAndLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash and Lash", "Out then In");
 	private final ModifiableCallout<AbilityCastStart> estinhog_lashAndGnash = ModifiableCallout.durationBasedCall("Estinhog: Lash and Gnash", "In then Out");
@@ -181,6 +188,7 @@ public class Dragonsong implements FilteredEventHandler {
 		thordan_firstTrio.feed(context, event);
 		thordan_secondTrio.feed(context, event);
 		thordan_iceFire.feed(context, event);
+		wyrmhole.feed(context, event);
 	}
 
 	private final SequentialTrigger<BaseEvent> p1_fourHeadMark = new SequentialTrigger<>(30_000, BaseEvent.class,
@@ -352,6 +360,7 @@ public class Dragonsong implements FilteredEventHandler {
 						log.error("Thordan Ice/Fire: player job was null!");
 						return;
 					}
+					// TODO : meteor partner
 					boolean playerIsDps = pj.isDps();
 					boolean meteorIsDps = marks.stream().anyMatch(mark -> mark.getTarget() instanceof XivPlayerCharacter pc && pc.getJob().isDps());
 					if (playerIsDps == meteorIsDps) {
@@ -379,21 +388,51 @@ public class Dragonsong implements FilteredEventHandler {
 				}
 			});
 
-	@HandleEvents
-	public void genericHeadMarksOnYou(EventContext context, HeadMarkerEvent event) {
-		if (event.getTarget().isThePlayer()) {
-			ModifiableCallout<HeadMarkerEvent> call;
-			switch (getHeadmarkOffset(event)) {
-				case -11 -> call = estinhog_headmark1;
-				case -10 -> call = estinhog_headmark2;
-				case -9 -> call = estinhog_headmark3;
-				default -> {
-					return;
+	private final SequentialTrigger<BaseEvent> wyrmhole = new SequentialTrigger<>(60_000, BaseEvent.class,
+			// Start on final chorus
+			e -> e instanceof AbilityUsedEvent a && a.getAbility().getId() == 0x6709 && a.isFirstTarget(),
+			(e1, s) -> {
+				BuffApplied inLineBuffApplied = s.waitEvent(BuffApplied.class, ba -> {
+					long id = ba.getBuff().getId();
+					return ba.getTarget().isThePlayer() && id >= 0xBBC && id <= 0xBBE;
+				});
+				int linePos = (int) inLineBuffApplied.getBuff().getId() - 0xBBB;
+				switch (linePos) {
+					case 1 -> s.accept(estinhog_headmark1.getModified(inLineBuffApplied));
+					case 2 -> s.accept(estinhog_headmark2.getModified(inLineBuffApplied));
+					case 3 -> s.accept(estinhog_headmark3.getModified(inLineBuffApplied));
 				}
-			}
-			context.accept(call.getModified(event));
-		}
-	}
+
+				BuffApplied diveBuffApplied = s.waitEvent(BuffApplied.class, ba -> {
+					long id = ba.getBuff().getId();
+					return ba.getTarget().isThePlayer() && id >= 0xAC3 && id <= 0xAC5;
+				});
+				int diveBuffId = (int) diveBuffApplied.getBuff().getId();
+				switch (diveBuffId) {
+					case 0xAC3 -> s.accept(estinhog_highJump.getModified(diveBuffApplied));
+					case 0xAC4 -> s.accept(estinhog_spineshatter.getModified(diveBuffApplied));
+					case 0xAC5 -> s.accept(estinhog_elusiveJump.getModified(diveBuffApplied));
+				}
+
+
+			});
+
+
+//	@HandleEvents
+//	public void genericHeadMarksOnYou(EventContext context, HeadMarkerEvent event) {
+//		if (event.getTarget().isThePlayer()) {
+//			ModifiableCallout<HeadMarkerEvent> call;
+//			switch (getHeadmarkOffset(event)) {
+//				case -11 -> call = estinhog_headmark1;
+//				case -10 -> call = estinhog_headmark2;
+//				case -9 -> call = estinhog_headmark3;
+//				default -> {
+//					return;
+//				}
+//			}
+//			context.accept(call.getModified(event));
+//		}
+//	}
 
 	private XivState getState() {
 		return state;
