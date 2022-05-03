@@ -10,16 +10,17 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
-import gg.xp.xivsupport.models.XivStatusEffect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,9 +76,19 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Second in Line", "Two");
 	private final ModifiableCallout<BuffApplied> estinhog_headmark3 = new ModifiableCallout<>("Estinhog: Third in Line", "Three");
 
+	private final ModifiableCallout<BuffRemoved> estinhog_baitGeir = new ModifiableCallout<>("Estinhog: Bait Geirskogul", "Bait Geirskogul");
+
+	private final ModifiableCallout<?> estinhog_placeSecond = new ModifiableCallout<>("Estinhog: Place Second Tower", "Place Second Tower");
+	private final ModifiableCallout<?> estinhog_placeThird = new ModifiableCallout<>("Estinhog: Place Third Tower", "Place Third Tower");
+
 	private final ModifiableCallout<BuffApplied> estinhog_highJump = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Tower on You");
 	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "Tower behind you");
 	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Tower in front of you");
+
+	private final ModifiableCallout<?> estinhog_soakFirst = ModifiableCallout.durationBasedCall("Estinhog: Soak First", "Soak First Tower");
+	private final ModifiableCallout<?> estinhog_soakSecond = ModifiableCallout.durationBasedCall("Estinhog: Soak Second", "Soak Second Tower");
+	private final ModifiableCallout<?> estinhog_soakThird_asSecond = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Soak Third Tower");
+	private final ModifiableCallout<?> estinhog_soakThird_asFirst = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Soak Third Tower");
 
 
 
@@ -85,9 +96,11 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> estinhog_lashAndGnash = ModifiableCallout.durationBasedCall("Estinhog: Lash and Gnash", "In then Out");
 
 	private final XivState state;
+	private final StatusEffectRepository buffs;
 
-	public Dragonsong(XivState state) {
+	public Dragonsong(XivState state, StatusEffectRepository buffs) {
 		this.state = state;
+		this.buffs = buffs;
 	}
 
 	@Override
@@ -414,8 +427,55 @@ public class Dragonsong implements FilteredEventHandler {
 					case 0xAC5 -> s.accept(estinhog_elusiveJump.getModified(diveBuffApplied));
 				}
 
+				// First towers placed
+				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBC);
 
+				if (linePos == 3) {
+					s.accept(estinhog_soakFirst.getModified());
+				}
+				// 6711 is the damage from actually soaking
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getAbility().getId() == 0x6711);
+				if (linePos == 2) {
+					s.accept(estinhog_placeSecond.getModified());
+				}
+
+				// Second towers placed
+				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBD);
+				if (linePos == 1) {
+					s.accept(estinhog_soakSecond.getModified());
+				}
+				// Second towers soaked
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getAbility().getId() == 0x6711);
+				if (linePos == 3) {
+					s.accept(estinhog_placeThird.getModified());
+				}
+
+				// Third towers placed
+				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBE);
+				if (linePos == 2) {
+					s.accept(estinhog_soakThird_asSecond.getModified());
+				}
+				// Whoever still has 'first in line' also needs to soak one of these, so check if the player still has it
+				else if (linePos == 1 && getBuffs().statusesOnTarget(getState().getPlayer())
+						.stream()
+						.anyMatch(buff -> buff.getBuff().getId() == 0xBBC)) {
+					s.accept(estinhog_soakThird_asFirst.getModified());
+				}
 			});
+
+	private StatusEffectRepository getBuffs() {
+		return buffs;
+	}
+
+	@HandleEvents
+	public void buffRemoved(EventContext ctx, BuffRemoved br) {
+		if (br.getTarget().isThePlayer()) {
+			long id = br.getBuff().getId();
+			if (id >= 0xBBC && id <= 0xBBE) {
+				ctx.accept(estinhog_baitGeir.getModified(br));
+			}
+		}
+	}
 
 
 //	@HandleEvents

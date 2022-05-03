@@ -155,7 +155,7 @@ public class FflogsEventProcessor {
 		if (rawType instanceof String type) {
 			switch (type) {
 				// Leaving possible NPEs in place because those wouldn't make sense anyway
-				case "combatantinfo": {
+				case "combatantinfo" -> {
 					Object aurasRaw = rawEvent.getField("auras");
 					if (aurasRaw != null) {
 						List<CombatantsInfoAura> auras = mapper.convertValue(aurasRaw, new TypeReference<>() {
@@ -169,10 +169,8 @@ public class FflogsEventProcessor {
 						partyList.add(pc);
 						state.setPartyList(partyList.stream().map(pm -> new RawXivPartyInfo(pm.getId(), pm.getName(), 0, pm.getJob().getId(), (int) pm.getLevel(), true)).toList());
 					}
-					break;
 				}
-				case "damage":
-				case "calculateddamage": {
+				case "damage", "calculateddamage" -> {
 					Long amount = rawEvent.getTypedField("amount", Long.class, 0L);
 					if (rawEvent.getTypedField("tick", boolean.class, false)) {
 						long rawEffectId = rawEvent.abilityId();
@@ -184,10 +182,8 @@ public class FflogsEventProcessor {
 						// TODO: severity
 						context.accept(new GenericDamageEvent(source, target, new XivAbility(rawEvent.abilityId()), amount, HitSeverity.NORMAL));
 					}
-					break;
 				}
-				case "heal":
-				case "calculatedheal": {
+				case "heal", "calculatedheal" -> {
 					Long amount = rawEvent.getTypedField("amount", Long.class, 0L);
 					if (rawEvent.getTypedField("tick", boolean.class, false)) {
 						XivStatusEffect status;
@@ -208,7 +204,7 @@ public class FflogsEventProcessor {
 					}
 					break;
 				}
-				case "begincast": {
+				case "begincast" -> {
 					double duration;
 					Double durationRaw = rawEvent.getTypedField("duration", Double.class);
 					if (durationRaw == null) {
@@ -223,7 +219,7 @@ public class FflogsEventProcessor {
 							target,
 							duration));
 				}
-				case "cast": {
+				case "cast" -> {
 					context.accept(new AbilityUsedEvent(
 							new XivAbility(rawEvent.abilityId()),
 							source,
@@ -232,16 +228,8 @@ public class FflogsEventProcessor {
 							counter.getAndIncrement(),
 							0,
 							1));
-					break;
 				}
-				case "applybuff":
-				case "applybuffstack":
-				case "applydebuff":
-				case "applydebuffstack":
-				case "removebuffstack":
-				case "removedebuffstack":
-				case "refreshbuff":
-				case "refreshdebuff": {
+				case "applybuff", "applybuffstack", "applydebuff", "applydebuffstack", "removebuffstack", "removedebuffstack", "refreshbuff", "refreshdebuff" -> {
 					int stacks = rawEvent.getTypedField("stack", int.class, 0);
 					double duration;
 					Double durationRaw = rawEvent.getTypedField("duration", Double.class);
@@ -258,11 +246,8 @@ public class FflogsEventProcessor {
 							target,
 							stacks
 					));
-					break;
 				}
-				case "dispel":
-				case "removebuff":
-				case "removedebuff": {
+				case "dispel", "removebuff", "removedebuff" -> {
 					context.accept(new BuffRemoved(
 							convertStatus(rawEvent.abilityId()),
 							0,
@@ -270,11 +255,9 @@ public class FflogsEventProcessor {
 							getCombatant(rawEvent.getTypedField("targetID", Long.class)),
 							0
 					));
-					break;
-
 				}
 
-				default: {
+				default -> {
 					context.accept(new FflogsUnsupportedEvent(rawEvent));
 				}
 
