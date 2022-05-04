@@ -20,8 +20,6 @@ import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +46,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private static final long serialVersionUID = 6804697839463860552L;
 
 	private final Object thingsLock = new Object();
-	private final Map<Long, Mutable<PlayerDoohickey>> things = new HashMap<>();
+	private final Map<Long, PlayerDoohickey> things = new HashMap<>();
 	private final RefreshLoop<MapPanel> refresher;
 	private double zoomFactor = 1;
 	private volatile int curXpan;
@@ -131,7 +129,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 //		log.info("Map refresh");
 		List<XivCombatant> combatants = state.getCombatantsListCopy();
 		map = state.getMap();
-		combatants.parallelStream()
+		combatants.stream()
 				.filter(cbt -> {
 					CombatantType type = cbt.getType();
 					return type != CombatantType.NONCOM && type != CombatantType.GP && type != CombatantType.OTHER;
@@ -141,43 +139,26 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					if (cbt.getPos() == null) {
 						return;
 					}
-					// Only lock for checking if it's there
-					Mutable<PlayerDoohickey> mut;
-					synchronized (thingsLock) {
-						mut = things.computeIfAbsent(id, (unused) -> new MutableObject<>());
-					}
-					PlayerDoohickey pdh;
-					if (mut.getValue() == null) {
-						mut.setValue(pdh = createNew(cbt));
-					}
-					else {
-						pdh = mut.getValue();
-					}
 					@Nullable CastTracker cast = acr.getCastFor(cbt);
-
-					SwingUtilities.invokeLater(() -> {
-						pdh.update(cbt, cast);
-					});
+					// Only lock for checking if it's there
+					PlayerDoohickey pdh = things.computeIfAbsent(id, (unused) -> createNew(cbt));
+					pdh.update(cbt, cast);
 				});
 
 		Set<Long> allKeys = things.keySet();
 		List<Long> keysToRemove = allKeys.stream().filter(v -> combatants.stream().noneMatch(c -> c.getId() == v)).toList();
 		keysToRemove.forEach(k -> {
-			PlayerDoohickey toRemove = things.remove(k).getValue();
-			SwingUtilities.invokeLater(() -> {
-				toRemove.setVisible(false);
-				remove(toRemove);
-			});
+			PlayerDoohickey toRemove = things.remove(k);
+			toRemove.setVisible(false);
+			remove(toRemove);
 		});
-		SwingUtilities.invokeLater(() -> {
-			revalidate();
-			repaint();
-		});
+		revalidate();
+		repaint();
 	}
 
 	private PlayerDoohickey createNew(XivCombatant cbt) {
 		PlayerDoohickey player = new PlayerDoohickey(cbt);
-		SwingUtilities.invokeLater(() -> add(player));
+		add(player);
 		return player;
 	}
 
@@ -367,7 +348,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (pos != null) {
 				this.x = pos.getX();
 				this.y = pos.getY();
-				setCenterPoint();
 			}
 			if (cbt instanceof XivPlayerCharacter pc) {
 				Job newJob = pc.getJob();
@@ -444,13 +424,15 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			validate();
 		}
 
-		public void setCenterPoint() {
-			Dimension size = getSize();
-			if (size.width == 0 || size.height == 0) {
-				size = getPreferredSize();
-			}
-			// TODO: automatically account for *where* in the component the icon is, since that's what matters
-			setBounds(translateX(this.x) - (size.width / 2), translateY(this.y) - (size.height / 2), size.width, size.height);
+		@Override
+		public int getX() {
+			return translateX(this.x) - (getSize().width / 2);
+		}
+
+
+		@Override
+		public int getY() {
+			return translateY(this.y) - (getSize().height / 2);
 		}
 	}
 

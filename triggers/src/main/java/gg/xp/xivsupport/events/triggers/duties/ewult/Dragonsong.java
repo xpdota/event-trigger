@@ -68,7 +68,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<?> thordan_trio2_nonMeteorRole = new ModifiableCallout<>("Second Trio: Meteors", "Non-meteor role");
 
 	private final ModifiableCallout<?> thordan_trio2_firstTower = new ModifiableCallout<>("Second Trio: Tower 1", "Soak First Tower");
-//	private final ModifiableCallout<?> thordan_trio2_secondTower = new ModifiableCallout<>("Second Trio: Tower 2", "Soak Second Tower");
+	//	private final ModifiableCallout<?> thordan_trio2_secondTower = new ModifiableCallout<>("Second Trio: Tower 2", "Soak Second Tower");
 	private final ModifiableCallout<?> thordan_trio2_kbImmune = new ModifiableCallout<>("Second Trio: Knockback Immune", "Knockback Immune in Tower");
 	private final ModifiableCallout<?> thordan_trio2_getKnockedBack = new ModifiableCallout<>("Second Trio: Knockback Immune", "Take knockback into tower");
 
@@ -85,15 +85,15 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "Tower behind you");
 	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Tower in front of you");
 
-	private final ModifiableCallout<?> estinhog_soakFirst = ModifiableCallout.durationBasedCall("Estinhog: Soak First", "Soak First Tower");
-	private final ModifiableCallout<?> estinhog_soakSecond = ModifiableCallout.durationBasedCall("Estinhog: Soak Second", "Soak Second Tower");
-	private final ModifiableCallout<?> estinhog_soakThird_asSecond = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Soak Third Tower");
-	private final ModifiableCallout<?> estinhog_soakThird_asFirst = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Soak Third Tower");
-
+	private final ModifiableCallout<?> estinhog_soakFirst = new ModifiableCallout<>("Estinhog: Soak First", "Soak First Tower");
+	private final ModifiableCallout<?> estinhog_soakSecond = new ModifiableCallout<>("Estinhog: Soak Second", "Soak Second Tower");
+	private final ModifiableCallout<?> estinhog_soakThird_asSecond = new ModifiableCallout<>("Estinhog: Spineshatter", "Soak Third Tower");
+	private final ModifiableCallout<?> estinhog_soakThird_asFirst = new ModifiableCallout<>("Estinhog: Spineshatter", "Soak Third Tower");
 
 
 	private final ModifiableCallout<AbilityCastStart> estinhog_gnashAndLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash and Lash", "Out then In");
 	private final ModifiableCallout<AbilityCastStart> estinhog_lashAndGnash = ModifiableCallout.durationBasedCall("Estinhog: Lash and Gnash", "In then Out");
+	private final ModifiableCallout<AbilityCastStart> estinhog_drachenlance = ModifiableCallout.durationBasedCall("Estinhog: Drachenlance", "Out of front");
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -129,6 +129,7 @@ public class Dragonsong implements FilteredEventHandler {
 			case 0x63C8 -> call = thordan_cleaveBait;
 			case 0x6712 -> call = estinhog_gnashAndLash;
 			case 0x6713 -> call = estinhog_lashAndGnash;
+			case 0x670B -> call = estinhog_drachenlance;
 			// TODO: what should this call actually be?
 //			case 0x62D6 -> call = p1_hyper;
 			default -> {
@@ -405,12 +406,14 @@ public class Dragonsong implements FilteredEventHandler {
 			// Start on final chorus
 			e -> e instanceof AbilityUsedEvent a && a.getAbility().getId() == 0x6709 && a.isFirstTarget(),
 			(e1, s) -> {
+				log.info("Nidhogg start");
 				// first/second/third in line
 				BuffApplied inLineBuffApplied = s.waitEvent(BuffApplied.class, ba -> {
 					long id = ba.getBuff().getId();
 					return ba.getTarget().isThePlayer() && id >= 0xBBC && id <= 0xBBE;
 				});
 				int linePos = (int) inLineBuffApplied.getBuff().getId() - 0xBBB;
+				log.info("Nidhogg line pos: {}", linePos);
 				switch (linePos) {
 					case 1 -> s.accept(estinhog_headmark1.getModified(inLineBuffApplied));
 					case 2 -> s.accept(estinhog_headmark2.getModified(inLineBuffApplied));
@@ -423,6 +426,7 @@ public class Dragonsong implements FilteredEventHandler {
 					return ba.getTarget().isThePlayer() && id >= 0xAC3 && id <= 0xAC5;
 				});
 				int diveBuffId = (int) diveBuffApplied.getBuff().getId();
+				log.info("Nidhogg dive buff: {}", diveBuffId);
 				switch (diveBuffId) {
 					case 0xAC3 -> s.accept(estinhog_highJump.getModified(diveBuffApplied));
 					case 0xAC4 -> s.accept(estinhog_spineshatter.getModified(diveBuffApplied));
@@ -431,29 +435,33 @@ public class Dragonsong implements FilteredEventHandler {
 
 				// First towers placed
 				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBC);
-
+				log.info("Nidhogg: First Towers Placed");
 				if (linePos == 3) {
 					s.accept(estinhog_soakFirst.getModified());
 				}
 				// 6711 is the damage from actually soaking
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getAbility().getId() == 0x6711);
+				log.info("Nidhogg: First Towers Soaked");
 				if (linePos == 2) {
 					s.accept(estinhog_placeSecond.getModified());
 				}
 
 				// Second towers placed
 				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBD);
+				log.info("Nidhogg: Second Towers Placed");
 				if (linePos == 1) {
 					s.accept(estinhog_soakSecond.getModified());
 				}
 				// Second towers soaked
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getAbility().getId() == 0x6711);
+				log.info("Nidhogg: Second Towers Soaked");
 				if (linePos == 3) {
 					s.accept(estinhog_placeThird.getModified());
 				}
 
 				// Third towers placed
 				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBE);
+				log.info("Nidhogg: Third Towers Placed");
 				if (linePos == 2) {
 					s.accept(estinhog_soakThird_asSecond.getModified());
 				}
@@ -471,11 +479,11 @@ public class Dragonsong implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void geirskogul(EventContext ctx, AbilityCastStart acs) {
-		if (acs.getAbility().getId() == 0x670A) {
-			if (buffs.statusesOnTarget(state.getPlayer()).stream().anyMatch(buff -> buff.getBuff().getId() == 0xB56)) {
-				ctx.accept(estinhog_baitGeir.getModified());
-			}
+	public void geirskogul(EventContext ctx, AbilityUsedEvent event) {
+		// I **think** this doesn't come up later in the fight judging by a p6 log I perused
+		long id = event.getAbility().getId();
+		if ((id == 0x6711 || id == 0x6717 || id == 0x6718 || id == 0x6719 || id == 0x671B) && event.getTarget().isThePlayer()) {
+			ctx.accept(estinhog_baitGeir.getModified());
 		}
 	}
 
