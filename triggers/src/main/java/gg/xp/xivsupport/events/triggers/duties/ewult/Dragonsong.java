@@ -15,6 +15,7 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.models.ArenaPos;
@@ -22,15 +23,21 @@ import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @CalloutRepo("Dragonsong's Reprise")
 public class Dragonsong implements FilteredEventHandler {
@@ -78,14 +85,17 @@ public class Dragonsong implements FilteredEventHandler {
 	//	private final ModifiableCallout<?> thordan_trio2_secondTower = new ModifiableCallout<>("Second Trio: Tower 2", "Soak Second Tower");
 	private final ModifiableCallout<?> thordan_trio2_kbImmune = new ModifiableCallout<>("Second Trio: Knockback Immune", "Knockback Immune in Tower");
 	private final ModifiableCallout<?> thordan_trio2_getKnockedBack = new ModifiableCallout<>("Second Trio: Knockback Immune", "Take knockback into tower");
+	private final ModifiableCallout<BaseEvent> meteorDrop = new ModifiableCallout<>("Drop Meteors", "Drop Meteors", "Drop Meteor #{num}", ModifiableCallout.expiresIn(Duration.ofSeconds(11)));
 
 	private final ModifiableCallout<BuffApplied> estinhog_headmark1 = new ModifiableCallout<>("Estinhog: First in Line", "One");
 	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Second in Line", "Two");
 	private final ModifiableCallout<BuffApplied> estinhog_headmark3 = new ModifiableCallout<>("Estinhog: Third in Line", "Three");
 
-//	private final ModifiableCallout<BuffApplied> estinhog_highJump = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Tower on You");
-//	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "Tower behind you");
-//	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Tower in front of you");
+	// TODO: put these back in
+	private final ModifiableCallout<BuffApplied> estinhog_highJumpOnlyYou = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Middle");
+	private final ModifiableCallout<BuffApplied> estinhog_highJumpAll = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Pick Spots");
+	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "West and Face In");
+	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "East and Face Out");
 
 
 	private final ModifiableCallout<BuffRemoved> estinhog_baitGeir = new ModifiableCallout<>("Estinhog: Bait Geirskogul", "Bait Geirskogul");
@@ -112,9 +122,11 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> estinhog_drachenlance = ModifiableCallout.durationBasedCall("Estinhog: Drachenlance", "Out of front");
 
 	private final XivState state;
+	private final StatusEffectRepository buffs;
 
-	public Dragonsong(XivState state) {
+	public Dragonsong(XivState state, StatusEffectRepository buffs) {
 		this.state = state;
+		this.buffs = buffs;
 	}
 
 	@Override
@@ -214,6 +226,7 @@ public class Dragonsong implements FilteredEventHandler {
 		thordan_firstTrio.feed(context, event);
 		thordan_secondTrio.feed(context, event);
 		thordan_iceFire.feed(context, event);
+		meteorHelper.feed(context, event);
 		wyrmhole.feed(context, event);
 		if (event instanceof AbilityUsedEvent aue) {
 			gnashLashHelper.feed(context, aue);
@@ -375,7 +388,7 @@ public class Dragonsong implements FilteredEventHandler {
 			(e1, s) -> {
 				// First call role (meteor on your, meteor on same role, no meteor)
 				IceFireRole yourRole;
-				List<HeadMarkerEvent> marks = s.waitEvents(2, HeadMarkerEvent.class, hm -> getHeadmarkOffset(hm) == -45);
+				List<BuffApplied> marks = s.waitEvents(2, BuffApplied.class, ba -> ba.getBuff().getId() == 0x232);
 				if (marks.stream().anyMatch(mark -> mark.getTarget().isThePlayer())) {
 					yourRole = IceFireRole.METEOR_ON_YOU;
 				}
@@ -413,17 +426,47 @@ public class Dragonsong implements FilteredEventHandler {
 				}
 			});
 
+
+	private final SequentialTrigger<BaseEvent> meteorHelper = new SequentialTrigger<>(25_000, BaseEvent.class,
+			e -> e instanceof BuffApplied ba && ba.getBuff().getId() == 0x232 && ba.getTarget().isThePlayer(),
+			(e1, s) -> {
+				log.info("Meteor helper start");
+				// Logic:
+				// Wait for tower to resolve first (I think this is 'conviction' 0x737C
+				AbilityUsedEvent e = s.waitEvent(AbilityUsedEvent.class, aue -> aue.getAbility().getId() == 0x737C);
+				// Comets drop in pairs of two. Seven pairs total.
+				MutableInt count = new MutableInt(1);
+				s.accept(meteorDrop.getModified(e, Map.of("num", (Supplier<Integer>) count::getValue)));
+				for (int i = 1; i <= 7; i++) {
+					count.setValue(i);
+					// Wait for the pair to drop
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.getAbility().getId() == 0x63E9 && aue.isFirstTarget());
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.getAbility().getId() == 0x63E9 && aue.isFirstTarget());
+					log.info("Dropped meteor {}", i);
+				}
+
+			}
+	);
+
+	private final Predicate<BuffApplied> wyrmholeNumber = ba -> {
+		long id = ba.getBuff().getId();
+		return ba.getTarget().isThePlayer() && id >= 0xBBC && id <= 0xBBE;
+	};
+
+	private final Predicate<BuffApplied> wyrmholeDive = ba -> {
+		long id = ba.getBuff().getId();
+		return id >= 0xAC3 && id <= 0xAC5;
+	};
+
 	private final SequentialTrigger<BaseEvent> wyrmhole = new SequentialTrigger<>(60_000, BaseEvent.class,
 			// Start on final chorus
 			e -> e instanceof AbilityUsedEvent a && a.getAbility().getId() == 0x6709 && a.isFirstTarget(),
 			(e1, s) -> {
 				log.info("Nidhogg start");
 				// first/second/third in line
-				BuffApplied inLineBuffApplied = s.waitEvent(BuffApplied.class, ba -> {
-					long id = ba.getBuff().getId();
-					return ba.getTarget().isThePlayer() && id >= 0xBBC && id <= 0xBBE;
-				});
-				int linePos = (int) inLineBuffApplied.getBuff().getId() - 0xBBB;
+				BuffApplied inLineBuffApplied = s.waitEvent(BuffApplied.class, wyrmholeNumber.and(ba -> ba.getTarget().isThePlayer()));
+				long myBuffId = inLineBuffApplied.getBuff().getId();
+				int linePos = (int) myBuffId - 0xBBB;
 				log.info("Nidhogg line pos: {}", linePos);
 				switch (linePos) {
 					case 1 -> s.accept(estinhog_headmark1.getModified(inLineBuffApplied));
@@ -434,17 +477,48 @@ public class Dragonsong implements FilteredEventHandler {
 
 //				s.accept(wyrmhole_number.getModified(Map.of("number", linePos)));
 
+				final String whereDive;
+				BuffApplied diveBuffApplied = s.waitEvent(BuffApplied.class, wyrmholeDive.and(ba -> ba.getTarget().isThePlayer()));
 				// on/front/back
-				BuffApplied diveBuffApplied = s.waitEvent(BuffApplied.class, ba -> {
-					long id = ba.getBuff().getId();
-					return ba.getTarget().isThePlayer() && id >= 0xAC3 && id <= 0xAC5;
-				});
 				int diveBuffId = (int) diveBuffApplied.getBuff().getId();
 				log.info("Nidhogg dive buff: {}", diveBuffId);
-				String whereDive = switch (diveBuffId) {
-					case 0xAC3 -> "On You";
-					case 0xAC4 -> "In Front";
-					case 0xAC5 -> "Behind You";
+				// If you have the front/rear buffs, then the problem is solved.
+				// If you have the circle, you need to wait for the rest of the buffs to go out, so that you can see if
+				// your *group* has all circles or not.
+				whereDive = switch (diveBuffId) {
+					case 0xAC3 -> {
+						while (true) {
+							Map<XivCombatant, Optional<BuffApplied>> collectedBuffs = getBuffs().getBuffs().stream().filter(ba -> ba.getBuff().getId() == myBuffId)
+									.map(BuffApplied::getTarget)
+									.collect(Collectors.toMap(Function.identity(), cbt -> getBuffs().statusesOnTarget(cbt)
+											.stream()
+											.filter(wyrmholeDive)
+											.findAny()));
+							if (collectedBuffs.values().stream().anyMatch(Optional::isEmpty)) {
+								// Wait
+								log.info("Waiting for more buffs. So far: {}", collectedBuffs);
+								s.waitEvent(BuffApplied.class, wyrmholeDive);
+							}
+							else {
+								if (collectedBuffs.values().stream().allMatch(o -> o.get().getBuff().getId() == 0xAC3)) {
+									s.accept(estinhog_highJumpAll.getModified(diveBuffApplied));
+									yield "Any Spot";
+								}
+								else {
+									s.accept(estinhog_highJumpOnlyYou.getModified(diveBuffApplied));
+									yield "On You";
+								}
+							}
+						}
+					}
+					case 0xAC4 -> {
+						s.accept(estinhog_spineshatter.getModified(diveBuffApplied));
+						yield "In Front";
+					}
+					case 0xAC5 -> {
+						s.accept(estinhog_elusiveJump.getModified(diveBuffApplied));
+						yield "Behind You";
+					}
 					default -> "?";
 				};
 
@@ -503,6 +577,10 @@ public class Dragonsong implements FilteredEventHandler {
 					}
 				}
 			});
+
+	private StatusEffectRepository getBuffs() {
+		return buffs;
+	}
 
 	private record GnashLash(AbilityCastStart event, String first, String second) {
 	}

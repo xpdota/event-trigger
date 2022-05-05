@@ -309,11 +309,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			int outerSize = 100;
 			int center = 50;
 			setSize(outerSize, outerSize);
-			revalidate();
 			int innerW = inner.getPreferredSize().width;
 			int innerH = inner.getPreferredSize().height;
 			inner.setBounds(new Rectangle(center - (innerW / 2), center - (innerH / 2), innerW, innerH));
-			revalidate();
 			this.castBar = new CastBarComponent() {
 				@Override
 				public void paint(Graphics g) {
@@ -328,6 +326,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			hpBar.setBounds(0, 62, 100, 19);
 			hpBar.setColor3(new Color(20, 20, 20, 240));
 			add(hpBar);
+			revalidate();
 		}
 
 		@Override
@@ -344,6 +343,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 		public void update(XivCombatant cbt, @Nullable CastTracker castData) {
 			RenderUtils.setTooltip(this, formatTooltip(cbt));
+			setBounds(getBounds());
 			Position pos = cbt.getPos();
 			if (pos != null) {
 				this.x = pos.getX();
