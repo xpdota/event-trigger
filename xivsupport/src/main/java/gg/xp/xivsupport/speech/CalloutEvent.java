@@ -15,4 +15,8 @@ public interface CalloutEvent extends Event, HasPrimaryValue {
 	default String getPrimaryValue() {
 		return getCallText();
 	}
+
+	@Nullable CalloutEvent replaces();
+
+	void setReplaces(CalloutEvent replaces);
 }

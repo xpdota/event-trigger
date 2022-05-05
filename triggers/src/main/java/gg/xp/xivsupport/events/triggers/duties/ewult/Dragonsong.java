@@ -17,10 +17,12 @@ import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +58,12 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> thordan_cleaveBait = ModifiableCallout.durationBasedCall("Ascalon's Mercy", "Cleave Bait");
 
+	private final ModifiableCallout<?> nsSafe = new ModifiableCallout<>("Trio 1 N/S Safe", "North/South Safe", "North South Safe", Collections.emptyList());
+	private final ModifiableCallout<?> neSwSafe = new ModifiableCallout<>("Trio 1 NE/SW Safe", "Northeast/Southwest Safe", "Northeast Southwest Safe", Collections.emptyList());
+	private final ModifiableCallout<?> ewSafe = new ModifiableCallout<>("Trio 1 E/W Safe", "East/West Safe", "East West Safe", Collections.emptyList());
+	private final ModifiableCallout<?> seNwSafe = new ModifiableCallout<>("Trio 1 SE/NW Safe", "Southeast/Northwest Safe", "Southeast Northwest Safe", Collections.emptyList());
+
+
 	private final ModifiableCallout<?> thordan_trio1_nothing = new ModifiableCallout<>("First Trio: Nothing", "Nothing");
 	private final ModifiableCallout<HeadMarkerEvent> thordan_trio1_blueMarker = new ModifiableCallout<>("First Trio: Blue Marker", "Blue Marker");
 	private final ModifiableCallout<?> thordan_trio1_tank = new ModifiableCallout<>("First Trio: Tank", "Take Tether");
@@ -78,21 +86,46 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private final ModifiableCallout<BuffRemoved> estinhog_baitGeir = new ModifiableCallout<>("Estinhog: Bait Geirskogul", "Bait Geirskogul");
 
-	private final ModifiableCallout<?> estinhog_placeSecond = new ModifiableCallout<>("Estinhog: Place Second Tower", "Place Second Tower");
-	private final ModifiableCallout<?> estinhog_placeThird = new ModifiableCallout<>("Estinhog: Place Third Tower", "Place Third Tower");
+//	private final ModifiableCallout<?> estinhog_placeSecond = new ModifiableCallout<>("Estinhog: Place Second Tower", "Place Second Tower");
+//	private final ModifiableCallout<?> estinhog_placeThird = new ModifiableCallout<>("Estinhog: Place Third Tower", "Place Third Tower");
+//
+//	private final ModifiableCallout<BuffApplied> estinhog_highJump = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Tower on You");
+//	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "Tower behind you");
+//	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Tower in front of you");
+//
+//	private final ModifiableCallout<?> estinhog_soakFirst = new ModifiableCallout<>("Estinhog: Soak First", "Soak First Tower");
+//	private final ModifiableCallout<?> estinhog_soakSecond = new ModifiableCallout<>("Estinhog: Soak Second", "Soak Second Tower");
+//	private final ModifiableCallout<?> estinhog_soakThird_asSecond = new ModifiableCallout<>("Estinhog: Spineshatter", "Soak Third Tower");
+//	private final ModifiableCallout<?> estinhog_soakThird_asFirst = new ModifiableCallout<>("Estinhog: Spineshatter", "Soak Third Tower");
+//
+//
+//	//	private final ModifiableCallout<AbilityCastStart> estinhog_gnashAndLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash and Lash", "Out then In");
+////	private final ModifiableCallout<AbilityCastStart> estinhog_lashAndGnash = ModifiableCallout.durationBasedCall("Estinhog: Lash and Gnash", "In then Out");
+//	private final ModifiableCallout<AbilityCastStart> estinhog_stackGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (No Tower)", "Stack, {first}, {second}");
+//	private final ModifiableCallout<AbilityCastStart> estinhog_firstTowerGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (1st Tower)", "Place first tower {where}, {first}, {second}");
+//	private final ModifiableCallout<AbilityCastStart> estinhog_secondTowerGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (2nd Tower)", "Place second tower {where}, {first}, {second}");
+//	private final ModifiableCallout<AbilityCastStart> estinhog_thirdPlaceGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (Place 3rd Tower)", "Place third tower {where}, {first}, {second}");
+//	private final ModifiableCallout<AbilityCastStart> estinhog_thirdSoakGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (Soak 3rd Tower)", "Place third tower {where}, {first}, {second}");
 
-	private final ModifiableCallout<BuffApplied> estinhog_highJump = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Tower on You");
-	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "Tower behind you");
-	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Tower in front of you");
+	private final ModifiableCallout<?> wyrmhole_number = new ModifiableCallout<>("Wyrmhole: Number Only", "Number {number}");
 
-	private final ModifiableCallout<?> estinhog_soakFirst = new ModifiableCallout<>("Estinhog: Soak First", "Soak First Tower");
-	private final ModifiableCallout<?> estinhog_soakSecond = new ModifiableCallout<>("Estinhog: Soak Second", "Soak Second Tower");
-	private final ModifiableCallout<?> estinhog_soakThird_asSecond = new ModifiableCallout<>("Estinhog: Spineshatter", "Soak Third Tower");
-	private final ModifiableCallout<?> estinhog_soakThird_asFirst = new ModifiableCallout<>("Estinhog: Spineshatter", "Soak Third Tower");
+	private final ModifiableCallout<?> wyrmhole_place1 = new ModifiableCallout<>("Wyrmhole: Place #1", "Place Tower {where}, then {first} then {second}");
+	private final ModifiableCallout<?> wyrmhole_soak1 = new ModifiableCallout<>("Wyrmhole: Soak #1", "Stack, {first}, {second}, then soak tower");
+	private final ModifiableCallout<?> wyrmhole_nothing1 = new ModifiableCallout<>("Wyrmhole: Nothing #1", "Stack, {first}, {second}");
+
+	private final ModifiableCallout<?> wyrmhole_place2 = new ModifiableCallout<>("Wyrmhole: Place #2", "Place Tower {where}");
+	// Actually comes out at the same time as the #3 calls since it gives the whole sequence
+	private final ModifiableCallout<?> wyrmhole_soak2 = new ModifiableCallout<>("Wyrmhole: Soak #2", "Soak then {first} then {second}");
+
+	private final ModifiableCallout<?> wyrmhole_place3 = new ModifiableCallout<>("Wyrmhole: Place #3", "Place Tower {where}, then {first} then {second}");
+	private final ModifiableCallout<?> wyrmhole_soak3_as1 = new ModifiableCallout<>("Wyrmhole: Soak #3 (As #1)", "Stack, {first}, {second}, then soak tower");
+	private final ModifiableCallout<?> wyrmhole_soak3_as2 = new ModifiableCallout<>("Wyrmhole: Soak #3 (As #2)", "Stack, {first}, {second}, then soak tower");
 
 
-	private final ModifiableCallout<AbilityCastStart> estinhog_gnashAndLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash and Lash", "Out then In");
-	private final ModifiableCallout<AbilityCastStart> estinhog_lashAndGnash = ModifiableCallout.durationBasedCall("Estinhog: Lash and Gnash", "In then Out");
+	private final ModifiableCallout<?> estinhog_gnash = new ModifiableCallout<>("Estinhog: Gnash", "Out");
+	private final ModifiableCallout<?> estinhog_lash = new ModifiableCallout<>("Estinhog: Lash", "In");
+
+
 	private final ModifiableCallout<AbilityCastStart> estinhog_drachenlance = ModifiableCallout.durationBasedCall("Estinhog: Drachenlance", "Out of front");
 
 	private final XivState state;
@@ -127,8 +160,6 @@ public class Dragonsong implements FilteredEventHandler {
 				}
 			}
 			case 0x63C8 -> call = thordan_cleaveBait;
-			case 0x6712 -> call = estinhog_gnashAndLash;
-			case 0x6713 -> call = estinhog_lashAndGnash;
 			case 0x670B -> call = estinhog_drachenlance;
 			// TODO: what should this call actually be?
 //			case 0x62D6 -> call = p1_hyper;
@@ -203,10 +234,13 @@ public class Dragonsong implements FilteredEventHandler {
 		thordan_secondTrio.feed(context, event);
 		thordan_iceFire.feed(context, event);
 		wyrmhole.feed(context, event);
+		if (event instanceof AbilityUsedEvent aue) {
+			gnashLashHelper.feed(context, aue);
+		}
 	}
 
 	private final SequentialTrigger<BaseEvent> p1_fourHeadMark = new SequentialTrigger<>(30_000, BaseEvent.class,
-			e -> (e instanceof AbilityCastStart acs) && acs.getAbility().getId() == 0x62DD,
+			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x62DD,
 			(e1, s) -> {
 				if (s.waitEvents(4, HeadMarkerEvent.class, event -> getHeadmarkOffset(event) == 0)
 						.stream().anyMatch(e -> e.getTarget().isThePlayer())) {
@@ -247,11 +281,7 @@ public class Dragonsong implements FilteredEventHandler {
 	);
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 5, 5);
-
-	private final ModifiableCallout<?> nsSafe = new ModifiableCallout<>("Trio 1 N/S Safe", "North/South Safe", "North South Safe", Collections.emptyList());
-	private final ModifiableCallout<?> neSwSafe = new ModifiableCallout<>("Trio 1 NE/SW Safe", "Northeast/Southwest Safe", "Northeast Southwest Safe", Collections.emptyList());
-	private final ModifiableCallout<?> ewSafe = new ModifiableCallout<>("Trio 1 E/W Safe", "East/West Safe", "East West Safe", Collections.emptyList());
-	private final ModifiableCallout<?> seNwSafe = new ModifiableCallout<>("Trio 1 SE/NW Safe", "Southeast/Northwest Safe", "Southeast Northwest Safe", Collections.emptyList());
+	private final ArenaPos tightArenaPos = new ArenaPos(100, 100, 3, 3);
 
 	private final SequentialTrigger<BaseEvent> thordan_firstTrio = new SequentialTrigger<>(30_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x63D3,
@@ -419,6 +449,9 @@ public class Dragonsong implements FilteredEventHandler {
 					case 2 -> s.accept(estinhog_headmark2.getModified(inLineBuffApplied));
 					case 3 -> s.accept(estinhog_headmark3.getModified(inLineBuffApplied));
 				}
+				boolean isMiddle = false;
+
+				s.accept(wyrmhole_number.getModified(Map.of("number", linePos)));
 
 				// on/front/back
 				BuffApplied diveBuffApplied = s.waitEvent(BuffApplied.class, ba -> {
@@ -427,56 +460,97 @@ public class Dragonsong implements FilteredEventHandler {
 				});
 				int diveBuffId = (int) diveBuffApplied.getBuff().getId();
 				log.info("Nidhogg dive buff: {}", diveBuffId);
-				switch (diveBuffId) {
-					case 0xAC3 -> s.accept(estinhog_highJump.getModified(diveBuffApplied));
-					case 0xAC4 -> s.accept(estinhog_spineshatter.getModified(diveBuffApplied));
-					case 0xAC5 -> s.accept(estinhog_elusiveJump.getModified(diveBuffApplied));
-				}
+				String whereDive = switch (diveBuffId) {
+					case 0xAC3 -> "On You";
+					case 0xAC4 -> "In Front";
+					case 0xAC5 -> "Behind You";
+					default -> "?";
+				};
 
+				// First, wait for the initial gnash and lash to start casting
+				// If you are #1, you will place towers
+				// If you are #2, you will stack
+				// If you are #3, you will stack then soak towers
+				{
+					GnashLash firstGnashLash = waitGnashLash(s);
+					Map<String, Object> params = Map.of("where", whereDive, "first", firstGnashLash.first, "second", firstGnashLash.second);
+					if (linePos == 1) {
+						s.accept(wyrmhole_place1.getModified(params));
+					}
+					else if (linePos == 3) {
+						s.accept(wyrmhole_soak1.getModified(params));
+					}
+					else {
+						s.accept(wyrmhole_nothing1.getModified(params));
+					}
+				}
 				// First towers placed
 				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBC);
-				log.info("Nidhogg: First Towers Placed");
-				if (linePos == 3) {
-					s.accept(estinhog_soakFirst.getModified());
+				if (linePos == 1) {
+					// Try to guess whether player was middle or not
+					ArenaSector sector = tightArenaPos.forCombatant(getState().getPlayer());
+					isMiddle = sector == ArenaSector.NORTH || sector == ArenaSector.SOUTH;
 				}
+				log.info("Nidhogg: First Towers Placed");
+//				if (linePos == 3) {
+//					s.accept(estinhog_soakFirst.getModified());
+//				}
 				// 6711 is the damage from actually soaking
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getAbility().getId() == 0x6711);
 				log.info("Nidhogg: First Towers Soaked");
 				if (linePos == 2) {
-					s.accept(estinhog_placeSecond.getModified());
+					s.accept(wyrmhole_place2.getModified(Map.of("where", whereDive)));
 				}
 
-				// Second towers placed
-				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBD);
-				log.info("Nidhogg: Second Towers Placed");
-				if (linePos == 1) {
-					s.accept(estinhog_soakSecond.getModified());
-				}
-				// Second towers soaked
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getAbility().getId() == 0x6711);
-				log.info("Nidhogg: Second Towers Soaked");
-				if (linePos == 3) {
-					s.accept(estinhog_placeThird.getModified());
-				}
-
-				// Third towers placed
-				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBE);
-				log.info("Nidhogg: Third Towers Placed");
-				if (linePos == 2) {
-					s.accept(estinhog_soakThird_asSecond.getModified());
-				}
-				// 0xB56 is the fire resist down. If you were first in line, and do NOT have this, you are soaking
-				// the extra for 3rd tower.
-				else if (linePos == 1 && getBuffs().statusesOnTarget(getState().getPlayer())
-						.stream()
-						.noneMatch(buff -> buff.getBuff().getId() == 0xB56)) {
-					s.accept(estinhog_soakThird_asFirst.getModified());
+				// Second gnash/lash starts casting
+				{
+					GnashLash secondGnashLash = waitGnashLash(s);
+					Map<String, Object> params = Map.of("where", whereDive, "first", secondGnashLash.first, "second", secondGnashLash.second);
+					if (linePos == 1) {
+						if (isMiddle) {
+							s.accept(wyrmhole_soak3_as1.getModified(params));
+						}
+						else {
+							s.accept(wyrmhole_soak2.getModified(params));
+						}
+					}
+					else if (linePos == 2) {
+						s.accept(wyrmhole_soak3_as2.getModified(params));
+					}
+					else if (linePos == 3) {
+						s.accept(wyrmhole_place3.getModified(params));
+					}
 				}
 			});
 
-	private StatusEffectRepository getBuffs() {
-		return buffs;
+	private record GnashLash(AbilityCastStart event, String first, String second) {
 	}
+
+	private GnashLash waitGnashLash(SequentialTriggerController<BaseEvent> s) {
+//			0x6712 -> estinhog_gnashAndLash; out then in
+//			0x6713 -> estinhog_lashAndGnash; in then out
+		AbilityCastStart gnashLash = s.waitEvent(AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x6712 || acs.getAbility().getId() == 0x6713);
+		long id = gnashLash.getAbility().getId();
+		String first = id == 0x6712 ? "Out" : "In";
+		String second = id == 0x6713 ? "Out" : "In";
+		return new GnashLash(gnashLash, first, second);
+	}
+
+	private final SequentialTrigger<AbilityUsedEvent> gnashLashHelper = new SequentialTrigger<>(10_000, AbilityUsedEvent.class,
+			e -> {
+				long id = e.getAbility().getId();
+				return id == 0x6712 || id == 0x6713;
+			}, (e1, s) -> {
+		// 6712 -> out then in (gnash)
+		// 6713 -> in then out (lash gnash)
+		// 6715 -> the actual out (gnash)
+		// 6716 -> the actual in (lash)
+		boolean outFirst = e1.getAbility().getId() == 0x6712;
+		CalloutEvent firstCall = outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified();
+		s.accept(firstCall);
+		s.waitEvent(AbilityUsedEvent.class, aue -> aue.isFirstTarget() && (aue.getAbility().getId() == 0x6715 || aue.getAbility().getId() == 0x6716));
+		s.updateCall(!outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified());
+	});
 
 	@HandleEvents
 	public void geirskogul(EventContext ctx, AbilityUsedEvent event) {

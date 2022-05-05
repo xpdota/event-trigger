@@ -3,10 +3,11 @@ package gg.xp.xivsupport.events.triggers.seq;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.xivsupport.speech.CalloutEvent;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,7 +20,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 
 	private static final Logger log = LoggerFactory.getLogger(SequentialTriggerController.class);
 	private static final AtomicInteger threadIdCounter = new AtomicInteger();
-//	private final Instant expiresAt;
+	//	private final Instant expiresAt;
 	private final BooleanSupplier expired;
 	private final Thread thread;
 	private final Object lock = new Object();
@@ -67,6 +68,22 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	public void enqueue(Event event) {
 		log.info("Enqueueing: {}", event);
 		context.enqueue(event);
+	}
+
+	private @Nullable CalloutEvent lastCall;
+
+	/**
+	 * Accept a new callout event, BUT mark it as "replacing" any previous call
+	 * i.e. update callout text + emit a new TTS
+	 *
+	 * @param call The new callout
+	 */
+	public void updateCall(CalloutEvent call) {
+		if (lastCall != null) {
+			call.setReplaces(lastCall);
+		}
+		lastCall = call;
+		accept(call);
 	}
 
 	// To be called from internal thread

@@ -434,6 +434,11 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		public int getY() {
 			return translateY(this.y) - (getSize().height / 2);
 		}
+
+		@Override
+		public Rectangle getBounds() {
+			return new Rectangle(getX(), getY(), getWidth(), getHeight());
+		}
 	}
 
 

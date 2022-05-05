@@ -33,4 +33,16 @@ public class DynamicCalloutEvent extends BaseEvent implements CalloutEvent {
 	public boolean isExpired() {
 		return expiresAt.isBefore(Instant.now());
 	}
+
+	private @Nullable CalloutEvent replaces;
+
+	@Override
+	public @Nullable CalloutEvent replaces() {
+		return replaces;
+	}
+
+	@Override
+	public void setReplaces(CalloutEvent replaces) {
+		this.replaces = replaces;
+	}
 }
