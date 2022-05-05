@@ -83,9 +83,14 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Second in Line", "Two");
 	private final ModifiableCallout<BuffApplied> estinhog_headmark3 = new ModifiableCallout<>("Estinhog: Third in Line", "Three");
 
+//	private final ModifiableCallout<BuffApplied> estinhog_highJump = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Tower on You");
+//	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "Tower behind you");
+//	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Tower in front of you");
+
+
 	private final ModifiableCallout<BuffRemoved> estinhog_baitGeir = new ModifiableCallout<>("Estinhog: Bait Geirskogul", "Bait Geirskogul");
 
-	private final ModifiableCallout<?> wyrmhole_number = new ModifiableCallout<>("Wyrmhole: Number Only", "Number {number}");
+//	private final ModifiableCallout<?> wyrmhole_number = new ModifiableCallout<>("Wyrmhole: Number Only", "Number {number}");
 
 	private final ModifiableCallout<?> wyrmhole_place1 = new ModifiableCallout<>("Wyrmhole: Place #1", "Place Tower {where}, then {first} then {second}");
 	private final ModifiableCallout<?> wyrmhole_soak1 = new ModifiableCallout<>("Wyrmhole: Soak #1", "Stack, {first}, {second}, then soak tower");
@@ -427,7 +432,7 @@ public class Dragonsong implements FilteredEventHandler {
 				}
 				boolean isMiddle = false;
 
-				s.accept(wyrmhole_number.getModified(Map.of("number", linePos)));
+//				s.accept(wyrmhole_number.getModified(Map.of("number", linePos)));
 
 				// on/front/back
 				BuffApplied diveBuffApplied = s.waitEvent(BuffApplied.class, ba -> {
