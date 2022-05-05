@@ -20,6 +20,7 @@ import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	@Serial
 	private static final long serialVersionUID = 6804697839463860552L;
 
+	private final Object thingsLock = new Object();
 	private final Map<Long, PlayerDoohickey> things = new HashMap<>();
+	private final RefreshLoop<MapPanel> refresher;
 	private double zoomFactor = 1;
 	private volatile int curXpan;
 	private volatile int curYpan;
@@ -62,24 +65,20 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	public MapPanel(XivState state, ActiveCastRepository acr) {
 		this.state = state;
 		this.acr = acr;
-//		setLayout(new FlowLayout());
 		setLayout(null);
-//		setPreferredSize(new Dimension(MAP_SIZE, MAP_SIZE));
-//		mapPanel.setBorder(new LineBorder(Color.BLUE, 2));
 		setBackground(new Color(168, 153, 114));
-		// TODO: this isn't a very good way of doing it, because it runs the entire thing in the EDT whereas we really
-		// don't need the computational parts to be on the EDT.
-		// TODO: lower this back down alter
-		new RefreshLoop<>("MapRefresh", this, map -> {
+		refresher = new RefreshLoop<>("MapRefresh", this, map -> {
 			SwingUtilities.invokeLater(() -> {
 				if (map.isShowing()) {
-					map.refresh();
+					refresh();
 				}
 			});
-		}, unused -> 100L).start();
+		}, unused -> 100L);
+		refresher.start();
 		addMouseWheelListener(this);
 		addMouseMotionListener(this);
 		addMouseListener(this);
+		setIgnoreRepaint(true);
 	}
 
 	@Override
@@ -118,8 +117,13 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		curXpan = 0;
 		curYpan = 0;
 		zoomFactor = 1;
-		SwingUtilities.invokeLater(this::refresh);
+		triggerRefresh();
 	}
+
+	private void triggerRefresh() {
+		refresher.refreshNow();
+	}
+
 
 	private void refresh() {
 //		log.info("Map refresh");
@@ -130,14 +134,15 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					CombatantType type = cbt.getType();
 					return type != CombatantType.NONCOM && type != CombatantType.GP && type != CombatantType.OTHER;
 				})
-//				.filter(XivCombatant::isPc)
 				.forEach(cbt -> {
 					long id = cbt.getId();
 					if (cbt.getPos() == null) {
 						return;
 					}
-					things.computeIfAbsent(id, (unused) -> createNew(cbt))
-							.update(cbt);
+					@Nullable CastTracker cast = acr.getCastFor(cbt);
+					// Only lock for checking if it's there
+					PlayerDoohickey pdh = things.computeIfAbsent(id, (unused) -> createNew(cbt));
+					pdh.update(cbt, cast);
 				});
 
 		Set<Long> allKeys = things.keySet();
@@ -193,7 +198,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		curYpan += yDiff;
 //		log.info("Map Panel Drag: {},{}", xDiff, yDiff);
 		dragPoint = curPoint;
-		refresh();
+		triggerRefresh();
 	}
 
 	@SuppressWarnings({"NonAtomicOperationOnVolatileField", "NumericCastThatLosesPrecision"})
@@ -219,7 +224,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 		curXpan = (int) ((zoomDiv) * (curXpan) + (1 - zoomDiv) * xRel);
 		curYpan = (int) ((zoomDiv) * (curYpan) + (1 - zoomDiv) * yRel);
-		refresh();
+		triggerRefresh();
 
 	}
 
@@ -244,7 +249,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	@Override
 	public void mouseReleased(MouseEvent e) {
 //		log.info("Released");
-		refresh();
+		triggerRefresh();
 	}
 
 	@Override
@@ -333,13 +338,16 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			return super.getToolTipText(event);
 		}
 
-		public void update(XivCombatant cbt) {
+		// Setting to -2 so it will never match initially
+		long oldHpCurrent = -2;
+		long oldHpMax = -2;
+
+		public void update(XivCombatant cbt, @Nullable CastTracker castData) {
 			RenderUtils.setTooltip(this, formatTooltip(cbt));
 			Position pos = cbt.getPos();
 			if (pos != null) {
 				this.x = pos.getX();
 				this.y = pos.getY();
-				setCenterPoint();
 			}
 			if (cbt instanceof XivPlayerCharacter pc) {
 				Job newJob = pc.getJob();
@@ -349,7 +357,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				}
 				oldJob = newJob;
 			}
-			CastTracker castData = acr.getCastFor(cbt);
 			if (castData == null || castData.getCast().getEstimatedTimeSinceExpiry().toMillis() > 5000) {
 				castBar.setData(null);
 			}
@@ -358,6 +365,14 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			}
 
 			HitPoints hp = cbt.getHp();
+			long hpCurrent = hp == null ? -1 : hp.getCurrent();
+			long hpMax = hp == null ? -1 : hp.getMax();
+			// Ignore updates where nothing changed
+			if (hpCurrent == oldHpCurrent && hpMax == oldHpMax) {
+				return;
+			}
+			oldHpCurrent = hpCurrent;
+			oldHpMax = hpMax;
 			if (hp == null) {
 				hpBar.setVisible(false);
 			}
@@ -409,13 +424,20 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			validate();
 		}
 
-		public void setCenterPoint() {
-			Dimension size = getSize();
-			if (size.width == 0 || size.height == 0) {
-				size = getPreferredSize();
-			}
-			// TODO: automatically account for *where* in the component the icon is, since that's what matters
-			setBounds(translateX(this.x) - (size.width / 2), translateY(this.y) - (size.height / 2), size.width, size.height);
+		@Override
+		public int getX() {
+			return translateX(this.x) - (getSize().width / 2);
+		}
+
+
+		@Override
+		public int getY() {
+			return translateY(this.y) - (getSize().height / 2);
+		}
+
+		@Override
+		public Rectangle getBounds() {
+			return new Rectangle(getX(), getY(), getWidth(), getHeight());
 		}
 	}
 

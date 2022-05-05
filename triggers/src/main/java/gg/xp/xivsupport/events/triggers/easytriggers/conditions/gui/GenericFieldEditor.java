@@ -67,20 +67,20 @@ public class GenericFieldEditor extends JPanel {
 		Object fieldValue = getField(field);
 		if (type.equals(long.class) || type.equals(Long.class)) {
 			if (idPick == null) {
-				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), () -> valueToString(fieldValue.toString()));
+				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), () -> valueToString(getField(field).toString()));
 			}
 			else {
-				editorComponent = IdPicker.pickerFor(idPick.value(), () -> (long) fieldValue, l -> setField(field, l));
+				editorComponent = IdPicker.pickerFor(idPick.value(), () -> (long) getField(field), l -> setField(field, l));
 			}
 		}
 		else if (type.equals(int.class) || type.equals(Integer.class)) {
-			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), () -> valueToString(String.valueOf(fieldValue)));
+			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
 		}
 		else if (String.class.isAssignableFrom(type)) {
-			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> valueToString(String.valueOf(fieldValue)));
+			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
 		}
 		else if (type.equals(Pattern.class)) {
-			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), () -> valueToString(fieldValue.toString()));
+			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), () -> valueToString(getField(field).toString()));
 			textField.setColumns(30);
 			editorComponent = textField;
 //			editorComponent.setPreferredSize(new Dimension(2500, editorComponent.getPreferredSize().height));

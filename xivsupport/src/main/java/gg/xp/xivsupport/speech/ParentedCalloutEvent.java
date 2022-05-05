@@ -38,4 +38,16 @@ public class ParentedCalloutEvent<X> extends BaseEvent implements CalloutEvent {
 	public boolean isExpired() {
 		return expiryCheck.test(event);
 	}
+
+	private @Nullable CalloutEvent replaces;
+
+	@Override
+	public @Nullable CalloutEvent replaces() {
+		return replaces;
+	}
+
+	@Override
+	public void setReplaces(CalloutEvent replaces) {
+		this.replaces = replaces;
+	}
 }
