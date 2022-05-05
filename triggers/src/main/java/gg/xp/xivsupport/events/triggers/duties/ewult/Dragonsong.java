@@ -15,7 +15,6 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.models.ArenaPos;
@@ -86,27 +85,6 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private final ModifiableCallout<BuffRemoved> estinhog_baitGeir = new ModifiableCallout<>("Estinhog: Bait Geirskogul", "Bait Geirskogul");
 
-//	private final ModifiableCallout<?> estinhog_placeSecond = new ModifiableCallout<>("Estinhog: Place Second Tower", "Place Second Tower");
-//	private final ModifiableCallout<?> estinhog_placeThird = new ModifiableCallout<>("Estinhog: Place Third Tower", "Place Third Tower");
-//
-//	private final ModifiableCallout<BuffApplied> estinhog_highJump = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Tower on You");
-//	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "Tower behind you");
-//	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "Tower in front of you");
-//
-//	private final ModifiableCallout<?> estinhog_soakFirst = new ModifiableCallout<>("Estinhog: Soak First", "Soak First Tower");
-//	private final ModifiableCallout<?> estinhog_soakSecond = new ModifiableCallout<>("Estinhog: Soak Second", "Soak Second Tower");
-//	private final ModifiableCallout<?> estinhog_soakThird_asSecond = new ModifiableCallout<>("Estinhog: Spineshatter", "Soak Third Tower");
-//	private final ModifiableCallout<?> estinhog_soakThird_asFirst = new ModifiableCallout<>("Estinhog: Spineshatter", "Soak Third Tower");
-//
-//
-//	//	private final ModifiableCallout<AbilityCastStart> estinhog_gnashAndLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash and Lash", "Out then In");
-////	private final ModifiableCallout<AbilityCastStart> estinhog_lashAndGnash = ModifiableCallout.durationBasedCall("Estinhog: Lash and Gnash", "In then Out");
-//	private final ModifiableCallout<AbilityCastStart> estinhog_stackGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (No Tower)", "Stack, {first}, {second}");
-//	private final ModifiableCallout<AbilityCastStart> estinhog_firstTowerGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (1st Tower)", "Place first tower {where}, {first}, {second}");
-//	private final ModifiableCallout<AbilityCastStart> estinhog_secondTowerGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (2nd Tower)", "Place second tower {where}, {first}, {second}");
-//	private final ModifiableCallout<AbilityCastStart> estinhog_thirdPlaceGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (Place 3rd Tower)", "Place third tower {where}, {first}, {second}");
-//	private final ModifiableCallout<AbilityCastStart> estinhog_thirdSoakGnashLash = ModifiableCallout.durationBasedCall("Estinhog: Gnash/Lash (Soak 3rd Tower)", "Place third tower {where}, {first}, {second}");
-
 	private final ModifiableCallout<?> wyrmhole_number = new ModifiableCallout<>("Wyrmhole: Number Only", "Number {number}");
 
 	private final ModifiableCallout<?> wyrmhole_place1 = new ModifiableCallout<>("Wyrmhole: Place #1", "Place Tower {where}, then {first} then {second}");
@@ -129,11 +107,9 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> estinhog_drachenlance = ModifiableCallout.durationBasedCall("Estinhog: Drachenlance", "Out of front");
 
 	private final XivState state;
-	private final StatusEffectRepository buffs;
 
-	public Dragonsong(XivState state, StatusEffectRepository buffs) {
+	public Dragonsong(XivState state) {
 		this.state = state;
-		this.buffs = buffs;
 	}
 
 	@Override
@@ -526,7 +502,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private record GnashLash(AbilityCastStart event, String first, String second) {
 	}
 
-	private GnashLash waitGnashLash(SequentialTriggerController<BaseEvent> s) {
+	private static GnashLash waitGnashLash(SequentialTriggerController<BaseEvent> s) {
 //			0x6712 -> estinhog_gnashAndLash; out then in
 //			0x6713 -> estinhog_lashAndGnash; in then out
 		AbilityCastStart gnashLash = s.waitEvent(AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x6712 || acs.getAbility().getId() == 0x6713);
