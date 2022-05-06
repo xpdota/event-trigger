@@ -27,11 +27,19 @@ public class HealEffect extends AbilityEffect {
 	@Override
 	public String getBaseDescription() {
 		if (severity == HitSeverity.NORMAL) {
-			return String.format("Heal: %s", amount);
+			return String.format("Heal: %s (%s %s)", amount, getDamageAspect(), getDamageType());
 		}
 		else {
-			return String.format("Heal: %s (%s)", amount, severity.getFriendlyName());
+			return String.format("Heal: %s (%s) (%s %s)", amount, severity.getFriendlyName(), getDamageAspect(), getDamageType());
 		}
+	}
+
+	public DamageAspect getDamageAspect() {
+		return DamageAspect.forByte((int) (getFlags() >> 20) % 16);
+	}
+
+	public DamageType getDamageType() {
+		return DamageType.forByte((int) (getFlags() >> 16) % 16);
 	}
 
 }
