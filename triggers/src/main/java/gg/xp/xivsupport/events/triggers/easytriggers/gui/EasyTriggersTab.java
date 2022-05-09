@@ -281,7 +281,7 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private void addnew() {
-		TableWithFilterAndDetails<EventDescription<?>, Object> table = TableWithFilterAndDetails.builder("Choose Event Type", EasyTriggers::getEventDescriptions)
+		TableWithFilterAndDetails<EventDescription<?>, Object> table = TableWithFilterAndDetails.builder("Choose Event Type", backend::getEventDescriptions)
 				.addMainColumn(new CustomColumn<>("Event", d -> d.type().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Description", EventDescription::description))
 				.setFixedData(true)
@@ -289,7 +289,7 @@ public class EasyTriggersTab implements PluginTab {
 		// TODO: owner
 		EventDescription<?> eventDescription = ChooserDialog.chooserReturnItem(SwingUtilities.getWindowAncestor(outer), table);
 		if (eventDescription != null) {
-			EasyTrigger<?> newTrigger = eventDescription.newInst();
+			EasyTrigger<?> newTrigger = eventDescription.newDefaultInst();
 			backend.addTrigger(newTrigger);
 			refresh();
 			SwingUtilities.invokeLater(() -> {
@@ -381,7 +381,7 @@ public class EasyTriggersTab implements PluginTab {
 
 
 	private void makeTriggerFromEvent(Event event) {
-		EasyTrigger<?> newTrigger = EasyTriggers.makeTriggerFromEvent(event);
+		EasyTrigger<?> newTrigger = backend.makeTriggerFromEvent(event);
 		if (newTrigger == null) {
 			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(outer), "Unfortunately, this event type is not possible to automatically make a trigger for.");
 		}

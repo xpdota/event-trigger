@@ -36,6 +36,7 @@ public class ModifiableCallout<X> {
 
 	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
 	private final Map<String, Script> scriptCache = new ConcurrentHashMap<>();
+	// TODO: should this use GroovyManager instead?
 	private final GroovyShell interpreter = new GroovyShell();
 
 	private final String description;

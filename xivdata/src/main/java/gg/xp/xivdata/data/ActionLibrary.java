@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,8 +19,9 @@ import java.util.regex.Pattern;
 public class ActionLibrary {
 	private static final Logger log = LoggerFactory.getLogger(ActionLibrary.class);
 
-	private static boolean loaded;
-	private static final Map<Long, ActionIcon> cache = new HashMap<>();
+	private static volatile boolean loaded;
+	// TODO: improve cache performance by making a map implementation backed by an array
+	private static final Map<Long, ActionIcon> cache = new ConcurrentHashMap<>();
 	private static final Map<Long, ActionInfo> csvValues = new HashMap<>();
 
 	private static void readCsv() {
@@ -78,21 +80,28 @@ public class ActionLibrary {
 	private static final Pattern texFilePattern = Pattern.compile("(\\d+)\\.tex");
 
 	public static void main(String[] args) {
-		readCsv();
+		ensureLoaded();
 		csvValues.values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
 	}
 
-	public static Map<Long, ActionInfo> getAll() {
+	private static final Object initLock = new Object();
+	private static void ensureLoaded() {
 		if (!loaded) {
-			readCsv();
+			synchronized (initLock) {
+				if (!loaded) {
+					readCsv();
+				}
+			}
 		}
+	}
+
+	public static Map<Long, ActionInfo> getAll() {
+		ensureLoaded();
 		return Collections.unmodifiableMap(csvValues);
 	}
 
 	public static @Nullable ActionInfo forId(long id) {
-		if (!loaded) {
-			readCsv();
-		}
+		ensureLoaded();
 		return csvValues.get(id);
 	}
 

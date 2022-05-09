@@ -95,7 +95,7 @@ public class EasyTriggersTest {
 			EventDistributor dist = pico.getComponent(EventDistributor.class);
 			dist.registerHandler(coll);
 			EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
-			EasyTrigger<X> easy = EasyTriggers.getEventDescription(testCase.type()).newInst();
+			EasyTrigger<X> easy = ez1.getEventDescription(testCase.type()).newEmptyInst();
 			ez1.addTrigger(easy);
 
 			dist.acceptEvent(testCase.event());

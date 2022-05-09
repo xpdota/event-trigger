@@ -9,5 +9,7 @@ public interface EventDescription<X> {
 
 	String defaultText();
 
-	EasyTrigger<X> newInst();
+	EasyTrigger<X> newEmptyInst();
+
+	EasyTrigger<X> newDefaultInst();
 }

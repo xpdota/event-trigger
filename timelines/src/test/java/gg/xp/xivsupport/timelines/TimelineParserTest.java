@@ -3,6 +3,8 @@ package gg.xp.xivsupport.timelines;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
+
 public class TimelineParserTest {
 
 	@Test
@@ -81,6 +83,21 @@ public class TimelineParserTest {
 		Assert.assertEquals(textFileTimelineEntry.timelineWindow().start(), 600.0d);
 		Assert.assertEquals(textFileTimelineEntry.timelineWindow().end(), 0.0d);
 		Assert.assertNull(textFileTimelineEntry.jump());
+	}
+
+	@Test
+	void testDifferentOrder() {
+		TextFileTimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("674.7 \"Holy Comet x7\" duration 12.7 sync / 1[56]:[^:]*:Ser Noudenet:63E8:/");
+		Assert.assertNotNull(textFileTimelineEntry);
+		Assert.assertEquals(textFileTimelineEntry.time(), 674.7d);
+		Assert.assertEquals(textFileTimelineEntry.name(), "Holy Comet x7");
+		Assert.assertEquals(textFileTimelineEntry.sync().pattern(), " 1[56]:[^:]*:Ser Noudenet:63E8:");
+		Assert.assertEquals(textFileTimelineEntry.duration(), (Double) 12.7d);
+		Assert.assertNotNull(textFileTimelineEntry.timelineWindow());
+		Assert.assertEquals(textFileTimelineEntry.timelineWindow().start(), 2.5);
+		Assert.assertEquals(textFileTimelineEntry.timelineWindow().end(), 2.5);
+		Assert.assertNull(textFileTimelineEntry.jump());
+
 	}
 
 	private void assertDefaultTimelineWindow(TextFileTimelineEntry entry) {

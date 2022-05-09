@@ -205,17 +205,49 @@ public class EasyTriggers {
 
 	// Be sure to add new types to EasyTriggersTest
 	// TODO: might be nice to wire some of the "single value replacement" logic from ModifiableCallout into here, to skip the need for .name on everything
-	private static final List<EventDescription<?>> eventTypes = List.of(
-			new EventDescriptionImpl<>(AbilityCastStart.class, "An ability has started casting. Corresponds to ACT 20 lines.", "{event.ability}", "{event.ability} ({event.estimatedRemainingDuration})"),
-			new EventDescriptionImpl<>(AbilityUsedEvent.class, "An ability has snapshotted. Corresponds to ACT 21/22 lines.", "{event.ability}"),
-			new EventDescriptionImpl<>(AbilityCastCancel.class, "An ability was interrupted while casting. Corresponds to ACT 23 lines.", "{event.ability} interrupted"),
-			new EventDescriptionImpl<>(EntityKilledEvent.class, "Something died. Corresponds to ACT 25 lines.", "{event.target} died"),
-			new EventDescriptionImpl<>(BuffApplied.class, "A buff or debuff has been applied. Corresponds to ACT 26 lines.", "{event.buff} on {event.target}"),
-			new EventDescriptionImpl<>(BuffRemoved.class, "A buff or debuff has been removed. Corresponds to ACT 30 lines.", "{event.buff} lost from {event.target}"),
-			new EventDescriptionImpl<>(AbilityResolvedEvent.class, "An ability has actually applied. Corresponds to ACT 37 lines.", "{event.ability} resolved"),
-			new EventDescriptionImpl<>(ActorControlEvent.class, "Conveys various state changes, such as wiping or finishing a raid. Corresponds to ACT 33 lines.", "Actor control {event.command}"),
-			new EventDescriptionImpl<>(ACTLogLineEvent.class, "Any log line, in text form. Use as a last resort.", "Log Line {event.rawFields[0]}"),
-			new EventDescriptionImpl<>(ChatLineEvent.class, "In-game chat lines", "{event.name} says {event.line}", "Chat Line {event.name}: {event.line}")
+	private final List<EventDescription<?>> eventTypes = List.of(
+			new EventDescriptionImpl<>(AbilityCastStart.class,
+					"An ability has started casting. Corresponds to ACT 20 lines.",
+					"{event.ability}",
+					"{event.ability} ({event.estimatedRemainingDuration})",
+					List.of(AbilityIdFilter::new)),
+			new EventDescriptionImpl<>(AbilityUsedEvent.class,
+					"An ability has snapshotted. Corresponds to ACT 21/22 lines.",
+					"{event.ability}",
+					List.of(AbilityIdFilter::new)),
+			new EventDescriptionImpl<>(AbilityCastCancel.class,
+					"An ability was interrupted while casting. Corresponds to ACT 23 lines.",
+					"{event.ability} interrupted",
+					List.of(AbilityIdFilter::new)),
+			new EventDescriptionImpl<>(EntityKilledEvent.class,
+					"Something died. Corresponds to ACT 25 lines.",
+					"{event.target} died",
+					List.of(TargetEntityTypeFilter::new)),
+			new EventDescriptionImpl<>(BuffApplied.class,
+					"A buff or debuff has been applied. Corresponds to ACT 26 lines.",
+					"{event.buff} on {event.target}",
+					List.of(StatusIdFilter::new)),
+			new EventDescriptionImpl<>(BuffRemoved.class,
+					"A buff or debuff has been removed. Corresponds to ACT 30 lines.",
+					"{event.buff} lost from {event.target}",
+					List.of(StatusIdFilter::new)),
+			new EventDescriptionImpl<>(AbilityResolvedEvent.class,
+					"An ability has actually applied. Corresponds to ACT 37 lines.",
+					"{event.ability} resolved",
+					List.of(AbilityIdFilter::new)),
+			new EventDescriptionImpl<>(ActorControlEvent.class,
+					"Conveys various state changes, such as wiping or finishing a raid. Corresponds to ACT 33 lines.",
+					"Actor control {event.command}",
+					List.of()),
+			new EventDescriptionImpl<>(ACTLogLineEvent.class,
+					"Any log line, in text form. Use as a last resort.",
+					"Log Line {event.rawFields[0]}",
+					List.of(LogLineRegexFilter::new)),
+			new EventDescriptionImpl<>(ChatLineEvent.class,
+					"In-game chat lines",
+					"{event.name} says {event.line}",
+					"Chat Line {event.name}: {event.line}",
+					List.of(ChatLineRegexFilter::new))
 	);
 
 
@@ -244,12 +276,12 @@ public class EasyTriggers {
 			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic)
 	);
 
-	public static List<EventDescription<?>> getEventDescriptions() {
+	public List<EventDescription<?>> getEventDescriptions() {
 		return eventTypes;
 	}
 
 	@SuppressWarnings("unchecked")
-	public static @Nullable <X> EventDescription<X> getEventDescription(Class<X> event) {
+	public @Nullable <X> EventDescription<X> getEventDescription(Class<X> event) {
 		return (EventDescription<X>) eventTypes.stream().filter(desc -> desc.type().equals(event)).findFirst().orElse(null);
 	}
 
@@ -267,9 +299,9 @@ public class EasyTriggers {
 		return (ConditionDescription<X, Y>) conditionDescription;
 	}
 
-	public static @Nullable EasyTrigger<?> makeTriggerFromEvent(Event event) {
+	public @Nullable EasyTrigger<?> makeTriggerFromEvent(Event event) {
 		if (event instanceof AbilityUsedEvent abu) {
-			EasyTrigger<AbilityUsedEvent> trigger = getEventDescription(AbilityUsedEvent.class).newInst();
+			EasyTrigger<AbilityUsedEvent> trigger = getEventDescription(AbilityUsedEvent.class).newEmptyInst();
 			trigger.setName(abu.getAbility().getName() + " used");
 			makeSourceConditions(abu).forEach(trigger::addCondition);
 			makeTargetConditions(abu).forEach(trigger::addCondition);
@@ -278,7 +310,7 @@ public class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof AbilityCastStart acs) {
-			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newInst();
+			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newEmptyInst();
 			trigger.setName(acs.getAbility().getName() + " casting");
 			makeSourceConditions(acs).forEach(trigger::addCondition);
 			makeTargetConditions(acs).forEach(trigger::addCondition);
@@ -286,14 +318,14 @@ public class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof AbilityCastCancel acc) {
-			EasyTrigger<AbilityCastCancel> trigger = getEventDescription(AbilityCastCancel.class).newInst();
+			EasyTrigger<AbilityCastCancel> trigger = getEventDescription(AbilityCastCancel.class).newEmptyInst();
 			trigger.setName(acc.getAbility().getName() + " cancelled");
 			makeSourceConditions(acc).forEach(trigger::addCondition);
 			makeAbilityConditions(acc).forEach(trigger::addCondition);
 			return trigger;
 		}
 		else if (event instanceof AbilityResolvedEvent are) {
-			EasyTrigger<AbilityResolvedEvent> trigger = getEventDescription(AbilityResolvedEvent.class).newInst();
+			EasyTrigger<AbilityResolvedEvent> trigger = getEventDescription(AbilityResolvedEvent.class).newEmptyInst();
 			trigger.setName(are.getAbility().getName() + " resolved");
 			makeSourceConditions(are).forEach(trigger::addCondition);
 			makeTargetConditions(are).forEach(trigger::addCondition);
@@ -302,7 +334,7 @@ public class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof BuffApplied ba) {
-			EasyTrigger<BuffApplied> trigger = getEventDescription(BuffApplied.class).newInst();
+			EasyTrigger<BuffApplied> trigger = getEventDescription(BuffApplied.class).newEmptyInst();
 			trigger.setName(ba.getBuff().getName() + " applied");
 			makeSourceConditions(ba).forEach(trigger::addCondition);
 			makeTargetConditions(ba).forEach(trigger::addCondition);
@@ -310,7 +342,7 @@ public class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof BuffRemoved br) {
-			EasyTrigger<BuffRemoved> trigger = getEventDescription(BuffRemoved.class).newInst();
+			EasyTrigger<BuffRemoved> trigger = getEventDescription(BuffRemoved.class).newEmptyInst();
 			trigger.setName(br.getBuff().getName() + " removed");
 			makeSourceConditions(br).forEach(trigger::addCondition);
 			makeTargetConditions(br).forEach(trigger::addCondition);

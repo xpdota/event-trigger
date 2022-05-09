@@ -42,12 +42,6 @@ public class TimelineManager {
 	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutNow = ModifiableCallout.durationBasedCallWithoutDurationText("Timeline Callout (Immediate)", "{event.getEntry().name()}");
 	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutPre = ModifiableCallout.durationBasedCall("Timeline Callout (Precall)", "{event.getEntry().name()}");
 
-	static {
-		TimelineCsvReader.readCsv().forEach(entry -> {
-			zoneIdToTimelineFile.put(entry.zoneId(), entry);
-		});
-	}
-
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
 
@@ -64,7 +58,24 @@ public class TimelineManager {
 		this.pers = pers;
 	}
 
+	private static volatile boolean init;
+	private static final Object initLock = new Object();
+
+	private static void ensureInit() {
+		if (!init) {
+			synchronized (initLock) {
+				if (!init) {
+					TimelineCsvReader.readCsv().forEach(entry -> {
+						zoneIdToTimelineFile.put(entry.zoneId(), entry);
+					});
+					init = true;
+				}
+			}
+		}
+	}
+
 	public @Nullable TimelineProcessor getTimeline(long zoneId) {
+		ensureInit();
 		TimelineInfo info = zoneIdToTimelineFile.get(zoneId);
 		if (info == null) {
 			log.info("No timeline info for zone {}", zoneId);
@@ -187,6 +198,7 @@ public class TimelineManager {
 	}
 
 	public static Map<Long, TimelineInfo> getTimelines() {
+		ensureInit();
 		return Collections.unmodifiableMap(zoneIdToTimelineFile);
 	}
 

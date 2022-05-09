@@ -55,7 +55,7 @@ public class FflogsClient {
 			throw new IllegalArgumentException("Client ID must not be blank");
 		}
 		String secret = controller.clientSecret().get();
-		if (clid.isEmpty()) {
+		if (secret.isEmpty()) {
 			throw new IllegalArgumentException("Secret must not be blank");
 		}
 		authLine = "Basic " + Base64.encodeBase64String((clid + ":" + secret).getBytes());

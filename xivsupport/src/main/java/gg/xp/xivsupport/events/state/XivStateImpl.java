@@ -696,6 +696,9 @@ public class XivStateImpl implements XivState {
 				if (bnpcId == 9020) {
 					fake = true;
 				}
+				if (ownerId != 0) {
+					computed.setParent(getCombatant(ownerId));
+				}
 			}
 			// Earthly star workaround
 			if (fake || computed.getbNpcId() == 7245) {

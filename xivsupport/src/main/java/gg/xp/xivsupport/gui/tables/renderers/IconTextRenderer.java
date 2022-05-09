@@ -6,12 +6,12 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class IconTextRenderer {
 
-	private static final Map<Object, ScaledImageComponent> cache = new HashMap<>();
+	private static final Map<Object, ScaledImageComponent> cache = new ConcurrentHashMap<>();
 	private static final int size = 20;
 
 	private IconTextRenderer() {
@@ -22,10 +22,10 @@ public final class IconTextRenderer {
 	}
 
 	public static @Nullable ScaledImageComponent getIconOnly(HasIconURL value) {
+		if (value == null) {
+			return null;
+		}
 		return cache.computeIfAbsent(value, (ignored1) -> {
-			if (value == null) {
-				return null;
-			}
 			URL imageUrl = value.getIconUrl();
 			if (imageUrl == null) {
 				return null;

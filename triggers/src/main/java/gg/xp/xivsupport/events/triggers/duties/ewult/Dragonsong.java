@@ -121,6 +121,8 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> estinhog_drachenlance = ModifiableCallout.durationBasedCall("Estinhog: Drachenlance", "Out of front");
 
+	private final ModifiableCallout<BuffApplied> doom = ModifiableCallout.durationBasedCall("Doom", "Doom");
+
 	private final XivState state;
 	private final StatusEffectRepository buffs;
 
@@ -169,8 +171,13 @@ public class Dragonsong implements FilteredEventHandler {
 		if (event.getBuff().getId() == 0x6316) {
 			context.accept(p1_brightwing.getModified(event));
 		}
-		else if (event.getBuff().getId() == 0xA65 && event.getTarget().isThePlayer()) {
-			context.accept(p1_puddleBait.getModified(event));
+		else if (event.getTarget().isThePlayer()) {
+			if (event.getBuff().getId() == 0xA65) {
+				context.accept(p1_puddleBait.getModified(event));
+			}
+			else if (event.getBuff().getId() == 0xBA0) {
+				context.accept(doom.getModified(event));
+			}
 		}
 	}
 

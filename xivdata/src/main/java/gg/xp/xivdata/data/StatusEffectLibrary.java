@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,7 +23,7 @@ public class StatusEffectLibrary {
 	private static volatile boolean loaded;
 	private static final Object lock = new Object();
 	private static final Map<Long, StatusEffectInfo> csvValues = new HashMap<>();
-	private static final Map<Long, StatusEffectIcon> cache = new HashMap<>();
+	private static final Map<Long, StatusEffectIcon> cache = new ConcurrentHashMap<>();
 
 	private static void ensureLoaded() {
 		if (!loaded) {

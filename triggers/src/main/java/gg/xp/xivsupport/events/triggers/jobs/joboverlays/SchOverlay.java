@@ -65,20 +65,24 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		DISSIPATION(0xe03);
 
 
-		final @Nullable Component icon;
-
-		SchSummon() {
-			this.icon = null;
-		}
+		private @Nullable Component icon;
+		private final long actionIdForIcon;
 
 		SchSummon(long actionIdForIcon) {
-			ScaledImageComponent icon = IconTextRenderer.getIconOnly(ActionLibrary.iconForId(actionIdForIcon));
+			this.actionIdForIcon = actionIdForIcon;
+		}
+
+		public Component getIcon() {
 			if (icon == null) {
-				this.icon = null;
+				ScaledImageComponent icon = IconTextRenderer.getIconOnly(ActionLibrary.iconForId(actionIdForIcon));
+				if (icon == null) {
+					this.icon = null;
+				}
+				else {
+					this.icon = icon.withNewSize(ICON_SIZE);
+				}
 			}
-			else {
-				this.icon = icon.withNewSize(ICON_SIZE);
-			}
+			return icon;
 		}
 	}
 
@@ -99,6 +103,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		// TODO: can't use getScale() from this context
 		RefreshLoop<SchOverlay> refresher = new RefreshLoop<>("SchOverlay", this, SchOverlay::refreshCd, dt -> Math.max((50L), 20));
 		refresher.start();
+
 	}
 
 	/*
@@ -227,7 +232,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 				summon = SchSummon.SELENE;
 			}
 		}
-		summonIcon = summon.icon;
+		summonIcon = summon.getIcon();
 	}
 
 	private boolean isDissipationActive() {
@@ -239,6 +244,9 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 	@Override
 	public void setVisible(boolean vis) {
 		if (vis) {
+			for (SchSummon value : SchSummon.values()) {
+				value.getIcon();
+			}
 			summonUpdate();
 			summonPendingActionsUpdate();
 			uiUpdate();
