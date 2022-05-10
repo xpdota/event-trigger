@@ -291,6 +291,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		private Component icon;
 		private final CastBarComponent castBar;
 		private final ResourceBar hpBar;
+		private final JLabel nameLabel;
+		private final JLabel idLabel;
 
 		public PlayerDoohickey(XivCombatant cbt) {
 			inner = new JPanel();
@@ -326,6 +328,21 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			hpBar.setBounds(0, 62, 100, 19);
 			hpBar.setColor3(new Color(20, 20, 20, 240));
 			add(hpBar);
+
+			nameLabel = new JLabel(cbt.getName());
+			nameLabel.setBounds(0, 7, 100, 17);
+			nameLabel.setOpaque(false);
+			nameLabel.setForeground(Color.BLACK);
+			nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+			add(nameLabel);
+
+			idLabel = new JLabel(String.format("0x%X", cbt.getId()));
+			idLabel.setBounds(0, 23, 100, 17);
+			idLabel.setOpaque(false);
+			idLabel.setForeground(Color.BLACK);
+			idLabel.setHorizontalAlignment(SwingConstants.CENTER);
+			add(idLabel);
+
 			revalidate();
 		}
 
@@ -388,7 +405,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				hpBar.setVisible(true);
 				hpBar.setPercent1(percent);
 				Color rawColor = Color.getHSBColor((float) (0.33f * percent), 0.36f, 0.52f);
-				hpBar.setColor1(new Color(rawColor.getRed(), rawColor.getGreen(), rawColor.getBlue(), 240));
+				hpBar.setColor1(new Color(rawColor.getRed(), rawColor.getGreen(), rawColor.getBlue(), 225));
 				hpBar.revalidate();
 			}
 		}

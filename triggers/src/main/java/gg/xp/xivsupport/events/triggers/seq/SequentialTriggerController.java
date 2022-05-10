@@ -3,11 +3,15 @@ package gg.xp.xivsupport.events.triggers.seq;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.SystemEvent;
+import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
+import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,6 +28,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	private final BooleanSupplier expired;
 	private final Thread thread;
 	private final Object lock = new Object();
+	private final X initialEvent;
 	private volatile X currentEvent;
 	private volatile EventContext context;
 	private volatile boolean done;
@@ -51,6 +56,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 				}
 			}
 		}, "SequentialTrigger-" + threadIdCounter.getAndIncrement());
+		this.initialEvent = initialEvent;
 		thread.setDaemon(true);
 		thread.setPriority(Thread.MAX_PRIORITY);
 		thread.start();
@@ -68,6 +74,33 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	public void enqueue(Event event) {
 		log.info("Enqueueing: {}", event);
 		context.enqueue(event);
+	}
+
+	public void refreshCombatants(long delay) {
+		accept(new RefreshCombatantsRequest());
+		waitMs(delay);
+	}
+
+	@SystemEvent
+	static class DelayedSqtEvent extends BaseDelayedEvent {
+
+		@Serial
+		private static final long serialVersionUID = -4212233775615486768L;
+
+		DelayedSqtEvent(long ms) {
+			super(ms);
+		}
+	}
+
+	public void waitMs(long ms) {
+		log.trace("in waitMs");
+		// This can stop waiting when it hits the original event (due to the delay), OR any other event (which is more
+		// likely when replaying)
+		DelayedSqtEvent event = new DelayedSqtEvent(ms);
+		enqueue(event);
+		long initial = initialEvent.getEffectiveTimeSince().toMillis();
+		long doneAt = initial + ms;
+		waitEvent(BaseEvent.class, e -> initialEvent.getEffectiveTimeSince().toMillis() >= doneAt);
 	}
 
 	private @Nullable CalloutEvent lastCall;

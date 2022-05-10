@@ -12,8 +12,11 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
+import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
+import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
@@ -63,6 +66,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<HeadMarkerEvent> cross = new ModifiableCallout<>("Cross", "Blue Cross with {partner}");
 
 	private final ModifiableCallout<AbilityCastStart> thordan_cleaveBait = ModifiableCallout.durationBasedCall("Ascalon's Mercy", "Cleave Bait");
+	private final ModifiableCallout<AbilityCastStart> thordan_quaga = ModifiableCallout.durationBasedCall("Ancient Quaga", "Raidwide");
 
 	private final ModifiableCallout<?> nsSafe = new ModifiableCallout<>("Trio 1 N/S Safe", "North/South Safe", "North South Safe", Collections.emptyList());
 	private final ModifiableCallout<?> neSwSafe = new ModifiableCallout<>("Trio 1 NE/SW Safe", "Northeast/Southwest Safe", "Northeast Southwest Safe", Collections.emptyList());
@@ -86,6 +90,9 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<?> thordan_trio2_kbImmune = new ModifiableCallout<>("Second Trio: Knockback Immune", "Knockback Immune in Tower");
 	private final ModifiableCallout<?> thordan_trio2_getKnockedBack = new ModifiableCallout<>("Second Trio: Knockback Immune", "Take knockback into tower");
 	private final ModifiableCallout<BaseEvent> meteorDrop = new ModifiableCallout<>("Drop Meteors", "Drop Meteors", "Drop Meteor #{num}", ModifiableCallout.expiresIn(Duration.ofSeconds(11)));
+
+	private final ModifiableCallout<AbilityCastStart> thordan_broadSwingL = ModifiableCallout.durationBasedCall("Broad Swing Left", "Back then Left");
+	private final ModifiableCallout<AbilityCastStart> thordan_broadSwingR = ModifiableCallout.durationBasedCall("Broad Swing Right", "Back then Right");
 
 	private final ModifiableCallout<BuffApplied> estinhog_headmark1 = new ModifiableCallout<>("Estinhog: First in Line", "One");
 	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Second in Line", "Two");
@@ -155,6 +162,9 @@ public class Dragonsong implements FilteredEventHandler {
 				}
 			}
 			case 0x63C8 -> call = thordan_cleaveBait;
+			case 0x63C6 -> call = thordan_quaga;
+			case 0x63C1 -> call = thordan_broadSwingL;
+			case 0x63C0 -> call = thordan_broadSwingR;
 			case 0x670B -> call = estinhog_drachenlance;
 			// TODO: what should this call actually be?
 //			case 0x62D6 -> call = p1_hyper;
@@ -284,15 +294,33 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 5, 5);
 	private final ArenaPos tightArenaPos = new ArenaPos(100, 100, 3, 3);
 
-	private final SequentialTrigger<BaseEvent> thordan_firstTrio = new SequentialTrigger<>(30_000, BaseEvent.class,
-			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x63D3,
+	private final SequentialTrigger<BaseEvent> thordan_firstTrio = new SequentialTrigger<>(28_000, BaseEvent.class,
+			e -> e instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x63D3,
 			(e1, s) -> {
 				log.info("Thordan Trio 1: Start");
 
-				List<AbilityCastStart> dashes = s.waitEvents(3, AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x63D4);
+				// This new logic should work faster while still preserving pure log compatibility (it will just be delayed)
+				// Comes from:
+				// Ser Vellguine 12633:3636
+				// Ser Paulecrain 12634:3637
+				// Ser Ignasse 12635:3638
+				List<XivCombatant> dashers;
+				s.waitEvent(TargetabilityUpdate.class, tu -> tu.getTarget().getbNpcId() == 12604 && !tu.isTargetable());
+				do {
+					dashers = getState().getCombatants().values().stream().filter(cbt -> {
+						long id = cbt.getbNpcId();
+						return id == 12633 || id == 12634 || id == 12635;
+					}).filter(cbt -> cbt.getPos() != null && arenaPos.distanceFromCenter(cbt.getPos()) > 20).toList();
+					if (dashers.size() < 3) {
+						s.refreshCombatants(200);
+					}
+					else {
+						break;
+					}
+				} while (true);
 				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.all);
-				dashes.stream()
-						.map(dash -> arenaPos.forCombatant(dash.getSource()))
+				dashers.stream()
+						.map(arenaPos::forCombatant)
 						.forEach(badSector -> {
 							log.info("Thordan Trio 1: Unsafe spot: {}", badSector);
 							safe.remove(badSector);
@@ -350,7 +378,7 @@ public class Dragonsong implements FilteredEventHandler {
 						break;
 					}
 					else {
-						s.waitEvent(BaseEvent.class);
+						s.refreshCombatants(200);
 					}
 				}
 			});

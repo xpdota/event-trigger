@@ -10,6 +10,7 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.replay.ReplayController;
+import gg.xp.xivsupport.sys.PrimaryLogSource;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -53,7 +54,7 @@ public class RawEventStorage {
 	private final BooleanSetting saveToDisk;
 	private boolean allowSave = true;
 
-	public RawEventStorage(PicoContainer container, PersistenceProvider persist) {
+	public RawEventStorage(PicoContainer container, PersistenceProvider persist, PrimaryLogSource pls) {
 		boolean isReplay = container.getComponent(ReplayController.class) != null;
 		IntSetting maxEventsStoredLegacy = new IntSetting(persist, "raw-storage.events-to-retain", 1_000_000);
 		int defaultMaxEvents;
@@ -81,6 +82,7 @@ public class RawEventStorage {
 				}
 			}
 		}));
+		allowSave = !pls.getLogSource().isImport();
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
