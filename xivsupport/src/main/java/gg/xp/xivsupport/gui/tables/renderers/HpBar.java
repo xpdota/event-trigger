@@ -257,7 +257,11 @@ public class HpBar extends JComponent {
 			return predictedDead;
 		}
 		else {
-			return getBackground();
+			Color bg = this.bgColor;
+			if (bg == null) {
+				return TRANSPARENT;
+			}
+			return bg;
 		}
 	}
 
