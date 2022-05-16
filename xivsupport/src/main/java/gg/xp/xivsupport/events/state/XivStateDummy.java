@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.state;
 
 import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
@@ -110,6 +111,11 @@ public class XivStateDummy implements XivState {
 	}
 
 	@Override
+	public void provideCombatantMP(XivCombatant target, @NotNull ManaPoints manaPoints) {
+		throw new UnsupportedOperationException("not supported");
+	}
+
+	@Override
 	public void provideCombatantPos(XivCombatant target, Position newPos) {
 		throw new UnsupportedOperationException("not supported");
 	}
@@ -128,5 +134,10 @@ public class XivStateDummy implements XivState {
 	@Override
 	public boolean inCombat() {
 		return true;
+	}
+
+	@Override
+	public void provideCombatantShieldPct(XivCombatant cbt, long shieldPct) {
+		throw new UnsupportedOperationException("not supported");
 	}
 }

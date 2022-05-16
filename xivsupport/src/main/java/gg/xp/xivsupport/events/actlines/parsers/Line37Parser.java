@@ -16,13 +16,13 @@ public class Line37Parser extends AbstractACTLineParser<Line37Parser.Fields> {
 
 	enum Fields {
 		id, name, sequenceId,
-		targetCurHp, targetMaxHp, targetCurMp, targetMaxMp, targetUnknown1, targetUnknown2, targetX, targetY, targetZ, targetHeading
+		targetCurHp, targetMaxHp, targetCurMp, targetMaxMp, targetShieldPct, targetUnknown2, targetX, targetY, targetZ, targetHeading
 	}
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		fields.setTrustedHp(true);
-		XivCombatant target = fields.getEntity(Fields.id, Fields.name, Fields.targetCurHp, Fields.targetMaxHp, Fields.targetCurMp, Fields.targetMaxMp, Fields.targetX, Fields.targetY, Fields.targetZ, Fields.targetHeading);
+		XivCombatant target = fields.getEntity(Fields.id, Fields.name, Fields.targetCurHp, Fields.targetMaxHp, Fields.targetCurMp, Fields.targetMaxMp, Fields.targetX, Fields.targetY, Fields.targetZ, Fields.targetHeading, Fields.targetShieldPct);
 		return new ActionSyncEvent(target, fields.getHex(Fields.sequenceId));
 	}
 }

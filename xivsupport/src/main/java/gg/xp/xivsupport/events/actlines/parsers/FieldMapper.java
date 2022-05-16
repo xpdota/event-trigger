@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -105,6 +106,10 @@ public class FieldMapper<K extends Enum<K>> {
 	}
 
 	public XivCombatant getEntity(K idKey, K nameKey, K currentHpKey, K maxHpKey, K currentMpKey, K maxMpKey, K posXKey, K posYKey, K posZKey, K headingKey) {
+		return getEntity(idKey, nameKey, currentHpKey, maxHpKey, currentMpKey, maxMpKey, posXKey, posYKey, posZKey, headingKey, null);
+	}
+
+	public XivCombatant getEntity(K idKey, K nameKey, K currentHpKey, K maxHpKey, K currentMpKey, K maxMpKey, K posXKey, K posYKey, K posZKey, K headingKey, K shieldPctKey) {
 		XivCombatant cbt = getEntity(idKey, nameKey);
 		if (cbt.isEnvironment()) {
 			return cbt;
@@ -118,7 +123,6 @@ public class FieldMapper<K extends Enum<K>> {
 					// Plan A - both the current and max fields are present
 					Long maxHp = getOptionalLong(maxHpKey);
 					if (maxHp != null) {
-						// TODO: collect these all then do them once at the end
 						state.provideCombatantHP(cbt, new HitPoints(curHp, maxHp));
 					}
 					// Plan B - we only have current available, so use stored max and assume it's the same (since max HP changes
@@ -127,6 +131,23 @@ public class FieldMapper<K extends Enum<K>> {
 						if (cbt.getHp() != null) {
 							state.provideCombatantHP(cbt, new HitPoints(curHp, cbt.getHp().getMax()));
 						}
+					}
+				}
+			}
+		}
+		if (currentMpKey != null && maxMpKey != null) {
+			Long curMp = getOptionalLong(currentMpKey);
+			if (curMp != null) {
+				// Plan A - both the current and max fields are present
+				Long maxMp = getOptionalLong(maxMpKey);
+				if (maxMp != null) {
+					state.provideCombatantMP(cbt, ManaPoints.of(curMp, maxMp));
+				}
+				// Plan B - we only have current available, so use stored max and assume it's the same (since max MP changes
+				// are not that common).
+				else {
+					if (cbt.getMp() != null) {
+						state.provideCombatantMP(cbt, ManaPoints.of(curMp, cbt.getMp().getMax()));
 					}
 				}
 			}
@@ -141,6 +162,12 @@ public class FieldMapper<K extends Enum<K>> {
 				Position pos = new Position(x, y, z, h);
 				state.provideCombatantPos(cbt, pos);
 //				cbt = new XivCombatant(cbt.getId(), cbt.getName(), cbt.isPc(), cbt.isThePlayer(), cbt.getRawType(), cbt.getHp(), cbt.getMp(), pos, cbt.getbNpcId(), cbt.getbNpcNameId(), cbt.getPartyType(), cbt.getLevel(), cbt.getOwnerId());
+			}
+		}
+		if (shieldPctKey != null) {
+			Long shieldPct = getOptionalLong(shieldPctKey);
+			if (shieldPct != null) {
+				state.provideCombatantShieldPct(cbt, shieldPct);
 			}
 		}
 		state.provideActFallbackCombatant(cbt);

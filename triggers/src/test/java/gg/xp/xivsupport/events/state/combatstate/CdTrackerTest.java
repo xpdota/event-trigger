@@ -27,10 +27,10 @@ import java.util.Map;
 public class CdTrackerTest {
 
 	Cooldown cd = Cooldown.Reprisal;
-	private final XivPlayerCharacter player = new XivPlayerCharacter(0x10000001, "Me, The Player", Job.GNB, XivWorld.of(), true, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0);
-	private final XivPlayerCharacter otherCharInParty = new XivPlayerCharacter(0x10000002, "Someone Else In My Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0);
-	private final XivPlayerCharacter otherCharNotInParty = new XivPlayerCharacter(0x10000003, "Someone Else Not In Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 0, 80, 0);
-	private final XivCombatant theBoss = new XivCombatant(0x40000001, "The Boss", false, false, 2, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 123, 456, 0, 80, 0);
+	private final XivPlayerCharacter player = new XivPlayerCharacter(0x10000001, "Me, The Player", Job.GNB, XivWorld.of(), true, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
+	private final XivPlayerCharacter otherCharInParty = new XivPlayerCharacter(0x10000002, "Someone Else In My Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
+	private final XivPlayerCharacter otherCharNotInParty = new XivPlayerCharacter(0x10000003, "Someone Else Not In Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 0, 80, 0, 0);
+	private final XivCombatant theBoss = new XivCombatant(0x40000001, "The Boss", false, false, 2, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 123, 456, 0, 80, 0, 0);
 	private final AbilityUsedEvent reprisalUsedByPc = new AbilityUsedEvent(
 			new XivAbility(cd.getPrimaryAbilityId(), "Reprisal"),
 			player,

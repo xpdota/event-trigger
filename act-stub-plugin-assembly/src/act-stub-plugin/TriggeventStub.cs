@@ -9,7 +9,7 @@ using RainbowMage.OverlayPlugin;
 
 [assembly: AssemblyTitle("Triggevent Stub Launcher")]
 [assembly: AssemblyDescription("A simple plugin that allows Triggevent to be launched via ACT")]
-[assembly: AssemblyCompany("Wynn Dohz")]
+[assembly: AssemblyCompany("Who Knows")]
 [assembly: AssemblyVersion("1.0.0.0")]
 
 namespace ACT_Plugin

@@ -115,7 +115,8 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private final ModifiableCallout<?> wyrmhole_place2 = new ModifiableCallout<>("Wyrmhole: Place #2", "Place Tower {where}");
 	// Actually comes out at the same time as the #3 calls since it gives the whole sequence
-	private final ModifiableCallout<?> wyrmhole_soak2 = new ModifiableCallout<>("Wyrmhole: Soak #2", "Soak then {first} then {second}");
+	private final ModifiableCallout<?> wyrmhole_soak2_firstPart = new ModifiableCallout<>("Wyrmhole: Soak #2", "Soak tower then stack");
+	private final ModifiableCallout<?> wyrmhole_soak2_secondPart = new ModifiableCallout<>("Wyrmhole: Soak #2 Gnash/Lash", "{first} then {second}");
 
 	private final ModifiableCallout<?> wyrmhole_place3 = new ModifiableCallout<>("Wyrmhole: Place #3", "Place Tower {where}, then {first} then {second}");
 	private final ModifiableCallout<?> wyrmhole_soak3_as1 = new ModifiableCallout<>("Wyrmhole: Soak #3 (As #1)", "Stack, {first}, {second}, then soak tower");
@@ -592,6 +593,14 @@ public class Dragonsong implements FilteredEventHandler {
 					s.accept(wyrmhole_place2.getModified(Map.of("where", whereDive)));
 				}
 
+				// Wait for second in line to go off, then call "soak 2" if needed
+				s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xBBD);
+				if (linePos == 1 && !isMiddle) {
+					s.accept(wyrmhole_soak2_firstPart.getModified());
+
+				}
+
+				// TODO: "soak 2" call needs to be earlier
 				// Second gnash/lash starts casting
 				{
 					GnashLash secondGnashLash = waitGnashLash(s);
@@ -601,7 +610,7 @@ public class Dragonsong implements FilteredEventHandler {
 							s.accept(wyrmhole_soak3_as1.getModified(params));
 						}
 						else {
-							s.accept(wyrmhole_soak2.getModified(params));
+							s.accept(wyrmhole_soak2_secondPart.getModified(params));
 						}
 					}
 					else if (linePos == 2) {

@@ -51,8 +51,8 @@ public class BuffTrackingTest {
 				0,
 				0,
 				80,
-				0
-		);
+				0,
+				0);
 		XivCombatant otherPlayer = new XivPlayerCharacter(2,
 				"Party Member",
 				Job.BLM,
@@ -66,8 +66,8 @@ public class BuffTrackingTest {
 				0,
 				0,
 				80,
-				0
-		);
+				0,
+				0);
 		XivCombatant enemy1 = new XivCombatant(5,
 				"Some Boss",
 				false,
@@ -80,8 +80,8 @@ public class BuffTrackingTest {
 				456,
 				0,
 				80,
-				0
-		);
+				0,
+				0);
 		XivCombatant enemy2 = new XivCombatant(6,
 				"Other Boss",
 				false,
@@ -94,8 +94,8 @@ public class BuffTrackingTest {
 				456,
 				0,
 				80,
-				0
-		);
+				0,
+				0);
 		BuffApplied player1DotsEnemy1 = new BuffApplied(testBuff1, 10, player, enemy1, 1);
 		BuffApplied player1DotsEnemy2 = new BuffApplied(testBuff1, 10, player, enemy2, 1);
 		BuffApplied player1DotsEnemy1again = new BuffApplied(testBuff1, 10, player, enemy1, 1);
