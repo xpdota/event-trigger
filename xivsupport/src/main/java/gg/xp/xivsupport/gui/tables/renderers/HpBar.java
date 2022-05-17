@@ -10,7 +10,6 @@ import java.awt.geom.AffineTransform;
 
 public class HpBar extends JComponent {
 
-	private final JLabel label = new JLabel("", SwingConstants.CENTER);
 	private static final Color predictedDead = new Color(108, 7, 7);
 	private static final Color actualDead = new Color(49, 7, 7);
 	private static final Color defaultShieldColor = new Color(199, 176, 60);
@@ -31,6 +30,12 @@ public class HpBar extends JComponent {
 	private boolean display;
 	private int fgTransparency = 255;
 	private int bgTransparency = 255;
+	private final JLabel label = new JLabel("", SwingConstants.CENTER) {
+		@Override
+		public boolean isVisible() {
+			return display;
+		}
+	};
 
 	public HpBar() {
 //		setOpaque(false);
