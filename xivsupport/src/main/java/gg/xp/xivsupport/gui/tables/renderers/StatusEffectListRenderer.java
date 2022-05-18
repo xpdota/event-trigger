@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.tables.renderers;
 
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.models.XivStatusEffect;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;

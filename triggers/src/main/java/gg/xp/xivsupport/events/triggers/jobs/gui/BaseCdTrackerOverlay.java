@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.state.combatstate.CooldownStatus;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.RefreshType;
@@ -18,12 +18,11 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 public abstract class BaseCdTrackerOverlay extends XivOverlay {
 	private static final Logger log = LoggerFactory.getLogger(BaseCdTrackerOverlay.class);
@@ -31,9 +30,10 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 	private final IntSetting numberOfRows;
 	private final CustomTableModel<VisualCdInfo> tableModel;
 	private final JTable table;
-	private volatile Map<CdTrackingKey, AbilityUsedEvent> currentCds = Collections.emptyMap();
+//	private volatile Map<CdTrackingKey, AbilityUsedEvent> currentCds = Collections.emptyMap();
 	private volatile List<VisualCdInfo> croppedCds = Collections.emptyList();
-	private volatile List<BuffApplied> currentBuffs = Collections.emptyList();
+//	private volatile List<BuffApplied> currentBuffs = Collections.emptyList();
+	private volatile List<CooldownStatus> currentCds;
 
 	protected BaseCdTrackerOverlay(String title, String settingKeyBase, OverlayConfig oc, PersistenceProvider persistence, IntSetting rowSetting) {
 		super(title, settingKeyBase, oc, persistence);
@@ -58,25 +58,26 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 		super.repackSize();
 	}
 
-	// TODO: move this all to CdTracker itself? Would make it easier to deal with
-	// charge vs non-charge.
-	protected abstract Map<CdTrackingKey, AbilityUsedEvent> getCooldowns();
+//	// TODO: move this all to CdTracker itself? Would make it easier to deal with
+//	// charge vs non-charge.
+//	protected abstract Map<CdTrackingKey, AbilityUsedEvent> getCooldowns();
+//
+//	protected abstract List<BuffApplied> getBuffs();
+//
+//	protected @Nullable Instant chargesReplenishedAt(CdTrackingKey key) {
+//		return null;
+//	}
 
-	protected abstract List<BuffApplied> getBuffs();
-
-	protected @Nullable Instant chargesReplenishedAt(CdTrackingKey key) {
-		return null;
-	}
+	protected abstract List<CooldownStatus> getCds();
 
 	private RefreshType getAndSort() {
 		if (!getEnabled().get()) {
 			croppedCds = Collections.emptyList();
 			return RefreshType.NONE;
 		}
-		Map<CdTrackingKey, AbilityUsedEvent> newCurrentCds = getCooldowns();
-		List<BuffApplied> newCurrentBuffs = getBuffs();
-		if (newCurrentCds.equals(currentCds) && newCurrentBuffs.equals(currentBuffs)) {
-			if (newCurrentCds.isEmpty() && newCurrentBuffs.isEmpty()) {
+		List<CooldownStatus> newCds = getCds();
+		if (newCds.equals(currentCds)) {
+			if (newCds.isEmpty()) {
 				return RefreshType.NONE;
 			}
 			if (croppedCds.isEmpty()) {
@@ -84,32 +85,52 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 			}
 		}
 		else {
-			currentCds = newCurrentCds;
-			currentBuffs = newCurrentBuffs;
-			List<VisualCdInfo> out = new ArrayList<>();
-			currentCds.forEach((k, abilityUsed) -> {
-				Cooldown cd = k.getCooldown();
-				@Nullable BuffApplied buffApplied = newCurrentBuffs.stream()
-						.filter(b -> cd.buffIdMatches(b.getBuff().getId()))
-						.filter(b -> b.getSource().walkParentChain().equals(abilityUsed.getSource().walkParentChain()))
-						.findFirst()
-						.orElse(null);
-				@Nullable Instant replenishedAt = chargesReplenishedAt(k);
-				VisualCdInfo vci = new VisualCdInfoMain(cd, abilityUsed, buffApplied, replenishedAt);
-				if (vci.stillValid()) {
-					out.add(vci);
-				}
-			});
-
-			croppedCds = out.stream()
-					.sorted(Comparator.comparing(VisualCdInfo::getCd))
+			currentCds = newCds;
+			croppedCds = newCds.stream()
+					.sorted(Comparator.comparing(e -> e.cdKey().getCooldown()))
 					.limit(numberOfRows.get())
-					.collect(Collectors.toList());
-		}
-		if (croppedCds.stream().noneMatch(VisualCdInfo::stillValid)) {
-			croppedCds = Collections.emptyList();
+					.map((Function<? super CooldownStatus, VisualCdInfo>) VisualCdInfoMain::new)
+					.filter(VisualCdInfo::stillValid)
+					.toList();
 		}
 		return RefreshType.FULL;
+//		Map<CdTrackingKey, AbilityUsedEvent> newCurrentCds = getCooldowns();
+//		List<BuffApplied> newCurrentBuffs = getBuffs();
+//		if (newCurrentCds.equals(currentCds) && newCurrentBuffs.equals(currentBuffs)) {
+//			if (newCurrentCds.isEmpty() && newCurrentBuffs.isEmpty()) {
+//				return RefreshType.NONE;
+//			}
+//			if (croppedCds.isEmpty()) {
+//				return RefreshType.REPAINT;
+//			}
+//		}
+//		else {
+//			currentCds = newCurrentCds;
+//			currentBuffs = newCurrentBuffs;
+//			List<VisualCdInfo> out = new ArrayList<>();
+//			currentCds.forEach((k, abilityUsed) -> {
+//				Cooldown cd = k.getCooldown();
+//				@Nullable BuffApplied buffApplied = newCurrentBuffs.stream()
+//						.filter(b -> cd.buffIdMatches(b.getBuff().getId()))
+//						.filter(b -> b.getSource().walkParentChain().equals(abilityUsed.getSource().walkParentChain()))
+//						.findFirst()
+//						.orElse(null);
+//				@Nullable Instant replenishedAt = chargesReplenishedAt(k);
+//				VisualCdInfo vci = new VisualCdInfoMain(cd, abilityUsed, buffApplied, replenishedAt);
+//				if (vci.stillValid()) {
+//					out.add(vci);
+//				}
+//			});
+//
+//			croppedCds = out.stream()
+//					.sorted(Comparator.comparing(VisualCdInfo::getCd))
+//					.limit(numberOfRows.get())
+//					.collect(Collectors.toList());
+//		}
+//		if (croppedCds.stream().noneMatch(VisualCdInfo::stillValid)) {
+//			croppedCds = Collections.emptyList();
+//		}
+//		return RefreshType.FULL;
 	}
 
 

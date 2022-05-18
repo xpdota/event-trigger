@@ -12,15 +12,15 @@ import java.time.Instant;
 // TODO: value in supporting buffs?
 public class VisualCdInfoCharge implements VisualCdInfo {
 
-	private final Cooldown cd;
-	private final AbilityUsedEvent abilityEvent;
-	private final BuffApplied buffApplied;
-	private final Instant replenishedAt;
+	private final @NotNull Cooldown cd;
+	private final @Nullable AbilityUsedEvent abilityEvent;
+	private final @Nullable BuffApplied buffApplied;
+	private final @Nullable Instant replenishedAt;
 	private final int chargeNum;
 	private final Instant start;
 	private final Instant end;
 
-	public VisualCdInfoCharge(Cooldown cd, @NotNull AbilityUsedEvent abilityEvent, @Nullable BuffApplied buffApplied, @NotNull Instant replenishedAt, int chargeNum) {
+	public VisualCdInfoCharge(Cooldown cd, @Nullable AbilityUsedEvent abilityEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt, int chargeNum) {
 		this.cd = cd;
 		this.abilityEvent = abilityEvent;
 		this.buffApplied = buffApplied;
@@ -28,8 +28,15 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 		this.chargeNum = chargeNum;
 		// e.g. for a 3 charge ability, this value should be 3 for the first charge, then 2, then 1
 		int chargeOffset = cd.getMaxCharges() - chargeNum;
-		this.start = replenishedAt.minus(cd.getCooldownAsDuration().multipliedBy(chargeOffset));
-		this.end = replenishedAt.minus(cd.getCooldownAsDuration().multipliedBy(chargeOffset - 1));
+		if (replenishedAt == null) {
+			// It works
+			start = Instant.EPOCH;
+			end = Instant.EPOCH.plusMillis(1000);
+		}
+		else {
+			this.start = replenishedAt.minus(cd.getCooldownAsDuration().multipliedBy(chargeOffset));
+			this.end = replenishedAt.minus(cd.getCooldownAsDuration().multipliedBy(chargeOffset - 1));
+		}
 	}
 
 	private Instant getNow() {
@@ -37,7 +44,7 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	}
 
 	@Override
-	public AbilityUsedEvent getEvent() {
+	public @Nullable AbilityUsedEvent getEvent() {
 		return abilityEvent;
 	}
 
@@ -51,17 +58,24 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 
 	@Override
 	public long getCurrent() {
-		long durMillis = Duration.between(start, getNow()).toMillis();
-		return Math.min(Math.max(0, durMillis), getMax());
+//		if (abilityEvent == null) {
+//			return getMax();
+//		}
+//		long durMillis = Duration.between(start, abilityEvent.effectiveTimeNow()).toMillis();
+//		return Math.min(Math.max(0, durMillis), getMax());
+		return Math.max(0, getCurrentUnbounded());
 	}
 
 	private long getCurrentUnbounded() {
-		long durMillis = Duration.between(start, getNow()).toMillis();
+		if (abilityEvent == null) {
+			return getMax();
+		}
+		long durMillis = Duration.between(start, abilityEvent.effectiveTimeNow()).toMillis();
 		return Math.min((durMillis), getMax());
 	}
 
 	@Override
-	public BuffApplied getBuffApplied() {
+	public @Nullable BuffApplied getBuffApplied() {
 		return buffApplied;
 	}
 
@@ -76,7 +90,7 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	}
 
 	@Override
-	public Cooldown getCd() {
+	public @NotNull Cooldown getCd() {
 		return cd;
 	}
 

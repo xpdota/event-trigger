@@ -236,6 +236,14 @@ public class CdTracker {
 		});
 	}
 
+	public boolean isEnabledForPersonalOverlay(Cooldown cd) {
+		return personalCds.get(cd).getOverlay().get();
+	}
+
+	public boolean isEnabledForPartyOverlay(Cooldown cd) {
+		return partyCds.get(cd).getOverlay().get();
+	}
+
 	// TODO: just combine these and use predicates
 	public Map<CdTrackingKey, AbilityUsedEvent> getCds(Predicate<Map.Entry<CdTrackingKey, AbilityUsedEvent>> cdFilter) {
 		synchronized (cdLock) {

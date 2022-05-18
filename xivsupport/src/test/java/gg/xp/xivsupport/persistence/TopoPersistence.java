@@ -29,7 +29,7 @@ public class TopoPersistence {
 		BaseToggleableTopo topo = (BaseToggleableTopo) someRandomTopo;
 		// Key should not be found at first
 		String propKey = topo.getFullPropKey();
-		log.info("Testing prop key: {}", propKey);
+		log.info("Testing prop cdKey: {}", propKey);
 		{
 			Boolean value = persistence.get(propKey, Boolean.class, null);
 			Assert.assertNull(value);

@@ -121,7 +121,7 @@ public class AutoMarkHandler {
 	private static void pressAndReleaseKey(int keyCode) {
 		exs.submit(() -> {
 			try {
-				log.info("Pressing key {} ({})", keyCode, KeyEvent.getKeyText(keyCode));
+				log.info("Pressing cdKey {} ({})", keyCode, KeyEvent.getKeyText(keyCode));
 				new Robot().keyPress(keyCode);
 				Thread.sleep(50);
 				new Robot().keyRelease(keyCode);
