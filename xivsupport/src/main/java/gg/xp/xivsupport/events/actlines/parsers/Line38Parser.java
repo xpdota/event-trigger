@@ -14,13 +14,13 @@ public class Line38Parser extends AbstractACTLineParser<Line38Parser.Fields> {
 
 	enum Fields {
 		id, name, jobLevelData,
-		targetCurHp, targetMaxHp, targetCurMp, targetMaxMp, targetUnknown1, targetUnknown2, targetX, targetY, targetZ, targetHeading
+		targetCurHp, targetMaxHp, targetCurMp, targetMaxMp, targetShieldPct, targetUnknown2, targetX, targetY, targetZ, targetHeading
 	}
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		fields.setTrustedHp(true);
-		fields.getEntity(Fields.id, Fields.name, Fields.targetCurHp, Fields.targetMaxHp, Fields.targetCurMp, Fields.targetMaxMp, Fields.targetX, Fields.targetY, Fields.targetZ, Fields.targetHeading);
+		fields.getEntity(Fields.id, Fields.name, Fields.targetCurHp, Fields.targetMaxHp, Fields.targetCurMp, Fields.targetMaxMp, Fields.targetX, Fields.targetY, Fields.targetZ, Fields.targetHeading, Fields.targetShieldPct);
 		return null;
 	}
 }

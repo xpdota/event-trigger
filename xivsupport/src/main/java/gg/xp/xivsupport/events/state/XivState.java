@@ -4,6 +4,7 @@ import gg.xp.reevent.context.SubState;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
@@ -47,6 +48,8 @@ public interface XivState extends SubState {
 
 	void provideCombatantHP(XivCombatant target, @NotNull HitPoints hitPoints);
 
+	void provideCombatantMP(XivCombatant target, @NotNull ManaPoints manaPoints);
+
 	void provideCombatantPos(XivCombatant target, Position newPos);
 
 	void provideActFallbackCombatant(XivCombatant cbt);
@@ -65,4 +68,5 @@ public interface XivState extends SubState {
 
 	boolean inCombat();
 
+	void provideCombatantShieldPct(XivCombatant cbt, long shieldPct);
 }

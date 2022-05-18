@@ -3,6 +3,7 @@ package gg.xp.xivsupport.timelines;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serializable;
 import java.util.regex.Pattern;
 
 public record TextFileTimelineEntry(
@@ -12,7 +13,7 @@ public record TextFileTimelineEntry(
 		@Nullable Double duration,
 		@NotNull TimelineWindow timelineWindow,
 		@Nullable Double jump
-) implements TimelineEntry {
+) implements TimelineEntry, Serializable {
 	@Override
 	public String toString() {
 		return "TextFileTimelineEntry{" +

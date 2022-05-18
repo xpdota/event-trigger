@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -14,8 +16,10 @@ import java.util.regex.Pattern;
 // Just going to use jackson for now
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CustomTimelineEntry implements TimelineEntry {
+public class CustomTimelineEntry implements TimelineEntry, Serializable {
 
+	@Serial
+	private static final long serialVersionUID = 8590938155631598982L;
 	// TODO: encapsulate these better
 	public double time;
 	public @Nullable String name;
