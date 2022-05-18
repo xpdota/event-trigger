@@ -23,9 +23,9 @@ public class XivPlayerCharacter extends XivCombatant {
 	                          long bNpcNameId,
 	                          long partyType,
 	                          long level,
-	                          long ownerId
-	) {
-		super(id, name, true, isLocalPlayerCharacter, typeRaw, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId);
+	                          long ownerId,
+	                          long shieldAmount) {
+		super(id, name, true, isLocalPlayerCharacter, typeRaw, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount);
 		this.job = job;
 		this.world = world;
 	}

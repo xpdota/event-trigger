@@ -178,7 +178,7 @@ public class CalloutTests {
 			Assert.assertEquals(modifiedWithOtherPlayer.getCallText(), "Tankbuster on Foo");
 			Assert.assertEquals(modifiedWithOtherPlayer.getVisualText(), "Tankbuster on Foo");
 
-			CalloutEvent modifiedWithThePlayer = mc.getModified(Map.of("target", new XivCombatant(0x123, "Bar", true, true, 1, null, null, null, 0, 0, 0, 0, 0)));
+			CalloutEvent modifiedWithThePlayer = mc.getModified(Map.of("target", new XivCombatant(0x123, "Bar", true, true, 1, null, null, null, 0, 0, 0, 0, 0, 0)));
 			Assert.assertEquals(modifiedWithThePlayer.getCallText(), "Tankbuster on YOU");
 			Assert.assertEquals(modifiedWithThePlayer.getVisualText(), "Tankbuster on YOU");
 		}

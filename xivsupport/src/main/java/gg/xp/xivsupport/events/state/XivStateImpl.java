@@ -396,8 +396,20 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
+	public void provideCombatantMP(XivCombatant target, @NotNull ManaPoints manaPoints) {
+		getOrCreateData(target.getId()).setMpOverride(manaPoints);
+		dirtyOverrides = true;
+	}
+
+	@Override
 	public void provideCombatantPos(XivCombatant target, Position newPos) {
 		getOrCreateData(target.getId()).setPosOverride(newPos);
+		dirtyOverrides = true;
+	}
+
+	@Override
+	public void provideCombatantShieldPct(XivCombatant target, long shieldPct) {
+		getOrCreateData(target.getId()).setShieldPct(shieldPct);
 		dirtyOverrides = true;
 	}
 
@@ -533,6 +545,7 @@ public class XivStateImpl implements XivState {
 		private @Nullable RawXivCombatantInfo raw;
 		private @Nullable Position posOverride;
 		private @Nullable HitPoints hpOverride;
+		private @Nullable ManaPoints mpOverride;
 		private @Nullable XivCombatant fromOtherActLine;
 		private @Nullable RawXivPartyInfo fromPartyInfo;
 		private OnlineStatus status = OnlineStatus.UNKNOWN;
@@ -541,6 +554,7 @@ public class XivStateImpl implements XivState {
 		private volatile boolean dirty;
 		private boolean removed;
 		private XivCombatant owner;
+		private long shieldPercent;
 
 		private CombatantData(long id) {
 			this.id = id;
@@ -597,6 +611,13 @@ public class XivStateImpl implements XivState {
 			}
 		}
 
+		public void setMpOverride(@Nullable ManaPoints mpOverride) {
+			if (!Objects.equals(this.mpOverride, mpOverride)) {
+				this.mpOverride = mpOverride;
+				dirty = true;
+			}
+		}
+
 		public void setFromOtherActLine(XivCombatant fromOtherActLine) {
 			this.fromOtherActLine = fromOtherActLine;
 			dirty = true;
@@ -609,6 +630,11 @@ public class XivStateImpl implements XivState {
 
 		public void setOwner(XivCombatant combatant) {
 			this.owner = combatant;
+			dirty = true;
+		}
+
+		public void setShieldPct(long shieldPct) {
+			this.shieldPercent = shieldPct;
 			dirty = true;
 		}
 
@@ -648,7 +674,7 @@ public class XivStateImpl implements XivState {
 
 			// HP prefers trusted ACT hp lines
 			HitPoints hp = hpOverride != null ? hpOverride : raw != null ? raw.getHP() : null;
-			ManaPoints mp = raw != null ? raw.getMP() : null;
+			ManaPoints mp = mpOverride != null ? mpOverride : raw != null ? raw.getMP() : null;
 			Position pos = posOverride != null ? posOverride : raw != null ? raw.getPos() : fromOther != null ? fromOther.getPos() : null;
 
 			XivCombatant computed;
@@ -659,6 +685,7 @@ public class XivStateImpl implements XivState {
 			long ownerId = raw != null ? raw.getOwnerId() : 0;
 			// TODO: changing primary player should dirty this
 			boolean isPlayer = rawType == 1;
+			long shieldAmount = hp != null ? shieldPercent * hp.getMax() / 100: 0;
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
 						id,
@@ -674,8 +701,8 @@ public class XivStateImpl implements XivState {
 						bnpcNameId,
 						partyType,
 						level,
-						ownerId
-				);
+						ownerId,
+						shieldAmount);
 			}
 			else {
 				computed = new XivCombatant(
@@ -691,8 +718,8 @@ public class XivStateImpl implements XivState {
 						bnpcNameId,
 						partyType,
 						level,
-						ownerId
-				);
+						ownerId,
+						shieldAmount);
 				if (bnpcId == 9020) {
 					fake = true;
 				}

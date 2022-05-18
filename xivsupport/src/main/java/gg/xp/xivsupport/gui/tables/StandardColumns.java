@@ -5,6 +5,7 @@ import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
+import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.HpPredictedRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
@@ -102,33 +103,69 @@ public final class StandardColumns {
 			});
 
 	public CustomColumn<XivCombatant> hpColumnWithUnresolved() {
-		return new CustomColumn<>("HP", combatant -> {
-			HitPoints realHp = combatant.getHp();
-			if (realHp == null) {
-				return null;
-			}
-			long pending;
-			// TODO: this is buggy - when damage resolves, it will briefly flash up to the higher value, because the
-			// predicted HP is constantly updated every time it renders, while the HP is only updated when the event
-			// is actually processed.
-			if (showPredictedHp.get()) {
-				List<AbilityUsedEvent> events = sqidTracker.getEventsTargetedOnEntity(combatant);
-				long dmg = 0;
-				for (AbilityUsedEvent event : events) {
-					dmg += event.getDamage();
-				}
-				pending = dmg;
-			}
-			else {
-				pending = 0;
-			}
-			return new HitPointsWithPredicted(realHp.getCurrent(), Math.max(realHp.getCurrent() - pending, 0), realHp.getMax());
-		}, c ->
+		return new CustomColumn<>("HP", combatant -> combatant, c ->
 		{
-			c.setCellRenderer(new HpPredictedRenderer());
+			HpBar hpBar = new HpBar();
+			hpBar.setFgTransparency(230);
+			hpBar.setBgTransparency(128);
+			DefaultTableCellRenderer dflt = new DefaultTableCellRenderer();
+			c.setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
+				Component defaultComponent = dflt.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
+				if (value instanceof XivCombatant cbt) {
+					long pending;
+					// TODO: this is buggy - when damage resolves, it will briefly flash up to the higher value, because the
+					// predicted HP is constantly updated every time it renders, while the HP is only updated when the event
+					// is actually processed.
+					if (showPredictedHp.get()) {
+						List<AbilityUsedEvent> events = sqidTracker.getEventsTargetedOnEntity(cbt);
+						long dmg = 0;
+						for (AbilityUsedEvent event : events) {
+							dmg += event.getDamage();
+						}
+						pending = dmg;
+					}
+					else {
+						pending = 0;
+					}
+					hpBar.setBackground(defaultComponent.getBackground());
+					hpBar.setData(cbt, pending * -1);
+					return hpBar;
+				}
+				else {
+					return defaultComponent;
+				}
+			});
 			c.setPreferredWidth(200);
 		});
 	}
+//	public CustomColumn<XivCombatant> hpColumnWithUnresolved() {
+//		return new CustomColumn<>("HP", combatant -> {
+//			HitPoints realHp = combatant.getHp();
+//			if (realHp == null) {
+//				return null;
+//			}
+//			long pending;
+//			// TODO: this is buggy - when damage resolves, it will briefly flash up to the higher value, because the
+//			// predicted HP is constantly updated every time it renders, while the HP is only updated when the event
+//			// is actually processed.
+//			if (showPredictedHp.get()) {
+//				List<AbilityUsedEvent> events = sqidTracker.getEventsTargetedOnEntity(combatant);
+//				long dmg = 0;
+//				for (AbilityUsedEvent event : events) {
+//					dmg += event.getDamage();
+//				}
+//				pending = dmg;
+//			}
+//			else {
+//				pending = 0;
+//			}
+//			return new HitPointsWithPredicted(realHp.getCurrent(), Math.max(realHp.getCurrent() - pending, 0), realHp.getMax());
+//		}, c ->
+//		{
+//			c.setCellRenderer(new HpPredictedRenderer());
+//			c.setPreferredWidth(200);
+//		});
+//	}
 
 	public static final CustomColumn<XivCombatant> mpColumn
 			= new CustomColumn<>("MP", xivCombatant -> {

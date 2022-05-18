@@ -23,6 +23,7 @@ public class XivCombatant extends XivEntity {
 	private final long ownerId;
 	private boolean isFake;
 	private @Nullable XivCombatant parent;
+	private final long shieldAmount;
 
 	public XivCombatant(
 			long id,
@@ -37,8 +38,8 @@ public class XivCombatant extends XivEntity {
 			long bNpcNameId,
 			long partyType,
 			long level,
-			long ownerId
-	) {
+			long ownerId,
+			long shieldAmount) {
 		super(id, name);
 		this.isPc = isPc;
 		this.isThePlayer = isThePlayer;
@@ -51,6 +52,7 @@ public class XivCombatant extends XivEntity {
 		this.partyType = partyType;
 		this.level = level;
 		this.ownerId = ownerId;
+		this.shieldAmount = shieldAmount;
 	}
 
 	/**
@@ -60,7 +62,7 @@ public class XivCombatant extends XivEntity {
 	 * @param name
 	 */
 	public XivCombatant(long id, String name) {
-		this(id, name, false, false, 0, null, null, null, 0, 0, 0, 0, 0);
+		this(id, name, false, false, 0, null, null, null, 0, 0, 0, 0, 0, 0);
 	}
 
 
@@ -198,7 +200,10 @@ public class XivCombatant extends XivEntity {
 			0,
 			0,
 			0,
-			0);
+			0, 0);
 
 
+	public long getShieldAmount() {
+		return shieldAmount;
+	}
 }

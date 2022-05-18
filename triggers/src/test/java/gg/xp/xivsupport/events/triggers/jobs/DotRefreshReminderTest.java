@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 
 public class DotRefreshReminderTest {
 
-	private static final XivPlayerCharacter thePlayer = new XivPlayerCharacter(0x123L, "Player", Job.WHM, XivWorld.of(), true, 1, null, null, null, 0, 0, 0, 0, 0);
-	private static final XivPlayerCharacter otherPlayer = new XivPlayerCharacter(0x222L, "Other", Job.WHM, XivWorld.of(), false, 1, null, null, null, 0, 0, 0, 0, 0);
+	private static final XivPlayerCharacter thePlayer = new XivPlayerCharacter(0x123L, "Player", Job.WHM, XivWorld.of(), true, 1, null, null, null, 0, 0, 0, 0, 0, 0);
+	private static final XivPlayerCharacter otherPlayer = new XivPlayerCharacter(0x222L, "Other", Job.WHM, XivWorld.of(), false, 1, null, null, null, 0, 0, 0, 0, 0, 0);
 	private static final XivCombatant enemy1 = new XivCombatant(0x456, "The Enemy");
 	private static final XivCombatant enemy2 = new XivCombatant(0xABC, "The Other Enemy");
 	private static final XivCombatant enemy3 = new XivCombatant(0xDEF, "The Third Enemy");

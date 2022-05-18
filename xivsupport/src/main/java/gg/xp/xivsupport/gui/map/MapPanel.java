@@ -11,6 +11,7 @@ import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
+import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.OverlapLayout;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
@@ -290,7 +291,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		private Job oldJob;
 		private Component icon;
 		private final CastBarComponent castBar;
-		private final ResourceBar hpBar;
+		private final HpBar hpBar;
 		private final JLabel nameLabel;
 		private final JLabel idLabel;
 
@@ -324,9 +325,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			};
 			castBar.setBounds(0, 81, 100, 19);
 			add(castBar);
-			this.hpBar = new ResourceBar();
+			this.hpBar = new HpBar();
 			hpBar.setBounds(0, 62, 100, 19);
-			hpBar.setColor3(new Color(20, 20, 20, 240));
+			hpBar.setBgTransparency(172);
+			hpBar.setFgTransparency(220);
 			add(hpBar);
 
 			nameLabel = new JLabel(cbt.getName());
@@ -397,17 +399,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				hpBar.setVisible(false);
 			}
 			else {
-				double percent = (double) hp.getCurrent() / hp.getMax();
-				// Try to do long label, otherwise fall back to short label
-				// TODO: deduplicate this with HpPredictedRenderer
-				String longText = String.format("%s / %s", hp.getCurrent(), hp.getMax());
-				hpBar.setTextOptions(longText, String.valueOf(hp.getCurrent()));
 				hpBar.setVisible(true);
-				hpBar.setPercent1(percent);
-				Color rawColor = Color.getHSBColor((float) (0.33f * percent), 0.36f, 0.52f);
-				hpBar.setColor1(new Color(rawColor.getRed(), rawColor.getGreen(), rawColor.getBlue(), 225));
-				hpBar.revalidate();
+				hpBar.setData(cbt, 0);
 			}
+			hpBar.revalidate();
 		}
 
 		private void formatComponent(XivCombatant cbt) {

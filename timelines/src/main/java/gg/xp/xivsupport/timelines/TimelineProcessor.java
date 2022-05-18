@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serial;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -146,8 +148,10 @@ public final class TimelineProcessor {
 
 	private List<UpcomingCall> upcomingTriggers = Collections.emptyList();
 
-	public class UpcomingCall implements HasDuration {
+	public class UpcomingCall implements HasDuration, Serializable {
 
+		@Serial
+		private static final long serialVersionUID = 4627297693366126838L;
 		private final double timelineTime;
 		private final double callTime;
 		private final Duration effectiveDuration;

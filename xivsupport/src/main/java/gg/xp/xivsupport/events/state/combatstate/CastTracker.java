@@ -52,9 +52,9 @@ public final class CastTracker {
 
 	public Duration getElapsedDuration() {
 		return (switch (getResult()) {
-			case SUCCESS -> getCastDuration();
+//			case SUCCESS -> getCastDuration();
 			case INTERRUPTED -> Duration.between(cast.getEffectiveHappenedAt(), end.getEffectiveHappenedAt());
-			case IN_PROGRESS, UNKNOWN -> cast.getEstimatedElapsedDuration();
+			case SUCCESS, IN_PROGRESS, UNKNOWN -> cast.getEstimatedElapsedDuration();
 		});
 	}
 }

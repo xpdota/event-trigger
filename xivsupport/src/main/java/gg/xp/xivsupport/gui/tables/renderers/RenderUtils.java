@@ -12,4 +12,8 @@ public final class RenderUtils {
 			jc.setToolTipText(tooltip);
 		}
 	}
+
+	public static Color withAlpha(Color base, int alpha) {
+		return new Color(base.getRGB() & 0xffffff + (alpha << 24), true);
+	}
 }
