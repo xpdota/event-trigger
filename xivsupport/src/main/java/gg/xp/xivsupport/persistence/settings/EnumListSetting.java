@@ -21,7 +21,7 @@ public class EnumListSetting<X extends Enum<X>> extends ObservableSetting {
 	private final List<X> dflt;
 
 	/**
-	 * Behavior for if a property key does not map to a valid enum member
+	 * Behavior for if a property cdKey does not map to a valid enum member
 	 */
 	public enum BadKeyBehavior {
 		/**
@@ -82,7 +82,7 @@ public class EnumListSetting<X extends Enum<X>> extends ObservableSetting {
 					out.add(item);
 				}
 				catch (IllegalArgumentException e) {
-					log.error("Invalid key ({}) for property ({}) - no member of ({}) for that value", stringItem, propertyKey, enumCls.getSimpleName());
+					log.error("Invalid cdKey ({}) for property ({}) - no member of ({}) for that value", stringItem, propertyKey, enumCls.getSimpleName());
 					switch (bkb) {
 						case OMIT:
 							continue;

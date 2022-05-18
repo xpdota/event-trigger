@@ -66,11 +66,11 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 	}
 
 	/**
-	 * Since not every format may be able to handle every key correctly, provide an optional
-	 * way to massage the key into a better format (e.g. stripping special characters)
+	 * Since not every format may be able to handle every cdKey correctly, provide an optional
+	 * way to massage the cdKey into a better format (e.g. stripping special characters)
 	 *
-	 * @param originalKey Original key
-	 * @return Massaged key
+	 * @param originalKey Original cdKey
+	 * @return Massaged cdKey
 	 */
 	protected String rewriteKey(String originalKey) {
 		return originalKey;

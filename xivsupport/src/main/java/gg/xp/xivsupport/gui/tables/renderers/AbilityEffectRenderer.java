@@ -13,6 +13,7 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpLoss;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;

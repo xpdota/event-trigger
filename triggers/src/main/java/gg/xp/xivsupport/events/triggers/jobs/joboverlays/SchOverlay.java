@@ -1,22 +1,20 @@
 package gg.xp.xivsupport.events.triggers.jobs.joboverlays;
 
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.ActionIcon;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.Cooldown;
-import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.combatstate.CdTracker;
+import gg.xp.xivsupport.events.state.combatstate.CooldownHelper;
+import gg.xp.xivsupport.events.state.combatstate.CooldownStatus;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.jobs.gui.BaseCdTrackerTable;
 import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfo;
 import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfoMain;
-import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -37,9 +35,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static gg.xp.xivdata.data.Job.SCH;
 
-public class SchOverlay extends JPanel implements FilteredEventHandler {
+public class SchOverlay extends BaseJobOverlay {
 
 	private static final Logger log = LoggerFactory.getLogger(SchOverlay.class);
 
@@ -47,7 +44,7 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 	private static final int ICON_SIZE = 40;
 	private final XivState state;
 	private final StatusEffectRepository buffs;
-	private final CdTracker cooldowns;
+	private final CooldownHelper cdh;
 	private @Nullable XivCombatant summonCombatant;
 	private SchSummon summon = SchSummon.NONE;
 	private @Nullable Component summonIcon;
@@ -65,14 +62,14 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		DISSIPATION(0xe03);
 
 
-		private @Nullable Component icon;
+		private @Nullable ScaledImageComponent icon;
 		private final long actionIdForIcon;
 
 		SchSummon(long actionIdForIcon) {
 			this.actionIdForIcon = actionIdForIcon;
 		}
 
-		public Component getIcon() {
+		public @Nullable ScaledImageComponent getIcon() {
 			if (icon == null) {
 				ScaledImageComponent icon = IconTextRenderer.getIconOnly(ActionLibrary.iconForId(actionIdForIcon));
 				if (icon == null) {
@@ -86,12 +83,10 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		}
 	}
 
-	public SchOverlay(XivState state, StatusEffectRepository buffs, CdTracker cooldowns) {
+	public SchOverlay(XivState state, StatusEffectRepository buffs, CooldownHelper cdh) {
 		this.state = state;
 		this.buffs = buffs;
-		this.cooldowns = cooldowns;
-		setLayout(null);
-		setOpaque(false);
+		this.cdh = cdh;
 		setPreferredSize(new Dimension(250, 100));
 		add(listRenderer);
 		listRenderer.setBounds(0, 5, 250, 50);
@@ -100,10 +95,6 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 		JTable table = tableHolder.getTable();
 		table.setBounds(0, 60, 250, 40);
 		add(table);
-		// TODO: can't use getScale() from this context
-		RefreshLoop<SchOverlay> refresher = new RefreshLoop<>("SchOverlay", this, SchOverlay::refreshCd, dt -> Math.max((50L), 20));
-		refresher.start();
-
 	}
 
 	/*
@@ -242,16 +233,14 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 	}
 
 	@Override
-	public void setVisible(boolean vis) {
-		if (vis) {
-			for (SchSummon value : SchSummon.values()) {
-				value.getIcon();
-			}
-			summonUpdate();
-			summonPendingActionsUpdate();
-			uiUpdate();
+	protected void onBecomeVisible() {
+		// Preload icons
+		for (SchSummon value : SchSummon.values()) {
+			value.getIcon();
 		}
-		super.setVisible(vis);
+		summonUpdate();
+		summonPendingActionsUpdate();
+		uiUpdate();
 	}
 
 	private @Nullable XivCombatant getSummonCombatant() {
@@ -260,6 +249,9 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 			return null;
 		}
 		XivPlayerCharacter player = state.getPlayer();
+		if (player == null) {
+			return null;
+		}
 		return state.getCombatantsListCopy().stream()
 				.filter(cbt -> player.equals(cbt.getParent()))
 				// Highest ID seems to always be most recently summoned
@@ -267,32 +259,23 @@ public class SchOverlay extends JPanel implements FilteredEventHandler {
 				.orElse(null);
 	}
 
-	@Override
-	public boolean enabled(EventContext context) {
-		return state.getPlayerJob() == SCH;
-	}
-
-	private @Nullable AbilityUsedEvent getAfCd() {
-		XivPlayerCharacter player = state.getPlayer();
-		if (player == null) {
-			return null;
-		}
-		// TODO: cooldowns should really just have a method that takes a key
-		return cooldowns.getCds((e) -> e.getValue().getSource().equals(player) && e.getValue().getAbility().getId() == 0xa6)
-				.values().stream().findFirst().orElse(null);
-	}
-
 	private void recalcCds() {
-		@Nullable AbilityUsedEvent event = getAfCd();
-		if (event == null) {
-			croppedCds = Collections.emptyList();
+		CooldownStatus personalCd = cdh.getPersonalCd(Cooldown.Aetherflow);
+		VisualCdInfo vci;
+		if (personalCd == null) {
+			// Not used yet - display placeholder
+			vci = new VisualCdInfoMain(Cooldown.Aetherflow);
 		}
 		else {
-			VisualCdInfo vci = new VisualCdInfoMain(Cooldown.Aetherflow, event, null, null);
-			croppedCds = Collections.singletonList(vci);
+			vci = new VisualCdInfoMain(personalCd);
 		}
+		croppedCds = Collections.singletonList(vci);
 	}
 
+	@Override
+	protected void periodicRefresh() {
+		refreshCd();
+	}
 
 	private void refreshCd() {
 		recalcCds();

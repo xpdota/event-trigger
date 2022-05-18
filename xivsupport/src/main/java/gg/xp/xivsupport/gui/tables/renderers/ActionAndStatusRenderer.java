@@ -87,6 +87,10 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 			tooltip = text = hasPrimaryValue.getPrimaryValue();
 			icon = null;
 		}
+		else if (value instanceof HasIconURL hiu) {
+			icon = hiu;
+			tooltip = text = "";
+		}
 		else {
 			return fallback.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
 		}

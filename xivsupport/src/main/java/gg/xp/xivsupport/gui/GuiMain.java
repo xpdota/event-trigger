@@ -121,9 +121,12 @@ public class GuiMain {
 		log.info("GUI Init");
 		log.info("Classpath: {}", System.getProperty("java.class.path"));
 		CatchFatalError.run(() -> {
+			log.info("GUI Setup");
 			CommonGuiSetup.setup();
+			log.info("Master Init");
 			MutablePicoContainer pico = XivMain.masterInit();
 			pico.addComponent(GuiMain.class);
+			log.info("GUI Init");
 			pico.getComponent(GuiMain.class);
 		});
 	}

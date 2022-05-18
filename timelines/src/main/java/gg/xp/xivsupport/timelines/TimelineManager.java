@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TimelineManager {
+public final class TimelineManager {
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineManager.class);
 	private static final Map<Long, TimelineInfo> zoneIdToTimelineFile = new HashMap<>();
@@ -56,6 +56,7 @@ public class TimelineManager {
 		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutNow, pers, "timeline-support.trigger-call-now");
 		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutPre, pers, "timeline-support.trigger-call-pre");
 		this.pers = pers;
+		new Thread(TimelineManager::ensureInit, "TimelineInitHelper").start();
 	}
 
 	private static volatile boolean init;
@@ -65,10 +66,12 @@ public class TimelineManager {
 		if (!init) {
 			synchronized (initLock) {
 				if (!init) {
+					log.info("Timeline init start");
 					TimelineCsvReader.readCsv().forEach(entry -> {
 						zoneIdToTimelineFile.put(entry.zoneId(), entry);
 					});
 					init = true;
+					log.info("Timeline init done");
 				}
 			}
 		}

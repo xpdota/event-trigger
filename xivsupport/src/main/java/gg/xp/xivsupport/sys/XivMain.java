@@ -8,12 +8,15 @@ import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.AutoHandlerScan;
 import gg.xp.reevent.topology.TopoInfoImpl;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.state.PicoStateStore;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
+import groovy.lang.GroovyShell;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
 import org.slf4j.Logger;
@@ -122,6 +125,15 @@ public final class XivMain {
 		else {
 			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing"));
 		}
+
+		new Thread(() -> {
+			log.info("StartupHelper begin");
+			//noinspection ResultOfObjectAllocationIgnored
+			new GroovyShell();
+			ActionLibrary.getAll();
+			StatusEffectLibrary.getAll();
+			log.info("StartupHelper end");
+		}, "StartupHelper").start();
 
 		// TODO: use "Startable" interface?
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);

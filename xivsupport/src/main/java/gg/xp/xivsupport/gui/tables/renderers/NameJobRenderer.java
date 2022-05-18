@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.tables.renderers;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;

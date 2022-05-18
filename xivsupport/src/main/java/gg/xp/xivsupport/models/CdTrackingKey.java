@@ -7,11 +7,11 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import java.util.Objects;
 
 public final class CdTrackingKey {
-	private final XivEntity source;
+	private final XivCombatant source;
 	private final XivAbility ability;
 	private final Cooldown cooldown;
 
-	private CdTrackingKey(XivEntity source, XivAbility ability, Cooldown cooldown) {
+	private CdTrackingKey(XivCombatant source, XivAbility ability, Cooldown cooldown) {
 		this.source = source;
 		this.ability = ability;
 		this.cooldown = cooldown;
@@ -34,7 +34,7 @@ public final class CdTrackingKey {
 		return Objects.hash(source, cooldown);
 	}
 
-	public XivEntity getSource() {
+	public XivCombatant getSource() {
 		return source;
 	}
 

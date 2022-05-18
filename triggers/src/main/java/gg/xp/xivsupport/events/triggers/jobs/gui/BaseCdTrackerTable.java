@@ -1,5 +1,9 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
+import gg.xp.xivdata.data.ActionIcon;
+import gg.xp.xivdata.data.ActionInfo;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
@@ -15,7 +19,14 @@ public class BaseCdTrackerTable {
 	private static final int BAR_WIDTH = 150;
 	public BaseCdTrackerTable(Supplier<List<? extends VisualCdInfo>> supplier) {
 		tableModel = CustomTableModel.builder(supplier)
-				.addColumn(new CustomColumn<>("Icon", c -> c.getEvent().getAbility(), c -> {
+				.addColumn(new CustomColumn<>("Icon", c -> {
+					AbilityUsedEvent ability = c.getEvent();
+					if (ability == null) {
+						return ActionLibrary.iconForId(c.getCd().getPrimaryAbilityId());
+					}
+					return ability.getAbility();
+
+				}, c -> {
 					c.setCellRenderer(new ActionAndStatusRenderer(true, false, false));
 					c.setMaxWidth(22);
 					c.setMinWidth(22);

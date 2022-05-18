@@ -15,7 +15,7 @@ import gg.xp.xivsupport.events.state.XivState;
 // with a UI to enable/disable them, and change the callout text under the Plugins > Callouts tab.
 // The name chosen here will show in the UI.
 @CalloutRepo("Urth's Fount (Odin)")
-// You should not chang the class name once you publish this, as it is used to determine the settings key to store
+// You should not chang the class name once you publish this, as it is used to determine the settings cdKey to store
 // customizations to the callouts.
 // FilteredEventHandler is an optional interface, giving you the 'enabled' option (see below).
 public class Odin implements FilteredEventHandler {

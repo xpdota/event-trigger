@@ -115,10 +115,8 @@ public class AutoHandlerScan {
 
 			log.info("Preloading instances");
 			StringBuilder topo = new StringBuilder();
-			classMethodMap.forEach((clazz, unused) -> {
-				// Preload class instances
-				instanceProvider.preAdd(clazz);
-			});
+			// Preload class instances
+			classMethodMap.keySet().forEach(instanceProvider::preAdd);
 			log.info("Preloaded instances");
 			classMethodMap.forEach((clazz, methods) -> {
 				// TODO: error handling
