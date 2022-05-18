@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.Nullable;
@@ -41,9 +43,19 @@ public class NameJobRenderer implements TableCellRenderer {
 		if (value instanceof XivEntity entity) {
 			label = fallback.getTableCellRendererComponent(table, entity.getName(), isSelected, false, row, column);
 			Job job;
-			if (value instanceof XivPlayerCharacter player && (job = player.getJob()) != null) {
-				icon = IconTextRenderer.getIconOnly(job);
-				tooltip = (String.format("%s - %s (0x%x, %s)", player.getName(), player.getJob(), player.getId(), player.getId()));
+			if (value instanceof XivCombatant cbt) {
+				HitPoints hp = cbt.getHp();
+				String hpStr = hp == null ? "null" : hp.getShortString();
+				long shieldAmount = cbt.getShieldAmount();
+				String shieldStr = shieldAmount > 0 ? String.format(" +~%s shield", shieldAmount) : "";
+				if (value instanceof XivPlayerCharacter player && (job = player.getJob()) != null) {
+					icon = IconTextRenderer.getIconOnly(job);
+					tooltip = (String.format("%s - %s (0x%x, %s)%n%nHP: (%s)%s%n%s", player.getName(), player.getJob(), player.getId(), player.getId(), hpStr, shieldStr, cbt.getPos()));
+				}
+				else {
+					tooltip = String.format("%s (0x%x, %s)%n%nHP: (%s)%s%n%s%nNPC ID %s, name %s", cbt.getName(), cbt.getId(), cbt.getId(), hpStr, shieldStr, cbt.getPos(), cbt.getbNpcId(), cbt.getbNpcNameId());
+					icon = null;
+				}
 			}
 			else {
 				tooltip = String.format("%s (0x%x, %s)", entity.getName(), entity.getId(), entity.getId());

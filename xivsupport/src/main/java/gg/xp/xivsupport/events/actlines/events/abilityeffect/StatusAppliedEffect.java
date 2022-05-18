@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
+import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
@@ -47,7 +48,8 @@ public class StatusAppliedEffect extends AbilityEffect {
 
 	@Override
 	public String getBaseDescription() {
-		String formatted = String.format("Applied Status 0x%x to %s", status.getId(), onTarget ? "Target" : "Caster");
+		StatusEffectInfo sei = StatusEffectLibrary.forId(status.getId());
+		String formatted = String.format("Applied Status 0x%x (%s) to %s", status.getId(), sei == null ? "Unknown" : sei.name(), onTarget ? "Target" : "Caster");
 		if (stacks > 0) {
 			formatted += String.format(" (%s stacks)", stacks);
 		}
