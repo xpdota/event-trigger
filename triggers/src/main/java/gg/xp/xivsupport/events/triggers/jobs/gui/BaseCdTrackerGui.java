@@ -1,7 +1,5 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.data.ActionInfo;
-import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.gui.NoCellEditor;
@@ -11,7 +9,9 @@ import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
+import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
+import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.LongSettingGui;
@@ -20,12 +20,12 @@ import gg.xp.xivsupport.persistence.settings.CooldownSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 public abstract class BaseCdTrackerGui implements PluginTab {
@@ -112,17 +112,29 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 							col.setMinWidth(100);
 							col.setMaxWidth(100);
 						}))
-				.addColumn(new CustomColumn<>("Skill", Cooldown::getLabel))
-				.addColumn(new CustomColumn<>("Cooldown (hardcoded)", cd -> cd.getCooldown()))
-				.addColumn(new CustomColumn<>("Cooldown (from CSV)", cd -> {
-					ActionInfo actionInfo = ActionLibrary.forId(cd.getPrimaryAbilityId());
-					return actionInfo == null ? null : actionInfo.getCd();
+				.addColumn(new CustomColumn<>("Skill",
+						cd -> new XivAbility(cd.getPrimaryAbilityId(), cd.getLabel()), c -> {
+					c.setCellRenderer(new ActionAndStatusRenderer());
 				}))
-				.addColumn(new CustomColumn<>("Max Charges", Cooldown::getMaxCharges))
-				.addColumn(new CustomColumn<>("Raw class/job/category", cd -> {
-					ActionInfo actionInfo = ActionLibrary.forId(cd.getPrimaryAbilityId());
-					return actionInfo == null ? null : actionInfo.categoryRaw();
+				.addColumn(new CustomColumn<>("Cooldown", cd -> {
+					int maxCharges = cd.getMaxCharges();
+					if (maxCharges > 1) {
+						return String.format("%s (%d charges)", cd.getCooldown(), maxCharges);
+					}
+					return cd.getCooldown();
 				}))
+//				.addColumn(new CustomColumn<>("Cooldown (from CSV)", cd -> {
+//					ActionInfo actionInfo = ActionLibrary.forId(cd.getPrimaryAbilityId());
+//					return actionInfo == null ? null : actionInfo.getCd();
+//				}))
+//				.addColumn(new CustomColumn<>("Max Charges", cooldown -> {
+//					int maxCharges = cooldown.getMaxCharges();
+//					return maxCharges > 1 ? maxCharges : null;
+//				}, 100))
+//				.addColumn(new CustomColumn<>("Raw class/job/category", cd -> {
+//					ActionInfo actionInfo = ActionLibrary.forId(cd.getPrimaryAbilityId());
+//					return actionInfo == null ? null : actionInfo.categoryRaw();
+//				}))
 				.build();
 
 		table.setModel(model);
