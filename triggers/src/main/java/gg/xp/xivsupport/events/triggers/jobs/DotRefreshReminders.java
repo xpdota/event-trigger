@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.jobs;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.ActionUtils;
 import gg.xp.xivdata.data.DotBuff;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -189,15 +190,8 @@ public class DotRefreshReminders {
 		if (originalName.startsWith("Eukrasian")) {
 			return "Dosis";
 		}
-		else if (originalName.endsWith(" II") || originalName.endsWith(" IV")) {
-			return originalName.substring(0, originalName.length() - 3);
-		}
-		else if (originalName.endsWith(" III")) {
-			return originalName.substring(0, originalName.length() - 4);
-		}
-		else {
-			return originalName;
-		}
+		return ActionUtils.adjustName(originalName);
+
 	}
 
 	public Map<DotBuff, BooleanSetting> getEnabledDots() {

@@ -9,7 +9,10 @@ import java.net.URL;
 public record ActionInfo(
 		long actionid,
 		String name,
-		long iconId
+		long iconId,
+		long cdRaw,
+		int maxCharges,
+		String categoryRaw
 ) {
 	public @Nullable ActionIcon getIcon() {
 		return ActionLibrary.iconForInfo(this);
@@ -26,5 +29,9 @@ public record ActionInfo(
 			throw new RuntimeException(e);
 		}
 
+	}
+
+	public double getCd() {
+		return cdRaw / 10.0;
 	}
 }

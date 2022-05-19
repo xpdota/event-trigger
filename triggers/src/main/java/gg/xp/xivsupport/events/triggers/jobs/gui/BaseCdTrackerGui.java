@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
+import gg.xp.xivdata.data.ActionInfo;
+import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.gui.NoCellEditor;
@@ -110,7 +112,17 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 							col.setMinWidth(100);
 							col.setMaxWidth(100);
 						}))
-				.addColumn(new CustomColumn<>("Cooldown", Cooldown::getLabel))
+				.addColumn(new CustomColumn<>("Skill", Cooldown::getLabel))
+				.addColumn(new CustomColumn<>("Cooldown (hardcoded)", cd -> cd.getCooldown()))
+				.addColumn(new CustomColumn<>("Cooldown (from CSV)", cd -> {
+					ActionInfo actionInfo = ActionLibrary.forId(cd.getPrimaryAbilityId());
+					return actionInfo == null ? null : actionInfo.getCd();
+				}))
+				.addColumn(new CustomColumn<>("Max Charges", Cooldown::getMaxCharges))
+				.addColumn(new CustomColumn<>("Raw class/job/category", cd -> {
+					ActionInfo actionInfo = ActionLibrary.forId(cd.getPrimaryAbilityId());
+					return actionInfo == null ? null : actionInfo.categoryRaw();
+				}))
 				.build();
 
 		table.setModel(model);
