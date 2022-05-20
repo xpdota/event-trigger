@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -94,13 +95,15 @@ public class CdTracker {
 
 		@Serial
 		private static final long serialVersionUID = 6817565445334081296L;
+		final CdTrackingKey key;
 		final AbilityUsedEvent originalEvent;
-		final int originalKey;
+		final int originalResetKey;
 
-		protected DelayedCdCallout(AbilityUsedEvent originalEvent, int originalKey, long delayMs) {
+		protected DelayedCdCallout(AbilityUsedEvent originalEvent, CdTrackingKey key, int originalResetKey, long delayMs) {
 			super(delayMs);
 			this.originalEvent = originalEvent;
-			this.originalKey = originalKey;
+			this.key = key;
+			this.originalResetKey = originalResetKey;
 		}
 	}
 
@@ -124,22 +127,41 @@ public class CdTracker {
 		return partyCdSetting != null && partyCdSetting.getTtsOnUse().get();
 	}
 
-	@SuppressWarnings({"SuspiciousMethodCalls", "NumericCastThatLosesPrecision"})
+	@SuppressWarnings({"SuspiciousMethodCalls"})
 	@HandleEvents
 	public void cdUsed(EventContext context, AbilityUsedEvent event) {
 		Cooldown cd;
 		// target index == 0 ensures that for abilities that can hit multiple enemies, we only start the CD tracking
 		// once.
 		if (event.getTargetIndex() == 0 && (cd = getCdInfo(event.getAbility().getId())) != null) {
+			final Instant newReplenishedAt;
+			CdTrackingKey key;
+			synchronized (cdLock) {
+				key = CdTrackingKey.of(event, cd);
+				cds.put(key, event);
+				Instant existing = chargesReplenishedAt.get(key);
+				// Logic - track when the CD will be fully replenished
+				// If there is no existing tracking info, or the existing info says that the CDs would be fully
+				// replenished in the past, then set the "replenished at" to now + cooldown time.
+				if (existing == null || existing.isBefore(event.effectiveTimeNow())) {
+					chargesReplenishedAt.put(key, newReplenishedAt = event.effectiveTimeNow().plus(cd.getCooldownAsDuration()));
+				}
+				// If there is an existing tracker, just add the duration to that.
+				else {
+					chargesReplenishedAt.put(key, newReplenishedAt = existing.plus(cd.getCooldownAsDuration()));
+				}
+			}
+			Duration delta = Duration.between(event.effectiveTimeNow(), newReplenishedAt);
+			log.info("Delta: {}", delta);
 			// TODO: there's some duplicate whitelist logic
 			boolean isSelf = event.getSource().isThePlayer();
 			if (enableTtsPersonal.get() && isEnabledForPersonalTts(cd) && isSelf) {
 				log.debug("Personal CD delayed: {}", event);
-				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvancePersonal.get()));
+				context.enqueue(new DelayedCdCallout(event, key, cdResetKey, delta.minusMillis(cdTriggerAdvancePersonal.get()).toMillis()));
 			}
 			else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
 				log.debug("Party CD delayed: {}", event);
-				context.enqueue(new DelayedCdCallout(event, cdResetKey, (long) (cd.getCooldown() * 1000) - cdTriggerAdvanceParty.get()));
+				context.enqueue(new DelayedCdCallout(event, key, cdResetKey, delta.minusMillis(cdTriggerAdvanceParty.get()).toMillis()));
 			}
 			if (enableTtsPersonal.get() && isEnabledForPersonalTtsOnUse(cd) && isSelf) {
 				log.debug("Personal CD immediate: {}", event);
@@ -148,21 +170,6 @@ public class CdTracker {
 			else if (enableTtsParty.get() && isEnabledForPartyTtsOnUse(cd) && state.getPartyList().contains(event.getSource())) {
 				log.debug("Party CD immediate: {}", event);
 				context.accept(makeCallout(event.getAbility()));
-			}
-			synchronized (cdLock) {
-				CdTrackingKey key = CdTrackingKey.of(event, cd);
-				cds.put(key, event);
-				Instant existing = chargesReplenishedAt.get(key);
-				// Logic - track when the CD will be fully replenished
-				// If there is no existing tracking info, or the existing info says that the CDs would be fully
-				// replenished in the past, then set the "replenished at" to now + cooldown time.
-				if (existing == null || existing.isBefore(event.effectiveTimeNow())) {
-					chargesReplenishedAt.put(key, event.effectiveTimeNow().plus(cd.getCooldownAsDuration()));
-				}
-				// If there is an existing tracker, just add the duration to that.
-				else {
-					chargesReplenishedAt.put(key, existing.plus(cd.getCooldownAsDuration()));
-				}
 			}
 		}
 	}
@@ -196,7 +203,12 @@ public class CdTracker {
 	@HandleEvents
 	public void refreshReminderCall(EventContext context, DelayedCdCallout event) {
 		XivAbility originalAbility = event.originalEvent.getAbility();
-		if (event.originalKey == cdResetKey) {
+		CdTrackingKey key = event.key;
+		AbilityUsedEvent lastUsed;
+		synchronized (cdLock) {
+			lastUsed = cds.get(key);
+		}
+		if (lastUsed == event.originalEvent) {
 			log.info("CD callout still valid");
 			context.accept(makeCallout(originalAbility));
 		}
@@ -209,6 +221,7 @@ public class CdTracker {
 		return new BasicCalloutEvent(ability.getName(), enableFlyingText.get() ? ability.getName() : null);
 	}
 
+	// TODO: this is only being used for testing
 	public Map<CdTrackingKey, AbilityUsedEvent> getOverlayPersonalCds() {
 		return getCds(entry -> {
 			CooldownSetting cdSetting = personalCds.get(entry.getKey().getCooldown());
