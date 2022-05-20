@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.state.combatstate;
+package gg.xp.xivsupport.events;
 
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;

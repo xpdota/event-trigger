@@ -23,13 +23,11 @@ import java.util.stream.Collectors;
 public class CdTrackerOverlay extends BaseCdTrackerOverlay {
 
 	private final CdTracker cdTracker;
-	private final StatusEffectRepository buffRepo;
 	private final CooldownHelper cdh;
 
-	public CdTrackerOverlay(PersistenceProvider persistence, CdTracker cdTracker, OverlayConfig oc, StatusEffectRepository buffRepo, CooldownHelper cdh) {
+	public CdTrackerOverlay(PersistenceProvider persistence, CdTracker cdTracker, OverlayConfig oc, CooldownHelper cdh) {
 		super("Cd Tracker", "cd-tracker.overlay", oc, persistence, cdTracker.getOverlayMaxPersonal());
 		this.cdTracker = cdTracker;
-		this.buffRepo = buffRepo;
 		this.cdh = cdh;
 	}
 
@@ -37,23 +35,4 @@ public class CdTrackerOverlay extends BaseCdTrackerOverlay {
 	protected List<CooldownStatus> getCds() {
 		return cdh.getCooldowns(XivCombatant::isThePlayer, cdTracker::isEnabledForPersonalOverlay);
 	}
-
-//	@Override
-//	protected @Nullable Instant chargesReplenishedAt(CdTrackingKey key) {
-//		return cdTracker.getReplenishedAt(key);
-//	}
-//
-//	@Override
-//	protected Map<CdTrackingKey, AbilityUsedEvent> getCooldowns() {
-//		return cdTracker.getOverlayPersonalCds();
-//	}
-//
-//	@Override
-//	protected List<BuffApplied> getBuffs() {
-//		return this.buffRepo.getBuffsAndPreapps().stream()
-//				.filter(buff -> buff.getSource().walkParentChain().isThePlayer())
-//				// TODO: maybe filter out stuff on pets here?
-////				.filter(buff -> buff.getTarget())
-//				.collect(Collectors.toList());
-//	}
 }

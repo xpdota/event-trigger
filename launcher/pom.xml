@@ -285,6 +285,10 @@
             <groupId>gg.xp</groupId>
             <artifactId>timelines</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>easytriggers</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

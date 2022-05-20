@@ -131,5 +131,10 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>testutils-generic</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

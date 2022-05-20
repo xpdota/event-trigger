@@ -70,7 +70,7 @@ import java.util.Collections;
 import java.util.List;
 
 @ScanMe
-public class EasyTriggers {
+public final class EasyTriggers {
 	private static final Logger log = LoggerFactory.getLogger(EasyTriggers.class);
 	private static final String settingKey = "easy-triggers.my-triggers";
 	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers";
@@ -79,7 +79,7 @@ public class EasyTriggers {
 	private final PersistenceProvider pers;
 	private final PicoContainer pico;
 
-	private List<EasyTrigger<?>> triggers;
+	private List<EasyTrigger<?>> triggers = Collections.emptyList();
 
 	public EasyTriggers(PicoContainer pico, PersistenceProvider pers) {
 		this.pers = pers;
@@ -90,40 +90,44 @@ public class EasyTriggers {
 				return getInjectionInstance(beanProperty.getType().getRawClass());
 			}
 		});
-		String strVal = pers.get(settingKey, String.class, null);
-		triggers = new ArrayList<>();
-		if (strVal != null) {
-			try {
-				// First, convert to List<JsonNode> so that errors can be reported for individual triggers
-				List<JsonNode> jsonNodes = mapper.readValue(strVal, new TypeReference<>() {
-				});
-				List<JsonNode> failed = new ArrayList<>();
-				for (JsonNode jsonNode : jsonNodes) {
-					try {
-						EasyTrigger easyTrigger = mapper.convertValue(jsonNode, EasyTrigger.class);
-						triggers.add(easyTrigger);
-					}
-					catch (Throwable jpe) {
-						log.error("Trigger failed to load: \n{}\n", jsonNode, jpe);
-						failed.add(jsonNode);
-					}
-				}
-				if (!failed.isEmpty()) {
-					String failedSetting = pers.get(failedTriggersSettingKey, String.class, "[]");
-					List<String> otherFailues = mapper.readValue(failedSetting, new TypeReference<>() {
+		new Thread(() -> {
+			String strVal = pers.get(settingKey, String.class, null);
+			List<EasyTrigger<?>> triggers = new ArrayList<>();
+			if (strVal != null) {
+				try {
+					// First, convert to List<JsonNode> so that errors can be reported for individual triggers
+					List<JsonNode> jsonNodes = mapper.readValue(strVal, new TypeReference<>() {
 					});
-					List<String> failures = new ArrayList<>(otherFailues);
-					failures.addAll(jsonNodes.stream().map(Object::toString).toList());
-					pers.save(failedTriggersSettingKey, mapper.writeValueAsString(failures));
-					log.info("One or more easy triggers failed to load - they have been saved to the setting '{}'", failedTriggersSettingKey);
+					List<JsonNode> failed = new ArrayList<>();
+					for (JsonNode jsonNode : jsonNodes) {
+						try {
+							EasyTrigger easyTrigger = mapper.convertValue(jsonNode, EasyTrigger.class);
+							triggers.add(easyTrigger);
+						}
+						catch (Throwable jpe) {
+							log.error("Trigger failed to load: \n{}\n", jsonNode, jpe);
+							failed.add(jsonNode);
+						}
+					}
+					if (!failed.isEmpty()) {
+						String failedSetting = pers.get(failedTriggersSettingKey, String.class, "[]");
+						List<String> otherFailues = mapper.readValue(failedSetting, new TypeReference<>() {
+						});
+						List<String> failures = new ArrayList<>(otherFailues);
+						failures.addAll(jsonNodes.stream().map(Object::toString).toList());
+						pers.save(failedTriggersSettingKey, mapper.writeValueAsString(failures));
+						log.error("One or more easy triggers failed to load - they have been saved to the setting '{}'", failedTriggersSettingKey);
+					}
 				}
+				catch (Throwable e) {
+					log.error("Error loading Easy Triggers", e);
+					log.error("Dump of trigger data:\n{}", strVal);
+					throw new RuntimeException("There was an error loading Easy Triggers. Check the log.", e);
+				}
+				log.info("Successfully loaded easy triggers");
 			}
-			catch (Throwable e) {
-				log.error("Error loading Easy Triggers", e);
-				log.error("Dump of trigger data:\n{}", strVal);
-				throw new RuntimeException("There was an error loading Easy Triggers. Check the log.", e);
-			}
-		}
+			this.triggers = triggers;
+		}, "EasyTriggersInit").start();
 	}
 
 	private <X> X getInjectionInstance(Class<X> clazz) {
@@ -244,7 +248,7 @@ public class EasyTriggers {
 					"Log Line {event.rawFields[0]}",
 					List.of(LogLineRegexFilter::new)),
 			new EventDescriptionImpl<>(ChatLineEvent.class,
-					"In-game chat lines",
+					"In-game chat lines. Use as a last resort, e.g. Nael quotes.",
 					"{event.name} says {event.line}",
 					"Chat Line {event.name}: {event.line}",
 					List.of(ChatLineRegexFilter::new))

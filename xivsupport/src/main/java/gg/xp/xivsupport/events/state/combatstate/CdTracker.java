@@ -152,23 +152,23 @@ public class CdTracker {
 				}
 			}
 			Duration delta = Duration.between(event.effectiveTimeNow(), newReplenishedAt);
-			log.info("Delta: {}", delta);
+			log.trace("Delta: {}", delta);
 			// TODO: there's some duplicate whitelist logic
 			boolean isSelf = event.getSource().isThePlayer();
 			if (enableTtsPersonal.get() && isEnabledForPersonalTts(cd) && isSelf) {
-				log.debug("Personal CD delayed: {}", event);
+				log.trace("Personal CD delayed: {}", event);
 				context.enqueue(new DelayedCdCallout(event, key, cdResetKey, delta.minusMillis(cdTriggerAdvancePersonal.get()).toMillis()));
 			}
 			else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
-				log.debug("Party CD delayed: {}", event);
+				log.trace("Party CD delayed: {}", event);
 				context.enqueue(new DelayedCdCallout(event, key, cdResetKey, delta.minusMillis(cdTriggerAdvanceParty.get()).toMillis()));
 			}
 			if (enableTtsPersonal.get() && isEnabledForPersonalTtsOnUse(cd) && isSelf) {
-				log.debug("Personal CD immediate: {}", event);
+				log.trace("Personal CD immediate: {}", event);
 				context.accept(makeCallout(event.getAbility()));
 			}
 			else if (enableTtsParty.get() && isEnabledForPartyTtsOnUse(cd) && state.getPartyList().contains(event.getSource())) {
-				log.debug("Party CD immediate: {}", event);
+				log.trace("Party CD immediate: {}", event);
 				context.accept(makeCallout(event.getAbility()));
 			}
 		}

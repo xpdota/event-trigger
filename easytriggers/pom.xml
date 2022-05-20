@@ -9,23 +9,18 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>triggers</artifactId>
+    <artifactId>easytriggers</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <!-- 7.4.0 Breaks stuff-->
-            <!--suppress MavenPackageUpdate -->
             <scope>test</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.hamcrest/hamcrest-all -->
-        <!--        TODO: probably doesn't need to be hamcrest-*all*-->
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
@@ -33,22 +28,7 @@
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>actimport</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
             <artifactId>testutils-xiv</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>testutils-generic</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>testutils-reevent</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

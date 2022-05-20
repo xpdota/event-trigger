@@ -50,7 +50,6 @@ public class EasyTriggersTab implements PluginTab {
 				"Make Easy Trigger",
 				Event.class,
 				this::makeTriggerFromEvent));
-		// TODO
 		// TODO: good candidate for sub-menus
 //				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Make Easy Trigger", Event.class, Function.identity(), e -> {
 //					container.getComponent(EasyTrig)
@@ -65,16 +64,6 @@ public class EasyTriggersTab implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
-		outer = new TitleBorderFullsizePanel("Easy Triggers") {
-			@Override
-			public void setVisible(boolean aFlag) {
-				if (!aFlag && backend != null) {
-					backend.commit();
-				}
-				super.setVisible(aFlag);
-			}
-		};
-		outer.setLayout(new GridBagLayout());
 		GridBagConstraints c = GuiUtil.defaultGbc();
 		c.weighty = 1;
 
@@ -100,6 +89,21 @@ public class EasyTriggersTab implements PluginTab {
 			}
 		};
 		model.configureColumns(triggerChooserTable);
+
+		outer = new TitleBorderFullsizePanel("Easy Triggers") {
+			@Override
+			public void setVisible(boolean visible) {
+				if (visible) {
+					model.signalNewData();
+				}
+				else {
+					backend.commit();
+				}
+				super.setVisible(visible);
+			}
+		};
+
+		outer.setLayout(new GridBagLayout());
 		triggerChooserTable.getSelectionModel().addListSelectionListener(l -> {
 			refreshSelection();
 		});

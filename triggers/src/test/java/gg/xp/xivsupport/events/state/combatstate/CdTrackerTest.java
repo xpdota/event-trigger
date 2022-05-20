@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.state.combatstate;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivsupport.events.CloseTo;
 import gg.xp.xivsupport.events.TestEventContext;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;

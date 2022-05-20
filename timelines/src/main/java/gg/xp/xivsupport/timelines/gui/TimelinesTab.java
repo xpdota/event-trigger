@@ -67,70 +67,16 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state) {
 		super("Timelines");
-		this.backend = backend;
-		this.setLayout(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.BOTH;
-		c.weighty = 0;
-		c.weightx = 1;
-		c.gridwidth = GridBagConstraints.REMAINDER;
-		c.insets = new Insets(5, 5, 5, 5);
-		c.gridx = 0;
-		c.gridy = 0;
-		{
-			JPanel settingsPanel = new JPanel();
-			settingsPanel.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
-
-			{
-				JCheckBox enableOverlay = new BooleanSettingGui(overlay.getEnabled(), "Enable Overlay").getComponent();
-				settingsPanel.add(enableOverlay);
-			}
-			{
-				// TODO: just add description to the settings themselves
-				JCheckBox debugMode = new BooleanSettingGui(backend.getDebugMode(), "Debug Mode").getComponent();
-				debugMode.setToolTipText("Debug mode will cause the last sync to always be displayed, and will cause sync-only entries to be displayed as well.");
-				settingsPanel.add(debugMode);
-			}
-			{
-				JCheckBox showPrePull = new BooleanSettingGui(backend.getPrePullSetting(), "Show Pre-Pull").getComponent();
-				showPrePull.setToolTipText("Timeline will show prior to there being a valid sync.");
-				settingsPanel.add(showPrePull);
-			}
-			{
-				JCheckBox resetOnMapChange = new BooleanSettingGui(backend.getResetOnMapChangeSetting(), "Reset on Map Change").getComponent();
-				resetOnMapChange.setToolTipText("Reset on map change - this is NOT a zone change! The timeline will always reset on zone changes.\n\nResetting on a map change is sometimes desirable (e.g. raids with doorbosses, dungeons), but breaks others if they use multiple maps (e.g. O3N) and their post-map-change syncs don't have a big enough window.");
-				settingsPanel.add(resetOnMapChange);
-			}
-			{
-				JPanel numSetting = new IntSettingSpinner(backend.getRowsToDisplay(), "Max in Overlay").getComponent();
-				settingsPanel.add(numSetting);
-			}
-			{
-				JPanel futureSetting = new IntSettingSpinner(backend.getSecondsFuture(), "Seconds in Future").getComponent();
-				settingsPanel.add(futureSetting);
-			}
-			{
-				JPanel pastSetting = new IntSettingSpinner(backend.getSecondsPast(), "Seconds in Past").getComponent();
-				settingsPanel.add(pastSetting);
-			}
-
-			this.add(settingsPanel, c);
-		}
-//		c.gridy++;
-//
-//		{
-//			ReadOnlyText text = new ReadOnlyText("This feature is beta and very buggy. For now, you can only add your own custom entries, but not edit anything coming from the original timeline files.");
-//			this.add(text, c);
-//		}
-
-
-		c.gridy++;
-		c.weightx = 0.2;
-		c.weighty = 1;
-		c.gridwidth = 1;
-		c.gridheight = 1;
-
 		// TODO: searching
+		this.backend = backend;
+
+		int numColMinWidth = 50;
+		int numColMaxWidth = 200;
+		int numColPrefWidth = 50;
+
+		int timeColMinWidth = 80;
+		int timeColMaxWidth = 200;
+		int timeColPrefWidth = 80;
 		timelineChooserModel = CustomTableModel.builder(() -> TimelineManager.getTimelines().values()
 						.stream().sorted(Comparator.comparing(TimelineInfo::zoneId)).toList())
 				.addColumn(new CustomColumn<>("Zone", TimelineInfo::zoneId, col -> {
@@ -143,24 +89,6 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setPreferredWidth(100);
 				}))
 				.build();
-
-		JTable timelineChooserTable = new JTable(timelineChooserModel);
-		timelineChooserModel.configureColumns(timelineChooserTable);
-		timelineChooserTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-
-		JScrollPane chooserScroller = new JScrollPane(timelineChooserTable);
-		chooserScroller.setPreferredSize(new Dimension(200, 32768));
-		chooserScroller.setMinimumSize(new Dimension(100, 200));
-		this.add(chooserScroller, c);
-
-		int numColMinWidth = 50;
-		int numColMaxWidth = 200;
-		int numColPrefWidth = 50;
-
-		int timeColMinWidth = 80;
-		int timeColMaxWidth = 200;
-		int timeColPrefWidth = 80;
 
 		timelineModel = CustomTableModel.builder(() -> {
 					TimelineProcessor timeline = currentTimeline;
@@ -260,24 +188,6 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				.setItemEquivalence((one, two) -> one == two)
 				.build();
 
-		CustomRightClickOption clone = CustomRightClickOption.forRow("Clone", TimelineEntry.class, e -> addNewEntry(new CustomTimelineEntry(
-				e.time(),
-				e.name() + " copy",
-				e.sync(),
-				e.duration(),
-				e.timelineWindow(),
-				e.jump(),
-				e.icon(),
-				null,
-				false,
-				false,
-				0
-		)));
-		CustomRightClickOption delete = CustomRightClickOption.forRow("Delete/Revert", CustomTimelineEntry.class, this::deleteEntry);
-
-		CustomRightClickOption chooseAbilityIcon = CustomRightClickOption.forRow("Use Ability Icon", TimelineEntry.class, this::chooseActionIcon);
-		CustomRightClickOption chooseStatusIcon = CustomRightClickOption.forRow("Use Status Icon", TimelineEntry.class, this::chooseStatusInfo);
-
 		timelineTable = new JTable(timelineModel) {
 
 			@Override
@@ -298,76 +208,173 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			}
 		};
 
-		timelineModel.configureColumns(timelineTable);
-		timelineTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-		timelineChooserTable.getSelectionModel().addListSelectionListener(l -> {
-			timelineModel.setSelectedValue(null);
-			stopEditing();
-			updateTab();
+		SwingUtilities.invokeLater(() -> {
+
+			this.setLayout(new GridBagLayout());
+			GridBagConstraints c = new GridBagConstraints();
+			c.fill = GridBagConstraints.BOTH;
+			c.weighty = 0;
+			c.weightx = 1;
+			c.gridwidth = GridBagConstraints.REMAINDER;
+			c.insets = new Insets(5, 5, 5, 5);
+			c.gridx = 0;
+			c.gridy = 0;
+			{
+				JPanel settingsPanel = new JPanel();
+				settingsPanel.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
+
+				{
+					JCheckBox enableOverlay = new BooleanSettingGui(overlay.getEnabled(), "Enable Overlay").getComponent();
+					settingsPanel.add(enableOverlay);
+				}
+				{
+					// TODO: just add description to the settings themselves
+					JCheckBox debugMode = new BooleanSettingGui(backend.getDebugMode(), "Debug Mode").getComponent();
+					debugMode.setToolTipText("Debug mode will cause the last sync to always be displayed, and will cause sync-only entries to be displayed as well.");
+					settingsPanel.add(debugMode);
+				}
+				{
+					JCheckBox showPrePull = new BooleanSettingGui(backend.getPrePullSetting(), "Show Pre-Pull").getComponent();
+					showPrePull.setToolTipText("Timeline will show prior to there being a valid sync.");
+					settingsPanel.add(showPrePull);
+				}
+				{
+					JCheckBox resetOnMapChange = new BooleanSettingGui(backend.getResetOnMapChangeSetting(), "Reset on Map Change").getComponent();
+					resetOnMapChange.setToolTipText("Reset on map change - this is NOT a zone change! The timeline will always reset on zone changes.\n\nResetting on a map change is sometimes desirable (e.g. raids with doorbosses, dungeons), but breaks others if they use multiple maps (e.g. O3N) and their post-map-change syncs don't have a big enough window.");
+					settingsPanel.add(resetOnMapChange);
+				}
+				{
+					JPanel numSetting = new IntSettingSpinner(backend.getRowsToDisplay(), "Max in Overlay").getComponent();
+					settingsPanel.add(numSetting);
+				}
+				{
+					JPanel futureSetting = new IntSettingSpinner(backend.getSecondsFuture(), "Seconds in Future").getComponent();
+					settingsPanel.add(futureSetting);
+				}
+				{
+					JPanel pastSetting = new IntSettingSpinner(backend.getSecondsPast(), "Seconds in Past").getComponent();
+					settingsPanel.add(pastSetting);
+				}
+
+				this.add(settingsPanel, c);
+			}
+//		c.gridy++;
+//
+//		{
+//			ReadOnlyText text = new ReadOnlyText("This feature is beta and very buggy. For now, you can only add your own custom entries, but not edit anything coming from the original timeline files.");
+//			this.add(text, c);
+//		}
+
+
+			c.gridy++;
+			c.weightx = 0.2;
+			c.weighty = 1;
+			c.gridwidth = 1;
+			c.gridheight = 1;
+
+
+			JTable timelineChooserTable = new JTable(timelineChooserModel);
+			timelineChooserModel.configureColumns(timelineChooserTable);
+			timelineChooserTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+
+			JScrollPane chooserScroller = new JScrollPane(timelineChooserTable);
+			chooserScroller.setPreferredSize(new Dimension(200, 32768));
+			chooserScroller.setMinimumSize(new Dimension(100, 200));
+			this.add(chooserScroller, c);
+
+
+
+			CustomRightClickOption clone = CustomRightClickOption.forRow("Clone", TimelineEntry.class, e -> addNewEntry(new CustomTimelineEntry(
+					e.time(),
+					e.name() + " copy",
+					e.sync(),
+					e.duration(),
+					e.timelineWindow(),
+					e.jump(),
+					e.icon(),
+					null,
+					false,
+					false,
+					0
+			)));
+			CustomRightClickOption delete = CustomRightClickOption.forRow("Delete/Revert", CustomTimelineEntry.class, this::deleteEntry);
+
+			CustomRightClickOption chooseAbilityIcon = CustomRightClickOption.forRow("Use Ability Icon", TimelineEntry.class, this::chooseActionIcon);
+			CustomRightClickOption chooseStatusIcon = CustomRightClickOption.forRow("Use Status Icon", TimelineEntry.class, this::chooseStatusInfo);
+
+			timelineModel.configureColumns(timelineTable);
+			timelineTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+			timelineChooserTable.getSelectionModel().addListSelectionListener(l -> {
+				timelineModel.setSelectedValue(null);
+				stopEditing();
+				updateTab();
+			});
+
+			RightClickOptionRepo.of(clone, delete, chooseAbilityIcon, chooseStatusIcon).configureTable(timelineTable, timelineModel);
+
+			c.gridx++;
+			c.weightx = 1;
+			c.gridheight = 1;
+			JScrollPane scroll = new JScrollPane(timelineTable);
+			scroll.setMinimumSize(new Dimension(1, 1));
+			this.add(scroll, c);
+
+			c.gridy++;
+
+			c.gridx = 0;
+			c.weighty = 0;
+			c.weightx = 0;
+			JButton selectCurrentButton = new JButton("Select Current");
+			selectCurrentButton.addActionListener(l -> {
+				XivZone zone = state.getZone();
+				if (zone != null) {
+					long zoneId = zone.getId();
+					timelineChooserModel.getData().stream().filter(e -> e.zoneId() == zoneId).findFirst().ifPresent(value -> {
+						timelineChooserModel.setSelectedValue(value);
+						timelineChooserModel.scrollToSelectedValue();
+					});
+				}
+			});
+			this.add(new WrapperPanel(selectCurrentButton), c);
+			c.weighty = 0;
+			c.gridx++;
+
+			JButton newButton = new JButton("Add New Timeline Entry") {
+				@Override
+				public boolean isEnabled() {
+					return currentCust != null;
+				}
+			};
+			newButton.addActionListener(l -> {
+				@Nullable TimelineEntry selectedValue = timelineModel.getSelectedValue();
+				CustomTimelineEntry newEntry = new CustomTimelineEntry();
+				if (selectedValue != null) {
+					newEntry.time = selectedValue.time();
+				}
+				addNewEntry(newEntry);
+			});
+			JButton resetButton = new JButton("Delete All Customizations") {
+				@Override
+				public boolean isEnabled() {
+					return currentCust != null && !currentCust.getEntries().isEmpty();
+				}
+			};
+			// TODO: confirmation
+			resetButton.addActionListener(l -> {
+				int confirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete all customizations for the currently selected timeline?", "Confirm", JOptionPane.YES_NO_OPTION);
+				if (confirmation == 0) {
+					resetAll();
+				}
+			});
+			JPanel buttonPanel = new JPanel(new WrapLayout());
+			buttonPanel.add(newButton);
+			buttonPanel.add(resetButton);
+
+			this.add(buttonPanel, c);
 		});
-
-		RightClickOptionRepo.of(clone, delete, chooseAbilityIcon, chooseStatusIcon).configureTable(timelineTable, timelineModel);
-
-		c.gridx++;
-		c.weightx = 1;
-		c.gridheight = 1;
-		JScrollPane scroll = new JScrollPane(timelineTable);
-		scroll.setMinimumSize(new Dimension(1, 1));
-		this.add(scroll, c);
-
-		c.gridy++;
-
-		c.gridx = 0;
-		c.weighty = 0;
-		c.weightx = 0;
-		JButton selectCurrentButton = new JButton("Select Current");
-		selectCurrentButton.addActionListener(l -> {
-			XivZone zone = state.getZone();
-			if (zone != null) {
-				long zoneId = zone.getId();
-				timelineChooserModel.getData().stream().filter(e -> e.zoneId() == zoneId).findFirst().ifPresent(value -> {
-					timelineChooserModel.setSelectedValue(value);
-					timelineChooserModel.scrollToSelectedValue();
-				});
-			}
-		});
-		this.add(new WrapperPanel(selectCurrentButton), c);
-		c.weighty = 0;
-		c.gridx++;
-
-		JButton newButton = new JButton("Add New Timeline Entry") {
-			@Override
-			public boolean isEnabled() {
-				return currentCust != null;
-			}
-		};
-		newButton.addActionListener(l -> {
-			@Nullable TimelineEntry selectedValue = timelineModel.getSelectedValue();
-			CustomTimelineEntry newEntry = new CustomTimelineEntry();
-			if (selectedValue != null) {
-				newEntry.time = selectedValue.time();
-			}
-			addNewEntry(newEntry);
-		});
-		JButton resetButton = new JButton("Delete All Customizations") {
-			@Override
-			public boolean isEnabled() {
-				return currentCust != null && !currentCust.getEntries().isEmpty();
-			}
-		};
-		// TODO: confirmation
-		resetButton.addActionListener(l -> {
-			int confirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete all customizations for the currently selected timeline?", "Confirm", JOptionPane.YES_NO_OPTION);
-			if (confirmation == 0) {
-				resetAll();
-			}
-		});
-		JPanel buttonPanel = new JPanel(new WrapLayout());
-		buttonPanel.add(newButton);
-		buttonPanel.add(resetButton);
-
-		this.add(buttonPanel, c);
 	}
 
 	private void commitSettings() {
@@ -416,7 +423,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		updateTab();
 	}
 
-	private static final Runnable NOTHING = () -> {};
+	private static final Runnable NOTHING = () -> {
+	};
 	private volatile Runnable pendingEdit = NOTHING;
 
 	/**
