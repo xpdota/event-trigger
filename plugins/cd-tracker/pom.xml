@@ -3,13 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>newtrig</artifactId>
+        <artifactId>plugins</artifactId>
         <groupId>gg.xp</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>easytriggers</artifactId>
+    <artifactId>cd-tracker</artifactId>
 
     <dependencies>
         <dependency>
@@ -17,24 +17,22 @@
             <artifactId>xivsupport</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>testutils-xiv</artifactId>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>testutils-generic</artifactId>
-            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>testutils-reevent</artifactId>
         </dependency>
     </dependencies>
 

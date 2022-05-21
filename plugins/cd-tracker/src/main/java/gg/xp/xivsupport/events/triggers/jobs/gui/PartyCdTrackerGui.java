@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.triggers.jobs;
+package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.Cooldown;

@@ -266,20 +266,23 @@
 
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>xivsupport</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>triggers</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.swingexplorer</groupId>
-            <artifactId>swingexplorer-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
             <artifactId>actimport</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>cd-tracker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>dot-tracker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>easytriggers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>job-overlays</artifactId>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
@@ -287,7 +290,20 @@
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>easytriggers</artifactId>
+            <artifactId>titan-jails</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>triggers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>xivsupport</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.swingexplorer</groupId>
+            <artifactId>swingexplorer-core</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
