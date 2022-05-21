@@ -303,68 +303,41 @@ public class ActWsLogSource implements EventSource {
 
 	static {
 		try {
+			String[] cbtProps = {
+					"CurrentWorldID",
+					"WorldID",
+					"WorldName",
+					"BNpcID",
+					"BNpcNameID",
+					"PartyType",
+					"ID",
+					"OwnerID",
+					"type",
+					"Job",
+					"Level",
+					"Name",
+					"CurrentHP",
+					"MaxHP",
+					"CurrentMP",
+					"MaxMP",
+					"PosX",
+					"PosY",
+					"PosZ",
+					"Heading",
+					"TargetID"
+			};
 			allCbtRequest = mapper.writeValueAsString(
 					Map.ofEntries(
 							Map.entry("call", "getCombatants"),
 							Map.entry("rseq", "allCombatants"),
-							Map.entry("props", new String[]{
-									"CurrentWorldID",
-									"WorldID",
-									"WorldName",
-									"BNpcID",
-									"BNpcNameID",
-									"PartyType",
-									"ID",
-									"OwnerID",
-									"type",
-									"Job",
-									"Level",
-									"Name",
-									"CurrentHP",
-									"MaxHP",
-									"CurrentMP",
-									"MaxMP",
-									"CurrentCP",
-									"MaxCP",
-									"CurrentGP",
-									"MaxGP",
-									"PosX",
-									"PosY",
-									"PosZ",
-									"Heading"
-							})
+							Map.entry("props", cbtProps)
 					));
 			specificCbtRequestTemplate = mapper.writeValueAsString(
 					Map.ofEntries(
 							Map.entry("call", "getCombatants"),
 							Map.entry("rseq", "specificCombatants"),
 							Map.entry("ids", List.of(123456)),
-							Map.entry("props", new String[]{
-									"CurrentWorldID",
-									"WorldID",
-									"WorldName",
-									"BNpcID",
-									"BNpcNameID",
-									"PartyType",
-									"ID",
-									"OwnerID",
-									"type",
-									"Job",
-									"Level",
-									"Name",
-									"CurrentHP",
-									"MaxHP",
-									"CurrentMP",
-									"MaxMP",
-									"CurrentCP",
-									"MaxCP",
-									"CurrentGP",
-									"MaxGP",
-									"PosX",
-									"PosY",
-									"PosZ",
-									"Heading"
-							})
+							Map.entry("props", cbtProps)
 					));
 		}
 		catch (JsonProcessingException e) {
