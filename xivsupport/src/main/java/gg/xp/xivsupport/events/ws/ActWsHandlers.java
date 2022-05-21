@@ -138,9 +138,9 @@ public class ActWsHandlers {
 		JsonNode typeNode = jsonNode.path("type");
 		String type;
 		if (typeNode.isTextual()) {
-			type = typeNode.textValue();
+			type = typeNode.textValue().intern();
 			try {
-				((ObjectNode) jsonNode).set("type", new TextNode(type.intern()));
+				((ObjectNode) jsonNode).set("type", new TextNode(type));
 			}
 			catch (Throwable t) {
 				log.error("Error optimizing JsonNode", t);
