@@ -5,6 +5,9 @@ import gg.xp.xivsupport.models.XivZone;
 
 import java.io.Serial;
 
+/**
+ * Represents a zone change
+ */
 public class ZoneChangeEvent extends BaseEvent implements XivStateChange {
 	@Serial
 	private static final long serialVersionUID = 3743475710853003703L;

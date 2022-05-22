@@ -9,6 +9,9 @@ import gg.xp.xivsupport.models.XivStatusEffect;
 import java.io.Serial;
 import java.time.Duration;
 
+/**
+ * Represents a buff being applied
+ */
 public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect, HasDuration {
 	@Serial
 	private static final long serialVersionUID = -3698392943125561045L;
@@ -103,7 +106,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	public String toString() {
 		return "BuffApplied{" +
 				"buff=" + buff +
-				", duration=" + duration +
+				", duration=" + (duration.getSeconds() > 9_990 ? "indef" : duration) +
 				", source=" + source +
 				", target=" + target +
 				", stacks=" + rawStacks +

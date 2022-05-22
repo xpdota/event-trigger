@@ -7,6 +7,9 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.io.Serial;
 import java.time.Duration;
 
+/**
+ * Represents an ability cast beginning i.e. castbar has appeared
+ */
 public class AbilityCastStart extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasDuration {
 	@Serial
 	private static final long serialVersionUID = -8156458501097189982L;

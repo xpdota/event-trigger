@@ -6,6 +6,9 @@ import gg.xp.xivsupport.models.XivCombatant;
 
 import java.io.Serial;
 
+/**
+ * Represents an ability cast being cancelled/interrupted/etc
+ */
 public class AbilityCastCancel extends BaseEvent implements HasSourceEntity, HasAbility {
 
 	@Serial

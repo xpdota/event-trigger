@@ -8,6 +8,9 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.io.Serial;
 import java.util.List;
 
+/**
+ * Represents an ability actual taking effect (as opposed to snapshotting)
+ */
 public class AbilityResolvedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects, HasTargetIndex {
 	@Serial
 	private static final long serialVersionUID = 4043588325843768440L;

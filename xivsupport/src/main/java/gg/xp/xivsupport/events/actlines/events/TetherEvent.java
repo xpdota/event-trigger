@@ -11,6 +11,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
+/**
+ * Event representing a tether. Rather than relying on tether events always ordering the two targets in a particular
+ * way, consider using order-agnostic methods, such as {@link #eitherTargetMatches}, {@link #getTargetMatching},
+ * and {@link #getTargets()}. In addition, for computing multiple tethers, there is a {@link #getUnitsTetheredTo} method
+ * which you may find convenient.
+ */
 public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
 
 	@Serial

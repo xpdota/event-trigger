@@ -5,6 +5,9 @@ import gg.xp.reevent.events.SystemEvent;
 
 import java.io.Serial;
 
+/**
+ * Emitted to indicate that buffs have been recalculated
+ */
 @SystemEvent
 public class XivBuffsUpdatedEvent extends BaseEvent implements XivStateChange {
 	@Serial

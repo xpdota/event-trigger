@@ -52,6 +52,7 @@ public class EventAbilityOrBuffFilter extends TextBasedFilter<Object> {
 			}
 			return item -> getIdForItem(item) == wantedId;
 		}
+		// TODO: Also account for effect results
 		return super.getFilterForInput(input);
 	}
 

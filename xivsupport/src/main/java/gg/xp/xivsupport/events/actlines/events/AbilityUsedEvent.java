@@ -9,6 +9,9 @@ import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Represents an ability snapshotting
+ */
 public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects, HasTargetIndex {
 
 	@Serial

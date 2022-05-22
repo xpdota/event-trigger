@@ -8,6 +8,9 @@ import gg.xp.xivsupport.models.XivStatusEffect;
 
 import java.io.Serial;
 
+/**
+ * Represents a buff being removed
+ */
 public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect {
 	@Serial
 	private static final long serialVersionUID = -5438212467951183512L;
