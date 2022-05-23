@@ -19,4 +19,9 @@ public interface CalloutEvent extends Event, HasPrimaryValue {
 	@Nullable CalloutEvent replaces();
 
 	void setReplaces(CalloutEvent replaces);
+
+	@Override
+	default boolean shouldSave() {
+		return false;
+	}
 }

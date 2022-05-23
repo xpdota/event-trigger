@@ -12,6 +12,8 @@ import gg.xp.xivsupport.events.fflogs.FflogsMasterDataEvent;
 import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.Compressible;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.File;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
+import java.io.WriteAbortedException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -32,6 +35,8 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 public final class EventReader {
+
+	private static final Logger log = LoggerFactory.getLogger(EventReader.class);
 
 	private EventReader() {
 	}
@@ -68,18 +73,24 @@ public final class EventReader {
 			};
 			ois.setObjectInputFilter(filter);
 			events = new ArrayList<>();
-			try {
-				while (true) {
-					Event event = (Event) ois.readObject();
-					event.setImported(true);
-					if (event instanceof Compressible compressible) {
-						compressible.decompress();
-					}
-					events.add(event);
+			while (true) {
+				Event event;
+				try {
+					event = (Event) ois.readObject();
 				}
-			}
-			catch (EOFException eof) {
-				// done reading
+				catch (EOFException eof) {
+					// done reading
+					break;
+				}
+//				catch (WriteAbortedException t) {
+//					log.error("Error deserializing event", t);
+//					continue;
+//				}
+				event.setImported(true);
+				if (event instanceof Compressible compressible) {
+					compressible.decompress();
+				}
+				events.add(event);
 			}
 		}
 		catch (Throwable e) {

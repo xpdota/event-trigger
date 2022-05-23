@@ -1,0 +1,58 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Publish
+
+on:
+#  push:
+  workflow_dispatch:
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          cache: maven
+      - name: Build with Maven
+        uses: gabrielbb/xvfb-action
+        with:
+          run: mvn -T5 clean install
+      - name: Copy release files
+        run: |
+          pushd launcher/target/windows/
+          mkdir -p publish_data/v2
+          md5sum *.exe *.dll deps/*.jar > publish_data/v2/manifest
+          cp -r *.exe *.dll deps/ publish_data/v2/
+          # Legacy updater
+          cd deps
+          md5sum *.jar > ../publish_data/manifest
+          cp *.jar ../publish_data/
+          popd
+      - name: Docs with Maven
+        run: mvn site
+      - name: Copy docs
+        run: |
+          mv target/site/apidocs ./launcher/target/windows/publish_data/javadoc
+      - name: Deploy release files
+        uses: JamesIves/github-pages-deploy-action@4.1.7
+
+        with:
+          folder: ./launcher/target/windows/publish_data
+          branch: gh-pages
+          target-folder: ${{ github.ref_name }}
+
+
+
+
+
+# TODO: artifacts
+# TODO: saint coinach auto-update of data
