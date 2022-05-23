@@ -23,7 +23,7 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - name: Build with Maven
-        uses: gabrielbb/xvfb-action
+        uses: gabrielbb/xvfb-action@v1
         with:
           run: mvn -T5 clean install
       - name: Copy release files
