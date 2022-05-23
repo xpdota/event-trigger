@@ -238,6 +238,7 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			ActWsLogSource actWs = container.getComponent(ActWsLogSource.class);
 			wsPanel.add(new WsURISettingGui(actWs.getUriSetting(), "ACT WS URI").getComponent());
 			wsPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
+			wsPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Enable TTS").getComponent());
 			addTab("Websocket", wsPanel);
 		}
 		{
