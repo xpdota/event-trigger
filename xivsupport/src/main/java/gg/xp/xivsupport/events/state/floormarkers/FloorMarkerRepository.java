@@ -11,26 +11,25 @@ import java.util.EnumMap;
 
 public class FloorMarkerRepository {
 
-
 	private final Object lock = new Object();
 	private final EnumMap<FloorMarker, Position> map = new EnumMap<>(FloorMarker.class);
 
 	@HandleEvents
-	void zoneChange(EventContext context, ZoneChangeEvent zce) {
+	public void zoneChange(EventContext context, ZoneChangeEvent zce) {
 		synchronized (lock) {
 			map.clear();
 		}
 	}
 
 	@HandleEvents
-	void markerPlaced(EventContext context, MarkerPlacedEvent placed) {
+	public void markerPlaced(EventContext context, MarkerPlacedEvent placed) {
 		synchronized (lock) {
 			map.put(placed.getMarker(), placed.getPosition());
 		}
 	}
 
 	@HandleEvents
-	void markerRemoved(EventContext context, MarkerRemovedEvent removed) {
+	public void markerRemoved(EventContext context, MarkerRemovedEvent removed) {
 		synchronized (lock) {
 			map.remove(removed.getMarker());
 		}
