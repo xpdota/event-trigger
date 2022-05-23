@@ -66,6 +66,15 @@ public class ModifiableCallout<X> {
 		conditions = Collections.emptyList();
 	}
 
+	public ModifiableCallout(String description, String ttsAndText, int msExpiry) {
+		this.description = description;
+		this.defaultTtsText = ttsAndText;
+		this.defaultVisualText = ttsAndText;
+		this.expiry = expiresIn(Duration.ofMillis(msExpiry));
+		this.defaultVisualHangTime = msExpiry;
+		conditions = Collections.emptyList();
+	}
+
 	public ModifiableCallout(String description, String text, List<CalloutCondition> conditions) {
 		this(description, text, text, conditions);
 	}
@@ -89,6 +98,10 @@ public class ModifiableCallout<X> {
 				return defaultExpiryAt.isBefore(Instant.now());
 			}
 		};
+	}
+
+	public static <X> Predicate<X> expiresIn(int seconds) {
+		return expiresIn(Duration.ofSeconds(seconds));
 	}
 
 	public void attachHandle(ModifiedCalloutHandle handle) {
