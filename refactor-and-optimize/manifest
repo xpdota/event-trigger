@@ -10,7 +10,7 @@ f54a8510f834a1a57166970bfc982e94  commons-collections-3.2.2.jar
 040b4b4d8eac886f6b4a2a3bd2f31b00  commons-logging-1.2.jar
 c1c130c369aa86bfe4f7a7a920bc0223  commons-text-1.9.jar
 6b23083dc5b6fc207778fc59892dfab9  dot-tracker-1.0-SNAPSHOT.jar
-ea20c543ec22ea954c787a3e926decae  easytriggers-1.0-SNAPSHOT.jar
+4eaf435aed28c93cc259aa5160155480  easytriggers-1.0-SNAPSHOT.jar
 655814242aa5fa27b4f4eaca9390c951  flatlaf-1.6.5.jar
 1125469744b5b7b9f404832279633442  groovy-3.0.10.jar
 40d6b9075fbd28fa10292a45a0db9457  httpclient-4.5.13.jar
@@ -36,5 +36,5 @@ fbcf58513bc25b80f075d812aad3e3cf  slf4j-api-1.7.32.jar
 9e9db02d87cb35071bec53e0307b32fb  timelines-1.0-SNAPSHOT.jar
 c840780d2d58eb4ee78fc53b7c7e2069  titan-jails-1.0-SNAPSHOT.jar
 dcc3d9c5620051dbc0b07a35e5e71e08  triggers-1.0-SNAPSHOT.jar
-304547f6faa8f3d4512ec4b2f75df133  xivdata-1.0-SNAPSHOT.jar
+c37664616733f45fad5f5a7d47c4d55b  xivdata-1.0-SNAPSHOT.jar
 1b56f54175a2b9e8fa2a8e1e75735ef6  xivsupport-1.0-SNAPSHOT.jar
