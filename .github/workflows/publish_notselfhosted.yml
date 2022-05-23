@@ -4,8 +4,8 @@
 name: Publish
 
 on:
-#  push:
   workflow_dispatch:
+#  push:
 
 
 jobs:
