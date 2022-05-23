@@ -657,8 +657,9 @@ public class Dragonsong implements FilteredEventHandler {
 	@HandleEvents
 	public void geirskogul(EventContext ctx, AbilityUsedEvent event) {
 		// I **think** this doesn't come up later in the fight judging by a p6 log I perused
+		// 671B appears to be the "failed tower" ability
 		long id = event.getAbility().getId();
-		if ((id == 0x6711 || id == 0x6717 || id == 0x6718 || id == 0x6719 || id == 0x671B) && event.getTarget().isThePlayer()) {
+		if ((id == 0x6711 || id == 0x6717 || id == 0x6718 || id == 0x6719 || id == 0x671A) && event.getTarget().isThePlayer()) {
 			ctx.accept(estinhog_baitGeir.getModified());
 		}
 	}
