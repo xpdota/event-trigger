@@ -31,8 +31,7 @@ public final class ActionUtils {
 	 * A function that, given names, will keep the first name intact, but chop everything other than the Roman numerals
 	 * at the end off of subsequent names.
 	 *
-	 * @param originalName The original name
-	 * @return The original name, or the Roman numerals
+	 * @return A function that returns the original name, or the Roman numerals
 	 */
 	public static Function<String, String> adjustNameReverse() {
 		AtomicBoolean afterFirst = new AtomicBoolean();

@@ -58,8 +58,8 @@ public class XivCombatant extends XivEntity {
 	/**
 	 * Simplified ctor for entity lookups that miss
 	 *
-	 * @param id
-	 * @param name
+	 * @param id numerical ID
+	 * @param name human-readable name
 	 */
 	public XivCombatant(long id, String name) {
 		this(id, name, false, false, 0, null, null, null, 0, 0, 0, 0, 0, 0);

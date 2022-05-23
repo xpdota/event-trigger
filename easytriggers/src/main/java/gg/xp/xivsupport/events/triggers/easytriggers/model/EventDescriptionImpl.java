@@ -86,8 +86,6 @@ public final class EventDescriptionImpl<X> implements EventDescription<X> {
 
 	/**
 	 * Override this to specify default filters
-	 *
-	 * @param trigger
 	 */
 	public List<Supplier<? extends Condition<X>>> defaultFilters() {
 		return Collections.emptyList();

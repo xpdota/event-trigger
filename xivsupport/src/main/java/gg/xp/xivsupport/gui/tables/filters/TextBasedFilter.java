@@ -110,8 +110,8 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 	 * <p>
 	 * If there is any filter, then apply this pre-filter.
 	 *
-	 * @param item
-	 * @return
+	 * @param item The item to filter
+	 * @return whether to let the item proceed to the main filter
 	 */
 	protected boolean preFilter(X item) {
 		return true;
