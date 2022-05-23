@@ -95,12 +95,19 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		c.gridy++;
 		JPanel content = new JPanel();
 		//noinspection InstanceVariableUsedBeforeInitialized
-		StringSetting setting = new StringSetting(updatePropsFilePers, "branch", "stable");
-		content.add(new StringSettingGui(setting, "Branch").getComponent());
-		setting.addListener(this::doUpdateCheckInBackground);
+		StringSetting branchSetting = new StringSetting(updatePropsFilePers, "branch", "stable");
+		content.add(new StringSettingGui(branchSetting, "Branch").getComponent());
+		branchSetting.addListener(this::doUpdateCheckInBackground);
 		content.add(button);
 		add(content, c);
 		c.gridy++;
+		StringSetting urlTemplateSetting = new StringSetting(updatePropsFilePers, "url_template", "https://xpdota.github.io/event-trigger/%s/v2/%s");
+		StringSettingGui templateGui = new StringSettingGui(urlTemplateSetting, "URL Template");
+		templateGui.getTextBoxOnly().setColumns(50);
+		add(templateGui.getComponent(), c);
+		urlTemplateSetting.addListener(this::doUpdateCheckInBackground);
+		c.gridy++;
+
 		JButton openInstallDirButton = new JButton("Open Install Dir");
 		openInstallDirButton.addActionListener(l -> GuiUtil.openFile(installDir));
 		add(openInstallDirButton, c);
@@ -113,7 +120,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				i -> doUpdateCheckInBackground(),
 				// 15 minutes * 60 seconds * 1000 ms
 				i -> 15 * 60 * 1000L
-				).start();
+		).start();
 	}
 
 	private void setUpdateCheckStatus(UpdateCheckStatus updateCheckStatus) {
