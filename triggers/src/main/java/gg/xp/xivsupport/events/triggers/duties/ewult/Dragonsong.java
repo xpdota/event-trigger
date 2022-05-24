@@ -58,7 +58,8 @@ public class Dragonsong implements FilteredEventHandler {
 
 //	private final ModifiableCallout<TetherEvent> p1_genericTether = new ModifiableCallout<>("P1 Generic Tethers", "Tether on you", "Tether on you {event.id}", Collections.emptyList());
 
-	private final ModifiableCallout<BuffApplied> p1_puddleBait = ModifiableCallout.durationBasedCall("Puddle", "Puddle on you");
+	private final ModifiableCallout<BuffApplied> p1_puddleBait = ModifiableCallout.durationBasedCall("Puddle (Place)", "Puddle on you");
+	private final ModifiableCallout<BuffRemoved> p1_puddleBaitAfter = new ModifiableCallout<>("Puddle (Move)", "Move");
 
 	private final ModifiableCallout<HeadMarkerEvent> circle = new ModifiableCallout<>("Circle", "Red Circle with {partner}");
 	private final ModifiableCallout<HeadMarkerEvent> triangle = new ModifiableCallout<>("Triangle", "Green Triangle with {partner}");
@@ -191,6 +192,14 @@ public class Dragonsong implements FilteredEventHandler {
 		}
 	}
 
+	private SequentialTrigger<BaseEvent> p1_puddleBaitSeq = new SequentialTrigger<>(10_000, BaseEvent.class,
+			e -> e instanceof BuffApplied ba && ba.getBuff().getId() == 0xA65,
+			(e1, s) -> {
+				s.updateCall(p1_puddleBait.getModified((BuffApplied) e1));
+				BuffRemoved removed = s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xA65);
+				s.updateCall(p1_puddleBaitAfter.getModified(removed));
+			});
+
 
 	@HandleEvents
 	public void reset(EventContext context, PullStartedEvent event) {
@@ -238,6 +247,7 @@ public class Dragonsong implements FilteredEventHandler {
 
 	@HandleEvents
 	public void feedSeq(EventContext context, BaseEvent event) {
+		p1_puddleBaitSeq.feed(context, event);
 		p1_fourHeadMark.feed(context, event);
 		p1_pairsOfMarkers.feed(context, event);
 		thordan_firstTrio.feed(context, event);
