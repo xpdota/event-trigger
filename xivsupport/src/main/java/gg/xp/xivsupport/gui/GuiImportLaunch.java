@@ -44,6 +44,8 @@ public final class GuiImportLaunch {
 			frame.setLocationByPlatform(true);
 			JPanel panel = new TitleBorderFullsizePanel("Import");
 
+			JLabel statusLabel = new JLabel("Please select something to import");
+
 			JCheckBox decompressCheckbox = new JCheckBox("Decompress events (uses more memory)");
 			Path sessionsDir = Paths.get(Platform.getTriggeventDir().toString(), "sessions");
 			JFileChooser sessionChooser = new JFileChooser(sessionsDir.toString());
@@ -53,6 +55,7 @@ public final class GuiImportLaunch {
 				int result = sessionChooser.showOpenDialog(panel);
 				if (result == JFileChooser.APPROVE_OPTION) {
 					File file = sessionChooser.getSelectedFile();
+					statusLabel.setText("Importing Session, Please Wait...");
 					// TODO: this should be async
 					CatchFatalError.run(() -> {
 						LaunchImportedSession.fromEvents(EventReader.readEventsFromFile(file), decompressCheckbox.isSelected());
@@ -70,6 +73,7 @@ public final class GuiImportLaunch {
 				int result = actLogChooser.showOpenDialog(panel);
 				if (result == JFileChooser.APPROVE_OPTION) {
 					File file = actLogChooser.getSelectedFile();
+					statusLabel.setText("Importing Log File, Please Wait...");
 					// TODO: this should be async
 					CatchFatalError.run(() -> {
 						LaunchImportedActLog.fromEvents(EventReader.readActLogFile(file), decompressCheckbox.isSelected());
@@ -98,6 +102,7 @@ public final class GuiImportLaunch {
 			}, locator::setValue, "Paste your FFLogs URL here");
 			importFflogsButton.addActionListener(l -> {
 				FflogsReportLocator fight = locator.getValue();
+				statusLabel.setText("Importing FFLogs Data, Please Wait...");
 				CatchFatalError.run(() -> {
 					LaunchImportedFflogs.fromUrl(fight);
 				});
@@ -182,7 +187,13 @@ public final class GuiImportLaunch {
 				c.gridy++;
 				c.weighty = 1;
 				// Filler
-				panel.add(new JPanel(), c);
+				panel.add(Box.createGlue(), c);
+			}
+
+			{
+				c.gridy ++;
+				c.weighty = 0;
+				panel.add(statusLabel, c);
 			}
 
 

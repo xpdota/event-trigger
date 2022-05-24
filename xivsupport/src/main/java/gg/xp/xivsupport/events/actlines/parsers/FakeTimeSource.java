@@ -4,7 +4,7 @@ import gg.xp.reevent.events.CurrentTimeSource;
 
 import java.time.Instant;
 
-public class FakeACTTimeSource implements CurrentTimeSource {
+public class FakeTimeSource implements CurrentTimeSource {
 
 	private volatile Instant currentTime = Instant.EPOCH;
 

@@ -363,6 +363,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		public void update(XivCombatant cbt, @Nullable CastTracker castData) {
 			RenderUtils.setTooltip(this, formatTooltip(cbt));
 			setBounds(getBounds());
+			nameLabel.setText(cbt.getName());
 			Position pos = cbt.getPos();
 			if (pos != null) {
 				this.x = pos.getX();
