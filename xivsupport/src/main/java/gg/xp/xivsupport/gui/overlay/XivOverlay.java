@@ -202,6 +202,10 @@ public class XivOverlay {
 		recalc();
 	}
 
+	protected boolean isVisible() {
+		return visible;
+	}
+
 	protected void repackSize() {
 		getFrame().revalidate();
 		redoScale();
@@ -212,7 +216,7 @@ public class XivOverlay {
 			panel.setBorder(transparentBorder);
 		}
 		boolean visible = this.visible && enabled.get();
-		if (visible) {
+		if (visible && !frame.isVisible()) {
 			frame.setVisible(true);
 		}
 		panel.setVisible(visible);

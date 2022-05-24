@@ -51,6 +51,7 @@ public class ActWsLogSource implements EventSource {
 	private final Object connectLock = new Object();
 	private final WsURISetting uriSetting;
 	private final BooleanSetting allowBadCert;
+	private final BooleanSetting allowTts;
 
 	private final class ActWsClientInternal extends WebSocketClient {
 
@@ -152,6 +153,7 @@ public class ActWsLogSource implements EventSource {
 		this.uriSetting = new WsURISetting(pers, "actws-uri", defaultUri);
 		this.allowBadCert = new BooleanSetting(pers, "acts-allow-bad-cert", false);
 		this.eventConsumer = master::pushEvent;
+		this.allowTts = new BooleanSetting(pers, "actws-allow-tts", true);
 		this.pls = pls;
 		this.client = new ActWsClientInternal();
 		stateStore.putCustom(WsState.class, state);
@@ -195,15 +197,16 @@ public class ActWsLogSource implements EventSource {
 	@LiveOnly
 	@HandleEvents
 	public void sayTts(EventContext context, TtsRequest event) {
-
-		try {
-			client.send(mapper.writeValueAsString(Map.ofEntries(
-					Map.entry("call", "say"),
-					Map.entry("text", event.getTtsString()),
-					Map.entry("rseq", rseqCounter.getAndIncrement()))));
-		}
-		catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
+		if (allowTts.get()) {
+			try {
+				client.send(mapper.writeValueAsString(Map.ofEntries(
+						Map.entry("call", "say"),
+						Map.entry("text", event.getTtsString()),
+						Map.entry("rseq", rseqCounter.getAndIncrement()))));
+			}
+			catch (JsonProcessingException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
@@ -303,68 +306,41 @@ public class ActWsLogSource implements EventSource {
 
 	static {
 		try {
+			String[] cbtProps = {
+					"CurrentWorldID",
+					"WorldID",
+					"WorldName",
+					"BNpcID",
+					"BNpcNameID",
+					"PartyType",
+					"ID",
+					"OwnerID",
+					"type",
+					"Job",
+					"Level",
+					"Name",
+					"CurrentHP",
+					"MaxHP",
+					"CurrentMP",
+					"MaxMP",
+					"PosX",
+					"PosY",
+					"PosZ",
+					"Heading",
+					"TargetID"
+			};
 			allCbtRequest = mapper.writeValueAsString(
 					Map.ofEntries(
 							Map.entry("call", "getCombatants"),
 							Map.entry("rseq", "allCombatants"),
-							Map.entry("props", new String[]{
-									"CurrentWorldID",
-									"WorldID",
-									"WorldName",
-									"BNpcID",
-									"BNpcNameID",
-									"PartyType",
-									"ID",
-									"OwnerID",
-									"type",
-									"Job",
-									"Level",
-									"Name",
-									"CurrentHP",
-									"MaxHP",
-									"CurrentMP",
-									"MaxMP",
-									"CurrentCP",
-									"MaxCP",
-									"CurrentGP",
-									"MaxGP",
-									"PosX",
-									"PosY",
-									"PosZ",
-									"Heading"
-							})
+							Map.entry("props", cbtProps)
 					));
 			specificCbtRequestTemplate = mapper.writeValueAsString(
 					Map.ofEntries(
 							Map.entry("call", "getCombatants"),
 							Map.entry("rseq", "specificCombatants"),
 							Map.entry("ids", List.of(123456)),
-							Map.entry("props", new String[]{
-									"CurrentWorldID",
-									"WorldID",
-									"WorldName",
-									"BNpcID",
-									"BNpcNameID",
-									"PartyType",
-									"ID",
-									"OwnerID",
-									"type",
-									"Job",
-									"Level",
-									"Name",
-									"CurrentHP",
-									"MaxHP",
-									"CurrentMP",
-									"MaxMP",
-									"CurrentCP",
-									"MaxCP",
-									"CurrentGP",
-									"MaxGP",
-									"PosX",
-									"PosY",
-									"PosZ",
-									"Heading"
-							})
+							Map.entry("props", cbtProps)
 					));
 		}
 		catch (JsonProcessingException e) {
@@ -378,5 +354,9 @@ public class ActWsLogSource implements EventSource {
 
 	public BooleanSetting getAllowBadCert() {
 		return allowBadCert;
+	}
+
+	public BooleanSetting getAllowTts() {
+		return allowTts;
 	}
 }

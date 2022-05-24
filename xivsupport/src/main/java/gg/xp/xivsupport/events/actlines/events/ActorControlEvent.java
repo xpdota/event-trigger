@@ -4,6 +4,9 @@ import gg.xp.reevent.events.BaseEvent;
 
 import java.io.Serial;
 
+/**
+ * Represents various types of actor control events, e.g. wipes, barrier up/down, etc
+ */
 public class ActorControlEvent extends BaseEvent {
 
 	@Serial

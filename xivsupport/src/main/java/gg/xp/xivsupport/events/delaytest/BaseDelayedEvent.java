@@ -9,9 +9,15 @@ public abstract class BaseDelayedEvent extends BaseEvent {
 	@Serial
 	private static final long serialVersionUID = 4516450176008003145L;
 	private final long runAt;
+	private final long timeBasis;
 
 	protected BaseDelayedEvent(long delayMs) {
-		this.runAt = System.currentTimeMillis() + delayMs;
+		this.timeBasis = System.currentTimeMillis();
+		this.runAt = timeBasis + delayMs;
+	}
+
+	public long getTimeBasis() {
+		return timeBasis;
 	}
 
 	@Override

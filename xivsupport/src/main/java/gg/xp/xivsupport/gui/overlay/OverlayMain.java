@@ -18,7 +18,7 @@ import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OverlayMain {
+public final class OverlayMain {
 
 	private static final Logger log = LoggerFactory.getLogger(OverlayMain.class);
 	private final BooleanSetting show;
@@ -83,31 +83,34 @@ public class OverlayMain {
 			isNonWindows = false;
 		}
 		show = config.getShow();
-		show.addListener(this::recalc);
 		forceShow = config.getForceShow();
-		forceShow.addListener(this::recalc);
-
-		List<XivOverlay> overlays = container.getComponents(XivOverlay.class);
-		overlays.forEach(this::addOverlay);
-
-		setEditing(false);
-		//noinspection CallToThreadStartDuringObjectConstruction
 		new Thread(() -> {
-			while (true) {
-				try {
-					boolean old = windowActive;
-					windowActive = isGameWindowActive();
-					if (old != windowActive) {
-						recalc();
+
+			show.addListener(this::recalc);
+			forceShow.addListener(this::recalc);
+
+			List<XivOverlay> overlays = container.getComponents(XivOverlay.class);
+			overlays.forEach(this::addOverlay);
+
+			setEditing(false);
+			//noinspection CallToThreadStartDuringObjectConstruction
+			new Thread(() -> {
+				while (true) {
+					try {
+						boolean old = windowActive;
+						windowActive = isGameWindowActive();
+						if (old != windowActive) {
+							recalc();
+						}
+						//noinspection BusyWait
+						Thread.sleep(200);
 					}
-					//noinspection BusyWait
-					Thread.sleep(200);
+					catch (Throwable e) {
+						log.error("Error", e);
+					}
 				}
-				catch (Throwable e) {
-					log.error("Error", e);
-				}
-			}
-		}).start();
+			}).start();
+		}, "OverlayStartupHelper").start();
 	}
 
 	private boolean isGameWindowActive() {

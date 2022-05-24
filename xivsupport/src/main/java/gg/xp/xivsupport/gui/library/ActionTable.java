@@ -51,6 +51,13 @@ public final class ActionTable {
 					col.setCellRenderer(new ActionAndStatusRenderer(true, false, false));
 					col.setPreferredWidth(500);
 				}))
+				.addMainColumn(new CustomColumn<>("Recast", ai -> {
+					int maxCharges = ai.maxCharges();
+					if (maxCharges > 1) {
+						return String.format("%s (%d charges)", ai.getCd(), maxCharges);
+					}
+					return ai.getCd();
+				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
 				.withRightClickRepo(RightClickOptionRepo.of(
 						CustomRightClickOption.forRow(

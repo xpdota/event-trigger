@@ -8,15 +8,19 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serial;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class XivMap {
+public class XivMap implements Serializable {
 
 	private static final Logger log = LoggerFactory.getLogger(XivMap.class);
+	@Serial
+	private static final long serialVersionUID = -4708756454369252820L;
 	private static boolean loaded;
 	private static final Map<Long, XivMap> maps = new HashMap<>();
 

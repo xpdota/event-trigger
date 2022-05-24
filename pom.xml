@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>gg.xp</groupId>
-    <artifactId>newtrig</artifactId>
+    <artifactId>triggevent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
         <java.version>17</java.version>
@@ -19,6 +19,91 @@
     </properties>
     <packaging>pom</packaging>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>2.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.0.0-M5</version>
+                    <configuration>
+                        <parallel>methods</parallel>
+                        <threadCount>2</threadCount>
+                        <perCoreThreadCount>true</perCoreThreadCount>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                    <artifactId>launch4j-maven-plugin</artifactId>
+                    <version>2.1.2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>4.0.0-M1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>3.3.0</version>
+            </plugin>
+        </plugins>
+    </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <id>aggregate</id>
+                        <inherited>false</inherited>
+                        <reports>
+                            <report>aggregate</report>
+                        </reports>
+                    </reportSet>
+                    <reportSet>
+                        <id>default</id>
+                        <reports>
+                            <report>javadoc</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -148,55 +233,61 @@
                 <artifactId>xivdata</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>easytriggers</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>testutils-generic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>testutils-reevent</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>testutils-xiv</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>dot-tracker</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>cd-tracker</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>job-overlays</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>plugins</artifactId>
+                <type>pom</type>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>testutils</artifactId>
+                <type>pom</type>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>titan-jails</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.2.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>3.2.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.3.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.6</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.0.0-M5</version>
-                    <configuration>
-                        <parallel>methods</parallel>
-                        <threadCount>2</threadCount>
-                        <perCoreThreadCount>true</perCoreThreadCount>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                    <artifactId>launch4j-maven-plugin</artifactId>
-                    <version>2.1.2</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 
     <modules>
         <module>reevent</module>
@@ -206,5 +297,9 @@
         <module>triggers</module>
         <module>actimport</module>
         <module>timelines</module>
+        <module>easytriggers</module>
+        <module>testutils</module>
+        <module>plugins</module>
+        <module>triggers/titan-jails</module>
     </modules>
 </project>

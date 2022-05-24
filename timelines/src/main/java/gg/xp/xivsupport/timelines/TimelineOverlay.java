@@ -11,6 +11,8 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 
 @ScanMe
 public class TimelineOverlay extends XivOverlay {
+	private static final Logger log = LoggerFactory.getLogger(TimelineOverlay.class);
 	private final TimelineManager timeline;
 	private volatile List<VisualTimelineEntry> current = Collections.emptyList();
 	private final IntSetting numberOfRows;
@@ -30,6 +33,7 @@ public class TimelineOverlay extends XivOverlay {
 
 	public TimelineOverlay(PersistenceProvider persistence, TimelineManager timeline, OverlayConfig oc) {
 		super("Timeline", "timeline-overlay", oc, persistence);
+		log.info("Start");
 		// TODO: fix the timer getting truncated. Just left-justify text and right-justify timer like on cactbot
 		this.timeline = timeline;
 		this.numberOfRows = timeline.getRowsToDisplay();
@@ -47,10 +51,15 @@ public class TimelineOverlay extends XivOverlay {
 		tableModel.configureColumns(table);
 		table.setCellSelectionEnabled(false);
 		getPanel().add(table);
-		RefreshLoop<TimelineOverlay> refresher = new RefreshLoop<>("TimelineOverlay", this, TimelineOverlay::refresh, dt -> dt.calculateScaledFrameTime(200));
-		repackSize();
-		refresher.start();
 
+	}
+
+	@Override
+	public void finishInit() {
+		super.finishInit();
+		repackSize();
+		RefreshLoop<TimelineOverlay> refresher = new RefreshLoop<>("TimelineOverlay", this, TimelineOverlay::refresh, dt -> dt.calculateScaledFrameTime(200));
+		refresher.start();
 	}
 
 	@Override
@@ -68,11 +77,21 @@ public class TimelineOverlay extends XivOverlay {
 		return RefreshType.FULL;
 	}
 
+	@Override
+	public void setVisible(boolean visible) {
+		super.setVisible(visible);
+		if (visible) {
+			refresh();
+		}
+	}
+
 	private void refresh() {
-		RefreshType refreshTypeNeeded = getAndSort();
-		switch (refreshTypeNeeded) {
-			case FULL -> tableModel.fullRefresh();
-			case REPAINT -> table.repaint();
+		if (isVisible()) {
+			RefreshType refreshTypeNeeded = getAndSort();
+			switch (refreshTypeNeeded) {
+				case FULL -> tableModel.fullRefresh();
+				case REPAINT -> table.repaint();
+			}
 		}
 	}
 }

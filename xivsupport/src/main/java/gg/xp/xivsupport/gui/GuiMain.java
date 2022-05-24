@@ -51,7 +51,6 @@ import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
-import gg.xp.xivsupport.gui.groovy.GroovyPanel;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
@@ -118,6 +117,7 @@ public class GuiMain {
 
 
 	public static void main(String[] args) {
+		long start = System.currentTimeMillis();
 		log.info("GUI Init");
 		log.info("Classpath: {}", System.getProperty("java.class.path"));
 		CatchFatalError.run(() -> {
@@ -128,6 +128,8 @@ public class GuiMain {
 			pico.addComponent(GuiMain.class);
 			log.info("GUI Init");
 			pico.getComponent(GuiMain.class);
+			long end = System.currentTimeMillis();
+			log.info("Total base startup time: {}", end - start);
 		});
 	}
 
@@ -139,6 +141,7 @@ public class GuiMain {
 		this.rightClicks = container.getComponent(RightClickOptionRepo.class);
 		columns = container.getComponent(StandardColumns.class);
 		replay = container.getComponent(ReplayController.class);
+		long start = System.currentTimeMillis();
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
 			tabPane = new SmartTabbedPane();
@@ -166,6 +169,10 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", new LibraryTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Groovy", new GroovyTab(container.getComponent(GroovyManager.class))));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
+		SwingUtilities.invokeLater(() -> {
+			long end = System.currentTimeMillis();
+			log.info("GUI startup time: {}", end - start);
+		});
 	}
 
 

@@ -7,14 +7,14 @@ public interface EventContext {
 	/**
 	 * Accept an event for immediate processing
 	 *
-	 * @param event
+	 * @param event The event
 	 */
 	void accept(Event event);
 
 	/**
 	 * Accept an event for processing as a normal queue event
 	 *
-	 * @param event
+	 * @param event The event
 	 */
 	void enqueue(Event event);
 
@@ -25,7 +25,7 @@ public interface EventContext {
 	 * to a particular implementation can just attach it here, rather than having to plumb more generics through the
 	 * entire system.
 	 *
-	 * @return
+	 * @return the state store
 	 */
 	StateStore getStateInfo();
 }

@@ -5,6 +5,9 @@ import gg.xp.xivsupport.models.XivCombatant;
 
 import java.io.Serial;
 
+/**
+ * Represents a headmarker. Note that this does not have any correction applied, i.e. for offset markers
+ */
 public class HeadMarkerEvent extends BaseEvent implements HasTargetEntity, HasPrimaryValue {
 
 	@Serial

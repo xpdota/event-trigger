@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.speech;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.Event;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
@@ -11,10 +12,12 @@ public class DynamicCalloutEvent extends BaseEvent implements CalloutEvent {
 	private final String callText;
 	private final Supplier<String> visualText;
 	private final Instant expiresAt;
+	private final long hangTime;
 
 	public DynamicCalloutEvent(String callText, Supplier<String> visualText, long hangTime) {
 		this.callText = callText;
 		this.visualText = visualText;
+		this.hangTime = hangTime;
 		expiresAt = Instant.now().plusMillis(hangTime);
 	}
 
@@ -31,6 +34,10 @@ public class DynamicCalloutEvent extends BaseEvent implements CalloutEvent {
 
 	@Override
 	public boolean isExpired() {
+		Event parent = getParent();
+		if (parent instanceof BaseEvent be) {
+			return be.getEffectiveTimeSince().toMillis() > hangTime;
+		}
 		return expiresAt.isBefore(Instant.now());
 	}
 

@@ -3,6 +3,9 @@ package gg.xp.xivdata.data;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static gg.xp.xivdata.data.Job.AST;
 import static gg.xp.xivdata.data.Job.BRD;
@@ -32,7 +35,7 @@ public enum Cooldown {
 
 	// List of ALL buffs to track - WL/BL will be done by user settings
 	// TANKS
-	Rampart(TANK, true, 90.0, "Rampart", CooldownType.PERSONAL_MIT, 0x1d6b, 1191),
+	Rampart(builder(CooldownType.PERSONAL_MIT, true, 0x1d6b, 1191)),
 	Reprisal(TANK, true, 60.0, "Reprisal", CooldownType.PARTY_MIT, 0x1d6f, 1193, 2101),
 	ArmsLength(TANK, true, 120.0, "Arm's Length", CooldownType.PERSONAL_UTILITY, 0x1d7c, 1209),
 
@@ -69,6 +72,16 @@ public enum Cooldown {
 	ShadowWall(DRK, true, 120.0, "Shadow Wall", CooldownType.PERSONAL_MIT, 0xe34, 747),
 	LivingDead(DRK, true, 300.0, "Living Dead", CooldownType.INVULN, 0xe36, 810),
 	TheBlackestNight(DRK, true, 15.0, "The Blackest Night", CooldownType.PERSONAL_MIT, 0x1ce1, 0x49a),
+	BloodWeapon(builder(CooldownType.PERSONAL_BURST, true, 0xE29).buffIds(0x2e6)),
+	SaltedEarth(builder(CooldownType.PERSONAL_BURST, true, 0xE37).buffIds(0x2ed)),
+	Plunge(builder(CooldownType.PERSONAL_BURST, true, 0xE38).maxCharges(2)),
+	// Also carve and spit
+	AbyssalDrain(builder(CooldownType.PERSONAL_BURST, true, 0xE39, 0xE3B)),
+	// TODO: maybe abilities like delirium and blood weapon should display remaining stacks rather than remaining duration?
+	Delirium(builder(CooldownType.PERSONAL_BURST, true, 0x1CDE).buffIds(0x7b4)),
+	LivingShadow(builder(CooldownType.PERSONAL_BURST, true, 0x4058).duration(24)),
+	Oblation(builder(CooldownType.PARTY_MIT, false, 0x649A)),
+	Shadowbringer(builder(CooldownType.PERSONAL_BURST, true, 0x649D)),
 
 	// HEALERS
 	LucidDreaming(HEALER, false, 60.0, "Lucid Dreaming", CooldownType.PERSONAL_UTILITY, 0x1D8A, 0x4B4),
@@ -103,7 +116,9 @@ public enum Cooldown {
 	DeploymentTactics(SCH, false, 90.0, "Deployment Tactics", CooldownType.PARTY_MIT, 0xE01),
 	EmergencyTactics(SCH, false, 15.0, "Emergency Tactics", CooldownType.PARTY_MIT, 0xE02, 0x318),
 	// Sage stuff
-	Phlegma(SGE, true, 45.0, 2, "Phlegma", CooldownType.PERSONAL_BURST, 0x5EF9),
+//	Phlegma(SGE, true, 45.0, 2, "Phlegma", CooldownType.PERSONAL_BURST, 0x5EF9),
+	// TODO: revisit the automatic naming stuff
+	Phlegma(builder(CooldownType.PERSONAL_BURST, true, 24313, 24307, 24289).name("Phlegma")),
 	Krasis(SGE, true, 60.0, "Krasis", CooldownType.HEAL, 0x5EFD, 0xA3E),
 	Pepsis(SGE, true, 30.0, "Pepsis", CooldownType.HEAL, 0x5EED),
 	Rhizomata(SGE, true, 90.0, "Rhizomata", CooldownType.PERSONAL_UTILITY, 0x5EF5),
@@ -139,7 +154,7 @@ public enum Cooldown {
 
 	// MELEE
 	Feint(MELEE_DPS, true, 90.0, "Feint", CooldownType.PARTY_MIT, 0x1d7d, 1195),
-//	TrickAttack(NIN, true, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
+	//	TrickAttack(NIN, true, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
 	// TODO
 	TrickAttackNew(NIN, true, 60.0, "Trick Attack", CooldownType.PERSONAL_BURST, 0x8d2, 3254),
 	// TODO
@@ -179,18 +194,13 @@ public enum Cooldown {
 	Devilment(DNC, true, 120.0, "Devilment", CooldownType.PARTY_BUFF, 0x3e8b, 1825),
 	ShieldSamba(DNC, true, 120.0, "Shield Samba", CooldownType.PARTY_MIT, 0x3e8c, 1826),
 	Troubadour(BRD, true, 120.0, "Troubadour", CooldownType.PARTY_MIT, 0x1ced, 1934),
-	// TODO: these do not have correct duration - need to fix
 	MagesBallad(BRD, true, 120.0, 45.0, "Mage's Ballad", CooldownType.PARTY_BUFF, 0x72, 0x8a9),
 	ArmysPaeon(BRD, true, 120.0, 45.0, "Army's Paeon", CooldownType.PARTY_BUFF, 0x74, 0x8aa),
 	WanderersMinuet(BRD, true, 120.0, 45.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
 	BattleVoice(BRD, true, 120.0, "Battle Voice", CooldownType.PARTY_BUFF, 0x76, 0x8d),
-	// TODO need buff ID
 	RadiantFinale(BRD, true, 110.0, "Radiant Finale", CooldownType.PARTY_BUFF, 0x64B9, 0xB94),
 	Tactician(MCH, true, 120.0, "Tactician", CooldownType.PARTY_MIT, 0x41f9, 1951, 2177);
 
-
-	private final boolean defaultPersOverlay;
-	private final @Nullable Double durationOverride;
 
 	public boolean defaultPersOverlay() {
 		return this.defaultPersOverlay;
@@ -216,6 +226,168 @@ public enum Cooldown {
 	private final long[] abilityIds;
 	private final long[] buffIds;
 	private final int maxCharges;
+	private final boolean defaultPersOverlay;
+	private final @Nullable Double durationOverride;
+
+	private static class CdBuilder {
+		// Required
+		private JobType jobType;
+		private Job job;
+		private final CooldownType type;
+		private final long[] abilityIds;
+		private final boolean defaultPersOverlay;
+
+		// Optional
+		private long[] buffIds = {};
+		private Integer maxCharges;
+		private Double cooldown;
+		private Double durationOverride;
+		private String name;
+
+		private CdBuilder buffIds(long... buffIds) {
+			this.buffIds = buffIds;
+			return this;
+		}
+
+		private CdBuilder maxCharges(int maxCharges) {
+			this.maxCharges = maxCharges;
+			return this;
+		}
+
+		private CdBuilder cooldown(double cd) {
+			this.cooldown = cd;
+			return this;
+		}
+
+		private CdBuilder duration(double durationOverride) {
+			this.durationOverride = durationOverride;
+			return this;
+		}
+
+		private CdBuilder name(String name) {
+			this.name = name;
+			return this;
+		}
+
+		// TODO: technically, Job/JobType is also in the CSV...
+		private CdBuilder(CooldownType type, boolean defaultPersOverlay, long[] abilityIds) {
+			this.type = type;
+			this.defaultPersOverlay = defaultPersOverlay;
+			this.abilityIds = abilityIds;
+		}
+
+		private ActionInfo getActionInfo() {
+			return getActionInfo(abilityIds[0]);
+		}
+
+		private static ActionInfo getActionInfo(long id) {
+			ActionInfo actionInfo = ActionLibrary.forId(id);
+			if (actionInfo == null) {
+				throw new RuntimeException(String.format("Could not find ActionInfo for action %X", id));
+			}
+			return actionInfo;
+		}
+
+		private List<ActionInfo> getAllActionInfo() {
+			return Arrays.stream(abilityIds).mapToObj(CdBuilder::getActionInfo).toList();
+		}
+
+		public double getCooldown() {
+			if (cooldown == null) {
+				return getActionInfo().getCd();
+			}
+			else {
+				return cooldown;
+			}
+		}
+
+		public String getName() {
+			if (name == null) {
+				return getAllActionInfo().stream()
+						.map(ActionInfo::name)
+						.map(ActionUtils.adjustNameReverse())
+						.collect(Collectors.joining("/"));
+			}
+			else {
+				return name;
+			}
+		}
+
+		public JobType getJobType() {
+			if (jobType == null) {
+				return switch (Integer.parseInt(getActionInfo().categoryRaw())) {
+					case 113 -> TANK;
+					// It's actually not but I don't have a category for DoW/DoM yet
+					case 161 -> TANK;
+					// This is actually DoM
+					case 120 -> CASTER;
+					case 114 -> MELEE_DPS;
+					case 116 -> CASTER;
+					default -> null;
+				};
+			}
+			else {
+				return jobType;
+			}
+		}
+
+		public Job getJob() {
+			if (job == null) {
+				return switch (Integer.parseInt(getActionInfo().categoryRaw())) {
+					case 20, 38 -> PLD;
+					case 22, 44 -> WAR;
+					case 98 -> DRK;
+					case 149 -> GNB;
+					case 25 -> WHM;
+					case 29 -> SCH;
+					case 99 -> AST;
+					case 181 -> SGE;
+					case 21 -> MNK;
+					case 23 -> DRG;
+					case 93 -> NIN;
+					case 180 -> RPR;
+					case 24 -> BRD;
+					case 96 -> MCH;
+					case 150 -> DNC;
+					case 28 -> SMN;
+					case 112 -> RDM;
+					default -> null;
+				};
+			}
+			else {
+				return job;
+			}
+		}
+
+		public int getMaxCharges() {
+			if (maxCharges == null) {
+				return getActionInfo().maxCharges();
+			}
+			else {
+				return maxCharges;
+			}
+		}
+	}
+
+	private static CdBuilder builder(CooldownType type, boolean defaultPersOverlay, long... abilityIds) {
+		return new CdBuilder(type, defaultPersOverlay, abilityIds);
+	}
+
+	Cooldown(CdBuilder builder) {
+		jobType = builder.getJobType();
+		job = builder.getJob();
+		abilityIds = builder.abilityIds;
+		defaultPersOverlay = builder.defaultPersOverlay;
+		cooldown = builder.getCooldown();
+		type = builder.type;
+		label = builder.getName();
+		buffIds = builder.buffIds;
+		maxCharges = builder.getMaxCharges();
+		durationOverride = builder.durationOverride;
+		if (job == null && jobType == null) {
+			throw new RuntimeException(String.format("Cooldown %s has neither a job nor jobtype", label));
+		}
+	}
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long[] abilityIds, long[] buffIds) {
 		this.job = job;

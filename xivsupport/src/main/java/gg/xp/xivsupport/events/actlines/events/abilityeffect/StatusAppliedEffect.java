@@ -49,7 +49,11 @@ public class StatusAppliedEffect extends AbilityEffect {
 	@Override
 	public String getBaseDescription() {
 		StatusEffectInfo sei = StatusEffectLibrary.forId(status.getId());
-		String formatted = String.format("Applied Status 0x%x (%s) to %s", status.getId(), sei == null ? "Unknown" : sei.name(), onTarget ? "Target" : "Caster");
+		long flags = getFlags();
+		byte param1 = (byte) (flags >> 24);
+		byte param2 = (byte) (flags >> 16);
+		byte param3 = (byte) (flags >> 8);
+		String formatted = String.format("Applied Status 0x%x (%s) to %s (params: %s %s %s)", status.getId(), sei == null ? "Unknown" : sei.name(), onTarget ? "Target" : "Caster", param1, param2, param3);
 		if (stacks > 0) {
 			formatted += String.format(" (%s stacks)", stacks);
 		}

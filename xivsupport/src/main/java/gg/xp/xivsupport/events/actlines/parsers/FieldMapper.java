@@ -178,6 +178,28 @@ public class FieldMapper<K extends Enum<K>> {
 		return cbt;
 	}
 
+	public XivCombatant getEntity(long id) {
+		XivCombatant xivCombatant = state.getCombatant(id);
+		if (xivCombatant != null) {
+			return xivCombatant;
+		}
+		else {
+			if (id == 0xE0000000L) {
+				return XivCombatant.ENVIRONMENT;
+			}
+			switch (entityLookupMissBehavior) {
+				case GET_AND_WARN:
+					log.trace("Did not find combatant info for id {}, guessing", Long.toString(id, 16));
+				case GET:
+					combatantsToUpdate.add(id);
+			}
+			XivCombatant cbt = new XivCombatant(id, "Unknown");
+			state.provideActFallbackCombatant(cbt);
+			XivCombatant stateCbtNew = state.getCombatant(id);
+			return stateCbtNew == null ? cbt : stateCbtNew;
+		}
+	}
+
 	public XivCombatant getEntity(K idKey, K nameKey) {
 		long id = getHex(idKey);
 		String name = getString(nameKey);

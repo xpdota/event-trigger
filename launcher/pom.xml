@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>newtrig</artifactId>
+        <artifactId>triggevent</artifactId>
         <groupId>gg.xp</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
@@ -266,24 +266,44 @@
 
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>xivsupport</artifactId>
+            <artifactId>actimport</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>cd-tracker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>dot-tracker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>easytriggers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>job-overlays</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>timelines</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>titan-jails</artifactId>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>triggers</artifactId>
         </dependency>
         <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>xivsupport</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.swingexplorer</groupId>
             <artifactId>swingexplorer-core</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>actimport</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>timelines</artifactId>
         </dependency>
     </dependencies>
 

@@ -98,7 +98,6 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Second in Line", "Two");
 	private final ModifiableCallout<BuffApplied> estinhog_headmark3 = new ModifiableCallout<>("Estinhog: Third in Line", "Three");
 
-	// TODO: put these back in
 	private final ModifiableCallout<BuffApplied> estinhog_highJumpOnlyYou = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Middle");
 	private final ModifiableCallout<BuffApplied> estinhog_highJumpAll = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Pick Spots");
 	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "West and Face In");
@@ -109,18 +108,18 @@ public class Dragonsong implements FilteredEventHandler {
 
 //	private final ModifiableCallout<?> wyrmhole_number = new ModifiableCallout<>("Wyrmhole: Number Only", "Number {number}");
 
-	private final ModifiableCallout<?> wyrmhole_place1 = new ModifiableCallout<>("Wyrmhole: Place #1", "Place Tower {where}, then {first} then {second}");
-	private final ModifiableCallout<?> wyrmhole_soak1 = new ModifiableCallout<>("Wyrmhole: Soak #1", "Stack, {first}, {second}, then soak tower");
-	private final ModifiableCallout<?> wyrmhole_nothing1 = new ModifiableCallout<>("Wyrmhole: Nothing #1", "Stack, {first}, {second}");
+	private final ModifiableCallout<?> wyrmhole_place1 = new ModifiableCallout<>("Wyrmhole: Place #1", "Place Tower {where}, then {first} then {second}", 8_000);
+	private final ModifiableCallout<?> wyrmhole_soak1 = new ModifiableCallout<>("Wyrmhole: Soak #1", "Stack, {first}, {second}, then soak tower", 8_000);
+	private final ModifiableCallout<?> wyrmhole_nothing1 = new ModifiableCallout<>("Wyrmhole: Nothing #1", "Stack, {first}, {second}", 8_000);
 
 	private final ModifiableCallout<?> wyrmhole_place2 = new ModifiableCallout<>("Wyrmhole: Place #2", "Place Tower {where}");
 	// Actually comes out at the same time as the #3 calls since it gives the whole sequence
-	private final ModifiableCallout<?> wyrmhole_soak2_firstPart = new ModifiableCallout<>("Wyrmhole: Soak #2", "Soak tower then stack");
+	private final ModifiableCallout<?> wyrmhole_soak2_firstPart = new ModifiableCallout<>("Wyrmhole: Soak #2", "Soak tower, bait, then stack");
 	private final ModifiableCallout<?> wyrmhole_soak2_secondPart = new ModifiableCallout<>("Wyrmhole: Soak #2 Gnash/Lash", "{first} then {second}");
 
-	private final ModifiableCallout<?> wyrmhole_place3 = new ModifiableCallout<>("Wyrmhole: Place #3", "Place Tower {where}, then {first} then {second}");
-	private final ModifiableCallout<?> wyrmhole_soak3_as1 = new ModifiableCallout<>("Wyrmhole: Soak #3 (As #1)", "Stack, {first}, {second}, then soak tower");
-	private final ModifiableCallout<?> wyrmhole_soak3_as2 = new ModifiableCallout<>("Wyrmhole: Soak #3 (As #2)", "Stack, {first}, {second}, then soak tower");
+	private final ModifiableCallout<?> wyrmhole_place3 = new ModifiableCallout<>("Wyrmhole: Place #3", "Place Tower {where}, then {first} then {second}", 8_000);
+	private final ModifiableCallout<?> wyrmhole_soak3_as1 = new ModifiableCallout<>("Wyrmhole: Soak #3 (As #1)", "Stack, {first}, {second}, then soak tower", 8_000);
+	private final ModifiableCallout<?> wyrmhole_soak3_as2 = new ModifiableCallout<>("Wyrmhole: Soak #3 (As #2)", "Stack, {first}, {second}, then soak tower", 8_000);
 
 
 	private final ModifiableCallout<?> estinhog_gnash = new ModifiableCallout<>("Estinhog: Gnash", "Out");
@@ -658,8 +657,9 @@ public class Dragonsong implements FilteredEventHandler {
 	@HandleEvents
 	public void geirskogul(EventContext ctx, AbilityUsedEvent event) {
 		// I **think** this doesn't come up later in the fight judging by a p6 log I perused
+		// 671B appears to be the "failed tower" ability
 		long id = event.getAbility().getId();
-		if ((id == 0x6711 || id == 0x6717 || id == 0x6718 || id == 0x6719 || id == 0x671B) && event.getTarget().isThePlayer()) {
+		if ((id == 0x6711 || id == 0x6717 || id == 0x6718 || id == 0x6719 || id == 0x671A) && event.getTarget().isThePlayer()) {
 			ctx.accept(estinhog_baitGeir.getModified());
 		}
 	}

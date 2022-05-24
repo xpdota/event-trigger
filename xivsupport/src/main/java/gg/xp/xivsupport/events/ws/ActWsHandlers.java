@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
@@ -67,10 +69,10 @@ public class ActWsHandlers {
 						// TODO: consider having this refresh rate be dynamic based on things like
 						// number of current combatants, or whether the current zone is a raid, or
 						// whether a pull is actually started.
-						Thread.sleep(500);
+						Thread.sleep(2_000);
 						master.pushEvent(new RefreshCombatantsRequest());
-						for (int i = 0; i < 15; i++) {
-							Thread.sleep(500);
+						for (int i = 0; i < 3; i++) {
+							Thread.sleep(2_000);
 							Set<Long> fastRefreshEntities = state.getPartyList().stream().map(XivEntity::getId).collect(Collectors.toSet());
 							if (pulls.getCurrentStatus() == PullStatus.COMBAT) {
 								state.getCombatantsListCopy().stream()
@@ -87,7 +89,7 @@ public class ActWsHandlers {
 				}
 			});
 			// TODO: should this be turned back on?
-//			combatantsLoopThread.start();
+			combatantsLoopThread.start();
 		}
 
 	}
@@ -136,7 +138,13 @@ public class ActWsHandlers {
 		JsonNode typeNode = jsonNode.path("type");
 		String type;
 		if (typeNode.isTextual()) {
-			type = typeNode.textValue();
+			type = typeNode.textValue().intern();
+			try {
+				((ObjectNode) jsonNode).set("type", new TextNode(type));
+			}
+			catch (Throwable t) {
+				log.error("Error optimizing JsonNode", t);
+			}
 		}
 		else {
 			type = null;

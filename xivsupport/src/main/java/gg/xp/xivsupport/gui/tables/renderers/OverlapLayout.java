@@ -57,7 +57,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	 * Create an overlapping layout.
 	 *
 	 * @param overlapPosition a Point defining the relative amount of overlap
-	 * @param overlayAbove    when true components are painted above the previous
+	 * @param overlapAbove    when true components are painted above the previous
 	 *                        component, otherwise they are painted below.
 	 */
 	public OverlapLayout(Point overlapPosition, boolean overlapAbove) {
@@ -87,7 +87,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Get the include invisible property
 	 *
-	 * @returns the include invisible property
+	 * @return the include invisible property
 	 */
 	public boolean isIncludeInvisible() {
 		return includeInvisible;
@@ -107,7 +107,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Get the overlapping position of each component
 	 *
-	 * @returns the Point representing the overlapped position
+	 * @return the Point representing the overlapped position
 	 */
 	public Point getOverlapPosition() {
 		return overlapPosition;
@@ -125,7 +125,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Get the popup insets
 	 *
-	 * @returns the popup insets
+	 * @return the popup insets
 	 */
 	public Insets getPopupInsets() {
 		return popupInsets;
@@ -215,7 +215,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Removes the specified component from the layout.
 	 *
-	 * @param comp the component to be removed
+	 * @param component the component to be removed
 	 */
 	@Override
 	public void removeLayoutComponent(Component component) {
@@ -226,7 +226,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Determine the minimum size on the Container
 	 *
-	 * @param     target   the container in which to do the layout
+	 * @param parent the container in which to do the layout
 	 * @return the minimum dimensions needed to lay out the
 	 * subcomponents of the specified container
 	 */
@@ -240,9 +240,9 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Determine the preferred size on the Container
 	 *
+	 * @param parent the container in which to do the layout
 	 * @return the preferred dimensions to lay out the
 	 * subcomponents of the specified container
-	 * @param     parent   the container in which to do the layout
 	 */
 	@Override
 	public Dimension preferredLayoutSize(Container parent) {
@@ -309,7 +309,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	 * Lays out the specified container using this layout.
 	 * <p>
 	 *
-	 * @param     target   the container in which to do the layout
+	 * @param parent the container in which to do the layout
 	 */
 	@Override
 	public void layoutContainer(Container parent) {

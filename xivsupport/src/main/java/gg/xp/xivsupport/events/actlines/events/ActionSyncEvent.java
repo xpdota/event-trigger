@@ -7,6 +7,9 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.io.Serial;
 
 
+/**
+ * This is the 'raw' version of {@link AbilityResolvedEvent}, which only has the target and sequence number.
+ */
 @SystemEvent
 public class ActionSyncEvent extends BaseEvent implements HasTargetEntity {
 

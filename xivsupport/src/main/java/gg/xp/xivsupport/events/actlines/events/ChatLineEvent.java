@@ -7,6 +7,10 @@ import java.io.Serial;
 
 // Going to mark this as a system event. Debug commands already get their own class, the rest
 // of it seems to be mostly combat log spam.
+
+/**
+ * Represents a chat line (from any channel - can be real chat, battle log, or other things).
+ */
 @SystemEvent
 public class ChatLineEvent extends BaseEvent {
 	@Serial

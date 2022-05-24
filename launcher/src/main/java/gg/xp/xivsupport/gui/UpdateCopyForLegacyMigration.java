@@ -37,12 +37,12 @@ import java.util.stream.Collectors;
 // ...which is also why the code is complete shit, no external libraries.
 public class UpdateCopyForLegacyMigration {
 
-	private static final String updaterUrlTemplate = "https://xpdota.github.io/event-trigger/%s/v2/%s";
+	private static final String defaultUpdaterUrlTemplate = "https://xpdota.github.io/event-trigger/%s/v2/%s";
 	private static final String defaultBranch = "stable";
 	private final Consumer<String> logging;
 	private final boolean updateTheUpdaterItself;
 	private final boolean noop;
-	private String branch;
+	private UpdaterLocation updateLocation;
 	private static final String manifestFile = "manifest";
 	private static final String propsOverrideFileName = "update.properties";
 	private static final String updaterFilename = "triggevent-upd.exe";
@@ -53,18 +53,25 @@ public class UpdateCopyForLegacyMigration {
 
 	private URI makeUrl(String filename) {
 		try {
-			return new URI(updaterUrlTemplate.formatted(getBranch(), filename));
+			return new URI(getUrlTemplate().formatted(getBranch(), filename));
 		}
 		catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private String getBranch() {
-		if (this.branch != null) {
-			return branch;
+	private record UpdaterLocation(
+			String urlTemplate,
+			String branch
+	) {
+	}
+
+	private UpdaterLocation getUpdaterLocation() {
+		if (updateLocation != null) {
+			return updateLocation;
 		}
 		Properties props = new Properties();
+		String updateUrlTemplate;
 		String branch;
 		if (propsOverride.exists()) {
 			appendText("Properties file exists, loading it...");
@@ -78,8 +85,13 @@ public class UpdateCopyForLegacyMigration {
 			}
 			branch = props.getProperty("branch");
 			if (branch == null) {
-				appendText("Branch not specified in properties file, assuming default of " + branch);
+				appendText("Branch not specified in properties file, assuming default of " + defaultBranch);
 				branch = defaultBranch;
+			}
+			updateUrlTemplate = props.getProperty("url_template");
+			if (updateUrlTemplate == null) {
+				appendText("URL not specified in properties file, assuming default of " + defaultUpdaterUrlTemplate);
+				updateUrlTemplate = defaultUpdaterUrlTemplate;
 			}
 		}
 		else {
@@ -94,17 +106,28 @@ public class UpdateCopyForLegacyMigration {
 				appendText(e.toString());
 				appendText(getStackTrace(e));
 			}
+			updateUrlTemplate = defaultUpdaterUrlTemplate;
 		}
-		this.branch = branch;
 		appendText("Using branch: " + branch);
-		return branch;
+		appendText("Using URL template: " + updateUrlTemplate);
+		UpdaterLocation updaterLocation = new UpdaterLocation(updateUrlTemplate, branch);
+		this.updateLocation = updaterLocation;
+		return updaterLocation;
+	}
+
+	private String getUrlTemplate() {
+		return getUpdaterLocation().urlTemplate();
+	}
+
+	private String getBranch() {
+		return getUpdaterLocation().branch();
 	}
 
 	private Path getLocalFile(String name) {
 		return Paths.get(installDir.toString(), name);
 	}
 
-	private final HttpClient client = HttpClient.newHttpClient();
+	private final HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
 
 	private UpdateCopyForLegacyMigration(Consumer<String> logging, boolean updateTheUpdaterItself, boolean onlyCheck) {
 		this.logging = logging;
@@ -208,7 +231,9 @@ public class UpdateCopyForLegacyMigration {
 
 	private boolean doUpdateCheck() {
 		try {
-			HttpResponse<String> manifestResponse = client.send(HttpRequest.newBuilder().GET().uri(makeUrl(manifestFile)).build(), HttpResponse.BodyHandlers.ofString());
+			// Adding random junk to bypass cache
+			URI uri = makeUrl(manifestFile + "?q=" + System.currentTimeMillis() % 1000);
+			HttpResponse<String> manifestResponse = client.send(HttpRequest.newBuilder().GET().uri(uri).build(), HttpResponse.BodyHandlers.ofString());
 			if (manifestResponse.statusCode() != 200) {
 				throw new RuntimeException("Bad response: %s: %s".formatted(manifestResponse.statusCode(), manifestResponse));
 			}
@@ -217,7 +242,10 @@ public class UpdateCopyForLegacyMigration {
 			Map<String, String> actualFiles = new HashMap<>();
 			appendText("Hashing Local Files...");
 			{
-				File[] mainFiles = installDir.listFiles((dir, name) -> name.toLowerCase(Locale.ROOT).endsWith(".exe"));
+				File[] mainFiles = installDir.listFiles((dir, name) -> {
+					String nameLower = name.toLowerCase(Locale.ROOT);
+					return nameLower.endsWith(".exe") || nameLower.endsWith(".dll");
+				});
 				File[] depsFiles = depsDir.listFiles();
 				if (mainFiles == null) {
 					throw new RuntimeException("Error checking local main files. Try reinstalling.");
@@ -285,7 +313,7 @@ public class UpdateCopyForLegacyMigration {
 							Thread.sleep(5000);
 						}
 						catch (InterruptedException e) {
-
+							// ignore
 						}
 					} while (true);
 				});
@@ -330,7 +358,7 @@ public class UpdateCopyForLegacyMigration {
 				Thread.sleep(1000);
 			}
 			catch (InterruptedException e) {
-
+				// ignore
 			}
 			gupdate.run();
 		});

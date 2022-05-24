@@ -5,6 +5,9 @@ import gg.xp.xivdata.data.XivMap;
 
 import java.io.Serial;
 
+/**
+ * Represents a map change event
+ */
 public class MapChangeEvent extends BaseEvent implements XivStateChange {
 	@Serial
 	private static final long serialVersionUID = -5578740136371565264L;

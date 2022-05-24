@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -61,8 +62,28 @@ public class ActionLibrary {
 //					return;
 					}
 				}
+				long cd;
+				try {
+					cd = Long.parseLong(row[40]);
+				}
+				catch (NumberFormatException nfe) {
+					log.error(String.format("Error reading cooldown: '%s'. Entire row: %s", row[40], Arrays.toString(row)));
+					cd = 0;
+				}
+				int maxCharges;
+				try {
+					maxCharges = Integer.parseInt(row[43]);
+					if (maxCharges <= 0) {
+						maxCharges = 1;
+					}
+				}
+				catch (NumberFormatException nfe) {
+					log.error(String.format("Error reading max charges: '%s'. Entire row: %s", row[43], Arrays.toString(row)));
+					maxCharges = 1;
+				}
 				if (imageId != 0) {
-					csvValues.put(id, new ActionInfo(id, row[1], imageId));
+					String categoryRaw = row[50];
+					csvValues.put(id, new ActionInfo(id, row[1], imageId, cd, maxCharges, categoryRaw));
 				}
 			});
 		}
