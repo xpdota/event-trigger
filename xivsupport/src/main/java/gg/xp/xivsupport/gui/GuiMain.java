@@ -263,7 +263,7 @@ public class GuiMain {
 			)));
 			add(connectedDisp);
 			JButton testTts = new JButton("Test TTS");
-			testTts.addActionListener(e -> master.pushEvent(new TtsRequest("Test")));
+			testTts.addActionListener(e -> master.pushEvent(new TtsRequest("This is a test message")));
 			add(testTts);
 			updateGui();
 		}

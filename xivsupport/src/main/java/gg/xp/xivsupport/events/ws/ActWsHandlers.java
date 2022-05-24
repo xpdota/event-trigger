@@ -117,9 +117,9 @@ public class ActWsHandlers {
 		JsonNode rseqNode = jsonNode.path("rseq");
 		Object rseqObj = mapper.convertValue(rseqNode, Object.class);
 		if (!rseqNode.isMissingNode()) {
-			// Null response - TODO try to match it up with the rseq
+			// Null response - used for things like telling us that a TTS request is done
 			if (!jsonNode.path("$isNull").isMissingNode()) {
-				log.trace("Got null ActWS response for rseq {}", rseqNode.intValue());
+				context.accept(new ActWsJsonMsg(null, rseqObj, jsonNode));
 				return;
 			}
 			// For now, since this is the only request/response we're using, we can just look for it specifically and

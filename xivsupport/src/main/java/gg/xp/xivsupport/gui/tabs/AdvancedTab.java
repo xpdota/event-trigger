@@ -4,6 +4,7 @@ import gg.xp.xivsupport.events.misc.Management;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.Stats;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
+import gg.xp.xivsupport.events.ws.ActWsTtsController;
 import gg.xp.xivsupport.gui.KeyValueDisplaySet;
 import gg.xp.xivsupport.gui.KeyValuePairDisplay;
 import gg.xp.xivsupport.gui.Refreshable;
@@ -236,9 +237,10 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			TitleBorderFullsizePanel wsPanel = new TitleBorderFullsizePanel("Websocket (Restart Required)");
 			wsPanel.setPreferredSize(new Dimension(300, 150));
 			ActWsLogSource actWs = container.getComponent(ActWsLogSource.class);
+			ActWsTtsController tts = container.getComponent(ActWsTtsController.class);
 			wsPanel.add(new WsURISettingGui(actWs.getUriSetting(), "ACT WS URI").getComponent());
 			wsPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
-			wsPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Enable TTS").getComponent());
+			wsPanel.add(new BooleanSettingGui(tts.getAllowTts(), "Enable TTS").getComponent());
 			addTab("Websocket", wsPanel);
 		}
 		{
