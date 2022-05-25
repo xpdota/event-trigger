@@ -58,8 +58,8 @@ public class Dragonsong implements FilteredEventHandler {
 
 //	private final ModifiableCallout<TetherEvent> p1_genericTether = new ModifiableCallout<>("P1 Generic Tethers", "Tether on you", "Tether on you {event.id}", Collections.emptyList());
 
-	private final ModifiableCallout<BuffApplied> p1_puddleBait = ModifiableCallout.durationBasedCall("Puddle (Place)", "Puddle on you");
-	private final ModifiableCallout<BuffRemoved> p1_puddleBaitAfter = new ModifiableCallout<>("Puddle (Move)", "Move");
+	private final ModifiableCallout<BuffApplied> p1_puddleBait = ModifiableCallout.<BuffApplied>durationBasedCall("Puddle (Place)", "Puddle on you").autoIcon();
+	private final ModifiableCallout<BuffRemoved> p1_puddleBaitAfter = new ModifiableCallout<BuffRemoved>("Puddle (Move)", "Move").autoIcon();
 
 	private final ModifiableCallout<HeadMarkerEvent> circle = new ModifiableCallout<>("Circle", "Red Circle with {partner}");
 	private final ModifiableCallout<HeadMarkerEvent> triangle = new ModifiableCallout<>("Triangle", "Green Triangle with {partner}");
@@ -85,7 +85,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<?> thordan_trio2_cw = new ModifiableCallout<>("Second Trio: Clockwise", "Clockwise");
 	private final ModifiableCallout<?> thordan_trio2_ccw = new ModifiableCallout<>("Second Trio: Counter-clockwise", "Counterclockwise");
 
-	private final ModifiableCallout<?> thordan_trio2_meteorMark = new ModifiableCallout<>("Second Trio: Meteors", "Meteor on you");
+	private final ModifiableCallout<?> thordan_trio2_meteorMark = new ModifiableCallout<>("Second Trio: Meteors", "Meteor on you").autoIcon();
 	private final ModifiableCallout<?> thordan_trio2_meteorRoleMark = new ModifiableCallout<>("Second Trio: Meteors", "Meteor role");
 	private final ModifiableCallout<?> thordan_trio2_nonMeteorRole = new ModifiableCallout<>("Second Trio: Meteors", "Non-meteor role");
 
@@ -98,14 +98,14 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> thordan_broadSwingL = ModifiableCallout.durationBasedCall("Broad Swing Left", "Back then Left");
 	private final ModifiableCallout<AbilityCastStart> thordan_broadSwingR = ModifiableCallout.durationBasedCall("Broad Swing Right", "Back then Right");
 
-	private final ModifiableCallout<BuffApplied> estinhog_headmark1 = new ModifiableCallout<>("Estinhog: First in Line", "One");
-	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Second in Line", "Two");
-	private final ModifiableCallout<BuffApplied> estinhog_headmark3 = new ModifiableCallout<>("Estinhog: Third in Line", "Three");
+	private final ModifiableCallout<BuffApplied> estinhog_headmark1 = new ModifiableCallout<BuffApplied>("Estinhog: First in Line", "One").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<BuffApplied>("Estinhog: Second in Line", "Two").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_headmark3 = new ModifiableCallout<BuffApplied>("Estinhog: Third in Line", "Three").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> estinhog_highJumpOnlyYou = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Middle");
-	private final ModifiableCallout<BuffApplied> estinhog_highJumpAll = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Pick Spots");
-	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "West and Face In");
-	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "East and Face Out");
+	private final ModifiableCallout<BuffApplied> estinhog_highJumpOnlyYou = ModifiableCallout.<BuffApplied>durationBasedCall("Estinhog: High Jump", "Middle").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_highJumpAll = ModifiableCallout.<BuffApplied>durationBasedCall("Estinhog: High Jump", "Pick Spots").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.<BuffApplied>durationBasedCall("Estinhog: Spineshatter", "West and Face In").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.<BuffApplied>durationBasedCall("Estinhog: Elusive Jump", "East and Face Out").autoIcon();
 
 
 	private final ModifiableCallout<BuffRemoved> estinhog_baitGeir = new ModifiableCallout<>("Estinhog: Bait Geirskogul", "Bait Geirskogul");
@@ -133,7 +133,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> estinhog_drachenlance = ModifiableCallout.durationBasedCall("Estinhog: Drachenlance", "Out of front");
 
 	private final ModifiableCallout<AbilityUsedEvent> twister = new ModifiableCallout<>("Thordan II: Twister", "Twister");
-	private final ModifiableCallout<BuffApplied> doom = ModifiableCallout.durationBasedCall("Thordan II: Doom", "Doom");
+	private final ModifiableCallout<BuffApplied> doom = ModifiableCallout.<BuffApplied>durationBasedCall("Thordan II: Doom", "Doom").autoIcon();
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -430,6 +430,8 @@ public class Dragonsong implements FilteredEventHandler {
 						"sword1", first == null ? "?" : first,
 						"sword2", second == null ? "?" : second)));
 
+				s.waitMs(2000);
+
 				log.info("Thordan Trio 2: Waiting for combatants");
 				while (true) {
 					Optional<XivCombatant> jan = getState().getCombatantsListCopy().stream()
@@ -694,7 +696,7 @@ public class Dragonsong implements FilteredEventHandler {
 		// 6716 -> the actual in (lash)
 		boolean outFirst = e1.getAbility().getId() == 0x6712;
 		CalloutEvent firstCall = outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified();
-		s.accept(firstCall);
+		s.updateCall(firstCall);
 		s.waitEvent(AbilityUsedEvent.class, aue -> aue.isFirstTarget() && (aue.getAbility().getId() == 0x6715 || aue.getAbility().getId() == 0x6716));
 		s.updateCall(!outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified());
 	});

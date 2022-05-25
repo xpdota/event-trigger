@@ -21,6 +21,16 @@ public final class IconTextRenderer {
 		return getComponent(value, defaultLabel, iconOnly, false, false);
 	}
 
+	public static @Nullable AutoHeightScalingIcon getStretchyIcon(HasIconURL value) {
+		ScaledImageComponent icon = getIconOnly(value);
+		if (icon == null) {
+			return null;
+		}
+		else {
+			return new AutoHeightScalingIcon(icon);
+		}
+	}
+
 	public static @Nullable ScaledImageComponent getIconOnly(HasIconURL value) {
 		if (value == null) {
 			return null;

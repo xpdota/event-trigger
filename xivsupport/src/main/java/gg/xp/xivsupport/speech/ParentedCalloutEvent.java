@@ -3,7 +3,9 @@ package gg.xp.xivsupport.speech;
 import gg.xp.reevent.events.BaseEvent;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.io.Serial;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -15,12 +17,14 @@ public class ParentedCalloutEvent<X> extends BaseEvent implements CalloutEvent {
 	private final String callText;
 	private final Supplier<String> visualText;
 	private final Predicate<X> expiryCheck;
+	private final Function<X, Component> guiFunction;
 
-	public ParentedCalloutEvent(X event, String callText, Supplier<String> visualText, Predicate<X> expiryCheck) {
+	public ParentedCalloutEvent(X event, String callText, Supplier<String> visualText, Predicate<X> expiryCheck, Function<X, Component> guiFunction) {
 		this.event = event;
 		this.callText = callText;
 		this.visualText = visualText;
 		this.expiryCheck = expiryCheck;
+		this.guiFunction = guiFunction;
 	}
 
 	@Override
@@ -49,5 +53,10 @@ public class ParentedCalloutEvent<X> extends BaseEvent implements CalloutEvent {
 	@Override
 	public void setReplaces(CalloutEvent replaces) {
 		this.replaces = replaces;
+	}
+
+	@Override
+	public @Nullable Component graphicalComponent() {
+		return guiFunction.apply(event);
 	}
 }

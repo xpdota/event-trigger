@@ -16,4 +16,8 @@ public class ActionIcon implements HasIconURL {
 	public URL getIconUrl() {
 		return url;
 	}
+
+	public boolean isDefaultIcon() {
+		return url.getFile().endsWith("000405_hr1.png");
+	}
 }
