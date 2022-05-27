@@ -2,12 +2,14 @@ package gg.xp.xivsupport.events.triggers.seq;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.EventHandler;
+import gg.xp.reevent.events.TypedEventHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
-public class SequentialTrigger<X extends BaseEvent> {
+public class SequentialTrigger<X extends BaseEvent> implements TypedEventHandler<X> {
 
 	private @Nullable SequentialTriggerController<X> instance;
 	private final int timeoutMs;
@@ -40,4 +42,13 @@ public class SequentialTrigger<X extends BaseEvent> {
 	}
 
 
+	@Override
+	public void handle(EventContext context, X event) {
+		feed(context, event);
+	}
+
+	@Override
+	public Class<X> getType() {
+		return type;
+	}
 }

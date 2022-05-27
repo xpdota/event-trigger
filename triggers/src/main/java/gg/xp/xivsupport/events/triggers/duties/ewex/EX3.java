@@ -3,6 +3,8 @@ package gg.xp.xivsupport.events.triggers.duties.ewex;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.AutoChildEventHandler;
+import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.CalloutRepo;
@@ -40,7 +42,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 @CalloutRepo("Endsinger Extreme")
-public class EX3 implements FilteredEventHandler {
+public class EX3 extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(EX3.class);
 
@@ -390,6 +392,7 @@ public class EX3 implements FilteredEventHandler {
 
 	private static final Set<Long> headAbilities = Set.of(0x6FFCL, 0x7006L, 0x7009L, 0x700AL);
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> fiveHead = new SequentialTrigger<>(60_000, BaseEvent.class, (e) -> e instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x7007, (e1, s) -> {
 
 		// Map of head to list of what it did on each set
@@ -469,6 +472,7 @@ public class EX3 implements FilteredEventHandler {
 	}
 
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> sixHead = new SequentialTrigger<>(25_000, BaseEvent.class, (e) -> {
 		if (e instanceof AbilityUsedEvent aue) {
 			long id = aue.getAbility().getId();
@@ -511,10 +515,10 @@ public class EX3 implements FilteredEventHandler {
 		}
 	});
 
-	@HandleEvents
-	public void feedHeads(EventContext context, BaseEvent event) {
-		fiveHead.feed(context, event);
-		sixHead.feed(context, event);
-	}
+//	@HandleEvents
+//	public void feedHeads(EventContext context, BaseEvent event) {
+//		fiveHead.feed(context, event);
+//		sixHead.feed(context, event);
+//	}
 
 }
