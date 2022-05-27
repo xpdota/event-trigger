@@ -11,15 +11,18 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
+import gg.xp.xivsupport.gui.tables.renderers.RefreshingHpBar;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
@@ -30,6 +33,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -131,6 +135,9 @@ public class Dragonsong implements FilteredEventHandler {
 
 
 	private final ModifiableCallout<AbilityCastStart> estinhog_drachenlance = ModifiableCallout.durationBasedCall("Estinhog: Drachenlance", "Out of front");
+
+	private final ModifiableCallout<BuffApplied> redTether = new ModifiableCallout<BuffApplied>("Red Tether", "Red").autoIcon();
+	private final ModifiableCallout<BuffApplied> blueTether = new ModifiableCallout<BuffApplied>("Blue Tether", "Blue").autoIcon();
 
 	private final ModifiableCallout<AbilityUsedEvent> twister = new ModifiableCallout<>("Thordan II: Twister", "Twister");
 	private final ModifiableCallout<BuffApplied> doom = ModifiableCallout.<BuffApplied>durationBasedCall("Thordan II: Doom", "Doom").autoIcon();
@@ -265,6 +272,8 @@ public class Dragonsong implements FilteredEventHandler {
 		meteorHelper.feed(context, event);
 		wyrmhole.feed(context, event);
 		thordan2_trio1.feed(context, event);
+//		tetherTracker.feed(context, event);
+		haurch_hp_track.feed(context, event);
 		if (event instanceof AbilityUsedEvent aue) {
 			gnashLashHelper.feed(context, aue);
 		}
@@ -710,6 +719,97 @@ public class Dragonsong implements FilteredEventHandler {
 			ctx.accept(estinhog_baitGeir.getModified());
 		}
 	}
+
+	private CalloutEvent previousRedBlueCall;
+
+	@HandleEvents
+	public void doRedBlueTethers(EventContext ctx, BuffApplied ba) {
+		if (ba.getTarget().isThePlayer()) {
+			CalloutEvent call;
+			long id = ba.getBuff().getId();
+			if (id == 0xAD7) {
+				call = redTether.getModified(ba);
+			}
+			else if (id == 0xAD8) {
+				call = blueTether.getModified(ba);
+			}
+			else {
+				return;
+			}
+			if (previousRedBlueCall != null) {
+				call.setReplaces(previousRedBlueCall);
+			}
+			ctx.accept(call);
+			previousRedBlueCall = call;
+		}
+	}
+
+//	private final SequentialTrigger<BaseEvent> tetherTracker = new SequentialTrigger<>(100_000, BaseEvent.class,
+//			// Start on steep of rage
+//			be -> be instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x68BA && aue.getSource().getbNpcId() == 13119,
+//			(e1, s) -> {
+//				log.info("Tether tracker start");
+//				while (true) {
+//					List<BuffApplied> newApp = s.waitEventsUntil(1, BuffApplied.class, ba -> {
+//						long id = ba.getBuff().getId();
+//						return ba.getTarget().isThePlayer() && (id == 0xAD7 || id == 0xAD8);
+//					}, BaseEvent.class, be ->
+//							be instanceof WipeEvent
+//									|| be instanceof EntityKilledEvent eke
+//									&& (eke.getTarget().getbNpcId() == 12609 || eke.getTarget().getbNpcId() == 12610));
+//					if (newApp.isEmpty()) {
+//						log.info("Tether tracker done");
+//						return;
+//					}
+//					else {
+//						BuffApplied buff = newApp.get(0);
+//						if (buff.getBuff().getId() == 0xAD7) {
+//							s.updateCall(redTether.getModified(buff));
+//						}
+//						else {
+//							s.updateCall(blueTether.getModified(buff));
+//						}
+//					}
+//				}
+//			}
+//	);
+
+	private final ModifiableCallout<HaurchefauntHpTracker> haurch_hp = new ModifiableCallout<>("Haurchefaunt HP bar", "", "HP", HaurchefauntHpTracker::isExpired)
+			.guiProvider(HaurchefauntHpTracker::getComponent);
+
+	private final class HaurchefauntHpTracker {
+		private final XivCombatant haurchInitial;
+
+		private HaurchefauntHpTracker(XivCombatant haurchInitial) {
+			this.haurchInitial = haurchInitial;
+		}
+
+		public XivCombatant getNewData() {
+			return getState().getLatestCombatantData(haurchInitial);
+		}
+
+		public boolean isExpired() {
+			return getBuffs().statusesOnTarget(haurchInitial).stream().noneMatch(ba -> ba.getBuff().getId() == 2977);
+		}
+
+		public Component getComponent() {
+			RefreshingHpBar bar = new RefreshingHpBar(this::getNewData);
+			bar.setPreferredSize(new Dimension(200, 20));
+			bar.setFgTransparency(220);
+			bar.setBgTransparency(128);
+			return bar;
+		}
+	}
+
+	private final SequentialTrigger<BaseEvent> haurch_hp_track = new SequentialTrigger<>(60_000, BaseEvent.class,
+			be -> be instanceof BuffApplied ba && ba.getBuff().getId() == 2977,
+			(e1, s) -> {
+				log.info("Haurch HP tracker start");
+				XivCombatant haurch = ((BuffApplied) e1).getTarget();
+				HaurchefauntHpTracker tracker = new HaurchefauntHpTracker(haurch);
+				s.accept(haurch_hp.getModified(tracker));
+				log.info("Haurch HP tracker end");
+			});
 
 	private final ModifiableCallout<HeadMarkerEvent> thordan2_trio1_blueMark = new ModifiableCallout<>("Wrath of the Heavens: Blue Marker", "Blue Marker");
 	private final ModifiableCallout<TetherEvent> thordan2_trio1_tether = new ModifiableCallout<>("Wrath of the Heavens: Tether", "Tether");

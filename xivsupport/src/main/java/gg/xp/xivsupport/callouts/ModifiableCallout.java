@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -53,7 +54,7 @@ public class ModifiableCallout<X> {
 	private final Object interpLock = new Object();
 	private int errorCount;
 	private static final int maxErrors = 10;
-	private Function<X, @Nullable Component> guiProvider = e -> null;
+	private Function<? super X, ? extends @Nullable Component> guiProvider = e -> null;
 
 	private static final Duration defaultHangDuration = Duration.of(5, ChronoUnit.SECONDS);
 
@@ -111,7 +112,7 @@ public class ModifiableCallout<X> {
 		return this;
 	}
 
-	public ModifiableCallout<X> guiProvider(Function<X, Component> guiProvider) {
+	public ModifiableCallout<X> guiProvider(Function<? super X, ? extends Component> guiProvider) {
 		this.guiProvider = guiProvider;
 		return this;
 	}

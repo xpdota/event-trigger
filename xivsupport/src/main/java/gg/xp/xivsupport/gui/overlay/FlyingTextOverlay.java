@@ -4,6 +4,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.gui.CommonGuiSetup;
+import gg.xp.xivsupport.gui.Refreshable;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Nullable;
@@ -86,8 +87,13 @@ public class FlyingTextOverlay extends XivOverlay {
 				else {
 					Dimension oldPref = extraComponent.getPreferredSize();
 					int newPrefHeight = templateHeight;
-					// New width is template height times preferred aspect ratio, but not to be more than 2:1
-					int newPrefWidth = (int) Math.min(newPrefHeight * 2, oldPref.getWidth() / oldPref.getHeight() * newPrefHeight);
+					// New width is template height times preferred aspect ratio, but not to be more than 4:1
+					int newPrefWidth = (int) Math.min(newPrefHeight * 4, oldPref.getWidth() / oldPref.getHeight() * newPrefHeight);
+					if (newPrefWidth == 0) {
+						// If no preferred size set, just assume 1:1 is fine
+						//noinspection SuspiciousNameCombination
+						newPrefWidth = newPrefHeight;
+					}
 					extraComponent.setBounds(0, 0, newPrefWidth, newPrefHeight);
 					newLeftBound = newPrefWidth + textPadding;
 					extraComponent.validate();
@@ -151,6 +157,9 @@ public class FlyingTextOverlay extends XivOverlay {
 				else {
 					extraComponentLeftPad = 0;
 				}
+			}
+			if (extraComponent != null && extraComponent instanceof Refreshable ref) {
+				ref.refresh();
 			}
 		}
 	}

@@ -16,10 +16,10 @@ public class ParentedCalloutEvent<X> extends BaseEvent implements CalloutEvent {
 	private final X event;
 	private final String callText;
 	private final Supplier<String> visualText;
-	private final Predicate<X> expiryCheck;
-	private final Function<X, Component> guiFunction;
+	private final Predicate<? super X> expiryCheck;
+	private final Function<? super X, ? extends Component> guiFunction;
 
-	public ParentedCalloutEvent(X event, String callText, Supplier<String> visualText, Predicate<X> expiryCheck, Function<X, Component> guiFunction) {
+	public ParentedCalloutEvent(X event, String callText, Supplier<String> visualText, Predicate<? super X> expiryCheck, Function<? super X, ? extends Component> guiFunction) {
 		this.event = event;
 		this.callText = callText;
 		this.visualText = visualText;
