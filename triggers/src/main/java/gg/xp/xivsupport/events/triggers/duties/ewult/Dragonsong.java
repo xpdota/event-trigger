@@ -2,6 +2,8 @@ package gg.xp.xivsupport.events.triggers.duties.ewult;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.AutoChildEventHandler;
+import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.Job;
@@ -11,11 +13,9 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
-import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
-import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
@@ -47,7 +47,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @CalloutRepo("Dragonsong's Reprise")
-public class Dragonsong implements FilteredEventHandler {
+public class Dragonsong extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(Dragonsong.class);
 
@@ -208,6 +208,7 @@ public class Dragonsong implements FilteredEventHandler {
 		}
 	}
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> p1_puddleBaitSeq = new SequentialTrigger<>(10_000, BaseEvent.class,
 			e -> e instanceof BuffApplied ba && ba.getBuff().getId() == 0xA65 && ba.getTarget().isThePlayer(),
 			(e1, s) -> {
@@ -252,33 +253,7 @@ public class Dragonsong implements FilteredEventHandler {
 	}
 
 
-//	@HandleEvents
-//	public void p1_genericTether(EventContext context, TetherEvent event) {
-//		long id = event.getId();
-//		if (event.eitherTargetMatches(XivCombatant::isThePlayer)
-//				&& (id == 0x54 || id == 0x1)) {
-//			context.accept(p1_genericTether.getModified(event));
-//		}
-//	}
-
-	@HandleEvents
-	public void feedSeq(EventContext context, BaseEvent event) {
-		p1_puddleBaitSeq.feed(context, event);
-		p1_fourHeadMark.feed(context, event);
-		p1_pairsOfMarkers.feed(context, event);
-		thordan_firstTrio.feed(context, event);
-		thordan_secondTrio.feed(context, event);
-		thordan_iceFire.feed(context, event);
-		meteorHelper.feed(context, event);
-		wyrmhole.feed(context, event);
-		thordan2_trio1.feed(context, event);
-//		tetherTracker.feed(context, event);
-		haurch_hp_track.feed(context, event);
-		if (event instanceof AbilityUsedEvent aue) {
-			gnashLashHelper.feed(context, aue);
-		}
-	}
-
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> p1_fourHeadMark = new SequentialTrigger<>(30_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x62DD,
 			(e1, s) -> {
@@ -291,6 +266,7 @@ public class Dragonsong implements FilteredEventHandler {
 				}
 			});
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> p1_pairsOfMarkers = new SequentialTrigger<>(20_000, BaseEvent.class,
 			e -> e instanceof AbilityUsedEvent acs && acs.getAbility().getId() == 0x62D5,
 			(e1, s) -> {
@@ -323,6 +299,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 5, 5);
 	private final ArenaPos tightArenaPos = new ArenaPos(100, 100, 3, 3);
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> thordan_firstTrio = new SequentialTrigger<>(28_000, BaseEvent.class,
 			e -> e instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x63D3,
 			(e1, s) -> {
@@ -412,6 +389,7 @@ public class Dragonsong implements FilteredEventHandler {
 				}
 			});
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> thordan_secondTrio = new SequentialTrigger<>(35_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x63E1,
 			(e1, s) -> {
@@ -474,6 +452,7 @@ public class Dragonsong implements FilteredEventHandler {
 		NO_METEOR
 	}
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> thordan_iceFire = new SequentialTrigger<>(60_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x63E1,
 			(e1, s) -> {
@@ -518,6 +497,7 @@ public class Dragonsong implements FilteredEventHandler {
 			});
 
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> meteorHelper = new SequentialTrigger<>(25_000, BaseEvent.class,
 			e -> e instanceof BuffApplied ba && ba.getBuff().getId() == 0x232 && ba.getTarget().isThePlayer(),
 			(e1, s) -> {
@@ -549,6 +529,7 @@ public class Dragonsong implements FilteredEventHandler {
 		return id >= 0xAC3 && id <= 0xAC5;
 	};
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> wyrmhole = new SequentialTrigger<>(60_000, BaseEvent.class,
 			// Start on final chorus
 			e -> e instanceof AbilityUsedEvent a && a.getAbility().getId() == 0x6709 && a.isFirstTarget(),
@@ -694,6 +675,7 @@ public class Dragonsong implements FilteredEventHandler {
 		return new GnashLash(gnashLash, first, second);
 	}
 
+	@AutoFeed
 	private final SequentialTrigger<AbilityUsedEvent> gnashLashHelper = new SequentialTrigger<>(10_000, AbilityUsedEvent.class,
 			e -> {
 				long id = e.getAbility().getId();
@@ -801,6 +783,7 @@ public class Dragonsong implements FilteredEventHandler {
 		}
 	}
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> haurch_hp_track = new SequentialTrigger<>(60_000, BaseEvent.class,
 			be -> be instanceof BuffApplied ba && ba.getBuff().getId() == 2977,
 			(e1, s) -> {
@@ -821,6 +804,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_in = ModifiableCallout.durationBasedCall("Wrath of the Heavens: In", "In");
 	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_inLightning = ModifiableCallout.durationBasedCall("Wrath of the Heavens: In with Lightning", "In");
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> thordan2_trio1 = new SequentialTrigger<>(30_000, BaseEvent.class,
 			event -> event instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x6B89,
 			(e1, s) -> {
@@ -866,22 +850,6 @@ public class Dragonsong implements FilteredEventHandler {
 			ctx.accept(twister.getModified(event));
 		}
 	}
-
-//	@HandleEvents
-//	public void genericHeadMarksOnYou(EventContext context, HeadMarkerEvent event) {
-//		if (event.getTarget().isThePlayer()) {
-//			ModifiableCallout<HeadMarkerEvent> call;
-//			switch (getHeadmarkOffset(event)) {
-//				case -11 -> call = estinhog_headmark1;
-//				case -10 -> call = estinhog_headmark2;
-//				case -9 -> call = estinhog_headmark3;
-//				default -> {
-//					return;
-//				}
-//			}
-//			context.accept(call.getModified(event));
-//		}
-//	}
 
 	private XivState getState() {
 		return state;
