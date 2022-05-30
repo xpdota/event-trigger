@@ -238,6 +238,9 @@ public final class StandardColumns {
 		if (e.getKey().getType().isPrimitive()) {
 			return "(primitive)";
 		}
+		if (e.getValue() == null) {
+			return "(null)";
+		}
 		return "0x" + Integer.toString(System.identityHashCode(e.getValue()), 16);
 	});
 	public static final CustomColumn<Map.Entry<Field, Object>> fieldType

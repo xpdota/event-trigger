@@ -121,9 +121,7 @@ public class TelestoMain {
 					.map(entry -> Long.parseLong(entry.get("actor").toString(), 16))
 					.toList();
 			log.info("New Telesto Party List: {}", partyActorIds);
-			if (!partyActorIds.isEmpty()) {
-				context.accept(new PartyForceOrderChangeEvent(partyActorIds));
-			}
+			context.accept(new PartyForceOrderChangeEvent(partyActorIds.isEmpty() ? null : partyActorIds));
 		}
 	}
 
