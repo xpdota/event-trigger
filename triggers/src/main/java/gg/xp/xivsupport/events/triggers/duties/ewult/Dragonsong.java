@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -140,7 +141,6 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<BuffApplied> blueTether = new ModifiableCallout<BuffApplied>("Blue Tether", "Blue").autoIcon();
 
 	private final ModifiableCallout<AbilityUsedEvent> twister = new ModifiableCallout<>("Thordan II: Twister", "Twister");
-	private final ModifiableCallout<BuffApplied> doom = ModifiableCallout.<BuffApplied>durationBasedCall("Thordan II: Doom", "Doom").autoIcon();
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -200,11 +200,6 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		// Brightwing
 		if (event.getBuff().getId() == 0x6316) {
 			context.accept(p1_brightwing.getModified(event));
-		}
-		else if (event.getTarget().isThePlayer()) {
-			if (event.getBuff().getId() == 0xBA0) {
-				context.accept(doom.getModified(event));
-			}
 		}
 	}
 
@@ -802,7 +797,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_protean = ModifiableCallout.durationBasedCall("Wrath of the Heavens: Protean", "Spread");
 
 	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_in = ModifiableCallout.durationBasedCall("Wrath of the Heavens: In", "In");
-	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_inLightning = ModifiableCallout.durationBasedCall("Wrath of the Heavens: In with Lightning", "In");
+	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_inLightning = ModifiableCallout.durationBasedCall("Wrath of the Heavens: In with Lightning", "In with Lightning");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> thordan2_trio1 = new SequentialTrigger<>(30_000, BaseEvent.class,
@@ -843,6 +838,85 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 			}
 
 	);
+
+
+	private final ModifiableCallout<AbilityUsedEvent> thordan2_liquidHeavenOnYou = new ModifiableCallout<>("Liquid Heaven on you", "Liquid Heaven", "Liquid Heaven #{num}/5", ModifiableCallout.expiresIn(5));
+
+	@AutoFeed
+	private final SequentialTrigger<AbilityUsedEvent> thordan2_liquidHeaven = new SequentialTrigger<>(20_000, AbilityUsedEvent.class,
+			event -> event.getAbility().getId() == 0x6b91 && event.getTarget().isThePlayer() && event.isFirstTarget() && event.getSource().getbNpcId() == 12646,
+			(e1, s) -> {
+				AtomicInteger counter = new AtomicInteger(1);
+				Supplier<Integer> num = counter::get;
+				// Call first puddle
+				s.updateCall(thordan2_liquidHeavenOnYou.getModified(e1, Map.of("num", num)));
+				// Update for puddles 2-5
+				for (int i = 2; i <= 5; i++) {
+					// Intentionally not restricting it to first target, since you could die and it goes on someone else
+					s.waitEvent(AbilityUsedEvent.class, event -> event.getAbility().getId() == 0x6b91 && event.isFirstTarget());
+					counter.set(i);
+				}
+			}
+	);
+
+	private final ModifiableCallout<BuffApplied> doom = ModifiableCallout.<BuffApplied>durationBasedCall("Thordan II: Doom", "Doom").autoIcon();
+	private final ModifiableCallout<?> noDoom = new ModifiableCallout<>("Thordan II: Non-Doom", "Puddle");
+	private final ModifiableCallout<HeadMarkerEvent> t2_circleDoom = new ModifiableCallout<>("Circle (Doom)", "Red Circle (Doom)");
+	private final ModifiableCallout<HeadMarkerEvent> t2_triangleNoDoom = new ModifiableCallout<>("Triangle (No Doom)", "Green Triangle");
+	private final ModifiableCallout<HeadMarkerEvent> t2_triangleDoom = new ModifiableCallout<>("Triangle (Doom)", "Green Triangle (Doom)");
+	private final ModifiableCallout<HeadMarkerEvent> t2_squareNoDoom = new ModifiableCallout<>("Square (No Doom)", "Purple Square");
+	private final ModifiableCallout<HeadMarkerEvent> t2_squareDoom = new ModifiableCallout<>("Square (Doom)", "Purple Square (Doom)");
+	private final ModifiableCallout<HeadMarkerEvent> t2_crossNoDoom = new ModifiableCallout<>("Cross (No Doom)", "Blue Cross");
+
+	private static final int baseHeadmarkerOffset = -49;
+	private static final int endHeadmarkerOffset = baseHeadmarkerOffset + 3;
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> thordan2_trio2 = new SequentialTrigger<>(60_000, BaseEvent.class,
+			event -> event instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x6B92,
+			(e1, s) -> {
+				log.info("Death of the Heavens Start");
+				List<BuffApplied> dooms = s.waitEvents(4, BuffApplied.class, ba -> ba.getBuff().getId() == 0xBA0);
+				Optional<BuffApplied> playerDoom = dooms.stream().filter(ba -> ba.getTarget().isThePlayer()).findAny();
+				boolean playerHasDoom;
+				if (playerDoom.isPresent()) {
+					s.updateCall(doom.getModified(playerDoom.get()));
+					playerHasDoom = true;
+				}
+				else {
+					s.updateCall(noDoom.getModified());
+					playerHasDoom = false;
+				}
+				log.info("Death of the Heavens: player has doom? {}", playerHasDoom);
+
+				List<HeadMarkerEvent> marks = s.waitEventsUntil(8, HeadMarkerEvent.class, e -> {
+					int headmarkOffset = getHeadmarkOffset(e);
+					return headmarkOffset >= baseHeadmarkerOffset && headmarkOffset <= endHeadmarkerOffset;
+				}, AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x62DE);
+				marks.stream().filter(e -> e.getTarget().isThePlayer())
+						.findAny()
+						.ifPresentOrElse(myMark -> {
+							Optional<HeadMarkerEvent> partnerMarker = marks.stream().filter(e -> !e.getTarget().isThePlayer() && e.getMarkerId() == myMark.getMarkerId())
+									.findAny();
+							int adjustedId = getHeadmarkOffset(myMark);
+							final ModifiableCallout<HeadMarkerEvent> call;
+							switch (adjustedId) {
+								case baseHeadmarkerOffset -> call = t2_circleDoom;
+								case baseHeadmarkerOffset + 1 ->
+										call = playerHasDoom ? t2_triangleDoom : t2_triangleNoDoom;
+								case baseHeadmarkerOffset + 2 -> call = playerHasDoom ? t2_squareDoom : t2_squareNoDoom;
+								case baseHeadmarkerOffset + 3 -> call = t2_crossNoDoom;
+								default -> {
+									return;
+								}
+							}
+							XivCombatant partner = partnerMarker.map(HeadMarkerEvent::getTarget).orElse(null);
+							s.updateCall(call.getModified(Map.of("partner", partner == null ? "nobody" : partner)));
+						}, () -> log.error("No personal headmarker! Collected: [{}]", marks));
+				log.info("Death of the Heavens: done");
+
+			});
+
 
 	@HandleEvents
 	public void abilityUsed(EventContext ctx, AbilityUsedEvent event) {

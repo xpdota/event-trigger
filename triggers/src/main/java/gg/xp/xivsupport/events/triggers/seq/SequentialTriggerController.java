@@ -119,6 +119,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		accept(call);
 	}
 
+
+	// TODO: warning/error if you try to wait for an event type that is incompatible with X
+	// i.e. if both X and Y are concrete types, and Y is not a subclass of X, then it should fail-fast
+
 	// To be called from internal thread
 	public <Y> Y waitEvent(Class<Y> eventClass) {
 		return waitEvent(eventClass, (e) -> true);
