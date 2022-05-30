@@ -35,6 +35,6 @@ b1930b5651377477a06ade2319f70dfc  logback-core-1.2.6.jar
 fbcf58513bc25b80f075d812aad3e3cf  slf4j-api-1.7.32.jar
 3a7adab0b8a3a7b3ec31dbd77bcc8d62  timelines-1.0-SNAPSHOT.jar
 0e3d4bebb51661f56ac1d7e6b80e8868  titan-jails-1.0-SNAPSHOT.jar
-16246b669328705cfa004b31fee1551a  triggers-1.0-SNAPSHOT.jar
+3f5324cfc17573145074166436486bcb  triggers-1.0-SNAPSHOT.jar
 fb92f67b3416c9822004e5a43e8d45f6  xivdata-1.0-SNAPSHOT.jar
 5c9636d35cadfe17155dc84df565b73b  xivsupport-1.0-SNAPSHOT.jar
