@@ -16,11 +16,22 @@ public class AbilityResolvedEvent extends BaseEvent implements HasSourceEntity, 
 	private static final long serialVersionUID = 4043588325843768440L;
 	private final AbilityUsedEvent originalEvent;
 	private final long sequenceId;
+	private final XivCombatant source;
+	private final XivCombatant target;
 
 	public AbilityResolvedEvent(AbilityUsedEvent originalEvent) {
 		this.originalEvent = originalEvent;
 		this.sequenceId = originalEvent.getSequenceId();
+		this.source = originalEvent.getSource();
+		this.target = originalEvent.getTarget();
 	}
+	public AbilityResolvedEvent(AbilityUsedEvent originalEvent, XivCombatant source, XivCombatant target) {
+		this.originalEvent = originalEvent;
+		this.sequenceId = originalEvent.getSequenceId();
+		this.source = source;
+		this.target = target;
+	}
+
 
 	@Override
 	public XivAbility getAbility() {
@@ -29,12 +40,12 @@ public class AbilityResolvedEvent extends BaseEvent implements HasSourceEntity, 
 
 	@Override
 	public XivCombatant getSource() {
-		return originalEvent.getSource();
+		return source;
 	}
 
 	@Override
 	public XivCombatant getTarget() {
-		return originalEvent.getTarget();
+		return target;
 	}
 
 	@Override

@@ -57,6 +57,7 @@ public class XivStateImpl implements XivState {
 	private XivEntity playerTmpOverride;
 	// TODO: see if same-world parties with out-of-zone players would break this
 	private volatile @NotNull List<RawXivPartyInfo> partyListRaw = Collections.emptyList();
+	private volatile @Nullable List<Long> partyListForceOrder;
 	private volatile @NotNull List<XivPlayerCharacter> partyListProcessed = Collections.emptyList();
 
 	private Job lastPlayerJob;
@@ -176,7 +177,7 @@ public class XivStateImpl implements XivState {
 
 	private boolean recomputeAll() {
 		boolean changed = false;
-		try (LockAdapter ignored = lock.read()){
+		try (LockAdapter ignored = lock.read()) {
 			for (CombatantData data : combatantData.values()) {
 				changed = data.recomputeIfDirty() || changed;
 			}
@@ -188,7 +189,7 @@ public class XivStateImpl implements XivState {
 	// Probably requires proper equals/hashcode on everything so we can actually compare them
 	private void recalcState() {
 
-		try (LockAdapter ignored = lock.write()){
+		try (LockAdapter ignored = lock.write()) {
 			// First, move removed stuff from the main map to the graveyard
 			Iterator<Map.Entry<Long, CombatantData>> iter = combatantData.entrySet().iterator();
 			while (iter.hasNext()) {
@@ -254,37 +255,50 @@ public class XivStateImpl implements XivState {
 			});
 			// TODO: just doing a simple diff of this would be a great way to synthesize
 			// add/remove combatant events
-			List<XivPlayerCharacter> partyListProcessed = new ArrayList<>(partyListRaw.size());
-			partyListRaw.forEach(rawPartyMember -> {
-				if (!rawPartyMember.isInParty()) {
-					// Member of different alliance, ignore
-					// TODO: is there value in supporting alliance stuff?
-					return;
-				}
-				long id = rawPartyMember.getId();
-				CombatantData data = getOrCreateData(id);
-				data.setFromPartyInfo(rawPartyMember);
-				XivCombatant fullCombatant = data.getComputed();
-				if (fullCombatant instanceof XivPlayerCharacter xpc) {
-					partyListProcessed.add(xpc);
-				}
-				else {
-					log.warn("Party member was not a PC? {}", fullCombatant);
-				}
-			});
-			combatantCache = combatantData.values().stream()
-					.filter(CombatantData::includeInList)
-					.peek(CombatantData::recomputeIfDirty)
-					.collect(Collectors.toMap(CombatantData::getId, CombatantData::getComputed));
-			partyListProcessed.sort(Comparator.comparing(p -> {
-				if (getPlayerId() == p.getId()) {
-					// Always sort main player first
-					return -1;
-				}
-				else {
-					return pso.getSortOrder(p.getJob());
-				}
-			}));
+			List<XivPlayerCharacter> partyListProcessed;
+			List<Long> forceOrder = partyListForceOrder;
+			if (forceOrder == null) {
+				partyListProcessed = new ArrayList<>(partyListRaw.size());
+				partyListRaw.forEach(rawPartyMember -> {
+					if (!rawPartyMember.isInParty()) {
+						// Member of different alliance, ignore
+						// TODO: is there value in supporting alliance stuff?
+						return;
+					}
+					long id = rawPartyMember.getId();
+					CombatantData data = getOrCreateData(id);
+					data.setFromPartyInfo(rawPartyMember);
+					XivCombatant fullCombatant = data.getComputed();
+					if (fullCombatant instanceof XivPlayerCharacter xpc) {
+						partyListProcessed.add(xpc);
+					}
+					else {
+						log.warn("Party member was not a PC? {}", fullCombatant);
+					}
+				});
+				combatantCache = combatantData.values().stream()
+						.filter(CombatantData::includeInList)
+						.peek(CombatantData::recomputeIfDirty)
+						.collect(Collectors.toMap(CombatantData::getId, CombatantData::getComputed));
+				partyListProcessed.sort(Comparator.comparing(p -> {
+					if (getPlayerId() == p.getId()) {
+						// Always sort main player first
+						return -1;
+					}
+					else {
+						return pso.getSortOrder(p.getJob());
+					}
+				}));
+			}
+			else {
+				partyListProcessed = forceOrder
+						.stream()
+						.map(this::getOrCreateData)
+						.map(CombatantData::getComputed)
+						.filter(XivPlayerCharacter.class::isInstance)
+						.map(XivPlayerCharacter.class::cast)
+						.toList();
+			}
 			XivPlayerCharacter player = getPlayer();
 			if (partyListProcessed.isEmpty() && player != null) {
 				this.partyListProcessed = List.of(player);
@@ -498,6 +512,21 @@ public class XivStateImpl implements XivState {
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
+	public void partyForceOrderChange(EventContext context, PartyForceOrderChangeEvent event) {
+		List<Long> newMembers = event.getMembers();
+		if (newMembers == null) {
+			partyListForceOrder = null;
+		}
+		else if (newMembers.isEmpty()) {
+			partyListForceOrder = null;
+		}
+		else {
+			partyListForceOrder = newMembers;
+		}
+		recalcState();
+	}
+
+	@HandleEvents(order = Integer.MIN_VALUE)
 	public void combatants(EventContext context, CombatantsUpdateRaw event) {
 		if (event.isFullRefresh()) {
 			setCombatants(event.getCombatantMaps());
@@ -527,13 +556,13 @@ public class XivStateImpl implements XivState {
 
 	private CombatantData getData(long cbtId) {
 		// TODO: make something like
-		try (LockAdapter ignored = lock.read()){
+		try (LockAdapter ignored = lock.read()) {
 			return combatantData.get(cbtId);
 		}
 	}
 
 	private CombatantData getOrCreateData(long cbtId) {
-		try (LockAdapter ignored = lock.write()){
+		try (LockAdapter ignored = lock.write()) {
 			return combatantData.computeIfAbsent(cbtId, CombatantData::new);
 		}
 	}
@@ -685,7 +714,7 @@ public class XivStateImpl implements XivState {
 			long ownerId = raw != null ? raw.getOwnerId() : 0;
 			// TODO: changing primary player should dirty this
 			boolean isPlayer = rawType == 1;
-			long shieldAmount = hp != null ? shieldPercent * hp.getMax() / 100: 0;
+			long shieldAmount = hp != null ? shieldPercent * hp.getMax() / 100 : 0;
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
 						id,
