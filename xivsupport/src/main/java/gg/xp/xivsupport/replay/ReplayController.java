@@ -77,11 +77,16 @@ public class ReplayController {
 			if (decompress && event instanceof Compressible compressedEvent) {
 				compressedEvent.decompress();
 			}
+			preProcessEvent(event);
 			master.pushEvent(event);
 			advancedBy++;
 		}
 		notifyCallbacks();
 		return advancedBy;
+	}
+
+	protected void preProcessEvent(Event event) {
+
 	}
 
 	public void advanceByAsync(int count) {
@@ -98,6 +103,7 @@ public class ReplayController {
 				if (decompress && event instanceof Compressible compressedEvent) {
 					compressedEvent.decompress();
 				}
+				preProcessEvent(event);
 				master.pushEventAndWait(event);
 			}
 			notifyCallbacks();

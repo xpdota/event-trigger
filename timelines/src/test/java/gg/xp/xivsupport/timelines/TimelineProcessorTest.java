@@ -3,12 +3,11 @@ package gg.xp.xivsupport.timelines;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
-import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
+import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
 import gg.xp.xivsupport.sys.XivMain;
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.picocontainer.MutablePicoContainer;
@@ -21,7 +20,7 @@ public class TimelineProcessorTest {
 	@Test
 	void basicTest() {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
-		pico.addComponent(new FakeACTTimeSource());
+		pico.addComponent(new FakeTimeSource());
 
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.ACT_LOG_FILE);
 

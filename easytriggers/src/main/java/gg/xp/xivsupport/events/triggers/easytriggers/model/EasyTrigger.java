@@ -48,7 +48,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 	}
 
 	private void recalc() {
-		call = new ModifiableCallout<>("Easy Trigger Callout", tts, text, Collections.emptyList());
+		call = new ModifiableCallout<X>("Easy Trigger Callout", tts, text, Collections.emptyList()).autoIcon();
 	}
 
 	public Class<X> getEventType() {

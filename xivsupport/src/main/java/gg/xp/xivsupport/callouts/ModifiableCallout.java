@@ -4,6 +4,8 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.time.TimeUtils;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
+import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -16,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -26,10 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
+// TODO: refactor all of this into a builder pattern
 public class ModifiableCallout<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(ModifiableCallout.class);
@@ -48,6 +54,7 @@ public class ModifiableCallout<X> {
 	private final Object interpLock = new Object();
 	private int errorCount;
 	private static final int maxErrors = 10;
+	private Function<? super X, ? extends @Nullable Component> guiProvider = e -> null;
 
 	private static final Duration defaultHangDuration = Duration.of(5, ChronoUnit.SECONDS);
 
@@ -98,6 +105,16 @@ public class ModifiableCallout<X> {
 				return defaultExpiryAt.isBefore(Instant.now());
 			}
 		};
+	}
+
+	public ModifiableCallout<X> autoIcon() {
+		this.guiProvider = e -> IconTextRenderer.getStretchyIcon(RenderUtils.guessIconFor(e));
+		return this;
+	}
+
+	public ModifiableCallout<X> guiProvider(Function<? super X, ? extends Component> guiProvider) {
+		this.guiProvider = guiProvider;
+		return this;
 	}
 
 	public static <X> Predicate<X> expiresIn(int seconds) {
@@ -156,8 +173,8 @@ public class ModifiableCallout<X> {
 					event,
 					modifiedCallText,
 					() -> applyReplacements(visualText, arguments),
-					expiry
-			);
+					expiry,
+					guiProvider);
 		}
 	}
 

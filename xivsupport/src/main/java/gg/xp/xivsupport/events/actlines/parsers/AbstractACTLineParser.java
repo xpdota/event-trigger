@@ -29,7 +29,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	private final String lineStart;
 	private final List<@Nullable F> groups;
 	private final XivState state;
-	private final @Nullable FakeACTTimeSource fakeTimeSource;
+	private final @Nullable FakeTimeSource fakeTimeSource;
 
 	AbstractACTLineParser(PicoContainer container, int logLineNumber, Class<F> enumCls) {
 		this(container, logLineNumber, Arrays.asList(enumCls.getEnumConstants()));
@@ -38,7 +38,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	@SuppressWarnings({"ConstantConditions", "unchecked"})
 	AbstractACTLineParser(PicoContainer container, int logLineNumber, List<@Nullable F> groups) {
 		this.state = Objects.requireNonNull(container.getComponent(XivState.class), "XivState is required");
-		this.fakeTimeSource = container.getComponent(FakeACTTimeSource.class);
+		this.fakeTimeSource = container.getComponent(FakeTimeSource.class);
 		if (groups.isEmpty()) {
 			// TODO: could some of them make sense as empty?
 			throw new IllegalArgumentException("Capture groups cannot be empty");

@@ -11,6 +11,7 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.InCombatChangeEvent;
+import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -39,8 +40,10 @@ public final class TimelineManager {
 	private final IntSetting rowsToDisplay;
 	private final IntSetting secondsPast;
 	private final IntSetting secondsFuture;
-	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutNow = ModifiableCallout.durationBasedCallWithoutDurationText("Timeline Callout (Immediate)", "{event.getEntry().name()}");
-	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutPre = ModifiableCallout.durationBasedCall("Timeline Callout (Precall)", "{event.getEntry().name()}");
+	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutNow = ModifiableCallout.<TimelineProcessor.UpcomingCall>durationBasedCallWithoutDurationText("Timeline Callout (Immediate)", "{event.getEntry().name()}")
+			.guiProvider(e -> IconTextRenderer.getStretchyIcon(e.getIconUrl()));
+	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutPre = ModifiableCallout.<TimelineProcessor.UpcomingCall>durationBasedCall("Timeline Callout (Precall)", "{event.getEntry().name()}")
+			.guiProvider(e -> IconTextRenderer.getStretchyIcon(e.getIconUrl()));
 
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;

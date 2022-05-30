@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.timelines;
 
+import gg.xp.xivdata.data.HasIconURL;
+import gg.xp.xivdata.data.HasOptionalIconURL;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serial;
 import java.io.Serializable;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -148,10 +151,8 @@ public final class TimelineProcessor {
 
 	private List<UpcomingCall> upcomingTriggers = Collections.emptyList();
 
-	public class UpcomingCall implements HasDuration, Serializable {
+	public class UpcomingCall implements HasDuration, HasOptionalIconURL {
 
-		@Serial
-		private static final long serialVersionUID = 4627297693366126838L;
 		private final double timelineTime;
 		private final double callTime;
 		private final Duration effectiveDuration;
@@ -207,6 +208,17 @@ public final class TimelineProcessor {
 
 		public TimelineEntry getEntry() {
 			return entry;
+		}
+
+		@Override
+		public @Nullable HasIconURL getIconUrl() {
+			URL rawIcon = entry.icon();
+			if (rawIcon == null) {
+				return null;
+			}
+			else {
+				return () -> rawIcon;
+			}
 		}
 	}
 

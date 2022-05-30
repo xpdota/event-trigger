@@ -2,6 +2,8 @@ package gg.xp.xivsupport.events.triggers.duties.ewult;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.AutoChildEventHandler;
+import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.Job;
@@ -13,16 +15,17 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
-import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
-import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
+import gg.xp.xivsupport.gui.tables.renderers.RefreshingHpBar;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -30,6 +33,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -37,20 +41,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @CalloutRepo("Dragonsong's Reprise")
-public class Dragonsong implements FilteredEventHandler {
+public class Dragonsong extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(Dragonsong.class);
 
 	private final ModifiableCallout<HeadMarkerEvent> p1_firstCleaveMarker = new ModifiableCallout<>("Quad Marker (1st set)", "Marker, First Set");
 	private final ModifiableCallout<HeadMarkerEvent> p1_secondCleaveMarker = new ModifiableCallout<>("Quad Marker (2nd set)", "Second Set");
 	private final ModifiableCallout<AbilityCastStart> p1_holiestOfHoly = ModifiableCallout.durationBasedCall("Holiest of Holy", "Raidwide");
-	private final ModifiableCallout<AbilityCastStart> p1_emptyDimension = ModifiableCallout.durationBasedCall("Empty Dimension", "Donut");
+	private final ModifiableCallout<AbilityCastStart> p1_emptyDimension = ModifiableCallout.durationBasedCall("Empty Dimension", "In");
 	private final ModifiableCallout<AbilityCastStart> p1_fullDimension = ModifiableCallout.durationBasedCall("Empty Dimension", "Out");
 	private final ModifiableCallout<AbilityCastStart> p1_heavensblaze = ModifiableCallout.durationBasedCall("Heavensblaze", "Stack on {event.target}");
 	private final ModifiableCallout<AbilityCastStart> p1_holiestHallowing = ModifiableCallout.durationBasedCall("Holiest Hallowing", "Interrupt {event.source}");
@@ -58,7 +63,8 @@ public class Dragonsong implements FilteredEventHandler {
 
 //	private final ModifiableCallout<TetherEvent> p1_genericTether = new ModifiableCallout<>("P1 Generic Tethers", "Tether on you", "Tether on you {event.id}", Collections.emptyList());
 
-	private final ModifiableCallout<BuffApplied> p1_puddleBait = ModifiableCallout.durationBasedCall("Puddle", "Puddle on you");
+	private final ModifiableCallout<BuffApplied> p1_puddleBait = ModifiableCallout.<BuffApplied>durationBasedCall("Puddle (Place)", "Puddle on you").autoIcon();
+	private final ModifiableCallout<BuffRemoved> p1_puddleBaitAfter = new ModifiableCallout<BuffRemoved>("Puddle (Move)", "Move").autoIcon();
 
 	private final ModifiableCallout<HeadMarkerEvent> circle = new ModifiableCallout<>("Circle", "Red Circle with {partner}");
 	private final ModifiableCallout<HeadMarkerEvent> triangle = new ModifiableCallout<>("Triangle", "Green Triangle with {partner}");
@@ -80,8 +86,11 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<?> thordan_trio1_wheresThordan = new ModifiableCallout<>("First Trio: Where is Thordan", "Thordan {wheresThordan}");
 
 	private final ModifiableCallout<?> thordan_trio2_swordMark = new ModifiableCallout<>("Second Trio: Swords", "{sword1} and {sword2}");
+	private final ModifiableCallout<AbilityCastStart> thordan_trio2_gaze = ModifiableCallout.durationBasedCall("Second Trio: Gaze", "Look away");
+	private final ModifiableCallout<?> thordan_trio2_cw = new ModifiableCallout<>("Second Trio: Clockwise", "Clockwise");
+	private final ModifiableCallout<?> thordan_trio2_ccw = new ModifiableCallout<>("Second Trio: Counter-clockwise", "Counterclockwise");
 
-	private final ModifiableCallout<?> thordan_trio2_meteorMark = new ModifiableCallout<>("Second Trio: Meteors", "Meteor on you");
+	private final ModifiableCallout<?> thordan_trio2_meteorMark = new ModifiableCallout<>("Second Trio: Meteors", "Meteor on you").autoIcon();
 	private final ModifiableCallout<?> thordan_trio2_meteorRoleMark = new ModifiableCallout<>("Second Trio: Meteors", "Meteor role");
 	private final ModifiableCallout<?> thordan_trio2_nonMeteorRole = new ModifiableCallout<>("Second Trio: Meteors", "Non-meteor role");
 
@@ -94,14 +103,14 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> thordan_broadSwingL = ModifiableCallout.durationBasedCall("Broad Swing Left", "Back then Left");
 	private final ModifiableCallout<AbilityCastStart> thordan_broadSwingR = ModifiableCallout.durationBasedCall("Broad Swing Right", "Back then Right");
 
-	private final ModifiableCallout<BuffApplied> estinhog_headmark1 = new ModifiableCallout<>("Estinhog: First in Line", "One");
-	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<>("Estinhog: Second in Line", "Two");
-	private final ModifiableCallout<BuffApplied> estinhog_headmark3 = new ModifiableCallout<>("Estinhog: Third in Line", "Three");
+	private final ModifiableCallout<BuffApplied> estinhog_headmark1 = new ModifiableCallout<BuffApplied>("Estinhog: First in Line", "One").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_headmark2 = new ModifiableCallout<BuffApplied>("Estinhog: Second in Line", "Two").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_headmark3 = new ModifiableCallout<BuffApplied>("Estinhog: Third in Line", "Three").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> estinhog_highJumpOnlyYou = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Middle");
-	private final ModifiableCallout<BuffApplied> estinhog_highJumpAll = ModifiableCallout.durationBasedCall("Estinhog: High Jump", "Pick Spots");
-	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.durationBasedCall("Estinhog: Spineshatter", "West and Face In");
-	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.durationBasedCall("Estinhog: Elusive Jump", "East and Face Out");
+	private final ModifiableCallout<BuffApplied> estinhog_highJumpOnlyYou = ModifiableCallout.<BuffApplied>durationBasedCall("Estinhog: High Jump", "Middle").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_highJumpAll = ModifiableCallout.<BuffApplied>durationBasedCall("Estinhog: High Jump", "Pick Spots").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_spineshatter = ModifiableCallout.<BuffApplied>durationBasedCall("Estinhog: Spineshatter", "West and Face In").autoIcon();
+	private final ModifiableCallout<BuffApplied> estinhog_elusiveJump = ModifiableCallout.<BuffApplied>durationBasedCall("Estinhog: Elusive Jump", "East and Face Out").autoIcon();
 
 
 	private final ModifiableCallout<BuffRemoved> estinhog_baitGeir = new ModifiableCallout<>("Estinhog: Bait Geirskogul", "Bait Geirskogul");
@@ -128,7 +137,10 @@ public class Dragonsong implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> estinhog_drachenlance = ModifiableCallout.durationBasedCall("Estinhog: Drachenlance", "Out of front");
 
-	private final ModifiableCallout<BuffApplied> doom = ModifiableCallout.durationBasedCall("Doom", "Doom");
+	private final ModifiableCallout<BuffApplied> redTether = new ModifiableCallout<BuffApplied>("Red Tether", "Red").autoIcon();
+	private final ModifiableCallout<BuffApplied> blueTether = new ModifiableCallout<BuffApplied>("Blue Tether", "Blue").autoIcon();
+
+	private final ModifiableCallout<AbilityUsedEvent> twister = new ModifiableCallout<>("Thordan II: Twister", "Twister");
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -149,7 +161,14 @@ public class Dragonsong implements FilteredEventHandler {
 		final ModifiableCallout<AbilityCastStart> call;
 		switch (id) {
 			case 0x62D4 -> call = p1_holiestOfHoly;
-			case 0x62DA -> call = p1_emptyDimension;
+			case 0x62DA -> {
+				if (!isSecondPhase) {
+					call = p1_emptyDimension;
+				}
+				else {
+					return;
+				}
+			}
 			case 0x62DB -> call = p1_fullDimension;
 			case 0x62DD -> call = p1_heavensblaze;
 			case 0x62D0 -> {
@@ -165,6 +184,7 @@ public class Dragonsong implements FilteredEventHandler {
 			case 0x63C6 -> call = thordan_quaga;
 			case 0x63C1 -> call = thordan_broadSwingL;
 			case 0x63C0 -> call = thordan_broadSwingR;
+			case 0x63D0 -> call = thordan_trio2_gaze;
 			case 0x670B -> call = estinhog_drachenlance;
 			// TODO: what should this call actually be?
 //			case 0x62D6 -> call = p1_hyper;
@@ -181,15 +201,16 @@ public class Dragonsong implements FilteredEventHandler {
 		if (event.getBuff().getId() == 0x6316) {
 			context.accept(p1_brightwing.getModified(event));
 		}
-		else if (event.getTarget().isThePlayer()) {
-			if (event.getBuff().getId() == 0xA65) {
-				context.accept(p1_puddleBait.getModified(event));
-			}
-			else if (event.getBuff().getId() == 0xBA0) {
-				context.accept(doom.getModified(event));
-			}
-		}
 	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p1_puddleBaitSeq = new SequentialTrigger<>(10_000, BaseEvent.class,
+			e -> e instanceof BuffApplied ba && ba.getBuff().getId() == 0xA65 && ba.getTarget().isThePlayer(),
+			(e1, s) -> {
+				s.updateCall(p1_puddleBait.getModified((BuffApplied) e1));
+				BuffRemoved removed = s.waitEvent(BuffRemoved.class, br -> br.getBuff().getId() == 0xA65 && br.getTarget().isThePlayer());
+				s.updateCall(p1_puddleBaitAfter.getModified(removed));
+			});
 
 
 	@HandleEvents
@@ -227,29 +248,7 @@ public class Dragonsong implements FilteredEventHandler {
 	}
 
 
-//	@HandleEvents
-//	public void p1_genericTether(EventContext context, TetherEvent event) {
-//		long id = event.getId();
-//		if (event.eitherTargetMatches(XivCombatant::isThePlayer)
-//				&& (id == 0x54 || id == 0x1)) {
-//			context.accept(p1_genericTether.getModified(event));
-//		}
-//	}
-
-	@HandleEvents
-	public void feedSeq(EventContext context, BaseEvent event) {
-		p1_fourHeadMark.feed(context, event);
-		p1_pairsOfMarkers.feed(context, event);
-		thordan_firstTrio.feed(context, event);
-		thordan_secondTrio.feed(context, event);
-		thordan_iceFire.feed(context, event);
-		meteorHelper.feed(context, event);
-		wyrmhole.feed(context, event);
-		if (event instanceof AbilityUsedEvent aue) {
-			gnashLashHelper.feed(context, aue);
-		}
-	}
-
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> p1_fourHeadMark = new SequentialTrigger<>(30_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x62DD,
 			(e1, s) -> {
@@ -262,6 +261,7 @@ public class Dragonsong implements FilteredEventHandler {
 				}
 			});
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> p1_pairsOfMarkers = new SequentialTrigger<>(20_000, BaseEvent.class,
 			e -> e instanceof AbilityUsedEvent acs && acs.getAbility().getId() == 0x62D5,
 			(e1, s) -> {
@@ -294,6 +294,7 @@ public class Dragonsong implements FilteredEventHandler {
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 5, 5);
 	private final ArenaPos tightArenaPos = new ArenaPos(100, 100, 3, 3);
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> thordan_firstTrio = new SequentialTrigger<>(28_000, BaseEvent.class,
 			e -> e instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x63D3,
 			(e1, s) -> {
@@ -383,6 +384,7 @@ public class Dragonsong implements FilteredEventHandler {
 				}
 			});
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> thordan_secondTrio = new SequentialTrigger<>(35_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x63E1,
 			(e1, s) -> {
@@ -410,6 +412,33 @@ public class Dragonsong implements FilteredEventHandler {
 						"sword1", first == null ? "?" : first,
 						"sword2", second == null ? "?" : second)));
 
+				s.waitMs(2000);
+
+				log.info("Thordan Trio 2: Waiting for combatants");
+				while (true) {
+					Optional<XivCombatant> jan = getState().getCombatantsListCopy().stream()
+							// Should be Ser Janneloux
+							.filter(cbt -> cbt.getbNpcId() == 12632)
+							.findAny();
+					if (jan.isPresent()) {
+						log.info("Jan present");
+						Position pos = jan.get().getPos();
+						if (pos != null) {
+							log.info("Jan pos: {}", pos);
+							if (pos.getX() > 100) {
+								s.accept(thordan_trio2_ccw.getModified());
+							}
+							else {
+								s.accept(thordan_trio2_cw.getModified());
+							}
+							break;
+						}
+						log.info("No Jan pos");
+					}
+					s.refreshCombatants(200);
+
+				}
+
 			});
 
 	private enum IceFireRole {
@@ -418,6 +447,7 @@ public class Dragonsong implements FilteredEventHandler {
 		NO_METEOR
 	}
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> thordan_iceFire = new SequentialTrigger<>(60_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x63E1,
 			(e1, s) -> {
@@ -462,6 +492,7 @@ public class Dragonsong implements FilteredEventHandler {
 			});
 
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> meteorHelper = new SequentialTrigger<>(25_000, BaseEvent.class,
 			e -> e instanceof BuffApplied ba && ba.getBuff().getId() == 0x232 && ba.getTarget().isThePlayer(),
 			(e1, s) -> {
@@ -493,6 +524,7 @@ public class Dragonsong implements FilteredEventHandler {
 		return id >= 0xAC3 && id <= 0xAC5;
 	};
 
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> wyrmhole = new SequentialTrigger<>(60_000, BaseEvent.class,
 			// Start on final chorus
 			e -> e instanceof AbilityUsedEvent a && a.getAbility().getId() == 0x6709 && a.isFirstTarget(),
@@ -638,6 +670,7 @@ public class Dragonsong implements FilteredEventHandler {
 		return new GnashLash(gnashLash, first, second);
 	}
 
+	@AutoFeed
 	private final SequentialTrigger<AbilityUsedEvent> gnashLashHelper = new SequentialTrigger<>(10_000, AbilityUsedEvent.class,
 			e -> {
 				long id = e.getAbility().getId();
@@ -649,7 +682,7 @@ public class Dragonsong implements FilteredEventHandler {
 		// 6716 -> the actual in (lash)
 		boolean outFirst = e1.getAbility().getId() == 0x6712;
 		CalloutEvent firstCall = outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified();
-		s.accept(firstCall);
+		s.updateCall(firstCall);
 		s.waitEvent(AbilityUsedEvent.class, aue -> aue.isFirstTarget() && (aue.getAbility().getId() == 0x6715 || aue.getAbility().getId() == 0x6716));
 		s.updateCall(!outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified());
 	});
@@ -664,22 +697,233 @@ public class Dragonsong implements FilteredEventHandler {
 		}
 	}
 
+	private CalloutEvent previousRedBlueCall;
 
-//	@HandleEvents
-//	public void genericHeadMarksOnYou(EventContext context, HeadMarkerEvent event) {
-//		if (event.getTarget().isThePlayer()) {
-//			ModifiableCallout<HeadMarkerEvent> call;
-//			switch (getHeadmarkOffset(event)) {
-//				case -11 -> call = estinhog_headmark1;
-//				case -10 -> call = estinhog_headmark2;
-//				case -9 -> call = estinhog_headmark3;
-//				default -> {
-//					return;
+	@HandleEvents
+	public void doRedBlueTethers(EventContext ctx, BuffApplied ba) {
+		if (ba.getTarget().isThePlayer()) {
+			CalloutEvent call;
+			long id = ba.getBuff().getId();
+			if (id == 0xAD7) {
+				call = redTether.getModified(ba);
+			}
+			else if (id == 0xAD8) {
+				call = blueTether.getModified(ba);
+			}
+			else {
+				return;
+			}
+			if (previousRedBlueCall != null) {
+				call.setReplaces(previousRedBlueCall);
+			}
+			ctx.accept(call);
+			previousRedBlueCall = call;
+		}
+	}
+
+//	private final SequentialTrigger<BaseEvent> tetherTracker = new SequentialTrigger<>(100_000, BaseEvent.class,
+//			// Start on steep of rage
+//			be -> be instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x68BA && aue.getSource().getbNpcId() == 13119,
+//			(e1, s) -> {
+//				log.info("Tether tracker start");
+//				while (true) {
+//					List<BuffApplied> newApp = s.waitEventsUntil(1, BuffApplied.class, ba -> {
+//						long id = ba.getBuff().getId();
+//						return ba.getTarget().isThePlayer() && (id == 0xAD7 || id == 0xAD8);
+//					}, BaseEvent.class, be ->
+//							be instanceof WipeEvent
+//									|| be instanceof EntityKilledEvent eke
+//									&& (eke.getTarget().getbNpcId() == 12609 || eke.getTarget().getbNpcId() == 12610));
+//					if (newApp.isEmpty()) {
+//						log.info("Tether tracker done");
+//						return;
+//					}
+//					else {
+//						BuffApplied buff = newApp.get(0);
+//						if (buff.getBuff().getId() == 0xAD7) {
+//							s.updateCall(redTether.getModified(buff));
+//						}
+//						else {
+//							s.updateCall(blueTether.getModified(buff));
+//						}
+//					}
 //				}
 //			}
-//			context.accept(call.getModified(event));
-//		}
-//	}
+//	);
+
+	private final ModifiableCallout<HaurchefauntHpTracker> haurch_hp = new ModifiableCallout<>("Haurchefaunt HP bar", "", "HP", HaurchefauntHpTracker::isExpired)
+			.guiProvider(HaurchefauntHpTracker::getComponent);
+
+	private final class HaurchefauntHpTracker {
+		private final XivCombatant haurchInitial;
+
+		private HaurchefauntHpTracker(XivCombatant haurchInitial) {
+			this.haurchInitial = haurchInitial;
+		}
+
+		public XivCombatant getNewData() {
+			return getState().getLatestCombatantData(haurchInitial);
+		}
+
+		public boolean isExpired() {
+			return getBuffs().statusesOnTarget(haurchInitial).stream().noneMatch(ba -> ba.getBuff().getId() == 2977);
+		}
+
+		public Component getComponent() {
+			RefreshingHpBar bar = new RefreshingHpBar(this::getNewData);
+			bar.setPreferredSize(new Dimension(200, 20));
+			bar.setFgTransparency(220);
+			bar.setBgTransparency(128);
+			return bar;
+		}
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> haurch_hp_track = new SequentialTrigger<>(60_000, BaseEvent.class,
+			be -> be instanceof BuffApplied ba && ba.getBuff().getId() == 2977,
+			(e1, s) -> {
+				log.info("Haurch HP tracker start");
+				XivCombatant haurch = ((BuffApplied) e1).getTarget();
+				HaurchefauntHpTracker tracker = new HaurchefauntHpTracker(haurch);
+				s.accept(haurch_hp.getModified(tracker));
+				log.info("Haurch HP tracker end");
+			});
+
+	private final ModifiableCallout<HeadMarkerEvent> thordan2_trio1_blueMark = new ModifiableCallout<>("Wrath of the Heavens: Blue Marker", "Blue Marker");
+	private final ModifiableCallout<TetherEvent> thordan2_trio1_tether = new ModifiableCallout<>("Wrath of the Heavens: Tether", "Tether");
+	private final ModifiableCallout<?> thordan2_trio1_neither = new ModifiableCallout<>("Wrath of the Heavens: Nothing", "Nothing");
+	private final ModifiableCallout<HeadMarkerEvent> thordan2_trio1_greenMark = new ModifiableCallout<>("Wrath of the Heavens: Blue Marker", "Green Marker");
+
+	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_protean = ModifiableCallout.durationBasedCall("Wrath of the Heavens: Protean", "Spread");
+
+	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_in = ModifiableCallout.durationBasedCall("Wrath of the Heavens: In", "In");
+	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_inLightning = ModifiableCallout.durationBasedCall("Wrath of the Heavens: In with Lightning", "In with Lightning");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> thordan2_trio1 = new SequentialTrigger<>(30_000, BaseEvent.class,
+			event -> event instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x6B89,
+			(e1, s) -> {
+				List<TetherEvent> tethers = s.waitEvents(2, TetherEvent.class, tether -> tether.getId() == 5);
+				HeadMarkerEvent blueMark = s.waitEvent(HeadMarkerEvent.class);
+				if (blueMark.getTarget().isThePlayer()) {
+					s.accept(thordan2_trio1_blueMark.getModified(blueMark));
+				}
+				else {
+					Optional<TetherEvent> tetherOnPlayer = tethers.stream()
+							.filter(tether -> tether.eitherTargetMatches(XivCombatant::isThePlayer))
+							.findAny();
+					if (tetherOnPlayer.isPresent()) {
+						s.accept(thordan2_trio1_tether.getModified(tetherOnPlayer.get()));
+					}
+					else {
+						s.accept(thordan2_trio1_neither.getModified());
+					}
+				}
+
+				HeadMarkerEvent greenMark = s.waitEvent(HeadMarkerEvent.class);
+				if (greenMark.getTarget().isThePlayer()) {
+					s.accept(thordan2_trio1_greenMark.getModified(greenMark));
+				}
+				AbilityCastStart spread = s.waitEvent(AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x63CA);
+				s.accept(thordan2_trio1_protean.getModified(spread));
+
+				AbilityCastStart donut = s.waitEvent(AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x62DA);
+				if (getBuffs().statusesOnTarget(getState().getPlayer()).stream().anyMatch(buff -> buff.getBuff().getId() == 0xB11)) {
+					s.accept(thordan2_trio1_inLightning.getModified(donut));
+				}
+				else {
+					s.accept(thordan2_trio1_in.getModified(donut));
+				}
+
+			}
+
+	);
+
+
+	private final ModifiableCallout<AbilityUsedEvent> thordan2_liquidHeavenOnYou = new ModifiableCallout<>("Liquid Heaven on you", "Liquid Heaven", "Liquid Heaven #{num}/5", ModifiableCallout.expiresIn(5));
+
+	@AutoFeed
+	private final SequentialTrigger<AbilityUsedEvent> thordan2_liquidHeaven = new SequentialTrigger<>(20_000, AbilityUsedEvent.class,
+			event -> event.getAbility().getId() == 0x6b91 && event.getTarget().isThePlayer() && event.isFirstTarget() && event.getSource().getbNpcId() == 12646,
+			(e1, s) -> {
+				AtomicInteger counter = new AtomicInteger(1);
+				Supplier<Integer> num = counter::get;
+				// Call first puddle
+				s.updateCall(thordan2_liquidHeavenOnYou.getModified(e1, Map.of("num", num)));
+				// Update for puddles 2-5
+				for (int i = 2; i <= 5; i++) {
+					// Intentionally not restricting it to first target, since you could die and it goes on someone else
+					s.waitEvent(AbilityUsedEvent.class, event -> event.getAbility().getId() == 0x6b91 && event.isFirstTarget());
+					counter.set(i);
+				}
+			}
+	);
+
+	private final ModifiableCallout<BuffApplied> doom = ModifiableCallout.<BuffApplied>durationBasedCall("Thordan II: Doom", "Doom").autoIcon();
+	private final ModifiableCallout<?> noDoom = new ModifiableCallout<>("Thordan II: Non-Doom", "Puddle");
+	private final ModifiableCallout<HeadMarkerEvent> t2_circleDoom = new ModifiableCallout<>("Circle (Doom)", "Red Circle (Doom)");
+	private final ModifiableCallout<HeadMarkerEvent> t2_triangleNoDoom = new ModifiableCallout<>("Triangle (No Doom)", "Green Triangle");
+	private final ModifiableCallout<HeadMarkerEvent> t2_triangleDoom = new ModifiableCallout<>("Triangle (Doom)", "Green Triangle (Doom)");
+	private final ModifiableCallout<HeadMarkerEvent> t2_squareNoDoom = new ModifiableCallout<>("Square (No Doom)", "Purple Square");
+	private final ModifiableCallout<HeadMarkerEvent> t2_squareDoom = new ModifiableCallout<>("Square (Doom)", "Purple Square (Doom)");
+	private final ModifiableCallout<HeadMarkerEvent> t2_crossNoDoom = new ModifiableCallout<>("Cross (No Doom)", "Blue Cross");
+
+	private static final int baseHeadmarkerOffset = -49;
+	private static final int endHeadmarkerOffset = baseHeadmarkerOffset + 3;
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> thordan2_trio2 = new SequentialTrigger<>(60_000, BaseEvent.class,
+			event -> event instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x6B92,
+			(e1, s) -> {
+				log.info("Death of the Heavens Start");
+				List<BuffApplied> dooms = s.waitEvents(4, BuffApplied.class, ba -> ba.getBuff().getId() == 0xBA0);
+				Optional<BuffApplied> playerDoom = dooms.stream().filter(ba -> ba.getTarget().isThePlayer()).findAny();
+				boolean playerHasDoom;
+				if (playerDoom.isPresent()) {
+					s.updateCall(doom.getModified(playerDoom.get()));
+					playerHasDoom = true;
+				}
+				else {
+					s.updateCall(noDoom.getModified());
+					playerHasDoom = false;
+				}
+				log.info("Death of the Heavens: player has doom? {}", playerHasDoom);
+
+				List<HeadMarkerEvent> marks = s.waitEventsUntil(8, HeadMarkerEvent.class, e -> {
+					int headmarkOffset = getHeadmarkOffset(e);
+					return headmarkOffset >= baseHeadmarkerOffset && headmarkOffset <= endHeadmarkerOffset;
+				}, AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x62DE);
+				marks.stream().filter(e -> e.getTarget().isThePlayer())
+						.findAny()
+						.ifPresentOrElse(myMark -> {
+							Optional<HeadMarkerEvent> partnerMarker = marks.stream().filter(e -> !e.getTarget().isThePlayer() && e.getMarkerId() == myMark.getMarkerId())
+									.findAny();
+							int adjustedId = getHeadmarkOffset(myMark);
+							final ModifiableCallout<HeadMarkerEvent> call;
+							switch (adjustedId) {
+								case baseHeadmarkerOffset -> call = t2_circleDoom;
+								case baseHeadmarkerOffset + 1 ->
+										call = playerHasDoom ? t2_triangleDoom : t2_triangleNoDoom;
+								case baseHeadmarkerOffset + 2 -> call = playerHasDoom ? t2_squareDoom : t2_squareNoDoom;
+								case baseHeadmarkerOffset + 3 -> call = t2_crossNoDoom;
+								default -> {
+									return;
+								}
+							}
+							XivCombatant partner = partnerMarker.map(HeadMarkerEvent::getTarget).orElse(null);
+							s.updateCall(call.getModified(Map.of("partner", partner == null ? "nobody" : partner)));
+						}, () -> log.error("No personal headmarker! Collected: [{}]", marks));
+				log.info("Death of the Heavens: done");
+
+			});
+
+
+	@HandleEvents
+	public void abilityUsed(EventContext ctx, AbilityUsedEvent event) {
+		if (event.getAbility().getId() == 0x6B8B && event.isFirstTarget()) {
+			ctx.accept(twister.getModified(event));
+		}
+	}
 
 	private XivState getState() {
 		return state;

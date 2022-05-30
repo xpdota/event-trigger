@@ -39,6 +39,10 @@ public class ScaledImageComponent extends Component {
 		setPreferredSize(dims);
 	}
 
+	public int getCurrentSize() {
+		return size;
+	}
+
 	public ScaledImageComponent cloneThis() {
 		return new ScaledImageComponent(image, size, cache);
 	}

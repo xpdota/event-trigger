@@ -4,10 +4,10 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.gui.CommonGuiSetup;
-import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
+import gg.xp.xivsupport.gui.Refreshable;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
-import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
@@ -31,11 +31,17 @@ public class FlyingTextOverlay extends XivOverlay {
 	private static final Color color = new Color(255, 255, 64, 255);
 	private static final Color backdropColor = new Color(20, 21, 22, 128);
 	private static final Color transparentColor = new Color(0, 0, 0, 0);
+	private static final int textPadding = 2;
 	private final InnerPanel innerPanel;
+	private final int templateHeight;
 
 	public FlyingTextOverlay(PersistenceProvider pers, OverlayConfig oc) {
 		super("Callout Text", "callout-text-overlay", oc, pers);
 		font = new JLabel().getFont().deriveFont(new AffineTransform(2, 0, 0, 2, 0, 0));
+		JLabel templateJLabel = new JLabel();
+		templateJLabel.setFont(font);
+		templateJLabel.setText("A");
+		templateHeight = templateJLabel.getPreferredSize().height;
 		RefreshLoop<FlyingTextOverlay> refresher = new RefreshLoop<>("CalloutOverlay", this, FlyingTextOverlay::refresh, i -> i.calculateUnscaledFrameTime(50));
 		innerPanel = new InnerPanel();
 		innerPanel.setPreferredSize(new Dimension(400, 220));
@@ -48,39 +54,65 @@ public class FlyingTextOverlay extends XivOverlay {
 	private final class VisualCalloutItem {
 		private final CalloutEvent event;
 		private final JTextPane text;
+		private final int centerX;
+		private final int width;
 		private String prevText = "";
 		private final int leftGradientBound;
 		private final int rightGradientBound;
 		private final int heightOfThisItem;
-		private final int leftTextBound;
-		private final int rightTextBound;
+		private volatile int leftTextBound;
+		private volatile int rightTextBound;
+		private final @Nullable Component extraComponent;
+		private volatile int extraComponentLeftPad;
 
 		private VisualCalloutItem(CalloutEvent event) {
 			this.event = event;
 			text = new JTextPane();
 			text.setParagraphAttributes(attribs, false);
-			recheckText();
+//			recheckText();
 			text.setAlignmentX(Component.CENTER_ALIGNMENT);
 			text.setOpaque(false);
 			text.setFont(font);
 			text.setEditable(false);
-			int width = innerPanel.getWidth();
-			int preferredWidth = text.getPreferredSize().width;
+			width = innerPanel.getWidth();
 			text.setBorder(null);
 			text.setFocusable(false);
-			int centerX = width >> 1;
-			this.text.setBounds(0, 0, width, 1);
+			centerX = width >> 1;
+			final int newLeftBound;
+			{
+				extraComponent = event.graphicalComponent();
+				if (extraComponent == null) {
+					newLeftBound = 0;
+				}
+				else {
+					Dimension oldPref = extraComponent.getPreferredSize();
+					int newPrefHeight = templateHeight;
+					// New width is template height times preferred aspect ratio, but not to be more than 4:1
+					int newPrefWidth = (int) Math.min(newPrefHeight * 4, oldPref.getWidth() / oldPref.getHeight() * newPrefHeight);
+					if (newPrefWidth == 0) {
+						// If no preferred size set, just assume 1:1 is fine
+						//noinspection SuspiciousNameCombination
+						newPrefWidth = newPrefHeight;
+					}
+					extraComponent.setBounds(0, 0, newPrefWidth, newPrefHeight);
+					newLeftBound = newPrefWidth + textPadding;
+					extraComponent.validate();
+				}
+			}
+			this.text.setBounds(newLeftBound, 0, width, 1);
 			int preferredHeight = text.getPreferredSize().height;
-			text.setPreferredSize(new Dimension(preferredWidth, preferredHeight));
-			this.text.setBounds(0, 0, width, preferredHeight);
-			heightOfThisItem = this.text.getPreferredSize().height;
+//			text.setPreferredSize(new Dimension(preferredWidth, preferredHeight));
+			this.text.setBounds(newLeftBound, 0, width, preferredHeight);
 			this.text.setForeground(color);
-			int preferredTextWidth = this.text.getPreferredSize().width;
+			int preferredTextWidth;
+			recheckText();
+			heightOfThisItem = this.text.getPreferredSize().height;
+			preferredTextWidth = this.text.getPreferredSize().width;
 			// TODO: these aren't the actual bounds
 			leftTextBound = Math.max(centerX - (preferredTextWidth >> 1), 10);
 			rightTextBound = Math.min(centerX + (preferredTextWidth >> 1), width - 10);
 			int gradientWidth = 50;
-			leftGradientBound = Math.max(leftTextBound - gradientWidth, 0);
+			leftGradientBound = Math.max(leftTextBound - gradientWidth - newLeftBound, 0);
 			rightGradientBound = Math.min(rightTextBound + gradientWidth, width);
 		}
 
@@ -95,6 +127,11 @@ public class FlyingTextOverlay extends XivOverlay {
 			graphics.fillRect(rightTextBound, 0, rightGradientBound - rightTextBound, heightOfThisItem);
 			graphics.setFont(text.getFont());
 			this.text.paint(graphics);
+			Component extra = this.extraComponent;
+			if (extra != null) {
+				graphics.translate(extraComponentLeftPad, 0);
+				extra.paint(graphics);
+			}
 		}
 
 		public boolean isExpired() {
@@ -109,6 +146,20 @@ public class FlyingTextOverlay extends XivOverlay {
 			String newText = event.getVisualText();
 			if (!Objects.equals(newText, prevText)) {
 				text.setText(prevText = newText);
+				if (extraComponent != null) {
+					int preferredTextWidth = this.text.getPreferredSize().width;
+					// TODO: these aren't the actual bounds
+					leftTextBound = Math.max(centerX - (preferredTextWidth >> 1), 10);
+					rightTextBound = Math.min(centerX + (preferredTextWidth >> 1), width - 10);
+					Rectangle oldBounds = extraComponent.getBounds();
+					extraComponentLeftPad = Math.max(0, leftTextBound - oldBounds.width - textPadding);
+				}
+				else {
+					extraComponentLeftPad = 0;
+				}
+			}
+			if (extraComponent != null && extraComponent instanceof Refreshable ref) {
+				ref.refresh();
 			}
 		}
 	}

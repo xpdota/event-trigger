@@ -119,6 +119,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		accept(call);
 	}
 
+
+	// TODO: warning/error if you try to wait for an event type that is incompatible with X
+	// i.e. if both X and Y are concrete types, and Y is not a subclass of X, then it should fail-fast
+
 	// To be called from internal thread
 	public <Y> Y waitEvent(Class<Y> eventClass) {
 		return waitEvent(eventClass, (e) -> true);
@@ -157,6 +161,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			}
 			// Second possibility - hit our stop trigger
 			else if (stopOnType.isInstance(event) && stopOn.test((Z) event)) {
+				log.info("Sequential trigger stopping on {}", event);
 				return out;
 			}
 			// Third possibility - keep looking
@@ -219,12 +224,13 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	private void waitProcessingDone() {
 		// "done" means waiting for another event
 		long startTime = System.currentTimeMillis();
-		long failAt = startTime + 100;
-		while (processing) {
+		int timeoutMs = 100;
+		long failAt = startTime + timeoutMs;
+		while (processing && !done) {
 			try {
 				long timeLeft = failAt - System.currentTimeMillis();
 				if (timeLeft <= 0) {
-					throw new SequentialTriggerTimeoutException("Cycle processing time max (100ms) exceeded");
+					log.error("Cycle processing time max ({}ms) exceeded", timeoutMs);
 				}
 				//noinspection WaitNotifyWhileNotSynced
 				lock.wait(timeLeft);
