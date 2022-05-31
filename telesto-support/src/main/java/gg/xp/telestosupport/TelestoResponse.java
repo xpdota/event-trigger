@@ -15,6 +15,8 @@ public class TelestoResponse extends BaseEvent {
 	private final long id;
 
 	public TelestoResponse(Map<String, Object> data) {
+		// TODO: I don't think this will be an issue, but if a value is not serializable, then the instance
+		// as a whole won't be able to serialize. But since it comes from JSON, I think we're fine.
 		this.data = data;
 		id = Long.parseLong(data.get("id").toString());
 	}
