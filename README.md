@@ -1,5 +1,7 @@
 ### Dragonsong's Reprise (aka Dragonsong War/Dragonsong Ultimate) Trigger Status: Doorboss done, Thordan 1 Done
 
+Code documentation (auto-generated) is now available [here](https://xpdota.github.io/event-trigger/master/javadoc/allclasses-index.html) (replace `master` in the URL with the branch you are using).
+
 # Triggevent
 
 Triggevent is a comprehensive FFXIV addon that provides triggers, overlays, log analysis, and more. Triggers can even
