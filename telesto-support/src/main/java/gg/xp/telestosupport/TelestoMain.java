@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -118,7 +119,11 @@ public class TelestoMain {
 			List<Map<String, Object>> partyData = (List<Map<String, Object>>) event.getResponse();
 			List<Long> partyActorIds = partyData.stream()
 					.sorted(Comparator.comparing(entry -> Integer.parseInt(entry.get("order").toString(), 16)))
-					.map(entry -> Long.parseLong(entry.get("actor").toString(), 16))
+					.map(entry -> entry.get("actor"))
+					.filter(Objects::nonNull)
+					.map(Object::toString)
+					.filter(s -> !s.isBlank())
+					.map(str -> Long.parseLong(str, 16))
 					.toList();
 			log.info("New Telesto Party List: {}", partyActorIds);
 			context.accept(new PartyForceOrderChangeEvent(partyActorIds.isEmpty() ? null : partyActorIds));

@@ -276,10 +276,6 @@ public class XivStateImpl implements XivState {
 						log.warn("Party member was not a PC? {}", fullCombatant);
 					}
 				});
-				combatantCache = combatantData.values().stream()
-						.filter(CombatantData::includeInList)
-						.peek(CombatantData::recomputeIfDirty)
-						.collect(Collectors.toMap(CombatantData::getId, CombatantData::getComputed));
 				partyListProcessed.sort(Comparator.comparing(p -> {
 					if (getPlayerId() == p.getId()) {
 						// Always sort main player first
@@ -299,6 +295,10 @@ public class XivStateImpl implements XivState {
 						.map(XivPlayerCharacter.class::cast)
 						.toList();
 			}
+			combatantCache = combatantData.values().stream()
+					.filter(CombatantData::includeInList)
+					.peek(CombatantData::recomputeIfDirty)
+					.collect(Collectors.toMap(CombatantData::getId, CombatantData::getComputed));
 			XivPlayerCharacter player = getPlayer();
 			if (partyListProcessed.isEmpty() && player != null) {
 				this.partyListProcessed = List.of(player);
