@@ -2,8 +2,8 @@ package gg.xp.xivsupport.events.triggers.marks;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
@@ -25,13 +25,22 @@ public class AutoMarkHandler {
 	private static final Logger log = LoggerFactory.getLogger(AutoMarkHandler.class);
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private final BooleanSetting useFkeys;
+	private final BooleanSetting useTelesto;
+	private final XivState state;
 
-	public AutoMarkHandler(PersistenceProvider persistence) {
-		this.useFkeys = new BooleanSetting(persistence, "auto-marks.use-fkeys", false);
+	public AutoMarkHandler(PersistenceProvider persistence, XivState state) {
+		useFkeys = new BooleanSetting(persistence, "auto-marks.use-fkeys", false);
+		// TODO: make this automatic
+		useTelesto = new BooleanSetting(persistence, "auto-marks.use-telesto", false);
+		this.state = state;
 	}
 
 	public BooleanSetting getUseFkeys() {
 		return useFkeys;
+	}
+
+	public BooleanSetting getUseTelesto() {
+		return useTelesto;
 	}
 
 	@HandleEvents
@@ -41,30 +50,37 @@ public class AutoMarkHandler {
 			args.subList(1, args.size())
 					.stream()
 					.mapToInt(Integer::parseInt)
-					.forEach(i -> doAutoMarkForSlot(context, i));
+					.forEach(i -> context.accept(new AutoMarkSlotRequest(i)));
 		}
 	}
 
 	@HandleEvents
 //	@LiveOnly
 	public void clearMarks(EventContext context, ClearAutoMarkRequest event) {
-		log.info("Clearing marks");
-		clearAutoMark(context);
+		if (!useTelesto.get()) {
+			log.info("Clearing marks");
+			clearAutoMark(context);
+		}
 	}
 
 	@HandleEvents
-	public void doAutoMark(EventContext context, AutoMarkRequest event) {
-		XivState xivState = context.getStateInfo().get(XivStateImpl.class);
+	public void findPartySlot(EventContext context, AutoMarkRequest event) {
 		XivPlayerCharacter player = event.getPlayerToMark();
-		int index = xivState.getPartySlotOf(player);
+		int index = state.getPartySlotOf(player);
 		if (index >= 0) {
 			int partySlot = index + 1;
 			log.info("Resolved player {} to party slot {}", player.getName(), partySlot);
-			event.setResolvedPartySlot(partySlot);
-			doAutoMarkForSlot(context, partySlot);
+			context.accept(new AutoMarkSlotRequest(partySlot));
 		}
 		else {
 			log.error("Couldn't resolve player '{}' to party slot", player.getName());
+		}
+	}
+
+	@HandleEvents
+	public void doMark(EventContext context, AutoMarkSlotRequest event) {
+		if (!useTelesto.get()) {
+			doAutoMarkForSlot(context, event.getSlotToMark());
 		}
 	}
 

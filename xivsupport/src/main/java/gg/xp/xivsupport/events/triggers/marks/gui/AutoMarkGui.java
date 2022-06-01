@@ -5,6 +5,7 @@ import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,10 +31,14 @@ public class AutoMarkGui implements PluginTab {
 		helpButton.addActionListener(l -> {
 			JOptionPane.showMessageDialog(SwingUtilities.getRoot(helpButton), helpText);
 		});
-		Component toggle = new BooleanSettingGui(marks.getUseFkeys(), "Use F1-F9 (Instead of NumPad 1-9)").getComponent();
+		BooleanSetting telestoSetting = marks.getUseTelesto();
+		Component useTelesto = new BooleanSettingGui(telestoSetting, "Use Telesto instead of Macros (must be installed in Dalamud)").getComponent();
+		Component useFKeys = new BooleanSettingGui(marks.getUseFkeys(), "Use F1-F9 (Instead of NumPad 1-9)", () -> !telestoSetting.get()).getComponent();
+		telestoSetting.addListener(outer::repaint);
 
 		outer.add(helpButton);
-		outer.add(toggle);
+		outer.add(useTelesto);
+		outer.add(useFKeys);
 
 		return outer;
 	}

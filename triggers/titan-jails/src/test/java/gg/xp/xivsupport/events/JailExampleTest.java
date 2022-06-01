@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkSlotRequest;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.models.XivEntity;
@@ -54,6 +55,7 @@ public class JailExampleTest {
 			TtsRequest.class,
 			AutoMarkRequest.class,
 			ClearAutoMarkRequest.class,
+			AutoMarkSlotRequest.class,
 			AutoMarkHandler.KeyPressRequest.class
 	);
 
@@ -105,10 +107,12 @@ public class JailExampleTest {
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
 				ParentedCalloutEvent.class,
-				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
+				// Slotted requests
+				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
 				// TTS
-				TtsRequest.class
+				TtsRequest.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -265,6 +269,8 @@ public class JailExampleTest {
 				FinalTitanJailsSolvedEvent.class,
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
+				// Slotted requests
+				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
 				// Key Presses
 				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
 		));
@@ -430,10 +436,12 @@ public class JailExampleTest {
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
 				ParentedCalloutEvent.class,
-				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
+				// Slotted requests
+				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
 				// TTS
-				TtsRequest.class
+				TtsRequest.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -521,10 +529,12 @@ public class JailExampleTest {
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
 				ParentedCalloutEvent.class,
-				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
+				// Slotted requests
+				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
 				// TTS
-				TtsRequest.class
+				TtsRequest.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -640,10 +650,12 @@ public class JailExampleTest {
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
 				ParentedCalloutEvent.class,
-				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
+				// Slotted requests
+				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
 				// TTS
-				TtsRequest.class
+				TtsRequest.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -738,10 +750,12 @@ public class JailExampleTest {
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
 				ParentedCalloutEvent.class,
-				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class,
+				// Slotted requests
+				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
 				// TTS
-				TtsRequest.class
+				TtsRequest.class,
+				// Key Presses
+				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its

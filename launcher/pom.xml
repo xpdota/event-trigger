@@ -305,6 +305,10 @@
             <artifactId>swingexplorer-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>telesto-support</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

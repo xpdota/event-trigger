@@ -285,6 +285,11 @@
                 <artifactId>titan-jails</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>telesto-support</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -301,5 +306,6 @@
         <module>testutils</module>
         <module>plugins</module>
         <module>triggers/titan-jails</module>
+        <module>telesto-support</module>
     </modules>
 </project>

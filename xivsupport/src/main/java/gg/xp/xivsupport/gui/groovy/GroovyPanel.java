@@ -231,6 +231,9 @@ public class GroovyPanel extends JPanel {
 	}
 
 	private static String singleValueConversion(Object obj) {
+		if (obj == null) {
+			return "(null)";
+		}
 		if (obj instanceof Byte || obj instanceof Integer || obj instanceof Long || obj instanceof Short) {
 			return String.format("%d (0x%x)", obj, obj);
 		}
