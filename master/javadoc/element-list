@@ -6,6 +6,8 @@ gg.xp.reevent.state
 gg.xp.reevent.time
 gg.xp.reevent.topology
 gg.xp.reevent.util
+gg.xp.telestosupport
+gg.xp.telestosupport.gui
 gg.xp.xivdata
 gg.xp.xivdata.data
 gg.xp.xivsupport.callouts
