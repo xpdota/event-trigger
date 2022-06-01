@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
@@ -13,6 +14,8 @@ import gg.xp.xivsupport.events.state.PartyForceOrderChangeEvent;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.HttpURISetting;
+import gg.xp.xivsupport.sys.KnownLogSource;
+import gg.xp.xivsupport.sys.PrimaryLogSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -31,7 +34,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TelestoMain {
+public class TelestoMain implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(TelestoMain.class);
 	private static final ExecutorService exs = Executors.newCachedThreadPool();
@@ -46,9 +49,11 @@ public class TelestoMain {
 	private final EventMaster master;
 
 	private volatile TelestoStatus status = TelestoStatus.UNKNOWN;
+	private final PrimaryLogSource pls;
 
-	public TelestoMain(EventMaster master, PersistenceProvider pers) {
+	public TelestoMain(EventMaster master, PersistenceProvider pers, PrimaryLogSource pls) {
 		this.master = master;
+		this.pls = pls;
 		try {
 			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://localhost:51323/"));
 			enablePartyList = new BooleanSetting(pers, "telesto-support.pull-party-list", true);
@@ -155,7 +160,7 @@ public class TelestoMain {
 				updateStatus(TelestoStatus.GOOD);
 			}
 			catch (Throwable e) {
-				log.error("Error sending Telesto message", e);
+				log.error("Error sending Telesto message {}", e.toString());
 				updateStatus(TelestoStatus.BAD);
 			}
 		});
@@ -181,5 +186,10 @@ public class TelestoMain {
 
 	public BooleanSetting getEnablePartyList() {
 		return enablePartyList;
+	}
+
+	@Override
+	public boolean enabled(EventContext context) {
+		return pls.getLogSource() == KnownLogSource.WEBSOCKET_LIVE;
 	}
 }
