@@ -5,8 +5,12 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.gui.CommonGuiSetup;
 import gg.xp.xivsupport.gui.Refreshable;
+import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.EnumSetting;
+import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -31,12 +35,14 @@ public class FlyingTextOverlay extends XivOverlay {
 	private static final Color color = new Color(255, 255, 64, 255);
 	private static final Color backdropColor = new Color(20, 21, 22, 128);
 	private static final Color transparentColor = new Color(0, 0, 0, 0);
-	private static final int textPadding = 2;
+	private static final int textPadding = 10;
 	private final InnerPanel innerPanel;
 	private final int templateHeight;
+	private final EnumSetting<TextAlignment> alignmentSetting;
 
 	public FlyingTextOverlay(PersistenceProvider pers, OverlayConfig oc) {
 		super("Callout Text", "callout-text-overlay", oc, pers);
+		alignmentSetting = new EnumSetting<>(pers, "callout-text-overlay.text-alignment", TextAlignment.class, TextAlignment.CENTER);
 		font = new JLabel().getFont().deriveFont(new AffineTransform(2, 0, 0, 2, 0, 0));
 		JLabel templateJLabel = new JLabel();
 		templateJLabel.setFont(font);
@@ -47,8 +53,18 @@ public class FlyingTextOverlay extends XivOverlay {
 		innerPanel.setPreferredSize(new Dimension(400, 220));
 		getPanel().add(innerPanel);
 		attribs = new SimpleAttributeSet();
-		StyleConstants.setAlignment(attribs, StyleConstants.ALIGN_CENTER);
+		recheckAlignment();
+		alignmentSetting.addListener(this::recheckAlignment);
 		refresher.start();
+	}
+
+	private void recheckAlignment() {
+		StyleConstants.setAlignment(attribs, switch (alignmentSetting.get()) {
+			case LEFT -> StyleConstants.ALIGN_LEFT;
+			case CENTER -> StyleConstants.ALIGN_CENTER;
+			case RIGHT -> StyleConstants.ALIGN_RIGHT;
+		});
+
 	}
 
 	private final class VisualCalloutItem {
@@ -57,20 +73,20 @@ public class FlyingTextOverlay extends XivOverlay {
 		private final int centerX;
 		private final int width;
 		private String prevText = "";
-		private final int leftGradientBound;
-		private final int rightGradientBound;
-		private final int heightOfThisItem;
-		private volatile int leftTextBound;
-		private volatile int rightTextBound;
+		private final int leftOuterGradientBound;
+		private final int rightOuterGradientBound;
+		private int heightOfThisItem;
+		private volatile int leftInnerGradientBound;
+		private volatile int rightInnerGradientBound;
 		private final @Nullable Component extraComponent;
 		private volatile int extraComponentLeftPad;
+		private int newLeftBound;
+		private static final int gradientWidth = 50;
 
 		private VisualCalloutItem(CalloutEvent event) {
 			this.event = event;
 			text = new JTextPane();
 			text.setParagraphAttributes(attribs, false);
-//			recheckText();
-			text.setAlignmentX(Component.CENTER_ALIGNMENT);
 			text.setOpaque(false);
 			text.setFont(font);
 			text.setEditable(false);
@@ -78,7 +94,6 @@ public class FlyingTextOverlay extends XivOverlay {
 			text.setBorder(null);
 			text.setFocusable(false);
 			centerX = width >> 1;
-			final int newLeftBound;
 			{
 				extraComponent = event.graphicalComponent();
 				if (extraComponent == null) {
@@ -109,22 +124,22 @@ public class FlyingTextOverlay extends XivOverlay {
 			heightOfThisItem = this.text.getPreferredSize().height;
 			preferredTextWidth = this.text.getPreferredSize().width;
 			// TODO: these aren't the actual bounds
-			leftTextBound = Math.max(centerX - (preferredTextWidth >> 1), 10);
-			rightTextBound = Math.min(centerX + (preferredTextWidth >> 1), width - 10);
+			leftInnerGradientBound = Math.max(centerX - (preferredTextWidth >> 1), textPadding);
+			rightInnerGradientBound = Math.min(centerX + (preferredTextWidth >> 1), width - textPadding);
 			int gradientWidth = 50;
-			leftGradientBound = Math.max(leftTextBound - gradientWidth - newLeftBound, 0);
-			rightGradientBound = Math.min(rightTextBound + gradientWidth, width);
+			leftOuterGradientBound = Math.max(leftInnerGradientBound - gradientWidth - newLeftBound, 0);
+			rightOuterGradientBound = Math.min(rightInnerGradientBound + gradientWidth, width);
 		}
 
 		private void paint(Graphics2D graphics) {
-			GradientPaint paintLeft = new GradientPaint(leftGradientBound, 0, transparentColor, leftTextBound, 0, backdropColor);
+			GradientPaint paintLeft = new GradientPaint(leftOuterGradientBound, 0, transparentColor, leftInnerGradientBound, 0, backdropColor);
 			graphics.setPaint(paintLeft);
-			graphics.fillRect(leftGradientBound, 0, leftTextBound - leftGradientBound, heightOfThisItem);
+			graphics.fillRect(leftOuterGradientBound, 0, leftInnerGradientBound - leftOuterGradientBound, heightOfThisItem);
 			graphics.setPaint(backdropColor);
-			graphics.fillRect(leftTextBound, 0, rightTextBound - leftTextBound, heightOfThisItem);
-			GradientPaint paintRight = new GradientPaint(rightTextBound, 0, backdropColor, rightGradientBound, 0, transparentColor);
+			graphics.fillRect(leftInnerGradientBound, 0, rightInnerGradientBound - leftInnerGradientBound, heightOfThisItem);
+			GradientPaint paintRight = new GradientPaint(rightInnerGradientBound, 0, backdropColor, rightOuterGradientBound, 0, transparentColor);
 			graphics.setPaint(paintRight);
-			graphics.fillRect(rightTextBound, 0, rightGradientBound - rightTextBound, heightOfThisItem);
+			graphics.fillRect(rightInnerGradientBound, 0, rightOuterGradientBound - rightInnerGradientBound, heightOfThisItem);
 			graphics.setFont(text.getFont());
 			this.text.paint(graphics);
 			Component extra = this.extraComponent;
@@ -148,15 +163,16 @@ public class FlyingTextOverlay extends XivOverlay {
 				text.setText(prevText = newText);
 				if (extraComponent != null) {
 					int preferredTextWidth = this.text.getPreferredSize().width;
-					// TODO: these aren't the actual bounds
-					leftTextBound = Math.max(centerX - (preferredTextWidth >> 1), 10);
-					rightTextBound = Math.min(centerX + (preferredTextWidth >> 1), width - 10);
+					leftInnerGradientBound = Math.max(centerX - (preferredTextWidth >> 1), textPadding);
+					rightInnerGradientBound = Math.min(centerX + (preferredTextWidth >> 1), width - textPadding);
 					Rectangle oldBounds = extraComponent.getBounds();
-					extraComponentLeftPad = Math.max(0, leftTextBound - oldBounds.width - textPadding);
+					extraComponentLeftPad = Math.max(0, leftInnerGradientBound - oldBounds.width - textPadding);
 				}
 				else {
 					extraComponentLeftPad = 0;
 				}
+				text.setBounds(leftInnerGradientBound + extraComponentLeftPad, 0, rightInnerGradientBound - leftInnerGradientBound, 1_000);
+				heightOfThisItem = this.text.getPreferredSize().height;
 			}
 			if (extraComponent != null && extraComponent instanceof Refreshable ref) {
 				ref.refresh();
@@ -244,25 +260,37 @@ public class FlyingTextOverlay extends XivOverlay {
 	public static void main(String[] args) {
 		CommonGuiSetup.setup();
 		{
-//			InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
-//			FlyingTextOverlay overlay = new FlyingTextOverlay(pers);
-//			overlay.finishInit();
-//			overlay.setVisible(true);
-//			overlay.setEditMode(true);
-//			overlay.getEnabled().set(true);
-//			double scaleFactor = 1.5;
-//			overlay.setScale(scaleFactor);
-//			overlay.addCallout(new BasicCalloutEvent(null, "One", 5000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "This second callout is longer", 15000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "Three", 255000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "This one is so long, it isn't going to fit on the screen", 255000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
-//			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+//			pers.save("callout-text-overlay.text-alignment", "LEFT");
+			OverlayConfig oc = new OverlayConfig(pers);
+			FlyingTextOverlay overlay = new FlyingTextOverlay(pers, oc);
+			overlay.finishInit();
+			overlay.setVisible(true);
+			overlay.setEditMode(true);
+			overlay.getEnabled().set(true);
+			double scaleFactor = 1.5;
+			overlay.setScale(scaleFactor);
+			overlay.addCallout(new BasicCalloutEvent(null, "One", 5000));
+			overlay.addCallout(new BasicCalloutEvent(null, "This second callout is longer", 15000) {
+				@Override
+				public @NotNull Component graphicalComponent() {
+					return new JButton("Foo");
+				}
+			});
+			overlay.addCallout(new BasicCalloutEvent(null, "Three", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "This one is so long, it isn't going to fit on one row", 255000) {
+				@Override
+				public @NotNull Component graphicalComponent() {
+					return new JButton("Bar");
+				}
+			});
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
+			overlay.addCallout(new BasicCalloutEvent(null, "Lots of Callouts", 255000));
 		}
 
 	}
