@@ -6,10 +6,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.events.actlines.events.HasDuration;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EasyTrigger<X> implements HasMutableConditions<X> {
@@ -29,6 +32,9 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 	private String name = "Give me a name";
 	private String tts = "The text that you want read out loud (or leave empty)";
 	private String text = "The text that you want displayed (or leave empty). Supports Groovy expressions in curly braces.";
+	private long hangTime = 5000;
+	private boolean useDuration = true;
+	private boolean useIcon = true;
 
 	public EasyTrigger() {
 		recalc();
@@ -48,7 +54,20 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 	}
 
 	private void recalc() {
-		call = new ModifiableCallout<X>("Easy Trigger Callout", tts, text, Collections.emptyList()).autoIcon();
+		Predicate<X> expiry;
+		Duration hangTime = Duration.ofMillis(this.hangTime);
+		if (useDuration && HasDuration.class.isAssignableFrom(eventType)) {
+			//noinspection RedundantCast,unchecked
+			expiry = (Predicate<X>) (Predicate<? extends HasDuration>) hd -> hd.getEstimatedTimeSinceExpiry().compareTo(hangTime) > 0;
+		}
+		else {
+			expiry = ModifiableCallout.expiresIn(hangTime);
+		}
+		ModifiableCallout<X> call = new ModifiableCallout<>("Easy Trigger Callout", tts, text, expiry);
+		if (useIcon) {
+			call.autoIcon();
+		}
+		this.call = call;
 	}
 
 	public Class<X> getEventType() {
@@ -133,6 +152,34 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+		recalc();
+	}
+
+	public long getHangTime() {
+		return hangTime;
+	}
+
+	public void setHangTime(long hangTime) {
+		this.hangTime = hangTime;
+		recalc();
+	}
+
+	public boolean isUseDuration() {
+		return useDuration;
+	}
+
+	public void setUseDuration(boolean useDuration) {
+		this.useDuration = useDuration;
+		recalc();
+	}
+
+	public boolean isUseIcon() {
+		return useIcon;
+	}
+
+	public void setUseIcon(boolean useIcon) {
+		this.useIcon = useIcon;
+		recalc();
 	}
 
 	public EasyTrigger<X> duplicate() {

@@ -26,6 +26,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 
+import javax.print.attribute.standard.JobKOctets;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Collections;
@@ -369,8 +370,38 @@ public class EasyTriggersTab implements PluginTab {
 			add(GuiUtil.labelFor("Text", textField), c);
 			c.gridx++;
 			add(textField, c);
+			int yReset = c.gridy + 1;
+			c.gridx = 2;
+
+			{
+				TextFieldWithValidation<Long> hangTime = new TextFieldWithValidation<>(Long::parseLong, trigger::setHangTime, () -> Long.toString(trigger.getHangTime()));
+				JCheckBox plusDuration = new JCheckBox();
+				plusDuration.setSelected(trigger.isUseDuration());
+				plusDuration.addActionListener(l -> trigger.setUseDuration(plusDuration.isSelected()));
+
+				JCheckBox useIcon = new JCheckBox();
+				useIcon.setSelected(trigger.isUseIcon());
+				useIcon.addActionListener(l -> trigger.setUseIcon(useIcon.isSelected()));
+
+				c.gridy = 0;
+				add(GuiUtil.labelFor("Hang Time", hangTime), c);
+				c.gridy++;
+				add(GuiUtil.labelFor("Plus cast/buff duration", plusDuration), c);
+				c.gridy++;
+				add(GuiUtil.labelFor("Use ability/buff icon", useIcon), c);
+				c.gridy = 0;
+				c.gridx++;
+				add(hangTime, c);
+				c.gridy++;
+				add(plusDuration, c);
+				c.gridy++;
+				add(useIcon, c);
+
+			}
+
+
 			c.gridx = 0;
-			c.gridy++;
+			c.gridy = yReset;
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			add(conditionsPanel, c);
 			c.gridy++;
