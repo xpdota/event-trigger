@@ -116,6 +116,9 @@ public class CalloutsConfigTab implements PluginTab {
 				c.gridx++;
 				c.weightx = 1;
 				innerPanel.add(csg.getTextPanel(), c);
+				c.gridx++;
+				c.weightx = 0;
+				innerPanel.add(csg.getColorPicker(), c);
 			});
 			csgs.forEach(csg -> csg.setEnabledByParent(topLevelCheckbox.isSelected()));
 			topLevelCheckbox.addActionListener(l -> {

@@ -4,14 +4,15 @@ import gg.xp.reevent.events.BaseEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
+import java.time.Duration;
 import java.time.Instant;
 
-public class BasicCalloutEvent extends BaseEvent implements CalloutEvent {
+public class BasicCalloutEvent extends BaseCalloutEvent {
 	@Serial
 	private static final long serialVersionUID = 7956006620675927571L;
 	private final String callText;
 	private final String visualText;
-	private final Instant expiresAt;
+	private final Duration hangTime;
 	// TODO lower this
 	private static final long DEFAULT_DURATION = 15000;
 
@@ -27,7 +28,7 @@ public class BasicCalloutEvent extends BaseEvent implements CalloutEvent {
 		this.callText = callText;
 		this.visualText = visualText;
 		// TODO: when I get fake time implemented, this will need to be changed
-		expiresAt = Instant.now().plusMillis(hangTime);
+		this.hangTime = Duration.ofMillis(hangTime);
 	}
 
 	@Override
@@ -42,18 +43,7 @@ public class BasicCalloutEvent extends BaseEvent implements CalloutEvent {
 
 	@Override
 	public boolean isExpired() {
-		return expiresAt.isBefore(Instant.now());
+		return getTimeSinceCall().compareTo(hangTime) > 0;
 	}
 
-	private @Nullable CalloutEvent replaces;
-
-	@Override
-	public @Nullable CalloutEvent replaces() {
-		return replaces;
-	}
-
-	@Override
-	public void setReplaces(CalloutEvent replaces) {
-		this.replaces = replaces;
-	}
 }

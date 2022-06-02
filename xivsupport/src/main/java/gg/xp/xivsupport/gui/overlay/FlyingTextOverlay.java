@@ -117,11 +117,17 @@ public class FlyingTextOverlay extends XivOverlay {
 					extraComponent.validate();
 				}
 			}
-			this.text.setBounds(textLeftBound, 0, width - textLeftBound - textPadding, 1);
+			text.setBounds(textLeftBound, 0, width - textLeftBound - textPadding, 1);
 			int preferredHeight = text.getPreferredSize().height;
 //			text.setPreferredSize(new Dimension(preferredWidth, preferredHeight));
-			this.text.setBounds(textLeftBound, 0, width - textLeftBound - textPadding, preferredHeight);
-			this.text.setForeground(textColorSetting.get());
+			text.setBounds(textLeftBound, 0, width - textLeftBound - textPadding, preferredHeight);
+			Color colorOverride = event.getColorOverride();
+			if (colorOverride == null) {
+				text.setForeground(textColorSetting.get());
+			}
+			else {
+				text.setForeground(colorOverride);
+			}
 			int preferredTextWidth;
 			recheckText();
 			heightOfThisItem = this.text.getPreferredSize().height;
@@ -175,7 +181,7 @@ public class FlyingTextOverlay extends XivOverlay {
 		}
 
 		public int getHeight() {
-			return text.getPreferredSize().height;
+			return heightOfThisItem;
 		}
 
 		public void recheckText() {
