@@ -2,7 +2,7 @@ package gg.xp.xivsupport.persistence.settings;
 
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 
-public class EnumSetting<X extends Enum<X>> extends ObservableSetting {
+public class EnumSetting<X extends Enum<X>> extends ObservableSetting implements Resettable {
 	
 	private final PersistenceProvider persistence;
 
@@ -33,4 +33,23 @@ public class EnumSetting<X extends Enum<X>> extends ObservableSetting {
 		notifyListeners();
 	}
 
+	@Override
+	public boolean isSet() {
+		return persistence.get(settingKey, enumCls, null) != null;
+	}
+
+	@Override
+	public void delete() {
+		persistence.delete(settingKey);
+		cached = null;
+		notifyListeners();
+	}
+
+	public X getDefault() {
+		return dflt;
+	}
+
+	public Class<X> getEnumType() {
+		return enumCls;
+	}
 }

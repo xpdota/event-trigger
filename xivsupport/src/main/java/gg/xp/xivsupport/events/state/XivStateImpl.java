@@ -684,7 +684,7 @@ public class XivStateImpl implements XivState {
 		}
 
 		public boolean recomputeIfDirty() {
-			if (dirty) {
+			if (dirty || computed == null) {
 				recompute();
 				return true;
 			}
