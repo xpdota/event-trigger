@@ -580,7 +580,7 @@ public class XivStateImpl implements XivState {
 		private OnlineStatus status = OnlineStatus.UNKNOWN;
 		private XivCombatant computed;
 		private boolean fake;
-		private volatile boolean dirty;
+		private volatile boolean dirty = true;
 		private boolean removed;
 		private XivCombatant owner;
 		private long shieldPercent;
