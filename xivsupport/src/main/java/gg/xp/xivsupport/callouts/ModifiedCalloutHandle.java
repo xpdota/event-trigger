@@ -2,6 +2,7 @@ package gg.xp.xivsupport.callouts;
 
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 import org.jetbrains.annotations.Nullable;
@@ -20,6 +21,7 @@ public final class ModifiedCalloutHandle {
 	private final ModifiableCallout<?> original;
 	private final @Nullable BooleanSetting allTts;
 	private final @Nullable BooleanSetting allText;
+	private final ColorSetting textColorOverride;
 	private boolean isEnabledByParent = true;
 
 	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
@@ -45,6 +47,7 @@ public final class ModifiedCalloutHandle {
 			// happen to set them to the same value.
 		}
 		hangTimeSetting = new LongSetting(persistenceProvider, propStub + ".text.hangtime", 5000L);
+		textColorOverride = new ColorSetting(persistenceProvider, propStub + ".text.color", null);
 		this.original = original;
 	}
 
@@ -137,5 +140,9 @@ public final class ModifiedCalloutHandle {
 
 	public BooleanSetting getAllTtsEnabled() {
 		return allTts;
+	}
+
+	public ColorSetting getTextColorOverride() {
+		return textColorOverride;
 	}
 }

@@ -35,7 +35,7 @@ public enum Cooldown {
 
 	// List of ALL buffs to track - WL/BL will be done by user settings
 	// TANKS
-	Rampart(builder(CooldownType.PERSONAL_MIT, true, 0x1d6b, 1191)),
+	Rampart(builder(CooldownType.PERSONAL_MIT, true, 0x1d6b).buffIds(1191)),
 	Reprisal(TANK, true, 60.0, "Reprisal", CooldownType.PARTY_MIT, 0x1d6f, 1193, 2101),
 	ArmsLength(TANK, true, 120.0, "Arm's Length", CooldownType.PERSONAL_UTILITY, 0x1d7c, 1209),
 

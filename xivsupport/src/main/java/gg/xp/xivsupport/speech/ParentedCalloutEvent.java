@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.speech;
 
-import gg.xp.reevent.events.BaseEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -9,7 +8,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class ParentedCalloutEvent<X> extends BaseEvent implements CalloutEvent {
+public class ParentedCalloutEvent<X> extends BaseCalloutEvent {
 
 	@Serial
 	private static final long serialVersionUID = 6842512228516345067L;
@@ -43,17 +42,6 @@ public class ParentedCalloutEvent<X> extends BaseEvent implements CalloutEvent {
 		return expiryCheck.test(event);
 	}
 
-	private @Nullable CalloutEvent replaces;
-
-	@Override
-	public @Nullable CalloutEvent replaces() {
-		return replaces;
-	}
-
-	@Override
-	public void setReplaces(CalloutEvent replaces) {
-		this.replaces = replaces;
-	}
 
 	@Override
 	public @Nullable Component graphicalComponent() {

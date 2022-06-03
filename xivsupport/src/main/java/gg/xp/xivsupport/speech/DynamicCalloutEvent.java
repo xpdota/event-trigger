@@ -4,21 +4,20 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Supplier;
 
-public class DynamicCalloutEvent extends BaseEvent implements CalloutEvent {
+public class DynamicCalloutEvent extends BaseCalloutEvent {
 
 	private final String callText;
 	private final Supplier<String> visualText;
-	private final Instant expiresAt;
-	private final long hangTime;
+	private final Duration hangTime;
 
 	public DynamicCalloutEvent(String callText, Supplier<String> visualText, long hangTime) {
 		this.callText = callText;
 		this.visualText = visualText;
-		this.hangTime = hangTime;
-		expiresAt = Instant.now().plusMillis(hangTime);
+		this.hangTime = Duration.ofMillis(hangTime);
 	}
 
 	@Override
@@ -34,22 +33,7 @@ public class DynamicCalloutEvent extends BaseEvent implements CalloutEvent {
 
 	@Override
 	public boolean isExpired() {
-		Event parent = getParent();
-		if (parent instanceof BaseEvent be) {
-			return be.getEffectiveTimeSince().toMillis() > hangTime;
-		}
-		return expiresAt.isBefore(Instant.now());
+		return getTimeSinceCall().compareTo(hangTime) > 0;
 	}
 
-	private @Nullable CalloutEvent replaces;
-
-	@Override
-	public @Nullable CalloutEvent replaces() {
-		return replaces;
-	}
-
-	@Override
-	public void setReplaces(CalloutEvent replaces) {
-		this.replaces = replaces;
-	}
 }

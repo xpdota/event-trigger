@@ -67,6 +67,7 @@ public class JailSolver implements FilteredEventHandler {
 		return index;
 	}).thenComparing(XivPlayerCharacter::getName);
 
+	// TODO: deal with duplicate jobs
 	private final Comparator<Job> defaultJailSortComparator = Comparator.<Job, Integer>comparing(job -> {
 		if (job.isMeleeDps()) {
 			return 1;

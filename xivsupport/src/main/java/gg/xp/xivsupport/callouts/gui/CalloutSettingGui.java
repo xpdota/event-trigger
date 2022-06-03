@@ -2,11 +2,14 @@ package gg.xp.xivsupport.callouts.gui;
 
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.StringSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class CalloutSettingGui {
@@ -21,6 +24,7 @@ public class CalloutSettingGui {
 	private final JTextField textTextBox;
 	private final BooleanSetting allText;
 	private final BooleanSetting allTts;
+	private final JButton colorPicker;
 	private boolean enabledByParent = true;
 
 	public CalloutSettingGui(ModifiedCalloutHandle call) {
@@ -30,6 +34,7 @@ public class CalloutSettingGui {
 		BooleanSetting enableText = call.getEnableText();
 		BooleanSetting sameText = call.getSameText();
 		StringSetting textSetting = call.getTextSetting();
+		ColorSetting colorOverride = call.getTextColorOverride();
 		this.allText = call.getAllTextEnabled();
 		this.allTts = call.getAllTtsEnabled();
 
@@ -66,6 +71,10 @@ public class CalloutSettingGui {
 
 			textTextBox = new StringSettingGui(textSetting, null, () -> textPanel.isEnabled() && textCheckbox.isSelected() && !sameCheckBox.isSelected()).getTextBoxOnly();
 			textPanel.add(textTextBox);
+		}
+		{
+			colorPicker = new ColorSettingGui(colorOverride, "Text Color", textPanel::isEnabled).getButtonOnly();
+			colorPicker.setPreferredSize(new Dimension(20, 10));
 		}
 		recalcEnabledDisabledStatus();
 		ActionListener l = e -> recalcEnabledDisabledStatus();
@@ -110,6 +119,10 @@ public class CalloutSettingGui {
 		return textPanel;
 	}
 
+	public JButton getColorPicker() {
+		return colorPicker;
+	}
+
 	public void setVisible(boolean visible) {
 //		private final JCheckBox callCheckbox;
 //		private final JPanel ttsPanel;
@@ -122,8 +135,7 @@ public class CalloutSettingGui {
 		callCheckbox.setVisible(visible);
 		ttsPanel.setVisible(visible);
 		textPanel.setVisible(visible);
-		callCheckbox.setVisible(visible);
-		callCheckbox.setVisible(visible);
-		callCheckbox.setVisible(visible);
+		colorPicker.setVisible(visible);
+
 	}
 }

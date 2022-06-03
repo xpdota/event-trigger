@@ -7,6 +7,7 @@ import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.speech.BaseCalloutEvent;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.DynamicCalloutEvent;
@@ -163,19 +164,24 @@ public class ModifiableCallout<X> {
 		}
 		String modifiedCallText = applyReplacements(callText, arguments);
 		String modifiedVisualText = applyReplacements(visualText, arguments);
+		BaseCalloutEvent call;
 		if (Objects.equals(modifiedVisualText, visualText) && this.expiry == null) {
-			return new BasicCalloutEvent(
+			call = new BasicCalloutEvent(
 					modifiedCallText,
 					modifiedVisualText);
 		}
 		else {
-			return new ParentedCalloutEvent<>(
+			call = new ParentedCalloutEvent<>(
 					event,
 					modifiedCallText,
 					() -> applyReplacements(visualText, arguments),
 					expiry,
 					guiProvider);
 		}
+		if (handle != null) {
+			call.setColorOverride(handle.getTextColorOverride().get());
+		}
+		return call;
 	}
 
 	public CalloutEvent getModified(Map<String, Object> arguments) {
@@ -192,18 +198,23 @@ public class ModifiableCallout<X> {
 		}
 		String modifiedCallText = applyReplacements(callText, arguments);
 		String modifiedVisualText = applyReplacements(visualText, arguments);
+		BaseCalloutEvent call;
 		if (Objects.equals(modifiedVisualText, visualText)) {
-			return new BasicCalloutEvent(
+			call = new BasicCalloutEvent(
 					modifiedCallText,
 					modifiedVisualText);
 		}
 		else {
-			return new DynamicCalloutEvent(
+			call = new DynamicCalloutEvent(
 					modifiedCallText,
 					() -> applyReplacements(visualText, arguments),
 					defaultVisualHangTime
 			);
 		}
+		if (handle != null) {
+			call.setColorOverride(handle.getTextColorOverride().get());
+		}
+		return call;
 	}
 
 	private boolean shouldLogError() {

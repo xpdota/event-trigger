@@ -39,12 +39,14 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineNumberFil
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityNpcIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityTypeFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourcePartyMemberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusStacksFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetCountFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityNpcIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityTypeFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetIndexFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetPartyMemberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
@@ -78,12 +80,14 @@ public final class EasyTriggers {
 
 	private final PersistenceProvider pers;
 	private final PicoContainer pico;
+	private final XivState state;
 
 	private List<EasyTrigger<?>> triggers;
 
-	public EasyTriggers(PicoContainer pico, PersistenceProvider pers) {
+	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state) {
 		this.pers = pers;
 		this.pico = pico;
+		this.state = state;
 		mapper.setInjectableValues(new InjectableValues() {
 			@Override
 			public Object findInjectableValue(Object o, DeserializationContext deserializationContext, BeanProperty beanProperty, Object o1) {
@@ -267,6 +271,8 @@ public final class EasyTriggers {
 			new ConditionDescription<>(TargetEntityTypeFilter.class, HasTargetEntity.class, "Target Combatant", TargetEntityTypeFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(SourceEntityNpcIdFilter.class, HasSourceEntity.class, "Source Combatant NPC ID", SourceEntityNpcIdFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(TargetEntityNpcIdFilter.class, HasTargetEntity.class, "Target Combatant NPC ID", TargetEntityNpcIdFilter::new, EasyTriggers::generic),
+			new ConditionDescription<>(SourcePartyMemberFilter.class, HasSourceEntity.class, "Source is (not) in Party", () -> new SourcePartyMemberFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic),
+			new ConditionDescription<>(TargetPartyMemberFilter.class, HasTargetEntity.class, "Target is (not) in Party", () -> new TargetPartyMemberFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic),
 			new ConditionDescription<>(TargetIndexFilter.class, HasTargetIndex.class, "Target Index", TargetIndexFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(TargetCountFilter.class, HasTargetIndex.class, "Target Count", TargetCountFilter::new, EasyTriggers::generic),
 			new ConditionDescription<>(DurationFilter.class, HasDuration.class, "Castbar or Status Duration", DurationFilter::new, EasyTriggers::generic),
@@ -381,12 +387,16 @@ public final class EasyTriggers {
 	}
 
 
-	private static List<Condition<HasSourceEntity>> makeSourceConditions(HasSourceEntity hse) {
+	private List<Condition<HasSourceEntity>> makeSourceConditions(HasSourceEntity hse) {
 		XivCombatant source = hse.getSource();
 		if (source.isThePlayer()) {
 			SourceEntityTypeFilter etf = new SourceEntityTypeFilter();
 			etf.type = EntityType.THE_PLAYER;
 			return Collections.singletonList(etf);
+		}
+		else if (source.walkParentChain().getPartyType() == 1) {
+			SourcePartyMemberFilter spmf = new SourcePartyMemberFilter(state);
+			return Collections.singletonList(spmf);
 		}
 		// TODO: party member
 		else if (source.isPc()) {
@@ -404,12 +414,16 @@ public final class EasyTriggers {
 		}
 	}
 
-	private static List<Condition<HasTargetEntity>> makeTargetConditions(HasTargetEntity hse) {
+	private List<Condition<HasTargetEntity>> makeTargetConditions(HasTargetEntity hse) {
 		XivCombatant target = hse.getTarget();
 		if (target.isThePlayer()) {
 			TargetEntityTypeFilter etf = new TargetEntityTypeFilter();
 			etf.type = EntityType.THE_PLAYER;
 			return Collections.singletonList(etf);
+		}
+		else if (target.walkParentChain().getPartyType() == 1) {
+			TargetPartyMemberFilter tpmf = new TargetPartyMemberFilter(state);
+			return Collections.singletonList(tpmf);
 		}
 		// TODO: party member
 		else if (target.isPc()) {

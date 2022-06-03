@@ -41,5 +41,6 @@ public interface CalloutEvent extends Event, HasPrimaryValue {
 //		return IconTextRenderer.getStretchyIcon(RenderUtils.guessIconFor(getParent()));
 	}
 
+	@Nullable Color getColorOverride();
 
 }
