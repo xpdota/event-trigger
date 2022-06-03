@@ -2,8 +2,11 @@ package gg.xp.xivsupport.callouts;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.time.TimeUtils;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -110,6 +113,16 @@ public class ModifiableCallout<X> {
 
 	public ModifiableCallout<X> autoIcon() {
 		this.guiProvider = e -> IconTextRenderer.getStretchyIcon(RenderUtils.guessIconFor(e));
+		return this;
+	}
+
+	public ModifiableCallout<X> statusIcon(long statusId) {
+		this.guiProvider = e -> IconTextRenderer.getStretchyIcon(StatusEffectLibrary.iconForId(statusId, 0));
+		return this;
+	}
+
+	public ModifiableCallout<X> abilityIcon(long abilityId) {
+		this.guiProvider = e -> IconTextRenderer.getStretchyIcon(ActionLibrary.iconForId(abilityId));
 		return this;
 	}
 

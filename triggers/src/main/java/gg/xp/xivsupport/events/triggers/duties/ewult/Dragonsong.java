@@ -20,6 +20,8 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
+import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.gui.tables.renderers.RefreshingHpBar;
@@ -28,6 +30,8 @@ import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.slf4j.Logger;
@@ -37,6 +41,7 @@ import java.awt.*;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -142,12 +147,19 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	private final ModifiableCallout<AbilityUsedEvent> twister = new ModifiableCallout<>("Thordan II: Twister", "Twister");
 
+	private final ModifiableCallout<BuffApplied> p6_spread = ModifiableCallout.<BuffApplied>durationBasedCall("Dragons: Spread", "Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> p6_stackWithDebuff = ModifiableCallout.<BuffApplied>durationBasedCall("Dragons: Stack Debuff", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> p6_stackWithoutDebuff = ModifiableCallout.durationBasedCall("Dragons: No Debuff", "Nothing");
+
+	private final BooleanSetting p6_useAutoMarks;
+
 	private final XivState state;
 	private final StatusEffectRepository buffs;
 
-	public Dragonsong(XivState state, StatusEffectRepository buffs) {
+	public Dragonsong(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
 		this.buffs = buffs;
+		p6_useAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.use-auto-marks", false);
 	}
 
 	@Override
@@ -923,6 +935,72 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		if (event.getAbility().getId() == 0x6B8B && event.isFirstTarget()) {
 			ctx.accept(twister.getModified(event));
 		}
+	}
+
+	private enum WrothFlamesRole {
+		SPREAD,
+		STACK,
+		NOTHING
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p6_wrothFlames = new SequentialTrigger<>(40_000, BaseEvent.class,
+			// Start on Wroth Flames cast
+			be -> be instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x6D45,
+			(e1, s) -> {
+				log.info("Wroth Flames: Begin");
+				// extra stop condition is for if people are dead
+				List<BuffApplied> buffs = s.waitEventsUntil(6,
+						BuffApplied.class, ba -> ba.buffIdMatches(2758, 2759),
+						// Stop on Akh Morn
+						AbilityCastStart.class, acs -> acs.abilityIdMatches(0x6D46));
+				log.info("Wroth Flames: Collected buffs: {}", buffs);
+
+				buffs.stream().filter(ba -> ba.getTarget().isThePlayer()).findAny().ifPresentOrElse(
+						buff -> {
+							log.info("Wroth Flames: Player has buff {}", buff.getBuff().getId());
+							if (buff.buffIdMatches(2758)) {
+								s.updateCall(p6_spread.getModified(buff));
+							}
+							else {
+								s.updateCall(p6_stackWithDebuff.getModified(buff));
+							}
+						}, () -> {
+							// We still need duration from *something* for this to display the timer, so just grab one of the white debuffs
+							buffs.stream()
+									.filter(ba -> ba.buffIdMatches(2759))
+									.findFirst()
+									.ifPresent(buffApplied -> s.updateCall(p6_stackWithoutDebuff.getModified(buffApplied)));
+						}
+				);
+
+				if (getP6_useAutoMarks().get()) {
+					Map<XivPlayerCharacter, WrothFlamesRole> playerMechs = new HashMap<>(8);
+					getState().getPartyList().forEach(partyMember -> playerMechs.put(partyMember, WrothFlamesRole.NOTHING));
+					buffs.forEach(ba -> {
+						if (ba.getBuff().getId() == 2758) {
+							playerMechs.put((XivPlayerCharacter) ba.getTarget(), WrothFlamesRole.SPREAD);
+						}
+						else {
+							playerMechs.put(((XivPlayerCharacter) ba.getTarget()), WrothFlamesRole.STACK);
+
+						}
+					});
+					playerMechs.forEach((player, mech) -> {
+						MarkerSign mark = switch (mech) {
+							case SPREAD -> MarkerSign.ATTACK_NEXT;
+							case STACK -> MarkerSign.BIND_NEXT;
+							case NOTHING -> MarkerSign.IGNORE_NEXT;
+						};
+						// Basic marks only support
+						s.accept(new SpecificAutoMarkRequest(player, mark));
+					});
+				}
+			}
+	);
+
+	public BooleanSetting getP6_useAutoMarks() {
+		return p6_useAutoMarks;
 	}
 
 	private XivState getState() {

@@ -16,6 +16,7 @@ import gg.xp.xivsupport.events.triggers.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkKeyHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkSlotRequest;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
@@ -56,7 +57,7 @@ public class JailExampleTest {
 			AutoMarkRequest.class,
 			ClearAutoMarkRequest.class,
 			AutoMarkSlotRequest.class,
-			AutoMarkHandler.KeyPressRequest.class
+			AutoMarkKeyHandler.KeyPressRequest.class
 	);
 
 	/**
@@ -112,7 +113,7 @@ public class JailExampleTest {
 				// TTS
 				TtsRequest.class,
 				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -146,7 +147,7 @@ public class JailExampleTest {
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
 
-		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkKeyHandler.KeyPressRequest.class).stream().map(AutoMarkKeyHandler.KeyPressRequest::getKeyCode)
 				.collect(Collectors.toList());
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
@@ -272,7 +273,7 @@ public class JailExampleTest {
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
 				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
 		// parent tagged onto it.
@@ -300,7 +301,7 @@ public class JailExampleTest {
 		List<CalloutEvent> callouts = collector.getEventsOf(CalloutEvent.class);
 		Assert.assertEquals(callouts.size(), 0);
 
-		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkKeyHandler.KeyPressRequest.class).stream().map(AutoMarkKeyHandler.KeyPressRequest::getKeyCode)
 				.collect(Collectors.toList());
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
@@ -441,7 +442,7 @@ public class JailExampleTest {
 				// TTS
 				TtsRequest.class,
 				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -467,7 +468,7 @@ public class JailExampleTest {
 		List<AutoMarkRequest> automarks = collector.getEventsOf(AutoMarkRequest.class);
 		Assert.assertEquals(automarks.stream().map(am -> am.getPlayerToMark().getName()).collect(Collectors.toList()), List.of("Random Person", "Some Guy", "Foo Bar"));
 
-		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkKeyHandler.KeyPressRequest.class).stream().map(AutoMarkKeyHandler.KeyPressRequest::getKeyCode)
 				.collect(Collectors.toList());
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
@@ -534,7 +535,7 @@ public class JailExampleTest {
 				// TTS
 				TtsRequest.class,
 				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -560,7 +561,7 @@ public class JailExampleTest {
 		List<AutoMarkRequest> automarks = collector.getEventsOf(AutoMarkRequest.class);
 		Assert.assertEquals(automarks.stream().map(am -> am.getPlayerToMark().getName()).collect(Collectors.toList()), List.of("Foo Bar", "Some Guy", "Random Person"));
 
-		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkKeyHandler.KeyPressRequest.class).stream().map(AutoMarkKeyHandler.KeyPressRequest::getKeyCode)
 				.collect(Collectors.toList());
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD1, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD2));
 
@@ -655,7 +656,7 @@ public class JailExampleTest {
 				// TTS
 				TtsRequest.class,
 				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -690,7 +691,7 @@ public class JailExampleTest {
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
 
-		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkKeyHandler.KeyPressRequest.class).stream().map(AutoMarkKeyHandler.KeyPressRequest::getKeyCode)
 				.collect(Collectors.toList());
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
@@ -755,7 +756,7 @@ public class JailExampleTest {
 				// TTS
 				TtsRequest.class,
 				// Key Presses
-				AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class, AutoMarkHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -789,7 +790,7 @@ public class JailExampleTest {
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "First");
 
-		List<Integer> keyPresses = collector.getEventsOf(AutoMarkHandler.KeyPressRequest.class).stream().map(AutoMarkHandler.KeyPressRequest::getKeyCode)
+		List<Integer> keyPresses = collector.getEventsOf(AutoMarkKeyHandler.KeyPressRequest.class).stream().map(AutoMarkKeyHandler.KeyPressRequest::getKeyCode)
 				.collect(Collectors.toList());
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD1, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD2));
 
