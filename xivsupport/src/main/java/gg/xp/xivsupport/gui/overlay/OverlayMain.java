@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.overlay;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.OnlineStatus;
 import gg.xp.xivsupport.events.debug.DebugCommand;
@@ -23,6 +24,7 @@ public final class OverlayMain {
 	private static final Logger log = LoggerFactory.getLogger(OverlayMain.class);
 	private final BooleanSetting show;
 	private final BooleanSetting forceShow;
+	private final PicoContainer container;
 
 
 	@HandleEvents
@@ -84,6 +86,11 @@ public final class OverlayMain {
 		}
 		show = config.getShow();
 		forceShow = config.getForceShow();
+		this.container = container;
+	}
+
+	@HandleEvents
+	public void init(EventContext context, InitEvent init) {
 		new Thread(() -> {
 
 			show.addListener(this::recalc);
@@ -93,24 +100,15 @@ public final class OverlayMain {
 			overlays.forEach(this::addOverlay);
 
 			setEditing(false);
-			//noinspection CallToThreadStartDuringObjectConstruction
-			new Thread(() -> {
-				while (true) {
-					try {
-						boolean old = windowActive;
-						windowActive = isGameWindowActive();
-						if (old != windowActive) {
-							recalc();
-						}
-						//noinspection BusyWait
-						Thread.sleep(200);
-					}
-					catch (Throwable e) {
-						log.error("Error", e);
-					}
+			new RefreshLoop<>("OverlayStateCheck", this, om -> {
+				boolean old = windowActive;
+				windowActive = isGameWindowActive();
+				if (old != windowActive) {
+					recalc();
 				}
-			}).start();
+			}, om -> 200L).start();
 		}, "OverlayStartupHelper").start();
+
 	}
 
 	private boolean isGameWindowActive() {

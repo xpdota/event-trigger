@@ -81,11 +81,13 @@ public class JobOverlayManager extends XivOverlay implements FilteredEventHandle
 			log.info("Switching job panel (to {}). null before: {}, null after: {}", newJob, current == null, newCurrent == null);
 			JPanel panel = getPanel();
 			if (current != null) {
+				log.info("Removing old panel");
 				current.setVisible(false);
 				panel.remove(current);
 			}
 			current = newCurrent;
 			if (current != null) {
+				log.info("Adding new panel");
 				current.setVisible(true);
 				panel.add(current);
 				repackSize();

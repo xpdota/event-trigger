@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs.joboverlays;
 
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.Cooldown;
@@ -65,6 +66,10 @@ public class SgeOverlay extends BaseJobOverlay {
 		updateKardion();
 	}
 
+	@HandleEvents
+	public void init(EventContext ctx, InitEvent init) {
+		updateKardion();
+	}
 //	@HandleEvents
 
 	private void updateKardion() {
@@ -88,6 +93,11 @@ public class SgeOverlay extends BaseJobOverlay {
 		SwingUtilities.invokeLater(this::repaint);
 	}
 
+	@Override
+	protected void onBecomeVisible() {
+		updateKardion();
+		periodicRefresh();
+	}
 
 	@Override
 	protected void periodicRefresh() {
