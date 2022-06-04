@@ -77,5 +77,7 @@ public class AutoMarkGui implements PluginTab {
 			To test, use the command '/e c:amtest x y z' (without the quotes) where x, y, and z are the party slots of the players you want to mark.
 						
 			If you aren't in a party, you can still do '/e c:amtest 1' to test it on yourself.
+			
+			To test Telesto's ability to place arbitrary markers, you can do '/e attack1 1', replacing attack1 with the desired marker.
 			""";
 }
