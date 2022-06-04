@@ -31,8 +31,8 @@ public class DragonsongGui implements PluginTab {
 		ReadOnlyText helpText = new ReadOnlyText("""
 				The four players with the 'spread' debuffs will receive 'attack' markers.
 				In addition, if Telesto is in use:
-				The two players with 'stack' debuffs will receive 'bind' markers,
-				and the two players with nothing will receive 'ignore' markers.
+				The two players with 'stack' debuffs will receive 'bind1' and 'ignore1' markers,
+				and the two players with nothing will receive 'bind2' and 'ignore2' markers.
 				""");
 		helpText.setPreferredSize(new Dimension(400, 400));
 

@@ -20,6 +20,7 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
@@ -39,7 +40,9 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -975,26 +978,48 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				);
 
 				if (getP6_useAutoMarks().get()) {
-					Map<XivPlayerCharacter, WrothFlamesRole> playerMechs = new HashMap<>(8);
-					getState().getPartyList().forEach(partyMember -> playerMechs.put(partyMember, WrothFlamesRole.NOTHING));
+					List<XivPlayerCharacter> noBuff = new ArrayList<>(getState().getPartyList());
+					Map<WrothFlamesRole, List<XivPlayerCharacter>> playerMechs = new EnumMap<>(WrothFlamesRole.class);
 					buffs.forEach(ba -> {
-						if (ba.getBuff().getId() == 2758) {
-							playerMechs.put((XivPlayerCharacter) ba.getTarget(), WrothFlamesRole.SPREAD);
+						// *Should* always be true, but just in case...
+						if (ba.getTarget() instanceof XivPlayerCharacter player) {
+							if (ba.getBuff().getId() == 2758) {
+								playerMechs.computeIfAbsent(WrothFlamesRole.SPREAD, k -> new ArrayList<>()).add(player);
+							}
+							else {
+								playerMechs.computeIfAbsent(WrothFlamesRole.STACK, k -> new ArrayList<>()).add(player);
+							}
+							noBuff.remove(player);
 						}
-						else {
-							playerMechs.put(((XivPlayerCharacter) ba.getTarget()), WrothFlamesRole.STACK);
+					});
+					playerMechs.put(WrothFlamesRole.NOTHING, noBuff);
 
-						}
-					});
-					playerMechs.forEach((player, mech) -> {
-						MarkerSign mark = switch (mech) {
-							case SPREAD -> MarkerSign.ATTACK_NEXT;
-							case STACK -> MarkerSign.BIND_NEXT;
-							case NOTHING -> MarkerSign.IGNORE_NEXT;
-						};
-						// Basic marks only support
-						s.accept(new SpecificAutoMarkRequest(player, mark));
-					});
+					log.info("Wroth player mechs: {}", playerMechs);
+
+					List<XivPlayerCharacter> spreaders = playerMechs.get(WrothFlamesRole.SPREAD);
+
+					List<XivPlayerCharacter> stackers = playerMechs.get(WrothFlamesRole.STACK);
+					List<XivPlayerCharacter> otherStackers = playerMechs.get(WrothFlamesRole.NOTHING);
+
+					// Give out markers
+					spreaders.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.ATTACK_NEXT)));
+
+					// People might be dead, so check count
+					if (stackers.size() >= 1 && otherStackers.size() >= 1) {
+						s.accept(new SpecificAutoMarkRequest(stackers.get(0), MarkerSign.BIND1));
+						s.accept(new SpecificAutoMarkRequest(otherStackers.get(0), MarkerSign.BIND2));
+					}
+					if (stackers.size() >= 2 && otherStackers.size() >= 2) {
+						s.accept(new SpecificAutoMarkRequest(stackers.get(1), MarkerSign.IGNORE1));
+						s.accept(new SpecificAutoMarkRequest(otherStackers.get(1), MarkerSign.IGNORE2));
+					}
+					else {
+						// but still warn that something went wrong
+						log.warn("Wroth: Not enough stackers! With buff: {}, without: {}", stackers, otherStackers);
+					}
+
+					s.waitMs(25_000);
+					s.accept(new ClearAutoMarkRequest());
 				}
 			}
 	);
