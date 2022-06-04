@@ -5,16 +5,22 @@ import gg.xp.reevent.events.BaseEvent;
 
 import java.io.Serial;
 
-public class TelestoMessage extends BaseEvent {
+public class TelestoOutgoingMessage extends BaseEvent {
 	@Serial
 	private static final long serialVersionUID = -4682203569109709940L;
 	private final JsonNode json;
+	private final boolean delay;
 
-	public TelestoMessage(JsonNode json) {
+	public TelestoOutgoingMessage(JsonNode json, boolean delay) {
 		this.json = json;
+		this.delay = delay;
 	}
 
 	public JsonNode getJson() {
 		return json;
+	}
+
+	public boolean shouldDelay() {
+		return delay;
 	}
 }

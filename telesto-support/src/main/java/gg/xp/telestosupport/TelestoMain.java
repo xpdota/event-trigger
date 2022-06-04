@@ -37,6 +37,9 @@ import java.util.concurrent.Executors;
 public class TelestoMain implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(TelestoMain.class);
+	// Being used as a queue
+	private static final ExecutorService queueExs = Executors.newSingleThreadExecutor();
+	// Handles the actual execution
 	private static final ExecutorService exs = Executors.newCachedThreadPool();
 	private final HttpClient http = HttpClient.newBuilder().build();
 	private final ObjectMapper mapper = new ObjectMapper();
@@ -66,10 +69,10 @@ public class TelestoMain implements FilteredEventHandler {
 	@HandleEvents
 	public void handleGameCommand(EventContext context, TelestoGameCommand event) {
 		String cmd = event.getCommand();
-		context.accept(makeMessage(GAME_CMD_ID, "ExecuteCommand", Map.of("command", cmd)));
+		context.accept(makeMessage(GAME_CMD_ID, "ExecuteCommand", Map.of("command", cmd), true));
 	}
 
-	private TelestoMessage makeMessage(int id, @NotNull String type, @Nullable Object payload) {
+	private TelestoOutgoingMessage makeMessage(int id, @NotNull String type, @Nullable Object payload, boolean delay) {
 		if (payload == null) {
 			//noinspection AssignmentToMethodParameter
 			payload = Collections.emptyMap();
@@ -80,40 +83,43 @@ public class TelestoMain implements FilteredEventHandler {
 						"id", id,
 						"type", type,
 						"payload", payload
-				)
-		);
+				), delay);
 	}
 
-	private TelestoMessage makeMessage(Map<String, Object> payload) {
-		return new TelestoMessage(mapper.valueToTree(payload));
+	private TelestoOutgoingMessage makeMessage(Map<String, Object> payload, boolean delay) {
+		return new TelestoOutgoingMessage(mapper.valueToTree(payload), delay);
 	}
 
 	@HandleEvents
 	public void handlePartyChange(EventContext context, PartyChangeEvent pce) {
 		if (enablePartyList.get()) {
-			context.accept(makeMessage(PARTY_UPDATE_ID, "GetPartyMembers", null));
+			context.accept(makePartyMemberMsg());
 		}
 	}
 
 	@HandleEvents
 	public void handlePartyChange(EventContext context, ActorControlEvent ace) {
 		if (enablePartyList.get()) {
-			context.accept(makeMessage(PARTY_UPDATE_ID, "GetPartyMembers", null));
+			context.accept(makePartyMemberMsg());
 		}
 	}
 
 	@HandleEvents
 	public void handlePartyChange(EventContext context, ZoneChangeEvent zce) {
 		if (enablePartyList.get()) {
-			context.accept(makeMessage(PARTY_UPDATE_ID, "GetPartyMembers", null));
+			context.accept(makePartyMemberMsg());
 		}
 	}
 
 	@HandleEvents
 	public void handlePartyChange(EventContext context, MapChangeEvent mce) {
 		if (enablePartyList.get()) {
-			context.accept(makeMessage(PARTY_UPDATE_ID, "GetPartyMembers", null));
+			context.accept(makePartyMemberMsg());
 		}
+	}
+
+	private TelestoOutgoingMessage makePartyMemberMsg() {
+		return makeMessage(PARTY_UPDATE_ID, "GetPartyMembers", null, false);
 	}
 
 
@@ -136,8 +142,8 @@ public class TelestoMain implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void handleMessage(EventContext context, TelestoMessage msg) {
-		exs.submit(() -> {
+	public void handleMessage(EventContext context, TelestoOutgoingMessage msg) {
+		Runnable task = () -> {
 			try {
 				String body = mapper.writeValueAsString(msg.getJson());
 				log.info("Sending Telesto message: {}", body);
@@ -163,7 +169,22 @@ public class TelestoMain implements FilteredEventHandler {
 				log.error("Error sending Telesto message {}", e.toString());
 				updateStatus(TelestoStatus.BAD);
 			}
-		});
+		};
+		if (msg.shouldDelay()) {
+			queueExs.submit(() -> {
+				exs.submit(task);
+				try {
+					// Insert delay to avoid spamming
+					Thread.sleep(100);
+				}
+				catch (InterruptedException e) {
+					log.error("Interrupted", e);
+				}
+			});
+		}
+		else {
+			exs.submit(task);
+		}
 
 	}
 
