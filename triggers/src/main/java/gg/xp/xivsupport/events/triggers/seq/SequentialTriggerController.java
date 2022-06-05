@@ -94,6 +94,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 
 	public void waitMs(long ms) {
 		log.trace("in waitMs");
+		if (ms <= 0) {
+			log.warn("waitMs called with non-positive value: {}", ms);
+		}
 		// This can stop waiting when it hits the original event (due to the delay), OR any other event (which is more
 		// likely when replaying)
 		DelayedSqtEvent event = new DelayedSqtEvent(ms);

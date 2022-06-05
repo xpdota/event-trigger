@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public interface XivState extends SubState {
 	// Note: can be null until we have all the required data, but this should only happen very early on in init
@@ -64,6 +65,14 @@ public interface XivState extends SubState {
 		else {
 			return player.getJob();
 		}
+	}
+
+	default boolean playerJobMatches(Predicate<Job> condition) {
+		Job job = getPlayerJob();
+		if (job == null) {
+			return false;
+		}
+		return condition.test(job);
 	}
 
 	boolean inCombat();

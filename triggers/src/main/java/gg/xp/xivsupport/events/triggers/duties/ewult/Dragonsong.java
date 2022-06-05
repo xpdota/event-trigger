@@ -1024,6 +1024,69 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 			}
 	);
 
+	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_leftIn = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Left, near Hraesvelgr");
+	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_rightIn = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Right, near Hraesvelgr");
+	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_leftOut = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Left, away from Hraesvelgr");
+	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_rightOut = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Right, away from Hraesvelgr");
+	private final ModifiableCallout<AbilityCastStart> akhAfah = ModifiableCallout.durationBasedCall("Akh Afah", "Light Party Stacks");
+
+
+
+	private final ModifiableCallout<BuffApplied> hotDebuff = ModifiableCallout.<BuffApplied>durationBasedCall("Boiling", "Get hit by Hraesvelgr").autoIcon();
+	private final ModifiableCallout<BuffApplied> coldDebuff = ModifiableCallout.<BuffApplied>durationBasedCall("Freezing", "Get hit by Nidhogg").autoIcon();
+	private final ModifiableCallout<BuffApplied> pyretic_pre = ModifiableCallout.<BuffApplied>durationBasedCall("Pyretic (Pre-Call)", "Stop Moving Soon").statusIcon(0x3C0);
+	private final ModifiableCallout<BuffApplied> pyretic = new ModifiableCallout<BuffApplied>("Pyretic", "Stop Moving", "Stop Moving", buff -> !getBuffs().originalStatusActive(buff)).statusIcon(0x3C0);
+
+	@HandleEvents
+	public void p6casts(EventContext context, AbilityCastStart event) {
+		// Hraesvelgr
+		if (event.getSource().getbNpcId() == 12613) {
+			final ModifiableCallout<AbilityCastStart> call;
+			boolean playerIsTank = getState().playerJobMatches(Job::isTank);
+			switch ((int) event.getAbility().getId()) {
+				case 0x6D23 -> call = playerIsTank ? hallowedWingsAndPlume_rightIn : hallowedWingsAndPlume_rightOut;
+				case 0x6D24 -> call = playerIsTank ? hallowedWingsAndPlume_rightOut : hallowedWingsAndPlume_rightIn;
+				case 0x6D26 -> call = playerIsTank ? hallowedWingsAndPlume_leftIn : hallowedWingsAndPlume_leftOut;
+				case 0x6D27 -> call = playerIsTank ? hallowedWingsAndPlume_leftOut : hallowedWingsAndPlume_leftIn;
+				case 0x6D41 -> call = akhAfah;
+				default -> {
+					return;
+				}
+			}
+			context.accept(call.getModified(event));
+		}
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BuffApplied> p6_hotCold = new SequentialTrigger<>(20_000, BuffApplied.class,
+			ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0xB52, 0xB53),
+			(e1, s) -> {
+				log.info("p6 hot/cold start");
+				s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 7_000);
+				if (e1.buffIdMatches(0xB52)) {
+					log.info("p6 HOT: part 1");
+					s.updateCall(hotDebuff.getModified(e1));
+					s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 1_500);
+					log.info("p6 HOT: part 2");
+					s.updateCall(pyretic_pre.getModified(e1));
+					BuffApplied pyreticApplied = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0x3C0));
+					log.info("p6 HOT: part 3");
+					s.updateCall(pyretic.getModified(pyreticApplied));
+				}
+				else {
+					log.info("p6 COLD");
+					s.updateCall(coldDebuff.getModified(e1));
+				}
+			});
+
+//	@HandleEvents
+//	public void p6_pyretic(EventContext context, BuffApplied event) {
+//		if (event.getTarget().isThePlayer() && event.getBuff().getId() == 0xB52) {
+//			context.accept(pyretic.getModified(event));
+//		}
+//	}
+
+
 	public BooleanSetting getP6_useAutoMarks() {
 		return p6_useAutoMarks;
 	}

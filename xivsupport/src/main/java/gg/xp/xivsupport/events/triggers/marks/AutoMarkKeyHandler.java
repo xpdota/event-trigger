@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkSlotRequest;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -68,7 +69,7 @@ public class AutoMarkKeyHandler implements FilteredEventHandler {
 	}
 
 
-	public static final class KeyPressRequest extends BaseEvent {
+	public static final class KeyPressRequest extends BaseEvent implements HasPrimaryValue {
 		@Serial
 		private static final long serialVersionUID = -3520916842042620376L;
 		private final int keyCode;
@@ -80,6 +81,11 @@ public class AutoMarkKeyHandler implements FilteredEventHandler {
 
 		public int getKeyCode() {
 			return keyCode;
+		}
+
+		@Override
+		public String getPrimaryValue() {
+			return KeyEvent.getKeyText(keyCode);
 		}
 	}
 
