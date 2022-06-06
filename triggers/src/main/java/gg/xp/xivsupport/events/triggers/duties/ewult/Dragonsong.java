@@ -34,7 +34,9 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1029,7 +1030,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_leftOut = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Left, away from Hraesvelgr");
 	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_rightOut = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Right, away from Hraesvelgr");
 	private final ModifiableCallout<AbilityCastStart> akhAfah = ModifiableCallout.durationBasedCall("Akh Afah", "Light Party Stacks");
-
+	private final ModifiableCallout<AbilityCastStart> akhAfahHpCheckCall = new ModifiableCallout<AbilityCastStart>("Akh Afah HP Check", "", "HP Check: {hpcheck}", ModifiableCallout.durationExpiry());
 
 
 	private final ModifiableCallout<BuffApplied> hotDebuff = ModifiableCallout.<BuffApplied>durationBasedCall("Boiling", "Get hit by Hraesvelgr").autoIcon();
@@ -1056,6 +1057,41 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 			context.accept(call.getModified(event));
 		}
 	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> akhAfahHpCheck = new SequentialTrigger<>(20_000, BaseEvent.class,
+			be -> be instanceof AbilityCastStart acs && acs.abilityIdMatches(0x6D41) && acs.getSource().getbNpcId() == 12613,
+			(e1, s) -> {
+				XivState state = getState();
+				List<XivCombatant> cbts = state.getCombatantsListCopy();
+				XivCombatant nidhogg = cbts.stream().filter(cbt -> cbt.getbNpcId() == 12612).findAny().orElseThrow(() -> new RuntimeException("Could not find Nidhogg!"));
+				XivCombatant hraes = cbts.stream().filter(cbt -> cbt.getbNpcId() == 12613).findAny().orElseThrow(() -> new RuntimeException("Could not find Hraesvelgr!"));
+				Supplier<String> hpCheckSupp = () -> {
+					XivCombatant nidNow = state.getLatestCombatantData(nidhogg);
+					XivCombatant hraesNow = state.getLatestCombatantData(hraes);
+
+					//noinspection ConstantConditions - just let it error out if null
+					double nidPct = nidNow.getHp().getPercent();
+					//noinspection ConstantConditions
+					double hraesPct = hraesNow.getHp().getPercent();
+					double diff = hraesPct - nidPct;
+					// Actual percentage is 2.9, but we want a buffer
+					if (diff > 0.02) {
+						return "Attack Hraesvelgr";
+					}
+					else if (diff < -0.02) {
+						return "Attack Nidhogg";
+					}
+					else {
+						return "Even";
+					}
+				};
+				s.updateCall(akhAfahHpCheckCall.getModified((AbilityCastStart) e1, Map.of("hpcheck", hpCheckSupp)));
+
+
+
+			}
+	);
 
 	@AutoFeed
 	private final SequentialTrigger<BuffApplied> p6_hotCold = new SequentialTrigger<>(20_000, BuffApplied.class,

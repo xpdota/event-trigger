@@ -38,7 +38,7 @@ public interface XivState extends SubState {
 		return getCombatants().get(id);
 	}
 
-	default XivCombatant getLatestCombatantData(XivCombatant cbt) {
+	default @Nullable XivCombatant getLatestCombatantData(XivCombatant cbt) {
 		return getCombatant(cbt.getId());
 	}
 
