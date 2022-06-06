@@ -34,9 +34,7 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
-import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1025,6 +1023,34 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 			}
 	);
 
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_stack = ModifiableCallout.durationBasedCall("P6 Tankbuster (Stack)", "Stack for Buster");
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_niddBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Nidhogg Buster)", "Nidd Buster, Hraes Cleave");
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_hraesBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Hraes Buster)", "Hraes Buster, Nidd Cleave");
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_bothBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Both Buster)", "Busters");
+
+	private static final Predicate<AbilityCastStart> niddHraesBuster = acs -> acs.abilityIdMatches(0x6D32, 0x6D33, 0x6D34, 0x6D35);
+
+	@AutoFeed
+	private final SequentialTrigger<AbilityCastStart> p6_tankbuster = new SequentialTrigger<>(20_000, AbilityCastStart.class,
+			niddHraesBuster,
+			(e1, s) -> {
+				AbilityCastStart e2 = s.waitEvent(AbilityCastStart.class, niddHraesBuster);
+				boolean hraesGlow = e1.abilityIdMatches(0x6D35) || e2.abilityIdMatches(0x6D35);
+				boolean niddGlow = e1.abilityIdMatches(0x6D33) || e2.abilityIdMatches(0x6D33);
+				if (hraesGlow && niddGlow) {
+					s.accept(p6_tankbuster_stack.getModified(e1));
+				}
+				else if (niddGlow) {
+					s.accept(p6_tankbuster_hraesBuster.getModified(e1));
+				}
+				else if (hraesGlow) {
+					s.accept(p6_tankbuster_niddBuster.getModified(e1));
+				}
+				else {
+					s.accept(p6_tankbuster_bothBuster.getModified(e1));
+				}
+			});
+
 	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_leftIn = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Left, near Hraesvelgr");
 	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_rightIn = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Right, near Hraesvelgr");
 	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_leftOut = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Left, away from Hraesvelgr");
@@ -1087,7 +1113,6 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 					}
 				};
 				s.updateCall(akhAfahHpCheckCall.getModified((AbilityCastStart) e1, Map.of("hpcheck", hpCheckSupp)));
-
 
 
 			}
