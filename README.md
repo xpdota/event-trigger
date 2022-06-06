@@ -2,6 +2,8 @@
 
 Code documentation (auto-generated) is now available [here](https://xpdota.github.io/event-trigger/master/javadoc/allclasses-index.html) (replace `master` in the URL with the branch you are using).
 
+There is also a [website for Triggevent](https://triggevent.io/) now!
+
 # Triggevent
 
 Triggevent is a comprehensive FFXIV addon that provides triggers, overlays, log analysis, and more. Triggers can even
