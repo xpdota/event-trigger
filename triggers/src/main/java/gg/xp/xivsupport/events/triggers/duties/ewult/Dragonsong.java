@@ -1045,10 +1045,10 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 			final ModifiableCallout<AbilityCastStart> call;
 			boolean playerIsTank = getState().playerJobMatches(Job::isTank);
 			switch ((int) event.getAbility().getId()) {
-				case 0x6D23 -> call = playerIsTank ? hallowedWingsAndPlume_rightIn : hallowedWingsAndPlume_rightOut;
-				case 0x6D24 -> call = playerIsTank ? hallowedWingsAndPlume_rightOut : hallowedWingsAndPlume_rightIn;
-				case 0x6D26 -> call = playerIsTank ? hallowedWingsAndPlume_leftIn : hallowedWingsAndPlume_leftOut;
-				case 0x6D27 -> call = playerIsTank ? hallowedWingsAndPlume_leftOut : hallowedWingsAndPlume_leftIn;
+				case 0x6D23 -> call = playerIsTank ? hallowedWingsAndPlume_leftIn : hallowedWingsAndPlume_leftOut;
+				case 0x6D24 -> call = playerIsTank ? hallowedWingsAndPlume_leftOut : hallowedWingsAndPlume_leftIn;
+				case 0x6D26 -> call = playerIsTank ? hallowedWingsAndPlume_rightIn : hallowedWingsAndPlume_rightOut;
+				case 0x6D27 -> call = playerIsTank ? hallowedWingsAndPlume_rightOut : hallowedWingsAndPlume_rightIn;
 				case 0x6D41 -> call = akhAfah;
 				default -> {
 					return;
