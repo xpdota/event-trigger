@@ -12,7 +12,7 @@ import java.io.Serial;
  * Represents a chat line (from any channel - can be real chat, battle log, or other things).
  */
 @SystemEvent
-public class ChatLineEvent extends BaseEvent {
+public class ChatLineEvent extends BaseEvent implements HasPrimaryValue {
 	@Serial
 	private static final long serialVersionUID = 4852530944045709474L;
 	private final long code;
@@ -35,5 +35,15 @@ public class ChatLineEvent extends BaseEvent {
 
 	public String getLine() {
 		return line;
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		if (name == null) {
+			return String.format("[%s]: %s", code, line);
+		}
+		else {
+			return String.format("%s [%s]: %s", name, code, line);
+		}
 	}
 }

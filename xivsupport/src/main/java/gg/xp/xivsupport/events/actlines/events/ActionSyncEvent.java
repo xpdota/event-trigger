@@ -11,7 +11,7 @@ import java.io.Serial;
  * This is the 'raw' version of {@link AbilityResolvedEvent}, which only has the target and sequence number.
  */
 @SystemEvent
-public class ActionSyncEvent extends BaseEvent implements HasTargetEntity {
+public class ActionSyncEvent extends BaseEvent implements HasTargetEntity, HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = -8477450928742265164L;
@@ -33,4 +33,8 @@ public class ActionSyncEvent extends BaseEvent implements HasTargetEntity {
 	}
 
 
+	@Override
+	public String getPrimaryValue() {
+		return String.valueOf(sequenceId);
+	}
 }

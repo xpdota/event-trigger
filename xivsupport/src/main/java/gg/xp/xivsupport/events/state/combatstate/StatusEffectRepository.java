@@ -7,6 +7,9 @@ import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
+import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
+import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
@@ -226,5 +229,32 @@ public class StatusEffectRepository {
 			}
 			return new ArrayList<>(cached.values());
 		}
+	}
+
+	public <X extends HasSourceEntity & HasTargetEntity & HasStatusEffect> @Nullable BuffApplied getLatest(X buff) {
+		return get(BuffTrackingKey.of(buff));
+	}
+
+	public StatusEffectCurrentStatus statusOf(BuffApplied buff) {
+		BuffApplied latest = getLatest(buff);
+		if (latest == buff) {
+			return StatusEffectCurrentStatus.ACTIVE;
+		}
+		else if (latest != null) {
+			return StatusEffectCurrentStatus.REPLACED;
+		}
+		else {
+			return StatusEffectCurrentStatus.GONE;
+		}
+	}
+
+	public boolean originalStatusActive(BuffApplied buff) {
+		StatusEffectCurrentStatus status = statusOf(buff);
+//		log.info("Buff status {} for {}", status, buff);
+		return status == StatusEffectCurrentStatus.ACTIVE;
+	}
+
+	public boolean statusOrRefreshActive(BuffApplied buff) {
+		return statusOf(buff) != StatusEffectCurrentStatus.GONE;
 	}
 }

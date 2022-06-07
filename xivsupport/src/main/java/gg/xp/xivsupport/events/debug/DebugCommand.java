@@ -1,13 +1,14 @@
 package gg.xp.xivsupport.events.debug;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 
 import java.io.Serial;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class DebugCommand extends BaseEvent {
+public class DebugCommand extends BaseEvent implements HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = -6938761273983139597L;
@@ -33,4 +34,8 @@ public class DebugCommand extends BaseEvent {
 	}
 
 
+	@Override
+	public String getPrimaryValue() {
+		return rawString;
+	}
 }

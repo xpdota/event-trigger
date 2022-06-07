@@ -20,6 +20,9 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
+import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.gui.tables.renderers.RefreshingHpBar;
@@ -28,6 +31,8 @@ import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.slf4j.Logger;
@@ -35,7 +40,9 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -142,12 +149,19 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	private final ModifiableCallout<AbilityUsedEvent> twister = new ModifiableCallout<>("Thordan II: Twister", "Twister");
 
+	private final ModifiableCallout<BuffApplied> p6_spread = ModifiableCallout.<BuffApplied>durationBasedCall("Dragons: Spread", "Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> p6_stackWithDebuff = ModifiableCallout.<BuffApplied>durationBasedCall("Dragons: Stack Debuff", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> p6_stackWithoutDebuff = ModifiableCallout.durationBasedCall("Dragons: No Debuff", "Nothing");
+
+	private final BooleanSetting p6_useAutoMarks;
+
 	private final XivState state;
 	private final StatusEffectRepository buffs;
 
-	public Dragonsong(XivState state, StatusEffectRepository buffs) {
+	public Dragonsong(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
 		this.buffs = buffs;
+		p6_useAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.use-auto-marks", false);
 	}
 
 	@Override
@@ -923,6 +937,219 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		if (event.getAbility().getId() == 0x6B8B && event.isFirstTarget()) {
 			ctx.accept(twister.getModified(event));
 		}
+	}
+
+	private enum WrothFlamesRole {
+		SPREAD,
+		STACK,
+		NOTHING
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p6_wrothFlames = new SequentialTrigger<>(40_000, BaseEvent.class,
+			// Start on Wroth Flames cast
+			be -> be instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x6D45,
+			(e1, s) -> {
+				log.info("Wroth Flames: Begin");
+				// extra stop condition is for if people are dead
+				List<BuffApplied> buffs = s.waitEventsUntil(6,
+						BuffApplied.class, ba -> ba.buffIdMatches(2758, 2759),
+						// Stop on Akh Morn
+						AbilityCastStart.class, acs -> acs.abilityIdMatches(0x6D46));
+				log.info("Wroth Flames: Collected buffs: {}", buffs);
+
+				buffs.stream().filter(ba -> ba.getTarget().isThePlayer()).findAny().ifPresentOrElse(
+						buff -> {
+							log.info("Wroth Flames: Player has buff {}", buff.getBuff().getId());
+							if (buff.buffIdMatches(2758)) {
+								s.updateCall(p6_spread.getModified(buff));
+							}
+							else {
+								s.updateCall(p6_stackWithDebuff.getModified(buff));
+							}
+						}, () -> {
+							// We still need duration from *something* for this to display the timer, so just grab one of the white debuffs
+							buffs.stream()
+									.filter(ba -> ba.buffIdMatches(2759))
+									.findFirst()
+									.ifPresent(buffApplied -> s.updateCall(p6_stackWithoutDebuff.getModified(buffApplied)));
+						}
+				);
+
+				if (getP6_useAutoMarks().get()) {
+					List<XivPlayerCharacter> noBuff = new ArrayList<>(getState().getPartyList());
+					Map<WrothFlamesRole, List<XivPlayerCharacter>> playerMechs = new EnumMap<>(WrothFlamesRole.class);
+					buffs.forEach(ba -> {
+						// *Should* always be true, but just in case...
+						if (ba.getTarget() instanceof XivPlayerCharacter player) {
+							if (ba.getBuff().getId() == 2758) {
+								playerMechs.computeIfAbsent(WrothFlamesRole.SPREAD, k -> new ArrayList<>()).add(player);
+							}
+							else {
+								playerMechs.computeIfAbsent(WrothFlamesRole.STACK, k -> new ArrayList<>()).add(player);
+							}
+							noBuff.remove(player);
+						}
+					});
+					playerMechs.put(WrothFlamesRole.NOTHING, noBuff);
+
+					log.info("Wroth player mechs: {}", playerMechs);
+
+					List<XivPlayerCharacter> spreaders = playerMechs.get(WrothFlamesRole.SPREAD);
+
+					List<XivPlayerCharacter> stackers = playerMechs.get(WrothFlamesRole.STACK);
+					List<XivPlayerCharacter> otherStackers = playerMechs.get(WrothFlamesRole.NOTHING);
+
+					// Give out markers
+					spreaders.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.ATTACK_NEXT)));
+
+					// People might be dead, so check count
+					if (stackers.size() >= 1 && otherStackers.size() >= 1) {
+						s.accept(new SpecificAutoMarkRequest(stackers.get(0), MarkerSign.BIND1));
+						s.accept(new SpecificAutoMarkRequest(otherStackers.get(0), MarkerSign.BIND2));
+					}
+					if (stackers.size() >= 2 && otherStackers.size() >= 2) {
+						s.accept(new SpecificAutoMarkRequest(stackers.get(1), MarkerSign.IGNORE1));
+						s.accept(new SpecificAutoMarkRequest(otherStackers.get(1), MarkerSign.IGNORE2));
+					}
+					else {
+						// but still warn that something went wrong
+						log.warn("Wroth: Not enough stackers! With buff: {}, without: {}", stackers, otherStackers);
+					}
+
+					s.waitMs(25_000);
+					s.accept(new ClearAutoMarkRequest());
+				}
+			}
+	);
+
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_stack = ModifiableCallout.durationBasedCall("P6 Tankbuster (Stack)", "Stack for Buster");
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_niddBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Nidhogg Buster)", "Nidd Buster, Hraes Cleave");
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_hraesBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Hraes Buster)", "Hraes Buster, Nidd Cleave");
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_bothBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Both Buster)", "Busters");
+
+	private static final Predicate<AbilityCastStart> niddHraesBuster = acs -> acs.abilityIdMatches(0x6D32, 0x6D33, 0x6D34, 0x6D35);
+
+	@AutoFeed
+	private final SequentialTrigger<AbilityCastStart> p6_tankbuster = new SequentialTrigger<>(20_000, AbilityCastStart.class,
+			niddHraesBuster,
+			(e1, s) -> {
+				AbilityCastStart e2 = s.waitEvent(AbilityCastStart.class, niddHraesBuster);
+				boolean hraesGlow = e1.abilityIdMatches(0x6D35) || e2.abilityIdMatches(0x6D35);
+				boolean niddGlow = e1.abilityIdMatches(0x6D33) || e2.abilityIdMatches(0x6D33);
+				if (hraesGlow && niddGlow) {
+					s.accept(p6_tankbuster_stack.getModified(e1));
+				}
+				else if (niddGlow) {
+					s.accept(p6_tankbuster_hraesBuster.getModified(e1));
+				}
+				else if (hraesGlow) {
+					s.accept(p6_tankbuster_niddBuster.getModified(e1));
+				}
+				else {
+					s.accept(p6_tankbuster_bothBuster.getModified(e1));
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_leftIn = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Left, near Hraesvelgr");
+	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_rightIn = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Right, near Hraesvelgr");
+	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_leftOut = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Left, away from Hraesvelgr");
+	private final ModifiableCallout<AbilityCastStart> hallowedWingsAndPlume_rightOut = ModifiableCallout.durationBasedCall("Hallowed Wings and Plume", "Right, away from Hraesvelgr");
+	private final ModifiableCallout<AbilityCastStart> akhAfah = ModifiableCallout.durationBasedCall("Akh Afah", "Light Party Stacks");
+	private final ModifiableCallout<AbilityCastStart> akhAfahHpCheckCall = new ModifiableCallout<AbilityCastStart>("Akh Afah HP Check", "", "HP Check: {hpcheck}", ModifiableCallout.durationExpiry());
+
+
+	private final ModifiableCallout<BuffApplied> hotDebuff = ModifiableCallout.<BuffApplied>durationBasedCall("Boiling", "Get hit by Hraesvelgr").autoIcon();
+	private final ModifiableCallout<BuffApplied> coldDebuff = ModifiableCallout.<BuffApplied>durationBasedCall("Freezing", "Get hit by Nidhogg").autoIcon();
+	private final ModifiableCallout<BuffApplied> pyretic_pre = ModifiableCallout.<BuffApplied>durationBasedCall("Pyretic (Pre-Call)", "Stop Moving Soon").statusIcon(0x3C0);
+	private final ModifiableCallout<BuffApplied> pyretic = new ModifiableCallout<BuffApplied>("Pyretic", "Stop Moving", "Stop Moving", buff -> !getBuffs().originalStatusActive(buff)).statusIcon(0x3C0);
+
+	@HandleEvents
+	public void p6casts(EventContext context, AbilityCastStart event) {
+		// Hraesvelgr
+		if (event.getSource().getbNpcId() == 12613) {
+			final ModifiableCallout<AbilityCastStart> call;
+			boolean playerIsTank = getState().playerJobMatches(Job::isTank);
+			switch ((int) event.getAbility().getId()) {
+				case 0x6D23 -> call = playerIsTank ? hallowedWingsAndPlume_leftIn : hallowedWingsAndPlume_leftOut;
+				case 0x6D24 -> call = playerIsTank ? hallowedWingsAndPlume_leftOut : hallowedWingsAndPlume_leftIn;
+				case 0x6D26 -> call = playerIsTank ? hallowedWingsAndPlume_rightIn : hallowedWingsAndPlume_rightOut;
+				case 0x6D27 -> call = playerIsTank ? hallowedWingsAndPlume_rightOut : hallowedWingsAndPlume_rightIn;
+				case 0x6D41 -> call = akhAfah;
+				default -> {
+					return;
+				}
+			}
+			context.accept(call.getModified(event));
+		}
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> akhAfahHpCheck = new SequentialTrigger<>(20_000, BaseEvent.class,
+			be -> be instanceof AbilityCastStart acs && acs.abilityIdMatches(0x6D41) && acs.getSource().getbNpcId() == 12613,
+			(e1, s) -> {
+				XivState state = getState();
+				List<XivCombatant> cbts = state.getCombatantsListCopy();
+				XivCombatant nidhogg = cbts.stream().filter(cbt -> cbt.getbNpcId() == 12612).findAny().orElseThrow(() -> new RuntimeException("Could not find Nidhogg!"));
+				XivCombatant hraes = cbts.stream().filter(cbt -> cbt.getbNpcId() == 12613).findAny().orElseThrow(() -> new RuntimeException("Could not find Hraesvelgr!"));
+				Supplier<String> hpCheckSupp = () -> {
+					XivCombatant nidNow = state.getLatestCombatantData(nidhogg);
+					XivCombatant hraesNow = state.getLatestCombatantData(hraes);
+
+					//noinspection ConstantConditions - just let it error out if null
+					double nidPct = nidNow.getHp().getPercent();
+					//noinspection ConstantConditions
+					double hraesPct = hraesNow.getHp().getPercent();
+					double diff = hraesPct - nidPct;
+					// Actual percentage is 2.9, but we want a buffer
+					if (diff > 0.02) {
+						return "Attack Hraesvelgr";
+					}
+					else if (diff < -0.02) {
+						return "Attack Nidhogg";
+					}
+					else {
+						return "Even";
+					}
+				};
+				s.updateCall(akhAfahHpCheckCall.getModified((AbilityCastStart) e1, Map.of("hpcheck", hpCheckSupp)));
+
+
+			}
+	);
+
+	@AutoFeed
+	private final SequentialTrigger<BuffApplied> p6_hotCold = new SequentialTrigger<>(20_000, BuffApplied.class,
+			ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0xB52, 0xB53),
+			(e1, s) -> {
+				log.info("p6 hot/cold start");
+				s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 7_000);
+				if (e1.buffIdMatches(0xB52)) {
+					log.info("p6 HOT: part 1");
+					s.updateCall(hotDebuff.getModified(e1));
+					s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 1_500);
+					log.info("p6 HOT: part 2");
+					s.updateCall(pyretic_pre.getModified(e1));
+					BuffApplied pyreticApplied = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0x3C0));
+					log.info("p6 HOT: part 3");
+					s.updateCall(pyretic.getModified(pyreticApplied));
+				}
+				else {
+					log.info("p6 COLD");
+					s.updateCall(coldDebuff.getModified(e1));
+				}
+			});
+
+//	@HandleEvents
+//	public void p6_pyretic(EventContext context, BuffApplied event) {
+//		if (event.getTarget().isThePlayer() && event.getBuff().getId() == 0xB52) {
+//			context.accept(pyretic.getModified(event));
+//		}
+//	}
+
+
+	public BooleanSetting getP6_useAutoMarks() {
+		return p6_useAutoMarks;
 	}
 
 	private XivState getState() {

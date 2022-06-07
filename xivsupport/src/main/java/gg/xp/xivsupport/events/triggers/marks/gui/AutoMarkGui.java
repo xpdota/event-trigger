@@ -2,8 +2,11 @@ package gg.xp.xivsupport.events.triggers.marks.gui;
 
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkKeyHandler;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 
@@ -14,9 +17,11 @@ import java.awt.*;
 public class AutoMarkGui implements PluginTab {
 
 	private final AutoMarkHandler marks;
+	private final AutoMarkKeyHandler keyHandler;
 
-	public AutoMarkGui(AutoMarkHandler marks) {
+	public AutoMarkGui(AutoMarkHandler marks, AutoMarkKeyHandler keyHandler) {
 		this.marks = marks;
+		this.keyHandler = keyHandler;
 	}
 
 	@Override
@@ -33,12 +38,13 @@ public class AutoMarkGui implements PluginTab {
 		});
 		BooleanSetting telestoSetting = marks.getUseTelesto();
 		Component useTelesto = new BooleanSettingGui(telestoSetting, "Use Telesto instead of Macros (must be installed in Dalamud)").getComponent();
-		Component useFKeys = new BooleanSettingGui(marks.getUseFkeys(), "Use F1-F9 (Instead of NumPad 1-9)", () -> !telestoSetting.get()).getComponent();
+		Component useFKeys = new BooleanSettingGui(keyHandler.getUseFkeys(), "Use F1-F9 (Instead of NumPad 1-9)", () -> !telestoSetting.get()).getComponent();
 		telestoSetting.addListener(outer::repaint);
 
-		outer.add(helpButton);
-		outer.add(useTelesto);
-		outer.add(useFKeys);
+		ReadOnlyText text = new ReadOnlyText("Note: Telesto is REQUIRED for triggers that place specific markers (rather than just doing '/mk attack' such as Titan Jails)");
+		text.setPreferredSize(new Dimension(400, 400));
+
+		GuiUtil.simpleTopDownLayout(outer, helpButton, useTelesto, useFKeys, text);
 
 		return outer;
 	}
@@ -71,5 +77,7 @@ public class AutoMarkGui implements PluginTab {
 			To test, use the command '/e c:amtest x y z' (without the quotes) where x, y, and z are the party slots of the players you want to mark.
 						
 			If you aren't in a party, you can still do '/e c:amtest 1' to test it on yourself.
+			
+			To test Telesto's ability to place arbitrary markers, you can do '/e attack1 1', replacing attack1 with the desired marker.
 			""";
 }

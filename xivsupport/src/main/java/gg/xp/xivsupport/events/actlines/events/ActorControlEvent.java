@@ -7,7 +7,7 @@ import java.io.Serial;
 /**
  * Represents various types of actor control events, e.g. wipes, barrier up/down, etc
  */
-public class ActorControlEvent extends BaseEvent {
+public class ActorControlEvent extends BaseEvent implements HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = 4887874439217409590L;
@@ -61,5 +61,10 @@ public class ActorControlEvent extends BaseEvent {
 
 	public long getInstanceContentTypeRaw() {
 		return instanceContentTypeRaw;
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		return String.format("%X:%X %X:%X:%X:%X", instance, command, data0, data1, data2, data3);
 	}
 }

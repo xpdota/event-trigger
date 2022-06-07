@@ -8,7 +8,7 @@ import java.io.Serial;
 /**
  * Represents a zone change
  */
-public class ZoneChangeEvent extends BaseEvent implements XivStateChange {
+public class ZoneChangeEvent extends BaseEvent implements XivStateChange, HasPrimaryValue {
 	@Serial
 	private static final long serialVersionUID = 3743475710853003703L;
 	private final XivZone zone;
@@ -19,5 +19,10 @@ public class ZoneChangeEvent extends BaseEvent implements XivStateChange {
 
 	public XivZone getZone() {
 		return zone;
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		return String.valueOf(zone);
 	}
 }

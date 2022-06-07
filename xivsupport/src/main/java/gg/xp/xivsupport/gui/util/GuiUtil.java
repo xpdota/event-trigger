@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.util;
 
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,7 @@ import java.io.IOException;
 
 public final class GuiUtil {
 	private static final Logger log = LoggerFactory.getLogger(GuiUtil.class);
+
 	private GuiUtil() {
 	}
 
@@ -61,5 +63,33 @@ public final class GuiUtil {
 			current = parent;
 			parent = current.getParent();
 		}
+	}
+
+	/**
+	 * Format a container, adding the given components, in a manner such that the components
+	 * are centered in the container, as far up in the container as they can go, and left-justified.
+	 *
+	 * @param container  The container to format
+	 * @param components The components to add
+	 */
+	public static void simpleTopDownLayout(Container container, Component... components) {
+		GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 5);
+		container.setLayout(new GridBagLayout());
+		c.weightx = 1;
+		c.gridx = 0;
+		container.add(Box.createGlue(), c);
+		c.gridx = 1;
+		c.weightx = 0;
+
+		for (Component component : components) {
+			container.add(component, c);
+			c.gridy++;
+		}
+
+		c.weighty = 1;
+		c.gridx++;
+		c.weightx = 1;
+		container.add(Box.createGlue(), c);
+
 	}
 }

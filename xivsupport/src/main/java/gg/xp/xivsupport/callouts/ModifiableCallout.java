@@ -2,6 +2,8 @@ package gg.xp.xivsupport.callouts;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.time.TimeUtils;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -30,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -110,6 +111,16 @@ public class ModifiableCallout<X> {
 
 	public ModifiableCallout<X> autoIcon() {
 		this.guiProvider = e -> IconTextRenderer.getStretchyIcon(RenderUtils.guessIconFor(e));
+		return this;
+	}
+
+	public ModifiableCallout<X> statusIcon(long statusId) {
+		this.guiProvider = e -> IconTextRenderer.getStretchyIcon(StatusEffectLibrary.iconForId(statusId, 0));
+		return this;
+	}
+
+	public ModifiableCallout<X> abilityIcon(long abilityId) {
+		this.guiProvider = e -> IconTextRenderer.getStretchyIcon(ActionLibrary.iconForId(abilityId));
 		return this;
 	}
 
@@ -348,7 +359,8 @@ public class ModifiableCallout<X> {
 	 * @return the ModifiableCallout
 	 */
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCall(String desc, String text) {
-		return new ModifiableCallout<>(desc, text, text + " ({event.getEstimatedRemainingDuration()})", hd -> hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0);
+		Predicate<Y> expiry = hd -> hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0;
+		return new ModifiableCallout<>(desc, text, text + " ({event.getEstimatedRemainingDuration()})", expiry);
 	}
 
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCallWithoutDurationText(String desc, String text) {
@@ -356,5 +368,18 @@ public class ModifiableCallout<X> {
 	}
 
 	private static final Duration defaultLingerTime = Duration.of(3, ChronoUnit.SECONDS);
+
+	public static <Y extends HasDuration> Predicate<Y> durationExpiryPlusDefaultLinger() {
+		return durationExpiryPlusLingerTime(defaultLingerTime);
+	}
+
+	public static <Y extends HasDuration> Predicate<Y> durationExpiry() {
+		return durationExpiryPlusLingerTime(Duration.ZERO);
+	}
+
+	public static <Y extends HasDuration> Predicate<Y> durationExpiryPlusLingerTime(Duration linger) {
+		return hd -> hd.getEstimatedTimeSinceExpiry().compareTo(linger) > 0;
+
+	}
 
 }
