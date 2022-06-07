@@ -41,6 +41,7 @@ gg.xp.xivsupport.events.triggers.jobs
 gg.xp.xivsupport.events.triggers.jobs.gui
 gg.xp.xivsupport.events.triggers.jobs.joboverlays
 gg.xp.xivsupport.events.triggers.marks
+gg.xp.xivsupport.events.triggers.marks.adv
 gg.xp.xivsupport.events.triggers.marks.gui
 gg.xp.xivsupport.events.triggers.seq
 gg.xp.xivsupport.events.triggers.util
