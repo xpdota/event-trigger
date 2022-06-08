@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.models;
 
 
+import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -205,5 +206,21 @@ public class XivCombatant extends XivEntity {
 
 	public long getShieldAmount() {
 		return shieldAmount;
+	}
+
+	public RawXivCombatantInfo toRaw() {
+		HitPoints hp = getHp();
+		if (hp == null) {
+			hp = new HitPoints(50_000, 50_000);
+		}
+		Position pos = getPos();
+		if (pos == null) {
+			pos = new Position(100, 100, 100, 0.0);
+		}
+		ManaPoints mp = getMp();
+		if (mp == null) {
+			mp = new ManaPoints(10_000, 10_000);
+		}
+		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.getCurrent(), hp.getMax(), mp.getCurrent(), mp.getMax(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId());
 	}
 }

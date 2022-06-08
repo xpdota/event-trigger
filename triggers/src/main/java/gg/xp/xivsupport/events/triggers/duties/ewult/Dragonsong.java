@@ -431,7 +431,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				log.info("Thordan Trio 2: Waiting for combatants");
 				while (true) {
 					Optional<XivCombatant> jan = getState().getCombatantsListCopy().stream()
-							// Should be Ser Janneloux
+							// Should be Ser Janlenoux
 							.filter(cbt -> cbt.getbNpcId() == 12632)
 							.findAny();
 					if (jan.isPresent()) {
@@ -685,7 +685,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	}
 
 	@AutoFeed
-	private final SequentialTrigger<AbilityUsedEvent> gnashLashHelper = new SequentialTrigger<>(10_000, AbilityUsedEvent.class,
+	private final SequentialTrigger<AbilityUsedEvent> gnashLashHelper = new SequentialTrigger<>(8_000, AbilityUsedEvent.class,
 			e -> {
 				long id = e.getAbility().getId();
 				return id == 0x6712 || id == 0x6713;

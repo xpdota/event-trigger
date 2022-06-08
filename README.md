@@ -23,14 +23,11 @@ addons and triggers.
 
 Most documentation is in the app, or on the [Wiki](https://github.com/xpdota/event-trigger/wiki/).
 
-For the technical explanation of why I made this,
-see [Why](https://github.com/xpdota/event-trigger/wiki/Why-I-Made-This).
-
 ## How to Download/Install
 
 READ THIS: See [Installation](https://github.com/xpdota/event-trigger/wiki/Installation-and-Setup)
 
-Short version: Install Overlayplugin in your ACT, then start OverlayPlugin WSServer from within ACT.
+Short version: Install OverlayPlugin in your ACT, then start OverlayPlugin WSServer from within ACT.
 
 ## Features
 

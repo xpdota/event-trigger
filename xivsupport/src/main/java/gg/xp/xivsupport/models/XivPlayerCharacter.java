@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.models;
 
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 
 import java.io.Serial;
 
@@ -43,4 +44,20 @@ public class XivPlayerCharacter extends XivCombatant {
 		return String.format("XivPlayerCharacter(0x%X:%s, %s, %s, %s, %s)", getId(), getName(), getJob(), getWorld(), getLevel(), isThePlayer());
 	}
 
+	@Override
+	public RawXivCombatantInfo toRaw() {
+		HitPoints hp = getHp();
+		if (hp == null) {
+			hp = new HitPoints(50_000, 50_000);
+		}
+		Position pos = getPos();
+		if (pos == null) {
+			pos = new Position(100, 100, 100, 0.0);
+		}
+		ManaPoints mp = getMp();
+		if (mp == null) {
+			mp = new ManaPoints(10_000, 10_000);
+		}
+		return new RawXivCombatantInfo(getId(), getName(), job.getId(), getRawType(), hp.getCurrent(), hp.getMax(), mp.getCurrent(), mp.getMax(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId());
+	}
 }
