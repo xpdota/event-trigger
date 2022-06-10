@@ -10,13 +10,20 @@ import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.ExternalObservable;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import groovy.transform.CompileStatic;
 import groovy.transform.TypeChecked;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.AbstractWhitelist;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.kohsuke.groovy.sandbox.SandboxTransformer;
 import org.picocontainer.PicoContainer;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
@@ -27,6 +34,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -52,11 +63,49 @@ public class GroovyManager {
 	private final List<GroovyScriptHolder> scripts = new ArrayList<>();
 	private final ObjectMapper mapper = new ObjectMapper();
 	private final ExternalObservable obs = new ExternalObservable();
+	private final GroovySandbox sandbox;
 
 	public GroovyManager(PicoContainer container) {
 		this.container = container;
 		loadScripts();
+		sandbox = new GroovySandbox().withWhitelist(new Whitelist() {
+			@Override
+			public boolean permitsMethod(@NotNull Method method, @NotNull Object receiver, @NotNull Object[] args) {
+				return false;
+			}
+
+			@Override
+			public boolean permitsConstructor(@NotNull Constructor<?> constructor, @NotNull Object[] args) {
+				return false;
+			}
+
+			@Override
+			public boolean permitsStaticMethod(@NotNull Method method, @NotNull Object[] args) {
+				return false;
+			}
+
+			@Override
+			public boolean permitsFieldGet(@NotNull Field field, @NotNull Object receiver) {
+				return false;
+			}
+
+			@Override
+			public boolean permitsFieldSet(@NotNull Field field, @NotNull Object receiver, Object value) {
+				return false;
+			}
+
+			@Override
+			public boolean permitsStaticFieldGet(@NotNull Field field) {
+				return false;
+			}
+
+			@Override
+			public boolean permitsStaticFieldSet(@NotNull Field field, Object value) {
+				return false;
+			}
+		});
 	}
+
 
 	public List<GroovyScriptHolder> getScripts() {
 		return Collections.unmodifiableList(scripts);
@@ -325,6 +374,12 @@ public class GroovyManager {
 				.forEach(importCustomizer::addImports);
 
 		compilerConfiguration.addCompilationCustomizers(importCustomizer);
+
+		SandboxTransformer sbt = new SandboxTransformer();
+		compilerConfiguration.addCompilationCustomizers(sbt);
+
+
+
 		log.info("Done with CompilerConfiguration");
 		return compilerConfiguration;
 	}
@@ -363,4 +418,7 @@ public class GroovyManager {
 			This does NOT have any sandboxing, so don't run random stuff you found on the internet. It can do anything to your system that compiled Java code would be able to do. \"""
 			""";
 
+	public GroovySandbox getSandbox() {
+		return sandbox;
+	}
 }

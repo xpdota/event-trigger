@@ -307,5 +307,6 @@
         <module>plugins</module>
         <module>triggers/titan-jails</module>
         <module>telesto-support</module>
+        <module>groovy-sandboxing</module>
     </modules>
 </project>

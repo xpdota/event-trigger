@@ -8,6 +8,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import groovy.lang.GroovyShell;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +120,9 @@ public class GroovyEventFilter implements Condition<Event> {
 			}
 		}
 		if (eventType.isInstance(event)) {
-			return ((Predicate<Event>) groovyCompiledScript).test(event);
+			try (GroovySandbox.Scope ignored = mgr.getSandbox().enter()) {
+				return ((Predicate<Event>) groovyCompiledScript).test(event);
+			}
 		}
 		else {
 			return false;

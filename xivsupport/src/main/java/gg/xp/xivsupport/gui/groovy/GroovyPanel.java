@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.groovy;
 
+import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -7,6 +8,7 @@ import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 
 public class GroovyPanel extends JPanel {
 
@@ -244,7 +247,10 @@ public class GroovyPanel extends JPanel {
 	private void submit() {
 		setResultDisplay(textDisplayComponent("Processing..."));
 		evaluator.submit(() -> {
-			GroovyScriptResult result = script.run();
+			GroovyScriptResult result;
+			try (GroovySandbox.Scope ignored = mgr.getSandbox().enter()) {
+				result = script.run();
+			}
 			setResult(result);
 		});
 	}
