@@ -61,7 +61,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 			add(checkingLabel, c);
 		}
 		JButton button = new JButton("Check for Updates and Restart");
-		button.addActionListener(l -> {
+		button.addActionListener(l -> exs.submit(() -> {
 			// First, try to update the updater itself
 			try {
 				try {
@@ -88,7 +88,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				return;
 			}
 			System.exit(0);
-		});
+		}));
 		c.gridy++;
 		//noinspection InstanceVariableUsedBeforeInitialized
 		add(new JLabel("Install Dir: " + installDir), c);

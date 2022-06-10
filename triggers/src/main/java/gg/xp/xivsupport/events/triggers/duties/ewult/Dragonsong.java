@@ -803,6 +803,8 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				log.info("Haurch HP tracker end");
 			});
 
+	private final ModifiableCallout<BuffApplied> thordan2_trio1_lightningOnYou = ModifiableCallout.durationBasedCall("Wrath of the Heavens: Lightning on you", "Lightning");
+
 	private final ModifiableCallout<HeadMarkerEvent> thordan2_trio1_blueMark = new ModifiableCallout<>("Wrath of the Heavens: Blue Marker", "Blue Marker");
 	private final ModifiableCallout<TetherEvent> thordan2_trio1_tether = new ModifiableCallout<>("Wrath of the Heavens: Tether", "Tether");
 	private final ModifiableCallout<?> thordan2_trio1_neither = new ModifiableCallout<>("Wrath of the Heavens: Nothing", "Nothing");
@@ -812,6 +814,13 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_in = ModifiableCallout.durationBasedCall("Wrath of the Heavens: In", "In");
 	private final ModifiableCallout<AbilityCastStart> thordan2_trio1_inLightning = ModifiableCallout.durationBasedCall("Wrath of the Heavens: In with Lightning", "In with Lightning");
+
+	@HandleEvents
+	public void lightning(EventContext context, BuffApplied event) {
+		if (event.getTarget().isThePlayer() && event.buffIdMatches(0xB11)) {
+			context.accept(thordan2_trio1_lightningOnYou.getModified(event));
+		}
+	}
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> thordan2_trio1 = new SequentialTrigger<>(30_000, BaseEvent.class,

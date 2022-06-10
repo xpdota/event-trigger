@@ -231,6 +231,7 @@ public class Update {
 
 	private boolean doUpdateCheck() {
 		try {
+			appendText("Beginning update check. If this hangs, freezes, or crashes, check that your AV is not interfering.");
 			// Adding random junk to bypass cache
 			URI uri = makeUrl(manifestFile + "?q=" + System.currentTimeMillis() % 1000);
 			HttpResponse<String> manifestResponse = client.send(HttpRequest.newBuilder().GET().uri(uri).build(), HttpResponse.BodyHandlers.ofString());
