@@ -20,6 +20,7 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.RejectASTTransformsCustomizer;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.AbstractWhitelist;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -65,45 +66,10 @@ public class GroovyManager {
 	private final ExternalObservable obs = new ExternalObservable();
 	private final GroovySandbox sandbox;
 
-	public GroovyManager(PicoContainer container) {
+	public GroovyManager(PicoContainer container, Whitelist whitelist) {
 		this.container = container;
 		loadScripts();
-		sandbox = new GroovySandbox().withWhitelist(new Whitelist() {
-			@Override
-			public boolean permitsMethod(@NotNull Method method, @NotNull Object receiver, @NotNull Object[] args) {
-				return false;
-			}
-
-			@Override
-			public boolean permitsConstructor(@NotNull Constructor<?> constructor, @NotNull Object[] args) {
-				return false;
-			}
-
-			@Override
-			public boolean permitsStaticMethod(@NotNull Method method, @NotNull Object[] args) {
-				return false;
-			}
-
-			@Override
-			public boolean permitsFieldGet(@NotNull Field field, @NotNull Object receiver) {
-				return false;
-			}
-
-			@Override
-			public boolean permitsFieldSet(@NotNull Field field, @NotNull Object receiver, Object value) {
-				return false;
-			}
-
-			@Override
-			public boolean permitsStaticFieldGet(@NotNull Field field) {
-				return false;
-			}
-
-			@Override
-			public boolean permitsStaticFieldSet(@NotNull Field field, Object value) {
-				return false;
-			}
-		});
+		sandbox = new GroovySandbox().withWhitelist(whitelist);
 	}
 
 
@@ -378,6 +344,8 @@ public class GroovyManager {
 		SandboxTransformer sbt = new SandboxTransformer();
 		compilerConfiguration.addCompilationCustomizers(sbt);
 
+		RejectASTTransformsCustomizer rejectAst = new RejectASTTransformsCustomizer();
+		compilerConfiguration.addCompilationCustomizers(rejectAst);
 
 
 		log.info("Done with CompilerConfiguration");

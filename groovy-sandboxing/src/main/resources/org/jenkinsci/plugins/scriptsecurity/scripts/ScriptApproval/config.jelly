@@ -1,0 +1,4 @@
+<!-- Just ti satisfy GlobalConfiguration.getGlobalConfigPage() -->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+</j:jelly>

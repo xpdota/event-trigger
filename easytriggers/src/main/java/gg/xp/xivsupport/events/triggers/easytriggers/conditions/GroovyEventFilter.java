@@ -93,7 +93,9 @@ public class GroovyEventFilter implements Condition<Event> {
 					}
 				};
 				""".formatted(longClassName, shortClassName, checkType, shortClassName, varName, script);
-		return (Predicate<? extends Event>) shell.evaluate(inJavaForm);
+		try (GroovySandbox.Scope ignored = mgr.getSandbox().enter()) {
+			return (Predicate<? extends Event>) shell.parse(inJavaForm).run();
+		}
 
 	}
 

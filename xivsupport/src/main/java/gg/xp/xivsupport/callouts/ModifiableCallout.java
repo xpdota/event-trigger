@@ -14,6 +14,7 @@ import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.DynamicCalloutEvent;
 import gg.xp.xivsupport.speech.ParentedCalloutEvent;
+import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import org.jetbrains.annotations.Contract;
@@ -45,6 +46,8 @@ public class ModifiableCallout<X> {
 	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
 	private final Map<String, Script> scriptCache = new ConcurrentHashMap<>();
 	// TODO: should this use GroovyManager instead?
+	// Yes - but actually getting it hooked up will be difficult
+//	private final GroovyShell interpreter = new GroovyShell(GroovyManager.getCompilerConfig());
 	private final GroovyShell interpreter = new GroovyShell();
 
 	private final String description;
@@ -258,49 +261,25 @@ public class ModifiableCallout<X> {
 		}
 
 		synchronized (interpLock) {
-			try {
-				replacements.forEach((k, v) -> {
-					try {
-						interpreter.setVariable(k, v);
-					}
-					catch (Throwable e) {
-						errorCount++;
-						if (shouldLogError()) {
-							log.error("Error setting variable in bsh", e);
-						}
-					}
-				});
-				return replacer.matcher(input).replaceAll(m -> {
-					try {
-						// TODO: scripts have a setBinding method. That might be easier.
-						Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
-						Object rawEval = script.run();
-						if (rawEval == null) {
-							return "null";
+			return replacer.matcher(input).replaceAll(m -> {
+				try {
+					// TODO: scripts have a setBinding method. That might be easier.
+					Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
+					script.setBinding(new Binding(replacements));
+					Object rawEval = script.run();
+					if (rawEval == null) {
+						return "null";
 //						return m.group(0);
-						}
-						return singleReplacement(rawEval);
 					}
-					catch (Throwable e) {
-						if (shouldLogError()) {
-							log.error("Eval error for input '{}'", input, e);
-						}
-						return "Error";
+					return singleReplacement(rawEval);
+				}
+				catch (Throwable e) {
+					if (shouldLogError()) {
+						log.error("Eval error for input '{}'", input, e);
 					}
-				});
-			}
-			finally {
-				replacements.forEach((k, v) -> {
-					try {
-						interpreter.removeVariable(k);
-					}
-					catch (Throwable e) {
-						if (shouldLogError()) {
-							log.error("Error unsetting variable in bsh", e);
-						}
-					}
-				});
-			}
+					return "Error";
+				}
+			});
 		}
 	}
 

@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+    Allows Jenkins administrators to control what in-process scripts can be run by less-privileged users.
+</div>

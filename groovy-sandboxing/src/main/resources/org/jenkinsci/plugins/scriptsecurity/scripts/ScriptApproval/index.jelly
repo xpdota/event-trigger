@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+The MIT License
+
+Copyright 2014 CloudBees, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+    <l:layout title="In-process Script Approval" permission="${app.ADMINISTER}">
+        <st:include page="sidepanel.jelly" it="${app}"/>
+        <l:main-panel>
+            <script>
+                var mgr = <st:bind value="${it}"/>;
+                function hideScript(hash) {
+                    $('ps-' + hash).remove();
+                }
+                function approveScript(hash) {
+                    mgr.approveScript(hash);
+                    hideScript(hash);
+                }
+                function denyScript(hash) {
+                    mgr.denyScript(hash);
+                    hideScript(hash);
+                }
+                function hideSignature(hash) {
+                    $('s-' + hash).style.display = 'none';
+                }
+                function updateApprovedSignatures(r) {
+                    var both = r.responseObject();
+                    $('approvedSignatures').value = both[0].join('\n');
+                    $('aclApprovedSignatures').value = both[1].join('\n');
+                    $('dangerousApprovedSignatures').value = both[2].join('\n');
+                }
+                function approveSignature(signature, hash) {
+                    mgr.approveSignature(signature, function(r) {
+                        updateApprovedSignatures(r);
+                    });
+                    hideSignature(hash);
+                }
+                function aclApproveSignature(signature, hash) {
+                    mgr.aclApproveSignature(signature, function(r) {
+                        updateApprovedSignatures(r);
+                    });
+                    hideSignature(hash);
+                }
+                function denySignature(signature, hash) {
+                    mgr.denySignature(signature);
+                    hideSignature(hash);
+                }
+                function clearApprovedSignatures() {
+                    mgr.clearApprovedSignatures(function(r) {
+                        updateApprovedSignatures(r);
+                    });
+                }
+                function clearDangerousApprovedSignatures() {
+                    mgr.clearDangerousApprovedSignatures(function(r) {
+                        updateApprovedSignatures(r);
+                    });
+                }
+                
+                function renderPendingClasspathEntries(pendingClasspathEntries) {
+                    if (pendingClasspathEntries.length == 0) {
+                        $('pendingClasspathEntries-none').show();
+                        $('pendingClasspathEntries').childElements().each(function(e){e.remove()});
+                        $('pendingClasspathEntries').hide();
+                    } else {
+                        $('pendingClasspathEntries-none').hide();
+                        $('pendingClasspathEntries').childElements().each(function(e){e.remove()});
+                        /*
+                           Create a list like:
+                            <p id="pcp-${pcp.hash}">
+                                <button class="approve" onclick="approveClasspathEntry('${pcp.hash}')">Approve</button> /
+                                <button class="deny"    onclick="denyClasspathEntry('${pcp.hash}')">Deny</button> 
+                                ${pcp.hash} (${pcp.path})
+                            </p>
+                         */
+                        pendingClasspathEntries.each(function(e) {
+                            var block = new Element('p', { 'id': 'pcp-' + e.hash });
+                            var approveButton = new Element('button', { 'class': 'approve', 'hash': e.hash});
+                            approveButton.insert('Approve');
+                            approveButton.observe('click', function() {
+                                approveClasspathEntry(this.readAttribute('hash'));
+                            });
+                            var denyButton = new Element('button', { 'class': 'deny', 'hash': e.hash});
+                            denyButton.insert('Deny');
+                            denyButton.observe('click', function() {
+                                denyClasspathEntry(this.readAttribute('hash'));
+                            });
+                            block.insert(approveButton);
+                            block.insert(denyButton);
+                            var code = new Element('code', { 'title': e.hash });
+                            code.textContent = e.path;
+                            block.insert(code);
+                            
+                            $('pendingClasspathEntries').insert(block);
+                        });
+                        $('pendingClasspathEntries').show();
+                    }
+                }
+                
+                function renderApprovedClasspathEntries(approvedClasspathEntries) {
+                    if (approvedClasspathEntries.length == 0) {
+                        $('approvedClasspathEntries-none').show();
+                        $('approvedClasspathEntries').childElements().each(function(e){e.remove()});
+                        $('approvedClasspathEntries').hide();
+                        $('approvedClasspathEntries-clear').hide();
+                    } else {
+                        $('approvedClasspathEntries-none').hide();
+                        $('approvedClasspathEntries').childElements().each(function(e){e.remove()});
+                        /*
+                           Create a list like:
+                            <p id="acp-${acp.hash}">
+                                <button class="delete" onclick="denyApprovedClasspathEntry('${pcp.hash}')">Delete</button> 
+                                ${acp.hash} (${acp.path})
+                            </p>
+                         */
+                        approvedClasspathEntries.each(function(e) {
+                            var block = new Element('p', { 'id': 'acp-' + e.hash });
+                            var deleteButton = new Element('button', { 'class': 'delete', 'hash': e.hash});
+                            deleteButton.insert('Delete');
+                            deleteButton.observe('click', function() {
+                                if (confirm('Really delete this approved classpath entry? Any existing scripts using it will need to be rerun and the entry reapproved.')) {
+                                    denyApprovedClasspathEntry(this.readAttribute('hash'));
+                                }
+                            });
+                            block.insert(deleteButton);
+                            var code = new Element('code', { 'title': e.hash });
+                            code.textContent = e.path;
+                            block.insert(code);
+                            
+                            $('approvedClasspathEntries').insert(block);
+                        });
+                        $('approvedClasspathEntries').show();
+                        $('approvedClasspathEntries-clear').show();
+                    }
+                }
+                
+                function renderClasspaths(r) {
+                    renderPendingClasspathEntries(r.responseObject()[0]);
+                    renderApprovedClasspathEntries(r.responseObject()[1]);
+                }
+                
+                function approveClasspathEntry(hash) {
+                    mgr.approveClasspathEntry(hash, function(r) {
+                        renderClasspaths(r);
+                    });
+                }
+                function denyClasspathEntry(hash) {
+                    mgr.denyClasspathEntry(hash, function(r) {
+                        renderClasspaths(r);
+                    });
+                }
+                function denyApprovedClasspathEntry(hash) {
+                    mgr.denyApprovedClasspathEntry(hash, function(r) {
+                        renderClasspaths(r);
+                    });
+                }
+                function clearApprovedClasspathEntries() {
+                    mgr.clearApprovedClasspathEntries(function(r) {
+                        renderClasspaths(r);
+                    });
+                }
+                
+                Event.observe(window, "load", function(){
+                    mgr.getClasspathRenderInfo(function(r) {
+                        renderClasspaths(r);
+                    });
+                });
+            </script>
+            <j:choose>
+                <j:when test="${it.pendingScripts.isEmpty()}">
+                    <p>
+                        No pending script approvals.
+                    </p>
+                </j:when>
+                <j:otherwise>
+                    <j:forEach var="ps" items="${it.pendingScripts}">
+                        <div id="ps-${ps.hash}" class="pending-script">
+                            <p class="ps-context">
+                                <button class="approve" onclick="approveScript('${ps.hash}')">Approve</button> / <button class="deny" onclick="denyScript('${ps.hash}')">Deny</button> ${ps.language.displayName} script
+                                <st:include it="${ps.context}" page="index.jelly"/>:
+                            </p>
+                            <f:textarea readonly="readonly" codemirror-mode="${ps.language.codeMirrorMode}" codemirror-config='"readOnly": true' rows="10" cols="80" value="${ps.script}"/>
+                        </div>
+                    </j:forEach>
+                </j:otherwise>
+            </j:choose>
+            <p id="approvedScripts-clear">
+                You can also remove all previous script approvals:
+                <button onclick="if (confirm('Really delete all approvals? Any existing scripts will need to be requeued and reapproved.')) {mgr.clearApprovedScripts()}">Clear Approvals</button>
+            </p>
+            <hr/>
+            <j:choose>
+                <j:when test="${it.pendingSignatures.isEmpty()}">
+                    <p>
+                        No pending signature approvals.
+                    </p>
+                </j:when>
+                <j:otherwise>
+                    <j:forEach var="s" items="${it.pendingSignatures}">
+                        <div id="s-${s.hash}">
+                            <p>
+                                <button onclick="approveSignature('${s.signature}', '${s.hash}')">Approve</button> /
+                                <j:if test="${!s.signature.startsWith('field')}">
+                                    <button onclick="aclApproveSignature('${s.signature}', '${s.hash}')">Approve assuming permission check</button> /
+                                </j:if>
+                                <button onclick="denySignature('${s.signature}', '${s.hash}')">Deny</button> signature
+                                <st:include it="${s.context}" page="index.jelly"/>:
+                                <code>${s.signature}</code>
+                                <j:if test="${s.dangerous}">
+                                    <st:nbsp/><strong><font color="red">Approving this signature may introduce a security vulnerability! You are advised to deny it.</font></strong>
+                                </j:if>
+                            </p>
+                        </div>
+                    </j:forEach>
+                </j:otherwise>
+            </j:choose>
+            <p>Signatures already approved:</p>
+            <br/>
+            <textarea readonly="readonly" id="approvedSignatures" rows="10" cols="80">
+                <j:forEach var="line" items="${it.approvedSignatures}">${line}<st:out value="&#10;"/></j:forEach>
+            </textarea>
+            <p>Signatures already approved assuming permission check:</p>
+            <br/>
+            <textarea readonly="readonly" id="aclApprovedSignatures" rows="10" cols="80">
+                <j:forEach var="line" items="${it.aclApprovedSignatures}">${line}<st:out value="&#10;"/></j:forEach>
+            </textarea>
+            <j:set var="dangerousApprovedSignatures" value="${it.dangerousApprovedSignatures}"/>
+            <j:if test="${!empty(dangerousApprovedSignatures)}">
+                <p>Signatures already approved which <strong><font color="red">may have introduced a security vulnerability</font></strong> (recommend clearing):</p>
+                <textarea readonly="readonly" id="dangerousApprovedSignatures" rows="10" cols="80">
+                    <j:forEach var="line" items="${dangerousApprovedSignatures}">${line}<st:out value="&#10;"/></j:forEach>
+                </textarea>
+            </j:if>
+            <p>
+                You can also remove all previous signature approvals:
+                <button onclick="if (confirm('Really delete all approvals? Any existing scripts will need to be rerun and signatures reapproved.')) {clearApprovedSignatures()}">Clear Approvals</button>
+            </p>
+            <j:if test="${!empty(dangerousApprovedSignatures)}">
+                Or you can just remove the dangerous ones:
+                <button onclick="clearDangerousApprovedSignatures()">Clear only dangerous Approvals</button>
+            </j:if>
+            <hr/>
+            <p id="pendingClasspathEntries-none">
+                No pending classpath entry approvals.
+            </p>
+            <div id="pendingClasspathEntries">
+                Classpath entries pending approval. (Beware of remote URLs, workspace files, or anything else that might change without your notice.)
+            </div>
+            <p>Classpath entries already approved:</p>
+            <p id="approvedClasspathEntries-none">
+                No approved classpath entries.
+            </p>
+            <div id="approvedClasspathEntries">
+            </div>
+            <p id="approvedClasspathEntries-clear">
+                You can also remove all previous classpath entry approvals:
+                <button onclick="if (confirm('Really delete all approvals? Any existing scripts using a classpath will need to be rerun and entries reapproved.')) {clearApprovedClasspathEntries()}">Clear Classpath Entries</button>
+            </p>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>
