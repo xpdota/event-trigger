@@ -55,6 +55,7 @@
                         <parallel>methods</parallel>
                         <threadCount>2</threadCount>
                         <perCoreThreadCount>true</perCoreThreadCount>
+                        <argLine>-Duser.country=US -Duser.language=en</argLine>
                     </configuration>
                 </plugin>
                 <plugin>
