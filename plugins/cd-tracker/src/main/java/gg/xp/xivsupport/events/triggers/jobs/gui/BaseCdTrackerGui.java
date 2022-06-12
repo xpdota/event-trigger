@@ -13,6 +13,7 @@ import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.LongSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -22,6 +23,7 @@ import gg.xp.xivsupport.persistence.settings.LongSetting;
 
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,6 +31,12 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class BaseCdTrackerGui implements PluginTab {
+
+	private final BaseCdTrackerOverlay overlay;
+
+	protected BaseCdTrackerGui(BaseCdTrackerOverlay overlay) {
+		this.overlay = overlay;
+	}
 
 	protected abstract LongSetting cdAdvance();
 
@@ -67,6 +75,12 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 		JPanel numSetting = new IntSettingSpinner(overlayMax(), "Max in Overlay").getComponent();
 		settingsPanel.add(numSetting);
 		// TODO: bug here - doesn't cancel editing, so current cell enabled/disabled is stuck
+
+		settingsPanel.add(Box.createHorizontalStrut(32_000));
+		SettingsCdTrackerColorProvider colors = overlay.getColors();
+		settingsPanel.add(new ColorSettingGui(colors.getActiveSetting(), "Active Color", enableOverlaySetting::get).getComponent());
+		settingsPanel.add(new ColorSettingGui(colors.getReadySetting(), "Ready Color", enableOverlaySetting::get).getComponent());
+		settingsPanel.add(new ColorSettingGui(colors.getOnCdSetting(), "On CD Color", enableOverlaySetting::get).getComponent());
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 
@@ -111,10 +125,12 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 							col.setCellRenderer(new JobRenderer());
 							col.setMinWidth(100);
 							col.setMaxWidth(100);
+							col.setCellEditor(new NoCellEditor());
 						}))
 				.addColumn(new CustomColumn<>("Skill",
 						cd -> new XivAbility(cd.getPrimaryAbilityId(), cd.getLabel()), c -> {
 					c.setCellRenderer(new ActionAndStatusRenderer());
+					c.setCellEditor(new NoCellEditor());
 				}))
 				.addColumn(new CustomColumn<>("Cooldown", cd -> {
 					int maxCharges = cd.getMaxCharges();
@@ -122,7 +138,7 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 						return String.format("%s (%d charges)", cd.getCooldown(), maxCharges);
 					}
 					return cd.getCooldown();
-				}))
+				}, c -> c.setCellEditor(new NoCellEditor())))
 //				.addColumn(new CustomColumn<>("Cooldown (from CSV)", cd -> {
 //					ActionInfo actionInfo = ActionLibrary.forId(cd.getPrimaryAbilityId());
 //					return actionInfo == null ? null : actionInfo.getCd();

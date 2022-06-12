@@ -5,6 +5,7 @@ import gg.xp.xivsupport.persistence.settings.IntSetting;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.Supplier;
 
 public class IntSettingSpinner {
 
@@ -12,8 +13,12 @@ public class IntSettingSpinner {
 	private final String label;
 	private JLabel jLabel;
 
-	// TODO: something weird going on with insets with this class
 	public IntSettingSpinner(IntSetting setting, String label) {
+		this(setting, label, () -> true);
+	}
+
+	// TODO: something weird going on with insets with this class
+	public IntSettingSpinner(IntSetting setting, String label, Supplier<Boolean> enabled) {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setValue(setting.get());
 		model.addChangeListener(e -> {
@@ -30,7 +35,12 @@ public class IntSettingSpinner {
 		if ((max = setting.getMax()) != null) {
 			model.setMaximum(max);
 		}
-		spinner = new JSpinner(model);
+		spinner = new JSpinner(model) {
+			@Override
+			public boolean isEnabled() {
+				return enabled.get();
+			}
+		};
 		this.label = label;
 	}
 

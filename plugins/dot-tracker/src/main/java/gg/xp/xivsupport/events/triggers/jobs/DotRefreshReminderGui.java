@@ -8,6 +8,7 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.LongSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -67,13 +68,22 @@ public class DotRefreshReminderGui implements PluginTab {
 			enableOverlaySetting.addListener(outerPanel::repaint);
 		}
 		{
-			JPanel numSetting = new IntSettingSpinner(backend.getNumberToDisplay(), "Max in Overlay").getComponent();
+			JPanel numSetting = new IntSettingSpinner(backend.getNumberToDisplay(), "Max in Overlay", enableOverlaySetting::get).getComponent();
 			settingsPanel.add(numSetting);
 		}
 		{
 			JCheckBox showTicks = new BooleanSettingGui(showTicksSetting, "Show Ticks", enableOverlaySetting::get).getComponent();
 			settingsPanel.add(showTicks);
 			showTicksSetting.addListener(outerPanel::repaint);
+		}
+		{
+			// Line break
+			settingsPanel.add(Box.createHorizontalStrut(32000));
+		}
+		{
+			settingsPanel.add(new ColorSettingGui(backend.getNormalColor(), "Bar Color", enableOverlaySetting::get).getComponent());
+			settingsPanel.add(new ColorSettingGui(backend.getExpiringColor(), "Expiring Color", enableOverlaySetting::get).getComponent());
+			settingsPanel.add(new ColorSettingGui(backend.getExpiredColor(), "Expired Color", enableOverlaySetting::get).getComponent());
 		}
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);

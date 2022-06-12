@@ -66,7 +66,7 @@ public class DotTrackerOverlay extends XivOverlay {
 				}))
 				.addColumn(new CustomColumn<>("Bar", Function.identity(),
 						c -> {
-							c.setCellRenderer(new DotBarRenderer());
+							c.setCellRenderer(new DotBarRenderer(dots));
 							c.setMaxWidth(BAR_WIDTH);
 							c.setMinWidth(BAR_WIDTH);
 						}))

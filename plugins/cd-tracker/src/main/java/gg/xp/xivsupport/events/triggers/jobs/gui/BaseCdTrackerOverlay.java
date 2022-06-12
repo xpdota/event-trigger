@@ -10,6 +10,7 @@ import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -30,16 +31,28 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 	private final IntSetting numberOfRows;
 	private final CustomTableModel<VisualCdInfo> tableModel;
 	private final JTable table;
-//	private volatile Map<CdTrackingKey, AbilityUsedEvent> currentCds = Collections.emptyMap();
+	private final SettingsCdTrackerColorProvider colors;
+	//	private volatile Map<CdTrackingKey, AbilityUsedEvent> currentCds = Collections.emptyMap();
 	private volatile List<VisualCdInfo> croppedCds = Collections.emptyList();
 //	private volatile List<BuffApplied> currentBuffs = Collections.emptyList();
 	private volatile List<CooldownStatus> currentCds;
+
+	private final ColorSetting activeColor;
+	private final ColorSetting readyColor;
+	private final ColorSetting onCdColor;
 
 	protected BaseCdTrackerOverlay(String title, String settingKeyBase, OverlayConfig oc, PersistenceProvider persistence, IntSetting rowSetting) {
 		super(title, settingKeyBase, oc, persistence);
 		numberOfRows = rowSetting;
 		numberOfRows.addListener(this::repackSize);
-		BaseCdTrackerTable tableHolder = new BaseCdTrackerTable(() -> croppedCds);
+
+		CdColorProvider defaults = DefaultCdTrackerColorProvider.INSTANCE;
+		activeColor = new ColorSetting(persistence, settingKeyBase + ".active-color", defaults.getActiveColor());
+		readyColor = new ColorSetting(persistence, settingKeyBase + ".ready-color", defaults.getReadyColor());
+		onCdColor = new ColorSetting(persistence, settingKeyBase + ".oncd-color", defaults.getOnCdColor());
+
+		colors = new SettingsCdTrackerColorProvider(activeColor, readyColor, onCdColor);
+		BaseCdTrackerTable tableHolder = new BaseCdTrackerTable(() -> croppedCds, colors);
 		tableModel = tableHolder.getTableModel();
 		table = tableHolder.getTable();
 		getPanel().add(table);
@@ -140,5 +153,9 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 			case FULL -> tableModel.fullRefresh();
 			case REPAINT -> table.repaint();
 		}
+	}
+
+	public SettingsCdTrackerColorProvider getColors() {
+		return colors;
 	}
 }

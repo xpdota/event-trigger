@@ -19,6 +19,7 @@ public class CdTrackerGui extends BaseCdTrackerGui {
 	private final CdTrackerOverlay overlay;
 
 	public CdTrackerGui(CdTracker backend, CdTrackerOverlay overlay) {
+		super(overlay);
 		this.backend = backend;
 		this.overlay = overlay;
 	}
