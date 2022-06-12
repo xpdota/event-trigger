@@ -31,7 +31,7 @@ public class XivEntity implements Serializable, NameIdPair {
 
 	public XivEntity(long id, String name) {
 		this.id = id;
-		this.name = name;
+		this.name = name == null ? null : name.intern();
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public class XivStatusEffect implements Serializable, NameIdPair {
 
 	public XivStatusEffect(long id, String name) {
 		this.id = id;
-		this.name = name;
+		this.name = name == null ? null : name.intern();
 	}
 
 	@Override

@@ -83,7 +83,7 @@ public class ActionLibrary {
 				}
 				if (imageId != 0) {
 					String categoryRaw = row[50];
-					csvValues.put(id, new ActionInfo(id, row[1], imageId, cd, maxCharges, categoryRaw));
+					csvValues.put(id, new ActionInfo(id, row[1].intern(), imageId, cd, maxCharges, categoryRaw.intern()));
 				}
 			});
 		}

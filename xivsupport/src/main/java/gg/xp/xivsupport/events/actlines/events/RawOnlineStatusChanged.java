@@ -21,7 +21,7 @@ public class RawOnlineStatusChanged extends BaseEvent {
 	public RawOnlineStatusChanged(long targetId, int rawStatusId, String statusName) {
 		this.targetId = targetId;
 		this.rawStatusId = rawStatusId;
-		this.statusName = statusName;
+		this.statusName = statusName.intern();
 	}
 
 	public long getTargetId() {
