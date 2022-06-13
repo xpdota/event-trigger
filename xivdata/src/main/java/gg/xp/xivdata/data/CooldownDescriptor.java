@@ -22,4 +22,8 @@ public interface CooldownDescriptor {
 	int getMaxCharges();
 
 	@Nullable Double getDurationOverride();
+
+	default boolean autoBuffs() {
+		return false;
+	};
 }

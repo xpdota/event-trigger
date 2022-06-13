@@ -13,6 +13,8 @@ import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
@@ -26,6 +28,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class FlyingTextOverlay extends XivOverlay {
+
+	private static final Logger log = LoggerFactory.getLogger(FlyingTextOverlay.class);
 
 	private final List<VisualCalloutItem> currentCallouts = new ArrayList<>();
 	private final Font font;
@@ -172,7 +176,12 @@ public class FlyingTextOverlay extends XivOverlay {
 			Component extra = this.extraComponent;
 			if (extra != null) {
 				graphics.translate(extraComponentLeftPad - textX, 0);
-				extra.paint(graphics);
+				try {
+					extra.paint(graphics);
+				}
+				catch (Throwable t) {
+					log.error("Error painting extra component", t);
+				}
 			}
 		}
 
@@ -185,21 +194,31 @@ public class FlyingTextOverlay extends XivOverlay {
 		}
 
 		public void recheckText() {
-			String newText = event.getVisualText();
-			if (!Objects.equals(newText, prevText)) {
-				text.setText(prevText = newText);
-				if (extraComponent != null) {
-					recheckGradients();
-					Rectangle oldBounds = extraComponent.getBounds();
-					extraComponentLeftPad = Math.max(0, leftInnerGradientBound - oldBounds.width - textPadding);
+			try {
+				String newText = event.getVisualText();
+				if (!Objects.equals(newText, prevText)) {
+					text.setText(prevText = newText);
+					if (extraComponent != null) {
+						recheckGradients();
+						Rectangle oldBounds = extraComponent.getBounds();
+						extraComponentLeftPad = Math.max(0, leftInnerGradientBound - oldBounds.width - textPadding);
+					}
+					else {
+						extraComponentLeftPad = 0;
+					}
+					heightOfThisItem = this.text.getPreferredSize().height;
 				}
-				else {
-					extraComponentLeftPad = 0;
-				}
-				heightOfThisItem = this.text.getPreferredSize().height;
+			}
+			catch (Throwable t) {
+				log.error("Error updating text", t);
 			}
 			if (extraComponent != null && extraComponent instanceof Refreshable ref) {
-				ref.refresh();
+				try {
+					ref.refresh();
+				}
+				catch (Throwable t) {
+					log.error("Error updating visual component", t);
+				}
 			}
 		}
 	}

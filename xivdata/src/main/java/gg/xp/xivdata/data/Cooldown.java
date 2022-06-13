@@ -35,7 +35,7 @@ public enum Cooldown implements CooldownDescriptor {
 
 	// List of ALL buffs to track - WL/BL will be done by user settings
 	// TANKS
-	Rampart(builder(CooldownType.PERSONAL_MIT, true, 0x1d6b).buffIds(1191)),
+	Rampart(builder(CooldownType.PERSONAL_MIT, true, 0x1d6b).autoBuffs()),
 	Reprisal(TANK, true, 60.0, "Reprisal", CooldownType.PARTY_MIT, 0x1d6f, 1193, 2101),
 	ArmsLength(TANK, true, 120.0, "Arm's Length", CooldownType.PERSONAL_UTILITY, 0x1d7c, 1209),
 
@@ -225,6 +225,7 @@ public enum Cooldown implements CooldownDescriptor {
 	private final String label;
 	private final long[] abilityIds;
 	private final long[] buffIds;
+	private final boolean autoBuffs;
 	private final int maxCharges;
 	private final boolean defaultPersOverlay;
 	private final @Nullable Double durationOverride;
@@ -243,9 +244,15 @@ public enum Cooldown implements CooldownDescriptor {
 		private Double cooldown;
 		private Double durationOverride;
 		private String name;
+		private boolean autoBuffs;
 
 		private CdBuilder buffIds(long... buffIds) {
 			this.buffIds = buffIds;
+			return this;
+		}
+
+		private CdBuilder autoBuffs() {
+			this.autoBuffs = true;
 			return this;
 		}
 
@@ -381,12 +388,16 @@ public enum Cooldown implements CooldownDescriptor {
 		cooldown = builder.getCooldown();
 		type = builder.type;
 		label = builder.getName();
-		buffIds = builder.buffIds;
 		maxCharges = builder.getMaxCharges();
 		durationOverride = builder.durationOverride;
 		if (job == null && jobType == null) {
 			throw new RuntimeException(String.format("Cooldown %s has neither a job nor jobtype", label));
 		}
+		if (builder.autoBuffs && builder.buffIds.length > 0) {
+			throw new RuntimeException(String.format("Cooldown %s specified both autoBuffs and explicit buff IDs (%s)", label, Arrays.toString(builder.buffIds)));
+		}
+		buffIds = builder.buffIds;
+		autoBuffs = builder.autoBuffs;
 	}
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long[] abilityIds, long[] buffIds) {
@@ -400,6 +411,7 @@ public enum Cooldown implements CooldownDescriptor {
 		this.buffIds = buffIds;
 		this.maxCharges = 1;
 		durationOverride = null;
+		autoBuffs = false;
 	}
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -413,6 +425,7 @@ public enum Cooldown implements CooldownDescriptor {
 		this.buffIds = buffId;
 		this.maxCharges = 1;
 		durationOverride = null;
+		autoBuffs = false;
 	}
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, double durationOverride, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -426,6 +439,7 @@ public enum Cooldown implements CooldownDescriptor {
 		this.buffIds = buffId;
 		this.maxCharges = 1;
 		this.durationOverride = durationOverride;
+		autoBuffs = false;
 	}
 
 	Cooldown(JobType jobType, boolean defaultPersOverlay, double cooldown, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -439,6 +453,7 @@ public enum Cooldown implements CooldownDescriptor {
 		this.buffIds = buffId;
 		this.maxCharges = 1;
 		durationOverride = null;
+		autoBuffs = false;
 	}
 
 	Cooldown(Job job, boolean defaultPersOverlay, double cooldown, int charges, String label, CooldownType cooldownType, long abilityId, long... buffId) {
@@ -452,6 +467,7 @@ public enum Cooldown implements CooldownDescriptor {
 		this.buffIds = buffId;
 		this.maxCharges = charges;
 		durationOverride = null;
+		autoBuffs = false;
 	}
 
 	public Job getJob() {
@@ -506,5 +522,10 @@ public enum Cooldown implements CooldownDescriptor {
 	@Override
 	public @Nullable Double getDurationOverride() {
 		return durationOverride;
+	}
+
+	@Override
+	public boolean autoBuffs() {
+		return autoBuffs;
 	}
 }
