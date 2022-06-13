@@ -29,7 +29,7 @@ import static gg.xp.xivdata.data.JobType.HEALER;
 import static gg.xp.xivdata.data.JobType.MELEE_DPS;
 import static gg.xp.xivdata.data.JobType.TANK;
 
-public enum Cooldown {
+public enum Cooldown implements CooldownDescriptor {
 
 	// DO NOT change enum member names - they are used as settings keys
 
@@ -462,10 +462,12 @@ public enum Cooldown {
 		return jobType;
 	}
 
+	@Override
 	public String getLabel() {
 		return label;
 	}
 
+	@Override
 	public boolean abilityIdMatches(long abilityId) {
 		for (long id : abilityIds) {
 			if (id == abilityId) {
@@ -475,6 +477,7 @@ public enum Cooldown {
 		return false;
 	}
 
+	@Override
 	public boolean buffIdMatches(long buffId) {
 		for (long thisBuffId : this.buffIds) {
 			if (thisBuffId == buffId) {
@@ -484,23 +487,23 @@ public enum Cooldown {
 		return false;
 	}
 
+	@Override
 	public double getCooldown() {
 		return cooldown;
 	}
 
-	public Duration getCooldownAsDuration() {
-		return Duration.ofMillis((long) (cooldown * 1000L));
-	}
-
 	// Purposefully saying "primary" here - as some might require multiple CDs (see: Raw/Nascent)
+	@Override
 	public long getPrimaryAbilityId() {
 		return abilityIds[0];
 	}
 
+	@Override
 	public int getMaxCharges() {
 		return maxCharges;
 	}
 
+	@Override
 	public @Nullable Double getDurationOverride() {
 		return durationOverride;
 	}

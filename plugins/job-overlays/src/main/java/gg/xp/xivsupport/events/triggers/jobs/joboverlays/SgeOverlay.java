@@ -3,11 +3,14 @@ package gg.xp.xivsupport.events.triggers.jobs.joboverlays;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.Cooldown;
+import gg.xp.xivdata.data.CooldownDescriptor;
 import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivsupport.events.actlines.events.jobguage.JobGaugeState;
+import gg.xp.xivsupport.events.actlines.events.jobguage.SgeGaugeEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.CdTracker;
 import gg.xp.xivsupport.events.state.combatstate.CooldownHelper;
@@ -15,17 +18,19 @@ import gg.xp.xivsupport.events.state.combatstate.CooldownStatus;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.jobs.gui.BaseCdTrackerTable;
 import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfo;
+import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfoCharge;
 import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfoMain;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
-import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,17 +40,19 @@ public class SgeOverlay extends BaseJobOverlay {
 	private final StatusEffectRepository buffs;
 	private final CdTracker cooldowns;
 	private final CooldownHelper cdh;
+	private final JobGaugeState gaugeState;
 	private final ComponentListRenderer listRenderer = new ComponentListRenderer(4);
 	private @Nullable XivPlayerCharacter kardionTarget;
 
 	private final CustomTableModel<VisualCdInfo> tableModel;
 	private volatile List<VisualCdInfo> croppedCds = Collections.emptyList();
 
-	public SgeOverlay(XivState state, StatusEffectRepository buffs, CdTracker cooldowns, CooldownHelper cdh) {
+	public SgeOverlay(XivState state, StatusEffectRepository buffs, CdTracker cooldowns, CooldownHelper cdh, JobGaugeState gaugeState) {
 		this.state = state;
 		this.buffs = buffs;
 		this.cooldowns = cooldowns;
 		this.cdh = cdh;
+		this.gaugeState = gaugeState;
 		setPreferredSize(new Dimension(250, 100));
 		add(listRenderer);
 		listRenderer.setBounds(0, 5, 250, 50);
@@ -105,16 +112,62 @@ public class SgeOverlay extends BaseJobOverlay {
 		SwingUtilities.invokeLater(tableModel::fullRefresh);
 	}
 
+	private static final CooldownDescriptor cdesc = new CooldownDescriptor() {
+		@Override
+		public String getLabel() {
+			return "Addersgall";
+		}
+
+		@Override
+		public boolean abilityIdMatches(long abilityId) {
+			return false;
+		}
+
+		@Override
+		public boolean buffIdMatches(long buffId) {
+			return false;
+		}
+
+		@Override
+		public double getCooldown() {
+			return 20.0;
+		}
+
+		@Override
+		public long getPrimaryAbilityId() {
+			return 0x5EE8;
+		}
+
+		@Override
+		public int getMaxCharges() {
+			return 3;
+		}
+
+		@Override
+		public @Nullable Double getDurationOverride() {
+			return null;
+		}
+	};
+
 	private void recalcCds() {
 		CooldownStatus personalCd = cdh.getPersonalCd(Cooldown.Phlegma);
-		VisualCdInfo vci;
+		VisualCdInfo phlegmaVci;
 		if (personalCd == null) {
 			// Not used yet - display placeholder
-			vci = new VisualCdInfoMain(Cooldown.Phlegma);
+			phlegmaVci = new VisualCdInfoMain(Cooldown.Phlegma);
 		}
 		else {
-			vci = new VisualCdInfoMain(personalCd);
+			phlegmaVci = new VisualCdInfoMain(personalCd);
 		}
-		croppedCds = Collections.singletonList(vci);
+		VisualCdInfo addersgallVci;
+		SgeGaugeEvent gauge = gaugeState.getLastUpdateOf(SgeGaugeEvent.class);
+		if (gauge != null) {
+			addersgallVci = new VisualCdInfoMain(cdesc, gauge, null, gauge.replenishedAt());
+			croppedCds = List.of(phlegmaVci, addersgallVci);
+		}
+		else {
+			croppedCds = Collections.singletonList(phlegmaVci);
+		}
+
 	}
 }

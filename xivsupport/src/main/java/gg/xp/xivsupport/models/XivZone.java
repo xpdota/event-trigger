@@ -14,7 +14,7 @@ public class XivZone implements Serializable {
 
 	public XivZone(long id, String name) {
 		this.id = id;
-		this.name = name;
+		this.name = name == null ? null : name.intern();
 	}
 
 	public long getId() {

@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
@@ -81,10 +80,10 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<AbilityCastStart> thordan_cleaveBait = ModifiableCallout.durationBasedCall("Ascalon's Mercy", "Cleave Bait");
 	private final ModifiableCallout<AbilityCastStart> thordan_quaga = ModifiableCallout.durationBasedCall("Ancient Quaga", "Raidwide");
 
-	private final ModifiableCallout<?> nsSafe = new ModifiableCallout<>("Trio 1 N/S Safe", "North/South Safe", "North South Safe", Collections.emptyList());
-	private final ModifiableCallout<?> neSwSafe = new ModifiableCallout<>("Trio 1 NE/SW Safe", "Northeast/Southwest Safe", "Northeast Southwest Safe", Collections.emptyList());
-	private final ModifiableCallout<?> ewSafe = new ModifiableCallout<>("Trio 1 E/W Safe", "East/West Safe", "East West Safe", Collections.emptyList());
-	private final ModifiableCallout<?> seNwSafe = new ModifiableCallout<>("Trio 1 SE/NW Safe", "Southeast/Northwest Safe", "Southeast Northwest Safe", Collections.emptyList());
+	private final ModifiableCallout<?> nsSafe = new ModifiableCallout<>("Trio 1 N/S Safe", "North/South Safe", "North South Safe");
+	private final ModifiableCallout<?> neSwSafe = new ModifiableCallout<>("Trio 1 NE/SW Safe", "Northeast/Southwest Safe", "Northeast Southwest Safe");
+	private final ModifiableCallout<?> ewSafe = new ModifiableCallout<>("Trio 1 E/W Safe", "East/West Safe", "East West Safe");
+	private final ModifiableCallout<?> seNwSafe = new ModifiableCallout<>("Trio 1 SE/NW Safe", "Southeast/Northwest Safe", "Southeast Northwest Safe");
 
 
 	private final ModifiableCallout<?> thordan_trio1_nothing = new ModifiableCallout<>("First Trio: Nothing", "Nothing");
@@ -780,6 +779,9 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		}
 
 		public boolean isExpired() {
+			if (getState().getLatestCombatantData(haurchInitial) == null) {
+				return true;
+			}
 			return getBuffs().statusesOnTarget(haurchInitial).stream().noneMatch(ba -> ba.getBuff().getId() == 2977);
 		}
 
@@ -803,7 +805,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				log.info("Haurch HP tracker end");
 			});
 
-	private final ModifiableCallout<BuffApplied> thordan2_trio1_lightningOnYou = ModifiableCallout.durationBasedCall("Wrath of the Heavens: Lightning on you", "Lightning");
+	private final ModifiableCallout<BuffApplied> thordan2_trio1_lightningOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Wrath of the Heavens: Lightning on you", "Lightning").autoIcon();
 
 	private final ModifiableCallout<HeadMarkerEvent> thordan2_trio1_blueMark = new ModifiableCallout<>("Wrath of the Heavens: Blue Marker", "Blue Marker");
 	private final ModifiableCallout<TetherEvent> thordan2_trio1_tether = new ModifiableCallout<>("Wrath of the Heavens: Tether", "Tether");

@@ -1,7 +1,5 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.data.ActionIcon;
-import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -17,12 +15,17 @@ public class BaseCdTrackerTable {
 	private final CustomTableModel<VisualCdInfo> tableModel;
 	private final JTable table;
 	private static final int BAR_WIDTH = 150;
+
 	public BaseCdTrackerTable(Supplier<List<? extends VisualCdInfo>> supplier) {
+		this(supplier, DefaultCdTrackerColorProvider.INSTANCE);
+	}
+
+	public BaseCdTrackerTable(Supplier<List<? extends VisualCdInfo>> supplier, CdColorProvider colors) {
 		tableModel = CustomTableModel.builder(supplier)
 				.addColumn(new CustomColumn<>("Icon", c -> {
 					AbilityUsedEvent ability = c.getEvent();
 					if (ability == null) {
-						return ActionLibrary.iconForId(c.getCd().getPrimaryAbilityId());
+						return ActionLibrary.iconForId(c.getPrimaryAbilityId());
 					}
 					return ability.getAbility();
 
@@ -33,7 +36,7 @@ public class BaseCdTrackerTable {
 				}))
 				.addColumn(new CustomColumn<>("Bar", Function.identity(),
 						c -> {
-							c.setCellRenderer(new CdBarRenderer());
+							c.setCellRenderer(new CdBarRenderer(colors));
 							c.setMaxWidth(BAR_WIDTH);
 							c.setMinWidth(BAR_WIDTH);
 						}))

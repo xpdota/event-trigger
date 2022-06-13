@@ -27,7 +27,7 @@ public class XivAbility implements Serializable, NameIdPair {
 
 	public XivAbility(long id, String name) {
 		this.id = id;
-		this.name = name;
+		this.name = name == null ? null : name.intern();
 	}
 
 	@Override

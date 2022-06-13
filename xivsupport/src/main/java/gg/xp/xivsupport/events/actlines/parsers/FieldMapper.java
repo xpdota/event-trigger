@@ -178,6 +178,11 @@ public class FieldMapper<K extends Enum<K>> {
 		return cbt;
 	}
 
+	public XivCombatant getEntity(K idKey) {
+		long id = getHex(idKey);
+		return getEntity(id);
+	}
+
 	public XivCombatant getEntity(long id) {
 		XivCombatant xivCombatant = state.getCombatant(id);
 		if (xivCombatant != null) {

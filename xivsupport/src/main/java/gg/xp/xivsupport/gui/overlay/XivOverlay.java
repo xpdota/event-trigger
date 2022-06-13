@@ -198,6 +198,11 @@ public class XivOverlay {
 	}
 
 	public void setVisible(boolean visible) {
+		// TODO: a bit of a hack, but fixes the bug where if you start the program with overlays disabled, you will
+		// have to restart after enabling them.
+		if (visible && frame.getWidth() < 30) {
+			repackSize();
+		}
 		this.visible = visible;
 		recalc();
 	}

@@ -39,10 +39,12 @@ public class ColorSettingGui {
 		};
 
 		button.addActionListener(l -> {
-			Color color = showDialog(button, label, setting.get());
-			if (color != null) {
-				setting.set(color);
-				button.repaint();
+			if (button.isEnabled()) {
+				Color color = showDialog(button, label, setting.get());
+				if (color != null) {
+					setting.set(color);
+					button.repaint();
+				}
 			}
 		});
 		button.setPreferredSize(new Dimension(50, 20));
@@ -70,7 +72,7 @@ public class ColorSettingGui {
 	private static @Nullable JColorChooser chooser;
 
 	@SuppressWarnings("NonThreadSafeLazyInitialization") // Always called from UI thread
-	private static Color showDialog(Component component, String title, Color initialColor) {
+	private static Color showDialog(Component component, String title, @Nullable Color initialColor) {
 
 
 //		final JColorChooser chooser = new JColorChooser(initialColor != null ? initialColor : Color.white);
@@ -80,6 +82,9 @@ public class ColorSettingGui {
 			for (AbstractColorChooserPanel ccPanel : chooser.getChooserPanels()) {
 				ccPanel.setColorTransparencySelectionEnabled(true);
 			}
+		}
+		if (initialColor != null) {
+			chooser.setColor(initialColor);
 		}
 
 		ColorTracker ok = new ColorTracker(chooser);

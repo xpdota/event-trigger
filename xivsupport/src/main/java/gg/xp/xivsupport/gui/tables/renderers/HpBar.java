@@ -62,7 +62,12 @@ public class HpBar extends JComponent {
 	}
 
 	public void setData(XivCombatant cbt, long diff) {
-		setData(cbt.getHp(), diff, cbt.getShieldAmount());
+		if (cbt == null) {
+			setData(null, 0, 0);
+		}
+		else {
+			setData(cbt.getHp(), diff, cbt.getShieldAmount());
+		}
 	}
 
 	public void setData(HitPoints hp, long diff, long shield) {

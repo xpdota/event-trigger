@@ -12,18 +12,17 @@ import java.util.function.Supplier;
 public class CdBarRenderer extends ResourceBarRenderer<VisualCdInfo> {
 
 
-	private static final Color colorActive = new Color(19, 8, 201, 192);
-	private static final Color colorReady = new Color(55, 182, 67, 192);
-	private static final Color colorOnCd = new Color(192, 0, 0, 192);
 	private final ComponentListStretchyRenderer componentListStretchyRenderer = new ComponentListStretchyRenderer(0);
+	private final CdColorProvider colors;
 
-	public CdBarRenderer() {
+	public CdBarRenderer(CdColorProvider colors) {
 		super(VisualCdInfo.class);
+		this.colors = colors;
 	}
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		if (value instanceof VisualCdInfoMain vci) {
+		if (value instanceof VisualCdInfo vci) {
 			if (vci.useChargeDisplay()) {
 				List<Supplier<Component>> components = vci.makeChargeInfo()
 						.stream()
@@ -38,19 +37,19 @@ public class CdBarRenderer extends ResourceBarRenderer<VisualCdInfo> {
 
 	@Override
 	protected void formatLabel(@NotNull VisualCdInfo item) {
-		bar.setTextOptions(((LabelOverride) item).getLabel());
+		bar.setTextOptions(item.getLabel());
 	}
 
 	@Override
 	protected Color getBarColor(double percent, @NotNull VisualCdInfo item) {
 		if (item.getBuffApplied() != null) {
-			return colorActive;
+			return colors.getActiveColor();
 		}
 		if (percent > 0.999d) {
-			return colorReady;
+			return colors.getReadyColor();
 		}
 		else {
-			return colorOnCd;
+			return colors.getOnCdColor();
 		}
 
 	}

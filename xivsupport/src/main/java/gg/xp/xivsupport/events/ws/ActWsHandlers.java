@@ -129,6 +129,9 @@ public class ActWsHandlers {
 				log.warn("I don't know how to handle response message: {}", rawMsg);
 			}
 			else {
+				if (rseqObj instanceof String str) {
+					rseqObj = str.intern();
+				}
 				// Just fake the type
 				ActWsJsonMsg actWsJsonMsg = new ActWsJsonMsg("combatants", rseqObj, jsonNode);
 				context.accept(actWsJsonMsg);
