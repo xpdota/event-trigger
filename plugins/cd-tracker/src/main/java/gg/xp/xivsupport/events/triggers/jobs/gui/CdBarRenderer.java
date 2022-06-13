@@ -22,7 +22,7 @@ public class CdBarRenderer extends ResourceBarRenderer<VisualCdInfo> {
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-		if (value instanceof VisualCdInfoMain vci) {
+		if (value instanceof VisualCdInfo vci) {
 			if (vci.useChargeDisplay()) {
 				List<Supplier<Component>> components = vci.makeChargeInfo()
 						.stream()

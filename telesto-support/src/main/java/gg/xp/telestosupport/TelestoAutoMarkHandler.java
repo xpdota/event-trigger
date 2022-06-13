@@ -33,14 +33,14 @@ public class TelestoAutoMarkHandler implements FilteredEventHandler {
 	}
 
 	private void clearAutoMark(EventContext context) {
-		context.accept(new TelestoGameCommand("/mk clear 1"));
-		context.accept(new TelestoGameCommand("/mk clear 2"));
-		context.accept(new TelestoGameCommand("/mk clear 3"));
-		context.accept(new TelestoGameCommand("/mk clear 4"));
-		context.accept(new TelestoGameCommand("/mk clear 5"));
-		context.accept(new TelestoGameCommand("/mk clear 6"));
-		context.accept(new TelestoGameCommand("/mk clear 7"));
-		context.accept(new TelestoGameCommand("/mk clear 8"));
+		context.accept(new TelestoGameCommand("/mk clear <1>"));
+		context.accept(new TelestoGameCommand("/mk clear <2>"));
+		context.accept(new TelestoGameCommand("/mk clear <3>"));
+		context.accept(new TelestoGameCommand("/mk clear <4>"));
+		context.accept(new TelestoGameCommand("/mk clear <5>"));
+		context.accept(new TelestoGameCommand("/mk clear <6>"));
+		context.accept(new TelestoGameCommand("/mk clear <7>"));
+		context.accept(new TelestoGameCommand("/mk clear <8>"));
 	}
 
 	@HandleEvents

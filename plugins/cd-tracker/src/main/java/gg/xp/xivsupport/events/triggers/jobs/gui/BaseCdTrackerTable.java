@@ -25,7 +25,7 @@ public class BaseCdTrackerTable {
 				.addColumn(new CustomColumn<>("Icon", c -> {
 					AbilityUsedEvent ability = c.getEvent();
 					if (ability == null) {
-						return ActionLibrary.iconForId(c.getCd().getPrimaryAbilityId());
+						return ActionLibrary.iconForId(c.getPrimaryAbilityId());
 					}
 					return ability.getAbility();
 

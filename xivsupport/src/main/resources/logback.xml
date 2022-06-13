@@ -12,7 +12,7 @@
         <file>${APPDATA}/triggevent/triggevent.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>%i.log.zip</fileNamePattern>
+            <fileNamePattern>${APPDATA}/triggevent/triggevent.log.%i.zip</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>3</maxIndex>
         </rollingPolicy>

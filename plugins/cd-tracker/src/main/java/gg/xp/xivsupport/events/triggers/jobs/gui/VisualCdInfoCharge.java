@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.data.Cooldown;
+import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivdata.data.CooldownDescriptor;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import org.jetbrains.annotations.NotNull;
@@ -8,21 +9,23 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 
 // TODO: value in supporting buffs?
 public class VisualCdInfoCharge implements VisualCdInfo {
 
-	private final @NotNull Cooldown cd;
-	private final @Nullable AbilityUsedEvent abilityEvent;
+	private final @NotNull CooldownDescriptor cd;
+	private final @Nullable BaseEvent basisEvent;
 	private final @Nullable BuffApplied buffApplied;
 	private final @Nullable Instant replenishedAt;
 	private final int chargeNum;
 	private final Instant start;
 	private final Instant end;
 
-	public VisualCdInfoCharge(Cooldown cd, @Nullable AbilityUsedEvent abilityEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt, int chargeNum) {
+	public VisualCdInfoCharge(CooldownDescriptor cd, @Nullable BaseEvent basisEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt, int chargeNum) {
 		this.cd = cd;
-		this.abilityEvent = abilityEvent;
+		this.basisEvent = basisEvent;
 		this.buffApplied = buffApplied;
 		this.replenishedAt = replenishedAt;
 		this.chargeNum = chargeNum;
@@ -40,12 +43,15 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	}
 
 	private Instant getNow() {
-		return abilityEvent.effectiveTimeNow();
+		return basisEvent.effectiveTimeNow();
 	}
 
 	@Override
 	public @Nullable AbilityUsedEvent getEvent() {
-		return abilityEvent;
+		if (basisEvent instanceof AbilityUsedEvent aue) {
+			return aue;
+		}
+		return null;
 	}
 
 	@Override
@@ -67,10 +73,10 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	}
 
 	private long getCurrentUnbounded() {
-		if (abilityEvent == null) {
+		if (basisEvent == null) {
 			return getMax();
 		}
-		long durMillis = Duration.between(start, abilityEvent.effectiveTimeNow()).toMillis();
+		long durMillis = Duration.between(start, basisEvent.effectiveTimeNow()).toMillis();
 		return Math.min((durMillis), getMax());
 	}
 
@@ -90,14 +96,19 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	}
 
 	@Override
-	public @NotNull Cooldown getCd() {
-		return cd;
+	public long getPrimaryAbilityId() {
+		return cd.getPrimaryAbilityId();
 	}
 
 	@Override
 	public boolean stillValid() {
 		// TODO: does this need to exist? remove from interface maybe?
 		return true;
+	}
+
+	@Override
+	public List<? extends VisualCdInfo> makeChargeInfo() {
+		return Collections.emptyList();
 	}
 
 }
