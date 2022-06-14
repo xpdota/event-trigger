@@ -35,12 +35,15 @@ public enum Cooldown implements CooldownDescriptor {
 
 	// List of ALL buffs to track - WL/BL will be done by user settings
 	// TANKS
-	Rampart(builder(CooldownType.PERSONAL_MIT, true, 0x1d6b).autoBuffs()),
-	Reprisal(TANK, true, 60.0, "Reprisal", CooldownType.PARTY_MIT, 0x1d6f, 1193, 2101),
-	ArmsLength(TANK, true, 120.0, "Arm's Length", CooldownType.PERSONAL_UTILITY, 0x1d7c, 1209),
+	Rampart(builder(CooldownType.PERSONAL_MIT, true, 0x1d6b)),
+	Reprisal(builder(CooldownType.PERSONAL_MIT, true, 0x1d6f)),
+	ArmsLength(builder(CooldownType.PERSONAL_UTILITY, true, 0x1d7c)),
+//	ArmsLength(TANK, true, 120.0, "Arm's Length", CooldownType.PERSONAL_UTILITY, 0x1d7c, 1209),
 
-	HallowedGround(PLD, true, 420.0, "Hallowed Ground", CooldownType.INVULN, 0x1e, 82),
+//	HallowedGround(PLD, true, 420.0, "Hallowed Ground", CooldownType.INVULN, 0x1e, 82),
+	HallowedGround(builder(CooldownType.INVULN, true, 0x1e)),
 	Sentinel(PLD, true, 120.0, "Sentinel", CooldownType.PERSONAL_MIT, 0x11, 74),
+//	Sentinel(builder(CooldownType.PERSONAL_MIT, true, 120.0, "Sentinel", CooldownType.PERSONAL_MIT, 0x11, 74),
 	Cover(PLD, true, 120.0, "Cover", CooldownType.PERSONAL_MIT, 0x1b, 80),
 	// TODO: sheltron/holy sheltron
 	FightOrFlight(PLD, true, 60.0, "Fight or Flight", CooldownType.PERSONAL_BURST, 0x14, 0x4c),
@@ -244,15 +247,16 @@ public enum Cooldown implements CooldownDescriptor {
 		private Double cooldown;
 		private Double durationOverride;
 		private String name;
-		private boolean autoBuffs;
+		private boolean autoBuffs = true;
 
 		private CdBuilder buffIds(long... buffIds) {
 			this.buffIds = buffIds;
+			this.autoBuffs = false;
 			return this;
 		}
 
-		private CdBuilder autoBuffs() {
-			this.autoBuffs = true;
+		private CdBuilder noAutoBuffs() {
+			this.autoBuffs = false;
 			return this;
 		}
 

@@ -767,6 +767,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<HaurchefauntHpTracker> haurch_hp = new ModifiableCallout<>("Haurchefaunt HP bar", "", "HP", HaurchefauntHpTracker::isExpired)
 			.guiProvider(HaurchefauntHpTracker::getComponent);
 
+	// TODO: figure out bug with this not disappearing
 	private final class HaurchefauntHpTracker {
 		private final XivCombatant haurchInitial;
 
