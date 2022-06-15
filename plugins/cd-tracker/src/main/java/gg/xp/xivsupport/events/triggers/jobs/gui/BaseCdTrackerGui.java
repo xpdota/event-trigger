@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
+import gg.xp.xivdata.data.ActionInfo;
+import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.gui.NoCellEditor;
@@ -141,7 +143,19 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 				}, c -> c.setCellEditor(new NoCellEditor())))
 //				.addColumn(new CustomColumn<>("Cooldown (from CSV)", cd -> {
 //					ActionInfo actionInfo = ActionLibrary.forId(cd.getPrimaryAbilityId());
-//					return actionInfo == null ? null : actionInfo.getCd();
+//					if (actionInfo == null) {
+//						return "null";
+//					}
+//					double cdAi = actionInfo.getCd();
+//					int maxChargesAi = actionInfo.maxCharges();
+//
+//					if (maxChargesAi == cd.getMaxCharges() && cd.getCooldown() == cdAi) {
+//						return "";
+//					}
+//					if (maxChargesAi > 1) {
+//						return String.format("%s (%d charges)", cdAi, maxChargesAi);
+//					}
+//					return cdAi;
 //				}))
 //				.addColumn(new CustomColumn<>("Max Charges", cooldown -> {
 //					int maxCharges = cooldown.getMaxCharges();
