@@ -62,28 +62,17 @@ public class ActionLibrary {
 //					return;
 					}
 				}
-				long cd;
-				try {
-					cd = Long.parseLong(row[40]);
-				}
-				catch (NumberFormatException nfe) {
-					log.error(String.format("Error reading cooldown: '%s'. Entire row: %s", row[40], Arrays.toString(row)));
-					cd = 0;
-				}
-				int maxCharges;
-				try {
-					maxCharges = Integer.parseInt(row[43]);
-					if (maxCharges <= 0) {
-						maxCharges = 1;
-					}
-				}
-				catch (NumberFormatException nfe) {
-					log.error(String.format("Error reading max charges: '%s'. Entire row: %s", row[43], Arrays.toString(row)));
+				long cd = readLong("cooldown", row, 40);
+				long recast = readLong("recast", row, 38);
+				int maxCharges = readInt("max charges", row, 43);
+				if (maxCharges <= 0) {
 					maxCharges = 1;
 				}
+				boolean isPlayerAbility = Boolean.parseBoolean(row[68]);
+
 				if (imageId != 0) {
 					String categoryRaw = row[50];
-					csvValues.put(id, new ActionInfo(id, row[1].intern(), imageId, cd, maxCharges, categoryRaw.intern()));
+					csvValues.put(id, new ActionInfo(id, row[1].intern(), imageId, cd, maxCharges, categoryRaw.intern(), isPlayerAbility, recast));
 				}
 			});
 		}
@@ -97,6 +86,37 @@ public class ActionLibrary {
 
 		// If we fail, it's always going to fail, so continue without icons.
 	}
+
+	private static volatile boolean hasErrors;
+
+	private static long readLong(String name, String[] row, int colIndex) {
+		try {
+			return Long.parseLong(row[colIndex]);
+		}
+		catch (NumberFormatException nfe) {
+			log.error(String.format("Error reading %s: '%s'. Entire row: %s", name, row[colIndex], Arrays.toString(row)));
+			hasErrors = true;
+			return 0;
+		}
+	}
+
+	private static int readInt(String name, String[] row, int colIndex) {
+		try {
+			return Integer.parseInt(row[colIndex]);
+		}
+		catch (NumberFormatException nfe) {
+			log.error(String.format("Error reading %s: '%s'. Entire row: %s", name, row[colIndex], Arrays.toString(row)));
+			hasErrors = true;
+			return 0;
+		}
+	}
+
+	// TODO: this should actually list the errors
+	public static void checkForErrors() {
+		if (hasErrors) {
+			throw new RuntimeException("There was an error - check log for errors from ActionLibrary");
+		}
+	};
 
 	private static final Pattern texFilePattern = Pattern.compile("(\\d+)\\.tex");
 

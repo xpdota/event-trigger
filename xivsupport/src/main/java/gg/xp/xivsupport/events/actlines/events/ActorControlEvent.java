@@ -1,12 +1,14 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.SystemEvent;
 
 import java.io.Serial;
 
 /**
  * Represents various types of actor control events, e.g. wipes, barrier up/down, etc
  */
+@SystemEvent
 public class ActorControlEvent extends BaseEvent implements HasPrimaryValue {
 
 	@Serial

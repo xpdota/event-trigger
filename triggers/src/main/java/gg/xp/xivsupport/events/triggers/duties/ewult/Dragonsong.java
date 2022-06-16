@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -1176,6 +1177,74 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				else {
 					log.info("p6 COLD");
 					s.updateCall(coldDebuff.getModified(e1));
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> p7_exaflare_windup = ModifiableCallout.durationBasedCall("P7: Exaflare Windup", "Exaflare");
+	private final ModifiableCallout<AbilityUsedEvent> p7_exaflare_1 = new ModifiableCallout<>("P7: Exaflare Hit #1", "Move", "Exaflare");
+	private final ModifiableCallout<AbilityUsedEvent> p7_exaflare_2 = new ModifiableCallout<>("P7: Exaflare Hit #2", "Move", "Exaflare");
+	private final ModifiableCallout<StatusLoopVfxApplied> p7_fire = new ModifiableCallout<>("P7: Fire", "Fire - Out");
+	private final ModifiableCallout<StatusLoopVfxApplied> p7_ice = new ModifiableCallout<>("P7: Fire", "Ice - In");
+
+	private final ModifiableCallout<AbilityCastStart> p7_akhMornEdge = ModifiableCallout.durationBasedCall("P7: Akh Morn's Edge", "Stacks");
+
+	private final ModifiableCallout<AbilityCastStart> p7_gigaflareWindup = ModifiableCallout.durationBasedCall("P7: Gigaflare Windup", "Gigaflare");
+	private final ModifiableCallout<AbilityUsedEvent> p7_gigaflare1 = new ModifiableCallout<>("P7: Gigaflare Hit #1", "Move", "Gigaflare");
+	private final ModifiableCallout<AbilityUsedEvent> p7_gigaflare2 = new ModifiableCallout<>("P7: Gigaflare Hit #2", "Move", "Gigaflare");
+
+	private final ModifiableCallout<AbilityCastStart> p7_enrage = ModifiableCallout.durationBasedCall("P7: Enrage", "Enrage");
+
+	@HandleEvents
+	public void p7casts(EventContext context, AbilityCastStart event) {
+		if (event.getSource().getbNpcId() == 12616)
+			if (event.abilityIdMatches(28051)) {
+				context.accept(p7_akhMornEdge.getModified(event));
+			}
+			else if (event.abilityIdMatches(28206)) {
+				context.accept(p7_enrage.getModified(event));
+			}
+	}
+
+	@HandleEvents
+	public void vfxHandler(EventContext context, StatusLoopVfxApplied event) {
+		ModifiableCallout<StatusLoopVfxApplied> call;
+		switch ((int) event.getStatusLoopVfx().getId()) {
+			case 298 -> call = p7_fire;
+			case 299 -> call = p7_ice;
+			default -> {
+				return;
+			}
+		}
+		context.accept(call.getModified(event));
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p7_exaflare = new SequentialTrigger<>(20_000, BaseEvent.class,
+			be -> be instanceof AbilityCastStart acs && acs.abilityIdMatches(28059),
+			(e1, s) -> {
+				s.updateCall(p7_exaflare_windup.getModified((AbilityCastStart) e1));
+				{
+					AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(28060));
+					s.updateCall(p7_exaflare_1.getModified(firstHit));
+				}
+				{
+					AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(28061));
+					s.updateCall(p7_exaflare_2.getModified(secondHit));
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p7_gigaflare = new SequentialTrigger<>(20_000, BaseEvent.class,
+			be -> be instanceof AbilityCastStart acs && acs.abilityIdMatches(28057),
+			(e1, s) -> {
+				s.updateCall(p7_gigaflareWindup.getModified((AbilityCastStart) e1));
+				{
+					AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(28058, 28114, 28115) && aue.isFirstTarget());
+					s.updateCall(p7_gigaflare1.getModified(firstHit));
+				}
+				{
+					AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(28058, 28114, 28115) && aue.isFirstTarget());
+					s.updateCall(p7_gigaflare2.getModified(secondHit));
 				}
 			});
 
