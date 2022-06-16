@@ -28,7 +28,7 @@ public class AbilityCastStart extends BaseEvent implements HasSourceEntity, HasT
 		this.target = target;
 		this.serverCastDuration = Duration.ofMillis((long) (serverCastDuration * 1000.0));
 		ActionInfo ai = ActionLibrary.forId(ability.getId());
-		if (ai == null || ai.isPlayerAbility()) {
+		if (ai == null || ai.isPlayerAbility() || source.isPc()) {
 			duration = this.serverCastDuration;
 		}
 		else {

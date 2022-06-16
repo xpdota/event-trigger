@@ -5,7 +5,7 @@ import gg.xp.xivsupport.events.triggers.util.CalloutVerificationTest;
 
 import java.util.List;
 
-public class DSR extends CalloutVerificationTest {
+public class DsrTest extends CalloutVerificationTest {
 	@Override
 	protected String getFileName() {
 		return "/dsr_cropped.log";
