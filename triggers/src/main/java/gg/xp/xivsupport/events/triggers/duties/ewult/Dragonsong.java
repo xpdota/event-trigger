@@ -1050,10 +1050,10 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 					// People might be dead, so check count
 					if (stackers.size() >= 1 && otherStackers.size() >= 1) {
 						s.accept(new SpecificAutoMarkRequest(stackers.get(0), MarkerSign.BIND1));
-						s.accept(new SpecificAutoMarkRequest(otherStackers.get(0), MarkerSign.BIND2));
+						s.accept(new SpecificAutoMarkRequest(otherStackers.get(0), MarkerSign.IGNORE1));
 					}
 					if (stackers.size() >= 2 && otherStackers.size() >= 2) {
-						s.accept(new SpecificAutoMarkRequest(stackers.get(1), MarkerSign.IGNORE1));
+						s.accept(new SpecificAutoMarkRequest(stackers.get(1), MarkerSign.BIND2));
 						s.accept(new SpecificAutoMarkRequest(otherStackers.get(1), MarkerSign.IGNORE2));
 					}
 					else {
