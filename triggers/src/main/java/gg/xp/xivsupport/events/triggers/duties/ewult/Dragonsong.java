@@ -34,14 +34,18 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.EnumListSetting;
+import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
@@ -206,6 +210,9 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	private final BooleanSetting p6_useAutoMarks;
 	private final BooleanSetting p6_altMarkMode;
+	private final BooleanSetting p6_rotPrioHigh;
+	private final BooleanSetting p6_reverseSort;
+	private final JobSortSetting sortSetting;
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -215,6 +222,9 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		this.buffs = buffs;
 		p6_useAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.use-auto-marks", false);
 		p6_altMarkMode = new BooleanSetting(pers, "triggers.dragonsong.alt-mark-mode", true);
+		p6_rotPrioHigh = new BooleanSetting(pers, "triggers.dragonsong.rot-highest-prio", true);
+		p6_reverseSort = new BooleanSetting(pers, "triggers.dragonsong.rot-reverse-sort", true);
+		sortSetting = new JobSortSetting(pers, "triggers.dragonsong.job-prio", state);
 	}
 
 	@Override
@@ -1041,8 +1051,26 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 					log.info("Wroth player mechs: {}", playerMechs);
 
-					List<XivPlayerCharacter> spreaders = playerMechs.get(WrothFlamesRole.SPREAD);
+					Comparator<XivPlayerCharacter> jobSort = getP6_sortSetting().getPlayerJailSortComparator();
+					Comparator<XivPlayerCharacter> sort;
+					if (getP6_rotPrioHigh().get()) {
+						@Nullable XivCombatant rotPlayer = getBuffs().getBuffs().stream()
+								.filter(ba -> ba.buffIdMatches(2896))
+								.map(BuffApplied::getTarget)
+								.findAny()
+								.orElse(null);
+						sort = Comparator.<XivPlayerCharacter, Integer>comparing(pc -> pc.equals(rotPlayer) ? -1 : 0).thenComparing(jobSort);
+					}
+					else {
+						sort = jobSort;
+					}
+					if (getP6_reverseSort().get()) {
+						sort = sort.reversed();
+					}
+					Comparator<XivPlayerCharacter> finalSort = sort;
+					playerMechs.values().forEach(list -> list.sort(finalSort));
 
+					List<XivPlayerCharacter> spreaders = playerMechs.get(WrothFlamesRole.SPREAD);
 					List<XivPlayerCharacter> stackers = playerMechs.get(WrothFlamesRole.STACK);
 					List<XivPlayerCharacter> otherStackers = playerMechs.get(WrothFlamesRole.NOTHING);
 
@@ -1146,10 +1174,10 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 					double hraesPct = hraesNow.getHp().getPercent();
 					double diff = hraesPct - nidPct;
 					// Actual percentage is 2.9, but we want a buffer
-					if (diff > 0.02) {
+					if (diff > 0.015) {
 						return "Attack Hraesvelgr";
 					}
-					else if (diff < -0.02) {
+					else if (diff < -0.015) {
 						return "Attack Nidhogg";
 					}
 					else {
@@ -1748,6 +1776,18 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	public BooleanSetting getP6_altMarkMode() {
 		return p6_altMarkMode;
+	}
+
+	public JobSortSetting getP6_sortSetting() {
+		return sortSetting;
+	}
+
+	public BooleanSetting getP6_rotPrioHigh() {
+		return p6_rotPrioHigh;
+	}
+
+	public BooleanSetting getP6_reverseSort() {
+		return p6_reverseSort;
 	}
 
 	private XivState getState() {

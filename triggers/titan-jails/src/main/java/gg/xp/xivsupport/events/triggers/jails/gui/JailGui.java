@@ -16,6 +16,8 @@ import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.JobSortGui;
+import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +32,13 @@ public class JailGui implements PluginTab {
 	private static final Logger log = LoggerFactory.getLogger(JailGui.class);
 
 	private final JailSolver jails;
-	private CustomTableModel<XivPlayerCharacter> partyTableModel;
+	private final JobSortSetting sorter;
+	private JobSortGui jobSortGui;
 
 	public JailGui(JailSolver jails) {
 
 		this.jails = jails;
+		this.sorter = jails.getSort();
 	}
 
 	@Override
@@ -44,20 +48,6 @@ public class JailGui implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
-		// Defined first so we can trigger refresh
-		partyTableModel = CustomTableModel.builder(
-						jails::partyOrderPreview)
-				.addColumn(new CustomColumn<>("Name", XivEntity::getName))
-				.addColumn(new CustomColumn<>("Job", XivPlayerCharacter::getJob, c -> c.setCellRenderer(new JobRenderer())))
-				.setItemEquivalence((a, b) -> a.getId() == b.getId() && a.getJob() == b.getJob())
-				.build();
-
-		List<Job> items = jails.getCurrentJailSort();
-		RearrangeableList<Job> jobList = new RearrangeableList<>(items, l -> {
-			jails.setJailSort(l);
-			log.info("Changed jail prio: {}", l.stream().map(Enum::name).collect(Collectors.joining(", ")));
-			partyTableModel.fullRefresh();
-		});
 
 		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Jails");
 
@@ -71,18 +61,14 @@ public class JailGui implements PluginTab {
 		c.gridy = 0;
 		c.gridwidth = GridBagConstraints.REMAINDER;
 
+		jobSortGui = new JobSortGui(sorter);
+
 		JPanel toggles = new JPanel();
 		toggles.setAlignmentX(0);
 		toggles.setLayout(new WrapLayout(FlowLayout.LEFT));
 		toggles.add(new BooleanSettingGui(jails.getEnableTts(), "Enable Personal Callout").getComponent());
 		toggles.add(new BooleanSettingGui(jails.getEnableAutomark(), "Enable Automarks").getComponent());
-		JButton resetButton = new JButton("Reset Order");
-		resetButton.addActionListener(l -> {
-			jails.resetJailSort();
-			partyTableModel.fullRefresh();
-			jobList.setValues(jails.getCurrentJailSort());
-		});
-		toggles.add(resetButton);
+		toggles.add(jobSortGui.getResetButton());
 		JButton helpButton = new JButton("Help");
 		helpButton.addActionListener(l -> {
 			JOptionPane.showMessageDialog(SwingUtilities.getRoot(helpButton), helpText);
@@ -104,34 +90,16 @@ public class JailGui implements PluginTab {
 		instructions.setFocusable(false);
 		panel.add(instructions, c);
 
-		jobList.setCellRenderer(new JobRenderer());
-		JScrollPane scroll = new JScrollPane(jobList);
-		Dimension size = new Dimension(100, 50);
-		scroll.setMinimumSize(size);
-		scroll.setPreferredSize(size);
 		c.gridwidth = 1;
 		c.weighty = 1;
 		c.gridy++;
 		c.weightx = 0;
-		panel.add(scroll, c);
+		panel.add(jobSortGui.getJobListPane(), c);
 
 
-		JTable partyMembersTable = new JTable(8, 3);
-		partyMembersTable.setModel(partyTableModel);
-		partyTableModel.configureColumns(partyMembersTable);
-		partyMembersTable.getSelectionModel().addListSelectionListener(l -> {
-			int[] selectedRows = partyMembersTable.getSelectedRows();
-			jobList.clearSelection();
-			Arrays.stream(selectedRows).forEach(partyRow -> {
-				XivPlayerCharacter player = partyTableModel.getValueForRow(partyRow);
-				int jobRow = jobList.getValues().indexOf(player.getJob());
-				jobList.addSelectionInterval(jobRow, jobRow);
-
-			});
-		});
 		c.gridx++;
 		c.weightx = 1;
-		panel.add(new JScrollPane(partyMembersTable), c);
+		panel.add(jobSortGui.getPartyPane(), c);
 
 		return panel;
 	}
@@ -141,11 +109,7 @@ public class JailGui implements PluginTab {
 	// tab is visible?
 	@HandleEvents(order = 20_000)
 	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-		SwingUtilities.invokeLater(() -> {
-			if (partyTableModel != null) {
-				partyTableModel.fullRefresh();
-			}
-		});
+		jobSortGui.externalRefresh();
 	}
 
 
