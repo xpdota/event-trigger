@@ -67,7 +67,7 @@ public class TelestoGui implements PluginTab {
 		}
 		JCheckBox partyListCb = new BooleanSettingGui(backend.getEnablePartyList(), "Enable Party List").getComponent();
 
-		GuiUtil.simpleTopDownLayout(outer, uriControl, label, testPanel, partyListCb);
+		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, label, testPanel, partyListCb);
 
 		return outer;
 	}

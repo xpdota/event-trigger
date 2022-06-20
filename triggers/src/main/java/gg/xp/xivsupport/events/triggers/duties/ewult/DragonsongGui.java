@@ -34,9 +34,8 @@ public class DragonsongGui implements PluginTab {
 				The two players with 'stack' debuffs will receive 'bind1' and 'ignore1' markers,
 				and the two players with nothing will receive 'bind2' and 'ignore2' markers.
 				""");
-		helpText.setPreferredSize(new Dimension(400, 400));
 
-		GuiUtil.simpleTopDownLayout(outer, p6marks, helpText);
+		GuiUtil.simpleTopDownLayout(outer, 500, p6marks, helpText);
 		return outer;
 	}
 

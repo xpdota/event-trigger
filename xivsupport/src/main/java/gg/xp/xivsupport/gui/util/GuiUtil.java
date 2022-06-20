@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.util;
 
-import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,17 +68,82 @@ public final class GuiUtil {
 	 * Format a container, adding the given components, in a manner such that the components
 	 * are centered in the container, as far up in the container as they can go, and left-justified.
 	 *
-	 * @param container  The container to format
+	 * @param outer      The container to format
 	 * @param components The components to add
 	 */
-	public static void simpleTopDownLayout(Container container, Component... components) {
-		GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 5);
+	public static void simpleTopDownLayout(Container outer, Component... components) {
+		GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 5);
+		JPanel container = new JPanel();
+
+		simpleLayoutInternal(container, c, components);
+
+		outer.setLayout(new BorderLayout());
+		outer.getInsets().set(10, 10, 10, 10);
+		outer.add(container, BorderLayout.CENTER);
+	}
+
+	/**
+	 * Format a container, adding the given components, in a manner such that the components
+	 * are centered in the container, as far up in the container as they can go, and left-justified.
+	 *
+	 * @param outer      The container to format
+	 * @param width      The max width of the inner container
+	 * @param components The components to add
+	 */
+	public static void simpleTopDownLayout(Container outer, int width, Component... components) {
+		JPanel container;
+		{
+			GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 5);
+			container = new JPanel() {
+
+				private Dimension getParentSpace() {
+					Dimension outerSz = outer.getSize();
+					Insets outerInsets = outer.getInsets();
+					return new Dimension(outerSz.width - outerInsets.left - outerInsets.right, outerSz.height - outerInsets.top - outerInsets.bottom);
+				}
+
+				@Override
+				public Dimension getPreferredSize() {
+					Dimension sup = super.getPreferredSize();
+					return new Dimension(Math.min(Math.min(width, getParentSpace().width), sup.width), sup.height);
+				}
+
+				//
+				@Override
+				public Dimension getMinimumSize() {
+					Dimension sup = super.getMinimumSize();
+					return new Dimension(getParentSpace().width, sup.height);
+				}
+
+				//
+				@Override
+				public Dimension getMaximumSize() {
+					Dimension sup = super.getMaximumSize();
+					return new Dimension(Math.min(width, sup.width), sup.height);
+				}
+			};
+
+			simpleLayoutInternal(container, c, components);
+		}
+
+		{
+
+			outer.setLayout(new GridBagLayout());
+			GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.NORTHWEST, GridBagConstraints.BOTH, outer.getInsets(), 0, 0);
+			c.weightx = 1;
+			outer.add(Box.createHorizontalGlue(), c);
+			c.gridx++;
+			c.weightx = 0.001;
+			outer.add(container, c);
+			c.gridx++;
+			c.weightx = 1;
+			outer.add(Box.createHorizontalGlue(), c);
+		}
+
+	}
+
+	private static void simpleLayoutInternal(JPanel container, GridBagConstraints c, Component[] components) {
 		container.setLayout(new GridBagLayout());
-		c.weightx = 1;
-		c.gridx = 0;
-		container.add(Box.createGlue(), c);
-		c.gridx = 1;
-		c.weightx = 0;
 
 		for (Component component : components) {
 			container.add(component, c);
@@ -87,9 +151,7 @@ public final class GuiUtil {
 		}
 
 		c.weighty = 1;
-		c.gridx++;
-		c.weightx = 1;
-		container.add(Box.createGlue(), c);
-
+		c.fill = GridBagConstraints.VERTICAL;
+		container.add(Box.createVerticalGlue(), c);
 	}
 }
