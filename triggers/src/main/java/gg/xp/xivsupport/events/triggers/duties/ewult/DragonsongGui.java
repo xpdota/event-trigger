@@ -103,6 +103,8 @@ public class DragonsongGui implements PluginTab {
 	// tab is visible?
 	@HandleEvents(order = 20_000)
 	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-		jsg.externalRefresh();
+		if (jsg != null) {
+			jsg.externalRefresh();
+		}
 	}
 }
