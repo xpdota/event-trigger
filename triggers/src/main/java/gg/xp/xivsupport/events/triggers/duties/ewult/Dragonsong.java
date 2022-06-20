@@ -205,6 +205,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 
 	private final BooleanSetting p6_useAutoMarks;
+	private final BooleanSetting p6_altMarkMode;
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -213,6 +214,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		this.state = state;
 		this.buffs = buffs;
 		p6_useAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.use-auto-marks", false);
+		p6_altMarkMode = new BooleanSetting(pers, "triggers.dragonsong.alt-mark-mode", true);
 	}
 
 	@Override
@@ -1047,13 +1049,15 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 					// Give out markers
 					spreaders.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.ATTACK_NEXT)));
 
+					boolean altMode = getP6_altMarkMode().get();
+
 					// People might be dead, so check count
 					if (stackers.size() >= 1 && otherStackers.size() >= 1) {
 						s.accept(new SpecificAutoMarkRequest(stackers.get(0), MarkerSign.BIND1));
-						s.accept(new SpecificAutoMarkRequest(otherStackers.get(0), MarkerSign.IGNORE1));
+						s.accept(new SpecificAutoMarkRequest(otherStackers.get(0), altMode ? MarkerSign.BIND2 : MarkerSign.IGNORE1));
 					}
 					if (stackers.size() >= 2 && otherStackers.size() >= 2) {
-						s.accept(new SpecificAutoMarkRequest(stackers.get(1), MarkerSign.BIND2));
+						s.accept(new SpecificAutoMarkRequest(stackers.get(1), altMode ? MarkerSign.IGNORE1 : MarkerSign.BIND2));
 						s.accept(new SpecificAutoMarkRequest(otherStackers.get(1), MarkerSign.IGNORE2));
 					}
 					else {
@@ -1740,6 +1744,10 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	public BooleanSetting getP6_useAutoMarks() {
 		return p6_useAutoMarks;
+	}
+
+	public BooleanSetting getP6_altMarkMode() {
+		return p6_altMarkMode;
 	}
 
 	private XivState getState() {
