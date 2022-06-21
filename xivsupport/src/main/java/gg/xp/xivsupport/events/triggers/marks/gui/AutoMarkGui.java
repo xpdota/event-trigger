@@ -42,9 +42,9 @@ public class AutoMarkGui implements PluginTab {
 		telestoSetting.addListener(outer::repaint);
 
 		ReadOnlyText text = new ReadOnlyText("Note: Telesto is REQUIRED for triggers that place specific markers (rather than just doing '/mk attack' such as Titan Jails)");
-		text.setPreferredSize(new Dimension(400, 400));
+//		text.setPreferredSize(new Dimension(400, 400));
 
-		GuiUtil.simpleTopDownLayout(outer, helpButton, useTelesto, useFKeys, text);
+		GuiUtil.simpleTopDownLayout(outer, 400, helpButton, useTelesto, useFKeys, text);
 
 		return outer;
 	}

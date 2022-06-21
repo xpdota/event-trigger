@@ -15,7 +15,6 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;
-import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkKeyHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkSlotRequest;
@@ -399,11 +398,11 @@ public class JailExampleTest {
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
-		List<Job> currentJailSort = new ArrayList<>(jail.getCurrentJailSort());
+		List<Job> currentJailSort = new ArrayList<>(jail.getSort().getCurrentJailSort());
 		Collections.reverse(currentJailSort);
-		jail.setJailSort(currentJailSort);
+		jail.getSort().setJailSort(currentJailSort);
 
-		jail.resetJailSort();
+		jail.getSort().resetJailSort();
 
 		// Send events
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|13|Random Person|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|9|cd69a51d5f584b836fa20c4a5b356612"));
@@ -493,9 +492,9 @@ public class JailExampleTest {
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
-		List<Job> currentJailSort = new ArrayList<>(jail.getCurrentJailSort());
+		List<Job> currentJailSort = new ArrayList<>(jail.getSort().getCurrentJailSort());
 		Collections.reverse(currentJailSort);
-		jail.setJailSort(currentJailSort);
+		jail.getSort().setJailSort(currentJailSort);
 
 
 		// Send events
@@ -587,18 +586,18 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		JailSolver jail = container.getComponent(JailSolver.class);
 		// Insufficient size
-		Assert.assertThrows(IllegalArgumentException.class, () -> jail.setJailSort(List.of(Job.WHM, Job.SCH)));
+		Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJailSort(List.of(Job.WHM, Job.SCH)));
 		{
-			List<Job> current = new ArrayList<>(jail.getCurrentJailSort());
+			List<Job> current = new ArrayList<>(jail.getSort().getCurrentJailSort());
 			// Make a duplicate
 			current.set(0, current.get(1));
-			Assert.assertThrows(IllegalArgumentException.class, () -> jail.setJailSort(current));
+			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJailSort(current));
 		}
 		{
-			List<Job> current = new ArrayList<>(jail.getCurrentJailSort());
+			List<Job> current = new ArrayList<>(jail.getSort().getCurrentJailSort());
 			// Too many
 			current.add(current.get(0));
-			Assert.assertThrows(IllegalArgumentException.class, () -> jail.setJailSort(current));
+			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJailSort(current));
 		}
 	}
 

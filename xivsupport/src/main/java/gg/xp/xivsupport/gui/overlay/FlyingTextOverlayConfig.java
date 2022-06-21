@@ -38,7 +38,7 @@ public class FlyingTextOverlayConfig implements PluginTab {
 		Component alignment = new EnumSettingGui<>(overlay.getAlignmentSetting(), "Text Alignment", enabled::get).getComponent();
 		Component color = new ColorSettingGui(overlay.getTextColorSetting(), "Text Color", enabled::get).getComponent();
 
-		GuiUtil.simpleTopDownLayout(panel, enableDisable, alignment, color);
+		GuiUtil.simpleTopDownLayout(panel, 400, enableDisable, alignment, color);
 		return panel;
 	}
 

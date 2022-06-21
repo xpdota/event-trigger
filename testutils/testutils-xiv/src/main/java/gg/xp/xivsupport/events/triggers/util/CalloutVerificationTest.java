@@ -27,15 +27,15 @@ public abstract class CalloutVerificationTest {
 	protected abstract String getFileName();
 
 	protected CalloutInitialValues call(long when, String tts, String text) {
-		return new CalloutInitialValues(when, tts, text);
+		return new CalloutInitialValues(when, tts, text, null);
 	}
 
 	protected CalloutInitialValues callAppend(long when, String tts, String appendText) {
-		return new CalloutInitialValues(when, tts, tts + ' ' + appendText);
+		return new CalloutInitialValues(when, tts, tts + ' ' + appendText, null);
 	}
 
 	protected CalloutInitialValues call(long when, String both) {
-		return new CalloutInitialValues(when, both, both);
+		return new CalloutInitialValues(when, both, both, null);
 	}
 
 	@Test
@@ -69,7 +69,7 @@ public abstract class CalloutVerificationTest {
 					msDelta = Duration.between(combatStart.getHappenedAt(), ((BaseEvent) e).getEffectiveHappenedAt()).toMillis();
 				}
 			}
-			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText()));
+			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText(), e.getParent()));
 		});
 
 

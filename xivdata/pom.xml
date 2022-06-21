@@ -42,6 +42,13 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <!-- 7.4.0 Breaks stuff-->
+            <!--suppress MavenPackageUpdate -->
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

@@ -7,6 +7,7 @@ import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
+import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
@@ -51,7 +52,13 @@ public final class ActionTable {
 				.addMainColumn(new CustomColumn<>("Name", ActionInfo::name, col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addMainColumn(new CustomColumn<>("Icon", ActionInfo::getIcon, col -> {
+				.addMainColumn(new CustomColumn<>("Icon", ai -> {
+					ActionIcon icon = ai.getIcon();
+					if (icon == null || icon.isDefaultIcon()) {
+						return "";
+					}
+					return icon;
+				}, col -> {
 					col.setCellRenderer(new DefaultTableCellRenderer() {
 						@Override
 						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -64,12 +71,21 @@ public final class ActionTable {
 					});
 					col.setPreferredWidth(500);
 				}))
+				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
+				.addMainColumn(new CustomColumn<>("Cast", ai -> {
+					double ct = ai.getCastTime();
+					if (ct == 0) {
+						return "";
+					}
+					return ct;
+				}))
 				.addMainColumn(new CustomColumn<>("Recast", ai -> {
 					int maxCharges = ai.maxCharges();
+					double cd = ai.getCd();
 					if (maxCharges > 1) {
-						return String.format("%s (%d charges)", ai.getCd(), maxCharges);
+						return String.format("%s (%d charges)", cd, maxCharges);
 					}
-					return ai.getCd();
+					return cd > 0 ? cd : "";
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
 				.withRightClickRepo(RightClickOptionRepo.of(

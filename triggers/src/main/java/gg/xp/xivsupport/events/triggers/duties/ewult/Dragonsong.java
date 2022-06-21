@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -33,14 +34,18 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.EnumListSetting;
+import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
@@ -204,6 +209,10 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 
 	private final BooleanSetting p6_useAutoMarks;
+	private final BooleanSetting p6_altMarkMode;
+	private final BooleanSetting p6_rotPrioHigh;
+	private final BooleanSetting p6_reverseSort;
+	private final JobSortSetting sortSetting;
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -212,6 +221,10 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		this.state = state;
 		this.buffs = buffs;
 		p6_useAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.use-auto-marks", false);
+		p6_altMarkMode = new BooleanSetting(pers, "triggers.dragonsong.alt-mark-mode", true);
+		p6_rotPrioHigh = new BooleanSetting(pers, "triggers.dragonsong.rot-highest-prio", true);
+		p6_reverseSort = new BooleanSetting(pers, "triggers.dragonsong.rot-reverse-sort", true);
+		sortSetting = new JobSortSetting(pers, "triggers.dragonsong.job-prio", state);
 	}
 
 	@Override
@@ -1038,21 +1051,41 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 					log.info("Wroth player mechs: {}", playerMechs);
 
-					List<XivPlayerCharacter> spreaders = playerMechs.get(WrothFlamesRole.SPREAD);
+					Comparator<XivPlayerCharacter> jobSort = getP6_sortSetting().getPlayerJailSortComparator();
+					Comparator<XivPlayerCharacter> sort;
+					if (getP6_rotPrioHigh().get()) {
+						@Nullable XivCombatant rotPlayer = getBuffs().getBuffs().stream()
+								.filter(ba -> ba.buffIdMatches(2896))
+								.map(BuffApplied::getTarget)
+								.findAny()
+								.orElse(null);
+						sort = Comparator.<XivPlayerCharacter, Integer>comparing(pc -> pc.equals(rotPlayer) ? -1 : 0).thenComparing(jobSort);
+					}
+					else {
+						sort = jobSort;
+					}
+					if (getP6_reverseSort().get()) {
+						sort = sort.reversed();
+					}
+					Comparator<XivPlayerCharacter> finalSort = sort;
+					playerMechs.values().forEach(list -> list.sort(finalSort));
 
+					List<XivPlayerCharacter> spreaders = playerMechs.get(WrothFlamesRole.SPREAD);
 					List<XivPlayerCharacter> stackers = playerMechs.get(WrothFlamesRole.STACK);
 					List<XivPlayerCharacter> otherStackers = playerMechs.get(WrothFlamesRole.NOTHING);
 
 					// Give out markers
 					spreaders.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.ATTACK_NEXT)));
 
+					boolean altMode = getP6_altMarkMode().get();
+
 					// People might be dead, so check count
 					if (stackers.size() >= 1 && otherStackers.size() >= 1) {
 						s.accept(new SpecificAutoMarkRequest(stackers.get(0), MarkerSign.BIND1));
-						s.accept(new SpecificAutoMarkRequest(otherStackers.get(0), MarkerSign.BIND2));
+						s.accept(new SpecificAutoMarkRequest(otherStackers.get(0), altMode ? MarkerSign.BIND2 : MarkerSign.IGNORE1));
 					}
 					if (stackers.size() >= 2 && otherStackers.size() >= 2) {
-						s.accept(new SpecificAutoMarkRequest(stackers.get(1), MarkerSign.IGNORE1));
+						s.accept(new SpecificAutoMarkRequest(stackers.get(1), altMode ? MarkerSign.IGNORE1 : MarkerSign.BIND2));
 						s.accept(new SpecificAutoMarkRequest(otherStackers.get(1), MarkerSign.IGNORE2));
 					}
 					else {
@@ -1141,10 +1174,10 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 					double hraesPct = hraesNow.getHp().getPercent();
 					double diff = hraesPct - nidPct;
 					// Actual percentage is 2.9, but we want a buffer
-					if (diff > 0.02) {
+					if (diff > 0.015) {
 						return "Attack Hraesvelgr";
 					}
-					else if (diff < -0.02) {
+					else if (diff < -0.015) {
 						return "Attack Nidhogg";
 					}
 					else {
@@ -1176,6 +1209,74 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				else {
 					log.info("p6 COLD");
 					s.updateCall(coldDebuff.getModified(e1));
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> p7_exaflare_windup = ModifiableCallout.durationBasedCall("P7: Exaflare Windup", "Exaflare");
+	private final ModifiableCallout<AbilityUsedEvent> p7_exaflare_1 = new ModifiableCallout<>("P7: Exaflare Hit #1", "Move", "Exaflare");
+	private final ModifiableCallout<AbilityUsedEvent> p7_exaflare_2 = new ModifiableCallout<>("P7: Exaflare Hit #2", "Move", "Exaflare");
+	private final ModifiableCallout<StatusLoopVfxApplied> p7_fire = new ModifiableCallout<>("P7: Fire", "Fire - Out");
+	private final ModifiableCallout<StatusLoopVfxApplied> p7_ice = new ModifiableCallout<>("P7: Fire", "Ice - In");
+
+	private final ModifiableCallout<AbilityCastStart> p7_akhMornEdge = ModifiableCallout.durationBasedCall("P7: Akh Morn's Edge", "Stacks");
+
+	private final ModifiableCallout<AbilityCastStart> p7_gigaflareWindup = ModifiableCallout.durationBasedCall("P7: Gigaflare Windup", "Gigaflare");
+	private final ModifiableCallout<AbilityUsedEvent> p7_gigaflare1 = new ModifiableCallout<>("P7: Gigaflare Hit #1", "Move", "Gigaflare");
+	private final ModifiableCallout<AbilityUsedEvent> p7_gigaflare2 = new ModifiableCallout<>("P7: Gigaflare Hit #2", "Move", "Gigaflare");
+
+	private final ModifiableCallout<AbilityCastStart> p7_enrage = ModifiableCallout.durationBasedCall("P7: Enrage", "Enrage");
+
+	@HandleEvents
+	public void p7casts(EventContext context, AbilityCastStart event) {
+		if (event.getSource().getbNpcId() == 12616)
+			if (event.abilityIdMatches(28051)) {
+				context.accept(p7_akhMornEdge.getModified(event));
+			}
+			else if (event.abilityIdMatches(28206)) {
+				context.accept(p7_enrage.getModified(event));
+			}
+	}
+
+	@HandleEvents
+	public void vfxHandler(EventContext context, StatusLoopVfxApplied event) {
+		ModifiableCallout<StatusLoopVfxApplied> call;
+		switch ((int) event.getStatusLoopVfx().getId()) {
+			case 298 -> call = p7_fire;
+			case 299 -> call = p7_ice;
+			default -> {
+				return;
+			}
+		}
+		context.accept(call.getModified(event));
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p7_exaflare = new SequentialTrigger<>(20_000, BaseEvent.class,
+			be -> be instanceof AbilityCastStart acs && acs.abilityIdMatches(28059),
+			(e1, s) -> {
+				s.updateCall(p7_exaflare_windup.getModified((AbilityCastStart) e1));
+				{
+					AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(28060));
+					s.updateCall(p7_exaflare_1.getModified(firstHit));
+				}
+				{
+					AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(28061));
+					s.updateCall(p7_exaflare_2.getModified(secondHit));
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p7_gigaflare = new SequentialTrigger<>(20_000, BaseEvent.class,
+			be -> be instanceof AbilityCastStart acs && acs.abilityIdMatches(28057),
+			(e1, s) -> {
+				s.updateCall(p7_gigaflareWindup.getModified((AbilityCastStart) e1));
+				{
+					AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(28058, 28114, 28115) && aue.isFirstTarget());
+					s.updateCall(p7_gigaflare1.getModified(firstHit));
+				}
+				{
+					AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(28058, 28114, 28115) && aue.isFirstTarget());
+					s.updateCall(p7_gigaflare2.getModified(secondHit));
 				}
 			});
 
@@ -1671,6 +1772,22 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	public BooleanSetting getP6_useAutoMarks() {
 		return p6_useAutoMarks;
+	}
+
+	public BooleanSetting getP6_altMarkMode() {
+		return p6_altMarkMode;
+	}
+
+	public JobSortSetting getP6_sortSetting() {
+		return sortSetting;
+	}
+
+	public BooleanSetting getP6_rotPrioHigh() {
+		return p6_rotPrioHigh;
+	}
+
+	public BooleanSetting getP6_reverseSort() {
+		return p6_reverseSort;
 	}
 
 	private XivState getState() {
