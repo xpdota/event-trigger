@@ -18,6 +18,7 @@ gg.xp.xivsupport.events.actlines.events
 gg.xp.xivsupport.events.actlines.events.abilityeffect
 gg.xp.xivsupport.events.actlines.events.actorcontrol
 gg.xp.xivsupport.events.actlines.events.jobguage
+gg.xp.xivsupport.events.actlines.events.vfx
 gg.xp.xivsupport.events.actlines.parsers
 gg.xp.xivsupport.events.debug
 gg.xp.xivsupport.events.delaytest
