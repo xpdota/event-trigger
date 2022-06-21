@@ -3,7 +3,6 @@ package gg.xp.xivsupport.events.actlines.events;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivsupport.events.actlines.parsers.Line20Parser;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 
