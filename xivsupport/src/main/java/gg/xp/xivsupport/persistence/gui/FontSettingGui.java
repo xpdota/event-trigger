@@ -20,13 +20,13 @@ public class FontSettingGui {
 	private final ListSettingGui<String> fontNameGui;
 	private final BooleanSettingGui boldGui;
 	private final BooleanSettingGui italicGui;
-	private final IntSettingGui sizeGui;
+	private final IntSettingSpinner sizeGui;
 	private final FontSetting setting;
 
 	public FontSettingGui(FontSetting setting, String label, String[] fontNames) {
 		this.setting = setting;
 		this.fontNameGui = new ListSettingGui<>(setting.getFontName(), label, fontNames);
-		this.sizeGui = new IntSettingGui(setting.getSize(), "Size", true);
+		this.sizeGui = new IntSettingSpinner(setting.getSize(), "Size", () -> true, true);
 		this.boldGui = new BooleanSettingGui(setting.getBold(), "Bold");
 		this.italicGui = new BooleanSettingGui(setting.getItalic(), "Italic");
 	}
@@ -35,9 +35,9 @@ public class FontSettingGui {
 		JPanel panel = new JPanel(new GridLayout(3, 1));
 		panel.add(fontNameGui.getComponent());
 		JPanel sizePanel = sizeGui.getComponent();
-		sizePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		sizePanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 2));
 		panel.add(sizePanel);
-		JPanel stylePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel stylePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
 		stylePanel.add(boldGui.getComponent());
 		stylePanel.add(italicGui.getComponent());
 		panel.add(stylePanel);

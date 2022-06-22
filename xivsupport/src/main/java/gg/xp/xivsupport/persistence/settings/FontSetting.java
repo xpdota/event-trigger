@@ -15,14 +15,14 @@ public class FontSetting {
 	private Font cached;
 	private boolean hasCachedValue;
 
-	public FontSetting(PersistenceProvider persistence, String settingKeyBase, String defaultFontName) {
+	public FontSetting(PersistenceProvider persistence, String settingKeyBase, String defaultFontName, int defaultSize) {
 		this.fontName = new ValueSetting<String>(persistence, settingKeyBase + ".font-name", defaultFontName);
 		this.fontName.addListener(() -> SwingUtilities.invokeLater(this::resetCache));
 		this.bold = new BooleanSetting(persistence, settingKeyBase + ".bold", false);
 		this.bold.addListener(() -> SwingUtilities.invokeLater(this::resetCache));
 		this.italic = new BooleanSetting(persistence, settingKeyBase + ".italic", false);
 		this.italic.addListener(() -> SwingUtilities.invokeLater(this::resetCache));
-		this.size = new IntSetting(persistence, settingKeyBase + ".size", 24);
+		this.size = new IntSetting(persistence, settingKeyBase + ".size", defaultSize);
 		this.size.addListener(() -> SwingUtilities.invokeLater(this::resetCache));
 	}
 

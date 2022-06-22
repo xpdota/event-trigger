@@ -51,7 +51,7 @@ public class FlyingTextOverlay extends XivOverlay {
 		super("Callout Text", "callout-text-overlay", oc, pers);
 		alignmentSetting = new EnumSetting<>(pers, "callout-text-overlay.text-alignment", TextAlignment.class, TextAlignment.CENTER);
 		textColorSetting = new ColorSetting(pers, "callout-text-overlay.text-color", defaultTextColor);
-		textFontSetting = new FontSetting(pers, "callout-text-overlay.text-font", new JLabel().getFont().getFontName());
+		textFontSetting = new FontSetting(pers, "callout-text-overlay.text-font", new JLabel().getFont().getFontName(), 24);
 		JLabel templateJLabel = new JLabel();
 		templateJLabel.setFont(textFontSetting.get());
 		templateJLabel.setText("A");
