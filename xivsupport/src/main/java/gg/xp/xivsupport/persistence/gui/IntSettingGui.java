@@ -13,9 +13,16 @@ public class IntSettingGui {
 	private final String label;
 	private JLabel jLabel;
 
+	private Boolean labelAtLeft;
+
 	public IntSettingGui(IntSetting setting, String label) {
+		this(setting, label, false);
+	}
+
+	public IntSettingGui(IntSetting setting, String label, Boolean labelAtLeft) {
 		textBox = new TextFieldWithValidation<>(Integer::parseInt, setting::set, Long.toString(setting.get()));
 		this.label = label;
+		this.labelAtLeft = labelAtLeft;
 	}
 
 	public Component getTextBoxOnly() {
@@ -33,8 +40,13 @@ public class IntSettingGui {
 	public JPanel getComponent() {
 		JPanel box = new JPanel();
 		box.setLayout(new WrapLayout());
-		box.add(getTextBoxOnly());
-		box.add(getLabelOnly());
+		if (labelAtLeft) {
+			box.add(getLabelOnly());
+			box.add(getTextBoxOnly());
+		} else {
+			box.add(getTextBoxOnly());
+			box.add(getLabelOnly());
+		}
 		box.setMaximumSize(box.getPreferredSize());
 		return box;
 	}

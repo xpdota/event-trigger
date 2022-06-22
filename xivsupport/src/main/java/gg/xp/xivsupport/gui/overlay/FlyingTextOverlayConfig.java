@@ -7,6 +7,7 @@ import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
+import gg.xp.xivsupport.persistence.gui.FontSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 
 import javax.swing.*;
@@ -37,8 +38,10 @@ public class FlyingTextOverlayConfig implements PluginTab {
 		JCheckBox enableDisable = new BooleanSettingGui(enabled, "Flying Text Enabled").getComponent();
 		Component alignment = new EnumSettingGui<>(overlay.getAlignmentSetting(), "Text Alignment", enabled::get).getComponent();
 		Component color = new ColorSettingGui(overlay.getTextColorSetting(), "Text Color", enabled::get).getComponent();
+		Component font = new FontSettingGui(overlay.getTextFontSetting(), "Text Font", GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()).getComponent();
 
-		GuiUtil.simpleTopDownLayout(panel, 400, enableDisable, alignment, color);
+
+		GuiUtil.simpleTopDownLayout(panel, 400, enableDisable, alignment, color, font);
 		return panel;
 	}
 
