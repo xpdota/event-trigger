@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
-import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
@@ -30,21 +29,16 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	private final String lineStart;
 	private final List<@Nullable F> groups;
 	private final XivState state;
-	private final boolean splitAll;
-	private final @Nullable FakeACTTimeSource fakeTimeSource;
+	private final @Nullable FakeTimeSource fakeTimeSource;
 
 	AbstractACTLineParser(PicoContainer container, int logLineNumber, Class<F> enumCls) {
-		this(container, logLineNumber, enumCls, false);
-	}
-	AbstractACTLineParser(PicoContainer container, int logLineNumber, Class<F> enumCls, boolean splitAll) {
-		this(container, logLineNumber, Arrays.asList(enumCls.getEnumConstants()), splitAll);
+		this(container, logLineNumber, Arrays.asList(enumCls.getEnumConstants()));
 	}
 
 	@SuppressWarnings({"ConstantConditions", "unchecked"})
-	AbstractACTLineParser(PicoContainer container, int logLineNumber, List<@Nullable F> groups, boolean splitAll) {
+	AbstractACTLineParser(PicoContainer container, int logLineNumber, List<@Nullable F> groups) {
 		this.state = Objects.requireNonNull(container.getComponent(XivState.class), "XivState is required");
-		this.fakeTimeSource = container.getComponent(FakeACTTimeSource.class);
-		this.splitAll = splitAll;
+		this.fakeTimeSource = container.getComponent(FakeTimeSource.class);
 		if (groups.isEmpty()) {
 			// TODO: could some of them make sense as empty?
 			throw new IllegalArgumentException("Capture groups cannot be empty");
@@ -73,20 +67,20 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 					out.put(groups.get(i), splits[i + 2]);
 				}
 				ZonedDateTime zdt = event.getTimestamp();
-				FieldMapper<F> mapper = new FieldMapper<>(out, state, context, entityLookupMissBehavior(), splits);
+				FieldMapper<F> mapper = new FieldMapper<>(out, state, entityLookupMissBehavior(), splits);
 				Event outgoingEvent;
 				try {
 					outgoingEvent = convert(mapper, lineNumber, zdt);
 				}
 				catch (Throwable t) {
+					//noinspection ThrowCaughtLocally
 					throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
 				}
+				// TODO: check whether it's better to request all at once, individually
 				mapper.getCombatantsToUpdate().forEach(id -> {
 					context.accept(new RefreshSpecificCombatantsRequest(List.of(id)));
 				});
-				if (mapper.isRecalcNeeded()) {
-					state.flushProvidedValues();
-				}
+				mapper.flushStateOverrides();
 				if (fakeTimeSource != null) {
 					// For 00-lines, the timestamp only has second-level precision, compared to millisecond-level
 					// precision for everything else. This causes time to jump around, which we don't want.
@@ -100,7 +94,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 					event.setTimeSource(fakeTimeSource);
 				}
 				if (outgoingEvent != null) {
-					outgoingEvent.setHappenedAt(zdt.toInstant());
+//					outgoingEvent.setHappenedAt(zdt.toInstant());
 					context.accept(outgoingEvent);
 				}
 			}

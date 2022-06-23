@@ -7,7 +7,9 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
+import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -22,9 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ScanMe
 public class PartyOverlay extends XivOverlay {
@@ -46,16 +48,14 @@ public class PartyOverlay extends XivOverlay {
 		c.setPreferredWidth(125);
 	});
 	private CustomColumn<XivCombatant> statusEffectsColumn() {
-		return new CustomColumn<>("Statuses", entity -> statuses.statusesOnTarget(entity).stream()
-				.map(BuffApplied::getBuff)
-				.collect(Collectors.toList()), c -> {
+		return new CustomColumn<>("Statuses", entity -> new ArrayList<>(statuses.statusesOnTarget(entity)), c -> {
 			c.setCellRenderer(new StatusEffectListRenderer());
 			c.setPreferredWidth(300);
 		});
 	}
 
-	public PartyOverlay(PersistenceProvider persistence, EventDistributor dist, XivState state, StatusEffectRepository statuses, StandardColumns columns) {
-		super("Party Overlay", "party-overlay", persistence);
+	public PartyOverlay(PersistenceProvider persistence, EventDistributor dist, OverlayConfig oc, XivState state, StatusEffectRepository statuses, StandardColumns columns) {
+		super("Party Overlay", "party-overlay", oc, persistence);
 		this.state = state;
 		this.statuses = statuses;
 		tableModel = CustomTableModel.builder(() -> party)

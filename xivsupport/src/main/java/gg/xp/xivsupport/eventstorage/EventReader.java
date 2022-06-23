@@ -1,8 +1,19 @@
 package gg.xp.xivsupport.eventstorage;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.Event;
+import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.fflogs.FflogsMasterDataEvent;
+import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
+import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.Compressible;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.File;
@@ -11,14 +22,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
+import java.io.WriteAbortedException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 public final class EventReader {
+
+	private static final Logger log = LoggerFactory.getLogger(EventReader.class);
 
 	private EventReader() {
 	}
@@ -55,18 +73,24 @@ public final class EventReader {
 			};
 			ois.setObjectInputFilter(filter);
 			events = new ArrayList<>();
-			try {
-				while (true) {
-					Event event = (Event) ois.readObject();
-					event.setImported(true);
-					if (event instanceof Compressible) {
-						((Compressible) event).decompress();
-					}
-					events.add(event);
+			while (true) {
+				Event event;
+				try {
+					event = (Event) ois.readObject();
 				}
-			}
-			catch (EOFException eof) {
-				// done reading
+				catch (EOFException eof) {
+					// done reading
+					break;
+				}
+//				catch (WriteAbortedException t) {
+//					log.error("Error deserializing event", t);
+//					continue;
+//				}
+				event.setImported(true);
+				if (event instanceof Compressible compressible) {
+					compressible.decompress();
+				}
+				events.add(event);
 			}
 		}
 		catch (Throwable e) {
@@ -78,9 +102,14 @@ public final class EventReader {
 	public static List<ACTLogLineEvent> readActLogResource(String resourcePath) {
 		List<String> lines;
 		try {
-			lines = Files.readAllLines(Path.of(EventReader.class.getResource(resourcePath).toURI()));
-		} catch (Throwable t) {
-			throw new RuntimeException(t);
+			URL resource = EventReader.class.getResource(resourcePath);
+			if (resource == null) {
+				throw new IllegalArgumentException("The resource '%s' does not exist".formatted(resourcePath));
+			}
+			lines = Files.readAllLines(Path.of(resource.toURI()));
+		}
+		catch (IOException | URISyntaxException e) {
+			throw new RuntimeException(e);
 		}
 		return lines.stream()
 				.filter(s -> !s.isEmpty())
@@ -92,12 +121,63 @@ public final class EventReader {
 		List<String> lines;
 		try {
 			lines = Files.readAllLines(file.toPath());
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			throw new RuntimeException(t);
 		}
 		return lines.stream()
 				.filter(s -> !s.isEmpty())
 				.map(ACTLogLineEvent::new)
 				.collect(Collectors.toList());
+	}
+
+	public static List<Event> readFflogsJson(List<JsonNode> rootNodes) {
+		boolean first = true;
+		ObjectMapper mapper = new ObjectMapper();
+		List<Event> out = new ArrayList<>();
+
+		for (JsonNode rootNode : rootNodes) {
+
+			JsonNode startTimeNode = rootNode.at("/reportData/report/startTime");
+			Instant start = Instant.ofEpochMilli(mapper.convertValue(startTimeNode, Long.class));
+
+
+			if (first) {
+				{
+					JsonNode masterNode = rootNode.at("/reportData/report/masterData");
+					out.add(mapper.convertValue(masterNode, FflogsMasterDataEvent.class));
+				}
+
+				{
+					JsonNode zoneIdNode = rootNode.at("/reportData/report/fights/0/gameZone/id");
+					Long zoneId = mapper.convertValue(zoneIdNode, Long.class);
+					JsonNode zoneNameNode = rootNode.at("/reportData/report/fights/0/gameZone/id");
+					String zoneName = mapper.convertValue(zoneNameNode, String.class);
+					ZoneChangeEvent zce = new ZoneChangeEvent(new XivZone(zoneId, zoneName));
+					out.add(zce);
+				}
+				{
+					JsonNode mapIdNode = rootNode.at("/reportData/report/fights/0/maps/0/id");
+					Long mapId = mapper.convertValue(mapIdNode, Long.class);
+					MapChangeEvent mce = new MapChangeEvent(XivMap.forId(mapId));
+					out.add(mce);
+				}
+				first = false;
+			}
+
+			{
+				JsonNode eventsNode = rootNode.at("/reportData/report/events/data");
+				List<Map<String, Object>> maps = mapper.convertValue(eventsNode, new TypeReference<>() {
+				});
+				out.addAll(maps.stream().map(map -> {
+					FflogsRawEvent raw = new FflogsRawEvent(map);
+					Long timeOffset = raw.getTypedField("timestamp", Long.class);
+					Instant actualTime = start.plusMillis(timeOffset);
+					raw.setHappenedAt(actualTime);
+					return raw;
+				}).toList());
+			}
+		}
+		return out;
 	}
 }

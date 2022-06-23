@@ -26,6 +26,14 @@ public final class Platform {
 		return userDataDir;
 	}
 
+	public static Path getSessionsDir() {
+		return Paths.get(getTriggeventDir().toString(), "sessions");
+	}
+
+	public static Path getGroovyDir() {
+		return Paths.get(getTriggeventDir().toString(), "userscripts");
+	}
+
 	public static Path getActDir() {
 		String appData = System.getenv("APPDATA");
 		Path userDataDir;
@@ -43,6 +51,17 @@ public final class Platform {
 
 	public static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
+	}
+
+	public static boolean isInIDE() {
+		File jarLocation;
+		try {
+			jarLocation = new File(UpdatesPanel.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+			return jarLocation.isDirectory();
+		}
+		catch (Throwable e) {
+			return false;
+		}
 	}
 
 	public static File getInstallDir() {

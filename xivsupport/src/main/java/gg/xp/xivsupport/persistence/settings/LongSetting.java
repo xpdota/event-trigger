@@ -2,7 +2,7 @@ package gg.xp.xivsupport.persistence.settings;
 
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 
-public class LongSetting {
+public class LongSetting extends ObservableSetting {
 
 	private final PersistenceProvider persistence;
 	private final String settingKey;
@@ -27,5 +27,6 @@ public class LongSetting {
 	public void set(long newValue) {
 		cached = newValue;
 		persistence.save(settingKey, newValue);
+		notifyListeners();
 	}
 }

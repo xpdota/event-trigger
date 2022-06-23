@@ -5,6 +5,9 @@ import gg.xp.xivsupport.models.XivCombatant;
 
 import java.io.Serial;
 
+/**
+ * Represents a combatant being killed
+ */
 public class EntityKilledEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
 	@Serial
 	private static final long serialVersionUID = 2379855663603121468L;

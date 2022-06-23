@@ -8,8 +8,8 @@ import java.awt.*;
 //@ScanMe
 public class ExampleOverlayWithLotsOfButtons extends XivOverlay {
 
-	public ExampleOverlayWithLotsOfButtons(PersistenceProvider persistence) {
-		super("Example Overlay", "example-overlay2", persistence);
+	public ExampleOverlayWithLotsOfButtons(PersistenceProvider persistence, OverlayConfig oc) {
+		super("Example Overlay", "example-overlay2", oc, persistence);
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(2, 2));
 		JButton button1 = new JButton("Bigger");

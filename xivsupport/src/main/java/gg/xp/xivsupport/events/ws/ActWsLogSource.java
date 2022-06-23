@@ -16,6 +16,8 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.WsURISetting;
 import gg.xp.xivsupport.speech.TtsRequest;
+import gg.xp.xivsupport.sys.KnownLogSource;
+import gg.xp.xivsupport.sys.PrimaryLogSource;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -32,7 +34,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,6 +51,7 @@ public class ActWsLogSource implements EventSource {
 	private final Object connectLock = new Object();
 	private final WsURISetting uriSetting;
 	private final BooleanSetting allowBadCert;
+	private final BooleanSetting allowTts;
 
 	private final class ActWsClientInternal extends WebSocketClient {
 
@@ -132,21 +134,27 @@ public class ActWsLogSource implements EventSource {
 			send("{\"call\":\"subscribe\",\"events\":[\"PartyChanged\"]}");
 //		send("{\"call\":\"subscribe\",\"events\":[\"onPlayerChangedEvent\"]}");
 			// TODO: there does not seem to be a non-cactbot alternative to this
-			send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
+//			send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"LogLine\"]}");
+			send("{\"call\":\"subscribe\",\"events\":[\"InCombat\"]}");
+			// EnmityTargetData is spammy even if there is no change
+//			send("{\"call\":\"subscribe\",\"events\":[\"EnmityTargetData\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"OnlineStatusChanged\"]}");
 			log.info("Subscribed to WS events");
 		}
 	}
 
 	private final Consumer<Event> eventConsumer;
+	private final PrimaryLogSource pls;
 	private final ActWsClientInternal client;
 	private final WsState state = new WsState();
 
-	public ActWsLogSource(EventMaster master, StateStore stateStore, PersistenceProvider pers) {
+	public ActWsLogSource(EventMaster master, StateStore stateStore, PersistenceProvider pers, PrimaryLogSource pls) {
 		this.uriSetting = new WsURISetting(pers, "actws-uri", defaultUri);
 		this.allowBadCert = new BooleanSetting(pers, "acts-allow-bad-cert", false);
 		this.eventConsumer = master::pushEvent;
+		this.allowTts = new BooleanSetting(pers, "actws-allow-tts", true);
+		this.pls = pls;
 		this.client = new ActWsClientInternal();
 		stateStore.putCustom(WsState.class, state);
 	}
@@ -189,15 +197,16 @@ public class ActWsLogSource implements EventSource {
 	@LiveOnly
 	@HandleEvents
 	public void sayTts(EventContext context, TtsRequest event) {
-
-		try {
-			client.send(mapper.writeValueAsString(Map.ofEntries(
-					Map.entry("call", "say"),
-					Map.entry("text", event.getTtsString()),
-					Map.entry("rseq", rseqCounter.getAndIncrement()))));
-		}
-		catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
+		if (allowTts.get()) {
+			try {
+				client.send(mapper.writeValueAsString(Map.ofEntries(
+						Map.entry("call", "say"),
+						Map.entry("text", event.getTtsString()),
+						Map.entry("rseq", rseqCounter.getAndIncrement()))));
+			}
+			catch (JsonProcessingException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 
@@ -289,6 +298,7 @@ public class ActWsLogSource implements EventSource {
 		// TODO: auto retry and reconnection
 		log.info("Attempting connection");
 		doOpen();
+		pls.setLogSource(KnownLogSource.WEBSOCKET_LIVE);
 	}
 
 	private static final String allCbtRequest;
@@ -296,68 +306,41 @@ public class ActWsLogSource implements EventSource {
 
 	static {
 		try {
+			String[] cbtProps = {
+					"CurrentWorldID",
+					"WorldID",
+					"WorldName",
+					"BNpcID",
+					"BNpcNameID",
+					"PartyType",
+					"ID",
+					"OwnerID",
+					"type",
+					"Job",
+					"Level",
+					"Name",
+					"CurrentHP",
+					"MaxHP",
+					"CurrentMP",
+					"MaxMP",
+					"PosX",
+					"PosY",
+					"PosZ",
+					"Heading",
+					"TargetID"
+			};
 			allCbtRequest = mapper.writeValueAsString(
 					Map.ofEntries(
 							Map.entry("call", "getCombatants"),
 							Map.entry("rseq", "allCombatants"),
-							Map.entry("props", new String[]{
-									"CurrentWorldID",
-									"WorldID",
-									"WorldName",
-									"BNpcID",
-									"BNpcNameID",
-									"PartyType",
-									"ID",
-									"OwnerID",
-									"type",
-									"Job",
-									"Level",
-									"Name",
-									"CurrentHP",
-									"MaxHP",
-									"CurrentMP",
-									"MaxMP",
-									"CurrentCP",
-									"MaxCP",
-									"CurrentGP",
-									"MaxGP",
-									"PosX",
-									"PosY",
-									"PosZ",
-									"Heading"
-							})
+							Map.entry("props", cbtProps)
 					));
 			specificCbtRequestTemplate = mapper.writeValueAsString(
 					Map.ofEntries(
 							Map.entry("call", "getCombatants"),
 							Map.entry("rseq", "specificCombatants"),
 							Map.entry("ids", List.of(123456)),
-							Map.entry("props", new String[]{
-									"CurrentWorldID",
-									"WorldID",
-									"WorldName",
-									"BNpcID",
-									"BNpcNameID",
-									"PartyType",
-									"ID",
-									"OwnerID",
-									"type",
-									"Job",
-									"Level",
-									"Name",
-									"CurrentHP",
-									"MaxHP",
-									"CurrentMP",
-									"MaxMP",
-									"CurrentCP",
-									"MaxCP",
-									"CurrentGP",
-									"MaxGP",
-									"PosX",
-									"PosY",
-									"PosZ",
-									"Heading"
-							})
+							Map.entry("props", cbtProps)
 					));
 		}
 		catch (JsonProcessingException e) {
@@ -371,5 +354,9 @@ public class ActWsLogSource implements EventSource {
 
 	public BooleanSetting getAllowBadCert() {
 		return allowBadCert;
+	}
+
+	public BooleanSetting getAllowTts() {
+		return allowTts;
 	}
 }

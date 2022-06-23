@@ -1,5 +1,8 @@
 package gg.xp.xivsupport.events.actlines.events;
 
+/**
+ * List of known Online Statuses
+ */
 public enum OnlineStatus {
 	UNKNOWN,
 	ONLINE,

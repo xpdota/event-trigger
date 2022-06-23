@@ -1,16 +1,23 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
+import gg.xp.xivdata.data.StatusEffectInfo;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
 public class StatusAppliedEffect extends AbilityEffect {
 	private final XivStatusEffect status;
+	private final int rawStacks;
+	private final int stacks;
 	private final boolean onTarget;
 
-	// TODO: target
-	public StatusAppliedEffect(long id, boolean onTarget) {
-		super(AbilityEffectType.APPLY_STATUS);
+	public StatusAppliedEffect(long flags, long value, long id, int rawStacks, boolean onTarget) {
+		super(flags, value, AbilityEffectType.APPLY_STATUS);
+		// TODO: get actual name
 		this.status = new XivStatusEffect(id, "");
+		this.rawStacks = rawStacks;
 		this.onTarget = onTarget;
+		this.stacks = StatusEffectLibrary.calcActualStacks(id, rawStacks);
+
 	}
 
 	@Override
@@ -31,8 +38,25 @@ public class StatusAppliedEffect extends AbilityEffect {
 		return onTarget;
 	}
 
+	public int getRawStacks() {
+		return rawStacks;
+	}
+
+	public int getStacks() {
+		return stacks;
+	}
+
 	@Override
-	public String getDescription() {
-		return String.format("Applied Status 0x%x to %s", status.getId(), onTarget ? "Target" : "Caster");
+	public String getBaseDescription() {
+		StatusEffectInfo sei = StatusEffectLibrary.forId(status.getId());
+		long flags = getFlags();
+		byte param1 = (byte) (flags >> 24);
+		byte param2 = (byte) (flags >> 16);
+		byte param3 = (byte) (flags >> 8);
+		String formatted = String.format("Applied Status 0x%x (%s) to %s (params: %s %s %s)", status.getId(), sei == null ? "Unknown" : sei.name(), onTarget ? "Target" : "Caster", param1, param2, param3);
+		if (stacks > 0) {
+			formatted += String.format(" (%s stacks)", stacks);
+		}
+		return formatted;
 	}
 }

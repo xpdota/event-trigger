@@ -7,15 +7,13 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
-import gg.xp.xivdata.jobs.XivMap;
+import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
-import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasEffects;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
-import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
@@ -24,17 +22,19 @@ import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
-import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
-import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.map.MapPanel;
+import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.gui.map.MapTab;
+import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.AbilityResolutionFilter;
@@ -42,6 +42,7 @@ import gg.xp.xivsupport.gui.tables.filters.ActLineFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventAbilityOrBuffFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
+import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
@@ -50,6 +51,9 @@ import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
+import gg.xp.xivsupport.gui.tabs.GroovyTab;
+import gg.xp.xivsupport.gui.tabs.LibraryTab;
+import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -57,6 +61,7 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayAdvancePseudoFilter;
@@ -68,7 +73,6 @@ import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
-import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +98,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @SuppressWarnings({"ReturnOfNull", "CodeBlock2Expr"})
@@ -103,20 +108,28 @@ public class GuiMain {
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("GuiMain"));
 	private final EventMaster master;
 	private final StateStore state;
-	private final PicoContainer container;
+	private final MutablePicoContainer container;
 	private final StandardColumns columns;
 	private final @Nullable ReplayController replay;
+	private final RightClickOptionRepo rightClicks;
 	private JTabbedPane tabPane;
+	private Component eventPanel;
 
 
 	public static void main(String[] args) {
+		long start = System.currentTimeMillis();
 		log.info("GUI Init");
 		log.info("Classpath: {}", System.getProperty("java.class.path"));
 		CatchFatalError.run(() -> {
+			log.info("GUI Setup");
 			CommonGuiSetup.setup();
+			log.info("Master Init");
 			MutablePicoContainer pico = XivMain.masterInit();
 			pico.addComponent(GuiMain.class);
+			log.info("GUI Init");
 			pico.getComponent(GuiMain.class);
+			long end = System.currentTimeMillis();
+			log.info("Total base startup time: {}", end - start);
 		});
 	}
 
@@ -125,32 +138,41 @@ public class GuiMain {
 		this.master = master;
 		this.state = master.getDistributor().getStateStore();
 		this.container = container;
+		this.rightClicks = container.getComponent(RightClickOptionRepo.class);
 		columns = container.getComponent(StandardColumns.class);
 		replay = container.getComponent(ReplayController.class);
+		long start = System.currentTimeMillis();
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
-			tabPane = new JTabbedPane();
+			tabPane = new SmartTabbedPane();
 			frame.setLayout(new BorderLayout());
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setLocationByPlatform(true);
-			frame.setSize(960, 720);
+//			frame.setLocationByPlatform(true);
+			frame.setSize(1280, 960);
+			frame.setLocationRelativeTo(null);
 			frame.setVisible(true);
 			frame.add(tabPane);
 			if (replay != null) {
-				frame.add(new ReplayControllerGui(replay).getPanel(), BorderLayout.PAGE_START);
+				frame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
 			}
 		});
 		SwingUtilities.invokeLater(() -> tabPane.addTab("General", new SystemTabPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Plugin Settings", new PluginSettingsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Combatants", getCombatantsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Buffs", getStatusEffectsPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Events", getEventsPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Events", (eventPanel = getEventsPanel())));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("ACT Log", getActLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("System Log", getSystemLogPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", new MapPanel(state.get(XivStateImpl.class))));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", container.getComponent(MapTab.class)));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", new LibraryTab()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Groovy", new GroovyTab(container.getComponent(GroovyManager.class))));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
+		SwingUtilities.invokeLater(() -> {
+			long end = System.currentTimeMillis();
+			log.info("GUI startup time: {}", end - start);
+		});
 	}
 
 
@@ -269,7 +291,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
-								return player == null ? "null" : player.getName();
+								return player == null ? "?" : player.getName();
 							},
 							JLabel::setText
 					),
@@ -278,7 +300,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivZone zone = state.get(XivStateImpl.class).getZone();
-								return zone == null ? "null" : zone.getName();
+								return zone == null ? "?" : zone.getName();
 							},
 							JLabel::setText
 					),
@@ -287,7 +309,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivMap map = state.get(XivStateImpl.class).getMap();
-								return map == null ? "null" : map.getPlace();
+								return map == null ? "?" : map.getPlace();
 							},
 							JLabel::setText
 					),
@@ -296,7 +318,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
-								return player == null ? "null" : player.getJob().getFriendlyName();
+								return player == null ? "?" : player.getJob().getFriendlyName();
 							},
 							JLabel::setText
 					),
@@ -305,16 +327,7 @@ public class GuiMain {
 							new JLabel(),
 							() -> {
 								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
-								return player == null ? "null" : Long.toString(player.getLevel());
-							},
-							JLabel::setText
-					),
-					new KeyValuePairDisplay<>(
-							"World",
-							new JLabel(),
-							() -> {
-								XivPlayerCharacter player = state.get(XivStateImpl.class).getPlayer();
-								return player == null ? "null" : player.getWorld().toString();
+								return player == null ? "?" : Long.toString(player.getLevel());
 							},
 							JLabel::setText
 					)
@@ -350,6 +363,12 @@ public class GuiMain {
 
 			partyMembersTable.setModel(partyTableModel);
 			partyTableModel.configureColumns(partyMembersTable);
+			RightClickOptionRepo.of(
+					CustomRightClickOption.forRow(
+							"Set As Primary Player",
+							XivPlayerCharacter.class,
+							p -> state.get(XivStateImpl.class).setPlayerTmpOverride(p))
+			).configureTable(partyMembersTable, partyTableModel);
 			JScrollPane scrollPane = new JScrollPane(partyMembersTable);
 			add(scrollPane);
 			refresh();
@@ -406,7 +425,7 @@ public class GuiMain {
 		public PluginSettingsPanel() {
 //			super("Plugin Settings");
 			setLayout(new BorderLayout());
-			tabPanel = new JTabbedPane(SwingConstants.LEFT);
+			tabPanel = new SmartTabbedPane(SwingConstants.LEFT);
 			add(tabPanel);
 			exs.submit(this::getAndAddTabs);
 		}
@@ -445,7 +464,6 @@ public class GuiMain {
 	}
 
 	private JPanel getCombatantsPanel() {
-		// TODO: jump to parent button
 		// Main table
 		XivState state = container.getComponent(XivStateImpl.class);
 		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Combatants",
@@ -553,7 +571,7 @@ public class GuiMain {
 							}
 						})
 				.addMainColumn(new CustomColumn<>("Time", event -> {
-					return event.getHappenedAt()
+					return event.getEffectiveHappenedAt()
 							.atZone(ZoneId.systemDefault())
 							.format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
 //					return DateTimeFormatter.ISO_TIME.format(event.getHappenedAt());
@@ -565,13 +583,14 @@ public class GuiMain {
 				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> {
-					if (e instanceof HasAbility) {
-						return ((HasAbility) e).getAbility();
-					}
-					if (e instanceof HasStatusEffect) {
-						return ((HasStatusEffect) e).getBuff();
-					}
-					return null;
+					return e;
+//					if (e instanceof HasAbility) {
+//						return ((HasAbility) e).getAbility();
+//					}
+//					if (e instanceof HasStatusEffect) {
+//						return ((HasStatusEffect) e).getBuff();
+//					}
+//					return null;
 				}, c -> {
 					c.setCellRenderer(new ActionAndStatusRenderer());
 				}))
@@ -590,28 +609,20 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
-				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy Net Line", Event.class, e -> {
-					return e.getThisOrParentOfType(ACTLogLineEvent.class);
-				}, line -> {
-					GuiUtil.copyTextToClipboard(line.getLogLine());
-				}))
-				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy Emulated ACT Line", Event.class, e -> {
-					return e.getThisOrParentOfType(ACTLogLineEvent.class);
-				}, line -> {
-					GuiUtil.copyTextToClipboard(line.getEmulatedActLogLine());
-				}))
-				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Copy WS JSON", Event.class, e -> {
-					return e.getThisOrParentOfType(ActWsRawMsg.class);
-				}, line -> {
-					GuiUtil.copyTextToClipboard(line.getRawMsgData());
-				}))
+				.withRightClickRepo(rightClicks)
 				.addFilter(SystemEventFilter::new)
 				.addFilter(EventClassFilterFilter::new)
 				.addFilter(AbilityResolutionFilter::new)
 				.addFilter(EventEntityFilter::eventSourceFilter)
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
-				.addFilter(r -> new PullNumberFilter(pulls, r))
+//				.addFilter(FreeformEventFilter::new)
+				.addFilter(GroovyFilter.forClass(Event.class))
+				.addFilter(r -> {
+					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);
+					container.addComponent(pullNumberFilter);
+					return pullNumberFilter;
+				})
 				.addWidget(replayNextPseudoFilter(Event.class))
 				.setAppendOrPruneOnly(true)
 				.build();
@@ -644,12 +655,7 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
-				.addRightClickOption(CustomRightClickOption.forRow("Copy Net Line", ACTLogLineEvent.class, line -> {
-					GuiUtil.copyTextToClipboard(line.getLogLine());
-				}))
-				.addRightClickOption(CustomRightClickOption.forRow("Copy Emulated ACT Line", ACTLogLineEvent.class, line -> {
-					GuiUtil.copyTextToClipboard(line.getEmulatedActLogLine());
-				}))
+				.withRightClickRepo(rightClicks)
 				.addFilter(ActLineFilter::new)
 				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
@@ -679,7 +685,6 @@ public class GuiMain {
 										Utils.dumpAllFields(e.getEvent()).entrySet().stream()
 								).collect(Collectors.toList());
 							})
-					// TODO: timestamp?
 					.addMainColumn(new CustomColumn<>("Time",
 							e -> Instant.ofEpochMilli(e.getEvent().getTimeStamp())
 									.atZone(ZoneId.systemDefault())
@@ -726,9 +731,7 @@ public class GuiMain {
 					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded, col -> {
 						col.setPreferredWidth(900);
 					}))
-					.addRightClickOption(CustomRightClickOption.forRow("Copy", LogEvent.class, tp -> {
-						GuiUtil.copyTextToClipboard(tp.getEncoded());
-					}))
+					.withRightClickRepo(rightClicks)
 					.addDetailsColumn(StandardColumns.fieldName)
 					.addDetailsColumn(StandardColumns.fieldValue)
 					.addDetailsColumn(StandardColumns.identity)
@@ -781,6 +784,16 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.withRightClickRepo(RightClickOptionRepo.of(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
+					PullNumberFilter pnf = container.getComponent(PullNumberFilter.class);
+					pnf.setPullNumberExternally(pull.getPullNum());
+					// TODO: messy
+					GuiUtil.bringToFront(eventPanel);
+					IntStream.range(0, tabPane.getTabCount())
+							.filter(i -> tabPane.getTitleAt(i).equals("Events"))
+							.findFirst()
+							.ifPresentOrElse(tabPane::setSelectedIndex, () -> log.error("Couldn't find Events tab"));
+				})))
 //				.addFilter(LogLevelVisualFilter::new)
 				.setAppendOrPruneOnly(false)
 				.build();
@@ -800,6 +813,7 @@ public class GuiMain {
 
 	private JPanel getOverlayConfigTab() {
 		OverlayMain overlayMain = container.getComponent(OverlayMain.class);
+		OverlayConfig oc = container.getComponent(OverlayConfig.class);
 		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Overlays");
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -808,7 +822,7 @@ public class GuiMain {
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
 		c.gridy = 0;
-		BooleanSetting visibleSetting = overlayMain.getVisibleSetting();
+		BooleanSetting visibleSetting = oc.getShow();
 		{
 			JPanel allOverlayControls = new JPanel();
 			allOverlayControls.setLayout(new WrapLayout());
@@ -820,7 +834,10 @@ public class GuiMain {
 			edit.addActionListener(e -> overlayMain.setEditing(edit.isSelected()));
 			allOverlayControls.add(edit);
 
-			allOverlayControls.add(new BooleanSettingGui(overlayMain.forceShow(), "Force Visible Even When Game Inactive").getComponent());
+			allOverlayControls.add(new BooleanSettingGui(oc.getForceShow(), "Force Visible Even When Game Inactive").getComponent());
+
+			allOverlayControls.add(new IntSettingSpinner(oc.getMinFps(), "Min Overlay FPS").getComponent());
+			allOverlayControls.add(new IntSettingSpinner(oc.getMaxFps(), "Max Overlay FPS").getComponent());
 
 			panel.add(allOverlayControls, c);
 			c.gridy++;
@@ -832,18 +849,15 @@ public class GuiMain {
 				@Override
 				public boolean isCellEditable(int row, int column) {
 					// TODO: make this more official
-					if (getCellEditor(row, column) instanceof NoCellEditor) {
-						return false;
-					}
-					return true;
+					return !(getCellEditor(row, column) instanceof NoCellEditor);
 				}
 			};
 			CustomTableModel<XivOverlay> tableModel = CustomTableModel.builder(overlayMain::getOverlays)
 					.addColumn(StandardColumns.booleanSettingColumn("On", XivOverlay::getEnabled, 50, visibleSetting))
 					.addColumn(new CustomColumn<>("Name", XivOverlay::getTitle, col -> col.setCellEditor(new NoCellEditor())))
-					.addColumn(new CustomColumn<>("X", o -> o.getXSetting().get(), col -> col.setCellEditor(new NoCellEditor())))
-					.addColumn(new CustomColumn<>("Y", o -> o.getYSetting().get(), col -> col.setCellEditor(new NoCellEditor())))
-					.addColumn(new CustomColumn<>("Scale", o -> o.getScale(), col -> col.setCellEditor(new NoCellEditor())))
+					.addColumn(StandardColumns.longSettingBoxColumn("X", XivOverlay::getXSetting, 100))
+					.addColumn(StandardColumns.longSettingBoxColumn("Y", XivOverlay::getYSetting, 100))
+					.addColumn(StandardColumns.doubleSettingBoxColumn("Scale (0.8 minimum)", XivOverlay::getScaleSetting, 100))
 					.addColumn(StandardColumns.doubleSettingSliderColumn("Opacity", XivOverlay::opacity, 200, 0.05))
 					.build();
 			table.setModel(tableModel);

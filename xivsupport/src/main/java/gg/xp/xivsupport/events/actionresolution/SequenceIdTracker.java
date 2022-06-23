@@ -178,8 +178,8 @@ public class SequenceIdTracker {
 			while (iterator.hasNext()) {
 				AbilityUsedEvent next = iterator.next();
 				if (next.getSequenceId() == event.getSequenceId() && next.getTarget().getId() == event.getTarget().getId()) {
-					AbilityResolvedEvent newEvent = new AbilityResolvedEvent(next);
-					newEvent.setHappenedAt(event.getHappenedAt());
+					AbilityResolvedEvent newEvent = new AbilityResolvedEvent(next, state.getLatestCombatantData(next.getSource()), state.getLatestCombatantData(next.getTarget()));
+//					newEvent.setHappenedAt(event.getHappenedAt());
 					context.accept(newEvent);
 					iterator.remove();
 					break;
@@ -203,7 +203,7 @@ public class SequenceIdTracker {
 		}
 		if (event.getEffects().stream().noneMatch(effect -> {
 			AbilityEffectType type = effect.getEffectType();
-			return type == AbilityEffectType.DAMAGE || type == AbilityEffectType.APPLY_STATUS || type == AbilityEffectType.BLOCKED || type == AbilityEffectType.PARRIED;
+			return type == AbilityEffectType.DAMAGE || type == AbilityEffectType.APPLY_STATUS || type == AbilityEffectType.BLOCKED || type == AbilityEffectType.PARRIED || type == AbilityEffectType.HEAL;
 		})) {
 			return false;
 		}

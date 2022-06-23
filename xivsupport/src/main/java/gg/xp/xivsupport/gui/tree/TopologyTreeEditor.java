@@ -32,8 +32,8 @@ public class TopologyTreeEditor extends AbstractCellEditor implements TreeCellEd
 					mouseEvent.getY());
 			if (path != null) {
 				Object node = path.getLastPathComponent();
-				if ((node instanceof TopoItem)) {
-					return ((TopoItem) node).canBeDisabled();
+				if (node instanceof TopoItem ti) {
+					return ti.canBeDisabled();
 				}
 			}
 		}
@@ -48,8 +48,8 @@ public class TopologyTreeEditor extends AbstractCellEditor implements TreeCellEd
 				fireEditingStopped();
 			}
 		};
-		if (editor instanceof CheckboxTreeNode) {
-			((CheckboxTreeNode) editor).getCheckBox().addItemListener(itemListener);
+		if (editor instanceof CheckboxTreeNode ctn) {
+			ctn.getCheckBox().addItemListener(itemListener);
 		}
 		return editor;
 	}

@@ -1,44 +1,46 @@
 package gg.xp.xivsupport.speech;
 
-import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.Event;
+import gg.xp.xivdata.data.ActionIcon;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.HasIconURL;
+import gg.xp.xivdata.data.HasOptionalIconURL;
+import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
+import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
+import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.Serial;
-import java.time.Instant;
+import java.awt.*;
 
-public class CalloutEvent extends BaseEvent {
-	@Serial
-	private static final long serialVersionUID = 7956006620675927571L;
-	private final String callText;
-	private final String visualText;
-	private final Instant expiresAt;
-	// TODO lower this
-	private static final long DEFAULT_DURATION = 15000;
+public interface CalloutEvent extends Event, HasPrimaryValue {
+	@Nullable String getVisualText();
 
-	public CalloutEvent(String callText) {
-		this(callText, callText, DEFAULT_DURATION);
+	@Nullable String getCallText();
+
+	boolean isExpired();
+
+	@Override
+	default String getPrimaryValue() {
+		return getCallText();
 	}
 
-	public CalloutEvent(String callText, String visualText) {
-		this(callText, visualText, DEFAULT_DURATION);
+	@Nullable CalloutEvent replaces();
+
+	void setReplaces(CalloutEvent replaces);
+
+	@Override
+	default boolean shouldSave() {
+		return false;
 	}
 
-	public CalloutEvent(String callText, String visualText, long hangTime) {
-		this.callText = callText;
-		this.visualText = visualText;
-		// TODO: when I get fake time implemented, this will need to be changed
-		expiresAt = Instant.now().plusMillis(hangTime);
+	default @Nullable Component graphicalComponent() {
+		return null;
+//		return IconTextRenderer.getStretchyIcon(RenderUtils.guessIconFor(getParent()));
 	}
 
-	public @Nullable String getVisualText() {
-		return visualText;
-	}
+	@Nullable Color getColorOverride();
 
-	public @Nullable String getCallText() {
-		return callText;
-	}
-
-	public boolean isExpired() {
-		return expiresAt.isBefore(Instant.now());
-	}
 }

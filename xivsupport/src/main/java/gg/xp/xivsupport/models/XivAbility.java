@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.models;
 
+import gg.xp.xivdata.data.ActionInfo;
+import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 
 import java.io.Serial;
@@ -12,9 +14,20 @@ public class XivAbility implements Serializable, NameIdPair {
 	private final long id;
 	private final String name;
 
+	public XivAbility(long id) {
+		this.id = id;
+		ActionInfo actionInfo = ActionLibrary.forId(id);
+		if (actionInfo == null) {
+			name = String.format("Unknown_%x", id);
+		}
+		else {
+			name = actionInfo.name();
+		}
+	}
+
 	public XivAbility(long id, String name) {
 		this.id = id;
-		this.name = name;
+		this.name = name == null ? null : name.intern();
 	}
 
 	@Override

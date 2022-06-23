@@ -10,10 +10,14 @@ public record ManaPoints(long current, long max) implements CurrentMaxPair, Seri
 
 	// Re-usable instance to save memory
 	private static final ManaPoints FULL = new ManaPoints(10_000, 10_000);
+	private static final ManaPoints EMPTY = new ManaPoints(0, 10_000);
 
 	public static ManaPoints of(long current, long max) {
 		if (current == 10_000 && max == 10_000) {
 			return FULL;
+		}
+		else if (current == 0 && max == 10_000) {
+			return EMPTY;
 		}
 		return new ManaPoints(current, max);
 	}

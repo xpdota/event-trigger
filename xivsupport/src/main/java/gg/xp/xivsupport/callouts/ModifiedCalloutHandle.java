@@ -1,10 +1,13 @@
 package gg.xp.xivsupport.callouts;
 
-import gg.xp.xivsupport.gui.overlay.FlyingTextOverlay;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 public final class ModifiedCalloutHandle {
 
@@ -12,14 +15,16 @@ public final class ModifiedCalloutHandle {
 	private final BooleanSetting enableTts;
 	private final StringSetting ttsSetting;
 	private final BooleanSetting enableText;
+	private final BooleanSetting sameText;
 	private final StringSetting textSetting;
 	private final LongSetting hangTimeSetting;
-	private final ModifiableCallout original;
-	private final BooleanSetting allTts;
-	private final BooleanSetting allText;
+	private final ModifiableCallout<?> original;
+	private final @Nullable BooleanSetting allTts;
+	private final @Nullable BooleanSetting allText;
+	private final ColorSetting textColorOverride;
 	private boolean isEnabledByParent = true;
 
-	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout original, BooleanSetting allTts, BooleanSetting allText) {
+	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
 		this.allTts = allTts;
 		this.allText = allText;
 		enable = new BooleanSetting(persistenceProvider, propStub + ".enabled", true);
@@ -27,9 +32,34 @@ public final class ModifiedCalloutHandle {
 		ttsSetting = new StringSetting(persistenceProvider, propStub + ".tts", original.getOriginalTts());
 		enableText = new BooleanSetting(persistenceProvider, propStub + ".text-enabled", true);
 		textSetting = new StringSetting(persistenceProvider, propStub + ".text", original.getOriginalVisualText());
-		// TODO 5000
+		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", false);
+		// Logic for defaulting the "same as TTS" setting:
+		// If sameText is already set (regardless of the value it is set to, do nothing)
+		if (!sameText.isSet()) {
+			// If the settings are identical, set it
+			// TODO: needs to be fixed
+			// If a callout is initially the same, and the user DOES NOT CUSTOMIZE, but the underlying call changes,
+			// the same setting will still be on in the current impl.
+			if (Objects.equals(ttsSetting.get(), textSetting.get())) {
+				sameText.set(true);
+			}
+			// Note that this will apply even if the tts/text have been customized. That is, if, down the line, you
+			// happen to set them to the same value.
+		}
 		hangTimeSetting = new LongSetting(persistenceProvider, propStub + ".text.hangtime", 5000L);
+		textColorOverride = new ColorSetting(persistenceProvider, propStub + ".text.color", null);
 		this.original = original;
+	}
+
+	@SuppressWarnings("UnusedReturnValue")
+	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub) {
+		return installHandle(original, pers, propStub, null, null);
+	}
+
+	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
+		ModifiedCalloutHandle modified = new ModifiedCalloutHandle(pers, propStub, original, allTts, allText);
+		original.attachHandle(modified);
+		return modified;
 	}
 
 	// TODO: enable/disable
@@ -53,8 +83,35 @@ public final class ModifiedCalloutHandle {
 		return enableText;
 	}
 
+	public BooleanSetting getSameText() {
+		return sameText;
+	}
+
 	public LongSetting getHangTimeSetting() {
 		return hangTimeSetting;
+	}
+
+	public @Nullable String getEffectiveTts() {
+		if (isTtsEffectivelyEnabled()) {
+			return ttsSetting.get();
+		}
+		else {
+			return null;
+		}
+	}
+
+	public @Nullable String getEffectiveText() {
+		if (isTextEffectivelyEnabled()) {
+			if (sameText.get()) {
+				return ttsSetting.get();
+			}
+			else {
+				return textSetting.get();
+			}
+		}
+		else {
+			return null;
+		}
 	}
 
 	public String getDescription() {
@@ -70,11 +127,11 @@ public final class ModifiedCalloutHandle {
 	}
 
 	public boolean isTtsEffectivelyEnabled() {
-		return isEffectivelyEnabled() && allTts.get() && getEnableTts().get();
+		return isEffectivelyEnabled() && (allTts == null || allTts.get()) && getEnableTts().get();
 	}
 
 	public boolean isTextEffectivelyEnabled() {
-		return isEffectivelyEnabled() && allText.get() && getEnableText().get();
+		return isEffectivelyEnabled() && (allText == null || allText.get()) && getEnableText().get();
 	}
 
 	public BooleanSetting getAllTextEnabled() {
@@ -83,5 +140,9 @@ public final class ModifiedCalloutHandle {
 
 	public BooleanSetting getAllTtsEnabled() {
 		return allTts;
+	}
+
+	public ColorSetting getTextColorOverride() {
+		return textColorOverride;
 	}
 }

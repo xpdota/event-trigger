@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
+import org.jetbrains.annotations.Nullable;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -11,11 +13,13 @@ public class ResourceBar extends JComponent {
 	private Color color1;
 	private Color color2;
 	private Color color3;
-	private Color borderColor;
+	private Color tickColor;
+	private @Nullable Color borderColor;
 	private Color textColor;
 	private double percent1;
 	private double percent2;
 	private String[] textOptions;
+	private @Nullable TickRenderInfo ticks;
 
 	public ResourceBar() {
 		setTextOptions("");
@@ -30,48 +34,28 @@ public class ResourceBar extends JComponent {
 		this.textOptions = textOptions;
 	}
 
-	public Color getColor1() {
-		return color1;
-	}
-
 	public void setColor1(Color color1) {
 		this.color1 = color1;
-	}
-
-	public Color getColor2() {
-		return color2;
 	}
 
 	public void setColor2(Color color2) {
 		this.color2 = color2;
 	}
 
-	public Color getColor3() {
-		return color3;
-	}
-
 	public void setColor3(Color color3) {
 		this.color3 = color3;
 	}
 
-	public Color getBorderColor() {
-		return borderColor;
+	public void setTickColor(Color tickColor) {
+		this.tickColor = tickColor;
 	}
 
-	public void setBorderColor(Color borderColor) {
+	public void setBorderColor(@Nullable Color borderColor) {
 		this.borderColor = borderColor;
-	}
-
-	public double getPercent1() {
-		return percent1;
 	}
 
 	public void setPercent1(double percent1) {
 		this.percent1 = percent1;
-	}
-
-	public double getPercent2() {
-		return percent2;
 	}
 
 	public void setPercent2(double percent2) {
@@ -107,14 +91,15 @@ public class ResourceBar extends JComponent {
 
 	@SuppressWarnings("SuspiciousNameCombination")
 	@Override
-	protected void paintComponent(Graphics g) {
-		AffineTransform old = ((Graphics2D) g).getTransform();
+	protected void paintComponent(Graphics graphics) {
+		Graphics2D g = ((Graphics2D) graphics);
+		AffineTransform old = g.getTransform();
 		AffineTransform t = new AffineTransform(old);
 		double xScale = t.getScaleX();
 		double yScale = t.getScaleY();
 //		t.scale(1 / xScale, 1 / yScale);
 		t.setTransform(1.0, 0, 0, 1.0, Math.round(t.getTranslateX()), Math.round(t.getTranslateY()));
-		((Graphics2D) g).setTransform(t);
+		g.setTransform(t);
 		int realWidth = (int) Math.floor(getWidth() * xScale);
 		int realHeight = (int) Math.floor(getHeight() * yScale);
 		int borderWidth = getBorderWidth();
@@ -145,14 +130,31 @@ public class ResourceBar extends JComponent {
 			g.drawRect(0, 0, realWidth - 1, realHeight - 1);
 		}
 
-		((Graphics2D) g).setTransform(old);
-	}
+		if (ticks != null) {
+			if (tickColor == null) {
+				g.setColor(label.getForeground());
+			}
+			else {
+				g.setColor(tickColor);
+			}
+			double current = ticks.offset();
+			while (current < 1.0d) {
+				int x = (int) (borderWidth + innerWidth * current);
+				int top = (int) ((4.0d * realHeight / 5.0d) - borderWidth);
+				int height = realHeight - top - 1;
+				g.fillRect(x, top, 3, height);
+				current += ticks.interval();
+			}
+		}
 
-	public Color getTextColor() {
-		return textColor;
+		g.setTransform(old);
 	}
 
 	public void setTextColor(Color textColor) {
 		this.textColor = textColor;
+	}
+
+	public void setTicks(@Nullable TickRenderInfo ticks) {
+		this.ticks = ticks;
 	}
 }

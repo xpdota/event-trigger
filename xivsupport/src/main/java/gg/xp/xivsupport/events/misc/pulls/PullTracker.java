@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.misc.pulls;
 
 import gg.xp.reevent.context.SubState;
-import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeOutEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.misc.ProxyForAppendOnlyList;
+import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CombatantType;
 
@@ -38,7 +39,7 @@ public class PullTracker implements SubState {
 		doPullStart(context, event);
 	}
 
-	private void doPullStart(EventContext context, Event event) {
+	private void doPullStart(EventContext context, BaseEvent event) {
 		if (currentPull != null) {
 			currentPull.setEnd(event);
 		}
@@ -46,6 +47,14 @@ public class PullTracker implements SubState {
 		pulls.add(myPull);
 		currentPull = myPull;
 		context.accept(new PullStartedEvent());
+	}
+
+	private void doPullEnd(EventContext context, BaseEvent event) {
+		if (currentPull != null) {
+			currentPull.setEnd(event);
+			currentPull = null;
+			context.accept(new PullEndedEvent());
+		}
 	}
 
 	@HandleEvents
@@ -59,12 +68,26 @@ public class PullTracker implements SubState {
 		}
 	}
 
-	// TODO: start of combat - currently would depend on cactbot event source, which we don't want to depend on
 	@HandleEvents
-	public void startCombat(EventContext context, AbilityUsedEvent abilityUsed) {
+	public void startCombatByAbility(EventContext context, AbilityUsedEvent abilityUsed) {
 		if (currentPull != null && currentPull.getStatus() == PullStatus.PRE_PULL) {
 			if (abilityUsed.getSource().isPc() && abilityUsed.getTarget().getType() == CombatantType.NPC) {
 				currentPull.setCombatStart(abilityUsed);
+			}
+		}
+	}
+
+	@HandleEvents
+	public void inCombatChangeEvent(EventContext context, InCombatChangeEvent event) {
+		if (event.isInCombat()) {
+			if (currentPull != null && currentPull.getStatus() == PullStatus.PRE_PULL) {
+				currentPull.setCombatStart(event);
+			}
+		}
+		else {
+			if (currentPull != null && currentPull.getStatus() == PullStatus.COMBAT) {
+				// TODO: this doesn't work too well because sometimes it arrives before the victory event
+//				doPullEnd(context, event);
 			}
 		}
 	}
@@ -78,26 +101,17 @@ public class PullTracker implements SubState {
 
 	@HandleEvents
 	public void wipe(EventContext context, FadeOutEvent wipe) {
-		if (currentPull != null) {
-			currentPull.setEnd(wipe);
-			currentPull = null;
-		}
+		doPullEnd(context, wipe);
 	}
 
 	@HandleEvents
 	public void leaveZone(EventContext context, ZoneChangeEvent zoneChange) {
-		if (currentPull != null) {
-			currentPull.setEnd(zoneChange);
-			currentPull = null;
-		}
+		doPullEnd(context, zoneChange);
 	}
 
 	@HandleEvents
 	public void victory(EventContext context, VictoryEvent victory) {
-		if (currentPull != null) {
-			currentPull.setEnd(victory);
-			currentPull = null;
-		}
+		doPullEnd(context, victory);
 	}
 
 	public List<Pull> getPulls() {
@@ -115,5 +129,9 @@ public class PullTracker implements SubState {
 		else {
 			return currentPull.getStatus();
 		}
+	}
+
+	public Pull getCurrentPull() {
+		return currentPull;
 	}
 }

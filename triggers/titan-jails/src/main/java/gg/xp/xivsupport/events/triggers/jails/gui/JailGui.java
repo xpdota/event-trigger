@@ -1,0 +1,141 @@
+package gg.xp.xivsupport.events.triggers.jails.gui;
+
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivdata.data.Job;
+import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.xivsupport.events.triggers.jails.JailSolver;
+import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.components.RearrangeableList;
+import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.tables.CustomColumn;
+import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
+import gg.xp.xivsupport.models.XivEntity;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.JobSortGui;
+import gg.xp.xivsupport.persistence.settings.JobSortSetting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@ScanMe
+public class JailGui implements PluginTab {
+	private static final Logger log = LoggerFactory.getLogger(JailGui.class);
+
+	private final JailSolver jails;
+	private final JobSortSetting sorter;
+	private JobSortGui jobSortGui;
+
+	public JailGui(JailSolver jails) {
+
+		this.jails = jails;
+		this.sorter = jails.getSort();
+	}
+
+	@Override
+	public String getTabName() {
+		return "Titan Gaols";
+	}
+
+	@Override
+	public Component getTabContents() {
+
+		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Jails");
+
+		panel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.weightx = 1;
+		c.weighty = 0;
+		c.fill = GridBagConstraints.BOTH;
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = GridBagConstraints.REMAINDER;
+
+		jobSortGui = new JobSortGui(sorter);
+
+		JPanel toggles = new JPanel();
+		toggles.setAlignmentX(0);
+		toggles.setLayout(new WrapLayout(FlowLayout.LEFT));
+		toggles.add(new BooleanSettingGui(jails.getEnableTts(), "Enable Personal Callout").getComponent());
+		toggles.add(new BooleanSettingGui(jails.getEnableAutomark(), "Enable Automarks").getComponent());
+		toggles.add(jobSortGui.getResetButton());
+		JButton helpButton = new JButton("Help");
+		helpButton.addActionListener(l -> {
+			JOptionPane.showMessageDialog(SwingUtilities.getRoot(helpButton), helpText);
+		});
+		toggles.add(helpButton);
+		toggles.add(new BooleanSettingGui(jails.getOverrideZoneLock(), "Override Zone Lock (for testing)").getComponent());
+
+
+		panel.add(toggles, c);
+
+		c.gridy++;
+		JTextArea instructions = new JTextArea();
+		instructions.setText("Instructions: Drag Jobs/Classes on the left to the desired order.\nThe list on the right reflects the current party with your custom order applied.");
+		instructions.setEditable(false);
+		instructions.setBorder(null);
+		instructions.setOpaque(false);
+		instructions.setWrapStyleWord(true);
+		instructions.setLineWrap(true);
+		instructions.setFocusable(false);
+		panel.add(instructions, c);
+
+		c.gridwidth = 1;
+		c.weighty = 1;
+		c.gridy++;
+		c.weightx = 0;
+		panel.add(jobSortGui.getJobListPane(), c);
+
+
+		c.gridx++;
+		c.weightx = 1;
+		panel.add(jobSortGui.getPartyPane(), c);
+
+		return panel;
+	}
+
+	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
+	// determine exactly what should trigger it. Maybe better to just stick it on a timer that only applies when the
+	// tab is visible?
+	@HandleEvents(order = 20_000)
+	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
+		jobSortGui.externalRefresh();
+	}
+
+
+	private static final String helpText = """
+			Instructions:
+
+			1. Check boxes for whether you would like personal callouts and/or automarks.
+			2. If you will be using automarks, be sure to configure automark hotkeys on the Automarks tab.
+			3. Drag jobs in the list to configure your priority. The party list on the right shows what the effective priority will be.
+			4. If using personal callouts, make sure everyone has the same priority (using the defaults makes this easy).
+			5. Also be sure to check Advanced > Party to make sure the party sort is correct (it should match the in-game party list, not your Gaol priority).
+			6. If using Automarks, also check the Help button on the Automarks if you need help setting up the macros.
+
+			To test automarks, you must in inside the UWU instance, or check the 'Override Zone Lock' option. Then, use the command 'amtest' like so:
+
+			/e c:amtest 4 2 7
+
+			where the numbers are which party slots you would like to put markers on. Make sure this works. Note that they will be marked in the order you put in the command, not the priority order.
+
+			To test jails in general, use the command:
+
+			/e c:jailtest 4 2 7
+
+			where the numbers are which party slots you would like to simulate being jailed. Note that they will be marked in the chosen priority order, not the order they are written in the command. This will follow your settings for whether you want automarks and/or personal callouts (you should make sure '1' is chosen as one of the player IDs if you want to hear a personal callout).
+
+			Finally, be sure to use '/e c:jailreset' to simulate a wipe.
+
+			If you are not in-instance, you can check the 'Override Zone Lock' checkbox, and then do /e c:jailtest 1 1 1 to simulate getting all three jails on yourself.""";
+}

@@ -8,6 +8,7 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
+import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +33,15 @@ public class XivOverlay {
 	private final TitledBorder editBorder;
 	private static final Border transparentBorderLine = new LineBorder(new Color(0, 0, 0, 0), 5);
 	private static final TitledBorder transparentBorder = new TitledBorder(transparentBorderLine, "Foo");
+	public static final String bufferNumSettingKey = "xiv-overlay.buffer-strategy";
 
 	static {
 		transparentBorder.setTitleColor(new Color(0, 0, 0, 0));
 	}
+
+	private final OverlayConfig oc;
+	private long minFrameTime;
+	private long maxFrameTime;
 
 	private int dragX;
 	private int dragY;
@@ -58,15 +64,18 @@ public class XivOverlay {
 	private static final AtomicLong nextDefaultPos = new AtomicLong(200);
 
 
-	public XivOverlay(String title, String settingKeyBase, PersistenceProvider persistence) {
+	public XivOverlay(String title, String settingKeyBase, OverlayConfig oc, PersistenceProvider persistence) {
 		editBorder = new TitledBorder(editBorderPink, title);
+		this.oc = oc;
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), nextDefaultPos.get());
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
 		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
 		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
+		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
 		enabled.addListener(this::recalc);
-		frame = ScalableJFrame.construct(title, scaleFactor.get());
+		frame = ScalableJFrame.construct(title, scaleFactor.get(), numBuffers);
+		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
 		this.title = title;
@@ -89,7 +98,10 @@ public class XivOverlay {
 		contentPane.add(panel);
 		contentPane.setOpaque(false);
 		frame.setAlwaysOnTop(true);
-		frame.setLocation((int) xSetting.get(), (int) ySetting.get());
+		resetPositionFromSettings();
+		xSetting.addListener(this::resetPositionFromSettings);
+		ySetting.addListener(this::resetPositionFromSettings);
+		scaleFactor.addListener(this::redoScale);
 		frame.setOpacity((float) opacity.get());
 		frame.addMouseListener(new MouseAdapter() {
 			@Override
@@ -133,6 +145,16 @@ public class XivOverlay {
 				dragY = newY;
 			}
 		});
+		calcFrameTimes();
+		oc.getMaxFps().addListener(this::calcFrameTimes);
+		oc.getMinFps().addListener(this::calcFrameTimes);
+	}
+
+	public void resetPositionFromSettings() {
+		if (posSettingDirty) {
+			return;
+		}
+		frame.setLocation((int) xSetting.get(), (int) ySetting.get());
 	}
 
 	public void finishInit() {
@@ -160,10 +182,10 @@ public class XivOverlay {
 	}
 
 	public void setPosition(int x, int y) {
+		posSettingDirty = true;
 		this.x = x;
 		this.y = y;
 		frame.setLocation(x, y);
-		posSettingDirty = true;
 	}
 
 	private void flushPosition() {
@@ -184,8 +206,17 @@ public class XivOverlay {
 	}
 
 	public void setVisible(boolean visible) {
+		// TODO: a bit of a hack, but fixes the bug where if you start the program with overlays disabled, you will
+		// have to restart after enabling them.
+		if (visible && frame.getWidth() < 30) {
+			repackSize();
+		}
 		this.visible = visible;
 		recalc();
+	}
+
+	protected boolean isVisible() {
+		return visible;
 	}
 
 	protected void repackSize() {
@@ -198,7 +229,7 @@ public class XivOverlay {
 			panel.setBorder(transparentBorder);
 		}
 		boolean visible = this.visible && enabled.get();
-		if (visible) {
+		if (visible && !frame.isVisible()) {
 			frame.setVisible(true);
 		}
 		panel.setVisible(visible);
@@ -222,12 +253,15 @@ public class XivOverlay {
 		boolean wasVisible = frame.isVisible();
 		frame.setVisible(false);
 		this.scaleFactor.set(scale);
-		redoScale();
 		frame.setVisible(wasVisible);
 	}
 
 	public double getScale() {
 		return scaleFactor.get();
+	}
+
+	public DoubleSetting getScaleSetting() {
+		return scaleFactor;
 	}
 
 	// https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
@@ -262,4 +296,18 @@ public class XivOverlay {
 		hwnd.setPointer(Native.getComponentPointer(w));
 		return hwnd;
 	}
+
+	private void calcFrameTimes() {
+		minFrameTime = 1000 / oc.getMaxFps().get();
+		maxFrameTime = 1000 / oc.getMinFps().get();
+	}
+
+	protected long calculateScaledFrameTime(long basis) {
+		return Math.min(Math.max((long) (basis / getScale()), maxFrameTime), minFrameTime);
+	}
+
+	protected long calculateUnscaledFrameTime(long basis) {
+		return Math.min(Math.max(basis, maxFrameTime), minFrameTime);
+	}
+
 }

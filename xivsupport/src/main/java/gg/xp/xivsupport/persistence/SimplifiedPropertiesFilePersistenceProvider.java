@@ -11,11 +11,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class SimplifiedPropertiesFilePersistenceProvider extends BaseStringPersistenceProvider {
 
@@ -57,7 +53,7 @@ public class SimplifiedPropertiesFilePersistenceProvider extends BaseStringPersi
 
 	@Override
 	protected void setValue(@NotNull String key, @Nullable String value) {
-		String truncated = StringUtils.abbreviate(value, 50);
+		String truncated = StringUtils.abbreviate(value, 200);
 		log.info("Setting changed: {} -> {}", key, truncated);
 		properties.setProperty(key, value);
 		writeChangesToDisk();

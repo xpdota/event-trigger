@@ -41,8 +41,8 @@ public class AbilityEffectListRenderer implements TableCellRenderer {
 				}
 				List<Component> components = renderer.getTableCellRendererComponents(table, obj, isSelected, false, row, column);
 				allComponents.addAll(components);
-				if (obj instanceof AbilityEffect) {
-					tooltipBuilder.append(((AbilityEffect) obj).getDescription());
+				if (obj instanceof AbilityEffect ae) {
+					tooltipBuilder.append(ae.getDescription());
 					tooltipBuilder.append('\n');
 				}
 				if (i < (count - 1)) {

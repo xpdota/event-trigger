@@ -29,10 +29,10 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	private Insets popupInsets = new Insets(0, 0, 0, 0);
 
 	//  Track original order in which the components where added
-	private final List<Component> components = new ArrayList<Component>();
+	private final List<Component> components = new ArrayList<>();
 
 	//  Track a constraint added to a component
-	private final HashMap<Component, Boolean> constraints = new HashMap<Component, Boolean>();
+	private final HashMap<Component, Boolean> constraints = new HashMap<>();
 
 	/**
 	 * Convenience constructor to provide for "stacking" of components. Each
@@ -57,7 +57,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	 * Create an overlapping layout.
 	 *
 	 * @param overlapPosition a Point defining the relative amount of overlap
-	 * @param overlayAbove    when true components are painted above the previous
+	 * @param overlapAbove    when true components are painted above the previous
 	 *                        component, otherwise they are painted below.
 	 */
 	public OverlapLayout(Point overlapPosition, boolean overlapAbove) {
@@ -87,7 +87,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Get the include invisible property
 	 *
-	 * @returns the include invisible property
+	 * @return the include invisible property
 	 */
 	public boolean isIncludeInvisible() {
 		return includeInvisible;
@@ -107,7 +107,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Get the overlapping position of each component
 	 *
-	 * @returns the Point representing the overlapped position
+	 * @return the Point representing the overlapped position
 	 */
 	public Point getOverlapPosition() {
 		return overlapPosition;
@@ -125,7 +125,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Get the popup insets
 	 *
-	 * @returns the popup insets
+	 * @return the popup insets
 	 */
 	public Insets getPopupInsets() {
 		return popupInsets;
@@ -175,8 +175,8 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 		if (constraint == null) {
 			constraints.remove(component);
 		}
-		else if (constraint instanceof Boolean) {
-			constraints.put(component, (Boolean) constraint);
+		else if (constraint instanceof Boolean bool) {
+			constraints.put(component, bool);
 		}
 		else {
 			String message = "Constraint parameter must be of type Boolean";
@@ -215,7 +215,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Removes the specified component from the layout.
 	 *
-	 * @param comp the component to be removed
+	 * @param component the component to be removed
 	 */
 	@Override
 	public void removeLayoutComponent(Component component) {
@@ -226,7 +226,7 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Determine the minimum size on the Container
 	 *
-	 * @param     target   the container in which to do the layout
+	 * @param parent the container in which to do the layout
 	 * @return the minimum dimensions needed to lay out the
 	 * subcomponents of the specified container
 	 */
@@ -240,9 +240,9 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	/**
 	 * Determine the preferred size on the Container
 	 *
+	 * @param parent the container in which to do the layout
 	 * @return the preferred dimensions to lay out the
 	 * subcomponents of the specified container
-	 * @param     parent   the container in which to do the layout
 	 */
 	@Override
 	public Dimension preferredLayoutSize(Container parent) {
@@ -298,21 +298,18 @@ public class OverlapLayout implements LayoutManager2, Serializable {
 	}
 
 	private Dimension getDimension(Component component, int type) {
-		switch (type) {
-			case PREFERRED:
-				return component.getPreferredSize();
-			case MINIMUM:
-				return component.getMinimumSize();
-			default:
-				return new Dimension(0, 0);
-		}
+		return switch (type) {
+			case PREFERRED -> component.getPreferredSize();
+			case MINIMUM -> component.getMinimumSize();
+			default -> new Dimension(0, 0);
+		};
 	}
 
 	/**
 	 * Lays out the specified container using this layout.
 	 * <p>
 	 *
-	 * @param     target   the container in which to do the layout
+	 * @param parent the container in which to do the layout
 	 */
 	@Override
 	public void layoutContainer(Container parent) {

@@ -3,16 +3,15 @@ package gg.xp.xivsupport.gui.tables;
 import gg.xp.xivsupport.gui.GuiGlobals;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.tables.filters.SplitVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.VisualFilter;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,15 +25,18 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
+public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 	private static final Logger log = LoggerFactory.getLogger(TableWithFilterAndDetails.class);
-	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
+	private final ExecutorService refresherPool = Executors.newSingleThreadExecutor();
+//	private final ExecutorService filteringPool = Executors.newSingleThreadExecutor();
 
 	private final Supplier<List<X>> dataGetter;
 	private final List<VisualFilter<? super X>> filters;
 	private final CustomTableModel<X> mainModel;
-	private final JCheckBox stayAtBottom;
+	private final @Nullable JCheckBox stayAtBottom;
+	private final JTable table;
+	private final @Nullable AutoBottomScrollHelper scroller;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
 	private List<X> dataFiltered = Collections.emptyList();
@@ -50,16 +52,19 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			Function<? super X, List<D>> detailsConverter,
 			List<Function<Runnable, VisualFilter<? super X>>> filterCreators,
 			List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets,
-			List<CustomRightClickOption> rightClickOptions,
+			RightClickOptionRepo rightClickOptions,
 			BiPredicate<? super X, ? super X> selectionEquivalence,
 			BiPredicate<? super D, ? super D> detailsSelectionEquivalence,
-			boolean appendOrPruneOnly) {
+			boolean appendOrPruneOnly,
+			boolean fixedData) {
 		super(title);
 		this.title = title;
 		// TODO: add count of events
 		this.dataGetter = dataGetter;
 		this.appendOrPruneOnly = appendOrPruneOnly;
-		setLayout(new BorderLayout());
+		// TODO: the layout is being weird when I resize. Even with GBL it takes a second to change.
+		GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0);
+		setLayout(new GridBagLayout());
 
 		CustomTableModel.CustomTableModelBuilder<D> detailsBuilder = CustomTableModel.builder(() -> detailsConverter.apply(this.currentSelection));
 		detailsColumns.forEach(detailsBuilder::addColumn);
@@ -75,13 +80,8 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 
 
 		// Main table
-		JTable table = new JTable(mainModel);
+		table = new JTable(mainModel);
 		mainModel.configureColumns(table);
-//		for (int i = 0; i < mainColumns.size(); i++) {
-//			TableColumn column = table.getColumnModel().getColumn(i);
-//			CustomColumn<X> customColumn = mainColumns.get(i);
-//			customColumn.configureColumn(column);
-//		}
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ListSelectionModel selectionModel = table.getSelectionModel();
 		selectionModel.addListSelectionListener(e -> {
@@ -97,95 +97,95 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			SwingUtilities.invokeLater(detailsModel::fullRefresh);
 //			detailsModel.fireTableDataChanged();
 		});
-		JButton refreshButton = new JButton("Refresh");
-		refreshButton.addActionListener(e -> {
-			updateAll();
-		});
-		JCheckBox autoRefresh = new JCheckBox("Auto Refresh");
-		autoRefresh.addItemListener(e -> {
-			isAutoRefreshEnabled = autoRefresh.isSelected();
-		});
-		autoRefresh.setSelected(true);
-
-		stayAtBottom = new JCheckBox("Scroll to Bottom");
-		AutoBottomScrollHelper scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
-		stayAtBottom.addItemListener(e -> scroller.setAutoScrollEnabled(stayAtBottom.isSelected()));
-		stayAtBottom.setSelected(true);
 
 		// Top panel
-		JPanel topPanel = new JPanel();
-		topPanel.add(refreshButton);
-		topPanel.add(autoRefresh);
-		topPanel.add(stayAtBottom);
-		topPanel.setLayout(new WrapLayout(FlowLayout.LEFT));
+		JPanel topBasicPanel = new JPanel();
+		List<Component> extraPanels = new ArrayList<>();
+		topBasicPanel.setLayout(new WrapLayout(WrapLayout.LEFT, 7, 7));
+
+		{
+			JButton refreshButton = new JButton(fixedData ? "Load" : "Refresh");
+			refreshButton.addActionListener(e -> updateAll());
+			topBasicPanel.add(refreshButton);
+		}
+
+		JScrollPane scroller;
+		if (!fixedData) {
+			JCheckBox autoRefresh = new JCheckBox("Auto Refresh");
+			autoRefresh.addItemListener(e -> isAutoRefreshEnabled = autoRefresh.isSelected());
+			autoRefresh.setSelected(true);
+
+			stayAtBottom = new JCheckBox("Scroll to Bottom");
+			this.scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
+			scroller = this.scroller;
+			stayAtBottom.addItemListener(e -> ((AutoBottomScrollHelper) scroller).setAutoScrollEnabled(stayAtBottom.isSelected()));
+			stayAtBottom.setSelected(true);
+			topBasicPanel.add(autoRefresh);
+			topBasicPanel.add(stayAtBottom);
+		}
+		else {
+			scroller = new JScrollPane(table);
+			this.scroller = null;
+			stayAtBottom = null;
+			isAutoRefreshEnabled = true;
+		}
 		filters = filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
-		filters.forEach(filter -> topPanel.add(filter.getComponent()));
-		widgets.stream().map(w -> w.apply(this)).forEach(topPanel::add);
-		add(topPanel, BorderLayout.PAGE_START);
+		filters.forEach(filter -> {
+			if (filter instanceof SplitVisualFilter<?> splitFilter) {
+				JPanel component = splitFilter.getComponent();
+				component.setBorder(new EmptyBorder(0, 7, 7, 7));
+				extraPanels.add(component);
+				component.setVisible(false);
+				JButton button = new JButton("Show/Hide " + splitFilter.getName());
+				topBasicPanel.add(button);
+				button.addActionListener(l -> component.setVisible(!component.isVisible()));
+			}
+			else {
+				topBasicPanel.add(filter.getComponent());
+			}
 
+		});
+		widgets.stream().map(w -> w.apply(this)).forEach(topBasicPanel::add);
+
+//		JPanel topPanel = new JPanel();
+//		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.PAGE_AXIS));
+//
+//		topPanel.add(topBasicPanel);
+//		extraPanels.forEach(topPanel::add);
+//
+//		add(topPanel, BorderLayout.PAGE_START);
+		add(topBasicPanel, c);
+		c.gridy++;
+		extraPanels.forEach(panel -> {
+			add(panel, c);
+			c.gridy++;
+		});
+		c.weighty = 1;
 
 		JTable detailsTable = new JTable(detailsModel);
 		JScrollPane detailsScroller = new JScrollPane(detailsTable);
 		detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
 
-		if (!rightClickOptions.isEmpty()) {
-			JPopupMenu popupMenu = new JPopupMenu();
-			popupMenu.addPopupMenuListener(new PopupMenuListener() {
-				@Override
-				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-					popupMenu.removeAll();
-					for (CustomRightClickOption rightClickOption : rightClickOptions) {
-						if (rightClickOption.shouldAppear(mainModel)) {
+		rightClickOptions.configureTable(table, mainModel);
 
-							JMenuItem menuItem = new JMenuItem(rightClickOption.getLabel());
-							menuItem.addActionListener(l -> {
-								rightClickOption.doAction(mainModel);
-							});
-							popupMenu.add(menuItem);
-						}
-					}
-					popupMenu.revalidate();
-
-				}
-
-				@Override
-				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-
-				}
-
-				@Override
-				public void popupMenuCanceled(PopupMenuEvent e) {
-
-				}
-			});
-			table.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mousePressed(MouseEvent e) {
-					if (e.getButton() == MouseEvent.BUTTON3) {
-						JTable source = (JTable) e.getSource();
-						int row = source.rowAtPoint(e.getPoint());
-						int column = source.columnAtPoint(e.getPoint());
-
-						if (!source.isRowSelected(row)) {
-							source.changeSelection(row, column, false, false);
-						}
-					}
-				}
-			});
-			table.setComponentPopupMenu(popupMenu);
+		// If no details, don't bother with a splitpane
+		// TODO: also cut out some of the selection logic
+		if (detailsColumns.isEmpty()) {
+			add(scroller, c);
 		}
-
-		// Split pane
-		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
-		add(splitPane);
-		SwingUtilities.invokeLater(() -> {
-			splitPane.setDividerLocation(0.7);
-			splitPane.setResizeWeight(1);
-			splitPane.setOneTouchExpandable(true);
-			updateAll();
-		});
+		else {
+			// Split pane
+			JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
+			add(splitPane, c);
+			SwingUtilities.invokeLater(() -> {
+				splitPane.setDividerLocation(0.7);
+				splitPane.setResizeWeight(1);
+				splitPane.setOneTouchExpandable(true);
+				updateAll();
+			});
+		}
 	}
 
 	private List<X> doFiltering(List<X> thingsToFilter) {
@@ -219,6 +219,14 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		dataFiltered = out;
 	}
 
+	public CustomTableModel<X> getMainModel() {
+		return mainModel;
+	}
+
+	public JTable getMainTable() {
+		return table;
+	}
+
 	private enum RefreshType {
 		NONE,
 		APPEND,
@@ -236,7 +244,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			int sizeAfter = dataAfter.size();
 			if (sizeAfter == 0 || sizeBefore == 0) {
 				dataFiltered = doFiltering(dataAfter);
-				// A full refresh technically isn't always needed here, but it doesn't really and simplifies the code
+				// A full refresh technically isn't always needed here, but it doesn't really hurt and simplifies the code
 				refreshNeeded = RefreshType.FULL;
 				return;
 			}
@@ -252,6 +260,10 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 					refreshNeeded = RefreshType.APPEND;
 				}
 			}
+			else {
+				dataFiltered = doFiltering(dataAfter);
+				refreshNeeded = RefreshType.FULL;
+			}
 		}
 		else {
 			dataRaw = dataGetter.get();
@@ -264,7 +276,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 	private void updateModel() {
 		switch (refreshNeeded) {
 			case NONE:
-				break;
+				return;
 			case APPEND:
 				mainModel.appendOnlyRefresh();
 				break;
@@ -282,7 +294,7 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			// This setup allows for there to be exactly one refresh in progress, and one pending after that
 			boolean skipRefresh = pendingRefresh.compareAndExchange(false, true);
 			if (!skipRefresh) {
-				exs.submit(() -> {
+				refresherPool.submit(() -> {
 					SwingUtilities.invokeLater(this::updateAll);
 					try {
 						// Cap updates to 1000/x fps, while not delaying updates
@@ -299,14 +311,28 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 	}
 
 	private void updateFiltering() {
-		filterFully();
-		updateModel();
+		refresherPool.submit(() -> {
+			Integer offset = mainModel.getSelectedItemViewportOffsetIfVisible();
+			filterFully();
+			updateModel();
+			// Only scroll back to selected item if auto scroll is disabled
+			if (scroller != null && !scroller.isAutoScrollEnabled() && offset != null) {
+				mainModel.setVisibleItemScrollOffset(offset);
+				log.info("Offset: {}", offset);
+			}
+		});
 	}
 
 	private void updateAll() {
-		pendingRefresh.set(false);
-		updateAndFilterData();
-		updateModel();
+		refresherPool.submit(() -> {
+			pendingRefresh.set(false);
+			updateAndFilterData();
+			updateModel();
+		});
+	}
+
+	public @Nullable X getCurrentSelection() {
+		return currentSelection;
 	}
 
 	public static final class TableWithFilterAndDetailsBuilder<X, D> {
@@ -317,10 +343,11 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		private final Function<X, List<D>> detailsConverter;
 		private final List<Function<Runnable, VisualFilter<? super X>>> filters = new ArrayList<>();
 		private final List<Function<TableWithFilterAndDetails<X, ?>, Component>> widgets = new ArrayList<>();
-		private final List<CustomRightClickOption> rightClickOptions = new ArrayList<>();
 		private BiPredicate<? super X, ? super X> selectionEquivalence = Objects::equals;
 		private BiPredicate<? super D, ? super D> detailsSelectionEquivalence = Objects::equals;
 		private boolean appendOrPruneOnly;
+		private boolean fixedData;
+		private RightClickOptionRepo rightClickOptionRepo = RightClickOptionRepo.EMPTY;
 
 
 		private TableWithFilterAndDetailsBuilder(String title, Supplier<List<X>> dataGetter, Function<X, List<D>> detailsConverter) {
@@ -339,8 +366,8 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 			return this;
 		}
 
-		public TableWithFilterAndDetailsBuilder<X, D> addRightClickOption(CustomRightClickOption rightClickOption) {
-			this.rightClickOptions.add(rightClickOption);
+		public TableWithFilterAndDetailsBuilder<X, D> withRightClickRepo(RightClickOptionRepo rightClickOptionRepo) {
+			this.rightClickOptionRepo = rightClickOptionRepo;
 			return this;
 		}
 
@@ -374,8 +401,18 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 		}
 
 		public TableWithFilterAndDetails<X, D> build() {
-			return new TableWithFilterAndDetails<X, D>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, rightClickOptions, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly);
+			return new TableWithFilterAndDetails<>(title, dataGetter, mainColumns, detailsColumns, detailsConverter, filters, widgets, rightClickOptionRepo, selectionEquivalence, detailsSelectionEquivalence, appendOrPruneOnly, fixedData);
 		}
+
+		public TableWithFilterAndDetailsBuilder<X, D> setFixedData(boolean fixedData) {
+			setAppendOrPruneOnly(true);
+			this.fixedData = fixedData;
+			return this;
+		}
+	}
+
+	public static <X, D> TableWithFilterAndDetailsBuilder<X, D> builder(String title, Supplier<List<X>> dataGetter) {
+		return new TableWithFilterAndDetailsBuilder<>(title, dataGetter, (i) -> Collections.emptyList());
 	}
 
 	public static <X, D> TableWithFilterAndDetailsBuilder<X, D> builder(String title, Supplier<List<X>> dataGetter, Function<X, List<D>> detailsConverter) {
@@ -383,6 +420,8 @@ public class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePanel {
 	}
 
 	public void setBottomScroll(boolean value) {
-		stayAtBottom.setSelected(value);
+		if (stayAtBottom != null) {
+			stayAtBottom.setSelected(value);
+		}
 	}
 }

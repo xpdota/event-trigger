@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -182,6 +183,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 //		}
 //	}
 	private final AtomicBoolean pendingRefresh = new AtomicBoolean();
+
 	public void signalNewData() {
 		// This setup allows for there to be exactly one refresh in progress, and one pending after that
 		boolean skipRefresh = pendingRefresh.compareAndExchange(false, true);
@@ -212,6 +214,14 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		SwingUtilities.invokeLater(this::processNewDataFull);
 	}
 
+	public void fullRefreshSync() {
+		updateDataOnly();
+		processNewDataFull();
+	}
+
+	public List<X> getData() {
+		return Collections.unmodifiableList(data);
+	}
 
 	// Experimenting, don't use
 	public void overlayHackRefresh() {
@@ -251,6 +261,55 @@ public class CustomTableModel<X> extends AbstractTableModel {
 				}
 			}
 		}
+	}
+
+	public @Nullable Integer getSelectedItemViewportOffsetIfVisible() {
+		JTable table = getTable();
+		// Determine if row is visible
+		int row = table.getSelectedRow();
+		if (row >= 0) {
+			Rectangle cellRect = table.getCellRect(row, 0, true);
+			Rectangle tableRect = table.getVisibleRect();
+			if (tableRect.contains(cellRect)) {
+				return cellRect.y - tableRect.y;
+			}
+			else {
+				return null;
+			}
+		}
+		return null;
+	}
+
+	public void setVisibleItemScrollOffset(int offset) {
+		SwingUtilities.invokeLater(() -> {
+			JTable table = getTable();
+			// Determine if row is visible
+			int row = table.getSelectedRow();
+			if (row >= 0) {
+				Rectangle cellRect = table.getCellRect(row, 0, true);
+				Rectangle tableRect = table.getVisibleRect();
+				int newY = cellRect.y - offset;
+				Rectangle lastCell = table.getCellRect(table.getRowCount() - 1, 0, true);
+				int maxLowerBound = lastCell.y + lastCell.height;
+				Rectangle rectangle = new Rectangle(cellRect.x, newY, cellRect.width, tableRect.height);
+				int overHeight = rectangle.y + rectangle.height - maxLowerBound;
+				// For some reason, we have to scroll to 0 first
+				table.scrollRectToVisible(new Rectangle(0, 0, 0, 0));
+				if (overHeight > 0) {
+					table.scrollRectToVisible(cellRect);
+				}
+				else {
+					table.scrollRectToVisible(rectangle);
+				}
+				log.info("Done scrolling, offset {}", offset);
+//				if (overHeight > 0) {
+//					rectangle.y -= overHeight;
+//				}
+//				table.scrollRectToVisible(rectangle);
+			}
+		});
+		log.info("Done scrolling, offset {}", offset);
+
 	}
 
 	@Override
@@ -308,6 +367,44 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		return null;
 	}
 
+	public List<X> getSelectedValues() {
+		JTable table = getTable();
+		if (table != null) {
+			return Arrays.stream(table.getSelectedRows())
+					.mapToObj(data::get)
+					.toList();
+		}
+		return Collections.emptyList();
+	}
+
+	public void setSelectedValue(@Nullable X value) {
+		JTable table = getTable();
+		if (value == null) {
+			table.clearSelection();
+		}
+		else {
+			int index = data.indexOf(value);
+			if (index >= 0) {
+				table.setRowSelectionInterval(index, index);
+			}
+			else {
+				table.clearSelection();
+			}
+
+		}
+	}
+
+	public void scrollToSelectedValue() {
+		SwingUtilities.invokeLater(() -> {
+			JTable table = getTable();
+			int row = table.getSelectedRow();
+			if (row >= 0) {
+				table.scrollRectToVisible(table.getCellRect(row, 0, true));
+			}
+		});
+
+	}
+
 	@Override
 	public @Nullable Object getValueAt(int rowIndex, int columnIndex) {
 		X item;
@@ -323,8 +420,8 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			Object value = columns.get(columnIndex).getValue(item);
 			long timeAfter = System.nanoTime();
 			long delta = timeAfter - timeBefore;
-			// TODO find good value for this - 100 might be a little low
-			if (delta > 500_000) {
+			// TODO make this value customizable
+			if (delta > 1_000_000) {
 				log.warn("Slow getValueAt performance: took {}ns to get value at row {} col {}", delta, rowIndex, columnIndex);
 			}
 			return value;
@@ -333,5 +430,11 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			log.error("ERROR getting value for row {} col {} value {}", rowIndex, columnIndex, item, e);
 			return "INTERNAL ERROR";
 		}
+	}
+
+	public JTable makeTable() {
+		JTable table = new JTable(this);
+		configureColumns(table);
+		return table;
 	}
 }

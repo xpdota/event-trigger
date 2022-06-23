@@ -2,9 +2,14 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
+import gg.xp.xivsupport.events.state.PrimaryPlayerOnlineStatusChangedEvent;
 
 import java.io.Serial;
 
+/**
+ * Represents an online status changing. Note that you should prefer {@link PrimaryPlayerOnlineStatusChangedEvent} for
+ * events concerning the local player.
+ */
 @SystemEvent
 public class RawOnlineStatusChanged extends BaseEvent {
 	@Serial
@@ -16,7 +21,7 @@ public class RawOnlineStatusChanged extends BaseEvent {
 	public RawOnlineStatusChanged(long targetId, int rawStatusId, String statusName) {
 		this.targetId = targetId;
 		this.rawStatusId = rawStatusId;
-		this.statusName = statusName;
+		this.statusName = statusName.intern();
 	}
 
 	public long getTargetId() {

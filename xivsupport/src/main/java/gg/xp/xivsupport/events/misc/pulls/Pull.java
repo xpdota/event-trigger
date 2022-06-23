@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.misc.pulls;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
@@ -20,15 +21,15 @@ import java.util.Map;
 public class Pull {
 
 	private final int pullNum;
-	private final Event start;
-	private Event combatStart;
-	private Event end;
+	private final BaseEvent start;
+	private BaseEvent combatStart;
+	private BaseEvent end;
 	private final XivZone zone;
 	private final Map<Long, XivPlayerCharacter> players = new HashMap<>(8);
 	private final Map<Long, XivCombatant> enemies = new HashMap<>();
 	// TODO: also hold events? Might be a creative way to prevent pruning on "current" events.
 
-	public Pull(int pullNum, Event start, XivZone zone) {
+	public Pull(int pullNum, BaseEvent start, XivZone zone) {
 		this.pullNum = pullNum;
 		this.start = start;
 		this.zone = zone;
@@ -46,7 +47,7 @@ public class Pull {
 		return combatStart;
 	}
 
-	void setCombatStart(@NotNull Event combatStart) {
+	void setCombatStart(@NotNull BaseEvent combatStart) {
 		this.combatStart = combatStart;
 	}
 
@@ -54,7 +55,7 @@ public class Pull {
 		return end;
 	}
 
-	void setEnd(@NotNull Event end) {
+	void setEnd(@NotNull BaseEvent end) {
 		this.end = end;
 	}
 
@@ -81,23 +82,28 @@ public class Pull {
 
 	// TODO: clock skew from client to server might cause an issue here
 	public @NotNull Instant startTime() {
-		return start.getHappenedAt();
+		return start.getEffectiveHappenedAt();
 	}
 
 	public @Nullable Instant combatStartTime() {
-		return combatStart == null ? null : combatStart.getHappenedAt();
+		return combatStart == null ? null : combatStart.getEffectiveHappenedAt();
 	}
 
 	public @Nullable Instant endTime() {
-		return end == null ? null : end.getHappenedAt();
+		return end == null ? null : end.getEffectiveHappenedAt();
+	}
+
+	private @NotNull Instant endOrNow() {
+		Instant end = endTime();
+		if (end == null) {
+			end = start.effectiveTimeNow();
+		}
+		return end;
 	}
 
 	public @NotNull Duration getDuration() {
 		Instant start = startTime();
-		Instant end = endTime();
-		if (end == null) {
-			end = Instant.now();
-		}
+		Instant end = endOrNow();
 		return Duration.between(start, end);
 	}
 
@@ -106,10 +112,7 @@ public class Pull {
 		if (start == null) {
 			return null;
 		}
-		Instant end = endTime();
-		if (end == null) {
-			end = Instant.now();
-		}
+		Instant end = endOrNow();
 		return Duration.between(start, end);
 	}
 

@@ -1,13 +1,14 @@
 package gg.xp.xivsupport.events.state;
 
-import gg.xp.xivdata.jobs.Job;
-import gg.xp.xivdata.jobs.XivMap;
+import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.sys.PrimaryLogSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,8 +27,12 @@ public class XivStateDummy implements XivState {
 	private XivMap map;
 	private List<XivPlayerCharacter> partyList = Collections.emptyList();
 	private Map<Long, XivCombatant> combatants = new HashMap<>();
-	private boolean isActImport;
 
+	private final PrimaryLogSource pls;
+
+	public XivStateDummy(PrimaryLogSource pls) {
+		this.pls = pls;
+	}
 
 	@Override
 	public XivPlayerCharacter getPlayer() {
@@ -106,7 +111,17 @@ public class XivStateDummy implements XivState {
 	}
 
 	@Override
+	public void provideCombatantMP(XivCombatant target, @NotNull ManaPoints manaPoints) {
+		throw new UnsupportedOperationException("not supported");
+	}
+
+	@Override
 	public void provideCombatantPos(XivCombatant target, Position newPos) {
+		throw new UnsupportedOperationException("not supported");
+	}
+
+	@Override
+	public void provideActFallbackCombatant(XivCombatant cbt) {
 		throw new UnsupportedOperationException("not supported");
 	}
 
@@ -115,19 +130,14 @@ public class XivStateDummy implements XivState {
 		throw new UnsupportedOperationException("not supported");
 	}
 
+	// TODO
 	@Override
-	public @Nullable XivCombatant getDeadCombatant(long id) {
-		// TODO
-		return null;
+	public boolean inCombat() {
+		return true;
 	}
 
 	@Override
-	public boolean isActImport() {
-		return isActImport;
-	}
-
-	@Override
-	public void setActImport(boolean isActImport) {
-		this.isActImport = isActImport;
+	public void provideCombatantShieldPct(XivCombatant cbt, long shieldPct) {
+		throw new UnsupportedOperationException("not supported");
 	}
 }

@@ -9,8 +9,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@SuppressWarnings({"ReplaceNullCheck", "AssignmentOrReturnOfFieldWithMutableType"})
-public class EnumListSetting<X extends Enum<X>> {
+@SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
+public class EnumListSetting<X extends Enum<X>> extends ObservableSetting {
 
 	private static final Logger log = LoggerFactory.getLogger(EnumListSetting.class);
 
@@ -21,7 +21,7 @@ public class EnumListSetting<X extends Enum<X>> {
 	private final List<X> dflt;
 
 	/**
-	 * Behavior for if a property key does not map to a valid enum member
+	 * Behavior for if a property cdKey does not map to a valid enum member
 	 */
 	public enum BadKeyBehavior {
 		/**
@@ -64,6 +64,10 @@ public class EnumListSetting<X extends Enum<X>> {
 
 	}
 
+	public List<X> getDefault() {
+		return Collections.unmodifiableList(dflt);
+	}
+
 	private List<X> computeValue() {
 		String valueFromPersistence = persistence.get(propertyKey, String.class, null);
 		if (valueFromPersistence == null) {
@@ -78,7 +82,7 @@ public class EnumListSetting<X extends Enum<X>> {
 					out.add(item);
 				}
 				catch (IllegalArgumentException e) {
-					log.error("Invalid key ({}) for property ({}) - no member of ({}) for that value", stringItem, propertyKey, enumCls.getSimpleName());
+					log.error("Invalid cdKey ({}) for property ({}) - no member of ({}) for that value", stringItem, propertyKey, enumCls.getSimpleName());
 					switch (bkb) {
 						case OMIT:
 							continue;
@@ -97,7 +101,7 @@ public class EnumListSetting<X extends Enum<X>> {
 		cached = dflt;
 		hasCachedValue = true;
 		persistence.delete(propertyKey);
-
+		notifyListeners();
 	}
 
 	public void set(List<X> newValue) {
@@ -107,6 +111,7 @@ public class EnumListSetting<X extends Enum<X>> {
 		cached = List.copyOf(newValue);
 		hasCachedValue = true;
 		persistence.save(propertyKey, stringified);
+		notifyListeners();
 	}
 
 }

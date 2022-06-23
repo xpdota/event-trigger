@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.models;
 
 
+import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,6 +24,7 @@ public class XivCombatant extends XivEntity {
 	private final long ownerId;
 	private boolean isFake;
 	private @Nullable XivCombatant parent;
+	private final long shieldAmount;
 
 	public XivCombatant(
 			long id,
@@ -37,8 +39,8 @@ public class XivCombatant extends XivEntity {
 			long bNpcNameId,
 			long partyType,
 			long level,
-			long ownerId
-	) {
+			long ownerId,
+			long shieldAmount) {
 		super(id, name);
 		this.isPc = isPc;
 		this.isThePlayer = isThePlayer;
@@ -51,16 +53,17 @@ public class XivCombatant extends XivEntity {
 		this.partyType = partyType;
 		this.level = level;
 		this.ownerId = ownerId;
+		this.shieldAmount = shieldAmount;
 	}
 
 	/**
 	 * Simplified ctor for entity lookups that miss
 	 *
-	 * @param id
-	 * @param name
+	 * @param id numerical ID
+	 * @param name human-readable name
 	 */
 	public XivCombatant(long id, String name) {
-		this(id, name, false, false, 0, null, null, null, 0, 0, 0, 0, 0);
+		this(id, name, false, false, 0, null, null, null, 0, 0, 0, 0, 0, 0);
 	}
 
 
@@ -77,7 +80,8 @@ public class XivCombatant extends XivEntity {
 		if (isEnvironment()) {
 			return super.toString();
 		}
-		return String.format("XivCombatant(0x%X:%s:%s:%s)", getId(), getName(), getType(), getPos());
+		String npcInfo = bNpcId == 0 ? "" : String.format(" NPC %s:%s", getbNpcId(), getbNpcNameId());
+		return String.format("XivCombatant(0x%X:%s:%s at %s%s)", getId(), getName(), getType(), getPos(), npcInfo);
 	}
 
 	// TODO: replace the others with this
@@ -197,7 +201,26 @@ public class XivCombatant extends XivEntity {
 			0,
 			0,
 			0,
-			0);
+			0, 0);
 
 
+	public long getShieldAmount() {
+		return shieldAmount;
+	}
+
+	public RawXivCombatantInfo toRaw() {
+		HitPoints hp = getHp();
+		if (hp == null) {
+			hp = new HitPoints(50_000, 50_000);
+		}
+		Position pos = getPos();
+		if (pos == null) {
+			pos = new Position(100, 100, 100, 0.0);
+		}
+		ManaPoints mp = getMp();
+		if (mp == null) {
+			mp = new ManaPoints(10_000, 10_000);
+		}
+		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.getCurrent(), hp.getMax(), mp.getCurrent(), mp.getMax(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId());
+	}
 }

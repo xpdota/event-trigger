@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.jobs.ActionIcon;
-import gg.xp.xivdata.jobs.HasIconURL;
-import gg.xp.xivdata.jobs.StatusEffectIcon;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.HasIconURL;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
@@ -13,6 +13,7 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpLoss;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -39,45 +40,49 @@ public class AbilityEffectRenderer {
 		String text;
 		HasIconURL icon;
 		boolean textOnRight = false;
-		if (value instanceof DamageTakenEffect) {
-			text = ((DamageTakenEffect) value).getSeverity().getSymbol() + ((DamageTakenEffect) value).getAmount();
-			icon = ActionIcon.forId(9);
+		if (value instanceof DamageTakenEffect dte) {
+			text = dte.getSeverity().getSymbol() + dte.getAmount();
+			icon = ActionLibrary.iconForId(9);
 		}
-		else if (value instanceof HealEffect) {
-			text = ((HealEffect) value).getSeverity().getSymbol() + ((HealEffect) value).getAmount();
-			icon = ActionIcon.forId(3594);
+		else if (value instanceof HealEffect heal) {
+			text = heal.getSeverity().getSymbol() + heal.getAmount();
+			icon = ActionLibrary.iconForId(3594);
 		}
-		else if (value instanceof MpGain) {
-			text = "+" + ((MpGain) value).getAmount();
-			icon = ActionIcon.forId(7562);
+		else if (value instanceof MpGain mpGain) {
+			text = "+" + mpGain.getAmount();
+			icon = ActionLibrary.iconForId(7562);
 		}
-		else if (value instanceof MpLoss) {
-			text = "-" + ((MpLoss) value).getAmount();
-			icon = ActionIcon.forId(7562);
+		else if (value instanceof MpLoss mpLoss) {
+			text = "-" + mpLoss.getAmount();
+			icon = ActionLibrary.iconForId(7562);
 		}
-		else if (value instanceof ParriedDamageEffect) {
+		else if (value instanceof ParriedDamageEffect pde) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
-			text = Long.toString(((ParriedDamageEffect) value).getAmount());
-			icon = ActionIcon.forId(16140);
+			text = Long.toString(pde.getAmount());
+			icon = ActionLibrary.iconForId(16140);
 		}
-		else if (value instanceof BlockedDamageEffect) {
+		else if (value instanceof BlockedDamageEffect bde) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
-			text = Long.toString(((BlockedDamageEffect) value).getAmount());
-			icon = ActionIcon.forId(3542);
+			text = Long.toString(bde.getAmount());
+			icon = ActionLibrary.iconForId(3542);
 		}
-		else if (value instanceof InvulnBlockedDamageEffect) {
+		else if (value instanceof InvulnBlockedDamageEffect invuln) {
 			// TODO: can blocked/parried also be crit/dhit/etc?
-			text = Long.toString(((InvulnBlockedDamageEffect) value).getAmount());
-			icon = ActionIcon.forId(30);
+			text = Long.toString(invuln.getAmount());
+			icon = ActionLibrary.iconForId(30);
 		}
-		else if (value instanceof StatusAppliedEffect) {
+		else if (value instanceof StatusAppliedEffect statusApplied) {
 			text = "+";
-			icon = StatusEffectIcon.forId(((StatusAppliedEffect) value).getStatus().getId());
+			icon = StatusEffectLibrary.iconForId(statusApplied.getStatus().getId(), statusApplied.getStacks());
+			if (icon == null) {
+				icon = StatusEffectLibrary.iconForId(760, 0);
+			}
 			textOnRight = true;
 		}
-		else if (value instanceof StatusNoEffect) {
+		else if (value instanceof StatusNoEffect sne) {
+			// TODO: does this also have a 'stacks' value?
 			text = "X";
-			icon = StatusEffectIcon.forId(((StatusNoEffect) value).getStatus().getId());
+			icon = StatusEffectLibrary.iconForId(sne.getStatus().getId(), 1);
 			textOnRight = true;
 		}
 		else {

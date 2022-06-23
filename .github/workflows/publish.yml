@@ -15,27 +15,38 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 17
-      uses: actions/setup-java@v2
-      with:
-        java-version: '17'
-        distribution: 'adopt'
-        cache: maven
-    - name: Build with Maven
-      run: xvfb-run mvn -T5 clean install
-    - name: Copy release files
-      run: |
-        pushd launcher/target/windows/deps/
-        md5sum *.jar > manifest
-        popd
-    - name: Deploy release files
-      uses: JamesIves/github-pages-deploy-action@4.1.7
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          cache: maven
+      - name: Build with Maven
+        run: xvfb-run mvn -T5 clean install
+      - name: Copy release files
+        run: |
+          pushd launcher/target/windows/
+          mkdir -p publish_data/v2
+          md5sum *.exe *.dll deps/*.jar > publish_data/v2/manifest
+          cp -r *.exe *.dll deps/ publish_data/v2/
+          # Legacy updater
+          cd deps
+          md5sum *.jar > ../publish_data/manifest
+          cp *.jar ../publish_data/
+          popd
+      - name: Docs with Maven
+        run: mvn site
+      - name: Copy docs
+        run: |
+          mv target/site/apidocs ./launcher/target/windows/publish_data/javadoc
+      - name: Deploy release files
+        uses: JamesIves/github-pages-deploy-action@4.1.7
 
-      with:
-        folder: ./launcher/target/windows/deps
-        branch: gh-pages
-        target-folder: ${{ github.ref_name }}
+        with:
+          folder: ./launcher/target/windows/publish_data
+          branch: gh-pages
+          target-folder: ${{ github.ref_name }}
 
 
 

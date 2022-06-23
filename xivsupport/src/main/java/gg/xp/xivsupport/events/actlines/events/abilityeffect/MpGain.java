@@ -3,8 +3,8 @@ package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 public class MpGain extends AbilityEffect {
 	private final long amount;
 
-	public MpGain(long amount) {
-		super(AbilityEffectType.HEAL);
+	public MpGain(long flags, long value, long amount) {
+		super(flags, value, AbilityEffectType.HEAL);
 		this.amount = amount;
 	}
 
@@ -18,7 +18,7 @@ public class MpGain extends AbilityEffect {
 	}
 
 	@Override
-	public String getDescription() {
+	public String getBaseDescription() {
 		return String.format("Gained MP: %s", amount);
 	}
 }

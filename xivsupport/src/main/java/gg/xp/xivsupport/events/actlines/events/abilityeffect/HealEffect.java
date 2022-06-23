@@ -4,8 +4,8 @@ public class HealEffect extends AbilityEffect {
 	private final HitSeverity severity;
 	private final long amount;
 
-	public HealEffect(HitSeverity severity, long amount) {
-		super(AbilityEffectType.HEAL);
+	public HealEffect(long flags, long value, HitSeverity severity, long amount) {
+		super(flags, value, AbilityEffectType.HEAL);
 		this.severity = severity;
 		this.amount = amount;
 	}
@@ -25,13 +25,21 @@ public class HealEffect extends AbilityEffect {
 
 
 	@Override
-	public String getDescription() {
+	public String getBaseDescription() {
 		if (severity == HitSeverity.NORMAL) {
-			return String.format("Heal: %s", amount);
+			return String.format("Heal: %s (%s %s)", amount, getDamageAspect(), getDamageType());
 		}
 		else {
-			return String.format("Heal: %s (%s)", amount, severity.getFriendlyName());
+			return String.format("Heal: %s (%s) (%s %s)", amount, severity.getFriendlyName(), getDamageAspect(), getDamageType());
 		}
+	}
+
+	public DamageAspect getDamageAspect() {
+		return DamageAspect.forByte((int) (getFlags() >> 20) % 16);
+	}
+
+	public DamageType getDamageType() {
+		return DamageType.forByte((int) (getFlags() >> 16) % 16);
 	}
 
 }

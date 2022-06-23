@@ -1,10 +1,15 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.SystemEvent;
 
 import java.io.Serial;
 
-public class ActorControlEvent extends BaseEvent {
+/**
+ * Represents various types of actor control events, e.g. wipes, barrier up/down, etc
+ */
+@SystemEvent
+public class ActorControlEvent extends BaseEvent implements HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = 4887874439217409590L;
@@ -58,5 +63,10 @@ public class ActorControlEvent extends BaseEvent {
 
 	public long getInstanceContentTypeRaw() {
 		return instanceContentTypeRaw;
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		return String.format("%X:%X %X:%X:%X:%X", instance, command, data0, data1, data2, data3);
 	}
 }

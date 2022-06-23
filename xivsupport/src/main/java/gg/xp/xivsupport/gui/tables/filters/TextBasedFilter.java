@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 	protected volatile Predicate<X> currentFilter;
 	protected boolean validationError;
 	protected final String fieldLabel;
-	protected final boolean ignoreCase = true;
+	protected static final boolean ignoreCase = true;
 	protected final Color invalidBackground = new Color(62, 27, 27);
 
 	public TextBasedFilter(Runnable filterUpdatedCallback, String fieldLabel, Function<X, String> textExtractor) {
@@ -66,7 +67,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 		filterUpdatedCallback.run();
 	}
 
-	protected @Nullable Predicate<X> getFilterForInput(String input) {
+	protected @Nullable Predicate<X> getFilterForInput(@NotNull String input) {
 		validationError = false;
 		if (input.isEmpty()) {
 			return null;
@@ -109,8 +110,8 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 	 * <p>
 	 * If there is any filter, then apply this pre-filter.
 	 *
-	 * @param item
-	 * @return
+	 * @param item The item to filter
+	 * @return whether to let the item proceed to the main filter
 	 */
 	protected boolean preFilter(X item) {
 		return true;
@@ -131,7 +132,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 	@Override
 	public Component getComponent() {
 		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		JLabel label = new JLabel(fieldLabel + ": ");
 		label.setLabelFor(textBox);
 		panel.add(label);

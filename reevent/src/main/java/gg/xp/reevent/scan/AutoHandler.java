@@ -119,8 +119,8 @@ public class AutoHandler implements EventHandler<Event> {
 		if (!eventClass.isInstance(event)) {
 			return;
 		}
-		if (clazzInstance instanceof FilteredEventHandler) {
-			if (!((FilteredEventHandler) clazzInstance).enabled(context)) {
+		if (clazzInstance instanceof FilteredEventHandler feh) {
+			if (!feh.enabled(context)) {
 				return;
 			}
 		}

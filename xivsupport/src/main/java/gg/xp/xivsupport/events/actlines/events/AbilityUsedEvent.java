@@ -2,7 +2,6 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 
@@ -10,7 +9,10 @@ import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
-public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects {
+/**
+ * Represents an ability snapshotting
+ */
+public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects, HasTargetIndex {
 
 	@Serial
 	private static final long serialVersionUID = -4539070760062288496L;
@@ -20,14 +22,16 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	private final List<AbilityEffect> effects;
 	private final long sequenceId;
 	private final long targetIndex;
+	private final long numberOfTargets;
 
-	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId, long targetIndex) {
+	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId, long targetIndex, long numberOfTargets) {
 		this.ability = ability;
 		this.caster = caster;
 		this.target = target;
 		this.effects = effects;
 		this.sequenceId = sequenceId;
 		this.targetIndex = targetIndex;
+		this.numberOfTargets = numberOfTargets;
 	}
 
 	@Override
@@ -50,17 +54,27 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 		return Collections.unmodifiableList(effects);
 	}
 
-	// TODO: not accurate, need to account for parries and stuff
-	public long getDamage() {
-		return effects.stream().filter(effect -> effect instanceof DamageTakenEffect).map(DamageTakenEffect.class::cast)
-				.mapToLong(DamageTakenEffect::getAmount).sum();
-	}
-
 	public long getSequenceId() {
 		return sequenceId;
 	}
 
+	@Override
 	public long getTargetIndex() {
 		return targetIndex;
+	}
+
+	@Override
+	public long getNumberOfTargets() {
+		return numberOfTargets;
+	}
+
+	@Override
+	public boolean isFirstTarget() {
+		return targetIndex == 0;
+	}
+
+	@Override
+	public boolean isLastTarget() {
+		return targetIndex >= numberOfTargets - 1;
 	}
 }

@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.Job;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -14,8 +14,8 @@ public class JobRenderer implements TableCellRenderer, ListCellRenderer<Job> {
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 		Component defaultLabel = fallback.getTableCellRendererComponent(table, value, isSelected, false, row, column);
-		if (value instanceof Job) {
-			return IconTextRenderer.getComponent((Job) value, defaultLabel, false);
+		if (value instanceof Job job) {
+			return IconTextRenderer.getComponent(job, defaultLabel, false);
 		}
 		return defaultLabel;
 	}

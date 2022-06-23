@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ModifiedCalloutRepository {
 
@@ -59,15 +58,14 @@ public class ModifiedCalloutRepository {
 				String fieldName = f.getName();
 				String fullPropStub = classPropStub + "." + fieldName;
 				f.setAccessible(true);
-				ModifiableCallout original;
+				ModifiableCallout<?> original;
 				try {
-					original = (ModifiableCallout) f.get(o);
+					original = (ModifiableCallout<?>) f.get(o);
 				}
 				catch (IllegalAccessException e) {
 					throw new RuntimeException(e);
 				}
-				ModifiedCalloutHandle modified = new ModifiedCalloutHandle(persistence, fullPropStub, original, enableTts, enableOverlay);
-				original.attachHandle(modified);
+				ModifiedCalloutHandle modified = ModifiedCalloutHandle.installHandle(original, persistence, fullPropStub, enableTts, enableOverlay);
 				callouts.add(modified);
 			});
 			allCallouts.add(new CalloutGroup(description, topLevelPropStub, persistence, callouts));

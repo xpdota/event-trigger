@@ -3,16 +3,20 @@ package gg.xp.xivsupport.sys;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.BasicEventDistributor;
 import gg.xp.reevent.events.BasicEventQueue;
-import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
+import gg.xp.reevent.scan.AutoHandlerConfig;
+import gg.xp.reevent.scan.AutoHandlerScan;
 import gg.xp.reevent.topology.TopoInfoImpl;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.state.PicoStateStore;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
-import gg.xp.reevent.scan.AutoHandlerConfig;
-import gg.xp.reevent.scan.AutoHandlerScan;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
+import groovy.lang.GroovyShell;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
 import org.slf4j.Logger;
@@ -35,6 +39,7 @@ public final class XivMain {
 
 	// Just the required stuff, doesn't start anything
 	private static MutablePicoContainer requiredComponents() {
+		log.info("Assembling required components");
 		MutablePicoContainer pico = new PicoBuilder()
 				.withCaching()
 				.withLifecycle()
@@ -49,7 +54,9 @@ public final class XivMain {
 		pico.addComponent(XivStateImpl.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
 		pico.addComponent(TopoInfoImpl.class);
+		pico.addComponent(PrimaryLogSource.class);
 		pico.addComponent(pico);
+		log.info("Required components done");
 		return pico;
 
 	}
@@ -87,6 +94,7 @@ public final class XivMain {
 				.build();
 		pico.addComponent(BasicEventDistributor.class);
 		pico.addComponent(EventMaster.class);
+		pico.addComponent(BasicEventQueue.class);
 		pico.addComponent(PicoStateStore.class);
 		pico.addComponent(XivStateImpl.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
@@ -111,7 +119,6 @@ public final class XivMain {
 
 		MutablePicoContainer pico = requiredComponents();
 		pico.addComponent(ActWsLogSource.class);
-		// TODO: replace with on-disk storage when done
 		if (isRealLauncher()) {
 			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent"));
 		}
@@ -119,8 +126,19 @@ public final class XivMain {
 			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing"));
 		}
 
+		new Thread(() -> {
+			log.info("StartupHelper begin");
+			//noinspection ResultOfObjectAllocationIgnored
+			new GroovyShell();
+			ActionLibrary.getAll();
+			StatusEffectLibrary.getAll();
+			log.info("StartupHelper end");
+		}, "StartupHelper").start();
+
 		// TODO: use "Startable" interface?
-		pico.getComponent(AutoEventDistributor.class).acceptEvent(new InitEvent());
+		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		log.info("Init start");
+		dist.acceptEvent(new InitEvent());
 		pico.getComponent(EventMaster.class).start();
 		pico.getComponent(ActWsLogSource.class).start();
 		log.info("Everything seems to have started successfully");
@@ -129,15 +147,19 @@ public final class XivMain {
 
 	public static MutablePicoContainer importInit() {
 		MutablePicoContainer pico = requiredComponents();
-		if (isRealLauncher()) {
-			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent", true));
-		}
-		else {
-			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing", true));
-		}
+		pico.addComponent(persistenceProvider());
 		pico.getComponent(AutoHandlerConfig.class).setNotLive(true);
 		pico.getComponent(EventMaster.class).start();
 		return pico;
+	}
+
+	public static PersistenceProvider persistenceProvider() {
+		if (isRealLauncher()) {
+			return PropertiesFilePersistenceProvider.inUserDataFolder("triggevent", true);
+		}
+		else {
+			return PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing", true);
+		}
 	}
 
 }

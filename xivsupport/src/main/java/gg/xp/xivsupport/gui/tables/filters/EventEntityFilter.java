@@ -26,7 +26,7 @@ public final class EventEntityFilter<I, X> implements VisualFilter<I> {
 	private static final String ALL = "All (Including None)";
 	private static final String ANY = "Any (Excluding None)";
 	private static final String PLAYERS = "Players";
-	private static final String NPCS = "NPCs";
+	private static final String NPCS = "NPCs (excl pets)";
 	private static final String SELF = "Self";
 	private static final String ENVIRONMENT = "Environment";
 	private static final String NONE = "None (Non-Targeted Event)";
@@ -96,7 +96,7 @@ public final class EventEntityFilter<I, X> implements VisualFilter<I> {
 				return false;
 			case NPCS:
 				if (expectedClass.isInstance(item)) {
-					return !entityGetter.apply(expectedClass.cast(item)).isPc();
+					return !entityGetter.apply(expectedClass.cast(item)).walkParentChain().isPc();
 				}
 				return false;
 			case ENVIRONMENT:
@@ -131,7 +131,7 @@ public final class EventEntityFilter<I, X> implements VisualFilter<I> {
 	@Override
 	public Component getComponent() {
 		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		JLabel label = new JLabel(labelText + ": ");
 		label.setLabelFor(comboBox);
 		panel.add(label);

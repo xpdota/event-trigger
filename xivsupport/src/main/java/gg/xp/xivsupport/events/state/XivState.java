@@ -1,9 +1,10 @@
 package gg.xp.xivsupport.events.state;
 
 import gg.xp.reevent.context.SubState;
-import gg.xp.xivdata.jobs.Job;
-import gg.xp.xivdata.jobs.XivMap;
+import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
@@ -14,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public interface XivState extends SubState {
 	// Note: can be null until we have all the required data, but this should only happen very early on in init
@@ -32,6 +34,14 @@ public interface XivState extends SubState {
 
 	Map<Long, XivCombatant> getCombatants();
 
+	default @Nullable XivCombatant getCombatant(long id) {
+		return getCombatants().get(id);
+	}
+
+	default @Nullable XivCombatant getLatestCombatantData(XivCombatant cbt) {
+		return getCombatant(cbt.getId());
+	}
+
 	// TODO: does this still need to be a copy?
 	List<XivCombatant> getCombatantsListCopy();
 
@@ -39,11 +49,13 @@ public interface XivState extends SubState {
 
 	void provideCombatantHP(XivCombatant target, @NotNull HitPoints hitPoints);
 
+	void provideCombatantMP(XivCombatant target, @NotNull ManaPoints manaPoints);
+
 	void provideCombatantPos(XivCombatant target, Position newPos);
 
-	void flushProvidedValues();
+	void provideActFallbackCombatant(XivCombatant cbt);
 
-	@Nullable XivCombatant getDeadCombatant(long id);
+	void flushProvidedValues();
 
 	default @Nullable Job getPlayerJob() {
 		XivPlayerCharacter player = getPlayer();
@@ -55,7 +67,15 @@ public interface XivState extends SubState {
 		}
 	}
 
-	boolean isActImport();
+	default boolean playerJobMatches(Predicate<Job> condition) {
+		Job job = getPlayerJob();
+		if (job == null) {
+			return false;
+		}
+		return condition.test(job);
+	}
 
-	void setActImport(boolean actImport);
+	boolean inCombat();
+
+	void provideCombatantShieldPct(XivCombatant cbt, long shieldPct);
 }

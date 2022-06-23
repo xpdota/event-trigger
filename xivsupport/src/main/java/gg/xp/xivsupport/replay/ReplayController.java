@@ -4,7 +4,6 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivsupport.persistence.Compressible;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import org.apache.commons.logging.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
 public class ReplayController {
@@ -72,16 +72,21 @@ public class ReplayController {
 	 */
 	public int advanceBy(int count) {
 		int advancedBy = 0;
-		for (; count-- > 0 && currentIndex < events.size(); currentIndex++) {
+		for (; count-- > 0 && hasMoreEvents(); currentIndex++) {
 			Event event = events.get(currentIndex);
 			if (decompress && event instanceof Compressible compressedEvent) {
 				compressedEvent.decompress();
 			}
+			preProcessEvent(event);
 			master.pushEvent(event);
 			advancedBy++;
 		}
 		notifyCallbacks();
 		return advancedBy;
+	}
+
+	protected void preProcessEvent(Event event) {
+
 	}
 
 	public void advanceByAsync(int count) {
@@ -91,16 +96,21 @@ public class ReplayController {
 		});
 	}
 
-	public void advanceByAsyncWhile(Supplier<Boolean> advWhile) {
-		exs.submit(() -> {
-			for (; advWhile.get() && currentIndex < events.size(); currentIndex++) {
+	public Future<?> advanceByAsyncWhile(Supplier<Boolean> advWhile) {
+		return exs.submit(() -> {
+			for (; advWhile.get() && hasMoreEvents(); currentIndex++) {
 				Event event = events.get(currentIndex);
 				if (decompress && event instanceof Compressible compressedEvent) {
 					compressedEvent.decompress();
 				}
+				preProcessEvent(event);
 				master.pushEventAndWait(event);
 			}
 			notifyCallbacks();
 		});
+	}
+
+	public boolean hasMoreEvents() {
+		return currentIndex < events.size();
 	}
 }

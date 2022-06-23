@@ -2,8 +2,8 @@ package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
 public class FullyResistedEffect extends AbilityEffect {
 
-	public FullyResistedEffect() {
-		super(AbilityEffectType.MISS);
+	public FullyResistedEffect(long flags, long value) {
+		super(flags, value, AbilityEffectType.MISS);
 	}
 
 	@Override

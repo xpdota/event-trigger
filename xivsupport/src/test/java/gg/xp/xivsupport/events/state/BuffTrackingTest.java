@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events.state;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
-import gg.xp.xivdata.jobs.Job;
+import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
@@ -17,7 +17,7 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivStatusEffect;
 import gg.xp.xivsupport.models.XivWorld;
 import gg.xp.xivsupport.models.XivZone;
-import gg.xp.xivsupport.events.triggers.jobs.StatusEffectRepository;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.sys.XivMain;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -51,8 +51,8 @@ public class BuffTrackingTest {
 				0,
 				0,
 				80,
-				0
-		);
+				0,
+				0);
 		XivCombatant otherPlayer = new XivPlayerCharacter(2,
 				"Party Member",
 				Job.BLM,
@@ -66,8 +66,8 @@ public class BuffTrackingTest {
 				0,
 				0,
 				80,
-				0
-		);
+				0,
+				0);
 		XivCombatant enemy1 = new XivCombatant(5,
 				"Some Boss",
 				false,
@@ -80,8 +80,8 @@ public class BuffTrackingTest {
 				456,
 				0,
 				80,
-				0
-		);
+				0,
+				0);
 		XivCombatant enemy2 = new XivCombatant(6,
 				"Other Boss",
 				false,
@@ -94,8 +94,8 @@ public class BuffTrackingTest {
 				456,
 				0,
 				80,
-				0
-		);
+				0,
+				0);
 		BuffApplied player1DotsEnemy1 = new BuffApplied(testBuff1, 10, player, enemy1, 1);
 		BuffApplied player1DotsEnemy2 = new BuffApplied(testBuff1, 10, player, enemy2, 1);
 		BuffApplied player1DotsEnemy1again = new BuffApplied(testBuff1, 10, player, enemy1, 1);

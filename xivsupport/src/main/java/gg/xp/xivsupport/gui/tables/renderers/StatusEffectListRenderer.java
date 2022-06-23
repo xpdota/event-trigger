@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
+import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.models.XivStatusEffect;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -30,7 +32,13 @@ public class StatusEffectListRenderer implements TableCellRenderer {
 				coll.forEach(obj -> {
 					Component component = (renderer.getTableCellRendererComponent(table, obj, isSelected, hasFocus, row, column));
 					comps.add(component);
-					if (obj instanceof XivStatusEffect status) {
+					if (obj instanceof HasStatusEffect status) {
+						tooltipBuilder.append(status.getBuff().getName());
+						long id = status.getBuff().getId();
+						tooltipBuilder.append(" (0x").append(Long.toString(id, 16))
+								.append(", ").append(id).append(", Stacks: ").append(status.getStacks()).append(")\n\n");
+					}
+					else if (obj instanceof XivStatusEffect status) {
 						tooltipBuilder.append(status.getName());
 						long id = status.getId();
 						tooltipBuilder.append(" (0x").append(Long.toString(id, 16))

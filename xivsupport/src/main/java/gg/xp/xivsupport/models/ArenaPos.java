@@ -59,4 +59,63 @@ public class ArenaPos {
 		}
 
 	}
+
+	public static ArenaSector combatantFacing(XivCombatant cbt) {
+		Position pos = cbt.getPos();
+		if (pos == null) {
+			return ArenaSector.UNKNOWN;
+		}
+		return combatantFacing(pos.getHeading());
+	}
+
+	public static ArenaSector combatantFacing(double heading) {
+		// Zero = south, then negative = clockwise
+		double pi = Math.PI;
+		if (heading > pi * 7 / 8) {
+			return ArenaSector.NORTH;
+		}
+		else if (heading > pi * 5 / 8) {
+			return ArenaSector.NORTHEAST;
+		}
+		else if (heading > pi * 3 / 8) {
+			return ArenaSector.EAST;
+		}
+		else if (heading > pi * 1 / 8) {
+			return ArenaSector.SOUTHEAST;
+		}
+		else if (heading > pi * -1 / 8) {
+			return ArenaSector.SOUTH;
+		}
+		else if (heading > pi * -3 / 8) {
+			return ArenaSector.SOUTHWEST;
+		}
+		else if (heading > pi * -5 / 8) {
+			return ArenaSector.WEST;
+		}
+		else if (heading > pi * -7 / 8) {
+			return ArenaSector.NORTHWEST;
+		}
+		else {
+			return ArenaSector.NORTH;
+		}
+	}
+
+	// TWO DIMENSIONAL distance from center
+	public double distanceFromCenter(XivCombatant cbt) {
+		Position pos = cbt.getPos();
+		if (pos == null) {
+			throw new IllegalArgumentException("Position cannot be null");
+		}
+		return distanceFromCenter(pos);
+	}
+
+	public double distanceFromCenter(Position pos) {
+		double posX = pos.getX();
+		double posY = pos.getY();
+		double deltaX = posX - xCenter;
+		double deltaY = posY - yCenter;
+		return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+	}
+
+
 }

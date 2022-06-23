@@ -18,8 +18,8 @@ public class AbilityResolutionFilter implements VisualFilter<Event> {
 		comboBox.setRenderer(new DefaultListCellRenderer() {
 			@Override
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-				if (value instanceof FilterOption) {
-					value = ((FilterOption) value).getName();
+				if (value instanceof FilterOption option) {
+					value = option.getName();
 				}
 				return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 			}
@@ -64,7 +64,7 @@ public class AbilityResolutionFilter implements VisualFilter<Event> {
 	@Override
 	public Component getComponent() {
 		JPanel panel = new JPanel();
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		JLabel label = new JLabel("Snap/Resolve: ");
 		label.setLabelFor(comboBox);
 		panel.add(label);

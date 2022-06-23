@@ -1,16 +1,32 @@
 package gg.xp.xivsupport.persistence;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseStringPersistenceProvider implements PersistenceProvider {
 
+	private static final Logger log = LoggerFactory.getLogger(BaseStringPersistenceProvider.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	@Override
 	public void save(@NotNull String key, @NotNull Object value) {
-		String convertedValue = mapper.convertValue(value, String.class);
+		String convertedValue;
+		if (value.getClass().isAnnotationPresent(UseJsonSer.class)) {
+			try {
+				convertedValue = mapper.writeValueAsString(value);
+			}
+			catch (JsonProcessingException e) {
+				log.error("Error serializing value", e);
+				throw new RuntimeException(e);
+			}
+		}
+		else {
+			convertedValue = mapper.convertValue(value, String.class);
+		}
 		setValue(rewriteKey(key), convertedValue);
 	}
 
@@ -24,7 +40,18 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 			return dflt;
 		}
 		else {
-			return mapper.convertValue(raw, type);
+			if (type.isAnnotationPresent(UseJsonSer.class)) {
+				try {
+					return mapper.readValue(raw, type);
+				}
+				catch (JsonProcessingException e) {
+					log.error("Error deserializing value", e);
+					return dflt;
+				}
+			}
+			else {
+				return mapper.convertValue(raw, type);
+			}
 		}
 	}
 
@@ -39,11 +66,11 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 	}
 
 	/**
-	 * Since not every format may be able to handle every key correctly, provide an optional
-	 * way to massage the key into a better format (e.g. stripping special characters)
+	 * Since not every format may be able to handle every cdKey correctly, provide an optional
+	 * way to massage the cdKey into a better format (e.g. stripping special characters)
 	 *
-	 * @param originalKey Original key
-	 * @return Massaged key
+	 * @param originalKey Original cdKey
+	 * @return Massaged cdKey
 	 */
 	protected String rewriteKey(String originalKey) {
 		return originalKey;

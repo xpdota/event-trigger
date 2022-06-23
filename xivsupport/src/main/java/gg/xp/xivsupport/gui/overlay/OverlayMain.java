@@ -3,7 +3,7 @@ package gg.xp.xivsupport.gui.overlay;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.events.EventDistributor;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.OnlineStatus;
 import gg.xp.xivsupport.events.debug.DebugCommand;
@@ -19,9 +19,12 @@ import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OverlayMain {
+public final class OverlayMain {
 
 	private static final Logger log = LoggerFactory.getLogger(OverlayMain.class);
+	private final BooleanSetting show;
+	private final BooleanSetting forceShow;
+	private final PicoContainer container;
 
 
 	@HandleEvents
@@ -67,15 +70,13 @@ public class OverlayMain {
 		recalc();
 	}
 
-	private final BooleanSetting show;
 	private boolean windowActive;
 	private boolean editing;
 	private boolean cutscene;
-	private final BooleanSetting forceShow;
 	// TODO: Linux support
 	private final boolean isNonWindows;
 
-	public OverlayMain(PicoContainer container, EventDistributor dist, PersistenceProvider persistence) {
+	public OverlayMain(PicoContainer container, OverlayConfig config, PersistenceProvider persistence) {
 		if (!Platform.isWindows()) {
 			log.warn("Not running on Windows - disabling overlay support");
 			isNonWindows = true;
@@ -83,32 +84,31 @@ public class OverlayMain {
 		else {
 			isNonWindows = false;
 		}
-		show = new BooleanSetting(persistence, "xiv-overlay.show", true);
-		show.addListener(this::recalc);
-		forceShow = new BooleanSetting(persistence, "xiv-overlay.force-show", false);
-		forceShow.addListener(this::recalc);
+		show = config.getShow();
+		forceShow = config.getForceShow();
+		this.container = container;
+	}
 
-		List<XivOverlay> overlays = container.getComponents(XivOverlay.class);
-		overlays.forEach(this::addOverlay);
-
-		setEditing(false);
-		//noinspection CallToThreadStartDuringObjectConstruction
+	@HandleEvents
+	public void init(EventContext context, InitEvent init) {
 		new Thread(() -> {
-			while (true) {
-				try {
-					boolean old = windowActive;
-					windowActive = isGameWindowActive();
-					if (old != windowActive) {
-						recalc();
-					}
-					//noinspection BusyWait
-					Thread.sleep(200);
+
+			show.addListener(this::recalc);
+			forceShow.addListener(this::recalc);
+
+			List<XivOverlay> overlays = container.getComponents(XivOverlay.class);
+			overlays.forEach(this::addOverlay);
+
+			setEditing(false);
+			new RefreshLoop<>("OverlayStateCheck", this, om -> {
+				boolean old = windowActive;
+				windowActive = isGameWindowActive();
+				if (old != windowActive) {
+					recalc();
 				}
-				catch (Throwable e) {
-					log.error("Error", e);
-				}
-			}
-		}).start();
+			}, om -> 200L).start();
+		}, "OverlayStartupHelper").start();
+
 	}
 
 	private boolean isGameWindowActive() {
@@ -116,7 +116,7 @@ public class OverlayMain {
 			return true;
 		}
 		String window = getActiveWindowText();
-		return window.startsWith("FINAL FANTASY XIV") || this.overlays.stream().anyMatch(o -> o.getTitle().equals(window));
+		return window.equalsIgnoreCase("FINAL FANTASY XIV") || this.overlays.stream().anyMatch(o -> o.getTitle().equals(window));
 	}
 
 	public void addOverlay(XivOverlay overlay) {
@@ -127,17 +127,9 @@ public class OverlayMain {
 		});
 	}
 
-	public BooleanSetting getVisibleSetting() {
-		return show;
-	}
-
 	public void setEditing(boolean editing) {
 		this.editing = editing;
 		recalc();
-	}
-
-	public BooleanSetting forceShow() {
-		return forceShow;
 	}
 
 	public void setOpacity(float opacity) {
@@ -191,8 +183,7 @@ public class OverlayMain {
 		char[] chars = new char[length + 1];
 		u32.GetWindowText(hwnd, chars, length + 1);
 		String window = new String(chars).substring(0, length);
-//		log.info("Window title: {}", window);
+//		log.info("Window title: [{}]", window);
 		return window;
 	}
-
 }

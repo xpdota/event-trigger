@@ -1,8 +1,12 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.jobs.ActionIcon;
-import gg.xp.xivdata.jobs.HasIconURL;
-import gg.xp.xivdata.jobs.StatusEffectIcon;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.HasIconURL;
+import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.URLIcon;
+import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
+import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivStatusEffect;
@@ -11,6 +15,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.net.URL;
 
 public class ActionAndStatusRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
@@ -31,35 +36,71 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 
-		Component defaultLabel;
-		if (value instanceof NameIdPair) {
-			if (iconOnly) {
-				defaultLabel = fallback.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
-			}
-			else {
-				defaultLabel = fallback.getTableCellRendererComponent(table, ((NameIdPair) value).getName(), isSelected, hasFocus, row, column);
-			}
-		}
-		else {
-			return fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-		}
+
 		HasIconURL icon;
-		String tooltip;
+		final String tooltip;
+		final String text;
 		if (value instanceof XivAbility ability) {
-			icon = ActionIcon.forId(ability.getId());
+			text = ability.getName();
+			icon = ActionLibrary.iconForId(ability.getId());
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 		}
 		else if (value instanceof XivStatusEffect status) {
-			icon = StatusEffectIcon.forId(status.getId());
+			text = status.getName();
+			icon = StatusEffectLibrary.iconForId(status.getId(), 1);
 			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
 		}
+		else if (value instanceof URL url) {
+			text = "";
+			icon = new URLIcon(url);
+			tooltip = "";
+		}
+		else if (value instanceof HasAbility hasAbility) {
+			XivAbility ability = hasAbility.getAbility();
+			text = ability.getName();
+			icon = ActionLibrary.iconForId(ability.getId());
+			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
+		}
+		else if (value instanceof HasStatusEffect hasStatus) {
+			XivStatusEffect status = hasStatus.getBuff();
+			// TODO: duration?
+			long stacks = hasStatus.getStacks();
+			if (stacks > 0) {
+				text = String.format("%s (%s)", status.getName(), stacks);
+			}
+			else {
+				text = String.format("%s", status.getName());
+			}
+			icon = StatusEffectLibrary.iconForId(status.getId(), stacks);
+			if (icon == null && status.getId() != 0) {
+				icon = StatusEffectLibrary.iconForId(760, 0);
+			}
+
+			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
+		}
+		else if (value instanceof NameIdPair pair) {
+			return fallback.getTableCellRendererComponent(table, pair.getName(), isSelected, hasFocus, row, column);
+		}
+		// Ehhh, really not the place for this, but it can move later
+		else if (value instanceof HasPrimaryValue hasPrimaryValue) {
+			// Using call text since it is fixed rather than dynamic
+			tooltip = text = hasPrimaryValue.getPrimaryValue();
+			icon = null;
+		}
+		else if (value instanceof HasIconURL hiu) {
+			icon = hiu;
+			tooltip = text = "";
+		}
 		else {
-			// Would never actually happen
-			return defaultLabel;
+			return fallback.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
 		}
-		if (icon == null) {
-			return defaultLabel;
+		Component defaultLabel;
+		defaultLabel = fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
+
+		if (icon == null && iconOnly) {
+			icon = StatusEffectLibrary.iconForId(760, 0);
 		}
+
 		Component component = IconTextRenderer.getComponent(icon, defaultLabel, iconOnly, false, bypassCache);
 		if (enableTooltips) {
 			RenderUtils.setTooltip(component, tooltip);

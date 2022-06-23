@@ -15,7 +15,7 @@ import java.util.List;
 public class ComponentListRenderer extends JComponent {
 	@Serial
 	private static final long serialVersionUID = -124182066710853800L;
-	private List<Component> components = Collections.emptyList();
+	private List<? extends Component> components = Collections.emptyList();
 	private final int xPadding;
 	private final boolean rightToLeft;
 	private Color bg;
@@ -37,7 +37,7 @@ public class ComponentListRenderer extends JComponent {
 		this.setToolTipText(null);
 	}
 
-	public void setComponents(List<Component> components) {
+	public void setComponents(List<? extends Component> components) {
 		this.components = components;
 	}
 

@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>newtrig</artifactId>
+        <artifactId>triggevent</artifactId>
         <groupId>gg.xp</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
@@ -15,6 +15,9 @@
         <mainClass>gg.xp.xivsupport.gui.GuiLaunch</mainClass>
         <mainImportClass>gg.xp.xivsupport.gui.GuiImportLaunch</mainImportClass>
         <mainUpdateClass>gg.xp.xivsupport.gui.Update</mainUpdateClass>
+        <launcherJar>./launcher-${project.version}.jar</launcherJar>
+        <launcherJarRelativeToPom>./target/windows/launcher-${project.version}.jar</launcherJarRelativeToPom>
+        <preCp>./userdata;./preload/*.jar;./deps/*.jar;./user/*.jar;${launcherJar}</preCp>
     </properties>
     <build>
         <plugins>
@@ -40,7 +43,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>zip-file-no-jre</id>
@@ -74,7 +76,6 @@
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
                 <executions>
                     <execution>
                         <id>copy-jar</id>
@@ -85,6 +86,23 @@
                         </goals>
                         <configuration>
                             <outputDirectory>${basedir}/target/windows</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>launcher-${project.version}.jar</includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-jar-secondary</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows/deps</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.build.directory}</directory>
@@ -110,12 +128,47 @@
 
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-act-dll</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${basedir}/../act-stub-plugin-assembly/bin</directory>
+                                    <includes>Triggevent_Stub.dll</includes>
+                                </resource>
+                            </resources>
+
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-config-file</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/classes</directory>
+                                    <includes>args.txt</includes>
+                                </resource>
+                            </resources>
+
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
                 <groupId>com.akathist.maven.plugins.launch4j</groupId>
                 <artifactId>launch4j-maven-plugin</artifactId>
-                <version>2.1.2</version>
                 <executions>
                     <execution>
                         <id>l4j-import-gui</id>
@@ -128,8 +181,9 @@
                             <classPath>
                                 <mainClass>${mainImportClass}</mainClass>
                                 <addDependencies>false</addDependencies>
-                                <postCp>./preload/*.jar;./deps/*.jar;./user/*.jar</postCp>
+                                <preCp>${preCp}</preCp>
                             </classPath>
+                            <jar>./nonexistent.jar</jar>
                         </configuration>
                     </execution>
                     <execution>
@@ -147,8 +201,9 @@
                             <classPath>
                                 <mainClass>${mainClass}</mainClass>
                                 <addDependencies>false</addDependencies>
-                                <postCp>./preload/*.jar;./deps/*.jar;./user/*.jar</postCp>
+                                <preCp>${preCp}</preCp>
                             </classPath>
+                            <jar>./nonexistent.jar</jar>
                         </configuration>
                     </execution>
                     <execution>
@@ -163,6 +218,8 @@
                                 <mainClass>${mainUpdateClass}</mainClass>
                                 <addDependencies>false</addDependencies>
                             </classPath>
+                            <jar>${launcherJarRelativeToPom}</jar>
+                            <dontWrapJar>false</dontWrapJar>
                         </configuration>
                     </execution>
 
@@ -172,23 +229,26 @@
                     <jre>
                         <path>jre</path>
                         <minVersion>${java.version}</minVersion>
+                        <opts>
+                            <opt>@args.txt</opt>
+                        </opts>
                     </jre>
                     <headerType>gui</headerType>
-                    <jar>./launcher-${project.version}.jar</jar>
                     <errTitle>Triggevent</errTitle>
                     <dontWrapJar>true</dontWrapJar>
                     <chdir>.</chdir>
                     <downloadUrl>https://www.oracle.com/java/technologies/downloads/#jdk17-windows</downloadUrl>
+                    <!-- This info is really only filled in because AVs complain less.-->
                     <versionInfo>
-                        <fileVersion>1.0.0.0</fileVersion>
-                        <txtFileVersion>txt file version</txtFileVersion>
-                        <fileDescription>description</fileDescription>
-                        <copyright>2021</copyright>
-                        <productVersion>1.0.0.0</productVersion>
-                        <txtProductVersion>1.0.0.0</txtProductVersion>
+                        <fileVersion>1.3.2.1</fileVersion>
+                        <txtFileVersion>1.3.2.1</txtFileVersion>
+                        <fileDescription>Triggevent</fileDescription>
+                        <copyright>2022</copyright>
+                        <productVersion>1.3.2.1</productVersion>
+                        <txtProductVersion>1.3.2.1</txtProductVersion>
                         <productName>Triggevent</productName>
                         <internalName>triggevent</internalName>
-                        <originalFilename>original.exe</originalFilename>
+                        <originalFilename>triggevent.exe</originalFilename>
                     </versionInfo>
                     <messages>
                         <bundledJreErr>You need to download Java version 17 or higher, or download the version
@@ -206,24 +266,48 @@
 
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>xivsupport</artifactId>
-            <version>${project.version}</version>
+            <artifactId>actimport</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>cd-tracker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>dot-tracker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>easytriggers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>job-overlays</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>timelines</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>titan-jails</artifactId>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>triggers</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>xivsupport</artifactId>
         </dependency>
         <dependency>
             <groupId>org.swingexplorer</groupId>
             <artifactId>swingexplorer-core</artifactId>
-            <version>1.7.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>actimport</artifactId>
-            <version>${project.version}</version>
+            <artifactId>telesto-support</artifactId>
         </dependency>
     </dependencies>
 

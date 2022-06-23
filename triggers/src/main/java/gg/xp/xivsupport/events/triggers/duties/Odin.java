@@ -15,13 +15,13 @@ import gg.xp.xivsupport.events.state.XivState;
 // with a UI to enable/disable them, and change the callout text under the Plugins > Callouts tab.
 // The name chosen here will show in the UI.
 @CalloutRepo("Urth's Fount (Odin)")
-// You should not chang the class name once you publish this, as it is used to determine the settings key to store
+// You should not chang the class name once you publish this, as it is used to determine the settings cdKey to store
 // customizations to the callouts.
 // FilteredEventHandler is an optional interface, giving you the 'enabled' option (see below).
 public class Odin implements FilteredEventHandler {
 
 	// Since we have @CalloutRepo
-	private final ModifiableCallout valknut = new ModifiableCallout("Valknut (Out)", "Out");
+	private final ModifiableCallout<AbilityCastStart> valknut = ModifiableCallout.durationBasedCall("Valknut (Out)", "Out");
 
 	// This comes from FilteredEventHandler. In this case, we want to restrict this set of triggers to a specific
 	// zone (Urth's Fount, in this case, Zone ID 394).
@@ -48,7 +48,7 @@ public class Odin implements FilteredEventHandler {
 			// ModifiableCallout.getModified() returns a CalloutEvent with whatever user-specified modifications
 			// applied (e.g. the text can be altered, you can pick TTS/Text/Both, or disable it entirely).
 			// EventContext.accept(Event) - submit the new event to be processed immediately.
-			context.accept(valknut.getModified());
+			context.accept(valknut.getModified(event));
 		}
 	}
 }

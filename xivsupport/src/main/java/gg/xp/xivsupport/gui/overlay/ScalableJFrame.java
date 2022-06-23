@@ -8,16 +8,26 @@ import java.awt.geom.AffineTransform;
 
 public class ScalableJFrame extends JFrame implements Scaled {
 
+	private final int numBuffers;
 	private final MutableDouble scaleFactor;
 
-	private ScalableJFrame(String title, MutableDouble scaleFactor) throws HeadlessException {
+	private ScalableJFrame(String title, MutableDouble scaleFactor, int numBuffers) throws HeadlessException {
 		super(title);
 		this.scaleFactor = scaleFactor;
+		this.numBuffers = numBuffers;
 	}
 
-	public static ScalableJFrame construct(String title, double defaultScaleFactor) {
+	public static ScalableJFrame construct(String title, double defaultScaleFactor, int numBuffers) {
 		MutableDouble scaleFactor = new MutableDouble(defaultScaleFactor);
-		return new ScalableJFrame(title, scaleFactor);
+		return new ScalableJFrame(title, scaleFactor, numBuffers);
+	}
+
+	@Override
+	public void setVisible(boolean b) {
+		if (getBufferStrategy() == null && numBuffers != 0) {
+			createBufferStrategy(numBuffers);
+		}
+		super.setVisible(b);
 	}
 
 	@Override

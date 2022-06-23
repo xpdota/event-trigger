@@ -82,7 +82,7 @@ public class CalloutProcessor {
 	@HandleEvents
 	public void callout(EventContext context, CalloutEvent callout) {
 		String callText = callout.getCallText();
-		if (callText != null) {
+		if (callText != null && !callText.isBlank()) {
 			context.accept(new TtsRequest(callText));
 		}
 	}
@@ -90,7 +90,7 @@ public class CalloutProcessor {
 	@HandleEvents
 	public void ttsDebugCommand(EventContext context, DebugCommand echo) {
 		if (echo.getCommand().equals("tts")) {
-			context.accept(new CalloutEvent("test"));
+			context.accept(new BasicCalloutEvent("test"));
 		}
 	}
 }

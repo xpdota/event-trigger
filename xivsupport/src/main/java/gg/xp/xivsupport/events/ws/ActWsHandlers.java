@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
@@ -15,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStatus;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.CombatantsUpdateRaw;
+import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
@@ -66,10 +69,10 @@ public class ActWsHandlers {
 						// TODO: consider having this refresh rate be dynamic based on things like
 						// number of current combatants, or whether the current zone is a raid, or
 						// whether a pull is actually started.
-						Thread.sleep(500);
+						Thread.sleep(2_000);
 						master.pushEvent(new RefreshCombatantsRequest());
-						for (int i = 0; i < 15; i++) {
-							Thread.sleep(500);
+						for (int i = 0; i < 3; i++) {
+							Thread.sleep(2_000);
 							Set<Long> fastRefreshEntities = state.getPartyList().stream().map(XivEntity::getId).collect(Collectors.toSet());
 							if (pulls.getCurrentStatus() == PullStatus.COMBAT) {
 								state.getCombatantsListCopy().stream()
@@ -85,7 +88,8 @@ public class ActWsHandlers {
 					}
 				}
 			});
-//			combatantsLoopThread.start();
+			// TODO: should this be turned back on?
+			combatantsLoopThread.start();
 		}
 
 	}
@@ -125,6 +129,9 @@ public class ActWsHandlers {
 				log.warn("I don't know how to handle response message: {}", rawMsg);
 			}
 			else {
+				if (rseqObj instanceof String str) {
+					rseqObj = str.intern();
+				}
 				// Just fake the type
 				ActWsJsonMsg actWsJsonMsg = new ActWsJsonMsg("combatants", rseqObj, jsonNode);
 				context.accept(actWsJsonMsg);
@@ -134,7 +141,13 @@ public class ActWsHandlers {
 		JsonNode typeNode = jsonNode.path("type");
 		String type;
 		if (typeNode.isTextual()) {
-			type = typeNode.textValue();
+			type = typeNode.textValue().intern();
+			try {
+				((ObjectNode) jsonNode).set("type", new TextNode(type));
+			}
+			catch (Throwable t) {
+				log.error("Error optimizing JsonNode", t);
+			}
 		}
 		else {
 			type = null;
@@ -189,19 +202,16 @@ public class ActWsHandlers {
 		if ("PartyChanged".equals(jsonMsg.getType())) {
 			List<RawXivPartyInfo> members = mapper.convertValue(jsonMsg.getJson().path("party"), new TypeReference<>() {
 			});
-//			// TODO: consider using automatic deserialization rather than doing it manually
-//
-//			for (JsonNode partyMember : jsonMsg.getJson().get("party")) {
-//				mapper.convertValue(partyMember)
-//				String name = partyMember.get("name").textValue();
-//				long id = Long.parseLong(partyMember.get("id").textValue(), 16);
-//				int world = partyMember.get("worldId").intValue();
-//				int job = partyMember.get("job").intValue();
-//				int level = partyMember.get("level").intValue();
-//				members.add(new RawXivPartyInfo(id, name, world, job, level));
-//			}
 			log.info("Party changed: {}", jsonMsg);
 			context.accept(new PartyChangeEvent(members));
+		}
+	}
+
+	@HandleEvents(order = -100)
+	public static void inCombatChange(EventContext context, ActWsJsonMsg jsonMsg) {
+		if ("InCombat".equals(jsonMsg.getType())) {
+			boolean inCombat = jsonMsg.getJson().get("inGameCombat").booleanValue();
+			context.accept(new InCombatChangeEvent(inCombat));
 		}
 	}
 

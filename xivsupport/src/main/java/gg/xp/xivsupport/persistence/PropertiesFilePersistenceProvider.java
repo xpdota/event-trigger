@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.persistence;
 
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +29,9 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 	private final Properties properties;
 	private final File file;
 	private final File backupFile;
-	private final boolean readOnly;
+	private final boolean canBeReadOnly;
+	private final BooleanSetting readOnlySetting;
+	private boolean readOnly;
 
 	// TODO: is this threadsafe?
 	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName) {
@@ -46,10 +49,10 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 		this(file, false);
 	}
 
-	public PropertiesFilePersistenceProvider(File file, boolean readOnly) {
+	public PropertiesFilePersistenceProvider(File file, boolean canBeReadOnly) {
+		this.canBeReadOnly = canBeReadOnly;
 		this.file = file;
 		this.backupFile = Paths.get(file.getParentFile().toPath().toString(), file.getName() + ".backup").toFile();
-		this.readOnly = readOnly;
 		Properties properties = new Properties();
 		try {
 			try (FileInputStream stream = new FileInputStream(file)) {
@@ -64,14 +67,25 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 		}
 		this.properties = properties;
 		writeChangesToDisk();
+		this.readOnlySetting = new BooleanSetting(this, "read-only-settings", false);
+		this.readOnlySetting.addListener(this::checkReadOnlySetting);
+		readOnly = this.canBeReadOnly && readOnlySetting.get();
+	}
+
+	private void checkReadOnlySetting() {
+		writeChangesToDisk();
+		readOnly = canBeReadOnly && readOnlySetting.get();
+		writeChangesToDisk();
 	}
 
 	private Future<?> writeChangesToDisk() {
 		if (readOnly) {
+			log.info("Not Saving Settings - Read Only");
 			return CompletableFuture.completedFuture(null);
 		}
 		return exs.submit(() -> {
 			try {
+				log.trace("Saving Persistent Settings");
 				File parentFile = file.getParentFile();
 				if (parentFile != null) {
 					parentFile.mkdirs();
@@ -106,7 +120,7 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 
 	@Override
 	protected void setValue(@NotNull String key, @Nullable String value) {
-		String truncated = StringUtils.abbreviate(value, 50);
+		String truncated = StringUtils.abbreviate(value, 300);
 		log.info("Setting changed: {} -> {}", key, truncated);
 		properties.setProperty(key, value);
 		writeChangesToDisk();
@@ -117,6 +131,10 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 		log.info("Setting deleted: {}", key);
 		properties.remove(key);
 		writeChangesToDisk();
+	}
+
+	public BooleanSetting getReadOnlySetting() {
+		return readOnlySetting;
 	}
 
 	@Override

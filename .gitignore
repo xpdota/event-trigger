@@ -6,3 +6,5 @@
 /.idea/workspace.xml
 **/target/
 /target/
+/act-stub-plugin-assembly/bin/*.nlp
+/act-stub-plugin-assembly/bin/mscorlib.dll

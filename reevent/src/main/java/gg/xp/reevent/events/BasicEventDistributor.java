@@ -101,11 +101,12 @@ public class BasicEventDistributor implements EventDistributor {
 									}
 									else {
 										if (e.delayedEnqueueAt() > 0) {
-											log.error("You called 'accept' on an event ({}) with a delayed enqueue - you probably meant to 'queue' it instead.", event.getClass().getSimpleName());
+											log.error("You called 'accept' on an event ({}) with a delayed enqueue - you probably meant to 'queue' it instead.", e.getClass().getSimpleName(), new RuntimeException("Dummy Exception to Generate Stack Trace"));
 										}
 										e.setParent(current);
 										e.setEnqueuedAt(TimeUtils.now());
 										e.setSourceEventHandler(handler);
+										e.setHappenedAt(current.getHappenedAt());
 										log.trace("Event {} triggered new event {}", current, e);
 										eventsForImmediateProcessing.add(e);
 									}

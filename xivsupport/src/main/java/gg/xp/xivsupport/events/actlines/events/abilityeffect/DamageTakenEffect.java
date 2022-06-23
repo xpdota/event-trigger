@@ -4,8 +4,8 @@ public class DamageTakenEffect extends AbilityEffect implements DamageEffect {
 	private final HitSeverity severity;
 	private final long amount;
 
-	public DamageTakenEffect(HitSeverity severity, long amount) {
-		super(AbilityEffectType.DAMAGE);
+	public DamageTakenEffect(long flags, long value, HitSeverity severity, long amount) {
+		super(flags, value, AbilityEffectType.DAMAGE);
 		this.severity = severity;
 		this.amount = amount;
 	}
@@ -25,12 +25,20 @@ public class DamageTakenEffect extends AbilityEffect implements DamageEffect {
 	}
 
 	@Override
-	public String getDescription() {
+	public String getBaseDescription() {
 		if (severity == HitSeverity.NORMAL) {
-			return String.format("Damage Taken: %s", amount);
+			return String.format("Damage Taken: %s (%s %s)", amount, getDamageAspect(), getDamageType());
 		}
 		else {
-			return String.format("Damage Taken: %s (%s)", amount, severity.getFriendlyName());
+			return String.format("Damage Taken: %s (%s) (%s %s)", amount, severity.getFriendlyName(), getDamageAspect(), getDamageType());
 		}
+	}
+
+	public DamageAspect getDamageAspect() {
+		return DamageAspect.forByte((int) (getFlags() >> 20) % 16);
+	}
+
+	public DamageType getDamageType() {
+		return DamageType.forByte((int) (getFlags() >> 16) % 16);
 	}
 }

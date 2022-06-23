@@ -1,13 +1,16 @@
 package gg.xp.xivdata;
 
-import gg.xp.xivdata.jobs.ActionIcon;
-import gg.xp.xivdata.jobs.StatusEffectIcon;
+import gg.xp.xivdata.data.ActionInfo;
+import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.StatusEffectInfo;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +62,7 @@ public class MakeEverything {
 			ProcessBuilder process = new ProcessBuilder(allArgs)
 					.redirectError(ProcessBuilder.Redirect.INHERIT)
 					.redirectOutput(ProcessBuilder.Redirect.INHERIT)
+					.redirectInput(ProcessBuilder.Redirect.PIPE)
 //					.redirectError(ProcessBuilder.Redirect.PIPE)
 //					.redirectOutput(ProcessBuilder.Redirect.PIPE)
 					.directory(scDir);
@@ -67,6 +71,9 @@ public class MakeEverything {
 				processes.add(proc);
 			}
 			long pid = proc.pid();
+			OutputStream stdin = proc.getOutputStream();
+			stdin.write("n\r\n".getBytes(StandardCharsets.UTF_8));
+			stdin.flush();
 			System.out.println("Started pid " + pid);
 //			proc.getInputStream()
 			return proc;
@@ -212,32 +219,32 @@ public class MakeEverything {
 
 		// STATUS EFFECTS
 		{
-			StatusEffectIcon.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
-			Map<Long, Long> statusCsvMap = StatusEffectIcon.getCsvValues();
+			StatusEffectLibrary.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
+			Map<Long, StatusEffectInfo> statusCsvMap = StatusEffectLibrary.getAll();
 			List<Long> statusIcons;
 			// TODO: it looks like the way status effects work is that there is one icon for each stack value.
 			// Maximum stack amounts are defined in Status.csv. Maybe it's time to improve the CSV reading?
 			// There's also fields for whether it can be dispelled or not.
 			{
-				statusIcons = statusCsvMap.values().stream().distinct().toList();
+				statusIcons = statusCsvMap.values().stream().flatMap((data) -> data.getAllIconIds().stream()).distinct().toList();
 				System.out.println("Number of status effect icons: " + statusIcons.size());
-				maker.extractIconRange(statusCsvMap.values());
+				maker.extractIconRange(statusIcons);
 				System.out.println("Copying Icons");
-				List<String> statusIconDir = List.of("xiv", "statuseffect", "icons");
+				List<String> statusIconDir = List.of("xiv", "icon");
 				statusIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, statusIconDir));
 			}
 		}
 		// ACTIONS/ABILITIES
 		{
-			ActionIcon.readAltCsv(maker.getTargetFile("xiv", "actions", "Action.csv"));
-			Map<Long, Long> actionCsvMap = ActionIcon.getCsvValues();
+			ActionLibrary.readAltCsv(maker.getTargetFile("xiv", "actions", "Action.csv"));
+			Map<Long, ActionInfo> actionCsvMap = ActionLibrary.getAll();
 			List<Long> actionIcons;
 			{
-				actionIcons = actionCsvMap.values().stream().distinct().toList();
+				actionIcons = actionCsvMap.values().stream().mapToLong(ActionInfo::iconId).distinct().boxed().toList();
 				System.out.println("Number of action icons: " + actionIcons.size());
-				maker.extractIconRange(actionCsvMap.values());
+				maker.extractIconRange(actionIcons);
 				System.out.println("Copying Icons");
-				List<String> actionIconDir = List.of("xiv", "actions", "icons");
+				List<String> actionIconDir = List.of("xiv", "icon");
 				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, actionIconDir));
 			}
 		}

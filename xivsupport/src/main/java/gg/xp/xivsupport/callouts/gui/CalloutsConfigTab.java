@@ -10,6 +10,7 @@ import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicArrowButton;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,60 +47,78 @@ public class CalloutsConfigTab implements PluginTab {
 		settingsPanel.add(enableTts);
 		JCheckBox enableOverlay = new BooleanSettingGui(backend.getEnableOverlay(), "Enable Overlay").getComponent();
 		settingsPanel.add(enableOverlay);
+		JButton expandAll = new JButton("Expand All");
+		settingsPanel.add(expandAll);
+		JButton collapseAll = new JButton("Collapse All");
+		settingsPanel.add(collapseAll);
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 
 		JPanel innerPanel = new JPanel();
+		enableTts.addActionListener(l -> innerPanel.repaint());
+		enableOverlay.addActionListener(l -> innerPanel.repaint());
 		innerPanel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		List<CalloutGroup> calloutMap = backend.getAllCallouts();
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.LINE_START;
-		c.ipadx = 20;
+		c.ipadx = 5;
 		c.gridy = 3;
 		calloutMap.forEach((group) -> {
 			List<ModifiedCalloutHandle> callouts = group.getCallouts();
 			c.gridx = 0;
-			c.weightx = 0;
-			// left filler
-//			c.gridwidth = 1;
-//			innerPanel.add(new JPanel(), c);
 			c.gridwidth = GridBagConstraints.REMAINDER;
-			JCheckBox topLevelCheckbox = new BooleanSettingGui(group.getEnabled(), group.getName()).getComponent();
-//			c.gridx++;
+			JPanel groupControls = new JPanel(new GridBagLayout());
+			GridBagConstraints subC = new GridBagConstraints(0, 0, 1, 0, 0, 0, GridBagConstraints.WEST, 0, new Insets(0, 0, 0, 0), 10, 0);
+			JCheckBox topLevelCheckbox;
+			{
+				topLevelCheckbox = new BooleanSettingGui(group.getEnabled(), group.getName()).getComponent();
+				groupControls.add(topLevelCheckbox, subC);
+			}
+			JCheckBox showHide;
+			{
+				showHide = new JCheckBox("Show/Hide");
+				showHide.setSelected(true);
+				subC.gridx++;
+				subC.fill = GridBagConstraints.HORIZONTAL;
+				subC.ipadx = 10;
+				subC.weightx = 1;
+				groupControls.add(showHide, subC);
+				collapseAll.addActionListener(l -> showHide.setSelected(false));
+				expandAll.addActionListener(l -> showHide.setSelected(true));
+			}
 			c.weightx = 1;
-			innerPanel.add(topLevelCheckbox, c);
+			innerPanel.add(groupControls, c);
 			c.weightx = 0;
 			c.gridwidth = 1;
 			List<CalloutSettingGui> csgs = new ArrayList<>();
 			callouts.forEach(call -> {
+				c.weightx = 0;
 				c.gridy++;
 				c.gridx = 1;
-				innerPanel.add(new JPanel(), c);
+				innerPanel.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
 				CalloutSettingGui csg = new CalloutSettingGui(call);
+				showHide.getModel().addChangeListener(l -> {
+					csg.setVisible(showHide.isSelected());
+				});
+
 				csgs.add(csg);
 
-
 				innerPanel.add(csg.getCallCheckbox(), c);
-				c.weightx = 0;
 
 				c.gridx++;
 				c.weightx = 1;
 				innerPanel.add(csg.getTtsPanel(), c);
 				c.weightx = 0;
 				c.gridx++;
-				JPanel padding = new JPanel();
-				padding.setSize(20, 1);
-				innerPanel.add(padding, c);
+				innerPanel.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
 				c.weightx = 1;
 				innerPanel.add(csg.getTextPanel(), c);
 				c.gridx++;
 				c.weightx = 0;
-				c.gridwidth = GridBagConstraints.REMAINDER;
-				innerPanel.add(new JPanel(), c);
-				c.gridwidth = 1;
+				innerPanel.add(csg.getColorPicker(), c);
 			});
 			csgs.forEach(csg -> csg.setEnabledByParent(topLevelCheckbox.isSelected()));
 			topLevelCheckbox.addActionListener(l -> {
@@ -107,11 +126,10 @@ public class CalloutsConfigTab implements PluginTab {
 				group.updateChildren();
 			});
 			c.gridx++;
-			c.weightx = 1;
+			c.weightx = 0;
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			// Add dummy to pad out the right side
-			JPanel dummyPanel = new JPanel();
-			innerPanel.add(dummyPanel, c);
+			innerPanel.add(Box.createHorizontalStrut(2), c);
 			c.gridy++;
 		});
 		c.weighty = 1;

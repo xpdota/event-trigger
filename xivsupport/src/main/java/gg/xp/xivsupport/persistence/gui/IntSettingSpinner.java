@@ -5,6 +5,7 @@ import gg.xp.xivsupport.persistence.settings.IntSetting;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.Supplier;
 
 public class IntSettingSpinner {
 
@@ -12,20 +13,42 @@ public class IntSettingSpinner {
 	private final String label;
 	private JLabel jLabel;
 
+	private final Boolean labelAtLeft;
+
 	public IntSettingSpinner(IntSetting setting, String label) {
+		this(setting, label, () -> true);
+	}
+
+	// TODO: something weird going on with insets with this class
+	public IntSettingSpinner(IntSetting setting, String label, Supplier<Boolean> enabled) {
+		this(setting, label, enabled, false);
+	}
+
+	public IntSettingSpinner(IntSetting setting, String label, Supplier<Boolean> enabled, Boolean labelAtLeft) {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setValue(setting.get());
 		model.addChangeListener(e -> {
-			// TODO: should this logic just be part of the setting?
 			Integer newValue = (Integer) model.getValue();
 			if (newValue != setting.get()) {
 				setting.set(newValue);
 			}
 		});
-		model.setMinimum(1);
-		model.setMaximum(32);
-		spinner = new JSpinner(model);
+		Integer min;
+		if ((min = setting.getMin()) != null) {
+			model.setMinimum(min);
+		}
+		Integer max;
+		if ((max = setting.getMax()) != null) {
+			model.setMaximum(max);
+		}
+		spinner = new JSpinner(model) {
+			@Override
+			public boolean isEnabled() {
+				return enabled.get();
+			}
+		};
 		this.label = label;
+		this.labelAtLeft = labelAtLeft;
 	}
 
 	public Component getSpinnerOnly() {
@@ -42,9 +65,14 @@ public class IntSettingSpinner {
 
 	public JPanel getComponent() {
 		JPanel box = new JPanel();
-		box.setLayout(new WrapLayout());
-		box.add(getSpinnerOnly());
-		box.add(getLabelOnly());
+		box.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
+		if (labelAtLeft) {
+			box.add(getLabelOnly());
+			box.add(getSpinnerOnly());
+		} else {
+			box.add(getSpinnerOnly());
+			box.add(getLabelOnly());
+		}
 		box.setMaximumSize(box.getPreferredSize());
 		return box;
 	}
