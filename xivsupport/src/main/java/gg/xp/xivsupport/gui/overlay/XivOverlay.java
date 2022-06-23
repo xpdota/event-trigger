@@ -75,11 +75,19 @@ public class XivOverlay {
 		frame.setType(Window.Type.UTILITY);
 		panel = new JPanel();
 		panel.setOpaque(false);
-//		panel.setBackground(new Color(0, 0, 0, 0));
-//			panel.add(contents);
 		panel.setBorder(transparentBorder);
-		frame.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT));
-		frame.getContentPane().add(panel);
+		JPanel contentPane = new JPanel() {
+			@Override
+			public void paint(Graphics g) {
+				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+				g.clearRect(0, 0, getWidth(), getHeight());
+				super.paint(g);
+			}
+		};
+		frame.setContentPane(contentPane);
+		contentPane.setLayout(new FlowLayout(FlowLayout.LEFT));
+		contentPane.add(panel);
+		contentPane.setOpaque(false);
 		frame.setAlwaysOnTop(true);
 		frame.setLocation((int) xSetting.get(), (int) ySetting.get());
 		frame.setOpacity((float) opacity.get());
