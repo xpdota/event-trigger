@@ -13,12 +13,18 @@ public class IntSettingSpinner {
 	private final String label;
 	private JLabel jLabel;
 
+	private final Boolean labelAtLeft;
+
 	public IntSettingSpinner(IntSetting setting, String label) {
 		this(setting, label, () -> true);
 	}
 
 	// TODO: something weird going on with insets with this class
 	public IntSettingSpinner(IntSetting setting, String label, Supplier<Boolean> enabled) {
+		this(setting, label, enabled, false);
+	}
+
+	public IntSettingSpinner(IntSetting setting, String label, Supplier<Boolean> enabled, Boolean labelAtLeft) {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setValue(setting.get());
 		model.addChangeListener(e -> {
@@ -42,6 +48,7 @@ public class IntSettingSpinner {
 			}
 		};
 		this.label = label;
+		this.labelAtLeft = labelAtLeft;
 	}
 
 	public Component getSpinnerOnly() {
@@ -59,8 +66,13 @@ public class IntSettingSpinner {
 	public JPanel getComponent() {
 		JPanel box = new JPanel();
 		box.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
-		box.add(getSpinnerOnly());
-		box.add(getLabelOnly());
+		if (labelAtLeft) {
+			box.add(getLabelOnly());
+			box.add(getSpinnerOnly());
+		} else {
+			box.add(getSpinnerOnly());
+			box.add(getLabelOnly());
+		}
 		box.setMaximumSize(box.getPreferredSize());
 		return box;
 	}

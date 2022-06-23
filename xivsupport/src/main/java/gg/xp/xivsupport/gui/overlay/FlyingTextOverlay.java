@@ -9,6 +9,7 @@ import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.EnumSetting;
+import gg.xp.xivsupport.persistence.settings.FontSetting;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +33,6 @@ public class FlyingTextOverlay extends XivOverlay {
 	private static final Logger log = LoggerFactory.getLogger(FlyingTextOverlay.class);
 
 	private final List<VisualCalloutItem> currentCallouts = new ArrayList<>();
-	private final Font font;
 	private final SimpleAttributeSet attribs;
 	private volatile List<VisualCalloutItem> currentCalloutsTmp = Collections.emptyList();
 	private final Object lock = new Object();
@@ -45,14 +45,15 @@ public class FlyingTextOverlay extends XivOverlay {
 	private final int templateHeight;
 	private final EnumSetting<TextAlignment> alignmentSetting;
 	private final ColorSetting textColorSetting;
+	private final FontSetting textFontSetting;
 
 	public FlyingTextOverlay(PersistenceProvider pers, OverlayConfig oc) {
 		super("Callout Text", "callout-text-overlay", oc, pers);
 		alignmentSetting = new EnumSetting<>(pers, "callout-text-overlay.text-alignment", TextAlignment.class, TextAlignment.CENTER);
 		textColorSetting = new ColorSetting(pers, "callout-text-overlay.text-color", defaultTextColor);
-		font = new JLabel().getFont().deriveFont(new AffineTransform(2, 0, 0, 2, 0, 0));
+		textFontSetting = new FontSetting(pers, "callout-text-overlay.text-font", new JLabel().getFont().getFontName(), 24);
 		JLabel templateJLabel = new JLabel();
-		templateJLabel.setFont(font);
+		templateJLabel.setFont(textFontSetting.get());
 		templateJLabel.setText("A");
 		templateHeight = templateJLabel.getPreferredSize().height;
 		RefreshLoop<FlyingTextOverlay> refresher = new RefreshLoop<>("CalloutOverlay", this, FlyingTextOverlay::refresh, i -> i.calculateUnscaledFrameTime(50));
@@ -95,7 +96,7 @@ public class FlyingTextOverlay extends XivOverlay {
 			text = new JTextPane();
 			text.setParagraphAttributes(attribs, false);
 			text.setOpaque(false);
-			text.setFont(font);
+			text.setFont(textFontSetting.get());
 			text.setEditable(false);
 			width = innerPanel.getWidth();
 			text.setBorder(null);
@@ -306,6 +307,10 @@ public class FlyingTextOverlay extends XivOverlay {
 
 	public ColorSetting getTextColorSetting() {
 		return textColorSetting;
+	}
+
+	public FontSetting getTextFontSetting() {
+		return textFontSetting;
 	}
 
 	public static void main(String[] args) {
