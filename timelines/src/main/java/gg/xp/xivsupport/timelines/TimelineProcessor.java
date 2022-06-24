@@ -96,6 +96,11 @@ public final class TimelineProcessor {
 		if (lastSync != null && lastSync.line.getEffectiveTimeSince().toMillis() < 10) {
 			return;
 		}
+		// To save on processing time, ignore some events that will never be found in a timeline
+		int num = event.getLineNumber();
+		if (num == 11 || num == 29 || num == 28 || num > 200 || num == 31 || num == 37 || num == 38 || num == 39) {
+			return;
+		}
 		String emulatedActLogLine = event.getEmulatedActLogLine();
 		Optional<TimelineEntry> newSync = entries.stream().filter(entry -> entry.shouldSync(getEffectiveTime(), emulatedActLogLine)).findFirst();
 		newSync.ifPresent(rawTimelineEntry -> {

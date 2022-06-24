@@ -8,8 +8,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.LongSummaryStatistics;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -20,6 +24,8 @@ public class BasicEventDistributor implements EventDistributor {
 
 	protected final List<EventHandler<Event>> handlers = new ArrayList<>();
 	private final Object handlersLock = new Object();
+
+	private final Map<EventHandler<?>, LongSummaryStatistics> executionTimes = new HashMap<>();
 
 	private final StateStore state;
 	private EventQueue queue;
@@ -87,7 +93,9 @@ public class BasicEventDistributor implements EventDistributor {
 			}
 			handlersTmp.forEach(handler -> {
 				log.trace("Sending event {} to handler {} with {} immediate events", current, handler, eventsForImmediateProcessing.size());
+				LongSummaryStatistics stats = executionTimes.computeIfAbsent(handler, unused -> new LongSummaryStatistics());
 				AtomicBoolean isDone = new AtomicBoolean();
+				long timeBefore = System.nanoTime();
 				try {
 					handler.handle(
 							new EventContext() {
@@ -136,7 +144,7 @@ public class BasicEventDistributor implements EventDistributor {
 								@Override
 								public StateStore getStateInfo() {
 									if (isDone.get()) {
-										throw new IllegalStateException("You must get state info at the time when the event handler is called. If you need async behavior, either immediately submit a new event for later processing, or snapshot the needed data before exiting your handler method.");
+										throw new IllegalStateException("You must get state info at the time when the event handler is called. If you need async behavior, either immediately submit a new event for later processing, or snapshot the needed data timeBefore exiting your handler method.");
 									}
 									return state;
 								}
@@ -147,10 +155,20 @@ public class BasicEventDistributor implements EventDistributor {
 				catch (Throwable t) {
 					log.error("Error pumping event {} into handler {}", event, handler, t);
 				}
+				long timeAfter = System.nanoTime();
+				long delta = timeAfter - timeBefore;
+//				if (delta > 100) {
+					stats.accept(delta);
+//				}
 			});
 			if (updateTimes) {
 				current.setPumpFinishedAt(TimeUtils.now());
 			}
 		}
+	}
+
+	public Map<EventHandler<?>, LongSummaryStatistics> getTimeStats() {
+		// Map.ofEntries((autoEventDistributor.getTimeStats().entrySet().stream().filter(e -> e.getValue().getSum() > 100_000_000).toArray(Map.Entry[]::new)))
+		return Collections.unmodifiableMap(executionTimes);
 	}
 }

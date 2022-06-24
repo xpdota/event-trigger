@@ -5,19 +5,19 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
 
 public class BasicEventQueue implements EventQueue {
 
 
 	private static final Logger log = LoggerFactory.getLogger(BasicEventQueue.class);
-	private final Queue<Tracker> backingQueue = new ArrayDeque<>();
+	private final LinkedBlockingDeque<Tracker> backingQueue = new LinkedBlockingDeque<>();
 	private final Object queueLock = new Object();
 	private final List<Event> delayedEvents = new ArrayList<>();
 	private volatile boolean delayedEventsDirtyFlag;
@@ -55,11 +55,9 @@ public class BasicEventQueue implements EventQueue {
 	public void push(Event event) {
 		long runAt = event.delayedEnqueueAt();
 		if (runAt == 0 || runAt <= System.currentTimeMillis()) {
-			synchronized (queueLock) {
-				event.setEnqueuedAt(TimeUtils.now());
-				backingQueue.add(new Tracker(event));
-				queueLock.notifyAll();
-			}
+
+			event.setEnqueuedAt(TimeUtils.now());
+			backingQueue.add(new Tracker(event));
 		}
 		else {
 			queueDelayedEvent(event);
@@ -68,40 +66,39 @@ public class BasicEventQueue implements EventQueue {
 
 	@Override
 	public Event pull() {
-		synchronized (queueLock) {
-			while (true) {
-				Tracker tracker = backingQueue.poll();
-				if (tracker == null) {
-					try {
-						queueLock.wait(5000);
-					}
-					catch (InterruptedException e) {
-						// ignored
-					}
-				}
-				else {
-					tracker.markExit();
+//		synchronized (queueLock) {
+		while (true) {
+			Tracker tracker;
+			try {
+				tracker = backingQueue.take();
+			}
+			catch (InterruptedException e) {
+				log.error("Interrupted", e);
+				continue;
+			}
+			tracker.markExit();
+			if (backingQueue.peekFirst() == null) {
+				synchronized (queueLock) {
 					queueLock.notifyAll();
-					return tracker.event;
 				}
 			}
+			return tracker.event;
 		}
+
 	}
 
 	@Override
 	public int pendingSize() {
-		synchronized (queueLock) {
-			return backingQueue.size();
-		}
+		return backingQueue.size();
 	}
 
 	// Should only be used for testing, or maybe hot reloads
-	// TODO: problem here is that it waits for queue to be empty, but doesn't wait for current
-	// event to be fully processed. This probably needs to be on EventMaster.
+// TODO: problem here is that it waits for queue to be empty, but doesn't wait for current
+// event to be fully processed. This probably needs to be on EventMaster.
 	@Override
 	public void waitDrain() {
 		synchronized (queueLock) {
-			while (pendingSize() > 0) {
+			while (!backingQueue.isEmpty()) {
 				try {
 					queueLock.wait(1000);
 				}
