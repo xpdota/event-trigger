@@ -50,8 +50,9 @@ public class Line20Test extends AbstractACTLineTest<AbilityCastStart> {
 		Assert.assertEquals(event.getTarget().getName(), "ENVIRONMENT");
 		Assert.assertTrue(event.getTarget().isEnvironment());
 
+		Assert.assertEquals(event.getInitialDuration().toMillis(), 2700);
 		// 2700 -> 3000 override from game data
-		Assert.assertEquals(event.getInitialDuration().toMillis(), 3000);
+		Assert.assertEquals(event.getUnmodifiedCastDuration().toMillis(), 3000);
 
 		Position pos = event.getSource().getPos();
 		Assert.assertNotNull(pos);

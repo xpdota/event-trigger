@@ -84,13 +84,13 @@ public class DsrTest extends CalloutVerificationTest {
 				call(683744, "Nidd Buster, Hraes Cleave", "Nidd Buster, Hraes Cleave (6.0)"),
 				call(701165, "", "HP Check: Even"),
 				call(701165, "Light Party Stacks", "Light Party Stacks (7.7)"),
-				call(714987, "Right, near Hraesvelgr", "Right, near Hraesvelgr (7.5)"),
+				call(714987, "Right, near Hraesvelgr", "Right, near Hraesvelgr (7.2)"),
 				call(739102, "Nothing", "Nothing (23.0)"),
-				call(754794, "In", "In (5.5)"),
+				call(754794, "In", "In (5.2)"),
 				call(770414, "", "HP Check: Attack Hraesvelgr"),
 				call(770414, "Light Party Stacks", "Light Party Stacks (7.7)"),
-				call(783084, "Left, away from Hraesvelgr", "Left, away from Hraesvelgr (7.5)"),
-				call(785092, "Out", "Out (5.5)"),
+				call(783084, "Left, away from Hraesvelgr", "Left, away from Hraesvelgr (7.2)"),
+				call(785092, "Out", "Out (5.2)"),
 				call(804102, "Nidd Buster, Hraes Cleave", "Nidd Buster, Hraes Cleave (6.0)"),
 				// P7
 				call(907745, "Exaflare", "Exaflare (5.7)"),
@@ -119,7 +119,7 @@ public class DsrTest extends CalloutVerificationTest {
 				call(1075400, "Move", "Exaflare"),
 				call(1087776, "Stacks", "Stacks (5.7)"),
 				call(1088710, "Ice - In", "Ice - In"),
-				call(1114345, "Enrage", "Enrage (10.0)")
+				call(1114345, "Enrage", "Enrage (9.7)")
 		);
 	}
 }
