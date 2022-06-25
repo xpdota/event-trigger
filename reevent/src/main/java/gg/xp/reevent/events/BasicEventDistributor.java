@@ -26,6 +26,7 @@ public class BasicEventDistributor implements EventDistributor {
 	private final Object handlersLock = new Object();
 
 	private final Map<EventHandler<?>, LongSummaryStatistics> executionTimes = new HashMap<>();
+	private boolean enableProfiling;
 
 	private final StateStore state;
 	private EventQueue queue;
@@ -91,11 +92,11 @@ public class BasicEventDistributor implements EventDistributor {
 			if (handlersTmp.isEmpty()) {
 				log.warn("No handlers!");
 			}
-			handlersTmp.forEach(handler -> {
+			for (EventHandler<Event> handler : handlersTmp) {
 				log.trace("Sending event {} to handler {} with {} immediate events", current, handler, eventsForImmediateProcessing.size());
 				LongSummaryStatistics stats = executionTimes.computeIfAbsent(handler, unused -> new LongSummaryStatistics());
 				AtomicBoolean isDone = new AtomicBoolean();
-				long timeBefore = System.nanoTime();
+				long timeBefore = enableProfiling ? System.nanoTime() : 0;
 				try {
 					handler.handle(
 							new EventContext() {
@@ -155,12 +156,14 @@ public class BasicEventDistributor implements EventDistributor {
 				catch (Throwable t) {
 					log.error("Error pumping event {} into handler {}", event, handler, t);
 				}
-				long timeAfter = System.nanoTime();
-				long delta = timeAfter - timeBefore;
+				if (enableProfiling) {
+					long timeAfter = System.nanoTime();
+					long delta = timeAfter - timeBefore;
 //				if (delta > 100) {
 					stats.accept(delta);
+				}
 //				}
-			});
+			}
 			if (updateTimes) {
 				current.setPumpFinishedAt(TimeUtils.now());
 			}
@@ -170,5 +173,13 @@ public class BasicEventDistributor implements EventDistributor {
 	public Map<EventHandler<?>, LongSummaryStatistics> getTimeStats() {
 		// Map.ofEntries((autoEventDistributor.getTimeStats().entrySet().stream().filter(e -> e.getValue().getSum() > 100_000_000).toArray(Map.Entry[]::new)))
 		return Collections.unmodifiableMap(executionTimes);
+	}
+
+	public boolean isProfilingEnabled() {
+		return enableProfiling;
+	}
+
+	public void setProfilingEnabled(boolean enableProfiling) {
+		this.enableProfiling = enableProfiling;
 	}
 }

@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tabs;
 
+import gg.xp.reevent.events.BasicEventDistributor;
 import gg.xp.xivsupport.events.misc.Management;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.Stats;
@@ -93,6 +94,14 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			statsPanel.add(new WrapperPanel(refreshButton));
 			statsPanel.add(displayed);
 			statsPanel.add(new IntSettingGui(storage.getMaxEventsStoredSetting(), "Max In-Memory Events").getComponent());
+			BasicEventDistributor dist = container.getComponent(BasicEventDistributor.class);
+			if (dist != null) {
+				JCheckBox profiling = new JCheckBox("Enable Profiling");
+				profiling.addActionListener(l -> {
+					dist.setProfilingEnabled(profiling.isSelected());
+				});
+				statsPanel.add(new WrapperPanel(profiling));
+			}
 			statsPanel.setPreferredSize(new Dimension(300, 300));
 			statsAndMemory.add(statsPanel, c);
 			TitleBorderFullsizePanel memoryPanel = new TitleBorderFullsizePanel("Memory Info");

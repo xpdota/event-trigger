@@ -90,7 +90,7 @@ public class RawEventStorage {
 			}
 		}));
 		allowSave = !pls.getLogSource().isImport();
-		Threading.namedDaemonThreadFactory("EventCompressSave").newThread(this::eventProcessingLoop);
+		Threading.namedDaemonThreadFactory("EventCompressSave").newThread(this::eventProcessingLoop).start();
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
@@ -110,7 +110,7 @@ public class RawEventStorage {
 
 	@HandleEvents(order = Integer.MAX_VALUE)
 	public void queueEventForProcessing(EventContext context, Event event) {
-		eventSaveQueue.offer(event);
+		eventSaveQueue.add(event);
 	}
 
 //	@HandleEvents(order = 1_000_000)

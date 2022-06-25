@@ -55,6 +55,11 @@ public class JobOverlayManager extends XivOverlay implements FilteredEventHandle
 
 	@HandleEvents
 	public void jobChange(EventContext context, PlayerChangedJobEvent event) {
+		resetJob();
+	}
+
+
+	private void resetJob() {
 		changeJob(state.getPlayerJob());
 	}
 
@@ -93,18 +98,24 @@ public class JobOverlayManager extends XivOverlay implements FilteredEventHandle
 				repackSize();
 			}
 			refresher.refreshNow();
-//			getFrame().repaint();
 			panel.repaint();
 		});
 	}
 
-//	@Override
-//	public void setVisible(boolean visible) {
-//		if (visible) {
-//			changeJob(state.getPlayerJob());
-//		}
-//		super.setVisible(visible);
-//	}
+	@Override
+	public void setVisible(boolean visible) {
+		if (visible) {
+			resetJob();
+			BaseJobOverlay cur = current;
+			if (cur != null) {
+				cur.onBecomeVisible();
+			}
+		}
+		super.setVisible(visible);
+		if (visible) {
+			repackSize();
+		}
+	}
 
 	@Override
 	public boolean enabled(EventContext context) {

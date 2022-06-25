@@ -78,4 +78,8 @@ public interface Event extends Serializable {
 	default Instant getEffectiveHappenedAt() {
 		return getHappenedAt();
 	}
+
+	default @Nullable Event combineWith(Event event) {
+		return null;
+	};
 }
