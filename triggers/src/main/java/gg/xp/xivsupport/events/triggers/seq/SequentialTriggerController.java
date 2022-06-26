@@ -231,10 +231,30 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	private static final int defaultCycleProcessingTime = 100;
+	private static final int cycleProcessingTime;
+	// Workaround for integration tests exceeding cycle time
+	static {
+		String prop = System.getProperty("sequentialTriggerCycleTime");
+		if (prop != null) {
+			int value;
+			try {
+				value = Integer.parseInt(prop);
+			}
+			catch (NumberFormatException nfe) {
+				value = defaultCycleProcessingTime;
+			}
+			cycleProcessingTime = value;
+		}
+		else {
+			cycleProcessingTime = defaultCycleProcessingTime;
+		}
+	}
+
 	private void waitProcessingDone() {
 		// "done" means waiting for another event
 		long startTime = System.currentTimeMillis();
-		int timeoutMs = 100;
+		int timeoutMs = cycleProcessingTime;
 		long failAt = startTime + timeoutMs;
 		while (processing && !done) {
 			try {
