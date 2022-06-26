@@ -9,7 +9,6 @@
     </appender>
     <define name="TRIGG_DIR" class="gg.xp.xivsupport.persistence.UserDirFinder" />
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-<!--        TODO this breaks on *nix-->
         <file>${TRIGG_DIR}/triggevent.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
