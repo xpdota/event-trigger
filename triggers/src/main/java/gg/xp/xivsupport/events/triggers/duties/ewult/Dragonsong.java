@@ -262,6 +262,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 			case 0x63C6 -> call = thordan_quaga;
 			case 0x63C1 -> call = thordan_broadSwingL;
 			case 0x63C0 -> call = thordan_broadSwingR;
+			case 0x63C7 -> call = thordan_heavenlyHeel;
 			case 0x63D0 -> call = thordan_trio2_gaze;
 			case 0x670B -> call = estinhog_drachenlance;
 			// TODO: what should this call actually be?

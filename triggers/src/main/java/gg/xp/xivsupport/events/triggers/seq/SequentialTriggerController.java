@@ -199,7 +199,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 				}
 				// TODO: use this as a stop condition
 				catch (InterruptedException e) {
-					throw new SequentialTriggerTimeoutException("Trigger was interrupted event");
+					throw new SequentialTriggerTimeoutException("Trigger was interrupted", e);
 				}
 			}
 		}
