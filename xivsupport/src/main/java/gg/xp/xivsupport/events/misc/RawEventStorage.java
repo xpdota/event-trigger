@@ -7,6 +7,7 @@ import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.persistence.Compressible;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.replay.ReplayController;
@@ -182,8 +183,7 @@ public class RawEventStorage {
 		if (event.shouldSave() && allowSave && saveToDisk.get()) {
 			try {
 				if (eventSaveStream == null) {
-					String userDataDir = System.getenv("APPDATA");
-					Path sessionsDir = Paths.get(userDataDir, "triggevent", "sessions", dirName);
+					Path sessionsDir = Platform.getSessionsDir();
 					File sessionsDirFile = sessionsDir.toFile();
 					sessionsDirFile.mkdirs();
 					if (!sessionsDirFile.exists() && sessionsDirFile.isDirectory()) {
