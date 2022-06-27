@@ -552,10 +552,12 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 						yourRole = IceFireRole.NO_METEOR;
 					}
 				}
+				List<XivCombatant> meteors = marks.stream().map(BuffApplied::getTarget).toList();
+				Map<String, Object> params = Map.of("meteors", meteors);
 				switch (yourRole) {
-					case METEOR_ON_YOU -> s.accept(thordan_trio2_meteorMark.getModified());
-					case METEOR_ON_ROLE -> s.accept(thordan_trio2_meteorRoleMark.getModified());
-					case NO_METEOR -> s.accept(thordan_trio2_nonMeteorRole.getModified());
+					case METEOR_ON_YOU -> s.accept(thordan_trio2_meteorMark.getModified(params));
+					case METEOR_ON_ROLE -> s.accept(thordan_trio2_meteorRoleMark.getModified(params));
+					case NO_METEOR -> s.accept(thordan_trio2_nonMeteorRole.getModified(params));
 				}
 				s.waitEvent(BuffApplied.class, ba -> ba.getBuff().getId() == 0xB57);
 				s.accept(thordan_trio2_firstTower.getModified());
