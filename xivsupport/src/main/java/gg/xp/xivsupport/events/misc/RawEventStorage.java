@@ -4,6 +4,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.persistence.Compressible;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -29,12 +30,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 public class RawEventStorage {
@@ -97,6 +101,11 @@ public class RawEventStorage {
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public void storeEvent(EventContext context, Event event) {
 		events.add(event);
+		eventSubTypeCache.forEach((type, list) -> {
+			if (type.isInstance(event)) {
+				list.add(event);
+			}
+		});
 		int maxEvents = maxEventsStored.get();
 		if (events.size() > maxEvents) {
 			log.info("Pruning events");
@@ -104,6 +113,7 @@ public class RawEventStorage {
 				int demarcation = events.size() / 3;
 				events = new ArrayList<>(events.subList(demarcation, events.size()));
 			}
+			eventSubTypeCache.clear();
 			// TODO: shutdown hook, or just stream events directly
 			exs.submit(System::gc);
 		}
@@ -140,6 +150,18 @@ public class RawEventStorage {
 	public List<Event> getEvents() {
 		// Trying new thing - this implementation is safe because we only append to the list
 		return new ProxyForAppendOnlyList<>(events);
+	}
+
+	private final Map<Class<?>, List<Event>> eventSubTypeCache = new ConcurrentHashMap<>();
+
+	@SuppressWarnings("unchecked")
+	public <X> List<X> getEventsOfType(Class<X> eventClass) {
+		// TODO: concurrency issues may cause a few events to be missed when creating one of these
+		return (List<X>) new ProxyForAppendOnlyList<>(eventSubTypeCache.computeIfAbsent(eventClass,
+				(cls) -> (List<Event>) getEvents().stream().filter(eventClass::isInstance)
+				.map(eventClass::cast)
+				.collect(Collectors.toList())));
+
 	}
 
 	public IntSetting getMaxEventsStoredSetting() {
