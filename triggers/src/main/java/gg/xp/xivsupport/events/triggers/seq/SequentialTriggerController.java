@@ -34,6 +34,8 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	private volatile boolean done;
 	private volatile boolean processing = true;
 	private volatile boolean die;
+	private volatile boolean cycleProcessingTimeExceeded;
+	private volatile @Nullable Predicate<X> filter;
 
 	// To be called from external thread
 	public SequentialTriggerController(EventContext initialEventContext, X initialEvent, BiConsumer<X, SequentialTriggerController<X>> triggerCode, int timeout) {
@@ -135,11 +137,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	public <Y> Y waitEvent(Class<Y> eventClass, Predicate<Y> eventFilter) {
 		log.trace("Waiting for specific event");
 		while (true) {
-			X event = waitEvent();
-			if (eventClass.isInstance(event) && eventFilter.test((Y) event)) {
-				log.trace("Done waiting for specific event, got: {}", event);
-				return (Y) event;
-			}
+			return (Y) waitEvent(event -> eventClass.isInstance(event) && eventFilter.test((Y) event));
 		}
 	}
 
@@ -153,7 +151,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	public <Y, Z> List<Y> waitEventsUntil(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {
 		List<Y> out = new ArrayList<>();
 		while (true) {
-			X event = waitEvent();
+			X event = waitEvent(e -> true);
 			// First possibility - event we're interested int
 			if (eventClass.isInstance(event) && eventFilter.test((Y) event)) {
 				out.add((Y) event);
@@ -172,11 +170,12 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	}
 
 	// To be called from internal thread
-	private X waitEvent() {
+	private X waitEvent(Predicate<X> filter) {
 		synchronized (lock) {
 			processing = false;
 			currentEvent = null;
 			context = null;
+			this.filter = filter;
 			lock.notifyAll();
 			while (true) {
 				if (die) {
@@ -185,9 +184,13 @@ public class SequentialTriggerController<X extends BaseEvent> {
 //					thread.stop();
 					throw new SequentialTriggerTimeoutException("Trigger ran out of time waiting for event");
 				}
+				if (cycleProcessingTimeExceeded) {
+					throw new SequentialTriggerTimeoutException("Trigger exceeded max cycle time");
+				}
 				if (currentEvent != null) {
 					X event = currentEvent;
 					currentEvent = null;
+					this.filter = null;
 					return event;
 				}
 
@@ -196,7 +199,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 				}
 				// TODO: use this as a stop condition
 				catch (InterruptedException e) {
-					throw new SequentialTriggerTimeoutException("Trigger was interrupted event");
+					throw new SequentialTriggerTimeoutException("Trigger was interrupted", e);
 				}
 			}
 		}
@@ -212,6 +215,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 				lock.notifyAll();
 				return;
 			}
+			Predicate<X> filt = filter;
+			if (filt != null && !filt.test(event)) {
+				return;
+			}
 			// First, set fields
 			context = ctx;
 			currentEvent = event;
@@ -224,16 +231,38 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	private static final int defaultCycleProcessingTime = 100;
+	private static final int cycleProcessingTime;
+	// Workaround for integration tests exceeding cycle time
+	static {
+		String prop = System.getProperty("sequentialTriggerCycleTime");
+		if (prop != null) {
+			int value;
+			try {
+				value = Integer.parseInt(prop);
+			}
+			catch (NumberFormatException nfe) {
+				value = defaultCycleProcessingTime;
+			}
+			cycleProcessingTime = value;
+		}
+		else {
+			cycleProcessingTime = defaultCycleProcessingTime;
+		}
+	}
+
 	private void waitProcessingDone() {
 		// "done" means waiting for another event
 		long startTime = System.currentTimeMillis();
-		int timeoutMs = 100;
+		int timeoutMs = cycleProcessingTime;
 		long failAt = startTime + timeoutMs;
 		while (processing && !done) {
 			try {
 				long timeLeft = failAt - System.currentTimeMillis();
 				if (timeLeft <= 0) {
 					log.error("Cycle processing time max ({}ms) exceeded", timeoutMs);
+					cycleProcessingTimeExceeded = true;
+					return;
 				}
 				//noinspection WaitNotifyWhileNotSynced
 				lock.wait(timeLeft);

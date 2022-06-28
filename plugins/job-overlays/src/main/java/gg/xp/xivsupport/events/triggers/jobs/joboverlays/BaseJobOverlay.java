@@ -13,11 +13,18 @@ public abstract class BaseJobOverlay extends JPanel implements FilteredEventHand
 		setOpaque(false);
 	}
 
+	private boolean wasVisible;
+
 	@Override
 	public boolean enabled(EventContext context) {
-		return isVisible();
+		boolean nowVisible = isShowing();
+		if (!wasVisible && nowVisible) {
+			SwingUtilities.invokeLater(this::onBecomeVisible);
+		}
+		return wasVisible = nowVisible;
 	}
 
+	@Override
 	public void setVisible(boolean vis) {
 		if (vis) {
 			onBecomeVisible();

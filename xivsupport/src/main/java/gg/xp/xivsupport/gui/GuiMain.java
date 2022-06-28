@@ -633,10 +633,13 @@ public class GuiMain {
 
 	private JPanel getActLogPanel() {
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
+		// The first way which this was implemented was by keeping its own list of events, but that meant that they
+		// would never clear out.
+		// The second way was to stream and filter the raw event storage, but that is inefficient because it scales
+		// very poorly and causes higher CPU usage.
+		// The third, not-hacky way is to just have RawEventStorage track events of a particular type for us
 		TableWithFilterAndDetails<ACTLogLineEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("ACT Log",
-						() -> rawStorage.getEvents().stream().filter(ACTLogLineEvent.class::isInstance)
-								.map(ACTLogLineEvent.class::cast)
-								.collect(Collectors.toList()),
+						() -> rawStorage.getEventsOfType(ACTLogLineEvent.class),
 						currentEvent -> {
 							if (currentEvent == null) {
 								return Collections.emptyList();

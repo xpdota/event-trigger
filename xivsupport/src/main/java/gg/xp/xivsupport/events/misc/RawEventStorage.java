@@ -4,13 +4,16 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.persistence.Compressible;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
+import gg.xp.xivsupport.sys.Threading;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -24,10 +27,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 public class RawEventStorage {
@@ -52,6 +63,7 @@ public class RawEventStorage {
 	private final Object eventsPruneLock = new Object();
 	private List<Event> events = new ArrayList<>();
 	private final BooleanSetting saveToDisk;
+	private final BlockingQueue<Event> eventSaveQueue = new LinkedBlockingQueue<>();
 	private boolean allowSave = true;
 
 	public RawEventStorage(PicoContainer container, PersistenceProvider persist, PrimaryLogSource pls) {
@@ -83,11 +95,17 @@ public class RawEventStorage {
 			}
 		}));
 		allowSave = !pls.getLogSource().isImport();
+		Threading.namedDaemonThreadFactory("EventCompressSave").newThread(this::eventProcessingLoop).start();
 	}
 
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public void storeEvent(EventContext context, Event event) {
 		events.add(event);
+		eventSubTypeCache.forEach((type, list) -> {
+			if (type.isInstance(event)) {
+				list.add(event);
+			}
+		});
 		int maxEvents = maxEventsStored.get();
 		if (events.size() > maxEvents) {
 			log.info("Pruning events");
@@ -95,25 +113,31 @@ public class RawEventStorage {
 				int demarcation = events.size() / 3;
 				events = new ArrayList<>(events.subList(demarcation, events.size()));
 			}
+			eventSubTypeCache.clear();
 			// TODO: shutdown hook, or just stream events directly
 			exs.submit(System::gc);
 		}
 	}
 
-	@HandleEvents
-	public void compressEvents(EventContext context, Event event) {
-		exs.submit(() -> {
-			compressEvent(event);
-		});
+	@HandleEvents(order = Integer.MAX_VALUE)
+	public void queueEventForProcessing(EventContext context, Event event) {
+		eventSaveQueue.add(event);
 	}
 
-	@LiveOnly
-	@HandleEvents(order = Integer.MAX_VALUE)
-	public void writeEventToDisk(EventContext context, Event event) {
-		exs.submit(() -> {
-			this.saveEventToDisk(event);
-		});
-	}
+//	@HandleEvents(order = 1_000_000)
+//	public void compressEvents(EventContext context, Event event) {
+//		exs.submit(() -> {
+//			compressEvent(event);
+//		});
+//	}
+//
+//	@LiveOnly
+//	@HandleEvents(order = Integer.MAX_VALUE)
+//	public void writeEventToDisk(EventContext context, Event event) {
+//		exs.submit(() -> {
+//			this.saveEventToDisk(event);
+//		});
+//	}
 
 	@HandleEvents
 	public void clear(EventContext context, DebugCommand event) {
@@ -128,8 +152,47 @@ public class RawEventStorage {
 		return new ProxyForAppendOnlyList<>(events);
 	}
 
+	private final Map<Class<?>, List<Event>> eventSubTypeCache = new ConcurrentHashMap<>();
+
+	@SuppressWarnings("unchecked")
+	public <X> List<X> getEventsOfType(Class<X> eventClass) {
+		// TODO: concurrency issues may cause a few events to be missed when creating one of these
+		return (List<X>) new ProxyForAppendOnlyList<>(eventSubTypeCache.computeIfAbsent(eventClass,
+				(cls) -> (List<Event>) getEvents().stream().filter(eventClass::isInstance)
+				.map(eventClass::cast)
+				.collect(Collectors.toList())));
+
+	}
+
 	public IntSetting getMaxEventsStoredSetting() {
 		return maxEventsStored;
+	}
+
+	private void eventProcessingLoop() {
+		while (true) {
+			try {
+				processNextEvent();
+			}
+			catch (Throwable t) {
+				log.error("Error processing event", t);
+			}
+		}
+	}
+
+	private void processNextEvent() {
+		Event e = null;
+		try {
+			e = eventSaveQueue.take();
+		}
+		catch (InterruptedException ex) {
+			log.error("Interrupted", ex);
+		}
+		processEvent(e);
+	}
+
+	private void processEvent(Event e) {
+		compressEvent(e);
+		saveEventToDisk(e);
 	}
 
 	private static void compressEvent(Event event) {
@@ -142,8 +205,7 @@ public class RawEventStorage {
 		if (event.shouldSave() && allowSave && saveToDisk.get()) {
 			try {
 				if (eventSaveStream == null) {
-					String userDataDir = System.getenv("APPDATA");
-					Path sessionsDir = Paths.get(userDataDir, "triggevent", "sessions", dirName);
+					Path sessionsDir = Platform.getSessionsDir();
 					File sessionsDirFile = sessionsDir.toFile();
 					sessionsDirFile.mkdirs();
 					if (!sessionsDirFile.exists() && sessionsDirFile.isDirectory()) {

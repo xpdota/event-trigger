@@ -92,6 +92,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<?> ewSafe = new ModifiableCallout<>("Trio 1 E/W Safe", "East/West Safe", "East West Safe");
 	private final ModifiableCallout<?> seNwSafe = new ModifiableCallout<>("Trio 1 SE/NW Safe", "Southeast/Northwest Safe", "Southeast Northwest Safe");
 
+	private final ModifiableCallout<AbilityCastStart> thordan_heavenlyHeel = ModifiableCallout.durationBasedCall("Heavenly Heel", "Buster on {event.target}, then 3 hits");
 
 	private final ModifiableCallout<?> thordan_trio1_nothing = new ModifiableCallout<>("First Trio: Nothing", "Nothing");
 	private final ModifiableCallout<HeadMarkerEvent> thordan_trio1_blueMarker = new ModifiableCallout<>("First Trio: Blue Marker", "Blue Marker");
@@ -261,6 +262,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 			case 0x63C6 -> call = thordan_quaga;
 			case 0x63C1 -> call = thordan_broadSwingL;
 			case 0x63C0 -> call = thordan_broadSwingR;
+			case 0x63C7 -> call = thordan_heavenlyHeel;
 			case 0x63D0 -> call = thordan_trio2_gaze;
 			case 0x670B -> call = estinhog_drachenlance;
 			// TODO: what should this call actually be?
@@ -550,10 +552,12 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 						yourRole = IceFireRole.NO_METEOR;
 					}
 				}
+				List<XivCombatant> meteors = marks.stream().map(BuffApplied::getTarget).toList();
+				Map<String, Object> params = Map.of("meteors", meteors);
 				switch (yourRole) {
-					case METEOR_ON_YOU -> s.accept(thordan_trio2_meteorMark.getModified());
-					case METEOR_ON_ROLE -> s.accept(thordan_trio2_meteorRoleMark.getModified());
-					case NO_METEOR -> s.accept(thordan_trio2_nonMeteorRole.getModified());
+					case METEOR_ON_YOU -> s.accept(thordan_trio2_meteorMark.getModified(params));
+					case METEOR_ON_ROLE -> s.accept(thordan_trio2_meteorRoleMark.getModified(params));
+					case NO_METEOR -> s.accept(thordan_trio2_nonMeteorRole.getModified(params));
 				}
 				s.waitEvent(BuffApplied.class, ba -> ba.getBuff().getId() == 0xB57);
 				s.accept(thordan_trio2_firstTower.getModified());

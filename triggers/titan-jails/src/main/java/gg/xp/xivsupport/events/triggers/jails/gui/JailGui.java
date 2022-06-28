@@ -109,7 +109,9 @@ public class JailGui implements PluginTab {
 	// tab is visible?
 	@HandleEvents(order = 20_000)
 	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-		jobSortGui.externalRefresh();
+		if (jobSortGui != null) {
+			jobSortGui.externalRefresh();
+		}
 	}
 
 
