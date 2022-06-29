@@ -1203,7 +1203,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				if (e1.buffIdMatches(0xB52)) {
 					log.info("p6 HOT: part 1");
 					s.updateCall(hotDebuff.getModified(e1));
-					s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 3_500);
+					s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 4_500);
 					log.info("p6 HOT: part 2");
 					s.updateCall(pyretic_pre.getModified(e1));
 					BuffApplied pyreticApplied = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0x3C0));
