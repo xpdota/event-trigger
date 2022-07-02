@@ -184,7 +184,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<HeadMarkerEvent> t2_crossNoDoom = new ModifiableCallout<>("Cross (No Doom)", "Blue Cross");
 
 	// Double Dragons
-	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_stack = ModifiableCallout.durationBasedCall("P6 Tankbuster (Stack)", "Stack for Buster");
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_stack = ModifiableCallout.durationBasedCall("P6 Tankbuster (Stack)", "Shared Buster");
 	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_niddBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Nidhogg Buster)", "Nidd Buster, Hraes Cleave");
 	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_hraesBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Hraes Buster)", "Hraes Buster, Nidd Cleave");
 	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_bothBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Both Buster)", "Busters");
