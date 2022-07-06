@@ -7,11 +7,8 @@ import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
-import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
-import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
@@ -92,13 +89,13 @@ public final class ActionTable {
 						CustomRightClickOption.forRow(
 								"Copy XIVAPI Icon URL",
 								ActionInfo.class,
-								ai -> GuiUtil.copyToClipboard(ai.getXivapiUrl().toString())),
+								ai -> GuiUtil.copyTextToClipboard(ai.getXivapiUrl().toString())),
 						CustomRightClickOption.forRow(
 								"Copy XIVAPI Icon As Markdown",
 								ActionInfo.class,
 								ai -> {
 									String md = String.format("![%s](%s)", ai.name(), ai.getXivapiUrl());
-									GuiUtil.copyToClipboard(md);
+									GuiUtil.copyTextToClipboard(md);
 								})))
 //				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
 //					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());

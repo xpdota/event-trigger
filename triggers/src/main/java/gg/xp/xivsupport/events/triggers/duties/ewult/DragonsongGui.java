@@ -78,7 +78,7 @@ public class DragonsongGui implements PluginTab {
 		c.weightx = 0;
 		c.gridwidth = 1;
 		c.weighty = 1;
-		inner.add(jsg.getJobListPane(), c);
+		inner.add(jsg.getJobListWithButtons(), c);
 		c.gridx++;
 		c.weightx = 1;
 		inner.add(jsg.getPartyPane(), c);
