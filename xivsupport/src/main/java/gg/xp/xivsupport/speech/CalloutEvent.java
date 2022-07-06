@@ -31,8 +31,12 @@ public interface CalloutEvent extends Event, HasPrimaryValue, HasCalloutTracking
 	@Nullable HasCalloutTrackingKey replaces();
 
 	default boolean shouldReplace(HasCalloutTrackingKey previous) {
+		HasCalloutTrackingKey rep = replaces();
+		if (rep == null) {
+			return false;
+		}
 		CalloutTrackingKey otherKey = previous.trackingKey();
-		return otherKey.equals(trackingKey());
+		return otherKey.equals(rep.trackingKey());
 	}
 
 	void setReplaces(HasCalloutTrackingKey replaces);

@@ -72,13 +72,15 @@ public class CalloutProcessor {
 		String tts = applyReplacements(raw, raw.getTts(), binding);
 		Supplier<String> text = () -> applyReplacements(raw, raw.getText(), binding);
 
-		return new ProcessedCalloutEvent(
+		ProcessedCalloutEvent out = new ProcessedCalloutEvent(
 				raw.trackingKey(),
 				tts,
 				text,
 				() -> raw.getExpiry().test(event),
 				() -> raw.getGuiProvider().apply(event),
 				raw.getColorOverride());
+		out.setReplaces(raw.getReplaces());
+		return out;
 	}
 
 
@@ -119,7 +121,7 @@ public class CalloutProcessor {
 
 	// Default conversions
 	@SuppressWarnings("unused")
-	public static String singleReplacement(Object rawValue) {
+	public String singleReplacement(Object rawValue) {
 		String value;
 		if (rawValue instanceof String strVal) {
 			value = strVal;

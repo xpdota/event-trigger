@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.callouts;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.SystemEvent;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -13,7 +15,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTrackingKey {
+@SystemEvent
+public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTrackingKey, HasPrimaryValue {
 	private static final Logger log = LoggerFactory.getLogger(RawModifiedCallout.class);
 	@Serial
 	private static final long serialVersionUID = 5660021283907309369L;
@@ -24,7 +27,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private final Map<String, Object> arguments;
 	private final Function<? super X, ? extends @Nullable Component> guiProvider;
 	private final Predicate<X> expiry;
-	private @Nullable CalloutTrackingKey replaces;
+	private @Nullable HasCalloutTrackingKey replaces;
 	private final @Nullable Color colorOverride;
 	private final CalloutTrackingKey key = new CalloutTrackingKey();
 	private static final int maxErrors = 10;
@@ -65,7 +68,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 		return expiry;
 	}
 
-	public @Nullable CalloutTrackingKey getReplaces() {
+	public @Nullable HasCalloutTrackingKey getReplaces() {
 		return replaces;
 	}
 
@@ -78,7 +81,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 			this.replaces = null;
 		}
 		else {
-			this.replaces = replaces.trackingKey();
+			this.replaces = replaces;
 		}
 	}
 
@@ -99,5 +102,10 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	@Override
 	public CalloutTrackingKey trackingKey() {
 		return key;
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		return tts;
 	}
 }

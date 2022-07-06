@@ -260,7 +260,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			catch (NumberFormatException nfe) {
 				value = defaultCycleProcessingTime;
 			}
-			cycleProcessingTime = value;
+//			cycleProcessingTime = value;
+			// TODO
+			cycleProcessingTime = 30000;
 		}
 		else {
 			cycleProcessingTime = defaultCycleProcessingTime;

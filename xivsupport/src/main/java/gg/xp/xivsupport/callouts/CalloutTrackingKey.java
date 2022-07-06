@@ -22,6 +22,11 @@ public class CalloutTrackingKey implements Serializable {
 	}
 
 	@Override
+	public String toString() {
+		return "CalloutTrackingKey(%s)".formatted(key);
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
