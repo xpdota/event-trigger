@@ -56,19 +56,10 @@ public class ModifiableCallout<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(ModifiableCallout.class);
 
-	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
-	private final Map<String, Script> scriptCache = new ConcurrentHashMap<>();
-	// TODO: should this use GroovyManager instead?
-	private final GroovyShell interpreter = new GroovyShell();
-
 	private final String description;
 	private final String defaultTtsText;
 	private final String defaultVisualText;
 	private final Predicate<X> expiry;
-	private final long defaultVisualHangTime;
-	private final Object interpLock = new Object();
-	private int errorCount;
-	private static final int maxErrors = 10;
 	private Function<? super X, ? extends @Nullable Component> guiProvider = e -> null;
 
 	private static final Duration defaultHangDuration = Duration.of(5, ChronoUnit.SECONDS);
@@ -100,7 +91,6 @@ public class ModifiableCallout<X> {
 		this.defaultTtsText = tts;
 		this.defaultVisualText = text;
 		this.expiry = expiry;
-		this.defaultVisualHangTime = 5000L;
 	}
 
 	/**
@@ -115,14 +105,12 @@ public class ModifiableCallout<X> {
 		this.defaultTtsText = ttsAndText;
 		this.defaultVisualText = ttsAndText;
 		this.expiry = expiresIn(Duration.ofMillis(msExpiry));
-		this.defaultVisualHangTime = msExpiry;
 	}
 
 	public ModifiableCallout(String description, String tts, String text) {
 		this.description = description;
 		defaultTtsText = tts;
 		defaultVisualText = text;
-		defaultVisualHangTime = 5000L;
 		this.expiry = expiresIn(defaultHangDuration);
 	}
 
@@ -235,7 +223,7 @@ public class ModifiableCallout<X> {
 	 *
 	 * @return A CalloutEvent
 	 */
-	public CalloutEvent getModified() {
+	public RawModifiedCallout<X> getModified() {
 		return getModified(Collections.emptyMap());
 	}
 
@@ -245,7 +233,7 @@ public class ModifiableCallout<X> {
 	 * @param event The event that 'caused' this callout
 	 * @return A CalloutEvent
 	 */
-	public CalloutEvent getModified(X event) {
+	public RawModifiedCallout<X> getModified(X event) {
 		return getModified(event, Collections.emptyMap());
 	}
 
@@ -257,42 +245,23 @@ public class ModifiableCallout<X> {
 	 * @param rawArguments Additional variables to be passed to Groovy expressions
 	 * @return A CalloutEvent
 	 */
-	public CalloutEvent getModified(X event, Map<String, Object> rawArguments) {
-		// TODO
-		Binding arguments = new Binding(new HashMap<>(rawArguments));
-		arguments.setVariable("event", event);
+	public RawModifiedCallout<X> getModified(X event, Map<String, Object> rawArguments) {
 		String callText;
 		String visualText;
+		Color colorOverride;
 		if (handle == null) {
 			// TODO: consider splitting out some logic here so that we can make these easily without worrying about handles
 			log.trace("ModifiableCallout does not have handle yet ({})", description);
 			callText = defaultTtsText;
 			visualText = defaultVisualText;
+			colorOverride = null;
 		}
 		else {
 			callText = handle.getEffectiveTts();
 			visualText = handle.getEffectiveText();
+			colorOverride = handle.getTextColorOverride().get();
 		}
-		String modifiedCallText = applyReplacements(callText, arguments);
-		String modifiedVisualText = applyReplacements(visualText, arguments);
-		BaseCalloutEvent call;
-		if (Objects.equals(modifiedVisualText, visualText) && this.expiry == null) {
-			call = new BasicCalloutEvent(
-					modifiedCallText,
-					modifiedVisualText);
-		}
-		else {
-			call = new ParentedCalloutEvent<>(
-					event,
-					modifiedCallText,
-					() -> applyReplacements(visualText, arguments),
-					expiry,
-					guiProvider);
-		}
-		if (handle != null) {
-			call.setColorOverride(handle.getTextColorOverride().get());
-		}
-		return call;
+		return new RawModifiedCallout<>(description, callText, visualText, event, rawArguments, guiProvider, expiry, colorOverride);
 	}
 
 	/**
@@ -302,126 +271,22 @@ public class ModifiableCallout<X> {
 	 * @param rawArguments Additional variables to be passed to Groovy expressions
 	 * @return A CalloutEvent
 	 */
-	public CalloutEvent getModified(Map<String, Object> rawArguments) {
+	public RawModifiedCallout<X> getModified(Map<String, Object> rawArguments) {
 		String callText;
 		String visualText;
+		Color colorOverride;
 		if (handle == null) {
 			log.warn("ModifiableCallout does not have handle yet ({})", description);
 			callText = defaultTtsText;
 			visualText = defaultVisualText;
+			colorOverride = null;
 		}
 		else {
 			callText = handle.getEffectiveTts();
 			visualText = handle.getEffectiveText();
+			colorOverride = handle.getTextColorOverride().get();
 		}
-		Binding arguments = new Binding(new HashMap<>(rawArguments));
-		String modifiedCallText = applyReplacements(callText, arguments);
-		String modifiedVisualText = applyReplacements(visualText, arguments);
-		BaseCalloutEvent call;
-		if (Objects.equals(modifiedVisualText, visualText)) {
-			call = new BasicCalloutEvent(
-					modifiedCallText,
-					modifiedVisualText);
-		}
-		else {
-			call = new DynamicCalloutEvent(
-					modifiedCallText,
-					() -> applyReplacements(visualText, arguments),
-					defaultVisualHangTime
-			);
-		}
-		if (handle != null) {
-			call.setColorOverride(handle.getTextColorOverride().get());
-		}
-		return call;
-	}
-
-	private boolean shouldLogError() {
-		errorCount++;
-		if (errorCount < maxErrors) {
-			return true;
-		}
-		else if (errorCount == maxErrors) {
-			log.error("Hit the maximum number of logged errors for ModifiableCallout '{}', silencing future errors", description);
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
-
-	private Script compile(String input) {
-		return interpreter.parse(input);
-	}
-
-	@Contract("null, _ -> null")
-	public @Nullable String applyReplacements(@Nullable String input, Binding binding) {
-		if (input == null) {
-			return null;
-		}
-		if (!input.contains("{")) {
-			return input;
-		}
-		synchronized (interpLock) {
-			return replacer.matcher(input).replaceAll(m -> {
-				try {
-					Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
-					script.setBinding(binding);
-					Object rawEval = script.run();
-					if (rawEval == null) {
-						return "null";
-//						return m.group(0);
-					}
-					return singleReplacement(rawEval);
-				}
-				catch (Throwable e) {
-					if (shouldLogError()) {
-						log.error("Eval error for input '{}'", input, e);
-					}
-					return "Error";
-				}
-			});
-		}
-	}
-
-	// Default conversions
-	@SuppressWarnings("unused")
-	public static String singleReplacement(Object rawValue) {
-		String value;
-		if (rawValue instanceof String strVal) {
-			value = strVal;
-		}
-		else if (rawValue instanceof XivCombatant cbt) {
-			if (cbt.isThePlayer()) {
-				value = "YOU";
-			}
-			else {
-				value = cbt.getName();
-			}
-		}
-		else if (rawValue instanceof NameIdPair pair) {
-			return pair.getName();
-		}
-		else if (rawValue instanceof Duration dur) {
-			if (dur.isZero()) {
-				return "NOW";
-			}
-			return String.format("%.01f", dur.toMillis() / 1000.0);
-		}
-		else if (rawValue instanceof Supplier supp) {
-			Object realValue = supp.get();
-			// Prevent infinite loops if a supplier produces another supplier
-			if (realValue instanceof Supplier) {
-				return realValue.toString();
-			}
-			else {
-				return singleReplacement(realValue);
-			}
-		}
-		else {
-			value = rawValue.toString();
-		}
-		return value;
+		return new RawModifiedCallout<>(description, callText, visualText, null, rawArguments, guiProvider, expiry, colorOverride);
 	}
 
 

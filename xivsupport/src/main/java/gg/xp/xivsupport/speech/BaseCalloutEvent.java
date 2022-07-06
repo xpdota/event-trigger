@@ -2,6 +2,7 @@ package gg.xp.xivsupport.speech;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.callouts.CalloutTrackingKey;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -10,7 +11,17 @@ import java.time.Duration;
 public abstract class BaseCalloutEvent extends BaseEvent implements CalloutEvent {
 
 	private @Nullable Color colorOverride;
-	private @Nullable CalloutEvent replaces;
+	private @Nullable HasCalloutTrackingKey replaces;
+
+	private final CalloutTrackingKey key;
+
+	protected BaseCalloutEvent() {
+		this.key = new CalloutTrackingKey();
+	}
+
+	protected BaseCalloutEvent(CalloutTrackingKey key) {
+		this.key = key;
+	}
 
 	@Override
 	public @Nullable Color getColorOverride() {
@@ -33,12 +44,17 @@ public abstract class BaseCalloutEvent extends BaseEvent implements CalloutEvent
 	}
 
 	@Override
-	public @Nullable CalloutEvent replaces() {
+	public @Nullable HasCalloutTrackingKey replaces() {
 		return replaces;
 	}
 
 	@Override
-	public void setReplaces(CalloutEvent replaces) {
+	public void setReplaces(@Nullable HasCalloutTrackingKey replaces) {
 		this.replaces = replaces;
+	}
+
+	@Override
+	public CalloutTrackingKey trackingKey() {
+		return key;
 	}
 }
