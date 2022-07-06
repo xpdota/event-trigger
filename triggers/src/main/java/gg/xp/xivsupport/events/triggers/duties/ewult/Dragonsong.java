@@ -184,7 +184,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<HeadMarkerEvent> t2_crossNoDoom = new ModifiableCallout<>("Cross (No Doom)", "Blue Cross");
 
 	// Double Dragons
-	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_stack = ModifiableCallout.durationBasedCall("P6 Tankbuster (Stack)", "Stack for Buster");
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_stack = ModifiableCallout.durationBasedCall("P6 Tankbuster (Stack)", "Shared Buster");
 	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_niddBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Nidhogg Buster)", "Nidd Buster, Hraes Cleave");
 	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_hraesBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Hraes Buster)", "Hraes Buster, Nidd Cleave");
 	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_bothBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Both Buster)", "Busters");
@@ -1203,7 +1203,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				if (e1.buffIdMatches(0xB52)) {
 					log.info("p6 HOT: part 1");
 					s.updateCall(hotDebuff.getModified(e1));
-					s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 3_500);
+					s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 4_500);
 					log.info("p6 HOT: part 2");
 					s.updateCall(pyretic_pre.getModified(e1));
 					BuffApplied pyreticApplied = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0x3C0));

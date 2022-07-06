@@ -172,13 +172,23 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setMinWidth(30);
 					col.setMaxWidth(30);
 				}))
-				.addColumn(new CustomColumn<>("Pre", TimelineEntry::calloutPreTime, col -> {
+				.addColumn(new CustomColumn<>("Pre", timelineEntry -> {
+					double pre = timelineEntry.calloutPreTime();
+					boolean isTrigger = timelineEntry.callout();
+					// Hide column if not a trigger
+					if (!isTrigger && pre == 0) {
+						return "";
+					}
+					return pre;
+				}, col -> {
 					col.setCellEditor(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> {
 						if (value == null) {
 							item.calloutPreTime = 0.0;
 						}
 						else {
+							// Automatically set as trigger if we set a pre time
 							item.calloutPreTime = value;
+							item.callout = true;
 						}
 					})));
 					col.setMinWidth(numColMinWidth);
@@ -296,8 +306,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					e.icon(),
 					null,
 					false,
-					false,
-					0
+					e.callout(),
+					e.calloutPreTime()
 			)));
 			CustomRightClickOption delete = CustomRightClickOption.forRow("Delete/Revert", CustomTimelineEntry.class, this::deleteEntry);
 

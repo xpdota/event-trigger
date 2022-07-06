@@ -101,7 +101,7 @@ public final class TimelineManager {
 			return TimelineProcessor.of(this, resource, getCustomEntries(zoneId));
 		}
 		catch (Throwable e) {
-			log.error("Error loading timeline", e);
+			log.error("Error loading timeline for zone {}", zoneId, e);
 			return null;
 		}
 
