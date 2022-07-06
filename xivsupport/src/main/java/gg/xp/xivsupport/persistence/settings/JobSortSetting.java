@@ -101,7 +101,7 @@ public class JobSortSetting {
 		sortSetting.delete();
 	}
 
-	private void validateJobSortOrder(List<Job> newSort) {
+	public void validateJobSortOrder(List<Job> newSort) {
 		int expectedNumberOfJobs = allValidJobs.size();
 		int actualNumberOfJobs = newSort.size();
 		if (expectedNumberOfJobs != actualNumberOfJobs) {

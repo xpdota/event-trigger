@@ -1,10 +1,13 @@
 package gg.xp.xivsupport.persistence.gui;
 
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.gui.components.RearrangeableList;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
@@ -23,6 +26,8 @@ public class JobSortGui {
 	private final JScrollPane jobListPane;
 	private final JScrollPane partyPane;
 	private final JButton resetButton;
+	private final JButton exportButton;
+	private final JButton importButton;
 
 	private CustomTableModel<XivPlayerCharacter> partyTableModel;
 
@@ -48,6 +53,29 @@ public class JobSortGui {
 			partyTableModel.fullRefresh();
 			jobList.setValues(sorter.getCurrentJailSort());
 		});
+		importButton = new JButton("Import");
+		importButton.addActionListener(l -> {
+			List<Job> newJobOrder = GuiUtil.doImportDialog("Import Job Order", s -> {
+				try {
+					List<Job> jobs = Arrays.stream(s.strip().split(","))
+							.map(Job::valueOf)
+							.toList();
+					sorter.validateJobSortOrder(jobs);
+					return jobs;
+				} catch (Throwable t) {
+					throw new ValidationError("Bad job order: " + t.getMessage(), t);
+				}
+			});
+			sorter.setJailSort(newJobOrder);
+			partyTableModel.fullRefresh();
+			jobList.setValues(sorter.getCurrentJailSort());
+		});
+		exportButton = new JButton("Export");
+		exportButton.addActionListener(l -> {
+			String exportedJobList = sorter.getCurrentJailSort().stream().map(Enum::name).collect(Collectors.joining(","));
+			GuiUtil.copyTextToClipboard(exportedJobList);
+			JOptionPane.showMessageDialog(exportButton, "Copied to clipboard");
+		});
 		jobList.setCellRenderer(new JobRenderer());
 		jobListPane = new JScrollPane(jobList);
 		Dimension size = new Dimension(100, 50);
@@ -71,6 +99,17 @@ public class JobSortGui {
 
 	public JScrollPane getJobListPane() {
 		return jobListPane;
+	}
+
+	public JPanel getJobListWithButtons() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(jobListPane, BorderLayout.CENTER);
+		JPanel bottom = new JPanel();
+		bottom.setLayout(new BoxLayout(bottom, BoxLayout.LINE_AXIS));
+		bottom.add(exportButton);
+		bottom.add(importButton);
+		panel.add(bottom, BorderLayout.NORTH);
+		return panel;
 	}
 
 	public JScrollPane getPartyPane() {

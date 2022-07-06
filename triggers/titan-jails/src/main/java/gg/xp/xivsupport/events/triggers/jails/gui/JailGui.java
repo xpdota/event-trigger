@@ -94,7 +94,7 @@ public class JailGui implements PluginTab {
 		c.weighty = 1;
 		c.gridy++;
 		c.weightx = 0;
-		panel.add(jobSortGui.getJobListPane(), c);
+		panel.add(jobSortGui.getJobListWithButtons(), c);
 
 
 		c.gridx++;
