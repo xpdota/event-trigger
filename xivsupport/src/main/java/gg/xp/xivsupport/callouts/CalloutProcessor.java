@@ -6,9 +6,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import gg.xp.xivsupport.models.XivCombatant;
-import gg.xp.xivsupport.speech.BaseCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
-import gg.xp.xivsupport.speech.DynamicCalloutEvent;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -32,9 +30,9 @@ public class CalloutProcessor {
 	private final Map<String, Script> scriptCache = new ConcurrentHashMap<>();
 	private final GroovyManager groovyMgr;
 	private volatile GroovyShell interpreter;
-	private final Object interpLock = new Object();
+	// TODO: this *shouldn't* need to be static, but something is up with it
+	private static final Object interpLock = new Object();
 	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
-	private final long defaultVisualHangTime = 5000L;
 
 
 	public CalloutProcessor(GroovyManager groovyMgr) {
@@ -85,6 +83,7 @@ public class CalloutProcessor {
 
 
 	private Script compile(String input) {
+		setupShell();
 		return interpreter.parse(input);
 	}
 
@@ -97,7 +96,6 @@ public class CalloutProcessor {
 			return input;
 		}
 		synchronized (interpLock) {
-			setupShell();
 			return replacer.matcher(input).replaceAll(m -> {
 				try {
 					Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
