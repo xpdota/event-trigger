@@ -18,6 +18,7 @@ import static gg.xp.xivdata.data.Job.NIN;
 import static gg.xp.xivdata.data.Job.PLD;
 import static gg.xp.xivdata.data.Job.RDM;
 import static gg.xp.xivdata.data.Job.RPR;
+import static gg.xp.xivdata.data.Job.SAM;
 import static gg.xp.xivdata.data.Job.SCH;
 import static gg.xp.xivdata.data.Job.SGE;
 import static gg.xp.xivdata.data.Job.SMN;
@@ -191,9 +192,9 @@ public enum Cooldown implements CooldownDescriptor {
 	ArcaneCrest(true,  CooldownType.PERSONAL_MIT, 0x5F54),
 
 	// SAM
-	MeikyoShisui(false, CooldownType.PERSONAL_BURST, 0x1D4B),
-	Ikishoten(false, CooldownType.PERSONAL_BURST, 0x4062),
-	ThirdEye(false, CooldownType.PERSONAL_MIT, 0x1D4A),
+	MeikyoShisui(false, CooldownType.PERSONAL_BURST, 7499),
+	Ikishoten(false, CooldownType.PERSONAL_BURST, 16482),
+	ThirdEye(false, CooldownType.PERSONAL_MIT, 7498),
 	HissatsuGurenSenei(builder(CooldownType.PERSONAL_BURST, false, 0x1D48, 0x4061).name("Hissatsu: Guren/Senei")),
 
 	// CASTER
@@ -389,6 +390,7 @@ public enum Cooldown implements CooldownDescriptor {
 					case 21 -> MNK;
 					case 23 -> DRG;
 					case 93 -> NIN;
+					case 111 -> SAM;
 					case 180 -> RPR;
 					case 24 -> BRD;
 					case 96 -> MCH;
