@@ -4,7 +4,7 @@
 name: Publish
 
 on:
-#  push:
+  push:
   workflow_dispatch:
 
 
