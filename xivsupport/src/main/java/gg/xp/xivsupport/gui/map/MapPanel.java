@@ -15,7 +15,6 @@ import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.OverlapLayout;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
-import gg.xp.xivsupport.gui.tables.renderers.ResourceBar;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
@@ -276,7 +275,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 		tt.append('\n').append(cbt.getPos());
 		if (cbt.getHp() != null) {
-			tt.append("\nHP: ").append(String.format("%s / %s", cbt.getHp().getCurrent(), cbt.getHp().getMax()));
+			tt.append("\nHP: ").append(String.format("%s / %s", cbt.getHp().current(), cbt.getHp().max()));
 		}
 		return tt.toString();
 	}
@@ -385,8 +384,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			}
 
 			HitPoints hp = cbt.getHp();
-			long hpCurrent = hp == null ? -1 : hp.getCurrent();
-			long hpMax = hp == null ? -1 : hp.getMax();
+			long hpCurrent = hp == null ? -1 : hp.current();
+			long hpMax = hp == null ? -1 : hp.max();
 			// Ignore updates where nothing changed
 			if (hpCurrent == oldHpCurrent && hpMax == oldHpMax) {
 				return;
@@ -396,7 +395,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (hp == null) {
 				hpBar.setVisible(false);
 			}
-			else if (cbt.getType() == CombatantType.FAKE || hp.getMax() == 1 || hp.getCurrent() < 0) {
+			else if (cbt.getType() == CombatantType.FAKE || hp.max() == 1 || hp.current() < 0) {
 				hpBar.setVisible(false);
 			}
 			else {

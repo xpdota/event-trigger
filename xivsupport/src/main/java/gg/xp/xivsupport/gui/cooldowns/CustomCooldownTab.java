@@ -4,34 +4,41 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.ExtendedCooldownDescriptor;
+import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivsupport.cdsupport.CustomCooldown;
 import gg.xp.xivsupport.cdsupport.CustomCooldownManager;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.TitleBorderPanel;
-import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ActionTableFactory;
+import gg.xp.xivsupport.gui.library.StatusTable;
 import gg.xp.xivsupport.gui.lists.ItemList;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
-import gg.xp.xivsupport.gui.tables.renderers.AbilityListRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.AbilityListCellRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.StatusListCellRenderer;
+import gg.xp.xivsupport.gui.util.GridBagHelper;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivAbility;
+import gg.xp.xivsupport.models.XivStatusEffect;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @ScanMe
 public class CustomCooldownTab implements PluginTab {
@@ -43,7 +50,8 @@ public class CustomCooldownTab implements PluginTab {
 	private TitleBorderFullsizePanel outer;
 	private CustomCooldown selection;
 	private List<CustomCooldown> multiSelections = Collections.emptyList();
-//	private boolean saveAnyway;
+	private JTable table;
+	//	private boolean saveAnyway;
 
 	public CustomCooldownTab(CustomCooldownManager backend, ActionTableFactory actionTableFactory) {
 		this.backend = backend;
@@ -74,14 +82,46 @@ public class CustomCooldownTab implements PluginTab {
 					}
 					return cd.getCooldown();
 				}), col -> col.setCellEditor(new NoCellEditor())))
+				.addColumn(new CustomColumn<>("Duration", resultingValue(cd -> {
+					Double dur = cd.getDurationOverride();
+					if (dur == null) {
+						return "Auto";
+					}
+					else {
+						return String.valueOf(dur);
+					}
+				})))
+				.addColumn(new CustomColumn<>("Status Effects", cd -> {
+					if (cd.autoBuffs) {
+						return "Auto";
+					}
+					else if (cd.buffIds.length == 0) {
+						return "None";
+					}
+					else {
+						return Arrays.stream(cd.buffIds).mapToObj(XivStatusEffect::new).toList();
+					}
+				}, col -> col.setCellRenderer(
+						new DefaultTableCellRenderer() {
+							final StatusEffectListRenderer selr = new StatusEffectListRenderer();
+
+							@Override
+							public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+								if (value instanceof List) {
+									return selr.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+								}
+								return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+							}
+						})))
+
 				.build();
-		JTable cdChooserTable = new JTable(model) {
+		table = new JTable(model) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
-				return column == 0;
+				return false;
 			}
 		};
-		model.configureColumns(cdChooserTable);
+		model.configureColumns(table);
 
 		// TODO: saving
 		outer = new TitleBorderFullsizePanel("Custom Cooldowns") {
@@ -98,10 +138,10 @@ public class CustomCooldownTab implements PluginTab {
 		};
 
 		outer.setLayout(new GridBagLayout());
-		cdChooserTable.getSelectionModel().addListSelectionListener(l -> {
+		table.getSelectionModel().addListSelectionListener(l -> {
 			refreshSelection();
 		});
-		cdChooserTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
 		JPanel bottomPanel = new JPanel(new BorderLayout());
 
@@ -141,7 +181,7 @@ public class CustomCooldownTab implements PluginTab {
 			bottomPanel.add(detailsInner, BorderLayout.CENTER);
 		}
 
-		JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(cdChooserTable), bottomPanel);
+		JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(table), bottomPanel);
 		split.setOneTouchExpandable(true);
 		outer.add(split, c);
 		split.setResizeWeight(0.5);
@@ -181,6 +221,7 @@ public class CustomCooldownTab implements PluginTab {
 			raw.accept(value);
 			cd.invalidate();
 			backend.commit();
+			table.repaint();
 		};
 	}
 
@@ -193,6 +234,21 @@ public class CustomCooldownTab implements PluginTab {
 				return raw.apply(value);
 			}
 		};
+	}
+
+	private static <X> Function<@Nullable X, String> nullToEmpty(Function<X, String> raw) {
+		return value -> {
+			if (value == null) {
+				return "";
+			}
+			else {
+				return raw.apply(value);
+			}
+		};
+	}
+
+	private static <X> Supplier<String> valueToStr(Supplier<X> extractor) {
+		return () -> nullToEmpty(String::valueOf).apply(extractor.get());
 	}
 
 	private void addnew() {
@@ -221,7 +277,8 @@ public class CustomCooldownTab implements PluginTab {
 		model.signalNewData();
 	}
 
-	private final AbilityListRenderer abilityRenderer = new AbilityListRenderer();
+	private final AbilityListCellRenderer abilityRenderer = new AbilityListCellRenderer();
+	private final StatusListCellRenderer statusRenderer = new StatusListCellRenderer();
 
 	private class CooldownConfigPanel extends JPanel {
 
@@ -242,27 +299,28 @@ public class CustomCooldownTab implements PluginTab {
 			inner.setLayout(new GridLayout(2, 2));
 			{
 				JPanel generalPanel = new JPanel();
+				GridBagConstraints innerGbc = new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 5, 0);
+				GridBagHelper gbh = new GridBagHelper(generalPanel, innerGbc);
 				generalPanel.setBorder(new TitledBorder("General"));
-				generalPanel.setLayout(new WrapLayout());
 				TextFieldWithValidation<String> nameField = new TextFieldWithValidation<>(
 						emptyToNull(Function.identity()),
 						modifyCd(selection, s -> selection.nameOverride = s),
 						() -> selection.nameOverride);
 				JLabel nameLabel = GuiUtil.labelFor("Name (Blank for Auto)", nameField);
-				generalPanel.add(nameLabel);
-				generalPanel.add(nameField);
+				gbh.addRow(nameLabel, nameField);
 				{
-					JPanel primaryAbilityPanel = new JPanel();
 					ActionInfo ai = ActionLibrary.forId(selection.primaryAbilityId);
-					primaryAbilityPanel.add(new JLabel("Primary Ability (cannot be changed): "));
+					JLabel label = new JLabel("Primary Ability");
+					Component icon;
 					if (ai != null) {
-						primaryAbilityPanel.add(IconTextRenderer.getComponent(ai.getIcon(), new JLabel(' ' + ai.name()), false, false, true));
+						icon = IconTextRenderer.getComponent(ai.getIcon(), new JLabel(' ' + ai.name()), false, false, true);
 					}
 					else {
-						primaryAbilityPanel.add(new JLabel("None"));
+						icon = new JLabel("None");
 					}
-					generalPanel.add(primaryAbilityPanel);
+					gbh.addRow(label, icon);
 				}
+				gbh.addVerticalPadding();
 				inner.add(generalPanel, c);
 			}
 			{
@@ -287,30 +345,65 @@ public class CustomCooldownTab implements PluginTab {
 				inner.add(abilityPanel, c);
 			}
 			{
-				TitleBorderPanel cdChargePanel = new TitleBorderPanel("Cooldown/Charges");
-				cdChargePanel.setLayout(new WrapLayout());
+				TitleBorderPanel cdChargePanel = new TitleBorderPanel("Cooldown/Charges/Duration (Leave Blank for Auto)");
+//				cdChargePanel.setLayout(new BorderLayout());
+				JPanel innerCdPanel = new JPanel();
+				GridBagConstraints innerGbc = new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 5, 0);
+				GridBagHelper gbh = new GridBagHelper(innerCdPanel, innerGbc);
 				c.gridx = 0;
 				c.gridy++;
 
 				{
-					TextFieldWithValidation<Double> durationField = new TextFieldWithValidation<>(emptyToNull(Double::parseDouble), modifyCd(selection, value -> selection.cooldown = value), () -> String.valueOf(selection.cooldown));
-					JLabel durationLabel = GuiUtil.labelFor("Duration", durationField);
-					cdChargePanel.add(durationField);
-					cdChargePanel.add(durationLabel);
+					TextFieldWithValidation<Double> cdField = new TextFieldWithValidation<>(emptyToNull(Double::parseDouble), modifyCd(selection, value -> selection.cooldown = value), valueToStr(() -> selection.cooldown));
+					JLabel cdLabel = GuiUtil.labelFor("Cooldown", cdField);
+					gbh.addRow(cdLabel, cdField);
 				}
 
 				{
-					TextFieldWithValidation<Integer> chargesField = new TextFieldWithValidation<>(emptyToNull(Integer::parseInt), modifyCd(selection, value -> selection.maxCharges = value), () -> String.valueOf(selection.maxCharges));
+					TextFieldWithValidation<Integer> chargesField = new TextFieldWithValidation<>(emptyToNull(Integer::parseInt), modifyCd(selection, value -> selection.maxCharges = value), valueToStr(() -> selection.maxCharges));
 					JLabel chargesLabel = GuiUtil.labelFor("Charges", chargesField);
-					cdChargePanel.add(chargesField);
-					cdChargePanel.add(chargesLabel);
+					gbh.addRow(chargesLabel, chargesField);
 				}
 
+				{
+					TextFieldWithValidation<Double> durationField = new TextFieldWithValidation<>(emptyToNull(Double::parseDouble), modifyCd(selection, value -> selection.duration = value), valueToStr(() -> selection.duration));
+					JLabel durationLabel = GuiUtil.labelFor("Duration", durationField);
+					gbh.addRow(durationLabel, durationField);
+				}
+				cdChargePanel.add(innerCdPanel, BorderLayout.WEST);
 				inner.add(cdChargePanel, c);
 			}
 			{
 				TitleBorderPanel statusPanel = new TitleBorderPanel("Status Effect");
+				statusPanel.setLayout(new BorderLayout());
 				c.gridx++;
+				JCheckBox autoCb = new JCheckBox("Automatic");
+				autoCb.setSelected(selection.autoBuffs);
+				autoCb.addActionListener(l -> {
+					CustomCooldownTab.this.<Boolean>modifyCd(selection, value -> selection.autoBuffs = value).accept(autoCb.isSelected());
+					statusPanel.repaint();
+				});
+				statusPanel.add(autoCb, BorderLayout.NORTH);
+				{
+					JPanel statusList = new ItemList<>(
+							() -> Arrays.stream(selection.buffIds).mapToObj(XivStatusEffect::new).toList(),
+							modifyCd(selection, statuses -> selection.buffIds = statuses.stream().mapToLong(XivStatusEffect::getId).toArray()),
+							statusRenderer,
+							() -> {
+								StatusEffectInfo sei = StatusTable.pickItem(SwingUtilities.getWindowAncestor(outer));
+								if (sei == null) {
+									return null;
+								}
+								return new XivStatusEffect(sei.statusEffectId());
+							}
+					) {
+						@Override
+						public boolean isEnabled() {
+							return !selection.autoBuffs;
+						}
+					};
+					statusPanel.add(statusList, BorderLayout.CENTER);
+				}
 				inner.add(statusPanel, c);
 			}
 			add(inner, BorderLayout.CENTER);

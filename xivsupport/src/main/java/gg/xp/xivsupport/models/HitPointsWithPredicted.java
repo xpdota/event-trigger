@@ -18,12 +18,12 @@ public final class HitPointsWithPredicted implements CurrentMaxPredicted, Serial
 	}
 
 	@Override
-	public long getCurrent() {
+	public long current() {
 		return current;
 	}
 
 	@Override
-	public long getMax() {
+	public long max() {
 		return max;
 	}
 

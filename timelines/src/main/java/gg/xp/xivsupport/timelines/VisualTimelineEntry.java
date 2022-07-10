@@ -21,7 +21,7 @@ public record VisualTimelineEntry(
 	}
 
 	@Override
-	public long getCurrent() {
+	public long current() {
 		if (remainingActiveTime() > 0) {
 			return (long) (remainingActiveTime() * 1000.0);
 		}
@@ -29,7 +29,7 @@ public record VisualTimelineEntry(
 	}
 
 	@Override
-	public long getMax() {
+	public long max() {
 		if (remainingActiveTime() > 0) {
 			//noinspection ConstantConditions - known to be non-null if remaining active time is > 0
 			return (long) (originalTimelineEntry.duration() * 1000);

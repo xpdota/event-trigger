@@ -9,12 +9,12 @@ public record HitPoints(long current, long max) implements CurrentMaxPair, Seria
 	private static final long serialVersionUID = 5725036718136891291L;
 
 	@Override
-	public long getCurrent() {
+	public long current() {
 		return current;
 	}
 
 	@Override
-	public long getMax() {
+	public long max() {
 		return max;
 	}
 

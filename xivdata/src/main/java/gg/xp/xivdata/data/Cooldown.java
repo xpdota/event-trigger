@@ -68,7 +68,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	AbyssalDrain(builder(CooldownType.PERSONAL_BURST, true, 0xE39, 0xE3B)),
 	// TODO: maybe abilities like delirium and blood weapon should display remaining stacks rather than remaining duration?
 	Delirium(builder(CooldownType.PERSONAL_BURST, true, 0x1CDE).buffIds(0x7b4)),
-	LivingShadow(builder(CooldownType.PERSONAL_BURST, true, 0x4058).duration(24)),
+	LivingShadow(builder(CooldownType.PERSONAL_BURST, true, 0x4058).noAutoBuffs().duration(24)),
 	Oblation(builder(CooldownType.PARTY_MIT, false, 0x649A)),
 	Shadowbringer(builder(CooldownType.PERSONAL_BURST, true, 0x649D)),
 
@@ -239,6 +239,11 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	}
 
 	@Override
+	public String getSettingKeyStub() {
+		return name();
+	}
+
+	@Override
 	public String getLabel() {
 		return delegate.getLabel();
 	}
@@ -281,5 +286,10 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	@Override
 	public boolean autoBuffs() {
 		return delegate.autoBuffs();
+	}
+
+	@Override
+	public boolean noStatusEffect() {
+		return delegate.noStatusEffect();
 	}
 }

@@ -8,7 +8,6 @@ import javax.swing.event.ListDataListener;
 import java.awt.*;
 import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -26,7 +25,12 @@ public class ItemList<X> extends JPanel {
 		this.setter = setter;
 		this.addButtonAction = addButtonAction;
 
-		list = new JList<>();
+		list = new JList<>() {
+			@Override
+			public boolean isEnabled() {
+				return ItemList.this.isEnabled();
+			}
+		};
 		list.setCellRenderer(renderer);
 
 		add(new JScrollPane(list), BorderLayout.CENTER);
@@ -36,8 +40,18 @@ public class ItemList<X> extends JPanel {
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
 
-		JButton addButton = new JButton("Add");
-		JButton deleteButton = new JButton("Delete");
+		JButton addButton = new JButton("Add") {
+			@Override
+			public boolean isEnabled() {
+				return ItemList.this.isEnabled();
+			}
+		};
+		JButton deleteButton = new JButton("Delete") {
+			@Override
+			public boolean isEnabled() {
+				return ItemList.this.isEnabled();
+			}
+		};
 
 		deleteButton.addActionListener(l -> {
 			model.removeElement(list.getSelectedValue());

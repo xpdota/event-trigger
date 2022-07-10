@@ -56,14 +56,14 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 
 	@Override
 	public String getLabel() {
-		if (getCurrent() == getMax()) {
+		if (current() == max()) {
 			return "Ready!";
 		}
-		return String.format("%.1f", ((double) (getMax() - getCurrentUnbounded())) / 1000.0f);
+		return String.format("%.1f", ((double) (max() - getCurrentUnbounded())) / 1000.0f);
 	}
 
 	@Override
-	public long getCurrent() {
+	public long current() {
 //		if (abilityEvent == null) {
 //			return getMax();
 //		}
@@ -74,10 +74,10 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 
 	private long getCurrentUnbounded() {
 		if (basisEvent == null) {
-			return getMax();
+			return max();
 		}
 		long durMillis = Duration.between(start, basisEvent.effectiveTimeNow()).toMillis();
-		return Math.min((durMillis), getMax());
+		return Math.min((durMillis), max());
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	}
 
 	@Override
-	public long getMax() {
+	public long max() {
 		return cd.getCooldownAsDuration().toMillis();
 	}
 
@@ -109,6 +109,19 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	@Override
 	public List<? extends VisualCdInfo> makeChargeInfo() {
 		return Collections.emptyList();
+	}
+
+	@Override
+	public CdStatus getStatus() {
+		if (basisEvent == null) {
+			return CdStatus.NOT_YET_USED;
+		}
+		else if (current() == max()) {
+			return CdStatus.READY;
+		}
+		else {
+			return CdStatus.ON_COOLDOWN;
+		}
 	}
 
 }

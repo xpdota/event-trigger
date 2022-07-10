@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.slf4j.Logger;
@@ -23,9 +24,11 @@ public class CustomCooldownManager {
 	private List<CustomCooldown> cds;
 	private final ObjectMapper mapper = new ObjectMapper();
 	private final PersistenceProvider pers;
+	private final EventMaster master;
 
-	public CustomCooldownManager(PersistenceProvider pers) {
+	public CustomCooldownManager(PersistenceProvider pers, EventMaster master) {
 		this.pers = pers;
+		this.master = master;
 		String strVal = pers.get(settingKey, String.class, null);
 		// TODO: dedup with EasyTriggers
 		List<CustomCooldown> cds = new ArrayList<>();
@@ -93,6 +96,7 @@ public class CustomCooldownManager {
 		try {
 			String cdsSerialized = mapper.writeValueAsString(cds);
 			pers.save(settingKey, cdsSerialized);
+			master.pushEvent(new CustomCooldownsUpdated());
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException(e);

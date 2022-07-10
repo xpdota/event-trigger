@@ -1,10 +1,11 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.data.ActionInfo;
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.Cooldown;
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.ExtendedCooldownDescriptor;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivdata.data.JobType;
+import gg.xp.xivsupport.cdsupport.CustomCooldownsUpdated;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
@@ -26,7 +27,6 @@ import gg.xp.xivsupport.persistence.settings.LongSetting;
 
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +36,7 @@ import java.util.Map;
 public abstract class BaseCdTrackerGui implements PluginTab {
 
 	private final BaseCdTrackerOverlay overlay;
+	private CustomTableModel<CdInfo> model;
 
 	protected BaseCdTrackerGui(BaseCdTrackerOverlay overlay) {
 		this.overlay = overlay;
@@ -49,7 +50,7 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 
 	protected abstract IntSetting overlayMax();
 
-	protected abstract Map<Cooldown, CooldownSetting> cds();
+	protected abstract Map<ExtendedCooldownDescriptor, CooldownSetting> cds();
 
 	// TODO: here's how I can do settings in a reasonable way:
 	// Have a gui with 5 or so checkboxes (all on/off, this, DPS, healer, tank)
@@ -58,6 +59,36 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 
 
 	// New idea: list them in a table, also have icons for job and ability
+	private record CdInfo(ExtendedCooldownDescriptor cd, CooldownSetting setting) {
+
+	}
+
+	List<CdInfo> getCds() {
+		Map<ExtendedCooldownDescriptor, CooldownSetting> cooldowns = cds();
+		// TODO: idea for how to do separate TTS/visual plus icons
+		// Instead of one checkbox per ability, just have one for TTS, and one for visual, and then
+		// have a label with icon and text.
+		// Alternatively, have a table with a bunch of checkbox columns
+
+		List<CdInfo> sortedCds = new ArrayList<>(cooldowns.entrySet().stream().map(entry -> new CdInfo(entry.getKey(), entry.getValue())).toList());
+		sortedCds.sort(Comparator.comparing(cdi -> {
+			ExtendedCooldownDescriptor cd = cdi.cd;
+			Job job = cd.getJob();
+			// Sort job categories first
+			if (job == null) {
+				JobType jobType = cd.getJobType();
+				if (jobType == null) {
+					// Put custom user-added CDs first
+					return -2;
+				}
+				// Then categories
+				return jobType.ordinal() + 5000;
+			}
+			// Then jobs
+			return job.defaultPartySortOrder() + 10000;
+		}));
+		return sortedCds;
+	}
 
 	@Override
 	public Component getTabContents() {
@@ -87,28 +118,6 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 
-		Map<Cooldown, CooldownSetting> cooldowns = cds();
-		// TODO: idea for how to do separate TTS/visual plus icons
-		// Instead of one checkbox per ability, just have one for TTS, and one for visual, and then
-		// have a label with icon and text.
-		// Alternatively, have a table with a bunch of checkbox columns
-
-		List<Cooldown> sortedCds = new ArrayList<>(cds().keySet());
-		sortedCds.sort(Comparator.comparing(cd -> {
-			Job job = cd.getJob();
-			// Sort job categories first
-			if (job == null) {
-				JobType jobType = cd.getJobType();
-				if (jobType == null) {
-					// Put custom user-added CDs first
-					return -2;
-				}
-				// Then categories
-				return jobType.ordinal() + 5000;
-			}
-			// Then jobs
-			return job.defaultPartySortOrder() + 10000;
-		}));
 		JTable table = new JTable() {
 			@Override
 			public boolean isCellEditable(int row, int column) {
@@ -119,16 +128,23 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 				return true;
 			}
 		};
-		CustomTableModel<Cooldown> model = CustomTableModel.builder(() -> sortedCds)
-				.addColumn(StandardColumns.booleanSettingColumn("Overlay", cd -> cooldowns.get(cd).getOverlay(), 50, enableOverlaySetting))
-				.addColumn(StandardColumns.booleanSettingColumn("TTS (Ready)", cd -> cooldowns.get(cd).getTtsReady(), 80, enableTtsSetting))
-				.addColumn(StandardColumns.booleanSettingColumn("TTS (On Use)", cd -> cooldowns.get(cd).getTtsOnUse(), 80, enableTtsSetting))
-				.addColumn(new CustomColumn<>("Job", cd -> {
+		model = CustomTableModel.builder(this::getCds)
+				.addColumn(StandardColumns.booleanSettingColumn("Overlay", cd -> cd.setting.getOverlay(), 50, enableOverlaySetting))
+				.addColumn(StandardColumns.booleanSettingColumn("TTS (Ready)", cd -> cd.setting.getTtsReady(), 80, enableTtsSetting))
+				.addColumn(StandardColumns.booleanSettingColumn("TTS (On Use)", cd -> cd.setting.getTtsOnUse(), 80, enableTtsSetting))
+				.addColumn(new CustomColumn<>("Job", cdi -> {
+					ExtendedCooldownDescriptor cd = cdi.cd;
 					if (cd.getJob() != null) {
 						return cd.getJob();
 					}
 					else {
-						return cd.getJobType().getFriendlyName();
+						JobType jobType = cd.getJobType();
+						if (jobType != null) {
+							return jobType.getFriendlyName();
+						}
+						else {
+							return "?";
+						}
 					}
 				},
 						col -> {
@@ -138,11 +154,12 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 							col.setCellEditor(new NoCellEditor());
 						}))
 				.addColumn(new CustomColumn<>("Skill",
-						cd -> new XivAbility(cd.getPrimaryAbilityId(), cd.getLabel()), c -> {
+						cdi -> new XivAbility(cdi.cd.getPrimaryAbilityId(), cdi.cd.getLabel()), c -> {
 					c.setCellRenderer(new ActionAndStatusRenderer());
 					c.setCellEditor(new NoCellEditor());
 				}))
-				.addColumn(new CustomColumn<>("Cooldown", cd -> {
+				.addColumn(new CustomColumn<>("Cooldown", cdi -> {
+					ExtendedCooldownDescriptor cd = cdi.cd;
 					int maxCharges = cd.getMaxCharges();
 					if (maxCharges > 1) {
 						return String.format("%s (%d charges)", cd.getCooldown(), maxCharges);
@@ -198,5 +215,12 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		outerPanel.add(scroll);
 		return outerPanel;
+	}
+
+	@HandleEvents(order = 100)
+	public void cooldownsUpdated(EventContext context, CustomCooldownsUpdated event) {
+		if (model != null) {
+			model.signalNewData();
+		}
 	}
 }

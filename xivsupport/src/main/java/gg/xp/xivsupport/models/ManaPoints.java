@@ -23,12 +23,12 @@ public record ManaPoints(long current, long max) implements CurrentMaxPair, Seri
 	}
 
 	@Override
-	public long getCurrent() {
+	public long current() {
 		return current;
 	}
 
 	@Override
-	public long getMax() {
+	public long max() {
 		return max;
 	}
 

@@ -1,8 +1,13 @@
 package gg.xp.xivsupport.events.state.combatstate;
 
+import gg.xp.reevent.context.BasicStateStore;
+import gg.xp.reevent.events.BasicEventDistributor;
+import gg.xp.reevent.events.BasicEventQueue;
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivsupport.cdsupport.CustomCooldownManager;
 import gg.xp.xivsupport.events.CloseTo;
 import gg.xp.xivsupport.events.TestEventContext;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -118,7 +123,9 @@ public class CdTrackerTest {
 				player, otherCharInParty, otherCharNotInParty, theBoss
 		));
 		state.setPartyList(List.of(player, otherCharInParty));
-		return new CdTracker(new InMemoryMapPersistenceProvider(), state);
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		CustomCooldownManager ccm = new CustomCooldownManager(pers, new EventMaster(new BasicEventDistributor(new BasicStateStore()), new BasicEventQueue()));
+		return new CdTracker(pers, state, ccm);
 	}
 
 

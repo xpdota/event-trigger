@@ -26,4 +26,6 @@ public interface BasicCooldownDescriptor {
 	default boolean autoBuffs() {
 		return false;
 	};
+
+	boolean noStatusEffect();
 }

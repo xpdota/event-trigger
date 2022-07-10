@@ -3,6 +3,7 @@ package gg.xp.xivdata.data;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 
@@ -10,6 +11,9 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 		jobType = builder.getJobType();
 		job = builder.getJob();
 		abilityIds = builder.abilityIds;
+		if (abilityIds.length == 0) {
+			throw new IllegalArgumentException("Ability ID list cannot be empty");
+		}
 		defaultPersOverlay = builder.defaultPersOverlay;
 		cooldown = builder.getCooldown();
 		type = builder.type;
@@ -17,10 +21,10 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 		maxCharges = builder.getMaxCharges();
 		durationOverride = builder.durationOverride;
 		if (job == null && jobType == null) {
-			throw new RuntimeException(String.format("Cooldown %s has neither a job nor jobtype", label));
+			throw new IllegalArgumentException(String.format("Cooldown %s has neither a job nor jobtype", label));
 		}
 		if (builder.autoBuffs && builder.buffIds.length > 0) {
-			throw new RuntimeException(String.format("Cooldown %s specified both autoBuffs and explicit buff IDs (%s)", label, Arrays.toString(builder.buffIds)));
+			throw new IllegalArgumentException(String.format("Cooldown %s specified both autoBuffs and explicit buff IDs (%s)", label, Arrays.toString(builder.buffIds)));
 		}
 		buffIds = builder.buffIds;
 		autoBuffs = builder.autoBuffs;
@@ -92,6 +96,16 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 		return this.defaultPersOverlay;
 	}
 
+	@Override
+	public String getSettingKeyStub() {
+		return "Custom_" + getPrimaryAbilityId();
+	}
+
+	@Override
+	public boolean noStatusEffect() {
+		return !autoBuffs && buffIds.length == 0;
+	}
+
 	private final JobType jobType;
 	private final Job job;
 	private final double cooldown;
@@ -103,4 +117,17 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 	private final int maxCharges;
 	private final boolean defaultPersOverlay;
 	private final @Nullable Double durationOverride;
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		CooldownDescriptorImpl that = (CooldownDescriptorImpl) o;
+		return Double.compare(that.getPrimaryAbilityId(), getPrimaryAbilityId()) == 0;
+	}
+
+	@Override
+	public int hashCode() {
+		return (int) getPrimaryAbilityId();
+	}
 }

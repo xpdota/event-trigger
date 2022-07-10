@@ -223,7 +223,7 @@ public class XivStateImpl implements XivState {
 					return;
 				}
 				// Sort highest HP first
-				values.sort(Comparator.<CombatantData, Long>comparing(npc -> npc.getComputed().getHp() != null ? npc.getComputed().getHp().getMax() : 0).reversed());
+				values.sort(Comparator.<CombatantData, Long>comparing(npc -> npc.getComputed().getHp() != null ? npc.getComputed().getHp().max() : 0).reversed());
 				XivCombatant primaryCombatant = values.get(0).getComputed();
 				if (primaryCombatant.getHp() == null) {
 					return;
@@ -234,7 +234,7 @@ public class XivStateImpl implements XivState {
 					if (computed.getHp() == null) {
 						continue;
 					}
-					if (computed.getHp().getMax() < primaryCombatant.getHp().getMax()
+					if (computed.getHp().max() < primaryCombatant.getHp().max()
 							&& computed.getbNpcId() != primaryCombatant.getbNpcId()) {
 						potentialFakes.add(otherCombatant);
 					}
@@ -714,7 +714,7 @@ public class XivStateImpl implements XivState {
 			long ownerId = raw != null ? raw.getOwnerId() : 0;
 			// TODO: changing primary player should dirty this
 			boolean isPlayer = rawType == 1;
-			long shieldAmount = hp != null ? shieldPercent * hp.getMax() / 100 : 0;
+			long shieldAmount = hp != null ? shieldPercent * hp.max() / 100 : 0;
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
 						id,

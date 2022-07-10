@@ -4,6 +4,10 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.Cooldown;
+import gg.xp.xivdata.data.ExtendedCooldownDescriptor;
+import gg.xp.xivsupport.cdsupport.CustomCooldown;
+import gg.xp.xivsupport.cdsupport.CustomCooldownManager;
+import gg.xp.xivsupport.cdsupport.CustomCooldownsUpdated;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
@@ -25,10 +29,12 @@ import org.slf4j.LoggerFactory;
 import java.io.Serial;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -45,16 +51,27 @@ public class CdTracker {
 	private final LongSetting cdTriggerAdvanceParty;
 	private final IntSetting overlayMaxPersonal;
 	private final IntSetting overlayMaxParty;
-	private final Map<Cooldown, CooldownSetting> personalCds = new LinkedHashMap<>();
-	private final Map<Cooldown, CooldownSetting> partyCds = new LinkedHashMap<>();
+	private final Map<Cooldown, CooldownSetting> personalCdsBuiltin = new LinkedHashMap<>();
+	private final Map<Cooldown, CooldownSetting> partyCdsBuiltin = new LinkedHashMap<>();
+	private final Map<ExtendedCooldownDescriptor, CooldownSetting> personalCdsCustom = new LinkedHashMap<>();
+	private final Map<ExtendedCooldownDescriptor, CooldownSetting> partyCdsCustom = new LinkedHashMap<>();
+	private Map<ExtendedCooldownDescriptor, CooldownSetting> personalCds = Collections.emptyMap();
+	private Map<ExtendedCooldownDescriptor, CooldownSetting> partyCds = Collections.emptyMap();
+	private List<ExtendedCooldownDescriptor> allCds = Collections.emptyList();
 	private final XivState state;
+	private final CustomCooldownManager customCdManager;
+	private final PersistenceProvider persistence;
 
-	public CdTracker(PersistenceProvider persistence, XivState state) {
+	public CdTracker(PersistenceProvider persistence, XivState state, CustomCooldownManager customCdManager) {
 		this.state = state;
 		for (Cooldown cd : Cooldown.values()) {
-			personalCds.put(cd, new CooldownSetting(persistence, getKey(cd), cd.defaultPersOverlay(), false));
-			partyCds.put(cd, new CooldownSetting(persistence, getKey(cd) + ".party", false, false));
+			personalCdsBuiltin.put(cd, new CooldownSetting(persistence, getKey(cd), cd.defaultPersOverlay(), false));
+			partyCdsBuiltin.put(cd, new CooldownSetting(persistence, getKey(cd) + ".party", false, false));
 		}
+		this.persistence = persistence;
+		this.customCdManager = customCdManager;
+		refreshCustoms();
+
 		enableTtsPersonal = new BooleanSetting(persistence, "cd-tracker.enable-tts", true);
 		enableTtsParty = new BooleanSetting(persistence, "cd-tracker.enable-tts.party", false);
 		enableFlyingText = new BooleanSetting(persistence, "cd-tracker.enable-flying-text", false);
@@ -64,8 +81,33 @@ public class CdTracker {
 		overlayMaxParty = new IntSetting(persistence, "cd-tracker.overlay-max.party", 8, 1, 32);
 	}
 
-	private static String getKey(Cooldown buff) {
-		return cdKeyStub + buff;
+	private static String getKey(ExtendedCooldownDescriptor buff) {
+		return cdKeyStub + buff.getSettingKeyStub();
+	}
+
+	private synchronized void refreshCustoms() {
+		log.info("Refreshing custom CDs");
+		List<CustomCooldown> customs = customCdManager.getCooldowns();
+		personalCdsCustom.clear();
+		partyCdsCustom.clear();
+		for (CustomCooldown custom : customs) {
+			ExtendedCooldownDescriptor cd = custom.buildCd();
+			personalCdsCustom.put(cd, new CooldownSetting(persistence, getKey(cd), cd.defaultPersOverlay(), false));
+			partyCdsCustom.put(cd, new CooldownSetting(persistence, getKey(cd) + ".party", false, false));
+		}
+		Map<ExtendedCooldownDescriptor, CooldownSetting> partyCds = new LinkedHashMap<>();
+		Map<ExtendedCooldownDescriptor, CooldownSetting> personalCds = new LinkedHashMap<>();
+		partyCds.putAll(partyCdsBuiltin);
+		partyCds.putAll(partyCdsCustom);
+		personalCds.putAll(personalCdsBuiltin);
+		personalCds.putAll(personalCdsCustom);
+		this.partyCds = partyCds;
+		this.personalCds = personalCds;
+		List<ExtendedCooldownDescriptor> all = new ArrayList<>();
+		all.addAll(partyCds.keySet());
+		all.addAll(personalCds.keySet());
+		allCds = all;
+		log.info("Number of CDs: {} builtin, {} custom, {} total", partyCdsBuiltin.size(), customs.size(), all.size());
 	}
 
 	// To be incremented on wipe or other event that would reset cooldowns
@@ -75,8 +117,8 @@ public class CdTracker {
 	private final Map<CdTrackingKey, AbilityUsedEvent> cds = new HashMap<>();
 	private final Map<CdTrackingKey, Instant> chargesReplenishedAt = new HashMap<>();
 
-	private static @Nullable Cooldown getCdInfo(long id) {
-		return Arrays.stream(Cooldown.values())
+	private @Nullable ExtendedCooldownDescriptor getCdInfo(long id) {
+		return allCds.stream()
 				.filter(b -> b.abilityIdMatches(id))
 				.findFirst()
 				.orElse(null);
@@ -107,22 +149,22 @@ public class CdTracker {
 		}
 	}
 
-	private boolean isEnabledForPersonalTts(Cooldown cd) {
+	private boolean isEnabledForPersonalTts(ExtendedCooldownDescriptor cd) {
 		CooldownSetting personalCdSetting = personalCds.get(cd);
 		return personalCdSetting != null && personalCdSetting.getTtsReady().get();
 	}
 
-	private boolean isEnabledForPartyTts(Cooldown cd) {
+	private boolean isEnabledForPartyTts(ExtendedCooldownDescriptor cd) {
 		CooldownSetting partyCdSetting = partyCds.get(cd);
 		return partyCdSetting != null && partyCdSetting.getTtsReady().get();
 	}
 
-	private boolean isEnabledForPersonalTtsOnUse(Cooldown cd) {
+	private boolean isEnabledForPersonalTtsOnUse(ExtendedCooldownDescriptor cd) {
 		CooldownSetting personalCdSetting = personalCds.get(cd);
 		return personalCdSetting != null && personalCdSetting.getTtsOnUse().get();
 	}
 
-	private boolean isEnabledForPartyTtsOnUse(Cooldown cd) {
+	private boolean isEnabledForPartyTtsOnUse(ExtendedCooldownDescriptor cd) {
 		CooldownSetting partyCdSetting = partyCds.get(cd);
 		return partyCdSetting != null && partyCdSetting.getTtsOnUse().get();
 	}
@@ -130,7 +172,7 @@ public class CdTracker {
 	@SuppressWarnings({"SuspiciousMethodCalls"})
 	@HandleEvents
 	public void cdUsed(EventContext context, AbilityUsedEvent event) {
-		Cooldown cd;
+		ExtendedCooldownDescriptor cd;
 		// target index == 0 ensures that for abilities that can hit multiple enemies, we only start the CD tracking
 		// once.
 		if (event.getTargetIndex() == 0 && (cd = getCdInfo(event.getAbility().getId())) != null) {
@@ -249,11 +291,11 @@ public class CdTracker {
 		});
 	}
 
-	public boolean isEnabledForPersonalOverlay(Cooldown cd) {
+	public boolean isEnabledForPersonalOverlay(ExtendedCooldownDescriptor cd) {
 		return personalCds.get(cd).getOverlay().get();
 	}
 
-	public boolean isEnabledForPartyOverlay(Cooldown cd) {
+	public boolean isEnabledForPartyOverlay(ExtendedCooldownDescriptor cd) {
 		return partyCds.get(cd).getOverlay().get();
 	}
 
@@ -289,11 +331,19 @@ public class CdTracker {
 		}
 	}
 
-	public Map<Cooldown, CooldownSetting> getPersonalCdSettings() {
+	public Map<ExtendedCooldownDescriptor, CooldownSetting> getPersonalCdSettings() {
 		return Collections.unmodifiableMap(personalCds);
 	}
 
-	public Map<Cooldown, CooldownSetting> getPartyCdSettings() {
+	public Map<ExtendedCooldownDescriptor, CooldownSetting> getPartyCdSettings() {
 		return Collections.unmodifiableMap(partyCds);
+	}
+
+	@HandleEvents(order = -100)
+	public void cooldownsUpdated(EventContext context, CustomCooldownsUpdated event) {
+		refreshCustoms();
+		// TODO: would be ideal if there were a way to do this without resetting, but the problem is that
+		// the map *keys* still contain obsolete CD information for custom CDs
+		reset();
 	}
 }

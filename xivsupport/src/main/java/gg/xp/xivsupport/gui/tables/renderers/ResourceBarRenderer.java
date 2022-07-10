@@ -25,8 +25,8 @@ public abstract class ResourceBarRenderer<X extends CurrentMaxPair> implements T
 			X hp = (X) value;
 			Component baseLabel = fallback.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column);
 			double percent;
-			long actualMax = hp.getMax();
-			long actualCurrent = hp.getCurrent();
+			long actualMax = hp.max();
+			long actualCurrent = hp.current();
 			int effectiveMax;
 			int effectiveCurrent;
 			if (actualMax == 0 || (actualMax < actualCurrent) || (actualMax == 1)) {
@@ -74,7 +74,7 @@ public abstract class ResourceBarRenderer<X extends CurrentMaxPair> implements T
 
 	protected void formatLabel(@NotNull X item) {
 		// Try to do long label, otherwise fall back to short label
-		String longText = String.format("%s / %s", item.getCurrent(), item.getMax());
-		bar.setTextOptions(longText, String.valueOf(item.getCurrent()));
+		String longText = String.format("%s / %s", item.current(), item.max());
+		bar.setTextOptions(longText, String.valueOf(item.current()));
 	}
 }

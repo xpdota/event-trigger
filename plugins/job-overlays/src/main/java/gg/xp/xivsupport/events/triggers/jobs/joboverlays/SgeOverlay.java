@@ -143,6 +143,11 @@ public class SgeOverlay extends BaseJobOverlay {
 		public @Nullable Double getDurationOverride() {
 			return null;
 		}
+
+		@Override
+		public boolean noStatusEffect() {
+			return true;
+		}
 	};
 
 	private void recalcCds() {
