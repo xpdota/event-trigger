@@ -228,7 +228,7 @@ public class FlyingTextOverlay extends XivOverlay {
 	private void addCallout(CalloutEvent callout) {
 		synchronized (lock) {
 			for (int i = 0; i < currentCallouts.size(); i++) {
-				if (currentCallouts.get(i).event == callout.replaces()) {
+				if (callout.shouldReplace(currentCallouts.get(i).event)) {
 					currentCallouts.set(i, new VisualCalloutItem(callout));
 					return;
 				}

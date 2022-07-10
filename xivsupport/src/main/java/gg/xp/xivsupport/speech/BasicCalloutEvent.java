@@ -1,11 +1,10 @@
 package gg.xp.xivsupport.speech;
 
-import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivsupport.callouts.CalloutTrackingKey;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.time.Duration;
-import java.time.Instant;
 
 public class BasicCalloutEvent extends BaseCalloutEvent {
 	@Serial

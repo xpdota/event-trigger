@@ -4,6 +4,7 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
@@ -69,7 +70,11 @@ public abstract class CalloutVerificationTest {
 					msDelta = Duration.between(combatStart.getHappenedAt(), ((BaseEvent) e).getEffectiveHappenedAt()).toMillis();
 				}
 			}
-			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText(), e.getParent()));
+			Event parent = e.getParent();
+			if (parent instanceof RawModifiedCallout<?>) {
+				parent = parent.getParent();
+			}
+			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText(), parent));
 		});
 
 

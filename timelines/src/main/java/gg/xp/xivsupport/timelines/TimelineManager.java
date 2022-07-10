@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
@@ -217,7 +218,7 @@ public final class TimelineManager {
 	}
 
 	void doTriggerCall(TimelineProcessor.UpcomingCall upc) {
-		CalloutEvent event;
+		RawModifiedCallout<TimelineProcessor.UpcomingCall> event;
 		if (upc.isPreCall()) {
 			event = timelineTriggerCalloutPre.getModified(upc);
 		}
