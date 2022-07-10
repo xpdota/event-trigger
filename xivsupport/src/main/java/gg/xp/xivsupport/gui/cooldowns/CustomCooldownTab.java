@@ -175,7 +175,10 @@ public class CustomCooldownTab implements PluginTab {
 				deleteCdButton.addActionListener(l -> delete());
 			}
 			{
-				JButton helpButton = new JButton("Help Button TODO Program Me");
+				JButton helpButton = new JButton("Help");
+				helpButton.addActionListener(l -> {
+					GuiUtil.openUrl("https://triggevent.io/pages/Cooldown-Tracker/#adding-custom-cooldowns");
+				});
 				controlsPanel.add(helpButton);
 			}
 			bottomPanel.add(controlsPanel, BorderLayout.NORTH);
