@@ -1,11 +1,15 @@
 package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
+
+	private static final Logger log = LoggerFactory.getLogger(CooldownDescriptorImpl.class);
 
 	public CooldownDescriptorImpl(CdBuilder builder) {
 		jobType = builder.getJobType();
@@ -21,7 +25,7 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 		maxCharges = builder.getMaxCharges();
 		durationOverride = builder.durationOverride;
 		if (job == null && jobType == null) {
-			throw new IllegalArgumentException(String.format("Cooldown %s has neither a job nor jobtype", label));
+			log.warn("Cooldown {} has neither a job nor jobtype", label);
 		}
 		if (builder.autoBuffs && builder.buffIds.length > 0) {
 			throw new IllegalArgumentException(String.format("Cooldown %s specified both autoBuffs and explicit buff IDs (%s)", label, Arrays.toString(builder.buffIds)));

@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.cooldowns;
 
+import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
@@ -7,6 +8,7 @@ import gg.xp.xivdata.data.ExtendedCooldownDescriptor;
 import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivsupport.cdsupport.CustomCooldown;
 import gg.xp.xivsupport.cdsupport.CustomCooldownManager;
+import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.TitleBorderPanel;
@@ -16,7 +18,9 @@ import gg.xp.xivsupport.gui.library.ActionTableFactory;
 import gg.xp.xivsupport.gui.library.StatusTable;
 import gg.xp.xivsupport.gui.lists.ItemList;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityListCellRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
@@ -53,9 +57,16 @@ public class CustomCooldownTab implements PluginTab {
 	private JTable table;
 	//	private boolean saveAnyway;
 
-	public CustomCooldownTab(CustomCooldownManager backend, ActionTableFactory actionTableFactory) {
+	public CustomCooldownTab(CustomCooldownManager backend, ActionTableFactory actionTableFactory, RightClickOptionRepo rightClicks) {
 		this.backend = backend;
 		this.actionTableFactory = actionTableFactory;
+		rightClicks.addOption(CustomRightClickOption.forRow(
+				"Add as Custom Cooldown",
+				HasAbility.class,
+				ha -> {
+					addnew(ha.getAbility().getId());
+					GuiUtil.bringToFront(outer);
+				}));
 	}
 
 	@Override
@@ -256,14 +267,19 @@ public class CustomCooldownTab implements PluginTab {
 		if (action == null) {
 			return;
 		}
+		addnew(action.actionid());
+	}
+
+	private void addnew(long id) {
 		CustomCooldown newCc = new CustomCooldown();
-		newCc.primaryAbilityId = action.actionid();
+		newCc.primaryAbilityId = id;
 		backend.addCooldown(newCc);
 		refresh();
 		SwingUtilities.invokeLater(() -> {
 			model.setSelectedValue(newCc);
 			refreshSelection();
 		});
+
 	}
 
 	private void delete() {

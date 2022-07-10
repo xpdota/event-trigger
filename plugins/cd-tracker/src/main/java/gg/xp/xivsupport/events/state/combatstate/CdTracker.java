@@ -97,10 +97,10 @@ public class CdTracker {
 		}
 		Map<ExtendedCooldownDescriptor, CooldownSetting> partyCds = new LinkedHashMap<>();
 		Map<ExtendedCooldownDescriptor, CooldownSetting> personalCds = new LinkedHashMap<>();
-		partyCds.putAll(partyCdsBuiltin);
 		partyCds.putAll(partyCdsCustom);
-		personalCds.putAll(personalCdsBuiltin);
+		partyCds.putAll(partyCdsBuiltin);
 		personalCds.putAll(personalCdsCustom);
+		personalCds.putAll(personalCdsBuiltin);
 		this.partyCds = partyCds;
 		this.personalCds = personalCds;
 		List<ExtendedCooldownDescriptor> all = new ArrayList<>();
