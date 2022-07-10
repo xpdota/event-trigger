@@ -166,6 +166,11 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	ArcaneCircle(true, CooldownType.PARTY_BUFF, 0x5F55),
 	ArcaneCrest(true, CooldownType.PERSONAL_MIT, 0x5F54),
 
+	// SAM
+	MeikyoShisui(false, CooldownType.PERSONAL_BURST, 7499),
+	Ikishoten(false, CooldownType.PERSONAL_BURST, 16482),
+	ThirdEye(false, CooldownType.PERSONAL_MIT, 7498),
+	HissatsuGurenSenei(builder(CooldownType.PERSONAL_BURST, false, 0x1D48, 0x4061).name("Hissatsu: Guren/Senei")),
 
 	// CASTER
 	Addle(true, CooldownType.PARTY_MIT, 0x1d88),
