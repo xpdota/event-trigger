@@ -16,6 +16,7 @@ import static gg.xp.xivdata.data.Job.NIN;
 import static gg.xp.xivdata.data.Job.PLD;
 import static gg.xp.xivdata.data.Job.RDM;
 import static gg.xp.xivdata.data.Job.RPR;
+import static gg.xp.xivdata.data.Job.SAM;
 import static gg.xp.xivdata.data.Job.SCH;
 import static gg.xp.xivdata.data.Job.SGE;
 import static gg.xp.xivdata.data.Job.SMN;
@@ -152,6 +153,7 @@ public class CdBuilder {
 				case 21 -> MNK;
 				case 23 -> DRG;
 				case 93 -> NIN;
+				case 111 -> SAM;
 				case 180 -> RPR;
 				case 24 -> BRD;
 				case 96 -> MCH;
