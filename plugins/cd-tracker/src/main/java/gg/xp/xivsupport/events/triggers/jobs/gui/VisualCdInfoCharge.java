@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivdata.data.CooldownDescriptor;
+import gg.xp.xivdata.data.BasicCooldownDescriptor;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +15,7 @@ import java.util.List;
 // TODO: value in supporting buffs?
 public class VisualCdInfoCharge implements VisualCdInfo {
 
-	private final @NotNull CooldownDescriptor cd;
+	private final @NotNull BasicCooldownDescriptor cd;
 	private final @Nullable BaseEvent basisEvent;
 	private final @Nullable BuffApplied buffApplied;
 	private final @Nullable Instant replenishedAt;
@@ -23,7 +23,7 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	private final Instant start;
 	private final Instant end;
 
-	public VisualCdInfoCharge(CooldownDescriptor cd, @Nullable BaseEvent basisEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt, int chargeNum) {
+	public VisualCdInfoCharge(BasicCooldownDescriptor cd, @Nullable BaseEvent basisEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt, int chargeNum) {
 		this.cd = cd;
 		this.basisEvent = basisEvent;
 		this.buffApplied = buffApplied;

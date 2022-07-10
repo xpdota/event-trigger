@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivdata.data.CooldownDescriptor;
+import gg.xp.xivdata.data.BasicCooldownDescriptor;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.combatstate.CooldownStatus;
@@ -16,12 +16,12 @@ import java.util.List;
 
 public class VisualCdInfoMain implements VisualCdInfo {
 
-	private final @NotNull CooldownDescriptor cd;
+	private final @NotNull BasicCooldownDescriptor cd;
 	private final @Nullable BaseEvent basisEvent;
 	private final @Nullable BuffApplied buffApplied;
 	private final @Nullable Instant replenishedAt;
 
-	public VisualCdInfoMain(@NotNull CooldownDescriptor cd, @Nullable BaseEvent basisEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt) {
+	public VisualCdInfoMain(@NotNull BasicCooldownDescriptor cd, @Nullable BaseEvent basisEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt) {
 		this.cd = cd;
 		this.basisEvent = basisEvent;
 		this.buffApplied = buffApplied;
@@ -32,7 +32,7 @@ public class VisualCdInfoMain implements VisualCdInfo {
 		this(status.cdKey().getCooldown(), status.used(), status.buff(), status.replenishedAt());
 	}
 
-	public VisualCdInfoMain(CooldownDescriptor cd) {
+	public VisualCdInfoMain(BasicCooldownDescriptor cd) {
 		this(cd, null, null, null);
 	}
 

@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-public interface CooldownDescriptor {
+public interface BasicCooldownDescriptor {
 	String getLabel();
 
 	boolean abilityIdMatches(long abilityId);

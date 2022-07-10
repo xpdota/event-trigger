@@ -4,9 +4,8 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.Cooldown;
-import gg.xp.xivdata.data.CooldownDescriptor;
+import gg.xp.xivdata.data.BasicCooldownDescriptor;
 import gg.xp.xivdata.data.StatusEffectLibrary;
-import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.jobguage.JobGaugeState;
@@ -18,7 +17,6 @@ import gg.xp.xivsupport.events.state.combatstate.CooldownStatus;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.jobs.gui.BaseCdTrackerTable;
 import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfo;
-import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfoCharge;
 import gg.xp.xivsupport.events.triggers.jobs.gui.VisualCdInfoMain;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
@@ -29,8 +27,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -112,7 +108,7 @@ public class SgeOverlay extends BaseJobOverlay {
 		SwingUtilities.invokeLater(tableModel::fullRefresh);
 	}
 
-	private static final CooldownDescriptor cdesc = new CooldownDescriptor() {
+	private static final BasicCooldownDescriptor cdesc = new BasicCooldownDescriptor() {
 		@Override
 		public String getLabel() {
 			return "Addersgall";

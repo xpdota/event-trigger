@@ -4,6 +4,7 @@ import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.JobType;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
@@ -97,8 +98,15 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 			Job job = cd.getJob();
 			// Sort job categories first
 			if (job == null) {
-				return cd.getJobType().ordinal();
+				JobType jobType = cd.getJobType();
+				if (jobType == null) {
+					// Put custom user-added CDs first
+					return -2;
+				}
+				// Then categories
+				return jobType.ordinal() + 5000;
 			}
+			// Then jobs
 			return job.defaultPartySortOrder() + 10000;
 		}));
 		JTable table = new JTable() {

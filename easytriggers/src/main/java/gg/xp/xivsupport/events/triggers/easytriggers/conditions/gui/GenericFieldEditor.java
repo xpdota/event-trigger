@@ -2,14 +2,14 @@ package gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui;
 
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EditorIgnore;
-import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdPicker;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdPickerFactory;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdType;
 import gg.xp.xivsupport.gui.ResettableField;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.util.GuiUtil;
-import gg.xp.xivsupport.persistence.settings.Resettable;
+import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,9 +25,11 @@ public class GenericFieldEditor extends JPanel {
 
 	private final Object object;
 	private final List<ResettableField> resettables = new ArrayList<>();
+	private final IdPickerFactory idPickerFactory;
 
-	public GenericFieldEditor(Object object) {
+	public GenericFieldEditor(Object object, PicoContainer pico) {
 		setLayout(new WrapLayout(0, 10, 0));
+		idPickerFactory = pico.getComponent(IdPickerFactory.class);
 		this.object = object;
 		Field[] fields = object.getClass().getFields();
 		Arrays.stream(fields)
@@ -70,7 +72,7 @@ public class GenericFieldEditor extends JPanel {
 				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), () -> valueToString(getField(field).toString()));
 			}
 			else {
-				editorComponent = IdPicker.pickerFor(idPick.value(), () -> (long) getField(field), l -> setField(field, l));
+				editorComponent = idPickerFactory.pickerFor(idPick.value(), () -> (long) getField(field), l -> setField(field, l));
 			}
 		}
 		else if (type.equals(int.class) || type.equals(Integer.class)) {

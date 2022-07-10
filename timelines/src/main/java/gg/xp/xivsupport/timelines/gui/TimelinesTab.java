@@ -11,7 +11,7 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.WrapperPanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.library.ActionTable;
+import gg.xp.xivsupport.gui.library.ActionTableFactory;
 import gg.xp.xivsupport.gui.library.StatusTable;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
@@ -56,6 +56,7 @@ import java.util.stream.Collectors;
 public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab {
 	private static final Logger log = LoggerFactory.getLogger(TimelinesTab.class);
 	private final TimelineManager backend;
+	private final ActionTableFactory actionTableFactory;
 	private final CustomTableModel<TimelineInfo> timelineChooserModel;
 	private final CustomTableModel<TimelineEntry> timelineModel;
 	private volatile List<TimelineEntry> timelineEntries;
@@ -65,10 +66,11 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private TimelineProcessor currentTimeline;
 	private TimelineCustomizations currentCust;
 
-	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state) {
+	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state, ActionTableFactory actionTableFactory) {
 		super("Timelines");
 		// TODO: searching
 		this.backend = backend;
+		this.actionTableFactory = actionTableFactory;
 
 		int numColMinWidth = 50;
 		int numColMaxWidth = 200;
@@ -413,7 +415,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 	private void chooseActionIcon(TimelineEntry te) {
 		stopEditing();
-		ActionTable.showChooser(SwingUtilities.getWindowAncestor(this), action -> this.<ActionInfo>safeEditTimelineEntry(false, (ce, actionInfo) -> {
+		actionTableFactory.showChooser(SwingUtilities.getWindowAncestor(this), action -> this.<ActionInfo>safeEditTimelineEntry(false, (ce, actionInfo) -> {
 					ActionIcon icon = actionInfo.getIcon();
 					ce.icon = icon == null ? null : icon.getIconUrl();
 				}).accept(te, action)

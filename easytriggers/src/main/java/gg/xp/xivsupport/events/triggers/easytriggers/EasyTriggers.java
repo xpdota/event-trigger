@@ -257,31 +257,31 @@ public final class EasyTriggers {
 	);
 
 
-	private static Component generic(Condition<?> cond, EasyTrigger<?> trigger) {
-		return new GenericFieldEditor(cond);
+	private Component generic(Condition<?> cond, EasyTrigger<?> trigger) {
+		return new GenericFieldEditor(cond, pico);
 	}
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
 	private final List<ConditionDescription<?, ?>> conditions = List.of(
-			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(StatusStacksFilter.class, HasStatusEffect.class, "Status Effect Stack Count", StatusStacksFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(SourceEntityTypeFilter.class, HasSourceEntity.class, "Source Combatant", SourceEntityTypeFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(TargetEntityTypeFilter.class, HasTargetEntity.class, "Target Combatant", TargetEntityTypeFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(SourceEntityNpcIdFilter.class, HasSourceEntity.class, "Source Combatant NPC ID", SourceEntityNpcIdFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(TargetEntityNpcIdFilter.class, HasTargetEntity.class, "Target Combatant NPC ID", TargetEntityNpcIdFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(SourcePartyMemberFilter.class, HasSourceEntity.class, "Source is (not) in Party", () -> new SourcePartyMemberFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic),
-			new ConditionDescription<>(TargetPartyMemberFilter.class, HasTargetEntity.class, "Target is (not) in Party", () -> new TargetPartyMemberFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic),
-			new ConditionDescription<>(TargetIndexFilter.class, HasTargetIndex.class, "Target Index", TargetIndexFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(TargetCountFilter.class, HasTargetIndex.class, "Target Count", TargetCountFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(DurationFilter.class, HasDuration.class, "Castbar or Status Duration", DurationFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(LogLineRegexFilter.class, ACTLogLineEvent.class, "Log Line Regular Expression (Regex)", LogLineRegexFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(LogLineNumberFilter.class, ACTLogLineEvent.class, "Log Line Number", LogLineNumberFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, EasyTriggers::generic),
+			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, this::generic),
+			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, this::generic),
+			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, this::generic),
+			new ConditionDescription<>(StatusStacksFilter.class, HasStatusEffect.class, "Status Effect Stack Count", StatusStacksFilter::new, this::generic),
+			new ConditionDescription<>(SourceEntityTypeFilter.class, HasSourceEntity.class, "Source Combatant", SourceEntityTypeFilter::new, this::generic),
+			new ConditionDescription<>(TargetEntityTypeFilter.class, HasTargetEntity.class, "Target Combatant", TargetEntityTypeFilter::new, this::generic),
+			new ConditionDescription<>(SourceEntityNpcIdFilter.class, HasSourceEntity.class, "Source Combatant NPC ID", SourceEntityNpcIdFilter::new, this::generic),
+			new ConditionDescription<>(TargetEntityNpcIdFilter.class, HasTargetEntity.class, "Target Combatant NPC ID", TargetEntityNpcIdFilter::new, this::generic),
+			new ConditionDescription<>(SourcePartyMemberFilter.class, HasSourceEntity.class, "Source is (not) in Party", () -> new SourcePartyMemberFilter(getInjectionInstance(XivState.class)), this::generic),
+			new ConditionDescription<>(TargetPartyMemberFilter.class, HasTargetEntity.class, "Target is (not) in Party", () -> new TargetPartyMemberFilter(getInjectionInstance(XivState.class)), this::generic),
+			new ConditionDescription<>(TargetIndexFilter.class, HasTargetIndex.class, "Target Index", TargetIndexFilter::new, this::generic),
+			new ConditionDescription<>(TargetCountFilter.class, HasTargetIndex.class, "Target Count", TargetCountFilter::new, this::generic),
+			new ConditionDescription<>(DurationFilter.class, HasDuration.class, "Castbar or Status Duration", DurationFilter::new, this::generic),
+			new ConditionDescription<>(LogLineRegexFilter.class, ACTLogLineEvent.class, "Log Line Regular Expression (Regex)", LogLineRegexFilter::new, this::generic),
+			new ConditionDescription<>(LogLineNumberFilter.class, ACTLogLineEvent.class, "Log Line Number", LogLineNumberFilter::new, this::generic),
+			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, this::generic),
+			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, this::generic),
 			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(getInjectionInstance(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, (EasyTrigger<Event>) b)),
-			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic)
+			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(getInjectionInstance(XivState.class)), this::generic)
 	);
 
 	public List<EventDescription<?>> getEventDescriptions() {

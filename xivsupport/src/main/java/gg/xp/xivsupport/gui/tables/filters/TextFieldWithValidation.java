@@ -60,7 +60,11 @@ public class TextFieldWithValidation<X> extends JTextField implements Resettable
 	public void resetText() {
 		ignoreUpdate = true;
 		try {
-			setText(valueGetter.get());
+			String value = valueGetter.get();
+			if (value == null) {
+				value = "";
+			}
+			setText(value);
 		}
 		finally {
 			ignoreUpdate = false;
