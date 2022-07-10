@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.cooldowns;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
@@ -429,5 +428,10 @@ public class CustomCooldownTab implements PluginTab {
 		}
 	}
 
+
+	@Override
+	public int getSortOrder() {
+		return 8;
+	}
 
 }
