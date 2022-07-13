@@ -12,6 +12,7 @@ import java.awt.*;
 import java.io.Serial;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -26,14 +27,14 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private final @Nullable X event;
 	private final Map<String, Object> arguments;
 	private final Function<? super X, ? extends @Nullable Component> guiProvider;
-	private final Predicate<X> expiry;
+	private final Predicate<RawModifiedCallout<X>> expiry;
 	private @Nullable HasCalloutTrackingKey replaces;
 	private final @Nullable Color colorOverride;
 	private final CalloutTrackingKey key = new CalloutTrackingKey();
 	private static final int maxErrors = 10;
 	private int errorCount;
 
-	public RawModifiedCallout(String description, String tts, String text, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<X> expiry, @Nullable Color colorOverride) {
+	public RawModifiedCallout(String description, String tts, String text, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride) {
 		this.description = description;
 		this.tts = tts;
 		this.text = text;
@@ -64,8 +65,8 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 		return guiProvider;
 	}
 
-	public Predicate<X> getExpiry() {
-		return expiry;
+	public BooleanSupplier getExpiry() {
+		return () -> expiry.test(this);
 	}
 
 	public @Nullable HasCalloutTrackingKey getReplaces() {

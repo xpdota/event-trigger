@@ -76,7 +76,7 @@ public class CalloutProcessor {
 				raw.trackingKey(),
 				tts,
 				text,
-				() -> raw.getExpiry().test(event),
+				() -> raw.getExpiry().getAsBoolean(),
 				() -> raw.getGuiProvider().apply(event),
 				raw.getColorOverride());
 		out.setReplaces(raw.getReplaces());

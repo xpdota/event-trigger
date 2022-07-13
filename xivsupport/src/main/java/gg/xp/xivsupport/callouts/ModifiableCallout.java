@@ -7,19 +7,8 @@ import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
-import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
-import gg.xp.xivsupport.models.XivCombatant;
-import gg.xp.xivsupport.speech.BaseCalloutEvent;
-import gg.xp.xivsupport.speech.BasicCalloutEvent;
-import gg.xp.xivsupport.speech.CalloutEvent;
-import gg.xp.xivsupport.speech.DynamicCalloutEvent;
-import gg.xp.xivsupport.speech.ParentedCalloutEvent;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import groovy.lang.Script;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,14 +18,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.regex.Pattern;
 
 // TODO: refactor all of this into a builder pattern
 
@@ -59,7 +43,7 @@ public class ModifiableCallout<X> {
 	private final String description;
 	private final String defaultTtsText;
 	private final String defaultVisualText;
-	private final Predicate<X> expiry;
+	private final Predicate<RawModifiedCallout<X>> expiry;
 	private Function<? super X, ? extends @Nullable Component> guiProvider = e -> null;
 
 	private static final Duration defaultHangDuration = Duration.of(5, ChronoUnit.SECONDS);
@@ -90,8 +74,16 @@ public class ModifiableCallout<X> {
 		this.description = description;
 		this.defaultTtsText = tts;
 		this.defaultVisualText = text;
-		this.expiry = expiry;
+		this.expiry = x -> expiry.test(x.getEvent());
 	}
+
+//	// last argument is dumb but works
+//	public ModifiableCallout(String description, String tts, String text, Predicate<RawModifiedCallout<X>> expiry, int ignoredUnused) {
+//		this.description = description;
+//		this.defaultTtsText = tts;
+//		this.defaultVisualText = text;
+//		this.expiry = expiry;
+//	}
 
 	/**
 	 * A callout with the same TTS and on-screen text, and a custom expiry time.
