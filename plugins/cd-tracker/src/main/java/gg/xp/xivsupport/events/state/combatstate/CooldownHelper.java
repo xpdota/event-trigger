@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.state.combatstate;
 
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.Cooldown;
+import gg.xp.xivdata.data.ExtendedCooldownDescriptor;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
@@ -11,6 +12,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,7 +36,9 @@ public class CooldownHelper {
 		this.state = state;
 	}
 
-	public List<CooldownStatus> getCooldowns(Predicate<XivCombatant> sourceFilter, Predicate<Cooldown> cdFilter) {
+	// TODO: one thing that isn't supported yet is stuff that has no buff whatsoever
+
+	public List<CooldownStatus> getCooldowns(Predicate<XivCombatant> sourceFilter, Predicate<ExtendedCooldownDescriptor> cdFilter) {
 		Predicate<XivCombatant> actualSourceFilter = xc -> sourceFilter.test(xc.walkParentChain());
 		Map<CdTrackingKey, AbilityUsedEvent> cds = cdTracker
 				.getCds(e -> cdFilter.test(e.getKey().getCooldown()) && actualSourceFilter.test(e.getKey().getSource()));
@@ -46,7 +50,7 @@ public class CooldownHelper {
 					CdTrackingKey key = e.getKey();
 					AbilityUsedEvent abilityUsed = e.getValue();
 					Instant replenishedAt = cdTracker.getReplenishedAt(key);
-					Cooldown cd = key.getCooldown();
+					ExtendedCooldownDescriptor cd = key.getCooldown();
 					Predicate<BuffApplied> buffFilter;
 					if (cd.autoBuffs()) {
 						Set<Long> buffIds = abilityUsed.getEffects().stream().map(effect -> {
@@ -63,7 +67,7 @@ public class CooldownHelper {
 					@Nullable BuffApplied buffApplied = buffs.stream()
 							.filter(buffFilter)
 							.filter(b -> b.getSource().walkParentChain().equals(abilityUsed.getSource().walkParentChain()))
-							.findFirst()
+							.max(Comparator.comparing(BuffApplied::getEffectiveHappenedAt))
 							.orElse(null);
 					return new CooldownStatus(key, abilityUsed, buffApplied, replenishedAt);
 				}).toList();

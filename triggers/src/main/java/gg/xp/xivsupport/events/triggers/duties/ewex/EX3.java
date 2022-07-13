@@ -9,6 +9,7 @@ import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -191,7 +192,7 @@ public class EX3 extends AutoChildEventHandler implements FilteredEventHandler {
 		pendingMultiStar.add(newStarData);
 		if (pendingMultiStar.size() == 2) {
 			pendingMultiStar.sort(Comparator.comparing(data -> (int) data.getEstimatedRemainingDuration().toMillis()));
-			CalloutEvent call = combinedCall.getModified(event, Map.of("event1", pendingMultiStar.get(0), "event2", pendingMultiStar.get(1)));
+			RawModifiedCallout call = combinedCall.getModified(event, Map.of("event1", pendingMultiStar.get(0), "event2", pendingMultiStar.get(1)));
 			context.accept(call);
 			pendingMultiStar.clear();
 		}
@@ -354,7 +355,7 @@ public class EX3 extends AutoChildEventHandler implements FilteredEventHandler {
 		}
 
 
-		public CalloutEvent getCallout() {
+		public RawModifiedCallout<HasDuration> getCallout() {
 			Map<String, Object> extraArgs = Map.of("starDir", getSector(), "safeSpot", getSafeSpot());
 			if (startType == StarType.AoE) {
 				return redStar.getModified(durationDelegate, extraArgs);

@@ -7,6 +7,7 @@ import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
@@ -23,8 +24,9 @@ import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.speech.BaseCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
-import gg.xp.xivsupport.speech.ParentedCalloutEvent;
+import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.XivMain;
 import org.hamcrest.MatcherAssert;
@@ -51,7 +53,8 @@ public class JailExampleTest {
 			AbilityUsedEvent.class,
 			UnsortedTitanJailsSolvedEvent.class,
 			FinalTitanJailsSolvedEvent.class,
-			ParentedCalloutEvent.class,
+			RawModifiedCallout.class,
+			BaseCalloutEvent.class,
 			TtsRequest.class,
 			AutoMarkRequest.class,
 			ClearAutoMarkRequest.class,
@@ -92,7 +95,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -106,13 +109,15 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -154,6 +159,10 @@ public class JailExampleTest {
 		Thread.sleep(1200);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 
+	}
+
+	private static void assertListEquals(List<?> actual, List<?> expected) {
+		Assert.assertEquals(actual, expected, "Lists were not equal%nExpected: %s%nActual: %s%n".formatted(expected, actual));
 	}
 
 	@Test
@@ -256,7 +265,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -337,7 +346,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -349,7 +358,9 @@ public class JailExampleTest {
 				// Finally, we have the three players that got jailed, but sorted in whatever order (currently just alphabetical)
 				FinalTitanJailsSolvedEvent.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// TTS
 				TtsRequest.class
 
@@ -421,7 +432,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -435,15 +446,16 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
-
-		));
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
+				));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
 		// parent tagged onto it.
 		List<ACTLogLineEvent> logLines = collector.getEventsOf(ACTLogLineEvent.class);
@@ -514,7 +526,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -528,13 +540,15 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -635,7 +649,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -649,13 +663,15 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -735,7 +751,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -749,13 +765,15 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its

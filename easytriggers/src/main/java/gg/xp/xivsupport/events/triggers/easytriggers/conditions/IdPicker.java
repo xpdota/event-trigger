@@ -5,19 +5,16 @@ import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivdata.data.StatusEffectLibrary;
-import gg.xp.xivsupport.gui.library.ActionTable;
+import gg.xp.xivsupport.gui.library.ActionTableFactory;
 import gg.xp.xivsupport.gui.library.StatusTable;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.IconUrlRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
-import gg.xp.xivsupport.models.XivZone;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.text.IconView;
 import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -107,16 +104,4 @@ public class IdPicker<X> extends JPanel {
 		}
 	}
 
-	public static <X> Component pickerFor(Class<X> clazz, Supplier<Long> getter, Consumer<Long> setter) {
-		if (clazz.equals(ActionInfo.class)) {
-			return new IdPicker<>(getter, setter, ActionLibrary::forId, ActionInfo::actionid, ActionInfo::name, ActionTable::pickItem, ActionInfo::getIcon);
-		}
-		else if (clazz.equals(StatusEffectInfo.class)) {
-			return new IdPicker<>(getter, setter, StatusEffectLibrary::forId, StatusEffectInfo::statusEffectId, StatusEffectInfo::name, StatusTable::pickItem, statusEffectInfo -> statusEffectInfo.getIcon(0));
-		}
-		else {
-			log.error("No picker for {}, falling back to basic text field with validation", clazz);
-			return new TextFieldWithValidation<>(Long::parseLong, setter, () -> String.valueOf(getter.get()));
-		}
-	}
 }

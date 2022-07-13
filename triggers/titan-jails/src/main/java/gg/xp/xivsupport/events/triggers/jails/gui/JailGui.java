@@ -3,18 +3,11 @@ package gg.xp.xivsupport.events.triggers.jails.gui;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
-import gg.xp.xivsupport.gui.components.RearrangeableList;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.tables.CustomColumn;
-import gg.xp.xivsupport.gui.tables.CustomTableModel;
-import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
-import gg.xp.xivsupport.models.XivEntity;
-import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
@@ -23,9 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @ScanMe
 public class JailGui implements PluginTab {

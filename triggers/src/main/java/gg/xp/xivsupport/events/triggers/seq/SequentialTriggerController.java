@@ -4,9 +4,11 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +110,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		waitEvent(BaseEvent.class, e -> initialEvent.getEffectiveTimeSince().toMillis() >= doneAt);
 	}
 
-	private @Nullable CalloutEvent lastCall;
+	private @Nullable HasCalloutTrackingKey lastCall;
 
 	/**
 	 * Accept a new callout event, BUT mark it as "replacing" any previous call
@@ -117,6 +119,20 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param call The new callout
 	 */
 	public void updateCall(CalloutEvent call) {
+		if (lastCall != null) {
+			call.setReplaces(lastCall);
+		}
+		lastCall = call;
+		accept(call);
+	}
+
+	/**
+	 * Accept a new callout event, BUT mark it as "replacing" any previous call
+	 * i.e. update callout text + emit a new TTS
+	 *
+	 * @param call The new callout
+	 */
+	public void updateCall(RawModifiedCallout<?> call) {
 		if (lastCall != null) {
 			call.setReplaces(lastCall);
 		}
@@ -244,7 +260,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			catch (NumberFormatException nfe) {
 				value = defaultCycleProcessingTime;
 			}
-			cycleProcessingTime = value;
+//			cycleProcessingTime = value;
+			// TODO
+			cycleProcessingTime = 30000;
 		}
 		else {
 			cycleProcessingTime = defaultCycleProcessingTime;

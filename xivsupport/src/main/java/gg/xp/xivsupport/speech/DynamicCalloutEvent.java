@@ -1,11 +1,9 @@
 package gg.xp.xivsupport.speech;
 
-import gg.xp.reevent.events.BaseEvent;
-import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.callouts.CalloutTrackingKey;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.function.Supplier;
 
 public class DynamicCalloutEvent extends BaseCalloutEvent {
@@ -15,6 +13,12 @@ public class DynamicCalloutEvent extends BaseCalloutEvent {
 	private final Duration hangTime;
 
 	public DynamicCalloutEvent(String callText, Supplier<String> visualText, long hangTime) {
+		this.callText = callText;
+		this.visualText = visualText;
+		this.hangTime = Duration.ofMillis(hangTime);
+	}
+	public DynamicCalloutEvent(CalloutTrackingKey key, String callText, Supplier<String> visualText, long hangTime) {
+		super(key);
 		this.callText = callText;
 		this.visualText = visualText;
 		this.hangTime = Duration.ofMillis(hangTime);

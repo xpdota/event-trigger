@@ -228,7 +228,7 @@ public class FlyingTextOverlay extends XivOverlay {
 	private void addCallout(CalloutEvent callout) {
 		synchronized (lock) {
 			for (int i = 0; i < currentCallouts.size(); i++) {
-				if (currentCallouts.get(i).event == callout.replaces()) {
+				if (callout.shouldReplace(currentCallouts.get(i).event)) {
 					currentCallouts.set(i, new VisualCalloutItem(callout));
 					return;
 				}
@@ -239,7 +239,13 @@ public class FlyingTextOverlay extends XivOverlay {
 
 	private void refreshCallouts() {
 		synchronized (lock) {
-			currentCallouts.removeIf(VisualCalloutItem::isExpired);
+			currentCallouts.removeIf(visualCalloutItem -> {
+				boolean expired = visualCalloutItem.isExpired();
+				if (expired) {
+					log.info("Removed call: {}", visualCalloutItem.event.getVisualText());
+				}
+				return expired;
+			});
 			currentCallouts.forEach(VisualCalloutItem::recheckText);
 		}
 	}
@@ -247,6 +253,7 @@ public class FlyingTextOverlay extends XivOverlay {
 	@HandleEvents
 	public void handleEvent(EventContext context, CalloutEvent event) {
 		if (event.getVisualText() != null && !event.getVisualText().isBlank()) {
+			log.info("Added call: {}", event.getVisualText());
 			addCallout(event);
 		}
 	}

@@ -9,8 +9,12 @@ import gg.xp.xivsupport.events.debug.DebugCommand;
 @CalloutRepo("Dummy (/e c:testcall)")
 public class DummyTestFight {
 
-	private final ModifiableCallout<DebugCommand> dummy = new ModifiableCallout<>("Dummy Callout to Test UI", "Test");
+	private volatile boolean dummyHold;
 
+	private final ModifiableCallout<DebugCommand> dummy = new ModifiableCallout<>("Dummy Callout to Test UI", "Test");
+	private final ModifiableCallout<DebugCommand> dummy2 = new ModifiableCallout<>("Dummy Callout to Test Holds", "Test", "Test", x -> !dummyHold);
+
+	// Dummy call that uses the event
 	@HandleEvents
 	public void dummyCall(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("testcall")) {
@@ -18,5 +22,26 @@ public class DummyTestFight {
 		}
 	}
 
+	// Dummy call that does not use the event
+	@HandleEvents
+	public void dummyCall2(EventContext context, DebugCommand event) {
+		if (event.getCommand().equals("testcall2")) {
+			context.accept(dummy.getModified(event));
+		}
+	}
+
+	@HandleEvents
+	public void dummyCallOn(EventContext context, DebugCommand event) {
+		if (event.getCommand().equals("testcall_on")) {
+			dummyHold = true;
+			context.accept(dummy2.getModified(event));
+		}
+	}
+	@HandleEvents
+	public void dummyCallOff(EventContext context, DebugCommand event) {
+		if (event.getCommand().equals("testcall_off")) {
+			dummyHold = false;
+		}
+	}
 
 }

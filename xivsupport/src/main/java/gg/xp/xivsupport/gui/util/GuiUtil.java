@@ -14,6 +14,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.function.Function;
 
 public final class GuiUtil {
@@ -33,10 +34,17 @@ public final class GuiUtil {
 			Desktop.getDesktop().open(file);
 		}
 		catch (IOException e) {
-			log.error("Error opening install dir", e);
+			log.error("Error opening file '{}'", file, e);
 			throw new RuntimeException(e);
 		}
+	}
 
+	public static void openUrl(String url) {
+		try {
+			Desktop.getDesktop().browse(new URI(url));
+		} catch (Throwable t) {
+			log.error("Error opening url '{}'", url, t);
+		}
 	}
 
 	public static GridBagConstraints defaultGbc() {

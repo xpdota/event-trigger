@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.xivdata.data.CooldownDescriptor;
+import gg.xp.xivdata.data.BasicCooldownDescriptor;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +15,7 @@ import java.util.List;
 // TODO: value in supporting buffs?
 public class VisualCdInfoCharge implements VisualCdInfo {
 
-	private final @NotNull CooldownDescriptor cd;
+	private final @NotNull BasicCooldownDescriptor cd;
 	private final @Nullable BaseEvent basisEvent;
 	private final @Nullable BuffApplied buffApplied;
 	private final @Nullable Instant replenishedAt;
@@ -23,7 +23,7 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	private final Instant start;
 	private final Instant end;
 
-	public VisualCdInfoCharge(CooldownDescriptor cd, @Nullable BaseEvent basisEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt, int chargeNum) {
+	public VisualCdInfoCharge(BasicCooldownDescriptor cd, @Nullable BaseEvent basisEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt, int chargeNum) {
 		this.cd = cd;
 		this.basisEvent = basisEvent;
 		this.buffApplied = buffApplied;
@@ -56,14 +56,14 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 
 	@Override
 	public String getLabel() {
-		if (getCurrent() == getMax()) {
+		if (current() == max()) {
 			return "Ready!";
 		}
-		return String.format("%.1f", ((double) (getMax() - getCurrentUnbounded())) / 1000.0f);
+		return String.format("%.1f", ((double) (max() - getCurrentUnbounded())) / 1000.0f);
 	}
 
 	@Override
-	public long getCurrent() {
+	public long current() {
 //		if (abilityEvent == null) {
 //			return getMax();
 //		}
@@ -74,10 +74,10 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 
 	private long getCurrentUnbounded() {
 		if (basisEvent == null) {
-			return getMax();
+			return max();
 		}
 		long durMillis = Duration.between(start, basisEvent.effectiveTimeNow()).toMillis();
-		return Math.min((durMillis), getMax());
+		return Math.min((durMillis), max());
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	}
 
 	@Override
-	public long getMax() {
+	public long max() {
 		return cd.getCooldownAsDuration().toMillis();
 	}
 
@@ -109,6 +109,19 @@ public class VisualCdInfoCharge implements VisualCdInfo {
 	@Override
 	public List<? extends VisualCdInfo> makeChargeInfo() {
 		return Collections.emptyList();
+	}
+
+	@Override
+	public CdStatus getStatus() {
+		if (basisEvent == null) {
+			return CdStatus.NOT_YET_USED;
+		}
+		else if (current() == max()) {
+			return CdStatus.READY;
+		}
+		else {
+			return CdStatus.ON_COOLDOWN;
+		}
 	}
 
 }

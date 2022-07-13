@@ -100,7 +100,7 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 		else {
 			currentCds = newCds;
 			croppedCds = newCds.stream()
-					.sorted(Comparator.comparing(e -> e.cdKey().getCooldown()))
+					.sorted(Comparator.comparing(e -> e.cdKey().getCooldown().sortOrder()))
 					.limit(numberOfRows.get())
 					.map((Function<? super CooldownStatus, VisualCdInfo>) VisualCdInfoMain::new)
 					.filter(VisualCdInfo::stillValid)

@@ -9,6 +9,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -762,7 +763,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		// 6715 -> the actual out (gnash)
 		// 6716 -> the actual in (lash)
 		boolean outFirst = e1.getAbility().getId() == 0x6712;
-		CalloutEvent firstCall = outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified();
+		RawModifiedCallout<?> firstCall = outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified();
 		s.updateCall(firstCall);
 		s.waitEvent(AbilityUsedEvent.class, aue -> aue.isFirstTarget() && (aue.getAbility().getId() == 0x6715 || aue.getAbility().getId() == 0x6716));
 		s.updateCall(!outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified());
@@ -778,12 +779,12 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		}
 	}
 
-	private CalloutEvent previousRedBlueCall;
+	private RawModifiedCallout previousRedBlueCall;
 
 	@HandleEvents
 	public void doRedBlueTethers(EventContext ctx, BuffApplied ba) {
 		if (ba.getTarget().isThePlayer()) {
-			CalloutEvent call;
+			RawModifiedCallout call;
 			long id = ba.getBuff().getId();
 			if (id == 0xAD7) {
 				call = redTether.getModified(ba);
