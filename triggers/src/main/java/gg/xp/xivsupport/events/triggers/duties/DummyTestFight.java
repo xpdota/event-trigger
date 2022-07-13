@@ -14,7 +14,7 @@ public class DummyTestFight {
 	@HandleEvents
 	public void dummyCall(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("testcall")) {
-			context.accept(dummy.getModified(event));
+			context.accept(dummy.getModified());
 		}
 	}
 
