@@ -314,7 +314,7 @@ public class JailExampleTest {
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(1500);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -396,7 +396,7 @@ public class JailExampleTest {
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(1500);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
 	}
 
@@ -491,7 +491,7 @@ public class JailExampleTest {
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(1500);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -714,7 +714,7 @@ public class JailExampleTest {
 		Assert.assertEquals(sortString, customSort);
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(1500);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -815,7 +815,7 @@ public class JailExampleTest {
 		Assert.assertEquals(sortString, customSort);
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(1500);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
