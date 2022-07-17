@@ -833,6 +833,8 @@ public class JailExampleTest {
 		queue.waitDrain();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		dist.acceptEvent(new InitEvent());
+		JailSolver jail = container.getComponent(JailSolver.class);
+		jail.getJailClearDelay().set(1000);
 		XivState state = container.getComponent(XivState.class);
 		// TODO: find actual solution to race conditions in tests
 		try {
@@ -851,8 +853,6 @@ public class JailExampleTest {
 		}
 		queue.waitDrain();
 
-		JailSolver jail = container.getComponent(JailSolver.class);
-		jail.getJailClearDelay().set(1000);
 	}
 
 	private static void doEvents(EventDistributor dist) {
