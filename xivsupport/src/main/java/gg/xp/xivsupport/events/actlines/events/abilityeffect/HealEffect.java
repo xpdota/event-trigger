@@ -3,11 +3,13 @@ package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 public class HealEffect extends AbilityEffect {
 	private final HitSeverity severity;
 	private final long amount;
+	private final boolean onTarget;
 
 	public HealEffect(long flags, long value, HitSeverity severity, long amount) {
 		super(flags, value, AbilityEffectType.HEAL);
 		this.severity = severity;
 		this.amount = amount;
+		onTarget = ((flags >> 8) & 1) == 0;
 	}
 
 	public HitSeverity getSeverity() {
@@ -26,20 +28,17 @@ public class HealEffect extends AbilityEffect {
 
 	@Override
 	public String getBaseDescription() {
+		String target = isOnTarget() ? "Target" : "Caster";
 		if (severity == HitSeverity.NORMAL) {
-			return String.format("Heal: %s (%s %s)", amount, getDamageAspect(), getDamageType());
+			return String.format("Healed %s: %s", target, amount);
 		}
 		else {
-			return String.format("Heal: %s (%s) (%s %s)", amount, severity.getFriendlyName(), getDamageAspect(), getDamageType());
+			return String.format("Healed %s: %s (%s)", target, amount, severity.getFriendlyName());
 		}
 	}
 
-	public DamageAspect getDamageAspect() {
-		return DamageAspect.forByte((int) (getFlags() >> 20) % 16);
-	}
-
-	public DamageType getDamageType() {
-		return DamageType.forByte((int) (getFlags() >> 16) % 16);
+	public boolean isOnTarget() {
+		return onTarget;
 	}
 
 }
