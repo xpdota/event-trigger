@@ -330,8 +330,13 @@ public class GroovyManager {
 	}
 
 	public GroovyShell makeShell() {
+		Binding binding = makeBinding();
+
+		return new GroovyShell(binding, getCompilerConfig());
+	}
+
+	public Binding makeBinding() {
 		Binding binding = new Binding();
-		GroovyShell shell = new GroovyShell(binding, getCompilerConfig());
 		container.getComponents().forEach(item -> {
 			String simpleName = item.getClass().getSimpleName();
 			simpleName = StringUtils.uncapitalize(simpleName);
@@ -339,9 +344,7 @@ public class GroovyManager {
 		});
 		// TODO: find a way to systematically do these
 		binding.setProperty("xivState", container.getComponent(XivState.class));
-
-		return shell;
-
+		return binding;
 	}
 
 	private static final String defaultScriptContent = """
