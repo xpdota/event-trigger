@@ -120,6 +120,7 @@ public class ModifiableCallout<X> {
 				return be.getEffectiveTimeSince().compareTo(dur) > 0;
 			}
 			else {
+				log.warn("Hit expiresIn false branch - this should never happen!");
 				return defaultExpiryAt.isBefore(Instant.now());
 			}
 		};
