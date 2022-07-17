@@ -66,7 +66,9 @@ public class CalloutProcessor {
 		if (event != null) {
 			arguments.put("event", event);
 		}
-		Binding binding = new Binding(arguments);
+		Binding binding = groovyMgr.makeBinding();
+		arguments.forEach(binding::setVariable);
+//		Binding binding = new Binding(arguments);
 
 		// TODO: fast path for when there are no {}
 		String tts = applyReplacements(raw, raw.getTts(), binding);
