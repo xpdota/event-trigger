@@ -2,11 +2,12 @@ package gg.xp.xivsupport.events.triggers.duties;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 
-@CalloutRepo("Dummy (/e c:testcall)")
+@CalloutRepo(name = "Dummy (/e c:testcall)", duty = KnownDuty.None)
 public class DummyTestFight {
 
 	private volatile boolean dummyHold;

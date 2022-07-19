@@ -3,11 +3,14 @@ package gg.xp.xivsupport.events.triggers.jails.gui;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
@@ -18,12 +21,13 @@ import javax.swing.*;
 import java.awt.*;
 
 @ScanMe
-public class JailGui implements PluginTab {
+public class JailGui implements DutyPluginTab {
 	private static final Logger log = LoggerFactory.getLogger(JailGui.class);
 
 	private final JailSolver jails;
 	private final JobSortSetting sorter;
 	private JobSortGui jobSortGui;
+	private JPanel panel;
 
 	public JailGui(JailSolver jails) {
 
@@ -91,7 +95,21 @@ public class JailGui implements PluginTab {
 		c.weightx = 1;
 		panel.add(jobSortGui.getPartyPane(), c);
 
+		this.panel = panel;
+
 		return panel;
+	}
+
+	@Override
+	public KnownDuty getDuty() {
+		return KnownDuty.UWU;
+	}
+
+
+	public void tryBringToFront() {
+		if (panel != null) {
+			GuiUtil.bringToFront(panel);
+		}
 	}
 
 	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to

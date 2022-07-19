@@ -49,7 +49,7 @@ public class ModifiedCalloutRepository {
 
 		objects.forEach(o -> {
 			Class<?> clazz = o.getClass();
-			String description = clazz.getAnnotation(CalloutRepo.class).value();
+			String description = clazz.getAnnotation(CalloutRepo.class).name();
 			List<ModifiedCalloutHandle> callouts = new ArrayList<>();
 			List<Field> fields = Arrays.stream(clazz.getDeclaredFields()).filter(f -> ModifiableCallout.class.isAssignableFrom(f.getType())).toList();
 			String classPropStub = "callouts." + clazz.getCanonicalName();

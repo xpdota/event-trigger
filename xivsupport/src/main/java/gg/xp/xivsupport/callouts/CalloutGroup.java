@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.callouts;
 
+import gg.xp.xivdata.data.duties.Duty;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 
@@ -39,5 +41,15 @@ public class CalloutGroup {
 
 	public Class<?> getCallClass() {
 		return clazz;
+	}
+
+	public KnownDuty getDuty() {
+		CalloutRepo ann = getCallClass().getAnnotation(CalloutRepo.class);
+		if (ann == null) {
+			return KnownDuty.None;
+		}
+		else {
+			return ann.duty();
+		}
 	}
 }
