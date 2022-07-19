@@ -8,11 +8,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class CalloutGroup {
+	private final Class<?> clazz;
 	private final String name;
 	private final BooleanSetting enabled;
 	private final List<ModifiedCalloutHandle> callouts;
 
-	public CalloutGroup(String name, String topLevelPropStub, PersistenceProvider persistence, List<ModifiedCalloutHandle> callouts) {
+	public CalloutGroup(Class<?> clazz, String name, String topLevelPropStub, PersistenceProvider persistence, List<ModifiedCalloutHandle> callouts) {
+		this.clazz = clazz;
 		this.name = name;
 		this.enabled = new BooleanSetting(persistence, topLevelPropStub + ".enabled", true);
 		this.callouts = new ArrayList<>(callouts);
@@ -33,5 +35,9 @@ public class CalloutGroup {
 
 	public List<ModifiedCalloutHandle> getCallouts() {
 		return Collections.unmodifiableList(callouts);
+	}
+
+	public Class<?> getCallClass() {
+		return clazz;
 	}
 }
