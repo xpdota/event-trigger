@@ -68,6 +68,10 @@ public class JailExampleTest {
 			AutoMarkSlotRequest.class,
 			AutoMarkKeyHandler.KeyPressRequest.class
 	);
+	
+	private static final int jailClearDelay = 1500;
+	private static final int jailClearSlop = 750;
+	private static final int jailClearWait = jailClearDelay + jailClearSlop;
 
 	@BeforeTest
 	void increasePrio() {
@@ -182,7 +186,7 @@ public class JailExampleTest {
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1500);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 
 	}
@@ -340,7 +344,7 @@ public class JailExampleTest {
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1500);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -422,7 +426,7 @@ public class JailExampleTest {
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1500);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
 	}
 
@@ -517,7 +521,7 @@ public class JailExampleTest {
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1500);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -616,7 +620,7 @@ public class JailExampleTest {
 		String sortString = persistence.get("jail-solver.job-order", String.class, null);
 		Assert.assertEquals(sortString, "SGE,AST,SCH,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,RPR,SAM,NIN,ROG,DRG,MNK,LNC,PGL");
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1500);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -740,7 +744,7 @@ public class JailExampleTest {
 		Assert.assertEquals(sortString, customSort);
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1500);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -841,7 +845,7 @@ public class JailExampleTest {
 		Assert.assertEquals(sortString, customSort);
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1500);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -860,7 +864,7 @@ public class JailExampleTest {
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		dist.acceptEvent(new InitEvent());
 		JailSolver jail = container.getComponent(JailSolver.class);
-		jail.getJailClearDelay().set(1000);
+		jail.getJailClearDelay().set(jailClearDelay);
 		XivState state = container.getComponent(XivState.class);
 		// TODO: find actual solution to race conditions in tests
 		try {
