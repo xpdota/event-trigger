@@ -1,9 +1,10 @@
 <configuration debug="false">
 
+    <conversionRule conversionWord="pid" converterClass="gg.xp.logback.PidConverter" />
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>
-                %d{HH:mm:ss.SSS} [%t] %highlight(%-5level) %logger{36}:%line - %msg%n
+                %d{HH:mm:ss.SSS} [%pid] [%t] %highlight(%-5level) %logger{36}:%line - %msg%n
             </pattern>
         </encoder>
     </appender>

@@ -1,12 +1,12 @@
 package gg.xp.xivsupport.events.triggers.duties.ewex;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
@@ -19,7 +19,6 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
-import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
@@ -28,7 +27,6 @@ import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
-import gg.xp.xivsupport.speech.CalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-@CalloutRepo("Endsinger Extreme")
+@CalloutRepo(name = "Endsinger Extreme", duty = KnownDuty.EndsingerEx)
 public class EX3 extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(EX3.class);

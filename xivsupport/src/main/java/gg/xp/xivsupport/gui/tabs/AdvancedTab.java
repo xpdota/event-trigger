@@ -253,9 +253,9 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 		{
 			addTab("Topology", new PluginTopologyPanel(container));
 		}
-		{
-			addTab("Updates", new UpdatesPanel());
-		}
+//		{
+//			addTab("Updates", new UpdatesPanel());
+//		}
 		{
 			addTab("Java", new JavaPanel());
 		}

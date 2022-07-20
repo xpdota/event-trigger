@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
@@ -22,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@CalloutRepo("P2S")
+@CalloutRepo(name = "P2S", duty = KnownDuty.P2S)
 public class P2S implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P2S.class);
 	// TODO: zone lock

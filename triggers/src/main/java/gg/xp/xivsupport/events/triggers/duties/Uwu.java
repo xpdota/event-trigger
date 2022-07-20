@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.duties;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
@@ -15,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@CalloutRepo("The Weapon's Refrain")
+@CalloutRepo(name = "The Weapon's Refrain", duty = KnownDuty.UWU)
 public class Uwu implements FilteredEventHandler {
 
 	@Override

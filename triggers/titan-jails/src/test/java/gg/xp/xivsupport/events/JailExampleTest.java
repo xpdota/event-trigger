@@ -28,6 +28,7 @@ import gg.xp.xivsupport.speech.BaseCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
+import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -36,9 +37,15 @@ import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.awt.event.KeyEvent;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -61,6 +68,25 @@ public class JailExampleTest {
 			AutoMarkSlotRequest.class,
 			AutoMarkKeyHandler.KeyPressRequest.class
 	);
+
+	@BeforeTest
+	void increasePrio() {
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+	}
+
+	@BeforeMethod
+	void before(Method method) {
+		log.info("Starting: {}", method.getName());
+	}
+
+	@AfterMethod
+	void after(ITestResult result) throws InterruptedException {
+		if (!result.isSuccess()) {
+			log.error("Test failed! {}", result.getName());
+			// Give time for extra events to finish to check timing issues
+			Thread.sleep(10_000);
+		}
+	}
 
 	/**
 	 * End to end example for titan jails

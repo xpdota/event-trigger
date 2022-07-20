@@ -107,7 +107,7 @@ public class CdTracker {
 		all.addAll(partyCds.keySet());
 		all.addAll(personalCds.keySet());
 		allCds = all;
-		log.info("Number of CDs: {} builtin, {} custom, {} total", partyCdsBuiltin.size(), customs.size(), all.size());
+		log.info("Number of CDs: {} builtin, {} custom", partyCdsBuiltin.size(), customs.size());
 	}
 
 	// To be incremented on wipe or other event that would reset cooldowns
