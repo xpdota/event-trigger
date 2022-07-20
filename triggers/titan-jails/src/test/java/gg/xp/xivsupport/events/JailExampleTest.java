@@ -36,6 +36,7 @@ import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.awt.event.KeyEvent;
@@ -61,6 +62,11 @@ public class JailExampleTest {
 			AutoMarkSlotRequest.class,
 			AutoMarkKeyHandler.KeyPressRequest.class
 	);
+
+	@BeforeTest
+	void increasePrio() {
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+	}
 
 	/**
 	 * End to end example for titan jails
