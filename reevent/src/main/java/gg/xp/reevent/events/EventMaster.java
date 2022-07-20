@@ -36,6 +36,7 @@ public class EventMaster {
 		queueSizeMonitorThread.setName(eventPumpThread.getName() + "-qsm");
 		queueSizeMonitorThread.setDaemon(true);
 		eventDistributor.getStateStore().putCustom(QueueState.class, new QueueState(queue));
+		log.info("Created EventMaster, pump thread is '{}', qsm thread is '{}'", eventPumpThread.getName(), queueSizeMonitorThread.getName());
 	}
 
 	public void start() {
