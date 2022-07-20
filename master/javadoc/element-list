@@ -1,3 +1,4 @@
+gg.xp.logback
 gg.xp.reevent
 gg.xp.reevent.context
 gg.xp.reevent.events
@@ -10,6 +11,7 @@ gg.xp.telestosupport
 gg.xp.telestosupport.gui
 gg.xp.xivdata
 gg.xp.xivdata.data
+gg.xp.xivdata.data.duties
 gg.xp.xivsupport.callouts
 gg.xp.xivsupport.callouts.gui
 gg.xp.xivsupport.cdsupport
