@@ -40,10 +40,12 @@ import org.testng.Assert;
 import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.awt.event.KeyEvent;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -70,6 +72,11 @@ public class JailExampleTest {
 	@BeforeTest
 	void increasePrio() {
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+	}
+
+	@BeforeMethod
+	void before(Method method) {
+		log.info("Starting: {}", method.getName());
 	}
 
 	@AfterMethod
