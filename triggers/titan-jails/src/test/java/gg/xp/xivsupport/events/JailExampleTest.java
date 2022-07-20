@@ -96,7 +96,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		XivState state = container.getComponent(XivState.class);
@@ -196,7 +196,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 
@@ -215,7 +215,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jails = container.getComponent(JailSolver.class);
@@ -236,7 +236,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 
@@ -268,7 +268,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
@@ -349,7 +349,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
@@ -431,7 +431,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
@@ -526,7 +526,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
@@ -647,7 +647,7 @@ public class JailExampleTest {
 		String customSort = "AST,SCH,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,SAM,NIN,ROG,DRG,MNK,LNC,PGL";
 		MutablePicoContainer container = XivMain.testingMasterInit();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		PersistenceProvider persistence = container.getComponent(PersistenceProvider.class);
@@ -749,7 +749,7 @@ public class JailExampleTest {
 		String customSort = "AST,SCH,SGE,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,SAM,NIN,ROG,DRG,MNK,LNC,PGL,RPR";
 		MutablePicoContainer container = XivMain.testingMasterInit();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		PersistenceProvider persistence = container.getComponent(PersistenceProvider.class);
