@@ -26,7 +26,9 @@ public class TestEventCollector implements EventHandler<Event> {
 	@Override
 	public void handle(EventContext context, Event event) {
 		synchronized (lock) {
-			log.debug("collected event: {}", event);
+			if (shouldLog) {
+				log.info("collected event: {}", event);
+			}
 			eventsSeen.add(event);
 		}
 	}
