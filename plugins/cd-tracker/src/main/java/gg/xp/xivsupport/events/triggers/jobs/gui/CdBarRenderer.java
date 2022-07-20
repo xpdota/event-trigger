@@ -42,15 +42,10 @@ public class CdBarRenderer extends ResourceBarRenderer<VisualCdInfo> {
 
 	@Override
 	protected Color getBarColor(double percent, @NotNull VisualCdInfo item) {
-		if (item.getBuffApplied() != null) {
-			return colors.getActiveColor();
-		}
-		if (percent > 0.999d) {
-			return colors.getReadyColor();
-		}
-		else {
-			return colors.getOnCdColor();
-		}
-
+		return switch (item.getStatus()) {
+			case READY, NOT_YET_USED -> colors.getReadyColor();
+			case BUFF_PREAPP, BUFF_ACTIVE -> colors.getActiveColor();
+			case ON_COOLDOWN -> colors.getOnCdColor();
+		};
 	}
 }

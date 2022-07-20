@@ -227,6 +227,11 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		return table;
 	}
 
+	public void setAndScrollToSelection(X item) {
+		mainModel.setSelectedValue(item);
+		mainModel.scrollToSelectedValue();
+	}
+
 	private enum RefreshType {
 		NONE,
 		APPEND,

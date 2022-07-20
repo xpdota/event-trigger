@@ -27,7 +27,7 @@ public class CalloutsConfigTab implements PluginTab {
 
 	@Override
 	public String getTabName() {
-		return "Callouts";
+		return "Callouts (Legacy)";
 	}
 
 	@Override

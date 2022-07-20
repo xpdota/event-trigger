@@ -1,11 +1,12 @@
 package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 
-import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
@@ -13,7 +14,6 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.Position;
-import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@CalloutRepo("P2S")
+@CalloutRepo(name = "P2S", duty = KnownDuty.P2S)
 public class P2S implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P2S.class);
 	// TODO: zone lock
@@ -129,14 +129,9 @@ public class P2S implements FilteredEventHandler {
 	public void simpleAbilities(EventContext context, AbilityCastStart event) {
 		long id = event.getAbility().getId();
 		if (id == 0x682F) {
-			CalloutEvent sw = shockwave.getModified(event);
-			if (sw instanceof BaseEvent be) {
-				be.setDelayedEnqueueOffset(event.getInitialDuration().minus(6, ChronoUnit.SECONDS));
-				context.enqueue(be);
-			}
-			else {
-				context.accept(sw);
-			}
+			RawModifiedCallout<AbilityCastStart> sw = shockwave.getModified(event);
+			sw.setDelayedEnqueueOffset(event.getInitialDuration().minus(6, ChronoUnit.SECONDS));
+			context.enqueue(sw);
 		}
 		else if (id == 0x6810) {
 			context.accept(sewageDeluge.getModified(event));

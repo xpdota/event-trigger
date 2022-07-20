@@ -7,8 +7,10 @@ import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -34,9 +36,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
-import gg.xp.xivsupport.persistence.settings.EnumListSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
-import gg.xp.xivsupport.speech.CalloutEvent;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@CalloutRepo("Dragonsong's Reprise")
+@CalloutRepo(name = "Dragonsong's Reprise", duty = KnownDuty.Dragonsong)
 public class Dragonsong extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(Dragonsong.class);
@@ -92,6 +92,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<?> ewSafe = new ModifiableCallout<>("Trio 1 E/W Safe", "East/West Safe", "East West Safe");
 	private final ModifiableCallout<?> seNwSafe = new ModifiableCallout<>("Trio 1 SE/NW Safe", "Southeast/Northwest Safe", "Southeast Northwest Safe");
 
+	private final ModifiableCallout<AbilityCastStart> thordan_heavenlyHeel = ModifiableCallout.durationBasedCall("Heavenly Heel", "Buster on {event.target}, then 3 hits");
 
 	private final ModifiableCallout<?> thordan_trio1_nothing = new ModifiableCallout<>("First Trio: Nothing", "Nothing");
 	private final ModifiableCallout<HeadMarkerEvent> thordan_trio1_blueMarker = new ModifiableCallout<>("First Trio: Blue Marker", "Blue Marker");
@@ -183,7 +184,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<HeadMarkerEvent> t2_crossNoDoom = new ModifiableCallout<>("Cross (No Doom)", "Blue Cross");
 
 	// Double Dragons
-	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_stack = ModifiableCallout.durationBasedCall("P6 Tankbuster (Stack)", "Stack for Buster");
+	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_stack = ModifiableCallout.durationBasedCall("P6 Tankbuster (Stack)", "Shared Buster");
 	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_niddBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Nidhogg Buster)", "Nidd Buster, Hraes Cleave");
 	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_hraesBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Hraes Buster)", "Hraes Buster, Nidd Cleave");
 	private final ModifiableCallout<AbilityCastStart> p6_tankbuster_bothBuster = ModifiableCallout.durationBasedCall("P6 Tankbuster (Both Buster)", "Busters");
@@ -261,6 +262,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 			case 0x63C6 -> call = thordan_quaga;
 			case 0x63C1 -> call = thordan_broadSwingL;
 			case 0x63C0 -> call = thordan_broadSwingR;
+			case 0x63C7 -> call = thordan_heavenlyHeel;
 			case 0x63D0 -> call = thordan_trio2_gaze;
 			case 0x670B -> call = estinhog_drachenlance;
 			// TODO: what should this call actually be?
@@ -550,10 +552,12 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 						yourRole = IceFireRole.NO_METEOR;
 					}
 				}
+				List<XivCombatant> meteors = marks.stream().map(BuffApplied::getTarget).toList();
+				Map<String, Object> params = Map.of("meteors", meteors);
 				switch (yourRole) {
-					case METEOR_ON_YOU -> s.accept(thordan_trio2_meteorMark.getModified());
-					case METEOR_ON_ROLE -> s.accept(thordan_trio2_meteorRoleMark.getModified());
-					case NO_METEOR -> s.accept(thordan_trio2_nonMeteorRole.getModified());
+					case METEOR_ON_YOU -> s.accept(thordan_trio2_meteorMark.getModified(params));
+					case METEOR_ON_ROLE -> s.accept(thordan_trio2_meteorRoleMark.getModified(params));
+					case NO_METEOR -> s.accept(thordan_trio2_nonMeteorRole.getModified(params));
 				}
 				s.waitEvent(BuffApplied.class, ba -> ba.getBuff().getId() == 0xB57);
 				s.accept(thordan_trio2_firstTower.getModified());
@@ -758,7 +762,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		// 6715 -> the actual out (gnash)
 		// 6716 -> the actual in (lash)
 		boolean outFirst = e1.getAbility().getId() == 0x6712;
-		CalloutEvent firstCall = outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified();
+		RawModifiedCallout<?> firstCall = outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified();
 		s.updateCall(firstCall);
 		s.waitEvent(AbilityUsedEvent.class, aue -> aue.isFirstTarget() && (aue.getAbility().getId() == 0x6715 || aue.getAbility().getId() == 0x6716));
 		s.updateCall(!outFirst ? estinhog_gnash.getModified() : estinhog_lash.getModified());
@@ -774,12 +778,12 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		}
 	}
 
-	private CalloutEvent previousRedBlueCall;
+	private RawModifiedCallout previousRedBlueCall;
 
 	@HandleEvents
 	public void doRedBlueTethers(EventContext ctx, BuffApplied ba) {
 		if (ba.getTarget().isThePlayer()) {
-			CalloutEvent call;
+			RawModifiedCallout call;
 			long id = ba.getBuff().getId();
 			if (id == 0xAD7) {
 				call = redTether.getModified(ba);
@@ -1199,7 +1203,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				if (e1.buffIdMatches(0xB52)) {
 					log.info("p6 HOT: part 1");
 					s.updateCall(hotDebuff.getModified(e1));
-					s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 1_500);
+					s.waitMs(e1.getEstimatedRemainingDuration().toMillis() - 4_500);
 					log.info("p6 HOT: part 2");
 					s.updateCall(pyretic_pre.getModified(e1));
 					BuffApplied pyreticApplied = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0x3C0));

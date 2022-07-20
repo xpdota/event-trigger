@@ -98,8 +98,8 @@ public class CalloutSettingGui {
 //			textPanel.setVisible(true);
 //		});
 		callCheckbox.repaint();
-		ttsPanel.repaint();
-		textPanel.repaint();
+		ttsPanel.updateUI();
+		textPanel.updateUI();
 	}
 
 	public void setEnabledByParent(boolean enabledByParent) {

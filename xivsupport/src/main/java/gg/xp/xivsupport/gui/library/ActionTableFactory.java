@@ -1,17 +1,17 @@
 package gg.xp.xivsupport.gui.library;
 
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.ActionIcon;
 import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.HasIconURL;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
-import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
-import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,11 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public final class ActionTable {
-	private ActionTable() {
-	}
+public final class ActionTableFactory {
 
-	public static TableWithFilterAndDetails<ActionInfo, Object> table() {
+	public TableWithFilterAndDetails<ActionInfo, Object> table() {
 		// TODO: "initial load on filter update" would be nice
 		//					ActionIcon icon = ai.getIcon();
 		//					if (icon == null) {
@@ -88,17 +87,18 @@ public final class ActionTable {
 					return cd > 0 ? cd : "";
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
+				.addWidget(InGameAbilityPickerButton::new)
 				.withRightClickRepo(RightClickOptionRepo.of(
 						CustomRightClickOption.forRow(
 								"Copy XIVAPI Icon URL",
 								ActionInfo.class,
-								ai -> GuiUtil.copyToClipboard(ai.getXivapiUrl().toString())),
+								ai -> GuiUtil.copyTextToClipboard(ai.getXivapiUrl().toString())),
 						CustomRightClickOption.forRow(
 								"Copy XIVAPI Icon As Markdown",
 								ActionInfo.class,
 								ai -> {
 									String md = String.format("![%s](%s)", ai.name(), ai.getXivapiUrl());
-									GuiUtil.copyToClipboard(md);
+									GuiUtil.copyTextToClipboard(md);
 								})))
 //				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
 //					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
@@ -108,12 +108,77 @@ public final class ActionTable {
 				.build();
 	}
 
-	public static void showChooser(Window owner, Consumer<ActionInfo> callback) {
+	private class InGameAbilityPickerButton extends JButton {
+
+		private final WeakReference<TableWithFilterAndDetails<ActionInfo, ?>> tableRef;
+
+		InGameAbilityPickerButton(TableWithFilterAndDetails<ActionInfo, ?> table) {
+			setToolTipText("Click this button, then use an ability (or get hit by it) in-game. The ability will then be selected in the table.");
+			this.tableRef = new WeakReference<>(table);
+			addActionListener(l -> {
+				this.clicked();
+			});
+		}
+
+		private boolean isActive() {
+			return currentPicker == this;
+		}
+
+		private void clicked() {
+			// I don't have to worry about thread safety because this always executes on the EDT
+			if (isActive()) {
+				setCurrentPicker(null);
+			}
+			else {
+				setCurrentPicker(this);
+			}
+		}
+
+		@Override
+		public String getText() {
+			return isActive() ? "Cancel" : "Use Ability In-Game";
+		}
+
+		public void feedAbility(AbilityUsedEvent aue) {
+			TableWithFilterAndDetails<ActionInfo, ?> table = tableRef.get();
+			if (table == null) {
+				return;
+			}
+			ActionInfo ai = ActionLibrary.forId(aue.getAbility().getId());
+			table.setAndScrollToSelection(ai);
+		}
+
+
+	}
+
+	public void showChooser(Window owner, Consumer<ActionInfo> callback) {
 		TableWithFilterAndDetails<ActionInfo, Object> table = table();
 		ChooserDialog.showChooser(owner, table, callback);
 	}
 
-	public static @Nullable ActionInfo pickItem(Window owner) {
+	public @Nullable ActionInfo pickItem(Window owner) {
 		return ChooserDialog.chooserReturnItem(owner, table());
+	}
+
+	private void setCurrentPicker(InGameAbilityPickerButton picker) {
+		InGameAbilityPickerButton oldPicker = currentPicker;
+		currentPicker = picker;
+		if (oldPicker != null) {
+			SwingUtilities.invokeLater(oldPicker::repaint);
+		}
+		if (picker != null) {
+			SwingUtilities.invokeLater(picker::repaint);
+		}
+	}
+
+	private InGameAbilityPickerButton currentPicker;
+
+	@HandleEvents
+	public void onAction(EventContext context, AbilityUsedEvent aue) {
+		InGameAbilityPickerButton picker = currentPicker;
+		if (picker != null && (aue.getSource().isThePlayer() || aue.getTarget().isThePlayer())) {
+			picker.feedAbility(aue);
+			setCurrentPicker(null);
+		}
 	}
 }

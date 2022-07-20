@@ -53,7 +53,9 @@ public final class XivMain {
 		pico.addComponent(PicoStateStore.class);
 		pico.addComponent(XivStateImpl.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
-		pico.addComponent(TopoInfoImpl.class);
+		// Removing ability to disable topo items persistently because it was nothing but a support headache when
+		// someone disabled something and forgot, or disabled something accidentally.
+		pico.addComponent(new TopoInfoImpl(new InMemoryMapPersistenceProvider()));
 		pico.addComponent(PrimaryLogSource.class);
 		pico.addComponent(pico);
 		log.info("Required components done");

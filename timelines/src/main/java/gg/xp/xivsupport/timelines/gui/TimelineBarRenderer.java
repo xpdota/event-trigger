@@ -26,8 +26,8 @@ public class TimelineBarRenderer implements TableCellRenderer {
 		if (value instanceof VisualTimelineEntry entry) {
 			Component baseLabel = fallback.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column);
 			double percent;
-			long actualMax = entry.getMax();
-			long actualCurrent = entry.getCurrent();
+			long actualMax = entry.max();
+			long actualCurrent = entry.current();
 			int effectiveMax;
 			int effectiveCurrent;
 			if (actualMax == 0 || actualMax < actualCurrent || actualMax == 1) {

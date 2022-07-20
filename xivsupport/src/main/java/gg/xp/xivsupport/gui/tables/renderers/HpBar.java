@@ -71,15 +71,15 @@ public class HpBar extends JComponent {
 	}
 
 	public void setData(HitPoints hp, long diff, long shield) {
-		if (hp == null || hp.getMax() == 0) {
+		if (hp == null || hp.max() == 0) {
 			display = false;
 		}
 		else {
 			display = true;
 			double percent;
 			double percentChange;
-			long actualMax = hp.getMax();
-			long actualCurrent = hp.getCurrent();
+			long actualMax = hp.max();
+			long actualCurrent = hp.current();
 			long actualPredicted = actualCurrent + diff;
 			if (actualMax < actualCurrent) {
 				actualCurrent = actualMax;

@@ -1,0 +1,14 @@
+package gg.xp.xivdata.data;
+
+public enum CooldownType {
+	PERSONAL_MIT,
+	INVULN,
+	PARTY_MIT,
+	SINGLE_TARGET_MIT,
+	PERSONAL_BURST,
+	PARTY_BUFF,
+	PERSONAL_UTILITY,
+	PARTY_UTILITY,
+	HEAL,
+	UNCATEGORIZED
+}

@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.callouts;
 
+import gg.xp.xivdata.data.duties.KnownDuty;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -10,5 +12,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CalloutRepo {
-	String value();
+	String name();
+
+	KnownDuty duty();
 }

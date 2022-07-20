@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.duties;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
@@ -14,7 +15,7 @@ import gg.xp.xivsupport.events.state.XivState;
 // @CalloutRepo indicates that the system should scan for fields defined as ModifiableCallout. The user is presented
 // with a UI to enable/disable them, and change the callout text under the Plugins > Callouts tab.
 // The name chosen here will show in the UI.
-@CalloutRepo("Urth's Fount (Odin)")
+@CalloutRepo(name = "Urth's Fount (Odin)", duty = KnownDuty.Odin)
 // You should not chang the class name once you publish this, as it is used to determine the settings cdKey to store
 // customizations to the callouts.
 // FilteredEventHandler is an optional interface, giving you the 'enabled' option (see below).

@@ -1,5 +1,10 @@
 package gg.xp.xivsupport.gui.util;
 
+import gg.xp.xivsupport.gui.tables.filters.InputValidationState;
+import gg.xp.xivsupport.gui.tables.filters.MultiLineTextAreaWithValidation;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +14,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.util.function.Function;
 
 public final class GuiUtil {
 	private static final Logger log = LoggerFactory.getLogger(GuiUtil.class);
@@ -27,10 +34,17 @@ public final class GuiUtil {
 			Desktop.getDesktop().open(file);
 		}
 		catch (IOException e) {
-			log.error("Error opening install dir", e);
+			log.error("Error opening file '{}'", file, e);
 			throw new RuntimeException(e);
 		}
+	}
 
+	public static void openUrl(String url) {
+		try {
+			Desktop.getDesktop().browse(new URI(url));
+		} catch (Throwable t) {
+			log.error("Error opening url '{}'", url, t);
+		}
 	}
 
 	public static GridBagConstraints defaultGbc() {
@@ -41,12 +55,6 @@ public final class GuiUtil {
 		JLabel label = new JLabel(text);
 		label.setLabelFor(component);
 		return label;
-	}
-
-	public static void copyToClipboard(String contents) {
-		StringSelection stringSelection = new StringSelection(contents);
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clipboard.setContents(stringSelection, null);
 	}
 
 	public static void bringToFront(Component component) {
@@ -153,5 +161,30 @@ public final class GuiUtil {
 		c.weighty = 1;
 		c.fill = GridBagConstraints.VERTICAL;
 		container.add(Box.createVerticalGlue(), c);
+	}
+
+	public static <X> @Nullable X doImportDialog(String title, Function<String, X> converter) {
+		Mutable<X> value = new MutableObject<>();
+		JButton okButton = new JButton("Import");
+		MultiLineTextAreaWithValidation<X> field = new MultiLineTextAreaWithValidation<>(converter, value::setValue, "", (vs -> okButton.setEnabled(vs == InputValidationState.VALID)));
+		JButton cancelButton = new JButton("Cancel");
+		field.setPreferredSize(null);
+		field.setLineWrap(true);
+		field.setWrapStyleWord(true);
+		JScrollPane scrollPane = new JScrollPane(field);
+		scrollPane.setPreferredSize(new Dimension(720, 480));
+		JOptionPane opt = new JOptionPane(scrollPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null, new Object[]{okButton, cancelButton});
+		okButton.addActionListener(l -> opt.setValue(JOptionPane.OK_OPTION));
+		cancelButton.addActionListener(l -> opt.setValue(JOptionPane.CANCEL_OPTION));
+		JDialog dialog = opt.createDialog(title);
+		dialog.setVisible(true);
+		Object dialogResult = opt.getValue();
+		X theValue = value.getValue();
+		if (dialogResult instanceof Integer dr && dr == JOptionPane.OK_OPTION && theValue != null) {
+			return theValue;
+		}
+		else {
+			return null;
+		}
 	}
 }

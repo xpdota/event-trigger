@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.Cooldown;
+import gg.xp.xivdata.data.ExtendedCooldownDescriptor;
 import gg.xp.xivsupport.events.state.combatstate.CdTracker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.BaseCdTrackerGui;
 import gg.xp.xivsupport.events.triggers.jobs.gui.PartyCdTrackerOverlay;
@@ -55,7 +56,7 @@ public class PartyCdTrackerGui extends BaseCdTrackerGui {
 	}
 
 	@Override
-	protected Map<Cooldown, CooldownSetting> cds() {
+	protected Map<ExtendedCooldownDescriptor, CooldownSetting> cds() {
 		return backend.getPartyCdSettings();
 	}
 

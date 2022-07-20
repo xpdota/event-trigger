@@ -27,6 +27,11 @@
             <artifactId>hamcrest-all</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>testutils-generic</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

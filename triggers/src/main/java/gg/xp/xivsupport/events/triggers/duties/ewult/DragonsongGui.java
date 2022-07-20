@@ -3,9 +3,11 @@ package gg.xp.xivsupport.events.triggers.duties.ewult;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
+import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
@@ -16,7 +18,7 @@ import java.awt.*;
 import java.util.List;
 
 @ScanMe
-public class DragonsongGui implements PluginTab {
+public class DragonsongGui implements DutyPluginTab {
 
 	private final Dragonsong ds;
 	private JobSortGui jsg;
@@ -78,7 +80,7 @@ public class DragonsongGui implements PluginTab {
 		c.weightx = 0;
 		c.gridwidth = 1;
 		c.weighty = 1;
-		inner.add(jsg.getJobListPane(), c);
+		inner.add(jsg.getJobListWithButtons(), c);
 		c.gridx++;
 		c.weightx = 1;
 		inner.add(jsg.getPartyPane(), c);
@@ -86,6 +88,11 @@ public class DragonsongGui implements PluginTab {
 		ds.getP6_useAutoMarks().addListener(this::checkVis);
 		outer.add(inner, BorderLayout.CENTER);
 		return outer;
+	}
+
+	@Override
+	public KnownDuty getDuty() {
+		return KnownDuty.Dragonsong;
 	}
 
 	private void checkVis() {
@@ -105,6 +112,12 @@ public class DragonsongGui implements PluginTab {
 	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
 		if (jsg != null) {
 			jsg.externalRefresh();
+		}
+	}
+
+	public void tryBringToFront() {
+		if (inner != null) {
+			GuiUtil.bringToFront(inner);
 		}
 	}
 }

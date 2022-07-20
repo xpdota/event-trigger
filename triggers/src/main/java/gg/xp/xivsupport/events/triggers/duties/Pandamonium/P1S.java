@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
@@ -14,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-@CalloutRepo("P1S")
+@CalloutRepo(name = "P1S", duty = KnownDuty.P1S)
 public class P1S implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P1S.class);
 

@@ -3,18 +3,14 @@ package gg.xp.xivsupport.events.triggers.jails.gui;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
-import gg.xp.xivsupport.gui.components.RearrangeableList;
+import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.tables.CustomColumn;
-import gg.xp.xivsupport.gui.tables.CustomTableModel;
-import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
-import gg.xp.xivsupport.models.XivEntity;
-import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
@@ -23,17 +19,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @ScanMe
-public class JailGui implements PluginTab {
+public class JailGui implements DutyPluginTab {
 	private static final Logger log = LoggerFactory.getLogger(JailGui.class);
 
 	private final JailSolver jails;
 	private final JobSortSetting sorter;
 	private JobSortGui jobSortGui;
+	private JPanel panel;
 
 	public JailGui(JailSolver jails) {
 
@@ -94,14 +88,28 @@ public class JailGui implements PluginTab {
 		c.weighty = 1;
 		c.gridy++;
 		c.weightx = 0;
-		panel.add(jobSortGui.getJobListPane(), c);
+		panel.add(jobSortGui.getJobListWithButtons(), c);
 
 
 		c.gridx++;
 		c.weightx = 1;
 		panel.add(jobSortGui.getPartyPane(), c);
 
+		this.panel = panel;
+
 		return panel;
+	}
+
+	@Override
+	public KnownDuty getDuty() {
+		return KnownDuty.UWU;
+	}
+
+
+	public void tryBringToFront() {
+		if (panel != null) {
+			GuiUtil.bringToFront(panel);
+		}
 	}
 
 	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
@@ -109,7 +117,9 @@ public class JailGui implements PluginTab {
 	// tab is visible?
 	@HandleEvents(order = 20_000)
 	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-		jobSortGui.externalRefresh();
+		if (jobSortGui != null) {
+			jobSortGui.externalRefresh();
+		}
 	}
 
 

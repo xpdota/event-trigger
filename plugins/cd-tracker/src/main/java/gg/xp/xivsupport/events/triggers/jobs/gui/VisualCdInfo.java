@@ -22,4 +22,6 @@ public interface VisualCdInfo extends CurrentMaxPair, LabelOverride {
 	boolean stillValid();
 
 	List<? extends VisualCdInfo> makeChargeInfo();
+
+	CdStatus getStatus();
 }

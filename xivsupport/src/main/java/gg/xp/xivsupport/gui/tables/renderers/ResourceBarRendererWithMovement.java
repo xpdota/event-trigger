@@ -29,8 +29,8 @@ public abstract class ResourceBarRendererWithMovement<X extends CurrentMaxPredic
 			Component baseLabel = fallback.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column);
 			double percent;
 			double percentChange;
-			long actualMax = hp.getMax();
-			long actualCurrent = hp.getCurrent();
+			long actualMax = hp.max();
+			long actualCurrent = hp.current();
 			long actualPredicted = hp.getPredicted();
 			int effectiveMax;
 			int effectiveCurrent;
@@ -114,7 +114,7 @@ public abstract class ResourceBarRendererWithMovement<X extends CurrentMaxPredic
 
 	protected void formatLabel(@NotNull X item) {
 		// Try to do long label, otherwise fall back to short label
-		String longText = String.format("%s / %s", item.getPredicted(), item.getMax());
+		String longText = String.format("%s / %s", item.getPredicted(), item.max());
 		bar.setTextOptions(longText, String.valueOf(item.getPredicted()));
 	}
 }
