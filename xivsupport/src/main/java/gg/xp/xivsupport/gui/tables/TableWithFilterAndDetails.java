@@ -37,6 +37,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	private final @Nullable JCheckBox stayAtBottom;
 	private final JTable table;
 	private final @Nullable AutoBottomScrollHelper scroller;
+	private @Nullable JSplitPane splitPane;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
 	private List<X> dataFiltered = Collections.emptyList();
@@ -177,7 +178,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		}
 		else {
 			// Split pane
-			JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
+			splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
 			add(splitPane, c);
 			SwingUtilities.invokeLater(() -> {
 				splitPane.setDividerLocation(0.7);
@@ -230,6 +231,10 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	public void setAndScrollToSelection(X item) {
 		mainModel.setSelectedValue(item);
 		mainModel.scrollToSelectedValue();
+	}
+
+	public @Nullable JSplitPane getSplitPane() {
+		return this.splitPane;
 	}
 
 	private enum RefreshType {

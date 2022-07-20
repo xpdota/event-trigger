@@ -207,8 +207,8 @@ public final class StandardColumns {
 				return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			}
 		});
-		c.setMinWidth(80);
-		c.setMaxWidth(80);
+		c.setMinWidth(50);
+		c.setMaxWidth(50);
 	});
 
 	public static final CustomColumn<XivCombatant> combatantRawTypeColumn

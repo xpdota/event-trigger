@@ -122,10 +122,10 @@ public final class GuiWithTestData {
 						      "MaxHP": 122700,
 						      "CurrentMP": 10000,
 						      "MaxMP": 10000,
-						      "PosX": 114.926422,
-						      "PosY": -83.86734,
-						      "PosZ": 44.3433,
-						      "Heading": -1.66136408
+						      "PosX": 100,
+						      "PosY": 120,
+						      "PosZ": 1.5,
+						      "Heading": 0
 						    },
 						    {
 						      "CurrentWorldID": 65,
@@ -144,10 +144,10 @@ public final class GuiWithTestData {
 						      "MaxHP": 122700,
 						      "CurrentMP": 10000,
 						      "MaxMP": 10000,
-						      "PosX": 114.926422,
-						      "PosY": -83.86734,
-						      "PosZ": 44.3433,
-						      "Heading": -1.66136408
+						      "PosX": 120,
+						      "PosY": 120,
+						      "PosZ": 1.5,
+						      "Heading": 1
 						    },
 						    {
 						      "CurrentWorldID": 65,
@@ -166,10 +166,10 @@ public final class GuiWithTestData {
 						      "MaxHP": 122700,
 						      "CurrentMP": 10000,
 						      "MaxMP": 10000,
-						      "PosX": 114.926422,
-						      "PosY": -83.86734,
-						      "PosZ": 44.3433,
-						      "Heading": -1.66136408
+						      "PosX": 120,
+						      "PosY": 100,
+						      "PosZ": 1.5,
+						      "Heading": 2
 						    },
 						    {
 						      "CurrentWorldID": 65,
@@ -188,10 +188,10 @@ public final class GuiWithTestData {
 						      "MaxHP": 122700,
 						      "CurrentMP": 10000,
 						      "MaxMP": 10000,
-						      "PosX": 114.926422,
-						      "PosY": -83.86734,
-						      "PosZ": 44.3433,
-						      "Heading": -1.66136408
+						      "PosX": 120,
+						      "PosY": 80,
+						      "PosZ": 1.5,
+						      "Heading": 3
 						    },
 						    {
 						      "CurrentWorldID": 65,
@@ -210,10 +210,10 @@ public final class GuiWithTestData {
 						      "MaxHP": 122700,
 						      "CurrentMP": 10000,
 						      "MaxMP": 10000,
-						      "PosX": 114.926422,
-						      "PosY": -83.86734,
-						      "PosZ": 44.3433,
-						      "Heading": -1.66136408
+						      "PosX": 100,
+						      "PosY": 80,
+						      "PosZ": 1.5,
+						      "Heading": 4
 						    },
 						    {
 						      "CurrentWorldID": 65,
@@ -232,10 +232,10 @@ public final class GuiWithTestData {
 						      "MaxHP": 122700,
 						      "CurrentMP": 10000,
 						      "MaxMP": 10000,
-						      "PosX": 114.926422,
-						      "PosY": -83.86734,
-						      "PosZ": 44.3433,
-						      "Heading": -1.66136408
+						      "PosX": 80,
+						      "PosY": 80,
+						      "PosZ": 1.5,
+						      "Heading": 5
 						    },
 						    {
 						      "CurrentWorldID": 65,
@@ -254,10 +254,10 @@ public final class GuiWithTestData {
 						      "MaxHP": 122700,
 						      "CurrentMP": 10000,
 						      "MaxMP": 10000,
-						      "PosX": 114.926422,
-						      "PosY": -83.86734,
-						      "PosZ": 44.3433,
-						      "Heading": -1.66136408
+						      "PosX": 80,
+						      "PosY": 100,
+						      "PosZ": 1.5,
+						      "Heading": 6
 						    },
 						    {
 						      "CurrentWorldID": 65,
@@ -276,10 +276,10 @@ public final class GuiWithTestData {
 						      "MaxHP": 122700,
 						      "CurrentMP": 10000,
 						      "MaxMP": 10000,
-						      "PosX": 114.926422,
-						      "PosY": -83.86734,
-						      "PosZ": 44.3433,
-						      "Heading": -1.66136408
+						      "PosX": 80,
+						      "PosY": 120,
+						      "PosZ": 1.5,
+						      "Heading": 7
 						    }
 						  ],
 						  "rseq": 0
