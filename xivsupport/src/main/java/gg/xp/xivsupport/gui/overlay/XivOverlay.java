@@ -102,6 +102,12 @@ public class XivOverlay {
 				g.clearRect(0, 0, getWidth(), getHeight());
 				super.paintComponent(g);
 			}
+			@Override
+			public void paintBorder(Graphics g) {
+				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+//				g.clearRect(0, 0, getWidth(), getHeight());
+				super.paintBorder(g);
+			}
 		};
 		contentPane.setDoubleBuffered(true);
 		panel.setDoubleBuffered(true);
