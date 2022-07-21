@@ -29,7 +29,6 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 	private static final Logger log = LoggerFactory.getLogger(GroovyFilter.class);
 	private final GroovyShell shell;
 	private final TextFieldWithValidation<?> textBox;
-	private final String shortClassName;
 	private final String longClassName;
 	private final String varName;
 	private @Nullable Predicate<X> filterScript;
@@ -39,16 +38,19 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 	private final Class<?> dataType;
 
 	public static <X> Function<Runnable, VisualFilter<? super X>> forClass(Class<X> dataType) {
-		return (filterUpdatedCallback) -> new GroovyFilter<>(filterUpdatedCallback, dataType);
+		return (filterUpdatedCallback) -> new GroovyFilter<>(filterUpdatedCallback, dataType, dataType.getSimpleName().toLowerCase(Locale.ROOT));
 	}
 
-	public GroovyFilter(Runnable filterUpdatedCallback, Class<X> dataType) {
+	public static <X> Function<Runnable, VisualFilter<? super X>> forClass(Class<X> dataType, String varName) {
+		return (filterUpdatedCallback) -> new GroovyFilter<>(filterUpdatedCallback, dataType, varName);
+	}
+
+	public GroovyFilter(Runnable filterUpdatedCallback, Class<X> dataType, String varName) {
 		this.filterUpdatedCallback = filterUpdatedCallback;
 		this.dataType = dataType;
 		this.textBox = new TextFieldWithValidation<>(this::makeFilter, this::setFilter, "");
-		this.shortClassName = dataType.getSimpleName();
 		this.longClassName = dataType.getCanonicalName();
-		this.varName = shortClassName.toLowerCase(Locale.ROOT);
+		this.varName = varName;
 		CompilerConfiguration compilerConfiguration = GroovyManager.getCompilerConfig();
 //		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
 //		ImportCustomizer importCustomizer = new ImportCustomizer();
