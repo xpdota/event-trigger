@@ -69,8 +69,16 @@ public class XivOverlay {
 		this.oc = oc;
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), nextDefaultPos.get());
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
-		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
-		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
+		if (Platform.isWindows()) {
+			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
+			scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
+		}
+		else {
+			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 1.0, 1.0);
+			opacity.reset();
+			scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 1.0d, 1.0d);
+			scaleFactor.reset();
+		}
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
 		enabled.addListener(this::recalc);
@@ -89,24 +97,12 @@ public class XivOverlay {
 		panel = new JPanel();
 		panel.setOpaque(false);
 		panel.setBorder(transparentBorder);
-		JPanel contentPane = new JPanel() {
-			@Override
-			public void paint(Graphics g) {
-				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-				g.clearRect(0, 0, getWidth(), getHeight());
-				super.paint(g);
-			}
+		JPanel contentPane = Platform.isWindows() ? new JPanel() : new JPanel() {
 			@Override
 			public void paintComponent(Graphics g) {
 				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
 				g.clearRect(0, 0, getWidth(), getHeight());
 				super.paintComponent(g);
-			}
-			@Override
-			public void paintBorder(Graphics g) {
-				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-//				g.clearRect(0, 0, getWidth(), getHeight());
-				super.paintBorder(g);
 			}
 		};
 		contentPane.setDoubleBuffered(true);

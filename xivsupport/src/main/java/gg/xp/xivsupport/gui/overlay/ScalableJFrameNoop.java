@@ -39,12 +39,6 @@ public class ScalableJFrameNoop extends ScalableJFrame {
 	public void paint(Graphics g) {
 		BufferStrategy buff = getBufferStrategy();
 		Graphics drawGraphics = buff.getDrawGraphics();
-//		((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-//		g.clearRect(0, 0, getWidth(), getHeight());
-//		((Graphics2D) drawGraphics).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC));
-//		((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC));
-//		((Graphics2D) drawGraphics).setBackground(new Color(0, 0, 0, 0));
-//		drawGraphics.clearRect(0, 0, getWidth(), getHeight());
 		getContentPane().paint(drawGraphics);
 //		super.paintComponents(drawGraphics);
 		buff.show();
