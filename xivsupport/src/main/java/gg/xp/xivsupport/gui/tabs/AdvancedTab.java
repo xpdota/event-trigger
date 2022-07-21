@@ -223,7 +223,7 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			c.gridx++;
 			{
 				JPanel graphicsPannel = new TitleBorderFullsizePanel("Graphics (Restart Required)");
-				JPanel bufferSettingGui = new IntSettingSpinner(container.getComponent(OverlayConfig.class).getBufferSetting(), "Buffers (0 for default)").getComponent();
+				JPanel bufferSettingGui = new IntSettingSpinner(container.getComponent(OverlayConfig.class).getBufferSetting(), "Buffers (0 for default)", Platform::isWindows).getComponent();
 				graphicsPannel.add(bufferSettingGui);
 				JCheckBox repaintIgnoreGui = new BooleanSettingGui(container.getComponent(OverlayConfig.class).getIgnoreRepaint(), "Ignore External Repaint").getComponent();
 				graphicsPannel.add(repaintIgnoreGui);
