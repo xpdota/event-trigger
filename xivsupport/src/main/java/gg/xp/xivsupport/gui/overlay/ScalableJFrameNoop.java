@@ -49,29 +49,29 @@ public class ScalableJFrameNoop extends ScalableJFrame {
 //		super.paintAll(getGraphics());
 //	}
 
-	@Override
-	public Graphics getGraphics() {
-		Graphics2D graphics = (Graphics2D) super.getGraphics();
-		AffineTransform transform = graphics.getTransform();
-		transform.scale(scaleFactor.getValue(), scaleFactor.getValue());
-//		graphics.setTransform(transform);
-		return graphics;
-	}
+//	@Override
+//	public Graphics getGraphics() {
+//		Graphics2D graphics = (Graphics2D) super.getGraphics();
+//		AffineTransform transform = graphics.getTransform();
+//		transform.scale(scaleFactor.getValue(), scaleFactor.getValue());
+////		graphics.setTransform(transform);
+//		return graphics;
+//	}
 
 
 	public void setScaleFactor(double scaleFactor) {
 		this.scaleFactor.setValue(scaleFactor);
 		pack();
-		Rectangle bounds = getBounds();
-		int newWidth;
-		int newHeight;
-		// Issues with border when scaling < 1
-		if (scaleFactor < 1.0) {
-			scaleFactor = (5.0 + scaleFactor) / 6.0;
-		}
-		newWidth = (int) Math.round(bounds.width * scaleFactor);
-		newHeight = (int) Math.round(bounds.height * scaleFactor);
-		setBounds(bounds.x, bounds.y, newWidth, newHeight);
+//		Rectangle bounds = getBounds();
+//		int newWidth;
+//		int newHeight;
+//		// Issues with border when scaling < 1
+//		if (scaleFactor < 1.0) {
+//			scaleFactor = (5.0 + scaleFactor) / 6.0;
+//		}
+//		newWidth = (int) Math.round(bounds.width * scaleFactor);
+//		newHeight = (int) Math.round(bounds.height * scaleFactor);
+//		setBounds(bounds.x, bounds.y, newWidth, newHeight);
 		if (isVisible()) {
 			repaint();
 		}

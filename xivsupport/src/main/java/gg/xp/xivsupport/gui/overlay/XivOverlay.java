@@ -152,7 +152,6 @@ public class XivOverlay {
 		calcFrameTimes();
 		oc.getMaxFps().addListener(this::calcFrameTimes);
 		oc.getMinFps().addListener(this::calcFrameTimes);
-		frame.repaint();
 	}
 
 	public void resetPositionFromSettings() {
@@ -227,6 +226,7 @@ public class XivOverlay {
 	protected void repackSize() {
 		getFrame().revalidate();
 		redoScale();
+		getFrame().repaint();
 	}
 
 	private void recalc() {
