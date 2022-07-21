@@ -91,10 +91,10 @@ public class XivOverlay {
 		panel.setBorder(transparentBorder);
 		JPanel contentPane = new JPanel() {
 			@Override
-			public void paint(Graphics g) {
+			public void paintComponent(Graphics g) {
 				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-//				g.clearRect(0, 0, getWidth(), getHeight());
-				super.paint(g);
+				g.clearRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
 			}
 		};
 		frame.setContentPane(contentPane);

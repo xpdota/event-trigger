@@ -29,7 +29,15 @@ public final class CommonGuiSetup {
 		SOFTWARE
 	}
 
-	private static final RenderMode mode = RenderMode.OPENGL;
+	private static final RenderMode mode;
+	static {
+		if (Platform.isWindows()) {
+			mode = RenderMode.SOFTWARE;
+		}
+		else {
+			mode = RenderMode.OPENGL;
+		}
+	}
 	private static final int GUI_WARN_MS = 100;
 
 	private CommonGuiSetup() {
@@ -47,27 +55,29 @@ public final class CommonGuiSetup {
 	}
 
 	private static void doSetup() {
-		switch (mode) {
-			case D3D -> System.setProperty("sun.java2d.d3d", "true");
-			case D3D_HWSCALE -> {
-				System.setProperty("sun.java2d.d3d", "true");
-				System.setProperty("sun.java2d.ddscale", "true");
+			switch (mode) {
+				case D3D -> System.setProperty("sun.java2d.d3d", "true");
+				case D3D_HWSCALE -> {
+					System.setProperty("sun.java2d.d3d", "true");
+					System.setProperty("sun.java2d.ddscale", "true");
+				}
+				case OPENGL -> {
+					System.setProperty("sun.java2d.opengl", "true");
+					System.setProperty("sun.java2d.d3d", "false");
+				}
+				case SOFTWARE -> {
+					System.setProperty("sun.java2d.opengl", "false");
+					System.setProperty("sun.java2d.d3d", "false");
+				}
 			}
-			case OPENGL -> {
-				System.setProperty("sun.java2d.opengl", "true");
-				System.setProperty("sun.java2d.d3d", "false");
-			}
-			case SOFTWARE -> {
-				System.setProperty("sun.java2d.opengl", "false");
-				System.setProperty("sun.java2d.d3d", "false");
-			}
-		}
-		try {
+		if (Platform.isWindows()) {
+			try {
 //			UIManager.setLookAndFeel(new DarculaLaf());
-//			UIManager.setLookAndFeel(new FlatDarculaLaf());
-		}
-		catch (Throwable t) {
-			log.error("Error setting up look and feel", t);
+				UIManager.setLookAndFeel(new FlatDarculaLaf());
+			}
+			catch (Throwable t) {
+				log.error("Error setting up look and feel", t);
+			}
 		}
 		SwingUtilities.invokeLater(() -> {
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
