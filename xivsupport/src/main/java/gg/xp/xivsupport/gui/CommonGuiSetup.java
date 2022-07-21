@@ -35,7 +35,7 @@ public final class CommonGuiSetup {
 			mode = RenderMode.SOFTWARE;
 		}
 		else {
-			mode = RenderMode.OPENGL;
+			mode = RenderMode.SOFTWARE;
 		}
 	}
 	private static final int GUI_WARN_MS = 100;
