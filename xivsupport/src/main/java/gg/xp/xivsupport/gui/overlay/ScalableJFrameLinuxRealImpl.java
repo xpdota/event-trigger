@@ -27,10 +27,10 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 
 	@Override
 	public void setVisible(boolean b) {
+		super.setVisible(b);
 		if (getBufferStrategy() == null) {
 			createBufferStrategy(2);
 		}
-		super.setVisible(b);
 	}
 
 	@Override
