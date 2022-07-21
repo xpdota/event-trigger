@@ -70,7 +70,7 @@ public final class CommonGuiSetup {
 					System.setProperty("sun.java2d.d3d", "false");
 				}
 			}
-		if (Platform.isWindows()) {
+		if (Platform.isWindows() || true) {
 			try {
 //			UIManager.setLookAndFeel(new DarculaLaf());
 				UIManager.setLookAndFeel(new FlatDarculaLaf());

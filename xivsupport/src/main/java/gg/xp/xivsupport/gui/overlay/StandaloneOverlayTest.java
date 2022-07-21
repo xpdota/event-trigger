@@ -27,7 +27,7 @@ public final class StandaloneOverlayTest {
 			overlay.setVisible(true);
 			overlay.setEditMode(true);
 			overlay.getEnabled().set(true);
-			double scaleFactor = 5.2;
+			double scaleFactor = 1.8;
 			overlay.setScale(scaleFactor);
 		}
 		{
