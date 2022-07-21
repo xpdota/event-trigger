@@ -7,10 +7,12 @@ import javax.swing.*;
 import java.awt.*;
 
 //@ScanMe
-public class ExampleJFrame extends JFrame {
+public class ExampleJFrame {
 
-	public ExampleJFrame() {
+	public static void main(String[] args) {
 		CommonGuiSetup.setup();
+		JFrame frame = new JFrame("Foo");
+
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(2, 2));
 		JButton button1 = new JButton("Bigger");
@@ -21,14 +23,13 @@ public class ExampleJFrame extends JFrame {
 		panel.add(reset);
 		panel.setOpaque(false);
 		panel.setBackground(new Color(200, 100, 0, 0));
-		setContentPane(panel);
-		setUndecorated(true);
-		setBackground(new Color(200, 100, 0, 0));
-		setSize(new Dimension(500, 500));
-		setLocationRelativeTo(null);
-	}
 
-	public static void main(String[] args) {
-		new ExampleJFrame().setVisible(true);
+		frame.setContentPane(panel);
+		frame.setUndecorated(true);
+		frame.setBackground(new Color(200, 100, 0, 0));
+		frame.setSize(new Dimension(500, 500));
+		frame.setLocationRelativeTo(null);
+
+		frame.setVisible(true);
 	}
 }
