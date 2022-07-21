@@ -1,19 +1,17 @@
 package gg.xp.xivsupport.gui.overlay;
 
-import org.apache.commons.lang3.mutable.MutableDouble;
-
 import java.awt.*;
 import java.awt.image.BufferStrategy;
 
-public final class ScalableJFrameLinuxImpl extends ScalableJFrame {
+public final class ScalableJFrameLinuxNoopImpl extends ScalableJFrame {
 
 
-	private ScalableJFrameLinuxImpl(String title) throws HeadlessException {
+	private ScalableJFrameLinuxNoopImpl(String title) throws HeadlessException {
 		super(title);
 	}
 
 	public static ScalableJFrame construct(String title) {
-		return new ScalableJFrameLinuxImpl(title);
+		return new ScalableJFrameLinuxNoopImpl(title);
 	}
 
 	@Override

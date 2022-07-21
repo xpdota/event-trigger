@@ -70,17 +70,15 @@ public class XivOverlay {
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), nextDefaultPos.get());
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
 		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
+		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
 		if (Platform.isWindows()) {
 			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
-			scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
 			frame = ScalableJFrameWindowsImpl.construct(title, scaleFactor.get(), numBuffers);
 		}
 		else {
 			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 1.0, 1.0);
 			opacity.reset();
-			scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 1.0d, 1.0d);
-			scaleFactor.reset();
-			frame = ScalableJFrameLinuxImpl.construct(title);
+			frame = ScalableJFrameLinuxRealImpl.construct(title, scaleFactor.get(), numBuffers);
 		}
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		enabled.addListener(this::recalc);

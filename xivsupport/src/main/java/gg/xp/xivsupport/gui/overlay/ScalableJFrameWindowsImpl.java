@@ -1,24 +1,21 @@
 package gg.xp.xivsupport.gui.overlay;
 
-import org.apache.commons.lang3.mutable.MutableDouble;
-
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
 public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 
 	private final int numBuffers;
-	private final MutableDouble scaleFactor;
+	private double scaleFactor;
 
-	private ScalableJFrameWindowsImpl(String title, MutableDouble scaleFactor, int numBuffers) throws HeadlessException {
+	private ScalableJFrameWindowsImpl(String title, double scaleFactor, int numBuffers) throws HeadlessException {
 		super(title);
 		this.scaleFactor = scaleFactor;
 		this.numBuffers = numBuffers;
 	}
 
 	public static ScalableJFrame construct(String title, double defaultScaleFactor, int numBuffers) {
-		MutableDouble scaleFactor = new MutableDouble(defaultScaleFactor);
-		return new ScalableJFrameWindowsImpl(title, scaleFactor, numBuffers);
+		return new ScalableJFrameWindowsImpl(title, defaultScaleFactor, numBuffers);
 	}
 
 	@Override
@@ -48,14 +45,14 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 	public Graphics getGraphics() {
 		Graphics2D graphics = (Graphics2D) super.getGraphics();
 		AffineTransform transform = graphics.getTransform();
-		transform.scale(scaleFactor.getValue(), scaleFactor.getValue());
+		transform.scale(scaleFactor, scaleFactor);
 		graphics.setTransform(transform);
 		return graphics;
 	}
 
 
 	public void setScaleFactor(double scaleFactor) {
-		this.scaleFactor.setValue(scaleFactor);
+		this.scaleFactor = scaleFactor;
 		pack();
 		Rectangle bounds = getBounds();
 		int newWidth;
@@ -74,6 +71,6 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 
 	@Override
 	public double getScaleFactor() {
-		return scaleFactor.getValue();
+		return scaleFactor;
 	}
 }
