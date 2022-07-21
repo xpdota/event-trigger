@@ -17,7 +17,7 @@ public class ExampleScalableJFrame {
 		JPanel panel = new JPanel() {
 			@Override
 			public void paint(Graphics g) {
-				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+				((Graphics2D) g).setBackground(new Color(0, 255, 0, 0));
 				g.clearRect(0, 0, getWidth(), getHeight());
 				super.paint(g);
 			}
