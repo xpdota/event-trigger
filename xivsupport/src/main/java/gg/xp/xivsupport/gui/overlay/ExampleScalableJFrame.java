@@ -13,7 +13,7 @@ public class ExampleScalableJFrame {
 
 	public static void main(String[] args) throws InterruptedException {
 		CommonGuiSetup.setup();
-		ScalableJFrame frame = ScalableJFrameNoop.construct("Foo", 1.3, 0);
+		ScalableJFrame frame = ScalableJFrameLinuxImpl.construct("Foo", 1.3, 0);
 
 		JPanel panel = new JPanel() {
 //			@Override

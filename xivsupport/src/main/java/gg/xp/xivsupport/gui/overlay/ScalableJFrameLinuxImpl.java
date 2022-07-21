@@ -3,15 +3,14 @@ package gg.xp.xivsupport.gui.overlay;
 import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferStrategy;
 
-public class ScalableJFrameNoop extends ScalableJFrame {
+public class ScalableJFrameLinuxImpl extends ScalableJFrame {
 
 	private final int numBuffers;
 	private final MutableDouble scaleFactor;
 
-	private ScalableJFrameNoop(String title, MutableDouble scaleFactor, int numBuffers) throws HeadlessException {
+	private ScalableJFrameLinuxImpl(String title, MutableDouble scaleFactor, int numBuffers) throws HeadlessException {
 		super(title);
 		this.scaleFactor = scaleFactor;
 		this.numBuffers = numBuffers;
@@ -19,7 +18,7 @@ public class ScalableJFrameNoop extends ScalableJFrame {
 
 	public static ScalableJFrame construct(String title, double defaultScaleFactor, int numBuffers) {
 		MutableDouble scaleFactor = new MutableDouble(1.0);
-		return new ScalableJFrameNoop(title, scaleFactor, numBuffers);
+		return new ScalableJFrameLinuxImpl(title, scaleFactor, numBuffers);
 	}
 
 	@Override

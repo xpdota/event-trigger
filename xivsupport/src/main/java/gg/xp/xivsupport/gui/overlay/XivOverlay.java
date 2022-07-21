@@ -83,9 +83,9 @@ public class XivOverlay {
 		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
 		enabled.addListener(this::recalc);
 		if (Platform.isWindows()) {
-			frame = ScalableJFrameImpl.construct(title, scaleFactor.get(), numBuffers);
+			frame = ScalableJFrameWindowsImpl.construct(title, scaleFactor.get(), numBuffers);
 		} else {
-			frame = ScalableJFrameNoop.construct(title, scaleFactor.get(), numBuffers);
+			frame = ScalableJFrameLinuxImpl.construct(title, scaleFactor.get(), numBuffers);
 		}
 		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));

@@ -5,12 +5,12 @@ import org.apache.commons.lang3.mutable.MutableDouble;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
-public class ScalableJFrameImpl extends ScalableJFrame {
+public class ScalableJFrameWindowsImpl extends ScalableJFrame {
 
 	private final int numBuffers;
 	private final MutableDouble scaleFactor;
 
-	private ScalableJFrameImpl(String title, MutableDouble scaleFactor, int numBuffers) throws HeadlessException {
+	private ScalableJFrameWindowsImpl(String title, MutableDouble scaleFactor, int numBuffers) throws HeadlessException {
 		super(title);
 		this.scaleFactor = scaleFactor;
 		this.numBuffers = numBuffers;
@@ -18,7 +18,7 @@ public class ScalableJFrameImpl extends ScalableJFrame {
 
 	public static ScalableJFrame construct(String title, double defaultScaleFactor, int numBuffers) {
 		MutableDouble scaleFactor = new MutableDouble(defaultScaleFactor);
-		return new ScalableJFrameImpl(title, scaleFactor, numBuffers);
+		return new ScalableJFrameWindowsImpl(title, scaleFactor, numBuffers);
 	}
 
 	@Override
