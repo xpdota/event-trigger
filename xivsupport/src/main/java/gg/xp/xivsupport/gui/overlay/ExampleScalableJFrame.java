@@ -11,7 +11,7 @@ public class ExampleScalableJFrame {
 	public ExampleScalableJFrame() {
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		CommonGuiSetup.setup();
 		ScalableJFrame frame = ScalableJFrameNoop.construct("Foo", 1.3, 0);
 
@@ -42,5 +42,8 @@ public class ExampleScalableJFrame {
 		frame.setLocationRelativeTo(null);
 
 		frame.setVisible(true);
+
+		Thread.sleep(5000);
+		frame.repaint();
 	}
 }

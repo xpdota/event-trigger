@@ -9,7 +9,7 @@ import java.awt.*;
 //@ScanMe
 public class ExampleJFrame {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		CommonGuiSetup.setup();
 		JFrame frame = new JFrame("Foo");
 
@@ -31,5 +31,8 @@ public class ExampleJFrame {
 		frame.setLocationRelativeTo(null);
 
 		frame.setVisible(true);
+
+		Thread.sleep(5000);
+		frame.repaint();
 	}
 }
