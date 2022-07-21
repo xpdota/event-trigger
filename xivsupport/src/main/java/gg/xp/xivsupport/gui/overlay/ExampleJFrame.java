@@ -10,7 +10,8 @@ import java.awt.*;
 public class ExampleJFrame extends JFrame {
 
 	public ExampleJFrame() {
-		CommonGuiSetup.setup();
+		super("foo");
+
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(2, 2));
 		JButton button1 = new JButton("Bigger");
@@ -19,8 +20,10 @@ public class ExampleJFrame extends JFrame {
 		panel.add(button2);
 		JButton reset = new JButton("Reset");
 		panel.add(reset);
+
 		panel.setOpaque(false);
 		panel.setBackground(new Color(200, 100, 0, 0));
+
 		setContentPane(panel);
 		setUndecorated(true);
 		setBackground(new Color(200, 100, 0, 0));
@@ -29,6 +32,7 @@ public class ExampleJFrame extends JFrame {
 	}
 
 	public static void main(String[] args) {
+		CommonGuiSetup.setup();
 		new ExampleJFrame().setVisible(true);
 	}
 }

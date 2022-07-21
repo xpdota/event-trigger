@@ -59,6 +59,7 @@ public class ScalableJFrameImpl extends ScalableJFrame {
 	}
 
 
+	@Override
 	public void setScaleFactor(double scaleFactor) {
 		this.scaleFactor.setValue(scaleFactor);
 		pack();
