@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.tabs;
 
-import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -23,7 +22,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-@ScanMe
 public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
 	private static final String propsOverrideFileName = "update.properties";
@@ -172,7 +170,8 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 			log.info("Update answer: {}", answer);
 			switch (answer) {
 				case 0 -> updateNow();
-				case 1 -> {}
+				case 1 -> {
+				}
 				case 2 -> updateCheckNag.set(false);
 			}
 		}
