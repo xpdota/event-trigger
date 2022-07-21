@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.overlay;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferStrategy;
@@ -53,7 +54,7 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 
 	public void setScaleFactor(double scaleFactor) {
 		this.scaleFactor = scaleFactor;
-		pack();
+		Dimension pref = getContentPane().getPreferredSize();
 		Rectangle bounds = getBounds();
 		int newWidth;
 		int newHeight;
@@ -61,12 +62,16 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 		if (scaleFactor < 1.0) {
 			scaleFactor = (5.0 + scaleFactor) / 6.0;
 		}
-		newWidth = (int) Math.round(bounds.width * scaleFactor);
-		newHeight = (int) Math.round(bounds.height * scaleFactor);
-		setBounds(bounds.x, bounds.y, newWidth, newHeight);
-		if (isVisible()) {
-			repaint();
-		}
+		newWidth = (int) Math.round(pref.width * scaleFactor);
+		newHeight = (int) Math.round(pref.height * scaleFactor);
+//		setVisible(wasVisible);
+		SwingUtilities.invokeLater(() -> {
+			setBounds(bounds.x, bounds.y, newWidth, newHeight);
+			if (isVisible()) {
+//				revalidate();
+				repaint();
+			}
+		});
 	}
 
 	@Override

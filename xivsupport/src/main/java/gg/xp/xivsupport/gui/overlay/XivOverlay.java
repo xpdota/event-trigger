@@ -122,7 +122,7 @@ public class XivOverlay {
 		resetPositionFromSettings();
 		xSetting.addListener(this::resetPositionFromSettings);
 		ySetting.addListener(this::resetPositionFromSettings);
-		scaleFactor.addListener(this::redoScale);
+		scaleFactor.addListener(() -> SwingUtilities.invokeLater(this::redoScale));
 		frame.setOpacity((float) opacity.get());
 		frame.addMouseListener(new MouseAdapter() {
 			@Override
@@ -156,14 +156,16 @@ public class XivOverlay {
 		frame.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent evt) {
-				int newX = evt.getXOnScreen();
-				int newY = evt.getYOnScreen();
-				int deltaX = newX - dragX;
-				int deltaY = newY - dragY;
-				Point old = frame.getLocation();
-				setPosition(old.x + deltaX, old.y + deltaY);
-				dragX = newX;
-				dragY = newY;
+				if (editMode) {
+					int newX = evt.getXOnScreen();
+					int newY = evt.getYOnScreen();
+					int deltaX = newX - dragX;
+					int deltaY = newY - dragY;
+					Point old = frame.getLocation();
+					setPosition(old.x + deltaX, old.y + deltaY);
+					dragX = newX;
+					dragY = newY;
+				}
 			}
 		});
 		calcFrameTimes();
