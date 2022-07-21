@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.xivsupport.gui.overlay.Scaled;
+import gg.xp.xivsupport.persistence.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,7 @@ public final class CommonGuiSetup {
 		SOFTWARE
 	}
 
-	private static final RenderMode mode = RenderMode.SOFTWARE;
+	private static final RenderMode mode = RenderMode.OPENGL;
 	private static final int GUI_WARN_MS = 100;
 
 	private CommonGuiSetup() {
@@ -63,7 +64,7 @@ public final class CommonGuiSetup {
 		}
 		try {
 //			UIManager.setLookAndFeel(new DarculaLaf());
-			UIManager.setLookAndFeel(new FlatDarculaLaf());
+//			UIManager.setLookAndFeel(new FlatDarculaLaf());
 		}
 		catch (Throwable t) {
 			log.error("Error setting up look and feel", t);

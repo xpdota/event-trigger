@@ -18,6 +18,7 @@ public final class StandaloneOverlayTest {
 		CommonGuiSetup.setup();
 		MutablePicoContainer pico = XivMain.testingMinimalInit();
 		pico.addComponent(OverlayMain.class);
+		pico.addComponent(OverlayConfig.class);
 		OverlayConfig oc = pico.getComponent(OverlayConfig.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		{

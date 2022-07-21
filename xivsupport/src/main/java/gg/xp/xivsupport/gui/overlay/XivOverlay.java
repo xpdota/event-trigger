@@ -74,7 +74,11 @@ public class XivOverlay {
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
 		enabled.addListener(this::recalc);
-		frame = ScalableJFrame.construct(title, scaleFactor.get(), numBuffers);
+		if (Platform.isWindows()) {
+			frame = ScalableJFrameImpl.construct(title, scaleFactor.get(), numBuffers);
+		} else {
+			frame = ScalableJFrameNoop.construct(title, scaleFactor.get(), numBuffers);
+		}
 		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
@@ -89,7 +93,7 @@ public class XivOverlay {
 			@Override
 			public void paint(Graphics g) {
 				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-				g.clearRect(0, 0, getWidth(), getHeight());
+//				g.clearRect(0, 0, getWidth(), getHeight());
 				super.paint(g);
 			}
 		};
