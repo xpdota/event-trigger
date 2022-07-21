@@ -4,6 +4,7 @@ import org.apache.commons.lang3.mutable.MutableDouble;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferStrategy;
 
 public class ScalableJFrameNoop extends ScalableJFrame {
 
@@ -23,8 +24,8 @@ public class ScalableJFrameNoop extends ScalableJFrame {
 
 	@Override
 	public void setVisible(boolean b) {
-		if (getBufferStrategy() == null && numBuffers != 0) {
-//			createBufferStrategy(numBuffers);
+		if (getBufferStrategy() == null) {
+			createBufferStrategy(2);
 		}
 		super.setVisible(b);
 	}
@@ -34,10 +35,21 @@ public class ScalableJFrameNoop extends ScalableJFrame {
 		return scale >= 0.999 && scale <= 1.001;
 	}
 
-//	@Override
-//	public void paint(Graphics g) {
-//		super.paint(getGraphics());
-//	}
+	@Override
+	public void paint(Graphics g) {
+		BufferStrategy buff = getBufferStrategy();
+		Graphics drawGraphics = buff.getDrawGraphics();
+//		((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+//		g.clearRect(0, 0, getWidth(), getHeight());
+//		((Graphics2D) drawGraphics).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC));
+//		((Graphics2D) g).setComposite(AlphaComposite.getInstance(AlphaComposite.SRC));
+//		((Graphics2D) drawGraphics).setBackground(new Color(0, 0, 0, 0));
+//		drawGraphics.clearRect(0, 0, getWidth(), getHeight());
+		getContentPane().paint(drawGraphics);
+//		super.paintComponents(drawGraphics);
+		buff.show();
+		drawGraphics.dispose();
+	}
 //
 //	@Override
 //	public void paintComponents(Graphics g) {

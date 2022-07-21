@@ -70,7 +70,7 @@ public final class CommonGuiSetup {
 					System.setProperty("sun.java2d.d3d", "false");
 				}
 			}
-		if (Platform.isWindows()) {
+//		if (Platform.isWindows()) {
 			try {
 //			UIManager.setLookAndFeel(new DarculaLaf());
 				UIManager.setLookAndFeel(new FlatDarculaLaf());
@@ -78,7 +78,7 @@ public final class CommonGuiSetup {
 			catch (Throwable t) {
 				log.error("Error setting up look and feel", t);
 			}
-		}
+//		}
 		SwingUtilities.invokeLater(() -> {
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		});
