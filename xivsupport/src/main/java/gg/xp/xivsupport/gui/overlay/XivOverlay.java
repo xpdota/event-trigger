@@ -93,7 +93,7 @@ public class XivOverlay {
 			@Override
 			public void paint(Graphics g) {
 				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-				g.clearRect(0, 0, getWidth(), getHeight());
+//				g.clearRect(0, 0, getWidth(), getHeight());
 				super.paint(g);
 			}
 		};
