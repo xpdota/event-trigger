@@ -93,10 +93,18 @@ public class XivOverlay {
 			@Override
 			public void paint(Graphics g) {
 				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-//				g.clearRect(0, 0, getWidth(), getHeight());
+				g.clearRect(0, 0, getWidth(), getHeight());
 				super.paint(g);
 			}
+			@Override
+			public void paintComponent(Graphics g) {
+				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+				g.clearRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
+			}
 		};
+		contentPane.setDoubleBuffered(true);
+		panel.setDoubleBuffered(true);
 		frame.setContentPane(contentPane);
 		contentPane.setLayout(new FlowLayout(FlowLayout.LEFT));
 		contentPane.add(panel);
