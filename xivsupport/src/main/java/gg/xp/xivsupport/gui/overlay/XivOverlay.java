@@ -69,23 +69,23 @@ public class XivOverlay {
 		this.oc = oc;
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), nextDefaultPos.get());
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
+		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
 		if (Platform.isWindows()) {
 			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
 			scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
+			frame = ScalableJFrameWindowsImpl.construct(title, scaleFactor.get(), numBuffers);
 		}
 		else {
 			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 1.0, 1.0);
 			opacity.reset();
 			scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 1.0d, 1.0d);
 			scaleFactor.reset();
+			frame = ScalableJFrameLinuxImpl.construct(title);
 		}
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
-		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
 		enabled.addListener(this::recalc);
 		if (Platform.isWindows()) {
-			frame = ScalableJFrameWindowsImpl.construct(title, scaleFactor.get(), numBuffers);
 		} else {
-			frame = ScalableJFrameLinuxImpl.construct(title, scaleFactor.get(), numBuffers);
 		}
 		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
@@ -97,13 +97,18 @@ public class XivOverlay {
 		panel = new JPanel();
 		panel.setOpaque(false);
 		panel.setBorder(transparentBorder);
-		JPanel contentPane = Platform.isWindows() ? new JPanel() : new JPanel() {
+		JPanel contentPane;
+		if (Platform.isWindows()) {
+			contentPane = new JPanel();
+		}
+		else contentPane = new JPanel() {
 			@Override
 			public void paint(Graphics g) {
 				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
 				g.clearRect(0, 0, getWidth(), getHeight());
 				super.paint(g);
 			}
+
 			@Override
 			public void paintComponent(Graphics g) {
 				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
@@ -111,8 +116,6 @@ public class XivOverlay {
 				super.paintComponent(g);
 			}
 		};
-		contentPane.setDoubleBuffered(true);
-		panel.setDoubleBuffered(true);
 		frame.setContentPane(contentPane);
 		contentPane.setLayout(new FlowLayout(FlowLayout.LEFT));
 		contentPane.add(panel);

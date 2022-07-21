@@ -5,7 +5,7 @@ import org.apache.commons.lang3.mutable.MutableDouble;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
-public class ScalableJFrameWindowsImpl extends ScalableJFrame {
+public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 
 	private final int numBuffers;
 	private final MutableDouble scaleFactor;
@@ -27,11 +27,6 @@ public class ScalableJFrameWindowsImpl extends ScalableJFrame {
 			createBufferStrategy(numBuffers);
 		}
 		super.setVisible(b);
-	}
-
-	private boolean isScaled() {
-		double scale = scaleFactor.getValue();
-		return scale >= 0.999 && scale <= 1.001;
 	}
 
 	@Override
