@@ -152,6 +152,7 @@ public class XivOverlay {
 		calcFrameTimes();
 		oc.getMaxFps().addListener(this::calcFrameTimes);
 		oc.getMinFps().addListener(this::calcFrameTimes);
+		frame.repaint();
 	}
 
 	public void resetPositionFromSettings() {
