@@ -13,7 +13,7 @@ public class ExampleScalableJFrame {
 
 	public static void main(String[] args) {
 		CommonGuiSetup.setup();
-		ScalableJFrame frame = ScalableJFrameImpl.construct("Foo", 1.3, 0);
+		ScalableJFrame frame = ScalableJFrameNoop.construct("Foo", 1.3, 0);
 		JPanel panel = new JPanel() {
 			@Override
 			public void paint(Graphics g) {
