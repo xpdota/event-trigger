@@ -336,7 +336,12 @@ public class Update {
 				if (!updateTheUpdaterItself) {
 					Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 						try {
-							Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent.exe").toString());
+							if (isWindows()) {
+								Runtime.getRuntime().exec(Paths.get(installDir.toString(), "triggevent.exe").toString());
+							}
+							else {
+								Runtime.getRuntime().exec(new String[]{"sh", Paths.get(installDir.toString(), "triggevent.sh").toString()});
+							}
 						}
 						catch (IOException e) {
 							e.printStackTrace();
@@ -398,6 +403,10 @@ public class Update {
 		final PrintWriter pw = new PrintWriter(sw, true);
 		throwable.printStackTrace(pw);
 		return sw.getBuffer().toString();
+	}
+
+	private static boolean isWindows() {
+		return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 	}
 
 }
