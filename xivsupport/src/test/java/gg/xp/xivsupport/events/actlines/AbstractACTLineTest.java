@@ -25,14 +25,19 @@ public class AbstractACTLineTest<X extends Event> {
 	}
 
 	private TestEventCollector submitLine(String line) {
-		// TODO: really need a way to assert there were no background errors in tests
-		MutablePicoContainer container = XivMain.testingMasterInit();
-		TestEventCollector coll = new TestEventCollector();
-		EventDistributor dist = container.getComponent(EventDistributor.class);
-		dist.registerHandler(coll);
-		ACTLogLineEvent event = new ACTLogLineEvent(line);
-		dist.acceptEvent(event);
-		return coll;
+		try {
+			// TODO: really need a way to assert there were no background errors in tests
+			MutablePicoContainer container = XivMain.testingMasterInit();
+			TestEventCollector coll = new TestEventCollector();
+			EventDistributor dist = container.getComponent(EventDistributor.class);
+			dist.registerHandler(coll);
+			ACTLogLineEvent event = new ACTLogLineEvent(line);
+			dist.acceptEvent(event);
+			return coll;
+		} catch (Throwable t) {
+			log.error("Error processing line '{}'", line, t);
+			throw t;
+		}
 	}
 
 	public X expectEvent(String line) {

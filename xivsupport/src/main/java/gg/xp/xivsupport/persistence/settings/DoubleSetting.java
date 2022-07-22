@@ -41,6 +41,12 @@ public class DoubleSetting extends ObservableSetting {
 		notifyListeners();
 	}
 
+	public void reset() {
+		cached = dflt;
+		persistence.delete(settingKey);
+		notifyListeners();
+	}
+
 	public double getMax() {
 		return max;
 	}

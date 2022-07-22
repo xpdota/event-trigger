@@ -69,12 +69,22 @@ public class XivOverlay {
 		this.oc = oc;
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), nextDefaultPos.get());
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
-		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
-		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
-		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
+		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
+		if (Platform.isWindows()) {
+			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
+			frame = ScalableJFrameWindowsImpl.construct(title, scaleFactor.get(), numBuffers);
+		}
+		else {
+			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 1.0, 1.0);
+			opacity.reset();
+			frame = ScalableJFrameLinuxRealImpl.construct(title, scaleFactor.get(), numBuffers);
+		}
+		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		enabled.addListener(this::recalc);
-		frame = ScalableJFrame.construct(title, scaleFactor.get(), numBuffers);
+		if (Platform.isWindows()) {
+		} else {
+		}
 		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
@@ -84,16 +94,35 @@ public class XivOverlay {
 		frame.setType(Window.Type.UTILITY);
 		panel = new JPanel();
 		panel.setOpaque(false);
-//		panel.setBackground(new Color(0, 0, 0, 0));
-//			panel.add(contents);
 		panel.setBorder(transparentBorder);
-		frame.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT));
-		frame.getContentPane().add(panel);
+		JPanel contentPane;
+		if (Platform.isWindows()) {
+			contentPane = new JPanel();
+		}
+		else contentPane = new JPanel() {
+			@Override
+			public void paint(Graphics g) {
+				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+				g.clearRect(0, 0, getWidth(), getHeight());
+				super.paint(g);
+			}
+
+			@Override
+			public void paintComponent(Graphics g) {
+				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+				g.clearRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
+			}
+		};
+		frame.setContentPane(contentPane);
+		contentPane.setLayout(new FlowLayout(FlowLayout.LEFT));
+		contentPane.add(panel);
+		contentPane.setOpaque(false);
 		frame.setAlwaysOnTop(true);
 		resetPositionFromSettings();
 		xSetting.addListener(this::resetPositionFromSettings);
 		ySetting.addListener(this::resetPositionFromSettings);
-		scaleFactor.addListener(this::redoScale);
+		scaleFactor.addListener(() -> SwingUtilities.invokeLater(this::redoScale));
 		frame.setOpacity((float) opacity.get());
 		frame.addMouseListener(new MouseAdapter() {
 			@Override
@@ -127,14 +156,16 @@ public class XivOverlay {
 		frame.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent evt) {
-				int newX = evt.getXOnScreen();
-				int newY = evt.getYOnScreen();
-				int deltaX = newX - dragX;
-				int deltaY = newY - dragY;
-				Point old = frame.getLocation();
-				setPosition(old.x + deltaX, old.y + deltaY);
-				dragX = newX;
-				dragY = newY;
+				if (editMode) {
+					int newX = evt.getXOnScreen();
+					int newY = evt.getYOnScreen();
+					int deltaX = newX - dragX;
+					int deltaY = newY - dragY;
+					Point old = frame.getLocation();
+					setPosition(old.x + deltaX, old.y + deltaY);
+					dragX = newX;
+					dragY = newY;
+				}
 			}
 		});
 		calcFrameTimes();
@@ -214,6 +245,7 @@ public class XivOverlay {
 	protected void repackSize() {
 		getFrame().revalidate();
 		redoScale();
+		getFrame().repaint();
 	}
 
 	private void recalc() {
