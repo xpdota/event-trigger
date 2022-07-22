@@ -1,28 +1,44 @@
 package gg.xp.xivsupport.gui.overlay;
 
+import com.sun.jna.platform.unix.X11;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferStrategy;
 
-import static java.awt.RenderingHints.KEY_ANTIALIASING;
 import static java.awt.RenderingHints.KEY_RENDERING;
-import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
 
 public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 
-	private final int numBuffers;
-	private double scaleFactor;
+	private static final Logger log = LoggerFactory.getLogger(ScalableJFrameLinuxRealImpl.class);
+	private static final boolean enableClickThrough;
 
-	private ScalableJFrameLinuxRealImpl(String title, double scaleFactor, int numBuffers) throws HeadlessException {
-		super(title);
-		this.scaleFactor = scaleFactor;
-		this.numBuffers = numBuffers;
+	static {
+		boolean enable;
+		try {
+			LibUtil.loadLibraryFromJar("/libjawt.so");
+			enable = true;
+		}
+		catch (Throwable t) {
+			log.error("Could not load libjawt.so - overlay click-through will not work.");
+			enable = false;
+		}
+		enableClickThrough = enable;
 	}
 
-	public static ScalableJFrame construct(String title, double defaultScaleFactor, int numBuffers) {
-		return new ScalableJFrameLinuxRealImpl(title, defaultScaleFactor, numBuffers);
+	private double scaleFactor;
+
+	private ScalableJFrameLinuxRealImpl(String title, double scaleFactor) throws HeadlessException {
+		super(title);
+		this.scaleFactor = scaleFactor;
+	}
+
+	public static ScalableJFrame construct(String title, double defaultScaleFactor) {
+		return new ScalableJFrameLinuxRealImpl(title, defaultScaleFactor);
 	}
 
 	@Override
@@ -41,8 +57,6 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 		AffineTransform t = g2d.getTransform();
 		t.scale(scaleFactor, scaleFactor);
 		g2d.transform(t);
-		g2d.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
-//		g2d.setRenderingHint(KEY_INTERPOLATION, VALUE_INTERPOLATION_BILINEAR);
 		g2d.setRenderingHint(KEY_RENDERING, VALUE_RENDER_QUALITY);
 
 		getContentPane().paint(drawGraphics);
@@ -78,4 +92,36 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 	public double getScaleFactor() {
 		return scaleFactor;
 	}
+
+	/*
+		Investigation: Normal "Shape" API isn't the right thing since we still want the window to occupy
+		the entire area.
+
+		What we specifically need seems to be XFixesSetWindowShapeRegion(), with a ShapeInput.
+		C++ example: https://gist.github.com/ericek111/774a1661be69387de846f5f5a5977a46#file-xoverlay-cpp-L64
+		void allow_input_passthrough (Window w) {
+		XserverRegion region = XFixesCreateRegion (g_display, NULL, 0);
+
+		//XFixesSetWindowShapeRegion (g_display, w, ShapeBounding, 0, 0, 0);
+		XFixesSetWindowShapeRegion (g_display, w, ShapeInput, 0, 0, region);
+
+		XFixesDestroyRegion (g_display, region);
+}
+	 */
+
+	@Override
+	public void setClickThrough(boolean clickThrough) {
+		if (!enableClickThrough) {
+			return;
+		}
+		if (clickThrough) {
+			Shape shape = new Rectangle(1, 1);
+			EnhancedWindowUtils.setWindowMask(this, shape, X11.Xext.ShapeInput);
+		}
+		else {
+			EnhancedWindowUtils.setWindowMask(this, null, X11.Xext.ShapeInput);
+		}
+	}
+
+
 }
