@@ -56,7 +56,7 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 		Graphics2D g2d = ((Graphics2D) drawGraphics);
 		AffineTransform t = g2d.getTransform();
 		t.scale(scaleFactor, scaleFactor);
-		g2d.transform(t);
+		g2d.setTransform(t);
 		g2d.setRenderingHint(KEY_RENDERING, VALUE_RENDER_QUALITY);
 
 		getContentPane().paint(drawGraphics);
