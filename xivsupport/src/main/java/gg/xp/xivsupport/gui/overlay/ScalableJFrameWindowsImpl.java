@@ -1,9 +1,20 @@
 package gg.xp.xivsupport.gui.overlay;
 
+import com.sun.jna.Native;
+import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinDef;
+import com.sun.jna.platform.win32.WinUser;
+import gg.xp.xivsupport.persistence.Platform;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
 public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
+
+	private static final Logger log = LoggerFactory.getLogger(ScalableJFrameWindowsImpl.class);
 
 	private final int numBuffers;
 	private double scaleFactor;
@@ -72,5 +83,43 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 	@Override
 	public double getScaleFactor() {
 		return scaleFactor;
+	}
+
+	@Override
+	public void setClickThrough(boolean clickThrough) {
+		setClickThrough(this, clickThrough);
+	}
+
+	// https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
+	private static final long WS_NOACTIVATE = 0x08000000L;
+
+	private static void setClickThrough(JFrame w, boolean clickThrough) {
+		log.trace("Click-through: {}", clickThrough);
+		w.setFocusableWindowState(!clickThrough);
+		if (!Platform.isWindows()) {
+			log.warn("Setting click-through is not supported on non-Windows platforms at this time.");
+			return;
+		}
+		WinDef.HWND hwnd = getHWnd(w);
+		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
+		if (clickThrough) {
+			wl |= WinUser.WS_EX_TRANSPARENT;
+			wl |= WS_NOACTIVATE;
+		}
+		else {
+			wl &= ~WinUser.WS_EX_TRANSPARENT;
+			wl &= ~WS_NOACTIVATE;
+		}
+		w.setBackground(new Color(0, 0, 0, 0));
+		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
+	}
+
+	/**
+	 * Get the window handle from the OS
+	 */
+	private static WinDef.HWND getHWnd(Component w) {
+		WinDef.HWND hwnd = new WinDef.HWND();
+		hwnd.setPointer(Native.getComponentPointer(w));
+		return hwnd;
 	}
 }

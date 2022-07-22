@@ -1,9 +1,5 @@
 package gg.xp.xivsupport.gui.overlay;
 
-import com.sun.jna.Native;
-import com.sun.jna.platform.win32.User32;
-import com.sun.jna.platform.win32.WinDef;
-import com.sun.jna.platform.win32.WinUser;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -78,7 +74,7 @@ public class XivOverlay {
 		else {
 			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 1.0, 1.0);
 			opacity.reset();
-			frame = ScalableJFrameLinuxRealImpl.construct(title, scaleFactor.get(), numBuffers);
+			frame = ScalableJFrameLinuxRealImpl.construct(title, scaleFactor.get());
 		}
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		enabled.addListener(this::recalc);
@@ -257,7 +253,8 @@ public class XivOverlay {
 			frame.setVisible(true);
 		}
 		panel.setVisible(visible);
-		setClickThrough(frame, !editMode);
+		frame.setClickThrough(!editMode);
+//		setClickThrough(frame, !editMode);
 		frame.setFocusable(editMode);
 		if (editMode) {
 			panel.setBorder(editBorder);
@@ -288,38 +285,7 @@ public class XivOverlay {
 		return scaleFactor;
 	}
 
-	// https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
-	private static final long WS_NOACTIVATE = 0x08000000L;
 
-	private static void setClickThrough(JFrame w, boolean clickThrough) {
-		log.trace("Click-through: {}", clickThrough);
-		w.setFocusableWindowState(!clickThrough);
-		if (!Platform.isWindows()) {
-			log.warn("Setting click-through is not supported on non-Windows platforms at this time.");
-			return;
-		}
-		WinDef.HWND hwnd = getHWnd(w);
-		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
-		if (clickThrough) {
-			wl |= WinUser.WS_EX_TRANSPARENT;
-			wl |= WS_NOACTIVATE;
-		}
-		else {
-			wl &= ~WinUser.WS_EX_TRANSPARENT;
-			wl &= ~WS_NOACTIVATE;
-		}
-		w.setBackground(new Color(0, 0, 0, 0));
-		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
-	}
-
-	/**
-	 * Get the window handle from the OS
-	 */
-	private static WinDef.HWND getHWnd(Component w) {
-		WinDef.HWND hwnd = new WinDef.HWND();
-		hwnd.setPointer(Native.getComponentPointer(w));
-		return hwnd;
-	}
 
 	private void calcFrameTimes() {
 		minFrameTime = 1000 / oc.getMaxFps().get();
