@@ -13,6 +13,7 @@
             <excludes>
                 <exclude>**/src.zip</exclude>
                 <exclude>jre/</exclude>
+                <exclude>*.sh</exclude>
             </excludes>
         </fileSet>
     </fileSets>

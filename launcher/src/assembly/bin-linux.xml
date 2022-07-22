@@ -12,7 +12,7 @@
             <outputDirectory>triggevent</outputDirectory>
             <excludes>
                 <exclude>**/src.zip</exclude>
-                <exclude>*.sh</exclude>
+                <exclude>jre/</exclude>
             </excludes>
         </fileSet>
     </fileSets>

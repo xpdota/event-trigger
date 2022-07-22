@@ -126,7 +126,12 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 			try {
 				// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
 				// can relaunch the application correctly.
-				Desktop.getDesktop().open(Paths.get(installDir.toString(), "triggevent-upd.exe").toFile());
+				if (Platform.isWindows()) {
+					Desktop.getDesktop().open(Paths.get(installDir.toString(), "triggevent-upd.exe").toFile());
+				}
+				else {
+					Runtime.getRuntime().exec(new String[]{"sh", "triggevent-upd.sh"});
+				}
 			}
 			catch (Throwable e) {
 				log.error("Error launching updater", e);
