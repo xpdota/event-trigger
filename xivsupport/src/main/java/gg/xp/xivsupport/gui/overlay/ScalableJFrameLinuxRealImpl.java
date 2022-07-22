@@ -10,7 +10,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferStrategy;
 
 import static java.awt.RenderingHints.KEY_RENDERING;
+import static java.awt.RenderingHints.KEY_TEXT_ANTIALIASING;
 import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
+import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON;
 
 public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 
@@ -35,6 +37,33 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 	private ScalableJFrameLinuxRealImpl(String title, double scaleFactor) throws HeadlessException {
 		super(title);
 		this.scaleFactor = scaleFactor;
+		JPanel contentPane = new JPanel() {
+			@Override
+			public void paint(Graphics g) {
+				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+				g.clearRect(0, 0, getWidth(), getHeight());
+				super.paint(g);
+			}
+
+			@Override
+			public void paintComponent(Graphics g) {
+				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+				g.clearRect(0, 0, getWidth(), getHeight());
+				super.paintComponent(g);
+			}
+
+			@Override
+			public void paintChildren(Graphics gg) {
+				Graphics2D g = (Graphics2D) gg;
+				AffineTransform t = g.getTransform();
+				t.scale(scaleFactor, scaleFactor);
+				g.setTransform(t);
+				super.paintChildren(g);
+			}
+		};
+		contentPane.setOpaque(false);
+		contentPane.setLayout(new FlowLayout(FlowLayout.LEFT));
+		setContentPane(contentPane);
 	}
 
 	public static ScalableJFrame construct(String title, double defaultScaleFactor) {
@@ -54,13 +83,10 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 		BufferStrategy buff = getBufferStrategy();
 		Graphics drawGraphics = buff.getDrawGraphics();
 		Graphics2D g2d = ((Graphics2D) drawGraphics);
-		AffineTransform t = g2d.getTransform();
-		t.scale(scaleFactor, scaleFactor);
-		g2d.setTransform(t);
 		g2d.setRenderingHint(KEY_RENDERING, VALUE_RENDER_QUALITY);
+//		g2d.setRenderingHint(KEY_TEXT_ANTIALIASING, VALUE_TEXT_ANTIALIAS_ON);
 
 		getContentPane().paint(drawGraphics);
-//		super.paintComponents(drawGraphics);
 		buff.show();
 		drawGraphics.dispose();
 	}

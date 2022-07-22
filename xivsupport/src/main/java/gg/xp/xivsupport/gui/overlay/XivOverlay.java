@@ -17,6 +17,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.AffineTransform;
 import java.util.concurrent.atomic.AtomicLong;
 
 // TODO: also have a method for getting a config panel, much like PluginTab
@@ -78,9 +79,6 @@ public class XivOverlay {
 		}
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		enabled.addListener(this::recalc);
-		if (Platform.isWindows()) {
-		} else {
-		}
 		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
@@ -91,29 +89,8 @@ public class XivOverlay {
 		panel = new JPanel();
 		panel.setOpaque(false);
 		panel.setBorder(transparentBorder);
-		JPanel contentPane;
-		if (Platform.isWindows()) {
-			contentPane = new JPanel();
-		}
-		else contentPane = new JPanel() {
-			@Override
-			public void paint(Graphics g) {
-				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-				g.clearRect(0, 0, getWidth(), getHeight());
-				super.paint(g);
-			}
-
-			@Override
-			public void paintComponent(Graphics g) {
-				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-				g.clearRect(0, 0, getWidth(), getHeight());
-				super.paintComponent(g);
-			}
-		};
-		frame.setContentPane(contentPane);
-		contentPane.setLayout(new FlowLayout(FlowLayout.LEFT));
+		Container contentPane = frame.getContentPane();
 		contentPane.add(panel);
-		contentPane.setOpaque(false);
 		frame.setAlwaysOnTop(true);
 		resetPositionFromSettings();
 		xSetting.addListener(this::resetPositionFromSettings);

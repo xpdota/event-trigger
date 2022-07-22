@@ -23,6 +23,10 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 		super(title);
 		this.scaleFactor = scaleFactor;
 		this.numBuffers = numBuffers;
+		JPanel contentPane = new JPanel();
+		contentPane.setOpaque(false);
+		contentPane.setLayout(new FlowLayout(FlowLayout.LEFT));
+		setContentPane(contentPane);
 	}
 
 	public static ScalableJFrame construct(String title, double defaultScaleFactor, int numBuffers) {
