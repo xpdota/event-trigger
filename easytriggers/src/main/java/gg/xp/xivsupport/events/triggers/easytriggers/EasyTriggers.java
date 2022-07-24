@@ -61,6 +61,7 @@ import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -117,7 +118,7 @@ public final class EasyTriggers {
 					List<String> otherFailues = mapper.readValue(failedSetting, new TypeReference<>() {
 					});
 					List<String> failures = new ArrayList<>(otherFailues);
-					failures.addAll(jsonNodes.stream().map(Object::toString).toList());
+					failures.addAll(failed.stream().map(Object::toString).toList());
 					pers.save(failedTriggersSettingKey, mapper.writeValueAsString(failures));
 					log.error("One or more easy triggers failed to load - they have been saved to the setting '{}'", failedTriggersSettingKey);
 				}

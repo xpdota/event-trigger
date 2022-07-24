@@ -19,7 +19,7 @@ public class CustomCooldownManager {
 
 	private static final Logger log = LoggerFactory.getLogger(CustomCooldownManager.class);
 	private static final String settingKey = "custom-cooldowns.my-cooldowns";
-	private static final String failedTriggersSettingKey = "custom-cooldowns.failed-to-load";
+	private static final String failedCooldownSettingKey = "custom-cooldowns.failed-to-load";
 
 	private List<CustomCooldown> cds;
 	private final ObjectMapper mapper = new ObjectMapper();
@@ -49,13 +49,13 @@ public class CustomCooldownManager {
 					}
 				}
 				if (!failed.isEmpty()) {
-					String failedSetting = pers.get(failedTriggersSettingKey, String.class, "[]");
+					String failedSetting = pers.get(failedCooldownSettingKey, String.class, "[]");
 					List<String> otherFailues = mapper.readValue(failedSetting, new TypeReference<>() {
 					});
 					List<String> failures = new ArrayList<>(otherFailues);
-					failures.addAll(jsonNodes.stream().map(Object::toString).toList());
-					pers.save(failedTriggersSettingKey, mapper.writeValueAsString(failures));
-					log.error("One or more custom cooldowns failed to load - they have been saved to the setting '{}'", failedTriggersSettingKey);
+					failures.addAll(failed.stream().map(Object::toString).toList());
+					pers.save(failedCooldownSettingKey, mapper.writeValueAsString(failures));
+					log.error("One or more custom cooldowns failed to load - they have been saved to the setting '{}'", failedCooldownSettingKey);
 				}
 			}
 			catch (Throwable e) {
