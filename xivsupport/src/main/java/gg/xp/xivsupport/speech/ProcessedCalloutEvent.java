@@ -4,11 +4,14 @@ import gg.xp.xivsupport.callouts.CalloutTrackingKey;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
+import java.io.Serial;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class ProcessedCalloutEvent extends BaseCalloutEvent {
 
+	@Serial
+	private static final long serialVersionUID = 9186465196672495653L;
 	private final String ttsText;
 	private final Supplier<String> visualText;
 	private final BooleanSupplier expired;
