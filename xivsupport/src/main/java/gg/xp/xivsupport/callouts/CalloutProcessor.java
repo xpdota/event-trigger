@@ -80,7 +80,8 @@ public class CalloutProcessor {
 				text,
 				() -> raw.getExpiry().getAsBoolean(),
 				() -> raw.getGuiProvider().apply(event),
-				raw.getColorOverride());
+				raw.getColorOverride(),
+				raw.getSound());
 		out.setReplaces(raw.getReplaces());
 		return out;
 	}

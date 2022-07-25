@@ -82,8 +82,9 @@ public final class EasyTriggers {
 	private final PersistenceProvider pers;
 	private final PicoContainer pico;
 	private final XivState state;
+	private final CustomJsonListSetting<EasyTrigger<?>> setting;
 
-	private List<EasyTrigger<?>> triggers;
+	private ArrayList<EasyTrigger<?>> triggers;
 
 	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state) {
 		this.pers = pers;
@@ -95,42 +96,11 @@ public final class EasyTriggers {
 				return getInjectionInstance(beanProperty.getType().getRawClass());
 			}
 		});
-		String strVal = pers.get(settingKey, String.class, null);
-		List<EasyTrigger<?>> triggers = new ArrayList<>();
-		if (strVal != null) {
-			try {
-				// First, convert to List<JsonNode> so that errors can be reported for individual triggers
-				List<JsonNode> jsonNodes = mapper.readValue(strVal, new TypeReference<>() {
-				});
-				List<JsonNode> failed = new ArrayList<>();
-				for (JsonNode jsonNode : jsonNodes) {
-					try {
-						EasyTrigger easyTrigger = mapper.convertValue(jsonNode, EasyTrigger.class);
-						triggers.add(easyTrigger);
-					}
-					catch (Throwable jpe) {
-						log.error("Trigger failed to load: \n{}\n", jsonNode, jpe);
-						failed.add(jsonNode);
-					}
-				}
-				if (!failed.isEmpty()) {
-					String failedSetting = pers.get(failedTriggersSettingKey, String.class, "[]");
-					List<String> otherFailues = mapper.readValue(failedSetting, new TypeReference<>() {
-					});
-					List<String> failures = new ArrayList<>(otherFailues);
-					failures.addAll(failed.stream().map(Object::toString).toList());
-					pers.save(failedTriggersSettingKey, mapper.writeValueAsString(failures));
-					log.error("One or more easy triggers failed to load - they have been saved to the setting '{}'", failedTriggersSettingKey);
-				}
-			}
-			catch (Throwable e) {
-				log.error("Error loading Easy Triggers", e);
-				log.error("Dump of trigger data:\n{}", strVal);
-				throw new RuntimeException("There was an error loading Easy Triggers. Check the log.", e);
-			}
-			log.info("Successfully loaded easy triggers");
-		}
-		this.triggers = triggers;
+		this.setting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
+				}, settingKey, failedTriggersSettingKey)
+				.withMapper(mapper)
+				.build();
+		this.triggers = new ArrayList<>(setting.getItems());
 	}
 
 	private <X> X getInjectionInstance(Class<X> clazz) {
@@ -157,14 +127,7 @@ public final class EasyTriggers {
 	}
 
 	private void save() {
-		try {
-			String triggersSerialized = mapper.writeValueAsString(triggers);
-//			log.info("Saving triggers: {}", triggersSerialized);
-			pers.save(settingKey, triggersSerialized);
-		}
-		catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
+		setting.setItems(triggers);
 	}
 
 	public void commit() {
@@ -188,21 +151,13 @@ public final class EasyTriggers {
 	}
 
 	public void addTrigger(EasyTrigger<?> trigger) {
-		makeListWritable();
 		triggers.add(trigger);
 		save();
 	}
 
 	public void removeTrigger(EasyTrigger<?> trigger) {
-		makeListWritable();
 		triggers.remove(trigger);
 		save();
-	}
-
-	private void makeListWritable() {
-		if (!(triggers instanceof ArrayList<EasyTrigger<?>>)) {
-			triggers = new ArrayList<>(triggers);
-		}
 	}
 
 	public void setTriggers(List<EasyTrigger<?>> triggers) {

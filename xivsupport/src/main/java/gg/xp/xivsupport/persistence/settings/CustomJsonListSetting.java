@@ -21,7 +21,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 	private final PersistenceProvider pers;
 	private final String settingKey;
 	private final String failuresKey;
-	private final Class<X> type;
+	private final TypeReference<X> type;
 	private final ObjectMapper mapper;
 
 	private List<X> items;
@@ -30,7 +30,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 			PersistenceProvider pers,
 			String settingKey,
 			String failuresKey,
-			Class<X> type,
+			TypeReference<X> type,
 			ObjectMapper mapper,
 			Supplier<List<X>> defaultProvider
 			) {
@@ -122,38 +122,42 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 		}
 		return removed;
 	}
-//
-//	public static <X> Builder<X> builder(@NotNull PersistenceProvider pers, @NotNull Class<X> type, @NotNull String settingKey, @NotNull String failuresKey) {
-//
-//	}
+
+	public static <X> Builder<X> builder(@NotNull PersistenceProvider pers, @NotNull TypeReference<X> type, @NotNull String settingKey, @NotNull String failuresKey) {
+		return new Builder<>(pers, type, settingKey, failuresKey);
+	}
 
 	public static class Builder<X> {
 		private final PersistenceProvider pers;
 		private final String settingKey;
 		private final String failuresKey;
-		private final Class<X> type;
+		private final TypeReference<X> type;
 		private ObjectMapper mapper;
 		private Supplier<List<X>> defaultProvider;
 
-		private Builder(@NotNull PersistenceProvider pers, @NotNull Class<X> type, @NotNull String settingKey, @NotNull String failuresKey) {
+		private Builder(@NotNull PersistenceProvider pers, @NotNull TypeReference<X> type, @NotNull String settingKey, @NotNull String failuresKey) {
 			this.pers = pers;
 			this.settingKey = settingKey;
 			this.failuresKey = failuresKey;
 			this.type = type;
 		}
 
-		public void withMapper(ObjectMapper mapper) {
+		public Builder<X> withMapper(ObjectMapper mapper) {
 			this.mapper = mapper;
+			return this;
 		}
 
-		public void withDefaultProvider(Supplier<List<X>> defaultProvider) {
+		public Builder<X> withDefaultProvider(Supplier<List<X>> defaultProvider) {
 			this.defaultProvider = defaultProvider;
+			return this;
 		}
 
-		public void withDefaultValues(List<X> defaultValues) {
+		public Builder<X> withDefaultValues(List<X> defaultValues) {
 			this.defaultProvider = () -> defaultValues;
+			return this;
 		}
 
+		@SuppressWarnings("Convert2MethodRef")
 		public CustomJsonListSetting<X> build() {
 			return new CustomJsonListSetting<>(
 					pers,
@@ -161,7 +165,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 					failuresKey,
 					type,
 					mapper != null ? mapper : new ObjectMapper(),
-					defaultProvider != null ? defaultProvider : Collections::emptyList
+					defaultProvider != null ? defaultProvider : () -> Collections.emptyList()
 			);
 		}
 
