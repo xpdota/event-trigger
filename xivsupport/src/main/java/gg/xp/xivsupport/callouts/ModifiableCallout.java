@@ -241,20 +241,23 @@ public class ModifiableCallout<X> {
 	public RawModifiedCallout<X> getModified(X event, Map<String, Object> rawArguments) {
 		String callText;
 		String visualText;
-		Color colorOverride;
+		@Nullable String sound;
+		@Nullable Color colorOverride;
 		if (handle == null) {
 			// TODO: consider splitting out some logic here so that we can make these easily without worrying about handles
 			log.trace("ModifiableCallout does not have handle yet ({})", description);
 			callText = defaultTtsText;
 			visualText = defaultVisualText;
+			sound = null;
 			colorOverride = null;
 		}
 		else {
 			callText = handle.getEffectiveTts();
 			visualText = handle.getEffectiveText();
+			sound = handle.getSoundFileIdentifier();
 			colorOverride = handle.getTextColorOverride().get();
 		}
-		return new RawModifiedCallout<>(description, callText, visualText, event, rawArguments, guiProvider, expiry, colorOverride);
+		return new RawModifiedCallout<>(description, callText, visualText, sound, event, rawArguments, guiProvider, expiry, colorOverride);
 	}
 
 	/**
@@ -267,19 +270,22 @@ public class ModifiableCallout<X> {
 	public RawModifiedCallout<X> getModified(Map<String, Object> rawArguments) {
 		String callText;
 		String visualText;
-		Color colorOverride;
+		@Nullable String sound;
+		@Nullable Color colorOverride;
 		if (handle == null) {
 			log.warn("ModifiableCallout does not have handle yet ({})", description);
 			callText = defaultTtsText;
 			visualText = defaultVisualText;
+			sound = null;
 			colorOverride = null;
 		}
 		else {
 			callText = handle.getEffectiveTts();
 			visualText = handle.getEffectiveText();
+			sound = handle.getSoundFileIdentifier();
 			colorOverride = handle.getTextColorOverride().get();
 		}
-		return new RawModifiedCallout<>(description, callText, visualText, null, rawArguments, guiProvider, expiry, colorOverride);
+		return new RawModifiedCallout<>(description, callText, visualText, sound, null, rawArguments, guiProvider, expiry, colorOverride);
 	}
 
 

@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.callouts.gui;
 
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.duties.Duty;
 import gg.xp.xivdata.data.duties.DutyType;
@@ -7,6 +8,9 @@ import gg.xp.xivdata.data.duties.Expansion;
 import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
+import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
+import gg.xp.xivsupport.events.debug.DebugCommand;
+import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
@@ -27,10 +31,14 @@ public class DutiesTab implements PluginTab {
 
 	private final ModifiedCalloutRepository backend;
 	private final PicoContainer container;
+	private final SoundFilesManager soundMgr;
+	private final EventMaster master;
 
-	public DutiesTab(ModifiedCalloutRepository backend, PicoContainer container) {
+	public DutiesTab(ModifiedCalloutRepository backend, PicoContainer container, SoundFilesManager soundMgr, EventMaster master) {
 		this.backend = backend;
 		this.container = container;
+		this.soundMgr = soundMgr;
+		this.master = master;
 	}
 
 	@Override
@@ -78,6 +86,33 @@ public class DutiesTab implements PluginTab {
 		});
 
 
+		nonSpecific.extraTabs.add(new DutyPluginTab() {
+			@Override
+			public String getTabName() {
+				return "Test Callouts";
+			}
+
+			@Override
+			public Component getTabContents() {
+				TitleBorderFullsizePanel outer = new TitleBorderFullsizePanel("Test Callouts");
+				outer.setLayout(new BorderLayout());
+				JButton testButton = new JButton("Test");
+				testButton.addActionListener(l -> {
+					// TODO: not a good way of doing this
+					master.pushEvent(new DebugCommand("testcall"));
+				});
+				JPanel panel = new JPanel();
+				panel.add(testButton);
+				outer.add(panel, BorderLayout.NORTH);
+				return outer;
+			}
+
+			@Override
+			public KnownDuty getDuty() {
+				return null;
+			}
+		});
+
 		tabPane.add("General", makeDutyComponent(nonSpecific));
 
 		// TODO: as this gets bigger, might be worth looking into some kind of lazy
@@ -102,7 +137,7 @@ public class DutiesTab implements PluginTab {
 
 		{
 			JPanel panel = new JPanel(new BorderLayout());
-			CalloutHelper ch = new CalloutHelper(dutyContent.calls);
+			CalloutHelper ch = new CalloutHelper(dutyContent.calls, soundMgr);
 			JScrollPane scroller = new JScrollPane(ch);
 			scroller.getVerticalScrollBar().setUnitIncrement(20);
 			scroller.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);

@@ -17,6 +17,7 @@ public final class ModifiedCalloutHandle {
 	private final BooleanSetting enableText;
 	private final BooleanSetting sameText;
 	private final StringSetting textSetting;
+	private final StringSetting soundSetting;
 	private final LongSetting hangTimeSetting;
 	private final ModifiableCallout<?> original;
 	private final @Nullable BooleanSetting allTts;
@@ -32,6 +33,7 @@ public final class ModifiedCalloutHandle {
 		ttsSetting = new StringSetting(persistenceProvider, propStub + ".tts", original.getOriginalTts());
 		enableText = new BooleanSetting(persistenceProvider, propStub + ".text-enabled", true);
 		textSetting = new StringSetting(persistenceProvider, propStub + ".text", original.getOriginalVisualText());
+		soundSetting = new StringSetting(persistenceProvider, propStub + ".sound", "");
 		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", false);
 		// Logic for defaulting the "same as TTS" setting:
 		// If sameText is already set (regardless of the value it is set to, do nothing)
@@ -69,6 +71,10 @@ public final class ModifiedCalloutHandle {
 
 	public StringSetting getTextSetting() {
 		return textSetting;
+	}
+
+	public StringSetting getSoundSetting() {
+		return soundSetting;
 	}
 
 	public BooleanSetting getEnable() {
@@ -116,6 +122,14 @@ public final class ModifiedCalloutHandle {
 
 	public String getDescription() {
 		return original.getDescription();
+	}
+
+	public @Nullable String getSoundFileIdentifier() {
+		String s = soundSetting.get();
+		if (s.isEmpty()) {
+			return null;
+		}
+		return s;
 	}
 
 	public void setEnabledByParent(boolean enabledByParent) {
