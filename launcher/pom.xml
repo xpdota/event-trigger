@@ -341,6 +341,10 @@
             <groupId>gg.xp</groupId>
             <artifactId>telesto-support</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>my-new-module</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
