@@ -309,5 +309,6 @@
         <module>plugins</module>
         <module>triggers/titan-jails</module>
         <module>telesto-support</module>
+        <module>triggers/custom-party-overlay</module>
     </modules>
 </project>
