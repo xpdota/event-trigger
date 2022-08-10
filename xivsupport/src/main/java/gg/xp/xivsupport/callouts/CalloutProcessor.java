@@ -3,9 +3,14 @@ package gg.xp.xivsupport.callouts;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.callouts.conversions.PlayerNameConversion;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import groovy.lang.Binding;
@@ -34,9 +39,13 @@ public class CalloutProcessor {
 	private static final Object interpLock = new Object();
 	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
 
+	private final BooleanSetting replaceYou;
+	private final EnumSetting<PlayerNameConversion> pcNameStyle;
 
-	public CalloutProcessor(GroovyManager groovyMgr) {
+	public CalloutProcessor(GroovyManager groovyMgr, PersistenceProvider pers) {
 		this.groovyMgr = groovyMgr;
+		this.replaceYou = new BooleanSetting(pers, "callout-processor.replace-you", true);
+		this.pcNameStyle = new EnumSetting<>(pers, "callout-processor.pc-style", PlayerNameConversion.class, PlayerNameConversion.FULL_NAME);
 	}
 
 	@HandleEvents
@@ -125,16 +134,18 @@ public class CalloutProcessor {
 	// Default conversions
 	@SuppressWarnings("unused")
 	public String singleReplacement(Object rawValue) {
-		String value;
 		if (rawValue instanceof String strVal) {
-			value = strVal;
+			return strVal;
 		}
 		else if (rawValue instanceof XivCombatant cbt) {
-			if (cbt.isThePlayer()) {
-				value = "YOU";
+			if (cbt.isThePlayer() && replaceYou.get()) {
+				return "YOU";
+			}
+			else if (rawValue instanceof XivPlayerCharacter xpc) {
+				return pcNameStyle.get().convert(xpc);
 			}
 			else {
-				value = cbt.getName();
+				return cbt.getName();
 			}
 		}
 		else if (rawValue instanceof NameIdPair pair) {
@@ -157,10 +168,15 @@ public class CalloutProcessor {
 			}
 		}
 		else {
-			value = rawValue.toString();
+			return rawValue.toString();
 		}
-		return value;
 	}
 
+	public BooleanSetting getReplaceYou() {
+		return replaceYou;
+	}
 
+	public EnumSetting<PlayerNameConversion> getPcNameStyle() {
+		return pcNameStyle;
+	}
 }
