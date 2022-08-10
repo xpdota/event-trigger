@@ -609,17 +609,20 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				AffineTransform newTrans = new AffineTransform(origTrans);
 				Rectangle bounds = getBounds();
 				newTrans.translate(bounds.width / 2.0, bounds.height / 2.0);
-				newTrans.rotate(facing);
+				newTrans.rotate(-1.0 * facing);
 				g.setTransform(newTrans);
 				g.setColor(mainColor);
 //				g.setColor(new Color(255, 0, 0));
 				int sizeBasis = Math.min(bounds.width, bounds.height);
-
+				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+						RenderingHints.VALUE_ANTIALIAS_ON);
 				Polygon poly = new Polygon(
-						new int[]{0, (int) (sizeBasis / -3.3), (int) (sizeBasis / 3.3)},
-						new int[]{(int) (sizeBasis / 2.2), (int) (sizeBasis / -2.2), sizeBasis / -2},
-						3);
+						new int[]{0, (int) (sizeBasis / -3.6), 0, (int) (sizeBasis / 3.6)},
+						new int[]{(int) (sizeBasis / 2.2), (int) (sizeBasis / -2.8), (int) (sizeBasis / -5.0), (int) (sizeBasis / -2.8)},
+						4);
 				g.fillPolygon(poly);
+				g.setColor(mainColor.darker().darker());
+				g.drawPolygon(poly);
 //				g.setColor(new Color(0, 255, 0));
 //				g.fillRect(sizeBasis / -8, sizeBasis / -2, sizeBasis / 8, sizeBasis / 2);
 				g.setTransform(origTrans);

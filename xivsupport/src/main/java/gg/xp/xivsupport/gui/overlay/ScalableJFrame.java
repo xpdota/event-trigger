@@ -12,4 +12,8 @@ public abstract class ScalableJFrame extends JFrame implements Scaled {
 
 	@Override
 	public abstract double getScaleFactor();
+
+	public abstract void setClickThrough(boolean clickThrough);
+
+//	public abstract JPanel getContentPane();
 }

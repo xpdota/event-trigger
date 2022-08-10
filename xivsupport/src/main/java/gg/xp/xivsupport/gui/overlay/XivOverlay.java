@@ -1,9 +1,5 @@
 package gg.xp.xivsupport.gui.overlay;
 
-import com.sun.jna.Native;
-import com.sun.jna.platform.win32.User32;
-import com.sun.jna.platform.win32.WinDef;
-import com.sun.jna.platform.win32.WinUser;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -21,6 +17,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.AffineTransform;
 import java.util.concurrent.atomic.AtomicLong;
 
 // TODO: also have a method for getting a config panel, much like PluginTab
@@ -78,13 +75,10 @@ public class XivOverlay {
 		else {
 			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 1.0, 1.0);
 			opacity.reset();
-			frame = ScalableJFrameLinuxRealImpl.construct(title, scaleFactor.get(), numBuffers);
+			frame = ScalableJFrameLinuxRealImpl.construct(title, scaleFactor.get());
 		}
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		enabled.addListener(this::recalc);
-		if (Platform.isWindows()) {
-		} else {
-		}
 		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
@@ -95,29 +89,8 @@ public class XivOverlay {
 		panel = new JPanel();
 		panel.setOpaque(false);
 		panel.setBorder(transparentBorder);
-		JPanel contentPane;
-		if (Platform.isWindows()) {
-			contentPane = new JPanel();
-		}
-		else contentPane = new JPanel() {
-			@Override
-			public void paint(Graphics g) {
-				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-				g.clearRect(0, 0, getWidth(), getHeight());
-				super.paint(g);
-			}
-
-			@Override
-			public void paintComponent(Graphics g) {
-				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
-				g.clearRect(0, 0, getWidth(), getHeight());
-				super.paintComponent(g);
-			}
-		};
-		frame.setContentPane(contentPane);
-		contentPane.setLayout(new FlowLayout(FlowLayout.LEFT));
+		Container contentPane = frame.getContentPane();
 		contentPane.add(panel);
-		contentPane.setOpaque(false);
 		frame.setAlwaysOnTop(true);
 		resetPositionFromSettings();
 		xSetting.addListener(this::resetPositionFromSettings);
@@ -257,7 +230,8 @@ public class XivOverlay {
 			frame.setVisible(true);
 		}
 		panel.setVisible(visible);
-		setClickThrough(frame, !editMode);
+		frame.setClickThrough(!editMode);
+//		setClickThrough(frame, !editMode);
 		frame.setFocusable(editMode);
 		if (editMode) {
 			panel.setBorder(editBorder);
@@ -288,38 +262,7 @@ public class XivOverlay {
 		return scaleFactor;
 	}
 
-	// https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
-	private static final long WS_NOACTIVATE = 0x08000000L;
 
-	private static void setClickThrough(JFrame w, boolean clickThrough) {
-		log.trace("Click-through: {}", clickThrough);
-		w.setFocusableWindowState(!clickThrough);
-		if (!Platform.isWindows()) {
-			log.warn("Setting click-through is not supported on non-Windows platforms at this time.");
-			return;
-		}
-		WinDef.HWND hwnd = getHWnd(w);
-		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
-		if (clickThrough) {
-			wl |= WinUser.WS_EX_TRANSPARENT;
-			wl |= WS_NOACTIVATE;
-		}
-		else {
-			wl &= ~WinUser.WS_EX_TRANSPARENT;
-			wl &= ~WS_NOACTIVATE;
-		}
-		w.setBackground(new Color(0, 0, 0, 0));
-		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
-	}
-
-	/**
-	 * Get the window handle from the OS
-	 */
-	private static WinDef.HWND getHWnd(Component w) {
-		WinDef.HWND hwnd = new WinDef.HWND();
-		hwnd.setPointer(Native.getComponentPointer(w));
-		return hwnd;
-	}
 
 	private void calcFrameTimes() {
 		minFrameTime = 1000 / oc.getMaxFps().get();

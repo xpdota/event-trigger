@@ -44,4 +44,9 @@ public final class ScalableJFrameLinuxNoopImpl extends ScalableJFrame {
 	public double getScaleFactor() {
 		return 1.0;
 	}
+
+	@Override
+	public void setClickThrough(boolean clickThrough) {
+
+	}
 }
