@@ -536,6 +536,10 @@ public final class StandardColumns {
 			}
 		}
 	};
+
+	public BooleanSetting getShowPredictedHp() {
+		return showPredictedHp;
+	}
 }
 
 

@@ -3,6 +3,8 @@ package gg.xp.xivsupport.events.state.combatstate;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.StatusEffectInfo;
+import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -27,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -229,6 +232,18 @@ public class StatusEffectRepository {
 			}
 			return new ArrayList<>(cached.values());
 		}
+	}
+
+	public List<BuffApplied> sortedStatusesOnTarget(XivEntity entity) {
+		List<BuffApplied> list = statusesOnTarget(entity);
+		list.sort(Comparator.comparing(ba -> {
+			StatusEffectInfo statusEffectInfo = StatusEffectLibrary.forId(ba.getBuff().getId());
+			if (statusEffectInfo == null) {
+				return 200;
+			}
+			return statusEffectInfo.partyListPriority();
+		}));
+		return list;
 	}
 
 	public <X extends HasSourceEntity & HasTargetEntity & HasStatusEffect> @Nullable BuffApplied getLatest(X buff) {

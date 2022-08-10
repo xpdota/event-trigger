@@ -1,5 +1,6 @@
 package gg.xp.xivdata.data;
 
+import gg.xp.xivdata.util.ArrayBackedMap;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ public class StatusEffectLibrary {
 
 	private static volatile boolean loaded;
 	private static final Object lock = new Object();
-	private static final Map<Long, StatusEffectInfo> csvValues = new HashMap<>();
+	private static Map<Integer, StatusEffectInfo> csvValues = Collections.emptyMap();
 	private static final Map<Long, StatusEffectIcon> cache = new ConcurrentHashMap<>();
 
 	private static void ensureLoaded() {
@@ -41,13 +42,14 @@ public class StatusEffectLibrary {
 
 	// TODO: this is kind of jank
 	private static void readCsv(Supplier<List<String[]>> cellProvider) {
+		final Map<Integer, StatusEffectInfo> csvValues = new HashMap<>();
 		List<String[]> arrays;
 		try {
 			arrays = cellProvider.get();
 			arrays.forEach(row -> {
-				long id;
+				int id;
 				try {
-					id = Long.parseLong(row[0]);
+					id = Integer.parseInt(row[0]);
 				}
 				catch (NumberFormatException nfe) {
 					// Ignore the bad value at the top
@@ -75,10 +77,26 @@ public class StatusEffectLibrary {
 //					return;
 					}
 				}
+				int partyListPrio;
+				try {
+					partyListPrio = Integer.parseInt(row[19]);
+				}
+				catch (NumberFormatException nfe) {
+					partyListPrio = 200;
+				}
 				if (imageId != 0) {
-					csvValues.put(id, new StatusEffectInfo(id, imageId, maxStacks, row[1], row[2]));
+					csvValues.put(id, new StatusEffectInfo(id,
+							imageId,
+							maxStacks,
+							row[1],
+							row[2],
+							Boolean.parseBoolean(row[16]),
+							Boolean.parseBoolean(row[18]),
+							partyListPrio
+							));
 				}
 			});
+			StatusEffectLibrary.csvValues = new ArrayBackedMap<>(csvValues);
 		}
 		catch (Throwable e) {
 			log.error("Could not load icons!", e);
@@ -97,7 +115,7 @@ public class StatusEffectLibrary {
 		csvValues.values().stream().distinct().sorted().map(s -> String.format("%06d", s.statusEffectId())).forEach(System.out::println);
 	}
 
-	public static Map<Long, StatusEffectInfo> getAll() {
+	public static Map<Integer, StatusEffectInfo> getAll() {
 		ensureLoaded();
 		return Collections.unmodifiableMap(csvValues);
 	}
@@ -109,7 +127,7 @@ public class StatusEffectLibrary {
 
 	public static @Nullable StatusEffectInfo forId(long id) {
 		ensureLoaded();
-		return csvValues.get(id);
+		return csvValues.get((int) id);
 	}
 
 	public static int getMaxStacks(long buffId) {

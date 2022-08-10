@@ -7,6 +7,7 @@ public class CustomOverlayComponentSpec {
 	public int width;
 	public int height;
 
+	public CustomPartyOverlayComponentType componentType = CustomPartyOverlayComponentType.NOTHING;
 
 
 }
