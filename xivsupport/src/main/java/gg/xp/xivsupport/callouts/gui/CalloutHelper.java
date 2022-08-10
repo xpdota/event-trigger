@@ -2,6 +2,7 @@ package gg.xp.xivsupport.callouts.gui;
 
 import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
+import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 
 import javax.swing.*;
@@ -14,7 +15,7 @@ public class CalloutHelper extends JPanel {
 	private final List<JCheckBox> showHides = new ArrayList<>();
 	private final List<JCheckBox> topLevel = new ArrayList<>();
 
-	public CalloutHelper(List<CalloutGroup> groups) {
+	public CalloutHelper(List<CalloutGroup> groups, SoundFilesManager soundMgr) {
 //		enableTts.addActionListener(l -> this.repaint());
 //		enableOverlay.addActionListener(l -> this.repaint());
 		this.setLayout(new GridBagLayout());
@@ -59,7 +60,7 @@ public class CalloutHelper extends JPanel {
 				c.gridx = 1;
 				this.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
-				CalloutSettingGui csg = new CalloutSettingGui(call);
+				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr);
 				showHide.getModel().addChangeListener(l -> {
 					csg.setVisible(showHide.isSelected());
 				});
@@ -77,9 +78,13 @@ public class CalloutHelper extends JPanel {
 				c.gridx++;
 				c.weightx = 1;
 				this.add(csg.getTextPanel(), c);
-				c.gridx++;
-				c.weightx = 0;
-				this.add(csg.getColorPicker(), c);
+
+				c.gridy++;
+				c.gridx = 3;
+				this.add(csg.getSoundPanel(), c);
+				c.gridx += 2;
+				this.add(csg.getColorPickerPanel(), c);
+
 			});
 			csgs.forEach(csg -> csg.setEnabledByParent(topLevelCheckbox.isSelected()));
 			topLevelCheckbox.getModel().addChangeListener(l -> {

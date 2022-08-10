@@ -4,27 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static gg.xp.xivdata.data.Job.AST;
-import static gg.xp.xivdata.data.Job.BRD;
-import static gg.xp.xivdata.data.Job.DNC;
-import static gg.xp.xivdata.data.Job.DRG;
-import static gg.xp.xivdata.data.Job.DRK;
-import static gg.xp.xivdata.data.Job.GNB;
-import static gg.xp.xivdata.data.Job.MCH;
-import static gg.xp.xivdata.data.Job.MNK;
-import static gg.xp.xivdata.data.Job.NIN;
-import static gg.xp.xivdata.data.Job.PLD;
-import static gg.xp.xivdata.data.Job.RDM;
-import static gg.xp.xivdata.data.Job.RPR;
-import static gg.xp.xivdata.data.Job.SAM;
-import static gg.xp.xivdata.data.Job.SCH;
-import static gg.xp.xivdata.data.Job.SGE;
-import static gg.xp.xivdata.data.Job.SMN;
-import static gg.xp.xivdata.data.Job.WAR;
-import static gg.xp.xivdata.data.Job.WHM;
-import static gg.xp.xivdata.data.JobType.CASTER;
-import static gg.xp.xivdata.data.JobType.MELEE_DPS;
-import static gg.xp.xivdata.data.JobType.TANK;
+import static gg.xp.xivdata.data.Job.*;
+import static gg.xp.xivdata.data.JobType.*;
 
 public class CdBuilder {
 	// Required
@@ -124,13 +105,15 @@ public class CdBuilder {
 	public JobType getJobType() {
 		if (jobType == null) {
 			return switch (Integer.parseInt(getActionInfo().categoryRaw())) {
-				case 113 -> TANK;
+				case 66, 105, 123, 171 -> PRANGED;
+				case 67, 76, 84, 114, 148 -> MELEE_DPS;
+				case 89, 116, 175 -> CASTER;
+				case 113, 121, 166 -> TANK;
+				case 117, 125, 128, 165 -> HEALER;
 				// It's actually not but I don't have a category for DoW/DoM yet
-				case 161 -> TANK;
-				// This is actually DoM
 				case 120 -> CASTER;
-				case 114 -> MELEE_DPS;
-				case 116 -> CASTER;
+				// This is actually DoM, but no category for that yet
+				case 161 -> TANK;
 				default -> null;
 			};
 		}
@@ -139,27 +122,43 @@ public class CdBuilder {
 		}
 	}
 
+	// TODO: just pull this from data files
 	public Job getJob() {
 		if (job == null) {
-			return switch (Integer.parseInt(getActionInfo().categoryRaw())) {
-				case 20, 38 -> PLD;
-				case 22, 44 -> WAR;
-				case 98 -> DRK;
-				case 149 -> GNB;
-				case 25 -> WHM;
+			int rawJobCategory = Integer.parseInt(getActionInfo().categoryRaw());
+			return switch (rawJobCategory) {
+				case 2, 20, 38 -> PLD;
+				case 3, 21 -> MNK;
+				case 4, 22, 44 -> WAR;
+				case 5, 23, 47 -> DRG;
+				case 6, 24, 50 -> BRD;
+				case 7, 25, 53 -> WHM;
+				case 8, 26, 55 -> BLM;
+				case 9 -> CRP;
+				case 10 -> BSM;
+				case 11 -> ARM;
+				case 12 -> GSM;
+				case 13 -> LTW;
+				case 14 -> WVR;
+				case 15 -> ALC;
+				case 16 -> CUL;
+				case 17 -> MIN;
+				case 18 -> BTN;
+				case 19 -> FSH;
+				case 27 -> ACN;
+				case 28, 68, 69 -> SMN;
 				case 29 -> SCH;
-				case 99 -> AST;
-				case 181 -> SGE;
-				case 21 -> MNK;
-				case 23 -> DRG;
-				case 93 -> NIN;
-				case 111 -> SAM;
-				case 180 -> RPR;
-				case 24 -> BRD;
+				case 91, 92, 93, 103 -> NIN;
 				case 96 -> MCH;
-				case 150 -> DNC;
-				case 28 -> SMN;
+				case 98 -> DRK;
+				case 99 -> AST;
+				case 111 -> SAM;
 				case 112 -> RDM;
+				case 129 -> BLU;
+				case 149 -> GNB;
+				case 150 -> DNC;
+				case 180 -> RPR;
+				case 181 -> SGE;
 				default -> null;
 			};
 		}
