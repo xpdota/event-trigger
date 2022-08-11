@@ -53,6 +53,10 @@ public class ScaledImageComponent extends Component {
 
 	@Override
 	public void paint(Graphics g) {
+		paint(g, size);
+	}
+
+	public void paint(Graphics g, int size) {
 		AffineTransform t = ((Graphics2D) g).getTransform();
 		((Graphics2D) g).setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 		((Graphics2D) g).setRenderingHint(KEY_INTERPOLATION, VALUE_INTERPOLATION_BILINEAR);

@@ -439,6 +439,14 @@ public final class StandardColumns {
 		return new CustomEditor<>(writer, Double::parseDouble);
 	}
 
+	public static <X> TableCellEditor intEditorNonNull(BiConsumer<X, Integer> writer) {
+		return new CustomEditor<>(writer, Integer::parseInt);
+	}
+
+	public static <X> TableCellEditor longEditorNonNull(BiConsumer<X, Long> writer) {
+		return new CustomEditor<>(writer, Long::parseLong);
+	}
+
 	public static <X> TableCellEditor stringEditorNonNull(BiConsumer<X, String> writer) {
 		return new CustomEditor<>(writer, Function.identity());
 	}
@@ -495,6 +503,7 @@ public final class StandardColumns {
 
 	public static class CustomCheckboxEditor<X> extends AbstractCellEditor implements TableCellEditor {
 
+		private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
 		@Serial
 		private static final long serialVersionUID = -3743763426515940614L;
 		private final BiConsumer<X, Boolean> writer;
@@ -511,6 +520,7 @@ public final class StandardColumns {
 			box.addActionListener(l -> {
 				writer.accept(model.getValueForRow(row), box.isSelected());
 			});
+			box.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, true, true, row, column).getBackground());
 			return box;
 		}
 
@@ -527,6 +537,7 @@ public final class StandardColumns {
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 			if (value instanceof Boolean boolVal) {
 				JCheckBox cb = new JCheckBox();
+				cb.setOpaque(true);
 				cb.setSelected(boolVal);
 				cb.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column).getBackground());
 				return cb;
@@ -536,6 +547,10 @@ public final class StandardColumns {
 			}
 		}
 	};
+
+	public BooleanSetting getShowPredictedHp() {
+		return showPredictedHp;
+	}
 }
 
 

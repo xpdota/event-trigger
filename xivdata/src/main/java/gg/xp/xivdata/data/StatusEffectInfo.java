@@ -13,7 +13,10 @@ public record StatusEffectInfo(
 		long baseIconId,
 		long maxStacks,
 		String name,
-		String description
+		String description,
+		boolean canDispel,
+		boolean isPermanent,
+		int partyListPriority
 ) {
 
 	public List<Long> getAllIconIds() {

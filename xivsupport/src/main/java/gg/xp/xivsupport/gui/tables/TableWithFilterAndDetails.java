@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables;
 
 import gg.xp.xivsupport.gui.GuiGlobals;
+import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.SplitVisualFilter;
@@ -44,6 +45,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	private volatile boolean isAutoRefreshEnabled;
 	private final boolean appendOrPruneOnly;
 	private final String title;
+	private EditMode editMode = EditMode.NEVER;
 
 	private TableWithFilterAndDetails(
 			String title,
@@ -81,7 +83,16 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 
 		// Main table
-		table = new JTable(mainModel);
+		table = new JTable(mainModel) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return switch (editMode) {
+					case NEVER -> false;
+					case AUTO -> !(getCellEditor(row, column) instanceof NoCellEditor);
+					case ALWAYS -> true;
+				};
+			}
+		};
 		mainModel.configureColumns(table);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ListSelectionModel selectionModel = table.getSelectionModel();
@@ -433,5 +444,9 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		if (stayAtBottom != null) {
 			stayAtBottom.setSelected(value);
 		}
+	}
+
+	public void setEditMode(EditMode editMode) {
+		this.editMode = editMode;
 	}
 }

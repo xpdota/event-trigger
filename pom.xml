@@ -292,6 +292,11 @@
                 <artifactId>telesto-support</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>custom-party-overlay</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -309,5 +314,6 @@
         <module>plugins</module>
         <module>triggers/titan-jails</module>
         <module>telesto-support</module>
+        <module>triggers/custom-party-overlay</module>
     </modules>
 </project>
