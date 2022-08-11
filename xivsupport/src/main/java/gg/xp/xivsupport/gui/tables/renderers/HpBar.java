@@ -193,7 +193,7 @@ public class HpBar extends JComponent {
 		double xScale = t.getScaleX();
 		double yScale = t.getScaleY();
 //		t.scale(1 / xScale, 1 / yScale);
-		t.setTransform(1.0, 0, 0, 1.0, Math.round(t.getTranslateX()), Math.round(t.getTranslateY()));
+		t.setTransform(1.0, 0, 0, 1.0, Math.floor(t.getTranslateX()), Math.floor(t.getTranslateY()));
 		g.setTransform(t);
 		int realWidth = (int) Math.floor(getWidth() * xScale);
 		int realHeight = (int) Math.floor(getHeight() * yScale);

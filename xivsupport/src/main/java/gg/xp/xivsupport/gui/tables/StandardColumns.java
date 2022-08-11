@@ -439,6 +439,14 @@ public final class StandardColumns {
 		return new CustomEditor<>(writer, Double::parseDouble);
 	}
 
+	public static <X> TableCellEditor intEditorNonNull(BiConsumer<X, Integer> writer) {
+		return new CustomEditor<>(writer, Integer::parseInt);
+	}
+
+	public static <X> TableCellEditor longEditorNonNull(BiConsumer<X, Long> writer) {
+		return new CustomEditor<>(writer, Long::parseLong);
+	}
+
 	public static <X> TableCellEditor stringEditorNonNull(BiConsumer<X, String> writer) {
 		return new CustomEditor<>(writer, Function.identity());
 	}

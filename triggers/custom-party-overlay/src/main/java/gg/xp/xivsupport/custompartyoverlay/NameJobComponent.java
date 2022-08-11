@@ -19,6 +19,7 @@ public class NameJobComponent extends BasePartyListComponent{
 		listRenderer = new ComponentListRenderer(2, true);
 		listRenderer.setOpaque(false);
 		label.setOpaque(false);
+		label.setForeground(new Color(255, 255, 255));
 	}
 
 	@Override

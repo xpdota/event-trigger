@@ -11,6 +11,8 @@ import java.awt.geom.AffineTransform;
 public class MpBar extends JComponent {
 
 	private static final Color mpColor = new Color(128, 128, 255, 255);
+	private static final Color borderNormal = mpColor.darker();
+	private static final Color borderEmpty = new Color(60, 63, 65, 255);
 
 	private Color baseHpColor;
 	private Color emptyColor;
@@ -76,7 +78,7 @@ public class MpBar extends JComponent {
 			percent = effectiveCurrent / (double) effectiveMax;
 			baseHpColor = getForegroundColor();
 			emptyColor = getBackgroundColor();
-			borderColor = effectiveCurrent > 0 ? mpColor : emptyColor;
+			borderColor = effectiveCurrent > 0 ? borderNormal : borderEmpty;
 			basePercentDisplay = percent;
 
 			String longText = String.format("%s / %s", effectiveCurrent, effectiveMax);
@@ -148,7 +150,7 @@ public class MpBar extends JComponent {
 		double xScale = t.getScaleX();
 		double yScale = t.getScaleY();
 //		t.scale(1 / xScale, 1 / yScale);
-		t.setTransform(1.0, 0, 0, 1.0, Math.round(t.getTranslateX()), Math.round(t.getTranslateY()));
+		t.setTransform(1.0, 0, 0, 1.0, Math.floor(t.getTranslateX()), Math.floor(t.getTranslateY()));
 		g.setTransform(t);
 		int realWidth = (int) Math.floor(getWidth() * xScale);
 		int realHeight = (int) Math.floor(getHeight() * yScale);

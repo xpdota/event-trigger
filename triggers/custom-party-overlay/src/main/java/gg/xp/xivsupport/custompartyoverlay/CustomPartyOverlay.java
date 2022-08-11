@@ -1,17 +1,15 @@
 package gg.xp.xivsupport.custompartyoverlay;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
-import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
-import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
-import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
+import gg.xp.xivsupport.persistence.settings.IntSetting;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,33 +26,31 @@ public class CustomPartyOverlay extends XivOverlay {
 	private static final Logger log = LoggerFactory.getLogger(CustomPartyOverlay.class);
 
 	private final XivState state;
-	private final StatusEffectRepository buffs;
-	private final BooleanSetting showPredictedHp;
-	private final ActiveCastRepository acr;
-	private final SequenceIdTracker sqidTracker;
-
-	private List<CustomOverlayComponentSpec> componentSpecs = Collections.emptyList();
+	private final CustomPartyOverlayComponentFactory factory;
+	private final JPanel panel;
 
 	private List<List<RefreshablePartyListComponent>> refreshables = Collections.emptyList();
-	private int yOffset;
-	private final ListSett
+	private final IntSetting yOffset;
+	private final CustomJsonListSetting<CustomOverlayComponentSpec> elements;
 
 
 	public CustomPartyOverlay(OverlayConfig oc,
 	                          PersistenceProvider persistence,
 	                          XivState state,
-	                          StatusEffectRepository buffs,
-	                          StandardColumns cols,
-	                          ActiveCastRepository acr,
-	                          SequenceIdTracker sqidTracker) {
+	                          CustomPartyOverlayComponentFactory factory
+	) {
 		super("Custom Party Overlay", "custom-party-overlay", oc, persistence);
+		this.elements = CustomJsonListSetting.builder(persistence, new TypeReference<CustomOverlayComponentSpec>() {
+				}, "custom-party-overlay.components", "custom-party-overlay.failures")
+				.withDefaultProvider(this::getDefaults).build();
+		this.yOffset = new IntSetting(persistence, "custom-party-overlay.y-offset", 39, 0, 1000);
+		this.yOffset.addListener(this::placeComponents);
+		this.elements.addListener(this::placeComponents);
 		this.state = state;
-		this.buffs = buffs;
-		showPredictedHp = cols.getShowPredictedHp();
-		this.acr = acr;
-		this.sqidTracker = sqidTracker;
-		getPanel().setLayout(null);
-		setupSpecs();
+		this.factory = factory;
+		this.panel = new JPanel(null);
+		panel.setOpaque(false);
+		getPanel().add(panel);
 		new RefreshLoop<>("CustomPartyRefresh", this, customPartyOverlay -> {
 			if (isVisible()) {
 				customPartyOverlay.periodicRefresh();
@@ -86,41 +82,43 @@ public class CustomPartyOverlay extends XivOverlay {
 	}
 
 	private void placeComponents() {
-		setupSpecs();
-		JPanel panel = getPanel();
-		panel.removeAll();
-		int maxX = 10;
-		int maxY = 10;
-		List<List<RefreshablePartyListComponent>> refreshables = new ArrayList<>(8);
-		for (int i = 0; i < 8; i++) {
-			List<RefreshablePartyListComponent> list = new ArrayList<>();
-			refreshables.add(list);
-			int offset = i * yOffset;
-			for (CustomOverlayComponentSpec spec : componentSpecs) {
-				RefreshablePartyListComponent ref = makeComponent(spec);
-				if (ref == null) {
-					continue;
+		SwingUtilities.invokeLater(() -> {
+
+			panel.removeAll();
+			int maxX = 10;
+			int maxY = 10;
+			List<List<RefreshablePartyListComponent>> refreshables = new ArrayList<>(8);
+			List<CustomOverlayComponentSpec> componentSpecs = elements.getItems();
+			for (int i = 0; i < 8; i++) {
+				List<RefreshablePartyListComponent> list = new ArrayList<>();
+				refreshables.add(list);
+				int offset = i * yOffset.get();
+				for (CustomOverlayComponentSpec spec : componentSpecs) {
+					RefreshablePartyListComponent ref = factory.makeComponent(spec);
+					if (ref == null) {
+						continue;
+					}
+					Component component = ref.getComponent();
+					component.setBounds(spec.x, spec.y + offset, spec.width, spec.height);
+					maxX = Math.max(maxX, spec.x + spec.width);
+					maxY = Math.max(maxY, spec.y + offset + spec.height);
+					panel.add(component);
+					list.add(ref);
+					log.trace("Added: {} -> {} -> {}", i, spec.componentType, component);
 				}
-				Component component = ref.getComponent();
-				component.setBounds(spec.x, spec.y + offset, spec.width, spec.height);
-				maxX = Math.max(maxX, spec.x + spec.width);
-				maxY = Math.max(maxY, spec.y + offset + spec.height);
-				panel.add(component);
-				list.add(ref);
-				log.info("Added: {} -> {} -> {}", i, spec.componentType, component);
 			}
-		}
-		panel.setPreferredSize(new Dimension(maxX + 10, maxY + 10));
-		this.refreshables = refreshables;
-		repackSize();
+			panel.setPreferredSize(new Dimension(maxX + 10, maxY + 10));
+			this.refreshables = refreshables;
+			repackSize();
+		});
 	}
 
-	private void setupSpecs() {
+	private List<CustomOverlayComponentSpec> getDefaults() {
 		List<CustomOverlayComponentSpec> specs = new ArrayList<>();
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 10;
-			comp.y = 20;
+			comp.y = 0;
 			comp.width = 100;
 			comp.height = 20;
 			comp.componentType = CustomPartyOverlayComponentType.NAME_JOB;
@@ -129,7 +127,7 @@ public class CustomPartyOverlay extends XivOverlay {
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 110;
-			comp.y = 20;
+			comp.y = 0;
 			comp.width = 130;
 			comp.height = 20;
 			comp.componentType = CustomPartyOverlayComponentType.HP;
@@ -138,8 +136,8 @@ public class CustomPartyOverlay extends XivOverlay {
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 240;
-			comp.y = 20;
-			comp.width = 300;
+			comp.y = 0;
+			comp.width = 295;
 			comp.height = 25;
 			comp.componentType = CustomPartyOverlayComponentType.BUFFS_WITH_TIMERS;
 			specs.add(comp);
@@ -147,23 +145,22 @@ public class CustomPartyOverlay extends XivOverlay {
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 110;
-			comp.y = 40;
-			comp.width = 90;
+			comp.y = 20;
+			comp.width = 80;
 			comp.height = 14;
 			comp.componentType = CustomPartyOverlayComponentType.CAST_BAR;
 			specs.add(comp);
 		}
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
-			comp.x = 200;
-			comp.y = 40;
-			comp.width = 40;
+			comp.x = 190;
+			comp.y = 20;
+			comp.width = 50;
 			comp.height = 14;
 			comp.componentType = CustomPartyOverlayComponentType.MP_BAR;
 			specs.add(comp);
 		}
-		componentSpecs = specs;
-		yOffset = 37;
+		return specs;
 
 	}
 
@@ -177,20 +174,16 @@ public class CustomPartyOverlay extends XivOverlay {
 		}
 	}
 
-	private RefreshablePartyListComponent makeComponent(CustomOverlayComponentSpec spec) {
-		CustomPartyOverlayComponentType type = spec.componentType;
-		RefreshablePartyListComponent component;
-		component = switch (type) {
-			case NOTHING -> new DoNothingComponent();
-			case NAME_JOB -> new NameJobComponent();
-			case HP -> new HpBarComponent(showPredictedHp, sqidTracker);
-			case BUFFS -> new BuffsComponent(buffs);
-			case BUFFS_WITH_TIMERS -> new BuffsWithTimersComponent(buffs);
-			case CAST_BAR -> new CastBarPartyComponent(acr);
-			case MP_BAR -> new MpBarComponent();
-		};
-		return component;
+	public IntSetting getYOffset() {
+		return yOffset;
 	}
 
+	public CustomJsonListSetting<CustomOverlayComponentSpec> getElements() {
+		return elements;
+	}
 
+	public void resetToDefault() {
+		getYOffset().delete();
+		elements.setItems(getDefaults());
+	}
 }

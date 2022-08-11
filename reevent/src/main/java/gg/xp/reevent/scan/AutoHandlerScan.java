@@ -143,9 +143,9 @@ public class AutoHandlerScan {
 	}
 
 
-	// Filter out interfaces and abstract classes
+	// Filter out interfaces, abstract classes, and other junk
 	private static boolean isClassInstantiable(Class<?> clazz) {
-		return !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers());
+		return !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnonymousClass();
 	}
 
 	private static @Nullable String getJarName(String uriStr) {

@@ -8,11 +8,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-public final class CastTracker {
+public class CastTracker {
 	private final AbilityCastStart cast;
 	private @Nullable Event end;
 
-	CastTracker(AbilityCastStart cast) {
+	public CastTracker(AbilityCastStart cast) {
 		this.cast = cast;
 	}
 

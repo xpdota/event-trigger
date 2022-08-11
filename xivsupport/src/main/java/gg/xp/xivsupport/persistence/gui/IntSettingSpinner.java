@@ -2,6 +2,7 @@ package gg.xp.xivsupport.persistence.gui;
 
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import gg.xp.xivsupport.persistence.settings.ResetMenuOption;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,6 +12,7 @@ public class IntSettingSpinner {
 
 	private final JSpinner spinner;
 	private final String label;
+	private volatile boolean changePending;
 	private JLabel jLabel;
 
 	private final Boolean labelAtLeft;
@@ -24,10 +26,13 @@ public class IntSettingSpinner {
 		this(setting, label, enabled, false);
 	}
 
-	public IntSettingSpinner(IntSetting setting, String label, Supplier<Boolean> enabled, Boolean labelAtLeft) {
+	public IntSettingSpinner(IntSetting setting, String label, Supplier<Boolean> enabled, boolean labelAtLeft) {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setValue(setting.get());
 		model.addChangeListener(e -> {
+			if (changePending) {
+				return;
+			}
 			Integer newValue = (Integer) model.getValue();
 			if (newValue != setting.get()) {
 				setting.set(newValue);
@@ -49,6 +54,13 @@ public class IntSettingSpinner {
 		};
 		this.label = label;
 		this.labelAtLeft = labelAtLeft;
+		setting.addListener(() -> model.setValue(setting.get()));
+		spinner.setComponentPopupMenu(ResetMenuOption.resetOnlyMenu(setting, () -> {
+			changePending = true;
+			setting.delete();
+			changePending = false;
+		}));
+
 	}
 
 	public Component getSpinnerOnly() {
