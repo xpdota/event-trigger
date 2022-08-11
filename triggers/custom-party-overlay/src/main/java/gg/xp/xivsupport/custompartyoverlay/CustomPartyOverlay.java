@@ -146,7 +146,7 @@ public class CustomPartyOverlay extends XivOverlay {
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 240;
 			comp.y = 0;
-			comp.width = 300;
+			comp.width = 298;
 			comp.height = 35;
 			comp.componentType = CustomPartyOverlayComponentType.BUFFS_WITH_TIMERS;
 			specs.add(comp);

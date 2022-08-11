@@ -17,7 +17,6 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.EditMode;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
@@ -50,8 +49,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 
 @ScanMe
@@ -134,14 +131,15 @@ public class CustomPartyConfig implements PluginTab {
 				panel.add(new BooleanSettingGui(enabled, "Enable Overlay", true).getComponent());
 				panel.add(new IntSettingSpinner(overlay.getYOffset(), "Y Offset Between Party Members").getComponent());
 				overlay.getYOffset().addListener(this::resetComponents);
-				JButton addButton = new JButton("Add Component");
-				JButton removeButton = new JButton("Remove Component");
+				// TODO: put these back when something new is added so there's actually a reason
+//				JButton addButton = new JButton("Add Component");
+//				JButton removeButton = new JButton("Remove Component");
 				JButton resetButton = new JButton("Reset to Default");
 				resetButton.addActionListener(l -> {
 					overlay.resetToDefault();
 				});
-				panel.add(addButton);
-				panel.add(removeButton);
+//				panel.add(addButton);
+//				panel.add(removeButton);
 				panel.add(resetButton);
 
 				mainOverlayPanel.add(panel, BorderLayout.NORTH);
