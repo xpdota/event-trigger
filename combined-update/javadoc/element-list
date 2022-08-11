@@ -12,12 +12,15 @@ gg.xp.telestosupport.gui
 gg.xp.xivdata
 gg.xp.xivdata.data
 gg.xp.xivdata.data.duties
+gg.xp.xivdata.util
 gg.xp.xivsupport.callouts
 gg.xp.xivsupport.callouts.audio
 gg.xp.xivsupport.callouts.audio.gui
 gg.xp.xivsupport.callouts.conversions
 gg.xp.xivsupport.callouts.gui
 gg.xp.xivsupport.cdsupport
+gg.xp.xivsupport.custompartyoverlay
+gg.xp.xivsupport.custompartyoverlay.gui
 gg.xp.xivsupport.events
 gg.xp.xivsupport.events.actionresolution
 gg.xp.xivsupport.events.actlines.events
