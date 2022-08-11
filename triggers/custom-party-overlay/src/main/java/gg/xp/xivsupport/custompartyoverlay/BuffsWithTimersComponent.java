@@ -5,7 +5,6 @@ import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
-import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -27,6 +26,7 @@ import java.util.Map;
 public class BuffsWithTimersComponent extends BasePartyListComponent {
 	private final StatusEffectRepository buffRepo;
 	private final Component renderingComponent;
+	private List<BuffApplied> rawBuffs = Collections.emptyList();
 	private List<Tracker> buffs = Collections.emptyList();
 
 	private static final Color myBuffColor = new Color(120, 220, 255);
@@ -37,20 +37,22 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 	private static final Stroke stroke1 = new BasicStroke(2);
 	private static final Stroke stroke2 = new BasicStroke(4);
 	private static final Map<FontShapeKey, Shape> shapeCache = new HashMap<>();
+	private int xPadding = 0;
 
 	private record FontShapeKey(String string, Font font) {
 
 	}
 
+	// TODO: this FontMetric stuff could also be used to fix label alignment for number stuff
+	private Font fontSmall;
+	private Font fontBig;
+	private FontMetrics fontSmallMetrics;
+	private FontMetrics fontBigMetrics;
+	private int buffWidth;
+
 	public BuffsWithTimersComponent(StatusEffectRepository buffRepo) {
 		this.buffRepo = buffRepo;
 		renderingComponent = new Component() {
-
-			// TODO: this FontMetric stuff could also be used to fix label alignment for number stuff
-			private Font fontSmall;
-			private Font fontBig;
-			private FontMetrics fontSmallMetrics;
-			private FontMetrics fontBigMetrics;
 
 			@Override
 			public void validate() {
@@ -65,12 +67,13 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 				fontSmall = fontBig.deriveFont(textHeightSmall);
 				fontBigMetrics = g.getFontMetrics(fontBig);
 				fontSmallMetrics = g.getFontMetrics(fontSmall);
+				// TODO: this shouldn't be on UI thread if possible
+				recalc();
 			}
 
 			@Override
 			public void paint(Graphics gg) {
 				Graphics2D g = (Graphics2D) gg;
-				int xPadding = 0;
 				Rectangle bounds = getBounds();
 				int cellHeight = bounds.height;
 				int cellWidth = bounds.width;
@@ -78,7 +81,7 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 				int curX = 5;
 				transform.translate(curX, 0);
 				int buffHeight = iconSize();
-				int buffWidth = (int) Math.ceil(buffHeight * 0.75);
+				buffWidth = (int) Math.ceil(buffHeight * 0.75);
 				g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 				for (Tracker tracker : buffs) {
 					g.setTransform(transform);
@@ -92,54 +95,14 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 					if (actualWidth <= 0) {
 						break;
 					}
-					String text = tracker.formattedText;
+					Image textImage = tracker.image;
 					component.paint(g, buffHeight);
-					if (text != null) {
-//						g.setTransform(transform);
-						StatusEffectInfo info = tracker.info;
-						int textWidth = fontBigMetrics.stringWidth(text);
-						int yPad = 2;
-						Font font;
-						if (textWidth > (buffWidth + xPadding - 1)) {
-							textWidth = fontSmallMetrics.stringWidth(text);
-							yPad += 2;
-							font = fontSmall;
-						}
-						else {
-							font = fontBig;
-						}
-						g.setFont(font);
-						FontRenderContext frc = g.getFontRenderContext();
-						Shape outline = shapeCache.computeIfAbsent(new FontShapeKey(text, font), k -> {
-							GlyphVector glyphVector = font.createGlyphVector(frc, text);
-							return glyphVector.getOutline();
-						});
-						// TODO: unfortunately, I think the only fix for bad perf here will be to use a BufferedImage
-						// in a non-AWT thread.
-						// Or, alternatively, ditch the font shadow idea, and just draw a generic gradient
-						// blob.
-						AffineTransform shapeTrans = new AffineTransform(transform);
-						shapeTrans.translate(buffWidth / 2 - (textWidth / 2), cellHeight - yPad);
-						g.setTransform(shapeTrans);
-						g.setColor(shadow1);
-						g.setStroke(stroke1);
-						g.draw(outline);
-						g.setStroke(stroke2);
-						g.setColor(shadow2);
-						g.draw(outline);
-//						g.drawString(text, -0.5f, -0.5f);
-//						g.drawString(text, 0.5f, 0.5f);
-						if (info != null && info.canDispel()) {
-							g.setColor(removableBuffColor);
-						}
-						else if (tracker.buff.getSource().walkParentChain().isThePlayer()) {
-							g.setColor(myBuffColor);
-						}
-						else {
-							g.setColor(defaultTextColor);
-						}
-						g.fill(outline);
+					if (textImage != null) {
 //						g.drawString(text, 0, 0);
+						AffineTransform shapeTrans = new AffineTransform(transform);
+						shapeTrans.translate(buffWidth / 2 - (tracker.textWidth / 2), cellHeight - tracker.yPad);
+						g.setTransform(shapeTrans);
+						g.drawImage(textImage, 0, 0, null);
 					}
 					int delta = actualWidth + xPadding;
 					transform.translate(delta, 0);
@@ -165,12 +128,75 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 		HasIconURL icon = StatusEffectLibrary.iconForId(buff.getBuff().getId(), buff.getStacks());
 		ScaledImageComponent scaled = IconTextRenderer.getIconOnly(icon);
 		StatusEffectInfo info = StatusEffectLibrary.forId(buff.getBuff().getId());
+		String text = formatText(buff);
+		boolean canDispel = info != null && info.canDispel();
+		boolean isMine = buff.getSource().walkParentChain().isThePlayer();
+		Image image;
+		int yPad = 0;
+		int textWidth = 0;
+		if (text != null) {
+//						g.setTransform(transform);
+			textWidth = fontBigMetrics.stringWidth(text);
+			image = new BufferedImage(textWidth, textWidth, BufferedImage.TYPE_INT_ARGB);
+//			image = renderingComponent.createImage(textWidth, textWidth);
+			Graphics2D g = (Graphics2D) image.getGraphics();
+			yPad += 2;
+			Font font;
+			if (textWidth > (buffWidth + xPadding - 1)) {
+				textWidth = fontSmallMetrics.stringWidth(text);
+				yPad += 2;
+				font = fontSmall;
+			}
+			else {
+				font = fontBig;
+			}
+			g.setFont(font);
+			FontRenderContext frc = g.getFontRenderContext();
+			Shape outline = shapeCache.computeIfAbsent(new FontShapeKey(text, font), k -> {
+				GlyphVector glyphVector = font.createGlyphVector(frc, text);
+				return glyphVector.getOutline();
+			});
+			// TODO: unfortunately, I think the only fix for bad perf here will be to use a BufferedImage
+			// in a non-AWT thread.
+			// Or, alternatively, ditch the font shadow idea, and just draw a generic gradient
+			// blob.
+			g.setBackground(new Color(0, 0, 0, 0));
+			g.clearRect(0, 0, buffWidth, buffWidth);
+			AffineTransform shapeTrans = new AffineTransform();
+			shapeTrans.translate(0, 5);
+			g.setTransform(shapeTrans);
+			g.setColor(shadow1);
+			g.setStroke(stroke1);
+			g.draw(outline);
+			g.setStroke(stroke2);
+			g.setColor(shadow2);
+			g.draw(outline);
+//						g.drawString(text, -0.5f, -0.5f);
+//						g.drawString(text, 0.5f, 0.5f);
+			if (canDispel) {
+				g.setColor(removableBuffColor);
+			}
+			else if (isMine) {
+				g.setColor(myBuffColor);
+			}
+			else {
+				g.setColor(defaultTextColor);
+			}
+			g.fill(outline);
+		}
+		else {
+			image = null;
+		}
 		return new Tracker(buff,
 				scaled,
 				info,
-				buff.getSource().walkParentChain().isThePlayer(),
-				info != null && info.canDispel(),
-				formatText(buff));
+				isMine,
+				canDispel,
+				text,
+				image,
+				yPad,
+				textWidth
+				);
 	}
 
 	private @Nullable String formatText(BuffApplied buff) {
@@ -204,19 +230,21 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 			@Nullable StatusEffectInfo info,
 			boolean isSelfApplied,
 			boolean isDispellable,
-			String formattedText
-	) {
+			String formattedText,
+			Image image, int yPad, int textWidth) {
 	}
 
+	private void recalc() {
+		List<Tracker> trackers = new ArrayList<>();
+		for (BuffApplied buff : rawBuffs) {
+			trackers.add(makeTracker(buff));
+		}
+		this.buffs = trackers;
+	}
 
 	@Override
 	protected void reformatComponent(@NotNull XivPlayerCharacter xpc) {
-		List<BuffApplied> buffs = buffRepo.sortedStatusesOnTarget(xpc);
-		List<Tracker> components = new ArrayList<>();
-		for (BuffApplied buff : buffs) {
-			components.add(makeTracker(buff));
-		}
-		this.buffs = components;
-
+		rawBuffs = buffRepo.sortedStatusesOnTarget(xpc);
+		recalc();
 	}
 }
