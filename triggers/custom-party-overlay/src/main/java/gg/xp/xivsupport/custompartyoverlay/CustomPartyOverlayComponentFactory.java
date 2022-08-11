@@ -6,6 +6,7 @@ import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import org.jetbrains.annotations.Nullable;
 
 @ScanMe
 public class CustomPartyOverlayComponentFactory {
@@ -27,10 +28,13 @@ public class CustomPartyOverlayComponentFactory {
 		this.sqidTracker = sqidTracker;
 	}
 
-	public RefreshablePartyListComponent makeComponent(CustomOverlayComponentSpec spec) {
+	public @Nullable RefreshablePartyListComponent makeComponent(CustomOverlayComponentSpec spec) {
+		if (!spec.enabled) {
+			return null;
+		}
 		CustomPartyOverlayComponentType type = spec.componentType;
 		if (type == CustomPartyOverlayComponentType.BUFFS_WITH_TIMERS) {
-			return new BuffsWithTimersComponent(buffs);
+			return new BuffsWithTimersComponent(buffs, true);
 		}
 		else if (false){
 			return null;
@@ -38,10 +42,11 @@ public class CustomPartyOverlayComponentFactory {
 		RefreshablePartyListComponent component;
 		component = switch (type) {
 			case NOTHING -> new DoNothingComponent();
-			case NAME_JOB -> new NameJobComponent();
+			case NAME -> new NameComponent();
+			case JOB -> new JobComponent();
 			case HP -> new HpBarComponent(showPredictedHp, sqidTracker);
-			case BUFFS -> new BuffsComponent(buffs);
-			case BUFFS_WITH_TIMERS -> new BuffsWithTimersComponent(buffs);
+			case BUFFS -> new BuffsWithTimersComponent(buffs, false);
+			case BUFFS_WITH_TIMERS -> new BuffsWithTimersComponent(buffs, true);
 			case CAST_BAR -> new CastBarPartyComponent(acr);
 			case MP_BAR -> new MpBarComponent();
 		};

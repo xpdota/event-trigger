@@ -2,41 +2,46 @@ package gg.xp.xivsupport.custompartyoverlay;
 
 import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.Collections;
 import java.util.List;
 
-public class NameJobComponent extends BasePartyListComponent{
+public class JobComponent extends BasePartyListComponent {
 
+	private ScaledImageComponent drawIcon;
 	private final ComponentListRenderer listRenderer;
-	private final JLabel label = new JLabel();
+	private final DropShadowLabel label = new DropShadowLabel();
 
-	public NameJobComponent() {
+	public JobComponent() {
 		listRenderer = new ComponentListRenderer(2, true);
 		listRenderer.setOpaque(false);
-		label.setOpaque(false);
 		label.setForeground(new Color(255, 255, 255));
 	}
 
 	@Override
 	protected Component makeComponent() {
-		return listRenderer;
+
+		return new Component() {
+			@Override
+			public void paint(Graphics g) {
+				ScaledImageComponent icon = drawIcon;
+				if (icon == null) {
+					return;
+				}
+				Rectangle bounds = getBounds();
+				int size = Math.min(bounds.width, bounds.height);
+				icon.paint(g, size);
+			}
+		};
 	}
 
 	@Override
 	protected void reformatComponent(@NotNull XivPlayerCharacter xpc) {
-		String name = xpc.getName();
-		Component icon = IconTextRenderer.getIconOnly(xpc.getJob());
-		label.setText(name);
-		if (icon != null) {
-			listRenderer.setComponents(List.of(icon, label));
-		}
-		else {
-			listRenderer.setComponents(Collections.singletonList(label));
-		}
+		this.drawIcon = IconTextRenderer.getIconOnly(xpc.getJob());
 	}
 }

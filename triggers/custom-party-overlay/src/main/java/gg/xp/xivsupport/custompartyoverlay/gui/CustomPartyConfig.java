@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.EditMode;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
@@ -49,6 +50,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 
 @ScanMe
@@ -147,7 +150,15 @@ public class CustomPartyConfig implements PluginTab {
 				this.dragArea = new ComponentDragPanel();
 				elementsSetting.addListener(this::resetComponents);
 				TableWithFilterAndDetails<CustomOverlayComponentSpec, Object> table = TableWithFilterAndDetails.builder("Components", elementsSetting::getItems)
-						.addMainColumn(new CustomColumn<>("Type", item -> item.componentType, c -> c.setCellEditor(new NoCellEditor())))
+						.addMainColumn(new CustomColumn<>("En", item -> item.enabled, c -> {
+							c.setMinWidth(22);
+							c.setMaxWidth(22);
+							c.setCellRenderer(StandardColumns.checkboxRenderer);
+							c.setCellEditor(new StandardColumns.CustomCheckboxEditor<>(safeEdit((item, value) -> item.enabled = value)));
+						}))
+						.addMainColumn(new CustomColumn<>("Type", item -> item.componentType.getFriendlyName(), c -> {
+							c.setCellEditor(new NoCellEditor());
+						}))
 						.addMainColumn(new CustomColumn<>("X", item -> item.x, c -> c.setCellEditor(StandardColumns.intEditorNonNull(safeEdit((item, value) -> item.x = value)))))
 						.addMainColumn(new CustomColumn<>("Y", item -> item.y, c -> c.setCellEditor(StandardColumns.intEditorNonNull(safeEdit((item, value) -> item.y = value)))))
 						.addMainColumn(new CustomColumn<>("Width", item -> item.width, c -> c.setCellEditor(StandardColumns.intEditorNonNull(safeEdit((item, value) -> item.width = value)))))
@@ -189,12 +200,21 @@ public class CustomPartyConfig implements PluginTab {
 				dragArea.add(component);
 				componentToSpecMapping.put(component, item);
 			}
-			dragArea.repaint();
+			SwingUtilities.invokeLater(() -> {
+				dragArea.revalidate();
+				dragArea.repaint();
+			});
 		});
 	}
 
 	private RefreshablePartyListComponent getComponentFor(CustomOverlayComponentSpec item) {
-		return componentCache.computeIfAbsent(item.componentType, (type) -> factory.makeComponent(item));
+		// TODO: kind of hacky
+		if (item.enabled) {
+			return componentCache.computeIfAbsent(item.componentType, (type) -> factory.makeComponent(item));
+		}
+		else {
+			return null;
+		}
 	}
 
 	private <X> BiConsumer<CustomOverlayComponentSpec, X> safeEdit(BiConsumer<CustomOverlayComponentSpec, X> editFunc) {

@@ -1,11 +1,25 @@
 package gg.xp.xivsupport.custompartyoverlay;
 
-public enum CustomPartyOverlayComponentType {
-	NOTHING,
-	NAME_JOB,
-	HP,
-	BUFFS,
-	BUFFS_WITH_TIMERS,
-	CAST_BAR,
-	MP_BAR
+import gg.xp.xivsupport.gui.util.HasFriendlyName;
+
+public enum CustomPartyOverlayComponentType implements HasFriendlyName {
+	NOTHING("Dummy Component"),
+	NAME("Name"),
+	JOB("Job"),
+	HP("HP/Shield Bar"),
+	BUFFS("Buffs"),
+	BUFFS_WITH_TIMERS("Buffs with Timers"),
+	CAST_BAR("Cast Bar"),
+	MP_BAR("MP Bar");
+
+	private final String friendlyName;
+
+	CustomPartyOverlayComponentType(String friendlyName) {
+		this.friendlyName = friendlyName;
+	}
+
+	@Override
+	public String getFriendlyName() {
+		return friendlyName;
+	}
 }

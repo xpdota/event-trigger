@@ -4,6 +4,7 @@ import gg.xp.xivsupport.gui.tables.renderers.MpBar;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
 import java.awt.*;
 
 public class MpBarComponent extends BasePartyListComponent {
@@ -23,6 +24,6 @@ public class MpBarComponent extends BasePartyListComponent {
 	@Override
 	protected void reformatComponent(@NotNull XivPlayerCharacter xpc) {
 		bar.setData(xpc);
-		bar.revalidate();
+		SwingUtilities.invokeLater(bar::revalidate);
 	}
 }

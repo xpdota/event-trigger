@@ -117,11 +117,20 @@ public class CustomPartyOverlay extends XivOverlay {
 		List<CustomOverlayComponentSpec> specs = new ArrayList<>();
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
-			comp.x = 10;
+			comp.x = 0;
 			comp.y = 0;
-			comp.width = 100;
+			comp.width = 90;
 			comp.height = 20;
-			comp.componentType = CustomPartyOverlayComponentType.NAME_JOB;
+			comp.componentType = CustomPartyOverlayComponentType.NAME;
+			specs.add(comp);
+		}
+		{
+			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
+			comp.x = 90;
+			comp.y = 0;
+			comp.width = 20;
+			comp.height = 20;
+			comp.componentType = CustomPartyOverlayComponentType.JOB;
 			specs.add(comp);
 		}
 		{
@@ -137,8 +146,8 @@ public class CustomPartyOverlay extends XivOverlay {
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 240;
 			comp.y = 0;
-			comp.width = 295;
-			comp.height = 25;
+			comp.width = 300;
+			comp.height = 35;
 			comp.componentType = CustomPartyOverlayComponentType.BUFFS_WITH_TIMERS;
 			specs.add(comp);
 		}
