@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.custompartyoverlay;
 
+import gg.xp.xivsupport.gui.tables.renderers.BarFractionDisplayOption;
 import gg.xp.xivsupport.gui.tables.renderers.MpBar;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +15,7 @@ public class MpBarComponent extends BasePartyListComponent {
 		bar = new MpBar();
 		bar.setFgTransparency(255);
 		bar.setBgTransparency(72);
+		bar.setTextMode(BarFractionDisplayOption.NUMERATOR);
 	}
 
 	@Override

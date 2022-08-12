@@ -16,6 +16,7 @@ import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.EditMode;
@@ -39,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -118,6 +120,7 @@ public class CustomPartyConfig implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
+		JPanel outer = new JPanel(new BorderLayout());
 		JTabbedPane pane = new JTabbedPane();
 
 		{
@@ -160,7 +163,7 @@ public class CustomPartyConfig implements PluginTab {
 						.addMainColumn(new CustomColumn<>("X", item -> item.x, c -> c.setCellEditor(StandardColumns.intEditorNonNull(safeEdit((item, value) -> item.x = value)))))
 						.addMainColumn(new CustomColumn<>("Y", item -> item.y, c -> c.setCellEditor(StandardColumns.intEditorNonNull(safeEdit((item, value) -> item.y = value)))))
 						.addMainColumn(new CustomColumn<>("Width", item -> item.width, c -> c.setCellEditor(StandardColumns.intEditorNonNull(safeEdit((item, value) -> item.width = value)))))
-						.addMainColumn(new CustomColumn<>("Height", item -> item.height, c -> c.setCellEditor(StandardColumns.intEditorNonNull(safeEdit((item, value) -> item.width = value)))))
+						.addMainColumn(new CustomColumn<>("Height", item -> item.height, c -> c.setCellEditor(StandardColumns.intEditorNonNull(safeEdit((item, value) -> item.height = value)))))
 						.setSelectionEquivalence((a, b) -> a.componentType == b.componentType)
 						.build();
 				table.setEditMode(EditMode.AUTO);
@@ -176,9 +179,16 @@ public class CustomPartyConfig implements PluginTab {
 
 			pane.add("Main", mainOverlayPanel);
 			resetComponents();
+			outer.add(pane, BorderLayout.CENTER);
+		}
+		{
+			JPanel top = new JPanel(new WrapLayout());
+			top.add(new ReadOnlyText("Please note: This feature is a beta!"));
+			outer.add(top, BorderLayout.NORTH);
 		}
 
-		return pane;
+
+		return outer;
 	}
 
 	private void resetComponents() {

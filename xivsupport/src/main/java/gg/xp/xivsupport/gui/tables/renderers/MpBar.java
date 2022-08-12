@@ -5,6 +5,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
@@ -25,6 +26,7 @@ public class MpBar extends JComponent {
 	private boolean display;
 	private int fgTransparency = 255;
 	private int bgTransparency = 255;
+	private BarFractionDisplayOption textMode = BarFractionDisplayOption.AUTO;
 	private final JLabel label = new JLabel("", SwingConstants.CENTER) {
 		@Override
 		public boolean isVisible() {
@@ -37,6 +39,10 @@ public class MpBar extends JComponent {
 		setTextOptions("");
 		add(label);
 		label.setOpaque(false);
+	}
+
+	public void setTextMode(BarFractionDisplayOption textMode) {
+		this.textMode = textMode;
 	}
 
 	public void setFgTransparency(int fgTransparency) {
@@ -81,8 +87,19 @@ public class MpBar extends JComponent {
 			borderColor = effectiveCurrent > 0 ? borderNormal : borderEmpty;
 			basePercentDisplay = percent;
 
-			String longText = String.format("%s / %s", effectiveCurrent, effectiveMax);
-			setTextOptions(longText, String.valueOf(effectiveCurrent));
+			switch (textMode) {
+				case AUTO -> {
+					String longText = String.format("%s / %s", effectiveCurrent, effectiveMax);
+					setTextOptions(longText, String.valueOf(effectiveCurrent));
+				}
+				case BOTH -> {
+					String longText = String.format("%s / %s", effectiveCurrent, effectiveMax);
+					setTextOptions(longText);
+				}
+				case NUMERATOR -> {
+					setTextOptions(String.valueOf(effectiveCurrent));
+				}
+			}
 		}
 	}
 
@@ -113,13 +130,14 @@ public class MpBar extends JComponent {
 
 	private void checkLabel() {
 		int width = getWidth();
+		int bw = getBorderWidth();
 		for (String text : textOptions) {
 			label.setText(text);
-			if (label.getPreferredSize().width <= width - 2 * getBorderWidth()) {
+			if (label.getPreferredSize().width <= width - 2 * bw - 2) {
 				break;
 			}
 		}
-		label.setBounds(0, 0, getWidth(), getHeight());
+		label.setBounds(bw, bw, getWidth() - 2 * bw, getHeight() - 2 * bw);
 	}
 
 	int getBorderWidth() {

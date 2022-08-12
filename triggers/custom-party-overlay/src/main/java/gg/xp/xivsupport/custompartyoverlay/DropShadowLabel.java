@@ -79,12 +79,20 @@ public class DropShadowLabel extends Component {
 	}
 
 	private void format(FontRenderRequest req) {
-		Font font = req.font.deriveFont(req.height * 0.65f);
+		float fontSize = req.height * 0.65f;
+		Font font = req.font.deriveFont(fontSize);
 		String text = req.text;
 
 		Graphics graphics = getGraphics();
 		FontMetrics fontMetrics = graphics.getFontMetrics(font);
+		int width = getWidth();
 		int textWidth = fontMetrics.stringWidth(text) + (2 * xPad);
+		while (textWidth > width && fontSize > 8) {
+			fontSize = Math.min(fontSize * 0.9f, fontSize - 1.0f);
+			font = req.font.deriveFont(fontSize);
+			fontMetrics = graphics.getFontMetrics(font);
+			textWidth = fontMetrics.stringWidth(text) + (2 * xPad);
+		}
 		int fontVshift = fontMetrics.getAscent();
 
 		BufferedImage bufferedImage = new BufferedImage((int) (textWidth * req.scale), (int) (req.height * req.scale), BufferedImage.TYPE_INT_ARGB);

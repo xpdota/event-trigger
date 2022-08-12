@@ -148,7 +148,10 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 	private record TextRenderKey(
 			String text,
 			Color color,
-			int maxWidth) {
+			int maxWidth,
+			int height
+
+	) {
 	}
 
 
@@ -177,12 +180,12 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 					color = (defaultTextColor);
 				}
 				int maxWidth = (buffWidth + xPadding - 1);
-				TextRenderKey key = new TextRenderKey(text, color, maxWidth);
+				int cellHeight = renderingComponent.getHeight();
+				TextRenderKey key = new TextRenderKey(text, color, maxWidth, cellHeight);
 				img = imageCache.computeIfAbsent(key, t -> {
 					int textWidth;
 					textWidth = fontBigMetrics.stringWidth(text);
 					int yPad = 0;
-					int cellHeight = renderingComponent.getHeight();
 					Image image = new BufferedImage((int) (scale * (buffWidth + (extraPadding * 2))), (int) (scale * cellHeight), BufferedImage.TYPE_INT_ARGB);
 					Graphics2D g = (Graphics2D) image.getGraphics();
 					g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
