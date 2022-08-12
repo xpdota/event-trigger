@@ -1,10 +1,12 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.time.Duration;
@@ -100,6 +102,29 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 
 	public boolean isPreApp() {
 		return isPreApp;
+	}
+
+	public @Nullable StatusEffectInfo getInfo() {
+		return buff.getInfo();
+	}
+
+
+	public boolean shouldDisplayDuration() {
+		if (isPreApp) {
+			return false;
+		}
+		else {
+			if (getInitialDuration().toSeconds() > 9000) {
+				return false;
+			}
+			StatusEffectInfo info = getInfo();
+			if (info != null) {
+				if (info.isPermanent()) {
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 
 	@Override

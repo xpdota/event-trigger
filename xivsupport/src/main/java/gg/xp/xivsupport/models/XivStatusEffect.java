@@ -3,6 +3,7 @@ package gg.xp.xivsupport.models;
 import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -28,6 +29,10 @@ public class XivStatusEffect implements Serializable, NameIdPair {
 	public XivStatusEffect(long id, String name) {
 		this.id = id;
 		this.name = name == null ? null : name.intern();
+	}
+
+	public @Nullable StatusEffectInfo getInfo() {
+		return StatusEffectLibrary.forId(id);
 	}
 
 	@Override

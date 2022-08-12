@@ -220,7 +220,7 @@ public class MakeEverything {
 		// STATUS EFFECTS
 		{
 			StatusEffectLibrary.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
-			Map<Long, StatusEffectInfo> statusCsvMap = StatusEffectLibrary.getAll();
+			Map<Integer, StatusEffectInfo> statusCsvMap = StatusEffectLibrary.getAll();
 			List<Long> statusIcons;
 			// TODO: it looks like the way status effects work is that there is one icon for each stack value.
 			// Maximum stack amounts are defined in Status.csv. Maybe it's time to improve the CSV reading?

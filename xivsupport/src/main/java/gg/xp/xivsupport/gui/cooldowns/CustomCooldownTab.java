@@ -43,6 +43,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+// TODO: This UI style is a candidate for some abstraction
 @ScanMe
 public class CustomCooldownTab implements PluginTab {
 
@@ -147,7 +148,7 @@ public class CustomCooldownTab implements PluginTab {
 			}
 		};
 
-		outer.setLayout(new GridBagLayout());
+		outer.setLayout(new BorderLayout());
 		table.getSelectionModel().addListSelectionListener(l -> {
 			refreshSelection();
 		});
@@ -185,33 +186,15 @@ public class CustomCooldownTab implements PluginTab {
 
 		{
 			this.detailsInner = new JPanel(new BorderLayout());
-//			JScrollPane detailsScroller = new JScrollPane(detailsInner);
-//			detailsScroller.setBorder(null);
-//			detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
-//			TitleBorderFullsizePanel detailsOuter = new TitleBorderFullsizePanel("Cooldown Details");
-//			detailsOuter.setLayout(new BorderLayout());
-//			detailsOuter.add(detailsScroller, BorderLayout.CENTER);
 			bottomPanel.add(detailsInner, BorderLayout.CENTER);
 		}
 
 		JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, new JScrollPane(table), bottomPanel);
 		split.setOneTouchExpandable(true);
-		outer.add(split, c);
+		outer.add(split);
 		split.setResizeWeight(0.5);
 		split.setDividerLocation(300);
 
-//		RefreshLoop<CustomCooldownTab> refresher = new RefreshLoop<>("CustomCdAutoSave", this, cct -> {
-//			if (outer.isShowing()) {
-//				cct.backend.commit();
-//				saveAnyway = true;
-//			}
-//			else if (saveAnyway) {
-//				cct.backend.commit();
-//				saveAnyway = false;
-//			}
-//		}, (unused) -> 15000L);
-
-//		refresher.start();
 		return outer;
 	}
 

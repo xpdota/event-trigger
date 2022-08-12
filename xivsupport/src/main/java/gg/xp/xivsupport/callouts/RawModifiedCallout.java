@@ -24,6 +24,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private final String description;
 	private final String tts;
 	private final String text;
+	private final @Nullable String sound;
 	private final @Nullable X event;
 	private final Map<String, Object> arguments;
 	private final Function<? super X, ? extends @Nullable Component> guiProvider;
@@ -34,10 +35,11 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private static final int maxErrors = 10;
 	private int errorCount;
 
-	public RawModifiedCallout(String description, String tts, String text, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride) {
+	public RawModifiedCallout(String description, String tts, String text, @Nullable String sound, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride) {
 		this.description = description;
 		this.tts = tts;
 		this.text = text;
+		this.sound = sound;
 		this.event = event;
 		this.arguments = arguments;
 		this.guiProvider = guiProvider;
@@ -75,6 +77,10 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 
 	public @Nullable Color getColorOverride() {
 		return colorOverride;
+	}
+
+	public @Nullable String getSound() {
+		return sound;
 	}
 
 	public void setReplaces(@Nullable HasCalloutTrackingKey replaces) {

@@ -21,6 +21,9 @@ public interface CalloutEvent extends Event, HasPrimaryValue, HasCalloutTracking
 
 	@Nullable String getCallText();
 
+	default @Nullable String getSound() {
+		return null;
+	};
 	boolean isExpired();
 
 	@Override

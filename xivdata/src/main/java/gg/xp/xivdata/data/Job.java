@@ -1,5 +1,6 @@
 package gg.xp.xivdata.data;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,9 +108,16 @@ public enum Job implements HasIconURL {
 
 	public static Job getById(long id) {
 		// This will work as long as they stay in order and contiguous
-		if (id > values().length) {
+		if (id >= values().length) {
 			log.error("There is no job with ID {}, using ADV instead", id);
 			return ADV;
+		}
+		return values()[(int) id];
+	}
+
+	public static @Nullable Job getByIdOrNull(long id) {
+		if (id < 0 || id >= values().length) {
+			return null;
 		}
 		return values()[(int) id];
 	}

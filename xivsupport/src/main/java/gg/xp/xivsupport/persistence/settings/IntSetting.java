@@ -3,7 +3,7 @@ package gg.xp.xivsupport.persistence.settings;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.jetbrains.annotations.Nullable;
 
-public class IntSetting extends ObservableSetting {
+public class IntSetting extends ObservableSetting implements Resettable{
 
 	private final PersistenceProvider persistence;
 	private final String settingKey;
@@ -51,5 +51,17 @@ public class IntSetting extends ObservableSetting {
 
 	public @Nullable Integer getMax() {
 		return max;
+	}
+
+	@Override
+	public boolean isSet() {
+		return persistence.get(settingKey, String.class, null) != null;
+	}
+
+	@Override
+	public void delete() {
+		persistence.delete(settingKey);
+		cached = null;
+		notifyListeners();
 	}
 }

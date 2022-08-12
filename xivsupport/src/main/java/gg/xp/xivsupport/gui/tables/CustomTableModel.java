@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables;
 
 import gg.xp.xivsupport.gui.GuiGlobals;
+import gg.xp.xivsupport.gui.NoCellEditor;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

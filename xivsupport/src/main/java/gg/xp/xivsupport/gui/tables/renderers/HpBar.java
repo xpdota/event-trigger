@@ -156,13 +156,14 @@ public class HpBar extends JComponent {
 
 	private void checkLabel() {
 		int width = getWidth();
+		int bw = getBorderWidth();
 		for (String text : textOptions) {
 			label.setText(text);
-			if (label.getPreferredSize().width <= width - 2 * getBorderWidth()) {
+			if (label.getPreferredSize().width <= width - 2 * bw - 2) {
 				break;
 			}
 		}
-		label.setBounds(0, 0, getWidth(), getHeight());
+		label.setBounds(bw, bw, getWidth() - 2 * bw, getHeight() - 2 * bw);
 	}
 
 	int getBorderWidth() {
@@ -193,7 +194,7 @@ public class HpBar extends JComponent {
 		double xScale = t.getScaleX();
 		double yScale = t.getScaleY();
 //		t.scale(1 / xScale, 1 / yScale);
-		t.setTransform(1.0, 0, 0, 1.0, Math.round(t.getTranslateX()), Math.round(t.getTranslateY()));
+		t.setTransform(1.0, 0, 0, 1.0, Math.floor(t.getTranslateX()), Math.floor(t.getTranslateY()));
 		g.setTransform(t);
 		int realWidth = (int) Math.floor(getWidth() * xScale);
 		int realHeight = (int) Math.floor(getHeight() * yScale);
