@@ -106,23 +106,29 @@ public class DropShadowLabel extends Component {
 	}
 
 	private void format(FontRenderRequest req) {
+		String text = req.text;
+		if (text == null || text.isBlank()) {
+			image = null;
+			return;
+		}
 		float fontSize = req.height * 0.65f;
 		Font font = req.font.deriveFont(fontSize);
-		String text = req.text;
 
 		Graphics graphics = getGraphics();
 		FontMetrics fontMetrics = graphics.getFontMetrics(font);
 		int width = getWidth();
-		int textWidth = fontMetrics.stringWidth(text) + (2 * xPad);
-		while (textWidth > width && fontSize > 8) {
-			fontSize = Math.min(fontSize * 0.9f, fontSize - 1.0f);
+		int targetWidth = width - (2 * xPad);
+		int textWidth = fontMetrics.stringWidth(text);
+		while (textWidth > targetWidth && fontSize > 6) {
+			fontSize = Math.min(fontSize * (targetWidth / (float) textWidth), fontSize - 1.0f);
 			font = req.font.deriveFont(fontSize);
 			fontMetrics = graphics.getFontMetrics(font);
-			textWidth = fontMetrics.stringWidth(text) + (2 * xPad);
+			textWidth = fontMetrics.stringWidth(text);
 		}
 		int fontVshift = fontMetrics.getAscent();
+		int textWidthWithPadding = textWidth + 2 * xPad;
 
-		BufferedImage bufferedImage = new BufferedImage((int) (textWidth * req.scale), (int) (req.height * req.scale), BufferedImage.TYPE_INT_ARGB);
+		BufferedImage bufferedImage = new BufferedImage((int) (textWidthWithPadding * req.scale), (int) (req.height * req.scale), BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = (Graphics2D) bufferedImage.getGraphics();
 		g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -145,8 +151,8 @@ public class DropShadowLabel extends Component {
 		g.setColor(getForeground());
 		g.fill(outline);
 		image = bufferedImage;
-		lastWidth = textWidth;
-		setPreferredSize(new Dimension(textWidth, req.height));
+		lastWidth = textWidthWithPadding;
+		setPreferredSize(new Dimension(textWidthWithPadding, req.height));
 
 	}
 

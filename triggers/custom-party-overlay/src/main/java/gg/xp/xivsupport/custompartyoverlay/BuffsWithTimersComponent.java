@@ -65,9 +65,7 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 		this.enableTimers = true;
 		renderingComponent = new Component() {
 
-			@Override
-			public void validate() {
-				super.validate();
+			private void resetScaling() {
 				Rectangle bounds = getBounds();
 				int cellHeight = bounds.height;
 				Graphics g = getGraphics();
@@ -94,6 +92,20 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 
 				}
 				exs.submit(() -> recalc());
+
+			}
+
+			@Override
+			public void setBounds(Rectangle r) {
+				super.setBounds(r);
+				resetScaling();
+				imageCache.clear();
+			}
+
+			@Override
+			public void validate() {
+				super.validate();
+				resetScaling();
 			}
 
 			@Override
