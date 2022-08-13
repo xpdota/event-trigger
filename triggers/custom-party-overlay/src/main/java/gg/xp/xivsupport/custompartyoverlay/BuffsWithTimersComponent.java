@@ -56,6 +56,7 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 	private FontMetrics fontBigMetrics;
 	private int buffWidth;
 	private double scale = 1.0f;
+	private double scaleFromPaint;
 	private float prevTextHeight;
 	private double prevScale;
 
@@ -67,15 +68,20 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 			@Override
 			public void validate() {
 				super.validate();
-				Graphics g = getGraphics();
 				Rectangle bounds = getBounds();
 				int cellHeight = bounds.height;
+				Graphics g = getGraphics();
 				float textHeight = (float) Math.max(5.0f, Math.floor(cellHeight * 0.30f));
-				if (g instanceof Graphics2D gg) {
-					scale = gg.getTransform().getScaleX();
+				if (scaleFromPaint > 0) {
+					scale = scaleFromPaint;
+				}
+				else {
+					if (g instanceof Graphics2D gg) {
+						scale = gg.getTransform().getScaleX();
+					}
 				}
 				//noinspection FloatingPointEquality
-				if (scale != prevScale || prevTextHeight != textHeight) {
+				if (BuffsWithTimersComponent.this.scale != prevScale || prevTextHeight != textHeight) {
 					Font fontOrig = g.getFont();
 					fontBig = fontOrig.deriveFont(textHeight);
 					float textHeightSmall = textHeight * 0.66f;
@@ -83,7 +89,7 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 					fontBigMetrics = g.getFontMetrics(fontBig);
 					fontSmallMetrics = g.getFontMetrics(fontSmall);
 					imageCache.clear();
-					prevScale = scale;
+					prevScale = BuffsWithTimersComponent.this.scale;
 					prevTextHeight = textHeight;
 
 				}
@@ -94,8 +100,8 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 			public void paint(Graphics gg) {
 //				if (true) return;
 				Graphics2D g = (Graphics2D) gg;
+				scaleFromPaint = g.getTransform().getScaleX();
 				Rectangle bounds = getBounds();
-				int cellHeight = bounds.height;
 				int cellWidth = bounds.width;
 				AffineTransform transform = g.getTransform();
 				int curX = 5;
@@ -149,8 +155,8 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 			String text,
 			Color color,
 			int maxWidth,
-			int height
-
+			int height,
+			double scale
 	) {
 	}
 
@@ -181,12 +187,12 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 				}
 				int maxWidth = (buffWidth + xPadding - 1);
 				int cellHeight = renderingComponent.getHeight();
-				TextRenderKey key = new TextRenderKey(text, color, maxWidth, cellHeight);
+				TextRenderKey key = new TextRenderKey(text, color, maxWidth, cellHeight, scale);
 				img = imageCache.computeIfAbsent(key, t -> {
 					int textWidth;
 					textWidth = fontBigMetrics.stringWidth(text);
 					int yPad = 0;
-					Image image = new BufferedImage((int) (scale * (buffWidth + (extraPadding * 2))), (int) (scale * cellHeight), BufferedImage.TYPE_INT_ARGB);
+					Image image = new BufferedImage((int) (scale * (buffWidth + (extraPadding * 2))), (int) (t.scale * cellHeight), BufferedImage.TYPE_INT_ARGB);
 					Graphics2D g = (Graphics2D) image.getGraphics();
 					g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 					g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -208,7 +214,7 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 					});
 //					g.setBackground(new Color(0, 0, 0, 0));
 					AffineTransform shapeTrans = new AffineTransform();
-					shapeTrans.scale(scale, scale);
+					shapeTrans.scale(t.scale, t.scale);
 					shapeTrans.translate(extraPadding + (buffWidth / 2.0f) - (textWidth / 2.0f), cellHeight - yPad);
 					g.setTransform(shapeTrans);
 					g.setColor(shadow1);
@@ -221,7 +227,6 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 					g.fill(outline);
 					return image;
 				});
-				int foo = 5+1;
 			}
 		}
 		else {

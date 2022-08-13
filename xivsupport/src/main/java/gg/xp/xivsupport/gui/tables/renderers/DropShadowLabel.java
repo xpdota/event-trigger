@@ -22,9 +22,10 @@ public class DropShadowLabel extends Component {
 	private TextAlignment alignment = TextAlignment.LEFT;
 	private FontRenderRequest lastReq;
 	private boolean enableShadow = true;
+	private double scaleFactor;
 
 	public void setText(String text) {
-		boolean changed = !text.equals(this.text);
+		boolean changed = !text.equals(this.text) || (lastReq != null && lastReq.scale != scaleFactor);
 		if (changed) {
 			this.text = text;
 			recalc();
@@ -49,7 +50,7 @@ public class DropShadowLabel extends Component {
 	@Override
 	public void validate() {
 		super.validate();
-		recalc();
+		invalidateImage();
 	}
 
 	@Override
@@ -66,7 +67,9 @@ public class DropShadowLabel extends Component {
 			case RIGHT -> getWidth() - textWidth;
 		};
 		trans.translate(xOffset, 0);
-		trans.scale(1.0f / trans.getScaleX(), 1.0f / trans.getScaleY());
+		double scale = trans.getScaleX();
+		this.scaleFactor = scale;
+		trans.scale(1.0f / scale, 1.0f / trans.getScaleY());
 		g.setTransform(trans);
 		g.drawImage(image, 0, 0, null);
 	}
@@ -81,11 +84,20 @@ public class DropShadowLabel extends Component {
 			return;
 		}
 		int height = getHeight();
-		Graphics graphics = getGraphics();
-		if (graphics == null) {
-			return;
+		double scale;
+		if (scaleFactor > 0) {
+			scale = scaleFactor;
 		}
-		double scale = ((Graphics2D) graphics).getTransform().getScaleX();
+		else {
+			// Querying this to find the scale factor doesn't work on X11
+			Graphics graphics = getGraphics();
+			if (graphics == null) {
+				return;
+			}
+			else {
+				scale = ((Graphics2D) graphics).getTransform().getScaleX();
+			}
+		}
 		FontRenderRequest req = new FontRenderRequest(text, height, font, scale);
 		if (!req.equals(this.lastReq)) {
 			format(req);
