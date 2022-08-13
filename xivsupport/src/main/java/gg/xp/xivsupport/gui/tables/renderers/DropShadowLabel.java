@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.custompartyoverlay;
+package gg.xp.xivsupport.gui.tables.renderers;
 
 import gg.xp.xivsupport.gui.overlay.TextAlignment;
 
@@ -21,14 +21,29 @@ public class DropShadowLabel extends Component {
 	private int lastWidth;
 	private TextAlignment alignment = TextAlignment.LEFT;
 	private FontRenderRequest lastReq;
+	private boolean enableShadow = true;
 
 	public void setText(String text) {
-		this.text = text;
-		recalc();
+		boolean changed = !text.equals(this.text);
+		if (changed) {
+			this.text = text;
+			recalc();
+		}
 	}
 
 	public void setAlignment(TextAlignment alignment) {
 		this.alignment = alignment;
+		invalidateImage();
+	}
+
+	public void setEnableShadow(boolean enableShadow) {
+		this.enableShadow = enableShadow;
+		invalidateImage();
+	}
+
+	private void invalidateImage() {
+		lastReq = null;
+		recalc();
 	}
 
 	@Override
@@ -47,7 +62,7 @@ public class DropShadowLabel extends Component {
 		int textWidth = lastWidth;
 		int xOffset = switch (alignment) {
 			case LEFT -> xPad;
-			case CENTER -> getWidth() - (int) (textWidth / 2.0);
+			case CENTER -> (int) ((getWidth() / 2.0) - (textWidth / 2.0));
 			case RIGHT -> getWidth() - textWidth;
 		};
 		trans.translate(xOffset, 0);
@@ -107,12 +122,14 @@ public class DropShadowLabel extends Component {
 		shapeTrans.translate(xPad, fontVshift);
 //		shapeTrans.translate(extraPadding + (buffWidth / 2.0f) - (textWidth / 2.0f), cellHeight - yPad);
 		g.setTransform(shapeTrans);
-		g.setColor(shadow1);
-		g.setStroke(stroke1);
-		g.draw(outline);
-		g.setStroke(stroke2);
-		g.setColor(shadow2);
-		g.draw(outline);
+		if (enableShadow) {
+			g.setColor(shadow1);
+			g.setStroke(stroke1);
+			g.draw(outline);
+			g.setStroke(stroke2);
+			g.setColor(shadow2);
+			g.draw(outline);
+		}
 		g.setColor(getForeground());
 		g.fill(outline);
 		image = bufferedImage;

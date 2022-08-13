@@ -59,9 +59,9 @@ public class BuffsWithTimersComponent extends BasePartyListComponent {
 	private float prevTextHeight;
 	private double prevScale;
 
-	public BuffsWithTimersComponent(StatusEffectRepository buffRepo, boolean enableTimers) {
+	public BuffsWithTimersComponent(StatusEffectRepository buffRepo) {
 		this.buffRepo = buffRepo;
-		this.enableTimers = enableTimers;
+		this.enableTimers = true;
 		renderingComponent = new Component() {
 
 			@Override

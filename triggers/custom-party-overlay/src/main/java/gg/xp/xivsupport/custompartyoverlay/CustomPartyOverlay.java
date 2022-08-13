@@ -81,6 +81,11 @@ public class CustomPartyOverlay extends XivOverlay {
 		super.setVisible(visible);
 	}
 
+	@Override
+	protected void onBecomeVisible() {
+		placeComponents();
+	}
+
 	private void placeComponents() {
 		SwingUtilities.invokeLater(() -> {
 

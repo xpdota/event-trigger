@@ -9,11 +9,24 @@ import java.awt.*;
 
 public class CastBarComponent extends ResourceBar {
 
+	public static final Color defaultInProgressColor = new Color(47, 82, 26);
+	public static final Color defaultSuccessColor = new Color(9, 46, 115);
+	public static final Color defaultInterruptedColor = new Color(94, 10, 10);
+	public static final Color defaultUnknownColor = new Color(100, 71, 9);
+	public static final Color defaultBackgroundColor = new Color(20, 20, 20);
+	public static final Color defaultTextColor = Color.WHITE;
+
+	private Color inProgressColor = defaultInProgressColor;
+	private Color successColor = defaultSuccessColor;
+	private Color interruptedColor = defaultInterruptedColor;
+	private Color unknownColor = defaultUnknownColor;
+
 	private @Nullable CastTracker tracker;
 
 	public CastBarComponent() {
 		setOpaque(false);
-		setColor3(new Color(20, 20, 20));
+		setColor3(defaultBackgroundColor);
+		setTextColor(defaultTextColor);
 	}
 
 	public void setData(@Nullable CastTracker tracker) {
@@ -26,22 +39,45 @@ public class CastBarComponent extends ResourceBar {
 			CastResult result = tracker.getResult();
 			// TODO: colors
 			setColor1(switch (result) {
-				case IN_PROGRESS -> new Color(47, 82, 26);
-				case SUCCESS -> new Color(9, 46, 115);
-				case INTERRUPTED -> new Color(94, 10, 10);
-				case UNKNOWN -> new Color(100, 71, 9);
+				case IN_PROGRESS -> inProgressColor;
+				case SUCCESS -> successColor;
+				case INTERRUPTED -> interruptedColor;
+				case UNKNOWN -> unknownColor;
 			});
-			setTextOptions(tracker.getCast().getAbility().getName());
-			setTextColor(Color.WHITE);
+			setTextOptions(makeText(tracker));
 			revalidate();
 		}
+	}
+
+	protected String makeText(CastTracker tracker) {
+		return tracker.getCast().getAbility().getName();
+	}
+
+	public void setInProgressColor(Color inProgressColor) {
+		this.inProgressColor = inProgressColor;
+	}
+
+	public void setSuccessColor(Color successColor) {
+		this.successColor = successColor;
+	}
+
+	public void setInterruptedColor(Color interruptedColor) {
+		this.interruptedColor = interruptedColor;
+	}
+
+	public void setUnknownColor(Color unknownColor) {
+		this.unknownColor = unknownColor;
+	}
+
+	@Override
+	public void setBackground(Color bg) {
+		setColor3(bg);
 	}
 
 	@Override
 	public void paint(Graphics g) {
 		// Just do nothing if there's no active cast
 		if (tracker == null) {
-//			g.clearRect(0, 0, getWidth(), getHeight());
 			return;
 		}
 		super.paint(g);

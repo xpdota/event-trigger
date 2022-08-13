@@ -1,5 +1,6 @@
-package gg.xp.xivsupport.custompartyoverlay;
+package gg.xp.xivsupport.custompartyoverlay.castbar;
 
+import gg.xp.xivsupport.custompartyoverlay.BasePartyListComponent;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
@@ -13,11 +14,25 @@ public class CastBarPartyComponent extends BasePartyListComponent {
 
 	private final ActiveCastRepository acr;
 	private final CastBarComponent bar;
+	private final CastBarComponentConfig config;
 
-	public CastBarPartyComponent(ActiveCastRepository acr) {
+	public CastBarPartyComponent(ActiveCastRepository acr, CastBarComponentConfig config) {
 		this.acr = acr;
 		bar = new CastBarComponent();
+		this.config = config;
+		config.addAndRunListener(this::applySettings);
 	}
+
+	private void applySettings() {
+		bar.setBackground(config.getBackgroundColor().get());
+		bar.setSuccessColor(config.getSuccessColor().get());
+		bar.setInProgressColor(config.getInProgressColor().get());
+		bar.setInterruptedColor(config.getInterruptedColor().get());
+		bar.setUnknownColor(config.getUnknownColor().get());
+		bar.setTextColor(config.getTextColor().get());
+
+	}
+
 
 	@Override
 	protected Component makeComponent() {
