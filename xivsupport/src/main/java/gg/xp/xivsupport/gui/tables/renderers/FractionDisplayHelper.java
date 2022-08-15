@@ -19,7 +19,7 @@ public class FractionDisplayHelper extends Component {
 
 	public void setValue(CurrentMaxPair data) {
 		this.data = data;
-		recalc();
+		clearComputedData();
 	}
 
 	public void setDisplayMode(BarFractionDisplayOption displayMode) {
@@ -29,28 +29,30 @@ public class FractionDisplayHelper extends Component {
 	}
 
 	@Override
+	public void setBounds(int x, int y, int width, int height) {
+		super.setBounds(x, y, width, height);
+		clearComputedData();
+	}
+
+	@Override
 	public void validate() {
 		clearComputedData();
-		recalc();
 	}
 
 	private void clearComputedData() {
 		lastData = null;
 	}
 
-	public void recalc() {
+	public void recalc(Graphics2D graphics) {
 		// The idea here is that we want alignment and choosing whether to display the full fraction or not
 		// to be based on
-		Graphics graphics = getGraphics();
-		if (graphics == null) {
-			return;
-		}
 		if (Objects.equals(data, lastData)) {
 			return;
 		}
 		int componentWidth = getWidth();
 		long current = data.current();
 		long max = data.max();
+
 		FontMetrics fm = graphics.getFontMetrics();
 
 		textYOffset = (int) (getHeight() / 2.0 + fm.getHeight() / 3.0);
@@ -78,6 +80,8 @@ public class FractionDisplayHelper extends Component {
 	@Override
 	public void paint(Graphics gg) {
 		Graphics2D g = (Graphics2D) gg;
+		g.setColor(getForeground());
+		recalc(g);
 		int xOffset = this.textXOffset;
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g.drawString(text, xOffset, textYOffset);

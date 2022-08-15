@@ -1,16 +1,22 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
 import gg.xp.xivsupport.gui.overlay.TextAlignment;
+import org.java_websocket.util.NamedThreadFactory;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DropShadowLabel extends Component {
 
 	private static final int xPad = 4;
+
+	private static final ExecutorService exs = Executors.newCachedThreadPool(new NamedThreadFactory("DropShadowLabelRender"));
 
 	private static final Color shadow1 = new Color(0, 0, 0, 192);
 	private static final Color shadow2 = new Color(0, 0, 0, 64);
@@ -20,37 +26,46 @@ public class DropShadowLabel extends Component {
 	private Image image;
 	private int lastWidth;
 	private TextAlignment alignment = TextAlignment.LEFT;
-	private FontRenderRequest lastReq;
 	private boolean enableShadow = true;
 	private double scaleFactor;
 
 	public void setText(String text) {
-		boolean changed = !text.equals(this.text) || (lastReq != null && lastReq.scale != scaleFactor);
-		if (changed) {
+		if (!text.equals(this.text)) {
 			this.text = text;
-			recalc();
+			requestRecalc();
 		}
+	}
+
+	@Override
+	public void setForeground(Color c) {
+		super.setForeground(c);
+		requestRecalc();
+	}
+
+	@Override
+	public void setFont(Font f) {
+		super.setFont(f);
+		requestRecalc();
+	}
+
+	private void requestRecalc() {
+		exs.submit(this::recalc);
 	}
 
 	public void setAlignment(TextAlignment alignment) {
 		this.alignment = alignment;
-		invalidateImage();
+		requestRecalc();
 	}
 
 	public void setEnableShadow(boolean enableShadow) {
 		this.enableShadow = enableShadow;
-		invalidateImage();
-	}
-
-	private void invalidateImage() {
-		lastReq = null;
-		recalc();
+		requestRecalc();
 	}
 
 	@Override
 	public void validate() {
 		super.validate();
-		invalidateImage();
+		requestRecalc();
 	}
 
 	@Override
@@ -68,6 +83,9 @@ public class DropShadowLabel extends Component {
 		};
 		trans.translate(xOffset, 0);
 		double scale = trans.getScaleX();
+		if (this.scaleFactor != scale) {
+			requestRecalc();
+		}
 		this.scaleFactor = scale;
 		trans.scale(1.0f / scale, 1.0f / trans.getScaleY());
 		g.setTransform(trans);
@@ -78,7 +96,7 @@ public class DropShadowLabel extends Component {
 
 	}
 
-	private synchronized void recalc() {
+	private void recalc() {
 		Font font = getFont();
 		if (font == null) {
 			return;
@@ -99,10 +117,10 @@ public class DropShadowLabel extends Component {
 			}
 		}
 		FontRenderRequest req = new FontRenderRequest(text, height, font, scale);
-		if (!req.equals(this.lastReq)) {
+//		if (!req.equals(this.lastReq)) {
 			format(req);
-			this.lastReq = req;
-		}
+			SwingUtilities.invokeLater(this::repaint);
+//		}
 	}
 
 	private void format(FontRenderRequest req) {

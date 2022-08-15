@@ -93,8 +93,8 @@ public class BuffsBar extends Component {
 	}
 
 	@Override
-	public void setBounds(Rectangle r) {
-		super.setBounds(r);
+	public void setBounds(int x, int y, int width, int height) {
+		super.setBounds(x, y, width, height);
 		resetScaling();
 		imageCache.clear();
 	}

@@ -45,6 +45,7 @@ public class HpBar extends JComponent {
 
 	public HpBar() {
 		add(textDelegate);
+		setTextColor(defaultTextColor);
 	}
 
 	public void setTextMode(BarFractionDisplayOption textMode) {
@@ -180,26 +181,37 @@ public class HpBar extends JComponent {
 		Rectangle bounds = getBounds();
 		int bw = getBorderWidth();
 		textDelegate.setBounds(bw, bw, bounds.width - 2 * bw, bounds.height - 2 * bw);
+		textDelegate.validate();
+	}
+
+	@Override
+	public void setBounds(int x, int y, int width, int height) {
+		super.setBounds(x, y, width, height);
+		setTextBounds();
 	}
 
 	@Override
 	public void revalidate() {
 		setTextBounds();
-		textDelegate.revalidate();
 	}
 
 	@Override
 	public void validate() {
 		setTextBounds();
-		textDelegate.validate();
 	}
 
 	@Override
 	public void paint(Graphics g) {
-		// Skip painting children if data is null
+		// Skip painting, including children, if data is null
 		if (display) {
 			super.paint(g);
+			int foo = 1+2;
 		}
+	}
+
+	@Override
+	protected void paintChildren(Graphics g) {
+		textDelegate.paint(g);
 	}
 
 	@SuppressWarnings("SuspiciousNameCombination")

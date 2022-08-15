@@ -170,10 +170,17 @@ public class FlyingTextOverlay extends XivOverlay {
 			GradientPaint paintRight = new GradientPaint(rightInnerGradientBound, 0, backdropColor, rightOuterGradientBound, 0, transparentColor);
 			graphics.setPaint(paintRight);
 			graphics.fillRect(rightInnerGradientBound, 0, rightOuterGradientBound - rightInnerGradientBound, heightOfThisItem);
+			Font oldFont = graphics.getFont();
 			graphics.setFont(text.getFont());
 			double textX = text.getBounds().getX();
 			graphics.translate(textX, 0);
-			this.text.paint(graphics);
+			try {
+				this.text.paint(graphics);
+			}
+			catch (Throwable t) {
+				log.error("Error rendering text for '{}' (from {})", text.getText(), event.getCallText(), t);
+			}
+			graphics.setFont(oldFont);
 			Component extra = this.extraComponent;
 			if (extra != null) {
 				graphics.translate(extraComponentLeftPad - textX, 0);
@@ -181,7 +188,7 @@ public class FlyingTextOverlay extends XivOverlay {
 					extra.paint(graphics);
 				}
 				catch (Throwable t) {
-					log.error("Error painting extra component", t);
+					log.error("Error rendering extra component for '{}' (from {})", text.getText(), event.getCallText(), t);
 				}
 			}
 		}

@@ -28,8 +28,8 @@ public class BuffsBarConfig extends ObservableSetting {
 		myBuffTextColor = new ColorSetting(pers, settingKeyBase + "mybuff-color", BuffsBar.defaultMyBuffColor);
 		removeableBuffColor = new ColorSetting(pers, settingKeyBase + "removeablebuff-color", BuffsBar.defaultRemovableBuffColor);
 		timers = new BooleanSetting(pers, settingKeyBase + "show-timers", true);
-		shadows = new BooleanSetting(pers, settingKeyBase + "shadows", true);
-		xPadding = new IntSetting(pers, settingKeyBase + "shadows", 0, -20, 1000);
+		shadows = new BooleanSetting(pers, settingKeyBase + "text-shadows", true);
+		xPadding = new IntSetting(pers, settingKeyBase + "xpad", 0, -20, 1000);
 		List.of(normalTextColor, myBuffTextColor, removeableBuffColor, timers, shadows, xPadding)
 				.forEach(setting -> setting.addListener(this::notifyListeners));
 	}
