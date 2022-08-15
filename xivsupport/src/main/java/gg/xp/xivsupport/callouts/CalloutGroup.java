@@ -23,6 +23,14 @@ public class CalloutGroup {
 		updateChildren();
 	}
 
+	public CalloutGroup(Class<?> clazz, String name, String topLevelPropStub, BooleanSetting enabled, List<ModifiedCalloutHandle> callouts) {
+		this.clazz = clazz;
+		this.name = name;
+		this.enabled = enabled;
+		this.callouts = new ArrayList<>(callouts);
+		updateChildren();
+	}
+
 	public void updateChildren() {
 		callouts.forEach(call -> call.setEnabledByParent(enabled.get()));
 	}

@@ -152,9 +152,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	// To be called from internal thread
 	public <Y> Y waitEvent(Class<Y> eventClass, Predicate<Y> eventFilter) {
 		log.trace("Waiting for specific event");
-		while (true) {
-			return (Y) waitEvent(event -> eventClass.isInstance(event) && eventFilter.test((Y) event));
-		}
+		return (Y) waitEvent(event -> eventClass.isInstance(event) && eventFilter.test((Y) event));
 	}
 
 	// To be called from internal thread
@@ -249,6 +247,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 
 	private static final int defaultCycleProcessingTime = 100;
 	private static final int cycleProcessingTime;
+
 	// Workaround for integration tests exceeding cycle time
 	static {
 		String prop = System.getProperty("sequentialTriggerCycleTime");
