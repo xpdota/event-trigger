@@ -63,6 +63,14 @@ public class ColorSettingGui {
 		return panel;
 	}
 
+	public Component getComponentReversed() {
+		JPanel panel = new JPanel();
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
+		panel.add(button);
+		panel.add(label);
+		return panel;
+	}
+
 	private void reset() {
 		setting.delete();
 		button.repaint();

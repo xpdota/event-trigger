@@ -81,6 +81,11 @@ public class CustomPartyOverlay extends XivOverlay {
 		super.setVisible(visible);
 	}
 
+	@Override
+	protected void onBecomeVisible() {
+		placeComponents();
+	}
+
 	private void placeComponents() {
 		SwingUtilities.invokeLater(() -> {
 
@@ -137,14 +142,14 @@ public class CustomPartyOverlay extends XivOverlay {
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 110;
 			comp.y = 0;
-			comp.width = 130;
+			comp.width = 160;
 			comp.height = 20;
 			comp.componentType = CustomPartyOverlayComponentType.HP;
 			specs.add(comp);
 		}
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
-			comp.x = 240;
+			comp.x = 270;
 			comp.y = 0;
 			comp.width = 298;
 			comp.height = 35;
@@ -155,16 +160,16 @@ public class CustomPartyOverlay extends XivOverlay {
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 110;
 			comp.y = 20;
-			comp.width = 80;
+			comp.width = 120;
 			comp.height = 14;
 			comp.componentType = CustomPartyOverlayComponentType.CAST_BAR;
 			specs.add(comp);
 		}
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
-			comp.x = 190;
+			comp.x = 230;
 			comp.y = 20;
-			comp.width = 50;
+			comp.width = 40;
 			comp.height = 14;
 			comp.componentType = CustomPartyOverlayComponentType.MP_BAR;
 			specs.add(comp);

@@ -9,9 +9,12 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferStrategy;
 
+import static java.awt.RenderingHints.KEY_ANTIALIASING;
 import static java.awt.RenderingHints.KEY_RENDERING;
 import static java.awt.RenderingHints.KEY_TEXT_ANTIALIASING;
+import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
+import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_GASP;
 import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON;
 
 public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
@@ -56,8 +59,10 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 			public void paintChildren(Graphics gg) {
 				Graphics2D g = (Graphics2D) gg;
 				AffineTransform t = g.getTransform();
-				t.scale(scaleFactor, scaleFactor);
+				t.scale(ScalableJFrameLinuxRealImpl.this.scaleFactor, ScalableJFrameLinuxRealImpl.this.scaleFactor);
 				g.setTransform(t);
+				g.setRenderingHint(KEY_TEXT_ANTIALIASING, VALUE_TEXT_ANTIALIAS_ON);
+				g.setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
 				super.paintChildren(g);
 			}
 		};

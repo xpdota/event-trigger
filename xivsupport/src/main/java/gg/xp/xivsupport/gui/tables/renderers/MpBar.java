@@ -5,44 +5,42 @@ import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
 public class MpBar extends JComponent {
 
-	private static final Color mpColor = new Color(128, 128, 255, 255);
-	private static final Color borderNormal = mpColor.darker();
+	public static final Color defaultMpColor = new Color(128, 128, 255, 255);
+	public static final Color defaultBgColor = new Color(60, 63, 65);
+	private static final Color borderNormal = defaultMpColor.darker();
 	private static final Color borderEmpty = new Color(60, 63, 65, 255);
 
-	private Color baseHpColor;
-	private Color emptyColor;
-	private @Nullable Color borderColor;
+	private Color mpColor = defaultMpColor;
+
+	private Color effectiveMpColor;
+	private Color effectiveEmpty;
+	private @Nullable Color effectiveBorderColor;
 	// Take care of this internally
-	private @Nullable Color bgColor = new Color(60, 63, 65);
+	private @Nullable Color bgColor = defaultBgColor;
 	//	private Color textColor;
 	private double basePercentDisplay;
-	private String[] textOptions;
 	private boolean display;
 	private int fgTransparency = 255;
 	private int bgTransparency = 255;
-	private BarFractionDisplayOption textMode = BarFractionDisplayOption.AUTO;
-	private final JLabel label = new JLabel("", SwingConstants.CENTER) {
-		@Override
-		public boolean isVisible() {
-			return display;
-		}
-	};
+
+	private final FractionDisplayHelper textDelegate = new FractionDisplayHelper();
 
 	public MpBar() {
 //		setOpaque(false);
-		setTextOptions("");
-		add(label);
-		label.setOpaque(false);
+		add(textDelegate);
 	}
 
 	public void setTextMode(BarFractionDisplayOption textMode) {
-		this.textMode = textMode;
+		textDelegate.setDisplayMode(textMode);
+	}
+
+	public void setTextColor(Color textColor) {
+		textDelegate.setForeground(textColor);
 	}
 
 	public void setFgTransparency(int fgTransparency) {
@@ -51,6 +49,10 @@ public class MpBar extends JComponent {
 
 	public void setBgTransparency(int bgTransparency) {
 		this.bgTransparency = bgTransparency;
+	}
+
+	public void setMpColor(Color mpColor) {
+		this.mpColor = mpColor;
 	}
 
 	@Override
@@ -82,24 +84,12 @@ public class MpBar extends JComponent {
 			int effectiveMax = (int) actualMax;
 			int effectiveCurrent = (int) actualCurrent;
 			percent = effectiveCurrent / (double) effectiveMax;
-			baseHpColor = getForegroundColor();
-			emptyColor = getBackgroundColor();
-			borderColor = effectiveCurrent > 0 ? borderNormal : borderEmpty;
+			effectiveMpColor = getForegroundColor();
+			effectiveEmpty = getBackgroundColor();
+			effectiveBorderColor = effectiveCurrent > 0 ? borderNormal : borderEmpty;
 			basePercentDisplay = percent;
 
-			switch (textMode) {
-				case AUTO -> {
-					String longText = String.format("%s / %s", effectiveCurrent, effectiveMax);
-					setTextOptions(longText, String.valueOf(effectiveCurrent));
-				}
-				case BOTH -> {
-					String longText = String.format("%s / %s", effectiveCurrent, effectiveMax);
-					setTextOptions(longText);
-				}
-				case NUMERATOR -> {
-					setTextOptions(String.valueOf(effectiveCurrent));
-				}
-			}
+			textDelegate.setValue(mp);
 		}
 	}
 
@@ -121,47 +111,43 @@ public class MpBar extends JComponent {
 		return RenderUtils.withAlpha(fg, fgTransparency);
 	}
 
-	private void setTextOptions(String... textOptions) {
-		if (textOptions.length == 0) {
-			throw new IllegalArgumentException("Must specify text");
-		}
-		this.textOptions = textOptions;
-	}
-
-	private void checkLabel() {
-		int width = getWidth();
-		int bw = getBorderWidth();
-		for (String text : textOptions) {
-			label.setText(text);
-			if (label.getPreferredSize().width <= width - 2 * bw - 2) {
-				break;
-			}
-		}
-		label.setBounds(bw, bw, getWidth() - 2 * bw, getHeight() - 2 * bw);
-	}
-
-	int getBorderWidth() {
+	private int getBorderWidth() {
 		return 1;
+	}
+
+	private void setTextBounds() {
+		Rectangle bounds = getBounds();
+		int bw = getBorderWidth();
+		textDelegate.setBounds(bw, bw, bounds.width - 2 * bw, bounds.height - 2 * bw);
+		textDelegate.validate();
+	}
+
+	@Override
+	public void setBounds(int x, int y, int width, int height) {
+		super.setBounds(x, y, width, height);
+		setTextBounds();
 	}
 
 	@Override
 	public void revalidate() {
-//		super.revalidate();
-		checkLabel();
+		setTextBounds();
 	}
 
 	@Override
 	public void validate() {
-//		super.validate();
-		checkLabel();
+		setTextBounds();
+	}
+
+	@Override
+	public void paint(Graphics g) {
+		if (display) {
+			super.paint(g);
+		}
 	}
 
 	@SuppressWarnings("SuspiciousNameCombination")
 	@Override
 	protected void paintComponent(Graphics graphics) {
-		if (!display) {
-			return;
-		}
 		Graphics2D g = (Graphics2D) graphics;
 		AffineTransform old = g.getTransform();
 		AffineTransform t = new AffineTransform(old);
@@ -176,22 +162,22 @@ public class MpBar extends JComponent {
 		int borderWidth = getBorderWidth();
 		int innerWidth = realWidth - 2 * borderWidth;
 		int innerHeight = realHeight - 2 * borderWidth;
-		int width1 = (int) (innerWidth * basePercentDisplay);
-		int width3 = innerWidth - width1;
+		int barWidth = (int) (innerWidth * basePercentDisplay);
+		int emptyWidth = innerWidth - barWidth;
 
 		// TODO: missing 1px at the right of the bar
-		if (width1 > 0) {
-			g.setColor(baseHpColor);
-			g.fillRect(borderWidth, borderWidth, width1, innerHeight);
+		if (barWidth > 0) {
+			g.setColor(effectiveMpColor);
+			g.fillRect(borderWidth, borderWidth, barWidth, innerHeight);
 		}
 
-		if (width3 > 0) {
-			g.setColor(emptyColor);
-			g.fillRect(width1 + borderWidth, borderWidth, width3 + borderWidth, innerHeight);
+		if (emptyWidth > 0) {
+			g.setColor(effectiveEmpty);
+			g.fillRect(barWidth + borderWidth, borderWidth, emptyWidth + borderWidth, innerHeight);
 		}
 
-		if (borderColor != null) {
-			g.setColor(borderColor);
+		if (effectiveBorderColor != null) {
+			g.setColor(effectiveBorderColor);
 			g.drawRect(0, 0, realWidth - 1, realHeight - 1);
 		}
 

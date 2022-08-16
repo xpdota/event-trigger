@@ -15,6 +15,11 @@ public class ObservableSetting {
 		callbacks.add(listener);
 	}
 
+	public void addAndRunListener(Runnable listener) {
+		addListener(listener);
+		listener.run();
+	}
+
 	public void removeListener(Runnable listener) {
 		callbacks.remove(listener);
 	}

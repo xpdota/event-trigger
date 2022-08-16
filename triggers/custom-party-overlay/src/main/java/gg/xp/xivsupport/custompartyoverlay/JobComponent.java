@@ -1,15 +1,13 @@
 package gg.xp.xivsupport.custompartyoverlay;
 
 import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.DropShadowLabel;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.Collections;
-import java.util.List;
 
 public class JobComponent extends BasePartyListComponent {
 
