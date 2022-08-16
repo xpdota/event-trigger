@@ -142,14 +142,14 @@ public class CustomPartyOverlay extends XivOverlay {
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 110;
 			comp.y = 0;
-			comp.width = 160;
+			comp.width = 180;
 			comp.height = 20;
 			comp.componentType = CustomPartyOverlayComponentType.HP;
 			specs.add(comp);
 		}
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
-			comp.x = 270;
+			comp.x = 290;
 			comp.y = 0;
 			comp.width = 298;
 			comp.height = 35;
@@ -169,7 +169,7 @@ public class CustomPartyOverlay extends XivOverlay {
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 230;
 			comp.y = 20;
-			comp.width = 40;
+			comp.width = 60;
 			comp.height = 14;
 			comp.componentType = CustomPartyOverlayComponentType.MP_BAR;
 			specs.add(comp);
