@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.fflogs.FflogsMasterDataEvent;
 import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.Compressible;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,9 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
-import java.io.WriteAbortedException;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -102,13 +102,13 @@ public final class EventReader {
 	public static List<ACTLogLineEvent> readActLogResource(String resourcePath) {
 		List<String> lines;
 		try {
-			URL resource = EventReader.class.getResource(resourcePath);
+			InputStream resource = EventReader.class.getResourceAsStream(resourcePath);
 			if (resource == null) {
 				throw new IllegalArgumentException("The resource '%s' does not exist".formatted(resourcePath));
 			}
-			lines = Files.readAllLines(Path.of(resource.toURI()));
+			lines = IOUtils.readLines(resource, StandardCharsets.UTF_8);
 		}
-		catch (IOException | URISyntaxException e) {
+		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		return lines.stream()
