@@ -297,6 +297,11 @@
                 <artifactId>custom-party-overlay</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>testutils-samplelogs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -315,5 +320,6 @@
         <module>triggers/titan-jails</module>
         <module>telesto-support</module>
         <module>triggers/custom-party-overlay</module>
+        <module>testutils/testutils-samplelogs</module>
     </modules>
 </project>

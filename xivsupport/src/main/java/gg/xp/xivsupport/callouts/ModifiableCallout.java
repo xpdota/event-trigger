@@ -62,6 +62,16 @@ public class ModifiableCallout<X> {
 	}
 
 	/**
+	 * Simple callout with the same description and text
+	 *
+	 * @param descriptionAndText The callout text and description
+	 */
+	public ModifiableCallout(String descriptionAndText) {
+		this(descriptionAndText, descriptionAndText, 5000);
+	}
+
+
+	/**
 	 * A callout with (optionally) different TTS and on-screen text, and a custom expiry condition.
 	 * This callout will appear until the 'expiry' predicate returns true.
 	 *

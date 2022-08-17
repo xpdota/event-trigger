@@ -38,6 +38,10 @@ public record Position(double x, double y, double z, double heading) implements 
 		return heading;
 	}
 
+	public static Position of2d(double x, double y) {
+		return new Position(x, y, 0, 0);
+	}
+
 	@Override
 	public String toString() {
 		return String.format("Pos(%.2f, %.2f, %.2f : %.2f)", x, y, z, heading);
