@@ -11,6 +11,10 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferStrategy;
+
+import static java.awt.RenderingHints.KEY_RENDERING;
+import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
 
 public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 
@@ -35,6 +39,7 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 
 	@Override
 	public void setVisible(boolean b) {
+		// TODO: is this actually doing anything? The BufferStrategy isn't being used
 		if (getBufferStrategy() == null && numBuffers != 0) {
 			createBufferStrategy(numBuffers);
 		}
@@ -44,16 +49,6 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 	@Override
 	public void paint(Graphics g) {
 		super.paint(getGraphics());
-	}
-
-	@Override
-	public void paintComponents(Graphics g) {
-		super.paintComponents(getGraphics());
-	}
-
-	@Override
-	public void paintAll(Graphics g) {
-		super.paintAll(getGraphics());
 	}
 
 	@Override

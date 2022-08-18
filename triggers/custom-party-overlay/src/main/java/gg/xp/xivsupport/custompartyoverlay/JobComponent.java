@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.custompartyoverlay;
 
-import gg.xp.xivsupport.gui.tables.renderers.ComponentListRenderer;
-import gg.xp.xivsupport.gui.tables.renderers.DropShadowLabel;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -9,17 +8,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
-public class JobComponent extends BasePartyListComponent {
+public class JobComponent extends DataWatchingCustomPartyComponent<Job> {
 
 	private ScaledImageComponent drawIcon;
-	private final ComponentListRenderer listRenderer;
-	private final DropShadowLabel label = new DropShadowLabel();
-
-	public JobComponent() {
-		listRenderer = new ComponentListRenderer(2, true);
-		listRenderer.setOpaque(false);
-		label.setForeground(new Color(255, 255, 255));
-	}
 
 	@Override
 	protected Component makeComponent() {
@@ -39,7 +30,13 @@ public class JobComponent extends BasePartyListComponent {
 	}
 
 	@Override
-	protected void reformatComponent(@NotNull XivPlayerCharacter xpc) {
-		this.drawIcon = IconTextRenderer.getIconOnly(xpc.getJob());
+	protected Job extractData(@NotNull XivPlayerCharacter xpc) {
+		return xpc.getJob();
+	}
+
+	@Override
+	protected void applyData(Job data) {
+		this.drawIcon = IconTextRenderer.getIconOnly(data);
+		getComponent().repaint();
 	}
 }

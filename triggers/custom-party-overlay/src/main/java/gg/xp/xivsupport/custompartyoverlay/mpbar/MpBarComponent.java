@@ -1,15 +1,14 @@
 package gg.xp.xivsupport.custompartyoverlay.mpbar;
 
-import gg.xp.xivsupport.custompartyoverlay.BasePartyListComponent;
-import gg.xp.xivsupport.gui.tables.renderers.BarFractionDisplayOption;
+import gg.xp.xivsupport.custompartyoverlay.DataWatchingCustomPartyComponent;
 import gg.xp.xivsupport.gui.tables.renderers.MpBar;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
 import java.awt.*;
 
-public class MpBarComponent extends BasePartyListComponent {
+public class MpBarComponent extends DataWatchingCustomPartyComponent<ManaPoints> {
 	private final MpBar bar = new MpBar();
 	private final MpBarComponentConfig config;
 
@@ -17,6 +16,7 @@ public class MpBarComponent extends BasePartyListComponent {
 		this.config = config;
 		config.addAndRunListener(this::applySettings);
 	}
+
 	private void applySettings() {
 		bar.setBgTransparency(config.getBgTransparency().get());
 		bar.setFgTransparency(config.getFgTransparency().get());
@@ -25,6 +25,7 @@ public class MpBarComponent extends BasePartyListComponent {
 		bar.setTextColor(config.getTextColor().get());
 		bar.setTextMode(config.getFractionDisplayMode().get());
 		bar.revalidate();
+		forceApplyLastData();
 	}
 
 	@Override
@@ -33,8 +34,13 @@ public class MpBarComponent extends BasePartyListComponent {
 	}
 
 	@Override
-	protected void reformatComponent(@NotNull XivPlayerCharacter xpc) {
-		bar.setData(xpc);
-//		SwingUtilities.invokeLater(bar::revalidate);
+	protected ManaPoints extractData(@NotNull XivPlayerCharacter xpc) {
+		return xpc.getMp();
+	}
+
+	@Override
+	protected void applyData(ManaPoints data) {
+		bar.setData(data);
+		bar.repaint();
 	}
 }

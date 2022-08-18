@@ -118,8 +118,8 @@ public class DropShadowLabel extends Component {
 		}
 		FontRenderRequest req = new FontRenderRequest(text, height, font, scale);
 //		if (!req.equals(this.lastReq)) {
-			format(req);
-			SwingUtilities.invokeLater(this::repaint);
+		format(req);
+		SwingUtilities.invokeLater(this::repaint);
 //		}
 	}
 

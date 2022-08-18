@@ -10,7 +10,7 @@ public abstract class BasePartyListComponent implements RefreshablePartyListComp
 
 	protected abstract Component makeComponent();
 	protected abstract void reformatComponent(@NotNull XivPlayerCharacter xpc);
-	private @Nullable Component component;
+	protected @Nullable Component component;
 
 	@Override
 	public Component getComponent() {

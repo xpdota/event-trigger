@@ -41,16 +41,18 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 		super(title);
 		this.scaleFactor = scaleFactor;
 		JPanel contentPane = new JPanel() {
+			private static final Color TRANSPARENT = new Color(0, 0, 0, 0);
+
 			@Override
 			public void paint(Graphics g) {
-				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+				((Graphics2D) g).setBackground(TRANSPARENT);
 				g.clearRect(0, 0, getWidth(), getHeight());
 				super.paint(g);
 			}
 
 			@Override
 			public void paintComponent(Graphics g) {
-				((Graphics2D) g).setBackground(new Color(0, 0, 0, 0));
+				((Graphics2D) g).setBackground(TRANSPARENT);
 				g.clearRect(0, 0, getWidth(), getHeight());
 				super.paintComponent(g);
 			}
@@ -91,9 +93,9 @@ public final class ScalableJFrameLinuxRealImpl extends ScalableJFrame {
 		g2d.setRenderingHint(KEY_RENDERING, VALUE_RENDER_QUALITY);
 //		g2d.setRenderingHint(KEY_TEXT_ANTIALIASING, VALUE_TEXT_ANTIALIAS_ON);
 
-		getContentPane().paint(drawGraphics);
+		getContentPane().paint(g2d);
 		buff.show();
-		drawGraphics.dispose();
+		g2d.dispose();
 	}
 
 

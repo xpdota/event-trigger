@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.custompartyoverlay.buffs;
 
+import gg.xp.xivsupport.custompartyoverlay.AlwaysRepaintingPartyListComponent;
 import gg.xp.xivsupport.custompartyoverlay.BasePartyListComponent;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -7,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
-public class BuffsBarPartyComponent extends BasePartyListComponent {
+public class BuffsBarPartyComponent extends AlwaysRepaintingPartyListComponent {
 
 	private final BuffsBar bar = new BuffsBar();
 	private final StatusEffectRepository buffRepo;
@@ -27,6 +28,7 @@ public class BuffsBarPartyComponent extends BasePartyListComponent {
 		bar.setEnableShadows(config.getShadows().get());
 		bar.setEnableTimers(config.getTimers().get());
 		bar.reformat();
+		bar.repaint();
 	}
 
 	@Override

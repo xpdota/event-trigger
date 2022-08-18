@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.custompartyoverlay.castbar;
 
+import gg.xp.xivsupport.custompartyoverlay.AlwaysRepaintingPartyListComponent;
 import gg.xp.xivsupport.custompartyoverlay.BasePartyListComponent;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
@@ -10,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 
-public class CastBarPartyComponent extends BasePartyListComponent {
+public class CastBarPartyComponent extends AlwaysRepaintingPartyListComponent {
 
 	private final ActiveCastRepository acr;
 	private final CastBarComponent bar;
@@ -30,6 +31,7 @@ public class CastBarPartyComponent extends BasePartyListComponent {
 		bar.setInterruptedColor(config.getInterruptedColor().get());
 		bar.setUnknownColor(config.getUnknownColor().get());
 		bar.setTextColor(config.getTextColor().get());
+		bar.repaint();
 
 	}
 

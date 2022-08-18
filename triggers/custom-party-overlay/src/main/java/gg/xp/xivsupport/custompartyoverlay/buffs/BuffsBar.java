@@ -298,6 +298,7 @@ public class BuffsBar extends Component {
 	public void reformat() {
 		resetScaling();
 		imageCache.clear();
+		repaint();
 	}
 
 

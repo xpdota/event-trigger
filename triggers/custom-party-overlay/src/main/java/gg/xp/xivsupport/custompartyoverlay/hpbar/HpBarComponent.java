@@ -1,10 +1,11 @@
 package gg.xp.xivsupport.custompartyoverlay.hpbar;
 
-import gg.xp.xivsupport.custompartyoverlay.BasePartyListComponent;
+import gg.xp.xivsupport.custompartyoverlay.DataWatchingCustomPartyComponent;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.renderers.HpBar;
+import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.util.List;
 
-public class HpBarComponent extends BasePartyListComponent {
+public class HpBarComponent extends DataWatchingCustomPartyComponent<HpBarComponent.HpData> {
 	private final HpBar bar = new HpBar();
 	private final BooleanSetting showPredictedHp;
 	private final SequenceIdTracker sqidTracker;
@@ -36,6 +37,10 @@ public class HpBarComponent extends BasePartyListComponent {
 		bar.setShieldColor(config.getShieldColor().get());
 		bar.setTextColor(config.getTextColor().get());
 		bar.setTextMode(config.getFractionDisplayMode().get());
+		forceApplyLastData();
+	}
+
+	public record HpData(HitPoints hp, long diff, long shieldAmount) {
 	}
 
 	@Override
@@ -44,7 +49,7 @@ public class HpBarComponent extends BasePartyListComponent {
 	}
 
 	@Override
-	protected void reformatComponent(@NotNull XivPlayerCharacter xpc) {
+	protected HpData extractData(@NotNull XivPlayerCharacter xpc) {
 		long pending;
 		if (showPredictedHp.get()) {
 			List<AbilityUsedEvent> events = sqidTracker.getEventsTargetedOnEntity(xpc);
@@ -52,12 +57,17 @@ public class HpBarComponent extends BasePartyListComponent {
 			for (AbilityUsedEvent event : events) {
 				dmg += event.getDamage();
 			}
-			pending = dmg;
+			pending = -1 * dmg;
 		}
 		else {
 			pending = 0;
 		}
-		bar.setData(xpc, pending * -1);
-//		bar.revalidate();
+		return new HpData(xpc.getHp(), pending, xpc.getShieldAmount());
+	}
+
+	@Override
+	protected void applyData(HpData data) {
+		bar.setData(data.hp, data.diff, data.shieldAmount);
+		bar.repaint();
 	}
 }

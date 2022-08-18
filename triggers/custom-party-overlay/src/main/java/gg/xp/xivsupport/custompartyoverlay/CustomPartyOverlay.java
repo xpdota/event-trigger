@@ -72,7 +72,6 @@ public class CustomPartyOverlay extends XivOverlay {
 				refreshable.refresh(partySlot);
 			}
 		}
-		getPanel().repaint();
 	}
 
 	@Override

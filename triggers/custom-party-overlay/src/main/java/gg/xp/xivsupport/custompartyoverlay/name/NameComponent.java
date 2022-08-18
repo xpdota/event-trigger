@@ -1,13 +1,13 @@
 package gg.xp.xivsupport.custompartyoverlay.name;
 
-import gg.xp.xivsupport.custompartyoverlay.BasePartyListComponent;
+import gg.xp.xivsupport.custompartyoverlay.DataWatchingCustomPartyComponent;
 import gg.xp.xivsupport.gui.tables.renderers.DropShadowLabel;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
-public class NameComponent extends BasePartyListComponent {
+public class NameComponent extends DataWatchingCustomPartyComponent<String> {
 
 	private final DropShadowLabel label = new DropShadowLabel();
 	private final NameComponentConfig config;
@@ -30,7 +30,12 @@ public class NameComponent extends BasePartyListComponent {
 	}
 
 	@Override
-	protected void reformatComponent(@NotNull XivPlayerCharacter xpc) {
-		label.setText(xpc.getName());
+	protected String extractData(@NotNull XivPlayerCharacter xpc) {
+		return xpc.getName();
+	}
+
+	@Override
+	protected void applyData(String data) {
+		label.setText(data);
 	}
 }
