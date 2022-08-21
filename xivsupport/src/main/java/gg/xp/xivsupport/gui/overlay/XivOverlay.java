@@ -1,9 +1,5 @@
 package gg.xp.xivsupport.gui.overlay;
 
-import com.sun.jna.Native;
-import com.sun.jna.platform.win32.User32;
-import com.sun.jna.platform.win32.WinDef;
-import com.sun.jna.platform.win32.WinUser;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -21,6 +17,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.AffineTransform;
 import java.util.concurrent.atomic.AtomicLong;
 
 // TODO: also have a method for getting a config panel, much like PluginTab
@@ -59,6 +56,7 @@ public class XivOverlay {
 	private volatile boolean posSettingDirty;
 
 	private boolean visible;
+	private boolean wasVisible;
 	private boolean editMode;
 
 	private static final AtomicLong nextDefaultPos = new AtomicLong(200);
@@ -69,12 +67,19 @@ public class XivOverlay {
 		this.oc = oc;
 		xSetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.x", settingKeyBase), nextDefaultPos.get());
 		ySetting = new LongSetting(persistence, String.format("xiv-overlay.window-pos.%s.y", settingKeyBase), nextDefaultPos.getAndAdd(80));
-		opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
-		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
-		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		int numBuffers = new IntSetting(persistence, bufferNumSettingKey, 0).get();
+		scaleFactor = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.scale", settingKeyBase), 1.0d, 0.8d, 8);
+		if (Platform.isWindows()) {
+			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 0.0, 1.0);
+			frame = ScalableJFrameWindowsImpl.construct(title, scaleFactor.get(), numBuffers);
+		}
+		else {
+			opacity = new DoubleSetting(persistence, String.format("xiv-overlay.window-pos.%s.opacity", settingKeyBase), 1.0d, 1.0, 1.0);
+			opacity.reset();
+			frame = ScalableJFrameLinuxRealImpl.construct(title, scaleFactor.get());
+		}
+		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
 		enabled.addListener(this::recalc);
-		frame = ScalableJFrame.construct(title, scaleFactor.get(), numBuffers);
 		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
 //		frame.setScaleFactor(scaleFactor.get());
@@ -84,16 +89,14 @@ public class XivOverlay {
 		frame.setType(Window.Type.UTILITY);
 		panel = new JPanel();
 		panel.setOpaque(false);
-//		panel.setBackground(new Color(0, 0, 0, 0));
-//			panel.add(contents);
 		panel.setBorder(transparentBorder);
-		frame.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT));
-		frame.getContentPane().add(panel);
+		Container contentPane = frame.getContentPane();
+		contentPane.add(panel);
 		frame.setAlwaysOnTop(true);
 		resetPositionFromSettings();
 		xSetting.addListener(this::resetPositionFromSettings);
 		ySetting.addListener(this::resetPositionFromSettings);
-		scaleFactor.addListener(this::redoScale);
+		scaleFactor.addListener(() -> SwingUtilities.invokeLater(this::redoScale));
 		frame.setOpacity((float) opacity.get());
 		frame.addMouseListener(new MouseAdapter() {
 			@Override
@@ -127,14 +130,16 @@ public class XivOverlay {
 		frame.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent evt) {
-				int newX = evt.getXOnScreen();
-				int newY = evt.getYOnScreen();
-				int deltaX = newX - dragX;
-				int deltaY = newY - dragY;
-				Point old = frame.getLocation();
-				setPosition(old.x + deltaX, old.y + deltaY);
-				dragX = newX;
-				dragY = newY;
+				if (editMode) {
+					int newX = evt.getXOnScreen();
+					int newY = evt.getYOnScreen();
+					int deltaX = newX - dragX;
+					int deltaY = newY - dragY;
+					Point old = frame.getLocation();
+					setPosition(old.x + deltaX, old.y + deltaY);
+					dragX = newX;
+					dragY = newY;
+				}
 			}
 		});
 		calcFrameTimes();
@@ -198,8 +203,17 @@ public class XivOverlay {
 	}
 
 	public void setVisible(boolean visible) {
+		// TODO: a bit of a hack, but fixes the bug where if you start the program with overlays disabled, you will
+		// have to restart after enabling them.
+		if (visible && frame.getWidth() < 30) {
+			repackSize();
+		}
 		this.visible = visible;
 		recalc();
+	}
+
+	protected void onBecomeVisible() {
+
 	}
 
 	protected boolean isVisible() {
@@ -209,6 +223,7 @@ public class XivOverlay {
 	protected void repackSize() {
 		getFrame().revalidate();
 		redoScale();
+		getFrame().repaint();
 	}
 
 	private void recalc() {
@@ -220,11 +235,16 @@ public class XivOverlay {
 			frame.setVisible(true);
 		}
 		panel.setVisible(visible);
-		setClickThrough(frame, !editMode);
+		frame.setClickThrough(!editMode);
+//		setClickThrough(frame, !editMode);
 		frame.setFocusable(editMode);
 		if (editMode) {
 			panel.setBorder(editBorder);
 		}
+		if (visible && !wasVisible) {
+			onBecomeVisible();
+		}
+		wasVisible = visible;
 	}
 
 	public void setEditMode(boolean editMode) {
@@ -251,38 +271,7 @@ public class XivOverlay {
 		return scaleFactor;
 	}
 
-	// https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
-	private static final long WS_NOACTIVATE = 0x08000000L;
 
-	private static void setClickThrough(JFrame w, boolean clickThrough) {
-		log.trace("Click-through: {}", clickThrough);
-		w.setFocusableWindowState(!clickThrough);
-		if (!Platform.isWindows()) {
-			log.warn("Setting click-through is not supported on non-Windows platforms at this time.");
-			return;
-		}
-		WinDef.HWND hwnd = getHWnd(w);
-		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
-		if (clickThrough) {
-			wl |= WinUser.WS_EX_TRANSPARENT;
-			wl |= WS_NOACTIVATE;
-		}
-		else {
-			wl &= ~WinUser.WS_EX_TRANSPARENT;
-			wl &= ~WS_NOACTIVATE;
-		}
-		w.setBackground(new Color(0, 0, 0, 0));
-		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
-	}
-
-	/**
-	 * Get the window handle from the OS
-	 */
-	private static WinDef.HWND getHWnd(Component w) {
-		WinDef.HWND hwnd = new WinDef.HWND();
-		hwnd.setPointer(Native.getComponentPointer(w));
-		return hwnd;
-	}
 
 	private void calcFrameTimes() {
 		minFrameTime = 1000 / oc.getMaxFps().get();

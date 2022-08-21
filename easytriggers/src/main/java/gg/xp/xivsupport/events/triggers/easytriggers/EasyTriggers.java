@@ -61,6 +61,7 @@ import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -81,8 +82,9 @@ public final class EasyTriggers {
 	private final PersistenceProvider pers;
 	private final PicoContainer pico;
 	private final XivState state;
+	private final CustomJsonListSetting<EasyTrigger<?>> setting;
 
-	private List<EasyTrigger<?>> triggers;
+	private ArrayList<EasyTrigger<?>> triggers;
 
 	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state) {
 		this.pers = pers;
@@ -94,42 +96,11 @@ public final class EasyTriggers {
 				return getInjectionInstance(beanProperty.getType().getRawClass());
 			}
 		});
-		String strVal = pers.get(settingKey, String.class, null);
-		List<EasyTrigger<?>> triggers = new ArrayList<>();
-		if (strVal != null) {
-			try {
-				// First, convert to List<JsonNode> so that errors can be reported for individual triggers
-				List<JsonNode> jsonNodes = mapper.readValue(strVal, new TypeReference<>() {
-				});
-				List<JsonNode> failed = new ArrayList<>();
-				for (JsonNode jsonNode : jsonNodes) {
-					try {
-						EasyTrigger easyTrigger = mapper.convertValue(jsonNode, EasyTrigger.class);
-						triggers.add(easyTrigger);
-					}
-					catch (Throwable jpe) {
-						log.error("Trigger failed to load: \n{}\n", jsonNode, jpe);
-						failed.add(jsonNode);
-					}
-				}
-				if (!failed.isEmpty()) {
-					String failedSetting = pers.get(failedTriggersSettingKey, String.class, "[]");
-					List<String> otherFailues = mapper.readValue(failedSetting, new TypeReference<>() {
-					});
-					List<String> failures = new ArrayList<>(otherFailues);
-					failures.addAll(jsonNodes.stream().map(Object::toString).toList());
-					pers.save(failedTriggersSettingKey, mapper.writeValueAsString(failures));
-					log.error("One or more easy triggers failed to load - they have been saved to the setting '{}'", failedTriggersSettingKey);
-				}
-			}
-			catch (Throwable e) {
-				log.error("Error loading Easy Triggers", e);
-				log.error("Dump of trigger data:\n{}", strVal);
-				throw new RuntimeException("There was an error loading Easy Triggers. Check the log.", e);
-			}
-			log.info("Successfully loaded easy triggers");
-		}
-		this.triggers = triggers;
+		this.setting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
+				}, settingKey, failedTriggersSettingKey)
+				.withMapper(mapper)
+				.build();
+		this.triggers = new ArrayList<>(setting.getItems());
 	}
 
 	private <X> X getInjectionInstance(Class<X> clazz) {
@@ -156,14 +127,7 @@ public final class EasyTriggers {
 	}
 
 	private void save() {
-		try {
-			String triggersSerialized = mapper.writeValueAsString(triggers);
-//			log.info("Saving triggers: {}", triggersSerialized);
-			pers.save(settingKey, triggersSerialized);
-		}
-		catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
+		setting.setItems(triggers);
 	}
 
 	public void commit() {
@@ -187,21 +151,13 @@ public final class EasyTriggers {
 	}
 
 	public void addTrigger(EasyTrigger<?> trigger) {
-		makeListWritable();
 		triggers.add(trigger);
 		save();
 	}
 
 	public void removeTrigger(EasyTrigger<?> trigger) {
-		makeListWritable();
 		triggers.remove(trigger);
 		save();
-	}
-
-	private void makeListWritable() {
-		if (!(triggers instanceof ArrayList<EasyTrigger<?>>)) {
-			triggers = new ArrayList<>(triggers);
-		}
 	}
 
 	public void setTriggers(List<EasyTrigger<?>> triggers) {
@@ -257,31 +213,31 @@ public final class EasyTriggers {
 	);
 
 
-	private static Component generic(Condition<?> cond, EasyTrigger<?> trigger) {
-		return new GenericFieldEditor(cond);
+	private Component generic(Condition<?> cond, EasyTrigger<?> trigger) {
+		return new GenericFieldEditor(cond, pico);
 	}
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
 	private final List<ConditionDescription<?, ?>> conditions = List.of(
-			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(StatusStacksFilter.class, HasStatusEffect.class, "Status Effect Stack Count", StatusStacksFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(SourceEntityTypeFilter.class, HasSourceEntity.class, "Source Combatant", SourceEntityTypeFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(TargetEntityTypeFilter.class, HasTargetEntity.class, "Target Combatant", TargetEntityTypeFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(SourceEntityNpcIdFilter.class, HasSourceEntity.class, "Source Combatant NPC ID", SourceEntityNpcIdFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(TargetEntityNpcIdFilter.class, HasTargetEntity.class, "Target Combatant NPC ID", TargetEntityNpcIdFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(SourcePartyMemberFilter.class, HasSourceEntity.class, "Source is (not) in Party", () -> new SourcePartyMemberFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic),
-			new ConditionDescription<>(TargetPartyMemberFilter.class, HasTargetEntity.class, "Target is (not) in Party", () -> new TargetPartyMemberFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic),
-			new ConditionDescription<>(TargetIndexFilter.class, HasTargetIndex.class, "Target Index", TargetIndexFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(TargetCountFilter.class, HasTargetIndex.class, "Target Count", TargetCountFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(DurationFilter.class, HasDuration.class, "Castbar or Status Duration", DurationFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(LogLineRegexFilter.class, ACTLogLineEvent.class, "Log Line Regular Expression (Regex)", LogLineRegexFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(LogLineNumberFilter.class, ACTLogLineEvent.class, "Log Line Number", LogLineNumberFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, EasyTriggers::generic),
-			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, EasyTriggers::generic),
+			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, this::generic),
+			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, this::generic),
+			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, this::generic),
+			new ConditionDescription<>(StatusStacksFilter.class, HasStatusEffect.class, "Status Effect Stack Count", StatusStacksFilter::new, this::generic),
+			new ConditionDescription<>(SourceEntityTypeFilter.class, HasSourceEntity.class, "Source Combatant", SourceEntityTypeFilter::new, this::generic),
+			new ConditionDescription<>(TargetEntityTypeFilter.class, HasTargetEntity.class, "Target Combatant", TargetEntityTypeFilter::new, this::generic),
+			new ConditionDescription<>(SourceEntityNpcIdFilter.class, HasSourceEntity.class, "Source Combatant NPC ID", SourceEntityNpcIdFilter::new, this::generic),
+			new ConditionDescription<>(TargetEntityNpcIdFilter.class, HasTargetEntity.class, "Target Combatant NPC ID", TargetEntityNpcIdFilter::new, this::generic),
+			new ConditionDescription<>(SourcePartyMemberFilter.class, HasSourceEntity.class, "Source is (not) in Party", () -> new SourcePartyMemberFilter(getInjectionInstance(XivState.class)), this::generic),
+			new ConditionDescription<>(TargetPartyMemberFilter.class, HasTargetEntity.class, "Target is (not) in Party", () -> new TargetPartyMemberFilter(getInjectionInstance(XivState.class)), this::generic),
+			new ConditionDescription<>(TargetIndexFilter.class, HasTargetIndex.class, "Target Index", TargetIndexFilter::new, this::generic),
+			new ConditionDescription<>(TargetCountFilter.class, HasTargetIndex.class, "Target Count", TargetCountFilter::new, this::generic),
+			new ConditionDescription<>(DurationFilter.class, HasDuration.class, "Castbar or Status Duration", DurationFilter::new, this::generic),
+			new ConditionDescription<>(LogLineRegexFilter.class, ACTLogLineEvent.class, "Log Line Regular Expression (Regex)", LogLineRegexFilter::new, this::generic),
+			new ConditionDescription<>(LogLineNumberFilter.class, ACTLogLineEvent.class, "Log Line Number", LogLineNumberFilter::new, this::generic),
+			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, this::generic),
+			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, this::generic),
 			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(getInjectionInstance(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, (EasyTrigger<Event>) b)),
-			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(getInjectionInstance(XivState.class)), EasyTriggers::generic)
+			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(getInjectionInstance(XivState.class)), this::generic)
 	);
 
 	public List<EventDescription<?>> getEventDescriptions() {

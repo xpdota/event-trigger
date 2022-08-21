@@ -7,12 +7,12 @@
             </pattern>
         </encoder>
     </appender>
+    <define name="TRIGG_DIR" class="gg.xp.xivsupport.persistence.UserDirFinder" />
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-<!--        TODO this breaks on *nix-->
-        <file>${APPDATA}/triggevent/triggevent.log</file>
+        <file>${TRIGG_DIR}/triggevent.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>%i.log.zip</fileNamePattern>
+            <fileNamePattern>${TRIGG_DIR}/triggevent.log.%i.zip</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>3</maxIndex>
         </rollingPolicy>

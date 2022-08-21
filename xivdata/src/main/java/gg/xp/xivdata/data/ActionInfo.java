@@ -12,8 +12,9 @@ public record ActionInfo(
 		long iconId,
 		long cdRaw,
 		int maxCharges,
-		String categoryRaw
-) {
+		String categoryRaw,
+		boolean isPlayerAbility,
+		long castTimeRaw) {
 	public @Nullable ActionIcon getIcon() {
 		return ActionLibrary.iconForInfo(this);
 	}
@@ -33,5 +34,9 @@ public record ActionInfo(
 
 	public double getCd() {
 		return cdRaw / 10.0;
+	}
+
+	public double getCastTime() {
+		return castTimeRaw / 10.0;
 	}
 }

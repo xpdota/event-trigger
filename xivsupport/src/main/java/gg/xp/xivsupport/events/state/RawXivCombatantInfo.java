@@ -57,8 +57,8 @@ public final class RawXivCombatantInfo implements Serializable {
 			@JsonProperty("OwnerID") long ownerId
 	) {
 		this.id = id;
-		// Reuse strings for NPCs
-		this.name = type != 1 && name != null ? name.intern() : name;
+		// Reuse strings
+		this.name = name != null ? name.intern() : null;
 		this.jobId = jobId;
 		this.type = type;
 		this.curHp = curHp;

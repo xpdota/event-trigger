@@ -16,7 +16,7 @@ public class TimelineParser {
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineParser.class);
 	// TODO: there are also windows that do not have a start + end, only a single number
-	private static final Pattern timelinePatternLong = Pattern.compile("^(?<time>\\d*\\.?\\d*) (?:\"(?<title>.*)\"| sync \\/(?<sync>.*)\\/| window (?<windowStart>\\d*\\.?\\d*),(?<windowEnd>\\d*\\.?\\d*)| jump (?<jump>\\d*\\.?\\d*)| duration (?<duration>\\d*\\.?\\d*))*$");
+	private static final Pattern timelinePatternLong = Pattern.compile("^(?<time>\\d+\\.?\\d*) (?:\"(?<title>.*)\"| sync /(?<sync>.*)/| window (?<windowStart>\\d*\\.?\\d*),(?<windowEnd>\\d*\\.?\\d*)| jump (?<jump>\\d*\\.?\\d*)| duration (?<duration>\\d*\\.?\\d*))*(?:$|\\s*#.*$)");
 
 	public static List<TextFileTimelineEntry> parseMultiple(Collection<String> line) {
 		return line.stream().map(TimelineParser::parseRaw).filter(Objects::nonNull).collect(Collectors.toList());
@@ -56,7 +56,14 @@ public class TimelineParser {
 			else {
 				window = TimelineWindow.DEFAULT;
 			}
-			return new TextFileTimelineEntry(Double.parseDouble(timeRaw), title, sync, doubleOrNull(durationRaw), window, doubleOrNull(jumpRaw));
+			double time;
+			try {
+				time = Double.parseDouble(timeRaw);
+			}
+			catch (NumberFormatException nfe) {
+				throw new IllegalArgumentException("Not a valid time: %s (entire line: %s)".formatted(timeRaw, line));
+			}
+			return new TextFileTimelineEntry(time, title, sync, doubleOrNull(durationRaw), window, doubleOrNull(jumpRaw));
 		}
 		else {
 			log.trace("Line did not match: {}", line);

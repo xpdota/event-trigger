@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
@@ -17,7 +18,7 @@ public class BasicEventQueue implements EventQueue {
 
 
 	private static final Logger log = LoggerFactory.getLogger(BasicEventQueue.class);
-	private final Queue<Tracker> backingQueue = new ArrayDeque<>();
+	private final Deque<Tracker> backingQueue = new ArrayDeque<>();
 	private final Object queueLock = new Object();
 	private final List<Event> delayedEvents = new ArrayList<>();
 	private volatile boolean delayedEventsDirtyFlag;
@@ -50,14 +51,30 @@ public class BasicEventQueue implements EventQueue {
 		}
 	}
 
+	private static final boolean enableCombine = false;
 
 	@Override
 	public void push(Event event) {
 		long runAt = event.delayedEnqueueAt();
 		if (runAt == 0 || runAt <= System.currentTimeMillis()) {
+			event.setEnqueuedAt(TimeUtils.now());
+			Tracker tracker = new Tracker(event);
 			synchronized (queueLock) {
-				event.setEnqueuedAt(TimeUtils.now());
-				backingQueue.add(new Tracker(event));
+				if (enableCombine) {
+					Tracker existingTracker = backingQueue.peekLast();
+					Event combined;
+					if (existingTracker == null || (combined = existingTracker.event.combineWith(event)) == null) {
+						backingQueue.add(existingTracker);
+					}
+					else {
+//					log.info("Combined!");
+						backingQueue.removeLast();
+						backingQueue.add(new Tracker(combined));
+					}
+				}
+				else {
+					backingQueue.add(tracker);
+				}
 				queueLock.notifyAll();
 			}
 		}

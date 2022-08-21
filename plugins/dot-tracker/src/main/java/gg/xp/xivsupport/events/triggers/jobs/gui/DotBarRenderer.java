@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.combatstate.TickInfo;
+import gg.xp.xivsupport.events.triggers.jobs.DotRefreshReminders;
 import gg.xp.xivsupport.gui.tables.renderers.ResourceBarRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.TickRenderInfo;
 import org.jetbrains.annotations.NotNull;
@@ -11,11 +12,11 @@ import java.time.Instant;
 
 public class DotBarRenderer extends ResourceBarRenderer<VisualDotInfo> {
 
-	private static final Color colorExpired = new Color(255, 0, 0, 192);
-	private static final Color colorGood = new Color(53, 134, 159, 192);
+	private final DotRefreshReminders dots;
 
-	public DotBarRenderer() {
+	public DotBarRenderer(DotRefreshReminders dots) {
 		super(VisualDotInfo.class);
+		this.dots = dots;
 	}
 
 	@Override
@@ -40,8 +41,11 @@ public class DotBarRenderer extends ResourceBarRenderer<VisualDotInfo> {
 	@Override
 	protected Color getBarColor(double percent, @NotNull VisualDotInfo item) {
 		if (percent > 0.999d) {
-			return colorExpired;
+			return dots.getExpiredColor().get();
 		}
-		return colorGood;
+		else if (percent > 0.87d) {
+			return dots.getExpiringColor().get();
+		}
+		return dots.getNormalColor().get();
 	}
 }

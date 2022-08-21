@@ -72,6 +72,20 @@
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>zip-file-linux</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/bin-linux.xml</descriptor>
+                            </descriptors>
+                            <finalName>triggevent-linux</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -159,6 +173,24 @@
                                 <resource>
                                     <directory>${project.build.directory}/classes</directory>
                                     <includes>args.txt</includes>
+                                </resource>
+                            </resources>
+
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-linux-scripts</id>
+                        <!-- here the phase you need -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/windows</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/linux</directory>
+                                    <includes>*.sh</includes>
                                 </resource>
                             </resources>
 
@@ -308,6 +340,14 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>telesto-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>custom-party-overlay</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>testutils-samplelogs</artifactId>
         </dependency>
     </dependencies>
 

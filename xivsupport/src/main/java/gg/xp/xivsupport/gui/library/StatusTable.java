@@ -23,7 +23,7 @@ public final class StatusTable {
 
 	public static TableWithFilterAndDetails<StatusEffectInfo, Object> table() {
 		return TableWithFilterAndDetails.builder("Status Effects", () -> {
-					Map<Long, StatusEffectInfo> csvValues = StatusEffectLibrary.getAll();
+					Map<Integer, StatusEffectInfo> csvValues = StatusEffectLibrary.getAll();
 					List<StatusEffectInfo> values = new ArrayList<>(csvValues.values());
 					values.sort(Comparator.comparing(StatusEffectInfo::statusEffectId));
 					return values;

@@ -22,10 +22,10 @@ public class AllTimelinesLoadedSuccessfullyTest {
 		TimelineManager manager = pico.getComponent(TimelineManager.class);
 		Set<Long> timelineZoneIds = TimelineManager.getTimelines().keySet();
 		int size = timelineZoneIds.size();
+		log.info("Number of timelines: {}", size);
 		if (size < 100) {
 			Assert.fail("Expected at least 100 timelines, got " + size);
 		}
-		log.info("Number of timelines: {}", log);
 		for (Long timelineZoneId : timelineZoneIds) {
 			TimelineProcessor proc = manager.getTimeline(timelineZoneId);
 			Assert.assertNotNull(proc, "Timeline Processor was null for zone " + timelineZoneId);

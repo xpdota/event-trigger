@@ -4,6 +4,7 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
@@ -27,19 +28,19 @@ public abstract class CalloutVerificationTest {
 	protected abstract String getFileName();
 
 	protected CalloutInitialValues call(long when, String tts, String text) {
-		return new CalloutInitialValues(when, tts, text);
+		return new CalloutInitialValues(when, tts, text, null);
 	}
 
 	protected CalloutInitialValues callAppend(long when, String tts, String appendText) {
-		return new CalloutInitialValues(when, tts, tts + ' ' + appendText);
+		return new CalloutInitialValues(when, tts, tts + ' ' + appendText, null);
 	}
 
 	protected CalloutInitialValues call(long when, String both) {
-		return new CalloutInitialValues(when, both, both);
+		return new CalloutInitialValues(when, both, both, null);
 	}
 
 	@Test
-	void doTheTest() throws ExecutionException, InterruptedException {
+	void doTheTest() {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		String fileName = getFileName();
 		ReplayController replayController = new ReplayController(pico.getComponent(EventMaster.class), EventReader.readActLogResource(fileName), false);
@@ -69,7 +70,11 @@ public abstract class CalloutVerificationTest {
 					msDelta = Duration.between(combatStart.getHappenedAt(), ((BaseEvent) e).getEffectiveHappenedAt()).toMillis();
 				}
 			}
-			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText()));
+			Event parent = e.getParent();
+			if (parent instanceof RawModifiedCallout<?>) {
+				parent = parent.getParent();
+			}
+			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText(), parent));
 		});
 
 

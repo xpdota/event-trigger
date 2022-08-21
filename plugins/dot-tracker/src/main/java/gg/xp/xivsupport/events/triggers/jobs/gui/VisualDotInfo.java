@@ -32,12 +32,12 @@ public class VisualDotInfo implements CurrentMaxPair, LabelOverride {
 	}
 
 	@Override
-	public long getCurrent() {
+	public long current() {
 		return buff.getEstimatedElapsedDuration().toMillis();
 	}
 
 	@Override
-	public long getMax() {
+	public long max() {
 		return buff.getInitialDuration().toMillis();
 	}
 

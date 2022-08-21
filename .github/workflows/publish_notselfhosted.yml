@@ -29,7 +29,7 @@ jobs:
       - name: Build with Maven
         uses: gabrielbb/xvfb-action@v1
         with:
-          run: mvn -T5 clean install
+          run: mvn -T4 clean install
       - name: Copy release files
         run: |
           pushd launcher/target/windows/

@@ -15,11 +15,13 @@ public class ACTLogLineEvent extends BaseEvent implements Compressible {
 	private final String logLine;
 	private final String[] rawFields;
 	private final ZonedDateTime timestamp;
+	private final int lineNumber;
 
 	public ACTLogLineEvent(String logLine) {
 		this.logLine = logLine;
 		rawFields = logLine.split("\\|");
 		this.timestamp = ZonedDateTime.parse(rawFields[1]);
+		lineNumber = Integer.parseInt(rawFields[0]);
 		setHappenedAt(timestamp.toInstant());
 	}
 
@@ -84,9 +86,13 @@ public class ACTLogLineEvent extends BaseEvent implements Compressible {
 		// ACT log lines do not have the checksum at the end
 		for (int i = 2; i < rawFields.length - 1; i++) {
 			String rawField = rawFields[i];
-			lineBuilder.append(":").append(rawField);
+			lineBuilder.append(':').append(rawField);
 		}
 		return lineBuilder.toString();
+	}
+
+	public int getLineNumber() {
+		return lineNumber;
 	}
 
 	@Override

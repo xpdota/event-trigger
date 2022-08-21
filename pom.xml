@@ -53,8 +53,10 @@
                     <version>3.0.0-M5</version>
                     <configuration>
                         <parallel>methods</parallel>
-                        <threadCount>2</threadCount>
+                        <threadCount>1</threadCount>
                         <perCoreThreadCount>true</perCoreThreadCount>
+                        <argLine>-Duser.country=US -Duser.language=en -DsequentialTriggerCycleTime=1000</argLine>
+                        <trimStackTrace>false</trimStackTrace>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -290,6 +292,16 @@
                 <artifactId>telesto-support</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>custom-party-overlay</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>testutils-samplelogs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -307,6 +319,8 @@
         <module>plugins</module>
         <module>triggers/titan-jails</module>
         <module>telesto-support</module>
+        <module>triggers/custom-party-overlay</module>
+        <module>testutils/testutils-samplelogs</module>
         <module>groovy-sandboxing</module>
     </modules>
 </project>

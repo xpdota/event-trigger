@@ -66,7 +66,7 @@ public class DotTrackerOverlay extends XivOverlay {
 				}))
 				.addColumn(new CustomColumn<>("Bar", Function.identity(),
 						c -> {
-							c.setCellRenderer(new DotBarRenderer());
+							c.setCellRenderer(new DotBarRenderer(dots));
 							c.setMaxWidth(BAR_WIDTH);
 							c.setMinWidth(BAR_WIDTH);
 						}))
@@ -168,7 +168,7 @@ public class DotTrackerOverlay extends XivOverlay {
 			});
 
 			croppedDots = out.stream()
-					.sorted(Comparator.<VisualDotInfo, Long>comparing(event -> event.getEvent().getTarget().getHp() != null ? event.getEvent().getTarget().getHp().getMax() : 0)
+					.sorted(Comparator.<VisualDotInfo, Long>comparing(event -> event.getEvent().getTarget().getHp() != null ? event.getEvent().getTarget().getHp().max() : 0)
 							.reversed()
 							.thenComparing(event -> event.getEvent().getTarget().getId()))
 					.limit(numberOfRows.get())

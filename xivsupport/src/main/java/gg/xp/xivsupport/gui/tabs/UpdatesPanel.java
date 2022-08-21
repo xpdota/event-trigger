@@ -6,7 +6,9 @@ import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.SimplifiedPropertiesFilePersistenceProvider;
+import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.StringSettingGui;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 import gg.xp.xivsupport.sys.Threading;
 import org.slf4j.Logger;
@@ -24,12 +26,15 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
 	private static final String propsOverrideFileName = "update.properties";
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("UpdateCheck"));
+	private JButton button;
 	private volatile UpdateCheckStatus updateCheckStatus = UpdateCheckStatus.NOT_STARTED;
 	private JLabel checkingLabel;
 	private File installDir;
 	private File propsOverride;
 	private PersistenceProvider updatePropsFilePers;
 	private static final boolean isIde = Platform.isInIDE();
+	private final BooleanSetting updateCheckNag;
+	private boolean updateCheckedThisRun;
 
 	private enum UpdateCheckStatus {
 		NOT_STARTED,
@@ -39,8 +44,9 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		ERROR
 	}
 
-	public UpdatesPanel() {
+	public UpdatesPanel(PersistenceProvider pers) {
 		super("Updates");
+		updateCheckNag = new BooleanSetting(pers, "updater.nag-next-update", true);
 		try {
 			this.installDir = Platform.getInstallDir();
 			propsOverride = Paths.get(installDir.toString(), propsOverrideFileName).toFile();
@@ -60,35 +66,8 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 //			doUpdateCheckInBackground();
 			add(checkingLabel, c);
 		}
-		JButton button = new JButton("Check for Updates and Restart");
-		button.addActionListener(l -> exs.submit(() -> {
-			// First, try to update the updater itself
-			try {
-				try {
-					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.Update");
-					clazz.getMethod("updateTheUpdater").invoke(null);
-				}
-				catch (Throwable e) {
-					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.UpdateCopyForLegacyMigration");
-					clazz.getMethod("updateTheUpdater").invoke(null);
-				}
-			}
-			catch (Throwable e) {
-				log.error("Error updating the updater - you may not have a recent enough version (or are running in an IDE).", e);
-				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error updating the updater. This may fix itself after updates. ");
-			}
-			try {
-				// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
-				// can relaunch the application correctly.
-				Desktop.getDesktop().open(Paths.get(installDir.toString(), "triggevent-upd.exe").toFile());
-			}
-			catch (Throwable e) {
-				log.error("Error launching updater", e);
-				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe, or reinstall if that doesn't work.");
-				return;
-			}
-			System.exit(0);
-		}));
+		button = new JButton("Check for Updates and Restart");
+		button.addActionListener(l -> updateNow());
 		c.gridy++;
 		//noinspection InstanceVariableUsedBeforeInitialized
 		add(new JLabel("Install Dir: " + installDir), c);
@@ -112,8 +91,12 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		openInstallDirButton.addActionListener(l -> GuiUtil.openFile(installDir));
 		add(openInstallDirButton, c);
 		c.gridy++;
+
+		JCheckBox nagCheckbox = new BooleanSettingGui(updateCheckNag, "Update Popup on Startup").getComponent();
+		add(nagCheckbox, c);
+		c.gridy++;
 		c.weighty = 1;
-		add(new JPanel(), c);
+		add(Box.createGlue(), c);
 		new RefreshLoop<>(
 				"UpdatePeriodicCheck",
 				this,
@@ -121,6 +104,42 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				// 15 minutes * 60 seconds * 1000 ms
 				i -> 15 * 60 * 1000L
 		).start();
+	}
+
+	private void updateNow() {
+		exs.submit(() -> {
+			// First, try to update the updater itself
+			try {
+				try {
+					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.Update");
+					clazz.getMethod("updateTheUpdater").invoke(null);
+				}
+				catch (Throwable e) {
+					Class<?> clazz = Class.forName("gg.xp.xivsupport.gui.UpdateCopyForLegacyMigration");
+					clazz.getMethod("updateTheUpdater").invoke(null);
+				}
+			}
+			catch (Throwable e) {
+				log.error("Error updating the updater - you may not have a recent enough version (or are running in an IDE).", e);
+				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error updating the updater. This may fix itself after updates. ");
+			}
+			try {
+				// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
+				// can relaunch the application correctly.
+				if (Platform.isWindows()) {
+					Desktop.getDesktop().open(Paths.get(installDir.toString(), "triggevent-upd.exe").toFile());
+				}
+				else {
+					Runtime.getRuntime().exec(new String[]{"sh", "triggevent-upd.sh"});
+				}
+			}
+			catch (Throwable e) {
+				log.error("Error launching updater", e);
+				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe, or reinstall if that doesn't work.");
+				return;
+			}
+			System.exit(0);
+		});
 	}
 
 	private void setUpdateCheckStatus(UpdateCheckStatus updateCheckStatus) {
@@ -137,6 +156,29 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		);
 		if (updateCheckStatus != UpdateCheckStatus.IN_PROGRESS) {
 			notifyParents();
+		}
+		if (updateCheckStatus == UpdateCheckStatus.NO_UPDATE || updateCheckStatus == UpdateCheckStatus.ERROR) {
+			updateCheckedThisRun = true;
+		}
+		if (!updateCheckedThisRun && updateCheckNag.get() && updateCheckStatus == UpdateCheckStatus.UPDATE_AVAILABLE) {
+			Object[] options = {"Yes", "No", "No, Don't Ask Again"};
+			updateCheckedThisRun = true;
+			int answer = JOptionPane.showOptionDialog(
+					SwingUtilities.getWindowAncestor(checkingLabel),
+					"There is an update available. Would you like to install it?",
+					"Update",
+					JOptionPane.YES_NO_CANCEL_OPTION,
+					JOptionPane.QUESTION_MESSAGE,
+					null,
+					options,
+					options[0]);
+			log.info("Update answer: {}", answer);
+			switch (answer) {
+				case 0 -> updateNow();
+				case 1 -> {
+				}
+				case 2 -> updateCheckNag.set(false);
+			}
 		}
 	}
 

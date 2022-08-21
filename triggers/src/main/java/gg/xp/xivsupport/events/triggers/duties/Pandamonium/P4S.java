@@ -6,6 +6,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
@@ -31,7 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@CalloutRepo("P4S")
+@CalloutRepo(name = "P4S", duty = KnownDuty.P4S)
 public class P4S implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P4S.class);
 	private final ModifiableCallout<AbilityCastStart> decollation = ModifiableCallout.durationBasedCall("Decollation", "Raidwide");

@@ -13,12 +13,14 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.models.BuffTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.Serial;
 import java.time.Duration;
 import java.time.Instant;
@@ -43,6 +45,14 @@ public class DotRefreshReminders {
 	private final Map<DotBuff, BooleanSetting> enabledDots = new LinkedHashMap<>();
 	private final StatusEffectRepository buffs;
 	private final IntSetting numberToDisplay;
+
+	private static final Color defaultColorExpired = new Color(255, 0, 0, 192);
+	private static final Color defaultColorGood = new Color(53, 134, 159, 192);
+	private static final Color defaultColorExpiring = new Color(172, 48, 225, 192);
+	private final ColorSetting normalColor;
+	private final ColorSetting expiredColor;
+	private final ColorSetting expiringColor;
+
 	// TODO: make this a real setting
 	boolean suppressSpamCallouts = true;
 
@@ -56,6 +66,10 @@ public class DotRefreshReminders {
 		// TODO put this on UI
 		this.enableFlyingText = new BooleanSetting(persistence, "dot-tracker.enable-flying-text", false);
 		this.numberToDisplay = new IntSetting(persistence, "dot-tracker.disp-time", 8, 1, 32);
+
+		normalColor = new ColorSetting(persistence, "dot-tracker.normal-color", defaultColorGood);
+		expiredColor = new ColorSetting(persistence, "dot-tracker.expired-color", defaultColorExpired);
+		expiringColor = new ColorSetting(persistence, "dot-tracker.expiring-color", defaultColorExpiring);
 	}
 
 	private static String getKey(DotBuff buff) {
@@ -215,5 +229,17 @@ public class DotRefreshReminders {
 
 	public BooleanSetting getEnableTts() {
 		return enableTts;
+	}
+
+	public ColorSetting getNormalColor() {
+		return normalColor;
+	}
+
+	public ColorSetting getExpiredColor() {
+		return expiredColor;
+	}
+
+	public ColorSetting getExpiringColor() {
+		return expiringColor;
 	}
 }

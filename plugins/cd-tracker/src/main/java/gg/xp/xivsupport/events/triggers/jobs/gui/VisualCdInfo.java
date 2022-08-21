@@ -7,6 +7,9 @@ import gg.xp.xivsupport.models.CurrentMaxPair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.List;
+
 public interface VisualCdInfo extends CurrentMaxPair, LabelOverride {
 	@Nullable AbilityUsedEvent getEvent();
 
@@ -14,7 +17,11 @@ public interface VisualCdInfo extends CurrentMaxPair, LabelOverride {
 
 	boolean useChargeDisplay();
 
-	@NotNull Cooldown getCd();
+	long getPrimaryAbilityId();
 
 	boolean stillValid();
+
+	List<? extends VisualCdInfo> makeChargeInfo();
+
+	CdStatus getStatus();
 }

@@ -221,6 +221,6 @@ public class XivCombatant extends XivEntity {
 		if (mp == null) {
 			mp = new ManaPoints(10_000, 10_000);
 		}
-		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.getCurrent(), hp.getMax(), mp.getCurrent(), mp.getMax(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId());
+		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.current(), hp.max(), mp.current(), mp.max(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId());
 	}
 }

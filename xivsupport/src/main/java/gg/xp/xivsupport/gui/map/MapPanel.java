@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.gui.map;
 
-import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.scan.HandleEvents;
+import com.formdev.flatlaf.util.ScaledImageIcon;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivdata.data.XivMap;
@@ -15,7 +14,6 @@ import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.OverlapLayout;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
-import gg.xp.xivsupport.gui.tables.renderers.ResourceBar;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
@@ -26,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -33,12 +32,18 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.AffineTransform;
 import java.io.Serial;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class MapPanel extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener {
 
@@ -57,6 +62,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private final ActiveCastRepository acr;
 	private XivMap map = XivMap.UNKNOWN;
 	private Image backgroundImage;
+	// -1 indicates no selection
+	private volatile long selection = -1;
+	private Consumer<@Nullable XivCombatant> selectionCallback = l -> {
+	};
 
 	private static final Color enemyColor = new Color(128, 0, 0);
 	private static final Color otherPlayerColor = new Color(82, 204, 82);
@@ -98,8 +107,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
-	@HandleEvents
-	public void mapChange(EventContext context, MapChangeEvent event) {
+	public void mapChange(MapChangeEvent event) {
 		setNewBackgroundImage(event.getMap());
 		resetPanAndZoom();
 	}
@@ -125,10 +133,16 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		refresher.refreshNow();
 	}
 
+	private volatile List<XivCombatant> combatants = Collections.emptyList();
+
+	public void setCombatants(List<XivCombatant> combatants) {
+		this.combatants = new ArrayList<>(combatants);
+		SwingUtilities.invokeLater(this::refresh);
+	}
 
 	private void refresh() {
 //		log.info("Map refresh");
-		List<XivCombatant> combatants = state.getCombatantsListCopy();
+		List<XivCombatant> combatants = this.combatants;
 		map = state.getMap();
 		combatants.stream()
 				.filter(cbt -> {
@@ -239,8 +253,27 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		if (e.getButton() == MouseEvent.BUTTON2) {
 			resetPanAndZoom();
 		}
+		else {
+			if (e.getComponent() instanceof PlayerDoohickey pd) {
+				selectionCallback.accept(pd.cbt);
+			}
+			else {
+				selectionCallback.accept(null);
+			}
+//			log.info("Clicked on {}", getComponentAt(e.getPoint()));
+		}
 	}
-
+//
+//	@Override
+//	public Component getComponentAt(Point p) {
+//		for (Component component : getComponents()) {
+//			if (component.getBounds().contains(p)) {
+//				return component;
+//			}
+//		}
+//		return this;
+//	}
+//
 	@Override
 	public void mousePressed(MouseEvent e) {
 //		log.info("Pressed");
@@ -265,6 +298,42 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	}
 
+	public void setSelection(@Nullable XivCombatant selection) {
+		long newSelection;
+		if (selection == null) {
+			newSelection = -1;
+		}
+		else {
+			newSelection = selection.getId();
+		}
+		if (newSelection != this.selection) {
+			log.info("New map selection: {} -> {}",
+					this.selection == -1 ? "none" : String.format("0x%X", this.selection),
+					newSelection == -1 ? "none" : String.format("0x%X", newSelection));
+			this.selection = newSelection;
+			Component[] components = getComponents();
+			removeAll();
+			Arrays.stream(components).sorted(Comparator.comparing(comp -> {
+				if (comp instanceof PlayerDoohickey pd) {
+					if (pd.isSelected()) {
+						return 0;
+					}
+					else {
+						return 1;
+					}
+				}
+				else {
+					return -1;
+				}
+			})).forEach(this::add);
+			repaint();
+		}
+	}
+
+	public void setSelectionCallback(Consumer<@Nullable XivCombatant> selectionCallback) {
+		this.selectionCallback = selectionCallback;
+	}
+
 	private static String formatTooltip(XivCombatant cbt) {
 		StringBuilder tt = new StringBuilder();
 		tt.append(cbt.getName()).append(" (").append(String.format("0x%X, %s)", cbt.getId(), cbt.getId()));
@@ -276,15 +345,34 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 		tt.append('\n').append(cbt.getPos());
 		if (cbt.getHp() != null) {
-			tt.append("\nHP: ").append(String.format("%s / %s", cbt.getHp().getCurrent(), cbt.getHp().getMax()));
+			tt.append("\nHP: ").append(String.format("%s / %s", cbt.getHp().current(), cbt.getHp().max()));
 		}
 		return tt.toString();
 	}
 
+	@Override
+	protected void paintChildren(Graphics g) {
+		super.paintChildren(g);
+		things.values().forEach(v -> {
+			if (v.isSelected()) {
+				v.repaint();
+//				v.paintComponent(g);
+//				paintComponents();
+//				v.paint(g);
+			}
+		});
+	}
+
+
 	// TODO: name....
 	private class PlayerDoohickey extends JPanel {
 
+		private static final Border selectionBorder = new LineBorder(Color.CYAN, 2);
+		private static final Color selectedBackground = new Color(192, 255, 255, 128);
 		private final JLabel defaultLabel;
+		private final XivCombatant cbt;
+		// This red should never actually show up
+		private Color mainColor = new Color(255, 0, 0);
 		private double x;
 		private double y;
 		private final JPanel inner;
@@ -294,9 +382,18 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		private final HpBar hpBar;
 		private final JLabel nameLabel;
 		private final JLabel idLabel;
+		private final long cbtId;
+		private double facing;
 
 		public PlayerDoohickey(XivCombatant cbt) {
-			inner = new JPanel();
+			this.cbt = cbt;
+			cbtId = cbt.getId();
+			inner = new JPanel() {
+				@Override
+				public Color getBackground() {
+					return mainColor;
+				}
+			};
 			inner.setBorder(new LineBorder(Color.PINK, 2));
 			setLayout(null);
 			inner.setLayout(new OverlapLayout());
@@ -314,7 +411,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			setSize(outerSize, outerSize);
 			int innerW = inner.getPreferredSize().width;
 			int innerH = inner.getPreferredSize().height;
-			inner.setBounds(new Rectangle(center - (innerW / 2), center - (innerH / 2), innerW, innerH));
+			inner.setBounds(new Rectangle(center - (innerW * 2), center - (innerH / 2), innerW, innerH));
 			this.castBar = new CastBarComponent() {
 				@Override
 				public void paint(Graphics g) {
@@ -323,6 +420,11 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					super.paint(g);
 				}
 			};
+
+			FacingAngleIndicator arrow = new FacingAngleIndicator();
+			arrow.setBounds(center - 10, center - 10, 20, 20);
+			add(arrow);
+
 			castBar.setBounds(0, 81, 100, 19);
 			add(castBar);
 			this.hpBar = new HpBar();
@@ -368,6 +470,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (pos != null) {
 				this.x = pos.getX();
 				this.y = pos.getY();
+				this.facing = pos.getHeading();
 			}
 			if (cbt instanceof XivPlayerCharacter pc) {
 				Job newJob = pc.getJob();
@@ -385,8 +488,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			}
 
 			HitPoints hp = cbt.getHp();
-			long hpCurrent = hp == null ? -1 : hp.getCurrent();
-			long hpMax = hp == null ? -1 : hp.getMax();
+			long hpCurrent = hp == null ? -1 : hp.current();
+			long hpMax = hp == null ? -1 : hp.max();
 			// Ignore updates where nothing changed
 			if (hpCurrent == oldHpCurrent && hpMax == oldHpMax) {
 				return;
@@ -396,7 +499,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (hp == null) {
 				hpBar.setVisible(false);
 			}
-			else if (cbt.getType() == CombatantType.FAKE || hp.getMax() == 1 || hp.getCurrent() < 0) {
+			else if (cbt.getType() == CombatantType.FAKE || hp.max() == 1 || hp.current() < 0) {
 				hpBar.setVisible(false);
 			}
 			else {
@@ -410,29 +513,35 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (cbt instanceof XivPlayerCharacter pc) {
 				Job job = pc.getJob();
 				if (cbt.isThePlayer()) {
-					inner.setBorder(new LineBorder(localPcColor));
-					inner.setBackground(localPcColor);
+					mainColor = localPcColor;
+//					inner.setBorder(new LineBorder(localPcColor));
+//					inner.setBackground(localPcColor);
 				}
 				else if (state.getPartyList().contains(cbt)) {
-					inner.setBorder(new LineBorder(partyMemberColor));
-					inner.setBackground(partyMemberColor);
+					mainColor = partyMemberColor;
+//					inner.setBorder(new LineBorder(partyMemberColor));
+//					inner.setBackground(partyMemberColor);
 				}
 				else {
-					inner.setBorder(new LineBorder(otherPlayerColor));
-					inner.setBackground(otherPlayerColor);
+					mainColor = otherPlayerColor;
+//					inner.setBorder(new LineBorder(otherPlayerColor));
+//					inner.setBackground(otherPlayerColor);
 				}
 				icon = IconTextRenderer.getComponent(job, defaultLabel, true, false, true);
-				inner.setOpaque(true);
+//				inner.setOpaque(true);
 				// TODO: this doesn't work because it hasn't been added to the container yet
 //				MapPanel.this.setComponentZOrder(this, 0);
 			}
 			else {
-				inner.setBorder(new LineBorder(enemyColor));
-				inner.setOpaque(false);
+				mainColor = enemyColor;
+//				inner.setBorder(new LineBorder(enemyColor));
+//				inner.setOpaque(false);
 				// TODO: find good icon
 				icon = IconTextRenderer.getComponent(ActionLibrary.iconForId(2246), defaultLabel, true, false, true);
 //				MapPanel.this.setComponentZOrder(this, 5);
 			}
+			inner.setBorder(new LineBorder(mainColor));
+			inner.setOpaque(true);
 			inner.add(icon);
 			validate();
 		}
@@ -451,6 +560,79 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		@Override
 		public Rectangle getBounds() {
 			return new Rectangle(getX(), getY(), getWidth(), getHeight());
+		}
+
+		private boolean isSelected() {
+			return this.cbtId == selection;
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+			Rectangle bounds = getBounds();
+			if (isSelected()) {
+				g.setColor(selectedBackground);
+				g.fillRect(0, 0, bounds.width, bounds.height);
+			}
+//			g.setColor(mainColor);
+//			int xCenter = bounds.width / 2;
+//			int yCenter = bounds.height / 2;
+//			int radius = bounds.width / 3;
+//			g.drawOval(xCenter - radius, yCenter - radius, radius * 2, radius * 2);
+//			super.paintComponent(g);
+		}
+
+//		@Override
+//		public Color getBackground() {
+//			if (isSelected()) {
+//				return selectedBackground;
+//			}
+//			else {
+//				return normalBackground;
+//			}
+//		}
+
+		@Override
+		public Border getBorder() {
+			if (isSelected()) {
+				return selectionBorder;
+			}
+			else {
+				return null;
+			}
+		}
+
+		private class FacingAngleIndicator extends JComponent {
+			@Override
+			public void paintComponent(Graphics graph) {
+				Graphics2D g = (Graphics2D) graph;
+				AffineTransform origTrans = g.getTransform();
+				AffineTransform newTrans = new AffineTransform(origTrans);
+				Rectangle bounds = getBounds();
+				newTrans.translate(bounds.width / 2.0, bounds.height / 2.0);
+				newTrans.rotate(-1.0 * facing);
+				g.setTransform(newTrans);
+				g.setColor(mainColor);
+//				g.setColor(new Color(255, 0, 0));
+				int sizeBasis = Math.min(bounds.width, bounds.height);
+				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+						RenderingHints.VALUE_ANTIALIAS_ON);
+				Polygon poly = new Polygon(
+						new int[]{0, (int) (sizeBasis / -3.6), 0, (int) (sizeBasis / 3.6)},
+						new int[]{(int) (sizeBasis / 2.2), (int) (sizeBasis / -2.8), (int) (sizeBasis / -5.0), (int) (sizeBasis / -2.8)},
+						4);
+				g.fillPolygon(poly);
+				g.setColor(mainColor.darker().darker());
+				g.drawPolygon(poly);
+//				g.setColor(new Color(0, 255, 0));
+//				g.fillRect(sizeBasis / -8, sizeBasis / -2, sizeBasis / 8, sizeBasis / 2);
+				g.setTransform(origTrans);
+			}
+
+			@Override
+			public Border getBorder() {
+				return null;
+//				return new LineBorder(Color.BLACK, 1);
+			}
 		}
 	}
 

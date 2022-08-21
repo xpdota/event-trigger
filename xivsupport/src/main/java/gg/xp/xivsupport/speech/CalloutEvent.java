@@ -6,6 +6,7 @@ import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivdata.data.HasOptionalIconURL;
 import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivsupport.callouts.CalloutTrackingKey;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
@@ -15,11 +16,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 
-public interface CalloutEvent extends Event, HasPrimaryValue {
+public interface CalloutEvent extends Event, HasPrimaryValue, HasCalloutTrackingKey {
 	@Nullable String getVisualText();
 
 	@Nullable String getCallText();
 
+	default @Nullable String getSound() {
+		return null;
+	};
 	boolean isExpired();
 
 	@Override
@@ -27,9 +31,18 @@ public interface CalloutEvent extends Event, HasPrimaryValue {
 		return getCallText();
 	}
 
-	@Nullable CalloutEvent replaces();
+	@Nullable HasCalloutTrackingKey replaces();
 
-	void setReplaces(CalloutEvent replaces);
+	default boolean shouldReplace(HasCalloutTrackingKey previous) {
+		HasCalloutTrackingKey rep = replaces();
+		if (rep == null) {
+			return false;
+		}
+		CalloutTrackingKey otherKey = previous.trackingKey();
+		return otherKey.equals(rep.trackingKey());
+	}
+
+	void setReplaces(HasCalloutTrackingKey replaces);
 
 	@Override
 	default boolean shouldSave() {

@@ -18,6 +18,7 @@ public final class StandaloneOverlayTest {
 		CommonGuiSetup.setup();
 		MutablePicoContainer pico = XivMain.testingMinimalInit();
 		pico.addComponent(OverlayMain.class);
+		pico.addComponent(OverlayConfig.class);
 		OverlayConfig oc = pico.getComponent(OverlayConfig.class);
 		PersistenceProvider pers = pico.getComponent(PersistenceProvider.class);
 		{
@@ -26,7 +27,7 @@ public final class StandaloneOverlayTest {
 			overlay.setVisible(true);
 			overlay.setEditMode(true);
 			overlay.getEnabled().set(true);
-			double scaleFactor = 5.2;
+			double scaleFactor = 1.8;
 			overlay.setScale(scaleFactor);
 		}
 		{

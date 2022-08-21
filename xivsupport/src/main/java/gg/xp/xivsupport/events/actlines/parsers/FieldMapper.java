@@ -129,7 +129,7 @@ public class FieldMapper<K extends Enum<K>> {
 					// are not that common).
 					else {
 						if (cbt.getHp() != null) {
-							state.provideCombatantHP(cbt, new HitPoints(curHp, cbt.getHp().getMax()));
+							state.provideCombatantHP(cbt, new HitPoints(curHp, cbt.getHp().max()));
 						}
 					}
 				}
@@ -147,7 +147,7 @@ public class FieldMapper<K extends Enum<K>> {
 				// are not that common).
 				else {
 					if (cbt.getMp() != null) {
-						state.provideCombatantMP(cbt, ManaPoints.of(curMp, cbt.getMp().getMax()));
+						state.provideCombatantMP(cbt, ManaPoints.of(curMp, cbt.getMp().max()));
 					}
 				}
 			}
@@ -176,6 +176,11 @@ public class FieldMapper<K extends Enum<K>> {
 			return stateCbt;
 		}
 		return cbt;
+	}
+
+	public XivCombatant getEntity(K idKey) {
+		long id = getHex(idKey);
+		return getEntity(id);
 	}
 
 	public XivCombatant getEntity(long id) {

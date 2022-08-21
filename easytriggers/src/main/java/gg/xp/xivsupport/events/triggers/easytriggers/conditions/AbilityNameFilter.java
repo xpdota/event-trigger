@@ -39,11 +39,11 @@ public class AbilityNameFilter implements Condition<HasAbility> {
 
 	@Override
 	public String fixedLabel() {
-		return "Ability ID";
+		return "Ability Name";
 	}
 
 	@Override
 	public String dynamicLabel() {
-		return "Ability ID " + operator.getFriendlyName() + ' ' + expected;
+		return "Ability Name " + operator.getFriendlyName() + ' ' + expected;
 	}
 }

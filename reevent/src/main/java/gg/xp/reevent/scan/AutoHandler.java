@@ -36,7 +36,9 @@ public class AutoHandler implements EventHandler<Event> {
 		}
 		// TODO: exception types
 		Class<?>[] paramTypes = method.getParameterTypes();
-		String tmpMethodLabel = method.getDeclaringClass().getSimpleName() + '.' + method.getName();
+		Class<?> declaring = method.getDeclaringClass();
+		Class<?> actualCls = clazzInstance.getClass();
+		String tmpMethodLabel = declaring.getSimpleName() + '.' + method.getName();
 		log.trace("Setting up method {}", tmpMethodLabel);
 		if (paramTypes.length != 2) {
 			throw new IllegalStateException("Error setting up method " + tmpMethodLabel + ": wrong number of parameters (should be 2)");
@@ -46,7 +48,13 @@ public class AutoHandler implements EventHandler<Event> {
 		}
 		this.eventClass = (Class<? extends Event>) paramTypes[1];
 		this.method = method;
-		this.methodLabel = method.getDeclaringClass().getSimpleName() + '.' + method.getName() + ':' + eventClass.getSimpleName();
+		if (actualCls.equals(declaring)) {
+			this.methodLabel = "%s.%s:%s".formatted(declaring.getSimpleName(), method.getName(), eventClass.getSimpleName());
+		}
+		else {
+			this.methodLabel = "%s(%s).%s:%s".formatted(declaring.getSimpleName(), actualCls.getSimpleName(), method.getName(), eventClass.getSimpleName());
+
+		}
 		this.clazzInstance = clazzInstance;
 		HandleEvents annotation = this.method.getAnnotation(HandleEvents.class);
 		if (annotation != null) {

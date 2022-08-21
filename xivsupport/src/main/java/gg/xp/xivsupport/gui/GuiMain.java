@@ -54,12 +54,14 @@ import gg.xp.xivsupport.gui.tabs.AdvancedTab;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
+import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -166,8 +168,9 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", container.getComponent(MapTab.class)));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", new LibraryTab()));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", container.getComponent(LibraryTab.class)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Groovy", new GroovyTab(container.getComponent(GroovyManager.class))));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class))));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 		SwingUtilities.invokeLater(() -> {
 			long end = System.currentTimeMillis();
@@ -633,10 +636,13 @@ public class GuiMain {
 
 	private JPanel getActLogPanel() {
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
+		// The first way which this was implemented was by keeping its own list of events, but that meant that they
+		// would never clear out.
+		// The second way was to stream and filter the raw event storage, but that is inefficient because it scales
+		// very poorly and causes higher CPU usage.
+		// The third, not-hacky way is to just have RawEventStorage track events of a particular type for us
 		TableWithFilterAndDetails<ACTLogLineEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("ACT Log",
-						() -> rawStorage.getEvents().stream().filter(ACTLogLineEvent.class::isInstance)
-								.map(ACTLogLineEvent.class::cast)
-								.collect(Collectors.toList()),
+						() -> rawStorage.getEventsOfType(ACTLogLineEvent.class),
 						currentEvent -> {
 							if (currentEvent == null) {
 								return Collections.emptyList();

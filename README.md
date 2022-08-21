@@ -1,4 +1,4 @@
-### Dragonsong's Reprise (aka Dragonsong War/Dragonsong Ultimate) Trigger Status: Doorboss done, Thordan 1 Done
+### Dragonsong's Reprise (aka Dragonsong War/Dragonsong Ultimate) Trigger Status: Basically done with the whole fight
 
 Code documentation (auto-generated) is now available [here](https://xpdota.github.io/event-trigger/master/javadoc/allclasses-index.html) (replace `master` in the URL with the branch you are using).
 

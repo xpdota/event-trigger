@@ -8,6 +8,7 @@ import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.state.PartySortOrder;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.components.RearrangeableEnumListSetting;
 import gg.xp.xivsupport.gui.components.RearrangeableList;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -54,9 +55,9 @@ public class PartyConfigTab extends TitleBorderFullsizePanel {
 			c.insets = new Insets(5, 5, 5, 5);
 
 			JButton resetButton = new JButton("Reset to Default");
+			c.anchor = GridBagConstraints.NORTHWEST;
 			c.fill = GridBagConstraints.BOTH;
-			add(new JLabel("Instructions: Drag the party categories and jobs within each category to match your in-game sort.\nNOTE: If you are using Telesto, you do not need to worry about this."), c);
-			c.anchor = GridBagConstraints.FIRST_LINE_START;
+			add(new ReadOnlyText("Instructions: Drag the party categories and jobs within each category to match your in-game sort. \nNOTE: If you are using Telesto, you do not need to worry about this."), c);
 			c.gridy++;
 			c.weightx = 1;
 			c.fill = GridBagConstraints.NONE;

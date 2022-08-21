@@ -11,7 +11,7 @@ public class ExampleOverlayWithLotsOfButtons extends XivOverlay {
 	public ExampleOverlayWithLotsOfButtons(PersistenceProvider persistence, OverlayConfig oc) {
 		super("Example Overlay", "example-overlay2", oc, persistence);
 		JPanel panel = new JPanel();
-		panel.setLayout(new GridLayout(2, 2));
+		panel.setLayout(new GridLayout(3, 2));
 		JButton button1 = new JButton("Bigger");
 		button1.addActionListener(l -> {
 			setScale(getScale() * 1.1);
@@ -27,7 +27,10 @@ public class ExampleOverlayWithLotsOfButtons extends XivOverlay {
 		reset.addActionListener(l -> {
 			setScale(defaultScale);
 		});
+
 		panel.add(reset);
+		JButton nothing = new JButton("Nothing");
+		panel.add(nothing);
 		panel.setBackground(new Color(200, 100, 0, 255));
 		getPanel().add(panel);
 		JPanel topPanel = new JPanel();

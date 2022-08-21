@@ -7,6 +7,7 @@ import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivdata.data.Job;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
@@ -15,7 +16,6 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.jails.FinalTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;
-import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkKeyHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkSlotRequest;
@@ -24,9 +24,11 @@ import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.speech.BaseCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
-import gg.xp.xivsupport.speech.ParentedCalloutEvent;
+import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
+import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -35,9 +37,15 @@ import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.awt.event.KeyEvent;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,13 +60,37 @@ public class JailExampleTest {
 			AbilityUsedEvent.class,
 			UnsortedTitanJailsSolvedEvent.class,
 			FinalTitanJailsSolvedEvent.class,
-			ParentedCalloutEvent.class,
+			RawModifiedCallout.class,
+			BaseCalloutEvent.class,
 			TtsRequest.class,
 			AutoMarkRequest.class,
 			ClearAutoMarkRequest.class,
 			AutoMarkSlotRequest.class,
 			AutoMarkKeyHandler.KeyPressRequest.class
 	);
+	
+	private static final int jailClearDelay = 1500;
+	private static final int jailClearSlop = 750;
+	private static final int jailClearWait = jailClearDelay + jailClearSlop;
+
+	@BeforeTest
+	void increasePrio() {
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+	}
+
+	@BeforeMethod
+	void before(Method method) {
+		log.info("Starting: {}", method.getName());
+	}
+
+	@AfterMethod
+	void after(ITestResult result) throws InterruptedException {
+		if (!result.isSuccess()) {
+			log.error("Test failed! {}", result.getName());
+			// Give time for extra events to finish to check timing issues
+			Thread.sleep(10_000);
+		}
+	}
 
 	/**
 	 * End to end example for titan jails
@@ -68,7 +100,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		XivState state = container.getComponent(XivState.class);
@@ -93,7 +125,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -107,13 +139,15 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -152,9 +186,13 @@ public class JailExampleTest {
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 
+	}
+
+	private static void assertListEquals(List<?> actual, List<?> expected) {
+		Assert.assertEquals(actual, expected, "Lists were not equal%nExpected: %s%nActual: %s%n".formatted(expected, actual));
 	}
 
 	@Test
@@ -162,7 +200,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 
@@ -181,7 +219,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jails = container.getComponent(JailSolver.class);
@@ -202,7 +240,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 
@@ -234,7 +272,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
@@ -257,7 +295,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -306,7 +344,7 @@ public class JailExampleTest {
 		Assert.assertEquals(keyPresses, List.of(KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD1));
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -315,7 +353,7 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
@@ -338,7 +376,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -350,7 +388,9 @@ public class JailExampleTest {
 				// Finally, we have the three players that got jailed, but sorted in whatever order (currently just alphabetical)
 				FinalTitanJailsSolvedEvent.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// TTS
 				TtsRequest.class
 
@@ -386,7 +426,7 @@ public class JailExampleTest {
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
 	}
 
@@ -395,15 +435,15 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
-		List<Job> currentJailSort = new ArrayList<>(jail.getCurrentJailSort());
+		List<Job> currentJailSort = new ArrayList<>(jail.getSort().getCurrentJailSort());
 		Collections.reverse(currentJailSort);
-		jail.setJailSort(currentJailSort);
+		jail.getSort().setJailSort(currentJailSort);
 
-		jail.resetJailSort();
+		jail.getSort().resetJailSort();
 
 		// Send events
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|13|Random Person|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|9|cd69a51d5f584b836fa20c4a5b356612"));
@@ -422,7 +462,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -436,15 +476,16 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
-
-		));
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
+				));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
 		// parent tagged onto it.
 		List<ACTLogLineEvent> logLines = collector.getEventsOf(ACTLogLineEvent.class);
@@ -480,7 +521,7 @@ public class JailExampleTest {
 		Assert.assertEquals(ttsEvents.size(), 1);
 		Assert.assertEquals(ttsEvents.get(0).getTtsString(), "Third");
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -489,13 +530,13 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		// Test setup
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
-		List<Job> currentJailSort = new ArrayList<>(jail.getCurrentJailSort());
+		List<Job> currentJailSort = new ArrayList<>(jail.getSort().getCurrentJailSort());
 		Collections.reverse(currentJailSort);
-		jail.setJailSort(currentJailSort);
+		jail.getSort().setJailSort(currentJailSort);
 
 
 		// Send events
@@ -515,7 +556,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -529,13 +570,15 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -577,7 +620,7 @@ public class JailExampleTest {
 		String sortString = persistence.get("jail-solver.job-order", String.class, null);
 		Assert.assertEquals(sortString, "SGE,AST,SCH,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,RPR,SAM,NIN,ROG,DRG,MNK,LNC,PGL");
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -587,18 +630,18 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		JailSolver jail = container.getComponent(JailSolver.class);
 		// Insufficient size
-		Assert.assertThrows(IllegalArgumentException.class, () -> jail.setJailSort(List.of(Job.WHM, Job.SCH)));
+		Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJailSort(List.of(Job.WHM, Job.SCH)));
 		{
-			List<Job> current = new ArrayList<>(jail.getCurrentJailSort());
+			List<Job> current = new ArrayList<>(jail.getSort().getCurrentJailSort());
 			// Make a duplicate
 			current.set(0, current.get(1));
-			Assert.assertThrows(IllegalArgumentException.class, () -> jail.setJailSort(current));
+			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJailSort(current));
 		}
 		{
-			List<Job> current = new ArrayList<>(jail.getCurrentJailSort());
+			List<Job> current = new ArrayList<>(jail.getSort().getCurrentJailSort());
 			// Too many
 			current.add(current.get(0));
-			Assert.assertThrows(IllegalArgumentException.class, () -> jail.setJailSort(current));
+			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJailSort(current));
 		}
 	}
 
@@ -608,7 +651,7 @@ public class JailExampleTest {
 		String customSort = "AST,SCH,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,SAM,NIN,ROG,DRG,MNK,LNC,PGL";
 		MutablePicoContainer container = XivMain.testingMasterInit();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		PersistenceProvider persistence = container.getComponent(PersistenceProvider.class);
@@ -636,7 +679,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -650,13 +693,15 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -699,7 +744,7 @@ public class JailExampleTest {
 		Assert.assertEquals(sortString, customSort);
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -708,7 +753,7 @@ public class JailExampleTest {
 		String customSort = "AST,SCH,SGE,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,SAM,NIN,ROG,DRG,MNK,LNC,PGL,RPR";
 		MutablePicoContainer container = XivMain.testingMasterInit();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
-		TestEventCollector collector = new TestEventCollector();
+		TestEventCollector collector = new TestEventCollector(true);
 		dist.registerHandler(collector);
 
 		PersistenceProvider persistence = container.getComponent(PersistenceProvider.class);
@@ -736,7 +781,7 @@ public class JailExampleTest {
 		finalEvents.forEach(e -> log.info("Seen event: {}", e));
 
 		List<Class<?>> actualEventClasses = finalEvents.stream().map(Event::getClass).collect(Collectors.toList());
-		Assert.assertEquals(actualEventClasses, List.of(
+		assertListEquals(actualEventClasses, List.of(
 				// Raw log line + parsed into AbilityUsedEvent
 				ACTLogLineEvent.class, AbilityUsedEvent.class,
 				// Same
@@ -750,13 +795,15 @@ public class JailExampleTest {
 				// Automarks
 				AutoMarkRequest.class, AutoMarkRequest.class, AutoMarkRequest.class,
 				// Personal callout since the player was one of the three
-				ParentedCalloutEvent.class,
+				RawModifiedCallout.class,
 				// Slotted requests
 				AutoMarkSlotRequest.class, AutoMarkSlotRequest.class, AutoMarkSlotRequest.class,
-				// TTS
-				TtsRequest.class,
+				// Processed version of the callout
+				ProcessedCalloutEvent.class,
 				// Key Presses
-				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class
+				AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class, AutoMarkKeyHandler.KeyPressRequest.class,
+				// TTS
+				TtsRequest.class
 
 		));
 		// For debugging purposes (or maybe even production purposes, who knows), every synthetic event also has its
@@ -798,7 +845,7 @@ public class JailExampleTest {
 		Assert.assertEquals(sortString, customSort);
 
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
-		Thread.sleep(1200);
+		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
 	}
 
@@ -816,6 +863,8 @@ public class JailExampleTest {
 		queue.waitDrain();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		dist.acceptEvent(new InitEvent());
+		JailSolver jail = container.getComponent(JailSolver.class);
+		jail.getJailClearDelay().set(jailClearDelay);
 		XivState state = container.getComponent(XivState.class);
 		// TODO: find actual solution to race conditions in tests
 		try {
@@ -834,8 +883,6 @@ public class JailExampleTest {
 		}
 		queue.waitDrain();
 
-		JailSolver jail = container.getComponent(JailSolver.class);
-		jail.getJailClearDelay().set(1000);
 	}
 
 	private static void doEvents(EventDistributor dist) {

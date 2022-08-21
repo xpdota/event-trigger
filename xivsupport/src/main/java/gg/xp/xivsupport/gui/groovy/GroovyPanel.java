@@ -179,6 +179,7 @@ public class GroovyPanel extends JPanel {
 		ScriptNameDialog dialog = new ScriptNameDialog("Save As", script.getScriptName() + " copy", mgr, this, newNameAndFile -> {
 			GroovyScriptHolder newScript = mgr.cloneAs(script, newNameAndFile);
 			tab.selectScript(newScript);
+			newScript.save();
 		});
 		dialog.setVisible(true);
 	}

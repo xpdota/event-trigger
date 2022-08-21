@@ -4,13 +4,13 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
+import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicArrowButton;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,14 +20,16 @@ public class CalloutsConfigTab implements PluginTab {
 
 
 	private final ModifiedCalloutRepository backend;
+	private final SoundFilesManager soundMgr;
 
-	public CalloutsConfigTab(ModifiedCalloutRepository backend) {
+	public CalloutsConfigTab(ModifiedCalloutRepository backend, SoundFilesManager soundMgr) {
 		this.backend = backend;
+		this.soundMgr = soundMgr;
 	}
 
 	@Override
 	public String getTabName() {
-		return "Callouts";
+		return "Callouts (Legacy)";
 	}
 
 	@Override
@@ -98,7 +100,7 @@ public class CalloutsConfigTab implements PluginTab {
 				c.gridx = 1;
 				innerPanel.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
-				CalloutSettingGui csg = new CalloutSettingGui(call);
+				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr);
 				showHide.getModel().addChangeListener(l -> {
 					csg.setVisible(showHide.isSelected());
 				});

@@ -59,6 +59,8 @@ public class TelestoMain implements FilteredEventHandler {
 		this.pls = pls;
 		try {
 			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://localhost:51323/"));
+			// TODO: Telesto bug....
+//			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://127.0.0.1:51323/"));
 			enablePartyList = new BooleanSetting(pers, "telesto-support.pull-party-list", true);
 		}
 		catch (URISyntaxException e) {
@@ -157,16 +159,24 @@ public class TelestoMain implements FilteredEventHandler {
 						HttpResponse.BodyHandlers.ofString());
 				log.info("Telesto message done");
 				if (response.statusCode() == 200) {
-					master.pushEvent(new TelestoResponse(mapper.readValue(response.body(), new TypeReference<>() {
-					})));
+					TelestoResponse event = new TelestoResponse(mapper.readValue(response.body(), new TypeReference<>() {
+					}));
+					event.setParent(msg);
+					master.pushEvent(event);
 				}
 				else {
+					TelestoHttpError error = new TelestoHttpError(response);
+					error.setParent(msg);
+					master.pushEvent(error);
 					log.error("Error in Telesto response: {} {}", response.statusCode(), response.body());
 				}
 				updateStatus(TelestoStatus.GOOD);
 			}
 			catch (Throwable e) {
 				log.error("Error sending Telesto message {}", e.toString());
+				TelestoConnectionError error = new TelestoConnectionError(e);
+				error.setParent(msg);
+				master.pushEvent(error);
 				updateStatus(TelestoStatus.BAD);
 			}
 		};

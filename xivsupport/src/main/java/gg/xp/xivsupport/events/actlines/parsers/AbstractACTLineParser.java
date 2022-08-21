@@ -26,7 +26,6 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 
 	private final Class<? extends Enum<F>> enumCls;
 	private final int lineNumber;
-	private final String lineStart;
 	private final List<@Nullable F> groups;
 	private final XivState state;
 	private final @Nullable FakeTimeSource fakeTimeSource;
@@ -50,53 +49,53 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				.orElseThrow(() -> new IllegalArgumentException("Must have a non-null capture group"));
 		enumCls = (Class<? extends Enum<F>>) anyCap.getClass();
 		lineNumber = logLineNumber;
-		lineStart = String.format("%02d", logLineNumber) + '|';
 	}
 
 	@SuppressWarnings("unchecked")
 	@HandleEvents
 	public void handle(EventContext context, ACTLogLineEvent event) {
+		if (event.getLineNumber() != lineNumber) {
+			return;
+		}
 		try {
 			String line = event.getLogLine();
-			if (line.startsWith(lineStart)) {
-				String[] splits = event.getRawFields();
-				Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
-				// TODO: validate number of fields
-				for (int i = 0; i < groups.size(); i++) {
-					// i + 2 is because the first two are the line number and timestamp.
-					out.put(groups.get(i), splits[i + 2]);
+			String[] splits = event.getRawFields();
+			Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
+			// TODO: validate number of fields
+			for (int i = 0; i < groups.size(); i++) {
+				// i + 2 is because the first two are the line number and timestamp.
+				out.put(groups.get(i), splits[i + 2]);
+			}
+			ZonedDateTime zdt = event.getTimestamp();
+			FieldMapper<F> mapper = new FieldMapper<>(out, state, entityLookupMissBehavior(), splits);
+			Event outgoingEvent;
+			try {
+				outgoingEvent = convert(mapper, lineNumber, zdt);
+			}
+			catch (Throwable t) {
+				//noinspection ThrowCaughtLocally
+				throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
+			}
+			// TODO: check whether it's better to request all at once, individually
+			mapper.getCombatantsToUpdate().forEach(id -> {
+				context.accept(new RefreshSpecificCombatantsRequest(List.of(id)));
+			});
+			mapper.flushStateOverrides();
+			if (fakeTimeSource != null) {
+				// For 00-lines, the timestamp only has second-level precision, compared to millisecond-level
+				// precision for everything else. This causes time to jump around, which we don't want.
+				// Thus, for 00-lines, just copy
+				if (zdt.get(ChronoField.MILLI_OF_SECOND) == 0) {
+					event.setHappenedAt(fakeTimeSource.now());
 				}
-				ZonedDateTime zdt = event.getTimestamp();
-				FieldMapper<F> mapper = new FieldMapper<>(out, state, entityLookupMissBehavior(), splits);
-				Event outgoingEvent;
-				try {
-					outgoingEvent = convert(mapper, lineNumber, zdt);
+				else {
+					fakeTimeSource.setNewTime(zdt.toInstant());
 				}
-				catch (Throwable t) {
-					//noinspection ThrowCaughtLocally
-					throw new IllegalArgumentException("Error parsing ACT line: " + line, t);
-				}
-				// TODO: check whether it's better to request all at once, individually
-				mapper.getCombatantsToUpdate().forEach(id -> {
-					context.accept(new RefreshSpecificCombatantsRequest(List.of(id)));
-				});
-				mapper.flushStateOverrides();
-				if (fakeTimeSource != null) {
-					// For 00-lines, the timestamp only has second-level precision, compared to millisecond-level
-					// precision for everything else. This causes time to jump around, which we don't want.
-					// Thus, for 00-lines, just copy
-					if (zdt.get(ChronoField.MILLI_OF_SECOND) == 0) {
-						event.setHappenedAt(fakeTimeSource.now());
-					}
-					else {
-						fakeTimeSource.setNewTime(zdt.toInstant());
-					}
-					event.setTimeSource(fakeTimeSource);
-				}
-				if (outgoingEvent != null) {
+				event.setTimeSource(fakeTimeSource);
+			}
+			if (outgoingEvent != null) {
 //					outgoingEvent.setHappenedAt(zdt.toInstant());
-					context.accept(outgoingEvent);
-				}
+				context.accept(outgoingEvent);
 			}
 		} catch (Throwable t) {
 			throw new ActLineParseException(event.getLogLine(), t);

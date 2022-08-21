@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables;
 
 import gg.xp.xivsupport.gui.GuiGlobals;
+import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.SplitVisualFilter;
@@ -37,12 +38,14 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	private final @Nullable JCheckBox stayAtBottom;
 	private final JTable table;
 	private final @Nullable AutoBottomScrollHelper scroller;
+	private @Nullable JSplitPane splitPane;
 	private volatile X currentSelection;
 	private List<X> dataRaw = Collections.emptyList();
 	private List<X> dataFiltered = Collections.emptyList();
 	private volatile boolean isAutoRefreshEnabled;
 	private final boolean appendOrPruneOnly;
 	private final String title;
+	private EditMode editMode = EditMode.NEVER;
 
 	private TableWithFilterAndDetails(
 			String title,
@@ -80,7 +83,16 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 
 		// Main table
-		table = new JTable(mainModel);
+		table = new JTable(mainModel) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return switch (editMode) {
+					case NEVER -> false;
+					case AUTO -> !(getCellEditor(row, column) instanceof NoCellEditor);
+					case ALWAYS -> true;
+				};
+			}
+		};
 		mainModel.configureColumns(table);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		ListSelectionModel selectionModel = table.getSelectionModel();
@@ -177,7 +189,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		}
 		else {
 			// Split pane
-			JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
+			splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
 			add(splitPane, c);
 			SwingUtilities.invokeLater(() -> {
 				splitPane.setDividerLocation(0.7);
@@ -225,6 +237,15 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 	public JTable getMainTable() {
 		return table;
+	}
+
+	public void setAndScrollToSelection(X item) {
+		mainModel.setSelectedValue(item);
+		mainModel.scrollToSelectedValue();
+	}
+
+	public @Nullable JSplitPane getSplitPane() {
+		return this.splitPane;
 	}
 
 	private enum RefreshType {
@@ -423,5 +444,9 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		if (stayAtBottom != null) {
 			stayAtBottom.setSelected(value);
 		}
+	}
+
+	public void setEditMode(EditMode editMode) {
+		this.editMode = editMode;
 	}
 }

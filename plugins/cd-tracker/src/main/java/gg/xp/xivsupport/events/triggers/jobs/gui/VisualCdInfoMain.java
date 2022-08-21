@@ -1,12 +1,16 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.data.Cooldown;
+import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivdata.data.BasicCooldownDescriptor;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.combatstate.CooldownStatus;
+import gg.xp.xivsupport.models.CurrentMaxPair;
+import gg.xp.xivsupport.models.CurrentMaxPairImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -15,14 +19,14 @@ import java.util.List;
 
 public class VisualCdInfoMain implements VisualCdInfo {
 
-	private final @NotNull Cooldown cd;
-	private final @Nullable AbilityUsedEvent abilityEvent;
+	private final @NotNull BasicCooldownDescriptor cd;
+	private final @Nullable BaseEvent basisEvent;
 	private final @Nullable BuffApplied buffApplied;
 	private final @Nullable Instant replenishedAt;
 
-	public VisualCdInfoMain(@NotNull Cooldown cd, @Nullable AbilityUsedEvent abilityEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt) {
+	public VisualCdInfoMain(@NotNull BasicCooldownDescriptor cd, @Nullable BaseEvent basisEvent, @Nullable BuffApplied buffApplied, @Nullable Instant replenishedAt) {
 		this.cd = cd;
-		this.abilityEvent = abilityEvent;
+		this.basisEvent = basisEvent;
 		this.buffApplied = buffApplied;
 		this.replenishedAt = replenishedAt;
 	}
@@ -31,64 +35,139 @@ public class VisualCdInfoMain implements VisualCdInfo {
 		this(status.cdKey().getCooldown(), status.used(), status.buff(), status.replenishedAt());
 	}
 
-	public VisualCdInfoMain(Cooldown cd) {
+	public VisualCdInfoMain(BasicCooldownDescriptor cd) {
 		this(cd, null, null, null);
 	}
 
 	@Override
 	public @Nullable AbilityUsedEvent getEvent() {
-		return abilityEvent;
+		if (basisEvent instanceof AbilityUsedEvent aue) {
+			return aue;
+		}
+		return null;
 	}
 
 	@Override
 	public String getLabel() {
-		if (buffApplied == null) {
+		CurrentMaxPair buffStatus = getBuffStatus();
+		if (buffStatus == null) {
 			// Ready
-			if (getCurrent() == getMax()) {
+			CurrentMaxPair as = getAbilityStatus();
+			// Hasn't been used yet
+			if (as == null) {
+				return "Ready!";
+			}
+			if (as.current() == as.max()) {
 				return "Ready!";
 			}
 			// On CD
-			return String.format("%.1f", ((double) (getMax() - getCurrent())) / 1000.0f);
+			return String.format("%.1f", ((double) (as.max() - as.current())) / 1000.0f);
 		}
 		else {
-			Double durOvr = cd.getDurationOverride();
-			// Duration override (e.g. BRD songs)
-			if (durOvr != null) {
-				// TODO: move this into buff tracking, so we can have correct buff info everywhere
-				long durOvrMs = (long) (durOvr * 1000);
-				if (abilityEvent == null) {
-					return "?";
-				}
-				long effectiveDur = Math.max(0, durOvrMs - abilityEvent.getEffectiveTimeSince().toMillis());
-				return String.format("%.1f", effectiveDur / 1000.0);
-			}
 			// Pre-app
-			if (buffApplied.isPreApp()) {
+			if (isPreApp()) {
 				return "...";
 			}
 			// Actual buff duration
-			return String.format("%.1f", ((double) (buffApplied.getEstimatedRemainingDuration().toMillis())) / 1000.0f);
+			return String.format("%.1f", ((double) (buffStatus.current()) / 1000.0f));
 		}
 	}
 
+	private boolean isPreApp() {
+		return buffApplied != null && buffApplied.isPreApp();
+	}
+
 	@Override
-	public long getCurrent() {
-		if (abilityEvent == null) {
-			return getMax();
+	public long current() {
+		return getBestPair().current();
+	}
+
+	private CurrentMaxPair getBestPair() {
+		CurrentMaxPair bs = getBuffStatus();
+		if (bs != null) {
+			return bs;
 		}
-		if (buffApplied != null) {
-			Double durOvr = cd.getDurationOverride();
-			if (durOvr != null) {
-				// TODO: move this into buff tracking, so we can have correct buff info everywhere
-				long durOvrMs = (long) (durOvr * 1000);
-				return Math.max(0, durOvrMs - abilityEvent.getEffectiveTimeSince().toMillis());
-			}
-			return buffApplied.getEstimatedRemainingDuration().toMillis();
+		CurrentMaxPair as = getAbilityStatus();
+		if (as != null) {
+			return as;
+		}
+		return getFallback();
+	}
+
+	private @Nullable CurrentMaxPair getAbilityStatus() {
+		if (basisEvent == null) {
+			return null;
 		}
 		else {
-			long durMillis = abilityEvent.getEffectiveTimeSince().toMillis();
-			return Math.min(Math.max(0, durMillis), getMax());
+			long max = (long) (cd.getCooldown() * 1000L);
+			long current = Math.min(Math.max(0, basisEvent.getEffectiveTimeSince().toMillis()), max);
+			return new CurrentMaxPairImpl(current, max);
 		}
+	}
+
+	private @Nullable CurrentMaxPair getBuffStatus() {
+		// Cases that need to be covered:
+		// 1. Normal, buff active - return info based on buff
+		// 2. Normal, buff not active - return null
+		// 3. Dur override, with buff - return hybrid of buff + fixed info
+		// 4. Dur override, no buff - return completely fixed info
+		// 5. No buff, with no dur override - useless (TODO warn user if they've set it up like this?)
+		Double durOvr = cd.getDurationOverride();
+		if (cd.noStatusEffect()) {
+			if (durOvr == null) {
+				// Case #5
+				return null;
+			}
+			BaseEvent base = basisEvent;
+			if (base == null) {
+				return null;
+			}
+			long since = base.getEffectiveTimeSince().toMillis();
+			long fakeDur = (long) (durOvr * 1000L);
+
+			// Case #4
+			if (since > fakeDur) {
+				return null;
+			}
+			else {
+				long remaining = fakeDur - since;
+				if (remaining < 0) {
+					return null;
+				}
+				return new CurrentMaxPairImpl(remaining, fakeDur);
+			}
+		}
+		else {
+			if (buffApplied == null) {
+				// Case #2
+				return null;
+			}
+			if (buffApplied.isPreApp()) {
+				return new CurrentMaxPairImpl(100, 100);
+			}
+			final long max;
+			final long current;
+			if (durOvr == null) {
+				// Case #1
+				max = buffApplied.getInitialDuration().toMillis();
+				current = buffApplied.getEstimatedRemainingDuration().toMillis();
+			}
+			else {
+				// Case #3
+				max = (long) (durOvr * 1000L);
+				long since = buffApplied.getEffectiveTimeSince().toMillis();
+				if (since > max) {
+					return null;
+				}
+				current = max - since;
+			}
+			return new CurrentMaxPairImpl(current, max);
+		}
+	}
+
+	private CurrentMaxPair getFallback() {
+		long num = (long) (cd.getCooldown() * 1000L);
+		return new CurrentMaxPairImpl(num, num);
 	}
 
 	@Override
@@ -97,16 +176,8 @@ public class VisualCdInfoMain implements VisualCdInfo {
 	}
 
 	@Override
-	public long getMax() {
-		if (buffApplied != null) {
-			Double durOvr = cd.getDurationOverride();
-			if (durOvr != null) {
-				return (long) (durOvr * 1000.0);
-			}
-			return buffApplied.getInitialDuration().toMillis();
-		}
-		//noinspection NumericCastThatLosesPrecision
-		return (long) (cd.getCooldown() * 1000L);
+	public long max() {
+		return getBestPair().max();
 	}
 
 	@Override
@@ -114,12 +185,17 @@ public class VisualCdInfoMain implements VisualCdInfo {
 		return cd.getMaxCharges() > 1;
 	}
 
+	@Override
+	public long getPrimaryAbilityId() {
+		return cd.getPrimaryAbilityId();
+	}
+
 	public List<VisualCdInfo> makeChargeInfo() {
 		if (useChargeDisplay()) {
 			int numCharges = cd.getMaxCharges();
 			List<VisualCdInfo> out = new ArrayList<>(numCharges);
 			for (int i = 0; i < numCharges; i++) {
-				out.add(new VisualCdInfoCharge(cd, abilityEvent, null, replenishedAt, i));
+				out.add(new VisualCdInfoCharge(cd, basisEvent, null, replenishedAt, i));
 			}
 			return out;
 		}
@@ -129,8 +205,25 @@ public class VisualCdInfoMain implements VisualCdInfo {
 	}
 
 	@Override
-	public @NotNull Cooldown getCd() {
-		return cd;
+	public CdStatus getStatus() {
+		if (isPreApp()) {
+			return CdStatus.BUFF_PREAPP;
+		}
+		else if (getBuffStatus() != null) {
+			return CdStatus.BUFF_ACTIVE;
+		}
+		else {
+			CurrentMaxPair as = getAbilityStatus();
+			if (as == null) {
+				return CdStatus.NOT_YET_USED;
+			}
+			else if (as.isFull()) {
+				return CdStatus.READY;
+			}
+			else {
+				return CdStatus.ON_COOLDOWN;
+			}
+		}
 	}
 
 	@Override
@@ -138,9 +231,9 @@ public class VisualCdInfoMain implements VisualCdInfo {
 
 		// TODO: make hang time a setting
 		// TODO: charge based abilities instantly disappear
-		return abilityEvent == null || (buffApplied != null
-				|| (replenishedAt != null && abilityEvent.effectiveTimeNow().isBefore(replenishedAt.plus(10, ChronoUnit.SECONDS)))
-				|| abilityEvent.getEffectiveTimeSince().toMillis() < (cd.getCooldown() * 1000L) + 10_000L);
+		return basisEvent == null || (buffApplied != null
+				|| (replenishedAt != null && basisEvent.effectiveTimeNow().isBefore(replenishedAt.plus(10, ChronoUnit.SECONDS)))
+				|| basisEvent.getEffectiveTimeSince().toMillis() < (cd.getCooldown() * 1000L) + 10_000L);
 //				|| Duration.between(abilityEvent.getEnqueuedAt().plusMillis((long) (cd.getCooldown() * 1000L)), Instant.now()).toMillis() < 10_000);
 	}
 

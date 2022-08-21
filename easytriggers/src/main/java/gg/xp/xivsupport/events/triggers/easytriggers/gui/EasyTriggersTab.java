@@ -26,7 +26,6 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 
-import javax.print.attribute.standard.JobKOctets;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Collections;
@@ -196,28 +195,7 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private static <X> @Nullable X doImportDialog(String title, Function<String, X> converter) {
-		Mutable<X> value = new MutableObject<>();
-		JButton okButton = new JButton("Import");
-		MultiLineTextAreaWithValidation<X> field = new MultiLineTextAreaWithValidation<>(converter, value::setValue, "", (vs -> okButton.setEnabled(vs == InputValidationState.VALID)));
-		JButton cancelButton = new JButton("Cancel");
-		field.setPreferredSize(null);
-		field.setLineWrap(true);
-		field.setWrapStyleWord(true);
-		JScrollPane scrollPane = new JScrollPane(field);
-		scrollPane.setPreferredSize(new Dimension(720, 480));
-		JOptionPane opt = new JOptionPane(scrollPane, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION, null, new Object[]{okButton, cancelButton});
-		okButton.addActionListener(l -> opt.setValue(JOptionPane.OK_OPTION));
-		cancelButton.addActionListener(l -> opt.setValue(JOptionPane.CANCEL_OPTION));
-		JDialog dialog = opt.createDialog(title);
-		dialog.setVisible(true);
-		Object dialogResult = opt.getValue();
-		X theValue = value.getValue();
-		if (dialogResult instanceof Integer dr && dr == JOptionPane.OK_OPTION && theValue != null) {
-			return theValue;
-		}
-		else {
-			return null;
-		}
+		return GuiUtil.doImportDialog(title, converter);
 	}
 
 	private void showEasyImportDialog() {
@@ -238,7 +216,7 @@ public class EasyTriggersTab implements PluginTab {
 
 	private void exportCurrent() {
 		if (!multiSelections.isEmpty()) {
-			GuiUtil.copyToClipboard(backend.exportToString(multiSelections));
+			GuiUtil.copyTextToClipboard(backend.exportToString(multiSelections));
 			JOptionPane.showMessageDialog(outer, "Copied to clipboard");
 		}
 	}
