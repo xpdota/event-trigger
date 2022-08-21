@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Predicate;
 
+// TODO: test this with sandboxing
 public class GroovyEventFilter implements Condition<Event> {
 	private static final Logger log = LoggerFactory.getLogger(GroovyEventFilter.class);
 

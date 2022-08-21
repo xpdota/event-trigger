@@ -1,28 +1,20 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import groovy.lang.GroovyShell;
-import groovy.transform.CompileStatic;
-import groovy.transform.TypeChecked;
+import groovy.lang.Script;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.control.customizers.ImportCustomizer;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
 import org.jetbrains.annotations.Nullable;
-import org.reflections.Reflections;
-import org.reflections.scanners.Scanners;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Locale;
-import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
-import static org.reflections.scanners.Scanners.SubTypes;
 
 public class GroovyFilter<X> implements SplitVisualFilter<X> {
 
@@ -31,26 +23,29 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 	private final TextFieldWithValidation<?> textBox;
 	private final String longClassName;
 	private final String varName;
+	private final GroovyManager mgr;
 	private @Nullable Predicate<X> filterScript;
 	private boolean strict;
 	private String lastFilterText;
 	private final Runnable filterUpdatedCallback;
 	private final Class<?> dataType;
+	private static final AtomicInteger scriptCounter = new AtomicInteger(1);
 
-	public static <X> Function<Runnable, VisualFilter<? super X>> forClass(Class<X> dataType) {
-		return (filterUpdatedCallback) -> new GroovyFilter<>(filterUpdatedCallback, dataType, dataType.getSimpleName().toLowerCase(Locale.ROOT));
+	public static <X> Function<Runnable, VisualFilter<? super X>> forClass(Class<X> dataType, GroovyManager mgr) {
+		return (filterUpdatedCallback) -> new GroovyFilter<>(filterUpdatedCallback, mgr, dataType, dataType.getSimpleName().toLowerCase(Locale.ROOT));
 	}
 
-	public static <X> Function<Runnable, VisualFilter<? super X>> forClass(Class<X> dataType, String varName) {
-		return (filterUpdatedCallback) -> new GroovyFilter<>(filterUpdatedCallback, dataType, varName);
+	public static <X> Function<Runnable, VisualFilter<? super X>> forClass(Class<X> dataType, GroovyManager mgr, String varName) {
+		return (filterUpdatedCallback) -> new GroovyFilter<>(filterUpdatedCallback, mgr, dataType, varName);
 	}
 
-	public GroovyFilter(Runnable filterUpdatedCallback, Class<X> dataType, String varName) {
+	public GroovyFilter(Runnable filterUpdatedCallback, GroovyManager mgr, Class<X> dataType, String varName) {
 		this.filterUpdatedCallback = filterUpdatedCallback;
 		this.dataType = dataType;
 		this.textBox = new TextFieldWithValidation<>(this::makeFilter, this::setFilter, "");
 		this.longClassName = dataType.getCanonicalName();
 		this.varName = varName;
+		this.mgr = mgr;
 		CompilerConfiguration compilerConfiguration = GroovyManager.getCompilerConfig();
 //		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
 //		ImportCustomizer importCustomizer = new ImportCustomizer();
@@ -82,19 +77,28 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		}
 		try {
 			String checkType = strict ? "@CompileStatic" : "";
-			String inJavaForm =
-					"""
-							new Predicate<%s>() {
-								%s
-								@Override
-								public boolean test(%s %s) {
-									%s
-								}
-							};
-							""".formatted(longClassName, checkType, longClassName, varName, filterText);
-			Predicate<X> compiled = (Predicate<X>) shell.evaluate(inJavaForm);
+			String scriptName = "GroovyFilterScript" + scriptCounter.getAndIncrement();
+			String inJavaForm = """
+					%s
+					boolean test(%s %s) {
+						%s
+					}
+					Predicate<%s> myPredicate = this::test;
+					return myPredicate;
+					""".formatted(checkType, longClassName, varName, filterText, longClassName);
+			Predicate<X> compiled;
+			try (GroovySandbox.Scope ignored = mgr.getSandbox().enter()) {
+//				Script script = shell.parse(inJavaForm, scriptName);
+				compiled = (Predicate<X>) shell.evaluate(inJavaForm);
+//				Script script = shell.parse(inJavaForm, scriptName);
+//				compiled = (Predicate<X>) script.invokeMethod("run", null);
+			}
 			textBox.setToolTipText(null);
-			return compiled;
+			return (x) -> {
+				try (GroovySandbox.Scope ignored = mgr.getSandbox().enter()) {
+					return compiled.test(x);
+				}
+			};
 		}
 		catch (Throwable t) {
 			textBox.setToolTipText(t.getMessage());
@@ -113,7 +117,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		if (filterScript == null) {
 			return true;
 		}
-		shell.setVariable(varName, item);
+//		shell.setVariable(varName, item);
 		boolean result;
 		try {
 			result = filterScript.test(item);

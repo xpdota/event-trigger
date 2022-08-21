@@ -234,11 +234,11 @@ public class CalloutTests {
 		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
 		mc.attachHandle(mch);
 
-		CalloutEvent ce1 = mc.getModified(Map.of("val1", 123, "val2", 456));
+		CalloutEvent ce1 = proc.processCallout(mc.getModified(Map.of("val1", 123, "val2", 456)));
 		Assert.assertEquals(ce1.getCallText(), "123 456");
 		Assert.assertEquals(ce1.getVisualText(), "123 456");
 
-		CalloutEvent ce2 = mc.getModified(Map.of("val1", 789));
+		CalloutEvent ce2 = proc.processCallout(mc.getModified(Map.of("val1", 789)));
 
 		Assert.assertEquals(ce1.getCallText(), "123 456");
 		Assert.assertEquals(ce2.getCallText(), "789 Error");

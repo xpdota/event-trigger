@@ -181,4 +181,9 @@ public class EasyTriggersTest {
 			}
 		}
 	}
+
+	@Test
+	void testGroovyTriggerPersistence() {
+
+	}
 }

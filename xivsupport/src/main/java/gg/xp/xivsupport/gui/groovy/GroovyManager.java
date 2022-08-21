@@ -10,19 +10,15 @@ import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.ExternalObservable;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
-import groovy.lang.Script;
 import groovy.transform.CompileStatic;
 import groovy.transform.TypeChecked;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.RejectASTTransformsCustomizer;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.AbstractWhitelist;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kohsuke.groovy.sandbox.SandboxTransformer;
 import org.picocontainer.PicoContainer;
@@ -35,10 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -366,6 +358,7 @@ public class GroovyManager {
 			binding.setProperty(simpleName, item);
 		});
 		// TODO: find a way to systematically do these
+		// TODO: expose user scripts here
 		binding.setProperty("xivState", container.getComponent(XivState.class));
 		return binding;
 	}

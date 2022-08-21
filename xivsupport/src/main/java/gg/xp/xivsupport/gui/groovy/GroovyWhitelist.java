@@ -1,11 +1,14 @@
 package gg.xp.xivsupport.gui.groovy;
 
 import gg.xp.reevent.scan.ScanMe;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -24,12 +27,16 @@ public class GroovyWhitelist extends Whitelist {
 			"java.awt.Desktop",
 			"java.lang.Thread",
 			"org.slf4j",
+			"org.apache.commons.io",
 			"java.lang.Process"
 	);
 	private final List<Class<?>> classBlacklist = List.of(
 			Thread.class,
 			Process.class,
-			ProcessBuilder.class
+			ProcessBuilder.class,
+			File.class,
+			FileUtils.class,
+			IOUtils.class
 	);
 
 	private boolean nameAllowed(String thing) {
@@ -116,37 +123,37 @@ public class GroovyWhitelist extends Whitelist {
 
 	@Override
 	public boolean permitsMethod(@NotNull Method method, @NotNull Object receiver, @NotNull Object[] args) {
-		log.info("{}", method);
+		log.trace("{}", method);
 		return methodAllowed(method) && objectAllowed(receiver) && objectsAllowed(args);
 	}
 
 	@Override
 	public boolean permitsConstructor(@NotNull Constructor<?> constructor, @NotNull Object[] args) {
-		log.info("{}", constructor);
+		log.trace("{}", constructor);
 		return ctorAllowed(constructor) && objectsAllowed(args);
 	}
 
 	@Override
 	public boolean permitsStaticMethod(@NotNull Method method, @NotNull Object[] args) {
-		log.info("{}", method);
+		log.trace("{}", method);
 		return methodAllowed(method) && objectsAllowed(args);
 	}
 
 	@Override
 	public boolean permitsFieldGet(@NotNull Field field, @NotNull Object receiver) {
-		log.info("{}", field);
+		log.trace("{}", field);
 		return fieldAllowed(field) && objectAllowed(receiver);
 	}
 
 	@Override
 	public boolean permitsFieldSet(@NotNull Field field, @NotNull Object receiver, Object value) {
-		log.info("{}", field);
+		log.trace("{}", field);
 		return fieldAllowed(field) && objectAllowed(receiver) && objectAllowed(value);
 	}
 
 	@Override
 	public boolean permitsStaticFieldGet(@NotNull Field field) {
-		log.info("{}", field);
+		log.trace("{}", field);
 		try {
 			return fieldAllowed(field) && objectAllowed(field.get(null));
 		}
@@ -157,7 +164,7 @@ public class GroovyWhitelist extends Whitelist {
 
 	@Override
 	public boolean permitsStaticFieldSet(@NotNull Field field, Object value) {
-		log.info("{}", field);
+		log.trace("{}", field);
 		return fieldAllowed(field) && objectAllowed(value);
 	}
 }

@@ -620,7 +620,7 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 //				.addFilter(FreeformEventFilter::new)
-				.addFilter(GroovyFilter.forClass(Event.class))
+				.addFilter(GroovyFilter.forClass(Event.class, container.getComponent(GroovyManager.class)))
 				.addFilter(r -> {
 					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);
 					container.addComponent(pullNumberFilter);

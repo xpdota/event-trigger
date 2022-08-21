@@ -10,6 +10,7 @@ import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -35,7 +36,7 @@ public class MapTab extends JSplitPane {
 	private final MapPanel mapPanel;
 	private volatile boolean selectionRefreshPending;
 
-	public MapTab(XivState state, StandardColumns columns, ActiveCastRepository acr) {
+	public MapTab(XivState state, StandardColumns columns, ActiveCastRepository acr, GroovyManager mgr) {
 //		super("Map");
 		super(HORIZONTAL_SPLIT);
 		this.mapPanel = new MapPanel(state, acr);
@@ -76,7 +77,7 @@ public class MapTab extends JSplitPane {
 				.setDetailsSelectionEquivalence((a, b) -> a.getKey().equals(b.getKey()))
 				.addFilter(EventEntityFilter::selfFilter)
 				.addFilter(NonCombatEntityFilter::new)
-				.addFilter(GroovyFilter.forClass(XivCombatant.class, "it"))
+				.addFilter(GroovyFilter.forClass(XivCombatant.class, mgr, "it"))
 				.build();
 		table.setBottomScroll(false);
 		mapRefresh = new RefreshLoop<>("MapTableRefresh", this, MapTab::updateMapPanel, u -> 100L);
