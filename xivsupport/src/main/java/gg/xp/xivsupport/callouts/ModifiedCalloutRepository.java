@@ -56,7 +56,7 @@ public class ModifiedCalloutRepository {
 			String topLevelPropStub = "callouts.group." + clazz.getCanonicalName();
 			fields.forEach(f -> {
 				String fieldName = f.getName();
-				String fullPropStub = classPropStub + "." + fieldName;
+				String fullPropStub = classPropStub + '.' + fieldName;
 				f.setAccessible(true);
 				ModifiableCallout<?> original;
 				try {
@@ -68,7 +68,14 @@ public class ModifiedCalloutRepository {
 				ModifiedCalloutHandle modified = ModifiedCalloutHandle.installHandle(original, persistence, fullPropStub, enableTts, enableOverlay);
 				callouts.add(modified);
 			});
-			allCallouts.add(new CalloutGroup(clazz, description, topLevelPropStub, persistence, callouts));
+			CalloutGroup cg;
+			if (o instanceof OverridesCalloutGroupEnabledSetting override) {
+				cg = new CalloutGroup(clazz, description, topLevelPropStub, override.getCalloutGroupEnabledSetting(), callouts);
+			}
+			else {
+				cg = new CalloutGroup(clazz, description, topLevelPropStub, persistence, callouts);
+			}
+			allCallouts.add(cg);
 		});
 		log.info("Found {} callout repo classes", allCallouts.size());
 	}
@@ -85,3 +92,4 @@ public class ModifiedCalloutRepository {
 		return enableTts;
 	}
 }
+

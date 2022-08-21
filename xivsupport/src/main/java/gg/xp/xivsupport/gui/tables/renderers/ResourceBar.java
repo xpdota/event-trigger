@@ -151,7 +151,7 @@ public class ResourceBar extends JComponent {
 	}
 
 	public void setTextColor(Color textColor) {
-		this.textColor = textColor;
+		this.label.setForeground(textColor);
 	}
 
 	public void setTicks(@Nullable TickRenderInfo ticks) {

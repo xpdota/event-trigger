@@ -40,7 +40,7 @@ public abstract class CalloutVerificationTest {
 	}
 
 	@Test
-	void doTheTest() throws ExecutionException, InterruptedException {
+	void doTheTest() {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		String fileName = getFileName();
 		ReplayController replayController = new ReplayController(pico.getComponent(EventMaster.class), EventReader.readActLogResource(fileName), false);

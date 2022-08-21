@@ -8,23 +8,21 @@ import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
-import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 @ScanMe
-public class DragonsongGui implements DutyPluginTab {
+public class DragonsongAmGui implements DutyPluginTab {
 
 	private final Dragonsong ds;
 	private JobSortGui jsg;
 	private JPanel inner;
 
-	public DragonsongGui(Dragonsong ds) {
+	public DragonsongAmGui(Dragonsong ds) {
 		this.ds = ds;
 	}
 

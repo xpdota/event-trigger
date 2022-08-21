@@ -10,9 +10,9 @@ import java.awt.*;
 @ScanMe
 public class DragonsongLegacyGui implements PluginTab {
 
-	private final DragonsongGui realGui;
+	private final DragonsongAmGui realGui;
 
-	public DragonsongLegacyGui(DragonsongGui realGui) {
+	public DragonsongLegacyGui(DragonsongAmGui realGui) {
 		this.realGui = realGui;
 	}
 

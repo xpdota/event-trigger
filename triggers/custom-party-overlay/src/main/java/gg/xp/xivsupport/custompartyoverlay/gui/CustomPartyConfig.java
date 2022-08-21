@@ -35,7 +35,9 @@ import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
+import gg.xp.xivsupport.sys.Threading;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 
 @ScanMe
@@ -60,6 +64,7 @@ public class CustomPartyConfig implements PluginTab {
 
 	public final CustomPartyOverlay overlay;
 	private final CustomJsonListSetting<CustomOverlayComponentSpec> elementsSetting;
+	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private final XivPlayerCharacter dummyCharacter = new XivPlayerCharacter(
 			0x12345678,
 			"Player Name",
@@ -78,16 +83,23 @@ public class CustomPartyConfig implements PluginTab {
 	);
 	private final Map<CustomPartyOverlayComponentType, RefreshablePartyListComponent> componentCache = new ConcurrentHashMap<>();
 	private final Map<Component, CustomOverlayComponentSpec> componentToSpecMapping = new ConcurrentHashMap<>();
+	private final Map<CustomOverlayComponentSpec, Component> specToComponentMapping = new ConcurrentHashMap<>();
 	private final CustomPartyOverlayComponentFactory factory;
+	private final MutablePicoContainer container;
 	private ComponentDragPanel dragArea;
 	private @Nullable Component selection;
+	private TableWithFilterAndDetails<CustomOverlayComponentSpec, Object> table;
+	private volatile boolean selectionRefreshPending;
 
-	public CustomPartyConfig(CustomPartyOverlay overlay, XivState state, SequenceIdTracker sqid, StandardColumns cols) {
+	public CustomPartyConfig(MutablePicoContainer parentContainer, CustomPartyOverlay overlay, XivState state, SequenceIdTracker sqid, StandardColumns cols) {
 		this.overlay = overlay;
 		elementsSetting = overlay.getElements();
 		// Set up fake data
 		XivCombatant enemy = new XivCombatant(0x4001_1001, "Enemy");
-		factory = new CustomPartyOverlayComponentFactory(new StatusEffectRepository(state, sqid) {
+		container = parentContainer.makeChildContainer();
+
+		container.removeComponent(StatusEffectRepository.class);
+		container.addComponent(StatusEffectRepository.class, new StatusEffectRepository(state, sqid) {
 			@Override
 			public List<BuffApplied> statusesOnTarget(XivEntity entity) {
 				BuffApplied vuln = new BuffApplied(new XivStatusEffect(0x584), 30.0, enemy, dummyCharacter, 16) {
@@ -98,7 +110,9 @@ public class CustomPartyConfig implements PluginTab {
 				};
 				return new ArrayList<>(Collections.nCopies(45, vuln));
 			}
-		}, cols, new ActiveCastRepository() {
+		});
+		container.removeComponent(ActiveCastRepository.class);
+		container.addComponent(ActiveCastRepository.class, new ActiveCastRepository() {
 			@Override
 			public @Nullable CastTracker getCastFor(XivCombatant cbt) {
 				return new CastTracker(new AbilityCastStart(
@@ -110,7 +124,8 @@ public class CustomPartyConfig implements PluginTab {
 					}
 				};
 			}
-		}, sqid);
+		});
+		factory = new CustomPartyOverlayComponentFactory(container);
 	}
 
 	@Override
@@ -120,7 +135,15 @@ public class CustomPartyConfig implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
-		JPanel outer = new JPanel(new BorderLayout());
+		JPanel outer = new JPanel(new BorderLayout()) {
+			@Override
+			public void setVisible(boolean aFlag) {
+				super.setVisible(aFlag);
+				if (aFlag) {
+					resetComponents();
+				}
+			}
+		};
 		JTabbedPane pane = new JTabbedPane();
 
 		{
@@ -137,7 +160,7 @@ public class CustomPartyConfig implements PluginTab {
 				// TODO: put these back when something new is added so there's actually a reason
 //				JButton addButton = new JButton("Add Component");
 //				JButton removeButton = new JButton("Remove Component");
-				JButton resetButton = new JButton("Reset to Default");
+				JButton resetButton = new JButton("Reset Layout");
 				resetButton.addActionListener(l -> {
 					overlay.resetToDefault();
 				});
@@ -150,7 +173,7 @@ public class CustomPartyConfig implements PluginTab {
 			{
 				this.dragArea = new ComponentDragPanel();
 				elementsSetting.addListener(this::resetComponents);
-				TableWithFilterAndDetails<CustomOverlayComponentSpec, Object> table = TableWithFilterAndDetails.builder("Components", elementsSetting::getItems)
+				table = TableWithFilterAndDetails.builder("Components", elementsSetting::getItems)
 						.addMainColumn(new CustomColumn<>("En", item -> item.enabled, c -> {
 							c.setMinWidth(22);
 							c.setMaxWidth(22);
@@ -167,11 +190,23 @@ public class CustomPartyConfig implements PluginTab {
 						.setSelectionEquivalence((a, b) -> a.componentType == b.componentType)
 						.build();
 				table.setEditMode(EditMode.AUTO);
+				table.getMainTable().getSelectionModel().addListSelectionListener(l -> {
+					if (l.getValueIsAdjusting()) {
+						return;
+					}
+					if (!selectionRefreshPending) {
+						selectionRefreshPending = true;
+						SwingUtilities.invokeLater(() -> {
+							setSelectionBySpec(table.getCurrentSelection());
+							selectionRefreshPending = false;
+						});
+					}
+				});
 				elementsSetting.addListener(table::signalNewData);
 				JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, dragArea, new JScrollPane(table.getMainTable()));
 				SwingUtilities.invokeLater(() -> {
-					splitPane.setDividerLocation(0.8);
-					splitPane.setResizeWeight(0.8);
+					splitPane.setDividerLocation(0.6);
+					splitPane.setResizeWeight(0.6);
 					table.signalNewData();
 				});
 				mainOverlayPanel.add(splitPane);
@@ -180,6 +215,17 @@ public class CustomPartyConfig implements PluginTab {
 			pane.add("Main", mainOverlayPanel);
 			resetComponents();
 			outer.add(pane, BorderLayout.CENTER);
+		}
+		{
+			// Add specific component config guis
+			for (CustomPartyOverlayComponentType type : CustomPartyOverlayComponentType.values()) {
+				Class<? extends Component> configGuiClass = type.getConfigGuiClass();
+				if (configGuiClass != null) {
+					container.addComponent(configGuiClass);
+					Component component = container.getComponent(configGuiClass);
+					pane.add(type.getFriendlyName(), component);
+				}
+			}
 		}
 		{
 			JPanel top = new JPanel(new WrapLayout());
@@ -195,6 +241,7 @@ public class CustomPartyConfig implements PluginTab {
 		SwingUtilities.invokeLater(() -> {
 			dragArea.removeAll();
 			componentToSpecMapping.clear();
+			specToComponentMapping.clear();
 			List<CustomOverlayComponentSpec> items = elementsSetting.getItems();
 			for (CustomOverlayComponentSpec item : items) {
 				RefreshablePartyListComponent rplc = getComponentFor(item);
@@ -207,10 +254,23 @@ public class CustomPartyConfig implements PluginTab {
 				rplc.refresh(dummyCharacter);
 				dragArea.add(component);
 				componentToSpecMapping.put(component, item);
+				specToComponentMapping.put(item, component);
 			}
 			SwingUtilities.invokeLater(() -> {
 				dragArea.revalidate();
 				dragArea.repaint();
+			});
+			exs.submit(() -> {
+				try {
+					Thread.sleep(200);
+				}
+				catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+				SwingUtilities.invokeLater(() -> {
+					dragArea.revalidate();
+					dragArea.repaint();
+				});
 			});
 		});
 	}
@@ -246,6 +306,17 @@ public class CustomPartyConfig implements PluginTab {
 		spec.width = size.width;
 		spec.height = size.height;
 		elementsSetting.commit();
+	}
+
+	private void setSelectionByComponent(@Nullable Component component) {
+		selection = component;
+		CustomOverlayComponentSpec spec = component == null ? null : componentToSpecMapping.get(component);
+		table.setAndScrollToSelection(spec);
+	}
+
+	private void setSelectionBySpec(@Nullable CustomOverlayComponentSpec spec) {
+		selection = spec == null ? null : specToComponentMapping.get(spec);
+		dragArea.repaint();
 	}
 
 	private enum DragType {
@@ -338,13 +409,13 @@ public class CustomPartyConfig implements PluginTab {
 		public void mouseClicked(MouseEvent e) {
 			Component componentAt = looseComponentAt(e.getPoint());
 			if (componentAt != null) {
-				selection = componentAt;
+				setSelectionByComponent(componentAt);
 				log.info("Clicked Component {}", componentAt);
 				CustomOverlayComponentSpec spec = componentToSpecMapping.get(componentAt);
 				log.info("Selected spec type: {}", spec.componentType);
 			}
 			else {
-				selection = null;
+				setSelectionByComponent(null);
 			}
 			repaint();
 		}

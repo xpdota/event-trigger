@@ -6,7 +6,10 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
@@ -26,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @CalloutRepo(name = "Titan Gaols", duty = KnownDuty.UWU)
@@ -33,6 +37,7 @@ public class JailSolver implements FilteredEventHandler {
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> first = new ModifiableCallout<>("First Jail", "First");
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> second = new ModifiableCallout<>("Second Jail", "Second");
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> third = new ModifiableCallout<>("Third Jail", "Third");
+	private final ModifiableCallout<EntityKilledEvent> playerDied = new ModifiableCallout<>("Jailed Player Died", "Cover {jailnum}");
 	private static final Logger log = LoggerFactory.getLogger(JailSolver.class);
 
 	private final List<XivPlayerCharacter> jailedPlayers = new ArrayList<>();
@@ -111,8 +116,26 @@ public class JailSolver implements FilteredEventHandler {
 	@HandleEvents
 	public void amResetManual(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("jailreset")) {
-			log.info("Cleared jails");
-			jailedPlayers.clear();
+			clearJails();
+		}
+	}
+
+	// Clear on this since we use the jail list for determining if a jailed player has died.
+	// Once the jail starts casting, it's too late to do anything about a dead jailee.
+	@HandleEvents
+	public void resetOnFetterBuff(EventContext context, AbilityCastStart event) {
+		if (event.abilityIdMatches(0x2B6D)) {
+			clearJails();
+		}
+	}
+
+	@HandleEvents
+	public void jailedPlayerDied(EventContext context, EntityKilledEvent event) {
+		XivCombatant target = event.getTarget();
+		int index;
+		//noinspection SuspiciousMethodCalls
+		if (target.isPc() && (index = jailedPlayers.indexOf(target)) >= 0) {
+			context.accept(playerDied.getModified(event, Map.of("jailnum", index + 1)));
 		}
 	}
 

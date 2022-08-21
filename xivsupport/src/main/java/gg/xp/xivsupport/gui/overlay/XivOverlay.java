@@ -56,6 +56,7 @@ public class XivOverlay {
 	private volatile boolean posSettingDirty;
 
 	private boolean visible;
+	private boolean wasVisible;
 	private boolean editMode;
 
 	private static final AtomicLong nextDefaultPos = new AtomicLong(200);
@@ -211,6 +212,10 @@ public class XivOverlay {
 		recalc();
 	}
 
+	protected void onBecomeVisible() {
+
+	}
+
 	protected boolean isVisible() {
 		return visible;
 	}
@@ -236,6 +241,10 @@ public class XivOverlay {
 		if (editMode) {
 			panel.setBorder(editBorder);
 		}
+		if (visible && !wasVisible) {
+			onBecomeVisible();
+		}
+		wasVisible = visible;
 	}
 
 	public void setEditMode(boolean editMode) {

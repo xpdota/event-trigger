@@ -12,6 +12,8 @@ import java.util.concurrent.Executors;
 
 public class TtsProcessor {
 
+	private static final Logger log = LoggerFactory.getLogger(TtsProcessor.class);
+
 //	private static final Logger log = LoggerFactory.getLogger(TtsProcessor.class);
 //	private static final ExecutorService exs = Executors.newSingleThreadExecutor(r -> {
 //		Thread thread = new Thread(r);
@@ -83,6 +85,7 @@ public class TtsProcessor {
 	public void callout(EventContext context, CalloutEvent callout) {
 		String callText = callout.getCallText();
 		if (callText != null && !callText.isBlank()) {
+			log.info("TTS: '{}'", callText);
 			context.accept(new TtsRequest(callText));
 		}
 	}

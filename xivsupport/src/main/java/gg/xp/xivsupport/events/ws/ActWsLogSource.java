@@ -199,9 +199,11 @@ public class ActWsLogSource implements EventSource {
 	public void sayTts(EventContext context, TtsRequest event) {
 		if (allowTts.get()) {
 			try {
+				String ttsString = event.getTtsString();
+				log.info("Sending TTS to ACT: {}", ttsString);
 				client.send(mapper.writeValueAsString(Map.ofEntries(
 						Map.entry("call", "say"),
-						Map.entry("text", event.getTtsString()),
+						Map.entry("text", ttsString),
 						Map.entry("rseq", rseqCounter.getAndIncrement()))));
 			}
 			catch (JsonProcessingException e) {
