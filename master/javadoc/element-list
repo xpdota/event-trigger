@@ -20,7 +20,12 @@ gg.xp.xivsupport.callouts.conversions
 gg.xp.xivsupport.callouts.gui
 gg.xp.xivsupport.cdsupport
 gg.xp.xivsupport.custompartyoverlay
+gg.xp.xivsupport.custompartyoverlay.buffs
+gg.xp.xivsupport.custompartyoverlay.castbar
 gg.xp.xivsupport.custompartyoverlay.gui
+gg.xp.xivsupport.custompartyoverlay.hpbar
+gg.xp.xivsupport.custompartyoverlay.mpbar
+gg.xp.xivsupport.custompartyoverlay.name
 gg.xp.xivsupport.events
 gg.xp.xivsupport.events.actionresolution
 gg.xp.xivsupport.events.actlines.events
