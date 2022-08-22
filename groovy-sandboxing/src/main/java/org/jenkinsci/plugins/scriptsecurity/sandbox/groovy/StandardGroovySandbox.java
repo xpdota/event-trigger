@@ -118,7 +118,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	/**
 	 * Prepares a compiler configuration the sandbox.
 	 *
-	 * <h2>CAUTION</h2>
+	 * CAUTION
 	 * <p>
 	 * When creating {@link GroovyShell} with this {@link CompilerConfiguration},
 	 * you also have to use {@link #createSecureClassLoader(ClassLoader)} to wrap
@@ -130,6 +130,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 *
 	 * @return a compiler configuration set up to use the sandbox
 	 */
+	// TODO: use this
 	public static @NonNull CompilerConfiguration createSecureCompilerConfiguration() {
 		CompilerConfiguration cc = createBaseCompilerConfiguration();
 		cc.addCompilationCustomizers(new SandboxTransformer());
