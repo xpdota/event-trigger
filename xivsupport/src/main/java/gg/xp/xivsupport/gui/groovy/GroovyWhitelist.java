@@ -40,6 +40,9 @@ public class GroovyWhitelist extends Whitelist {
 	);
 
 	private boolean nameAllowed(String thing) {
+		if (thing == null) {
+			return true;
+		}
 		String stringifiedThing = stringify(thing);
 		for (String s : pkgBlacklist) {
 			if (stringifiedThing.startsWith(s)) {

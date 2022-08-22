@@ -8,7 +8,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import groovy.lang.GroovyShell;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +28,8 @@ public class GroovyEventFilter implements Condition<Event> {
 	private boolean strict = true;
 	@JsonIgnore
 	private Predicate<? extends Event> groovyCompiledScript;
+	@JsonIgnore
+	private volatile Throwable lastError;
 
 	public GroovyEventFilter(@JacksonInject GroovyManager mgr) {
 		this.mgr = mgr;
@@ -84,17 +86,25 @@ public class GroovyEventFilter implements Condition<Event> {
 		String shortClassName = eventType.getSimpleName();
 		String varName = "event";
 		String checkType = strict ? "@CompileStatic" : "";
+//		String inJavaForm = """
+//				import %s;
+//				new Predicate<%s>() {
+//					%s
+//					@Override
+//					public boolean test(%s %s) {
+//						%s
+//					}
+//				};
+//				""".formatted(longClassName, shortClassName, checkType, shortClassName, varName, script);
 		String inJavaForm = """
-				import %s;
-				new Predicate<%s>() {
 					%s
-					@Override
 					public boolean test(%s %s) {
 						%s
 					}
-				};
-				""".formatted(longClassName, shortClassName, checkType, shortClassName, varName, script);
-		try (GroovySandbox.Scope ignored = mgr.getSandbox().enter()) {
+					Predicate<%s> myPredicate = this::test;
+					return myPredicate;
+					""".formatted(checkType, longClassName, varName, script, longClassName);
+		try (SandboxScope ignored = mgr.getSandbox().enter()) {
 			return (Predicate<? extends Event>) shell.parse(inJavaForm).run();
 		}
 
@@ -110,6 +120,10 @@ public class GroovyEventFilter implements Condition<Event> {
 		return "(Groovy Expression)";
 	}
 
+	public Throwable getLastError() {
+		return lastError;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean test(Event event) {
@@ -123,8 +137,13 @@ public class GroovyEventFilter implements Condition<Event> {
 			}
 		}
 		if (eventType.isInstance(event)) {
-			try (GroovySandbox.Scope ignored = mgr.getSandbox().enter()) {
+			try (SandboxScope ignored = mgr.getSandbox().enter()) {
 				return ((Predicate<Event>) groovyCompiledScript).test(event);
+			}
+			catch (Throwable t) {
+				log.error("Easy trigger Groovy script encountered an error (returning false)", t);
+				lastError = t;
+				return false;
 			}
 		}
 		else {

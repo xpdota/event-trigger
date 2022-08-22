@@ -18,7 +18,7 @@ public class ScriptNameDialog extends JDialog {
 	private final Consumer<ScriptNameAndFileStub> consumer;
 	private String name;
 
-	public ScriptNameDialog(String title, @Nullable String existingName, GroovyManager mgr, Component parent, Consumer<ScriptNameAndFileStub> consumer) {
+	public ScriptNameDialog(String title, @Nullable String existingName, GroovyScriptManager mgr, Component parent, Consumer<ScriptNameAndFileStub> consumer) {
 		super(SwingUtilities.getWindowAncestor(parent), title);
 		if (existingName == null) {
 			name = "New Script";

@@ -16,7 +16,7 @@ import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -114,7 +114,7 @@ public class CalloutProcessor {
 			return replacer.matcher(input).replaceAll(m -> {
 				try {
 					Object rawEval;
-					try (GroovySandbox.Scope ignored = groovyMgr.getSandbox().enter()) {
+					try (SandboxScope ignored = groovyMgr.getSandbox().enter()) {
 						Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
 						script.setBinding(binding);
 						rawEval = script.run();

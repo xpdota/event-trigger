@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.tabs;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.groovy.GroovyPanel;
 import gg.xp.xivsupport.gui.groovy.GroovyScriptHolder;
+import gg.xp.xivsupport.gui.groovy.GroovyScriptManager;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,10 +18,10 @@ import java.util.Objects;
 public class GroovyTab extends JPanel {
 
 	private final JTabbedPane tabPane;
-	private final GroovyManager mgr;
+	private final GroovyScriptManager mgr;
 	private final Map<GroovyScriptHolder, GroovyPanel> componentCache = new HashMap<>();
 
-	public GroovyTab(GroovyManager mgr) {
+	public GroovyTab(GroovyScriptManager mgr) {
 		this.mgr = mgr;
 		// Idea: have an "Add New" button just be a tab
 		tabPane = new JTabbedPane(JTabbedPane.LEFT) {

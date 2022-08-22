@@ -2,9 +2,8 @@ package gg.xp.xivsupport.gui.tables.filters;
 
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import groovy.lang.GroovyShell;
-import groovy.lang.Script;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,27 +45,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		this.longClassName = dataType.getCanonicalName();
 		this.varName = varName;
 		this.mgr = mgr;
-		CompilerConfiguration compilerConfiguration = GroovyManager.getCompilerConfig();
-//		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
-//		ImportCustomizer importCustomizer = new ImportCustomizer();
-//		importCustomizer.addImports(
-//				Predicate.class.getCanonicalName(),
-//				CompileStatic.class.getCanonicalName(),
-//				TypeChecked.class.getCanonicalName(),
-//				longClassName);
-//		importCustomizer.addStarImports("gg.xp.xivsupport.events.actlines.events");
-//		Reflections reflections = new Reflections(
-//				new ConfigurationBuilder()
-//						.setUrls(ClasspathHelper.forJavaClassPath())
-//						.setParallel(true)
-//						.setScanners(Scanners.SubTypes));
-//		reflections.get(SubTypes.of(Event.class).asClass())
-//				.stream()
-//				.map(Class::getCanonicalName)
-//				.filter(Objects::nonNull)
-//				.forEach(importCustomizer::addImports);
-
-//		compilerConfiguration.addCompilationCustomizers(importCustomizer);
+		CompilerConfiguration compilerConfiguration = mgr.getCompilerConfig();
 		shell = new GroovyShell(compilerConfiguration);
 	}
 
@@ -87,7 +66,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 					return myPredicate;
 					""".formatted(checkType, longClassName, varName, filterText, longClassName);
 			Predicate<X> compiled;
-			try (GroovySandbox.Scope ignored = mgr.getSandbox().enter()) {
+			try (SandboxScope ignored = mgr.getSandbox().enter()) {
 //				Script script = shell.parse(inJavaForm, scriptName);
 				compiled = (Predicate<X>) shell.evaluate(inJavaForm);
 //				Script script = shell.parse(inJavaForm, scriptName);
@@ -95,7 +74,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 			}
 			textBox.setToolTipText(null);
 			return (x) -> {
-				try (GroovySandbox.Scope ignored = mgr.getSandbox().enter()) {
+				try (SandboxScope ignored = mgr.getSandbox().enter()) {
 					return compiled.test(x);
 				}
 			};

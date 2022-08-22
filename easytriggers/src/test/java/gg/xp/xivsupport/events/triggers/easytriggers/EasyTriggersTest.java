@@ -14,18 +14,28 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
+import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
 import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import groovy.lang.MissingPropertyException;
+import org.codehaus.groovy.control.MultipleCompilationErrorsException;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
 import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
@@ -53,7 +63,7 @@ public class EasyTriggersTest {
 	private static final AbilityCastCancel castCancel = new AbilityCastCancel(caster, matchingAbility, "Stuff");
 	private static final EntityKilledEvent killed = new EntityKilledEvent(caster, target);
 	private static final BuffApplied buffApply = new BuffApplied(status, 5.0, caster, target, 5);
-	private static final BuffRemoved buffRemove = new BuffRemoved(status, 5.0,caster, target, 5);
+	private static final BuffRemoved buffRemove = new BuffRemoved(status, 5.0, caster, target, 5);
 	private static final AbilityResolvedEvent resolved = new AbilityResolvedEvent(abilityUsed1);
 	private static final ActorControlEvent ace = new ActorControlEvent(1, 2, 3, 4, 5, 6);
 	private static final ACTLogLineEvent logLine = new ACTLogLineEvent("22|2022-01-20T18:11:59.9720000-08:00|40031036|Sparkfledged|66E6|Ashen Eye|10679943|Player Name|3|967F4098|1B|66E68000|0|0|0|0|0|0|0|0|0|0|0|0|61186|61186|10000|10000|||100.14|91.29|-0.02|3.08|69200|69200|10000|10000|||100.11|106.76|0.00|3.14|000133E7|2|4|64f5cd5254f9f411");
@@ -183,7 +193,105 @@ public class EasyTriggersTest {
 	}
 
 	@Test
-	void testGroovyTriggerPersistence() {
+	void testGroovyTrigger() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.eventType = EchoEvent.class;
+		gef.setGroovyScript("event.line.startsWith('foo')");
+		Assert.assertTrue(gef.test(new EchoEvent("foobar")));
+		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+	}
 
+	@Test
+	void testGroovyTriggerBadSyntax() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.eventType = EchoEvent.class;
+		gef.setGroovyScript("asdfasdfasdfasdf");
+		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		MatcherAssert.assertThat(gef.getLastError(), Matchers.instanceOf(MissingPropertyException.class));
+	}
+
+	// TODO: broken
+	@Test
+	@Ignore
+	void testGroovyTriggerBadSyntaxStrict() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.eventType = EchoEvent.class;
+		gef.setStrict(true);
+		// Due to the way this is set up, we have to set the script to something valid, *then* something invalid
+		gef.setGroovyScript("true");
+		Assert.assertThrows(MultipleCompilationErrorsException.class, () -> gef.setGroovyScript("asdfasdfasdfasdf"));
+	}
+
+	@Test
+	void testGroovyTriggerBadSyntaxStrictBuggyWrongBehavior() {
+		// TODO: this is testing wrong behavior to make sure that it's not TOO wrong
+		MutablePicoContainer pico = ExampleSetup.setup();
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.eventType = EchoEvent.class;
+		gef.setStrict(true);
+		// Due to the way this is set up, we have to set the script to something valid, *then* something invalid
+		gef.setGroovyScript("true");
+		gef.setGroovyScript("asdfasdfasdfasdf");
+		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		MatcherAssert.assertThat(gef.getLastError(), Matchers.instanceOf(MissingPropertyException.class));
+	}
+
+	@Test
+	void testGroovyTriggerSandboxViolation() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.eventType = EchoEvent.class;
+		gef.setGroovyScript("new java.io.File(\"Foo\") != null");
+		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		MatcherAssert.assertThat(gef.getLastError(), Matchers.instanceOf(RejectedAccessException.class));
+	}
+
+	private static MutablePicoContainer getSbxDisabledSetup() {
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		pers.save("groovy.enable-sandbox", false);
+		return ExampleSetup.setup(pers);
+	}
+
+	@Test
+	void testGroovyTriggerNoSbx() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.eventType = EchoEvent.class;
+		gef.setGroovyScript("event.line.startsWith('foo')");
+		Assert.assertTrue(gef.test(new EchoEvent("foobar")));
+		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+	}
+
+	@Test
+	void testGroovyTriggerBadSyntaxNoSbx() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.eventType = EchoEvent.class;
+		gef.setGroovyScript("asdfasdfasdfasdf");
+		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		MatcherAssert.assertThat(gef.getLastError(), Matchers.instanceOf(MissingPropertyException.class));
+	}
+
+	@Test
+	void testGroovyTriggerBadSyntaxStrictNoSbx() {
+		MutablePicoContainer pico = getSbxDisabledSetup();
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.eventType = EchoEvent.class;
+		gef.setStrict(true);
+		// Due to the way this is set up, we have to set the script to something valid, *then* something invalid
+		gef.setGroovyScript("true");
+		Assert.assertThrows(IllegalArgumentException.class, () -> gef.setGroovyScript("asdfasdfasdfasdf"));
+	}
+
+	@Test
+	void testGroovyTriggerSandboxViolationNoSbx() {
+		MutablePicoContainer pico = getSbxDisabledSetup();
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.eventType = EchoEvent.class;
+		gef.setGroovyScript("new java.io.File(\"Foo\") != null");
+		Assert.assertTrue(gef.test(new EchoEvent("foobar")));
 	}
 }

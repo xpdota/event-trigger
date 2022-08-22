@@ -25,12 +25,12 @@
 package org.jenkinsci.plugins.scriptsecurity.sandbox;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.StandardGroovySandbox;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.StaticWhitelist;
 
 /**
  * Thrown when access to a language element was not permitted.
- * @see GroovySandbox#runInSandbox(Runnable, Whitelist)
+ * @see StandardGroovySandbox#runInSandbox(Runnable, Whitelist)
  */
 public final class RejectedAccessException extends SecurityException {
 

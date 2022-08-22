@@ -27,14 +27,10 @@ package org.jenkinsci.plugins.scriptsecurity.sandbox;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.ProxyWhitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.StandardGroovySandbox;
 
 /**
  * Determines which methods and similar members which scripts may call.
@@ -47,7 +43,7 @@ public abstract class Whitelist {
      * Checks whether a given virtual method may be invoked.
      * <p>Note that {@code method} should not be implementing or overriding a method in a supertype;
      * in such a case the caller must pass that supertype method instead.
-     * In other words, call site selection is the responsibility of the caller (such as {@link GroovySandbox}), not the whitelist.
+     * In other words, call site selection is the responsibility of the caller (such as {@link StandardGroovySandbox}), not the whitelist.
      * @param method a method defined in the JVM
      * @param receiver {@code this}, the receiver of the method call
      * @param args zero or more arguments
