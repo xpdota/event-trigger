@@ -111,9 +111,10 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 	public void flush() {
 		Future<?> future = writeChangesToDisk();
 		try {
-			future.get(5, TimeUnit.SECONDS);
+			future.get(10, TimeUnit.SECONDS);
 		}
 		catch (InterruptedException | ExecutionException | TimeoutException e) {
+			log.error("ERROR SAVING SETTINGS - CHANGES MAY NOT BE SAVED TO DISK!", e);
 			throw new RuntimeException(e);
 		}
 	}
