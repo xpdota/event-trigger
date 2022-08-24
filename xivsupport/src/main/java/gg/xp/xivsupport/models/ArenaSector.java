@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.models;
 
+import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public enum ArenaSector {
+public enum ArenaSector implements HasFriendlyName {
 
 
 	NORTH("North"),
@@ -19,7 +20,13 @@ public enum ArenaSector {
 	SOUTHWEST("Southwest"),
 	WEST("West"),
 	NORTHWEST("Northwest"),
+	/**
+	 * Represents the center of the arena rather than a direction.
+	 */
 	CENTER("Center"),
+	/**
+	 * Represents an unknown sector.
+	 */
 	UNKNOWN("?");
 
 	private static final Logger log = LoggerFactory.getLogger(ArenaSector.class);
@@ -34,10 +41,31 @@ public enum ArenaSector {
 		return friendlyName;
 	}
 
+	/**
+	 * The list of cardinal directions.
+	 */
 	public static final List<ArenaSector> cardinals = List.of(NORTH, EAST, SOUTH, WEST);
+	/**
+	 * The the list of intercardinal directions (or quadrants, if you prefer).
+	 */
 	public static final List<ArenaSector> quadrants = List.of(NORTHEAST, SOUTHEAST, SOUTHWEST, NORTHWEST);
+	/**
+	 * Intercardinals and cardinals. This only contains the 'real' directions (no 'center' or 'unknown'), so it is
+	 * preferable to use this instead of {@link #values()}
+	 */
 	public static final List<ArenaSector> all = List.of(NORTH, NORTHEAST, EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST);
 
+	/**
+	 * Given two intercardinal quadrants, check if there is a cardinal adjacent to both of them.
+	 * <p>
+	 * r e.g. NE, NW == north; NE, SE == south; NE, SW == null
+	 * <p>
+	 * null will also be returned if the input is invalid, e.g. if the list size was not 2,
+	 * or if one or more item was not an intercard.
+	 *
+	 * @param quadrants The two quadrants
+	 * @return The adjacent cardinal, or null they are opposites, or if the input is invalid.
+	 */
 	public static @Nullable ArenaSector tryCombineTwoQuadrants(List<ArenaSector> quadrants) {
 		if (quadrants.size() != 2) {
 			log.warn("Expected two quadrants, but got: {}", quadrants);
@@ -65,10 +93,28 @@ public enum ArenaSector {
 		};
 	}
 
+	/**
+	 * @return The direct opposite of this arena area. If 'this' is center or unknown, returns 'this' unmodified.
+	 */
 	public ArenaSector opposite() {
+		if (this == CENTER || this == UNKNOWN) {
+			return this;
+		}
 		return values()[(ordinal() + 4) % 8];
 	}
 
+	/**
+	 * Add the given number of eigth-turns (clockwise) to this sector and return the result.
+	 * <p>
+	 * e.g. NORTHEAST.plusEights(2) == SOUTHEAST and NORTHEAST.plusEights(-3) == WEST
+	 * <p>
+	 * To rotate counterclockwise, supply a negative value.
+	 * <p>
+	 * If 'this' is center/unknown, returns this unmodified.
+	 *
+	 * @param eights Eigth-turns. Positive is clockwise, negative is CCW.
+	 * @return The result.
+	 */
 	public ArenaSector plusEighths(int eights) {
 		if (this == CENTER || this == UNKNOWN) {
 			return this;
@@ -79,10 +125,28 @@ public enum ArenaSector {
 		return values()[(ordinal() + eights) % 8];
 	}
 
+	/**
+	 * Like {@link #plusEighths(int)}, but quarter-turns rather than eights.
+	 * <p>
+	 * e.g. NORTHEAST.plusQuads(1) == SOUTHEAST, NORTH.plusQuads(-1) == WEST;
+	 *
+	 * @param quads The number of quarter turns. Positive is clockwise, negative is CCW.
+	 * @return The result.
+	 */
 	public ArenaSector plusQuads(int quads) {
 		return plusEighths(quads * 2);
 	}
 
+	/**
+	 * Computes the rotation from one sector to another, expressed in eight-turns. Positive indicates clockwise
+	 * while negative indicates CCW.
+	 * <p>
+	 * e.g. NORTHEAST.eightsTo(WEST) == -3, because the shortest path from northeast to west is CCW.
+	 *
+	 * @param other The sector to compare to.
+	 * @return The eighth-turns to get to that sector from this.
+	 * @throws IllegalArgumentException if 'this' or 'other' is center or unknown.
+	 */
 	public int eighthsTo(ArenaSector other) {
 		if (this == CENTER || this == UNKNOWN) {
 			throw new IllegalArgumentException(this.toString());
@@ -104,19 +168,35 @@ public enum ArenaSector {
 		return rawDiff;
 	}
 
+	/**
+	 * @param other A sector to compare to
+	 * @return true if and only if this sector is exactly one eight-turn away from 'other'. If they are the same, it
+	 * still returns false.
+	 * @throws IllegalArgumentException if 'this' or 'other' is center or unknown.
+	 */
 	public boolean isStrictlyAdjacentTo(ArenaSector other) {
 		return Math.abs(eighthsTo(other)) == 1;
 	}
 
+	/**
+	 * @return true if and only if this is an 'outside' direction, i.e. not 'center' or 'unknown'
+	 */
 	public boolean isOutside() {
 		return ordinal() <= 7;
 	}
 
+	/**
+	 * @return true if and only if this is a cardinal.
+	 */
 	public boolean isCardinal() {
 		int ordinal = ordinal();
 		return ordinal <= 7 && ordinal % 2 == 0;
 	}
 
+
+	/**
+	 * @return true if and only if this is an intercardinal.
+	 */
 	public boolean isIntercard() {
 		int ordinal = ordinal();
 		return ordinal <= 7 && ordinal % 2 == 1;
