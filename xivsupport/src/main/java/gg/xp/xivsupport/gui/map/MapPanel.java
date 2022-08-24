@@ -146,8 +146,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		map = state.getMap();
 		combatants.stream()
 				.filter(cbt -> {
-					CombatantType type = cbt.getType();
-					return type != CombatantType.NONCOM && type != CombatantType.GP && type != CombatantType.OTHER;
+					// Further filtering is no longer necessary here since the table pre-filters for us.
+					// But we can't exactly display something with no position.
+					return cbt.getPos() != null;
 				})
 				.forEach(cbt -> {
 					long id = cbt.getId();
@@ -155,8 +156,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 						return;
 					}
 					@Nullable CastTracker cast = acr.getCastFor(cbt);
-					// Only lock for checking if it's there
+					// Create if it doesn't already exist
 					PlayerDoohickey pdh = things.computeIfAbsent(id, (unused) -> createNew(cbt));
+					// Update with latest info
 					pdh.update(cbt, cast);
 				});
 
@@ -177,29 +179,55 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		return player;
 	}
 
+	// Translate in-game X to map coordinates
+
+	/**
+	 * @param originalX in-game X coordinate
+	 * @return          equivalent map coordinates on the current map.
+	 */
 	private double translateXmap(double originalX) {
 		// Already divided by 100
 		double c = map.getScaleFactor();
 		return (originalX + map.getOffsetX()) * c;
 	}
 
+	/**
+	 * @param originalY in-game Y coordinate
+	 * @return          equivalent map coordinates on the current map.
+	 */
 	private double translateYmap(double originalY) {
 		double c = map.getScaleFactor();
 		return (originalY + map.getOffsetY()) * c;
 	}
 
+	/**
+	 * @param originalX map X coordinate
+	 * @return          equivalent on-screen coordinate
+	 */
 	private int translateXscrn(double originalX) {
 		return (int) ((originalX * zoomFactor) + curXpan + getWidth() / 2.0);
 	}
 
+	/**
+	 * @param originalY map Y coordinate
+	 * @return          equivalent on-screen coordinate
+	 */
 	private int translateYscrn(double originalY) {
 		return (int) ((originalY * zoomFactor) + curYpan + getHeight() / 2.0);
 	}
 
+	/**
+	 * @param originalX in-game X coordinate
+	 * @return          equivalent screen coordinate
+	 */
 	private int translateX(double originalX) {
 		return translateXscrn(translateXmap(originalX));
 	}
 
+	/**
+	 * @param originalY in-game Y coordinate
+	 * @return          equivalent screen coordinate
+	 */
 	private int translateY(double originalY) {
 		return translateYscrn(translateYmap(originalY));
 	}
@@ -245,7 +273,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-
+		// Ignored
 	}
 
 	@Override
@@ -350,25 +378,26 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		return tt.toString();
 	}
 
-	@Override
-	protected void paintChildren(Graphics g) {
-		super.paintChildren(g);
-		things.values().forEach(v -> {
-			if (v.isSelected()) {
-				v.repaint();
-//				v.paintComponent(g);
-//				paintComponents();
-//				v.paint(g);
-			}
-		});
-	}
+	// This seems to be pointless, but put back if it breaks something.
+//	@Override
+//	protected void paintChildren(Graphics g) {
+//		super.paintChildren(g);
+//		things.values().forEach(v -> {
+//			if (v.isSelected()) {
+////				v.repaint();
+////				v.paintComponent(g);
+////				paintComponents();
+////				v.paint(g);
+//			}
+//		});
+//	}
 
 
 	// TODO: name....
 	private class PlayerDoohickey extends JPanel {
 
 		private static final Border selectionBorder = new LineBorder(Color.CYAN, 2);
-		private static final Color selectedBackground = new Color(192, 255, 255, 128);
+		private static final Color selectedBackground = new Color(192, 255, 255, 175);
 		private final JLabel defaultLabel;
 		private final XivCombatant cbt;
 		// This red should never actually show up

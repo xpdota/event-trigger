@@ -184,7 +184,8 @@ public class XivCombatant extends XivEntity {
 	}
 
 	public boolean isCombative() {
-		return !(getType() == CombatantType.OTHER || getType() == CombatantType.NONCOM);
+		CombatantType type = getType();
+		return !(type == CombatantType.OTHER || type == CombatantType.NONCOM || type == CombatantType.GP);
 	}
 
 	public static final XivCombatant ENVIRONMENT
