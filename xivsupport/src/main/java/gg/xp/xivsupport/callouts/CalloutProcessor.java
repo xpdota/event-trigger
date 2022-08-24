@@ -6,6 +6,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.conversions.PlayerNameConversion;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -166,6 +167,9 @@ public class CalloutProcessor {
 			else {
 				return singleReplacement(realValue);
 			}
+		}
+		else if (rawValue instanceof HasFriendlyName hfn) {
+			return hfn.getFriendlyName();
 		}
 		else {
 			return rawValue.toString();
