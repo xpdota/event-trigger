@@ -28,6 +28,9 @@ public class PersistenceTests {
 		new LongSetting(persistence, "LongSettingExample", 54321L).set(1234567654321L);
 		new EnumListSetting<>(Job.class, persistence, "JobList1", EnumListSetting.BadKeyBehavior.OMIT, null).set(List.of(Job.WHM, Job.SCH, Job.BLU));
 		persistence.save("JobList2", "WHM,SCH,ABC");
+		if (persistence instanceof PropertiesFilePersistenceProvider propPers) {
+			propPers.flush();
+		}
 
 	}
 
