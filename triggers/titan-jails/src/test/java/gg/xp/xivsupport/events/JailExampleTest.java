@@ -70,7 +70,8 @@ public class JailExampleTest {
 	);
 	
 	private static final int jailClearDelay = 1500;
-	private static final int jailClearSlop = 750;
+	// This is *actual, real-world time*, so overloaded/slow CPU can cause these to fail.
+	private static final int jailClearSlop = 1000;
 	private static final int jailClearWait = jailClearDelay + jailClearSlop;
 
 	@BeforeTest

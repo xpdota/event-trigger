@@ -34,7 +34,7 @@ public class DsrTest extends CalloutVerificationTest {
 				call(36654, "East/West Safe", "East West Safe"),
 				call(44460, "Cleave Bait", "Cleave Bait (2.7)"),
 				call(49409, "Take Tether", "Take Tether"),
-				call(49409, "Thordan EAST", "Thordan EAST"),
+				call(49409, "Thordan East", "Thordan East"),
 				call(63976, "Raidwide", "Raidwide (5.7)"),
 				call(76127, "Buster on YOU, then 3 hits", "Buster on YOU, then 3 hits (3.7)"),
 				call(103079, "SCH Player and WHM Player", "SCH Player and WHM Player"),
