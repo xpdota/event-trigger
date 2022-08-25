@@ -34,6 +34,7 @@ public class EX4 extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> hairRaid = ModifiableCallout.durationBasedCall("Hair Raid", "In");
 	private final ModifiableCallout<AbilityCastStart> hairRaidWall = ModifiableCallout.durationBasedCall("Hair Raid (Wall)", "{dir} safe");
 	private final ModifiableCallout<AbilityCastStart> secretBreeze = ModifiableCallout.durationBasedCall("Secret Breeze", "Protean, Repeat");
+	private final ModifiableCallout<AbilityCastStart> impact = ModifiableCallout.durationBasedCall("Impact", "Knockback");
 	private final ModifiableCallout<HeadMarkerEvent> brittleBoulder = new ModifiableCallout<>("Brittle Boulder", "Bait middle then out");
 	private final ModifiableCallout<TetherEvent> brutalRush = new ModifiableCallout<>("Brutal Rush", "Tether on you");
 	private final ModifiableCallout<HeadMarkerEvent> boldBoulder = new ModifiableCallout<>("Bold Boulder", "Flare");
@@ -85,6 +86,7 @@ public class EX4 extends AutoChildEventHandler implements FilteredEventHandler {
 				context.accept(hairRaidWall.getModified(acs, Map.of("dir", bossFacing)));
 			}
 			case 0x7580 -> call = secretBreeze; // Secret Breeze, Protean
+			case 0x75A0 -> call = impact;
 //			case 0x759E -> {
 //				// Brittle Boulder, Bait Middle then out
 //				if (acs.getTarget().isThePlayer()) {
@@ -115,7 +117,7 @@ public class EX4 extends AutoChildEventHandler implements FilteredEventHandler {
 		if (hme.getTarget().isThePlayer()) {
 			ModifiableCallout<HeadMarkerEvent> call;
 			switch ((int) hme.getMarkerId()) {
-				case 0x173 -> call = brittleBoulder; // Big headmarker, bait middle then out
+				case 0x16D -> call = brittleBoulder; // Big headmarker, bait middle then out
 				case 0x16F -> call = circle; // Circle
 				case 0x170 -> call = triangle; // Triangle
 				case 0x171 -> call = square; // Square
