@@ -1,6 +1,9 @@
 package gg.xp.xivsupport.events.triggers.duties.ewex;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.AutoChildEventHandler;
+import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
@@ -8,6 +11,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
@@ -16,20 +20,24 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.time.Duration;
 import java.util.Map;
 
-public class EX4 implements FilteredEventHandler {
+public class EX4 extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> voidAero3 = ModifiableCallout.durationBasedCall("Void Aero III", "Tankbuster");
 	private final ModifiableCallout<AbilityCastStart> voidAero4 = ModifiableCallout.durationBasedCall("Void Aero IV", "Raidwide");
-	private final ModifiableCallout<AbilityCastStart> hairSpray = ModifiableCallout.durationBasedCall("Hair Spray", "In/Wall then Spread");
+	// TODO: spread on its own, or after another mech
+	private final ModifiableCallout<AbilityCastStart> hairSpray = ModifiableCallout.durationBasedCall("Hair Spray", "Spread");
+	// TODO: add direction to this
 	private final ModifiableCallout<AbilityCastStart> savageBarberyIn = ModifiableCallout.durationBasedCall("Savage Barbery (In)", "In");
-	private final ModifiableCallout<AbilityCastStart> savageBarberyOut = ModifiableCallout.durationBasedCall("Savage Barbery (Out)", "Out");
+	// TODO: add direction to this
+	private final ModifiableCallout<AbilityCastStart> savageBarberyOut = ModifiableCallout.durationBasedCall("Savage Barbery (Cleave)", "Away");
 	private final ModifiableCallout<AbilityCastStart> deadlyTwist = ModifiableCallout.durationBasedCall("Deadly Twist", "Light Parties");
 	private final ModifiableCallout<AbilityCastStart> hairRaid = ModifiableCallout.durationBasedCall("Hair Raid", "In");
 	private final ModifiableCallout<AbilityCastStart> hairRaidWall = ModifiableCallout.durationBasedCall("Hair Raid (Wall)", "{dir} safe");
-	private final ModifiableCallout<AbilityCastStart> secretBreeze = ModifiableCallout.durationBasedCall("Secret Breeze", "Protean");
-	private final ModifiableCallout<AbilityCastStart> brittleBoulder = ModifiableCallout.durationBasedCall("Brittle Boulder", "Bait middle then out");
+	private final ModifiableCallout<AbilityCastStart> secretBreeze = ModifiableCallout.durationBasedCall("Secret Breeze", "Protean, Repeat");
+	private final ModifiableCallout<HeadMarkerEvent> brittleBoulder = new ModifiableCallout<>("Brittle Boulder", "Bait middle then out");
 	private final ModifiableCallout<TetherEvent> brutalRush = new ModifiableCallout<>("Brutal Rush", "Tether on you");
 	private final ModifiableCallout<HeadMarkerEvent> boldBoulder = new ModifiableCallout<>("Bold Boulder", "Flare");
+	private final ModifiableCallout<HeadMarkerEvent> notBoldBoulder = new ModifiableCallout<>("Not Bold Boulder", "Stack");
 	private final ModifiableCallout<HeadMarkerEvent> circle = new ModifiableCallout<>("Circle");
 	private final ModifiableCallout<HeadMarkerEvent> triangle = new ModifiableCallout<>("Triangle");
 	private final ModifiableCallout<HeadMarkerEvent> square = new ModifiableCallout<>("Square");
@@ -77,12 +85,12 @@ public class EX4 implements FilteredEventHandler {
 				context.accept(hairRaidWall.getModified(acs, Map.of("dir", bossFacing)));
 			}
 			case 0x7580 -> call = secretBreeze; // Secret Breeze, Protean
-			case 0x759E -> {
-				// Brittle Boulder, Bait Middle then out
-				if (acs.getTarget().isThePlayer()) {
-					call = brittleBoulder;
-				}
-			}
+//			case 0x759E -> {
+//				// Brittle Boulder, Bait Middle then out
+//				if (acs.getTarget().isThePlayer()) {
+//					call = brittleBoulder;
+//				}
+//			}
 		}
 		if (call != null) {
 			context.accept(call.getModified(acs));
@@ -98,12 +106,16 @@ public class EX4 implements FilteredEventHandler {
 		}
 	}
 
+//	@AutoFeed
+//	private final SequentialTrigger<BaseEvent> savageBarberySeq = new SequentialTrigger<>(5000, BaseEvent.class,
+//			e -> e instanceof AbilityCastStart acs && acs.abilityIdMatches())
+//
 	@HandleEvents
 	public void headmarker(EventContext context, HeadMarkerEvent hme) {
 		if (hme.getTarget().isThePlayer()) {
 			ModifiableCallout<HeadMarkerEvent> call;
 			switch ((int) hme.getMarkerId()) {
-				case 0x15A -> call = boldBoulder; // Bold Boulder, Flare
+				case 0x173 -> call = brittleBoulder; // Big headmarker, bait middle then out
 				case 0x16F -> call = circle; // Circle
 				case 0x170 -> call = triangle; // Triangle
 				case 0x171 -> call = square; // Square
@@ -115,4 +127,37 @@ public class EX4 implements FilteredEventHandler {
 			context.accept(call.getModified(hme));
 		}
 	}
+
+	@AutoFeed
+	private final SequentialTrigger<HeadMarkerEvent> twoFlareAndStack = new SequentialTrigger<>(5_000, HeadMarkerEvent.class,
+			hme -> hme.getMarkerId() == 0x15A,
+			(e1, s) -> {
+				HeadMarkerEvent e2 = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getMarkerId() == 0x15A);
+				if (e1.getTarget().isThePlayer()) {
+					s.updateCall(boldBoulder.getModified(e1));
+				}
+				else if (e2.getTarget().isThePlayer()) {
+					s.updateCall(boldBoulder.getModified(e2));
+				}
+				else {
+					s.updateCall(notBoldBoulder.getModified(e1));
+				}
+			});
+
+	// TODO: mechanic with two enums, four spreads
+//	@AutoFeed
+//	private final SequentialTrigger<HeadMarkerEvent> whatIsThisCalled = new SequentialTrigger<>(5_000, HeadMarkerEvent.class,
+//			hme -> hme.getMarkerId() == 0x15A,
+//			(e1, s) -> {
+//				HeadMarkerEvent e2 = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getMarkerId() == 0x15A);
+//				if (e1.getTarget().isThePlayer()) {
+//					s.updateCall(boldBoulder.getModified(e1));
+//				}
+//				else if (e2.getTarget().isThePlayer()) {
+//					s.updateCall(boldBoulder.getModified(e2));
+//				}
+//				else {
+//					s.updateCall(notBoldBoulder.getModified(e1));
+//				}
+//			});
 }
