@@ -18,7 +18,7 @@ import java.util.Map;
 @CalloutRepo(name = "P5S", duty = KnownDuty.P5S)
 public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P5S.class);
-	private final ModifiableCallout<AbilityCastStart> test = ModifiableCallout.durationBasedCall("Test", "testing");
+	//private final ModifiableCallout<AbilityCastStart> test = ModifiableCallout.durationBasedCall("Test", "testing");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
@@ -39,12 +39,12 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
 		long id = event.getAbility().getId();
-		ModifiableCallout<AbilityCastStart> call;
+		/*ModifiableCallout<AbilityCastStart> call;
 		if (id == 0x0)
 			call = test;
 		else
 			return;
 
-		context.accept(call.getModified(event, Map.of("target", event.getTarget())));
+		context.accept(call.getModified(event, Map.of("target", event.getTarget())));*/
 	}
 }
