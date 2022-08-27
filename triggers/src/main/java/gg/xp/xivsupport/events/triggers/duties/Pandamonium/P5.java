@@ -12,11 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @CalloutRepo(name = "P5", duty = KnownDuty.P5)
-public class P5S {
-	private static final Logger log = LoggerFactory.getLogger(P5S.class);
+public class P5 {
+	private static final Logger log = LoggerFactory.getLogger(P5.class);
 	private final ModifiableCallout<AbilityCastStart> RUbysomethingidk = ModifiableCallout.durationBasedCall("Rubysomething", "Raidwide");
 
-	public P5S(XivState state) {
+	public P5(XivState state) {
 		this.state = state;
 	}
 

@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Set;
 
 @CalloutRepo(name = "P8", duty = KnownDuty.P8)
-public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
-	private static final Logger log = LoggerFactory.getLogger(P8S.class);
+public class P8 extends AutoChildEventHandler implements FilteredEventHandler {
+	private static final Logger log = LoggerFactory.getLogger(P8.class);
 	private final ModifiableCallout<AbilityCastStart> genesisOfFlame = ModifiableCallout.durationBasedCall("Genesis Of Flame", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> rearingRampage = ModifiableCallout.durationBasedCall("Rearing Rampage", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> ektothermos = ModifiableCallout.durationBasedCall("Ektothermos", "Raidwide");
@@ -44,7 +44,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
-	public P8S(XivState state) {
+	public P8(XivState state) {
 		this.state = state;
 	}
 
