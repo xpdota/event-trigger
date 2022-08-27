@@ -49,6 +49,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	}
 
 	private final XivState state;
+	private XivState getState() {
+		return this.state;
+	}
 
 	@Override
 	public boolean enabled(EventContext context) {
@@ -98,10 +101,11 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 				cthonicCasts.add((AbilityCastStart) e1);
 				List<XivCombatant> suneaters = new ArrayList<>();
 				log.info("CthonicVent: Got suneater casts");
+				s.waitMs(100);
 				s.refreshCombatants(100);
 				log.info("CthonicVent: done with delay");
 				for(AbilityCastStart acs : cthonicCasts) {
-					suneaters.add(acs.getSource());
+					suneaters.add(this.getState().getLatestCombatantData(acs.getSource()));
 				}
 				log.info("CthonicVent: done finding positions, finding safe spots");
 				if(suneaters.size() != 2) {
