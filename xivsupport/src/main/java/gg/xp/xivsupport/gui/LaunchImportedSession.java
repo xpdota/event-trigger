@@ -45,6 +45,8 @@ public final class LaunchImportedSession {
 				timeSource.setNewTime(pumpedAt);
 			}
 		};
+		// TODO: this will interfere with AbstractACTLineParser
+//		pico.addComponent(timeSource);
 		pico.addComponent(replayController);
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.WEBSOCKET_REPLAY);
 		dist.acceptEvent(new InitEvent());

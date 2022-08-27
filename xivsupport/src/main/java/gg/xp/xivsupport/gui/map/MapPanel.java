@@ -1,9 +1,6 @@
 package gg.xp.xivsupport.gui.map;
 
-import com.formdev.flatlaf.util.ScaledImageIcon;
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.Job;
-import gg.xp.xivdata.data.XivMap;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
@@ -51,15 +48,13 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	@Serial
 	private static final long serialVersionUID = 6804697839463860552L;
 
-	private final Object thingsLock = new Object();
 	private final Map<Long, PlayerDoohickey> things = new HashMap<>();
 	private final RefreshLoop<MapPanel> refresher;
+	private final MapDataController mdc;
 	private double zoomFactor = 1;
 	private volatile int curXpan;
 	private volatile int curYpan;
 	private volatile Point dragPoint;
-	private final XivState state;
-	private final ActiveCastRepository acr;
 	private XivMap map = XivMap.UNKNOWN;
 	private Image backgroundImage;
 	// -1 indicates no selection
@@ -72,9 +67,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private static final Color partyMemberColor = new Color(104, 120, 222);
 	private static final Color localPcColor = new Color(150, 199, 255);
 
-	public MapPanel(XivState state, ActiveCastRepository acr) {
-		this.state = state;
-		this.acr = acr;
+	public MapPanel(MapDataController mdc) {
+		this.mdc = mdc;
+
 		setLayout(null);
 		setBackground(new Color(168, 153, 114));
 		refresher = new RefreshLoop<>("MapRefresh", this, map -> {
@@ -143,7 +138,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private void refresh() {
 //		log.info("Map refresh");
 		List<XivCombatant> combatants = this.combatants;
-		map = state.getMap();
+		map = mdc.getMap();
 		combatants.stream()
 				.filter(cbt -> {
 					// Further filtering is no longer necessary here since the table pre-filters for us.
@@ -155,7 +150,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					if (cbt.getPos() == null) {
 						return;
 					}
-					@Nullable CastTracker cast = acr.getCastFor(cbt);
+					@Nullable CastTracker cast = mdc.getCastFor(cbt);
 					// Create if it doesn't already exist
 					PlayerDoohickey pdh = things.computeIfAbsent(id, (unused) -> createNew(cbt));
 					// Update with latest info
@@ -183,7 +178,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	/**
 	 * @param originalX in-game X coordinate
-	 * @return          equivalent map coordinates on the current map.
+	 * @return equivalent map coordinates on the current map.
 	 */
 	private double translateXmap(double originalX) {
 		// Already divided by 100
@@ -193,7 +188,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	/**
 	 * @param originalY in-game Y coordinate
-	 * @return          equivalent map coordinates on the current map.
+	 * @return equivalent map coordinates on the current map.
 	 */
 	private double translateYmap(double originalY) {
 		double c = map.getScaleFactor();
@@ -202,7 +197,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	/**
 	 * @param originalX map X coordinate
-	 * @return          equivalent on-screen coordinate
+	 * @return equivalent on-screen coordinate
 	 */
 	private int translateXscrn(double originalX) {
 		return (int) ((originalX * zoomFactor) + curXpan + getWidth() / 2.0);
@@ -210,7 +205,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	/**
 	 * @param originalY map Y coordinate
-	 * @return          equivalent on-screen coordinate
+	 * @return equivalent on-screen coordinate
 	 */
 	private int translateYscrn(double originalY) {
 		return (int) ((originalY * zoomFactor) + curYpan + getHeight() / 2.0);
@@ -218,7 +213,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	/**
 	 * @param originalX in-game X coordinate
-	 * @return          equivalent screen coordinate
+	 * @return equivalent screen coordinate
 	 */
 	private int translateX(double originalX) {
 		return translateXscrn(translateXmap(originalX));
@@ -226,7 +221,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	/**
 	 * @param originalY in-game Y coordinate
-	 * @return          equivalent screen coordinate
+	 * @return equivalent screen coordinate
 	 */
 	private int translateY(double originalY) {
 		return translateYscrn(translateYmap(originalY));
@@ -291,7 +286,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 //			log.info("Clicked on {}", getComponentAt(e.getPoint()));
 		}
 	}
-//
+
+	//
 //	@Override
 //	public Component getComponentAt(Point p) {
 //		for (Component component : getComponents()) {
@@ -509,7 +505,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				}
 				oldJob = newJob;
 			}
-			if (castData == null || castData.getCast().getEstimatedTimeSinceExpiry().toMillis() > 5000) {
+			if (castData == null || castData.getEstimatedTimeSinceExpiry().toMillis() > 5000) {
 				castBar.setData(null);
 			}
 			else {
@@ -546,7 +542,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 //					inner.setBorder(new LineBorder(localPcColor));
 //					inner.setBackground(localPcColor);
 				}
-				else if (state.getPartyList().contains(cbt)) {
+				else if (mdc.getPartyList().contains(cbt)) {
 					mainColor = partyMemberColor;
 //					inner.setBorder(new LineBorder(partyMemberColor));
 //					inner.setBackground(partyMemberColor);

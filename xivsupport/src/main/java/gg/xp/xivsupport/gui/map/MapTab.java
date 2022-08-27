@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.map;
 
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
@@ -8,8 +7,6 @@ import gg.xp.reevent.util.Utils;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
-import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -28,25 +25,30 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @ScanMe
-public class MapTab extends JSplitPane {
+public class MapTab extends JPanel {
 
 	private final TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table;
 	private final RefreshLoop<MapTab> mapRefresh;
 	private final MapPanel mapPanel;
+	private final MapDataController mapDataController;
+	private final MapDataScrubber scrubber;
+	private final Component configPanel;
 	private volatile boolean selectionRefreshPending;
 
-	public MapTab(XivState state, StandardColumns columns, ActiveCastRepository acr) {
+	public MapTab(MapDataController mdc, MapConfig config) {
 //		super("Map");
-		super(HORIZONTAL_SPLIT);
-		this.mapPanel = new MapPanel(state, acr);
-		setPreferredSize(getMaximumSize());
+		super(new BorderLayout());
+		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		this.mapDataController = mdc;
+		this.mapPanel = new MapPanel(mdc);
+//		setPreferredSize(getMaximumSize());
 //		setLayout(new BorderLayout());
-		setRightComponent(mapPanel);
+		split.setRightComponent(mapPanel);
 //		add(panel);
 		JPanel controls = new JPanel(new BorderLayout());
 
 		table = TableWithFilterAndDetails.builder("Combatants",
-						() -> state.getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
+						() -> mdc.getCombatants().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
 						combatant -> {
 							if (combatant == null) {
 								return Collections.emptyList();
@@ -61,10 +63,11 @@ public class MapTab extends JSplitPane {
 						})
 				.addMainColumn(StandardColumns.entityIdColumn)
 				.addMainColumn(StandardColumns.nameJobColumn)
-				.addMainColumn(columns.statusEffectsColumn())
+				.addMainColumn(StandardColumns.statusEffectsColumn(mdc::buffsOnCombatant))
 //				.addMainColumn(StandardColumns.parentNameJobColumn)
 				.addMainColumn(StandardColumns.combatantTypeColumn)
-				.addMainColumn(columns.hpColumnWithUnresolved())
+				// HP comes from the Combatant object directly, no need to do any funny business here
+				.addMainColumn(StandardColumns.hpColumnWithUnresolved(mdc::unresolvedDamage))
 //				.addMainColumn(StandardColumns.mpColumn)
 //				.addMainColumn(StandardColumns.posColumn)
 				.addDetailsColumn(StandardColumns.fieldName)
@@ -82,9 +85,9 @@ public class MapTab extends JSplitPane {
 		mapRefresh = new RefreshLoop<>("MapTableRefresh", this, MapTab::updateMapPanel, u -> 100L);
 
 		controls.add(table, BorderLayout.CENTER);
-		setLeftComponent(controls);
-		setDividerLocation(0.35);
-		setResizeWeight(0.25);
+		split.setLeftComponent(controls);
+		split.setDividerLocation(0.35);
+		split.setResizeWeight(0.25);
 
 		table.getMainTable().getSelectionModel().addListSelectionListener(l -> {
 			if (l.getValueIsAdjusting()) {
@@ -103,7 +106,17 @@ public class MapTab extends JSplitPane {
 		SwingUtilities.invokeLater(() -> table.getSplitPane().setDividerLocation(0.75));
 
 		mapPanel.setSelectionCallback(table::setAndScrollToSelection);
+		scrubber = new MapDataScrubber(mdc, this::toggleSettings);
+		mdc.setCallback(() -> {
+			refreshIfVisible();
+			scrubber.repaint();
+		});
 		mapRefresh.start();
+		add(split);
+		add(scrubber, BorderLayout.NORTH);
+		configPanel = config.makeComponent();
+		configPanel.setVisible(false);
+		add(configPanel, BorderLayout.EAST);
 	}
 
 	@Override
@@ -117,6 +130,7 @@ public class MapTab extends JSplitPane {
 	private void refreshIfVisible() {
 		if (table.getMainTable().isShowing()) {
 			table.signalNewData();
+			scrubber.repaint();
 		}
 	}
 
@@ -126,6 +140,7 @@ public class MapTab extends JSplitPane {
 	}
 
 	private void signalUpdate() {
+		mapDataController.captureSnapshot();
 		refreshIfVisible();
 	}
 
@@ -142,6 +157,10 @@ public class MapTab extends JSplitPane {
 	@HandleEvents
 	public void mapChange(EventContext context, MapChangeEvent event) {
 		mapPanel.mapChange(event);
+		signalUpdate();
 	}
 
+	public void toggleSettings() {
+		configPanel.setVisible(!configPanel.isVisible());
+	}
 }
