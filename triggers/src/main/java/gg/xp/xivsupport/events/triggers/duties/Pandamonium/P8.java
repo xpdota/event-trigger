@@ -36,9 +36,6 @@ public class P8 extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> sunforgeSerpent = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out");
 	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadrupedal = ModifiableCallout.durationBasedCall("Reforged Reflection Quadrupedal", "Quadrapedal");
 	private final ModifiableCallout<AbilityCastStart> reforgedReflectionSerpent = ModifiableCallout.durationBasedCall("Reforged Reflection Serpent", "Serpent");
-	private final ModifiableCallout<AbilityCastStart> quadrupedalCrush = ModifiableCallout.durationBasedCall("Boss jumps to wall (Blazing Footfalls prep?)", "boss jump"); //no work
-	private final ModifiableCallout<AbilityCastStart> trailblaze = ModifiableCallout.durationBasedCall("Blazing Footfalls Line KB", "line kb"); //no work
-	private final ModifiableCallout<AbilityCastStart> quadrupedalImpact = ModifiableCallout.durationBasedCall("Blazing Footfalls AOE KB", "aoe kb"); //no work
 	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "tank buster");
 
@@ -73,12 +70,6 @@ public class P8 extends AutoChildEventHandler implements FilteredEventHandler {
 				call = reforgedReflectionQuadrupedal;
 			else if (id == 0x794C)
 				call = reforgedReflectionSerpent;
-			else if (id == 0x7904)
-				call = quadrupedalCrush;
-			else if (id == 0x790D)
-				call = trailblaze;
-			else if (id == 0x7103)
-				call = quadrupedalImpact;
 			else if (id == 0x7908)
 				call = flameviper;
 			else if (id == 0x79AB)
