@@ -90,8 +90,8 @@ public class MapDataController {
 			}
 			callback.run();
 		});
-		maxCaptures = new IntSetting(pers, "map-replay.max-snapshots", 100_000, 100, 2_000_000_000);
-		msBetweenCaptures = new IntSetting(pers, "map-replay.capture-interval", 5, 0, 10_000);
+		maxCaptures = new IntSetting(pers, "map-replay.max-snapshots", 50_000, 100, 2_000_000_000);
+		msBetweenCaptures = new IntSetting(pers, "map-replay.capture-interval", 200, 0, 10_000);
 	}
 
 	// record to capture all the data used by the map panel
@@ -137,6 +137,9 @@ public class MapDataController {
 	}
 
 	public void setRelativeIndex(int delta) {
+		if (delta == 0) {
+			return;
+		}
 		int newIndex = live ? snapshots.size() - 1 : index + delta;
 		if (newIndex < 0) {
 			newIndex = 0;
@@ -147,6 +150,30 @@ public class MapDataController {
 		log.trace("setRelativeIndex({}) => {}", delta, newIndex);
 		setIndex(newIndex);
 	}
+
+	public void setRelativeIndexAutoLive(int delta) {
+		if (delta == 0) {
+			return;
+		}
+		if (live && delta > 0) {
+			return;
+		}
+		int newIndex = live ? snapshots.size() - 1 : index + delta;
+		if (newIndex < 0) {
+			newIndex = 0;
+		}
+		if (newIndex >= snapshots.size()) {
+			newIndex = snapshots.size() - 1;
+			live = true;
+		}
+		else {
+			live = false;
+		}
+		index = newIndex;
+		log.info("setRelativeIndexAutoLive({}) => {}", delta, newIndex);
+		callback.run();
+	}
+
 
 	public void clearAll() {
 		log.info("Clearing replay");

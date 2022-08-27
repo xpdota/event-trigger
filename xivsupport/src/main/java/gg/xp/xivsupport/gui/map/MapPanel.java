@@ -39,6 +39,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -102,11 +103,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
-	public void mapChange(MapChangeEvent event) {
-		setNewBackgroundImage(event.getMap());
-		resetPanAndZoom();
-	}
-
 	private void setNewBackgroundImage(XivMap map) {
 		URL image = map.getImage();
 		if (image == null) {
@@ -120,7 +116,12 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private void resetPanAndZoom() {
 		curXpan = 0;
 		curYpan = 0;
-		zoomFactor = 1;
+		if (map != null) {
+			zoomFactor = map.getScaleFactor();
+		}
+		else {
+			zoomFactor = 1;
+		}
 		triggerRefresh();
 	}
 
@@ -138,7 +139,12 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private void refresh() {
 //		log.info("Map refresh");
 		List<XivCombatant> combatants = this.combatants;
-		map = mdc.getMap();
+		XivMap mapNow = mdc.getMap();
+		if (!Objects.equals(map, mapNow)) {
+			map = mapNow;
+			setNewBackgroundImage(mapNow);
+			resetPanAndZoom();
+		}
 		combatants.stream()
 				.filter(cbt -> {
 					// Further filtering is no longer necessary here since the table pre-filters for us.

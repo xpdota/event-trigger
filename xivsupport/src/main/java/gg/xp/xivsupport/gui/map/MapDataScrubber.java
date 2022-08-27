@@ -5,7 +5,6 @@ import gg.xp.xivsupport.gui.tables.renderers.ResourceBar;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.CurrentMaxPairImpl;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
-import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -96,7 +95,8 @@ public class MapDataScrubber extends JPanel {
 		private final FractionDisplayHelper fdh = new FractionDisplayHelper();
 		private final JLabel leftLabel = new JLabel("Drag anywhere in this area to scrub");
 		private final JLabel rightLabel = new JLabel("Shift-Drag for slower scrub, Ctrl-Drag for faster scrub");
-		private volatile Point dragPoint;
+		private Point dragPoint;
+		private static final Color green = new Color(0, 170, 0);
 
 		{
 			leftLabel.setHorizontalAlignment(SwingConstants.LEFT);
@@ -118,7 +118,6 @@ public class MapDataScrubber extends JPanel {
 
 		@Override
 		protected void paintComponent(Graphics graphics) {
-			// TODO this shouldn't be here
 			int maxFrame = controller.getSize() - 1;
 			int curFrame;
 			if (maxFrame == 0) {
@@ -129,6 +128,7 @@ public class MapDataScrubber extends JPanel {
 				curFrame = controller.getIndex();
 			}
 
+			// TODO this shouldn't be here
 			fdh.setValue(new CurrentMaxPairImpl(controller.getIndex(), maxFrame));
 			Dimension dim = getSize();
 			int vBarWidth = 3;
@@ -136,7 +136,13 @@ public class MapDataScrubber extends JPanel {
 			graphics.fillRect(0, 0, vBarWidth, dim.height / 2);
 			graphics.fillRect(dim.width - vBarWidth, 0, vBarWidth, dim.height / 2);
 			graphics.fillRect(vBarWidth, 5, dim.width - 2 * vBarWidth, hBarHeight);
-			graphics.setColor(new Color(255, 0, 0));
+			if (controller.isLive()) {
+				graphics.setColor(green);
+			}
+			else {
+				graphics.setColor(Color.RED);
+			}
+
 			int barX = vBarWidth + (int) (((double) dim.width - 3 * vBarWidth) * curFrame / maxFrame);
 			graphics.fillRect(barX, 0, vBarWidth, dim.height / 2);
 		}
@@ -180,7 +186,9 @@ public class MapDataScrubber extends JPanel {
 			else {
 				xDiff *= 5;
 			}
-			controller.setRelativeIndex((int) xDiff);
+			if (xDiff != 0) {
+				controller.setRelativeIndexAutoLive((int) xDiff);
+			}
 //		log.info("Map Panel Drag: {},{}", xDiff, yDiff);
 			dragPoint = curPoint;
 		}

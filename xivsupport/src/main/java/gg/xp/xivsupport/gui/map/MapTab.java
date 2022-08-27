@@ -33,12 +33,13 @@ public class MapTab extends JPanel {
 	private final MapDataController mapDataController;
 	private final MapDataScrubber scrubber;
 	private final Component configPanel;
+	private final JSplitPane split;
 	private volatile boolean selectionRefreshPending;
 
 	public MapTab(MapDataController mdc, MapConfig config) {
 //		super("Map");
 		super(new BorderLayout());
-		JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		this.mapDataController = mdc;
 		this.mapPanel = new MapPanel(mdc);
 //		setPreferredSize(getMaximumSize());
@@ -156,11 +157,13 @@ public class MapTab extends JPanel {
 
 	@HandleEvents
 	public void mapChange(EventContext context, MapChangeEvent event) {
-		mapPanel.mapChange(event);
 		signalUpdate();
 	}
 
 	public void toggleSettings() {
+		double before = split.getResizeWeight();
+		split.setResizeWeight(0);
 		configPanel.setVisible(!configPanel.isVisible());
+		SwingUtilities.invokeLater(() -> split.setResizeWeight(before));
 	}
 }
