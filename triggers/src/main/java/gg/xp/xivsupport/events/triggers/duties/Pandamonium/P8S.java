@@ -55,7 +55,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return context.getStateInfo().get(XivState.class).zoneIs(0x43F);
+		return state.zoneIs(0x43F);
 	}
 
 	@HandleEvents
