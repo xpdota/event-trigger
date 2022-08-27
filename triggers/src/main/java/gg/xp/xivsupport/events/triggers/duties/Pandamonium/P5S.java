@@ -11,7 +11,7 @@ import gg.xp.xivsupport.models.CombatantType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@CalloutRepo(name = "P5S", duty = KnownDuty.P5S)
+@CalloutRepo(name = "P5", duty = KnownDuty.P5)
 public class P5S {
 	private static final Logger log = LoggerFactory.getLogger(P5S.class);
 	private final ModifiableCallout<AbilityCastStart> RUbysomethingidk = ModifiableCallout.durationBasedCall("Rubysomething", "Raidwide");

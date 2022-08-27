@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@CalloutRepo(name = "P8S", duty = KnownDuty.P8S)
+@CalloutRepo(name = "P8", duty = KnownDuty.P8)
 public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P8S.class);
 	private final ModifiableCallout<AbilityCastStart> genesisOfFlame = ModifiableCallout.durationBasedCall("Genesis Of Flame", "Raidwide");
