@@ -15,14 +15,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-@CalloutRepo(name = "P6", duty = KnownDuty.P6)
-public class P6 extends AutoChildEventHandler implements FilteredEventHandler {
-	private static final Logger log = LoggerFactory.getLogger(P6.class);
+@CalloutRepo(name = "P5S", duty = KnownDuty.P5S)
+public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
+	private static final Logger log = LoggerFactory.getLogger(P5S.class);
 	private final ModifiableCallout<AbilityCastStart> test = ModifiableCallout.durationBasedCall("Test", "testing");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
-	public P6(XivState state) {
+	public P5S(XivState state) {
 		this.state = state;
 	}
 
@@ -33,7 +33,7 @@ public class P6 extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return state.zoneIs(0x43B);
+		return state.zoneIs(0x43A);
 	}
 
 	@HandleEvents
