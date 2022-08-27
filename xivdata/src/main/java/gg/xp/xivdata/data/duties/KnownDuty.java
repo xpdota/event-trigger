@@ -8,10 +8,10 @@ public enum KnownDuty implements Duty {
 	P2S("P2S", Expansion.EW, DutyType.SAVAGE_RAID),
 	P3S("P3S", Expansion.EW, DutyType.SAVAGE_RAID),
 	P4S("P4S", Expansion.EW, DutyType.SAVAGE_RAID),
-	P5("P5S", Expansion.EW, DutyType.SAVAGE_RAID),
-	P6("P6S", Expansion.EW, DutyType.SAVAGE_RAID),
-	P7("P7S", Expansion.EW, DutyType.SAVAGE_RAID),
-	P8("P8S", Expansion.EW, DutyType.SAVAGE_RAID),
+	P5("P5S", Expansion.EW, DutyType.RAID),
+	P6("P6S", Expansion.EW, DutyType.RAID),
+	P7("P7S", Expansion.EW, DutyType.RAID),
+	P8("P8S", Expansion.EW, DutyType.RAID),
 	EndsingerEx("EX3", Expansion.EW, DutyType.TRIAL_EX),
 	Dragonsong("Dragonsong", Expansion.EW, DutyType.ULTIMATE);
 
