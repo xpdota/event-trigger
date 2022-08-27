@@ -1,11 +1,12 @@
 package gg.xp.xivsupport.events.triggers.duties.ewex;
 
-import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivdata.data.duties.*;
+import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
@@ -20,6 +21,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.time.Duration;
 import java.util.Map;
 
+@CalloutRepo(name = "EX4", duty = KnownDuty.BarbarEx)
 public class EX4 extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> voidAero3 = ModifiableCallout.durationBasedCall("Void Aero III", "Tankbuster");
@@ -108,7 +110,7 @@ public class EX4 extends AutoChildEventHandler implements FilteredEventHandler {
 		}
 	}
 
-//	@AutoFeed
+	//	@AutoFeed
 //	private final SequentialTrigger<BaseEvent> savageBarberySeq = new SequentialTrigger<>(5000, BaseEvent.class,
 //			e -> e instanceof AbilityCastStart acs && acs.abilityIdMatches())
 //
