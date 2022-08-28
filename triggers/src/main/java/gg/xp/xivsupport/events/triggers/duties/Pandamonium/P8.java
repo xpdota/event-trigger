@@ -34,7 +34,7 @@ public class P8 extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> sunforgePhoenix = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In");
 	private final ModifiableCallout<AbilityCastStart> sunforgeSerpent = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out");
-	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadrupedal = ModifiableCallout.durationBasedCall("Reforged Reflection Quadrupedal", "Quadrapedal");
+	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadraped");
 	private final ModifiableCallout<AbilityCastStart> reforgedReflectionSerpent = ModifiableCallout.durationBasedCall("Reforged Reflection Serpent", "Serpent");
 	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "tank buster");
@@ -67,7 +67,7 @@ public class P8 extends AutoChildEventHandler implements FilteredEventHandler {
 			else if (id == 0x78ED)
 				call = sunforgePhoenix;
 			else if (id == 0x794B)
-				call = reforgedReflectionQuadrupedal;
+				call = reforgedReflectionQuadruped;
 			else if (id == 0x794C)
 				call = reforgedReflectionSerpent;
 			else if (id == 0x7908)
@@ -112,4 +112,6 @@ public class P8 extends AutoChildEventHandler implements FilteredEventHandler {
 				s.accept(fourfoldFiresSafe.getModified(cthonicCasts.get(0), args));
 			}
 	);
+
+	//TODO: blazing footfalls sequential. 7900 boss cast, 790b line kb precast, 790c circle precast. kb precasts happen before 7900 finishes casting.
 }
