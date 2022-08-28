@@ -1,9 +1,6 @@
 package gg.xp.xivdata;
 
-import gg.xp.xivdata.data.ActionInfo;
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.StatusEffectInfo;
-import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
@@ -189,7 +186,11 @@ public class MakeEverything {
 
 	public static void main(String[] args) {
 		if (args.length != 2) {
-			printAndFail("This requires exactly two arguments. The first is the path to your Saint Coinach directory, the second is the path to the XIV install dir.");
+			printAndFail("""
+					This requires exactly two arguments. The first is the path to your Saint Coinach directory, the second is the path to the XIV install dir.
+					Example:
+						MakeEverything "C:\\Users\\FooBar\\Downloads\\Saint Coinach" "C:\\Program Files (x86)\\Steam\\steamapps\\common\\FINAL FANTASY XIV Online"
+					""");
 		}
 		if (!System.getProperty("user.dir").endsWith("xivdata")) {
 			printAndFail("This should be run from the xivdata directory");
