@@ -71,12 +71,12 @@ public class CalloutProcessor {
 	public void initEvent(EventContext ctx, InitEvent init) {
 		// TODO: this is bad, but works
 		Thread thread = new Thread(() -> {
-//			try {
-//				Thread.sleep(10_000);
-//			}
-//			catch (InterruptedException e) {
-//				throw new RuntimeException(e);
-//			}
+			try {
+				Thread.sleep(10_000);
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
 			compile("\"dummy script to force init\"");
 		}, "CalloutProcessorSetup");
 		thread.setDaemon(true);
