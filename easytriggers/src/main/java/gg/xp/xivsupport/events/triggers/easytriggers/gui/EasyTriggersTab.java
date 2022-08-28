@@ -9,6 +9,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.components.ColorChooser;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
@@ -18,18 +19,18 @@ import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
-import gg.xp.xivsupport.gui.tables.filters.InputValidationState;
-import gg.xp.xivsupport.gui.tables.filters.MultiLineTextAreaWithValidation;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.util.GuiUtil;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -37,12 +38,16 @@ import java.util.stream.Collectors;
 @ScanMe
 public class EasyTriggersTab implements PluginTab {
 
+	private static final Logger log = LoggerFactory.getLogger(EasyTriggersTab.class);
+
 	private final EasyTriggers backend;
+	private final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private JPanel detailsInner;
 	private CustomTableModel<EasyTrigger<?>> model;
 	private TitleBorderFullsizePanel outer;
 	private EasyTrigger<?> selection;
 	private List<EasyTrigger<?>> multiSelections = Collections.emptyList();
+	private RefreshLoop<EasyTriggersTab> autoSave;
 
 	public EasyTriggersTab(EasyTriggers backend, RightClickOptionRepo rightClicks) {
 		this.backend = backend;
@@ -179,7 +184,7 @@ public class EasyTriggersTab implements PluginTab {
 		split.setResizeWeight(0.5);
 		split.setDividerLocation(300);
 
-		RefreshLoop<EasyTriggersTab> refresher = new RefreshLoop<>("EasyTriggerAutoSave", this, ett -> {
+		this.autoSave = new RefreshLoop<>("EasyTriggerAutoSave", this, ett -> {
 			if (outer.isShowing()) {
 				ett.backend.commit();
 				saveAnyway = true;
@@ -190,7 +195,7 @@ public class EasyTriggersTab implements PluginTab {
 			}
 		}, (unused) -> 15000L);
 
-		refresher.start();
+		autoSave.start();
 		return outer;
 	}
 
@@ -293,8 +298,32 @@ public class EasyTriggersTab implements PluginTab {
 		model.setSelectedValue(null);
 	}
 
+	private volatile long saveAt;
+	private static final int saveDelay = 1000;
+
 	private void requestSave() {
-		// TODO figure out what the plan is here
+		boolean submitTask = saveAt <= 0;
+		saveAt = System.currentTimeMillis() + saveDelay;
+		if (submitTask) {
+			exs.submit(() -> {
+				while (true) {
+					long delta = saveAt - System.currentTimeMillis();
+					if (delta <= 0) {
+						break;
+					}
+					else {
+						try {
+							Thread.sleep(delta);
+						}
+						catch (InterruptedException e) {
+							break;
+						}
+					}
+				}
+				saveAt = 0;
+				backend.commit();
+			});
+		}
 	}
 
 	private class TriggerConfigPanel extends JPanel {
@@ -352,14 +381,18 @@ public class EasyTriggersTab implements PluginTab {
 			c.gridx = 2;
 
 			{
-				TextFieldWithValidation<Long> hangTime = new TextFieldWithValidation<>(Long::parseLong, trigger::setHangTime, () -> Long.toString(trigger.getHangTime()));
+				TextFieldWithValidation<Long> hangTime = new TextFieldWithValidation<>(Long::parseLong, editTriggerThenSave(trigger::setHangTime), () -> Long.toString(trigger.getHangTime()));
 				JCheckBox plusDuration = new JCheckBox();
 				plusDuration.setSelected(trigger.isUseDuration());
 				plusDuration.addActionListener(l -> trigger.setUseDuration(plusDuration.isSelected()));
+				plusDuration.addActionListener(l -> requestSave());
 
 				JCheckBox useIcon = new JCheckBox();
 				useIcon.setSelected(trigger.isUseIcon());
 				useIcon.addActionListener(l -> trigger.setUseIcon(useIcon.isSelected()));
+				useIcon.addActionListener(l -> requestSave());
+
+				Component textColor = new ColorChooser("Text Color", trigger::getColor, editTriggerThenSave(trigger::setColor), () -> true).getButtonOnly();
 
 				c.gridy = 0;
 				add(GuiUtil.labelFor("Hang Time", hangTime), c);
@@ -367,14 +400,18 @@ public class EasyTriggersTab implements PluginTab {
 				add(GuiUtil.labelFor("Plus cast/buff duration", plusDuration), c);
 				c.gridy++;
 				add(GuiUtil.labelFor("Use ability/buff icon", useIcon), c);
+				c.gridy++;
+				add(GuiUtil.labelFor("Text Color Override", textColor), c);
 				c.gridy = 0;
+
 				c.gridx++;
 				add(hangTime, c);
 				c.gridy++;
 				add(plusDuration, c);
 				c.gridy++;
 				add(useIcon, c);
-
+				c.gridy++;
+				add(textColor, c);
 			}
 
 

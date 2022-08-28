@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.persistence.settings;
 
+import gg.xp.xivsupport.gui.util.ColorUtils;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +33,7 @@ public class ColorSetting extends ObservableSetting implements Resettable {
 				value = dflt;
 			}
 			else {
-				value = intToColor(colorAsInt);
+				value = ColorUtils.intToColor(colorAsInt);
 			}
 			cached = value;
 			hasCachedValue = true;
@@ -43,16 +44,8 @@ public class ColorSetting extends ObservableSetting implements Resettable {
 	public void set(Color newValue) {
 		cached = newValue;
 		hasCachedValue = true;
-		persistence.save(settingKey, colorToInt(newValue));
+		persistence.save(settingKey, ColorUtils.colorToInt(newValue));
 		notifyListeners();
-	}
-
-	private static Color intToColor(int color) {
-		return new Color(color, true);
-	}
-
-	private static int colorToInt(Color color) {
-		return color.getRGB();
 	}
 
 	@Override

@@ -9,6 +9,7 @@ public enum KnownDuty implements Duty {
 	P3S("P3S", Expansion.EW, DutyType.SAVAGE_RAID),
 	P4S("P4S", Expansion.EW, DutyType.SAVAGE_RAID),
 	EndsingerEx("EX3", Expansion.EW, DutyType.TRIAL_EX),
+	BarbarEx("EX4", Expansion.EW, DutyType.TRIAL_EX),
 	Dragonsong("Dragonsong", Expansion.EW, DutyType.ULTIMATE);
 
 	private final String name;
