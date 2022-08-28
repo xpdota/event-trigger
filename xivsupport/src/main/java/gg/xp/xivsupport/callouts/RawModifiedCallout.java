@@ -31,7 +31,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private final Function<? super X, ? extends @Nullable Component> guiProvider;
 	private final Predicate<RawModifiedCallout<X>> expiry;
 	private @Nullable HasCalloutTrackingKey replaces;
-	private final @Nullable Color colorOverride;
+	private @Nullable Color colorOverride;
 	private final CalloutTrackingKey key = new CalloutTrackingKey();
 	private static final int maxErrors = 10;
 	private int errorCount;
@@ -115,5 +115,9 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	@Override
 	public String getPrimaryValue() {
 		return tts;
+	}
+
+	public void setColorOverride(Color colorOverride) {
+		this.colorOverride = colorOverride;
 	}
 }

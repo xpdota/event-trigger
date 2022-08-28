@@ -23,11 +23,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class CalloutProcessor {
 
@@ -67,7 +69,19 @@ public class CalloutProcessor {
 
 	@HandleEvents(order = Integer.MAX_VALUE)
 	public void initEvent(EventContext ctx, InitEvent init) {
-		setupShell();
+		// TODO: this is bad, but works
+		// It will probably not matter anyway once the other groovy stuff is done
+		Thread thread = new Thread(() -> {
+			try {
+				Thread.sleep(10_000);
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			compile("\"dummy script to force init\"");
+		}, "CalloutProcessorSetup");
+		thread.setDaemon(true);
+		thread.start();
 	}
 
 	public <X> CalloutEvent processCallout(RawModifiedCallout<X> raw) {
@@ -170,6 +184,11 @@ public class CalloutProcessor {
 		}
 		else if (rawValue instanceof HasFriendlyName hfn) {
 			return hfn.getFriendlyName();
+		}
+		else if (rawValue instanceof Collection<?> coll) {
+			return coll.stream()
+					.map(this::singleReplacement)
+					.collect(Collectors.joining(", "));
 		}
 		else {
 			return rawValue.toString();

@@ -39,6 +39,8 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 	private final ModifiableCallout<AbilityCastStart> southNorth = new ModifiableCallout<>("South Then North", "South Then North", 8_000);
 	private final ModifiableCallout<AbilityCastStart> southWest = new ModifiableCallout<>("South Then West", "South Then West", 8_000);
 	private final ModifiableCallout<AbilityCastStart> southEast = new ModifiableCallout<>("South Then East", "South Then East", 8_000);
+	private final ModifiableCallout<AbilityCastStart> northwestPlant = new ModifiableCallout<>("Northwest Plant", "Northwest Plant", 8_000);
+	private final ModifiableCallout<AbilityCastStart> northeastPlant = new ModifiableCallout<>("Northeast Plant", "Northeast Plant", 8_000);
 	private final ModifiableCallout<AbilityCastStart> badPattern = new ModifiableCallout<>("Bad Pattern", "Downtime Pattern", 8_000);
 
 	// TODO: make tests for this
@@ -55,6 +57,15 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 	public boolean enabled(EventContext context) {
 		return enabled.get() && state.zoneIs(0x3C8);
 	}
+
+	// TODO: There's more info about how uptime exaflares work now
+	/*
+		The "downtime" pattern is unnecessary, because if NW and NE are intercard, and S is card, then NW/NE aren't
+		getting hit by anything. Thus, you can plant NW or NE.
+
+		There's also a second strat, where you can just *always* plant. It appears that you cannot actually get a
+		pattern without a plantable exaflare.
+	 */
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> uptimeExas = new SequentialTrigger<>(
@@ -95,12 +106,27 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 				boolean sUnsafeFromW = westFacing == ArenaSector.NORTHEAST || westFacing == ArenaSector.SOUTHEAST || westFacing == ArenaSector.SOUTHWEST;
 				boolean sUnsafeFromE = eastFacing == ArenaSector.NORTHWEST || eastFacing == ArenaSector.SOUTHEAST || eastFacing == ArenaSector.SOUTHWEST;
 				boolean nUnsafeFromS = southFacing == ArenaSector.NORTH || southFacing == ArenaSector.WEST || southFacing == ArenaSector.EAST;
+				// TODO: rewrite this later
+				boolean wUnsafeFromS = southFacing == ArenaSector.NORTHWEST || southFacing == ArenaSector.NORTHEAST || southFacing == ArenaSector.SOUTHWEST;
+				boolean eUnsafeFromS = southFacing == ArenaSector.NORTHWEST || southFacing == ArenaSector.NORTHEAST || southFacing == ArenaSector.SOUTHEAST;
+				boolean wUnsafeFromE = eastFacing == ArenaSector.NORTH || eastFacing == ArenaSector.WEST || eastFacing == ArenaSector.SOUTH;
+				boolean eUnsafeFromW = westFacing == ArenaSector.NORTH || westFacing == ArenaSector.EAST || westFacing == ArenaSector.SOUTH;
+				boolean wSafe = (!wUnsafeFromS && !wUnsafeFromE);
+				boolean eSafe = (!eUnsafeFromS && !eUnsafeFromW);
 
 				ModifiableCallout<AbilityCastStart> call;
 				if (sUnsafeFromW && sUnsafeFromE) {
 					if (nUnsafeFromS) {
 						// bad pattern, can't uptime with this strat
-						call = badPattern;
+						if (wSafe) {
+							call = northwestPlant;
+						}
+						else if (eSafe) {
+							call = northeastPlant;
+						}
+						else {
+							call = badPattern;
+						}
 					}
 					else {
 						// south then north

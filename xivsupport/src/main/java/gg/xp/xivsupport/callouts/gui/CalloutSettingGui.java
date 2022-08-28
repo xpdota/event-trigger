@@ -203,6 +203,7 @@ public class CalloutSettingGui {
 		ttsPanel.setVisible(visible);
 		textPanel.setVisible(visible);
 		colorPickerPanel.setVisible(visible);
+		soundPanel.setVisible(visible);
 
 	}
 }

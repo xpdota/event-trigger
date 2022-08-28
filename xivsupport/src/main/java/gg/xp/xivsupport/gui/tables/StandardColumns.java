@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.tables;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.renderers.HpBar;
@@ -42,6 +43,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -87,11 +89,15 @@ public final class StandardColumns {
 		c.setPreferredWidth(100);
 	});
 
-	public CustomColumn<XivCombatant> statusEffectsColumn() {
-		return new CustomColumn<>("Statuses", statuses::statusesOnTarget, c -> {
+	public static CustomColumn<XivCombatant> statusEffectsColumn(Function<XivEntity, List<BuffApplied>> buffGetter) {
+		return new CustomColumn<>("Statuses", buffGetter::apply, c -> {
 			c.setCellRenderer(new StatusEffectListRenderer());
 			c.setPreferredWidth(300);
 		});
+	}
+
+	public CustomColumn<XivCombatant> statusEffectsColumn() {
+		return statusEffectsColumn(statuses::statusesOnTarget);
 	}
 
 
@@ -103,6 +109,20 @@ public final class StandardColumns {
 			});
 
 	public CustomColumn<XivCombatant> hpColumnWithUnresolved() {
+		return hpColumnWithUnresolved(cbt -> {
+			// TODO: this is buggy - when damage resolves, it will briefly flash up to the higher value, because the
+			// predicted HP is constantly updated every time it renders, while the HP is only updated when the event
+			// is actually processed.
+			if (showPredictedHp.get()) {
+				return sqidTracker.unresolvedDamageOnEntity(cbt);
+			}
+			else {
+				return 0L;
+			}
+		});
+	}
+
+	public static CustomColumn<XivCombatant> hpColumnWithUnresolved(Function<XivCombatant, Long> pendingDamageFunc) {
 		return new CustomColumn<>("HP", combatant -> combatant, c ->
 		{
 			HpBar hpBar = new HpBar();
@@ -112,22 +132,8 @@ public final class StandardColumns {
 			c.setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
 				Component defaultComponent = dflt.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
 				if (value instanceof XivCombatant cbt) {
-					long pending;
-					// TODO: this is buggy - when damage resolves, it will briefly flash up to the higher value, because the
-					// predicted HP is constantly updated every time it renders, while the HP is only updated when the event
-					// is actually processed.
-					if (showPredictedHp.get()) {
-						List<AbilityUsedEvent> events = sqidTracker.getEventsTargetedOnEntity(cbt);
-						long dmg = 0;
-						for (AbilityUsedEvent event : events) {
-							dmg += event.getDamage();
-						}
-						pending = dmg;
-					}
-					else {
-						pending = 0;
-					}
 					hpBar.setBackground(defaultComponent.getBackground());
+					long pending = pendingDamageFunc.apply(cbt);
 					hpBar.setData(cbt, pending * -1);
 					return hpBar;
 				}
