@@ -39,7 +39,8 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 	private final EnumListSetting<UptimeExaflareMovement> priority;
 
 	private final ModifiableCallout<AbilityCastStart> southPlant = new ModifiableCallout<>("South Plant", "South Plant", 8_000);
-	private final ModifiableCallout<AbilityCastStart> southNorth = new ModifiableCallout<>("South Then North", "South Then North", 8_000);
+	private final ModifiableCallout<AbilityCastStart> southNorth = new ModifiableCallout<>("South Then North (Wide)", "South Then North", 8_000);
+	private final ModifiableCallout<AbilityCastStart> southNorthNarrow = new ModifiableCallout<>("South Then North (Narrow)", "South Then North", 8_000);
 	private final ModifiableCallout<AbilityCastStart> southWest = new ModifiableCallout<>("South Then West", "South Then West", 8_000);
 	private final ModifiableCallout<AbilityCastStart> southEast = new ModifiableCallout<>("South Then East", "South Then East", 8_000);
 	private final ModifiableCallout<AbilityCastStart> northwestPlant = new ModifiableCallout<>("Northwest Plant", "Northwest Plant", 8_000);
@@ -127,10 +128,15 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 				}
 				if (willExaHitDirection(ArenaSector.NORTH, southFacing)) {
 					safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
+					safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH_NARROW);
 				}
 				// Remove things that NW will hit
 				if (willExaHitDirection(ArenaSector.EAST, westFacing)) {
 					safeSpots.remove(UptimeExaflareMovement.NORTHEAST_PLANT);
+					safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
+				}
+				if (willExaHitDirection(ArenaSector.SOUTH, westFacing)) {
+					safeSpots.remove(UptimeExaflareMovement.SOUTH_WEST);
 				}
 				if (willExaHitDirection(ArenaSector.SOUTHEAST, westFacing)) {
 					safeSpots.remove(UptimeExaflareMovement.SOUTH_PLANT);
@@ -139,6 +145,10 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 				// Remove things that NE will hit
 				if (willExaHitDirection(ArenaSector.WEST, eastFacing)) {
 					safeSpots.remove(UptimeExaflareMovement.NORTHWEST_PLANT);
+					safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
+				}
+				if (willExaHitDirection(ArenaSector.SOUTH, eastFacing)) {
+					safeSpots.remove(UptimeExaflareMovement.SOUTH_EAST);
 				}
 				if (willExaHitDirection(ArenaSector.SOUTHWEST, eastFacing)) {
 					safeSpots.remove(UptimeExaflareMovement.SOUTH_PLANT);
@@ -159,6 +169,7 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 						case SOUTH_EAST -> southEast;
 						case NORTHWEST_PLANT -> northwestPlant;
 						case NORTHEAST_PLANT -> northeastPlant;
+						case SOUTH_NORTH_NARROW -> southNorthNarrow;
 						case DOWNTIME -> badPattern;
 					};
 				}

@@ -7,11 +7,12 @@ import java.util.List;
 
 public enum UptimeExaflareMovement implements HasFriendlyName {
 	SOUTH_PLANT("South Plant"),
-	SOUTH_NORTH("South, Dodge North"),
 	SOUTH_WEST("South, Dodge Southwest"),
 	SOUTH_EAST("South, Dodge Southeast"),
+	SOUTH_NORTH("South, Dodge North (Wide Safe Spot)"),
 	NORTHWEST_PLANT("Northwest Plant"),
 	NORTHEAST_PLANT("Northeast Plant"),
+	SOUTH_NORTH_NARROW("South, Dodge North (Narrow Safe Spot)"),
 	DOWNTIME("Downtime (South, Dodge South)");
 
 	private final String friendlyName;
