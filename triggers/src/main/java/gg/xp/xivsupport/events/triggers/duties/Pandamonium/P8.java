@@ -79,7 +79,7 @@ public class P8 extends AutoChildEventHandler implements FilteredEventHandler {
 			else
 				return;
 
-			context.accept(call.getModified(event, Map.of("target", event.getTarget())));
+			context.accept(call.getModified(event));
 		}
 	}
 

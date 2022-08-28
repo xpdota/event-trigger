@@ -67,7 +67,7 @@ public class P5 extends AutoChildEventHandler implements FilteredEventHandler {
 				call = venomRain;
 			else
 				return;
-			context.accept(call.getModified(event, Map.of("target", event.getTarget())));
+			context.accept(call.getModified(event));
 		//}
 	}
 }
