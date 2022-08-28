@@ -92,7 +92,11 @@ public class GroovyEventFilter implements Condition<Event> {
 					}
 				};
 				""".formatted(longClassName, shortClassName, checkType, shortClassName, varName, script);
-		return (Predicate<? extends Event>) shell.evaluate(inJavaForm);
+		try {
+			return (Predicate<? extends Event>) shell.evaluate(inJavaForm);
+		} catch (Throwable t) {
+			throw new RuntimeException(String.format("Error compiling script {%s}%nFull script: %s"));
+		}
 
 	}
 
