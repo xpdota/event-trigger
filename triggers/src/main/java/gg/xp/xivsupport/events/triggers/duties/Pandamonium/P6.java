@@ -93,7 +93,7 @@ public class P6 extends AutoChildEventHandler implements FilteredEventHandler {
 		long id = event.getBuff().getId();
 		Duration duration = event.getInitialDuration();
 		ModifiableCallout<HasDuration> call;
-		if (event.getTarget().isThePlayer() && buffAppliedSupp.check(event) && id == 0xCF2) //CFA bad glossomorph, TODO: refire so it doesnt spam call
+		if (event.getTarget().isThePlayer() && buffAppliedSupp.check(event) && id == 0xCF2) //CFA bad glossomorph
 			call = glossomorph;
 		else
 			return;
