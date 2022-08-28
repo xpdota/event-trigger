@@ -6,8 +6,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
+import gg.xp.xivsupport.gui.util.ColorUtils;
+import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +36,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 	private String name = "Give me a name";
 	private String tts = "The text that you want read out loud (or leave empty)";
 	private String text = "The text that you want displayed (or leave empty). Supports Groovy expressions in curly braces.";
+	private @Nullable Integer colorRaw;
 	private long hangTime = 5000;
 	private boolean useDuration = true;
 	private boolean useIcon = true;
@@ -44,7 +49,12 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 		if (enabled && eventType != null && eventType.isInstance(event)) {
 			X typedEvent = eventType.cast(event);
 			if (conditions.stream().allMatch(cond -> cond.test(typedEvent))) {
-				context.accept(call.getModified(typedEvent));
+				RawModifiedCallout<X> modified = call.getModified(typedEvent);
+				Integer colorRaw = this.colorRaw;
+				if (colorRaw != null) {
+					modified.setColorOverride(ColorUtils.intToColor(colorRaw));
+				}
+				context.accept(modified);
 				hits++;
 			}
 			else {
@@ -180,6 +190,33 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 	public void setUseIcon(boolean useIcon) {
 		this.useIcon = useIcon;
 		recalc();
+	}
+
+	public @Nullable Integer getColorRaw() {
+		return colorRaw;
+	}
+
+	public void setColorRaw(@Nullable Integer colorRaw) {
+		this.colorRaw = colorRaw;
+	}
+
+	@JsonIgnore
+	public @Nullable Color getColor() {
+		Integer colorRaw = this.colorRaw;
+		if (colorRaw == null) {
+			return null;
+		}
+		return ColorUtils.intToColor(colorRaw);
+	}
+
+	@JsonIgnore
+	public void setColor(@Nullable Color color) {
+		if (color == null) {
+			colorRaw = null;
+		}
+		else {
+			colorRaw = ColorUtils.colorToInt(color);
+		}
 	}
 
 	public EasyTrigger<X> duplicate() {
