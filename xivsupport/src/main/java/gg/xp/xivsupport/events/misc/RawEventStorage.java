@@ -121,6 +121,7 @@ public class RawEventStorage {
 
 	@HandleEvents(order = Integer.MAX_VALUE)
 	public void queueEventForProcessing(EventContext context, Event event) {
+		// This is slow. Potential fix is to save to a temp list, then dump them all once we hit a certain threshold.
 		eventSaveQueue.add(event);
 	}
 

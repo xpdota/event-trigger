@@ -69,7 +69,19 @@ public class CalloutProcessor {
 
 	@HandleEvents(order = Integer.MAX_VALUE)
 	public void initEvent(EventContext ctx, InitEvent init) {
-		new Thread(() -> compile("\"dummy script to force init\""), "CalloutProcessorSetup").start();
+		// TODO: this is bad, but works
+		// It will probably not matter anyway once the other groovy stuff is done
+		Thread thread = new Thread(() -> {
+			try {
+				Thread.sleep(10_000);
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			compile("\"dummy script to force init\"");
+		}, "CalloutProcessorSetup");
+		thread.setDaemon(true);
+		thread.start();
 	}
 
 	public <X> CalloutEvent processCallout(RawModifiedCallout<X> raw) {
