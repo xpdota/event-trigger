@@ -46,6 +46,7 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 	private final ModifiableCallout<AbilityCastStart> northwestPlant = new ModifiableCallout<>("Northwest Plant", "Northwest Plant", 8_000);
 	private final ModifiableCallout<AbilityCastStart> northeastPlant = new ModifiableCallout<>("Northeast Plant", "Northeast Plant", 8_000);
 	private final ModifiableCallout<AbilityCastStart> badPattern = new ModifiableCallout<>("Bad Pattern", "Downtime Pattern", 8_000);
+	private final ModifiableCallout<AbilityCastStart> error = new ModifiableCallout<>("Trigger Error", "Downtime Pattern", 8_000);
 
 	// TODO: make tests for this
 	public DragonsongUptimeExas(XivState state, PersistenceProvider pers) {
@@ -105,6 +106,7 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 						.toList();
 				if (normalizedExaPositions.size() != 3) {
 					log.error("Missing an exaflare actor! Data: {} - {}", exaCasts, normalizedExaPositions);
+					s.updateCall(error.getModified(realThordanCast));
 					return;
 				}
 				log.info("Uptime exas: computing");
