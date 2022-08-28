@@ -12,11 +12,13 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 
 @CalloutRepo(name = "P6", duty = KnownDuty.P6)
@@ -56,6 +58,8 @@ public class P6 extends AutoChildEventHandler implements FilteredEventHandler {
 		return state.zoneIs(0x43B);
 	}
 
+	private final RepeatSuppressor buffAppliedSupp = new RepeatSuppressor(Duration.ofSeconds(21)); //longest buff duration is 20s
+
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
 		long id = event.getAbility().getId();
@@ -89,7 +93,7 @@ public class P6 extends AutoChildEventHandler implements FilteredEventHandler {
 		long id = event.getBuff().getId();
 		Duration duration = event.getInitialDuration();
 		ModifiableCallout<HasDuration> call;
-		if (event.getTarget().isThePlayer() && id == 0xCF2) //CFA bad glossomorph
+		if (event.getTarget().isThePlayer() && buffAppliedSupp.check(event) && id == 0xCF2) //CFA bad glossomorph, TODO: refire so it doesnt spam call
 			call = glossomorph;
 		else
 			return;
