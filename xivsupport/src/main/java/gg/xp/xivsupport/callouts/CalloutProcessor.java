@@ -70,6 +70,7 @@ public class CalloutProcessor {
 	@HandleEvents(order = Integer.MAX_VALUE)
 	public void initEvent(EventContext ctx, InitEvent init) {
 		// TODO: this is bad, but works
+		// It will probably not matter anyway once the other groovy stuff is done
 		Thread thread = new Thread(() -> {
 			try {
 				Thread.sleep(10_000);
