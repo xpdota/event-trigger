@@ -63,7 +63,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private Consumer<@Nullable XivCombatant> selectionCallback = l -> {
 	};
 
-	private static final Color enemyColor = new Color(128, 0, 0);
+	private static final Color enemyColor = new Color(145, 0, 0);
+	private static final Color fakeEnemyColor = new Color(170, 120, 0);
+	private static final Color otherColor = new Color(128, 128, 128);
 	private static final Color otherPlayerColor = new Color(82, 204, 82);
 	private static final Color partyMemberColor = new Color(104, 120, 222);
 	private static final Color localPcColor = new Color(150, 199, 255);
@@ -492,6 +494,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		// Setting to -2 so it will never match initially
 		long oldHpCurrent = -2;
 		long oldHpMax = -2;
+		long oldUnresolved = -2;
 
 		public void update(XivCombatant cbt, @Nullable CastTracker castData) {
 			RenderUtils.setTooltip(this, formatTooltip(cbt));
@@ -506,7 +509,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (cbt instanceof XivPlayerCharacter pc) {
 				Job newJob = pc.getJob();
 				if (newJob != oldJob) {
-					inner.remove(icon);
+					if (icon != null) {
+						inner.remove(icon);
+					}
 					formatComponent(cbt);
 				}
 				oldJob = newJob;
@@ -521,12 +526,14 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			HitPoints hp = cbt.getHp();
 			long hpCurrent = hp == null ? -1 : hp.current();
 			long hpMax = hp == null ? -1 : hp.max();
+			long unresolved = mdc.unresolvedDamage(cbt);
 			// Ignore updates where nothing changed
-			if (hpCurrent == oldHpCurrent && hpMax == oldHpMax) {
+			if (hpCurrent == oldHpCurrent && hpMax == oldHpMax && unresolved == oldUnresolved) {
 				return;
 			}
 			oldHpCurrent = hpCurrent;
 			oldHpMax = hpMax;
+			oldUnresolved = unresolved;
 			if (hp == null) {
 				hpBar.setVisible(false);
 			}
@@ -535,7 +542,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			}
 			else {
 				hpBar.setVisible(true);
-				hpBar.setData(cbt, 0);
+				hpBar.setData(cbt, -1 * unresolved);
 			}
 			hpBar.revalidate();
 		}
@@ -564,16 +571,27 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 //				MapPanel.this.setComponentZOrder(this, 0);
 			}
 			else {
-				mainColor = enemyColor;
+				icon = null;
+				if (cbt.getType() == CombatantType.FAKE) {
+					mainColor = fakeEnemyColor;
+				}
+				else if (cbt.getType() == CombatantType.NPC) {
+					mainColor = enemyColor;
 //				inner.setBorder(new LineBorder(enemyColor));
 //				inner.setOpaque(false);
-				// TODO: find good icon
-				icon = IconTextRenderer.getComponent(ActionLibrary.iconForId(2246), defaultLabel, true, false, true);
+					// TODO: find good icon
+//				icon = IconTextRenderer.getComponent(ActionLibrary.iconForId(2246), defaultLabel, true, false, true);
 //				MapPanel.this.setComponentZOrder(this, 5);
+				}
+				else {
+					mainColor = otherColor;
+				}
 			}
 			inner.setBorder(new LineBorder(mainColor));
 			inner.setOpaque(true);
-			inner.add(icon);
+			if (icon != null) {
+				inner.add(icon);
+			}
 			validate();
 		}
 

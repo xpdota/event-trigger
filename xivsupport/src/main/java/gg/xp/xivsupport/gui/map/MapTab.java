@@ -40,6 +40,7 @@ public class MapTab extends JPanel {
 //		super("Map");
 		super(new BorderLayout());
 		split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		split.setOneTouchExpandable(true);
 		this.mapDataController = mdc;
 		this.mapPanel = new MapPanel(mdc);
 //		setPreferredSize(getMaximumSize());

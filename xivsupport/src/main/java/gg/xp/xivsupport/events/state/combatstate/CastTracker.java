@@ -63,7 +63,10 @@ public class CastTracker implements HasDuration {
 
 	public CastTracker withNewCurrentTime(Instant timeBasis) {
 		CastTracker out = new CastTracker(cast);
-		out.end = end;
+		// Only include the ending event IF it would have occurred at the given time
+		if (end != null && end.getEffectiveHappenedAt().compareTo(timeBasis) < 0) {
+			out.end = end;
+		}
 		out.currentTimeOverride = timeBasis;
 		return out;
 	}
