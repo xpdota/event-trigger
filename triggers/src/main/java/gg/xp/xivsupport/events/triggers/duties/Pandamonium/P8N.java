@@ -11,19 +11,24 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.events.state.combatstate.CastResult;
+import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
-import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @CalloutRepo(name = "P8N", duty = KnownDuty.P8N)
 public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
@@ -39,15 +44,24 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "Tankbuster on {event.target}");
 
+	private final ModifiableCallout<AbilityCastStart> petrifaction = ModifiableCallout.durationBasedCall("Petrifaction", "Look {safe}");
+	private final ModifiableCallout<AbilityCastStart> volcanicTorchesSafe = ModifiableCallout.durationBasedCall("Volcanic Torches Safe", "{safe}");
+
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
-	public P8N(XivState state) {
+	public P8N(XivState state, ActiveCastRepository activeCastRepository) {
 		this.state = state;
+		this.activeCastRepository = activeCastRepository;
 	}
 
 	private final XivState state;
 	private XivState getState() {
 		return this.state;
+	}
+
+	private final ActiveCastRepository activeCastRepository;
+	private ActiveCastRepository getActiveCastRepository() {
+		return this.activeCastRepository;
 	}
 
 	@Override
@@ -97,11 +111,11 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 					suneaters.add(this.getState().getLatestCombatantData(acs.getSource()));
 				}
 				log.info("CthonicVent: done finding positions, finding safe spots");
+
 				if(suneaters.size() != 2) {
-					log.error("Invalid number of suneaters found! Data: {}", cthonicCasts);
+					log.error("CthonicVent: Invalid number of suneaters found! Data: {}", cthonicCasts);
 					return;
 				}
-				log.info("CthonicVent: found suneaters 1:{}, 2:{}", arenaPos.forCombatant(suneaters.get(0)).getFriendlyName(), arenaPos.forCombatant(suneaters.get(1)).getFriendlyName());
 				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.quadrants);
 				safe.remove(arenaPos.forCombatant(suneaters.get(0)));
 				safe.remove(arenaPos.forCombatant(suneaters.get(1)));
@@ -109,6 +123,132 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 
 				Map<String, Object> args = Map.of("safe", combined == null ? safe : combined);
 				s.accept(fourfoldFiresSafe.getModified(cthonicCasts.get(0), args));
+			}
+	);
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> volcanicTorches = new SequentialTrigger<>(
+			15_000,
+			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x78F7),
+			(e1, s) -> {
+				s.waitMs(5_000); //need to wait till the actors start casting
+				List<CastTracker> torchFlameCasts = getActiveCastRepository().getAll().stream().filter(castTracker -> castTracker.getCast().abilityIdMatches(0x78F8) && castTracker.getResult() == CastResult.IN_PROGRESS).toList();
+				List<XivCombatant> tiles;
+				log.info("VolcanicTorches: got tile casts");
+				s.waitMs(5_000); //they dont start casting in their final position, delay needs testing
+				s.refreshCombatants(100);
+				log.info("VolcanicTorches: done with delay");
+
+				tiles = torchFlameCasts.stream().map(tracker -> tracker.getCast().getSource()).collect(Collectors.toList());
+				log.info("VolcanicTorcher: done finding positions");
+
+				if(tiles.size() != 12 && tiles.size() != 8) {
+					log.error("VolcanicTorches: invalid number of tiles found! Data: {}", torchFlameCasts);
+				}
+
+				Set<VolcanicTorchesColumnsAndRow> safe = EnumSet.copyOf(VolcanicTorchesColumnsAndRow.all);
+				for(XivCombatant c : tiles) {
+					int x = (int)(Math.round(c.getPos().x()) - 85)/10;
+					int y = (int)(Math.round(c.getPos().y()) - 85)/10;
+					if (x == 0)
+						safe.remove(VolcanicTorchesColumnsAndRow.OUTER_WEST);
+					else if (x == 1)
+						safe. remove(VolcanicTorchesColumnsAndRow.INNER_WEST);
+					else if (x == 2)
+						safe.remove(VolcanicTorchesColumnsAndRow.INNER_EAST);
+					else if (x == 3)
+						safe.remove(VolcanicTorchesColumnsAndRow.OUTER_EAST);
+					else
+						log.error("Volcanic torches: Invalid x value! x: {}", x);
+
+					if (y == 0)
+						safe.remove(VolcanicTorchesColumnsAndRow.OUTER_NORTH);
+					else if (y == 1)
+						safe.remove(VolcanicTorchesColumnsAndRow.INNER_NORTH);
+					else if (y == 2)
+						safe.remove(VolcanicTorchesColumnsAndRow.INNER_SOUTH);
+					else if (y == 3)
+						safe.remove(VolcanicTorchesColumnsAndRow.OUTER_SOUTH);
+					else
+						log.error("Volcanic torches: Invalid y value! y: {}", y);
+				}
+				VolcanicTorchesColumnsAndRow combined = VolcanicTorchesColumnsAndRow.tryCombine(new ArrayList<>(safe));
+
+				Map<String, Object> args = Map.of("safe", combined == null ? safe : combined);
+				s.accept(volcanicTorchesSafe.getModified(torchFlameCasts.get(0).getCast(), args));
+			}
+	);
+
+	private enum VolcanicTorchesColumnsAndRow {
+
+		OUTER_WEST("Outer West"), //x = 85
+		INNER_WEST("Inner West"), //x = 95
+		OUTER_EAST("Outer East"), //x = 115
+		INNER_EAST("Inner East"), //x = 105
+		OUTER_NORTH("Outer North"), //y = 85
+		INNER_NORTH("Inner North"), //y = 95
+		OUTER_SOUTH("Outer South"), //y = 115
+		INNER_SOUTH("Inner South"), //y = 105
+		MIDDLE("Middle");
+
+		private final String friendlyName;
+		private String getFriendlyName() {
+			return  friendlyName;
+		}
+
+		VolcanicTorchesColumnsAndRow(String friendlyName) {
+			this.friendlyName = friendlyName;
+		}
+
+		private static final List<VolcanicTorchesColumnsAndRow> all = List.of(OUTER_WEST, INNER_WEST, OUTER_EAST, INNER_EAST, OUTER_NORTH, INNER_NORTH, OUTER_SOUTH, INNER_SOUTH);
+
+		private static @Nullable P8N.VolcanicTorchesColumnsAndRow tryCombine(List<VolcanicTorchesColumnsAndRow> columnsAndRows) {
+			if(columnsAndRows.size() != 2) {
+				return null;
+			}
+
+			columnsAndRows = new ArrayList<>(columnsAndRows);
+			columnsAndRows.sort(Comparator.naturalOrder());
+			VolcanicTorchesColumnsAndRow first = columnsAndRows.get(0);
+			VolcanicTorchesColumnsAndRow second = columnsAndRows.get(1);
+			return switch (first) {
+				case INNER_WEST -> second == INNER_EAST ? MIDDLE : null;
+				case INNER_NORTH -> second == INNER_SOUTH ? MIDDLE : null;
+				default -> null;
+			};
+		}
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> intoTheShadows = new SequentialTrigger<>(
+			13_000,
+			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x78FB),
+			(e1, s) -> {
+				List<AbilityCastStart> petrifactionCasts = new ArrayList<>(s.waitEvents(2, AbilityCastStart.class, event -> event.abilityIdMatches(0x78FC)));
+				List<XivCombatant> gorgons;
+				log.info("IntoTheShadows: got gorgon casts");
+				s.waitMs(100);
+				s.refreshCombatants(100);
+				log.info("IntoTheShadows: done with delay");
+				gorgons = petrifactionCasts.stream().map(acs -> this.getState().getLatestCombatantData(acs.getSource())).collect(Collectors.toList());
+
+				if(gorgons.size() != 2) {
+					log.error("IntoTheShadows: Invalid number of gorgons found! Data: {}", petrifactionCasts);
+					return;
+				}
+				log.info("IntoTheShadows: done finding actors, getting safe directions");
+
+				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.all);
+				gorgons.stream()
+						.map(arenaPos::forCombatant)
+						.forEach(badSector -> {
+							log.info("IntoTheShadows: Unsafe direction: {}", badSector);
+							safe.remove(badSector);
+							safe.remove(badSector.opposite());
+						});
+
+				Map<String, Object> args = Map.of("safe", safe);
+				s.accept(petrifaction.getModified(petrifactionCasts.get(0), args));
 			}
 	);
 
