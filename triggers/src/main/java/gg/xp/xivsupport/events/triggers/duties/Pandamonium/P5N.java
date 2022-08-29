@@ -10,15 +10,12 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.ArenaPos;
-import gg.xp.xivsupport.models.CombatantType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
-@CalloutRepo(name = "P5", duty = KnownDuty.P5)
-public class P5 extends AutoChildEventHandler implements FilteredEventHandler {
-	private static final Logger log = LoggerFactory.getLogger(P5.class);
+@CalloutRepo(name = "P5N", duty = KnownDuty.P5N)
+public class P5N extends AutoChildEventHandler implements FilteredEventHandler {
+	private static final Logger log = LoggerFactory.getLogger(P5N.class);
 	private final ModifiableCallout<AbilityCastStart> searingRay = ModifiableCallout.durationBasedCall("Searing Ray", "Behind");
 	private final ModifiableCallout<AbilityCastStart> searingRayReflected = ModifiableCallout.durationBasedCall("Searing Ray Reflected", "Front");
 	private final ModifiableCallout<AbilityCastStart> rubyGlow = ModifiableCallout.durationBasedCall("Ruby Glow", "raidwide");
@@ -30,7 +27,7 @@ public class P5 extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
-	public P5(XivState state) {
+	public P5N(XivState state) {
 		this.state = state;
 	}
 

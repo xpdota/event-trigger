@@ -15,12 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
 
-@CalloutRepo(name = "P7", duty = KnownDuty.P7)
-public class P7 extends AutoChildEventHandler implements FilteredEventHandler {
-	private static final Logger log = LoggerFactory.getLogger(P7.class);
+@CalloutRepo(name = "P7N", duty = KnownDuty.P7N)
+public class P7N extends AutoChildEventHandler implements FilteredEventHandler {
+	private static final Logger log = LoggerFactory.getLogger(P7N.class);
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisFar = ModifiableCallout.durationBasedCall("Bough of Attis Far", "far");
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisClose = ModifiableCallout.durationBasedCall("Bough of Attis Close", "close");
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisLeft = ModifiableCallout.durationBasedCall("Bough of Attis Left", "right");
@@ -37,7 +35,7 @@ public class P7 extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
-	public P7(XivState state) {
+	public P7N(XivState state) {
 		this.state = state;
 	}
 

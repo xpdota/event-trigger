@@ -18,12 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
 
-@CalloutRepo(name = "P6", duty = KnownDuty.P6)
-public class P6 extends AutoChildEventHandler implements FilteredEventHandler {
-	private static final Logger log = LoggerFactory.getLogger(P6.class);
+@CalloutRepo(name = "P6N", duty = KnownDuty.P6N)
+public class P6N extends AutoChildEventHandler implements FilteredEventHandler {
+	private static final Logger log = LoggerFactory.getLogger(P6N.class);
 	private final ModifiableCallout<AbilityCastStart> aethericPolyominoid = ModifiableCallout.durationBasedCall("Aetheric Polyominoid", "tiles"); //7855 tile explosion
 	private final ModifiableCallout<AbilityCastStart> polyominoidSigma = ModifiableCallout.durationBasedCall("Polyominoid Sigma", "tiles swapping");
 	private final ModifiableCallout<AbilityCastStart> chorosIxouSides = ModifiableCallout.durationBasedCall("Choros Ixou Sides hit", "front back"); //785A? 7858?
@@ -38,7 +36,7 @@ public class P6 extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
-	public P6(XivState state, StatusEffectRepository buffs) {
+	public P6N(XivState state, StatusEffectRepository buffs) {
 		this.state = state;
 		this.buffs = buffs;
 	}
@@ -93,7 +91,7 @@ public class P6 extends AutoChildEventHandler implements FilteredEventHandler {
 		long id = event.getBuff().getId();
 		Duration duration = event.getInitialDuration();
 		ModifiableCallout<HasDuration> call;
-		if (event.getTarget().isThePlayer() && buffAppliedSupp.check(event) && id == 0xCF2) //CFA bad glossomorph
+		if (event.getTarget().isThePlayer() && id == 0xCF2 && buffAppliedSupp.check(event)) //CFA bad glossomorph
 			call = glossomorph;
 		else
 			return;
