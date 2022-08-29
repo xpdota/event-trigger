@@ -18,12 +18,12 @@ public class P5N extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P5N.class);
 	private final ModifiableCallout<AbilityCastStart> searingRay = ModifiableCallout.durationBasedCall("Searing Ray", "Behind");
 	private final ModifiableCallout<AbilityCastStart> searingRayReflected = ModifiableCallout.durationBasedCall("Searing Ray Reflected", "Front");
-	private final ModifiableCallout<AbilityCastStart> rubyGlow = ModifiableCallout.durationBasedCall("Ruby Glow", "raidwide");
-	private final ModifiableCallout<AbilityCastStart> crunch = ModifiableCallout.durationBasedCall("Crunch", "buster");
-	private final ModifiableCallout<AbilityCastStart> sonicHowl = ModifiableCallout.durationBasedCall("Sonic Howl", "raidwide");
-	private final ModifiableCallout<AbilityCastStart> toxicCrunch = ModifiableCallout.durationBasedCall("Toxic Crunch", "tankbuster");
-	private final ModifiableCallout<AbilityCastStart> venomPool = ModifiableCallout.durationBasedCall("Venom Pool", "stack");
-	private final ModifiableCallout<AbilityCastStart> venomRain = ModifiableCallout.durationBasedCall("Venom Rain", "spread");
+	private final ModifiableCallout<AbilityCastStart> rubyGlow = ModifiableCallout.durationBasedCall("Ruby Glow", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> crunch = ModifiableCallout.durationBasedCall("Crunch", "Tankbuster on {event.target}");
+	private final ModifiableCallout<AbilityCastStart> sonicHowl = ModifiableCallout.durationBasedCall("Sonic Howl", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> toxicCrunch = ModifiableCallout.durationBasedCall("Toxic Crunch", "Tankbuster on {event.target}");
+	private final ModifiableCallout<AbilityCastStart> venomPool = ModifiableCallout.durationBasedCall("Venom Pool", "Stack");
+	private final ModifiableCallout<AbilityCastStart> venomRain = ModifiableCallout.durationBasedCall("Venom Rain", "Spread");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
