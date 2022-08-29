@@ -34,7 +34,7 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> sunforgePhoenix = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In");
 	private final ModifiableCallout<AbilityCastStart> sunforgeSerpent = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out");
-	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadraped");
+	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadruped");
 	private final ModifiableCallout<AbilityCastStart> reforgedReflectionSerpent = ModifiableCallout.durationBasedCall("Reforged Reflection Serpent", "Serpent");
 	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "Tankbuster on {event.target}");
@@ -107,8 +107,9 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.quadrants);
 				safe.remove(arenaPos.forCombatant(suneaters.get(0)));
 				safe.remove(arenaPos.forCombatant(suneaters.get(1)));
+				ArenaSector combined = ArenaSector.tryCombineTwoQuadrants(new ArrayList<>(safe));
 
-				Map<String, Object> args = Map.of("safe", safe);
+				Map<String, Object> args = Map.of("safe", combined == null ? safe : combined);
 				s.accept(fourfoldFiresSafe.getModified(cthonicCasts.get(0), args));
 			}
 	);
