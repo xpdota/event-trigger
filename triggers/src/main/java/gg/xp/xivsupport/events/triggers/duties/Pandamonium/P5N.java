@@ -43,28 +43,26 @@ public class P5N extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
-		//if (event.getSource().getType() == CombatantType.NPC) {
-			long id = event.getAbility().getId();
-			ModifiableCallout<AbilityCastStart> call;
-			if (id == 0x76D7)
-				call = searingRay;
-			else if (id == 0x76D8)
-				call = searingRayReflected;
-			else if(id == 0x76D4)
-				call = rubyGlow;
-			else if(id == 0x76F0)
-				call = crunch;
-			else if(id == 0x76F2)
-				call = sonicHowl;
-			else if(id == 0x76F1)
-				call = toxicCrunch;
-			else if(id == 0x76EF)
-				call = venomPool;
-			else if(id == 0x76ED && event.getTarget().isThePlayer())
-				call = venomRain;
-			else
-				return;
-			context.accept(call.getModified(event));
-		//}
+		long id = event.getAbility().getId();
+		ModifiableCallout<AbilityCastStart> call;
+		if (id == 0x76D7)
+			call = searingRay;
+		else if (id == 0x76D8)
+			call = searingRayReflected;
+		else if(id == 0x76D4)
+			call = rubyGlow;
+		else if(id == 0x76F0)
+			call = crunch;
+		else if(id == 0x76F2)
+			call = sonicHowl;
+		else if(id == 0x76F1)
+			call = toxicCrunch;
+		else if(id == 0x76EF)
+			call = venomPool;
+		else if(id == 0x76ED && event.getTarget().isThePlayer())
+			call = venomRain;
+		else
+			return;
+		context.accept(call.getModified(event));
 	}
 }

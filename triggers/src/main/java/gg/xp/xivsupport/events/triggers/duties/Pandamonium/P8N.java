@@ -57,30 +57,28 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
-		if (event.getSource().getType() == CombatantType.NPC) {
-			long id = event.getAbility().getId();
-			ModifiableCallout<AbilityCastStart> call;
-			if (id == 0x7905)
-				call = genesisOfFlame;
-			else if (id == 0x78EC)
-				call = sunforgeSerpent;
-			else if (id == 0x78ED)
-				call = sunforgePhoenix;
-			else if (id == 0x794B)
-				call = reforgedReflectionQuadruped;
-			else if (id == 0x794C)
-				call = reforgedReflectionSerpent;
-			else if (id == 0x7908)
-				call = flameviper;
-			else if (id == 0x79AB)
-				call = rearingRampage;
-			else if (id == 0x78FE)
-				call = ektothermos;
-			else
-				return;
+		long id = event.getAbility().getId();
+		ModifiableCallout<AbilityCastStart> call;
+		if (id == 0x7905)
+			call = genesisOfFlame;
+		else if (id == 0x78EC)
+			call = sunforgeSerpent;
+		else if (id == 0x78ED)
+			call = sunforgePhoenix;
+		else if (id == 0x794B)
+			call = reforgedReflectionQuadruped;
+		else if (id == 0x794C)
+			call = reforgedReflectionSerpent;
+		else if (id == 0x7908)
+			call = flameviper;
+		else if (id == 0x79AB)
+			call = rearingRampage;
+		else if (id == 0x78FE)
+			call = ektothermos;
+		else
+			return;
 
-			context.accept(call.getModified(event));
-		}
+		context.accept(call.getModified(event));
 	}
 
 	@AutoFeed
