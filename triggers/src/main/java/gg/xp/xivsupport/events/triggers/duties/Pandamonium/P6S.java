@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 
 @CalloutRepo(name = "P6S", duty = KnownDuty.P6S)
-public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
-	private static final Logger log = LoggerFactory.getLogger(P6S.class);
+public class P6S extends AutoChildEventHandler /*implements FilteredEventHandler*/ {
+	/*private static final Logger log = LoggerFactory.getLogger(P6S.class);
 	private final ModifiableCallout<AbilityCastStart> aethericPolyominoid = ModifiableCallout.durationBasedCall("Aetheric Polyominoid", "Tiles"); //????+2 tile explosion
 	private final ModifiableCallout<AbilityCastStart> polyominoidSigma = ModifiableCallout.durationBasedCall("Polyominoid Sigma", "Tiles Swapping");
 	private final ModifiableCallout<AbilityCastStart> chorosIxouSides = ModifiableCallout.durationBasedCall("Choros Ixou Sides hit", "Go Front/Back");
@@ -94,5 +94,5 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			return;
 
 		context.accept(call.getModified(event));
-	}
+	}*/
 }

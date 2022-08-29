@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 
 @CalloutRepo(name = "P7S", duty = KnownDuty.P7S)
-public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
-	private static final Logger log = LoggerFactory.getLogger(P7S.class);
+public class P7S extends AutoChildEventHandler /*implements FilteredEventHandler*/ {
+	/*private static final Logger log = LoggerFactory.getLogger(P7S.class);
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisClose = ModifiableCallout.durationBasedCall("Bough of Attis Attack Close", "Go Far");
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisFar = ModifiableCallout.durationBasedCall("Bough of Attis Attack Far", "Get Close");
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisLeft = ModifiableCallout.durationBasedCall("Bough of Attis Attack Left", "Go Right");
@@ -85,5 +85,5 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 			return;
 
 		context.accept(call.getModified(event));
-	}
+	}*/
 }

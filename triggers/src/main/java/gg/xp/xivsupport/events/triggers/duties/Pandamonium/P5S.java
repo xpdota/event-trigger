@@ -14,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @CalloutRepo(name = "P5S", duty = KnownDuty.P5S)
-public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
-	private static final Logger log = LoggerFactory.getLogger(P5S.class);
+public class P5S extends AutoChildEventHandler /*implements FilteredEventHandler*/ {
+	/*private static final Logger log = LoggerFactory.getLogger(P5S.class);
 	private final ModifiableCallout<AbilityCastStart> searingRay = ModifiableCallout.durationBasedCall("Searing Ray", "Behind");
 	private final ModifiableCallout<AbilityCastStart> searingRayReflected = ModifiableCallout.durationBasedCall("Searing Ray Reflected", "Front");
 	private final ModifiableCallout<AbilityCastStart> rubyGlow = ModifiableCallout.durationBasedCall("Ruby Glow", "Raidwide");
@@ -64,5 +64,5 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 		else
 			return;
 		context.accept(call.getModified(event));
-	}
+	}*/
 }
