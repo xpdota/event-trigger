@@ -19,8 +19,8 @@ import java.time.Duration;
 @CalloutRepo(name = "P7N", duty = KnownDuty.P7N)
 public class P7N extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P7N.class);
-	private final ModifiableCallout<AbilityCastStart> boughOfAttisFar = ModifiableCallout.durationBasedCall("Bough of Attis Far", "far");
-	private final ModifiableCallout<AbilityCastStart> boughOfAttisClose = ModifiableCallout.durationBasedCall("Bough of Attis Close", "close");
+	private final ModifiableCallout<AbilityCastStart> boughOfAttisClose = ModifiableCallout.durationBasedCall("Bough of Attis Attack Close", "far");
+	private final ModifiableCallout<AbilityCastStart> boughOfAttisFar = ModifiableCallout.durationBasedCall("Bough of Attis Attack Far", "close");
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisLeft = ModifiableCallout.durationBasedCall("Bough of Attis Left", "right");
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisRight = ModifiableCallout.durationBasedCall("Bough of Attis Right", "left");
 	private final ModifiableCallout<AbilityCastStart> hemitheosHoly = ModifiableCallout.durationBasedCall("Hemitheos's Holy", "spread");
@@ -56,9 +56,9 @@ public class P7N extends AutoChildEventHandler implements FilteredEventHandler {
 		long id = event.getAbility().getId();
 		ModifiableCallout<AbilityCastStart> call;
 		if (id == 0x77F9) //77FA fake, casted twice
-			call = boughOfAttisFar;
-		else if (id == 0x77FE) //77FF fake
 			call = boughOfAttisClose;
+		else if (id == 0x77FE) //77FF fake
+			call = boughOfAttisFar;
 		else if (id == 0x77FD && event.getSource().getPos().x() < 100) //77FC boss
 			call = boughOfAttisLeft;
 		else if (id == 0x77FD && event.getSource().getPos().x() > 100) //77FC boss
