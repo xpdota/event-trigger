@@ -119,45 +119,7 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 				ArenaSector eastFacing = ArenaPos.combatantFacing(eastExaPos.getHeading());
 
 				log.info("Uptime exaflares: S {}, NW {}, NE {}", southFacing, westFacing, eastFacing);
-
-				List<UptimeExaflareMovement> safeSpots = new ArrayList<>(getPriority().get());
-				// Remove things that S will hit
-				if (willExaHitDirection(ArenaSector.NORTHWEST, southFacing)) {
-					safeSpots.remove(UptimeExaflareMovement.NORTHWEST_PLANT);
-				}
-				if (willExaHitDirection(ArenaSector.NORTHEAST, southFacing)) {
-					safeSpots.remove(UptimeExaflareMovement.NORTHEAST_PLANT);
-				}
-				if (willExaHitDirection(ArenaSector.NORTH, southFacing)) {
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH_NARROW);
-				}
-				// Remove things that NW will hit
-				if (willExaHitDirection(ArenaSector.EAST, westFacing)) {
-					safeSpots.remove(UptimeExaflareMovement.NORTHEAST_PLANT);
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
-				}
-				if (willExaHitDirection(ArenaSector.SOUTH, westFacing)) {
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_WEST);
-				}
-				if (willExaHitDirection(ArenaSector.SOUTHEAST, westFacing)) {
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_PLANT);
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_EAST);
-				}
-				// Remove things that NE will hit
-				if (willExaHitDirection(ArenaSector.WEST, eastFacing)) {
-					safeSpots.remove(UptimeExaflareMovement.NORTHWEST_PLANT);
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
-				}
-				if (willExaHitDirection(ArenaSector.SOUTH, eastFacing)) {
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_EAST);
-				}
-				if (willExaHitDirection(ArenaSector.SOUTHWEST, eastFacing)) {
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_PLANT);
-					safeSpots.remove(UptimeExaflareMovement.SOUTH_WEST);
-				}
-
-				log.info("Computed safe strats: {}", safeSpots);
+				List<UptimeExaflareMovement> safeSpots = getSafeMovements(southFacing, westFacing, eastFacing);
 				final ModifiableCallout<AbilityCastStart> call;
 				if (safeSpots.isEmpty()) {
 					// Should never happen, just in case
@@ -178,6 +140,50 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 				s.updateCall(call.getModified(realThordanCast));
 			}
 	);
+
+	// TODO: unit test
+	final List<UptimeExaflareMovement> getSafeMovements(ArenaSector southFacing, ArenaSector westFacing, ArenaSector eastFacing) {
+		List<UptimeExaflareMovement> safeSpots = new ArrayList<>(getPriority().get());
+		// Remove things that S will hit
+		if (willExaHitDirection(ArenaSector.NORTHWEST, southFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.NORTHWEST_PLANT);
+		}
+		if (willExaHitDirection(ArenaSector.NORTHEAST, southFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.NORTHEAST_PLANT);
+		}
+		if (willExaHitDirection(ArenaSector.NORTH, southFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH_NARROW);
+		}
+		// Remove things that NW will hit
+		if (willExaHitDirection(ArenaSector.EAST, westFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.NORTHEAST_PLANT);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
+		}
+		if (willExaHitDirection(ArenaSector.SOUTH, westFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_WEST);
+		}
+		if (willExaHitDirection(ArenaSector.SOUTHEAST, westFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_PLANT);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_EAST);
+		}
+		// Remove things that NE will hit
+		if (willExaHitDirection(ArenaSector.WEST, eastFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.NORTHWEST_PLANT);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
+		}
+		if (willExaHitDirection(ArenaSector.SOUTH, eastFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_EAST);
+		}
+		if (willExaHitDirection(ArenaSector.SOUTHWEST, eastFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_PLANT);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_WEST);
+		}
+
+		log.info("Computed safe strats: {}", safeSpots);
+		return safeSpots;
+
+	}
 
 	@Override
 	public BooleanSetting getCalloutGroupEnabledSetting() {
