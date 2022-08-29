@@ -15,6 +15,7 @@ import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastResult;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -41,9 +42,10 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> sunforgeSerpent = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out");
 	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadruped");
 	private final ModifiableCallout<AbilityCastStart> reforgedReflectionSerpent = ModifiableCallout.durationBasedCall("Reforged Reflection Serpent", "Serpent");
+	private final ModifiableCallout<AbilityCastStart> hemitheosFlare = ModifiableCallout.durationBasedCall("Hemitheos's Flare", "Spread");
+
 	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "Tankbuster on {event.target}");
-
 	private final ModifiableCallout<AbilityCastStart> petrifaction = ModifiableCallout.durationBasedCall("Petrifaction", "Look {safe}");
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesSafe = ModifiableCallout.durationBasedCall("Volcanic Torches Safe", "{safe}");
 
@@ -89,6 +91,8 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 			call = rearingRampage;
 		else if (id == 0x78FE)
 			call = ektothermos;
+		else if (id == 0x7906)
+			call = hemitheosFlare;
 		else
 			return;
 
@@ -129,21 +133,23 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> volcanicTorches = new SequentialTrigger<>(
 			15_000,
-			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x78F7),
+			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x78F8),
 			(e1, s) -> {
-				s.waitMs(5_000); //need to wait till the actors start casting
-				List<CastTracker> torchFlameCasts = getActiveCastRepository().getAll().stream().filter(castTracker -> castTracker.getCast().abilityIdMatches(0x78F8) && castTracker.getResult() == CastResult.IN_PROGRESS).toList();
-				List<XivCombatant> tiles;
-				log.info("VolcanicTorches: got tile casts");
-				s.waitMs(5_000); //they dont start casting in their final position, delay needs testing
+				s.waitMs(100);
 				s.refreshCombatants(100);
 				log.info("VolcanicTorches: done with delay");
-
-				tiles = torchFlameCasts.stream().map(tracker -> tracker.getCast().getSource()).collect(Collectors.toList());
+				List <XivCombatant> tiles = getActiveCastRepository()
+						.getAll()
+						.stream()
+						.filter(castTracker -> castTracker.getCast().abilityIdMatches(0x78F8) && castTracker.getResult() == CastResult.IN_PROGRESS)
+						.map(ct -> ct.getCast().getSource())
+						.map(cbt -> getState().getLatestCombatantData(cbt))
+						.toList();
 				log.info("VolcanicTorcher: done finding positions");
 
 				if(tiles.size() != 12 && tiles.size() != 8) {
-					log.error("VolcanicTorches: invalid number of tiles found! Data: {}", torchFlameCasts);
+					log.error("VolcanicTorches: invalid number of tiles found! Data: {}", tiles);
+					return;
 				}
 
 				Set<VolcanicTorchesColumnsAndRow> safe = EnumSet.copyOf(VolcanicTorchesColumnsAndRow.all);
@@ -175,11 +181,11 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 				VolcanicTorchesColumnsAndRow combined = VolcanicTorchesColumnsAndRow.tryCombine(new ArrayList<>(safe));
 
 				Map<String, Object> args = Map.of("safe", combined == null ? safe : combined);
-				s.accept(volcanicTorchesSafe.getModified(torchFlameCasts.get(0).getCast(), args));
+				s.accept(volcanicTorchesSafe.getModified((AbilityCastStart) e1, args));
 			}
 	);
 
-	private enum VolcanicTorchesColumnsAndRow {
+	private enum VolcanicTorchesColumnsAndRow implements HasFriendlyName {
 
 		OUTER_WEST("Outer West"), //x = 85
 		INNER_WEST("Inner West"), //x = 95
@@ -192,7 +198,7 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 		MIDDLE("Middle");
 
 		private final String friendlyName;
-		private String getFriendlyName() {
+		public String getFriendlyName() {
 			return  friendlyName;
 		}
 
@@ -244,7 +250,11 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 						.forEach(badSector -> {
 							log.info("IntoTheShadows: Unsafe direction: {}", badSector);
 							safe.remove(badSector);
+							safe.remove(badSector.plusEighths(1));
+							safe.remove(badSector.plusEighths(-1));
 							safe.remove(badSector.opposite());
+							safe.remove(badSector.opposite().plusEighths(1));
+							safe.remove(badSector.opposite().plusEighths(-1));
 						});
 
 				Map<String, Object> args = Map.of("safe", safe);
