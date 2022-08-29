@@ -56,8 +56,6 @@ public class P6N extends AutoChildEventHandler implements FilteredEventHandler {
 		return state.zoneIs(0x43B);
 	}
 
-	private final RepeatSuppressor buffAppliedSupp = new RepeatSuppressor(Duration.ofSeconds(21)); //longest buff duration is 20s
-
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
 		long id = event.getAbility().getId();
@@ -91,7 +89,7 @@ public class P6N extends AutoChildEventHandler implements FilteredEventHandler {
 		long id = event.getBuff().getId();
 		Duration duration = event.getInitialDuration();
 		ModifiableCallout<HasDuration> call;
-		if (event.getTarget().isThePlayer() && id == 0xCF2 && buffAppliedSupp.check(event)) //CFA bad glossomorph
+		if (event.getTarget().isThePlayer() && id == 0xCF2 && !event.isRefresh()) //CFA bad glossomorph
 			call = glossomorph;
 		else
 			return;
