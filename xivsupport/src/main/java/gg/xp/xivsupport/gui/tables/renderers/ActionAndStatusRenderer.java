@@ -4,10 +4,12 @@ import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivdata.data.URLIcon;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
@@ -65,6 +67,13 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 			XivStatusEffect status = hasStatus.getBuff();
 			// TODO: duration?
 			long stacks = hasStatus.getStacks();
+			String preAppText = "";
+			if (value instanceof BuffApplied ba) {
+				StatusAppliedEffect preAppInfo = ba.getPreAppInfo();
+				if (preAppInfo != null) {
+					preAppText = "\nValues from Pre-App: %s\nRaw: %X %X".formatted(preAppInfo.getPreAppFlagsFormatted(), preAppInfo.getFlags(), preAppInfo.getValue());
+				}
+			}
 			if (stacks > 0) {
 				text = String.format("%s (%s)", status.getName(), stacks);
 			}
@@ -76,7 +85,7 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 				icon = StatusEffectLibrary.iconForId(760, 0);
 			}
 
-			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
+			tooltip = String.format("%s (0x%x, %s)%s", status.getName(), status.getId(), status.getId(), preAppText);
 		}
 		else if (value instanceof NameIdPair pair) {
 			return fallback.getTableCellRendererComponent(table, pair.getName(), isSelected, hasFocus, row, column);
