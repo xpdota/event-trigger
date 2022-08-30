@@ -13,25 +13,30 @@ import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.models.ArenaPos;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
 @CalloutRepo(name = "P6S", duty = KnownDuty.P6S)
-public class P6S extends AutoChildEventHandler /*implements FilteredEventHandler*/ {
-	/*private static final Logger log = LoggerFactory.getLogger(P6S.class);
+public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
+	//	private static final Logger log = LoggerFactory.getLogger(P6S.class);
 	private final ModifiableCallout<AbilityCastStart> aethericPolyominoid = ModifiableCallout.durationBasedCall("Aetheric Polyominoid", "Tiles"); //????+2 tile explosion
-	private final ModifiableCallout<AbilityCastStart> polyominoidSigma = ModifiableCallout.durationBasedCall("Polyominoid Sigma", "Tiles Swapping");
-	private final ModifiableCallout<AbilityCastStart> chorosIxouSides = ModifiableCallout.durationBasedCall("Choros Ixou Sides hit", "Go Front/Back");
-	private final ModifiableCallout<AbilityCastStart> chorosIxouFrontBack = ModifiableCallout.durationBasedCall("Choros Ixou Front Back hit", "Go Sides");
+	private final ModifiableCallout<AbilityCastStart> chelicSynergy = ModifiableCallout.durationBasedCall("Chelic Synergy", "Buster with Bleed"); //????+2 tile explosion
+	private final ModifiableCallout<AbilityCastStart> unholyDarkness = ModifiableCallout.durationBasedCall("Unholy Darkness", "Healer Stacks"); //????+2 tile explosion
+	private final ModifiableCallout<AbilityCastStart> exoCleaver = ModifiableCallout.durationBasedCall("Exocleaver", "Cleaves"); //????+2 tile explosion
+	//	private final ModifiableCallout<AbilityCastStart> polyominoidSigma = ModifiableCallout.durationBasedCall("Polyominoid Sigma", "Tiles Swapping");
+	private final ModifiableCallout<AbilityCastStart> chorosIxouSides = ModifiableCallout.durationBasedCall("Choros Ixou Sides Hit First", "Front/Back then Sides");
+	private final ModifiableCallout<AbilityCastStart> chorosIxouFrontBack = ModifiableCallout.durationBasedCall("Choros Ixou Front Back Hit First", "Sides then Front/Back");
 	private final ModifiableCallout<AbilityCastStart> hemitheosDarkIV = ModifiableCallout.durationBasedCall("Hemitheos's Dark IV", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> pathogenicCells = ModifiableCallout.durationBasedCall("Pathogenic Cells", "Check Number");
+	private final ModifiableCallout<AbilityCastStart> aetherialExchange = ModifiableCallout.durationBasedCall("Aetherial Exchange", "Check Tether");
 	private final ModifiableCallout<AbilityCastStart> synergy = ModifiableCallout.durationBasedCall("Synergy", "Tankbuster"); //????+1 on MT, ????+2 on OT
-	private final ModifiableCallout<AbilityCastStart> stropheIxouCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Clockwise");
-	private final ModifiableCallout<AbilityCastStart> stropheIxouCCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Counterclockwise");
-	private final ModifiableCallout<AbilityCastStart> darkAshes = ModifiableCallout.durationBasedCall("Dark Ashes", "Spread"); //????-1 real boss
+	private final ModifiableCallout<AbilityCastStart> darkAshes = ModifiableCallout.durationBasedCall("Dark Ashes", "Spread"); //????+1 on MT, ????+2 on OT
+	private final ModifiableCallout<AbilityCastStart> darkSphere = ModifiableCallout.durationBasedCall("Dark Sphere", "Spread to Safe Spots"); //????+1 on MT, ????+2 on OT
+//	private final ModifiableCallout<AbilityCastStart> stropheIxouCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Clockwise");
+//	private final ModifiableCallout<AbilityCastStart> stropheIxouCCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Counterclockwise");
+//	private final ModifiableCallout<AbilityCastStart> darkAshes = ModifiableCallout.durationBasedCall("Dark Ashes", "Spread"); //????-1 real boss
 
-	private final ModifiableCallout<HasDuration> glossomorph = ModifiableCallout.durationBasedCall("Glossomorph debuff", "Point Away Soon").autoIcon();
+//	private final ModifiableCallout<HasDuration> glossomorph = ModifiableCallout.durationBasedCall("Glossomorph debuff", "Point Away Soon").autoIcon();
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
@@ -41,11 +46,13 @@ public class P6S extends AutoChildEventHandler /*implements FilteredEventHandler
 	}
 
 	private final XivState state;
+
 	private XivState getState() {
 		return this.state;
 	}
 
 	private final StatusEffectRepository buffs;
+
 	private StatusEffectRepository getBuffs() {
 		return this.buffs;
 	}
@@ -57,42 +64,58 @@ public class P6S extends AutoChildEventHandler /*implements FilteredEventHandler
 
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
-		long id = event.getAbility().getId();
+		int id = (int) event.getAbility().getId();
 		ModifiableCallout<AbilityCastStart> call;
-		if (id == 0x0)
-			call = aethericPolyominoid;
-		else if (id == 0x0)
-			call = polyominoidSigma;
-		else if (id == 0x0)
-			call = chorosIxouSides;
-		else if (id == 0x0)
-			call = chorosIxouFrontBack;
-		else if (id == 0x0)
-			call = hemitheosDarkIV;
-		else if (id == 0x0) //see synergy declaration
-			call = synergy;
-		else if (id == 0x0)
-			call = stropheIxouCCW;
-		else if (id == 0x0)
-			call = stropheIxouCW;
-		else if (id == 0x0 && event.getTarget().isThePlayer())
-			call = darkAshes;
-		else
-			return;
+		// Unknown:
+		/*
+			_rsv_30858 (788A) - chelic synergy (buster)
+			_rsv_30828 (786C) - ?
 
+		*/
+		switch (id) {
+			case 0x7866 -> call = aethericPolyominoid;
+			case 30858 -> call = chelicSynergy;
+			case 0x7891 -> call = unholyDarkness;
+			case 0x7869 -> call = exoCleaver;
+			case 0x7864 -> call = pathogenicCells;
+			case 0x784D -> call = aetherialExchange;
+			case 0x7887 -> call = synergy;
+			case 0x7881 -> call = chorosIxouFrontBack;
+			case 0x7883 -> call = chorosIxouSides;
+			case 0x788D -> call = darkAshes;
+			case 0x788F -> call = darkSphere;
+//		else if (id == 0x0)
+//			call = polyominoidSigma;
+//		else if (id == 0x0)
+//			call = chorosIxouSides;
+//		else if (id == 0x0)
+//			call = chorosIxouFrontBack;
+			case 0x7860 -> call = hemitheosDarkIV;
+//		else if (id == 0x0) //see synergy declaration
+//			call = synergy;
+//		else if (id == 0x0)
+//			call = stropheIxouCCW;
+//		else if (id == 0x0)
+//			call = stropheIxouCW;
+//		else if (id == 0x0 && event.getTarget().isThePlayer())
+//			call = darkAshes;
+			default -> {
+				return;
+			}
+		}
 		context.accept(call.getModified(event));
 	}
 
-	@HandleEvents
-	public void buffApplied(EventContext context, BuffApplied event) {
-		long id = event.getBuff().getId();
-		Duration duration = event.getInitialDuration();
-		ModifiableCallout<HasDuration> call;
-		if (event.getTarget().isThePlayer() && id == 0x0 && !event.isRefresh()) //???+8 bad glossomorph
-			call = glossomorph;
-		else
-			return;
-
-		context.accept(call.getModified(event));
-	}*/
+//	@HandleEvents
+//	public void buffApplied(EventContext context, BuffApplied event) {
+//		long id = event.getBuff().getId();
+//		Duration duration = event.getInitialDuration();
+//		ModifiableCallout<HasDuration> call;
+//		if (event.getTarget().isThePlayer() && id == 0x0 && !event.isRefresh()) //???+8 bad glossomorph
+//			call = glossomorph;
+//		else
+//			return;
+//
+//		context.accept(call.getModified(event));
+//	}
 }

@@ -41,7 +41,7 @@ public class FflogsEventProcessor {
 	private static final Logger log = LoggerFactory.getLogger(FflogsEventProcessor.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 	private final AtomicInteger counter = new AtomicInteger();
-	private final Map<Long, Long> combatantIdToGameId = new HashMap<>();
+	private final Map<Long, Long> fflogsProvidedMapping = new HashMap<>();
 	private final List<XivPlayerCharacter> partyList = new ArrayList<>();
 	private final XivStateImpl state;
 	private final @Nullable FakeFflogsTimeSource fakeTimeSource;
@@ -53,18 +53,19 @@ public class FflogsEventProcessor {
 	}
 
 	// TODO: multiple instances
-	private @Nullable XivCombatant getCombatant(@Nullable Long id) {
+	private @Nullable XivCombatant getCombatant(@Nullable Long id, @Nullable Long instanceId) {
 		if (id == null) {
 			return null;
 		}
 		else if (id == -1) {
 			return XivCombatant.ENVIRONMENT;
 		}
-		Long realId = combatantIdToGameId.get(id);
-		if (realId == null) {
-			return new XivCombatant(id, "Combatant " + id);
+		Long gameId = fflogsProvidedMapping.get(id);
+		// Give unique IDs to each instanceId
+		if (gameId == null) {
+			gameId = 0x4800_0000 + id * 0x100 + (instanceId == null ? 0 : instanceId + 1);
 		}
-		XivCombatant knownCbt = state.getCombatant(realId);
+		XivCombatant knownCbt = state.getCombatant(gameId);
 		if (knownCbt == null) {
 			return new XivCombatant(id, "Combatant " + id);
 		}
@@ -77,8 +78,8 @@ public class FflogsEventProcessor {
 		return (rawCoord) / 100.0;
 	}
 
-	private @Nullable XivCombatant getCombatant(@Nullable Long id, @Nullable Object resourcesRaw) {
-		XivCombatant cbt = getCombatant(id);
+	private @Nullable XivCombatant getCombatant(@Nullable Long id, @Nullable Long instanceId, @Nullable Object resourcesRaw) {
+		XivCombatant cbt = getCombatant(id, instanceId);
 		if (cbt != null && resourcesRaw != null) {
 			RawResources resources = mapper.convertValue(resourcesRaw, RawResources.class);
 			HitPoints hp = new HitPoints(resources.hitPoints, resources.maxHitPoints);
@@ -133,7 +134,7 @@ public class FflogsEventProcessor {
 					if (ownerId == null) {
 						ownerId = 0L;
 					}
-					combatantIdToGameId.put(actor.id(), actor.gameID());
+					fflogsProvidedMapping.put(actor.id(), actor.gameID());
 					// TODO: Job
 					return new RawXivCombatantInfo(id, actor.name(), isPlayer ? convertJob(actor.subType()).getId() : 0, isPlayer ? 1 : 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, "TODO", 0, 0, 0, ownerId);
 				})
@@ -150,8 +151,8 @@ public class FflogsEventProcessor {
 		}
 
 		Object rawType = rawEvent.getField("type");
-		XivCombatant source = getCombatant(rawEvent.sourceID(), rawEvent.getField("sourceResources"));
-		XivCombatant target = getCombatant(rawEvent.targetID(), rawEvent.getField("targetResources"));
+		XivCombatant source = getCombatant(rawEvent.sourceID(), rawEvent.sourceInstance(), rawEvent.getField("sourceResources"));
+		XivCombatant target = getCombatant(rawEvent.targetID(), rawEvent.targetInstance(), rawEvent.getField("targetResources"));
 		if (rawType instanceof String type) {
 			switch (type) {
 				// Leaving possible NPEs in place because those wouldn't make sense anyway
@@ -161,7 +162,7 @@ public class FflogsEventProcessor {
 						List<CombatantsInfoAura> auras = mapper.convertValue(aurasRaw, new TypeReference<>() {
 						});
 						auras.forEach(aura -> {
-							XivCombatant auraSource = getCombatant(aura.source);
+							XivCombatant auraSource = getCombatant(aura.source, null);
 							context.accept(new BuffApplied(convertStatus(aura.ability % 1_000_000), 9999, auraSource, source, aura.stacks));
 						});
 					}
@@ -251,8 +252,8 @@ public class FflogsEventProcessor {
 					context.accept(new BuffRemoved(
 							convertStatus(rawEvent.abilityId()),
 							0,
-							getCombatant(rawEvent.getTypedField("sourceID", Long.class)),
-							getCombatant(rawEvent.getTypedField("targetID", Long.class)),
+							getCombatant(rawEvent.getTypedField("sourceID", Long.class), rawEvent.getTypedField("sourceInstance", Long.class)),
+							getCombatant(rawEvent.getTypedField("targetID", Long.class), rawEvent.getTypedField("targetInstance", Long.class)),
 							0
 					));
 				}

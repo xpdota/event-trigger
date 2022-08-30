@@ -170,7 +170,7 @@ public class MapDataController {
 			live = false;
 		}
 		index = newIndex;
-		log.info("setRelativeIndexAutoLive({}) => {}", delta, newIndex);
+		log.trace("setRelativeIndexAutoLive({}) => {}", delta, newIndex);
 		callback.run();
 	}
 
