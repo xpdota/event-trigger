@@ -10,19 +10,25 @@ import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,22 +45,34 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> venomSquall = ModifiableCallout.durationBasedCall("Venom Squall", "Spread then Bait then Light Parties");
 	private final ModifiableCallout<AbilityCastStart> venomSurge = ModifiableCallout.durationBasedCall("Venom Surge", "Light Parties then Bait then Spread");
 	private final ModifiableCallout<AbilityCastStart> doubleRush = ModifiableCallout.durationBasedCall("Double Rush", "Knockback");
-	private final ModifiableCallout<AbilityCastStart> venomousMass = ModifiableCallout.durationBasedCall("Venemous Mass", "Tankbuster on {event.target}");
+	private final ModifiableCallout<AbilityCastStart> venomousMass = ModifiableCallout.durationBasedCall("Venomous Mass", "Tankbuster with Bleed");
 	private final ModifiableCallout<AbilityCastStart> clawToTail = ModifiableCallout.durationBasedCall("Claw to Tail", "Go Back then Front");
 	private final ModifiableCallout<AbilityCastStart> tailToClaw = ModifiableCallout.durationBasedCall("Tail to Claw", "Go Front then Back");
 	private final ModifiableCallout<AbilityCastStart> ragingClaw = ModifiableCallout.durationBasedCall("Raging Claw", "Go Behind");
 
 	private final ModifiableCallout<AbilityCastStart> firstRubyGlowSafe = ModifiableCallout.durationBasedCall("First Ruby Ray Safe", "{safe}");
 
-	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
+	private final ModifiableCallout<AbilityCastStart> topazCluster = new ModifiableCallout<>("Topaz Cluster Initial", "{safe} safe", 20_000);
+//	private final ModifiableCallout<AbilityCastStart> topazClusterFollowup = new ModifiableCallout<>("Topaz Cluster Initial", "{safe} safe", 5_000);
+	// TODO: not sure what duration to use for these, might need some fakery
+//	private final ModifiableCallout<AbilityCastStart> topazClusterFollowup = ModifiableCallout.durationBasedCall("Topaz Cluster Followup", "{safe}");
 
-	public P5S(XivState state) {
+	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
+	private final ArenaPos tightArenaPos = new ArenaPos(100, 100, 0.1, 0.1);
+
+	public P5S(XivState state, ActiveCastRepository acr) {
 		this.state = state;
+
+		this.acr = acr;
 	}
 
 	private final XivState state;
 	private XivState getState() {
 		return this.state;
+	}
+	private final ActiveCastRepository acr;
+	public ActiveCastRepository getAcr() {
+		return acr;
 	}
 
 	@Override
@@ -153,4 +171,51 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	);
 
 	//TODO:third ruby glow 1 2 3 4 safe spots (crystals spawn 2 2 3 3)
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> topazClusterSq = new SequentialTrigger<>(40_000, BaseEvent.class,
+			e1 -> e1 instanceof AbilityCastStart acs && acs.abilityIdMatches(0x7702),
+			(e1, s) -> {
+				// 10 crystals spawn
+				// 7703 is the shortest (3.7s)
+				// 7704 is 6.2s
+				// 7705 is 8.7s
+				// 7706 is 11.2s
+				// Can use either ID or duration to differentiate
+				log.info("Topaz Cluster: Start");
+				s.waitMs(200);
+				s.refreshCombatants(200);
+				log.info("Topaz Cluster: Done Waiting");
+				Map<Integer, List<ArenaSector>> unsafeSpots = new HashMap<>();
+				Map<Integer, AbilityCastStart> sampleCasts = new HashMap<>();
+				getAcr().getAll().stream().filter(ct -> ct.getCast().abilityIdMatches(0x7703, 0x7704, 0x7705, 0x7706))
+						.forEach(ct -> {
+							AbilityCastStart cast = ct.getCast();
+							int index = (int) (cast.getAbility().getId() - 0x7703);
+							unsafeSpots.computeIfAbsent(index, unused -> new ArrayList<>())
+									.add(tightArenaPos.forCombatant(getState().getLatestCombatantData(cast.getSource())));
+							sampleCasts.putIfAbsent(index, cast);
+						});
+				log.info("Topaz Cluster Unsafe: {} --- {} --- {} --- {}", unsafeSpots.get(0), unsafeSpots.get(1), unsafeSpots.get(2), unsafeSpots.get(3));
+				List<List<ArenaSector>> safeSpots = new ArrayList<>(4);
+				for (int i = 0; i < 4; i++) {
+					List<ArenaSector> unsafe = unsafeSpots.get(i);
+					List<ArenaSector> safe = new ArrayList<>(ArenaSector.quadrants);
+					safe.removeAll(unsafe);
+					safeSpots.add(safe);
+					if (safe.size() < 1 || safe.size() > 2) {
+						log.error("Topaz cluster error! i={}, unsafe={}, safe={}", i, unsafe, safe);
+						return;
+					}
+				}
+				log.info("Topaz Cluster Safe: {} --- {} --- {} --- {}", safeSpots.get(0), safeSpots.get(1), safeSpots.get(2), safeSpots.get(3));
+				s.updateCall(topazCluster.getModified(sampleCasts.get(0), Map.of("safe", safeSpots.get(0))));
+				for (int i = 1; i < 4; i++) {
+					// Wait for the current mechanic to actually snapshot before telling player to move
+					XivCombatant source = sampleCasts.get(i - 1).getSource();
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.getSource().equals(source) && aue.abilityIdMatches(0x79FFL));
+					s.updateCall(topazCluster.getModified(sampleCasts.get(i), Map.of("safe", safeSpots.get(i))));
+				}
+
+			});
 }
