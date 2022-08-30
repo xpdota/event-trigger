@@ -106,14 +106,12 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				List<AbilityCastStart> cthonicCasts = new ArrayList<>(s.waitEvents(1, AbilityCastStart.class, event -> event.abilityIdMatches(0x78F5, 0x794D, 0x78F6)));
 				cthonicCasts.add((AbilityCastStart) e1);
-				List<XivCombatant> suneaters = new ArrayList<>();
+				List<XivCombatant> suneaters;
 				log.info("CthonicVent: Got suneater casts");
 				s.waitMs(100);
 				s.refreshCombatants(100);
 				log.info("CthonicVent: done with delay");
-				for(AbilityCastStart acs : cthonicCasts) {
-					suneaters.add(this.getState().getLatestCombatantData(acs.getSource()));
-				}
+				suneaters = cthonicCasts.stream().map(acs -> this.getState().getLatestCombatantData(acs.getSource())).collect(Collectors.toList());
 				log.info("CthonicVent: done finding positions, finding safe spots");
 
 				if(suneaters.size() != 2) {
@@ -195,7 +193,8 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 		INNER_NORTH("Inner North"), //y = 95
 		OUTER_SOUTH("Outer South"), //y = 115
 		INNER_SOUTH("Inner South"), //y = 105
-		MIDDLE("Middle");
+		HORIZONTAL_MIDDLE("Horizontal Middle"),
+		VERTICAL_MIDDLE("Vertical Middle");
 
 		private final String friendlyName;
 		public String getFriendlyName() {
@@ -218,8 +217,8 @@ public class P8N extends AutoChildEventHandler implements FilteredEventHandler {
 			VolcanicTorchesColumnsAndRow first = columnsAndRows.get(0);
 			VolcanicTorchesColumnsAndRow second = columnsAndRows.get(1);
 			return switch (first) {
-				case INNER_WEST -> second == INNER_EAST ? MIDDLE : null;
-				case INNER_NORTH -> second == INNER_SOUTH ? MIDDLE : null;
+				case INNER_WEST -> second == INNER_EAST ? VERTICAL_MIDDLE : null;
+				case INNER_NORTH -> second == INNER_SOUTH ? HORIZONTAL_MIDDLE : null;
 				default -> null;
 			};
 		}
