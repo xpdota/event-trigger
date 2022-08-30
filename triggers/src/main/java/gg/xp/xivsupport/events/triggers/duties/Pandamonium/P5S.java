@@ -121,7 +121,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 
 				s.waitMs(100);
 				s.refreshCombatants(100);
-				List<XivCombatant> topazCrystals = crystalSummons.stream().map(acs -> this.getState().getLatestCombatantData(acs.getSource())).collect(Collectors.toList());
+				List<XivCombatant> topazCrystals = crystalSummons.stream().map(acs -> this.getState().getLatestCombatantData(acs.getSource())).toList();
 
 				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.quadrants);
 				for (XivCombatant c : topazCrystals) {
@@ -142,6 +142,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 							safe.remove(ArenaSector.SOUTHEAST);
 						} else {
 							log.error("FirstRubyRay: ERROR REMOVING UNSAFE SPOTS x: {} y: {}", realX, realY);
+							return;
 						}
 					}
 				}
