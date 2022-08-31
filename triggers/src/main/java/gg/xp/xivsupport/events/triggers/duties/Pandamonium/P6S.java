@@ -84,7 +84,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return state.zoneIs(0x43C);
+		return state.dutyIs(KnownDuty.P6S);
 	}
 
 	@HandleEvents

@@ -52,7 +52,7 @@ public class P6N extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return state.zoneIs(0x43B);
+		return state.dutyIs(KnownDuty.P6N);
 	}
 
 	@HandleEvents

@@ -9,6 +9,8 @@ import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
+import gg.xp.xivsupport.callouts.conversions.DutySpecificArenaSectorConverter;
+import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
@@ -33,12 +35,14 @@ public class DutiesTab implements PluginTab {
 	private final PicoContainer container;
 	private final SoundFilesManager soundMgr;
 	private final EventMaster master;
+	private final GlobalArenaSectorConverter asc;
 
-	public DutiesTab(ModifiedCalloutRepository backend, PicoContainer container, SoundFilesManager soundMgr, EventMaster master) {
+	public DutiesTab(ModifiedCalloutRepository backend, PicoContainer container, SoundFilesManager soundMgr, EventMaster master, GlobalArenaSectorConverter asc) {
 		this.backend = backend;
 		this.container = container;
 		this.soundMgr = soundMgr;
 		this.master = master;
+		this.asc = asc;
 	}
 
 	@Override
@@ -74,6 +78,25 @@ public class DutiesTab implements PluginTab {
 					.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty, DutyTabContents::new);
 			tabContents.calls.add(group);
+			DutySpecificArenaSectorConverter dsc = asc.getDutySpecificConverter(duty);
+			if (dsc != null) {
+				tabContents.extraTabs.add(new DutyPluginTab() {
+					@Override
+					public String getTabName() {
+						return "Arena Positions";
+					}
+
+					@Override
+					public Component getTabContents() {
+						return new ArenaSectorConverterGui(dsc);
+					}
+
+					@Override
+					public KnownDuty getDuty() {
+						return duty;
+					}
+				});
+			}
 		});
 
 		container.getComponents(DutyPluginTab.class).forEach(tab -> {

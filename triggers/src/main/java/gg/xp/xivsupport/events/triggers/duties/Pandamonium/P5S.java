@@ -81,7 +81,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return state.zoneIs(0x43A);
+		return state.dutyIs(KnownDuty.P5S);
 	}
 
 	private final RepeatSuppressor tailClawRepeat = new RepeatSuppressor(Duration.ofMillis(11_000));

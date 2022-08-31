@@ -12,33 +12,46 @@ import java.util.List;
 public enum ArenaSector implements HasFriendlyName {
 
 
-	NORTH("North"),
-	NORTHEAST("Northeast"),
-	EAST("East"),
-	SOUTHEAST("Southeast"),
-	SOUTH("South"),
-	SOUTHWEST("Southwest"),
-	WEST("West"),
-	NORTHWEST("Northwest"),
+	NORTH("North", "N"),
+	NORTHEAST("Northeast", "NE"),
+	EAST("East", "E"),
+	SOUTHEAST("Southeast", "SE"),
+	SOUTH("South", "S"),
+	SOUTHWEST("Southwest", "SW"),
+	WEST("West", "W"),
+	NORTHWEST("Northwest", "NW"),
 	/**
 	 * Represents the center of the arena rather than a direction.
 	 */
-	CENTER("Center"),
+	CENTER("Center", "Mid"),
 	/**
 	 * Represents an unknown sector.
 	 */
-	UNKNOWN("?");
+	UNKNOWN("?", "?");
 
 	private static final Logger log = LoggerFactory.getLogger(ArenaSector.class);
 
 	private final String friendlyName;
+	private final String abbreviation;
 
-	ArenaSector(String friendlyName) {
+	ArenaSector(String friendlyName, String abbreviation) {
 		this.friendlyName = friendlyName;
+		this.abbreviation = abbreviation;
 	}
 
+	/**
+	 * @return The full name for this sector, e.g. "Northwest" or "East"
+	 */
+	@Override
 	public String getFriendlyName() {
 		return friendlyName;
+	}
+
+	/**
+	 * @return The abbreviation for this sector, e.g. "NW" or "E"
+	 */
+	public String getAbbreviation() {
+		return abbreviation;
 	}
 
 	/**
@@ -201,4 +214,5 @@ public enum ArenaSector implements HasFriendlyName {
 		int ordinal = ordinal();
 		return ordinal <= 7 && ordinal % 2 == 1;
 	}
+
 }
