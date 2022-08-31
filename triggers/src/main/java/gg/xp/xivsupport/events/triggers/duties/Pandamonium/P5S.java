@@ -14,16 +14,13 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
-import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
-import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -32,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @CalloutRepo(name = "P5S", duty = KnownDuty.P5S)
 public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -42,13 +38,15 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> rubyGlow = ModifiableCallout.durationBasedCall("Ruby Glow", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> sonicHowl = ModifiableCallout.durationBasedCall("Sonic Howl", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> toxicCrunch = ModifiableCallout.durationBasedCall("Toxic Crunch", "Tankbuster on MT");
+	// TODO: for these two, make a sequential that calls out mechs as they happen
 	private final ModifiableCallout<AbilityCastStart> venomSquall = ModifiableCallout.durationBasedCall("Venom Squall", "Spread then Bait then Light Parties");
 	private final ModifiableCallout<AbilityCastStart> venomSurge = ModifiableCallout.durationBasedCall("Venom Surge", "Light Parties then Bait then Spread");
 	private final ModifiableCallout<AbilityCastStart> doubleRush = ModifiableCallout.durationBasedCall("Double Rush", "Knockback");
 	private final ModifiableCallout<AbilityCastStart> venomousMass = ModifiableCallout.durationBasedCall("Venomous Mass", "Tankbuster with Bleed");
 	private final ModifiableCallout<AbilityCastStart> clawToTail = ModifiableCallout.durationBasedCall("Claw to Tail", "Go Back then Front");
 	private final ModifiableCallout<AbilityCastStart> tailToClaw = ModifiableCallout.durationBasedCall("Tail to Claw", "Go Front then Back");
-	private final ModifiableCallout<AbilityCastStart> ragingClaw = ModifiableCallout.durationBasedCall("Raging Claw", "Go Behind");
+	// Can be deleted? Seems redundant with claw/tail calls
+//	private final ModifiableCallout<AbilityCastStart> ragingClaw = ModifiableCallout.durationBasedCall("Raging Claw", "Go Behind");
 
 	private final ModifiableCallout<AbilityCastStart> firstRubyGlowSafe = ModifiableCallout.durationBasedCall("First Ruby Ray Safe", "{safe}");
 
@@ -67,10 +65,13 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	}
 
 	private final XivState state;
+
 	private XivState getState() {
 		return this.state;
 	}
+
 	private final ActiveCastRepository acr;
+
 	public ActiveCastRepository getAcr() {
 		return acr;
 	}
@@ -90,28 +91,28 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 			call = searingRay;
 		else if (id == 0x7657)
 			call = searingRayReflected;
-		else if(id == 0x76F3) {
+		else if (id == 0x76F3) {
 			call = rubyGlow;
 			rubyGlows++;
 		}
-		else if(id == 0x7720)
+		else if (id == 0x7720)
 			call = sonicHowl;
-		else if(id == 0x784A) //has no target TODO: Find who has agro and call (auto attack hack)
+		else if (id == 0x784A) //has no target TODO: Find who has agro and call (auto attack hack)
 			call = toxicCrunch;
-		else if(id == 0x7716)
+		else if (id == 0x7716)
 			call = venomSquall;
-		else if(id == 0x771D)
+		else if (id == 0x771D)
 			call = venomousMass;
-		else if(id == 0x771B)
+		else if (id == 0x771B)
 			call = doubleRush;
-		else if(id == 0x7717)
+		else if (id == 0x7717)
 			call = venomSurge;
-		else if(id == 0x770E)
+		else if (id == 0x770E)
 			call = clawToTail;
-		else if(id == 0x7712)
+		else if (id == 0x7712)
 			call = tailToClaw;
-		else if(id == 0x770F) //TODO: fix calling when boss casts 770E or 7712
-			call = ragingClaw;
+//		else if (id == 0x770F) //TODO: fix calling when boss casts 770E or 7712
+//			call = ragingClaw;
 		else
 			return;
 		context.accept(call.getModified(event));
@@ -129,6 +130,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	}
 
 	private int rubyGlows = 0;
+
 	@HandleEvents
 	public void resetAll(EventContext context, DutyCommenceEvent event) {
 		rubyGlows = 0;
@@ -159,22 +161,26 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 
 				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.quadrants);
 				for (XivCombatant c : topazCrystals) {
-					int approxX = (int)Math.round(c.getPos().x());
-					int approxY = (int)Math.round(c.getPos().y());
+					int approxX = (int) Math.round(c.getPos().x());
+					int approxY = (int) Math.round(c.getPos().y());
 					double realX = c.getPos().x();
 					double realY = c.getPos().y();
-					if((approxX == 111 || approxX == 89) && (approxY == 111 || approxY == 89)) { //bad corner toxic crystal
+					if ((approxX == 111 || approxX == 89) && (approxY == 111 || approxY == 89)) { //bad corner toxic crystal
 						safe.remove(arenaPos.forCombatant(c));
-					} else if(approxX != 104 && approxX != 96 && approxY != 104 && approxY != 96) { //not safe toxic crystal
-						if(realX < 100 && realY < 100) { //nw
+					} else if (approxX != 104 && approxX != 96 && approxY != 104 && approxY != 96) { //not safe toxic crystal
+						if (realX < 100 && realY < 100) { //nw
 							safe.remove(ArenaSector.NORTHWEST);
-						} else if(realX > 100 && realY < 100) { //ne
+						}
+						else if (realX > 100 && realY < 100) { //ne
 							safe.remove(ArenaSector.NORTHEAST);
-						} else if(realX < 100 && realY > 100) { //sw
+						}
+						else if (realX < 100 && realY > 100) { //sw
 							safe.remove(ArenaSector.SOUTHWEST);
-						} else if(realX > 100 && realY > 100) { //se
+						}
+						else if (realX > 100 && realY > 100) { //se
 							safe.remove(ArenaSector.SOUTHEAST);
-						} else {
+						}
+						else {
 							log.error("FirstRubyRay: ERROR REMOVING UNSAFE SPOTS x: {} y: {}", realX, realY);
 							return;
 						}
