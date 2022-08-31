@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.state;
 import gg.xp.reevent.context.SubState;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivdata.data.XivMap;
+import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
@@ -29,6 +30,11 @@ public interface XivState extends SubState {
 	List<XivPlayerCharacter> getPartyList();
 
 	boolean zoneIs(long zoneId);
+
+	default boolean dutyIs(Duty duty) {
+		Long expected = duty.getZoneId();
+		return expected != null && zoneIs(expected);
+	}
 
 	void removeSpecificCombatant(long idToRemove);
 

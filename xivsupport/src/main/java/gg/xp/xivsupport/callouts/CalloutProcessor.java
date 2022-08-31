@@ -3,10 +3,12 @@ package gg.xp.xivsupport.callouts;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
 import gg.xp.xivsupport.callouts.conversions.PlayerNameConversion;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
+import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -44,11 +46,14 @@ public class CalloutProcessor {
 
 	private final BooleanSetting replaceYou;
 	private final EnumSetting<PlayerNameConversion> pcNameStyle;
+	private final GlobalArenaSectorConverter asc;
 
-	public CalloutProcessor(GroovyManager groovyMgr, PersistenceProvider pers) {
+	// TODO: make interface/autoscan for all the converters
+	public CalloutProcessor(GroovyManager groovyMgr, PersistenceProvider pers, GlobalArenaSectorConverter asc) {
 		this.groovyMgr = groovyMgr;
 		this.replaceYou = new BooleanSetting(pers, "callout-processor.replace-you", true);
 		this.pcNameStyle = new EnumSetting<>(pers, "callout-processor.pc-style", PlayerNameConversion.class, PlayerNameConversion.FULL_NAME);
+		this.asc = asc;
 	}
 
 	@HandleEvents
@@ -181,6 +186,9 @@ public class CalloutProcessor {
 			else {
 				return singleReplacement(realValue);
 			}
+		}
+		else if (rawValue instanceof ArenaSector as) {
+			return asc.convert(as);
 		}
 		else if (rawValue instanceof HasFriendlyName hfn) {
 			return hfn.getFriendlyName();

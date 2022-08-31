@@ -104,7 +104,7 @@ public class P4S implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return context.getStateInfo().get(XivState.class).zoneIs(0x3F1);
+		return state.zoneIs(0x3F1);
 	}
 
 	@HandleEvents

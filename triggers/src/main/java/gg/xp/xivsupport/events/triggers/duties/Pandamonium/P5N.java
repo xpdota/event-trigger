@@ -38,7 +38,7 @@ public class P5N extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return state.zoneIs(0x439);
+		return state.dutyIs(KnownDuty.P5N);
 	}
 
 	@HandleEvents

@@ -4,12 +4,14 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.callouts.CalloutProcessor;
-import gg.xp.xivsupport.callouts.gui.CalloutsConfigTab;
+import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
+import gg.xp.xivsupport.callouts.conversions.DefaultArenaSectorConversion;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RefreshingHpBar;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -17,12 +19,16 @@ import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
 import gg.xp.xivsupport.persistence.gui.FontSettingGui;
+import gg.xp.xivsupport.persistence.gui.StringSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @ScanMe
 public class CalloutStyleConfigGui implements PluginTab {
@@ -30,11 +36,13 @@ public class CalloutStyleConfigGui implements PluginTab {
 	private final FlyingTextOverlay overlay;
 	private final CalloutProcessor calloutProcessor;
 	private final EventMaster master;
+	private final GlobalArenaSectorConverter asc;
 
-	public CalloutStyleConfigGui(FlyingTextOverlay overlay, CalloutProcessor calloutProcessor, EventMaster master) {
+	public CalloutStyleConfigGui(FlyingTextOverlay overlay, CalloutProcessor calloutProcessor, EventMaster master, GlobalArenaSectorConverter asc) {
 		this.overlay = overlay;
 		this.calloutProcessor = calloutProcessor;
 		this.master = master;
+		this.asc = asc;
 	}
 
 
@@ -106,7 +114,26 @@ public class CalloutStyleConfigGui implements PluginTab {
 			JCheckBox replaceYou = new BooleanSettingGui(calloutProcessor.getReplaceYou(), "Replace your own name with 'YOU'").getComponent();
 			Component playerNameStylePanel = new EnumSettingGui<>(calloutProcessor.getPcNameStyle(), "Player Name Style", () -> true).getComponent();
 			GuiUtil.simpleTopDownLayout(panel, 400, replaceYou, playerNameStylePanel);
-			tpane.add("Name Conversions", panel);
+			tpane.add("Player Names", panel);
+		}
+		{
+			JPanel panel = new TitleBorderFullsizePanel("Arena Sector Conversions");
+			List<Component> components = new ArrayList<>();
+			EnumSetting<DefaultArenaSectorConversion> mainSetting = asc.getMainSetting();
+			mainSetting.addListener(panel::repaint);
+			components.add(new EnumSettingGui<>(mainSetting, "Default Style", () -> true).getComponent());
+
+			components.add(new JLabel("Custom Values (select 'Custom' in the box above):"));
+			for (var entry : asc.getPerSectorSettings().entrySet()) {
+				ArenaSector sector = entry.getKey();
+				components.add(
+						new StringSettingGui(entry.getValue(),
+								sector == ArenaSector.UNKNOWN ? "Unknown/Error" : sector.getFriendlyName(),
+								() -> mainSetting.get() == DefaultArenaSectorConversion.CUSTOM).getComponent());
+			}
+
+			GuiUtil.simpleTopDownLayout(panel, 400, components.toArray(Component[]::new));
+			tpane.add("Arena Directions", panel);
 		}
 		return tpane;
 	}

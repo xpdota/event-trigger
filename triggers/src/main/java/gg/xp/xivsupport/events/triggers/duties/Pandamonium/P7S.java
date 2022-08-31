@@ -46,7 +46,7 @@ public class P7S extends AutoChildEventHandler /*implements FilteredEventHandler
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return state.zoneIs(0x43E);
+		return state.dutyIs(KnownDuty.P7S);
 	}
 
 	private final RepeatSuppressor manyActorsSupp = new RepeatSuppressor(Duration.ofMillis(100));

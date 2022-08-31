@@ -46,7 +46,7 @@ public class P7N extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return state.zoneIs(0x43D);
+		return state.dutyIs(KnownDuty.P7N);
 	}
 
 	private final RepeatSuppressor manyActorsSupp = new RepeatSuppressor(Duration.ofMillis(100));
