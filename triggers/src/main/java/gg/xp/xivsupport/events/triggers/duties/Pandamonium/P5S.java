@@ -50,7 +50,10 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> firstRubyGlowSafe = ModifiableCallout.durationBasedCall("First Ruby Ray Safe", "{safe}");
 
-	private final ModifiableCallout<AbilityCastStart> topazCluster = new ModifiableCallout<>("Topaz Cluster Initial", "{safe} safe", 20_000);
+	private final ModifiableCallout<AbilityCastStart> topazCluster = new ModifiableCallout<>("Topaz Cluster Initial", "{allSafeSpots}", 20_000);
+	private final ModifiableCallout<AbilityCastStart> topazClusterAfter = new ModifiableCallout<>("Topaz Cluster Followup", "{nextSafeSpot}", "{remainingSafeSpots}");
+//	private final ModifiableCallout<AbilityCastStart> topazCluster = new ModifiableCallout<>("Topaz Cluster Initial", "{safe} then {next}", 20_000);
+//	private final ModifiableCallout<AbilityCastStart> topazClusterLast = new ModifiableCallout<>("Topaz Cluster Initial", "{safe}", 20_000);
 //	private final ModifiableCallout<AbilityCastStart> topazClusterFollowup = new ModifiableCallout<>("Topaz Cluster Initial", "{safe} safe", 5_000);
 	// TODO: not sure what duration to use for these, might need some fakery
 //	private final ModifiableCallout<AbilityCastStart> topazClusterFollowup = ModifiableCallout.durationBasedCall("Topaz Cluster Followup", "{safe}");
@@ -111,22 +114,11 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 			call = clawToTail;
 		else if (id == 0x7712)
 			call = tailToClaw;
-//		else if (id == 0x770F) //TODO: fix calling when boss casts 770E or 7712
+//		else if(id == 0x770F) //TODO: fix calling when boss casts 770E or 7712
 //			call = ragingClaw;
 		else
 			return;
 		context.accept(call.getModified(event));
-	}
-
-	private XivCombatant hasAgro = null;
-	@HandleEvents
-	public void abilityUsed(EventContext context, AbilityUsedEvent event) {
-		long id = event.getAbility().getId();
-		ModifiableCallout<AbilityUsedEvent> call;
-		if (id == 0x7A0E)
-			hasAgro = event.getTarget();
-		else
-			return;
 	}
 
 	private int rubyGlows = 0;
@@ -139,18 +131,13 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> firstRubyGlow = new SequentialTrigger<>( //76fe CRYSTAL SUMMON, 76FD topaz boss cast
 			20_000,
-			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x76FD, 0x76FE),
+			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x76FD),
 			(e1, s) -> {
-				if (rubyGlows != 1) {
-					//log.error("FirstRubyRay: It's not the first ruby ray!");
+				if (rubyGlows != 1)
 					return;
-				}
-				List<AbilityCastStart> crystalSummons = new ArrayList<>(s.waitEvents(4, AbilityCastStart.class, event -> event.abilityIdMatches(0x76FE, 0x76FD)));
-				crystalSummons.add((AbilityCastStart) e1);
-				AbilityCastStart rubyGlowCast = crystalSummons.stream().filter(acs -> acs.getAbility().getId() == 0x76FD).findFirst().orElseThrow(() -> new RuntimeException("FirstRubyRay: Couldn't find the original cast!"));
-				crystalSummons.remove(rubyGlowCast);
+				List<AbilityCastStart> crystalSummons = new ArrayList<>(s.waitEvents(4, AbilityCastStart.class, event -> event.abilityIdMatches(0x76FE)));
 
-				if(crystalSummons.size() != 4) {
+				if (crystalSummons.size() != 4) {
 					log.error("FirstRubyRay: Invalid number of Crystal Summons found! Data: {}", crystalSummons);
 					return;
 				}
@@ -167,7 +154,8 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 					double realY = c.getPos().y();
 					if ((approxX == 111 || approxX == 89) && (approxY == 111 || approxY == 89)) { //bad corner toxic crystal
 						safe.remove(arenaPos.forCombatant(c));
-					} else if (approxX != 104 && approxX != 96 && approxY != 104 && approxY != 96) { //not safe toxic crystal
+					}
+					else if (approxX != 104 && approxX != 96 && approxY != 104 && approxY != 96) { //not safe toxic crystal
 						if (realX < 100 && realY < 100) { //nw
 							safe.remove(ArenaSector.NORTHWEST);
 						}
@@ -230,14 +218,16 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 						return;
 					}
 				}
+				// TODO: this is a mess. Just pick one safe spot from the first two sets, probably based on final wd
 				log.info("Topaz Cluster Safe: {} --- {} --- {} --- {}", safeSpots.get(0), safeSpots.get(1), safeSpots.get(2), safeSpots.get(3));
-				s.updateCall(topazCluster.getModified(sampleCasts.get(0), Map.of("safe", safeSpots.get(0))));
+				List<ArenaSector> singleSafeSpots = safeSpots.stream().map(l -> l.get(0)).toList();
+				s.updateCall(topazCluster.getModified(sampleCasts.get(0), Map.of("allSafeSpots", singleSafeSpots, "nextSafeSpot", singleSafeSpots.get(0))));
+
 				for (int i = 1; i < 4; i++) {
 					// Wait for the current mechanic to actually snapshot before telling player to move
 					XivCombatant source = sampleCasts.get(i - 1).getSource();
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.getSource().equals(source) && aue.abilityIdMatches(0x79FFL));
-					s.updateCall(topazCluster.getModified(sampleCasts.get(i), Map.of("safe", safeSpots.get(i))));
+					s.updateCall(topazClusterAfter.getModified(sampleCasts.get(0), Map.of("remainingSafeSpots", singleSafeSpots.subList(i, 4), "nextSafeSpot", singleSafeSpots.get(i))));
 				}
-
 			});
 }
