@@ -38,6 +38,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> rubyGlow = ModifiableCallout.durationBasedCall("Ruby Glow", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> sonicHowl = ModifiableCallout.durationBasedCall("Sonic Howl", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> toxicCrunch = ModifiableCallout.durationBasedCall("Toxic Crunch", "Tankbuster on MT");
+	// TODO: for these two, make a sequential that calls out mechs as they happen
 	private final ModifiableCallout<AbilityCastStart> venomSquall = ModifiableCallout.durationBasedCall("Venom Squall", "Spread then Bait then Light Parties");
 	private final ModifiableCallout<AbilityCastStart> venomSurge = ModifiableCallout.durationBasedCall("Venom Surge", "Light Parties then Bait then Spread");
 	private final ModifiableCallout<AbilityCastStart> doubleRush = ModifiableCallout.durationBasedCall("Double Rush", "Knockback");
