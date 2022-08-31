@@ -117,6 +117,17 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 		context.accept(call.getModified(event));
 	}
 
+	private XivCombatant hasAgro = null;
+	@HandleEvents
+	public void abilityUsed(EventContext context, AbilityUsedEvent event) {
+		long id = event.getAbility().getId();
+		ModifiableCallout<AbilityUsedEvent> call;
+		if (id == 0x7A0E)
+			hasAgro = event.getTarget();
+		else
+			return;
+	}
+
 	private int rubyGlows = 0;
 	@HandleEvents
 	public void resetAll(EventContext context, DutyCommenceEvent event) {
@@ -126,11 +137,16 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> firstRubyGlow = new SequentialTrigger<>( //76fe CRYSTAL SUMMON, 76FD topaz boss cast
 			20_000,
-			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x76FD),
+			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x76FD, 0x76FE),
 			(e1, s) -> {
-				if (rubyGlows != 1)
+				if (rubyGlows != 1) {
+					//log.error("FirstRubyRay: It's not the first ruby ray!");
 					return;
-				List<AbilityCastStart> crystalSummons = new ArrayList<>(s.waitEvents(4, AbilityCastStart.class, event -> event.abilityIdMatches(0x76FE)));
+				}
+				List<AbilityCastStart> crystalSummons = new ArrayList<>(s.waitEvents(4, AbilityCastStart.class, event -> event.abilityIdMatches(0x76FE, 0x76FD)));
+				crystalSummons.add((AbilityCastStart) e1);
+				AbilityCastStart rubyGlowCast = crystalSummons.stream().filter(acs -> acs.getAbility().getId() == 0x76FD).findFirst().orElseThrow(() -> new RuntimeException("FirstRubyRay: Couldn't find the original cast!"));
+				crystalSummons.remove(rubyGlowCast);
 
 				if(crystalSummons.size() != 4) {
 					log.error("FirstRubyRay: Invalid number of Crystal Summons found! Data: {}", crystalSummons);
