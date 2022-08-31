@@ -44,6 +44,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> venomousMass = ModifiableCallout.durationBasedCall("Venomous Mass", "Tankbuster with Bleed");
 	private final ModifiableCallout<AbilityCastStart> clawToTail = ModifiableCallout.durationBasedCall("Claw to Tail", "Go Back then Front");
 	private final ModifiableCallout<AbilityCastStart> tailToClaw = ModifiableCallout.durationBasedCall("Tail to Claw", "Go Front then Back");
+	// Can be deleted? Seems redundant with claw/tail calls
 //	private final ModifiableCallout<AbilityCastStart> ragingClaw = ModifiableCallout.durationBasedCall("Raging Claw", "Go Behind");
 
 	private final ModifiableCallout<AbilityCastStart> firstRubyGlowSafe = ModifiableCallout.durationBasedCall("First Ruby Ray Safe", "{safe}");
