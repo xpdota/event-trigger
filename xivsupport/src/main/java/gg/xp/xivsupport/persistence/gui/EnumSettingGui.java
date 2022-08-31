@@ -26,10 +26,10 @@ public class EnumSettingGui<X extends Enum<X>> {
 			}
 		};
 		comboBox.setRenderer(new FriendlyNameListCellRenderer());
+		comboBox.setSelectedItem(setting.get());
 		comboBox.addItemListener(event -> {
 			setting.set((X) event.getItem());
 		});
-		comboBox.setSelectedItem(setting.get());
 		comboBox.setComponentPopupMenu(ResetMenuOption.resetOnlyMenu(setting, this::reset));
 		this.label = new JLabel(label);
 		this.label.setLabelFor(comboBox);

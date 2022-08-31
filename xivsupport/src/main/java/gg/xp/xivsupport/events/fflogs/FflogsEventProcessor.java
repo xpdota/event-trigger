@@ -18,6 +18,7 @@ import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -84,7 +85,9 @@ public class FflogsEventProcessor {
 			RawResources resources = mapper.convertValue(resourcesRaw, RawResources.class);
 			HitPoints hp = new HitPoints(resources.hitPoints, resources.maxHitPoints);
 			Position pos = new Position(convertCoordinate(resources.x), convertCoordinate(resources.y), resources.z, resources.facing / 1000.0 * Math.PI);
+			state.provideCombatantShieldPct(cbt, resources.absorb);
 			state.provideCombatantHP(cbt, hp);
+			state.provideCombatantMP(cbt, new ManaPoints(resources.mp, resources.maxMP));
 			state.provideCombatantPos(cbt, pos);
 		}
 		return cbt;
@@ -99,7 +102,8 @@ public class FflogsEventProcessor {
 			long x,
 			long y,
 			long z,
-			long facing
+			long facing,
+			long absorb
 	) {
 	}
 
