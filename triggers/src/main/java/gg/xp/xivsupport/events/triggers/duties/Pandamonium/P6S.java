@@ -10,15 +10,19 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
+import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.models.ArenaPos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
 @CalloutRepo(name = "P6S", duty = KnownDuty.P6S)
 public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
-	//	private static final Logger log = LoggerFactory.getLogger(P6S.class);
+	private static final Logger log = LoggerFactory.getLogger(P6S.class);
 	private final ModifiableCallout<AbilityCastStart> aethericPolyominoid = ModifiableCallout.durationBasedCall("Aetheric Polyominoid", "Tiles"); //????+2 tile explosion
 	private final ModifiableCallout<AbilityCastStart> chelicSynergy = ModifiableCallout.durationBasedCall("Chelic Synergy", "Buster with Bleed"); //????+2 tile explosion
 	private final ModifiableCallout<AbilityCastStart> unholyDarkness = ModifiableCallout.durationBasedCall("Unholy Darkness", "Healer Stacks"); //????+2 tile explosion
@@ -35,6 +39,9 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 //	private final ModifiableCallout<AbilityCastStart> stropheIxouCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Clockwise");
 //	private final ModifiableCallout<AbilityCastStart> stropheIxouCCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Counterclockwise");
 //	private final ModifiableCallout<AbilityCastStart> darkAshes = ModifiableCallout.durationBasedCall("Dark Ashes", "Spread"); //????-1 real boss
+	private final ModifiableCallout<AbilityCastStart> darkPerimeter = ModifiableCallout.durationBasedCall("Dark Perimeter", "Donut on YOU");
+	private final ModifiableCallout<AbilityCastStart> darkburst = ModifiableCallout.durationBasedCall("Darkburst", "AOE on YOU");
+	private final ModifiableCallout<AbilityCastStart> unholyDarknessMarker = ModifiableCallout.durationBasedCall("Unholy Darkness Marker", "Stack on YOU");
 
 //	private final ModifiableCallout<HasDuration> glossomorph = ModifiableCallout.durationBasedCall("Glossomorph debuff", "Point Away Soon").autoIcon();
 
@@ -103,6 +110,15 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 				return;
 			}
 		}
+		if(event.getTarget().isThePlayer())
+			switch (id) {
+				case 0x7873 -> call = darkPerimeter;
+				case 0x7870 -> call = darkburst;
+				case 0x786E -> call = unholyDarknessMarker;
+				default -> {
+					return;
+				}
+			}
 		context.accept(call.getModified(event));
 	}
 
@@ -118,4 +134,11 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 //
 //		context.accept(call.getModified(event));
 //	}
+
+	@HandleEvents
+	public void headMarker(EventContext context, HeadMarkerEvent event) {
+		long id = event.getMarkerId();
+		log.info("Gained head marker with ID: {}", id);
+		//TODO: flood ray number call
+	}
 }
