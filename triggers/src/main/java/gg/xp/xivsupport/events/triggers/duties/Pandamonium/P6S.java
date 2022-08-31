@@ -25,6 +25,20 @@ import java.util.Map;
 @CalloutRepo(name = "P6S", duty = KnownDuty.P6S)
 public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P6S.class);
+
+	/*
+		TODO:
+		Call out current LC number
+		Point in/Point out (status 0xCF2 is face out, 0xCF3 is face in)
+		3rd set of healer stacks + other mechanics
+		Whatever mechs come after
+
+		Probably not doable:
+		Floor tile patterns (likely need MapEvent)
+
+
+	 */
+
 	private final ModifiableCallout<AbilityCastStart> aethericPolyominoid = ModifiableCallout.durationBasedCall("Aetheric Polyominoid", "Tiles"); //????+2 tile explosion
 	private final ModifiableCallout<AbilityCastStart> chelicSynergy = ModifiableCallout.durationBasedCall("Chelic Synergy", "Buster with Bleed"); //????+2 tile explosion
 	private final ModifiableCallout<AbilityCastStart> unholyDarknessHealer = ModifiableCallout.durationBasedCall("Unholy Darkness", "Healer Stacks"); //????+2 tile explosion
