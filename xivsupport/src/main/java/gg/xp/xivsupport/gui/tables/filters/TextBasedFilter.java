@@ -73,14 +73,15 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 			return null;
 		}
 		else {
-			if (input.startsWith("/") && input.endsWith("/") && input.length() >= 2) {
+			String trimmedInput = input.trim();
+			if (trimmedInput.startsWith("/") && trimmedInput.endsWith("/") && trimmedInput.length() >= 2) {
 				try {
 					Pattern regex;
 					if (ignoreCase) {
-						regex = Pattern.compile(input.substring(1, input.length() - 1), Pattern.CASE_INSENSITIVE);
+						regex = Pattern.compile(trimmedInput.substring(1, trimmedInput.length() - 1), Pattern.CASE_INSENSITIVE);
 					}
 					else {
-						regex = Pattern.compile(input.substring(1, input.length() - 1));
+						regex = Pattern.compile(trimmedInput.substring(1, trimmedInput.length() - 1));
 					}
 					return item -> regex.matcher(textExtractor.apply(item)).find();
 				}

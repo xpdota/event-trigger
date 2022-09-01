@@ -313,7 +313,13 @@ public class ModifiableCallout<X> {
 	 * @return the ModifiableCallout
 	 */
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCall(String desc, String text) {
-		Predicate<Y> expiry = hd -> hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0;
+		Predicate<Y> expiry = hd -> {
+			if (hd == null) {
+				log.error("durationBasedCall: event was null! No time basis! Expiring callout prematurely.");
+				return true;
+			}
+			return hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0;
+		};
 		return new ModifiableCallout<>(desc, text, text + " ({event.getEstimatedRemainingDuration()})", expiry);
 	}
 
