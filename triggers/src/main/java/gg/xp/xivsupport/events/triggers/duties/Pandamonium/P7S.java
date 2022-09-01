@@ -1,14 +1,20 @@
 package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
+import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import org.slf4j.Logger;
@@ -30,21 +36,34 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 //	private final ModifiableCallout<AbilityCastStart> hemitheosGlareIII = ModifiableCallout.durationBasedCall("Hemitheos's Glare III", "Center");
 //	private final ModifiableCallout<AbilityCastStart> immortalsObol = ModifiableCallout.durationBasedCall("Immortal's Obol", "Edge, in Circles");
 //	private final ModifiableCallout<AbilityCastStart> hemitheosAeroII = ModifiableCallout.durationBasedCall("Hemitheos's Aero II", "Tankbuster");
-	private final ModifiableCallout<AbilityCastStart> sparkOfLife = ModifiableCallout.durationBasedCall("Spark of Life", "Raidwide"); //bleed
+	private final ModifiableCallout<AbilityCastStart> sparkOfLife = ModifiableCallout.durationBasedCall("Spark of Life", "Raidwide with Bleed"); //bleed
 //	private final ModifiableCallout<AbilityCastStart> staticMoon = ModifiableCallout.durationBasedCall("Static Moon", "Out");
 //	private final ModifiableCallout<AbilityCastStart> stymphalianStrike = ModifiableCallout.durationBasedCall("Stymphalian Strike", "Dive");
 	private final ModifiableCallout<AbilityCastStart> bladesOfAttis = ModifiableCallout.durationBasedCall("Blades of Attis", "Exaflare");
 //	private final ModifiableCallout<AbilityCastStart> hemitheosAeroIV = ModifiableCallout.durationBasedCall("Hemitheos's Aero IV", "Knockback");
 
+	private final ModifiableCallout<BuffApplied> firstSet_stackSpread = ModifiableCallout.durationBasedCall("First Debuff Set: Stack then Spread", "Stack then Spread");
+	private final ModifiableCallout<BuffApplied> firstSet_spreadStack = ModifiableCallout.durationBasedCall("First Debuff Set: Spread then Stack", "Spread then Stack");
+	private final ModifiableCallout<BuffApplied> firstSet_spread = ModifiableCallout.durationBasedCall("First Debuff Set: Spread (after stack)", "Spread in Safe Spot");
+	private final ModifiableCallout<BuffApplied> firstSet_stack = ModifiableCallout.durationBasedCall("First Debuff Set: Stack (after spread)", "Stack in Safe Spot");
+
+
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
-	public P7S(XivState state) {
+	public P7S(XivState state, StatusEffectRepository buffs) {
 		this.state = state;
+		this.buffs = buffs;
 	}
 
 	private final XivState state;
 	private XivState getState() {
 		return this.state;
+	}
+
+	private final StatusEffectRepository buffs;
+
+	private StatusEffectRepository getBuffs() {
+		return buffs;
 	}
 
 	@Override
@@ -71,6 +90,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 				return;
 			}
 		}
+		// 782F is the exaflare fake actor cast, can be used to see pattern
 //		if (id == 0x0)
 //			call = boughOfAttisClose;
 //		else if (id == 0x0) //????+1 fake
@@ -102,4 +122,87 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 //
 		context.accept(call.getModified(event));
 	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> firstAeroSet = new SequentialTrigger<>(25_000, BaseEvent.class,
+			e1 -> e1 instanceof BuffApplied ba && ba.buffIdMatches(3308, 3397) && ba.getTarget().isThePlayer(),
+			(e1, s) -> {
+				log.info("First Aero: Start");
+				BuffApplied initialBuff = (BuffApplied) e1;
+				boolean stackFirst = initialBuff.getBuff().getId() == 3397;
+				if (stackFirst) {
+					s.updateCall(firstSet_stackSpread.getModified(initialBuff));
+				}
+				else {
+					s.updateCall(firstSet_spreadStack.getModified(initialBuff));
+				}
+				log.info("First Aero: Waiting");
+				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(3309));
+				// Find the long stack and use that as timing basis
+				BuffApplied followUp = getBuffs().getBuffs()
+						.stream()
+						.filter(ba -> ba.buffIdMatches(3398))
+						.findFirst()
+						.orElseThrow(() -> new RuntimeException("Couldn't find follow-up buff!"));
+				if (stackFirst) {
+					// Spread
+					s.updateCall(firstSet_spread.getModified(followUp));
+				}
+				else {
+					// Stack
+					s.updateCall(firstSet_stack.getModified(followUp));
+				}
+				log.info("First Aero: Done");
+			});
+
+//	@AutoFeed
+//	private final SequentialTrigger<BaseEvent> secondAeroSet = new SequentialTrigger<>(25_000, BaseEvent.class,
+//			e1 -> e1 instanceof BuffApplied ba && ba.buffIdMatches(3308, 3397) && ba.getTarget().isThePlayer(),
+//			(e1, s) -> {
+//				log.info("First Aero: Start");
+//				BuffApplied initialBuff = (BuffApplied) e1;
+//				boolean stackFirst = initialBuff.getBuff().getId() == 3397;
+//				if (stackFirst) {
+//					s.updateCall(firstSet_stackSpread.getModified(initialBuff));
+//				}
+//				else {
+//					s.updateCall(firstSet_spreadStack.getModified(initialBuff));
+//				}
+//				log.info("First Aero: Waiting");
+//				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(3309));
+//				// Find the long stack and use that as timing basis
+//				BuffApplied followUp = getBuffs().getBuffs()
+//						.stream()
+//						.filter(ba -> ba.buffIdMatches(3398))
+//						.findFirst()
+//						.orElseThrow(() -> new RuntimeException("Couldn't find follow-up buff!"));
+//				if (stackFirst) {
+//					// Spread
+//					s.updateCall(firstSet_spread.getModified(followUp));
+//				}
+//				else {
+//					// Stack
+//					s.updateCall(firstSet_stack.getModified(followUp));
+//				}
+//				log.info("First Aero: Done");
+//			});
+
+	/*
+		BUFFS
+		3308 is short spread
+		3397 is the long-timer spread
+		3309 is short stack
+		3398 is the long stack
+
+		// 1 = 10s, 2 = 25s, 3 = 40s, 4 = 55s
+		3310 is aero 1
+		3391 is aero 2
+		3392 is aero 3
+		3393 is aero 4
+
+		3311 is ? 1
+		3394 is ? 2
+		3395 is ? 3
+		3396 is ? 4
+	 */
 }

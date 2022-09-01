@@ -19,11 +19,11 @@ public class DurationFilter implements Condition<HasDuration> {
 
 	@Override
 	public String fixedLabel() {
-		return "# of Stacks";
+		return "Duration";
 	}
 
 	@Override
 	public String dynamicLabel() {
-		return "# of Stacks " + operator.getFriendlyName() + ' ' + expectedMs;
+		return "Duration " + operator.getFriendlyName() + ' ' + expectedMs;
 	}
 }
