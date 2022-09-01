@@ -11,6 +11,7 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
@@ -20,6 +21,7 @@ import gg.xp.xivsupport.models.ArenaPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 @CalloutRepo(name = "P6S", duty = KnownDuty.P6S)
@@ -57,6 +59,18 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> unholyDarkness2 = ModifiableCallout.durationBasedCall("Unholy Darkness (Single)", "Stack in Middle");
 	private final ModifiableCallout<AbilityCastStart> darkDomeBait = ModifiableCallout.durationBasedCall("Dark Dome Bait", "Bait");
 	private final ModifiableCallout<AbilityCastStart> darkDomeMove = ModifiableCallout.durationBasedCall("Dark Dome Move", "Move!");
+
+	private final ModifiableCallout<BuffApplied> dpWing8 = new ModifiableCallout<BuffApplied>("8 Second + Hit By Wing", "8, Get Hit By Wing", 23_000).statusIcon(3319);
+	private final ModifiableCallout<BuffApplied> dpWing12 = new ModifiableCallout<BuffApplied>("12 Second + Hit By Wing", "12, Get Hit By Wing", 23_000).statusIcon(3319);
+	private final ModifiableCallout<BuffApplied> dpWing16 = new ModifiableCallout<BuffApplied>("16 Second + Hit By Wing", "16, Get Hit By Wing", 23_000).statusIcon(3319);
+	private final ModifiableCallout<BuffApplied> dpWing20 = new ModifiableCallout<BuffApplied>("20 Second + Hit By Wing", "20, Get Hit By Wing", 23_000).statusIcon(3319);
+	private final ModifiableCallout<BuffApplied> dpSnake8 = new ModifiableCallout<BuffApplied>("8 Second + Hit By Snake", "8, Get Hit By Snake", 23_000).statusIcon(3320);
+	private final ModifiableCallout<BuffApplied> dpSnake12 = new ModifiableCallout<BuffApplied>("12 Second + Hit By Snake", "12, Get Hit By Snake", 23_000).statusIcon(3320);
+	private final ModifiableCallout<BuffApplied> dpSnake16 = new ModifiableCallout<BuffApplied>("16 Second + Hit By Snake", "16, Get Hit By Snake", 23_000).statusIcon(3320);
+	private final ModifiableCallout<BuffApplied> dpSnake20 = new ModifiableCallout<BuffApplied>("20 Second + Hit By Snake", "20, Get Hit By Snake", 23_000).statusIcon(3320);
+
+	private final ModifiableCallout<BuffApplied> faceIn = ModifiableCallout.<BuffApplied>durationBasedCall("Cleaving Behind You", "Face In").autoIcon();
+	private final ModifiableCallout<BuffApplied> faceOut = ModifiableCallout.<BuffApplied>durationBasedCall("Cleaving in Front of You", "Face Out").autoIcon();
 //	private final ModifiableCallout<AbilityCastStart> stropheIxouCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Clockwise");
 //	private final ModifiableCallout<AbilityCastStart> stropheIxouCCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Counterclockwise");
 //	private final ModifiableCallout<AbilityCastStart> darkAshes = ModifiableCallout.durationBasedCall("Dark Ashes", "Spread"); //????-1 real boss
@@ -149,6 +163,18 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		}
 	}
 
+	@HandleEvents
+	public void buffs(EventContext context, BuffApplied event) {
+		if (event.getTarget().isThePlayer() && !event.isRefresh()) {
+			if (event.buffIdMatches(3315)) {
+				context.accept(faceIn.getModified(event));
+			}
+			else if (event.buffIdMatches(3400)) {
+				context.accept(faceOut.getModified(event));
+			}
+		}
+	}
+
 
 	private Long firstHeadmark;
 
@@ -182,6 +208,33 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(darkDomeMove.getModified(e2));
 				log.info("Dark Dome: End");
 			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> dualPredation = new SequentialTrigger<>(50_000, BaseEvent.class,
+			e1 -> e1 instanceof BuffApplied ba && ba.buffIdMatches(3321),
+			(e1, s) -> {
+				s.waitMs(200);
+				List<BuffApplied> playerBuffs = getBuffs().statusesOnTarget(getState().getPlayer());
+				BuffApplied headBuff = playerBuffs.stream().filter(ba -> ba.buffIdMatches(3321)).findFirst().orElseThrow(() -> new RuntimeException("Didn't find head buff!"));
+				BuffApplied sideBuff = playerBuffs.stream().filter(ba -> ba.buffIdMatches(3319, 3320)).findFirst().orElseThrow(() -> new RuntimeException("Didn't find side buff!"));
+				long seconds = headBuff.getInitialDuration().toSeconds();
+				boolean getHitByWing = sideBuff.buffIdMatches(3319);
+				ModifiableCallout<BuffApplied> call;
+				if (seconds < 10) {
+					call = getHitByWing ? dpWing8 : dpSnake8;
+				}
+				else if (seconds < 14) {
+					call = getHitByWing ? dpWing12 : dpSnake12;
+				}
+				else if (seconds < 18) {
+					call = getHitByWing ? dpWing16 : dpSnake16;
+				}
+				else {
+					call = getHitByWing ? dpWing20 : dpSnake20;
+				}
+				s.updateCall(call.getModified(headBuff));
+			}
+	);
 
 //	@HandleEvents
 //	public void buffApplied(EventContext context, BuffApplied event) {
