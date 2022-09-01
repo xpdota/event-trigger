@@ -6,7 +6,7 @@ package gg.xp.xivsupport.events.actlines.events;
 public interface HasPrimaryValue {
 	/**
 	 * @return A text description of this object. Should be user-friendly and not over-the-top technical (fine-grained
-	 * details belong in other fields, or in the {@link #toString()} method).
+	 * details belong in other fields, or in the {@link Object#toString()} method).
 	 */
 	String getPrimaryValue();
 }
