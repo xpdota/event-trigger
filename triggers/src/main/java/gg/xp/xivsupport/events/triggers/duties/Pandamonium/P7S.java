@@ -10,14 +10,17 @@ import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +63,16 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> firstSet_stack = ModifiableCallout.<BuffApplied>durationBasedCall("First Debuff Set: Stack (after spread)", "Stack in Safe Spot").statusIcon(3398);
 	private final ModifiableCallout<BuffApplied> secondAero = new ModifiableCallout<BuffApplied>("Second Debuff Set: Initial Callout", "{nextMechanic}", "{nextMechanic} ({event.estimatedRemainingDuration}) {remainingMechanics}", ModifiableCallout.expiresIn(55)).autoIcon();
 
+	private final ModifiableCallout<AbilityCastStart> moveIn = new ModifiableCallout<>("Move In (Healer Stacks + Floor Returns)", "Move In");
+
+	private final ModifiableCallout<AbilityCastStart> famineHarvest = ModifiableCallout.durationBasedCall("Famine's Harvest", "Famine");
+	private final ModifiableCallout<AbilityCastStart> famineTether = new ModifiableCallout<>("Famine's Harvest - Tether", "Tether", 10_000);
+	private final ModifiableCallout<AbilityCastStart> famineNoTether = new ModifiableCallout<>("Famine's Harvest - No Tether", "No Tether", 10_000);
+	private final ModifiableCallout<AbilityCastStart> deathHarvest = ModifiableCallout.durationBasedCall("Death's Harvest", "Death");
+	private final ModifiableCallout<AbilityCastStart> warHarvest = ModifiableCallout.durationBasedCall("War's Harvest", "War");
+	private final ModifiableCallout<TetherEvent> warHarvestIoTether = new ModifiableCallout<>("War's Harvest - Io Tether", "Io Tether", 10_000);
+	private final ModifiableCallout<TetherEvent> warHarvestMinoTether = new ModifiableCallout<>("War's Harvest - Mino Tether", "Mino Tether", 10_000);
+	private final ModifiableCallout<TetherEvent> warHarvestBirdTether = new ModifiableCallout<>("War's Harvest - Bird Tether", "Bird Tether", 10_000);
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 5, 5);
 
@@ -100,6 +113,9 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 			case 0x7836 -> call = condensedAeroII;
 			case 0x7839 -> call = sparkOfLife;
 			case 0x782E -> call = bladesOfAttis;
+			case 31311 -> call = famineHarvest; // 7A4F
+			case 31312 -> call = deathHarvest; // 7A50
+			case 31313 -> call = warHarvest; // 7A51
 			default -> {
 				return;
 			}
@@ -221,6 +237,59 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(secondAero.getModified(calloutBuff, Map.of("remainingMechanics", remainingMechanics.subList(i + 1, 4), "nextMechanic", nextIsSpread ? "Spread" : "Stack")));
 					long spreadId = spreadIds[i];
 					s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(spreadId));
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> moveInSq = SqtTemplates.sq(10_000,
+			AbilityCastStart.class,
+			acs -> acs.abilityIdMatches(0x783B),
+			(e1, s) -> {
+				// This is the floor popping back up
+				// Example filter to search in UI:
+				// (event instanceof ChatLineEvent && event.line.contains("A foothold")) || (event instanceof ActorControlEvent) || (!event.source.isPc())
+				log.info("moveInSq: Start");
+				List<ActorControlEvent> aces = s.waitEventsUntil(1,
+						ActorControlEvent.class,
+						ace -> {
+							log.info("moveInsq: {} {}", ace.getCommand(), ace.getData0());
+							return ace.getCommand() == 0x8000000dL && ace.getData0() == 0x7fc000L;
+						},
+						BaseEvent.class, unused -> e1.getEffectiveTimeSince().toMillis() > 5000);
+				log.info("moveInSq: result {}", aces.size());
+				if (!aces.isEmpty()) {
+					s.updateCall(moveIn.getModified(e1));
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> famineSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(31311),
+			(e1, s) -> {
+				List<TetherEvent> tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> true, Duration.ofMillis(200));
+				if (tethers.stream().anyMatch(t -> t.eitherTargetMatches(XivCombatant::isThePlayer))) {
+					s.updateCall(famineTether.getModified(e1));
+				}
+				else {
+					s.updateCall(famineNoTether.getModified(e1));
+				}
+			});
+	// TODO: Death: Is there anything that can be done here? Tethers are all the same tether ID, and the NPCs aren't even in the combatants list
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> warSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(31313),
+			(e1, s) -> {
+				TetherEvent te = s.waitEvent(TetherEvent.class, e -> e.getTarget().isThePlayer());
+				// Can't use tether IDs because they change with distance.
+				if (te.getSource().getbNpcId() == 14899) {
+					s.updateCall(warHarvestMinoTether.getModified(te));
+				}
+				else if (te.getSource().getbNpcId() == 14898) {
+					s.updateCall(warHarvestBirdTether.getModified(te));
+				}
+				// This one isn't a real combatant
+				else {
+					s.updateCall(warHarvestIoTether.getModified(te));
 				}
 			});
 

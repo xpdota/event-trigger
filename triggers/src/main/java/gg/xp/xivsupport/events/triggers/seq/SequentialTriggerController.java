@@ -183,10 +183,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param exclusive  false if you would like an event to be allowed to match multiple filters, rather than movingn
 	 *                   on to the next event after a single match.
 	 * @param filters    The list of filters.
-	 * @return           A map, where the keys are the filters, and the values are a list of events that matched that
-	 *                   filter.
 	 * @param <P>        The type of filter.
 	 * @param <Y>        The type of event.
+	 * @return A map, where the keys are the filters, and the values are a list of events that matched that
+	 * filter.
 	 */
 	public <P extends Predicate<? super Y>, Y> Map<P, List<Y>> groupEvents(int limit, int timeoutMs, Class<Y> eventClass, boolean exclusive, List<P> filters) {
 		Duration end = timeSinceStart().plusMillis(timeoutMs);
@@ -235,6 +235,30 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		Map<EventCollector<? super Y>, List<Y>> result = groupEvents(limit, timeoutMs, eventClass, exclusive, collectors);
 		for (EventCollector<? super Y> collector : collectors) {
 			collector.provideEvents(result.get(collector));
+		}
+	}
+
+	public <Y extends BaseEvent> List<Y> waitEventsQuickSuccession(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Duration maxDelta) {
+		List<Y> out = new ArrayList<>();
+		Y last = waitEvent(eventClass, eventFilter);
+		out.add(last);
+		while (true) {
+			X event = waitEvent(e -> true);
+			// First possibility - event we're interested int
+			if (eventClass.isInstance(event) && eventFilter.test((Y) event)) {
+				out.add((Y) event);
+				last = (Y) event;
+				// If we have reached the limit, return it now
+				if (out.size() >= limit) {
+					return out;
+				}
+			}
+			// Second possibility - hit our stop trigger
+			else if (last.getEffectiveTimeSince().compareTo(maxDelta) > 0) {
+				log.info("Sequential trigger stopping on {}", event);
+				return out;
+			}
+			// Third possibility - keep looking
 		}
 	}
 
