@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
 
 public class DropShadowLabel extends Component {
 
-	private static final int xPad = 4;
+	private static final int xPad = 6;
 
 	private static final ExecutorService exs = Executors.newCachedThreadPool(new NamedThreadFactory("DropShadowLabelRender"));
 
@@ -77,16 +77,16 @@ public class DropShadowLabel extends Component {
 		AffineTransform trans = g.getTransform();
 		int textWidth = lastWidth;
 		int xOffset = switch (alignment) {
-			case LEFT -> xPad;
+			case LEFT -> 0;
 			case CENTER -> (int) ((getWidth() / 2.0) - (textWidth / 2.0));
 			case RIGHT -> getWidth() - textWidth;
 		};
 		trans.translate(xOffset, 0);
 		double scale = trans.getScaleX();
 		if (this.scaleFactor != scale) {
+			this.scaleFactor = scale;
 			requestRecalc();
 		}
-		this.scaleFactor = scale;
 		trans.scale(1.0f / scale, 1.0f / trans.getScaleY());
 		g.setTransform(trans);
 		g.drawImage(image, 0, 0, null);

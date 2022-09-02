@@ -83,6 +83,12 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		context.enqueue(event);
 	}
 
+	public void waitThenRefreshCombatants(long delay) {
+		waitMs(delay);
+		accept(new RefreshCombatantsRequest());
+		waitMs(delay);
+	}
+
 	public void refreshCombatants(long delay) {
 		accept(new RefreshCombatantsRequest());
 		waitMs(delay);

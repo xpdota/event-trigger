@@ -44,8 +44,13 @@ public interface XivState extends SubState {
 		return getCombatants().get(id);
 	}
 
-	default @Nullable XivCombatant getLatestCombatantData(XivCombatant cbt) {
-		return getCombatant(cbt.getId());
+	default @NotNull XivCombatant getLatestCombatantData(@NotNull XivCombatant cbt) {
+		XivCombatant result = getCombatant(cbt.getId());
+		// If we no longer know if this combatant, avoid nullity issues by just returning the original data.
+		if (result == null) {
+			return cbt;
+		}
+		return result;
 	}
 
 	// TODO: does this still need to be a copy?

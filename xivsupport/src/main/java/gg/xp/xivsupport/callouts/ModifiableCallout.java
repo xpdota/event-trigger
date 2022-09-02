@@ -2,8 +2,7 @@ package gg.xp.xivsupport.callouts;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.time.TimeUtils;
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
@@ -322,6 +321,20 @@ public class ModifiableCallout<X> {
 		};
 		return new ModifiableCallout<>(desc, text, text + " ({event.getEstimatedRemainingDuration()})", expiry);
 	}
+
+	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCallWithOffset(String desc, String text, Duration offset) {
+		Duration combinedLingerTime = defaultLingerTime.plus(offset);
+		Predicate<Y> expiry = hd -> {
+			if (hd == null) {
+				log.error("durationBasedCall: event was null! No time basis! Expiring callout prematurely.");
+				return true;
+			}
+			return hd.getEstimatedTimeSinceExpiry().compareTo(combinedLingerTime) > 0;
+		};
+		long millis = offset.toMillis();
+		return new ModifiableCallout<>(desc, text, text + " ({event.remainingDurationPlus(java.time.Duration.ofMillis(" + millis + "))})", expiry);
+	}
+
 
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCallWithoutDurationText(String desc, String text) {
 		return new ModifiableCallout<>(desc, text, text, hd -> hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0);

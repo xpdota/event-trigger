@@ -237,11 +237,11 @@ public class StatusEffectRepository {
 	public List<BuffApplied> sortedStatusesOnTarget(XivEntity entity) {
 		List<BuffApplied> list = statusesOnTarget(entity);
 		list.sort(Comparator.comparing(ba -> {
-			StatusEffectInfo statusEffectInfo = StatusEffectLibrary.forId(ba.getBuff().getId());
+			StatusEffectInfo statusEffectInfo = ba.getBuff().getInfo();
 			if (statusEffectInfo == null) {
-				return 200;
+				return 0;
 			}
-			return statusEffectInfo.partyListPriority();
+			return -1 * statusEffectInfo.partyListPriority();
 		}));
 		return list;
 	}
