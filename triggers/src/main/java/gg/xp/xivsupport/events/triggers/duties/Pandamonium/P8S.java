@@ -10,6 +10,7 @@ import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.models.ArenaPos;
@@ -25,10 +26,10 @@ import java.util.Map;
 import java.util.Set;
 
 @CalloutRepo(name = "P8S", duty = KnownDuty.P8S)
-public class P8S extends AutoChildEventHandler /*implements FilteredEventHandler*/ {
-	/*private static final Logger log = LoggerFactory.getLogger(P8S.class);
+public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
+	private static final Logger log = LoggerFactory.getLogger(P8S.class);
 	private final ModifiableCallout<AbilityCastStart> genesisOfFlame = ModifiableCallout.durationBasedCall("Genesis Of Flame", "Raidwide");
-	private final ModifiableCallout<AbilityCastStart> rearingRampage = ModifiableCallout.durationBasedCall("Rearing Rampage", "Raidwide");
+//	private final ModifiableCallout<AbilityCastStart> rearingRampage = ModifiableCallout.durationBasedCall("Rearing Rampage", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> ektothermos = ModifiableCallout.durationBasedCall("Ektothermos", "Raidwide");
 
 	private final ModifiableCallout<AbilityCastStart> sunforgePhoenix = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In");
@@ -56,58 +57,66 @@ public class P8S extends AutoChildEventHandler /*implements FilteredEventHandler
 
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
-		long id = event.getAbility().getId();
+		int id = (int) event.getAbility().getId();
 		ModifiableCallout<AbilityCastStart> call;
-		if (id == 0x0)
-			call = genesisOfFlame;
-		else if (id == 0x0)
-			call = sunforgeSerpent;
-		else if (id == 0x0)
-			call = sunforgePhoenix;
-		else if (id == 0x0)
-			call = reforgedReflectionQuadruped;
-		else if (id == 0x0)
-			call = reforgedReflectionSerpent;
-		else if (id == 0x0)
-			call = flameviper;
-		else if (id == 0x0)
-			call = rearingRampage;
-		else if (id == 0x0)
-			call = ektothermos;
-		else
-			return;
-
-		context.accept(call.getModified(event));
+		// Savage IDs
+//		switch (id) {
+//			case 31044 -> genesisOfFlame; // raidwide
+//			case 31210 -> ekto; // raidwide
+//			case 0x7912 -> sunforgeSerpent; // out
+//			case 0x7913 -> sunforgePhoenix; // in
+//			case 0x794b -> dog; // dog form, kb
+//			case 0x794c -> snake; // snake form, out
+//			case 0x7933 -> rearingRampage; // double hit + raidwide x4, must spread
+//
+//
+//		context.accept(call.getModified(event));
 	}
+//
+//	@HandleEvents
+//	public void buffApplied(EventContext context, BuffApplied event) {
+//		if (event.getTarget().isThePlayer()) {
+//			switch ((int) event.getBuff().getId()) {
+//
+//			}
+//		}
+//	}
 
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> cthonicVent = new SequentialTrigger<>(
-			10_000,
-			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x0, 0x0, 0x0), //????, ????+88(?), ????+1
-			(e1, s) -> {
-				List<AbilityCastStart> cthonicCasts = new ArrayList<>(s.waitEvents(1, AbilityCastStart.class, event -> event.abilityIdMatches(0x0, 0x0, 0x0))); // same as above
-				cthonicCasts.add((AbilityCastStart) e1);
-				List<XivCombatant> suneaters = new ArrayList<>();
-				log.info("CthonicVent: Got suneater casts");
-				s.waitMs(100);
-				s.refreshCombatants(100);
-				log.info("CthonicVent: done with delay");
-				for(AbilityCastStart acs : cthonicCasts) {
-					suneaters.add(this.getState().getLatestCombatantData(acs.getSource()));
-				}
-				log.info("CthonicVent: done finding positions, finding safe spots");
-				if(suneaters.size() != 2) {
-					log.error("Invalid number of suneaters found! Data: {}", cthonicCasts);
-					return;
-				}
-				log.info("CthonicVent: found suneaters 1:{}, 2:{}", arenaPos.forCombatant(suneaters.get(0)).getFriendlyName(), arenaPos.forCombatant(suneaters.get(1)).getFriendlyName());
-				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.quadrants);
-				safe.remove(arenaPos.forCombatant(suneaters.get(0)));
-				safe.remove(arenaPos.forCombatant(suneaters.get(1)));
-				ArenaSector combined = ArenaSector.tryCombineTwoQuadrants(new ArrayList<>(safe));
+//	@AutoFeed
+//	private final SequentialTrigger<BaseEvent> cthonicVent = new SequentialTrigger<>(
+//			10_000,
+//			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x0, 0x0, 0x0), //????, ????+88(?), ????+1
+//			(e1, s) -> {
+//				List<AbilityCastStart> cthonicCasts = new ArrayList<>(s.waitEvents(1, AbilityCastStart.class, event -> event.abilityIdMatches(0x0, 0x0, 0x0))); // same as above
+//				cthonicCasts.add((AbilityCastStart) e1);
+//				List<XivCombatant> suneaters = new ArrayList<>();
+//				log.info("CthonicVent: Got suneater casts");
+//				s.waitMs(100);
+//				s.refreshCombatants(100);
+//				log.info("CthonicVent: done with delay");
+//				for(AbilityCastStart acs : cthonicCasts) {
+//					suneaters.add(this.getState().getLatestCombatantData(acs.getSource()));
+//				}
+//				log.info("CthonicVent: done finding positions, finding safe spots");
+//				if(suneaters.size() != 2) {
+//					log.error("Invalid number of suneaters found! Data: {}", cthonicCasts);
+//					return;
+//				}
+//				log.info("CthonicVent: found suneaters 1:{}, 2:{}", arenaPos.forCombatant(suneaters.get(0)).getFriendlyName(), arenaPos.forCombatant(suneaters.get(1)).getFriendlyName());
+//				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.quadrants);
+//				safe.remove(arenaPos.forCombatant(suneaters.get(0)));
+//				safe.remove(arenaPos.forCombatant(suneaters.get(1)));
+//				ArenaSector combined = ArenaSector.tryCombineTwoQuadrants(new ArrayList<>(safe));
+//
+//				Map<String, Object> args = Map.of("safe", combined == null ? safe : combined);
+//				s.accept(fourfoldFiresSafe.getModified(cthonicCasts.get(0), args));
+//			}
+//	);
 
-				Map<String, Object> args = Map.of("safe", combined == null ? safe : combined);
-				s.accept(fourfoldFiresSafe.getModified(cthonicCasts.get(0), args));
-			}
-	);*/
+	// TODO: generic torch flame
+	// TODO: single and dual sunforge
+	// Scorched Pinion 7953
+
+//	private final SequentialTrigger<BaseEvent> }
+
 }

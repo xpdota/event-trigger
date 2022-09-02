@@ -153,6 +153,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 		context.accept(call.getModified(event));
 	}
 
+	// TODO: needs to cancel on wipe
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> lightOfLifeSq = SqtTemplates.callWhenDurationIs(
 			AbilityCastStart.class,
