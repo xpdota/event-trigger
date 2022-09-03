@@ -189,13 +189,13 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	 */
 
 	//
-	@HandleEvents
-	public void buffApplied(EventContext context, BuffApplied event) {
-		if (event.getTarget().isThePlayer()) {
-			ModifiableCallout<BuffApplied> call;
-			context.accept(call.getModified(event));
-		}
-	}
+//	@HandleEvents
+//	public void buffApplied(EventContext context, BuffApplied event) {
+//		if (event.getTarget().isThePlayer()) {
+//			ModifiableCallout<BuffApplied> call;
+////			context.accept(call.getModified(event));
+//		}
+//	}
 
 	private boolean seenFirstSnakes;
 
