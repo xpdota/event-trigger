@@ -18,6 +18,7 @@ import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastResult;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
@@ -38,8 +39,10 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> genesisOfFlame = ModifiableCallout.durationBasedCall("Genesis Of Flame", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> rearingRampage = ModifiableCallout.durationBasedCall("Rearing Rampage", "Raidwides and Spread");
 	private final ModifiableCallout<AbilityCastStart> ektothermos = ModifiableCallout.durationBasedCall("Ektothermos", "Raidwide");
-	private final ModifiableCallout<AbilityCastStart> spreadLater = new ModifiableCallout<>("Octaflare: Spread Later", "Spread Later");
-	private final ModifiableCallout<AbilityCastStart> stackLater = new ModifiableCallout<>("Tetraflare: Stack Later", "Stack Later");
+	private final ModifiableCallout<AbilityCastStart> spreadLater = new ModifiableCallout<>("Octaflare: Spread Later", "Spread Later", 20_000);
+	private final ModifiableCallout<AbilityCastStart> stackLater = new ModifiableCallout<>("Tetraflare: Stack Later", "Stack Later", 20_000);
+	private final ModifiableCallout<AbilityCastStart> spread = ModifiableCallout.durationBasedCall("Octaflare: Spread Now", "Spread");
+	private final ModifiableCallout<AbilityCastStart> stack = ModifiableCallout.durationBasedCall("Tetraflare: Stack Now", "Stack");
 
 
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesEWOut = ModifiableCallout.durationBasedCall("Torches: East/West Safe", "East/West Out");
@@ -51,12 +54,14 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesNInSOut = ModifiableCallout.durationBasedCall("Torches: N In, S Out", "North In, South Out");
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesError = ModifiableCallout.durationBasedCall("Torches: Trigger Error", "Error");
 	private final ModifiableCallout<AbilityCastStart> volcanicTorches2SafeSpot = ModifiableCallout.durationBasedCall("Torches 2: Safe Corner", "{corner} safe");
-	private final ModifiableCallout<?> volcanicTorches1SpreadAfter = new ModifiableCallout<>("Torches 1: Spread After", "Spread After");
-	private final ModifiableCallout<?> volcanicTorches1StackAfter = new ModifiableCallout<>("Torches 1: Stack After", "Stack After");
 
 	private final ModifiableCallout<AbilityCastStart> sunforgePhoenix = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In");
 	private final ModifiableCallout<AbilityCastStart> sunforgeSerpent = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out");
-	private final ModifiableCallout<AbilityCastStart> dogForm = ModifiableCallout.durationBasedCall("Quadruped Form", "Quadruped Form");
+	private final ModifiableCallout<AbilityCastStart> sunforgePhoenixStack = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In and Stack");
+	private final ModifiableCallout<AbilityCastStart> sunforgeSerpentStack = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out and Stack");
+	private final ModifiableCallout<AbilityCastStart> sunforgePhoenixSpread = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In and Spread");
+	private final ModifiableCallout<AbilityCastStart> sunforgeSerpentSpread = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out and Spread");
+	private final ModifiableCallout<AbilityCastStart> dogForm = ModifiableCallout.durationBasedCall("Quadruped Form", "Quadruped Form, Knockback Soon");
 	private final ModifiableCallout<AbilityCastStart> snakeForm = ModifiableCallout.durationBasedCall("Snake Form", "Snake Form");
 	private final ModifiableCallout<BuffApplied> snakeFirstCone = ModifiableCallout.<BuffApplied>durationBasedCall("Snake: First Gaze Cone", "First Gaze Cone").autoIcon();
 	private final ModifiableCallout<BuffApplied> snakeSecondCone = ModifiableCallout.<BuffApplied>durationBasedCall("Snake: Second Gaze Cone", "Second Gaze Cone").autoIcon();
@@ -66,6 +71,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityUsedEvent> firstGazeDone = new ModifiableCallout<>("Snake: First Gazes Done", "Gaze Done");
 	private final ModifiableCallout<AbilityCastStart> secondGazeCall = ModifiableCallout.durationBasedCallWithOffset("Snake: Second Gazes", "Gazes: {gazeSpots}", Duration.ofMillis(1_200));
 	private final ModifiableCallout<AbilityUsedEvent> secondGazeDone = new ModifiableCallout<>("Snake: Second Gazes Done", "Gaze Done");
+	private final ModifiableCallout<AbilityUsedEvent> snakeOut = new ModifiableCallout<>("Snake: Out", "Out");
+	// TODO
+//	private final ModifiableCallout<AbilityUsedEvent> dogKb = new ModifiableCallout<>("Quadruped: Knockback", "Knockback");
 
 	private final ModifiableCallout<AbilityUsedEvent> upliftNumber = new ModifiableCallout<>("Quadruped: Rearing Rampage Number", "Bait {num} with {partner}");
 	private final ModifiableCallout<BaseEvent> upliftBait = new ModifiableCallout<>("Quadruped: Rearing Rampage Bait", "Bait with {partner}");
@@ -75,10 +83,12 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> doublePinionEW = ModifiableCallout.durationBasedCallWithOffset("Double Pinion: East/West Out", "East/West Out", Duration.ofMillis(1_000));
 	private final ModifiableCallout<AbilityCastStart> doublePinionCorners = ModifiableCallout.durationBasedCallWithOffset("Double Pinion: Corners", "Corners", Duration.ofMillis(1_000));
 
+
 	//	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadruped");
 //	private final ModifiableCallout<AbilityCastStart> reforgedReflectionSerpent = ModifiableCallout.durationBasedCall("Reforged Reflection Serpent", "Serpent");
 //	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "Double Buster with Bleed");
+	private final ModifiableCallout<AbilityCastStart> nestOfFlameVipers = ModifiableCallout.durationBasedCall("Nest of Flamevipers", "Proteans");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
@@ -114,6 +124,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	@HandleEvents
 	public void reset(EventContext context, DutyCommenceEvent event) {
 		nextFlare = null;
+		seenFirstSnakes = false;
 	}
 
 	@HandleEvents
@@ -124,8 +135,30 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 		switch (id) {
 			case 31044 -> call = genesisOfFlame; // raidwide
 			case 31210 -> call = ektothermos; // raidwide
-			case 0x7910 -> call = sunforgeSerpent; // out
-			case 0x7911 -> call = sunforgePhoenix; // in
+			case 0x7910 -> {
+				// out
+				if (nextFlare == Flare.OctaSpread) {
+					call = sunforgeSerpentSpread;
+				}
+				else if (nextFlare == Flare.TetraStack) {
+					call = sunforgeSerpentStack;
+				}
+				else {
+					call = sunforgeSerpent;
+				}
+			}
+			case 0x7911 -> {
+				// In
+				if (nextFlare == Flare.OctaSpread) {
+					call = sunforgePhoenixSpread;
+				}
+				else if (nextFlare == Flare.TetraStack) {
+					call = sunforgePhoenixStack;
+				}
+				else {
+					call = sunforgePhoenix;
+				}
+			}
 			case 0x794b -> call = dogForm; // dog form, kb
 			case 0x794c -> call = snakeForm; // snake form, out
 			case 0x7933 -> call = rearingRampage; // double hit + raidwide x4, must spread
@@ -138,6 +171,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 				nextFlare = Flare.TetraStack;
 			}
 			case 0x7945 -> call = flameviper;
+			case 31007 -> call = nestOfFlameVipers;
+			case 31006 -> call = stack;
+			case 31005 -> call = spread;
 			default -> {
 				return;
 			}
@@ -157,7 +193,42 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	public void buffApplied(EventContext context, BuffApplied event) {
 		if (event.getTarget().isThePlayer()) {
 			ModifiableCallout<BuffApplied> call;
-			switch ((int) event.getBuff().getId()) {
+			context.accept(call.getModified(event));
+		}
+	}
+
+	private boolean seenFirstSnakes;
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> snakeFormGazes = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x794c),
+			(e1, s) -> {
+				AbilityUsedEvent e = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x794c));
+				s.waitMs(1000);
+				s.updateCall(snakeOut.getModified(e));
+				// TODO: make SqTemplate for mechanics where the same castbar does different things at different
+				// points in the fight.
+				if (!seenFirstSnakes) {
+					// This is second snakes
+					try {
+						firstSnakes(s);
+					} finally {
+						seenFirstSnakes = true;
+					}
+				}
+				else {
+					secondSnakes(e1, s);
+				}
+			});
+
+	private void firstSnakes(SequentialTriggerController<BaseEvent> s) {
+		{
+			BuffApplied buff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(3351, 3326) && ba.getTarget().isThePlayer());
+			if (buff.buffIdMatches(3351)) {
+				if (buff.getInitialDuration().toSeconds() < 30) {
+					s.accept(snakeFirstCone);
+				}
+			}
 				case 3351 -> {
 					if (event.getInitialDuration().toSeconds() < 30) {
 						call = snakeFirstCone;
@@ -174,65 +245,58 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 						call = snakeSecondPuddle;
 					}
 				}
-				default -> {
+		}
+		{
+			List<AbilityCastStart> firstGazes = s.waitEvents(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x792B));
+			AbilityCastStart sampleCast = firstGazes.get(0);
+			s.waitThenRefreshCombatants(100);
+			List<ArenaSector> firstBadSpots = firstGazes.stream()
+					.map(AbilityCastStart::getSource)
+					.map(cbt -> getState().getLatestCombatantData(cbt))
+					.map(arenaPos::forCombatant)
+					.toList();
+
+			s.updateCall(firstGazeCall.getModified(sampleCast, Map.of("gazeSpots", firstBadSpots)));
+		}
+		// Why, SE. Why did you make the snapshot of the actual cast NOT the thing that does the petrifaction?
+		// Also, sometimes the second set starts its cast before the first goes off. Other times, it's the other
+		// way around, so we have to loop to account for both.
+		{
+			AbilityUsedEvent firstDone = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x6724));
+			s.updateCall(firstGazeDone.getModified(firstDone));
+		}
+		// Find second set
+		{
+			List<AbilityCastStart> secondGazes;
+			int limit = 20;
+			do {
+				if (limit-- <= 0) {
+					log.error("Error in snake form gazes! Quitting");
 					return;
 				}
-			}
-			context.accept(call.getModified(event));
+				s.waitMs(50);
+				secondGazes = getAcr().getAll().stream()
+						.filter(ct -> ct.getCast().abilityIdMatches(0x792b) && ct.getResult() == CastResult.IN_PROGRESS)
+						.map(CastTracker::getCast)
+						.toList();
+			} while (secondGazes.size() < 2);
+			List<ArenaSector> secondBadSpots = secondGazes.stream()
+					.map(AbilityCastStart::getSource)
+					.map(cbt -> getState().getLatestCombatantData(cbt))
+					.map(arenaPos::forCombatant)
+					.toList();
+			s.waitMs(2000);
+			s.updateCall(secondGazeCall.getModified(secondGazes.get(0), Map.of("gazeSpots", secondBadSpots)));
+			// Make sure we don't hit something from the first set if they arrive in a weird order
+			AbilityUsedEvent secondDone = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x6724));
+			s.updateCall(secondGazeDone.getModified(secondDone));
 		}
+
 	}
 
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> snakeFormGazes = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x794c),
-			(e1, s) -> {
-				{
-					List<AbilityCastStart> firstGazes = s.waitEvents(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x792B));
-					AbilityCastStart sampleCast = firstGazes.get(0);
-					s.waitThenRefreshCombatants(100);
-					List<ArenaSector> firstBadSpots = firstGazes.stream()
-							.map(AbilityCastStart::getSource)
-							.map(cbt -> getState().getLatestCombatantData(cbt))
-							.map(arenaPos::forCombatant)
-							.toList();
+	private void secondSnakes(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 
-					s.updateCall(firstGazeCall.getModified(sampleCast, Map.of("gazeSpots", firstBadSpots)));
-				}
-				// Why, SE. Why did you make the snapshot of the actual cast NOT the thing that does the petrifaction?
-				// Also, sometimes the second set starts its cast before the first goes off. Other times, it's the other
-				// way around, so we have to loop to account for both.
-				{
-					AbilityUsedEvent firstDone = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x6724));
-					s.updateCall(firstGazeDone.getModified(firstDone));
-				}
-				// Find second set
-				{
-					List<AbilityCastStart> secondGazes;
-					int limit = 20;
-					do {
-						if (limit -- <= 0) {
-							log.error("Error in snake form gazes! Quitting");
-							return;
-						}
-						s.waitMs(50);
-						secondGazes = getAcr().getAll().stream()
-								.filter(ct -> ct.getCast().abilityIdMatches(0x792b) && ct.getResult() == CastResult.IN_PROGRESS)
-								.map(CastTracker::getCast)
-								.toList();
-					} while (secondGazes.size() < 2);
-					List<ArenaSector> secondBadSpots = secondGazes.stream()
-							.map(AbilityCastStart::getSource)
-							.map(cbt -> getState().getLatestCombatantData(cbt))
-							.map(arenaPos::forCombatant)
-							.toList();
-					s.waitMs(2000);
-					s.updateCall(secondGazeCall.getModified(secondGazes.get(0), Map.of("gazeSpots", secondBadSpots)));
-					// Make sure we don't hit something from the first set if they arrive in a weird order
-					AbilityUsedEvent secondDone = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x6724));
-					s.updateCall(secondGazeDone.getModified(secondDone));
-				}
-
-			});
+	}
 
 	private enum DoublePinionSpots {
 		NS_OUT,
@@ -376,18 +440,11 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					call = volcanicTorchesError;
 				}
 				s.updateCall(call.getModified(sample));
-				s.waitMs(5500);
-				switch (nextFlare) {
-					// NOT overwriting call since it's two separate things
-					case OctaSpread -> s.accept(volcanicTorches1SpreadAfter.getModified());
-					case TetraStack -> s.accept(volcanicTorches1StackAfter.getModified());
-				}
-				nextFlare = null;
 			});
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> volcanicTorches2sq = SqtTemplates.sq(15_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x791E),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x791E, 31007),
 			(e1, s) -> {
 				log.info("Torches 2 Start");
 				List<AbilityCastStart> casts = s.waitEvents(15, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7927));
