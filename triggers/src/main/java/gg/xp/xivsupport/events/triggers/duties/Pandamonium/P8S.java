@@ -38,8 +38,10 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> genesisOfFlame = ModifiableCallout.durationBasedCall("Genesis Of Flame", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> rearingRampage = ModifiableCallout.durationBasedCall("Rearing Rampage", "Raidwides and Spread");
 	private final ModifiableCallout<AbilityCastStart> ektothermos = ModifiableCallout.durationBasedCall("Ektothermos", "Raidwide");
-	private final ModifiableCallout<AbilityCastStart> spreadLater = new ModifiableCallout<>("Octaflare: Spread Later", "Spread Later");
-	private final ModifiableCallout<AbilityCastStart> stackLater = new ModifiableCallout<>("Tetraflare: Stack Later", "Stack Later");
+	private final ModifiableCallout<AbilityCastStart> spreadLater = new ModifiableCallout<>("Octaflare: Spread Later", "Spread Later", 20_000);
+	private final ModifiableCallout<AbilityCastStart> stackLater = new ModifiableCallout<>("Tetraflare: Stack Later", "Stack Later", 20_000);
+	private final ModifiableCallout<AbilityCastStart> spread = ModifiableCallout.durationBasedCall("Octaflare: Spread Now", "Spread Later");
+	private final ModifiableCallout<AbilityCastStart> stack = ModifiableCallout.durationBasedCall("Tetraflare: Stack Now", "Stack Later");
 
 
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesEWOut = ModifiableCallout.durationBasedCall("Torches: East/West Safe", "East/West Out");
@@ -51,12 +53,14 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesNInSOut = ModifiableCallout.durationBasedCall("Torches: N In, S Out", "North In, South Out");
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesError = ModifiableCallout.durationBasedCall("Torches: Trigger Error", "Error");
 	private final ModifiableCallout<AbilityCastStart> volcanicTorches2SafeSpot = ModifiableCallout.durationBasedCall("Torches 2: Safe Corner", "{corner} safe");
-	private final ModifiableCallout<?> volcanicTorches1SpreadAfter = new ModifiableCallout<>("Torches 1: Spread After", "Spread After");
-	private final ModifiableCallout<?> volcanicTorches1StackAfter = new ModifiableCallout<>("Torches 1: Stack After", "Stack After");
 
 	private final ModifiableCallout<AbilityCastStart> sunforgePhoenix = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In");
 	private final ModifiableCallout<AbilityCastStart> sunforgeSerpent = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out");
-	private final ModifiableCallout<AbilityCastStart> dogForm = ModifiableCallout.durationBasedCall("Quadruped Form", "Quadruped Form");
+	private final ModifiableCallout<AbilityCastStart> sunforgePhoenixStack = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In and Stack");
+	private final ModifiableCallout<AbilityCastStart> sunforgeSerpentStack = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out and Stack");
+	private final ModifiableCallout<AbilityCastStart> sunforgePhoenixSpread = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In and Spread");
+	private final ModifiableCallout<AbilityCastStart> sunforgeSerpentSpread = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out and Spread");
+	private final ModifiableCallout<AbilityCastStart> dogForm = ModifiableCallout.durationBasedCall("Quadruped Form", "Quadruped Form, Knockback Soon");
 	private final ModifiableCallout<AbilityCastStart> snakeForm = ModifiableCallout.durationBasedCall("Snake Form", "Snake Form");
 	private final ModifiableCallout<BuffApplied> snakeFirstCone = ModifiableCallout.<BuffApplied>durationBasedCall("Snake: First Gaze Cone", "First Gaze Cone").autoIcon();
 	private final ModifiableCallout<BuffApplied> snakeSecondCone = ModifiableCallout.<BuffApplied>durationBasedCall("Snake: Second Gaze Cone", "Second Gaze Cone").autoIcon();
@@ -66,6 +70,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityUsedEvent> firstGazeDone = new ModifiableCallout<>("Snake: First Gazes Done", "Gaze Done");
 	private final ModifiableCallout<AbilityCastStart> secondGazeCall = ModifiableCallout.durationBasedCallWithOffset("Snake: Second Gazes", "Gazes: {gazeSpots}", Duration.ofMillis(1_200));
 	private final ModifiableCallout<AbilityUsedEvent> secondGazeDone = new ModifiableCallout<>("Snake: Second Gazes Done", "Gaze Done");
+	private final ModifiableCallout<AbilityUsedEvent> snakeOut = new ModifiableCallout<>("Snake: Out", "Out");
+	// TODO
+//	private final ModifiableCallout<AbilityUsedEvent> dogKb = new ModifiableCallout<>("Quadruped: Knockback", "Knockback");
 
 	private final ModifiableCallout<AbilityUsedEvent> upliftNumber = new ModifiableCallout<>("Quadruped: Rearing Rampage Number", "Bait {num} with {partner}");
 	private final ModifiableCallout<BaseEvent> upliftBait = new ModifiableCallout<>("Quadruped: Rearing Rampage Bait", "Bait with {partner}");
@@ -75,10 +82,12 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> doublePinionEW = ModifiableCallout.durationBasedCallWithOffset("Double Pinion: East/West Out", "East/West Out", Duration.ofMillis(1_000));
 	private final ModifiableCallout<AbilityCastStart> doublePinionCorners = ModifiableCallout.durationBasedCallWithOffset("Double Pinion: Corners", "Corners", Duration.ofMillis(1_000));
 
+
 	//	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadruped");
 //	private final ModifiableCallout<AbilityCastStart> reforgedReflectionSerpent = ModifiableCallout.durationBasedCall("Reforged Reflection Serpent", "Serpent");
 //	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "Double Buster with Bleed");
+	private final ModifiableCallout<AbilityCastStart> nestOfFlameVipers = ModifiableCallout.durationBasedCall("Nest of Flamevipers", "Proteans");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
@@ -114,6 +123,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	@HandleEvents
 	public void reset(EventContext context, DutyCommenceEvent event) {
 		nextFlare = null;
+		seenFirstSnakes = false;
 	}
 
 	@HandleEvents
@@ -124,8 +134,30 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 		switch (id) {
 			case 31044 -> call = genesisOfFlame; // raidwide
 			case 31210 -> call = ektothermos; // raidwide
-			case 0x7910 -> call = sunforgeSerpent; // out
-			case 0x7911 -> call = sunforgePhoenix; // in
+			case 0x7910 -> {
+				// out
+				if (nextFlare == Flare.OctaSpread) {
+					call = sunforgeSerpentSpread;
+				}
+				else if (nextFlare == Flare.TetraStack) {
+					call = sunforgeSerpentStack;
+				}
+				else {
+					call = sunforgeSerpent;
+				}
+			}
+			case 0x7911 -> {
+				// In
+				if (nextFlare == Flare.OctaSpread) {
+					call = sunforgePhoenixSpread;
+				}
+				else if (nextFlare == Flare.TetraStack) {
+					call = sunforgePhoenixStack;
+				}
+				else {
+					call = sunforgePhoenix;
+				}
+			}
 			case 0x794b -> call = dogForm; // dog form, kb
 			case 0x794c -> call = snakeForm; // snake form, out
 			case 0x7933 -> call = rearingRampage; // double hit + raidwide x4, must spread
@@ -138,6 +170,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 				nextFlare = Flare.TetraStack;
 			}
 			case 0x7945 -> call = flameviper;
+			case 31007 -> call = nestOfFlameVipers;
+			case 31006 -> call = stack;
+			case 31005 -> call = spread;
 			default -> {
 				return;
 			}
@@ -159,6 +194,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 			ModifiableCallout<BuffApplied> call;
 			switch ((int) event.getBuff().getId()) {
 				case 3351 -> {
+					if (seenFirstSnakes) {
+						return;
+					}
 					if (event.getInitialDuration().toSeconds() < 30) {
 						call = snakeFirstCone;
 					}
@@ -167,6 +205,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					}
 				}
 				case 3326 -> {
+					if (seenFirstSnakes) {
+						return;
+					}
 					if (event.getInitialDuration().toSeconds() < 30) {
 						call = snakeFirstPuddle;
 					}
@@ -182,10 +223,19 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 		}
 	}
 
+	private boolean seenFirstSnakes;
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> snakeFormGazes = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x794c),
 			(e1, s) -> {
+				AbilityUsedEvent e = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x794c));
+				s.waitMs(1000);
+				s.updateCall(snakeOut.getModified(e));
+				if (seenFirstSnakes) {
+					// This is second snakes
+					return;
+				}
 				{
 					List<AbilityCastStart> firstGazes = s.waitEvents(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x792B));
 					AbilityCastStart sampleCast = firstGazes.get(0);
@@ -210,7 +260,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					List<AbilityCastStart> secondGazes;
 					int limit = 20;
 					do {
-						if (limit -- <= 0) {
+						if (limit-- <= 0) {
 							log.error("Error in snake form gazes! Quitting");
 							return;
 						}
@@ -231,6 +281,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					AbilityUsedEvent secondDone = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x6724));
 					s.updateCall(secondGazeDone.getModified(secondDone));
 				}
+				seenFirstSnakes = true;
 
 			});
 
@@ -376,18 +427,11 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					call = volcanicTorchesError;
 				}
 				s.updateCall(call.getModified(sample));
-				s.waitMs(5500);
-				switch (nextFlare) {
-					// NOT overwriting call since it's two separate things
-					case OctaSpread -> s.accept(volcanicTorches1SpreadAfter.getModified());
-					case TetraStack -> s.accept(volcanicTorches1StackAfter.getModified());
-				}
-				nextFlare = null;
 			});
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> volcanicTorches2sq = SqtTemplates.sq(15_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x791E),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x791E, 31007),
 			(e1, s) -> {
 				log.info("Torches 2 Start");
 				List<AbilityCastStart> casts = s.waitEvents(15, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7927));
