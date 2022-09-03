@@ -759,6 +759,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 				else {
 					torchesSafe = ArenaSector.UNKNOWN;
 				}
+				s.waitMs(1_000);
 				s.updateCall(volcanicTorches3SafeSpot.getModified(torches.get(0), Map.of("side", torchesSafe)));
 
 			}
