@@ -9,6 +9,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -17,6 +18,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastResult;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
@@ -28,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +44,10 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> rearingRampage = ModifiableCallout.durationBasedCall("Rearing Rampage", "Raidwides and Spread");
 	private final ModifiableCallout<AbilityCastStart> ektothermos = ModifiableCallout.durationBasedCall("Ektothermos", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> spreadLater = new ModifiableCallout<>("Octaflare: Spread Later", "Spread Later", 20_000);
-	private final ModifiableCallout<AbilityCastStart> stackLater = new ModifiableCallout<>("Tetraflare: Stack Later", "Stack Later", 20_000);
+	private final ModifiableCallout<AbilityCastStart> stackLater = new ModifiableCallout<>("Tetraflare: Stack Later", "Partners Later", 20_000);
+	private final ModifiableCallout<AbilityCastStart> lightPartiesLater = new ModifiableCallout<>("Diflare: Light Parties Later", "Light Parties Later", 20_000);
 	private final ModifiableCallout<AbilityCastStart> spread = ModifiableCallout.durationBasedCall("Octaflare: Spread Now", "Spread");
-	private final ModifiableCallout<AbilityCastStart> stack = ModifiableCallout.durationBasedCall("Tetraflare: Stack Now", "Stack");
+	private final ModifiableCallout<AbilityCastStart> stack = ModifiableCallout.durationBasedCall("Tetraflare: Partners Now", "Partners");
 
 
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesEWOut = ModifiableCallout.durationBasedCall("Torches: East/West Safe", "East/West Out");
@@ -54,6 +59,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesNInSOut = ModifiableCallout.durationBasedCall("Torches: N In, S Out", "North In, South Out");
 	private final ModifiableCallout<AbilityCastStart> volcanicTorchesError = ModifiableCallout.durationBasedCall("Torches: Trigger Error", "Error");
 	private final ModifiableCallout<AbilityCastStart> volcanicTorches2SafeSpot = ModifiableCallout.durationBasedCall("Torches 2: Safe Corner", "{corner} safe");
+	private final ModifiableCallout<AbilityCastStart> volcanicTorches3SafeSpot = ModifiableCallout.durationBasedCall("Torches 3: Safe Side", "{side} safe");
 
 	private final ModifiableCallout<AbilityCastStart> sunforgePhoenix = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In");
 	private final ModifiableCallout<AbilityCastStart> sunforgeSerpent = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out");
@@ -62,6 +68,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> sunforgePhoenixSpread = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In and Spread");
 	private final ModifiableCallout<AbilityCastStart> sunforgeSerpentSpread = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out and Spread");
 	private final ModifiableCallout<AbilityCastStart> dogForm = ModifiableCallout.durationBasedCall("Quadruped Form", "Quadruped Form, Knockback Soon");
+	private final ModifiableCallout<?> dogFormKb = new ModifiableCallout<>("Quadruped Form KB", "Knockback");
 	private final ModifiableCallout<AbilityCastStart> snakeForm = ModifiableCallout.durationBasedCall("Snake Form", "Snake Form");
 	private final ModifiableCallout<BuffApplied> snakeFirstCone = ModifiableCallout.<BuffApplied>durationBasedCall("Snake: First Gaze Cone", "First Gaze Cone").autoIcon();
 	private final ModifiableCallout<BuffApplied> snakeSecondCone = ModifiableCallout.<BuffApplied>durationBasedCall("Snake: Second Gaze Cone", "Second Gaze Cone").autoIcon();
@@ -90,11 +97,31 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "Double Buster with Bleed");
 	private final ModifiableCallout<AbilityCastStart> nestOfFlameVipers = ModifiableCallout.durationBasedCall("Nest of Flamevipers", "Proteans");
 
+	private final ModifiableCallout<BuffApplied> puddleFirstThenGaze = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Puddle then Gaze", "Puddle then Gaze").autoIcon();
+	private final ModifiableCallout<BuffApplied> gazeNow = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Gaze Followup", "Gaze").autoIcon();
+	private final ModifiableCallout<BuffApplied> gazeFirstThenPuddle = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Gaze then Puddle", "Gaze then Puddle").autoIcon();
+	private final ModifiableCallout<BuffApplied> puddleNow = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Gaze then Puddle", "Puddle").autoIcon();
+	private final ModifiableCallout<BuffApplied> stackOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Stack on You", "Stack, {safe} safe").autoIcon();
+	private final ModifiableCallout<BuffApplied> stackNotOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Stack with Light Party", "Stack, {safe} safe").autoIcon();
+	private final ModifiableCallout<BuffApplied> petrificationOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Petrification on You", "Stack Behind Snake, {safe} safe").autoIcon();
+	private final ModifiableCallout<AbilityCastStart> snakesGetIn = ModifiableCallout.durationBasedCallWithOffset("Snakes 2: Gorgospit", "Inside Squares", Duration.ofMillis(1_200));
+	private final ModifiableCallout<AbilityCastStart> quadGaze = ModifiableCallout.durationBasedCall("Snakes 2: Gazes", "Gazes on {gazeSpot}, {safeSpot} safe");
+	private final ModifiableCallout<AbilityUsedEvent> quadGazeDone = new ModifiableCallout<>("Snakes 2: Gazes Done", "Gaze Done");
+
+	private final ModifiableCallout<AbilityCastStart> quadrupedInitialImpact = ModifiableCallout.durationBasedCall("Quadruped: Initial Impact", "Towards Boss Facing");
+	private final ModifiableCallout<AbilityCastStart> quadrupedInitialCrush = ModifiableCallout.durationBasedCall("Quadruped: Initial Crush", "Away From Boss Facing");
+	private final ModifiableCallout<?> quadrupedDiflare = new ModifiableCallout<>("Quadruped: Diflare", "{firstSafe}, Light Parties, {secondSafe}", 30_000);
+	private final ModifiableCallout<?> quadrupedTetraflare = new ModifiableCallout<>("Quadruped: Tetraflare", "{firstSafe}, Partners, {secondSafe}", 30_000);
+	private final ModifiableCallout<?> quadrupedSecondMech = new ModifiableCallout<>("Quadruped: Followup", "{secondSafe}", 10_000);
+
+//	private final ModifiableCallout<AbilityCastStart>
+
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
-	public P8S(XivState state, ActiveCastRepository acr) {
+	public P8S(XivState state, ActiveCastRepository acr, StatusEffectRepository buffs) {
 		this.state = state;
 		this.acr = acr;
+		this.buffs = buffs;
 	}
 
 	private final XivState state;
@@ -105,8 +132,14 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ActiveCastRepository acr;
 
-	public ActiveCastRepository getAcr() {
+	private ActiveCastRepository getAcr() {
 		return acr;
+	}
+
+	private final StatusEffectRepository buffs;
+
+	private StatusEffectRepository getBuffs() {
+		return buffs;
 	}
 
 	@Override
@@ -119,7 +152,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 		TetraStack
 	}
 
-	private volatile Flare nextFlare;
+	private Flare nextFlare;
+	// TODO: have flare callout replace precursor call
+//	private RawModifiedCallout<?> lastFlare;
 
 	@HandleEvents
 	public void reset(EventContext context, DutyCommenceEvent event) {
@@ -159,7 +194,6 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					call = sunforgePhoenix;
 				}
 			}
-			case 0x794b -> call = dogForm; // dog form, kb
 			case 0x794c -> call = snakeForm; // snake form, out
 			case 0x7933 -> call = rearingRampage; // double hit + raidwide x4, must spread
 			case 0x7914 -> {
@@ -212,39 +246,36 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					// This is second snakes
 					try {
 						firstSnakes(s);
-					} finally {
+					}
+					finally {
 						seenFirstSnakes = true;
 					}
 				}
 				else {
-					secondSnakes(e1, s);
+					secondSnakes(s);
 				}
 			});
 
 	private void firstSnakes(SequentialTriggerController<BaseEvent> s) {
+		log.info("Snakes 1: Begin");
 		{
 			BuffApplied buff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(3351, 3326) && ba.getTarget().isThePlayer());
 			if (buff.buffIdMatches(3351)) {
 				if (buff.getInitialDuration().toSeconds() < 30) {
-					s.accept(snakeFirstCone);
+					s.accept(snakeFirstCone.getModified(buff));
+				}
+				else {
+					s.accept(snakeSecondCone.getModified(buff));
 				}
 			}
-				case 3351 -> {
-					if (event.getInitialDuration().toSeconds() < 30) {
-						call = snakeFirstCone;
-					}
-					else {
-						call = snakeSecondCone;
-					}
+			else {
+				if (buff.getInitialDuration().toSeconds() < 30) {
+					s.accept(snakeFirstPuddle.getModified(buff));
 				}
-				case 3326 -> {
-					if (event.getInitialDuration().toSeconds() < 30) {
-						call = snakeFirstPuddle;
-					}
-					else {
-						call = snakeSecondPuddle;
-					}
+				else {
+					s.accept(snakeSecondPuddle.getModified(buff));
 				}
+			}
 		}
 		{
 			List<AbilityCastStart> firstGazes = s.waitEvents(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x792B));
@@ -291,11 +322,109 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 			AbilityUsedEvent secondDone = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x6724));
 			s.updateCall(secondGazeDone.getModified(secondDone));
 		}
+		log.info("Snakes 1: End");
 
 	}
 
-	private void secondSnakes(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> dogFormKbSq = SqtTemplates.sq(20_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x794b),
+			(e1, s) -> {
+				s.updateCall(dogForm.getModified(e1));
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x794b));
+				s.waitMs(3000);
+				s.updateCall(dogFormKb.getModified());
+			});
 
+	private void secondSnakes(SequentialTriggerController<BaseEvent> s) {
+		log.info("Snakes 2: Begin");
+		List<BuffApplied> buffs = s.waitEvents(2, BuffApplied.class, ba -> ba.buffIdMatches(3351, 3326) && ba.getTarget().isThePlayer());
+		buffs.sort(Comparator.comparing(BuffApplied::getInitialDuration));
+		BuffApplied firstBuff = buffs.get(0);
+		BuffApplied secondBuff = buffs.get(1);
+		RawModifiedCallout<BuffApplied> firstBuffCall;
+		if (firstBuff.buffIdMatches(3351)) {
+			firstBuffCall = gazeFirstThenPuddle.getModified(firstBuff);
+		}
+		else {
+			firstBuffCall = puddleFirstThenGaze.getModified(firstBuff);
+		}
+		s.accept(firstBuffCall);
+		AbilityCastStart gazeStart = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x792B));
+		ArenaSector gazeSpot = arenaPos.forCombatant(gazeStart.getSource());
+		String cardOrInter;
+		String safeSpot;
+		if (gazeSpot.isCardinal()) {
+			cardOrInter = "Cardinal";
+			safeSpot = "Intercard";
+		}
+		else {
+			safeSpot = "Cardinal";
+			cardOrInter = "Intercard";
+		}
+		RawModifiedCallout<AbilityCastStart> qgCall = quadGaze.getModified(gazeStart, Map.of("gazeSpot", cardOrInter, "safeSpot", safeSpot));
+		s.accept(qgCall);
+		AbilityCastStart quadGorgoSpit = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7932));
+		s.accept(snakesGetIn.getModified(quadGorgoSpit));
+		AbilityUsedEvent gazeDone = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x6724));
+		RawModifiedCallout<AbilityUsedEvent> qgDone = quadGazeDone.getModified(gazeDone);
+		qgDone.setReplaces(qgCall);
+		s.accept(qgDone);
+		s.waitBuffRemoved(getBuffs(), firstBuff);
+		RawModifiedCallout<BuffApplied> secondBuffCall;
+		if (secondBuff.buffIdMatches(3351)) {
+			secondBuffCall = gazeNow.getModified(secondBuff);
+		}
+		else {
+			secondBuffCall = puddleNow.getModified(secondBuff);
+		}
+		secondBuffCall.setReplaces(firstBuffCall);
+		AbilityCastStart cleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7932));
+		Position cleavePos = cleave.getSource().getPos();
+		List<ArenaSector> safeSpots;
+		if (cleavePos != null) {
+			ArenaSector cleaveFrom = arenaPos.forPosition(cleavePos);
+			if (cleaveFrom.isCardinal()) {
+				// Cardinal is easy, just go left/right
+				safeSpots = List.of(cleaveFrom.plusQuads(1), cleaveFrom.plusQuads(-1));
+			}
+			else {
+				// Use combatant facing to calculate a "to" spot
+				ArenaSector cleaveTo = arenaPos.forPosition(cleavePos.translateRelative(0, 40));
+				safeSpots = List.of(cleaveFrom.opposite(), cleaveTo.opposite());
+				ArenaSector combined = ArenaSector.tryCombineTwoQuadrants(safeSpots);
+				if (combined != null) {
+					safeSpots = Collections.singletonList(combined);
+				}
+			}
+		}
+		else {
+			safeSpots = Collections.singletonList(ArenaSector.UNKNOWN);
+		}
+		BuffApplied playerGaze = getBuffs().statusesOnTarget(getState().getPlayer()).stream().filter(ba -> ba.buffIdMatches(3352)).findFirst().orElse(null);
+		RawModifiedCallout<BuffApplied> thirdBuffCall;
+		Map<String, Object> params = Map.of("safe", safeSpots);
+		if (playerGaze != null) {
+			thirdBuffCall = petrificationOnYou.getModified(playerGaze, params);
+		}
+		else {
+			List<BuffApplied> stackBuffs = getBuffs().getBuffs().stream().filter(ba -> ba.buffIdMatches(3327)).toList();
+			if (stackBuffs.isEmpty()) {
+				log.error("Snakes 2: No Stack Buff!");
+				return;
+			}
+			BuffApplied playerStack = stackBuffs.stream().filter(ba -> ba.getTarget().isThePlayer()).findFirst().orElse(null);
+			if (playerStack != null) {
+				thirdBuffCall = stackOnYou.getModified(playerStack, params);
+			}
+			else {
+				BuffApplied anyStack = stackBuffs.get(0);
+				thirdBuffCall = stackNotOnYou.getModified(anyStack, params);
+			}
+		}
+		thirdBuffCall.setReplaces(secondBuffCall);
+		s.accept(thirdBuffCall);
+		log.info("Snakes 2: End");
 	}
 
 	private enum DoublePinionSpots {
@@ -370,6 +499,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static VolcanicTorchPos torchPos(XivCombatant cbt) {
 		Position pos = cbt.getPos();
+		if (pos == null) {
+			throw new IllegalArgumentException("Combatant had null position: " + cbt);
+		}
 		int x = (int) Math.round((pos.x() - 85.0) / 10.0);
 		int y = (int) Math.round((pos.y() - 85.0) / 10.0);
 		if (x < 0 || x > 3 || y < 0 || y > 3) {
@@ -478,6 +610,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> rearingRampageNumSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7933),
 			(e1, s) -> {
+				log.info("Rearing Rampage: Start");
 				int playerNum = 0;
 				boolean firstCallDone = false;
 				AbilityUsedEvent last = null;
@@ -503,6 +636,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					log.warn("Uplift: Player did not get hit! Maybe they're dead?");
 					return;
 				}
+				log.info("Rearing Rampage: Collected");
 				// #1 doesn't need to wait for anything, they can go as soon as the uplifts are done
 				Map<String, Object> params = Map.of("partner", partner == null ? "null" : partner);
 				if (playerNum == 1) {
@@ -514,7 +648,89 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 						s.updateCall(upliftBait.getModified(event, params));
 					}
 				}
+				log.info("Rearing Rampage: Done");
 			});
+
+	private enum QuadOption {
+		KB,
+		AWAY
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> quadrupedCrushImpactSq = SqtTemplates.sq(60_000,
+			// 7A05 is Crush (go far), 7A04 is Impact (close, kb)
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A04, 0x7A05),
+			(e1, s) -> {
+				if (e1.abilityIdMatches(0x7A04)) {
+					// call impact (close kb)
+					s.updateCall(quadrupedInitialImpact.getModified(e1));
+				}
+				else {
+					// call crush (far)
+					s.updateCall(quadrupedInitialCrush.getModified(e1));
+				}
+				AbilityCastStart stock = s.waitEvent(AbilityCastStart.class, acs -> acs.getSource().equals(e1.getSource()));
+				// 30999 = Diflare (light parties), 30998 = Tetraflare (partners)
+				boolean stockedDiflare = stock.abilityIdMatches(30999);
+				if (stockedDiflare) {
+					s.updateCall(lightPartiesLater.getModified(stock));
+				}
+				else {
+					s.updateCall(stackLater.getModified(stock));
+				}
+
+				AbilityCastStart firstMechCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x793c, 0x793d));
+				QuadOption firstMech = firstMechCast.abilityIdMatches(0x793c) ? QuadOption.KB : QuadOption.AWAY;
+				s.waitThenRefreshCombatants(100);
+				ArenaSector firstMechWhere = arenaPos.forCombatant(getState().getLatestCombatantData(firstMechCast.getSource()));
+				ArenaSector firstMechSafe = firstMech == QuadOption.KB ? firstMechWhere : firstMechWhere.opposite();
+
+				AbilityCastStart secondMechCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x793c, 0x793d));
+				QuadOption secondMech = secondMechCast.abilityIdMatches(0x793c) ? QuadOption.KB : QuadOption.AWAY;
+				s.waitThenRefreshCombatants(100);
+				ArenaSector secondMechWhere = arenaPos.forCombatant(getState().getLatestCombatantData(secondMechCast.getSource()));
+				ArenaSector secondMechSafe = secondMech == QuadOption.KB ? secondMechWhere : secondMechWhere.opposite();
+
+				Map<String, Object> params = Map.of("firstSafe", firstMechSafe, "secondSafe", secondMechSafe);
+				if (stockedDiflare) {
+					s.updateCall(quadrupedDiflare.getModified(params));
+				}
+				else {
+					s.updateCall(quadrupedTetraflare.getModified(params));
+				}
+				// Followup call
+				// I don't know all the variants, so just doing a hard wait
+				s.waitMs(4_200);
+				s.updateCall(quadrupedSecondMech.getModified(params));
+
+				List<AbilityCastStart> torches = getAcr().getAll().stream()
+						.filter(ct -> ct.getResult() == CastResult.IN_PROGRESS)
+						.map(CastTracker::getCast)
+						.filter(cast -> cast.abilityIdMatches(0x7927))
+						.toList();
+				s.waitThenRefreshCombatants(100);
+				boolean[][] badSpots = computeTorchFlameBadSpots(torches);
+				ArenaSector torchesSafe;
+				// [x][y]
+				if (!badSpots[0][1]) {
+					torchesSafe = ArenaSector.WEST;
+				}
+				else if (!badSpots[1][0]) {
+					torchesSafe = ArenaSector.NORTH;
+				}
+				else if (!badSpots[3][1]) {
+					torchesSafe = ArenaSector.EAST;
+				}
+				else if (!badSpots[1][3]) {
+					torchesSafe = ArenaSector.SOUTH;
+				}
+				else {
+					torchesSafe = ArenaSector.UNKNOWN;
+				}
+				s.updateCall(volcanicTorches3SafeSpot.getModified(torches.get(0), Map.of("side", torchesSafe)));
+
+			}
+	);
 
 
 //	@AutoFeed

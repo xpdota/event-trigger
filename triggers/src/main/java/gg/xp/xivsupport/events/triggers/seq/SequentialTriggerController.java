@@ -5,8 +5,11 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
 import org.jetbrains.annotations.Nullable;
@@ -265,6 +268,12 @@ public class SequentialTriggerController<X extends BaseEvent> {
 				return out;
 			}
 			// Third possibility - keep looking
+		}
+	}
+
+	public void waitBuffRemoved(StatusEffectRepository repo, BuffApplied buff) {
+		while (repo.statusOrRefreshActive(buff)) {
+			waitEvent(BuffRemoved.class, br -> br.getBuff().equals(buff.getBuff()) && br.getTarget().equals(buff.getTarget()));
 		}
 	}
 
