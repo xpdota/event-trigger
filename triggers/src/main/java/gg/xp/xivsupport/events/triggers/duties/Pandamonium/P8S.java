@@ -75,7 +75,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> doublePinionEW = ModifiableCallout.durationBasedCallWithOffset("Double Pinion: East/West Out", "East/West Out", Duration.ofMillis(1_000));
 	private final ModifiableCallout<AbilityCastStart> doublePinionCorners = ModifiableCallout.durationBasedCallWithOffset("Double Pinion: Corners", "Corners", Duration.ofMillis(1_000));
 
-//	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadruped");
+	//	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadruped");
 //	private final ModifiableCallout<AbilityCastStart> reforgedReflectionSerpent = ModifiableCallout.durationBasedCall("Reforged Reflection Serpent", "Serpent");
 //	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "Double Buster with Bleed");
@@ -208,7 +208,13 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Find second set
 				{
 					List<AbilityCastStart> secondGazes;
+					int limit = 20;
 					do {
+						if (limit -- <= 0) {
+							log.error("Error in snake form gazes! Quitting");
+							return;
+						}
+						s.waitMs(50);
 						secondGazes = getAcr().getAll().stream()
 								.filter(ct -> ct.getCast().abilityIdMatches(0x792b) && ct.getResult() == CastResult.IN_PROGRESS)
 								.map(CastTracker::getCast)
@@ -383,6 +389,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> volcanicTorches2sq = SqtTemplates.sq(15_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x791E),
 			(e1, s) -> {
+				log.info("Torches 2 Start");
 				List<AbilityCastStart> casts = s.waitEvents(15, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7927));
 				AbilityCastStart sample = casts.get(0);
 				s.waitThenRefreshCombatants(100);
@@ -406,6 +413,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(volcanicTorchesError.getModified(sample));
 					return;
 				}
+				log.info("Volcanic Torches 2: Done! {}", safeSpot);
 				s.updateCall(volcanicTorches2SafeSpot.getModified(sample, Map.of("corner", safeSpot)));
 			});
 
