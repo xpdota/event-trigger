@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -82,7 +83,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	// TODO
 //	private final ModifiableCallout<AbilityUsedEvent> dogKb = new ModifiableCallout<>("Quadruped: Knockback", "Knockback");
 
-	private final ModifiableCallout<AbilityUsedEvent> upliftNumber = new ModifiableCallout<>("Quadruped: Rearing Rampage Number", "Bait {num} with {partner}");
+	private final ModifiableCallout<AbilityUsedEvent> upliftNumber = new ModifiableCallout<>("Quadruped: Rearing Rampage Number", "Bait {num} with {partner}", 20_000);
 	private final ModifiableCallout<BaseEvent> upliftBait = new ModifiableCallout<>("Quadruped: Rearing Rampage Bait", "Bait with {partner}");
 
 	private final ModifiableCallout<AbilityCastStart> doublePinionCenter = ModifiableCallout.durationBasedCallWithOffset("Double Pinion: Center", "Center", Duration.ofMillis(1_000));
@@ -156,10 +157,13 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	// TODO: have flare callout replace precursor call
 //	private RawModifiedCallout<?> lastFlare;
 
+	private boolean seenTorches2;
+
 	@HandleEvents
 	public void reset(EventContext context, DutyCommenceEvent event) {
 		nextFlare = null;
 		seenFirstSnakes = false;
+		seenTorches2 = false;
 	}
 
 	@HandleEvents
@@ -338,7 +342,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private void secondSnakes(SequentialTriggerController<BaseEvent> s) {
 		log.info("Snakes 2: Begin");
-		List<BuffApplied> buffs = s.waitEvents(2, BuffApplied.class, ba -> ba.buffIdMatches(3351, 3326) && ba.getTarget().isThePlayer());
+		List<BuffApplied> buffs = new ArrayList<>(s.waitEvents(2, BuffApplied.class, ba -> ba.buffIdMatches(3351, 3326) && ba.getTarget().isThePlayer()));
 		buffs.sort(Comparator.comparing(BuffApplied::getInitialDuration));
 		BuffApplied firstBuff = buffs.get(0);
 		BuffApplied secondBuff = buffs.get(1);
@@ -362,6 +366,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 			safeSpot = "Cardinal";
 			cardOrInter = "Intercard";
 		}
+		log.info("Snakes 2: Found Safe Spot");
 		RawModifiedCallout<AbilityCastStart> qgCall = quadGaze.getModified(gazeStart, Map.of("gazeSpot", cardOrInter, "safeSpot", safeSpot));
 		s.accept(qgCall);
 		AbilityCastStart quadGorgoSpit = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7932));
@@ -370,7 +375,9 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 		RawModifiedCallout<AbilityUsedEvent> qgDone = quadGazeDone.getModified(gazeDone);
 		qgDone.setReplaces(qgCall);
 		s.accept(qgDone);
+		log.info("Snakes 2: Waiting for buff to be removed");
 		s.waitBuffRemoved(getBuffs(), firstBuff);
+		log.info("Snakes 2: Buff Removed");
 		RawModifiedCallout<BuffApplied> secondBuffCall;
 		if (secondBuff.buffIdMatches(3351)) {
 			secondBuffCall = gazeNow.getModified(secondBuff);
@@ -379,6 +386,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 			secondBuffCall = puddleNow.getModified(secondBuff);
 		}
 		secondBuffCall.setReplaces(firstBuffCall);
+		s.accept(secondBuffCall);
 		AbilityCastStart cleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7932));
 		Position cleavePos = cleave.getSource().getPos();
 		List<ArenaSector> safeSpots;
@@ -497,6 +505,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private record VolcanicTorchPos(int x, int y) {
 	}
 
+	@SuppressWarnings("NumericCastThatLosesPrecision")
 	private static VolcanicTorchPos torchPos(XivCombatant cbt) {
 		Position pos = cbt.getPos();
 		if (pos == null) {
@@ -578,6 +587,12 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> volcanicTorches2sq = SqtTemplates.sq(15_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x791E, 31007),
 			(e1, s) -> {
+				if (seenTorches2) {
+					return;
+				}
+				else {
+					seenTorches2 = true;
+				}
 				log.info("Torches 2 Start");
 				List<AbilityCastStart> casts = s.waitEvents(15, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7927));
 				AbilityCastStart sample = casts.get(0);
@@ -661,6 +676,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 			// 7A05 is Crush (go far), 7A04 is Impact (close, kb)
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A04, 0x7A05),
 			(e1, s) -> {
+				log.info("Quadruped Mechs 2: Start");
 				if (e1.abilityIdMatches(0x7A04)) {
 					// call impact (close kb)
 					s.updateCall(quadrupedInitialImpact.getModified(e1));
@@ -690,6 +706,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitThenRefreshCombatants(100);
 				ArenaSector secondMechWhere = arenaPos.forCombatant(getState().getLatestCombatantData(secondMechCast.getSource()));
 				ArenaSector secondMechSafe = secondMech == QuadOption.KB ? secondMechWhere : secondMechWhere.opposite();
+				log.info("Quadruped Mechs 2: Calculated {} at {}, {} at {}", firstMech, firstMechWhere, secondMech, secondMechWhere);
 
 				Map<String, Object> params = Map.of("firstSafe", firstMechSafe, "secondSafe", secondMechSafe);
 				if (stockedDiflare) {
@@ -701,14 +718,29 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Followup call
 				// I don't know all the variants, so just doing a hard wait
 				s.waitMs(4_200);
+				log.info("Quadruped Mechs 2: Waited some time");
 				s.updateCall(quadrupedSecondMech.getModified(params));
 
-				List<AbilityCastStart> torches = getAcr().getAll().stream()
-						.filter(ct -> ct.getResult() == CastResult.IN_PROGRESS)
-						.map(CastTracker::getCast)
-						.filter(cast -> cast.abilityIdMatches(0x7927))
-						.toList();
-				s.waitThenRefreshCombatants(100);
+				List<AbilityCastStart> torches;
+				log.info("Quadruped Mechs 2: Waiting for Torches");
+				while (true) {
+					torches = getAcr().getAll().stream()
+							.map(CastTracker::getCast)
+							// Just in case we're lagging and the casts have already completed, filter these by looking
+							// at how long in the past they were, rather than the status.
+							.filter(cast -> cast.getEffectiveTimeSince().toSeconds() < 20)
+							.filter(cast -> cast.abilityIdMatches(0x7927))
+							.toList();
+					log.info("Quadruped Mechs 2: Number of torches: {}", torches.size());
+					if (torches.size() < 12) {
+						s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7927));
+					}
+					else {
+						s.waitThenRefreshCombatants(100);
+						break;
+					}
+				}
+				log.info("Quadruped Mechs 2: Found Torches");
 				boolean[][] badSpots = computeTorchFlameBadSpots(torches);
 				ArenaSector torchesSafe;
 				// [x][y]
