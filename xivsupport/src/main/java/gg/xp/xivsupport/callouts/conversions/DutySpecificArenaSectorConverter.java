@@ -25,7 +25,7 @@ public class DutySpecificArenaSectorConverter {
 
 	public @Nullable String valueForSector(ArenaSector sector) {
 		StringSetting setting = perSectorSettings.get(sector);
-		if (setting == null) {
+		if (setting == null || setting.get().isBlank()) {
 			return null;
 		}
 		else {
