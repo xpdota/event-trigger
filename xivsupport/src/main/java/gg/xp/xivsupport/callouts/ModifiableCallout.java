@@ -322,6 +322,10 @@ public class ModifiableCallout<X> {
 		return new ModifiableCallout<>(desc, text, text + " ({event.getEstimatedRemainingDuration()})", expiry);
 	}
 
+	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCall(String descAndText) {
+		return durationBasedCall(descAndText, descAndText);
+	}
+
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCallWithOffset(String desc, String text, Duration offset) {
 		Duration combinedLingerTime = defaultLingerTime.plus(offset);
 		Predicate<Y> expiry = hd -> {

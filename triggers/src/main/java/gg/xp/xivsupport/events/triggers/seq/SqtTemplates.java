@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.seq;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 
 import java.time.Duration;
@@ -43,4 +44,17 @@ public class SqtTemplates {
 					trigger.accept((X) e1, s);
 				});
 	}
+
+	public static SequentialTrigger<BaseEvent> beginningAndEndingOfCast(
+			Predicate<AbilityCastStart> castFilter,
+			ModifiableCallout<? super AbilityCastStart> initialCall,
+			ModifiableCallout<?> followup) {
+		return sq(60_000, AbilityCastStart.class, castFilter,
+				(e1, s) -> {
+					s.updateCall(initialCall.getModified(e1));
+					s.waitMs(e1.getEstimatedRemainingDuration().toMillis());
+					s.updateCall(followup.getModified());
+				});
+	}
+
 }
