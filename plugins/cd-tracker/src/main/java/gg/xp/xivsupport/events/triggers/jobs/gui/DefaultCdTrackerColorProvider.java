@@ -9,6 +9,7 @@ public final class DefaultCdTrackerColorProvider implements CdColorProvider {
 	private static final Color defaultColorActive = new Color(19, 8, 201, 192);
 	private static final Color defaultColorReady = new Color(55, 182, 67, 192);
 	private static final Color defaultColorOnCd = new Color(192, 0, 0, 192);
+	private static final Color defaultFontColor = new Color(240, 240, 240);
 
 	private DefaultCdTrackerColorProvider() {}
 
@@ -26,5 +27,15 @@ public final class DefaultCdTrackerColorProvider implements CdColorProvider {
 	@Override
 	public Color getOnCdColor() {
 		return defaultColorOnCd;
+	}
+
+	@Override
+	public Color getPreappColor() {
+		return defaultColorActive;
+	}
+
+	@Override
+	public Color getFontColor() {
+		return defaultFontColor;
 	}
 }

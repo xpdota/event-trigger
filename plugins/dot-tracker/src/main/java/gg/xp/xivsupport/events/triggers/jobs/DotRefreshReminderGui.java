@@ -84,6 +84,7 @@ public class DotRefreshReminderGui implements PluginTab {
 			settingsPanel.add(new ColorSettingGui(backend.getNormalColor(), "Bar Color", enableOverlaySetting::get).getComponent());
 			settingsPanel.add(new ColorSettingGui(backend.getExpiringColor(), "Expiring Color", enableOverlaySetting::get).getComponent());
 			settingsPanel.add(new ColorSettingGui(backend.getExpiredColor(), "Expired Color", enableOverlaySetting::get).getComponent());
+			settingsPanel.add(new ColorSettingGui(backend.getFontColor(), "Font Color", enableOverlaySetting::get).getComponent());
 		}
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);

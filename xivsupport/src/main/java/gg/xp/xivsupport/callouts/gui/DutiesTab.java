@@ -9,6 +9,7 @@ import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
+import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.callouts.conversions.DutySpecificArenaSectorConverter;
 import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
 import gg.xp.xivsupport.events.debug.DebugCommand;
@@ -24,9 +25,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @ScanMe
 public class DutiesTab implements PluginTab {
@@ -36,13 +39,20 @@ public class DutiesTab implements PluginTab {
 	private final SoundFilesManager soundMgr;
 	private final EventMaster master;
 	private final GlobalArenaSectorConverter asc;
+	private final SoundFileTab sft;
 
-	public DutiesTab(ModifiedCalloutRepository backend, PicoContainer container, SoundFilesManager soundMgr, EventMaster master, GlobalArenaSectorConverter asc) {
+	public DutiesTab(ModifiedCalloutRepository backend,
+	                 PicoContainer container,
+	                 SoundFilesManager soundMgr,
+	                 EventMaster master,
+	                 GlobalArenaSectorConverter asc,
+	                 SoundFileTab sft) {
 		this.backend = backend;
 		this.container = container;
 		this.soundMgr = soundMgr;
 		this.master = master;
 		this.asc = asc;
+		this.sft = sft;
 	}
 
 	@Override
@@ -61,6 +71,8 @@ public class DutiesTab implements PluginTab {
 		}
 	}
 
+	private final Set<KnownDuty> alreadyHasAscTab = EnumSet.noneOf(KnownDuty.class);
+
 	@Override
 	public Component getTabContents() {
 		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
@@ -78,24 +90,27 @@ public class DutiesTab implements PluginTab {
 					.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty, DutyTabContents::new);
 			tabContents.calls.add(group);
-			DutySpecificArenaSectorConverter dsc = asc.getDutySpecificConverter(duty);
-			if (dsc != null) {
-				tabContents.extraTabs.add(new DutyPluginTab() {
-					@Override
-					public String getTabName() {
-						return "Arena Positions";
-					}
+			if (!alreadyHasAscTab.contains(duty)) {
+				DutySpecificArenaSectorConverter dsc = asc.getDutySpecificConverter(duty);
+				if (dsc != null) {
+					tabContents.extraTabs.add(new DutyPluginTab() {
+						@Override
+						public String getTabName() {
+							return "Arena Positions";
+						}
 
-					@Override
-					public Component getTabContents() {
-						return new ArenaSectorConverterGui(dsc);
-					}
+						@Override
+						public Component getTabContents() {
+							return new ArenaSectorConverterGui(dsc);
+						}
 
-					@Override
-					public KnownDuty getDuty() {
-						return duty;
-					}
-				});
+						@Override
+						public KnownDuty getDuty() {
+							return duty;
+						}
+					});
+				}
+				alreadyHasAscTab.add(duty);
 			}
 		});
 
@@ -160,7 +175,7 @@ public class DutiesTab implements PluginTab {
 
 		{
 			JPanel panel = new JPanel(new BorderLayout());
-			CalloutHelper ch = new CalloutHelper(dutyContent.calls, soundMgr);
+			CalloutHelper ch = new CalloutHelper(dutyContent.calls, soundMgr, sft);
 			JScrollPane scroller = new JScrollPane(ch);
 			scroller.getVerticalScrollBar().setUnitIncrement(20);
 			scroller.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);

@@ -285,6 +285,9 @@ public class MapDataController {
 			int truncation = (int) (oldSize * 0.10);
 			List<Snapshot> newList = new ArrayList<>(snapshots.subList(truncation, oldSize));
 			snapshots = newList;
+			if (index > newList.size()) {
+				index = newList.size() - 1;
+			}
 		}
 	}
 

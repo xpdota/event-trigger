@@ -5,6 +5,7 @@ import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
+import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
@@ -21,10 +22,12 @@ public class CalloutsConfigTab implements PluginTab {
 
 	private final ModifiedCalloutRepository backend;
 	private final SoundFilesManager soundMgr;
+	private final SoundFileTab sft;
 
-	public CalloutsConfigTab(ModifiedCalloutRepository backend, SoundFilesManager soundMgr) {
+	public CalloutsConfigTab(ModifiedCalloutRepository backend, SoundFilesManager soundMgr, SoundFileTab sft) {
 		this.backend = backend;
 		this.soundMgr = soundMgr;
+		this.sft = sft;
 	}
 
 	@Override
@@ -100,7 +103,7 @@ public class CalloutsConfigTab implements PluginTab {
 				c.gridx = 1;
 				innerPanel.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
-				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr);
+				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr, sft);
 				showHide.getModel().addChangeListener(l -> {
 					csg.setVisible(showHide.isSelected());
 					innerPanel.revalidate();

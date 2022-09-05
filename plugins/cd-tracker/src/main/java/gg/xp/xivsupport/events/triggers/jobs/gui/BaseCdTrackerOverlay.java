@@ -1,28 +1,22 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
-import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.combatstate.CooldownStatus;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.RefreshType;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
-import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 public abstract class BaseCdTrackerOverlay extends XivOverlay {
@@ -40,6 +34,8 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 	private final ColorSetting activeColor;
 	private final ColorSetting readyColor;
 	private final ColorSetting onCdColor;
+	private final ColorSetting preappColor;
+	private final ColorSetting fontColor;
 
 	protected BaseCdTrackerOverlay(String title, String settingKeyBase, OverlayConfig oc, PersistenceProvider persistence, IntSetting rowSetting) {
 		super(title, settingKeyBase, oc, persistence);
@@ -50,8 +46,10 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 		activeColor = new ColorSetting(persistence, settingKeyBase + ".active-color", defaults.getActiveColor());
 		readyColor = new ColorSetting(persistence, settingKeyBase + ".ready-color", defaults.getReadyColor());
 		onCdColor = new ColorSetting(persistence, settingKeyBase + ".oncd-color", defaults.getOnCdColor());
+		preappColor = new ColorSetting(persistence, settingKeyBase + ".preapp-color", defaults.getPreappColor());
+		fontColor = new ColorSetting(persistence, settingKeyBase + ".font-color", defaults.getFontColor());
 
-		colors = new SettingsCdTrackerColorProvider(activeColor, readyColor, onCdColor);
+		colors = new SettingsCdTrackerColorProvider(activeColor, readyColor, onCdColor, preappColor, fontColor);
 		BaseCdTrackerTable tableHolder = new BaseCdTrackerTable(() -> croppedCds, colors);
 		tableModel = tableHolder.getTableModel();
 		table = tableHolder.getTable();

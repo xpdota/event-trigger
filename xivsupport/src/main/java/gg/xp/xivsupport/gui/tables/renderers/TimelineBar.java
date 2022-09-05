@@ -186,6 +186,8 @@ public class TimelineBar extends JComponent {
 	}
 
 	public void setTextColor(Color textColor) {
+		this.label.setForeground(textColor);
+		this.rightLabel.setForeground(textColor);
 		this.textColor = textColor;
 	}
 }

@@ -10,6 +10,7 @@ import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -63,7 +64,7 @@ public class SoundFileTab implements PluginTab {
 			JButton deleteButton = new JButton("Delete") {
 				@Override
 				public boolean isEnabled() {
-					return singleItemSelected();
+					return !multiSelections.isEmpty();
 				}
 			};
 			deleteButton.addActionListener(l -> deleteCurrent());
@@ -113,8 +114,11 @@ public class SoundFileTab implements PluginTab {
 		outer.repaint();
 	}
 
-	private void addNew() {
+	private @Nullable SoundFile makeNew() {
 		String name = JOptionPane.showInputDialog("Give this sound a name");
+		if (name == null || name.isBlank()) {
+			return null;
+		}
 		// TODO: reuse instance of JFileChooser so it keeps directory?
 		JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setFileFilter(new FileFilter() {
@@ -136,19 +140,30 @@ public class SoundFileTab implements PluginTab {
 			SoundFile soundFile = new SoundFile();
 			soundFile.name = name;
 			soundFile.file = file.toPath();
-			backend.addSoundFile(soundFile);
-			refresh();
-			SwingUtilities.invokeLater(() -> {
-				model.setSelectedValue(soundFile);
-				refreshSelection();
-			});
+			return soundFile;
+		}
+		else {
+			return null;
 		}
 	}
 
-	private void deleteCurrent() {
-		if (selection != null) {
-			backend.removeSoundFile(selection);
+
+	public @Nullable SoundFile addNew() {
+		SoundFile newFile = makeNew();
+		if (newFile != null) {
+			backend.addSoundFile(newFile);
+			refresh();
+			SwingUtilities.invokeLater(() -> {
+				model.setSelectedValue(newFile);
+				refreshSelection();
+			});
+			return newFile;
 		}
+		return null;
+	}
+
+	private void deleteCurrent() {
+		multiSelections.forEach(backend::removeSoundFile);
 		refresh();
 		model.setSelectedValue(null);
 	}

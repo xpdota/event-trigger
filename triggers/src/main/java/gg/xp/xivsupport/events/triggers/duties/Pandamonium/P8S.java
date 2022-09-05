@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@CalloutRepo(name = "P8S", duty = KnownDuty.P8S)
+@CalloutRepo(name = "P8S Door Boss", duty = KnownDuty.P8S)
 public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P8S.class);
 	private final ModifiableCallout<AbilityCastStart> genesisOfFlame = ModifiableCallout.durationBasedCall("Genesis Of Flame", "Raidwide");
@@ -95,13 +95,15 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	//	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadruped");
 //	private final ModifiableCallout<AbilityCastStart> reforgedReflectionSerpent = ModifiableCallout.durationBasedCall("Reforged Reflection Serpent", "Serpent");
 //	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
+	private final ModifiableCallout<AbilityUsedEvent> dontBaitProtean = new ModifiableCallout<>("Hit by Flare, Don't Bait Protean", "Avoid Protean");
+	private final ModifiableCallout<AbilityUsedEvent> doBaitProtean = new ModifiableCallout<>("Not Hit by Flare, Bait Protean", "In and Bait Protean");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "Double Buster with Bleed");
 	private final ModifiableCallout<AbilityCastStart> nestOfFlameVipers = ModifiableCallout.durationBasedCall("Nest of Flamevipers", "Proteans");
 
 	private final ModifiableCallout<BuffApplied> puddleFirstThenGaze = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Puddle then Gaze", "Puddle then Gaze").autoIcon();
 	private final ModifiableCallout<BuffApplied> gazeNow = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Gaze Followup", "Gaze").autoIcon();
 	private final ModifiableCallout<BuffApplied> gazeFirstThenPuddle = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Gaze then Puddle", "Gaze then Puddle").autoIcon();
-	private final ModifiableCallout<BuffApplied> puddleNow = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Gaze then Puddle", "Puddle").autoIcon();
+	private final ModifiableCallout<BuffApplied> puddleNow = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Puddle Followup", "Puddle").autoIcon();
 	private final ModifiableCallout<BuffApplied> stackOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Stack on You", "Stack, {safe} safe").autoIcon();
 	private final ModifiableCallout<BuffApplied> stackNotOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Stack with Light Party", "Stack, {safe} safe").autoIcon();
 	private final ModifiableCallout<BuffApplied> petrificationOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Snakes 2: Petrification on You", "Stack Behind Snake, {safe} safe").autoIcon();
@@ -446,7 +448,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 		When the real Heph is casting it, the basic ability ID is fine, since there's one for in and one for out.
 	 */
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> doublePinionFang = SqtTemplates.sq(2_000,
+	private final SequentialTrigger<BaseEvent> doublePinionFang = SqtTemplates.sq(20_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7950, 0x7951),
 			(e1, s) -> {
 				AbilityCastStart e2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7950, 0x7951));
@@ -498,6 +500,12 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					case CENTER -> doublePinionCenter;
 				};
 				s.updateCall(call.getModified(e1));
+				List<AbilityUsedEvent> proteanHits = s.waitEventsQuickSuccession(4, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x72CE) && aue.isFirstTarget(), Duration.ofMillis(300));
+				proteanHits.stream().filter(hit -> hit.getTarget().isThePlayer())
+						.findAny()
+						.ifPresentOrElse(
+								aue -> s.updateCall(dontBaitProtean.getModified(aue)),
+								() -> s.updateCall(doBaitProtean.getModified(proteanHits.get(0))));
 			});
 
 	// x and y range from 0 to 3
@@ -717,7 +725,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 				// Followup call
 				// I don't know all the variants, so just doing a hard wait
-				s.waitMs(4_200);
+				s.waitMs(4_900);
 				log.info("Quadruped Mechs 2: Waited some time");
 				s.updateCall(quadrupedSecondMech.getModified(params));
 

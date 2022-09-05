@@ -49,9 +49,11 @@ public class DotRefreshReminders {
 	private static final Color defaultColorExpired = new Color(255, 0, 0, 192);
 	private static final Color defaultColorGood = new Color(53, 134, 159, 192);
 	private static final Color defaultColorExpiring = new Color(172, 48, 225, 192);
+	private static final Color defaultFontColor = new Color(220, 220, 220);
 	private final ColorSetting normalColor;
 	private final ColorSetting expiredColor;
 	private final ColorSetting expiringColor;
+	private final ColorSetting fontColor;
 
 	// TODO: make this a real setting
 	boolean suppressSpamCallouts = true;
@@ -70,6 +72,7 @@ public class DotRefreshReminders {
 		normalColor = new ColorSetting(persistence, "dot-tracker.normal-color", defaultColorGood);
 		expiredColor = new ColorSetting(persistence, "dot-tracker.expired-color", defaultColorExpired);
 		expiringColor = new ColorSetting(persistence, "dot-tracker.expiring-color", defaultColorExpiring);
+		fontColor = new ColorSetting(persistence, "dot-tracker.font-color", defaultFontColor);
 	}
 
 	private static String getKey(DotBuff buff) {
@@ -241,5 +244,9 @@ public class DotRefreshReminders {
 
 	public ColorSetting getExpiringColor() {
 		return expiringColor;
+	}
+
+	public ColorSetting getFontColor() {
+		return fontColor;
 	}
 }

@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
 
 public class DropShadowLabel extends Component {
 
-	private static final int xPad = 6;
+	private static final int xPad = 3;
 
 	private static final ExecutorService exs = Executors.newCachedThreadPool(new NamedThreadFactory("DropShadowLabelRender"));
 
@@ -154,8 +154,9 @@ public class DropShadowLabel extends Component {
 		GlyphVector glyphVector = font.createGlyphVector(frc, text);
 		Shape outline = glyphVector.getOutline();
 		AffineTransform shapeTrans = new AffineTransform();
+		shapeTrans.translate(xPad, 0);
 		shapeTrans.scale(req.scale, req.scale);
-		shapeTrans.translate(xPad, fontVshift);
+		shapeTrans.translate(0, fontVshift);
 //		shapeTrans.translate(extraPadding + (buffWidth / 2.0f) - (textWidth / 2.0f), cellHeight - yPad);
 		g.setTransform(shapeTrans);
 		if (enableShadow) {
