@@ -171,7 +171,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> firePairsSameRole = new ModifiableCallout<>("Fire Pairs, NA Role", "Fire Pairs - {frontSafe ? \"Front\" : \"Second\"} row");
 	private final ModifiableCallout<?> iceLightPartiesSameRole = new ModifiableCallout<>("Ice Parties, NA Role", "Ice Parties - {frontSafe ? \"Front\" : \"Second\"} row");
 	private final ModifiableCallout<?> firePairsOtherRole = new ModifiableCallout<>("Fire Pairs, Other Role", "Fire Pairs - {frontSafe ? \"Front\" : \"Second\"} row");
-	private final ModifiableCallout<?> iceLightPartiesOtherRole = new ModifiableCallout<>("Ice Parties, Other Role", "Ice Parties - {frontSafe ? \"Front\" : \"Second\"} row");
+	private final ModifiableCallout<?> iceLightPartiesOtherRole = new ModifiableCallout<>("Ice Pairs, Other Role", "Ice Parties - {frontSafe ? \"Front\" : \"Second\"} row");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> naturalAlignment1 = SqtTemplates.sq(80_000,
@@ -293,7 +293,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 								s.updateCall(iceFireNothing.getModified(safeSpotParams));
 							}
 							case SAME_ROLE -> {
-								if (partnersFirst) {
+								if (!partnersFirst) {
 									s.updateCall(firePairsSameRole.getModified(safeSpotParams));
 								}
 								else {
@@ -301,7 +301,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 								}
 							}
 							case OTHER_ROLE -> {
-								if (partnersFirst) {
+								if (!partnersFirst) {
 									s.updateCall(firePairsOtherRole.getModified(safeSpotParams));
 								}
 								else {

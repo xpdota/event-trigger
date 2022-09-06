@@ -97,6 +97,18 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		waitMs(delay);
 	}
 
+	public void forceExpire() {
+		synchronized (lock) {
+			// TODO: expire on wipe?
+			// Also make it configurable as to whether or not a wipe ends the trigger
+//			if (event.getHappenedAt().isAfter(expiresAt)) {
+			log.info("Sequential trigger force expired");
+			die = true;
+			lock.notifyAll();
+		}
+
+	}
+
 	@SystemEvent
 	static class DelayedSqtEvent extends BaseDelayedEvent {
 

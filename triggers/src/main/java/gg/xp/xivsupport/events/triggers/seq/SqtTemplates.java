@@ -1,9 +1,11 @@
 package gg.xp.xivsupport.events.triggers.seq;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
+import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 
 import java.time.Duration;
 import java.util.function.BiConsumer;
@@ -42,7 +44,15 @@ public class SqtTemplates {
 				e1 -> startType.isInstance(e1) && startCondition.test((X) e1),
 				(e1, s) -> {
 					trigger.accept((X) e1, s);
-				});
+				}) {
+			@Override
+			public void feed(EventContext ctx, BaseEvent event) {
+				if (event instanceof WipeEvent wipe) {
+					forceExpire();
+				}
+				super.feed(ctx, event);
+			}
+		};
 	}
 
 	public static SequentialTrigger<BaseEvent> beginningAndEndingOfCast(
