@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -104,6 +105,22 @@ public enum ArenaSector implements HasFriendlyName {
 			};
 			default -> null;
 		};
+	}
+
+	/**
+	 * Like {@link #tryCombineTwoQuadrants(List)} (List)}, but returns a list. If they were combined, the list will
+	 * contain the single combined item. Otherwise, returns the original input.
+	 * @param quadrants The quadrants to combine.
+	 * @return          The original input if no combination possible, otherwise the combination.
+	 */
+	public static List<ArenaSector> tryMergeQuadrants(List<ArenaSector> quadrants) {
+		ArenaSector combined = tryCombineTwoQuadrants(quadrants);
+		if (combined == null) {
+			return quadrants;
+		}
+		else {
+			return Collections.singletonList(combined);
+		}
 	}
 
 	/**

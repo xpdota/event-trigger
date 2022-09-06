@@ -94,7 +94,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	//	private final ModifiableCallout<AbilityCastStart> reforgedReflectionQuadruped = ModifiableCallout.durationBasedCall("Reforged Reflection Quadruped", "Quadruped");
 //	private final ModifiableCallout<AbilityCastStart> reforgedReflectionSerpent = ModifiableCallout.durationBasedCall("Reforged Reflection Serpent", "Serpent");
-//	private final ModifiableCallout<AbilityCastStart> fourfoldFiresSafe = ModifiableCallout.durationBasedCall("Fourfold Fires Safe Spot", "{safe}");
+	private final ModifiableCallout<?> fourfoldFiresSafe = new ModifiableCallout<>("Fourfold Fires Safe Spot", "{safe}");
 	private final ModifiableCallout<AbilityUsedEvent> dontBaitProtean = new ModifiableCallout<>("Hit by Flare, Don't Bait Protean", "Avoid Protean");
 	private final ModifiableCallout<AbilityUsedEvent> doBaitProtean = new ModifiableCallout<>("Not Hit by Flare, Bait Protean", "In and Bait Protean");
 	private final ModifiableCallout<AbilityCastStart> flameviper = ModifiableCallout.durationBasedCall("Flameviper", "Double Buster with Bleed");
@@ -774,36 +774,59 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 	);
 
 
-//	@AutoFeed
-//	private final SequentialTrigger<BaseEvent> cthonicVent = new SequentialTrigger<>(
-//			10_000,
-//			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x0, 0x0, 0x0), //????, ????+88(?), ????+1
-//			(e1, s) -> {
-//				List<AbilityCastStart> cthonicCasts = new ArrayList<>(s.waitEvents(1, AbilityCastStart.class, event -> event.abilityIdMatches(0x0, 0x0, 0x0))); // same as above
-//				cthonicCasts.add((AbilityCastStart) e1);
-//				List<XivCombatant> suneaters = new ArrayList<>();
-//				log.info("CthonicVent: Got suneater casts");
-//				s.waitMs(100);
-//				s.refreshCombatants(100);
-//				log.info("CthonicVent: done with delay");
-//				for(AbilityCastStart acs : cthonicCasts) {
-//					suneaters.add(this.getState().getLatestCombatantData(acs.getSource()));
-//				}
-//				log.info("CthonicVent: done finding positions, finding safe spots");
-//				if(suneaters.size() != 2) {
-//					log.error("Invalid number of suneaters found! Data: {}", cthonicCasts);
-//					return;
-//				}
-//				log.info("CthonicVent: found suneaters 1:{}, 2:{}", arenaPos.forCombatant(suneaters.get(0)).getFriendlyName(), arenaPos.forCombatant(suneaters.get(1)).getFriendlyName());
-//				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.quadrants);
-//				safe.remove(arenaPos.forCombatant(suneaters.get(0)));
-//				safe.remove(arenaPos.forCombatant(suneaters.get(1)));
-//				ArenaSector combined = ArenaSector.tryCombineTwoQuadrants(new ArrayList<>(safe));
-//
-//				Map<String, Object> args = Map.of("safe", combined == null ? safe : combined);
-//				s.accept(fourfoldFiresSafe.getModified(cthonicCasts.get(0), args));
-//			}
-//	);
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> cthonicVent = SqtTemplates.sq(
+			40_000,
+			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x78F0),
+			(e1, s) -> {
+				log.info("Cthonic Vent: Start");
+				List<AbilityCastStart> initialCasts = s.waitEvents(2, AbilityCastStart.class, event -> event.abilityIdMatches(0x7925));
+				s.refreshCombatants(100);
+				List<XivCombatant> initialSpots = initialCasts.stream()
+						.map(AbilityCastStart::getSource)
+						.map(cbt -> getState().getLatestCombatantData(cbt))
+						.toList();
+				List<ArenaSector> initialBadSpots = initialSpots.stream().map(arenaPos::forCombatant).toList();
+				List<ArenaSector> initialSafe = new ArrayList<>(ArenaSector.quadrants);
+				initialSafe.removeAll(initialBadSpots);
+				log.info("Cthonic Vent: Got casts. Bad: {}, Safe: {}", initialBadSpots, initialSafe);
+				s.updateCall(fourfoldFiresSafe.getModified(Map.of("safe", ArenaSector.tryMergeQuadrants(initialSafe))));
+
+				for (int i = 0; i < 2; i++) {
+					// Time to figure out next spots
+					// First wait for casts to be done
+					List<AbilityUsedEvent> turns = s.waitEvents(2, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7923, 0x7924));
+					log.info("Cthonic Vent: Got turn/movement abilities");
+					List<ArenaSector> nextSafeSpots;
+					List<ArenaSector> nextBadSpots;
+					while (true) {
+						// To make this work better in testing,
+						s.refreshCombatants(100);
+						nextBadSpots = turns.stream()
+								.map(AbilityUsedEvent::getSource)
+								.map(cbt -> getState().getLatestCombatantData(cbt))
+								.map(XivCombatant::getPos)
+								// Filter out stuff that just hasn't moved yet
+								.filter(pos -> {
+									double xabs = Math.abs(100 - pos.x());
+									double yabs = Math.abs(100 - pos.y());
+									return xabs > 14.9 && xabs < 15.1 &&  yabs > 14.9 && yabs < 15.1;
+								})
+								// Just pretend it moves 50 units forward, it's good enough
+								.map(pos -> pos.translateRelative(0, 50))
+								.map(arenaPos::forPosition)
+								.toList();
+						nextSafeSpots = new ArrayList<>(ArenaSector.quadrants);
+						nextSafeSpots.removeAll(nextBadSpots);
+						if (nextSafeSpots.size() == 2) {
+							break;
+						}
+					}
+					log.info("Cthonic Vent: Predicted Bad: {}, Good: {}", nextBadSpots, nextSafeSpots);
+					s.updateCall(fourfoldFiresSafe.getModified(Map.of("safe", ArenaSector.tryMergeQuadrants(nextSafeSpots))));
+				}
+			}
+	);
 
 	// TODO: generic torch flame
 	// TODO: single and dual sunforge
