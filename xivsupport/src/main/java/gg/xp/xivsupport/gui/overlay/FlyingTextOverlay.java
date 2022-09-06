@@ -117,12 +117,13 @@ public class FlyingTextOverlay extends XivOverlay {
 					}
 					extraComponent.setBounds(0, 0, extraComponentDesiredWidth, newPrefHeight);
 					extraComponent.validate();
+					textLeftBound = Math.max(textPadding, extraComponentDesiredWidth);
 				}
 			}
-			text.setBounds(textLeftBound, 0, width - textLeftBound - textPadding, 1);
+			text.setBounds(textLeftBound, 0, width - textLeftBound - 2 * textPadding, 1);
 			int preferredHeight = text.getTextHeight();
 //			text.setPreferredSize(new Dimension(preferredWidth, preferredHeight));
-			text.setBounds(textLeftBound, 0, width - textLeftBound - textPadding, preferredHeight);
+			text.setBounds(textLeftBound, 0, width - textLeftBound - 2 * textPadding, preferredHeight);
 			Color colorOverride = event.getColorOverride();
 			if (colorOverride == null) {
 				text.setForeground(textColorSetting.get());
@@ -138,9 +139,9 @@ public class FlyingTextOverlay extends XivOverlay {
 			int preferredTextWidth = this.text.getTextWidth();
 			Component ec = extraComponent;
 			int extraComponentWidth = ec == null ? 0 : ec.getWidth() + textPadding;
-			int contentWidth = preferredTextWidth + extraComponentWidth;
+			int contentWidth = Math.min(preferredTextWidth + extraComponentWidth, width - 2 * textPadding);
 			int textHeight = this.text.getTextHeight();
-			int extraSpacePerSide = (width - contentWidth) / 2;
+			int extraSpacePerSide = Math.max(10, (width - contentWidth) / 2);
 			heightOfThisItem = ec == null ? textHeight : Math.max(textHeight, ec.getHeight());
 			int gradientWidth = Math.min(maxGradientWidth, extraSpacePerSide);
 			// TODO: these aren't the actual bounds
