@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
@@ -158,11 +159,13 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<BuffApplied> naturalAlignmentOnYou = ModifiableCallout.<BuffApplied>durationBasedCall("Natural Alignment on You", "Natural Alignment on {naPlayers}").autoIcon();
 	private final ModifiableCallout<BuffApplied> naturalAlignmentSameRole = new ModifiableCallout<>("Natural Alignment on Your Role", "Natural Alignment Role - {naPlayers}");
 	private final ModifiableCallout<BuffApplied> naturalAlignmentOtherRole = new ModifiableCallout<>("Natural Alignment on Other Role", "Other Role has Natural Alignment");
-	private final ModifiableCallout<?> naStackFirst = new ModifiableCallout<>("Stack First");
-	private final ModifiableCallout<?> naSpreadFirst = new ModifiableCallout<>("Spread First");
-	private final ModifiableCallout<?> avoidPlayers = new ModifiableCallout<>("Avoid Players");
+	private final ModifiableCallout<?> naStackFirst = new ModifiableCallout<>("NA1: Stack First", "Stack First");
+	private final ModifiableCallout<?> naSpreadFirst = new ModifiableCallout<>("NA1: Spread First", "Spread First");
+	private final ModifiableCallout<?> naStackFirstWithNA = new ModifiableCallout<>("NA1: Stack First", "Avoid Stack");
+	private final ModifiableCallout<?> naSpreadFirstWithNA = new ModifiableCallout<>("NA1: Spread First", "Avoid Spread");
 	private final ModifiableCallout<AbilityCastStart> baitThenStack = ModifiableCallout.durationBasedCall("Bait then Stack");
 	private final ModifiableCallout<AbilityCastStart> baitThenSpread = ModifiableCallout.durationBasedCall("Bait then Spread");
+	private final ModifiableCallout<AbilityCastStart> naAvoidPlayers = ModifiableCallout.durationBasedCall("Bait then Avoid");
 	private final ModifiableCallout<AbilityCastStart> spreadSecond = ModifiableCallout.durationBasedCall("Spread {safe}");
 	private final ModifiableCallout<AbilityCastStart> stackSecond = ModifiableCallout.durationBasedCall("Stack {safe}");
 	private final ModifiableCallout<AbilityCastStart> avoidPlayersCleave = ModifiableCallout.durationBasedCall("{safe}, Avoid Players");
@@ -171,147 +174,322 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> iceLightPartiesSameRole = new ModifiableCallout<>("Ice Parties, NA Role", "Ice Parties - {frontSafe ? \"Front\" : \"Second\"} row");
 	private final ModifiableCallout<?> firePairsOtherRole = new ModifiableCallout<>("Fire Pairs, Other Role", "Fire Pairs - {frontSafe ? \"Front\" : \"Second\"} row");
 	private final ModifiableCallout<?> iceLightPartiesOtherRole = new ModifiableCallout<>("Ice Parties, Other Role", "Ice Parties - {frontSafe ? \"Front\" : \"Second\"} row");
+	private final ModifiableCallout<?> na2StackFirst = new ModifiableCallout<>("NA2: Stack First", "Stack First");
+	private final ModifiableCallout<?> na2SpreadFirst = new ModifiableCallout<>("NA2: Spread First", "Spread First");
+	private final ModifiableCallout<?> na2StackFirstWithNA = new ModifiableCallout<>("NA2: Avoid Stack First", "Avoid Stack First");
+	private final ModifiableCallout<?> na2SpreadFirstWithNA = new ModifiableCallout<>("NA2: Avoid Stack First", "Avoid Spread First");
+	private final ModifiableCallout<?> na2avoidPlayers = new ModifiableCallout<>("NA2: Avoid", "Avoid Players - {frontSafe ? \"Front\" : \"Second\"} row");
+	private final ModifiableCallout<?> na2stack = new ModifiableCallout<>("NA2: Stack", "Stack - {frontSafe ? \"Front\" : \"Second\"} row");
+	private final ModifiableCallout<?> na2spread = new ModifiableCallout<>("NA2: Spread", "Spread - {frontSafe ? \"Front\" : \"Second\"} row");
+	private final ModifiableCallout<?> na2cleave = new ModifiableCallout<>("NA2: Cleave", "{safe} safe");
+//	private final ModifiableCallout<?> na2StackFirst = new ModifiableCallout<>("NA2: Stack First", "Stack - {frontSafe ? \"Front\" : \"Second\"} row");
+//	private final ModifiableCallout<?> na2SpreadFirst = new ModifiableCallout<>("NA2: Spread First", "Spread - {frontSafe ? \"Front\" : \"Second\"} row");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> naturalAlignment1 = SqtTemplates.sq(80_000,
+	private final SequentialTrigger<BaseEvent> naturalAlignment1 = SqtTemplates.multiInvocation(80_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(31163),
-			(e1, s) -> {
-				log.info("NA1: Start");
-				List<BuffApplied> naturalAlignmentBuffs = s.waitEventsQuickSuccession(2,
-						BuffApplied.class, ba -> ba.buffIdMatches(3412), Duration.ofMillis(200));
-				List<XivCombatant> naBuffs = naturalAlignmentBuffs.stream().map(BuffApplied::getTarget).toList();
-				Map<String, Object> params = Map.of("naPlayers", naBuffs);
-				final NaturalAlignmentRole roleStatus;
-				if (naBuffs.stream().anyMatch(XivCombatant::isThePlayer)) {
-					roleStatus = NaturalAlignmentRole.ON_YOU;
+			this::na1,
+			this::na2);
+
+	private void na1(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+		log.info("NA1: Start");
+		List<BuffApplied> naturalAlignmentBuffs = s.waitEventsQuickSuccession(2,
+				BuffApplied.class, ba -> ba.buffIdMatches(3412), Duration.ofMillis(200));
+		List<XivCombatant> naBuffs = naturalAlignmentBuffs.stream().map(BuffApplied::getTarget).toList();
+		Map<String, Object> params = Map.of("naPlayers", naBuffs);
+		final NaturalAlignmentRole roleStatus;
+		if (naBuffs.stream().anyMatch(XivCombatant::isThePlayer)) {
+			roleStatus = NaturalAlignmentRole.ON_YOU;
+		}
+		else {
+			boolean sameRole = getState().getPlayerJob().isDps() == ((XivPlayerCharacter) naBuffs.get(0)).getJob().isDps();
+			if (sameRole) {
+				roleStatus = NaturalAlignmentRole.SAME_ROLE;
+			}
+			else {
+				roleStatus = NaturalAlignmentRole.OTHER_ROLE;
+			}
+		}
+		log.info("NA1: Role {}", roleStatus);
+		ModifiableCallout<BuffApplied> call = switch (roleStatus) {
+			case ON_YOU -> naturalAlignmentOnYou;
+			case SAME_ROLE -> naturalAlignmentSameRole;
+			case OTHER_ROLE -> naturalAlignmentOtherRole;
+		};
+		s.accept(call.getModified(naturalAlignmentBuffs.get(0), params));
+		{
+			// 1e3 = spread then stack
+			// 1e1 = stack then spread
+			BuffApplied headBuff = s.waitEvent(BuffApplied.class,
+					ba -> ba.getBuff().getId() == 0x9F8
+							&& (ba.getRawStacks() == 0x1e1
+							|| ba.getRawStacks() == 0x1e3));
+			boolean stackFirst = headBuff.getRawStacks() == 0x1e1;
+			log.info("NA1: Head Buff 1: {}", headBuff);
+			log.info("NA1: Stack First? {}", stackFirst);
+			if (roleStatus != NaturalAlignmentRole.ON_YOU) {
+				if (stackFirst) {
+					s.updateCall(naStackFirst.getModified());
 				}
 				else {
-					boolean sameRole = getState().getPlayerJob().isDps() == ((XivPlayerCharacter) naBuffs.get(0)).getJob().isDps();
-					if (sameRole) {
-						roleStatus = NaturalAlignmentRole.SAME_ROLE;
-					}
-					else {
-						roleStatus = NaturalAlignmentRole.OTHER_ROLE;
-					}
+					s.updateCall(naSpreadFirst.getModified());
 				}
-				log.info("NA1: Role {}", roleStatus);
-				ModifiableCallout<BuffApplied> call = switch (roleStatus) {
-					case ON_YOU -> naturalAlignmentOnYou;
-					case SAME_ROLE -> naturalAlignmentSameRole;
-					case OTHER_ROLE -> naturalAlignmentOtherRole;
-				};
-				s.accept(call.getModified(naturalAlignmentBuffs.get(0), params));
-				{
-					// 1e3 = spread then stack
-					// 1e1 = stack then spread
-					BuffApplied headBuff = s.waitEvent(BuffApplied.class,
-							ba -> ba.getBuff().getId() == 0x9F8
-									&& (ba.getRawStacks() == 0x1e1
-									|| ba.getRawStacks() == 0x1e3));
-					boolean stackFirst = headBuff.getRawStacks() == 0x1e1;
-					log.info("NA1: Stack First? {}", stackFirst);
-					// Inverse
-					if (getBuffs().statusesOnTarget(headBuff.getTarget()).stream().anyMatch(ba -> ba.buffIdMatches(0xD15))) {
-						stackFirst = !stackFirst;
+			}
+			else {
+				if (stackFirst) {
+					s.updateCall(naStackFirstWithNA.getModified());
+				}
+				else {
+					s.updateCall(naSpreadFirstWithNA.getModified());
+				}
+			}
+			AbilityCastStart flare = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7a89));
+			log.info("NA1: Got Flare");
+			if (roleStatus == NaturalAlignmentRole.ON_YOU) {
+				s.updateCall(naAvoidPlayers.getModified(flare));
+			}
+			else {
+				s.updateCall((stackFirst ? baitThenStack : baitThenSpread).getModified(flare));
+			}
+			AbilityCastStart cleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x79D7, 0x79D8));
+			ArenaSector safe = cleave.abilityIdMatches(0x79D7) ? ArenaSector.EAST : ArenaSector.WEST;
+			log.info("NA1: Cleave Safe Spot {}", safe);
+			Map<String, Object> cleaveParams = Map.of("safe", safe);
+			if (roleStatus == NaturalAlignmentRole.ON_YOU) {
+				s.updateCall(avoidPlayersCleave.getModified(cleave, cleaveParams));
+			}
+			else {
+				s.updateCall((stackFirst ? spreadSecond : stackSecond).getModified(cleave, cleaveParams));
+			}
+		}
+
+		{
+			BuffApplied headBuff = s.waitEvent(BuffApplied.class,
+					ba -> ba.getBuff().getId() == 0x9F8
+							&& (ba.getRawStacks() == 0x1dd
+							|| ba.getRawStacks() == 0x1df));
+			boolean partnersFirst = headBuff.getRawStacks() == 0x1dd;
+			log.info("NA1: Head Buff 2: {}", headBuff);
+			log.info("NA1: Partners First {}", partnersFirst);
+			{
+				List<AbilityCastStart> endOfDays = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A8B));
+				boolean frontSafe = endOfDays.stream().noneMatch(acs -> acs.getSource().getPos().y() < 90);
+				log.info("NA1: Front Safe? {}", frontSafe);
+				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
+				switch (roleStatus) {
+					case ON_YOU -> {
+						s.updateCall(iceFireNothing.getModified(safeSpotParams));
 					}
-					if (roleStatus != NaturalAlignmentRole.ON_YOU) {
-						if (stackFirst) {
-							s.updateCall(naStackFirst.getModified());
+					case SAME_ROLE -> {
+						if (partnersFirst) {
+							s.updateCall(firePairsSameRole.getModified(safeSpotParams));
 						}
 						else {
-							s.updateCall(naSpreadFirst.getModified());
+							s.updateCall(iceLightPartiesSameRole.getModified(safeSpotParams));
 						}
 					}
-					log.info("NA1: Stack First? {}", stackFirst);
-					AbilityCastStart flare = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7a89));
-					log.info("NA1: Got Flare");
-					if (roleStatus == NaturalAlignmentRole.ON_YOU) {
-						s.updateCall(avoidPlayers.getModified());
-					}
-					else {
-						s.updateCall((stackFirst ? baitThenStack : baitThenSpread).getModified(flare));
-					}
-					AbilityCastStart cleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x79D7, 0x79D8));
-					ArenaSector safe = cleave.abilityIdMatches(0x79D7) ? ArenaSector.EAST : ArenaSector.WEST;
-					log.info("NA1: Cleave Safe Spot {}", safe);
-					Map<String, Object> cleaveParams = Map.of("safe", safe);
-					if (roleStatus == NaturalAlignmentRole.ON_YOU) {
-						s.updateCall(avoidPlayersCleave.getModified(cleave, cleaveParams));
-					}
-					else {
-						s.updateCall((stackFirst ? spreadSecond : stackSecond).getModified(cleave, cleaveParams));
-					}
-				}
-
-				{
-					BuffApplied headBuff = s.waitEvent(BuffApplied.class,
-							ba -> ba.getBuff().getId() == 0x9F8
-									&& (ba.getRawStacks() == 0x1dd
-									|| ba.getRawStacks() == 0x1df));
-					boolean partnersFirst = headBuff.buffIdMatches(0x1dd);
-					log.info("NA1: Partners First {}", partnersFirst);
-					// Inverse
-					if (getBuffs().statusesOnTarget(headBuff.getTarget()).stream().anyMatch(ba -> ba.buffIdMatches(0xD15))) {
-						partnersFirst = !partnersFirst;
-					}
-					log.info("NA1: Partners First {}", partnersFirst);
-					{
-						List<AbilityCastStart> endOfDays = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A8B));
-						boolean frontSafe = endOfDays.stream().noneMatch(acs -> acs.getSource().getPos().y() < 90);
-						log.info("NA1: Front Safe? {}", frontSafe);
-						Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
-						switch (roleStatus) {
-							case ON_YOU -> {
-								s.updateCall(iceFireNothing.getModified(safeSpotParams));
-							}
-							case SAME_ROLE -> {
-								if (partnersFirst) {
-									s.updateCall(firePairsSameRole.getModified(safeSpotParams));
-								}
-								else {
-									s.updateCall(iceLightPartiesSameRole.getModified(safeSpotParams));
-								}
-							}
-							case OTHER_ROLE -> {
-								if (partnersFirst) {
-									s.updateCall(firePairsOtherRole.getModified(safeSpotParams));
-								}
-								else {
-									s.updateCall(iceLightPartiesOtherRole.getModified(safeSpotParams));
-								}
-							}
+					case OTHER_ROLE -> {
+						if (partnersFirst) {
+							s.updateCall(firePairsOtherRole.getModified(safeSpotParams));
 						}
-					}
-					{
-						List<AbilityCastStart> endOfDays = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A8B));
-						boolean frontSafe = endOfDays.stream().noneMatch(acs -> acs.getSource().getPos().y() < 90);
-						log.info("NA1: Front Safe? {}", frontSafe);
-						Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
-						switch (roleStatus) {
-							case ON_YOU -> {
-								s.updateCall(iceFireNothing.getModified(safeSpotParams));
-							}
-							case SAME_ROLE -> {
-								if (!partnersFirst) {
-									s.updateCall(firePairsSameRole.getModified(safeSpotParams));
-								}
-								else {
-									s.updateCall(iceLightPartiesSameRole.getModified(safeSpotParams));
-								}
-							}
-							case OTHER_ROLE -> {
-								if (!partnersFirst) {
-									s.updateCall(firePairsOtherRole.getModified(safeSpotParams));
-								}
-								else {
-									s.updateCall(iceLightPartiesOtherRole.getModified(safeSpotParams));
-								}
-							}
+						else {
+							s.updateCall(iceLightPartiesOtherRole.getModified(safeSpotParams));
 						}
 					}
 				}
+			}
+			{
+				List<AbilityCastStart> endOfDays = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A8B));
+				boolean frontSafe = endOfDays.stream().noneMatch(acs -> acs.getSource().getPos().y() < 90);
+				log.info("NA1: Front Safe? {}", frontSafe);
+				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
+				switch (roleStatus) {
+					case ON_YOU -> {
+						s.updateCall(iceFireNothing.getModified(safeSpotParams));
+					}
+					case SAME_ROLE -> {
+						if (!partnersFirst) {
+							s.updateCall(firePairsSameRole.getModified(safeSpotParams));
+						}
+						else {
+							s.updateCall(iceLightPartiesSameRole.getModified(safeSpotParams));
+						}
+					}
+					case OTHER_ROLE -> {
+						if (!partnersFirst) {
+							s.updateCall(firePairsOtherRole.getModified(safeSpotParams));
+						}
+						else {
+							s.updateCall(iceLightPartiesOtherRole.getModified(safeSpotParams));
+						}
+					}
+				}
+			}
+		}
 
-			});
+	}
+	private void na2(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+		log.info("NA2: Start");
+		List<BuffApplied> naturalAlignmentBuffs = s.waitEventsQuickSuccession(2,
+				BuffApplied.class, ba -> ba.buffIdMatches(3412), Duration.ofMillis(200));
+		List<XivCombatant> naBuffs = naturalAlignmentBuffs.stream().map(BuffApplied::getTarget).toList();
+		Map<String, Object> params = Map.of("naPlayers", naBuffs);
+		final NaturalAlignmentRole roleStatus;
+		if (naBuffs.stream().anyMatch(XivCombatant::isThePlayer)) {
+			roleStatus = NaturalAlignmentRole.ON_YOU;
+		}
+		else {
+			boolean sameRole = getState().getPlayerJob().isDps() == ((XivPlayerCharacter) naBuffs.get(0)).getJob().isDps();
+			if (sameRole) {
+				roleStatus = NaturalAlignmentRole.SAME_ROLE;
+			}
+			else {
+				roleStatus = NaturalAlignmentRole.OTHER_ROLE;
+			}
+		}
+		log.info("NA2: Role {}", roleStatus);
+		ModifiableCallout<BuffApplied> call = switch (roleStatus) {
+			case ON_YOU -> naturalAlignmentOnYou;
+			case SAME_ROLE -> naturalAlignmentSameRole;
+			case OTHER_ROLE -> naturalAlignmentOtherRole;
+		};
+		s.accept(call.getModified(naturalAlignmentBuffs.get(0), params));
+		{
+			// 1e3 = spread then stack
+			// 1e1 = stack then spread
+			BuffApplied headBuff = s.waitEvent(BuffApplied.class,
+					ba -> ba.getBuff().getId() == 0x9F8
+							&& (ba.getRawStacks() == 0x1e1
+							|| ba.getRawStacks() == 0x1e3));
+			boolean stackFirst = headBuff.getRawStacks() == 0x1e1;
+			log.info("NA2: Head Buff 1: {}", headBuff);
+			log.info("NA2: Stack First? {}", stackFirst);
+			// Inverse
+			if (getBuffs().statusesOnTarget(headBuff.getTarget()).stream().anyMatch(ba -> ba.buffIdMatches(0xD15))) {
+				log.info("NA2: Inverting!");
+				stackFirst = !stackFirst;
+			}
+			if (roleStatus != NaturalAlignmentRole.ON_YOU) {
+				if (stackFirst) {
+					s.updateCall(na2StackFirst.getModified());
+				}
+				else {
+					s.updateCall(na2SpreadFirst.getModified());
+				}
+			}
+			else {
+				if (stackFirst) {
+					s.updateCall(na2StackFirstWithNA.getModified());
+				}
+				else {
+					s.updateCall(na2SpreadFirstWithNA.getModified());
+				}
+			}
+			{
+				List<AbilityCastStart> endOfDays = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A8B));
+				boolean frontSafe = endOfDays.stream().noneMatch(acs -> acs.getSource().getPos().y() < 90);
+				log.info("NA2: Front Safe? {}", frontSafe);
+				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
+				if (roleStatus == NaturalAlignmentRole.ON_YOU) {
+					s.updateCall(na2avoidPlayers.getModified(safeSpotParams));
+				}
+				else {
+					s.updateCall((stackFirst ? na2stack : na2spread).getModified(safeSpotParams));
+				}
+			}
+			{
+				List<AbilityCastStart> endOfDays = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A8B));
+				boolean frontSafe = endOfDays.stream().noneMatch(acs -> acs.getSource().getPos().y() < 90);
+				log.info("NA2: Front Safe? {}", frontSafe);
+				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
+				if (roleStatus == NaturalAlignmentRole.ON_YOU) {
+					s.updateCall(na2avoidPlayers.getModified(safeSpotParams));
+				}
+				else {
+					s.updateCall((stackFirst ? na2spread : na2stack).getModified(safeSpotParams));
+				}
+			}
+		}
+
+		{
+			BuffApplied headBuff = s.waitEvent(BuffApplied.class,
+					ba -> ba.getBuff().getId() == 0x9F8
+							&& (ba.getRawStacks() == 0x1dd
+							|| ba.getRawStacks() == 0x1df));
+			boolean partnersFirst = headBuff.getRawStacks() == 0x1dd;
+			log.info("NA2: Head Buff 2: {}", headBuff);
+			log.info("NA2: Partners First {}", partnersFirst);
+			// Inverse
+			if (getBuffs().statusesOnTarget(headBuff.getTarget()).stream().anyMatch(ba -> ba.buffIdMatches(0xD15))) {
+				log.info("NA2: Inverting!");
+				partnersFirst = !partnersFirst;
+			}
+			log.info("NA2: Partners First {}", partnersFirst);
+			{
+				List<AbilityCastStart> endOfDays = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A8B));
+				boolean frontSafe = endOfDays.stream().noneMatch(acs -> acs.getSource().getPos().y() < 90);
+				log.info("NA2: Front Safe? {}", frontSafe);
+				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
+				switch (roleStatus) {
+					case ON_YOU -> {
+						s.updateCall(iceFireNothing.getModified(safeSpotParams));
+					}
+					case SAME_ROLE -> {
+						if (partnersFirst) {
+							s.updateCall(firePairsSameRole.getModified(safeSpotParams));
+						}
+						else {
+							s.updateCall(iceLightPartiesSameRole.getModified(safeSpotParams));
+						}
+					}
+					case OTHER_ROLE -> {
+						if (partnersFirst) {
+							s.updateCall(firePairsOtherRole.getModified(safeSpotParams));
+						}
+						else {
+							s.updateCall(iceLightPartiesOtherRole.getModified(safeSpotParams));
+						}
+					}
+				}
+			}
+			{
+				List<AbilityCastStart> endOfDays = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7A8B));
+				boolean frontSafe = endOfDays.stream().noneMatch(acs -> acs.getSource().getPos().y() < 90);
+				log.info("NA2: Front Safe? {}", frontSafe);
+				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
+				switch (roleStatus) {
+					case ON_YOU -> {
+						s.updateCall(iceFireNothing.getModified(safeSpotParams));
+					}
+					case SAME_ROLE -> {
+						if (!partnersFirst) {
+							s.updateCall(firePairsSameRole.getModified(safeSpotParams));
+						}
+						else {
+							s.updateCall(iceLightPartiesSameRole.getModified(safeSpotParams));
+						}
+					}
+					case OTHER_ROLE -> {
+						if (!partnersFirst) {
+							s.updateCall(firePairsOtherRole.getModified(safeSpotParams));
+						}
+						else {
+							s.updateCall(iceLightPartiesOtherRole.getModified(safeSpotParams));
+						}
+					}
+				}
+			}
+			{
+				AbilityCastStart cleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x79D7, 0x79D8));
+				ArenaSector safe = cleave.abilityIdMatches(0x79D7) ? ArenaSector.EAST : ArenaSector.WEST;
+				log.info("NA1: Cleave Safe Spot {}", safe);
+				Map<String, Object> cleaveParams = Map.of("safe", safe);
+				s.updateCall(na2cleave.getModified(cleaveParams));
+
+			}
+		}
+
+	}
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> highConcept1 = SqtTemplates.sq(60_000,
