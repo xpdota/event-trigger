@@ -10,6 +10,7 @@ import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
@@ -20,14 +21,22 @@ import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
+import gg.xp.xivsupport.models.ArenaSector;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @CalloutRepo(name = "P7S", duty = KnownDuty.P7S)
 public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -48,6 +57,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 //	private final ModifiableCallout<AbilityCastStart> stymphalianStrike = ModifiableCallout.durationBasedCall("Stymphalian Strike", "Dive");
 	private final ModifiableCallout<AbilityCastStart> bladesOfAttis = ModifiableCallout.durationBasedCall("Blades of Attis", "Exaflare");
 	private final ModifiableCallout<AbilityCastStart> lightOfLife = ModifiableCallout.durationBasedCall("Light of Life", "Big Raidwide");
+	private final ModifiableCallout<AbilityCastStart> lightOfLifeEnrage = ModifiableCallout.durationBasedCall("Light of Life (Enrage)", "Enrage");
 //	private final ModifiableCallout<AbilityCastStart> hemitheosAeroIV = ModifiableCallout.durationBasedCall("Hemitheos's Aero IV", "Knockback");
 
 	/*
@@ -66,15 +76,22 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> moveIn = new ModifiableCallout<>("Move In (Healer Stacks + Floor Returns)", "Move In");
 
 	private final ModifiableCallout<AbilityCastStart> famineHarvest = ModifiableCallout.durationBasedCall("Famine's Harvest", "Famine");
-	private final ModifiableCallout<AbilityCastStart> famineTether = new ModifiableCallout<>("Famine's Harvest - Tether", "Tether", 10_000);
-	private final ModifiableCallout<AbilityCastStart> famineNoTether = new ModifiableCallout<>("Famine's Harvest - No Tether", "No Tether", 10_000);
+	private final ModifiableCallout<?> famineTether = new ModifiableCallout<>("Famine's Harvest - Tether", "Take Tether {safe}", "Tethered to {tetherLocation} - go {safe}", ModifiableCallout.expiresIn(12));
+	private final ModifiableCallout<?> famineNoTether = new ModifiableCallout<>("Famine's Harvest - No Tether", "No Tether - bait {lightningBait}", 12_000);
 	private final ModifiableCallout<AbilityCastStart> deathHarvest = ModifiableCallout.durationBasedCall("Death's Harvest", "Death");
+	private final ModifiableCallout<?> deathHarvestSpots = new ModifiableCallout<>("Death's Harvest Spots", "{bad} unsafe, {clockwise ? \"Clockwise\" : \"Counterclockwise\"}");
 	private final ModifiableCallout<AbilityCastStart> warHarvest = ModifiableCallout.durationBasedCall("War's Harvest", "War");
-	private final ModifiableCallout<TetherEvent> warHarvestIoTether = new ModifiableCallout<>("War's Harvest - Io Tether", "Io Tether", 10_000);
-	private final ModifiableCallout<TetherEvent> warHarvestMinoTether = new ModifiableCallout<>("War's Harvest - Mino Tether", "Mino Tether", 10_000);
-	private final ModifiableCallout<TetherEvent> warHarvestBirdTether = new ModifiableCallout<>("War's Harvest - Bird Tether", "Bird Tether", 10_000);
+	private final ModifiableCallout<TetherEvent> warHarvestIoTether = new ModifiableCallout<>("War's Harvest - Io Tether", "Io Tether from {where}", 10_000);
+	private final ModifiableCallout<TetherEvent> warHarvestMinoTether = new ModifiableCallout<>("War's Harvest - Mino Tether (Unknown)", "Mino Tether", 10_000);
+	private final ModifiableCallout<TetherEvent> warHarvestMinoTetherFar = new ModifiableCallout<>("War's Harvest - Mino (Far From Lighting)", "{where} Mino Tether", 10_000);
+	private final ModifiableCallout<TetherEvent> warHarvestMinoTetherAdj = new ModifiableCallout<>("War's Harvest - Mino (Adjacent to Lightning)", "{where} Mino Tether", 10_000);
+	private final ModifiableCallout<TetherEvent> warHarvestBirdTether = new ModifiableCallout<>("War's Harvest - Bird Tether (Unknown)", "Bird Tether", 10_000);
+	private final ModifiableCallout<TetherEvent> warHarvestBirdTetherEmpty = new ModifiableCallout<>("War's Harvest - Bird (Near Empty Bridge)", "{where} Bird Tether", 10_000);
+	private final ModifiableCallout<TetherEvent> warHarvestBirdTetherOccupied = new ModifiableCallout<>("War's Harvest - Bird (Both Bridges Occupied)", "{where} Bird Tether", 10_000);
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 5, 5);
+	private final ArenaPos arenaPosFamine = new ArenaPos(100, 100, 7, 1);
+	private final ArenaPos arenaPosTight = new ArenaPos(100, 100, 1, 1);
 
 	public P7S(XivState state, StatusEffectRepository buffs) {
 		this.state = state;
@@ -100,6 +117,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final RepeatSuppressor manyActorsSupp = new RepeatSuppressor(Duration.ofMillis(100));
 
+	// TODO: first tether mechanic
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
 		int id = (int) event.getAbility().getId();
@@ -113,6 +131,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 			case 0x7836 -> call = condensedAeroII;
 			case 0x7839 -> call = sparkOfLife;
 			case 0x782E -> call = bladesOfAttis;
+			case 0x783F -> call = lightOfLifeEnrage;
 			case 31311 -> call = famineHarvest; // 7A4F
 			case 31312 -> call = deathHarvest; // 7A50
 			case 31313 -> call = warHarvest; // 7A51
@@ -263,34 +282,218 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
+	private static Set<ArenaSector> platforms() {
+		return EnumSet.of(ArenaSector.SOUTH, ArenaSector.NORTHWEST, ArenaSector.NORTHEAST);
+	}
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> famineSq = SqtTemplates.sq(30_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(31311),
 			(e1, s) -> {
+				log.info("Famine: Start");
 				List<TetherEvent> tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> true, Duration.ofMillis(200));
-				if (tethers.stream().anyMatch(t -> t.eitherTargetMatches(XivCombatant::isThePlayer))) {
-					s.updateCall(famineTether.getModified(e1));
+				log.info("Famine: Got Tethers: {}", tethers);
+				s.waitThenRefreshCombatants(100);
+				ArenaSector lightningBaitSpot;
+				{
+					Set<ArenaSector> platforms = platforms();
+					tethers.stream().map(t -> t.getTargetMatching(cbt -> cbt.getbNpcId() == 14899))
+							.filter(Objects::nonNull)
+							.map(cbt -> getState().getLatestCombatantData(cbt))
+							.peek(cbt -> log.info("Got combatant: {}", cbt))
+							.map(arenaPosFamine::forCombatant)
+							.peek(pos -> log.info("Resolved position: {}", pos))
+							.forEach(platforms::remove);
+					log.info("Famine: Raw platforms: {}", platforms);
+					lightningBaitSpot = platforms.size() == 1 ? platforms.iterator().next() : ArenaSector.UNKNOWN;
+				}
+				log.info("Famine: Lightning Bait on {}", lightningBaitSpot);
+				tethers.stream().filter(t -> t.eitherTargetMatches(XivCombatant::isThePlayer))
+						.findAny()
+						.ifPresentOrElse(tether -> {
+							ArenaSector tetheredTo;
+							ArenaSector tetherBaitSpot;
+							XivCombatant tetheredToCbt = tether.getTargetMatching(cbt -> !cbt.isPc());
+							if (tetheredToCbt == null) {
+								log.warn("Combatant was null!");
+								tetheredTo = ArenaSector.UNKNOWN;
+								tetherBaitSpot = ArenaSector.UNKNOWN;
+							}
+							else {
+								tetheredTo = arenaPos.forCombatant(tetheredToCbt);
+								Set<ArenaSector> platforms = platforms();
+								platforms.remove(lightningBaitSpot);
+								platforms.remove(tetheredTo);
+								tetherBaitSpot = platforms.iterator().next();
+							}
+							s.updateCall(famineTether.getModified(Map.of("lightningBait", lightningBaitSpot, "tetherLocation", tetheredTo, "safe", tetherBaitSpot)));
+						}, () -> {
+							s.updateCall(famineNoTether.getModified(Map.of("lightningBait", lightningBaitSpot)));
+						});
+			});
+
+	private static final Position sPlatform = Position.of2d(100, 116.5);
+	private static final Position nwPlatform = Position.of2d(85.71, 91.75);
+	private static final Position nePlatform = Position.of2d(114.29, 91.75);
+	private static final Position nBridge = Position.of2d(100, 91.75);
+	private static final Position swBridge = Position.of2d(92.86, 104.13);
+	private static final Position seBridge = Position.of2d(107.14, 104.13);
+
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> deathSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(31312),
+			(e1, s) -> {
+				// TODO: Death: Is there anything that can be done here? Tethers are all the same tether ID, and the NPCs aren't even in the combatants list
+				// For calling CW/CCW:
+				// 1. Unsafe platform is highest ID Immature Io (id/name 14897/11378)
+				// 2. Tether IOs are lowest and middle ID
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7811));
+				s.waitMs(200);
+				// This extra position matching stuff is purely because we're pulling all combatants, and there might
+				// be junk.
+				List<Position> bridges = List.of(nBridge, swBridge, seBridge);
+				List<Position> platforms = List.of(sPlatform, nwPlatform, nePlatform);
+				Position takenPlatform;
+				List<Position> takenBridges;
+				List<XivCombatant> ios;
+				do {
+					do {
+						s.waitThenRefreshCombatants(100);
+						ios = getState().getCombatantsListCopy()
+								.stream()
+								.filter(cbt -> cbt.getbNpcId() == 14897)
+								.toList();
+					} while (ios.size() != 3);
+					List<XivCombatant> tmpIos = ios;
+					log.info("Death: Ios: {}", ios);
+					takenPlatform = platforms.stream().filter(platform -> tmpIos.stream().anyMatch(cbt -> platform.distanceFrom2D(cbt.getPos()) < 1)).findAny().orElse(null);
+					takenBridges = bridges.stream().filter(bridge -> tmpIos.stream().anyMatch(cbt -> bridge.distanceFrom2D(cbt.getPos()) < 1)).toList();
+					log.info("Death: Taken Platform: {}, Taken Bridges: {}", takenPlatform, takenBridges);
+				} while (takenPlatform == null || takenBridges.size() != 2);
+				boolean clockwise;
+				ArenaSector bad;
+				if (takenPlatform == sPlatform) {
+					clockwise = takenBridges.contains(swBridge);
+					bad = ArenaSector.SOUTH;
+				}
+				else if (takenPlatform == nwPlatform) {
+					clockwise = takenBridges.contains(nBridge);
+					bad = ArenaSector.NORTHWEST;
+				}
+				else if (takenPlatform == nePlatform) {
+					clockwise = takenBridges.contains(seBridge);
+					bad = ArenaSector.NORTHEAST;
 				}
 				else {
-					s.updateCall(famineNoTether.getModified(e1));
+					throw new RuntimeException("Bad platform! Ios: " + ios);
 				}
+				s.updateCall(deathHarvestSpots.getModified(Map.of("clockwise", clockwise, "bad", bad)));
+
+
 			});
-	// TODO: Death: Is there anything that can be done here? Tethers are all the same tether ID, and the NPCs aren't even in the combatants list
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> warSq = SqtTemplates.sq(30_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(31313),
 			(e1, s) -> {
-				TetherEvent te = s.waitEvent(TetherEvent.class, e -> e.getTarget().isThePlayer());
-				// Can't use tether IDs because they change with distance.
-				if (te.getSource().getbNpcId() == 14899) {
-					s.updateCall(warHarvestMinoTether.getModified(te));
+				log.info("War: Start");
+				long stymph = 14898;
+				long mino = 14899;
+				List<TetherEvent> allTethers = s.waitEventsQuickSuccession(8, TetherEvent.class, te -> true, Duration.ofMillis(400));
+				TetherEvent te = allTethers.stream().filter(tether -> tether.eitherTargetMatches(XivCombatant::isThePlayer)).findAny().orElse(null);
+				Set<ArenaSector> stymphs = EnumSet.noneOf(ArenaSector.class);
+				Set<ArenaSector> minos = EnumSet.noneOf(ArenaSector.class);
+				s.waitThenRefreshCombatants(50);
+				allTethers.stream()
+						.flatMap(tether -> Stream.of(tether.getSource(), tether.getTarget()))
+						.filter(cbt -> cbt.getbNpcId() == stymph || cbt.getbNpcId() == mino)
+						.forEach(cbt -> {
+							XivCombatant latest = getState().getLatestCombatantData(cbt);
+							if (cbt.getbNpcId() == stymph) {
+								log.warn("Stymph: {}", latest);
+								stymphs.add(arenaPosTight.forCombatant(latest));
+							}
+							else if (cbt.getbNpcId() == mino) {
+								log.warn("Mino: {}", latest);
+								minos.add(arenaPosTight.forCombatant(latest));
+							}
+						});
+				if (te == null) {
+					log.warn("War: No tether, player probably dead");
+					return;
 				}
-				else if (te.getSource().getbNpcId() == 14898) {
-					s.updateCall(warHarvestBirdTether.getModified(te));
+				// Possible options here:
+				// Lightning Tether
+				// Stymphalide, on platform adjacent to both occupied bridges
+				// Stymphalide, on platform adjacent to empty bridge
+				// Minotaur, on bridge far from lightning (adjacent to both stymphs)
+				// Minotaur, on bridge close to lightning
+				// Can't use tether IDs because they change with distance.
+				if (te.getSource().getbNpcId() == mino) {
+					// Minotaur, on bridge
+					ArenaSector tetheredTo = arenaPosTight.forCombatant(getState().getLatestCombatantData(te.getSource()));
+					Map<String, Object> params = Map.of("where", tetheredTo);
+					List<ArenaSector> adjacent;
+					switch (tetheredTo) {
+						case NORTH -> adjacent = List.of(ArenaSector.NORTHWEST, ArenaSector.NORTHEAST);
+						case SOUTHEAST -> adjacent = List.of(ArenaSector.SOUTH, ArenaSector.NORTHEAST);
+						case SOUTHWEST -> adjacent = List.of(ArenaSector.NORTHWEST, ArenaSector.SOUTH);
+						default -> {
+							// Fallback option
+							log.warn("War fail! Bad position for {}", tetheredTo);
+							s.updateCall(warHarvestMinoTether.getModified(te));
+							return;
+						}
+					}
+					if (stymphs.size() != 2) {
+						log.warn("War fail! Bad stymphs: {}", stymphs);
+						s.updateCall(warHarvestMinoTether.getModified(te));
+					} else if (stymphs.containsAll(adjacent)) {
+						s.updateCall(warHarvestMinoTetherFar.getModified(te, params));
+					}
+					else {
+						s.updateCall(warHarvestMinoTetherAdj.getModified(te, params));
+					}
+				}
+				else if (te.getSource().getbNpcId() == stymph) {
+					// Stymphalide, on platform
+					ArenaSector tetheredTo = arenaPosTight.forCombatant(getState().getLatestCombatantData(te.getSource()));
+					Map<String, Object> params = Map.of("where", tetheredTo);
+					List<ArenaSector> adjacent;
+					switch (tetheredTo) {
+						case SOUTH -> adjacent = List.of(ArenaSector.SOUTHWEST, ArenaSector.SOUTHEAST);
+						case NORTHWEST -> adjacent = List.of(ArenaSector.NORTH, ArenaSector.SOUTHWEST);
+						case NORTHEAST -> adjacent = List.of(ArenaSector.NORTH, ArenaSector.SOUTHEAST);
+						default -> {
+							// Fallback option
+							log.warn("War fail! Bad position for {}", tetheredTo);
+							s.updateCall(warHarvestBirdTether.getModified(te));
+							return;
+						}
+					}
+					if (minos.size() != 2) {
+						log.warn("War fail! Bad minos: {}", stymphs);
+						s.updateCall(warHarvestBirdTether.getModified(te));
+					} else if (stymphs.containsAll(adjacent)) {
+						s.updateCall(warHarvestBirdTetherOccupied.getModified(te, params));
+					}
+					else {
+						s.updateCall(warHarvestBirdTetherEmpty.getModified(te, params));
+					}
 				}
 				// This one isn't a real combatant
 				else {
-					s.updateCall(warHarvestIoTether.getModified(te));
+					// Lightning
+					Set<ArenaSector> platforms = platforms();
+					ArenaSector tetherSpot;
+					platforms.removeAll(stymphs);
+					if (platforms.size() == 1){
+						tetherSpot = platforms.iterator().next();
+					}
+					else {
+						tetherSpot = ArenaSector.UNKNOWN;
+					}
+					s.updateCall(warHarvestIoTether.getModified(te, Map.of("where", tetherSpot)));
 				}
 			});
 

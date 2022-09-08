@@ -80,7 +80,8 @@ public class ReplayController {
 				compressedEvent.decompress();
 			}
 			preProcessEvent(event);
-			master.pushEvent(event);
+			// TODO: this fixes a bug (see LaunchImportedSession) but may be slightly worse on performance
+			master.pushEventAndWait(event);
 			advancedBy++;
 		}
 		notifyCallbacks();

@@ -42,6 +42,8 @@ public final class LaunchImportedSession {
 				if (event instanceof BaseEvent be) {
 					be.setTimeSource(timeSource);
 				}
+				// TODO - this is buggy, because it updates time when new events are queued rather than
+				// when they are actually played. This causes time based things to not work right.
 				timeSource.setNewTime(pumpedAt);
 			}
 		};

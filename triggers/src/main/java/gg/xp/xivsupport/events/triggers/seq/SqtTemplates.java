@@ -2,19 +2,15 @@ package gg.xp.xivsupport.events.triggers.seq;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.events.EventHandler;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
-import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
@@ -24,6 +20,17 @@ public final class SqtTemplates {
 	private SqtTemplates() {
 	}
 
+	/**
+	 * Given an event with a duration, trigger the given callout when the duration dips
+	 * below the given duration.
+	 *
+	 * @param eventType      Event type
+	 * @param eventFilter    Event filter
+	 * @param callout        The callout to trigger
+	 * @param targetDuration The duration at which to call out
+	 * @param <X>            Event type
+	 * @return The constructed trigger
+	 */
 	public static <X extends HasDuration> SequentialTrigger<BaseEvent> callWhenDurationIs(
 			Class<X> eventType,
 			Predicate<X> eventFilter,
@@ -43,6 +50,20 @@ public final class SqtTemplates {
 				});
 	}
 
+	/**
+	 * Convenience function for making a typical sequential controller.
+	 * <p>
+	 * Unlike using a raw {@link SequentialTrigger}, this provides an auto-reset-on-wipe, as well
+	 * as handling type safety of the initial event since it is typically recommended to use a more
+	 * broad type (e.g. BaseEvent) as the generic type, while the start event is more specific.
+	 *
+	 * @param timeoutMs      Timeout
+	 * @param startType      Starting event type
+	 * @param startCondition Starting event condition
+	 * @param trigger        The trigger code
+	 * @param <X>            The start event type
+	 * @return The constructed Sequential Trigger
+	 */
 	public static <X> SequentialTrigger<BaseEvent> sq(
 			int timeoutMs,
 			Class<X> startType,
@@ -53,7 +74,23 @@ public final class SqtTemplates {
 	}
 
 
-
+	/**
+	 * Trigger template for when the same event might indicate different things in a fight.
+	 * <p>
+	 * The first time this is called, it will execute the first item in the 'triggers' array.
+	 * The second time, it will execute the second, and so on. It will reset back to the first
+	 * on a wipe/reset.
+	 *
+	 * @param timeoutMs      Timeout. This is the same for each individual trigger, so you should
+	 *                       use the highest value that any individual invocation needs.
+	 * @param startType      Start event type.
+	 * @param startCondition Start event condition.
+	 * @param triggers       Array of triggers to be fired in order when we see the start event.
+	 *                       These will work exactly like normal sequential triggers, but will be
+	 *                       used sequentially.
+	 * @param <X>            Start event type.
+	 * @return The constructed trigger.
+	 */
 	public static <X> SequentialTrigger<BaseEvent> multiInvocation(
 			int timeoutMs,
 			Class<X> startType,
@@ -77,8 +114,20 @@ public final class SqtTemplates {
 				mint.setValue(0);
 			}
 		};
-	};
+	}
 
+	/**
+	 * Trigger template for when you want one call at the start of a cast bar, then
+	 * another call at the end of the cast bar.
+	 * <p>
+	 * Note that this uses the cast duration ONLY - it does not check to see if the
+	 * ability has actually gone off or not.
+	 *
+	 * @param castFilter  What cast to look for
+	 * @param initialCall Initial call
+	 * @param followup    Followup call
+	 * @return The constructed trigger
+	 */
 	public static SequentialTrigger<BaseEvent> beginningAndEndingOfCast(
 			Predicate<AbilityCastStart> castFilter,
 			ModifiableCallout<? super AbilityCastStart> initialCall,
@@ -108,7 +157,7 @@ public final class SqtTemplates {
 
 		void onWipe() {
 			forceExpire();
-		};
+		}
 
 	}
 }

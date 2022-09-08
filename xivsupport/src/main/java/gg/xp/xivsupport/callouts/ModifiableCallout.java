@@ -79,7 +79,7 @@ public class ModifiableCallout<X> {
 	 * @param text        The default on-screen text
 	 * @param expiry      A condition for expiring the callout (removes it from the on-screen display)
 	 */
-	public ModifiableCallout(String description, String tts, String text, Predicate<X> expiry) {
+	public ModifiableCallout(String description, String tts, String text, Predicate<? super X> expiry) {
 		this.description = description;
 		this.defaultTtsText = tts;
 		this.defaultVisualText = text;
