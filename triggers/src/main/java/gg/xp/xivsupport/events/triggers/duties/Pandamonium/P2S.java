@@ -1,6 +1,9 @@
 package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.AutoChildEventHandler;
+import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.KnownDuty;
@@ -13,10 +16,13 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.models.Position;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @CalloutRepo(name = "P2S", duty = KnownDuty.P2S)
-public class P2S implements FilteredEventHandler {
+public class P2S extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P2S.class);
 	// TODO: zone lock
 	private final ModifiableCallout<BuffApplied> leftTide = ModifiableCallout.durationBasedCall("Left Push", "{longshort} West Push");
@@ -128,12 +134,7 @@ public class P2S implements FilteredEventHandler {
 	@HandleEvents
 	public void simpleAbilities(EventContext context, AbilityCastStart event) {
 		long id = event.getAbility().getId();
-		if (id == 0x682F) {
-			RawModifiedCallout<AbilityCastStart> sw = shockwave.getModified(event);
-			sw.setDelayedEnqueueOffset(event.getInitialDuration().minus(6, ChronoUnit.SECONDS));
-			context.enqueue(sw);
-		}
-		else if (id == 0x6810) {
+		if (id == 0x6810) {
 			context.accept(sewageDeluge.getModified(event));
 		}
 		else if (id == 0x6833) {
@@ -144,6 +145,12 @@ public class P2S implements FilteredEventHandler {
 			context.accept(taintedFlood.getModified(event));
 		}
 	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> shockwaveSq = SqtTemplates.callWhenDurationIs(
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x682F),
+			shockwave,
+			Duration.ofSeconds(6));
 
 	@HandleEvents
 	public void cataract(EventContext context, AbilityCastStart event) {
