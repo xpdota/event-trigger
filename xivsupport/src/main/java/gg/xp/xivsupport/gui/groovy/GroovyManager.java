@@ -304,6 +304,7 @@ public class GroovyManager {
 				Event.class.getCanonicalName(),
 				CompileStatic.class.getCanonicalName(),
 				TypeChecked.class.getCanonicalName());
+		// TODO: add ability effects and other common events here
 		importCustomizer.addStarImports(
 				"gg.xp.xivsupport.events.actlines.events",
 				"javax.util",
