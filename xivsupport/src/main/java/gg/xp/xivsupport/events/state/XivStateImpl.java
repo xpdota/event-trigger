@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.state;
 
+import gg.xp.reevent.events.CurrentTimeSource;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
@@ -26,6 +27,7 @@ import gg.xp.xivsupport.sys.EnhancedReadWriteReentrantLock;
 import gg.xp.xivsupport.sys.LockAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +50,7 @@ public class XivStateImpl implements XivState {
 	private static final Logger log = LoggerFactory.getLogger(XivStateImpl.class);
 	private final EventMaster master;
 	private final PartySortOrder pso;
+	private final @Nullable CurrentTimeSource fakeTimeSource;
 
 	private XivZone zone;
 	private XivMap map = XivMap.UNKNOWN;
@@ -62,9 +65,10 @@ public class XivStateImpl implements XivState {
 
 	private Job lastPlayerJob;
 
-	public XivStateImpl(EventMaster master, PartySortOrder pso) {
+	public XivStateImpl(EventMaster master, PartySortOrder pso, PicoContainer pico) {
 		this.master = master;
 		this.pso = pso;
+		fakeTimeSource = pico.getComponent(CurrentTimeSource.class);
 		// This might technically have a very slight concurrency issue, but it's doubtful
 		// that it would ever become a real issue.
 		pso.addListener(this::recalcState);
@@ -309,7 +313,13 @@ public class XivStateImpl implements XivState {
 			log.trace("Recalculated state, player is {}, party is {}", player, partyListProcessed);
 			// TODO: improve this
 			if (master != null) {
-				master.getQueue().push(new XivStateRecalculatedEvent());
+				// TODO: this is kind of a workaround for tests, should improve it
+				XivStateRecalculatedEvent event = new XivStateRecalculatedEvent();
+				if (fakeTimeSource != null) {
+					event.setTimeSource(fakeTimeSource);
+					event.setHappenedAt(fakeTimeSource.now());
+				}
+				master.getQueue().push(event);
 				if (player != null) {
 					Job newJob = player.getJob();
 					if (lastPlayerJob != newJob) {
