@@ -1,10 +1,7 @@
 package gg.xp.xivsupport.events.triggers.duties.ewult;
 
-import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.duties.KnownDuty;
-import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
