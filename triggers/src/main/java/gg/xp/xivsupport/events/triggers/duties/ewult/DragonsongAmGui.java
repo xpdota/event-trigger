@@ -8,6 +8,7 @@ import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
@@ -33,9 +34,19 @@ public class DragonsongAmGui implements DutyPluginTab {
 
 	@Override
 	public Component getTabContents() {
-		TitleBorderFullsizePanel outer = new TitleBorderFullsizePanel("Dragonsong Automarks");
-		outer.setLayout(new BorderLayout());
 		jsg = new JobSortGui(ds.getP6_sortSetting());
+		RefreshLoop<JobSortGui> refresher = new RefreshLoop<>("DsrAmRefresh", jsg, JobSortGui::externalRefresh, unused -> 10_000L);
+		TitleBorderFullsizePanel outer = new TitleBorderFullsizePanel("Dragonsong Automarks") {
+			@Override
+			public void setVisible(boolean aFlag) {
+				super.setVisible(aFlag);
+				if (aFlag) {
+					jsg.externalRefresh();
+					refresher.startIfNotStarted();
+				}
+			}
+		};
+		outer.setLayout(new BorderLayout());
 		JCheckBox p6marks = new BooleanSettingGui(ds.getP6_useAutoMarks(), "P6 Wroth Flames Automarks").getComponent();
 		outer.add(p6marks, BorderLayout.NORTH);
 		GridBagConstraints c = new GridBagConstraints(0, 0, 2, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
@@ -83,7 +94,7 @@ public class DragonsongAmGui implements DutyPluginTab {
 		c.weightx = 1;
 		inner.add(jsg.getPartyPane(), c);
 
-		ds.getP6_useAutoMarks().addListener(this::checkVis);
+		ds.getP6_useAutoMarks().addAndRunListener(this::checkVis);
 		outer.add(inner, BorderLayout.CENTER);
 		return outer;
 	}
@@ -103,15 +114,15 @@ public class DragonsongAmGui implements DutyPluginTab {
 		return 101;
 	}
 
-	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
-	// determine exactly what should trigger it. Maybe better to just stick it on a timer that only applies when the
-	// tab is visible?
-	@HandleEvents(order = 20_000)
-	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-		if (jsg != null) {
-			jsg.externalRefresh();
-		}
-	}
+//	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
+//	// determine exactly what should trigger it. Maybe better to just stick it on a timer that only applies when the
+//	// tab is visible?
+//	@HandleEvents(order = 20_000)
+//	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
+//		if (jsg != null) {
+//			jsg.externalRefresh();
+//		}
+//	}
 
 	public void tryBringToFront() {
 		if (inner != null) {
