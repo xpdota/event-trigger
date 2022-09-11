@@ -10,6 +10,7 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
@@ -43,9 +44,6 @@ public class JailGui implements DutyPluginTab {
 	@Override
 	public Component getTabContents() {
 
-		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Jails");
-
-		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.weightx = 1;
 		c.weighty = 0;
@@ -56,6 +54,19 @@ public class JailGui implements DutyPluginTab {
 		c.gridwidth = GridBagConstraints.REMAINDER;
 
 		jobSortGui = new JobSortGui(sorter);
+		RefreshLoop<JobSortGui> refresher = new RefreshLoop<>("JailRefresh", jobSortGui, JobSortGui::externalRefresh, unused -> 10_000L);
+		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("Jails") {
+			@Override
+			public void setVisible(boolean aFlag) {
+				super.setVisible(aFlag);
+				if (aFlag) {
+					jobSortGui.externalRefresh();
+					refresher.startIfNotStarted();
+				}
+			}
+		};
+
+		panel.setLayout(new GridBagLayout());
 
 		JPanel toggles = new JPanel();
 		toggles.setAlignmentX(0);
@@ -112,15 +123,15 @@ public class JailGui implements DutyPluginTab {
 		}
 	}
 
-	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
-	// determine exactly what should trigger it. Maybe better to just stick it on a timer that only applies when the
-	// tab is visible?
-	@HandleEvents(order = 20_000)
-	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-		if (jobSortGui != null) {
-			jobSortGui.externalRefresh();
-		}
-	}
+//	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
+//	// determine exactly what should trigger it. Maybe better to just stick it on a timer that only applies when the
+//	// tab is visible?
+//	@HandleEvents(order = 20_000)
+//	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
+//		if (jobSortGui != null) {
+//			jobSortGui.externalRefresh();
+//		}
+//	}
 
 
 	private static final String helpText = """

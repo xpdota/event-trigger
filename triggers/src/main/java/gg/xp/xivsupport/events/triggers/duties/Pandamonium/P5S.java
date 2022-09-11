@@ -203,6 +203,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 				log.info("Topaz Cluster: Done Waiting");
 				Map<Integer, List<ArenaSector>> unsafeSpots = new HashMap<>();
 				Map<Integer, AbilityCastStart> sampleCasts = new HashMap<>();
+				// TODO: Does this need the 'in progress' filter?
 				getAcr().getAll().stream().filter(ct -> ct.getCast().abilityIdMatches(0x7703, 0x7704, 0x7705, 0x7706))
 						.forEach(ct -> {
 							AbilityCastStart cast = ct.getCast();

@@ -48,6 +48,12 @@ public class RefreshLoop<X> {
 		thread.start();
 	}
 
+	public void startIfNotStarted() {
+		if (thread.getState() == Thread.State.NEW) {
+			start();
+		}
+	}
+
 	public void stop() {
 		stop = true;
 	}

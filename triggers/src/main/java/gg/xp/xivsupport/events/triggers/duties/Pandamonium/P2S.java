@@ -9,7 +9,6 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
-import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
@@ -23,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +30,6 @@ import java.util.Optional;
 @CalloutRepo(name = "P2S", duty = KnownDuty.P2S)
 public class P2S extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P2S.class);
-	// TODO: zone lock
 	private final ModifiableCallout<BuffApplied> leftTide = ModifiableCallout.durationBasedCall("Left Push", "{longshort} West Push");
 	private final ModifiableCallout<BuffApplied> rightTide = ModifiableCallout.durationBasedCall("Right Push", "{longshort} East Push");
 	private final ModifiableCallout<BuffApplied> foreTide = ModifiableCallout.durationBasedCall("Fore Push", "{longshort} North Push");
@@ -61,6 +58,12 @@ public class P2S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> tides = ModifiableCallout.durationBasedCall("Mark of the Tides","Get Away");
 
 	private final List<BuffApplied> stackSpreadBuffs = new ArrayList<>();
+
+	private final XivState state;
+
+	public P2S(XivState state) {
+		this.state = state;
+	}
 
 	@HandleEvents
 	public void stackOrSpread(EventContext context, BuffApplied event) {
@@ -228,6 +231,6 @@ public class P2S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return context.getStateInfo().get(XivState.class).zoneIs(0x3ED);
+		return state.dutyIs(KnownDuty.P2S);
 	}
 }

@@ -23,6 +23,7 @@ import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import org.apache.commons.lang3.time.DurationUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 
 	private final ModifiableCallout<AbilityCastStart> tyrantsUnholyDarkness = ModifiableCallout.durationBasedCall("Tyrant's Unholy Darkness", "Split Buster");
 	private final ModifiableCallout<AbilityCastStart> aioniopyr = ModifiableCallout.durationBasedCall("Aioniopyr", "Raidwide with Bleed");
+	private final ModifiableCallout<AbilityCastStart> aionagonia = ModifiableCallout.durationBasedCall("Aionagonia", "Raidwide with Bleed");
 //				if (alchNow) {
 //		s.updateCall(hc1doSecondAlch.getModified());
 //		s.waitMs(2_000);
@@ -88,11 +90,21 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 			// TODO: figure out correct IDs
 			case 31197, 31198 -> call = tyrantsUnholyDarkness; // split buster, no bleed
 			case 31199 -> call = aioniopyr; // raidwide+bleed
+			case 31266 -> call = aionagonia;
 			default -> {
 				return;
 			}
 		}
 		context.accept(call.getModified(event));
+	}
+
+	@HandleEvents
+	public void playerBuff(EventContext context, BuffApplied buff) {
+		if (buff.getTarget().isThePlayer()) {
+			if (buff.buffIdMatches(0xD14)) {
+				context.accept(hc2prey.getModified(buff));
+			}
+		}
 	}
 
 	private enum TowerColor {
@@ -686,11 +698,11 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> hc2ShortGammaInitial = new ModifiableCallout<>("HC2: Short Gamma Initial", "Short Gamma").statusIcon(3332);
 	private final ModifiableCallout<?> hc2ShortGammaSecond = new ModifiableCallout<>("HC2: Short Gamma Post-Defa", "Alch if Blue or Purple Tower").statusIcon(3335);
 	private final ModifiableCallout<?> hc2LongAlphaInitial = new ModifiableCallout<>("HC2: Long Alpha Initial (No Splice)", "Long Alpha").statusIcon(3330);
-	private final ModifiableCallout<?> hc2LongAlphaSecond = new ModifiableCallout<>("HC2: Long Alpha Post-Defa", "Preposotion to Alpha").statusIcon(3330);
+	private final ModifiableCallout<?> hc2LongAlphaSecond = new ModifiableCallout<>("HC2: Long Alpha Post-Defa", "Preposition to Alpha").statusIcon(3330);
 	private final ModifiableCallout<?> hc2LongBetaInitial = new ModifiableCallout<>("HC2: Long Beta Initial (No Splice)", "Long Beta").statusIcon(3331);
-	private final ModifiableCallout<?> hc2LongBetaSecond = new ModifiableCallout<>("HC2: Long Beta Post-Defa", "Preposotion to Beta").statusIcon(3331);
+	private final ModifiableCallout<?> hc2LongBetaSecond = new ModifiableCallout<>("HC2: Long Beta Post-Defa", "Preposition to Beta").statusIcon(3331);
 	private final ModifiableCallout<?> hc2LongGammaInitial = new ModifiableCallout<>("HC2: Long Gamma Initial (No Splice)", "Long Gamma").statusIcon(3332);
-	private final ModifiableCallout<?> hc2LongGammaSecond = new ModifiableCallout<>("HC2: Long Gamma Post-Defa", "Preposotion to Gamma").statusIcon(3332);
+	private final ModifiableCallout<?> hc2LongGammaSecond = new ModifiableCallout<>("HC2: Long Gamma Post-Defa", "Preposition to Gamma").statusIcon(3332);
 	private final ModifiableCallout<?> hc2soloInitial = new ModifiableCallout<>("HC2: Solo Splice Initial", "Solo Splice").statusIcon(3345);
 	private final ModifiableCallout<?> hc2multiInitial = new ModifiableCallout<>("HC2: Multi Splice Initial", "Multi Splice").statusIcon(3346);
 	private final ModifiableCallout<AbilityCastStart> hc2cleave = ModifiableCallout.durationBasedCall("HC2: Cleave", "{safe} safe");
@@ -706,6 +718,10 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> hc2finalBaitAsNothing = new ModifiableCallout<>("HC2: Bait Charge (Original Nothing)", "Bait Charge");
 	private final ModifiableCallout<?> hc2finalBaitFirstAlch = new ModifiableCallout<>("HC2: Bait Charge (Original Alch)", "Bait Charge");
 	private final ModifiableCallout<?> hc2finalAlchemy = new ModifiableCallout<>("HC2: Do Second Alchemy", "Do Alchemy and Towers");
+	private final ModifiableCallout<?> hc2finalAlchemyUnused = new ModifiableCallout<>("HC2: Do Second Alchemy (Did Not Alch 1st)", "Do Alchemy and Towers");
+	private final ModifiableCallout<BuffApplied> hc2prey = ModifiableCallout.<BuffApplied>durationBasedCall("HC2: Prey", "Move").autoIcon();
+	private final ModifiableCallout<?> hc2heal = new ModifiableCallout<>("HC2: Heal", "Heal to Full");
+	private final ModifiableCallout<?> hc2makePhoenix = new ModifiableCallout<>("HC2: Make Phoenix", "Make Phoenix Then Heal To Full").abilityIcon(3343);
 
 	private void hc2(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 		log.info("HC2: Begin");
@@ -783,6 +799,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 		s.waitMs(200);
 		List<BuffApplied> playerBuffs = getBuffs().statusesOnTarget(getState().getPlayer());
 		boolean playerHasAnimalAfterFirstSet = playerBuffs.stream().anyMatch(ba -> ba.buffIdMatches(3337, 3338, 3339, 3340, 3341, 3342));
+		boolean playerUnused = playerBuffs.stream().anyMatch(ba -> ba.buffIdMatches(3333, 3334, 3335));
 		log.info("HC2: player has animal after first set? {}", playerHasAnimalAfterFirstSet);
 		// This set of calls is for the second defamation positions
 		ModifiableCallout<?> secondDefaCall;
@@ -829,8 +846,8 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 		log.info("HC2: Checkpoint 3");
 		// Ifrit
 //		if (getBuffs().statusesOnTarget(getState().getPlayer()).stream().anyMatch(ba -> ba.buffIdMatches(3340, 3341, 3342))) {
-		// TODO: is this correct?
 		if (playerHasAnimalAfterFirstSet) {
+			// TODO: prey marker
 			if (secondCall == hc2nothingSecond) {
 				s.updateCall(hc2finalBaitAsNothing.getModified());
 			}
@@ -839,7 +856,21 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 			}
 		}
 		else {
-			s.updateCall(hc2finalAlchemy.getModified());
+			// TODO: test this
+			if (playerUnused) {
+				s.updateCall(hc2finalAlchemyUnused.getModified());
+			}
+			else {
+				s.updateCall(hc2finalAlchemy.getModified());
+			}
+		}
+		// TODO: do something smarter than a wait here
+		s.waitMs(10_000);
+		if (getBuffs().statusesOnTarget(getState().getPlayer()).stream().anyMatch(ba -> ba.buffIdMatches(3340, 3337))) {
+			s.updateCall(hc2makePhoenix.getModified());
+		}
+		else {
+			s.updateCall(hc2heal.getModified());
 		}
 	}
 
@@ -892,6 +923,23 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 						log.info("LD SQ 2: done");
 						return;
 					}
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> dominionInitial = ModifiableCallout.durationBasedCall("Dominion: Initial", "Spread for Dominion");
+	private final ModifiableCallout<?> dominionFirstSet = new ModifiableCallout<>("Dominion: First Towers", "First Set");
+	private final ModifiableCallout<?> dominionSecondSet = new ModifiableCallout<>("Dominion: First Towers", "Second Set");
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> dominionSq = SqtTemplates.sq(30_000, AbilityCastStart.class,
+			acs -> acs.abilityIdMatches(31193),
+			(e1, s) -> {
+				s.updateCall(dominionInitial.getModified(e1));
+				List<AbilityUsedEvent> hits = s.waitEventsQuickSuccession(4, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(31195) && aue.isFirstTarget(), Duration.ofMillis(100));
+				if (hits.stream().anyMatch(aue -> aue.getTarget().isThePlayer())) {
+					s.updateCall(dominionSecondSet.getModified());
+				}
+				else {
+					s.updateCall(dominionFirstSet.getModified());
 				}
 			});
 
