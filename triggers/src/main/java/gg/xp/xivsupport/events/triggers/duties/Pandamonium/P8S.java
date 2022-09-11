@@ -64,10 +64,10 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> sunforgePhoenix = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In");
 	private final ModifiableCallout<AbilityCastStart> sunforgeSerpent = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out");
-	private final ModifiableCallout<AbilityCastStart> sunforgePhoenixStack = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In and Stack");
-	private final ModifiableCallout<AbilityCastStart> sunforgeSerpentStack = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out and Stack");
-	private final ModifiableCallout<AbilityCastStart> sunforgePhoenixSpread = ModifiableCallout.durationBasedCall("Sunforge Phoenix", "In and Spread");
-	private final ModifiableCallout<AbilityCastStart> sunforgeSerpentSpread = ModifiableCallout.durationBasedCall("Sunforge Serpent", "Out and Spread");
+	private final ModifiableCallout<AbilityCastStart> sunforgePhoenixStack = ModifiableCallout.durationBasedCall("Sunforge Phoenix (Stack)", "In and Stack");
+	private final ModifiableCallout<AbilityCastStart> sunforgeSerpentStack = ModifiableCallout.durationBasedCall("Sunforge Serpent (Stack)", "Out and Stack");
+	private final ModifiableCallout<AbilityCastStart> sunforgePhoenixSpread = ModifiableCallout.durationBasedCall("Sunforge Phoenix (Spread)", "In and Spread");
+	private final ModifiableCallout<AbilityCastStart> sunforgeSerpentSpread = ModifiableCallout.durationBasedCall("Sunforge Serpent (Spread)", "Out and Spread");
 	private final ModifiableCallout<AbilityCastStart> dogForm = ModifiableCallout.durationBasedCall("Quadruped Form", "Quadruped Form, Knockback Soon");
 	private final ModifiableCallout<?> dogFormKb = new ModifiableCallout<>("Quadruped Form KB", "Knockback");
 	private final ModifiableCallout<AbilityCastStart> snakeForm = ModifiableCallout.durationBasedCall("Snake Form", "Snake Form");
@@ -810,7 +810,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 								.filter(pos -> {
 									double xabs = Math.abs(100 - pos.x());
 									double yabs = Math.abs(100 - pos.y());
-									return xabs > 14.9 && xabs < 15.1 &&  yabs > 14.9 && yabs < 15.1;
+									return xabs > 14.9 && xabs < 15.1 && yabs > 14.9 && yabs < 15.1;
 								})
 								// Just pretend it moves 50 units forward, it's good enough
 								.map(pos -> pos.translateRelative(0, 50))
