@@ -10,10 +10,13 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawOnlineStatusChanged;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.parsers.Line40Parser;
 import gg.xp.xivsupport.events.misc.pulls.PullStatus;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.CombatantsUpdateRaw;
@@ -194,6 +197,15 @@ public class ActWsHandlers {
 			long id = jsonMsg.getJson().get("zoneID").intValue();
 			String name = jsonMsg.getJson().get("zoneName").textValue();
 			context.accept(new ZoneChangeEvent(new XivZone(id, name)));
+		}
+	}
+
+	// TODO later: after everyone has had a chance to upgrade OP, move Line40Parser to import-only status
+	@HandleEvents(order = -100)
+	public static void actWsMapChange(EventContext context, ActWsJsonMsg jsonMsg) {
+		if ("ChangeMap".equals(jsonMsg.getType())) {
+			long id = jsonMsg.getJson().get("mapID").intValue();
+			context.accept(new MapChangeEvent(XivMap.forId(id)));
 		}
 	}
 
