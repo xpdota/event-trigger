@@ -3,7 +3,10 @@ package gg.xp.xivsupport.events.ws;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.cfg.MapperBuilder;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import gg.xp.reevent.events.EventContext;
@@ -41,7 +44,9 @@ import java.util.stream.Collectors;
 public class ActWsHandlers {
 
 	private static final Logger log = LoggerFactory.getLogger(ActWsHandlers.class);
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = JsonMapper.builder()
+			.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+			.build();
 	private final EventMaster master;
 	private final XivState state;
 	private final PullTracker pulls;

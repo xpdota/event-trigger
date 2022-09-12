@@ -317,7 +317,7 @@ public class ActWsLogSource implements EventSource {
 					"PartyType",
 					"ID",
 					"OwnerID",
-					"type",
+					"Type",
 					"Job",
 					"Level",
 					"Name",
