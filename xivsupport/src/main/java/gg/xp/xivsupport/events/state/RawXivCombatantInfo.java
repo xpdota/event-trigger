@@ -71,7 +71,7 @@ public final class RawXivCombatantInfo implements Serializable {
 		this.posZ = posZ;
 		this.heading = heading;
 		this.worldId = worldId;
-		this.worldName = worldName.intern();
+		this.worldName = worldName == null ? null : worldName.intern();
 		this.bnpcId = bnpcId;
 		this.bnpcNameId = bnpcNameId;
 		this.partyType = partyType;
