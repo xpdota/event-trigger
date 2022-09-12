@@ -101,7 +101,7 @@ public final class SqtTemplates {
 		BiConsumer<X, SequentialTriggerController<BaseEvent>> combined = (e1, s) -> {
 			int index = mint.getAndIncrement();
 			if (index >= triggers.length) {
-				log.warn("Too many invocations of this trigger!");
+				log.info("Too many invocations of this trigger, ignoring.");
 				return;
 			}
 			BiConsumer<X, SequentialTriggerController<BaseEvent>> current = triggers[index];

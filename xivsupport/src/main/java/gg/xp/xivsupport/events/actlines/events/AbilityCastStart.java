@@ -59,4 +59,14 @@ public class AbilityCastStart extends BaseEvent implements HasSourceEntity, HasT
 	public @Nullable Duration getUnmodifiedCastDuration() {
 		return unmodifiedCastDuration;
 	}
+
+	@Override
+	public String toString() {
+		return "AbilityCastStart{" +
+				"ability=" + ability +
+				", source=" + source +
+				", target=" + target +
+				", duration=" + duration +
+				'}';
+	}
 }
