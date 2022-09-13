@@ -68,7 +68,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<TetherEvent> firstTetherNothing = new ModifiableCallout<>("First Tethers: Nothing", "Bait Cleave");
 
 	private final ModifiableCallout<AbilityCastStart> forbiddenFruit5 = new ModifiableCallout<>("Forbidden Fruit 5", "Tethers and Towers");
-	private final ModifiableCallout<TetherEvent> forbiddenFruit5tether = new ModifiableCallout<>("Forbidden Fruit 5 - Tether", "Tethers");
+	private final ModifiableCallout<TetherEvent> forbiddenFruit5tether = new ModifiableCallout<>("Forbidden Fruit 5 - Tether", "Tether");
 	private final ModifiableCallout<TetherEvent> forbiddenFruit5noTether = new ModifiableCallout<>("Forbidden Fruit 5 - No Tether", "Tower");
 	private final ModifiableCallout<TetherEvent> forbiddenFruit5kb = new ModifiableCallout<>("Forbidden Fruit 5 - KB", "Knockback");
 
