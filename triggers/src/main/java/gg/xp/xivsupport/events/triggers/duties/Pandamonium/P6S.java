@@ -45,6 +45,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	 */
 
+	// TODO: Check these, especially number 4
 	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid1 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 1", "Light Parties in Safe Tiles");
 	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid2 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 2", "Spread in Safe Spots, Bait");
 	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid3 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 3", "Stack in Safe Spot, Bait");
@@ -74,9 +75,9 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> darkAshes = ModifiableCallout.durationBasedCall("Dark Ashes", "Spread");
 	private final ModifiableCallout<AbilityCastStart> darkSphere = ModifiableCallout.durationBasedCall("Dark Sphere", "Spread to Safe Spots");
 	private final ModifiableCallout<AbilityCastStart> darkBurst = ModifiableCallout.durationBasedCall("Dark Burst (Flare)", "Out");
-	private final ModifiableCallout<AbilityCastStart> darkPerimeter = ModifiableCallout.durationBasedCall("Dark Sphere (Donut)", "Stack in Middle");
-	private final ModifiableCallout<AbilityCastStart> unholyDarkness2 = ModifiableCallout.durationBasedCall("Unholy Darkness (Single)", "Stack in Middle");
-	private final ModifiableCallout<AbilityCastStart> unholyDarknessSomeoneElse = ModifiableCallout.durationBasedCall("Nothing", "Stack in Middle");
+	private final ModifiableCallout<AbilityCastStart> darkPerimeter = ModifiableCallout.durationBasedCall("Dark Sphere (Donut)", "Donut");
+	private final ModifiableCallout<AbilityCastStart> unholyDarkness2 = ModifiableCallout.durationBasedCall("Unholy Darkness (Single)", "Stack");
+	private final ModifiableCallout<AbilityCastStart> unholyDarknessSomeoneElse = ModifiableCallout.durationBasedCall("Nothing", "Nothing (Stack)");
 	private final ModifiableCallout<AbilityCastStart> darkDomeBait = ModifiableCallout.durationBasedCall("Dark Dome Bait", "Bait");
 	// Added number to reset customizations
 	private final ModifiableCallout<AbilityUsedEvent> darkDomeMove2 = new ModifiableCallout<>("Dark Dome Move", "Move!");
@@ -273,7 +274,8 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 									.stream()
 									.filter(tracker -> tracker.getResult() == CastResult.IN_PROGRESS)
 									.map(CastTracker::getCast)
-									.filter(cast -> cast.abilityIdMatches(0x786D, 0x786E, 0x786F))
+									// TODO: test this
+									.filter(cast -> cast.abilityIdMatches(0x7A0F))
 									.findAny()
 									.orElse(null)));
 						});

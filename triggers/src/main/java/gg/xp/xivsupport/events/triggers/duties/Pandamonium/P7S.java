@@ -59,7 +59,9 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> forbiddenFruit2 = new ModifiableCallout<>("Forbidden Fruit 2", "Spread and Knockback");
 
-	private final ModifiableCallout<AbilityCastStart> forbiddenFruit3 = new ModifiableCallout<>("Forbidden Fruit 3", "Light Parties on Platforms");
+	// TODO: this call was originally telling you to move to separate platforms, but this is wrong.
+	// The platforms are already separate at that point.
+	private final ModifiableCallout<AbilityCastStart> forbiddenFruit3 = new ModifiableCallout<>("Forbidden Fruit 3", "Move in Soon");
 	private final ModifiableCallout<AbilityCastStart> moveIn = new ModifiableCallout<>("Move In (Healer Stacks + Floor Returns)", "Move In");
 
 	private final ModifiableCallout<AbilityCastStart> forbiddenFruit4 = new ModifiableCallout<>("Forbidden Fruit 4", "Tethers and Baits");
