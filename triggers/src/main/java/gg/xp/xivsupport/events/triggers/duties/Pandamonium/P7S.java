@@ -17,9 +17,9 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
-import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
@@ -30,34 +30,55 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @CalloutRepo(name = "P7S", duty = KnownDuty.P7S)
 public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P7S.class);
+	// Generic repetitive calls
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisClose = ModifiableCallout.durationBasedCall("Bough of Attis Attack Close", "Go Far");
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisFar = ModifiableCallout.durationBasedCall("Bough of Attis Attack Far", "Get Close");
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisLeft = ModifiableCallout.durationBasedCall("Bough of Attis Attack Left", "Go Right");
 	private final ModifiableCallout<AbilityCastStart> boughOfAttisRight = ModifiableCallout.durationBasedCall("Bough of Attis Attack Right", "Go Left");
 	private final ModifiableCallout<AbilityCastStart> dispersedAeroII = ModifiableCallout.durationBasedCall("Dispersed Aero II", "Tank Spread");
 	private final ModifiableCallout<AbilityCastStart> condensedAeroII = ModifiableCallout.durationBasedCall("Condensed Aero II", "Tank Stack");
-
-	//	private final ModifiableCallout<AbilityCastStart> hemitheosHoly = ModifiableCallout.durationBasedCall("Hemitheos's Holy", "Spread");
-//	private final ModifiableCallout<AbilityCastStart> hemitheosGlareIII = ModifiableCallout.durationBasedCall("Hemitheos's Glare III", "Center");
-//	private final ModifiableCallout<AbilityCastStart> immortalsObol = ModifiableCallout.durationBasedCall("Immortal's Obol", "Edge, in Circles");
-//	private final ModifiableCallout<AbilityCastStart> hemitheosAeroII = ModifiableCallout.durationBasedCall("Hemitheos's Aero II", "Tankbuster");
 	private final ModifiableCallout<AbilityCastStart> sparkOfLife = ModifiableCallout.durationBasedCall("Spark of Life", "Raidwide with Bleed"); //bleed
-	//	private final ModifiableCallout<AbilityCastStart> staticMoon = ModifiableCallout.durationBasedCall("Static Moon", "Out");
-//	private final ModifiableCallout<AbilityCastStart> stymphalianStrike = ModifiableCallout.durationBasedCall("Stymphalian Strike", "Dive");
 	private final ModifiableCallout<AbilityCastStart> bladesOfAttis = ModifiableCallout.durationBasedCall("Blades of Attis", "Exaflare");
 	private final ModifiableCallout<AbilityCastStart> lightOfLife = ModifiableCallout.durationBasedCall("Light of Life", "Big Raidwide");
-	private final ModifiableCallout<AbilityCastStart> lightOfLifeEnrage = ModifiableCallout.durationBasedCall("Light of Life (Enrage)", "Enrage");
+
+	private final ModifiableCallout<AbilityCastStart> forbiddenFruit1 = new ModifiableCallout<>("Forbidden Fruit 1", "Light Parties in Safe Spots");
+
+	private final ModifiableCallout<BuffApplied> firstSet_stackSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Inviolate Bonds: Stack then Spread", "Stack then Spread").statusIcon(3309);
+	private final ModifiableCallout<BuffApplied> firstSet_spreadStack = ModifiableCallout.<BuffApplied>durationBasedCall("Inviolate Bonds: Spread then Stack", "Spread then Stack").statusIcon(3308);
+	private final ModifiableCallout<BuffApplied> firstSet_spread = ModifiableCallout.<BuffApplied>durationBasedCall("Inviolate Bonds: Spread (after stack)", "Spread in Safe Spot").statusIcon(3397);
+	private final ModifiableCallout<BuffApplied> firstSet_stack = ModifiableCallout.<BuffApplied>durationBasedCall("Inviolate Bonds: Stack (after spread)", "Stack in Safe Spot").statusIcon(3398);
+
+	private final ModifiableCallout<AbilityCastStart> forbiddenFruit2 = new ModifiableCallout<>("Forbidden Fruit 2", "Spread and Knockback");
+
+	// TODO: this call was originally telling you to move to separate platforms, but this is wrong.
+	// The platforms are already separate at that point.
+	private final ModifiableCallout<AbilityCastStart> forbiddenFruit3 = new ModifiableCallout<>("Forbidden Fruit 3", "Move in Soon");
+	private final ModifiableCallout<AbilityCastStart> moveIn = new ModifiableCallout<>("Move In (Healer Stacks + Floor Returns)", "Move In");
+
+	private final ModifiableCallout<AbilityCastStart> forbiddenFruit4 = new ModifiableCallout<>("Forbidden Fruit 4", "Tethers and Baits");
+	private final ModifiableCallout<TetherEvent> firstTetherMino = new ModifiableCallout<>("First Tethers: Mino", "Minotaur Tether");
+	private final ModifiableCallout<TetherEvent> firstTetherLightning = new ModifiableCallout<>("First Tethers: Lightning", "Lightning Tether");
+	private final ModifiableCallout<TetherEvent> firstTetherNothing = new ModifiableCallout<>("First Tethers: Nothing", "Bait Cleave");
+
+	private final ModifiableCallout<AbilityCastStart> forbiddenFruit5 = new ModifiableCallout<>("Forbidden Fruit 5", "Tethers and Towers");
+	private final ModifiableCallout<TetherEvent> forbiddenFruit5tether = new ModifiableCallout<>("Forbidden Fruit 5 - Tether", "Tether");
+	private final ModifiableCallout<TetherEvent> forbiddenFruit5noTether = new ModifiableCallout<>("Forbidden Fruit 5 - No Tether", "Tower");
+	private final ModifiableCallout<TetherEvent> forbiddenFruit5kb = new ModifiableCallout<>("Forbidden Fruit 5 - KB", "Knockback");
+
+	private final ModifiableCallout<AbilityCastStart> forbiddenFruit6 = new ModifiableCallout<>("Forbidden Fruit 6", "Stacks and Spreads");
+	private final ModifiableCallout<BuffApplied> secondAero = new ModifiableCallout<BuffApplied>("Inviolate Purgation", "{nextMechanic}", "{nextMechanic} ({event.estimatedRemainingDuration}) {remainingMechanics}", ModifiableCallout.expiresIn(55)).autoIcon();
+
+	private final ModifiableCallout<AbilityCastStart> forbiddenFruit7 = new ModifiableCallout<>("Forbidden Fruit 7", "Bait Then Run");
+
 //	private final ModifiableCallout<AbilityCastStart> hemitheosAeroIV = ModifiableCallout.durationBasedCall("Hemitheos's Aero IV", "Knockback");
 
 	/*
@@ -67,13 +88,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 		3398 is the long stack
 
 	 */
-	private final ModifiableCallout<BuffApplied> firstSet_stackSpread = ModifiableCallout.<BuffApplied>durationBasedCall("First Debuff Set: Stack then Spread", "Stack then Spread").statusIcon(3309);
-	private final ModifiableCallout<BuffApplied> firstSet_spreadStack = ModifiableCallout.<BuffApplied>durationBasedCall("First Debuff Set: Spread then Stack", "Spread then Stack").statusIcon(3308);
-	private final ModifiableCallout<BuffApplied> firstSet_spread = ModifiableCallout.<BuffApplied>durationBasedCall("First Debuff Set: Spread (after stack)", "Spread in Safe Spot").statusIcon(3397);
-	private final ModifiableCallout<BuffApplied> firstSet_stack = ModifiableCallout.<BuffApplied>durationBasedCall("First Debuff Set: Stack (after spread)", "Stack in Safe Spot").statusIcon(3398);
-	private final ModifiableCallout<BuffApplied> secondAero = new ModifiableCallout<BuffApplied>("Second Debuff Set: Initial Callout", "{nextMechanic}", "{nextMechanic} ({event.estimatedRemainingDuration}) {remainingMechanics}", ModifiableCallout.expiresIn(55)).autoIcon();
 
-	private final ModifiableCallout<AbilityCastStart> moveIn = new ModifiableCallout<>("Move In (Healer Stacks + Floor Returns)", "Move In");
 
 	private final ModifiableCallout<AbilityCastStart> famineHarvest = ModifiableCallout.durationBasedCall("Famine's Harvest", "Famine");
 	private final ModifiableCallout<?> famineTether = new ModifiableCallout<>("Famine's Harvest - Tether", "Take Tether {safe}", "Tethered to {tetherLocation} - go {safe}", ModifiableCallout.expiresIn(12));
@@ -88,6 +103,8 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<TetherEvent> warHarvestBirdTether = new ModifiableCallout<>("War's Harvest - Bird Tether (Unknown)", "Bird Tether", 10_000);
 	private final ModifiableCallout<TetherEvent> warHarvestBirdTetherEmpty = new ModifiableCallout<>("War's Harvest - Bird (Near Empty Bridge)", "{where} Bird Tether", 10_000);
 	private final ModifiableCallout<TetherEvent> warHarvestBirdTetherOccupied = new ModifiableCallout<>("War's Harvest - Bird (Both Bridges Occupied)", "{where} Bird Tether", 10_000);
+
+	private final ModifiableCallout<AbilityCastStart> lightOfLifeEnrage = ModifiableCallout.durationBasedCall("Light of Life (Enrage)", "Enrage");
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 5, 5);
 	private final ArenaPos arenaPosFamine = new ArenaPos(100, 100, 7, 1);
@@ -115,7 +132,6 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 		return state.dutyIs(KnownDuty.P7S);
 	}
 
-	private final RepeatSuppressor manyActorsSupp = new RepeatSuppressor(Duration.ofMillis(100));
 
 	// TODO: first tether mechanic
 	@HandleEvents
@@ -135,6 +151,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 			case 31311 -> call = famineHarvest; // 7A4F
 			case 31312 -> call = deathHarvest; // 7A50
 			case 31313 -> call = warHarvest; // 7A51
+			// TODO: Knockback
 			default -> {
 				return;
 			}
@@ -286,6 +303,61 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 		return EnumSet.of(ArenaSector.SOUTH, ArenaSector.NORTHWEST, ArenaSector.NORTHEAST);
 	}
 
+	// TODO: what is the best initial trigger for this?
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> forbiddenFruitWithTethers = SqtTemplates.multiInvocation(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7811),
+			// TODO: First three - mostly covered by other triggers already, but might be worth adding just in case
+			(e1, s) -> {
+				// Healer stacks
+				s.updateCall(forbiddenFruit1.getModified(e1));
+			},
+			(e1, s) -> {
+				// Knockback
+				s.updateCall(forbiddenFruit2.getModified(e1));
+			},
+			(e1, s) -> {
+				// Separate Light parties
+				s.updateCall(forbiddenFruit3.getModified(e1));
+			},
+			(e1, s) -> {
+				// Tethers and baits
+				s.updateCall(forbiddenFruit4.getModified(e1));
+				EventCollector<TetherEvent> mino = new EventCollector<>(te -> te.eitherTargetMatches(cbt -> cbt.getbNpcId() == 14899));
+				EventCollector<TetherEvent> lightning = new EventCollector<>(te -> true);
+				s.collectEvents(6, 30_000, TetherEvent.class, true, List.of(mino, lightning));
+				mino.findAny(te -> te.eitherTargetMatches(XivCombatant::isThePlayer))
+						.ifPresentOrElse(
+								minoTether -> s.updateCall(firstTetherMino.getModified(minoTether)),
+								() -> lightning.findAny(te -> te.eitherTargetMatches(XivCombatant::isThePlayer))
+										.ifPresentOrElse(
+												lightningTether -> s.updateCall(firstTetherLightning.getModified(lightningTether)),
+												() -> s.updateCall(firstTetherNothing.getModified())
+										));
+			},
+			(e1, s) -> {
+				// Tethers/towers
+				s.updateCall(forbiddenFruit5.getModified(e1));
+				List<TetherEvent> tethers = s.waitEvents(4, TetherEvent.class, te -> te.eitherTargetMatches(cbt -> cbt.getbNpcId() == 14898));
+				tethers.stream()
+						.filter(tether -> tether.eitherTargetMatches(XivCombatant::isThePlayer))
+						.findAny()
+						.ifPresentOrElse(
+								tether -> s.updateCall(forbiddenFruit5tether.getModified(tether)),
+								() -> s.updateCall(forbiddenFruit5noTether.getModified()));
+				s.waitMs(4000);
+				s.updateCall(forbiddenFruit5kb.getModified());
+			},
+			(e1, s) -> {
+				// Inviolate Purgation (four stack/spread)
+				s.updateCall(forbiddenFruit6.getModified());
+			},
+			(e1, s) -> {
+				// Bait then run to other platform
+				s.updateCall(forbiddenFruit7.getModified());
+			}
+	);
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> famineSq = SqtTemplates.sq(30_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(31311),
@@ -327,9 +399,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 								tetherBaitSpot = platforms.iterator().next();
 							}
 							s.updateCall(famineTether.getModified(Map.of("lightningBait", lightningBaitSpot, "tetherLocation", tetheredTo, "safe", tetherBaitSpot)));
-						}, () -> {
-							s.updateCall(famineNoTether.getModified(Map.of("lightningBait", lightningBaitSpot)));
-						});
+						}, () -> s.updateCall(famineNoTether.getModified(Map.of("lightningBait", lightningBaitSpot))));
 			});
 
 	private static final Position sPlatform = Position.of2d(100, 116.5);
@@ -389,9 +459,9 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 					throw new RuntimeException("Bad platform! Ios: " + ios);
 				}
 				s.updateCall(deathHarvestSpots.getModified(Map.of("clockwise", clockwise, "bad", bad)));
-
-
 			});
+
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> warSq = SqtTemplates.sq(30_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(31313),
@@ -448,7 +518,8 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 					if (stymphs.size() != 2) {
 						log.warn("War fail! Bad stymphs: {}", stymphs);
 						s.updateCall(warHarvestMinoTether.getModified(te));
-					} else if (stymphs.containsAll(adjacent)) {
+					}
+					else if (stymphs.containsAll(adjacent)) {
 						s.updateCall(warHarvestMinoTetherFar.getModified(te, params));
 					}
 					else {
@@ -474,7 +545,8 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 					if (minos.size() != 2) {
 						log.warn("War fail! Bad minos: {}", stymphs);
 						s.updateCall(warHarvestBirdTether.getModified(te));
-					} else if (stymphs.containsAll(adjacent)) {
+					}
+					else if (stymphs.containsAll(adjacent)) {
 						s.updateCall(warHarvestBirdTetherOccupied.getModified(te, params));
 					}
 					else {
@@ -487,7 +559,7 @@ public class P7S extends AutoChildEventHandler implements FilteredEventHandler {
 					Set<ArenaSector> platforms = platforms();
 					ArenaSector tetherSpot;
 					platforms.removeAll(stymphs);
-					if (platforms.size() == 1){
+					if (platforms.size() == 1) {
 						tetherSpot = platforms.iterator().next();
 					}
 					else {

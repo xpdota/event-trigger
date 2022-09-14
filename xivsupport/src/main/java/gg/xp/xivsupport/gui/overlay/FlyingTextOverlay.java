@@ -94,6 +94,9 @@ public class FlyingTextOverlay extends XivOverlay {
 		private static final int maxGradientWidth = 50;
 
 		private VisualCalloutItem(CalloutEvent event) {
+			if (event.isExpired()) {
+				log.warn("Callout was already expired! {}", event.getCallText());
+			}
 			this.event = event;
 			text = new SimpleMultiLineText();
 			text.setAlignment(alignmentSetting.get());
