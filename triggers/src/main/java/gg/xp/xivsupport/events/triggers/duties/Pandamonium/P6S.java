@@ -48,7 +48,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	// TODO: Check these, especially number 4
 	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid1 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 1", "Light Parties in Safe Tiles");
 	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid2 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 2", "Spread in Safe Spots, Bait");
-	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid3 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 3", "Stack in Safe Spot, Bait");
+	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid3 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 3", "Bait then Move to Safe Spot");
 	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid4 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 4", "Safe Spot, Dodge Cleave");
 
 	private final ModifiableCallout<AbilityCastStart> exchange1 = ModifiableCallout.durationBasedCall("Exchange 1", "Stack/Spread");
@@ -70,7 +70,6 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> chorosIxouFrontBackAfter = new ModifiableCallout<>("Choros Ixou, Move to Front/Back", "Front/Back");
 	private final ModifiableCallout<AbilityCastStart> hemitheosDarkIV = ModifiableCallout.durationBasedCall("Hemitheos's Dark IV", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> pteraIxou = ModifiableCallout.durationBasedCall("Ptera Ixou", "Switch Sides");
-	private final ModifiableCallout<AbilityCastStart> aetherialExchange = ModifiableCallout.durationBasedCall("Aetherial Exchange", "Check Tether");
 	private final ModifiableCallout<AbilityCastStart> synergy = ModifiableCallout.durationBasedCall("Synergy", "Tankbuster"); //????+1 on MT, ????+2 on OT
 	private final ModifiableCallout<AbilityCastStart> darkAshes = ModifiableCallout.durationBasedCall("Dark Ashes", "Spread");
 	private final ModifiableCallout<AbilityCastStart> darkSphere = ModifiableCallout.durationBasedCall("Dark Sphere", "Spread to Safe Spots");
