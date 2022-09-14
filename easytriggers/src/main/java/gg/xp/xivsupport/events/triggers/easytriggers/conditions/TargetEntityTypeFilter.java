@@ -1,9 +1,9 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 
-public class TargetEntityTypeFilter implements Condition<HasTargetEntity> {
+public class TargetEntityTypeFilter implements SimpleCondition<HasTargetEntity> {
 
 	public EntityType type = EntityType.ANY;
 

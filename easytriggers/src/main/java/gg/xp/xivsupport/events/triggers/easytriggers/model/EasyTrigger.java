@@ -48,8 +48,9 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 	public void handleEvent(EventContext context, Event event) {
 		if (enabled && eventType != null && eventType.isInstance(event)) {
 			X typedEvent = eventType.cast(event);
-			if (conditions.stream().allMatch(cond -> cond.test(typedEvent))) {
-				RawModifiedCallout<X> modified = call.getModified(typedEvent);
+			EasyTriggerContext ctx = new EasyTriggerContext();
+			if (conditions.stream().allMatch(cond -> cond.test(ctx, typedEvent))) {
+				RawModifiedCallout<X> modified = call.getModified(typedEvent, ctx.getExtraVariables());
 				Integer colorRaw = this.colorRaw;
 				if (colorRaw != null) {
 					modified.setColorOverride(ColorUtils.intToColor(colorRaw));

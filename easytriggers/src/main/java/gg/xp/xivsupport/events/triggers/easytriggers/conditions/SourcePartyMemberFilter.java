@@ -3,10 +3,10 @@ package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.models.XivCombatant;
 
-public class SourcePartyMemberFilter implements Condition<HasSourceEntity> {
+public class SourcePartyMemberFilter implements SimpleCondition<HasSourceEntity> {
 
 	@Description("Invert (not in party)")
 	public boolean invert;
