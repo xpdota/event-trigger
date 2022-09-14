@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers;
 
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import org.apache.commons.text.StringEscapeUtils;
 
@@ -87,14 +88,17 @@ public final class ActLegacyTriggerImport {
 		EasyTrigger<ACTLogLineEvent> trigger = new EasyTrigger<>();
 		trigger.setEventType(ACTLogLineEvent.class);
 		trigger.setName(regex);
-		trigger.setText(output);
-		trigger.setTts(output);
+		CalloutAction call = new CalloutAction();
+		call.setText(output);
+		call.setTts(output);
+		trigger.addAction(call);
 		LogLineRegexFilter cond = new LogLineRegexFilter();
 		cond.regex = Pattern.compile(regex);
 		cond.lineType = LogLineRegexFilter.LogLineType.PARSED;
 		cond.matcherVar = "match";
 
 		trigger.addCondition(cond);
+		trigger.recalc();
 
 		return trigger;
 	}

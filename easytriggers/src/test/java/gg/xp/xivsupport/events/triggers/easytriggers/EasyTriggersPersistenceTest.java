@@ -22,7 +22,7 @@ public class EasyTriggersPersistenceTest {
 
 	// Test that we can import existing triggers
 	@Test
-	void test() {
+	void legacyPersistenceTest() {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		pico.getComponent(PersistenceProvider.class).save("easy-triggers.my-triggers", triggerData);
 		pico.getComponent(EventDistributor.class).acceptEvent(new InitEvent());

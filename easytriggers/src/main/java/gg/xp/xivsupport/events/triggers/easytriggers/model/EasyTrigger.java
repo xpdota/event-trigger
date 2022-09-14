@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
-import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.gui.util.ColorUtils;
 import org.jetbrains.annotations.Nullable;
@@ -15,11 +14,12 @@ import java.awt.*;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EasyTrigger<X> implements HasMutableConditions<X> {
+public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableActions<X> {
 
 	@JsonIgnore
 	private long misses;
@@ -28,18 +28,11 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 
 	@JsonProperty(defaultValue = "true")
 	private boolean enabled = true;
-	private ModifiableCallout<X> call;
 
 	private Class<X> eventType = (Class<X>) Event.class;
 	private List<Condition<? super X>> conditions = Collections.emptyList();
-	// TODO: hangtime conditions
+	private List<Action<? super X>> actions = Collections.emptyList();
 	private String name = "Give me a name";
-	private String tts = "The text that you want read out loud (or leave empty)";
-	private String text = "The text that you want displayed (or leave empty). Supports Groovy expressions in curly braces.";
-	private @Nullable Integer colorRaw;
-	private long hangTime = 5000;
-	private boolean useDuration = true;
-	private boolean useIcon = true;
 
 	public EasyTrigger() {
 		recalc();
@@ -48,15 +41,16 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 	public void handleEvent(EventContext context, Event event) {
 		if (enabled && eventType != null && eventType.isInstance(event)) {
 			X typedEvent = eventType.cast(event);
-			EasyTriggerContext ctx = new EasyTriggerContext();
+			EasyTriggerContext ctx = new EasyTriggerContext(context);
 			if (conditions.stream().allMatch(cond -> cond.test(ctx, typedEvent))) {
-				RawModifiedCallout<X> modified = call.getModified(typedEvent, ctx.getExtraVariables());
-				Integer colorRaw = this.colorRaw;
-				if (colorRaw != null) {
-					modified.setColorOverride(ColorUtils.intToColor(colorRaw));
-				}
-				context.accept(modified);
 				hits++;
+				// TODO: to allow for delays, this could be a sequential trigger
+				for (Action<? super X> action : actions) {
+					action.accept(ctx, typedEvent);
+					if (ctx.shouldStopProcessing()) {
+						return;
+					}
+				}
 			}
 			else {
 				misses++;
@@ -64,21 +58,11 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 		}
 	}
 
-	private void recalc() {
-		Predicate<X> expiry;
-		Duration hangTime = Duration.ofMillis(this.hangTime);
-		if (useDuration && HasDuration.class.isAssignableFrom(eventType)) {
-			//noinspection RedundantCast,unchecked
-			expiry = (Predicate<X>) (Predicate<? extends HasDuration>) hd -> hd.getEstimatedTimeSinceExpiry().compareTo(hangTime) > 0;
-		}
-		else {
-			expiry = ModifiableCallout.expiresIn(hangTime);
-		}
-		ModifiableCallout<X> call = new ModifiableCallout<>("Easy Trigger Callout", tts, text, expiry);
-		if (useIcon) {
-			call.autoIcon();
-		}
-		this.call = call;
+	public void recalc() {
+		makeWritable();
+		conditions.sort(Comparator.comparing(Condition::sortOrder));
+		conditions.forEach(Condition::recalc);
+		actions.forEach(Action::recalc);
 	}
 
 	public Class<X> getEventType() {
@@ -103,10 +87,18 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 		if (!(conditions instanceof ArrayList)) {
 			conditions = new ArrayList<>(conditions);
 		}
+		if (!(actions instanceof ArrayList)) {
+			actions = new ArrayList<>(actions);
+		}
 	}
 
 	@Override
 	public Class<X> classForConditions() {
+		return eventType;
+	}
+
+	@Override
+	public Class<X> classForActions() {
 		return eventType;
 	}
 
@@ -122,22 +114,26 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 		conditions.remove(condition);
 	}
 
-	public String getTts() {
-		return tts;
+	@Override
+	public List<Action<? super X>> getActions() {
+		return Collections.unmodifiableList(actions);
 	}
 
-	public void setTts(String tts) {
-		this.tts = tts;
-		recalc();
+	@Override
+	public void setActions(List<Action<? super X>> actions) {
+		this.actions = new ArrayList<>(actions);
 	}
 
-	public String getText() {
-		return text;
+	@Override
+	public void addAction(Action<? super X> action) {
+		makeWritable();
+		actions.add(action);
 	}
 
-	public void setText(String text) {
-		this.text = text;
-		recalc();
+	@Override
+	public void removeAction(Action<? super X> action) {
+		makeWritable();
+		actions.remove(action);
 	}
 
 	public String getName() {
@@ -166,67 +162,15 @@ public class EasyTrigger<X> implements HasMutableConditions<X> {
 		recalc();
 	}
 
-	public long getHangTime() {
-		return hangTime;
-	}
 
-	public void setHangTime(long hangTime) {
-		this.hangTime = hangTime;
-		recalc();
-	}
-
-	public boolean isUseDuration() {
-		return useDuration;
-	}
-
-	public void setUseDuration(boolean useDuration) {
-		this.useDuration = useDuration;
-		recalc();
-	}
-
-	public boolean isUseIcon() {
-		return useIcon;
-	}
-
-	public void setUseIcon(boolean useIcon) {
-		this.useIcon = useIcon;
-		recalc();
-	}
-
-	public @Nullable Integer getColorRaw() {
-		return colorRaw;
-	}
-
-	public void setColorRaw(@Nullable Integer colorRaw) {
-		this.colorRaw = colorRaw;
-	}
-
-	@JsonIgnore
-	public @Nullable Color getColor() {
-		Integer colorRaw = this.colorRaw;
-		if (colorRaw == null) {
-			return null;
-		}
-		return ColorUtils.intToColor(colorRaw);
-	}
-
-	@JsonIgnore
-	public void setColor(@Nullable Color color) {
-		if (color == null) {
-			colorRaw = null;
-		}
-		else {
-			colorRaw = ColorUtils.colorToInt(color);
-		}
-	}
-
-	public EasyTrigger<X> duplicate() {
-		EasyTrigger<X> newTrigger = new EasyTrigger<>();
-		newTrigger.setEventType(eventType);
-		newTrigger.setName(name + " copy");
-		newTrigger.setTts(tts);
-		newTrigger.setText(text);
-		newTrigger.setConditions(new ArrayList<>(conditions));
-		return newTrigger;
-	}
+	// TODO: this doesn't work right anyway, because it doesn't do a deep clone of conditions
+//	public EasyTrigger<X> duplicate() {
+//		EasyTrigger<X> newTrigger = new EasyTrigger<>();
+//		newTrigger.setEventType(eventType);
+//		newTrigger.setName(name + " copy");
+//		newTrigger.setTts(tts);
+//		newTrigger.setText(text);
+//		newTrigger.setConditions(new ArrayList<>(conditions));
+//		return newTrigger;
+//	}
 }

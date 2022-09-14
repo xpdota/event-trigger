@@ -11,4 +11,10 @@ public interface Condition<X> {
 	boolean test(EasyTriggerContext context, X event);
 	String fixedLabel();
 	String dynamicLabel();
+
+	default void recalc() {}
+
+	default int sortOrder() {
+		return 0;
+	};
 }

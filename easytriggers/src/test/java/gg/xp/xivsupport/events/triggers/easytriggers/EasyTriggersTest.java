@@ -15,6 +15,7 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 import gg.xp.xivsupport.models.XivAbility;
@@ -144,8 +145,10 @@ public class EasyTriggersTest {
 			cond.expected = 123;
 			trig1.setEventType(AbilityUsedEvent.class);
 			trig1.addCondition(cond);
-			trig1.setText("{event.getAbility().getId()}");
-			trig1.setTts("{event.getAbility().getId()}");
+			CalloutAction call = new CalloutAction();
+			call.setText("{event.getAbility().getId()}");
+			call.setTts("{event.getAbility().getId()}");
+			trig1.addAction(call);
 			ez1.addTrigger(trig1);
 
 			dist.acceptEvent(abilityUsed2);
@@ -181,4 +184,59 @@ public class EasyTriggersTest {
 			}
 		}
 	}
+
+	// This test is obsolete, see EasyTriggersPersistenceTest2
+//	@Test
+//	void testLegacyMigration() {
+//		PersistenceProvider pers;
+//		{
+//			MutablePicoContainer pico = ExampleSetup.setup();
+//			pers = pico.getComponent(PersistenceProvider.class);
+//			TestEventCollector coll = new TestEventCollector();
+//			EventDistributor dist = pico.getComponent(EventDistributor.class);
+//			dist.registerHandler(coll);
+//			EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+//			EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
+//			AbilityIdFilter cond = new AbilityIdFilter();
+//			cond.operator = NumericOperator.EQ;
+//			cond.expected = 123;
+//			trig1.setEventType(AbilityUsedEvent.class);
+//			trig1.addCondition(cond);
+//			reflectionSetField(trig1, "text", "{event.getAbility().getId()}");
+//			reflectionSetField(trig1, "tts", "{event.getAbility().getId()}");
+//			ez1.addTrigger(trig1);
+//
+//			dist.acceptEvent(abilityUsed2);
+//			dist.acceptEvent(zoneChange);
+//			dist.acceptEvent(abilityUsed1);
+//
+//			{
+//				List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+//				Assert.assertEquals(calls.size(), 1);
+//				CalloutEvent theCall = calls.get(0);
+//				Assert.assertEquals(theCall.getVisualText(), "123");
+//				Assert.assertEquals(theCall.getCallText(), "123");
+//			}
+//		}
+//		// Now load the serialized version and make sure it all still works
+//
+//		{
+//			MutablePicoContainer pico = ExampleSetup.setup(pers);
+//			TestEventCollector coll = new TestEventCollector();
+//			EventDistributor dist = pico.getComponent(EventDistributor.class);
+//			dist.registerHandler(coll);
+//
+//			dist.acceptEvent(abilityUsed2);
+//			dist.acceptEvent(zoneChange);
+//			dist.acceptEvent(abilityUsed1);
+//
+//			{
+//				List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+//				Assert.assertEquals(calls.size(), 1);
+//				CalloutEvent theCall = calls.get(0);
+//				Assert.assertEquals(theCall.getVisualText(), "123");
+//				Assert.assertEquals(theCall.getCallText(), "123");
+//			}
+//		}
+//	}
 }
