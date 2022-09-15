@@ -63,6 +63,7 @@ gg.xp.xivsupport.events.triggers.seq
 gg.xp.xivsupport.events.triggers.util
 gg.xp.xivsupport.events.ws
 gg.xp.xivsupport.eventstorage
+gg.xp.xivsupport.groovy
 gg.xp.xivsupport.gui
 gg.xp.xivsupport.gui.components
 gg.xp.xivsupport.gui.cooldowns
