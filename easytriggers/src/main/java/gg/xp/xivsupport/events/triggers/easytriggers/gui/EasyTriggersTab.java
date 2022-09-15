@@ -5,6 +5,7 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
@@ -80,6 +81,7 @@ public class EasyTriggersTab implements PluginTab {
 				}))
 				.addColumn(new CustomColumn<>("Name", EasyTrigger::getName))
 				.addColumn(new CustomColumn<>("Event Type", t -> t.getEventType().getSimpleName()))
+				.addColumn(new CustomColumn<>("Actions", t -> String.format("(%d) %s", t.getActions().size(), t.getActions().stream().map(Action::dynamicLabel).collect(Collectors.joining("; ")))))
 				.addColumn(new CustomColumn<>("Conditions", t -> String.format("(%d) %s", t.getConditions().size(), t.getConditions().stream().map(Condition::dynamicLabel).collect(Collectors.joining("; ")))))
 				// TODO: replace these with a description of actions
 //				.addColumn(new CustomColumn<>("TTS", EasyTrigger::getTts))
@@ -349,8 +351,8 @@ public class EasyTriggersTab implements PluginTab {
 //			TextFieldWithValidation<String> ttsField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setTts), trigger.getTts());
 //			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setText), trigger.getText());
 
-			JPanel actionsPanel = new ActionsPanel<>(backend, "Actions", trigger);
-			JPanel conditionsPanel = new ConditionsPanel<>(backend, "Conditions", trigger);
+			JPanel actionsPanel = new ActionsPanel<>(backend, "Actions", trigger, () -> requestSave());
+			JPanel conditionsPanel = new ConditionsPanel<>(backend, "Conditions", trigger, () -> requestSave());
 
 			c.weightx = 0;
 			JLabel firstLabel = GuiUtil.labelFor("Name", nameField);
@@ -366,8 +368,8 @@ public class EasyTriggersTab implements PluginTab {
 			c.gridx = 0;
 			c.gridy++;
 			add(GuiUtil.labelFor("Event", eventTypeField), c);
-//			c.gridx++;
-//			add(eventTypeField, c);
+			c.gridx++;
+			add(eventTypeField, c);
 //			c.gridx = 0;
 //			c.gridy++;
 //			add(GuiUtil.labelFor("TTS", ttsField), c);

@@ -38,7 +38,22 @@ public class DurationBasedCalloutAction implements Action<HasDuration>, GenericC
 
 	@Override
 	public String fixedLabel() {
-		return "Callout";
+		return null;
+	}
+
+	@Override
+	public String dynamicLabel() {
+		String displayedCall;
+		if (tts != null && !tts.isBlank()) {
+			displayedCall = tts;
+		}
+		else if (text != null && !text.isBlank()) {
+			displayedCall = text;
+		}
+		else {
+			return "Call <nothing>";
+		}
+		return String.format("Call '%s'", displayedCall);
 	}
 
 	@Override

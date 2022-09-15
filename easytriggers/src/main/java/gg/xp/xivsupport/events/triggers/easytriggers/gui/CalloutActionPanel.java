@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GenericCalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.AcceptsSaveCallback;
-import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.components.ColorChooser;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -14,12 +14,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 // TODO
-public class CalloutActionPanel extends TitleBorderFullsizePanel implements AcceptsSaveCallback {
+public class CalloutActionPanel extends TitleBorderPanel implements AcceptsSaveCallback {
 	private Runnable saveCallback;
 
 	// TODO: this doesn't receive auto-save functionality
 	public CalloutActionPanel(GenericCalloutAction action) {
-		super("Callouts");
+		super((action instanceof DurationBasedCalloutAction ? "Callout with Duration" : "Callout"));
 		setLayout(new GridBagLayout());
 		GridBagConstraints c = GuiUtil.defaultGbc();
 		c.insets = new Insets(1, 2, 1, 2);
@@ -79,7 +79,6 @@ public class CalloutActionPanel extends TitleBorderFullsizePanel implements Acce
 			add(GuiUtil.labelFor("Text Color Override", textColor), c);
 			c.gridy = 0;
 			c.gridx++;
-			c.gridy++;
 			add(useIcon, c);
 			c.gridy++;
 			add(textColor, c);

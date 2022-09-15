@@ -42,12 +42,14 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.PlayerHasStatusF
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.RefireFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityNpcIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityTypeFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceHasStatusFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourcePartyMemberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusStacksFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetCountFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityNpcIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityTypeFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetHasStatusFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetIndexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetPartyMemberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
@@ -290,6 +292,8 @@ public final class EasyTriggers {
 			new ConditionDescription<>(SourcePartyMemberFilter.class, HasSourceEntity.class, "Source is (not) in Party", () -> new SourcePartyMemberFilter(getInjectionInstance(XivState.class)), this::generic),
 			new ConditionDescription<>(TargetPartyMemberFilter.class, HasTargetEntity.class, "Target is (not) in Party", () -> new TargetPartyMemberFilter(getInjectionInstance(XivState.class)), this::generic),
 			new ConditionDescription<>(PlayerHasStatusFilter.class, Event.class, "Player has a specific status effect", () -> new PlayerHasStatusFilter(getInjectionInstance(XivState.class), getInjectionInstance(StatusEffectRepository.class)), this::generic),
+			new ConditionDescription<>(SourceHasStatusFilter.class, HasSourceEntity.class, "Source has a specific status effect", () -> new SourceHasStatusFilter(getInjectionInstance(StatusEffectRepository.class)), this::generic),
+			new ConditionDescription<>(TargetHasStatusFilter.class, HasTargetEntity.class, "Target has a specific status effect", () -> new TargetHasStatusFilter(getInjectionInstance(StatusEffectRepository.class)), this::generic),
 			new ConditionDescription<>(TargetIndexFilter.class, HasTargetIndex.class, "Target Index", TargetIndexFilter::new, this::generic),
 			new ConditionDescription<>(TargetCountFilter.class, HasTargetIndex.class, "Target Count", TargetCountFilter::new, this::generic),
 			new ConditionDescription<>(DurationFilter.class, HasDuration.class, "Castbar or Status Duration", DurationFilter::new, this::generic),

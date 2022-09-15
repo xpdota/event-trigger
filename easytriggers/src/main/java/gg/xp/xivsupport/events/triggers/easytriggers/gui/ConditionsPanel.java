@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.AcceptsSaveCallback;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
@@ -21,12 +22,14 @@ import java.awt.*;
 public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(ConditionsPanel.class);
 	private final HasMutableConditions<X> trigger;
+	private final Runnable saveCallback;
 	private final EasyTriggers backend;
 
-	public ConditionsPanel(EasyTriggers backend, String label, HasMutableConditions<X> trigger) {
+	public ConditionsPanel(EasyTriggers backend, String label, HasMutableConditions<X> trigger, Runnable saveCallback) {
 		super(label);
 		this.backend = backend;
 		this.trigger = trigger;
+		this.saveCallback = saveCallback;
 		setPreferredSize(null);
 //		setLayout(new GridBagLayout());
 //		GridBagConstraints c = GuiUtil.defaultGbc();
@@ -111,6 +114,9 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 				component = new JLabel("Error making component");
 			}
 			add(component, c);
+			if (component instanceof AcceptsSaveCallback asc) {
+				asc.setSaveCallback(saveCallback);
+			}
 //			c.weightx = 1;
 //			add(Box.createHorizontalGlue(), c);
 		}

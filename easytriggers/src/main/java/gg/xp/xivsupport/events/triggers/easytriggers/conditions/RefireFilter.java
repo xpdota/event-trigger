@@ -10,7 +10,7 @@ import java.time.Instant;
 public class RefireFilter implements SimpleCondition<Event> {
 
 	@Description("Refire Period (ms)")
-	private long refireMs = 1_000;
+	public long refireMs = 1_000;
 
 	@JsonIgnore
 	private long last;
@@ -28,6 +28,16 @@ public class RefireFilter implements SimpleCondition<Event> {
 	@Override
 	public boolean test(Event event) {
 		long thisEventAt = event.getEffectiveHappenedAt().toEpochMilli();
-		return last + refireMs <= thisEventAt;
+		boolean result = last + refireMs <= thisEventAt;
+		if (result) {
+			last = thisEventAt;
+		}
+		return result;
+	}
+
+	// This one should be last
+	@Override
+	public int sortOrder() {
+		return 1_000_000;
 	}
 }
