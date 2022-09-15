@@ -110,6 +110,7 @@ public class XivCombatant extends XivEntity {
 	}
 
 	/**
+	 * Some of these are in OverlayPlugin EnmityMemoryCommon.cs
 	 * 0 = ?
 	 * 1 = PC
 	 * 2 = Combatant NPCs and pets? Both Selene and Chocobo seem to be in here, as do enemies
@@ -118,6 +119,7 @@ public class XivCombatant extends XivEntity {
 	 * 5 = ?
 	 * 6 = Gathering point? I got "Mature Tree" in here
 	 * 7 = Gardening patch?
+	 * 9 = Minion?
 	 * 12 = Interactable housing item?
 	 *
 	 * @return Raw type from ACT

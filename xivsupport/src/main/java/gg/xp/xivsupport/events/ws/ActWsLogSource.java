@@ -329,7 +329,8 @@ public class ActWsLogSource implements EventSource {
 					"PosZ",
 					"Heading",
 					"TargetID",
-					"IsVisible",
+					// I think whether or not it is visible might be in here
+					"ModelStatus",
 					"IsTargetable"
 			};
 			allCbtRequest = mapper.writeValueAsString(
