@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.timelines;
 
-import gg.xp.xivdata.data.HasIconURL;
-import gg.xp.xivdata.data.HasOptionalIconURL;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
@@ -14,8 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serial;
-import java.io.Serializable;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -98,11 +95,27 @@ public final class TimelineProcessor {
 		}
 		// To save on processing time, ignore some events that will never be found in a timeline
 		int num = event.getLineNumber();
-		if (num == 11 || num == 29 || num == 28 || num > 200 || num == 31 || num == 37 || num == 38 || num == 39) {
+		// Things that can be ignored:
+		/*
+			1. Change Zone
+			2. Change Primary Player
+			11. Party List
+			12. Player Stats
+			24. DoT tick
+			28. Waymarks
+			29. Player marker
+			31. Gauge
+			37. Action resolved (probably can ignore)
+			38. Status effect list
+			39. HP Update
+			200 and up. Only used by the ACT plugin itself for debug messages and such.
+		 */
+		if (num == 1 || num == 2 || num == 11 || num == 12 || num == 24 || num == 28 || num == 29 || num == 31 || num == 37 || num == 38 || num == 39 || num > 200) {
 			return;
 		}
 		String emulatedActLogLine = event.getEmulatedActLogLine();
-		Optional<TimelineEntry> newSync = entries.stream().filter(entry -> entry.shouldSync(getEffectiveTime(), emulatedActLogLine)).findFirst();
+		double timeNow = getEffectiveTime();
+		Optional<TimelineEntry> newSync = entries.stream().filter(entry -> entry.shouldSync(timeNow, emulatedActLogLine)).findFirst();
 		newSync.ifPresent(rawTimelineEntry -> {
 			double timeToSyncTo = rawTimelineEntry.getSyncToTime();
 			double effectiveTimeBefore = getEffectiveTime();

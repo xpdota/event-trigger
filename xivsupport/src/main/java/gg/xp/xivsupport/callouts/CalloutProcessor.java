@@ -3,9 +3,12 @@ package gg.xp.xivsupport.callouts;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
 import gg.xp.xivsupport.callouts.conversions.PlayerNameConversion;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.gui.util.HasFriendlyName;
+import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -23,11 +26,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class CalloutProcessor {
 
@@ -42,11 +47,14 @@ public class CalloutProcessor {
 
 	private final BooleanSetting replaceYou;
 	private final EnumSetting<PlayerNameConversion> pcNameStyle;
+	private final GlobalArenaSectorConverter asc;
 
-	public CalloutProcessor(GroovyManager groovyMgr, PersistenceProvider pers) {
+	// TODO: make interface/autoscan for all the converters
+	public CalloutProcessor(GroovyManager groovyMgr, PersistenceProvider pers, GlobalArenaSectorConverter asc) {
 		this.groovyMgr = groovyMgr;
 		this.replaceYou = new BooleanSetting(pers, "callout-processor.replace-you", true);
 		this.pcNameStyle = new EnumSetting<>(pers, "callout-processor.pc-style", PlayerNameConversion.class, PlayerNameConversion.FULL_NAME);
+		this.asc = asc;
 	}
 
 	@HandleEvents
@@ -67,7 +75,19 @@ public class CalloutProcessor {
 
 	@HandleEvents(order = Integer.MAX_VALUE)
 	public void initEvent(EventContext ctx, InitEvent init) {
-		setupShell();
+		// TODO: this is bad, but works
+		// It will probably not matter anyway once the other groovy stuff is done
+		Thread thread = new Thread(() -> {
+			try {
+				Thread.sleep(10_000);
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			compile("\"dummy script to force init\"");
+		}, "CalloutProcessorSetup");
+		thread.setDaemon(true);
+		thread.start();
 	}
 
 	public <X> CalloutEvent processCallout(RawModifiedCallout<X> raw) {
@@ -170,6 +190,17 @@ public class CalloutProcessor {
 			else {
 				return singleReplacement(realValue);
 			}
+		}
+		else if (rawValue instanceof ArenaSector as) {
+			return asc.convert(as);
+		}
+		else if (rawValue instanceof HasFriendlyName hfn) {
+			return hfn.getFriendlyName();
+		}
+		else if (rawValue instanceof Collection<?> coll) {
+			return coll.stream()
+					.map(this::singleReplacement)
+					.collect(Collectors.joining(", "));
 		}
 		else {
 			return rawValue.toString();

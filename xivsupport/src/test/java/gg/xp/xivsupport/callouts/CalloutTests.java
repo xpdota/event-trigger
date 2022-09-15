@@ -43,8 +43,8 @@ public class CalloutTests {
 		{
 			ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
 			mc.attachHandle(mch);
-			Assert.assertTrue(mch.getSameText().get());
-			Assert.assertTrue(mch.getSameText().isSet());
+			Assert.assertFalse(mch.getSameText().get());
+			Assert.assertFalse(mch.getSameText().isSet());
 		}
 	}
 
@@ -67,11 +67,12 @@ public class CalloutTests {
 		{
 			ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
 			mc.attachHandle(mch);
-			Assert.assertTrue(mch.getSameText().get());
-			Assert.assertTrue(mch.getSameText().isSet());
+			Assert.assertFalse(mch.getSameText().get());
+			Assert.assertFalse(mch.getSameText().isSet());
 			Assert.assertEquals(mch.getEffectiveTts(), "Bar");
 			Assert.assertEquals(mch.getEffectiveText(), "Bar");
 			mch.getTtsSetting().set("Bar3");
+			mch.getSameText().set(true);
 			Assert.assertEquals(mch.getEffectiveTts(), "Bar3");
 			Assert.assertEquals(mch.getEffectiveText(), "Bar3");
 		}
@@ -108,6 +109,7 @@ public class CalloutTests {
 			Assert.assertEquals(modified.getCallText(), "Bar");
 			Assert.assertEquals(modified.getVisualText(), "Bar");
 		}
+		mch.getSameText().set(true);
 		mch.getTtsSetting().set("123");
 		mch.getTextSetting().set("456");
 		{

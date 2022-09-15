@@ -5,7 +5,7 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
-import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeInEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeOutEvent;
@@ -15,6 +15,7 @@ import gg.xp.xivsupport.events.misc.ProxyForAppendOnlyList;
 import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CombatantType;
+import gg.xp.xivsupport.models.XivCombatant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,12 @@ public class PullTracker implements SubState {
 	private final List<Pull> pulls = new ArrayList<>();
 	private final AtomicInteger pullCounter = new AtomicInteger(1);
 	private Pull currentPull;
+
+	private final XivState state;
+
+	public PullTracker(XivState state) {
+		this.state = state;
+	}
 
 	// Special case - initial plugin startup
 	@HandleEvents(order = 500)
@@ -46,6 +53,10 @@ public class PullTracker implements SubState {
 		Pull myPull = new Pull(pullCounter.getAndIncrement(), event, context.getStateInfo().get(XivState.class).getZone());
 		pulls.add(myPull);
 		currentPull = myPull;
+		state.getPartyList().forEach(currentPull::addPlayer);
+		state.getCombatantsListCopy().stream()
+				.filter(c -> !c.isPc())
+				.forEach(currentPull::addEnemy);
 		context.accept(new PullStartedEvent());
 	}
 
@@ -58,13 +69,12 @@ public class PullTracker implements SubState {
 	}
 
 	@HandleEvents
-	public void updateCombatInfo(EventContext context, XivStateRecalculatedEvent event) {
+	public void updateCombatInfo(EventContext context, RawAddCombatantEvent event) {
 		if (currentPull != null) {
-			XivState state = context.getStateInfo().get(XivState.class);
-			state.getPartyList().forEach(currentPull::addPlayer);
-			state.getCombatantsListCopy().stream()
-					.filter(c -> !c.isPc())
-					.forEach(currentPull::addEnemy);
+			XivCombatant entity = event.getEntity();
+			if (!entity.isPc()) {
+				currentPull.addEnemy(entity);
+			}
 		}
 	}
 

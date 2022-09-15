@@ -15,11 +15,17 @@ import java.net.URL;
 
 public class TimelineBarRenderer implements TableCellRenderer {
 
-	private static final Color colorActive = new Color(87, 149, 16, 192);
-	private static final Color colorExpired = new Color(128, 0, 128, 192);
-	private static final Color colorUpcoming = new Color(53, 134, 159, 192);
+	public static final Color defaultColorActive = new Color(87, 149, 16, 192);
+	public static final Color defaultColorExpired = new Color(128, 0, 128, 192);
+	public static final Color defaultColorUpcoming = new Color(53, 134, 159, 192);
+	public static final Color defaultFontColor = new Color(240, 240, 240);
 	private final TimelineBar bar = new TimelineBar();
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
+	private final TimelineBarColorProvider colorProvider;
+
+	public TimelineBarRenderer(TimelineBarColorProvider colorProvider) {
+		this.colorProvider = colorProvider;
+	}
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -48,7 +54,7 @@ public class TimelineBarRenderer implements TableCellRenderer {
 
 
 			bar.setPercent1(percent);
-			bar.setTextColor(baseLabel.getForeground());
+			bar.setTextColor(colorProvider.getFontColor());
 
 			formatLabel(entry);
 
@@ -73,12 +79,12 @@ public class TimelineBarRenderer implements TableCellRenderer {
 
 	protected Color getBarColor(double percent, @NotNull VisualTimelineEntry item) {
 		if (item.remainingActiveTime() > 0) {
-			return colorActive;
+			return colorProvider.getActiveColor();
 		}
 		if (percent < 0.999d) {
-			return colorUpcoming;
+			return colorProvider.getUpcomingColor();
 		}
-		return colorExpired;
+		return colorProvider.getExpiredColor();
 	}
 
 	private final EmptyRenderer empty = new EmptyRenderer();

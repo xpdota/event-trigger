@@ -248,4 +248,15 @@ public class SequenceIdTracker {
 			return new ArrayList<>(list);
 		}
 	}
+
+	public long unresolvedDamageOnEntity(XivEntity target) {
+		synchronized (lock) {
+			List<AbilityUsedEvent> events = getEventsTargetedOnEntity(target);
+			long dmg = 0;
+			for (AbilityUsedEvent event : events) {
+				dmg += event.getDamage();
+			}
+			return dmg;
+		}
+	}
 }

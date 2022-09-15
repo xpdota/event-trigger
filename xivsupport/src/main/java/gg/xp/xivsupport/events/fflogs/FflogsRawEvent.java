@@ -54,6 +54,14 @@ public class FflogsRawEvent extends BaseEvent {
 		return getTypedField("targetID", Long.class);
 	}
 
+	public @Nullable Long sourceInstance() {
+		return getTypedField("sourceInstance", Long.class);
+	}
+
+	public @Nullable Long targetInstance() {
+		return getTypedField("targetInstance", Long.class);
+	}
+
 	public @Nullable Long abilityId() {
 		return getTypedField("abilityGameID", Long.class);
 	}

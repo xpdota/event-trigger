@@ -82,4 +82,13 @@ public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTarget
 		tetheredCombatants.remove(combatant);
 		return tetheredCombatants;
 	}
+
+	@Override
+	public String toString() {
+		return "TetherEvent{" +
+				"source=" + source +
+				", target=" + target +
+				", id=" + id +
+				'}';
+	}
 }

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.callouts.gui;
 import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
+import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 
 import javax.swing.*;
@@ -15,7 +16,7 @@ public class CalloutHelper extends JPanel {
 	private final List<JCheckBox> showHides = new ArrayList<>();
 	private final List<JCheckBox> topLevel = new ArrayList<>();
 
-	public CalloutHelper(List<CalloutGroup> groups, SoundFilesManager soundMgr) {
+	public CalloutHelper(List<CalloutGroup> groups, SoundFilesManager soundMgr, SoundFileTab sft) {
 //		enableTts.addActionListener(l -> this.repaint());
 //		enableOverlay.addActionListener(l -> this.repaint());
 		this.setLayout(new GridBagLayout());
@@ -60,7 +61,7 @@ public class CalloutHelper extends JPanel {
 				c.gridx = 1;
 				this.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
-				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr);
+				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr, sft);
 				showHide.getModel().addChangeListener(l -> {
 					csg.setVisible(showHide.isSelected());
 				});

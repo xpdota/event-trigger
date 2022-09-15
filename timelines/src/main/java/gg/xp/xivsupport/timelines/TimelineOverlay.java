@@ -4,6 +4,8 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.RefreshType;
+import gg.xp.xivsupport.persistence.settings.ColorSetting;
+import gg.xp.xivsupport.timelines.gui.TimelineBarColorProvider;
 import gg.xp.xivsupport.timelines.gui.TimelineBarRenderer;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
@@ -31,7 +33,7 @@ public class TimelineOverlay extends XivOverlay {
 	private static final int BAR_WIDTH = 150;
 	private final JTable table;
 
-	public TimelineOverlay(PersistenceProvider persistence, TimelineManager timeline, OverlayConfig oc) {
+	public TimelineOverlay(PersistenceProvider persistence, TimelineManager timeline, OverlayConfig oc, TimelineBarColorProvider tbcp) {
 		super("Timeline", "timeline-overlay", oc, persistence);
 		log.info("Start");
 		// TODO: fix the timer getting truncated. Just left-justify text and right-justify timer like on cactbot
@@ -41,7 +43,7 @@ public class TimelineOverlay extends XivOverlay {
 		tableModel = CustomTableModel.builder(() -> current)
 				.addColumn(new CustomColumn<>("Bar", Function.identity(),
 						c -> {
-							c.setCellRenderer(new TimelineBarRenderer());
+							c.setCellRenderer(new TimelineBarRenderer(tbcp));
 							c.setMaxWidth(BAR_WIDTH);
 							c.setMinWidth(BAR_WIDTH);
 						}))

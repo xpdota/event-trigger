@@ -6,7 +6,7 @@ import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;

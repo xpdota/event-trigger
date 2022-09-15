@@ -19,8 +19,11 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -266,6 +269,21 @@ public class GroovyPanel extends JPanel {
 				}
 				else if (result instanceof Collection coll) {
 					setResultDisplay(simpleListDisplay(coll));
+				}
+				else if (result.getClass().isArray()) {
+					try {
+						int length = Array.getLength(result);
+						List<Object> converted = new ArrayList<>();
+						for (int i = 0; i < length; i++) {
+							converted.add(Array.get(result, i));
+						}
+						setResultDisplay(simpleListDisplay(converted));
+					}
+					catch (Throwable t) {
+						log.error("Error converting array to list", t);
+						setResultDisplay(textDisplayComponent("This was supposed to be an array, but there was an error converting it to a list.\n\n" + result));
+					}
+
 				}
 				else if (result instanceof Component comp) {
 					setResultDisplay(comp);

@@ -91,9 +91,15 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			ListSelectionModel selectionModel = table.getSelectionModel();
 			int oldSize = data.size();
 			int[] oldSelectionIndices = selectionModel.getSelectedIndices();
-			List<X> oldSelections = Arrays.stream(oldSelectionIndices)
-					.mapToObj(i -> data.get(i))
-					.collect(Collectors.toList());
+			List<X> oldSelections;
+			try {
+				oldSelections = Arrays.stream(oldSelectionIndices)
+						.mapToObj(i -> data.get(i))
+						.collect(Collectors.toList());
+			} catch (Throwable t) {
+				log.error("Error re-applying selections, clearing selections.", t);
+				oldSelections = Collections.emptyList();
+			}
 			// TODO: smarter data provider that informs us of append-only operations
 			data = newData;
 			int newSize = data.size();

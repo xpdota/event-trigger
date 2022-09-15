@@ -86,6 +86,7 @@ public class BasicEventDistributor implements EventDistributor {
 				log.warn("No handlers for event {}!", event);
 			}
 			List<EventHandler<Event>> handlersTmp;
+			// TODO: this would be nice to get rid of, don't want an O(n) creation right here
 			synchronized (handlersLock) {
 				handlersTmp = new ArrayList<>(handlers);
 			}

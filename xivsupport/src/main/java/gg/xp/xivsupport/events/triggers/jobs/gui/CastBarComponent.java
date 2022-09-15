@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.jobs.gui;
 import gg.xp.xivsupport.events.state.combatstate.CastResult;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.gui.tables.renderers.ResourceBar;
+import gg.xp.xivsupport.models.XivAbility;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -90,11 +91,13 @@ public class CastBarComponent extends ResourceBar {
 			// TODO: should it be null?
 			return null;
 		}
+		XivAbility ability = tracker.getCast().getAbility();
+		String skillNameAndId = String.format("(%s - 0x%X)", ability.getName(), ability.getId());
 		return switch (tracker.getResult()) {
-			case IN_PROGRESS -> String.format("%.03fs / %.03fs", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0);
-			case SUCCESS -> String.format("Done, %.03fs", tracker.getCastDuration().toMillis() / 1000.0);
-			case INTERRUPTED -> String.format("Interrupted at %.03fs / %.03fs", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0);
-			case UNKNOWN -> String.format("??? %.03fs / %.03fs", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0);
+			case IN_PROGRESS -> String.format("%.03fs / %.03fs %s", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0, skillNameAndId);
+			case SUCCESS -> String.format("Done, %.03fs %s", tracker.getCastDuration().toMillis() / 1000.0, skillNameAndId);
+			case INTERRUPTED -> String.format("Interrupted at %.03fs / %.03fs %s", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0, skillNameAndId);
+			case UNKNOWN -> String.format("??? %.03fs / %.03fs %s", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0, skillNameAndId);
 		};
 	}
 }

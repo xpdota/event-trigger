@@ -5,9 +5,11 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
-import gg.xp.xivsupport.events.actlines.events.WipeEvent;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
 import org.jetbrains.annotations.Nullable;
@@ -15,8 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
@@ -81,9 +86,27 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		context.enqueue(event);
 	}
 
+	public void waitThenRefreshCombatants(long delay) {
+		waitMs(delay);
+		accept(new RefreshCombatantsRequest());
+		waitMs(delay);
+	}
+
 	public void refreshCombatants(long delay) {
 		accept(new RefreshCombatantsRequest());
 		waitMs(delay);
+	}
+
+	public void forceExpire() {
+		synchronized (lock) {
+			// TODO: expire on wipe?
+			// Also make it configurable as to whether or not a wipe ends the trigger
+//			if (event.getHappenedAt().isAfter(expiresAt)) {
+			log.info("Sequential trigger force expired");
+			die = true;
+			lock.notifyAll();
+		}
+
 	}
 
 	@SystemEvent
@@ -128,6 +151,13 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	}
 
 	/**
+	 * @return The duration since this trigger began
+	 */
+	public Duration timeSinceStart() {
+		return initialEvent.getEffectiveTimeSince();
+	}
+
+	/**
 	 * Accept a new callout event, BUT mark it as "replacing" any previous call
 	 * i.e. update callout text + emit a new TTS
 	 *
@@ -161,6 +191,102 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		return IntStream.range(0, events)
 				.mapToObj(i -> waitEvent(eventClass, eventFilter))
 				.toList();
+	}
+
+	/**
+	 * Wait for a certain number of events, but with multiple filters in an 'or' fashion. This method returns a map
+	 * of filters to a list of events that passed that filter. With 'exclusive' set to true, an event that matches
+	 * more than one filter will only be assigned to the first in the return value.
+	 *
+	 * @param limit      Number of events
+	 * @param timeoutMs  Timeout in ms to wait for events
+	 * @param eventClass Class of event
+	 * @param exclusive  false if you would like an event to be allowed to match multiple filters, rather than movingn
+	 *                   on to the next event after a single match.
+	 * @param filters    The list of filters.
+	 * @param <P>        The type of filter.
+	 * @param <Y>        The type of event.
+	 * @return A map, where the keys are the filters, and the values are a list of events that matched that
+	 * filter.
+	 */
+	public <P extends Predicate<? super Y>, Y> Map<P, List<Y>> groupEvents(int limit, int timeoutMs, Class<Y> eventClass, boolean exclusive, List<P> filters) {
+		Duration end = timeSinceStart().plusMillis(timeoutMs);
+//		log.info("End ms: {}", end.toMillis());
+		DelayedSqtEvent event = new DelayedSqtEvent(timeoutMs);
+		enqueue(event);
+		List<Y> rawEvents = waitEventsUntil(limit, eventClass, e -> filters.stream().anyMatch(p -> p.test(e)), BaseEvent.class, unused -> {
+			Duration tss = timeSinceStart();
+//			log.info("TSS ms: {}", tss.toMillis());
+			return tss.compareTo(end) > 0;
+		});
+		log.info("groupEvents: {} total", rawEvents.size());
+		Map<P, List<Y>> out = new HashMap<>(filters.size());
+		// Even if there were no matches for a particular filter, we should set that key's value to an empty list
+		for (P filter : filters) {
+			out.put(filter, new ArrayList<>());
+		}
+		for (Y rawEvent : rawEvents) {
+			for (P filter : filters) {
+				if (filter.test(rawEvent)) {
+					out.get(filter).add(rawEvent);
+					if (exclusive) {
+						break;
+					}
+				}
+			}
+		}
+		return out;
+	}
+
+	/**
+	 * Like {@link #groupEvents(int, int, Class, boolean, List)}, but uses {@link EventCollector} objects to filter
+	 * and collect the result. This method works exactly like groupEvents, but does not return anything. Rather, you
+	 * would query each of your EventCollectors to see what was matched. Each collector specifies what should be
+	 * matched, and will be populated with the matches.
+	 *
+	 * @param limit      Number of events
+	 * @param timeoutMs  Timeout in ms to wait for events
+	 * @param eventClass Class of event
+	 * @param exclusive  false if you would like an event to be allowed to match multiple filters, rather than movingn
+	 *                   on to the next event after a single match.
+	 * @param collectors The list of collectors.
+	 * @param <Y>        The type of event.
+	 */
+	public <Y> void collectEvents(int limit, int timeoutMs, Class<Y> eventClass, boolean exclusive, List<EventCollector<? super Y>> collectors) {
+		Map<EventCollector<? super Y>, List<Y>> result = groupEvents(limit, timeoutMs, eventClass, exclusive, collectors);
+		for (EventCollector<? super Y> collector : collectors) {
+			collector.provideEvents(result.get(collector));
+		}
+	}
+
+	public <Y extends BaseEvent> List<Y> waitEventsQuickSuccession(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Duration maxDelta) {
+		List<Y> out = new ArrayList<>();
+		Y last = waitEvent(eventClass, eventFilter);
+		out.add(last);
+		while (true) {
+			X event = waitEvent(e -> true);
+			// First possibility - event we're interested int
+			if (eventClass.isInstance(event) && eventFilter.test((Y) event)) {
+				out.add((Y) event);
+				last = (Y) event;
+				// If we have reached the limit, return it now
+				if (out.size() >= limit) {
+					return out;
+				}
+			}
+			// Second possibility - hit our stop trigger
+			else if (last.getEffectiveTimeSince().compareTo(maxDelta) > 0) {
+				log.info("Sequential trigger stopping on {}", event);
+				return out;
+			}
+			// Third possibility - keep looking
+		}
+	}
+
+	public void waitBuffRemoved(StatusEffectRepository repo, BuffApplied buff) {
+		while (repo.statusOrRefreshActive(buff)) {
+			waitEvent(BuffRemoved.class, br -> br.getBuff().equals(buff.getBuff()) && br.getTarget().equals(buff.getTarget()));
+		}
 	}
 
 	public <Y, Z> List<Y> waitEventsUntil(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {

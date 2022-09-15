@@ -11,7 +11,7 @@ import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepositoryImpl;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.NoCellEditor;
@@ -35,14 +35,12 @@ import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
-import gg.xp.xivsupport.sys.Threading;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -111,8 +109,8 @@ public class CustomPartyConfig implements PluginTab {
 				return new ArrayList<>(Collections.nCopies(45, vuln));
 			}
 		});
-		container.removeComponent(ActiveCastRepository.class);
-		container.addComponent(ActiveCastRepository.class, new ActiveCastRepository() {
+		container.removeComponent(ActiveCastRepositoryImpl.class);
+		container.addComponent(ActiveCastRepositoryImpl.class, new ActiveCastRepositoryImpl() {
 			@Override
 			public @Nullable CastTracker getCastFor(XivCombatant cbt) {
 				return new CastTracker(new AbilityCastStart(
