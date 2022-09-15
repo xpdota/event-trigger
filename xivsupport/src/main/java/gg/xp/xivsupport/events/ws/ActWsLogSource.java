@@ -316,6 +316,7 @@ public class ActWsLogSource implements EventSource {
 					"ID",
 					"OwnerID",
 					"Type",
+					"type",
 					"Job",
 					"Level",
 					"Name",
@@ -327,7 +328,9 @@ public class ActWsLogSource implements EventSource {
 					"PosY",
 					"PosZ",
 					"Heading",
-					"TargetID"
+					"TargetID",
+					"IsVisible",
+					"IsTargetable"
 			};
 			allCbtRequest = mapper.writeValueAsString(
 					Map.ofEntries(
