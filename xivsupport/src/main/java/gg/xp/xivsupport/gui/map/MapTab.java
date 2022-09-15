@@ -7,9 +7,7 @@ import gg.xp.reevent.util.Utils;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
-import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -39,7 +37,7 @@ public class MapTab extends JPanel {
 	private final JSplitPane split;
 	private volatile boolean selectionRefreshPending;
 
-	public MapTab(XivState state, StandardColumns columns, ActiveCastRepository acr, GroovyManager mgr) {
+	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config) {
 //		super("Map");
 		super(new BorderLayout());
 		split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);

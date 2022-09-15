@@ -19,7 +19,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;

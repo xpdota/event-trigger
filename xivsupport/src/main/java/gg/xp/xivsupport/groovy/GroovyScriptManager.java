@@ -1,7 +1,10 @@
-package gg.xp.xivsupport.gui.groovy;
+package gg.xp.xivsupport.groovy;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.gui.groovy.GroovyScriptHolder;
+import gg.xp.xivsupport.gui.groovy.ScriptNameAndFileStub;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.ExternalObservable;
@@ -25,6 +28,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@ScanMe
 public class GroovyScriptManager {
 	private static final Logger log = LoggerFactory.getLogger(GroovyScriptManager.class);
 	private final List<GroovyScriptHolder> scripts = new ArrayList<>();
@@ -221,7 +225,7 @@ public class GroovyScriptManager {
 		return script;
 	}
 
-	void saveScript(GroovyScriptHolder script) {
+	public void saveScript(GroovyScriptHolder script) {
 		File outFile = script.getFile();
 		if (outFile == null) {
 			throw new IllegalArgumentException("Cannot save a script with no associated file");

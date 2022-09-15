@@ -26,8 +26,8 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
-import gg.xp.xivsupport.gui.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import gg.xp.xivsupport.gui.map.MapTab;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
@@ -446,13 +446,12 @@ public class GuiMain {
 
 		@SuppressWarnings("BusyWait")
 		private void getAndAddTabs() {
+			List<PluginTab> components;
 			while (true) {
 				// Kinda bad...
 				try {
-					List<PluginTab> components = container.getComponents(PluginTab.class);
-					components.sort(Comparator.comparing(PluginTab::getSortOrder));
-					SwingUtilities.invokeLater(() -> this.addTabs(components));
-					return;
+					components = container.getComponents(PluginTab.class);
+					break;
 				}
 				catch (ConcurrentModificationException ignored) {
 					try {
@@ -463,6 +462,9 @@ public class GuiMain {
 					}
 				}
 			}
+			List<PluginTab> allComponents = components;
+			allComponents.sort(Comparator.comparing(PluginTab::getSortOrder));
+			SwingUtilities.invokeLater(() -> this.addTabs(allComponents));
 		}
 
 	}

@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.gui.groovy;
+package gg.xp.xivsupport.groovy;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
@@ -96,6 +96,7 @@ public class GroovyManager {
 				"javax.swing",
 				"gg.xp.xivdata.data",
 				"gg.xp.xivsupport.gui",
+				"gg.xp.xivsupport.events.actlines.events.abilityeffect",
 				"gg.xp.xivsupport.gui.tables"
 		);
 		Reflections reflections = new Reflections(

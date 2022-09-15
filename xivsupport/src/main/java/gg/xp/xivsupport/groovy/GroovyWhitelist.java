@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.gui.groovy;
+package gg.xp.xivsupport.groovy;
 
 import gg.xp.reevent.scan.ScanMe;
 import org.apache.commons.io.FileUtils;

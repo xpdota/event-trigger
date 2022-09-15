@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.gui.groovy;
+package gg.xp.xivsupport.groovy;
 
 import org.jetbrains.annotations.Nullable;
 

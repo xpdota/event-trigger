@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.groovy;
 
+import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import org.jetbrains.annotations.Nullable;

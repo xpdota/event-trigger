@@ -6,7 +6,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
 import gg.xp.xivsupport.callouts.conversions.PlayerNameConversion;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;

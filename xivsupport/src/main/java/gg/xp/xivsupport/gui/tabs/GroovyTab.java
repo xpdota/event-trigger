@@ -1,9 +1,8 @@
 package gg.xp.xivsupport.gui.tabs;
 
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.groovy.GroovyPanel;
 import gg.xp.xivsupport.gui.groovy.GroovyScriptHolder;
-import gg.xp.xivsupport.gui.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 

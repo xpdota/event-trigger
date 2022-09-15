@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyManager;
 import groovy.lang.GroovyShell;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.Nullable;

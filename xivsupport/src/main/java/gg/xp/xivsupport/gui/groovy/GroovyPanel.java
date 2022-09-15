@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.gui.groovy;
 
+import gg.xp.xivsupport.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.groovy.GroovyScriptResult;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -7,7 +9,6 @@ import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +22,6 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

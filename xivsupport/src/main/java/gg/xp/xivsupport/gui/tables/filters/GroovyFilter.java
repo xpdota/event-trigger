@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyManager;
 import groovy.lang.GroovyShell;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;

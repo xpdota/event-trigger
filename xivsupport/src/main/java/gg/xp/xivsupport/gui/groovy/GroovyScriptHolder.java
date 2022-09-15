@@ -3,6 +3,9 @@ package gg.xp.xivsupport.gui.groovy;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.groovy.GroovyScriptResult;
 import groovy.lang.GroovyShell;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -159,7 +162,7 @@ public class GroovyScriptHolder {
 		return scriptMgr != null;
 	}
 
-	void setScriptMgr(GroovyScriptManager scriptMgr) {
+	public void setScriptMgr(GroovyScriptManager scriptMgr) {
 		this.scriptMgr = scriptMgr;
 		this.groovyMgr = scriptMgr.getGroovyManager();
 	}
