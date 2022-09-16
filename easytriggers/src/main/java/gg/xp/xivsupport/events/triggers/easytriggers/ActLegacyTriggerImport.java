@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers;
 
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import org.apache.commons.text.StringEscapeUtils;
 
@@ -71,6 +72,15 @@ public final class ActLegacyTriggerImport {
 			throw new IllegalArgumentException("Did not have required fields: " + triggerXml);
 		}
 
+		// Now, we need to convert capture groups.
+		// e.g. ${time} -> match.group('time')
+		// https://github.com/xpdota/event-trigger/issues/123
+		// Replace named capture groups
+		output = output.replaceAll("\\$\\{([^\\d}'][^}']*)}", "{match.group('$1')}");
+		// Replace indexed capture groups
+		output = output.replaceAll("\\$\\{(\\d+)}", "{match.group($1)}");
+		output = output.replaceAll("\\$(\\d+)", "{match.group($1)}");
+
 		// Java doesn't support PCRE regex comments, so strip them.
 		// They look like this: (?#-- Comment goes here --)
 		regex = regex.replaceAll("\\(\\?#--.*?--\\)", "");
@@ -78,13 +88,17 @@ public final class ActLegacyTriggerImport {
 		EasyTrigger<ACTLogLineEvent> trigger = new EasyTrigger<>();
 		trigger.setEventType(ACTLogLineEvent.class);
 		trigger.setName(regex);
-		trigger.setText(output);
-		trigger.setTts(output);
+		CalloutAction call = new CalloutAction();
+		call.setText(output);
+		call.setTts(output);
+		trigger.addAction(call);
 		LogLineRegexFilter cond = new LogLineRegexFilter();
-		cond.regex = Pattern.compile(regex, Pattern.COMMENTS);
+		cond.regex = Pattern.compile(regex);
 		cond.lineType = LogLineRegexFilter.LogLineType.PARSED;
+		cond.matcherVar = "match";
 
 		trigger.addCondition(cond);
+		trigger.recalc();
 
 		return trigger;
 	}

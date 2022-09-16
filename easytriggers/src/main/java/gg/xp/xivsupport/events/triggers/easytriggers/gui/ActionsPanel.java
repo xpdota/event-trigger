@@ -7,7 +7,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -19,13 +19,13 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 
-public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
-	private static final Logger log = LoggerFactory.getLogger(ConditionsPanel.class);
-	private final HasMutableConditions<X> trigger;
+public class ActionsPanel<X> extends TitleBorderFullsizePanel {
+	private static final Logger log = LoggerFactory.getLogger(ActionsPanel.class);
+	private final HasMutableActions<X> trigger;
 	private final Runnable saveCallback;
 	private final EasyTriggers backend;
 
-	public ConditionsPanel(EasyTriggers backend, String label, HasMutableConditions<X> trigger, Runnable saveCallback) {
+	public ActionsPanel(EasyTriggers backend, String label, HasMutableActions<X> trigger, Runnable saveCallback) {
 		super(label);
 		this.backend = backend;
 		this.trigger = trigger;
@@ -46,36 +46,36 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		JButton newButton = new JButton("New");
 		add(newButton);
-		newButton.addActionListener(l -> addNewCondition());
-		trigger.getConditions().forEach(cond -> {
-			add(new ConditionPanel<>(cond));
+		newButton.addActionListener(l -> addNewAction());
+		trigger.getActions().forEach(cond -> {
+			add(new ActionPanel<>(cond));
 		});
 	}
 
-	private void addNewCondition() {
-		TableWithFilterAndDetails<ConditionDescription<?, ?>, Object> table = TableWithFilterAndDetails.builder(
+	private void addNewAction() {
+		TableWithFilterAndDetails<ActionDescription<?, ?>, Object> table = TableWithFilterAndDetails.builder(
 						"Choose Condition Type",
-						() -> backend.getConditionsApplicableTo(trigger))
+						() -> backend.getActionsApplicableTo(trigger))
 				.addMainColumn(new CustomColumn<>("Condition", c -> c.clazz().getSimpleName()))
-				.addMainColumn(new CustomColumn<>("Description", ConditionDescription::description))
+				.addMainColumn(new CustomColumn<>("Description", ActionDescription::description))
 				.setFixedData(true)
 				.build();
 		// TODO: owner
-		ConditionDescription<?, ?> desc = ChooserDialog.chooserReturnItem(SwingUtilities.getWindowAncestor(this), table);
+		ActionDescription<?, ?> desc = ChooserDialog.chooserReturnItem(SwingUtilities.getWindowAncestor(this), table);
 		if (desc != null) {
-			Condition<?> newInst = desc.newInst();
-			trigger.addCondition((Condition<? super X>) newInst);
-			add(new ConditionPanel<>(newInst));
+			Action<?> newInst = desc.newInst();
+			trigger.addAction((Action<? super X>) newInst);
+			add(new ActionPanel<>(newInst));
 			revalidate();
 		}
 	}
 
-	private class ConditionPanel<Y> extends JPanel {
+	private class ActionPanel<Y> extends JPanel {
 
-		private final Condition<Y> condition;
+		private final Action<Y> action;
 
-		ConditionPanel(Condition<Y> condition) {
-			this.condition = condition;
+		ActionPanel(gg.xp.xivsupport.events.triggers.easytriggers.model.Action<Y> action) {
+			this.action = action;
 			setAlignmentX(Component.LEFT_ALIGNMENT);
 			setBorder(null);
 			setLayout(new GridBagLayout());
@@ -89,21 +89,24 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 //			add(buttonHolder, c);
 			add(deleteButton, c);
 			c.gridx++;
-			JLabel labelLabel = new JLabel(condition.fixedLabel());
-			add(labelLabel, c);
-			c.gridx++;
+			String fixedLabel = action.fixedLabel();
+			if (fixedLabel != null) {
+				JLabel labelLabel = new JLabel(fixedLabel);
+				add(labelLabel, c);
+				c.gridx++;
+			}
 			c.weightx = 1;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			deleteButton.addActionListener(l -> this.delete());
 			Component component;
-			Class<? extends Condition> condClass = condition.getClass();
-			ConditionDescription<Condition<Y>, Y> desc = backend.getConditionDescription(condClass);
+			Class<? extends Action> actionClass = action.getClass();
+			ActionDescription<Action<Y>, Y> desc = backend.getActionDescription(actionClass);
 			try {
 				if (desc == null) {
 					component = new JLabel("Error: cannot find component");
 				}
 				else {
-					component = desc.guiprovider().apply(condition, (EasyTrigger<? super Y>) trigger);
+					component = desc.guiprovider().apply(action, (EasyTrigger<? super Y>) trigger);
 					if (component == null) {
 						component = new JLabel("Error: null component");
 					}
@@ -122,9 +125,9 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 		}
 
 		private void delete() {
-			trigger.removeCondition((Condition<? super X>) condition);
-			ConditionsPanel.this.remove(this);
-			ConditionsPanel.this.revalidate();
+			trigger.removeAction((Action<? super X>) action);
+			ActionsPanel.this.remove(this);
+			ActionsPanel.this.revalidate();
 		}
 	}
 

@@ -1,10 +1,11 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 
-public class SourceEntityNpcIdFilter implements Condition<HasSourceEntity> {
+public class SourceEntityNpcIdFilter implements SimpleCondition<HasSourceEntity> {
 
 	public NumericOperator operator = NumericOperator.EQ;
 	@Description("NPC ID")

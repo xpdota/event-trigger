@@ -2,8 +2,10 @@ package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LogLineRegexFilter implements Condition<ACTLogLineEvent> {
@@ -28,6 +30,8 @@ public class LogLineRegexFilter implements Condition<ACTLogLineEvent> {
 	public LogLineType lineType = LogLineType.NETWORK;
 	@Description("Regex")
 	public Pattern regex = Pattern.compile("^Regex Here$");
+	@Description("Matcher Variable")
+	public String matcherVar = "";
 
 	@Override
 	public String fixedLabel() {
@@ -40,9 +44,16 @@ public class LogLineRegexFilter implements Condition<ACTLogLineEvent> {
 	}
 
 	@Override
-	public boolean test(ACTLogLineEvent event) {
+	public boolean test(EasyTriggerContext context, ACTLogLineEvent event) {
 		String line = lineType == LogLineType.NETWORK ? event.getLogLine() : event.getEmulatedActLogLine();
-		return regex.matcher(line).find();
+		Matcher matcher = regex.matcher(line);
+		if (matcher.find()) {
+			if (matcherVar != null && !matcherVar.isBlank()) {
+				context.addVariable(matcherVar, matcher);
+			}
+			return true;
+		}
+		return false;
 	}
 
 }

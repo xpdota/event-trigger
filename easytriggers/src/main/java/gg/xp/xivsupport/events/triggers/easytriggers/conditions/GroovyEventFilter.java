@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
+import gg.xp.xivsupport.gui.groovy.GroovyManager;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import groovy.lang.GroovyShell;
@@ -15,8 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Predicate;
 
-// TODO: test this with sandboxing
-public class GroovyEventFilter implements Condition<Event> {
+public class GroovyEventFilter implements SimpleCondition<Event> {
 	private static final Logger log = LoggerFactory.getLogger(GroovyEventFilter.class);
 
 	private final GroovyManager mgr;

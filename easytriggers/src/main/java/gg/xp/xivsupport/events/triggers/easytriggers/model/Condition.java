@@ -1,16 +1,23 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import gg.xp.reevent.events.EventContext;
-
-import java.util.function.Predicate;
+import org.jetbrains.annotations.Nullable;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-public interface Condition<X> extends Predicate<X> {
+public interface Condition<X> {
 	@SuppressWarnings("unused")
-	default boolean test(EventContext context, X event) {
-		return test(event);
-	}
-	String fixedLabel();
+	boolean test(EasyTriggerContext context, X event);
+
+	@Nullable String fixedLabel();
+
 	String dynamicLabel();
+
+	default void recalc() {
+	}
+
+	default int sortOrder() {
+		return 0;
+	}
+
+	;
 }

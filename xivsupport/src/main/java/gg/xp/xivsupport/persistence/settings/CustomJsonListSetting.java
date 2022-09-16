@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 public class CustomJsonListSetting<X> extends ObservableSetting {
@@ -22,6 +23,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 	private final String settingKey;
 	private final String failuresKey;
 	private final TypeReference<X> type;
+	private final BiConsumer<JsonNode, X> postContstruct;
 	private final ObjectMapper mapper;
 
 	private List<X> items;
@@ -32,13 +34,14 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 			String failuresKey,
 			TypeReference<X> type,
 			ObjectMapper mapper,
-			Supplier<List<X>> defaultProvider
-			) {
+			Supplier<List<X>> defaultProvider,
+			BiConsumer<JsonNode, X> postContstruct) {
 		this.pers = pers;
 		this.settingKey = settingKey;
 		this.failuresKey = failuresKey;
 		this.type = type;
 		this.mapper = mapper;
+		this.postContstruct = postContstruct;
 
 		String strVal = pers.get(settingKey, String.class, null);
 		List<X> items;
@@ -54,6 +57,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 				for (JsonNode node : nodes) {
 					try {
 						X item = mapper.convertValue(node, type);
+						postContstruct.accept(node, item);
 						items.add(item);
 					}
 					catch (Throwable jpe) {
@@ -134,6 +138,8 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 		private final TypeReference<X> type;
 		private ObjectMapper mapper;
 		private Supplier<List<X>> defaultProvider;
+		private BiConsumer<JsonNode, X> postConstruct = (node, item) -> {
+		};
 
 		private Builder(@NotNull PersistenceProvider pers, @NotNull TypeReference<X> type, @NotNull String settingKey, @NotNull String failuresKey) {
 			this.pers = pers;
@@ -157,6 +163,11 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 			return this;
 		}
 
+		public Builder<X> postConstruct(BiConsumer<JsonNode, X> postConstruct) {
+			this.postConstruct = postConstruct;
+			return this;
+		}
+
 		@SuppressWarnings("Convert2MethodRef")
 		public CustomJsonListSetting<X> build() {
 			return new CustomJsonListSetting<>(
@@ -165,8 +176,8 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 					failuresKey,
 					type,
 					mapper != null ? mapper : new ObjectMapper(),
-					defaultProvider != null ? defaultProvider : () -> Collections.emptyList()
-			);
+					defaultProvider != null ? defaultProvider : () -> Collections.emptyList(),
+					postConstruct);
 		}
 
 	}
