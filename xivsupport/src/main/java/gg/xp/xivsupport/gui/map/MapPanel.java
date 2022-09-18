@@ -339,7 +339,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			newSelection = selection.getId();
 		}
 		if (newSelection != this.selection) {
-			log.info("New map selection: {} -> {}",
+			log.debug("New map selection: {} -> {}",
 					this.selection == -1 ? "none" : String.format("0x%X", this.selection),
 					newSelection == -1 ? "none" : String.format("0x%X", newSelection));
 			this.selection = newSelection;

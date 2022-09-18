@@ -12,13 +12,16 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.EchoEvent;
-import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.models.XivAbility;
@@ -43,6 +46,7 @@ import org.testng.annotations.Test;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class EasyTriggersTest {
 
@@ -201,8 +205,9 @@ public class EasyTriggersTest {
 		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
 		gef.eventType = EchoEvent.class;
 		gef.setGroovyScript("event.line.startsWith('foo')");
-		Assert.assertTrue(gef.test(new EchoEvent("foobar")));
-		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		EasyTriggerContext etc = new EasyTriggerContext(null);
+		Assert.assertTrue(gef.test(etc, new EchoEvent("foobar")));
+		Assert.assertFalse(gef.test(etc, new EchoEvent("notbar")));
 	}
 
 	@Test
@@ -211,7 +216,8 @@ public class EasyTriggersTest {
 		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
 		gef.eventType = EchoEvent.class;
 		gef.setGroovyScript("asdfasdfasdfasdf");
-		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		EasyTriggerContext etc = new EasyTriggerContext(null);
+		Assert.assertFalse(gef.test(etc, new EchoEvent("notbar")));
 		MatcherAssert.assertThat(gef.getLastError(), Matchers.instanceOf(MissingPropertyException.class));
 	}
 
@@ -238,7 +244,8 @@ public class EasyTriggersTest {
 		// Due to the way this is set up, we have to set the script to something valid, *then* something invalid
 		gef.setGroovyScript("true");
 		gef.setGroovyScript("asdfasdfasdfasdf");
-		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		EasyTriggerContext etc = new EasyTriggerContext(null);
+		Assert.assertFalse(gef.test(etc, new EchoEvent("notbar")));
 		MatcherAssert.assertThat(gef.getLastError(), Matchers.instanceOf(MissingPropertyException.class));
 	}
 
@@ -248,8 +255,52 @@ public class EasyTriggersTest {
 		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
 		gef.eventType = EchoEvent.class;
 		gef.setGroovyScript("new java.io.File(\"Foo\") != null");
-		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		EasyTriggerContext etc = new EasyTriggerContext(null);
+		Assert.assertFalse(gef.test(etc, new EchoEvent("notbar")));
 		MatcherAssert.assertThat(gef.getLastError(), Matchers.instanceOf(RejectedAccessException.class));
+	}
+
+	@Test
+	void testGroovyConditionBinding() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		ChatLineRegexFilter clrf = new ChatLineRegexFilter();
+		clrf.regex = Pattern.compile("foo (?<stuff>\\d+)");
+		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
+		gef.setGroovyScript("match.group('stuff') == '456'");
+		EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+		EasyTrigger<ChatLineEvent> easy = new EasyTrigger<>();
+		easy.setEventType(ChatLineEvent.class);
+		easy.addCondition(clrf);
+		easy.addCondition(gef);
+		CalloutAction ca = new CalloutAction();
+		ca.setText("{match.group('stuff')}");
+		ca.setTts("{match.group('stuff')}");
+		easy.addAction(ca);
+		ez1.addTrigger(easy);
+
+		TestEventCollector coll = new TestEventCollector();
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
+		dist.registerHandler(coll);
+
+		{
+			dist.acceptEvent(new ChatLineEvent(123, null, "foo bar"));
+			List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		{
+			dist.acceptEvent(new ChatLineEvent(123, null, "foo 123"));
+			List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		{
+			dist.acceptEvent(new ChatLineEvent(123, null, "foo 456"));
+			List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+			Assert.assertEquals(calls.size(), 1);
+			CalloutEvent theCall = calls.get(0);
+			Assert.assertEquals(theCall.getVisualText(), "456");
+			Assert.assertEquals(theCall.getCallText(), "456");
+		}
+
 	}
 
 	private static MutablePicoContainer getSbxDisabledSetup() {
@@ -264,8 +315,9 @@ public class EasyTriggersTest {
 		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
 		gef.eventType = EchoEvent.class;
 		gef.setGroovyScript("event.line.startsWith('foo')");
-		Assert.assertTrue(gef.test(new EchoEvent("foobar")));
-		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		EasyTriggerContext etc = new EasyTriggerContext(null);
+		Assert.assertTrue(gef.test(etc, new EchoEvent("foobar")));
+		Assert.assertFalse(gef.test(etc, new EchoEvent("notbar")));
 	}
 
 	@Test
@@ -274,7 +326,8 @@ public class EasyTriggersTest {
 		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
 		gef.eventType = EchoEvent.class;
 		gef.setGroovyScript("asdfasdfasdfasdf");
-		Assert.assertFalse(gef.test(new EchoEvent("notbar")));
+		EasyTriggerContext etc = new EasyTriggerContext(null);
+		Assert.assertFalse(gef.test(etc, new EchoEvent("notbar")));
 		MatcherAssert.assertThat(gef.getLastError(), Matchers.instanceOf(MissingPropertyException.class));
 	}
 
@@ -295,7 +348,8 @@ public class EasyTriggersTest {
 		GroovyEventFilter gef = new GroovyEventFilter(pico.getComponent(GroovyManager.class));
 		gef.eventType = EchoEvent.class;
 		gef.setGroovyScript("new java.io.File(\"Foo\") != null");
-		Assert.assertTrue(gef.test(new EchoEvent("foobar")));
+		EasyTriggerContext etc = new EasyTriggerContext(null);
+		Assert.assertTrue(gef.test(etc, new EchoEvent("foobar")));
 	}
 
 	// This test is obsolete, see EasyTriggersPersistenceTest2
