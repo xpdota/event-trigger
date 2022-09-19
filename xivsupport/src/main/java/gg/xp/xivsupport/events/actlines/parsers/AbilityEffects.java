@@ -53,13 +53,13 @@ public final class AbilityEffects {
 				return new HealEffect(flags, value, calcSeverity(healSeverityByte), calcDamage(value));
 
 			case 5:
-				return new BlockedDamageEffect(flags, value, calcDamage(value));
+				return new BlockedDamageEffect(flags, value, calcDamage(value), calcSeverity(severityByte));
 
 			case 6:
-				return new ParriedDamageEffect(flags, value, calcDamage(value));
+				return new ParriedDamageEffect(flags, value, calcDamage(value), calcSeverity(severityByte));
 
 			case 7:
-				return new InvulnBlockedDamageEffect(flags, value, calcDamage(value));
+				return new InvulnBlockedDamageEffect(flags, value, calcDamage(value), calcSeverity(severityByte));
 
 			case 8:
 				return new NoEffect(flags, value);
@@ -133,9 +133,13 @@ public final class AbilityEffects {
 	private static HitSeverity calcSeverity(byte severity) {
 		return switch (severity) {
 			// Fortunately, the pre- and post-6.1 values do not overlap, so they can both be supported simultaneously
-			case 0x20, 1 -> HitSeverity.CRIT;
-			case 0x40, 2 -> HitSeverity.DHIT;
-			case 0x60, 3 -> HitSeverity.CRIT_DHIT;
+			// Unfortunately, they seem to conflict with other bit flags, so disabling for now
+//			case 0x20, 1 -> HitSeverity.CRIT;
+//			case 0x40, 2 -> HitSeverity.DHIT;
+//			case 0x60, 3 -> HitSeverity.CRIT_DHIT;
+			case 0x20 -> HitSeverity.CRIT;
+			case 0x40 -> HitSeverity.DHIT;
+			case 0x60 -> HitSeverity.CRIT_DHIT;
 
 			default -> HitSeverity.NORMAL;
 		};

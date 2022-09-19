@@ -1,25 +1,23 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
-public class BlockedDamageEffect extends AbilityEffect implements DamageEffect {
-	private final long amount;
+public class BlockedDamageEffect extends BaseDamageEffect implements HasDamageModifier {
 
-	public BlockedDamageEffect(long flags, long value, long amount) {
-		super(flags, value, AbilityEffectType.BLOCKED);
-		this.amount = amount;
+	public BlockedDamageEffect(long flags, long value, long amount, HitSeverity severity) {
+		super(flags, value, amount, severity, AbilityEffectType.BLOCKED);
 	}
 
 	@Override
-	public long getAmount() {
-		return amount;
+	protected String shortName() {
+		return "Block";
 	}
 
 	@Override
-	public String toString() {
-		return String.format("Block(%s)", amount);
+	protected String longName() {
+		return "Blocked Damage";
 	}
 
 	@Override
-	public String getBaseDescription() {
-		return String.format("Blocked Damage: %s", amount);
+	public int getModifier() {
+		return getRawModifierByte();
 	}
 }
