@@ -8,6 +8,7 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CdTrackingKey;
+import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,14 +37,14 @@ public class CooldownHelper {
 		this.state = state;
 	}
 
-	// TODO: one thing that isn't supported yet is stuff that has no buff whatsoever
-
 	public List<CooldownStatus> getCooldowns(Predicate<XivCombatant> sourceFilter, Predicate<ExtendedCooldownDescriptor> cdFilter) {
 		Predicate<XivCombatant> actualSourceFilter = xc -> sourceFilter.test(xc.walkParentChain());
 		Map<CdTrackingKey, AbilityUsedEvent> cds = cdTracker
 				.getCds(e -> cdFilter.test(e.getKey().getCooldown()) && actualSourceFilter.test(e.getKey().getSource()));
 		List<BuffApplied> buffs = buffTracker.getBuffsAndPreapps().stream()
 				.filter(ba -> actualSourceFilter.test(ba.getSource()))
+				// Filter out pets
+				.filter(ba -> ba.getTarget().getType() != CombatantType.PET)
 				.toList();
 		return cds.entrySet()
 				.stream().map(e -> {
