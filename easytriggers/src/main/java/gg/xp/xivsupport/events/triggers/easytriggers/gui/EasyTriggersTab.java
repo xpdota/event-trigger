@@ -285,13 +285,19 @@ public class EasyTriggersTab implements PluginTab {
 			SwingUtilities.invokeLater(() -> {
 				model.setSelectedValue(newTrigger);
 				refreshSelection();
+				model.scrollToSelectedValue();
 			});
 		}
 	}
 
 	private void addImports(List<EasyTrigger<?>> toAdd) {
+		if (toAdd.isEmpty()) {
+			return;
+		}
 		toAdd.forEach(backend::addTrigger);
 		refresh();
+		model.setSelectedValue(toAdd.get(0));
+		model.scrollToSelectedValue();
 	}
 
 	private void delete() {

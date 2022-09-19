@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
-public class HealEffect extends AbilityEffect {
+public class HealEffect extends AbilityEffect implements HasSeverity {
 	private final HitSeverity severity;
 	private final long amount;
 	private final boolean onTarget;
@@ -12,6 +12,7 @@ public class HealEffect extends AbilityEffect {
 		onTarget = ((flags >> 8) & 1) == 0;
 	}
 
+	@Override
 	public HitSeverity getSeverity() {
 		return severity;
 	}
