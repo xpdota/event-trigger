@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.groovy;
 
+import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +19,7 @@ public class ScriptNameDialog extends JDialog {
 	private final Consumer<ScriptNameAndFileStub> consumer;
 	private String name;
 
-	public ScriptNameDialog(String title, @Nullable String existingName, GroovyManager mgr, Component parent, Consumer<ScriptNameAndFileStub> consumer) {
+	public ScriptNameDialog(String title, @Nullable String existingName, GroovyScriptManager mgr, Component parent, Consumer<ScriptNameAndFileStub> consumer) {
 		super(SwingUtilities.getWindowAncestor(parent), title);
 		if (existingName == null) {
 			name = "New Script";

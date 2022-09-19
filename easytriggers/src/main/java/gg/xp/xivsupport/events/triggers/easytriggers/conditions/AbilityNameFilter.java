@@ -3,12 +3,12 @@ package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.StringOperator;
 
 import java.util.Locale;
 
-public class AbilityNameFilter implements Condition<HasAbility> {
+public class AbilityNameFilter implements SimpleCondition<HasAbility> {
 
 	public StringOperator operator = StringOperator.EQ;
 	@Description("Use Local Language (instead of English)")

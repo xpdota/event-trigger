@@ -1,11 +1,11 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 
 
-public class DurationFilter implements Condition<HasDuration> {
+public class DurationFilter implements SimpleCondition<HasDuration> {
 
 	public NumericOperator operator = NumericOperator.EQ;
 	@Description("Milliseconds")
@@ -19,11 +19,11 @@ public class DurationFilter implements Condition<HasDuration> {
 
 	@Override
 	public String fixedLabel() {
-		return "# of Stacks";
+		return "Duration";
 	}
 
 	@Override
 	public String dynamicLabel() {
-		return "# of Stacks " + operator.getFriendlyName() + ' ' + expectedMs;
+		return "Duration " + operator.getFriendlyName() + ' ' + expectedMs;
 	}
 }

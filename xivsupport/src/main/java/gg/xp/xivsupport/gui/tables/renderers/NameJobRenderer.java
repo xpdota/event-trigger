@@ -41,7 +41,11 @@ public class NameJobRenderer implements TableCellRenderer {
 		final Component label;
 		final String tooltip;
 		if (value instanceof XivEntity entity) {
-			label = fallback.getTableCellRendererComponent(table, entity.getName(), isSelected, false, row, column);
+			String name = entity.getName();
+			if (name == null) {
+				name = String.format("Unknown 0x%X", entity.getId());
+			}
+			label = fallback.getTableCellRendererComponent(table, name, isSelected, false, row, column);
 			Job job;
 			if (value instanceof XivCombatant cbt) {
 				HitPoints hp = cbt.getHp();

@@ -37,17 +37,18 @@ public final class ModifiedCalloutHandle {
 		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", false);
 		// Logic for defaulting the "same as TTS" setting:
 		// If sameText is already set (regardless of the value it is set to, do nothing)
-		if (!sameText.isSet()) {
-			// If the settings are identical, set it
-			// TODO: needs to be fixed
-			// If a callout is initially the same, and the user DOES NOT CUSTOMIZE, but the underlying call changes,
-			// the same setting will still be on in the current impl.
-			if (Objects.equals(ttsSetting.get(), textSetting.get())) {
-				sameText.set(true);
-			}
-			// Note that this will apply even if the tts/text have been customized. That is, if, down the line, you
-			// happen to set them to the same value.
-		}
+		// Disabling this because it causes a lot more problems than it solves
+//		if (!sameText.isSet()) {
+//			// If the settings are identical, set it
+//			// TODO: needs to be fixed
+//			// If a callout is initially the same, and the user DOES NOT CUSTOMIZE, but the underlying call changes,
+//			// the same setting will still be on in the current impl.
+//			if (Objects.equals(ttsSetting.get(), textSetting.get())) {
+//				sameText.set(true);
+//			}
+//			// Note that this will apply even if the tts/text have been customized. That is, if, down the line, you
+//			// happen to set them to the same value.
+//		}
 		hangTimeSetting = new LongSetting(persistenceProvider, propStub + ".text.hangtime", 5000L);
 		textColorOverride = new ColorSetting(persistenceProvider, propStub + ".text.color", null);
 		this.original = original;

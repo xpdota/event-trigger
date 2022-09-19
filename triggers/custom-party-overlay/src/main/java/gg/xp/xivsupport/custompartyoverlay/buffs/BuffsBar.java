@@ -123,10 +123,8 @@ public class BuffsBar extends Component {
 			if (component == null) {
 				continue;
 			}
-			int prefWidth = buffWidth + xPadding;
 			int remainingX = cellWidth - curX;
-			int actualWidth = Math.min(prefWidth, remainingX);
-			if (actualWidth <= 0) {
+			if (buffWidth > remainingX) {
 				break;
 			}
 			Image textImage = tracker.image;
@@ -140,7 +138,7 @@ public class BuffsBar extends Component {
 				g.setTransform(shapeTrans);
 				g.drawImage(textImage, 0, 0, null);
 			}
-			int delta = actualWidth + xPadding;
+			int delta = buffWidth + xPadding;
 			transform.translate(delta, 0);
 //			g.translate(delta, 0);
 			curX += delta;

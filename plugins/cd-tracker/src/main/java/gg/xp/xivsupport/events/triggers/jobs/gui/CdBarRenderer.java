@@ -44,7 +44,8 @@ public class CdBarRenderer extends ResourceBarRenderer<VisualCdInfo> {
 	protected Color getBarColor(double percent, @NotNull VisualCdInfo item) {
 		return switch (item.getStatus()) {
 			case READY, NOT_YET_USED -> colors.getReadyColor();
-			case BUFF_PREAPP, BUFF_ACTIVE -> colors.getActiveColor();
+			case BUFF_ACTIVE -> colors.getActiveColor();
+			case BUFF_PREAPP -> colors.getPreappColor();
 			case ON_COOLDOWN -> colors.getOnCdColor();
 		};
 	}

@@ -1,8 +1,12 @@
 package gg.xp.xivsupport.events.triggers.seq;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.WipeEvent;
+import gg.xp.xivsupport.events.debug.DebugCommand;
+import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.speech.TtsRequest;
@@ -10,10 +14,13 @@ import gg.xp.xivsupport.sys.XivMain;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.picocontainer.MutablePicoContainer;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SequentialTriggerTest {
 
@@ -24,6 +31,7 @@ public class SequentialTriggerTest {
 	AbilityUsedEvent secondMatchingEvent = new AbilityUsedEvent(new XivAbility(123), cbt, cbt, Collections.emptyList(), 3, 1, 1);
 	AbilityUsedEvent altMatchingEvent = new AbilityUsedEvent(new XivAbility(456), cbt, cbt, Collections.emptyList(), 4, 1, 1);
 	AbilityUsedEvent altMatchingEventInFuture = new AbilityUsedEvent(new XivAbility(456), cbt, cbt, Collections.emptyList(), 4, 1, 1);
+
 	{
 		altMatchingEventInFuture.setHappenedAt(altMatchingEventInFuture.getHappenedAt().plusSeconds(6));
 	}
@@ -147,6 +155,73 @@ public class SequentialTriggerTest {
 
 		MatcherAssert.assertThat(ttsEvents, Matchers.equalTo(List.of("Foo: 2", "Bar: 3", "Foo: 2", "Bar: 3", "Baz: 4")));
 
+	}
+
+	@Test
+	void testAutoWipeReset() {
+
+		AtomicInteger aint = new AtomicInteger();
+		SequentialTrigger<BaseEvent> trigger = SqtTemplates.sq(10_000, EchoEvent.class, e -> e.getLine().startsWith("Foo"), (e1, s) -> {
+			aint.incrementAndGet();
+			EchoEvent bar = s.waitEvent(EchoEvent.class, e -> e.getLine().startsWith("Bar"));
+			aint.incrementAndGet();
+		});
+		MutablePicoContainer pico = XivMain.testingMinimalInit();
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
+		dist.registerHandler(BaseEvent.class, trigger::feed);
+
+		dist.acceptEvent(new DebugCommand("Not interested in this event"));
+		dist.acceptEvent(new EchoEvent("Foo1"));
+		dist.acceptEvent(new EchoEvent("Bar1"));
+		Assert.assertEquals(aint.get(), 2);
+		dist.acceptEvent(new EchoEvent("Foo1"));
+		dist.acceptEvent(new WipeEvent());
+		// Should be skipped because we wiped
+		dist.acceptEvent(new EchoEvent("Bar1"));
+		Assert.assertEquals(aint.get(), 3);
+		dist.acceptEvent(new EchoEvent("Foo1"));
+		dist.acceptEvent(new EchoEvent("Bar1"));
+		Assert.assertEquals(aint.get(), 5);
+	}
+
+	@Test
+	void testMultiInvocation() {
+
+		List<String> values = new ArrayList<>();
+		SequentialTrigger<BaseEvent> trigger = SqtTemplates.multiInvocation(10_000, EchoEvent.class, e -> e.getLine().startsWith("Foo"), (e1, s) -> {
+					values.add(e1.getLine());
+					EchoEvent bar = s.waitEvent(EchoEvent.class, e -> e.getLine().startsWith("Bar"));
+					values.add(bar.getLine());
+				},
+				(e1, s) -> {
+					values.add('X' + e1.getLine());
+					EchoEvent bar = s.waitEvent(EchoEvent.class, e -> e.getLine().startsWith("Bar"));
+					values.add('X' + bar.getLine());
+
+				});
+		MutablePicoContainer pico = XivMain.testingMinimalInit();
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
+		dist.registerHandler(BaseEvent.class, trigger::feed);
+
+		dist.acceptEvent(new DebugCommand("Not interested in this event"));
+		dist.acceptEvent(new EchoEvent("Foo1"));
+		dist.acceptEvent(new EchoEvent("Bar1"));
+		Assert.assertEquals(values, List.of("Foo1", "Bar1"));
+		dist.acceptEvent(new EchoEvent("Foo2"));
+		dist.acceptEvent(new WipeEvent());
+		Assert.assertEquals(values, List.of("Foo1", "Bar1", "XFoo2"));
+		// Should be skipped because we wiped
+		dist.acceptEvent(new EchoEvent("Bar2"));
+		Assert.assertEquals(values, List.of("Foo1", "Bar1", "XFoo2"));
+		dist.acceptEvent(new EchoEvent("Foo3"));
+		dist.acceptEvent(new EchoEvent("Bar3"));
+		Assert.assertEquals(values, List.of("Foo1", "Bar1", "XFoo2", "Foo3", "Bar3"));
+		dist.acceptEvent(new EchoEvent("Foo4"));
+		dist.acceptEvent(new EchoEvent("Bar4"));
+		Assert.assertEquals(values, List.of("Foo1", "Bar1", "XFoo2", "Foo3", "Bar3", "XFoo4", "XBar4"));
+		dist.acceptEvent(new EchoEvent("Foo5"));
+		dist.acceptEvent(new EchoEvent("Bar5"));
+		Assert.assertEquals(values, List.of("Foo1", "Bar1", "XFoo2", "Foo3", "Bar3", "XFoo4", "XBar4"));
 	}
 
 }

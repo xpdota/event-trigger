@@ -7,6 +7,7 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -35,7 +36,7 @@ public class ReplayController {
 	public ReplayController(EventMaster master, List<? extends Event> events, boolean decompress) {
 //		master.setUseLoopLock(true);
 		this.master = master;
-		this.events = events;
+		this.events = events instanceof ArrayList ? events : new ArrayList<>(events);
 		this.decompress = decompress;
 	}
 
@@ -74,11 +75,13 @@ public class ReplayController {
 		int advancedBy = 0;
 		for (; count-- > 0 && hasMoreEvents(); currentIndex++) {
 			Event event = events.get(currentIndex);
+			events.set(currentIndex, null);
 			if (decompress && event instanceof Compressible compressedEvent) {
 				compressedEvent.decompress();
 			}
 			preProcessEvent(event);
-			master.pushEvent(event);
+			// TODO: this fixes a bug (see LaunchImportedSession) but may be slightly worse on performance
+			master.pushEventAndWait(event);
 			advancedBy++;
 		}
 		notifyCallbacks();
@@ -100,6 +103,7 @@ public class ReplayController {
 		return exs.submit(() -> {
 			for (; advWhile.get() && hasMoreEvents(); currentIndex++) {
 				Event event = events.get(currentIndex);
+				events.set(currentIndex, null);
 				if (decompress && event instanceof Compressible compressedEvent) {
 					compressedEvent.decompress();
 				}

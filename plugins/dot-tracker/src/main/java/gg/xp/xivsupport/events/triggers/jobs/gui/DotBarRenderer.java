@@ -22,6 +22,7 @@ public class DotBarRenderer extends ResourceBarRenderer<VisualDotInfo> {
 	@Override
 	// TODO: rename this method?
 	protected void formatLabel(@NotNull VisualDotInfo item) {
+		bar.setTextColor(dots.getFontColor().get());
 		bar.setTextOptions(((LabelOverride) item).getLabel());
 		TickInfo tick = item.getTick();
 		BuffApplied event = item.getEvent();

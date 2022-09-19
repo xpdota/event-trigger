@@ -25,11 +25,13 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	private final long rawStacks;
 	private final boolean isPreApp;
 	private boolean isRefresh;
+	private @Nullable StatusAppliedEffect preAppInfo;
 
 
 	// Only for pre-apps
 	public BuffApplied(AbilityUsedEvent event, StatusAppliedEffect effect) {
 		this(effect.getStatus(), 9999, event.getSource(), event.getTarget(), effect.getRawStacks(), true);
+		preAppInfo = effect;
 	}
 
 	public BuffApplied(XivStatusEffect buff, double durationRaw, XivCombatant source, XivCombatant target, long stacks) {
@@ -108,6 +110,13 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		return buff.getInfo();
 	}
 
+	public void setPreAppInfo(StatusAppliedEffect preAppInfo) {
+		this.preAppInfo = preAppInfo;
+	}
+
+	public @Nullable StatusAppliedEffect getPreAppInfo() {
+		return preAppInfo;
+	}
 
 	public boolean shouldDisplayDuration() {
 		if (isPreApp) {

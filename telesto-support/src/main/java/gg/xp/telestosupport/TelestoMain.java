@@ -11,6 +11,7 @@ import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.PartyForceOrderChangeEvent;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.HttpURISetting;
@@ -26,6 +27,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -99,10 +101,15 @@ public class TelestoMain implements FilteredEventHandler {
 		}
 	}
 
+	private volatile ActorControlEvent lastAce;
+
 	@HandleEvents
 	public void handlePartyChange(EventContext context, ActorControlEvent ace) {
 		if (enablePartyList.get()) {
-			context.accept(makePartyMemberMsg());
+			if (lastAce == null || lastAce.getEffectiveTimeSince().compareTo(Duration.ofSeconds(5)) > 0) {
+				context.accept(makePartyMemberMsg());
+				lastAce = ace;
+			}
 		}
 	}
 

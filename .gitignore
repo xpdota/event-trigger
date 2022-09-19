@@ -7,4 +7,11 @@
 **/target/
 /target/
 /act-stub-plugin-assembly/bin/*.nlp
+/act-stub-plugin-assembly/bin_old/mscorlib.dll
+/act-stub-plugin-assembly/src/act-stub-plugin/obj/
+**/hs_err_pid*.log
+**/replay_pid*.log
+**/.idea/indexLayout.xml
+**/.idea/vcs.xml
 /act-stub-plugin-assembly/bin/mscorlib.dll
+/act-stub-plugin-assembly/bin/OverlayPlugin.Common.dll

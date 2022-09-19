@@ -1,11 +1,33 @@
 package gg.xp.xivsupport.models;
 
+/**
+ * Class to represent an arena, and divide it into cardinals and intercards.
+ */
 public class ArenaPos {
 	private final double xCenter;
 	private final double yCenter;
 	private final double xDiff;
 	private final double yDiff;
 
+	/**
+	 * Defines the geometry of the arena. This divides the arena into nine areas (cards, intercards, center).
+	 * <p>
+	 * This definition consists of a center point, and a delta for X and Y directions. If a combatant's position is
+	 * within xCenter +/- xDiff, and yCenter +/- yDiff, they are considered to be in the center of the arena.
+	 * <p>
+	 * If they are outside the xDiff but inside yDiff, they are considered to be west or east. If they are outside
+	 * yDiff but inside xDiff, they are considered to be north or south. If they are outside of both, they are
+	 * considered to be in an intercard.
+	 * <p>
+	 * In other words, you can visualize the sectors by drawing vertical lines at xCenter - xDiff and xCenter + xDiff,
+	 * and horizontal lines at yCenter - yDiff and yCenter + yDiff. These four lines will divide the arena into nine
+	 * distinct areas.
+	 *
+	 * @param xCenter Center X value (usually 100)
+	 * @param yCenter Center Y value (usually 100)
+	 * @param xDiff   How far west/east away from center you can get before you're actually considered west/east.
+	 * @param yDiff   How far north/south away from center you can get before you're actually considered north/south.
+	 */
 	public ArenaPos(double xCenter, double yCenter, double xDiff, double yDiff) {
 		this.xCenter = xCenter;
 		this.yCenter = yCenter;
@@ -13,6 +35,10 @@ public class ArenaPos {
 		this.yDiff = yDiff;
 	}
 
+	/**
+	 * @param cbt A combatant to compute the sector of. Must not be null.
+	 * @return The arena sector in which the combatant lies, or null if the combatant's position is null.
+	 */
 	public ArenaSector forCombatant(XivCombatant cbt) {
 		Position pos = cbt.getPos();
 		if (pos == null) {
@@ -21,6 +47,10 @@ public class ArenaPos {
 		return forPosition(pos);
 	}
 
+	/**
+	 * @param pos A position to compute the sector of. Must not be null.
+	 * @return The arena sector in which the position lies.
+	 */
 	public ArenaSector forPosition(Position pos) {
 		double x = pos.getX();
 		double y = pos.getY();
@@ -60,6 +90,10 @@ public class ArenaPos {
 
 	}
 
+	/**
+	 * @param cbt A combatant to compute the facing angle of.
+	 * @return The facing angle expressed as a card/intercard, or 'unknown' if the combatant's position is null.
+	 */
 	public static ArenaSector combatantFacing(XivCombatant cbt) {
 		Position pos = cbt.getPos();
 		if (pos == null) {
@@ -68,6 +102,10 @@ public class ArenaPos {
 		return combatantFacing(pos.getHeading());
 	}
 
+	/**
+	 * @param heading a raw facing angle.
+	 * @return The facing angle expressed as a card/intercard, or 'unknown' if the combatant's position is null.
+	 */
 	public static ArenaSector combatantFacing(double heading) {
 		// Zero = south, then negative = clockwise
 		double pi = Math.PI;
@@ -101,6 +139,12 @@ public class ArenaPos {
 	}
 
 	// TWO DIMENSIONAL distance from center
+
+	/**
+	 * @param cbt A combatant.
+	 * @return The distance from this combatant to the center of the arena.
+	 * @throws IllegalArgumentException if the combatant's position is null.
+	 */
 	public double distanceFromCenter(XivCombatant cbt) {
 		Position pos = cbt.getPos();
 		if (pos == null) {
@@ -109,6 +153,10 @@ public class ArenaPos {
 		return distanceFromCenter(pos);
 	}
 
+	/**
+	 * @param pos A position
+	 * @return The distance from this position to the center of the arena.
+	 */
 	public double distanceFromCenter(Position pos) {
 		double posX = pos.getX();
 		double posY = pos.getY();

@@ -42,9 +42,13 @@ public final class LaunchImportedSession {
 				if (event instanceof BaseEvent be) {
 					be.setTimeSource(timeSource);
 				}
+				// TODO - this is buggy, because it updates time when new events are queued rather than
+				// when they are actually played. This causes time based things to not work right.
 				timeSource.setNewTime(pumpedAt);
 			}
 		};
+		// TODO: this will interfere with AbstractACTLineParser
+//		pico.addComponent(timeSource);
 		pico.addComponent(replayController);
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.WEBSOCKET_REPLAY);
 		dist.acceptEvent(new InitEvent());

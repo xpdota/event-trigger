@@ -41,6 +41,14 @@ public class SequentialTrigger<X extends BaseEvent> implements TypedEventHandler
 		}
 	}
 
+	public void forceExpire() {
+		SequentialTriggerController<X> inst = instance;
+		if (inst != null) {
+			inst.forceExpire();
+			instance = null;
+		}
+	}
+
 
 	@Override
 	public void handle(EventContext context, X event) {

@@ -3,6 +3,9 @@ package gg.xp.xivsupport.gui.groovy;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.groovy.GroovyScriptResult;
 import groovy.lang.GroovyShell;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,7 +13,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(
@@ -29,15 +31,19 @@ public class GroovyScriptHolder {
 	private File file;
 	private GroovyScriptResult lastResult;
 
-	private GroovyManager manager;
+	private GroovyScriptManager scriptMgr;
+	private GroovyManager groovyMgr;
 	private GroovyShell shell;
 
 	public GroovyScriptResult run() {
 		try {
 			if (shell == null) {
-				shell = getMgr().makeShell();
+				shell = getGroovyMgr().makeShell();
 			}
-			Object result = shell.parse(getScriptContent()).run();
+			Object result;
+			try (AutoCloseable ignored = getGroovyMgr().getSandbox().enter()) {
+				result = shell.parse(getScriptContent()).run();
+			}
 			return lastResult = GroovyScriptResult.success(result);
 		}
 		catch (Throwable t) {
@@ -47,7 +53,7 @@ public class GroovyScriptHolder {
 
 	public void save() {
 		if (dirty) {
-			getMgr().saveScript(this);
+			getScriptMgr().saveScript(this);
 		}
 		dirty = false;
 	}
@@ -59,7 +65,7 @@ public class GroovyScriptHolder {
 		copy.file = newFile;
 		copy.strict = strict;
 		copy.dirty = true;
-		copy.manager = manager;
+		copy.scriptMgr = scriptMgr;
 		return copy;
 	}
 
@@ -72,12 +78,20 @@ public class GroovyScriptHolder {
 		dirty = other.dirty;
 	}
 
-	private GroovyManager getMgr() {
-		if (getManager() == null) {
-			throw new IllegalStateException("Neither Shell nor GroovyManager set");
+	private GroovyScriptManager getScriptMgr() {
+		if (scriptMgr == null) {
+			throw new IllegalStateException("scriptMgr has not been set yet");
 		}
-		return getManager();
+		return scriptMgr;
 	}
+
+	private GroovyManager getGroovyMgr() {
+		if (groovyMgr == null) {
+			throw new IllegalStateException("groovyMgr has not been set yet");
+		}
+		return groovyMgr;
+	}
+
 
 	public boolean isSaveable() {
 		// Can't factor "dirty" into here because the toolbar doesn't auto update. might look into that.
@@ -144,11 +158,12 @@ public class GroovyScriptHolder {
 		return lastResult;
 	}
 
-	public GroovyManager getManager() {
-		return manager;
+	public boolean isMgrSet() {
+		return scriptMgr != null;
 	}
 
-	void setManager(GroovyManager manager) {
-		this.manager = manager;
+	public void setScriptMgr(GroovyScriptManager scriptMgr) {
+		this.scriptMgr = scriptMgr;
+		this.groovyMgr = scriptMgr.getGroovyManager();
 	}
 }

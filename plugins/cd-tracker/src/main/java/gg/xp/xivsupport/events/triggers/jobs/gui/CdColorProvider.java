@@ -8,4 +8,8 @@ public interface CdColorProvider {
 	Color getReadyColor();
 	Color getOnCdColor();
 
+	Color getPreappColor();
+
+	Color getFontColor();
+
 }

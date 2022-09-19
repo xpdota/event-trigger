@@ -43,8 +43,8 @@ public class CalloutTests {
 		{
 			ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
 			mc.attachHandle(mch);
-			Assert.assertTrue(mch.getSameText().get());
-			Assert.assertTrue(mch.getSameText().isSet());
+			Assert.assertFalse(mch.getSameText().get());
+			Assert.assertFalse(mch.getSameText().isSet());
 		}
 	}
 
@@ -67,11 +67,12 @@ public class CalloutTests {
 		{
 			ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
 			mc.attachHandle(mch);
-			Assert.assertTrue(mch.getSameText().get());
-			Assert.assertTrue(mch.getSameText().isSet());
+			Assert.assertFalse(mch.getSameText().get());
+			Assert.assertFalse(mch.getSameText().isSet());
 			Assert.assertEquals(mch.getEffectiveTts(), "Bar");
 			Assert.assertEquals(mch.getEffectiveText(), "Bar");
 			mch.getTtsSetting().set("Bar3");
+			mch.getSameText().set(true);
 			Assert.assertEquals(mch.getEffectiveTts(), "Bar3");
 			Assert.assertEquals(mch.getEffectiveText(), "Bar3");
 		}
@@ -108,6 +109,7 @@ public class CalloutTests {
 			Assert.assertEquals(modified.getCallText(), "Bar");
 			Assert.assertEquals(modified.getVisualText(), "Bar");
 		}
+		mch.getSameText().set(true);
 		mch.getTtsSetting().set("123");
 		mch.getTextSetting().set("456");
 		{
@@ -224,6 +226,27 @@ public class CalloutTests {
 				Assert.assertEquals(modified2.getVisualText(), "123:FOOSTATUS 15.0 5 true 1:Cbt1 2:Cbt2");
 			}
 		}
+	}
+
+	@Test
+	void testConcurrent() {
+		ModifiableCallout mc = new ModifiableCallout("Foo", "{val1} {val2}");
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+		mc.attachHandle(mch);
+
+		CalloutEvent ce1 = proc.processCallout(mc.getModified(Map.of("val1", 123, "val2", 456)));
+		Assert.assertEquals(ce1.getCallText(), "123 456");
+		Assert.assertEquals(ce1.getVisualText(), "123 456");
+
+		CalloutEvent ce2 = proc.processCallout(mc.getModified(Map.of("val1", 789)));
+
+		Assert.assertEquals(ce1.getCallText(), "123 456");
+		Assert.assertEquals(ce2.getCallText(), "789 Error");
+
+		Assert.assertEquals(ce1.getVisualText(), "123 456");
+		Assert.assertEquals(ce2.getVisualText(), "789 Error");
 	}
 
 	@Test

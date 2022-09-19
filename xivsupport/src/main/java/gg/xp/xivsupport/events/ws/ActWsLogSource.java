@@ -131,10 +131,8 @@ public class ActWsLogSource implements EventSource {
 			log.info("Subscribing to WS events");
 			send("{\"call\":\"subscribe\",\"events\":[\"ChangePrimaryPlayer\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"ChangeZone\"]}");
+			send("{\"call\":\"subscribe\",\"events\":[\"ChangeMap\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"PartyChanged\"]}");
-//		send("{\"call\":\"subscribe\",\"events\":[\"onPlayerChangedEvent\"]}");
-			// TODO: there does not seem to be a non-cactbot alternative to this
-//			send("{\"call\":\"subscribe\",\"events\":[\"onInCombatChangedEvent\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"LogLine\"]}");
 			send("{\"call\":\"subscribe\",\"events\":[\"InCombat\"]}");
 			// EnmityTargetData is spammy even if there is no change
@@ -199,9 +197,11 @@ public class ActWsLogSource implements EventSource {
 	public void sayTts(EventContext context, TtsRequest event) {
 		if (allowTts.get()) {
 			try {
+				String ttsString = event.getTtsString();
+				log.info("Sending TTS to ACT: {}", ttsString);
 				client.send(mapper.writeValueAsString(Map.ofEntries(
 						Map.entry("call", "say"),
-						Map.entry("text", event.getTtsString()),
+						Map.entry("text", ttsString),
 						Map.entry("rseq", rseqCounter.getAndIncrement()))));
 			}
 			catch (JsonProcessingException e) {
@@ -315,6 +315,7 @@ public class ActWsLogSource implements EventSource {
 					"PartyType",
 					"ID",
 					"OwnerID",
+					"Type",
 					"type",
 					"Job",
 					"Level",
@@ -327,7 +328,10 @@ public class ActWsLogSource implements EventSource {
 					"PosY",
 					"PosZ",
 					"Heading",
-					"TargetID"
+					"TargetID",
+					// I think whether or not it is visible might be in here
+					"ModelStatus",
+					"IsTargetable"
 			};
 			allCbtRequest = mapper.writeValueAsString(
 					Map.ofEntries(

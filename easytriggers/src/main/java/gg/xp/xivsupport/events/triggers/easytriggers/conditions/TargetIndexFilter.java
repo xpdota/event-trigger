@@ -1,10 +1,10 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 
-public class TargetIndexFilter implements Condition<HasTargetIndex> {
+public class TargetIndexFilter implements SimpleCondition<HasTargetIndex> {
 
 	public NumericOperator operator = NumericOperator.EQ;
 	@Description("Target Index (from 0)")

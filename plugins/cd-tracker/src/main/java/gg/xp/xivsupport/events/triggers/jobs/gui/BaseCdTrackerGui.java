@@ -115,6 +115,8 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 		settingsPanel.add(new ColorSettingGui(colors.getActiveSetting(), "Active Color", enableOverlaySetting::get).getComponent());
 		settingsPanel.add(new ColorSettingGui(colors.getReadySetting(), "Ready Color", enableOverlaySetting::get).getComponent());
 		settingsPanel.add(new ColorSettingGui(colors.getOnCdSetting(), "On CD Color", enableOverlaySetting::get).getComponent());
+		settingsPanel.add(new ColorSettingGui(colors.getPreappSetting(), "Preapp Color", enableOverlaySetting::get).getComponent());
+		settingsPanel.add(new ColorSettingGui(colors.getFontSetting(), "Font Color", enableOverlaySetting::get).getComponent());
 
 		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
 

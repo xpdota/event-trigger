@@ -44,10 +44,10 @@ public class Uwu extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> aerialBlast = ModifiableCallout.durationBasedCall("Aerial Blast", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> friction = ModifiableCallout.durationBasedCall("Friction", "Stack");
 
-	private final ModifiableCallout<BuffApplied> fetters = ModifiableCallout.durationBasedCall("Fetters", "Fetters");
-	private final ModifiableCallout<AbilityCastStart> searingWindInitial = ModifiableCallout.durationBasedCall("Searing Wind (Initial)", "Searing Wind on {event.target}");
-	private final ModifiableCallout<BuffApplied> searingWindLinger = new ModifiableCallout<>("Searing Wind (Linger Time)", "", "Searing Wind on {event.target} ({event.estimatedRemainingDuration})", ModifiableCallout.durationExpiryPlusDefaultLinger());
-	private final ModifiableCallout<HeadMarkerEvent> flamingCrush = new ModifiableCallout<>("Flaming Crush", "Stack on {event.target}");
+	private final ModifiableCallout<BuffApplied> fetters = ModifiableCallout.<BuffApplied>durationBasedCall("Fetters", "Fetters").autoIcon();
+	private final ModifiableCallout<AbilityCastStart> searingWindInitial = ModifiableCallout.<AbilityCastStart>durationBasedCall("Searing Wind (Initial)", "Searing Wind on {event.target}").statusIcon(0x62a);
+	private final ModifiableCallout<BuffApplied> searingWindLinger = new ModifiableCallout<BuffApplied>("Searing Wind (Linger Time)", "", "Searing Wind on {event.target} ({event.estimatedRemainingDuration})", ModifiableCallout.durationExpiryPlusDefaultLinger()).statusIcon(0x62a);
+	private final ModifiableCallout<HeadMarkerEvent> flamingCrush = new ModifiableCallout<HeadMarkerEvent>("Flaming Crush", "Stack on {event.target}").statusIcon(0x5F7);
 	private final ModifiableCallout<AbilityCastStart> hellfire = ModifiableCallout.durationBasedCall("Hellfire", "Raidwide");
 
 	private final ModifiableCallout<?> titanBoulderLeftSafe = new ModifiableCallout<>("Titan Bury: Left Safe", "Left");

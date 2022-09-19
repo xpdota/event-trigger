@@ -3,17 +3,23 @@ package gg.xp.xivsupport.events.ws;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.cfg.MapperBuilder;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawOnlineStatusChanged;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.parsers.Line40Parser;
 import gg.xp.xivsupport.events.misc.pulls.PullStatus;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.CombatantsUpdateRaw;
@@ -41,7 +47,9 @@ import java.util.stream.Collectors;
 public class ActWsHandlers {
 
 	private static final Logger log = LoggerFactory.getLogger(ActWsHandlers.class);
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = JsonMapper.builder()
+			.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+			.build();
 	private final EventMaster master;
 	private final XivState state;
 	private final PullTracker pulls;
@@ -194,6 +202,15 @@ public class ActWsHandlers {
 			long id = jsonMsg.getJson().get("zoneID").intValue();
 			String name = jsonMsg.getJson().get("zoneName").textValue();
 			context.accept(new ZoneChangeEvent(new XivZone(id, name)));
+		}
+	}
+
+	// TODO later: after everyone has had a chance to upgrade OP, move Line40Parser to import-only status
+	@HandleEvents(order = -100)
+	public static void actWsMapChange(EventContext context, ActWsJsonMsg jsonMsg) {
+		if ("ChangeMap".equals(jsonMsg.getType())) {
+			long id = jsonMsg.getJson().get("mapID").intValue();
+			context.accept(new MapChangeEvent(XivMap.forId(id)));
 		}
 	}
 

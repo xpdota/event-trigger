@@ -1,10 +1,7 @@
 package gg.xp.xivsupport.timelines.gui;
 
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.ActionIcon;
-import gg.xp.xivdata.data.ActionInfo;
-import gg.xp.xivdata.data.StatusEffectIcon;
-import gg.xp.xivdata.data.StatusEffectInfo;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.NoCellEditor;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
@@ -22,6 +19,7 @@ import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.timelines.CustomTimelineEntry;
@@ -66,7 +64,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private TimelineProcessor currentTimeline;
 	private TimelineCustomizations currentCust;
 
-	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state, ActionTableFactory actionTableFactory) {
+	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state, ActionTableFactory actionTableFactory, TimelineBarColorProviderImpl tbcp) {
 		super("Timelines");
 		// TODO: searching
 		this.backend = backend;
@@ -271,6 +269,18 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 				this.add(settingsPanel, c);
 			}
+			c.gridy++;
+			{
+				JPanel colorsPanel = new JPanel();
+				colorsPanel.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
+
+				colorsPanel.add(new ColorSettingGui(tbcp.getActiveSetting(), "Active Color", () -> true).getComponent());
+				colorsPanel.add(new ColorSettingGui(tbcp.getUpcomingSetting(), "Upcoming Color", () -> true).getComponent());
+				colorsPanel.add(new ColorSettingGui(tbcp.getExpiredSetting(), "Expired Color", () -> true).getComponent());
+				colorsPanel.add(new ColorSettingGui(tbcp.getFontSetting(), "Font Color", () -> true).getComponent());
+
+				this.add(colorsPanel, c);
+			}
 //		c.gridy++;
 //
 //		{
@@ -295,7 +305,6 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			chooserScroller.setPreferredSize(new Dimension(200, 32768));
 			chooserScroller.setMinimumSize(new Dimension(100, 200));
 			this.add(chooserScroller, c);
-
 
 
 			CustomRightClickOption clone = CustomRightClickOption.forRow("Clone", TimelineEntry.class, e -> addNewEntry(new CustomTimelineEntry(

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.state;
 import gg.xp.reevent.context.SubState;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivdata.data.XivMap;
+import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
@@ -30,6 +31,11 @@ public interface XivState extends SubState {
 
 	boolean zoneIs(long zoneId);
 
+	default boolean dutyIs(Duty duty) {
+		Long expected = duty.getZoneId();
+		return expected != null && zoneIs(expected);
+	}
+
 	void removeSpecificCombatant(long idToRemove);
 
 	Map<Long, XivCombatant> getCombatants();
@@ -38,8 +44,13 @@ public interface XivState extends SubState {
 		return getCombatants().get(id);
 	}
 
-	default @Nullable XivCombatant getLatestCombatantData(XivCombatant cbt) {
-		return getCombatant(cbt.getId());
+	default @NotNull XivCombatant getLatestCombatantData(@NotNull XivCombatant cbt) {
+		XivCombatant result = getCombatant(cbt.getId());
+		// If we no longer know if this combatant, avoid nullity issues by just returning the original data.
+		if (result == null) {
+			return cbt;
+		}
+		return result;
 	}
 
 	// TODO: does this still need to be a copy?

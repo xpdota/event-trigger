@@ -64,6 +64,15 @@
                     <artifactId>launch4j-maven-plugin</artifactId>
                     <version>2.1.2</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>3.3.0</version>
+                    <configuration>
+                        <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -321,5 +330,6 @@
         <module>telesto-support</module>
         <module>triggers/custom-party-overlay</module>
         <module>testutils/testutils-samplelogs</module>
+        <module>groovy-sandboxing</module>
     </modules>
 </project>

@@ -26,7 +26,11 @@ public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> imp
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		long count = fields.getLong(Fields.count);
 		List<String> raw = fields.getRawLineSplit();
-		List<RawXivPartyInfo> out = IntStream.range(0, (int) count)
+		// Subtract four - line number, timestamp, count, hash
+		// This is due to an ACT bug where it can report a party size of 8, but not actually list all 8, e.g.
+		// 11|2022-09-02T18:46:48.5120000+08:00|8|1029C88D|1033290F|101FE2E6|102B4E61|10308B6B|10296516|10327D18|7bbaf2d12623bd7b
+		long realCount = Math.min(count, raw.size() - 4);
+		List<RawXivPartyInfo> out = IntStream.range(0, (int) realCount)
 				.mapToObj(i -> raw.get(i + 3))
 				.filter(s -> !(s == null || s.isEmpty()))
 				// We can use bad info for most of this because it gets replaced by the fake real combatant info anyway
