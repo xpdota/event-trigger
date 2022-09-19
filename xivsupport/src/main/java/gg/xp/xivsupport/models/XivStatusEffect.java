@@ -15,6 +15,7 @@ public class XivStatusEffect implements Serializable, NameIdPair {
 	private final long id;
 	private final String name;
 
+	// TODO: worth caching these?
 	public XivStatusEffect(long id) {
 		this.id = id;
 		StatusEffectInfo statusInfo = StatusEffectLibrary.forId(id);

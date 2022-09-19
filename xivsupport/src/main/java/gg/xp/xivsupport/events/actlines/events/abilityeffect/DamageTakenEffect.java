@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
-public class DamageTakenEffect extends AbilityEffect implements DamageEffect {
+public class DamageTakenEffect extends AbilityEffect implements DamageEffect, HasSeverity {
 	private final HitSeverity severity;
 	private final long amount;
 
@@ -10,6 +10,7 @@ public class DamageTakenEffect extends AbilityEffect implements DamageEffect {
 		this.amount = amount;
 	}
 
+	@Override
 	public HitSeverity getSeverity() {
 		return severity;
 	}
@@ -26,12 +27,21 @@ public class DamageTakenEffect extends AbilityEffect implements DamageEffect {
 
 	@Override
 	public String getBaseDescription() {
-		if (severity == HitSeverity.NORMAL) {
-			return String.format("Damage Taken: %s (%s %s)", amount, getDamageAspect(), getDamageType());
+		StringBuilder sb = new StringBuilder("Damage Taken: ");
+		sb.append(amount);
+		if (severity != HitSeverity.NORMAL) {
+			sb.append(' ').append(severity.getFriendlyName());
 		}
-		else {
-			return String.format("Damage Taken: %s (%s) (%s %s)", amount, severity.getFriendlyName(), getDamageAspect(), getDamageType());
+		int cb = getComboBonus();
+		if (cb != 0) {
+			sb.append(" (").append(cb).append("% from combo/positional)");
 		}
+		sb.append(" (").append(getDamageAspect()).append(' ').append(getDamageType()).append(')');
+		return sb.toString();
+	}
+
+	public int getComboBonus() {
+		return (byte) (getFlags() >> 24);
 	}
 
 	public DamageAspect getDamageAspect() {
