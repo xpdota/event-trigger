@@ -9,6 +9,7 @@ gg.xp.reevent.topology
 gg.xp.reevent.util
 gg.xp.telestosupport
 gg.xp.telestosupport.gui
+gg.xp.util
 gg.xp.xivdata
 gg.xp.xivdata.data
 gg.xp.xivdata.data.duties
@@ -47,6 +48,7 @@ gg.xp.xivsupport.events.triggers.duties.ewex
 gg.xp.xivsupport.events.triggers.duties.ewult
 gg.xp.xivsupport.events.triggers.duties.Pandamonium
 gg.xp.xivsupport.events.triggers.easytriggers
+gg.xp.xivsupport.events.triggers.easytriggers.actions
 gg.xp.xivsupport.events.triggers.easytriggers.conditions
 gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui
 gg.xp.xivsupport.events.triggers.easytriggers.gui
@@ -63,6 +65,7 @@ gg.xp.xivsupport.events.triggers.seq
 gg.xp.xivsupport.events.triggers.util
 gg.xp.xivsupport.events.ws
 gg.xp.xivsupport.eventstorage
+gg.xp.xivsupport.groovy
 gg.xp.xivsupport.gui
 gg.xp.xivsupport.gui.components
 gg.xp.xivsupport.gui.cooldowns
@@ -89,3 +92,6 @@ gg.xp.xivsupport.speech
 gg.xp.xivsupport.sys
 gg.xp.xivsupport.timelines
 gg.xp.xivsupport.timelines.gui
+org.jenkinsci.plugins.scriptsecurity.sandbox
+org.jenkinsci.plugins.scriptsecurity.sandbox.groovy
+org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists
