@@ -24,8 +24,8 @@ public class Line41Parser extends AbstractACTLineParser<Line41Parser.Fields> {
 		return new SystemLogMessageEvent(
 				fields.getHex(Fields.unknown1),
 				fields.getHex(Fields.id),
-				fields.getLong(Fields.param0),
-				fields.getLong(Fields.param1),
-				fields.getLong(Fields.param2));
+				fields.getHex(Fields.param0),
+				fields.getHex(Fields.param1),
+				fields.getHex(Fields.param2));
 	}
 }

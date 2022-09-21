@@ -35,7 +35,8 @@ import java.util.Set;
 @CalloutRepo(name = "P5S", duty = KnownDuty.P5S)
 public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P5S.class);
-	private final ModifiableCallout<AbilityCastStart> searingRay = ModifiableCallout.durationBasedCall("Searing Ray", "Go Behind");
+	private final ModifiableCallout<AbilityCastStart> searingRay = ModifiableCallout.durationBasedCall("Searing Ray", "Go Front");
+	// TODO: is this ever used?
 	private final ModifiableCallout<AbilityCastStart> searingRayReflected = ModifiableCallout.durationBasedCall("Searing Ray Reflected", "Go Front");
 	private final ModifiableCallout<AbilityCastStart> rubyGlow = ModifiableCallout.durationBasedCall("Ruby Glow", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> sonicHowl = ModifiableCallout.durationBasedCall("Sonic Howl", "Raidwide");
@@ -90,6 +91,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 		return state.dutyIs(KnownDuty.P5S);
 	}
 
+	// TODO: delete this
 	private final RepeatSuppressor tailClawRepeat = new RepeatSuppressor(Duration.ofMillis(11_000));
 
 	@HandleEvents
@@ -98,13 +100,13 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 		ModifiableCallout<AbilityCastStart> call;
 		switch (id) {
 			case 0x76D7, 0x76F7 -> call = searingRay;
+			// TODO: is this ever used?
 			case 0x7657 -> call = searingRayReflected;
 			case 0x76F3 -> call = rubyGlow;
 			case 0x76FA -> call = ragingClaw;
 			case 0x7720 -> call = sonicHowl;
-			case 0x784A ->
 //has no target TODO: Find who has agro and call (auto attack hack)
-					call = toxicCrunch;
+			case 0x784A -> call = toxicCrunch;
 			case 0x7716 -> call = venomSquall;
 			case 0x771D -> call = venomousMass;
 			case 0x771B -> call = doubleRush;
@@ -115,10 +117,6 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 				return;
 			}
 		}
-//		else if(id == 0x770F) //TODO: fix calling when boss casts 770E or 7712
-//			call = ragingClaw;
-//		else
-//			return;
 		context.accept(call.getModified(event));
 	}
 
@@ -173,18 +171,31 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 			},
 			// 2
 			(e1, s) -> {
-				// TODO: this is the diagonal charge one
-				// There is no indication of which way the partition is, but we should be able to figure out the bad/safe spot based on boss facing
-				AbilityCastStart chargeStart = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(30_491));
-				s.waitThenRefreshCombatants(100);
-				XivCombatant boss = getState().getLatestCombatantData(chargeStart.getSource());
-				XivCombatant crystal = getAcr().getAll().stream().filter(tracker -> tracker.getResult() == CastResult.IN_PROGRESS && tracker.getCast().abilityIdMatches(0x79FE))
-						.findFirst()
-						.map(tracker -> tracker.getCast().getSource())
-						.map(source -> getState().getLatestCombatantData(source))
-						.orElseThrow(() -> new RuntimeException("RG2: Couldn't find crystal cast!"));
-				Position position = crystal.getPos().normalizedTo(boss.getPos());
-				if (position.getY() > 0) {
+				double yOffset;
+				AbilityCastStart chargeStart = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x771b));
+				s.waitThenRefreshCombatants(1_000);
+				while (true) {
+					Position boss = getState().getLatestCombatantData(chargeStart.getSource()).getPos();
+					Position crystal = getAcr().getAll().stream().filter(tracker -> tracker.getResult() == CastResult.IN_PROGRESS && tracker.getCast().abilityIdMatches(0x79FE))
+							.findFirst()
+							.map(tracker -> tracker.getCast().getSource())
+							.map(source -> getState().getLatestCombatantData(source))
+							.map(XivCombatant::getPos)
+							.orElseThrow(() -> new RuntimeException("RG2: Couldn't find crystal cast!"));
+
+					if (boss == null || crystal == null) {
+						s.waitThenRefreshCombatants(200);
+						continue;
+					}
+					Position offset = crystal.normalizedTo(boss);
+					yOffset = offset.getY();
+					log.info("Y offset: {}", yOffset);
+					if (Math.abs(yOffset) < 2) {
+						break;
+					}
+				}
+				// +y == south
+				if (yOffset > 0) {
 					// hitting behind, wait then cross
 					s.updateCall(secondRubyGlowCross.getModified(chargeStart));
 				}

@@ -21,7 +21,6 @@ import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
-import gg.xp.xivsupport.models.ArenaPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,13 +49,15 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid2 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 2", "Spread in Safe Spots, Bait");
 	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid3 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 3", "Bait then Move to Safe Spot");
 	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid4 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 4", "Safe Spot, Dodge Cleave");
+	private final ModifiableCallout<AbilityCastStart> aethericPolyminoid5 = ModifiableCallout.durationBasedCall("Aetheric Polyominoid 5", "Light Parties in Safe Tiles");
 
 	private final ModifiableCallout<AbilityCastStart> exchange1 = ModifiableCallout.durationBasedCall("Exchange 1", "Stack/Spread");
 	private final ModifiableCallout<AbilityCastStart> exchange2 = ModifiableCallout.durationBasedCall("Exchange 2", "Bait then Move to Safe");
 	private final ModifiableCallout<AbilityCastStart> exchange3 = ModifiableCallout.durationBasedCall("Exchange 3", "Light Parties/Spreads");
 	private final ModifiableCallout<AbilityCastStart> exchange4 = ModifiableCallout.durationBasedCall("Exchange 4", "Light Parties in Safe Spot");
 	private final ModifiableCallout<AbilityCastStart> exchange5 = ModifiableCallout.durationBasedCall("Exchange 5", "Stack/Spread");
-	private final ModifiableCallout<AbilityCastStart> exchange6 = ModifiableCallout.durationBasedCall("Exchange 6", "Stack/Spread");
+	private final ModifiableCallout<AbilityCastStart> exchange6 = ModifiableCallout.durationBasedCall("Exchange 6", "Find Safe Spot, Dodge Cleave");
+	private final ModifiableCallout<AbilityCastStart> exchange7 = ModifiableCallout.durationBasedCall("Exchange 7", "Check Debuff, Stack/Spread");
 
 	private final ModifiableCallout<AbilityCastStart> chelicSynergy = ModifiableCallout.durationBasedCall("Chelic Synergy", "Buster with Bleed");
 	private final ModifiableCallout<AbilityCastStart> unholyDarknessHealer = ModifiableCallout.durationBasedCall("Unholy Darkness", "Healer Stacks");
@@ -69,7 +70,6 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> chorosIxouFrontBack = ModifiableCallout.durationBasedCall("Choros Ixou Cleaving Front/Back", "Sides then Front/Back");
 	private final ModifiableCallout<?> chorosIxouFrontBackAfter = new ModifiableCallout<>("Choros Ixou, Move to Front/Back", "Front/Back");
 	private final ModifiableCallout<AbilityCastStart> hemitheosDarkIV = ModifiableCallout.durationBasedCall("Hemitheos's Dark IV", "Raidwide");
-	private final ModifiableCallout<AbilityCastStart> pteraIxou = ModifiableCallout.durationBasedCall("Ptera Ixou", "Switch Sides");
 	private final ModifiableCallout<AbilityCastStart> synergy = ModifiableCallout.durationBasedCall("Synergy", "Tankbuster"); //????+1 on MT, ????+2 on OT
 	private final ModifiableCallout<AbilityCastStart> darkAshes = ModifiableCallout.durationBasedCall("Dark Ashes", "Spread");
 	private final ModifiableCallout<AbilityCastStart> darkSphere = ModifiableCallout.durationBasedCall("Dark Sphere", "Spread to Safe Spots");
@@ -81,24 +81,27 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	// Added number to reset customizations
 	private final ModifiableCallout<AbilityUsedEvent> darkDomeMove2 = new ModifiableCallout<>("Dark Dome Move", "Move!");
 
-	private final ModifiableCallout<BuffApplied> dpWing8 = new ModifiableCallout<BuffApplied>("8 Second + Hit By Wing", "8, Get Hit By Wing", 23_000).statusIcon(3319);
-	private final ModifiableCallout<BuffApplied> dpWing12 = new ModifiableCallout<BuffApplied>("12 Second + Hit By Wing", "12, Get Hit By Wing", 23_000).statusIcon(3319);
-	private final ModifiableCallout<BuffApplied> dpWing16 = new ModifiableCallout<BuffApplied>("16 Second + Hit By Wing", "16, Get Hit By Wing", 23_000).statusIcon(3319);
-	private final ModifiableCallout<BuffApplied> dpWing20 = new ModifiableCallout<BuffApplied>("20 Second + Hit By Wing", "20, Get Hit By Wing", 23_000).statusIcon(3319);
-	private final ModifiableCallout<BuffApplied> dpSnake8 = new ModifiableCallout<BuffApplied>("8 Second + Hit By Snake", "8, Get Hit By Snake", 23_000).statusIcon(3320);
-	private final ModifiableCallout<BuffApplied> dpSnake12 = new ModifiableCallout<BuffApplied>("12 Second + Hit By Snake", "12, Get Hit By Snake", 23_000).statusIcon(3320);
-	private final ModifiableCallout<BuffApplied> dpSnake16 = new ModifiableCallout<BuffApplied>("16 Second + Hit By Snake", "16, Get Hit By Snake", 23_000).statusIcon(3320);
-	private final ModifiableCallout<BuffApplied> dpSnake20 = new ModifiableCallout<BuffApplied>("20 Second + Hit By Snake", "20, Get Hit By Snake", 23_000).statusIcon(3320);
+	private final ModifiableCallout<BuffApplied> dpWing8 = new ModifiableCallout<BuffApplied>("8 Second + Hit By Wing (Left)", "8, Left", 23_000).statusIcon(3319);
+	private final ModifiableCallout<BuffApplied> dpWing12 = new ModifiableCallout<BuffApplied>("12 Second + Hit By Wing (Left)", "12, Left", 23_000).statusIcon(3319);
+	private final ModifiableCallout<BuffApplied> dpWing16 = new ModifiableCallout<BuffApplied>("16 Second + Hit By Wing (Left)", "16, Left", 23_000).statusIcon(3319);
+	private final ModifiableCallout<BuffApplied> dpWing20 = new ModifiableCallout<BuffApplied>("20 Second + Hit By Wing (Left)", "20, Left", 23_000).statusIcon(3319);
+	private final ModifiableCallout<BuffApplied> dpSnake8 = new ModifiableCallout<BuffApplied>("8 Second + Hit By Snake (Right)", "8, Right", 23_000).statusIcon(3320);
+	private final ModifiableCallout<BuffApplied> dpSnake12 = new ModifiableCallout<BuffApplied>("12 Second + Hit By Snake (Right)", "12, Right", 23_000).statusIcon(3320);
+	private final ModifiableCallout<BuffApplied> dpSnake16 = new ModifiableCallout<BuffApplied>("16 Second + Hit By Snake (Right)", "16, Right", 23_000).statusIcon(3320);
+	private final ModifiableCallout<BuffApplied> dpSnake20 = new ModifiableCallout<BuffApplied>("20 Second + Hit By Snake (Right)", "20, Right", 23_000).statusIcon(3320);
+	private final ModifiableCallout<AbilityCastStart> pteraIxou = ModifiableCallout.durationBasedCall("Ptera Ixou (Unknown/Error)", "Switch Sides");
+	private final ModifiableCallout<AbilityCastStart> pteraIxouLeft = ModifiableCallout.durationBasedCall("Ptera Ixou (Go Left/Wing)", "Left");
+	private final ModifiableCallout<AbilityCastStart> pteraIxouRight = ModifiableCallout.durationBasedCall("Ptera Ixou (Go Right/Snake)", "Right");
 
-	private final ModifiableCallout<BuffApplied> faceIn = ModifiableCallout.<BuffApplied>durationBasedCall("Cleaving Behind You", "Face In").autoIcon();
-	private final ModifiableCallout<BuffApplied> faceOut = ModifiableCallout.<BuffApplied>durationBasedCall("Cleaving in Front of You", "Face Out").autoIcon();
+	private final ModifiableCallout<BuffApplied> faceIn = ModifiableCallout.<BuffApplied>durationBasedCall("Cleaving Behind You", "Face In Soon").autoIcon();
+	private final ModifiableCallout<BuffApplied> faceOut = ModifiableCallout.<BuffApplied>durationBasedCall("Cleaving in Front of You", "Face Out Soon").autoIcon();
+	private final ModifiableCallout<BuffApplied> faceInNow = ModifiableCallout.<BuffApplied>durationBasedCall("Cleaving Behind You", "Face In Now").autoIcon();
+	private final ModifiableCallout<BuffApplied> faceOutNow = ModifiableCallout.<BuffApplied>durationBasedCall("Cleaving in Front of You", "Face Out Now").autoIcon();
 //	private final ModifiableCallout<AbilityCastStart> stropheIxouCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Clockwise");
 //	private final ModifiableCallout<AbilityCastStart> stropheIxouCCW = ModifiableCallout.durationBasedCall("Strophe Ixou", "Sides, Counterclockwise");
 //	private final ModifiableCallout<AbilityCastStart> darkAshes = ModifiableCallout.durationBasedCall("Dark Ashes", "Spread"); //????-1 real boss
 
 //	private final ModifiableCallout<HasDuration> glossomorph = ModifiableCallout.durationBasedCall("Glossomorph debuff", "Point Away Soon").autoIcon();
-
-	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
 	public P6S(XivState state, StatusEffectRepository buffs, ActiveCastRepository acr) {
 		this.state = state;
@@ -145,22 +148,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			case 0x7887 -> call = synergy;
 			case 0x788D -> call = darkAshes;
 			case 0x788F -> call = darkSphere;
-//			case 0x7871 -> call = unholyDarkness3;
-//		else if (id == 0x0)
-//			call = polyominoidSigma;
-//		else if (id == 0x0)
-//			call = chorosIxouSides;
-//		else if (id == 0x0)
-//			call = chorosIxouFrontBack;
 			case 0x7860 -> call = hemitheosDarkIV;
-//		else if (id == 0x0) //see synergy declaration
-//			call = synergy;
-//		else if (id == 0x0)
-//			call = stropheIxouCCW;
-//		else if (id == 0x0)
-//			call = stropheIxouCW;
-//		else if (id == 0x0 && event.getTarget().isThePlayer())
-//			call = darkAshes;
 			default -> {
 				return;
 			}
@@ -168,18 +156,31 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		context.accept(call.getModified(event));
 	}
 
-	@HandleEvents
-	public void buffs(EventContext context, BuffApplied event) {
-		if (event.getTarget().isThePlayer() && !event.isRefresh()) {
-			if (event.buffIdMatches(3315)) {
-				context.accept(faceIn.getModified(event));
-			}
-			else if (event.buffIdMatches(3400)) {
-				context.accept(faceOut.getModified(event));
-			}
-		}
-	}
-
+	@AutoFeed
+	// Transmission
+	private final SequentialTrigger<BaseEvent> faceInOut = SqtTemplates.multiInvocation(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7861), (e1, s) -> {
+				log.info("Transmission 1: Start");
+				BuffApplied faceInOutBuff = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0xcf3, 0xd48));
+				log.info("Transmission 1: Got {}", faceInOutBuff);
+				long waitMs = faceInOutBuff.getEstimatedRemainingDuration().minusSeconds(2).toMillis();
+				if (faceInOutBuff.buffIdMatches(0xcf3)) {
+					s.updateCall(faceIn.getModified(faceInOutBuff));
+					s.waitMs(waitMs);
+					s.updateCall(faceInNow.getModified(faceInOutBuff));
+				}
+				else if (faceInOutBuff.buffIdMatches(0xd48)) {
+					s.updateCall(faceOut.getModified(faceInOutBuff));
+					s.waitMs(waitMs);
+					s.updateCall(faceOutNow.getModified(faceInOutBuff));
+				}
+			}, (e1, s) -> {
+				log.info("Transmission 2");
+				// Handled by other triggers?
+			}, (e1, s) -> {
+				log.info("Transmission 3");
+				// Kind of handled by other triggers?
+			});
 
 	private Long firstHeadmark;
 
@@ -219,6 +220,9 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				// Bait Puddle then move to safe spot
 				s.updateCall(aethericPolyminoid4.getModified(e1));
+			},
+			(e1, s) -> {
+				s.updateCall(aethericPolyminoid5.getModified(e1));
 			}
 	);
 
@@ -301,8 +305,11 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(call.getModified(event));
 			},
 			(e1, s) -> {
-				// the tank LB3 mechanic
+				// the one where you dodge cleave
 				s.updateCall(exchange6.getModified(e1));
+			},
+			(e1, s) -> {
+				s.updateCall(exchange7.getModified(e1));
 			}
 	);
 
@@ -331,27 +338,44 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			e1 -> e1 instanceof BuffApplied ba && ba.buffIdMatches(3321),
 			(e1, s) -> {
 				s.waitMs(200);
-				List<BuffApplied> playerBuffs = getBuffs().statusesOnTarget(getState().getPlayer());
-				BuffApplied headBuff = playerBuffs.stream().filter(ba -> ba.buffIdMatches(3321)).findFirst().orElseThrow(() -> new RuntimeException("Didn't find head buff!"));
-				BuffApplied sideBuff = playerBuffs.stream().filter(ba -> ba.buffIdMatches(3319, 3320)).findFirst().orElseThrow(() -> new RuntimeException("Didn't find side buff!"));
-				long seconds = headBuff.getInitialDuration().toSeconds();
-				boolean getHitByWing = sideBuff.buffIdMatches(3319);
-				ModifiableCallout<BuffApplied> call;
-				if (seconds < 10) {
-					call = getHitByWing ? dpWing8 : dpSnake8;
+				{
+					List<BuffApplied> playerBuffs = getBuffs().statusesOnTarget(getState().getPlayer());
+					BuffApplied headBuff = playerBuffs.stream().filter(ba -> ba.buffIdMatches(3321)).findFirst().orElseThrow(() -> new RuntimeException("Didn't find head buff!"));
+					BuffApplied sideBuff = playerBuffs.stream().filter(ba -> ba.buffIdMatches(3319, 3320)).findFirst().orElseThrow(() -> new RuntimeException("Didn't find side buff!"));
+					long seconds = headBuff.getInitialDuration().toSeconds();
+					boolean getHitByWing = sideBuff.buffIdMatches(0xCF7);
+					ModifiableCallout<BuffApplied> call;
+					if (seconds < 10) {
+						call = getHitByWing ? dpWing8 : dpSnake8;
+					}
+					else if (seconds < 14) {
+						call = getHitByWing ? dpWing12 : dpSnake12;
+					}
+					else if (seconds < 18) {
+						call = getHitByWing ? dpWing16 : dpSnake16;
+					}
+					else {
+						call = getHitByWing ? dpWing20 : dpSnake20;
+					}
+					s.updateCall(call.getModified(headBuff));
 				}
-				else if (seconds < 14) {
-					call = getHitByWing ? dpWing12 : dpSnake12;
-				}
-				else if (seconds < 18) {
-					call = getHitByWing ? dpWing16 : dpSnake16;
-				}
-				else {
-					call = getHitByWing ? dpWing20 : dpSnake20;
-				}
-				s.updateCall(call.getModified(headBuff));
 				AbilityCastStart ptera = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(30844));
-				s.updateCall(pteraIxou.getModified(ptera));
+				{
+					List<BuffApplied> playerBuffs = getBuffs().statusesOnTarget(getState().getPlayer());
+					BuffApplied sideBuff = playerBuffs.stream().filter(ba -> ba.buffIdMatches(3319, 3320)).findFirst().orElse(null);
+					if (sideBuff == null) {
+						s.updateCall(pteraIxou.getModified(ptera));
+					}
+					else {
+						boolean getHitByWing = sideBuff.buffIdMatches(0xCF7);
+						if (getHitByWing) {
+							s.updateCall(pteraIxouLeft.getModified(ptera));
+						}
+						else {
+							s.updateCall(pteraIxouRight.getModified(ptera));
+						}
+					}
+				}
 			}
 	);
 

@@ -22,8 +22,8 @@ public class Line257Parser extends AbstractACTLineParser<Line257Parser.Fields> {
 		return new MapEffectEvent(
 				fields.getHex(Fields.instanceContentId),
 				fields.getHex(Fields.flags),
-				fields.getLong(Fields.index),
-				fields.getLong(Fields.unknown1),
-				fields.getLong(Fields.unknown2));
+				fields.getHex(Fields.index),
+				fields.getHex(Fields.unknown1),
+				fields.getHex(Fields.unknown2));
 	}
 }
