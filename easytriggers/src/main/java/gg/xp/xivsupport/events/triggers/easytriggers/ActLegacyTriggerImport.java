@@ -46,7 +46,7 @@ public final class ActLegacyTriggerImport {
 		// Ta: Add Results Tab
 		// <Trigger R="asdf" SD="qwer" ST="2" CR="F" C="zxcv" T="F" TN="tyui" Ta="T" />
 
-		// TODO: there's also a "long form" of these, looks like this:
+		// There's also a "long form" of these, looks like this:
 		// <Trigger Active="True" Regex="(?#-- Thermionic Beam -&gt; Lunar Dynamo : Stack &amp; In --)Take fire, O hallowed moon!" SoundData="Stack &amp; In" SoundType="3" CategoryRestrict="False" Category="Nael RP Quotes" Timer="False" TimerName="" Tabbed="False" />
 
 		Matcher matcher = parsePattern.matcher(triggerXml);
