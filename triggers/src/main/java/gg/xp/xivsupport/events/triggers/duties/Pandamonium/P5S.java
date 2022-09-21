@@ -91,8 +91,6 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 		return state.dutyIs(KnownDuty.P5S);
 	}
 
-	// TODO: delete this
-	private final RepeatSuppressor tailClawRepeat = new RepeatSuppressor(Duration.ofMillis(11_000));
 
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
