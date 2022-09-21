@@ -11,6 +11,8 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
+import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
@@ -23,11 +25,18 @@ import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
+import gg.xp.xivsupport.events.actlines.events.HasEffects;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.SoundActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityNameFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineRegexFilter;
@@ -35,28 +44,40 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineTypeFilt
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DurationFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EntityType;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HitSeverityFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineNumberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.PlayerHasStatusFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.RefireFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityNpcIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityTypeFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceHasStatusFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourcePartyMemberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusStacksFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetCountFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityNpcIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityTypeFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetHasStatusFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetIndexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetPartyMemberFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TetherEntityTypeFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TetherIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
+import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerMigrationHelper;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -93,17 +114,46 @@ public final class EasyTriggers {
 		mapper.setInjectableValues(new InjectableValues() {
 			@Override
 			public Object findInjectableValue(Object o, DeserializationContext deserializationContext, BeanProperty beanProperty, Object o1) {
-				return getInjectionInstance(beanProperty.getType().getRawClass());
+				return inject(beanProperty.getType().getRawClass());
 			}
 		});
 		this.setting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
 				}, settingKey, failedTriggersSettingKey)
 				.withMapper(mapper)
+				.postConstruct(this::doLegacyMigration)
 				.build();
 		this.triggers = new ArrayList<>(setting.getItems());
+		recalc();
 	}
 
-	private <X> X getInjectionInstance(Class<X> clazz) {
+	@SuppressWarnings("unchecked")
+	private <X> void doLegacyMigration(JsonNode node, EasyTrigger<X> trigger) {
+		EasyTriggerMigrationHelper migration = mapper.convertValue(node, EasyTriggerMigrationHelper.class);
+		// legacy migration
+		if (migration.tts != null || migration.text != null) {
+			if (migration.useDuration && HasDuration.class.isAssignableFrom(trigger.getEventType())) {
+				DurationBasedCalloutAction action = new DurationBasedCalloutAction();
+				action.setText(migration.text);
+				action.setTts(migration.tts);
+				action.setColorRaw(migration.colorRaw);
+				action.setUseIcon(migration.useIcon);
+				action.setHangTime(migration.hangTime);
+				trigger.addAction((Action<? super X>) action);
+			}
+			else {
+				CalloutAction action = new CalloutAction();
+				action.setText(migration.text);
+				action.setTts(migration.tts);
+				action.setColorRaw(migration.colorRaw);
+				action.setUseIcon(migration.useIcon);
+				action.setHangTime(migration.hangTime);
+				trigger.addAction((Action<? super X>) action);
+			}
+		}
+	}
+
+
+	private <X> X inject(Class<X> clazz) {
 		return pico.getComponent(clazz);
 	}
 
@@ -118,8 +168,15 @@ public final class EasyTriggers {
 
 	public List<EasyTrigger<?>> importFromString(String string) {
 		try {
-			return mapper.readValue(string, new TypeReference<>() {
+			List<JsonNode> nodes = mapper.readValue(string, new TypeReference<>() {
 			});
+			List<EasyTrigger<?>> out = new ArrayList<>(nodes.size());
+			for (JsonNode node : nodes) {
+				EasyTrigger<?> trigger = mapper.convertValue(node, EasyTrigger.class);
+				doLegacyMigration(node, trigger);
+				out.add(trigger);
+			}
+			return out;
 		}
 		catch (JsonProcessingException e) {
 			throw new ValidationError("Error importing trigger: " + e.getMessage(), e);
@@ -127,11 +184,16 @@ public final class EasyTriggers {
 	}
 
 	private void save() {
+		recalc();
 		setting.setItems(triggers);
 	}
 
 	public void commit() {
 		save();
+	}
+
+	private void recalc() {
+		triggers.forEach(EasyTrigger::recalc);
 	}
 
 	@HandleEvents
@@ -172,7 +234,15 @@ public final class EasyTriggers {
 					"An ability has started casting. Corresponds to ACT 20 lines.",
 					"{event.ability}",
 					"{event.ability} ({event.estimatedRemainingDuration})",
-					List.of(AbilityIdFilter::new)),
+					List.of(AbilityIdFilter::new)) {
+				@Override
+				protected Action<? super AbilityCastStart> defaultCallout() {
+					DurationBasedCalloutAction call = new DurationBasedCalloutAction();
+					call.setTts(defaultTts);
+					call.setText(defaultText);
+					return call;
+				}
+			},
 			new EventDescriptionImpl<>(AbilityUsedEvent.class,
 					"An ability has snapshotted. Corresponds to ACT 21/22 lines.",
 					"{event.ability}",
@@ -197,6 +267,10 @@ public final class EasyTriggers {
 					"An ability has actually applied. Corresponds to ACT 37 lines.",
 					"{event.ability} resolved",
 					List.of(AbilityIdFilter::new)),
+			new EventDescriptionImpl<>(TetherEvent.class,
+					"A tether between two combatants. Corresponds to ACT 35 lines.",
+					"tether",
+					List.of(TetherEntityTypeFilter::new)),
 			new EventDescriptionImpl<>(ActorControlEvent.class,
 					"Conveys various state changes, such as wiping or finishing a raid. Corresponds to ACT 33 lines.",
 					"Actor control {event.command}",
@@ -213,12 +287,13 @@ public final class EasyTriggers {
 	);
 
 
-	private Component generic(Condition<?> cond, EasyTrigger<?> trigger) {
-		return new GenericFieldEditor(cond, pico);
+	private Component generic(Object object, EasyTrigger<?> trigger) {
+		return new GenericFieldEditor(object, pico);
 	}
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
 	private final List<ConditionDescription<?, ?>> conditions = List.of(
+			new ConditionDescription<>(RefireFilter.class, Event.class, "Refire Suppression", RefireFilter::new, this::generic),
 			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, this::generic),
 			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, this::generic),
 			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, this::generic),
@@ -227,8 +302,13 @@ public final class EasyTriggers {
 			new ConditionDescription<>(TargetEntityTypeFilter.class, HasTargetEntity.class, "Target Combatant", TargetEntityTypeFilter::new, this::generic),
 			new ConditionDescription<>(SourceEntityNpcIdFilter.class, HasSourceEntity.class, "Source Combatant NPC ID", SourceEntityNpcIdFilter::new, this::generic),
 			new ConditionDescription<>(TargetEntityNpcIdFilter.class, HasTargetEntity.class, "Target Combatant NPC ID", TargetEntityNpcIdFilter::new, this::generic),
-			new ConditionDescription<>(SourcePartyMemberFilter.class, HasSourceEntity.class, "Source is (not) in Party", () -> new SourcePartyMemberFilter(getInjectionInstance(XivState.class)), this::generic),
-			new ConditionDescription<>(TargetPartyMemberFilter.class, HasTargetEntity.class, "Target is (not) in Party", () -> new TargetPartyMemberFilter(getInjectionInstance(XivState.class)), this::generic),
+			new ConditionDescription<>(SourcePartyMemberFilter.class, HasSourceEntity.class, "Source is (not) in Party", () -> new SourcePartyMemberFilter(inject(XivState.class)), this::generic),
+			new ConditionDescription<>(TargetPartyMemberFilter.class, HasTargetEntity.class, "Target is (not) in Party", () -> new TargetPartyMemberFilter(inject(XivState.class)), this::generic),
+			new ConditionDescription<>(TetherEntityTypeFilter.class, TetherEvent.class, "Target types for Tether Events", TetherEntityTypeFilter::new, this::generic),
+			new ConditionDescription<>(TetherIdFilter.class, TetherEvent.class, "Tether ID", TetherIdFilter::new, this::generic),
+			new ConditionDescription<>(PlayerHasStatusFilter.class, Event.class, "Player has a specific status effect", () -> new PlayerHasStatusFilter(inject(XivState.class), inject(StatusEffectRepository.class)), this::generic),
+			new ConditionDescription<>(SourceHasStatusFilter.class, HasSourceEntity.class, "Source has a specific status effect", () -> new SourceHasStatusFilter(inject(StatusEffectRepository.class)), this::generic),
+			new ConditionDescription<>(TargetHasStatusFilter.class, HasTargetEntity.class, "Target has a specific status effect", () -> new TargetHasStatusFilter(inject(StatusEffectRepository.class)), this::generic),
 			new ConditionDescription<>(TargetIndexFilter.class, HasTargetIndex.class, "Target Index", TargetIndexFilter::new, this::generic),
 			new ConditionDescription<>(TargetCountFilter.class, HasTargetIndex.class, "Target Count", TargetCountFilter::new, this::generic),
 			new ConditionDescription<>(DurationFilter.class, HasDuration.class, "Castbar or Status Duration", DurationFilter::new, this::generic),
@@ -236,8 +316,15 @@ public final class EasyTriggers {
 			new ConditionDescription<>(LogLineNumberFilter.class, ACTLogLineEvent.class, "Log Line Number", LogLineNumberFilter::new, this::generic),
 			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, this::generic),
 			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, this::generic),
-			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(getInjectionInstance(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, (EasyTrigger<Event>) b)),
-			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(getInjectionInstance(XivState.class)), this::generic)
+			new ConditionDescription<>(HitSeverityFilter.class, HasEffects.class, "Hit Severity (Crit/Direct Hit)", HitSeverityFilter::new, this::generic),
+			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, (EasyTrigger<Event>) b)),
+			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic)
+	);
+
+	private final List<ActionDescription<?, ?>> actions = List.of(
+			new ActionDescription<>(CalloutAction.class, Event.class, "Basic TTS/Text Callout", CalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
+			new ActionDescription<>(DurationBasedCalloutAction.class, HasDuration.class, "Duration-Based TTS/Text Callout", DurationBasedCalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
+			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action))
 	);
 
 	public List<EventDescription<?>> getEventDescriptions() {
@@ -257,28 +344,43 @@ public final class EasyTriggers {
 		return conditions.stream().filter(cdesc -> cdesc.appliesTo(trigger.classForConditions())).toList();
 	}
 
+	public List<ActionDescription<?, ?>> getActions() {
+		return actions;
+	}
+
+	public <X> List<ActionDescription<?, ?>> getActionsApplicableTo(HasMutableActions<X> trigger) {
+		return actions.stream().filter(adesc -> adesc.appliesTo(trigger.classForActions())).toList();
+	}
+
+
 	@SuppressWarnings("unchecked")
 	public <X extends Condition<Y>, Y> ConditionDescription<X, Y> getConditionDescription(Class<X> cond) {
 		ConditionDescription<?, ?> conditionDescription = conditions.stream().filter(item -> item.clazz().equals(cond)).findFirst().orElse(null);
 		return (ConditionDescription<X, Y>) conditionDescription;
 	}
 
+	@SuppressWarnings("unchecked")
+	public <X extends Action<Y>, Y> ActionDescription<X, Y> getActionDescription(Class<X> action) {
+		ActionDescription<?, ?> conditionDescription = actions.stream().filter(item -> item.clazz().equals(action)).findFirst().orElse(null);
+		return (ActionDescription<X, Y>) conditionDescription;
+	}
+
 	public @Nullable EasyTrigger<?> makeTriggerFromEvent(Event event) {
-		if (event instanceof AbilityUsedEvent abu) {
+		if (event instanceof AbilityCastStart acs) {
+			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newEmptyInst();
+			trigger.setName(acs.getAbility().getName() + " casting");
+			makeSourceConditions(acs).forEach(trigger::addCondition);
+			makeTargetConditions(acs).forEach(trigger::addCondition);
+			makeAbilityConditions(acs).forEach(trigger::addCondition);
+			return trigger;
+		}
+		else if (event instanceof AbilityUsedEvent abu) {
 			EasyTrigger<AbilityUsedEvent> trigger = getEventDescription(AbilityUsedEvent.class).newEmptyInst();
 			trigger.setName(abu.getAbility().getName() + " used");
 			makeSourceConditions(abu).forEach(trigger::addCondition);
 			makeTargetConditions(abu).forEach(trigger::addCondition);
 			makeAbilityConditions(abu).forEach(trigger::addCondition);
 			makeTargetIndexConditions(abu).forEach(trigger::addCondition);
-			return trigger;
-		}
-		else if (event instanceof AbilityCastStart acs) {
-			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newEmptyInst();
-			trigger.setName(acs.getAbility().getName() + " casting");
-			makeSourceConditions(acs).forEach(trigger::addCondition);
-			makeTargetConditions(acs).forEach(trigger::addCondition);
-			makeAbilityConditions(acs).forEach(trigger::addCondition);
 			return trigger;
 		}
 		else if (event instanceof AbilityCastCancel acc) {

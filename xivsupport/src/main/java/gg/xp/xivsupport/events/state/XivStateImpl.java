@@ -706,7 +706,7 @@ public class XivStateImpl implements XivState {
 			// Each data element has a different "priority" for each field
 			XivCombatant fromOther = fromOtherActLine;
 			RawXivPartyInfo fromPartyInfo = this.fromPartyInfo;
-			String name = raw != null ? raw.getName() : (fromOther != null ? fromOther.getName() : (fromPartyInfo != null ? fromPartyInfo.getName() : "Error: No Name"));
+			String name = raw != null ? raw.getName() : (fromOther != null ? fromOther.getName() : (fromPartyInfo != null ? fromPartyInfo.getName() : "???"));
 			long jobId = raw != null ? raw.getJobId() : (fromPartyInfo != null ? fromPartyInfo.getJobId() : 0);
 			XivWorld world = XivWorld.of();
 			long rawType = raw != null ? raw.getRawType() : (id >= 0x4000_0000 ? 2 : 1);

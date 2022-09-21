@@ -1,0 +1,1349 @@
+# groovy-cps - not needed from workflow-cps 2.33+
+staticMethod com.cloudbees.groovy.cps.CpsDefaultGroovyMethods each java.util.Iterator groovy.lang.Closure
+
+# Groovy:
+staticMethod groovy.json.JsonOutput prettyPrint java.lang.String
+staticMethod groovy.json.JsonOutput toJson java.lang.Boolean
+staticMethod groovy.json.JsonOutput toJson java.lang.Character
+staticMethod groovy.json.JsonOutput toJson java.lang.Number
+staticMethod groovy.json.JsonOutput toJson java.lang.String
+staticMethod groovy.json.JsonOutput toJson java.net.URL
+staticMethod groovy.json.JsonOutput toJson java.util.Calendar
+staticMethod groovy.json.JsonOutput toJson java.util.Date
+staticMethod groovy.json.JsonOutput toJson java.util.Map
+staticMethod groovy.json.JsonOutput toJson java.util.UUID
+new groovy.json.JsonSlurper
+method groovy.json.JsonSlurper parseText java.lang.String
+
+method groovy.lang.Binding hasVariable java.lang.String
+staticField groovy.lang.Closure DELEGATE_FIRST
+staticField groovy.lang.Closure DELEGATE_ONLY
+staticField groovy.lang.Closure OWNER_FIRST
+staticField groovy.lang.Closure OWNER_ONLY
+staticField groovy.lang.Closure TO_SELF
+method groovy.lang.Closure call java.lang.Object
+method groovy.lang.Closure call java.lang.Object[]
+method groovy.lang.Closure curry java.lang.Object
+method groovy.lang.Closure curry java.lang.Object[]
+method groovy.lang.Closure getDelegate
+method groovy.lang.Closure getResolveStrategy
+method groovy.lang.Closure ncurry int java.lang.Object
+method groovy.lang.Closure ncurry int java.lang.Object[]
+method groovy.lang.Closure setDelegate java.lang.Object
+method groovy.lang.Closure setResolveStrategy int
+method groovy.lang.GString plus java.lang.String
+method groovy.lang.Range getFrom
+method groovy.lang.Range getTo
+method groovy.lang.Range step int
+method groovy.lang.Range step int groovy.lang.Closure
+method groovy.lang.Script getBinding
+staticMethod groovy.xml.XmlUtil escapeXml java.lang.String
+
+method java.io.Flushable flush
+# Useful to show stacktrace to the user.
+new java.io.PrintWriter java.io.Writer
+# Needed for Groovy Templates to emit output:
+method java.io.PrintWriter print java.lang.Object
+method java.io.PrintWriter print java.lang.String
+
+method java.io.Reader read
+method java.io.Reader read char[]
+method java.io.Reader read char[] int int
+method java.io.Reader reset
+method java.io.Reader skip long
+
+# Useful general stuff:
+new java.io.StringReader java.lang.String
+new java.io.StringWriter
+
+method java.io.Writer write char[]
+method java.io.Writer write char[] int int
+method java.io.Writer write int
+method java.io.Writer write java.lang.String
+method java.io.Writer write java.lang.String int int
+
+method java.lang.AbstractStringBuilder append boolean
+method java.lang.AbstractStringBuilder append char[]
+method java.lang.AbstractStringBuilder append char[] int int
+method java.lang.AbstractStringBuilder append double
+method java.lang.AbstractStringBuilder append float
+method java.lang.AbstractStringBuilder append int
+method java.lang.AbstractStringBuilder append java.lang.Object
+method java.lang.AbstractStringBuilder append java.lang.String
+method java.lang.AbstractStringBuilder append java.lang.StringBuffer
+method java.lang.AbstractStringBuilder append long
+method java.lang.AbstractStringBuilder appendCodePoint int
+method java.lang.AbstractStringBuilder capacity
+method java.lang.AbstractStringBuilder codePointAt int
+method java.lang.AbstractStringBuilder codePointBefore int
+method java.lang.AbstractStringBuilder codePointCount int int
+method java.lang.AbstractStringBuilder delete int int
+method java.lang.AbstractStringBuilder deleteCharAt int
+method java.lang.AbstractStringBuilder ensureCapacity int
+method java.lang.AbstractStringBuilder getChars int int char[] int
+method java.lang.AbstractStringBuilder indexOf java.lang.String
+method java.lang.AbstractStringBuilder indexOf java.lang.String int
+method java.lang.AbstractStringBuilder insert int boolean
+method java.lang.AbstractStringBuilder insert int char
+method java.lang.AbstractStringBuilder insert int char[]
+method java.lang.AbstractStringBuilder insert int char[] int int
+method java.lang.AbstractStringBuilder insert int double
+method java.lang.AbstractStringBuilder insert int float
+method java.lang.AbstractStringBuilder insert int int
+method java.lang.AbstractStringBuilder insert int java.lang.CharSequence
+method java.lang.AbstractStringBuilder insert int java.lang.CharSequence int int
+method java.lang.AbstractStringBuilder insert int java.lang.Object
+method java.lang.AbstractStringBuilder insert int java.lang.String
+method java.lang.AbstractStringBuilder insert int long
+method java.lang.AbstractStringBuilder lastIndexOf java.lang.String
+method java.lang.AbstractStringBuilder lastIndexOf java.lang.String int
+method java.lang.AbstractStringBuilder offsetByCodePoints int int
+method java.lang.AbstractStringBuilder replace int int java.lang.String
+method java.lang.AbstractStringBuilder reverse
+method java.lang.AbstractStringBuilder setCharAt int char
+method java.lang.AbstractStringBuilder setLength int
+method java.lang.AbstractStringBuilder substring int
+method java.lang.AbstractStringBuilder substring int int
+method java.lang.AbstractStringBuilder trimToSize
+method java.lang.Appendable append char
+method java.lang.Appendable append java.lang.CharSequence
+method java.lang.Appendable append java.lang.CharSequence int int
+method java.lang.AutoCloseable close
+method java.lang.Boolean booleanValue
+new java.lang.Boolean java.lang.String
+staticMethod java.lang.Boolean parseBoolean java.lang.String
+staticMethod java.lang.Boolean valueOf boolean
+staticMethod java.lang.Boolean valueOf java.lang.String
+method java.lang.CharSequence charAt int
+method java.lang.CharSequence isEmpty
+method java.lang.CharSequence length
+method java.lang.CharSequence subSequence int int
+method java.lang.Class getName
+method java.lang.Class getSimpleName
+method java.lang.Class isInstance java.lang.Object
+method java.lang.Comparable compareTo java.lang.Object
+new java.lang.Enum java.lang.String int
+method java.lang.Enum name
+method java.lang.Enum ordinal
+new java.lang.Exception java.lang.String
+staticField java.lang.Integer MAX_VALUE
+# could add valueOf, though currently the staticField’s need to be whitelisted, which is the more likely use case
+staticMethod java.lang.Integer parseInt java.lang.String
+staticMethod java.lang.Integer parseInt java.lang.String int
+staticMethod java.lang.Integer toString int int
+staticMethod java.lang.Integer valueOf java.lang.String
+method java.lang.Iterable iterator
+staticField java.lang.Math E
+staticMethod java.lang.Math IEEEremainder double double
+staticField java.lang.Math PI
+staticMethod java.lang.Math abs double
+staticMethod java.lang.Math abs float
+staticMethod java.lang.Math abs int
+staticMethod java.lang.Math abs long
+staticMethod java.lang.Math acos double
+staticMethod java.lang.Math addExact int int
+staticMethod java.lang.Math addExact long long
+staticMethod java.lang.Math asin double
+staticMethod java.lang.Math atan double
+staticMethod java.lang.Math atan2 double double
+staticMethod java.lang.Math cbrt double
+staticMethod java.lang.Math ceil double
+staticMethod java.lang.Math copySign double double
+staticMethod java.lang.Math copySign float float
+staticMethod java.lang.Math cos double
+staticMethod java.lang.Math cosh double
+staticMethod java.lang.Math exp double
+staticMethod java.lang.Math expm1 double
+staticMethod java.lang.Math floor double
+staticMethod java.lang.Math floorDiv int int
+staticMethod java.lang.Math floorDiv long long
+staticMethod java.lang.Math floorMod int int
+staticMethod java.lang.Math floorMod long long
+staticMethod java.lang.Math getExponent double
+staticMethod java.lang.Math getExponent float
+staticMethod java.lang.Math hypot double double
+staticMethod java.lang.Math incrementExact int
+staticMethod java.lang.Math incrementExact long
+staticMethod java.lang.Math log double
+staticMethod java.lang.Math log10 double
+staticMethod java.lang.Math log1p double
+staticMethod java.lang.Math max double double
+staticMethod java.lang.Math max float float
+staticMethod java.lang.Math max int int
+staticMethod java.lang.Math max long long
+staticMethod java.lang.Math min double double
+staticMethod java.lang.Math min float float
+staticMethod java.lang.Math min int int
+staticMethod java.lang.Math min long long
+staticMethod java.lang.Math multiplyExact int int
+staticMethod java.lang.Math multiplyExact long long
+staticMethod java.lang.Math negateExact int
+staticMethod java.lang.Math negateExact long
+staticMethod java.lang.Math nextAfter double double
+staticMethod java.lang.Math nextAfter float double
+staticMethod java.lang.Math nextDown double
+staticMethod java.lang.Math nextDown float
+staticMethod java.lang.Math nextUp double
+staticMethod java.lang.Math nextUp float
+staticMethod java.lang.Math pow double double
+staticMethod java.lang.Math random
+staticMethod java.lang.Math rint double
+staticMethod java.lang.Math round double
+staticMethod java.lang.Math round float
+staticMethod java.lang.Math scalb double int
+staticMethod java.lang.Math scalb float int
+staticMethod java.lang.Math signum double
+staticMethod java.lang.Math signum float
+staticMethod java.lang.Math sin double
+staticMethod java.lang.Math sinh double
+staticMethod java.lang.Math sqrt double
+staticMethod java.lang.Math subtractExact int int
+staticMethod java.lang.Math subtractExact long long
+staticMethod java.lang.Math tan double
+staticMethod java.lang.Math tanh double
+staticMethod java.lang.Math toDegrees double
+staticMethod java.lang.Math toIntExact long
+staticMethod java.lang.Math toRadians double
+staticMethod java.lang.Math ulp double
+staticMethod java.lang.Math ulp float
+method java.lang.Number byteValue
+method java.lang.Number doubleValue
+method java.lang.Number floatValue
+method java.lang.Number intValue
+method java.lang.Number longValue
+method java.lang.Number shortValue
+method java.lang.Object clone
+method java.lang.Object equals java.lang.Object
+method java.lang.Object getClass
+method java.lang.Object hashCode
+method java.lang.Object toString
+new java.lang.String
+staticField java.lang.String CASE_INSENSITIVE_ORDER
+new java.lang.String byte[]
+new java.lang.String byte[] int int
+new java.lang.String byte[] int int java.lang.String
+new java.lang.String byte[] int int java.nio.charset.Charset
+new java.lang.String byte[] java.lang.String
+new java.lang.String byte[] java.nio.charset.Charset
+new java.lang.String char[]
+new java.lang.String char[] int int
+method java.lang.String codePointAt int
+method java.lang.String codePointBefore int
+method java.lang.String concat java.lang.String
+method java.lang.String contains java.lang.CharSequence
+method java.lang.String contentEquals java.lang.CharSequence
+method java.lang.String contentEquals java.lang.StringBuffer
+method java.lang.String endsWith java.lang.String
+method java.lang.String equalsIgnoreCase java.lang.String
+staticMethod java.lang.String format java.lang.String java.lang.Object[]
+staticMethod java.lang.String format java.util.Locale java.lang.String java.lang.Object[]
+method java.lang.String getBytes
+method java.lang.String getBytes java.lang.String
+method java.lang.String getChars int int char[] int
+method java.lang.String indexOf int
+method java.lang.String indexOf int int
+method java.lang.String indexOf java.lang.String
+method java.lang.String indexOf java.lang.String int
+new java.lang.String int[] int int
+method java.lang.String isEmpty
+new java.lang.String java.lang.String
+new java.lang.String java.lang.StringBuffer
+new java.lang.String java.lang.StringBuilder
+staticMethod java.lang.String join java.lang.CharSequence java.lang.CharSequence[]
+staticMethod java.lang.String join java.lang.CharSequence java.lang.Iterable
+method java.lang.String lastIndexOf int
+method java.lang.String lastIndexOf int int
+method java.lang.String lastIndexOf java.lang.String
+method java.lang.String lastIndexOf java.lang.String int
+method java.lang.String matches java.lang.String
+method java.lang.String offsetByCodePoints int int
+method java.lang.String regionMatches boolean int java.lang.String int int
+method java.lang.String regionMatches int java.lang.String int int
+method java.lang.String replace char char
+method java.lang.String replace java.lang.CharSequence java.lang.CharSequence
+method java.lang.String replaceAll java.lang.String java.lang.String
+method java.lang.String replaceFirst java.lang.String java.lang.String
+method java.lang.String split java.lang.String
+method java.lang.String split java.lang.String int
+method java.lang.String startsWith java.lang.String
+method java.lang.String startsWith java.lang.String int
+method java.lang.String substring int
+method java.lang.String substring int int
+method java.lang.String toCharArray
+method java.lang.String toLowerCase
+method java.lang.String toLowerCase java.util.Locale
+method java.lang.String toUpperCase
+method java.lang.String toUpperCase java.util.Locale
+method java.lang.String trim
+staticMethod java.lang.String valueOf boolean
+staticMethod java.lang.String valueOf char
+staticMethod java.lang.String valueOf char[]
+staticMethod java.lang.String valueOf char[] int int
+staticMethod java.lang.String valueOf double
+staticMethod java.lang.String valueOf float
+staticMethod java.lang.String valueOf int
+staticMethod java.lang.String valueOf java.lang.Object
+staticMethod java.lang.String valueOf long
+new java.lang.StringBuffer
+new java.lang.StringBuffer int
+new java.lang.StringBuffer java.lang.CharSequence
+new java.lang.StringBuffer java.lang.String
+new java.lang.StringBuilder
+new java.lang.StringBuilder int
+new java.lang.StringBuilder java.lang.CharSequence
+new java.lang.StringBuilder java.lang.String
+staticMethod java.lang.System currentTimeMillis
+staticMethod java.lang.System identityHashCode java.lang.Object
+method java.lang.Throwable getCause
+method java.lang.Throwable getMessage
+method java.lang.Throwable printStackTrace java.io.PrintStream
+method java.lang.Throwable printStackTrace java.io.PrintWriter
+method java.math.BigDecimal multiply java.math.BigDecimal
+new java.net.MalformedURLException java.lang.String
+new java.net.URL java.lang.String
+staticMethod java.net.URLDecoder decode java.lang.String java.lang.String
+staticMethod java.net.URLEncoder encode java.lang.String java.lang.String
+staticMethod java.nio.charset.Charset forName java.lang.String
+staticField java.nio.charset.StandardCharsets ISO_8859_1
+staticField java.nio.charset.StandardCharsets US_ASCII
+staticField java.nio.charset.StandardCharsets UTF_16
+staticField java.nio.charset.StandardCharsets UTF_16BE
+staticField java.nio.charset.StandardCharsets UTF_16LE
+staticField java.nio.charset.StandardCharsets UTF_8
+staticField java.text.DateFormat AM_PM_FIELD
+staticField java.text.DateFormat DATE_FIELD
+staticField java.text.DateFormat DAY_OF_WEEK_FIELD
+staticField java.text.DateFormat DAY_OF_WEEK_IN_MONTH_FIELD
+staticField java.text.DateFormat DAY_OF_YEAR_FIELD
+staticField java.text.DateFormat DEFAULT
+staticField java.text.DateFormat ERA_FIELD
+staticField java.text.DateFormat FULL
+staticField java.text.DateFormat HOUR0_FIELD
+staticField java.text.DateFormat HOUR1_FIELD
+staticField java.text.DateFormat HOUR_OF_DAY0_FIELD
+staticField java.text.DateFormat HOUR_OF_DAY1_FIELD
+staticField java.text.DateFormat LONG
+staticField java.text.DateFormat MEDIUM
+staticField java.text.DateFormat MILLISECOND_FIELD
+staticField java.text.DateFormat MINUTE_FIELD
+staticField java.text.DateFormat MONTH_FIELD
+staticField java.text.DateFormat SECOND_FIELD
+staticField java.text.DateFormat SHORT
+staticField java.text.DateFormat TIMEZONE_FIELD
+staticField java.text.DateFormat WEEK_OF_MONTH_FIELD
+staticField java.text.DateFormat WEEK_OF_YEAR_FIELD
+staticField java.text.DateFormat YEAR_FIELD
+method java.text.DateFormat format java.util.Date
+staticMethod java.text.DateFormat getAvailableLocales
+method java.text.DateFormat getCalendar
+staticMethod java.text.DateFormat getDateInstance
+staticMethod java.text.DateFormat getDateInstance int
+staticMethod java.text.DateFormat getDateInstance int java.util.Locale
+staticMethod java.text.DateFormat getDateTimeInstance
+staticMethod java.text.DateFormat getDateTimeInstance int int
+staticMethod java.text.DateFormat getDateTimeInstance int int java.util.Locale
+staticMethod java.text.DateFormat getInstance
+method java.text.DateFormat getNumberFormat
+staticMethod java.text.DateFormat getTimeInstance
+staticMethod java.text.DateFormat getTimeInstance int
+staticMethod java.text.DateFormat getTimeInstance int java.util.Locale
+method java.text.DateFormat getTimeZone
+method java.text.DateFormat isLenient
+method java.text.DateFormat parse java.lang.String
+method java.text.DateFormat setCalendar java.util.Calendar
+method java.text.DateFormat setLenient boolean
+method java.text.DateFormat setNumberFormat java.text.NumberFormat
+method java.text.DateFormat setTimeZone java.util.TimeZone
+method java.text.Format format java.lang.Object
+method java.text.Format formatToCharacterIterator java.lang.Object
+method java.text.Format parseObject java.lang.String
+new java.text.SimpleDateFormat java.lang.String
+staticField java.time.DayOfWeek FRIDAY
+staticField java.time.DayOfWeek MONDAY
+staticField java.time.DayOfWeek SATURDAY
+staticField java.time.DayOfWeek SUNDAY
+staticField java.time.DayOfWeek THURSDAY
+staticField java.time.DayOfWeek TUESDAY
+staticField java.time.DayOfWeek WEDNESDAY
+method java.time.Instant getEpochSecond
+method java.time.Instant getNano
+method java.time.Instant minusMillis long
+method java.time.Instant minusNanos long
+method java.time.Instant minusSeconds long
+staticMethod java.time.Instant parse java.lang.CharSequence
+method java.time.Instant plusMillis long
+method java.time.Instant plusNanos long
+method java.time.Instant plusSeconds long
+method java.time.LocalDate getDayOfMonth
+method java.time.LocalDate getDayOfWeek
+method java.time.LocalDate getDayOfYear
+method java.time.LocalDate getMonth
+method java.time.LocalDate getMonthValue
+method java.time.LocalDate getYear
+method java.time.LocalDate minusDays long
+method java.time.LocalDate minusMonths long
+method java.time.LocalDate minusWeeks long
+method java.time.LocalDate minusYears long
+staticMethod java.time.LocalDate now
+staticMethod java.time.LocalDate parse java.lang.CharSequence
+staticMethod java.time.LocalDate parse java.lang.CharSequence java.time.format.DateTimeFormatter
+method java.time.LocalDate plusDays long
+method java.time.LocalDate plusMonths long
+method java.time.LocalDate plusWeeks long
+method java.time.LocalDate plusYears long
+method java.time.LocalDate withDayOfMonth int
+method java.time.LocalDate withDayOfYear int
+method java.time.LocalDate withMonth int
+method java.time.LocalDate withYear int
+method java.time.LocalDateTime getDayOfMonth
+method java.time.LocalDateTime getDayOfWeek
+method java.time.LocalDateTime getDayOfYear
+method java.time.LocalDateTime getHour
+method java.time.LocalDateTime getMinute
+method java.time.LocalDateTime getMonth
+method java.time.LocalDateTime getMonthValue
+method java.time.LocalDateTime getNano
+method java.time.LocalDateTime getSecond
+method java.time.LocalDateTime getYear
+method java.time.LocalDateTime minusDays long
+method java.time.LocalDateTime minusHours long
+method java.time.LocalDateTime minusMinutes long
+method java.time.LocalDateTime minusMonths long
+method java.time.LocalDateTime minusNanos long
+method java.time.LocalDateTime minusSeconds long
+method java.time.LocalDateTime minusWeeks long
+method java.time.LocalDateTime minusYears long
+staticMethod java.time.LocalDateTime now
+staticMethod java.time.LocalDateTime of java.time.LocalDate java.time.LocalTime
+staticMethod java.time.LocalDateTime parse java.lang.CharSequence
+staticMethod java.time.LocalDateTime parse java.lang.CharSequence java.time.format.DateTimeFormatter
+method java.time.LocalDateTime plusDays long
+method java.time.LocalDateTime plusHours long
+method java.time.LocalDateTime plusMinutes long
+method java.time.LocalDateTime plusMonths long
+method java.time.LocalDateTime plusNanos long
+method java.time.LocalDateTime plusSeconds long
+method java.time.LocalDateTime plusWeeks long
+method java.time.LocalDateTime plusYears long
+method java.time.LocalDateTime withDayOfMonth int
+method java.time.LocalDateTime withDayOfYear int
+method java.time.LocalDateTime withHour int
+method java.time.LocalDateTime withMinute int
+method java.time.LocalDateTime withMonth int
+method java.time.LocalDateTime withNano int
+method java.time.LocalDateTime withSecond int
+method java.time.LocalDateTime withYear int
+staticField java.time.LocalTime MIDNIGHT
+staticField java.time.LocalTime NOON
+method java.time.LocalTime format java.time.format.DateTimeFormatter
+method java.time.LocalTime getHour
+method java.time.LocalTime getMinute
+method java.time.LocalTime getNano
+method java.time.LocalTime getSecond
+method java.time.LocalTime minusHours long
+method java.time.LocalTime minusMinutes long
+method java.time.LocalTime minusNanos long
+method java.time.LocalTime minusSeconds long
+staticMethod java.time.LocalTime now
+staticMethod java.time.LocalTime parse java.lang.CharSequence
+staticMethod java.time.LocalTime parse java.lang.CharSequence java.time.format.DateTimeFormatter
+method java.time.LocalTime plusHours long
+method java.time.LocalTime plusMinutes long
+method java.time.LocalTime plusNanos long
+method java.time.LocalTime plusSeconds long
+method java.time.LocalTime toNanoOfDay
+method java.time.LocalTime toSecondOfDay
+method java.time.LocalTime withHour int
+method java.time.LocalTime withMinute int
+method java.time.LocalTime withNano int
+method java.time.LocalTime withSecond int
+method java.time.chrono.ChronoLocalDate format java.time.format.DateTimeFormatter
+method java.time.chrono.ChronoLocalDate getEra
+method java.time.chrono.ChronoLocalDate isLeapYear
+method java.time.chrono.ChronoLocalDate lengthOfMonth
+method java.time.chrono.ChronoLocalDate lengthOfYear
+method java.time.chrono.ChronoLocalDate toEpochDay
+method java.time.chrono.ChronoLocalDateTime format java.time.format.DateTimeFormatter
+staticField java.time.format.DateTimeFormatter BASIC_ISO_DATE
+staticField java.time.format.DateTimeFormatter ISO_DATE
+staticField java.time.format.DateTimeFormatter ISO_DATE_TIME
+staticField java.time.format.DateTimeFormatter ISO_INSTANT
+staticField java.time.format.DateTimeFormatter ISO_LOCAL_DATE
+staticField java.time.format.DateTimeFormatter ISO_LOCAL_DATE_TIME
+staticField java.time.format.DateTimeFormatter ISO_LOCAL_TIME
+staticField java.time.format.DateTimeFormatter ISO_OFFSET_DATE
+staticField java.time.format.DateTimeFormatter ISO_OFFSET_DATE_TIME
+staticField java.time.format.DateTimeFormatter ISO_OFFSET_TIME
+staticField java.time.format.DateTimeFormatter ISO_ORDINAL_DATE
+staticField java.time.format.DateTimeFormatter ISO_TIME
+staticField java.time.format.DateTimeFormatter ISO_WEEK_DATE
+staticField java.time.format.DateTimeFormatter ISO_ZONED_DATE_TIME
+staticField java.time.format.DateTimeFormatter RFC_1123_DATE_TIME
+staticMethod java.time.format.DateTimeFormatter ofPattern java.lang.String
+staticField java.time.temporal.ChronoUnit CENTURIES
+staticField java.time.temporal.ChronoUnit DAYS
+staticField java.time.temporal.ChronoUnit DECADES
+staticField java.time.temporal.ChronoUnit ERAS
+staticField java.time.temporal.ChronoUnit FOREVER
+staticField java.time.temporal.ChronoUnit HALF_DAYS
+staticField java.time.temporal.ChronoUnit HOURS
+staticField java.time.temporal.ChronoUnit MICROS
+staticField java.time.temporal.ChronoUnit MILLENNIA
+staticField java.time.temporal.ChronoUnit MILLIS
+staticField java.time.temporal.ChronoUnit MINUTES
+staticField java.time.temporal.ChronoUnit MONTHS
+staticField java.time.temporal.ChronoUnit NANOS
+staticField java.time.temporal.ChronoUnit SECONDS
+staticField java.time.temporal.ChronoUnit WEEKS
+staticField java.time.temporal.ChronoUnit YEARS
+method java.time.temporal.TemporalUnit addTo java.time.temporal.Temporal long
+method java.time.temporal.TemporalUnit between java.time.temporal.Temporal java.time.temporal.Temporal
+method java.time.temporal.TemporalUnit getDuration
+method java.time.temporal.TemporalUnit isDateBased
+method java.time.temporal.TemporalUnit isDurationEstimated
+method java.time.temporal.TemporalUnit isSupportedBy java.time.temporal.Temporal
+method java.time.temporal.TemporalUnit isTimeBased
+new java.util.ArrayList java.util.Collection
+staticMethod java.util.Arrays asList java.lang.Object[]
+staticMethod java.util.Arrays toString java.lang.Object[]
+staticMethod java.util.Base64 getDecoder
+staticMethod java.util.Base64 getEncoder
+staticMethod java.util.Base64 getMimeDecoder
+staticMethod java.util.Base64 getMimeEncoder
+staticMethod java.util.Base64 getMimeEncoder int byte[]
+staticMethod java.util.Base64 getUrlDecoder
+staticMethod java.util.Base64 getUrlEncoder
+method java.util.Base64$Decoder decode byte[]
+method java.util.Base64$Decoder decode byte[] byte[]
+method java.util.Base64$Decoder decode java.lang.String
+method java.util.Base64$Encoder encode byte[]
+method java.util.Base64$Encoder encode byte[] byte[]
+method java.util.Base64$Encoder encodeToString byte[]
+method java.util.Base64$Encoder withoutPadding
+staticField java.util.Calendar ALL_STYLES
+staticField java.util.Calendar AM
+staticField java.util.Calendar AM_PM
+staticField java.util.Calendar APRIL
+staticField java.util.Calendar AUGUST
+staticField java.util.Calendar DATE
+staticField java.util.Calendar DAY_OF_MONTH
+staticField java.util.Calendar DAY_OF_WEEK
+staticField java.util.Calendar DAY_OF_WEEK_IN_MONTH
+staticField java.util.Calendar DAY_OF_YEAR
+staticField java.util.Calendar DECEMBER
+staticField java.util.Calendar DST_OFFSET
+staticField java.util.Calendar ERA
+staticField java.util.Calendar FEBRUARY
+staticField java.util.Calendar FIELD_COUNT
+staticField java.util.Calendar FRIDAY
+staticField java.util.Calendar HOUR
+staticField java.util.Calendar HOUR_OF_DAY
+staticField java.util.Calendar JANUARY
+staticField java.util.Calendar JULY
+staticField java.util.Calendar JUNE
+staticField java.util.Calendar LONG
+staticField java.util.Calendar LONG_FORMAT
+staticField java.util.Calendar LONG_STANDALONE
+staticField java.util.Calendar MARCH
+staticField java.util.Calendar MAY
+staticField java.util.Calendar MILLISECOND
+staticField java.util.Calendar MINUTE
+staticField java.util.Calendar MONDAY
+staticField java.util.Calendar MONTH
+staticField java.util.Calendar NARROW_FORMAT
+staticField java.util.Calendar NARROW_STANDALONE
+staticField java.util.Calendar NOVEMBER
+staticField java.util.Calendar OCTOBER
+staticField java.util.Calendar PM
+staticField java.util.Calendar SATURDAY
+staticField java.util.Calendar SECOND
+staticField java.util.Calendar SEPTEMBER
+staticField java.util.Calendar SHORT
+staticField java.util.Calendar SHORT_FORMAT
+staticField java.util.Calendar SHORT_STANDALONE
+staticField java.util.Calendar SUNDAY
+staticField java.util.Calendar THURSDAY
+staticField java.util.Calendar TUESDAY
+staticField java.util.Calendar UNDECIMBER
+staticField java.util.Calendar WEDNESDAY
+staticField java.util.Calendar WEEK_OF_MONTH
+staticField java.util.Calendar WEEK_OF_YEAR
+staticField java.util.Calendar YEAR
+staticField java.util.Calendar ZONE_OFFSET
+method java.util.Calendar add int int
+method java.util.Calendar after java.lang.Object
+method java.util.Calendar before java.lang.Object
+method java.util.Calendar clear
+method java.util.Calendar clear int
+method java.util.Calendar compareTo java.util.Calendar
+method java.util.Calendar get int
+method java.util.Calendar getActualMaximum int
+method java.util.Calendar getActualMinimum int
+staticMethod java.util.Calendar getAvailableCalendarTypes
+staticMethod java.util.Calendar getAvailableLocales
+method java.util.Calendar getCalendarType
+method java.util.Calendar getDisplayName int int java.util.Locale
+method java.util.Calendar getDisplayNames int int java.util.Locale
+method java.util.Calendar getFirstDayOfWeek
+method java.util.Calendar getGreatestMinimum int
+staticMethod java.util.Calendar getInstance
+staticMethod java.util.Calendar getInstance java.util.Locale
+staticMethod java.util.Calendar getInstance java.util.TimeZone
+staticMethod java.util.Calendar getInstance java.util.TimeZone java.util.Locale
+method java.util.Calendar getLeastMaximum int
+method java.util.Calendar getMaximum int
+method java.util.Calendar getMinimalDaysInFirstWeek
+method java.util.Calendar getMinimum int
+method java.util.Calendar getTime
+method java.util.Calendar getTimeInMillis
+method java.util.Calendar getTimeZone
+method java.util.Calendar getWeekYear
+method java.util.Calendar getWeeksInWeekYear
+method java.util.Calendar isLenient
+method java.util.Calendar isSet int
+method java.util.Calendar isWeekDateSupported
+method java.util.Calendar roll int boolean
+method java.util.Calendar roll int int
+method java.util.Calendar set int int
+method java.util.Calendar set int int int
+method java.util.Calendar set int int int int int
+method java.util.Calendar set int int int int int int
+method java.util.Calendar setFirstDayOfWeek int
+method java.util.Calendar setLenient boolean
+method java.util.Calendar setMinimalDaysInFirstWeek int
+method java.util.Calendar setTime java.util.Date
+method java.util.Calendar setTimeInMillis long
+method java.util.Calendar setTimeZone java.util.TimeZone
+method java.util.Calendar setWeekDate int int int
+method java.util.Calendar toInstant
+method java.util.Collection add java.lang.Object
+method java.util.Collection addAll java.util.Collection
+method java.util.Collection contains java.lang.Object
+method java.util.Collection containsAll java.util.Collection
+method java.util.Collection isEmpty
+method java.util.Collection remove java.lang.Object
+method java.util.Collection removeAll java.util.Collection
+method java.util.Collection retainAll java.util.Collection
+method java.util.Collection size
+staticMethod java.util.Collections addAll java.util.Collection java.lang.Object[]
+staticMethod java.util.Collections asLifoQueue java.util.Deque
+staticMethod java.util.Collections binarySearch java.util.List java.lang.Object
+staticMethod java.util.Collections binarySearch java.util.List java.lang.Object java.util.Comparator
+staticMethod java.util.Collections checkedCollection java.util.Collection java.lang.Class
+staticMethod java.util.Collections checkedList java.util.List java.lang.Class
+staticMethod java.util.Collections checkedMap java.util.Map java.lang.Class java.lang.Class
+staticMethod java.util.Collections checkedSortedMap java.util.SortedMap java.lang.Class java.lang.Class
+staticMethod java.util.Collections checkedSortedSet java.util.SortedSet java.lang.Class
+staticMethod java.util.Collections copy java.util.List java.util.List
+staticMethod java.util.Collections disjoint java.util.Collection java.util.Collection
+staticMethod java.util.Collections emptyEnumeration
+staticMethod java.util.Collections emptyIterator
+staticMethod java.util.Collections emptyList
+staticMethod java.util.Collections emptyListIterator
+staticMethod java.util.Collections emptyMap
+staticMethod java.util.Collections emptySet
+staticMethod java.util.Collections enumeration java.util.Collection
+staticMethod java.util.Collections fill java.util.List java.lang.Object
+staticMethod java.util.Collections frequency java.util.Collection java.lang.Object
+staticMethod java.util.Collections indexOfSubList java.util.List java.util.List
+staticMethod java.util.Collections lastIndexOfSubList java.util.List java.util.List
+staticMethod java.util.Collections list java.util.Enumeration
+staticMethod java.util.Collections max java.util.Collection
+staticMethod java.util.Collections max java.util.Collection java.util.Comparator
+staticMethod java.util.Collections min java.util.Collection
+staticMethod java.util.Collections min java.util.Collection java.util.Comparator
+staticMethod java.util.Collections nCopies int java.lang.Object
+staticMethod java.util.Collections newSetFromMap java.util.Map
+staticMethod java.util.Collections replaceAll java.util.List java.lang.Object java.lang.Object
+staticMethod java.util.Collections reverse java.util.List
+staticMethod java.util.Collections reverseOrder
+staticMethod java.util.Collections reverseOrder java.util.Comparator
+staticMethod java.util.Collections rotate java.util.List int
+staticMethod java.util.Collections shuffle java.util.List
+staticMethod java.util.Collections shuffle java.util.List java.util.Random
+staticMethod java.util.Collections singleton java.lang.Object
+staticMethod java.util.Collections singletonList java.lang.Object
+staticMethod java.util.Collections singletonMap java.lang.Object java.lang.Object
+staticMethod java.util.Collections sort java.util.List
+staticMethod java.util.Collections sort java.util.List java.util.Comparator
+staticMethod java.util.Collections swap java.util.List int int
+staticMethod java.util.Collections synchronizedCollection java.util.Collection
+staticMethod java.util.Collections synchronizedList java.util.List
+staticMethod java.util.Collections synchronizedMap java.util.Map
+staticMethod java.util.Collections synchronizedSet java.util.Set
+staticMethod java.util.Collections synchronizedSortedMap java.util.SortedMap
+staticMethod java.util.Collections synchronizedSortedSet java.util.SortedSet
+staticMethod java.util.Collections unmodifiableCollection java.util.Collection
+staticMethod java.util.Collections unmodifiableList java.util.List
+staticMethod java.util.Collections unmodifiableMap java.util.Map
+staticMethod java.util.Collections unmodifiableSet java.util.Set
+staticMethod java.util.Collections unmodifiableSortedMap java.util.SortedMap
+staticMethod java.util.Collections unmodifiableSortedSet java.util.SortedSet
+method java.util.Comparator compare java.lang.Object java.lang.Object
+new java.util.Date
+method java.util.Date after java.util.Date
+method java.util.Date before java.util.Date
+method java.util.Date getDate
+method java.util.Date getDay
+method java.util.Date getHours
+method java.util.Date getMinutes
+method java.util.Date getMonth
+method java.util.Date getSeconds
+method java.util.Date getTime
+method java.util.Date getTimezoneOffset
+method java.util.Date getYear
+new java.util.Date long
+staticMethod java.util.Date parse java.lang.String
+method java.util.Date setDate int
+method java.util.Date setHours int
+method java.util.Date setMinutes int
+method java.util.Date setMonth int
+method java.util.Date setSeconds int
+method java.util.Date setTime long
+method java.util.Date setYear int
+method java.util.Date toGMTString
+method java.util.Date toLocaleString
+new java.util.HashMap
+new java.util.HashMap java.util.Map
+new java.util.HashSet
+new java.util.HashSet java.util.Collection
+method java.util.Iterator hasNext
+method java.util.Iterator next
+new java.util.LinkedHashSet
+method java.util.List add int java.lang.Object
+method java.util.List get int
+method java.util.List indexOf java.lang.Object
+method java.util.List remove int
+method java.util.List subList int int
+staticField java.util.Locale CANADA
+staticField java.util.Locale CANADA_FRENCH
+staticField java.util.Locale CHINESE
+staticField java.util.Locale ENGLISH
+staticField java.util.Locale FRANCE
+staticField java.util.Locale FRENCH
+staticField java.util.Locale GERMAN
+staticField java.util.Locale GERMANY
+staticField java.util.Locale ITALIAN
+staticField java.util.Locale ITALY
+staticField java.util.Locale JAPAN
+staticField java.util.Locale JAPANESE
+staticField java.util.Locale KOREA
+staticField java.util.Locale KOREAN
+staticField java.util.Locale ROOT
+staticField java.util.Locale SIMPLIFIED_CHINESE
+staticField java.util.Locale TRADITIONAL_CHINESE
+staticField java.util.Locale UK
+staticField java.util.Locale US
+method java.util.Map clear
+method java.util.Map containsKey java.lang.Object
+method java.util.Map containsValue java.lang.Object
+method java.util.Map entrySet
+method java.util.Map get java.lang.Object
+method java.util.Map getOrDefault java.lang.Object java.lang.Object
+method java.util.Map isEmpty
+method java.util.Map keySet
+method java.util.Map put java.lang.Object java.lang.Object
+method java.util.Map putAll java.util.Map
+method java.util.Map putIfAbsent java.lang.Object java.lang.Object
+method java.util.Map remove java.lang.Object
+method java.util.Map replace java.lang.Object java.lang.Object
+method java.util.Map replace java.lang.Object java.lang.Object java.lang.Object
+method java.util.Map size
+method java.util.Map values
+method java.util.Map$Entry getKey
+method java.util.Map$Entry getValue
+staticMethod java.util.Objects hash java.lang.Object[]
+staticMethod java.util.Objects requireNonNull java.lang.Object
+staticMethod java.util.Objects requireNonNull java.lang.Object java.lang.String
+new java.util.Random
+new java.util.Random long
+method java.util.Random nextBoolean
+method java.util.Random nextBytes byte[]
+method java.util.Random nextDouble
+method java.util.Random nextFloat
+method java.util.Random nextGaussian
+method java.util.Random nextInt
+method java.util.Random nextInt int
+method java.util.Random nextLong
+staticMethod java.util.TimeZone getTimeZone java.lang.String
+new java.util.TreeMap
+new java.util.TreeSet
+staticMethod java.util.UUID randomUUID
+method java.util.concurrent.Callable call
+staticField java.util.concurrent.TimeUnit HOURS
+staticField java.util.concurrent.TimeUnit MILLISECONDS
+staticField java.util.concurrent.TimeUnit MINUTES
+staticField java.util.concurrent.TimeUnit SECONDS
+method java.util.random.RandomGenerator nextBoolean
+method java.util.random.RandomGenerator nextBytes byte[]
+method java.util.random.RandomGenerator nextDouble
+method java.util.random.RandomGenerator nextFloat
+method java.util.random.RandomGenerator nextGaussian
+method java.util.random.RandomGenerator nextInt
+method java.util.random.RandomGenerator nextInt int
+method java.util.random.RandomGenerator nextLong
+method java.util.regex.MatchResult end
+method java.util.regex.MatchResult end int
+method java.util.regex.MatchResult group
+method java.util.regex.MatchResult group int
+method java.util.regex.MatchResult groupCount
+method java.util.regex.MatchResult start
+method java.util.regex.MatchResult start int
+method java.util.regex.Matcher appendReplacement java.lang.StringBuffer java.lang.String
+method java.util.regex.Matcher appendTail java.lang.StringBuffer
+method java.util.regex.Matcher end java.lang.String
+method java.util.regex.Matcher find
+method java.util.regex.Matcher find int
+method java.util.regex.Matcher group java.lang.String
+method java.util.regex.Matcher hasAnchoringBounds
+method java.util.regex.Matcher hasTransparentBounds
+method java.util.regex.Matcher hitEnd
+method java.util.regex.Matcher lookingAt
+method java.util.regex.Matcher matches
+method java.util.regex.Matcher pattern
+staticMethod java.util.regex.Matcher quoteReplacement java.lang.String
+method java.util.regex.Matcher region int int
+method java.util.regex.Matcher regionEnd
+method java.util.regex.Matcher regionStart
+method java.util.regex.Matcher replaceAll java.lang.String
+method java.util.regex.Matcher replaceFirst java.lang.String
+method java.util.regex.Matcher requireEnd
+method java.util.regex.Matcher reset
+method java.util.regex.Matcher reset java.lang.CharSequence
+method java.util.regex.Matcher start java.lang.String
+method java.util.regex.Matcher toMatchResult
+method java.util.regex.Matcher useAnchoringBounds boolean
+method java.util.regex.Matcher usePattern java.util.regex.Pattern
+method java.util.regex.Matcher useTransparentBounds boolean
+staticMethod java.util.regex.Pattern compile java.lang.String
+staticMethod java.util.regex.Pattern compile java.lang.String int
+method java.util.regex.Pattern flags
+method java.util.regex.Pattern matcher java.lang.CharSequence
+staticMethod java.util.regex.Pattern matches java.lang.String java.lang.CharSequence
+method java.util.regex.Pattern pattern
+staticMethod java.util.regex.Pattern quote java.lang.String
+method java.util.regex.Pattern split java.lang.CharSequence
+method java.util.regex.Pattern split java.lang.CharSequence int
+method net.sf.json.JSON isArray
+method net.sf.json.JSON isEmpty
+method net.sf.json.JSON size
+
+
+# More Groovy:
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods downto java.util.Calendar java.util.Calendar groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods downto java.util.Date java.util.Date groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods format java.util.Calendar java.lang.String
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods format java.util.Date java.lang.String
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods format java.util.Date java.lang.String java.util.TimeZone
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods getAt java.util.Calendar int
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods getAt java.util.Date int
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods getDateString java.util.Date
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods getDateTimeString java.util.Date
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods getTimeString java.util.Date
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods minus java.util.Calendar java.util.Calendar
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods minus java.util.Date int
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods minus java.util.Date java.util.Date
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods next java.util.Calendar
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods next java.util.Date
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods plus java.util.Date int
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods previous java.util.Calendar
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods previous java.util.Date
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods putAt java.util.Calendar int int
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods putAt java.util.Date int int
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods set java.util.Calendar java.util.Map
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods set java.util.Date java.util.Map
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods toCalendar java.util.Date
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods upto java.util.Calendar java.util.Calendar groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DateGroovyMethods upto java.util.Date java.util.Date groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods abs java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods addAll java.util.Collection java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods and java.lang.Boolean java.lang.Boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods any java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods any java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods any java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods asBoolean java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods asBoolean java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods asImmutable java.util.Map
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods capitalize java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collate java.lang.Iterable int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collate java.lang.Iterable int boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collate java.lang.Iterable int int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collate java.lang.Iterable int int boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collate java.util.List int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collate java.util.List int boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collate java.util.List int int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collate java.util.List int int boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collect java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collect java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collect java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collect java.util.Collection java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collect java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collect java.util.Map java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectEntries java.lang.Iterable java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectEntries java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectEntries java.lang.Object[] java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectEntries java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectEntries java.util.Collection java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectEntries java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectEntries java.util.Iterator java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectEntries java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectEntries java.util.Map java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectMany java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectMany java.lang.Iterable java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectMany java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectMany java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectMany java.util.Collection java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectMany java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectMany java.util.Map java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectNested java.lang.Iterable java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectNested java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collectNested java.util.Collection java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods combinations java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains boolean[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains byte[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains char[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains double[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains float[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains int[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains java.lang.Iterable java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains java.lang.Object[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains long[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods contains short[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods containsAll java.lang.Iterable java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods count java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods count java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods count java.lang.Object[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods count java.lang.String java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods count java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods count java.util.Collection java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods count java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods count java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods countBy java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods countBy java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods countBy java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods countBy java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods countBy java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods disjoint java.util.Collection java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods drop java.lang.Iterable int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods drop java.util.List int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods dropRight java.lang.Iterable int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods dropRight java.util.List int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods each java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods each java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods each java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods each java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods each java.util.List groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods each java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods each java.util.Set groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods each java.util.SortedSet groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachLine java.lang.CharSequence groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachLine java.lang.CharSequence int groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachLine java.lang.String groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachLine java.lang.String int groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachPermutation java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachWithIndex java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachWithIndex java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachWithIndex java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachWithIndex java.util.List groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachWithIndex java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachWithIndex java.util.Set groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods eachWithIndex java.util.SortedSet groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods every java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods every java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods every java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods every java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods find java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods find java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods find java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findAll java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findAll java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findAll java.util.List groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findAll java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findAll java.util.Set groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findIndexOf java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findIndexOf java.lang.Object int groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findIndexValues java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findIndexValues java.lang.Object java.lang.Number groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findLastIndexOf java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findLastIndexOf java.lang.Object int groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findResult java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findResult java.util.Collection java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findResult java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findResult java.util.Map java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findResults java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods findResults java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods first java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods first java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods first java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods flatten java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods flatten java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods get java.util.Map java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.Iterable int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.Object[] groovy.lang.IntRange
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.Object[] groovy.lang.Range
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.Object[] java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.String groovy.lang.IntRange
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.String groovy.lang.Range
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.String int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.lang.String java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.util.List groovy.lang.Range
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.util.List int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.util.List java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.util.Map java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getAt java.util.regex.Matcher int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods getChars java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods groupBy java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods groupBy java.lang.Iterable java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods groupBy java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods groupBy java.lang.Object[] java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods groupBy java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods groupBy java.util.Collection java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods groupBy java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods groupBy java.util.Map java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods groupEntriesBy java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods inject java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods inject java.lang.Object java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods inject java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods inject java.lang.Object[] java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods inject java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods inject java.util.Collection java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods inject java.util.Iterator java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods inject java.util.Map java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods intersect java.util.Set java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods isCase java.util.Collection java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods isInteger java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods isNumber java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods iterator java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join boolean[] java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join byte[] java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join char[] java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join double[] java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join float[] java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join int[] java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join java.lang.Iterable java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join java.lang.Object[] java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join java.util.Collection java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join java.util.Iterator java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join long[] java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods join short[] java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods last java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods last java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods last java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.io.Writer java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.lang.String java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.lang.StringBuffer java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.util.Collection java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.util.List java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.util.Map java.util.Map
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods leftShift java.util.Set java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods max java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods max java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods max java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods max java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods max java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods min java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods min java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods min java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods min java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods min java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.Character java.lang.Character
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.Character java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.Iterable java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.Iterable java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.Number java.lang.Character
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.Object[] java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.Object[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.Object[] java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.lang.String java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.Collection java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.List java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.List java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.List java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.Map java.util.Map
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.Set java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.Set java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.Set java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.SortedSet java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.SortedSet java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods minus java.util.SortedSet java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods multiply java.lang.String java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods next java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods or java.lang.Boolean java.lang.Boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods padLeft java.lang.CharSequence java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods padLeft java.lang.CharSequence java.lang.Number java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods padLeft java.lang.String java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods padLeft java.lang.String java.lang.Number java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods padRight java.lang.CharSequence java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods padRight java.lang.CharSequence java.lang.Number java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods padRight java.lang.String java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods padRight java.lang.String java.lang.Number java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods permutations java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods permutations java.util.List groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.CharSequence java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Character java.lang.Character
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Character java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Iterable java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Iterable java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Number java.lang.Character
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Number java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Object[] java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Object[] java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Object[] java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.Object[] java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.String java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.lang.StringBuffer java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.Collection java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.Collection java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.Collection java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.List int java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.List int java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.List int java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.List java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.List java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.List java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.Map java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.Map java.util.Map
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.Set java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.Set java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.Set java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.SortedSet java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.SortedSet java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods plus java.util.SortedSet java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods pop java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods power java.lang.Integer java.lang.Integer
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods power java.lang.Long java.lang.Integer
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods power java.lang.Number java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods power java.math.BigDecimal java.lang.Integer
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods power java.math.BigInteger java.lang.Integer
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods previous java.lang.Number
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods push java.util.List java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods putAll java.util.Map java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods putAt java.util.List int java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods putAt java.util.Map java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods removeAll java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods retainAll java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods reverse java.util.Iterator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods reverse java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods reverseEach java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods reverseEach java.util.List groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods reverseEach java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size boolean[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size byte[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size char[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size double[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size float[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size int[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size java.lang.StringBuffer
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size long[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods size short[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Iterable boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Iterable boolean groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Iterable boolean java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Object[] boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Object[] boolean groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Object[] boolean java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.lang.Object[] java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.util.Collection java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.util.Iterator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.util.Iterator java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.util.Map
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sort java.util.Map java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods split java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods split java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods split java.util.List groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods split java.util.Set groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods splitEachLine java.lang.String java.lang.String groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods splitEachLine java.lang.String java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods stripIndent java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods stripIndent java.lang.String int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods stripMargin java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods stripMargin java.lang.String java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods subMap java.util.Map java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods subMap java.util.Map java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sum java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sum java.lang.Object[] java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sum java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sum java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods sum java.util.Collection java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods tail java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods take java.lang.CharSequence int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods take java.lang.Iterable int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods take java.util.List int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods takeRight java.lang.Iterable int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods takeRight java.util.List int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods times java.lang.Number groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toBoolean java.lang.Boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toBoolean java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toDouble java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toInteger java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList boolean[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList byte[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList char[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList double[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList float[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList int[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList java.util.Enumeration
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList java.util.Iterator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList long[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toList short[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toListString java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toListString java.util.Collection int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toLong java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toMapString java.util.Map
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toMapString java.util.Map int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSet java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.lang.Iterable
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.lang.Iterable groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.lang.Iterable java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.lang.Object[]
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.lang.Object[] groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.lang.Object[] java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.util.Iterator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.util.Iterator java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.util.Map
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.util.Map java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.util.SortedMap
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods toSorted java.util.SortedSet
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods tokenize java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods tokenize java.lang.String java.lang.Character
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods tokenize java.lang.String java.lang.String
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods transpose java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.Collection boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.Collection boolean groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.Collection boolean java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.Collection groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.Collection java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.Iterator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.Iterator groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.Iterator java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.List
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.List boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.List boolean groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.List boolean java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.List groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods unique java.util.List java.util.Comparator
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods with java.lang.Object groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods withDefault java.util.List groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods withDefault java.util.Map groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods withLazyDefault java.util.List groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods xor java.lang.Boolean java.lang.Boolean
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport createSimilarCollection java.util.Collection
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport createSimilarCollection java.util.Collection int
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport createSimilarMap java.util.Map
+staticMethod org.codehaus.groovy.runtime.InvokerHelper asIterator java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter bitwiseNegate java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareEqual java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareGreaterThan java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareGreaterThanEqual java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareIdentical java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareLessThan java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareLessThanEqual java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareNotEqual java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareNotIdentical java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter compareTo java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter createRange java.lang.Object java.lang.Object boolean
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter findRegex java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter isCase java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.ScriptBytecodeAdapter matchRegex java.lang.Object java.lang.Object
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods capitalize java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods capitalize java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods center java.lang.CharSequence java.lang.Number
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods center java.lang.CharSequence java.lang.Number java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods center java.lang.String java.lang.Number
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods center java.lang.String java.lang.Number java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods count java.lang.CharSequence java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods count java.lang.String java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods denormalize java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods denormalize java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods drop java.lang.CharSequence int
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods dropWhile java.lang.CharSequence groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods eachMatch java.lang.String java.lang.String groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods eachMatch java.lang.String java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods endsWithAny java.lang.CharSequence java.lang.CharSequence[]
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods expand java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods expand java.lang.CharSequence int
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods expand java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods expand java.lang.String int
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods expandLine java.lang.CharSequence int
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods expandLine java.lang.String int
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods find java.lang.CharSequence java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods find java.lang.CharSequence java.lang.CharSequence groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods find java.lang.CharSequence java.util.regex.Pattern
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods find java.lang.CharSequence java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods find java.lang.String java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods find java.lang.String java.lang.String groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods find java.lang.String java.util.regex.Pattern
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods find java.lang.String java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods findAll java.lang.CharSequence java.lang.CharSequence groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods findAll java.lang.CharSequence java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods findAll java.lang.String java.lang.String groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods findAll java.lang.String java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isAllWhitespace java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isAllWhitespace java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isDouble java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isDouble java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isFloat java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isFloat java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isInteger java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isInteger java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isLong java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods isLong java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods minus java.lang.CharSequence java.lang.Object
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods minus java.lang.CharSequence java.util.regex.Pattern
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods minus java.lang.String java.lang.Object
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods minus java.lang.String java.util.regex.Pattern
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods multiply java.lang.CharSequence java.lang.Number
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods multiply java.lang.String java.lang.Number
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods normalize java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods normalize java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods padLeft java.lang.CharSequence java.lang.Number
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods padLeft java.lang.CharSequence java.lang.Number java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods padLeft java.lang.String java.lang.Number
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods padLeft java.lang.String java.lang.Number java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods padRight java.lang.CharSequence java.lang.Number
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods padRight java.lang.CharSequence java.lang.Number java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods padRight java.lang.String java.lang.Number
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods padRight java.lang.String java.lang.Number java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods readLines java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods readLines java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods replaceAll java.lang.CharSequence java.lang.CharSequence groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods replaceAll java.lang.CharSequence java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods replaceAll java.lang.String java.lang.String groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods replaceAll java.lang.String java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods replaceFirst java.lang.CharSequence java.lang.CharSequence groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods replaceFirst java.lang.CharSequence java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods replaceFirst java.lang.String java.lang.String groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods replaceFirst java.lang.String java.util.regex.Pattern groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods reverse java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods startsWithAny java.lang.CharSequence java.lang.CharSequence[]
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods takeWhile groovy.lang.GString groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods takeWhile java.lang.CharSequence groovy.lang.Closure
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods toBoolean java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods toDouble java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods toDouble java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods toInteger java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods toInteger java.lang.String
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods tr java.lang.CharSequence java.lang.CharSequence java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpand java.lang.CharSequence
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpand java.lang.CharSequence int
+staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpandLine java.lang.CharSequence int
+
+# Currently called indirectly from Builder.sandboxCast; cf. comment in SandboxInvokerTest.typeCoercion:
+staticMethod org.kohsuke.groovy.sandbox.impl.Checker checkedCast java.lang.Class java.lang.Object boolean boolean boolean

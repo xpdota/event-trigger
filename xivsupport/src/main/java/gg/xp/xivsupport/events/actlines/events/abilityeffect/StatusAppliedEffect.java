@@ -4,7 +4,13 @@ import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.models.XivStatusEffect;
 
-public class StatusAppliedEffect extends AbilityEffect {
+import java.io.Serial;
+import java.io.Serializable;
+
+public class StatusAppliedEffect extends AbilityEffect implements Serializable {
+
+	@Serial
+	private static final long serialVersionUID = -8307994316154164152L;
 	private final XivStatusEffect status;
 	private final int rawStacks;
 	private final int stacks;
@@ -49,14 +55,18 @@ public class StatusAppliedEffect extends AbilityEffect {
 	@Override
 	public String getBaseDescription() {
 		StatusEffectInfo sei = StatusEffectLibrary.forId(status.getId());
-		long flags = getFlags();
-		byte param1 = (byte) (flags >> 24);
-		byte param2 = (byte) (flags >> 16);
-		byte param3 = (byte) (flags >> 8);
-		String formatted = String.format("Applied Status 0x%x (%s) to %s (params: %s %s %s)", status.getId(), sei == null ? "Unknown" : sei.name(), onTarget ? "Target" : "Caster", param1, param2, param3);
+		String formatted = String.format("Applied Status 0x%x (%s) to %s (params: %s)", status.getId(), sei == null ? "Unknown" : sei.name(), onTarget ? "Target" : "Caster", getPreAppFlagsFormatted());
 		if (stacks > 0) {
 			formatted += String.format(" (%s stacks)", stacks);
 		}
 		return formatted;
+	}
+
+	public String getPreAppFlagsFormatted() {
+		long flags = getFlags();
+		byte param1 = (byte) (flags >> 24);
+		byte param2 = (byte) (flags >> 16);
+		byte param3 = (byte) (flags >> 8);
+		return String.format("%s %s %s", param1, param2, param3);
 	}
 }

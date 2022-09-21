@@ -1,10 +1,10 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
-public class ParriedDamageEffect extends AbilityEffect implements DamageEffect {
+public class ParriedDamageEffect extends BaseDamageEffect implements HasDamageModifier {
 	private final long amount;
 
-	public ParriedDamageEffect(long flags, long value, long amount) {
-		super(flags, value, AbilityEffectType.PARRIED);
+	public ParriedDamageEffect(long flags, long value, long amount, HitSeverity severity) {
+		super(flags, value, amount, severity, AbilityEffectType.PARRIED);
 		this.amount = amount;
 	}
 
@@ -14,12 +14,17 @@ public class ParriedDamageEffect extends AbilityEffect implements DamageEffect {
 	}
 
 	@Override
-	public String toString() {
-		return String.format("Parry(%s)", amount);
+	protected String shortName() {
+		return "Parry";
 	}
 
 	@Override
-	public String getBaseDescription() {
-		return String.format("Parried: %s", amount);
+	protected String longName() {
+		return "Parried";
+	}
+
+	@Override
+	public int getModifier() {
+		return getRawModifierByte();
 	}
 }

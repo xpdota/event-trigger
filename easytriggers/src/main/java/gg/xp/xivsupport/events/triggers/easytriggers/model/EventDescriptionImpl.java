@@ -1,16 +1,18 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public final class EventDescriptionImpl<X> implements EventDescription<X> {
-	private final Class<X> type;
-	private final String description;
-	private final String defaultText;
-	private final String defaultTts;
-	private final List<Supplier<Condition<? super X>>> defaultFilters;
+public class EventDescriptionImpl<X> implements EventDescription<X> {
+	protected final Class<X> type;
+	protected final String description;
+	protected final String defaultText;
+	protected final String defaultTts;
+	protected final List<Supplier<Condition<? super X>>> defaultFilters;
 	public EventDescriptionImpl(
 			Class<X> type,
 			String description,
@@ -69,8 +71,7 @@ public final class EventDescriptionImpl<X> implements EventDescription<X> {
 	public EasyTrigger<X> newEmptyInst() {
 		EasyTrigger<X> easy = new EasyTrigger<>();
 		easy.setEventType(type);
-		easy.setTts(defaultTts);
-		easy.setText(defaultText);
+		easy.addAction(defaultCallout());
 		return easy;
 	}
 
@@ -78,10 +79,16 @@ public final class EventDescriptionImpl<X> implements EventDescription<X> {
 	public EasyTrigger<X> newDefaultInst() {
 		EasyTrigger<X> easy = new EasyTrigger<>();
 		easy.setEventType(type);
-		easy.setTts(defaultTts);
-		easy.setText(defaultText);
+		easy.addAction(defaultCallout());
 		defaultFilters.forEach(fp -> easy.addCondition(fp.get()));
 		return easy;
+	}
+
+	protected Action<? super X> defaultCallout() {
+		CalloutAction call = new CalloutAction();
+		call.setTts(defaultTts);
+		call.setText(defaultText);
+		return (Action<? super X>) call;
 	}
 
 	/**

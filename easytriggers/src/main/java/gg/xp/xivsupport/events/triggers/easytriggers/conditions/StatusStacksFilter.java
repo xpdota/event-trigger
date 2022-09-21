@@ -1,11 +1,11 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 
 
-public class StatusStacksFilter implements Condition<HasStatusEffect> {
+public class StatusStacksFilter implements SimpleCondition<HasStatusEffect> {
 
 	public NumericOperator operator = NumericOperator.EQ;
 	@Description("Stacks")

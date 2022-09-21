@@ -6,6 +6,7 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,8 +110,8 @@ public final class SqtTemplates {
 		};
 		return new AutoWipeSequentialTrigger<>(timeoutMs, startType, startCondition, combined) {
 			@Override
-			void onWipe() {
-				super.onWipe();
+			void reset() {
+				super.reset();
 				mint.setValue(0);
 			}
 		};
@@ -149,13 +150,13 @@ public final class SqtTemplates {
 
 		@Override
 		public void feed(EventContext ctx, BaseEvent event) {
-			if (event instanceof WipeEvent) {
-				onWipe();
+			if (event instanceof WipeEvent || event instanceof PullStartedEvent) {
+				reset();
 			}
 			super.feed(ctx, event);
 		}
 
-		void onWipe() {
+		void reset() {
 			forceExpire();
 		}
 

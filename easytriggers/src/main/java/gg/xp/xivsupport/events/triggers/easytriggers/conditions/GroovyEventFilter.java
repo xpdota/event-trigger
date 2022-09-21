@@ -6,12 +6,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
+import gg.xp.xivsupport.groovy.GroovyManager;
+import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import groovy.lang.Script;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class GroovyEventFilter implements Condition<Event> {
@@ -26,6 +32,9 @@ public class GroovyEventFilter implements Condition<Event> {
 	private boolean strict = true;
 	@JsonIgnore
 	private Predicate<? extends Event> groovyCompiledScript;
+	@JsonIgnore
+	private volatile Throwable lastError;
+	private volatile EasyTriggerContext currentContext;
 
 	public GroovyEventFilter(@JacksonInject GroovyManager mgr) {
 		this.mgr = mgr;
@@ -82,18 +91,55 @@ public class GroovyEventFilter implements Condition<Event> {
 		String shortClassName = eventType.getSimpleName();
 		String varName = "event";
 		String checkType = strict ? "@CompileStatic" : "";
+//		String inJavaForm = """
+//				import %s;
+//				new Predicate<%s>() {
+//					%s
+//					@Override
+//					public boolean test(%s %s) {
+//						%s
+//					}
+//				};
+//				""".formatted(longClassName, shortClassName, checkType, shortClassName, varName, script);
 		String inJavaForm = """
-				import %s;
-				new Predicate<%s>() {
+				%s
+				public boolean test(%s %s) {
 					%s
-					@Override
-					public boolean test(%s %s) {
-						%s
+				}
+				Predicate<%s> myPredicate = this::test;
+				return myPredicate;
+				""".formatted(checkType, longClassName, varName, script, longClassName);
+		try (SandboxScope ignored = mgr.getSandbox().enter()) {
+			Script parsedScript = shell.parse(inJavaForm);
+			Binding originalBinding = parsedScript.getBinding();
+			// TODO: does getVariables() also need to be overridden?
+			// TODO: make this more official
+			Binding mergedBinding = new Binding(originalBinding.getVariables()) {
+				@Override
+				public Object getVariable(String name) {
+					Object extra = currentContext.getExtraVariables().get(name);
+					if (extra != null) {
+						return extra;
 					}
-				};
-				""".formatted(longClassName, shortClassName, checkType, shortClassName, varName, script);
-		return (Predicate<? extends Event>) shell.evaluate(inJavaForm);
+					return super.getVariable(name);
+				}
+
+				@Override
+				public void setVariable(String name, Object value) {
+					currentContext.addVariable(name, value);
+				}
+
+				@Override
+				public boolean hasVariable(String name) {
+					return currentContext.getExtraVariables().containsKey(name) || super.hasVariable(name);
+				}
+			};
+			parsedScript.setBinding(mergedBinding);
+			return (Predicate<? extends Event>) parsedScript.run();
+		}
+
 	}
+
 
 	@Override
 	public String fixedLabel() {
@@ -105,9 +151,12 @@ public class GroovyEventFilter implements Condition<Event> {
 		return "(Groovy Expression)";
 	}
 
-	@SuppressWarnings("unchecked")
+	public Throwable getLastError() {
+		return lastError;
+	}
+
 	@Override
-	public boolean test(Event event) {
+	public boolean test(EasyTriggerContext context, Event event) {
 		if (groovyCompiledScript == null) {
 			try {
 				groovyCompiledScript = compile(groovyScript);
@@ -118,7 +167,18 @@ public class GroovyEventFilter implements Condition<Event> {
 			}
 		}
 		if (eventType.isInstance(event)) {
-			return ((Predicate<Event>) groovyCompiledScript).test(event);
+			currentContext = context;
+			try (SandboxScope ignored = mgr.getSandbox().enter()) {
+				return ((Predicate<Event>) groovyCompiledScript).test(event);
+			}
+			catch (Throwable t) {
+				log.error("Easy trigger Groovy script encountered an error (returning false)", t);
+				lastError = t;
+				return false;
+			}
+			finally {
+				currentContext = null;
+			}
 		}
 		else {
 			return false;

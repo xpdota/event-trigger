@@ -2,9 +2,9 @@ package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
 public abstract class AbilityEffect {
 
-	private final long flags;
-	private final long value;
-	private final AbilityEffectType effectType;
+	protected final long flags;
+	protected final long value;
+	protected final AbilityEffectType effectType;
 
 	protected AbilityEffect(long flags, long value, AbilityEffectType effectType) {
 		this.flags = flags;

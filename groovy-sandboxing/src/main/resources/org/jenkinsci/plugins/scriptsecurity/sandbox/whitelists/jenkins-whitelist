@@ -1,0 +1,38 @@
+# Useful Jenkins API methods:
+new hudson.EnvVars
+method hudson.model.AbstractBuild getEnvironments
+method hudson.model.BallColor getHtmlBaseColor
+staticMethod hudson.model.Environment create hudson.EnvVars
+method hudson.model.Item getParent
+method hudson.model.ModelObject getDisplayName
+staticField hudson.model.Result ABORTED
+staticField hudson.model.Result FAILURE
+staticField hudson.model.Result NOT_BUILT
+staticField hudson.model.Result SUCCESS
+staticField hudson.model.Result UNSTABLE
+field hudson.model.Result color
+staticMethod hudson.model.Result fromString java.lang.String
+method hudson.model.Run getFullDisplayName
+method hudson.model.User getFullName
+method hudson.model.User getId
+method hudson.scm.ChangeLogSet getItems
+method hudson.scm.ChangeLogSet getKind
+method hudson.scm.ChangeLogSet isEmptySet
+method hudson.scm.ChangeLogSet$AffectedFile getEditType
+method hudson.scm.ChangeLogSet$AffectedFile getPath
+method hudson.scm.ChangeLogSet$Entry getAffectedFiles
+method hudson.scm.ChangeLogSet$Entry getAffectedPaths
+method hudson.scm.ChangeLogSet$Entry getAuthor
+method hudson.scm.ChangeLogSet$Entry getCommitId
+method hudson.scm.ChangeLogSet$Entry getMsg
+method hudson.scm.ChangeLogSet$Entry getMsgAnnotated
+method hudson.scm.ChangeLogSet$Entry getMsgEscaped
+method hudson.scm.ChangeLogSet$Entry getTimestamp
+field hudson.scm.EditType ADD
+field hudson.scm.EditType DELETE
+field hudson.scm.EditType EDIT
+method hudson.scm.EditType getName
+method hudson.tools.ToolInstallation getHome
+method hudson.tools.ToolInstallation getName
+method jenkins.model.CauseOfInterruption getShortDescription
+method jenkins.model.CauseOfInterruption$UserInterruption getUserId

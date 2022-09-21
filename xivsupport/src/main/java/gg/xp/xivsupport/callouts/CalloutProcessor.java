@@ -6,7 +6,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
 import gg.xp.xivsupport.callouts.conversions.PlayerNameConversion;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -19,6 +19,7 @@ import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -132,9 +133,12 @@ public class CalloutProcessor {
 		synchronized (interpLock) {
 			return replacer.matcher(input).replaceAll(m -> {
 				try {
-					Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
-					script.setBinding(binding);
-					Object rawEval = script.run();
+					Object rawEval;
+					try (SandboxScope ignored = groovyMgr.getSandbox().enter()) {
+						Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
+						script.setBinding(binding);
+						rawEval = script.run();
+					}
 					if (rawEval == null) {
 						return "null";
 //						return m.group(0);

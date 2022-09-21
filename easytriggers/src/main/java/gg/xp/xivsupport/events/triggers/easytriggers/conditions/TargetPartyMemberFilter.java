@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.models.XivCombatant;
 
-public class TargetPartyMemberFilter implements Condition<HasTargetEntity> {
+public class TargetPartyMemberFilter implements SimpleCondition<HasTargetEntity> {
 
 	@Description("Invert (not in party)")
 	public boolean invert;

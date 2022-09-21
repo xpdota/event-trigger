@@ -11,13 +11,15 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
-import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.events.state.combatstate.CastResult;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,8 @@ import java.util.Set;
 @CalloutRepo(name = "P5S", duty = KnownDuty.P5S)
 public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P5S.class);
-	private final ModifiableCallout<AbilityCastStart> searingRay = ModifiableCallout.durationBasedCall("Searing Ray", "Go Behind");
+	private final ModifiableCallout<AbilityCastStart> searingRay = ModifiableCallout.durationBasedCall("Searing Ray", "Go Front");
+	// TODO: is this ever used?
 	private final ModifiableCallout<AbilityCastStart> searingRayReflected = ModifiableCallout.durationBasedCall("Searing Ray Reflected", "Go Front");
 	private final ModifiableCallout<AbilityCastStart> rubyGlow = ModifiableCallout.durationBasedCall("Ruby Glow", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> sonicHowl = ModifiableCallout.durationBasedCall("Sonic Howl", "Raidwide");
@@ -45,10 +48,14 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> venomousMass = ModifiableCallout.durationBasedCall("Venomous Mass", "Tankbuster with Bleed");
 	private final ModifiableCallout<AbilityCastStart> clawToTail = ModifiableCallout.durationBasedCall("Claw to Tail", "Go Back then Front");
 	private final ModifiableCallout<AbilityCastStart> tailToClaw = ModifiableCallout.durationBasedCall("Tail to Claw", "Go Front then Back");
-	// Can be deleted? Seems redundant with claw/tail calls
-//	private final ModifiableCallout<AbilityCastStart> ragingClaw = ModifiableCallout.durationBasedCall("Raging Claw", "Go Behind");
+	private final ModifiableCallout<AbilityCastStart> ragingClaw = ModifiableCallout.durationBasedCall("Raging Claw", "Go Behind");
 
-	private final ModifiableCallout<AbilityCastStart> firstRubyGlowSafe = ModifiableCallout.durationBasedCall("First Ruby Ray Safe", "{safe}");
+	private final ModifiableCallout<AbilityCastStart> firstRubyGlowSafe = new ModifiableCallout<>("First Ruby Ray Safe", "{safe}");
+	private final ModifiableCallout<AbilityCastStart> secondRubyGlowStay = new ModifiableCallout<>("Second Ruby Glow: Stay Behind", "Stay Behind");
+	private final ModifiableCallout<AbilityCastStart> secondRubyGlowCross = new ModifiableCallout<>("Second Ruby Glow: Behind then Cross", "Wait Behind then Cross");
+	private final ModifiableCallout<?> fourthRubyGlow = new ModifiableCallout<>("Fourth Ruby Glow", "Light Parties on Crystals");
+	private final ModifiableCallout<?> fifthRubyGlow = new ModifiableCallout<>("Fifth Ruby Glow", "Light Parties in Safe Spots");
+	private final ModifiableCallout<?> sixthRubyGlow = new ModifiableCallout<>("Sixth Ruby Glow", "Light Parties on Crystals");
 
 	private final ModifiableCallout<AbilityCastStart> topazCluster = new ModifiableCallout<>("Topaz Cluster Initial", "{allSafeSpots}", 20_000);
 	private final ModifiableCallout<AbilityCastStart> topazClusterAfter = new ModifiableCallout<>("Topaz Cluster Followup", "{nextSafeSpot}", "{remainingSafeSpots}");
@@ -84,64 +91,41 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 		return state.dutyIs(KnownDuty.P5S);
 	}
 
-	private final RepeatSuppressor tailClawRepeat = new RepeatSuppressor(Duration.ofMillis(11_000));
 
 	@HandleEvents
 	public void startsCasting(EventContext context, AbilityCastStart event) {
-		long id = event.getAbility().getId();
+		int id = (int) event.getAbility().getId();
 		ModifiableCallout<AbilityCastStart> call;
-		if (id == 0x0)
-			call = searingRay;
-		else if (id == 0x7657)
-			call = searingRayReflected;
-		else if (id == 0x76F3) {
-			call = rubyGlow;
-			rubyGlows++;
+		switch (id) {
+			case 0x76D7, 0x76F7 -> call = searingRay;
+			// TODO: is this ever used?
+			case 0x7657 -> call = searingRayReflected;
+			case 0x76F3 -> call = rubyGlow;
+			case 0x76FA -> call = ragingClaw;
+			case 0x7720 -> call = sonicHowl;
+//has no target TODO: Find who has agro and call (auto attack hack)
+			case 0x784A -> call = toxicCrunch;
+			case 0x7716 -> call = venomSquall;
+			case 0x771D -> call = venomousMass;
+			case 0x771B -> call = doubleRush;
+			case 0x7717 -> call = venomSurge;
+			case 0x770E -> call = clawToTail;
+			case 0x7712 -> call = tailToClaw;
+			default -> {
+				return;
+			}
 		}
-		else if (id == 0x7720)
-			call = sonicHowl;
-		else if (id == 0x784A) //has no target TODO: Find who has agro and call (auto attack hack)
-			call = toxicCrunch;
-		else if (id == 0x7716)
-			call = venomSquall;
-		else if (id == 0x771D)
-			call = venomousMass;
-		else if (id == 0x771B)
-			call = doubleRush;
-		else if (id == 0x7717)
-			call = venomSurge;
-		else if (id == 0x770E)
-			call = clawToTail;
-		else if (id == 0x7712)
-			call = tailToClaw;
-//		else if(id == 0x770F) //TODO: fix calling when boss casts 770E or 7712
-//			call = ragingClaw;
-		else
-			return;
 		context.accept(call.getModified(event));
 	}
 
-	private int rubyGlows = 0;
-
-	@HandleEvents
-	public void resetAll(EventContext context, DutyCommenceEvent event) {
-		rubyGlows = 0;
-	}
-
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> firstRubyGlow = new SequentialTrigger<>( //76fe CRYSTAL SUMMON, 76FD topaz boss cast
-			20_000,
-			BaseEvent.class, event -> event instanceof AbilityCastStart acs && acs.abilityIdMatches(0x76FD, 0x76FE),
+	private final SequentialTrigger<BaseEvent> rubyGlowSq = SqtTemplates.multiInvocation( //76fe CRYSTAL SUMMON, 76FD topaz boss cast
+			40_000,
+			AbilityCastStart.class, event -> event.abilityIdMatches(0x76F3),
+			// 1
 			(e1, s) -> {
-				if (rubyGlows != 1) {
-					//log.error("FirstRubyRay: It's not the first ruby ray!");
-					return;
-				}
-				List<AbilityCastStart> crystalSummons = new ArrayList<>(s.waitEvents(4, AbilityCastStart.class, event -> event.abilityIdMatches(0x76FE, 0x76FD)));
-				crystalSummons.add((AbilityCastStart) e1);
-				AbilityCastStart rubyGlowCast = crystalSummons.stream().filter(acs -> acs.getAbility().getId() == 0x76FD).findFirst().orElseThrow(() -> new RuntimeException("FirstRubyRay: Couldn't find the original cast!"));
-				crystalSummons.remove(rubyGlowCast);
-				
+				List<AbilityCastStart> crystalSummons = new ArrayList<>(s.waitEvents(4, AbilityCastStart.class, event -> event.abilityIdMatches(0x76FE)));
+
 				if (crystalSummons.size() != 4) {
 					log.error("FirstRubyRay: Invalid number of Crystal Summons found! Data: {}", crystalSummons);
 					return;
@@ -181,15 +165,78 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 
 				Map<String, Object> args = Map.of("safe", safe);
-				s.accept(firstRubyGlowSafe.getModified((AbilityCastStart) e1, args));
+				s.accept(firstRubyGlowSafe.getModified(crystalSummons.get(0), args));
+			},
+			// 2
+			(e1, s) -> {
+				double yOffset;
+				AbilityCastStart chargeStart = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x771b));
+				s.waitThenRefreshCombatants(1_000);
+				while (true) {
+					Position boss = getState().getLatestCombatantData(chargeStart.getSource()).getPos();
+					Position crystal = getAcr().getAll().stream().filter(tracker -> tracker.getResult() == CastResult.IN_PROGRESS && tracker.getCast().abilityIdMatches(0x79FE))
+							.findFirst()
+							.map(tracker -> tracker.getCast().getSource())
+							.map(source -> getState().getLatestCombatantData(source))
+							.map(XivCombatant::getPos)
+							.orElseThrow(() -> new RuntimeException("RG2: Couldn't find crystal cast!"));
+
+					if (boss == null || crystal == null) {
+						s.waitThenRefreshCombatants(200);
+						continue;
+					}
+					Position offset = crystal.normalizedTo(boss);
+					yOffset = offset.getY();
+					log.info("Y offset: {}", yOffset);
+					if (Math.abs(yOffset) < 2) {
+						break;
+					}
+				}
+				// +y == south
+				if (yOffset > 0) {
+					// hitting behind, wait then cross
+					s.updateCall(secondRubyGlowCross.getModified(chargeStart));
+				}
+				else {
+					// hitting in front, stay behind
+					s.updateCall(secondRubyGlowStay.getModified(chargeStart));
+				}
+
+			},
+			// 3
+			(e1, s) -> {
+				// This is already handled by topazClusterSq
+			},
+			// 4
+			(e1, s) -> {
+				s.waitMs(e1.getEstimatedRemainingDuration().toMillis());
+				// This is the one where you have to find which side only has two and drop puddles on them
+				// We still don't know how to specifically get diagonal partition angle, *but* it can be deduced,
+				// since it appears that there are always exactly two sitting on the partition, and three on the
+				// arena walls.
+				s.updateCall(fourthRubyGlow.getModified());
+			},
+			// 5
+			(e1, s) -> {
+				s.waitMs(e1.getEstimatedRemainingDuration().toMillis());
+				// This is the one where two of the quadrants have a puddle, and two of them have an explosion.
+				// Then, it's the bait/stack/spread mechanic again
+				s.updateCall(fifthRubyGlow.getModified());
+			},
+			// 6
+			(e1, s) -> {
+				s.waitMs(e1.getEstimatedRemainingDuration().toMillis());
+				// This is the same as #4 but with quadrants rather than diagonal
+				// Is there more than one safe spot?
+				s.updateCall(sixthRubyGlow.getModified());
 			}
+
 	);
 
-	//TODO:third ruby glow 1 2 3 4 safe spots (crystals spawn 2 2 3 3)
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> topazClusterSq = new SequentialTrigger<>(40_000, BaseEvent.class,
-			e1 -> e1 instanceof AbilityCastStart acs && acs.abilityIdMatches(0x7702),
+	private final SequentialTrigger<BaseEvent> topazClusterSq = SqtTemplates.sq(40_000, AbilityCastStart.class,
+			e1 -> e1.abilityIdMatches(0x7702),
 			(e1, s) -> {
 				// 10 crystals spawn
 				// 7703 is the shortest (3.7s)

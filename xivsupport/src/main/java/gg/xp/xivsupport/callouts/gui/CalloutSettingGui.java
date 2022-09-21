@@ -85,61 +85,63 @@ public class CalloutSettingGui {
 			soundPanel.setLayout(new BoxLayout(soundPanel, BoxLayout.LINE_AXIS));
 			JLabel soundLabel = new JLabel("Sound: ");
 
-			JComboBox<String> filePicker = new JComboBox<>();
-			ComboBoxModel<String> fpModel = new ComboBoxModel<>() {
-				@Override
-				public void setSelectedItem(Object item) {
-					if (item.equals("Add New...")) {
-						SoundFile soundFile = sft.addNew();
-						if (soundFile != null) {
-							call.getSoundSetting().set(soundFile.name);
-						}
-						else {
-							return;
-						}
-					}
-					else {
-						if (item.equals("None")) {
-							item = "";
-						}
-						call.getSoundSetting().set(item.toString());
-					}
-					SwingUtilities.invokeLater(filePicker::repaint);
-				}
-
-				@Override
-				public Object getSelectedItem() {
-					String s = call.getSoundSetting().get();
-					if (s.isEmpty()) {
-						return "None";
-					}
-					return s;
-				}
-
-				@Override
-				public int getSize() {
-					return soundMgr.getSoundFilesAndNone().size() + 1;
-				}
-
-				@Override
-				public String getElementAt(int index) {
-					if (index == soundMgr.getSoundFilesAndNone().size()) {
-						return "Add New...";
-					}
-					return soundMgr.getSoundFilesAndNone().get(index);
-				}
-
-				@Override
-				public void addListDataListener(ListDataListener l) {
-
-				}
-
-				@Override
-				public void removeListDataListener(ListDataListener l) {
-
-				}
-			};
-			filePicker.setModel(fpModel);
+			JComboBox<String> filePicker = new SoundFilePicker(sft, soundMgr, () -> call.getSoundSetting().get(), file -> call.getSoundSetting().set(file)).getPicker();
+//
+//			JComboBox<String> filePicker = new JComboBox<>();
+//			ComboBoxModel<String> fpModel = new ComboBoxModel<>() {
+//				@Override
+//				public void setSelectedItem(Object item) {
+//					if (item.equals("Add New...")) {
+//						SoundFile soundFile = sft.addNew();
+//						if (soundFile != null) {
+//							call.getSoundSetting().set(soundFile.name);
+//						}
+//						else {
+//							return;
+//						}
+//					}
+//					else {
+//						if (item.equals("None")) {
+//							item = "";
+//						}
+//						call.getSoundSetting().set(item.toString());
+//					}
+//					SwingUtilities.invokeLater(filePicker::repaint);
+//				}
+//
+//				@Override
+//				public Object getSelectedItem() {
+//					String s = call.getSoundSetting().get();
+//					if (s.isEmpty()) {
+//						return "None";
+//					}
+//					return s;
+//				}
+//
+//				@Override
+//				public int getSize() {
+//					return soundMgr.getSoundFilesAndNone().size() + 1;
+//				}
+//
+//				@Override
+//				public String getElementAt(int index) {
+//					if (index == soundMgr.getSoundFilesAndNone().size()) {
+//						return "Add New...";
+//					}
+//					return soundMgr.getSoundFilesAndNone().get(index);
+//				}
+//
+//				@Override
+//				public void addListDataListener(ListDataListener l) {
+//
+//				}
+//
+//				@Override
+//				public void removeListDataListener(ListDataListener l) {
+//
+//				}
+//			};
+//			filePicker.setModel(fpModel);
 			soundPanel.add(soundLabel);
 			soundPanel.add(filePicker);
 		}

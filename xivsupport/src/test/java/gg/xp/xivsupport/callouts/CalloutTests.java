@@ -229,6 +229,27 @@ public class CalloutTests {
 	}
 
 	@Test
+	void testConcurrent() {
+		ModifiableCallout mc = new ModifiableCallout("Foo", "{val1} {val2}");
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+		mc.attachHandle(mch);
+
+		CalloutEvent ce1 = proc.processCallout(mc.getModified(Map.of("val1", 123, "val2", 456)));
+		Assert.assertEquals(ce1.getCallText(), "123 456");
+		Assert.assertEquals(ce1.getVisualText(), "123 456");
+
+		CalloutEvent ce2 = proc.processCallout(mc.getModified(Map.of("val1", 789)));
+
+		Assert.assertEquals(ce1.getCallText(), "123 456");
+		Assert.assertEquals(ce2.getCallText(), "789 Error");
+
+		Assert.assertEquals(ce1.getVisualText(), "123 456");
+		Assert.assertEquals(ce2.getVisualText(), "789 Error");
+	}
+
+	@Test
 	@Ignore // This doesn't seem to work well
 	public void testReplacementsAdvanced2() {
 //		ModifiableCallout mc = new ModifiableCallout("Foo", "{String.format(\"%.02X\", event.getBuff().getId()}");

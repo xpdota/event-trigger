@@ -5,11 +5,11 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
-import gg.xp.xivsupport.gui.components.ColorChooser;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
@@ -81,9 +81,11 @@ public class EasyTriggersTab implements PluginTab {
 				}))
 				.addColumn(new CustomColumn<>("Name", EasyTrigger::getName))
 				.addColumn(new CustomColumn<>("Event Type", t -> t.getEventType().getSimpleName()))
+				.addColumn(new CustomColumn<>("Actions", t -> String.format("(%d) %s", t.getActions().size(), t.getActions().stream().map(Action::dynamicLabel).collect(Collectors.joining("; ")))))
 				.addColumn(new CustomColumn<>("Conditions", t -> String.format("(%d) %s", t.getConditions().size(), t.getConditions().stream().map(Condition::dynamicLabel).collect(Collectors.joining("; ")))))
-				.addColumn(new CustomColumn<>("TTS", EasyTrigger::getTts))
-				.addColumn(new CustomColumn<>("Text", EasyTrigger::getText))
+				// TODO: replace these with a description of actions
+//				.addColumn(new CustomColumn<>("TTS", EasyTrigger::getTts))
+//				.addColumn(new CustomColumn<>("Text", EasyTrigger::getText))
 				.addColumn(new CustomColumn<>("Hit", EasyTrigger::getHits, 80))
 				.addColumn(new CustomColumn<>("Miss", EasyTrigger::getMisses, 80))
 				.build();
@@ -283,13 +285,19 @@ public class EasyTriggersTab implements PluginTab {
 			SwingUtilities.invokeLater(() -> {
 				model.setSelectedValue(newTrigger);
 				refreshSelection();
+				model.scrollToSelectedValue();
 			});
 		}
 	}
 
 	private void addImports(List<EasyTrigger<?>> toAdd) {
+		if (toAdd.isEmpty()) {
+			return;
+		}
 		toAdd.forEach(backend::addTrigger);
 		refresh();
+		model.setSelectedValue(toAdd.get(0));
+		model.scrollToSelectedValue();
 	}
 
 	private void delete() {
@@ -346,10 +354,11 @@ public class EasyTriggersTab implements PluginTab {
 				}
 				return str;
 			}, editTriggerThenSave(trigger::setName), trigger.getName());
-			TextFieldWithValidation<String> ttsField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setTts), trigger.getTts());
-			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setText), trigger.getText());
+//			TextFieldWithValidation<String> ttsField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setTts), trigger.getTts());
+//			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setText), trigger.getText());
 
-			JPanel conditionsPanel = new ConditionsPanel(backend, "Conditions", trigger);
+			JPanel actionsPanel = new ActionsPanel<>(backend, "Actions", trigger, () -> requestSave());
+			JPanel conditionsPanel = new ConditionsPanel<>(backend, "Conditions", trigger, () -> requestSave());
 
 			c.weightx = 0;
 			JLabel firstLabel = GuiUtil.labelFor("Name", nameField);
@@ -367,58 +376,60 @@ public class EasyTriggersTab implements PluginTab {
 			add(GuiUtil.labelFor("Event", eventTypeField), c);
 			c.gridx++;
 			add(eventTypeField, c);
-			c.gridx = 0;
-			c.gridy++;
-			add(GuiUtil.labelFor("TTS", ttsField), c);
-			c.gridx++;
-			add(ttsField, c);
-			c.gridx = 0;
-			c.gridy++;
-			add(GuiUtil.labelFor("Text", textField), c);
-			c.gridx++;
-			add(textField, c);
-			int yReset = c.gridy + 1;
-			c.gridx = 2;
+//			c.gridx = 0;
+//			c.gridy++;
+//			add(GuiUtil.labelFor("TTS", ttsField), c);
+//			c.gridx++;
+//			add(ttsField, c);
+//			c.gridx = 0;
+//			c.gridy++;
+//			add(GuiUtil.labelFor("Text", textField), c);
+//			c.gridx++;
+//			add(textField, c);
+//			int yReset = c.gridy + 1;
+//			c.gridx = 2;
 
 			{
-				TextFieldWithValidation<Long> hangTime = new TextFieldWithValidation<>(Long::parseLong, editTriggerThenSave(trigger::setHangTime), () -> Long.toString(trigger.getHangTime()));
-				JCheckBox plusDuration = new JCheckBox();
-				plusDuration.setSelected(trigger.isUseDuration());
-				plusDuration.addActionListener(l -> trigger.setUseDuration(plusDuration.isSelected()));
-				plusDuration.addActionListener(l -> requestSave());
-
-				JCheckBox useIcon = new JCheckBox();
-				useIcon.setSelected(trigger.isUseIcon());
-				useIcon.addActionListener(l -> trigger.setUseIcon(useIcon.isSelected()));
-				useIcon.addActionListener(l -> requestSave());
-
-				Component textColor = new ColorChooser("Text Color", trigger::getColor, editTriggerThenSave(trigger::setColor), () -> true).getButtonOnly();
-
-				c.gridy = 0;
-				add(GuiUtil.labelFor("Hang Time", hangTime), c);
-				c.gridy++;
-				add(GuiUtil.labelFor("Plus cast/buff duration", plusDuration), c);
-				c.gridy++;
-				add(GuiUtil.labelFor("Use ability/buff icon", useIcon), c);
-				c.gridy++;
-				add(GuiUtil.labelFor("Text Color Override", textColor), c);
-				c.gridy = 0;
-
-				c.gridx++;
-				add(hangTime, c);
-				c.gridy++;
-				add(plusDuration, c);
-				c.gridy++;
-				add(useIcon, c);
-				c.gridy++;
-				add(textColor, c);
+//				TextFieldWithValidation<Long> hangTime = new TextFieldWithValidation<>(Long::parseLong, editTriggerThenSave(trigger::setHangTime), () -> Long.toString(trigger.getHangTime()));
+//				JCheckBox plusDuration = new JCheckBox();
+//				plusDuration.setSelected(trigger.isUseDuration());
+//				plusDuration.addActionListener(l -> trigger.setUseDuration(plusDuration.isSelected()));
+//				plusDuration.addActionListener(l -> requestSave());
+//
+//				JCheckBox useIcon = new JCheckBox();
+//				useIcon.setSelected(trigger.isUseIcon());
+//				useIcon.addActionListener(l -> trigger.setUseIcon(useIcon.isSelected()));
+//				useIcon.addActionListener(l -> requestSave());
+//
+//				Component textColor = new ColorChooser("Text Color", trigger::getColor, editTriggerThenSave(trigger::setColor), () -> true).getButtonOnly();
+//
+//				c.gridy = 0;
+//				add(GuiUtil.labelFor("Hang Time", hangTime), c);
+//				c.gridy++;
+//				add(GuiUtil.labelFor("Plus cast/buff duration", plusDuration), c);
+//				c.gridy++;
+//				add(GuiUtil.labelFor("Use ability/buff icon", useIcon), c);
+//				c.gridy++;
+//				add(GuiUtil.labelFor("Text Color Override", textColor), c);
+//				c.gridy = 0;
+//
+//				c.gridx++;
+//				add(hangTime, c);
+//				c.gridy++;
+//				add(plusDuration, c);
+//				c.gridy++;
+//				add(useIcon, c);
+//				c.gridy++;
+//				add(textColor, c);
 			}
 
 
 			c.gridx = 0;
-			c.gridy = yReset;
+			c.gridy++;
 			c.gridwidth = GridBagConstraints.REMAINDER;
 			add(conditionsPanel, c);
+			c.gridy++;
+			add(actionsPanel, c);
 			c.gridy++;
 			c.weighty = 1;
 			add(Box.createGlue(), c);

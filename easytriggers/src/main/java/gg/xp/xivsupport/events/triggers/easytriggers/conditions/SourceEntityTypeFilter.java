@@ -1,11 +1,10 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 
 // TODO: source/target could be combined by simply setting the field in the newInst
-// TODO: support 'in party' though it would need injection and wouldn't work with this enum style
-public class SourceEntityTypeFilter implements Condition<HasSourceEntity> {
+public class SourceEntityTypeFilter implements SimpleCondition<HasSourceEntity> {
 
 	public EntityType type = EntityType.ANY;
 

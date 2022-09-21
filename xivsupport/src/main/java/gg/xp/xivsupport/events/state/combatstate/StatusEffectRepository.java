@@ -26,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -67,7 +66,7 @@ public class StatusEffectRepository {
 			for (StatusAppliedEffect preApp : newPreApps) {
 				BuffApplied fakeValue = new BuffApplied(event, preApp);
 				fakeValue.setParent(event);
-				fakeValue.setHappenedAt(Instant.now());
+				fakeValue.setHappenedAt(event.getEffectiveHappenedAt());
 				this.preApps.put(new BuffTrackingKey(event.getSource(), preApp.isOnTarget() ? event.getTarget() : event.getSource(), preApp.getStatus()), fakeValue);
 			}
 		}
@@ -87,7 +86,10 @@ public class StatusEffectRepository {
 					key,
 					event
 			);
-			preApps.remove(key);
+			BuffApplied preapp = preApps.remove(key);
+			if (preapp != null) {
+				event.setPreAppInfo(preapp.getPreAppInfo());
+			}
 			onTargetCache.computeIfAbsent(target, k -> new LinkedHashMap<>()).put(key, event);
 		}
 		if (previous != null) {

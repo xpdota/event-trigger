@@ -1,27 +1,14 @@
-package gg.xp.xivsupport.gui.groovy;
+package gg.xp.xivsupport.groovy;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.gui.groovy.GroovyScriptHolder;
+import gg.xp.xivsupport.gui.groovy.ScriptNameAndFileStub;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.ExternalObservable;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import groovy.transform.CompileStatic;
-import groovy.transform.TypeChecked;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.jetbrains.annotations.Nullable;
-import org.picocontainer.PicoContainer;
-import org.reflections.Reflections;
-import org.reflections.scanners.Scanners;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,23 +25,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.reflections.scanners.Scanners.SubTypes;
-
 @ScanMe
-public class GroovyManager {
-
-	private static final Logger log = LoggerFactory.getLogger(GroovyManager.class);
-	private final PicoContainer container;
+public class GroovyScriptManager {
+	private static final Logger log = LoggerFactory.getLogger(GroovyScriptManager.class);
 	private final List<GroovyScriptHolder> scripts = new ArrayList<>();
 	private final ObjectMapper mapper = new ObjectMapper();
 	private final ExternalObservable obs = new ExternalObservable();
+	private final GroovyManager mgr;
 
-	public GroovyManager(PicoContainer container) {
-		this.container = container;
+	public GroovyScriptManager(GroovyManager mgr) {
+		this.mgr = mgr;
 		loadScripts();
 	}
 
@@ -84,22 +67,17 @@ public class GroovyManager {
 				log.warn("scriptFiles == null");
 				return;
 			}
-			Arrays.stream(scriptFiles)
-					.parallel()
-					.map(scriptFile -> {
-								try {
-									GroovyScriptHolder script = readFile(scriptFile);
-									log.info("Read script file '{}' into script '{}'", scriptFile, script.getScriptName());
-									return script;
-								}
-								catch (Throwable t) {
-									log.error("Error reading script file '{}'", scriptFile, t);
-									return null;
-								}
-							}
-					)
-					.filter(Objects::nonNull)
-					.forEachOrdered(this::addScript);
+			Arrays.stream(scriptFiles).parallel().map(scriptFile -> {
+				try {
+					GroovyScriptHolder script = readFile(scriptFile);
+					log.info("Read script file '{}' into script '{}'", scriptFile, script.getScriptName());
+					return script;
+				}
+				catch (Throwable t) {
+					log.error("Error reading script file '{}'", scriptFile, t);
+					return null;
+				}
+			}).filter(Objects::nonNull).forEachOrdered(this::addScript);
 		}
 		obs.notifyListeners();
 	}
@@ -247,7 +225,7 @@ public class GroovyManager {
 		return script;
 	}
 
-	void saveScript(GroovyScriptHolder script) {
+	public void saveScript(GroovyScriptHolder script) {
 		File outFile = script.getFile();
 		if (outFile == null) {
 			throw new IllegalArgumentException("Cannot save a script with no associated file");
@@ -256,10 +234,7 @@ public class GroovyManager {
 		StringBuilder fileOut = new StringBuilder();
 		Map<String, String> props = mapper.convertValue(script, new TypeReference<>() {
 		});
-		props.forEach((k, v)
-				-> fileOut
-				.append(propFormat.formatted(k, v))
-				.append('\n'));
+		props.forEach((k, v) -> fileOut.append(propFormat.formatted(k, v)).append('\n'));
 		fileOut.append(script.getScriptContent());
 		try {
 			outFile.getParentFile().mkdirs();
@@ -276,76 +251,13 @@ public class GroovyManager {
 	}
 
 	private void configureScriptHolder(GroovyScriptHolder holder) {
-		if (holder.getManager() == null) {
-			holder.setManager(this);
+		if (!holder.isMgrSet()) {
+			holder.setScriptMgr(this);
 		}
 	}
 
-	private static final Object cclock = new Object();
-	private static volatile @Nullable CompilerConfiguration compilerConfig;
-
-	public static CompilerConfiguration getCompilerConfig() {
-		if (compilerConfig == null) {
-			synchronized (cclock) {
-				if (compilerConfig == null) {
-					return compilerConfig = makeCompilerConfig();
-				}
-			}
-		}
-		return compilerConfig;
-	}
-
-	private static CompilerConfiguration makeCompilerConfig() {
-		log.info("Setting up Groovy CompilerConfiguration");
-		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
-		ImportCustomizer importCustomizer = new ImportCustomizer();
-		importCustomizer.addImports(
-				Predicate.class.getCanonicalName(),
-				Event.class.getCanonicalName(),
-				CompileStatic.class.getCanonicalName(),
-				TypeChecked.class.getCanonicalName());
-		// TODO: add ability effects and other common events here
-		importCustomizer.addStarImports(
-				"gg.xp.xivsupport.events.actlines.events",
-				"javax.util",
-				"javax.util.function",
-				"javax.swing",
-				"gg.xp.xivdata.data",
-				"gg.xp.xivsupport.gui",
-				"gg.xp.xivsupport.gui.tables"
-		);
-		Reflections reflections = new Reflections(
-				new ConfigurationBuilder()
-						.setUrls(ClasspathHelper.forJavaClassPath())
-						.setParallel(true)
-						.setScanners(Scanners.SubTypes));
-		reflections.get(SubTypes.of(Event.class).asClass())
-				.stream()
-				.map(Class::getCanonicalName)
-				.filter(Objects::nonNull)
-				.forEach(importCustomizer::addImports);
-
-		compilerConfiguration.addCompilationCustomizers(importCustomizer);
-		log.info("Done with CompilerConfiguration");
-		return compilerConfiguration;
-	}
-
-	public GroovyShell makeShell() {
-		Binding binding = makeBinding();
-
-		return new GroovyShell(binding, getCompilerConfig());
-	}
-
-	public Binding makeBinding() {
-		Binding binding = new Binding();
-		container.getComponents().forEach(item -> {
-			String simpleName = item.getClass().getSimpleName();
-			simpleName = StringUtils.uncapitalize(simpleName);
-			binding.setProperty(simpleName, item);
-		});
-		// TODO: find a way to systematically do these
-		binding.setProperty("xivState", container.getComponent(XivState.class));
-		return binding;
+	public GroovyManager getGroovyManager() {
+		return mgr;
 	}
 
 	private static final String defaultScriptContent = """

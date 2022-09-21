@@ -108,4 +108,8 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	protected EntityLookupMissBehavior entityLookupMissBehavior() {
 		return EntityLookupMissBehavior.GET_AND_WARN;
 	}
+
+	public int getLineNumber() {
+		return lineNumber;
+	}
 }

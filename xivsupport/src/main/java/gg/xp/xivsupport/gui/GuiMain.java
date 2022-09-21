@@ -26,7 +26,8 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import gg.xp.xivsupport.gui.map.MapTab;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
@@ -169,7 +170,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", container.getComponent(MapTab.class)));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", container.getComponent(LibraryTab.class)));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Groovy", new GroovyTab(container.getComponent(GroovyManager.class))));
+		SwingUtilities.invokeLater(() -> tabPane.addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class))));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class))));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
 		SwingUtilities.invokeLater(() -> {
@@ -445,13 +446,12 @@ public class GuiMain {
 
 		@SuppressWarnings("BusyWait")
 		private void getAndAddTabs() {
+			List<PluginTab> components;
 			while (true) {
 				// Kinda bad...
 				try {
-					List<PluginTab> components = container.getComponents(PluginTab.class);
-					components.sort(Comparator.comparing(PluginTab::getSortOrder));
-					SwingUtilities.invokeLater(() -> this.addTabs(components));
-					return;
+					components = container.getComponents(PluginTab.class);
+					break;
 				}
 				catch (ConcurrentModificationException ignored) {
 					try {
@@ -462,6 +462,9 @@ public class GuiMain {
 					}
 				}
 			}
+			List<PluginTab> allComponents = components;
+			allComponents.sort(Comparator.comparing(PluginTab::getSortOrder));
+			SwingUtilities.invokeLater(() -> this.addTabs(allComponents));
 		}
 
 	}
@@ -620,7 +623,7 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 //				.addFilter(FreeformEventFilter::new)
-				.addFilter(GroovyFilter.forClass(Event.class))
+				.addFilter(GroovyFilter.forClass(Event.class, container.getComponent(GroovyManager.class)))
 				.addFilter(r -> {
 					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);
 					container.addComponent(pullNumberFilter);

@@ -4,6 +4,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EditorIgnore;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdPickerFactory;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdType;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.AcceptsSaveCallback;
 import gg.xp.xivsupport.gui.ResettableField;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
@@ -21,12 +22,13 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-public class GenericFieldEditor extends JPanel {
+public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 
 	private final Object object;
 	private final List<ResettableField> resettables = new ArrayList<>();
 	private final IdPickerFactory idPickerFactory;
 
+	// TODO: this doesn't receive auto-save functionality
 	public GenericFieldEditor(Object object, PicoContainer pico) {
 		setLayout(new WrapLayout(0, 10, 0));
 		idPickerFactory = pico.getComponent(IdPickerFactory.class);
@@ -142,7 +144,15 @@ public class GenericFieldEditor extends JPanel {
 		catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
+		if (saveCallback != null) {
+			saveCallback.run();
+		}
 	}
 
+	private Runnable saveCallback;
 
+	@Override
+	public void setSaveCallback(Runnable saveCallback) {
+		saveCallback = saveCallback;
+	}
 }
