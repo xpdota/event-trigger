@@ -32,4 +32,11 @@ public class TelestoResponse extends BaseEvent {
 	public Object getResponse() {
 		return data.get("response");
 	}
+
+	// TODO: this is broken due to a bug with saving the parent event since it has an event handler
+	// I think the best workaround is to simply not use the parent event field for that purpose, instead making a new field
+//	@Override
+//	public boolean shouldSave() {
+//		return true;
+//	}
 }
