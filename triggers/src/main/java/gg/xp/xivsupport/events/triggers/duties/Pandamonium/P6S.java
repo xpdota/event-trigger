@@ -231,7 +231,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				// Swapping headmarkers/casts
 				s.updateCall(exchange1.getModified(e1));
-				AbilityCastStart event = s.waitEvent(AbilityCastStart.class, acs -> acs.getTarget().isThePlayer());
+				AbilityCastStart event = s.waitEvent(AbilityCastStart.class, acs -> acs.getTarget().isThePlayer() && acs.getSource().getbNpcId() == 9020);
 				ModifiableCallout<AbilityCastStart> call;
 				switch ((int) event.getAbility().getId()) {
 					// Each of these seems to have 3 IDs. I'm guessing it's no-swap plus the two possibilities for swap
@@ -253,7 +253,8 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(exchange3.getModified(e1));
 				// Light parties and markers
 				// Like before, but we have to account for getting no marker whatsoever
-				List<AbilityCastStart> casts = s.waitEvents(4, AbilityCastStart.class, acs -> acs.getTarget().isPc());
+				List<AbilityCastStart> casts = s.waitEvents(4, AbilityCastStart.class, acs -> acs.getTarget().isPc() && acs.getSource().getbNpcId() == 9020);
+				log.info("Exchange 3 casts: {}", casts);
 				casts.stream().filter(acs -> acs.getTarget().isThePlayer())
 						.findAny()
 						.ifPresentOrElse(event -> {
@@ -290,7 +291,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				// Swapping headmarkers/casts
 				s.updateCall(exchange5.getModified(e1));
-				AbilityCastStart event = s.waitEvent(AbilityCastStart.class, acs -> acs.getTarget().isThePlayer());
+				AbilityCastStart event = s.waitEvent(AbilityCastStart.class, acs -> acs.getTarget().isThePlayer() && acs.getSource().getbNpcId() == 9020);
 				ModifiableCallout<AbilityCastStart> call;
 				switch ((int) event.getAbility().getId()) {
 					// Each of these seems to have 3 IDs. I'm guessing it's no-swap plus the two possibilities for swap
