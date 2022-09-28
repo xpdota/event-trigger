@@ -77,4 +77,8 @@ public final class Platform {
 			throw new RuntimeException(e);
 		}
 	}
+
+	public static boolean startMinimized() {
+		return Boolean.parseBoolean(System.getProperty("start-minimized", "false"));
+	}
 }

@@ -63,6 +63,7 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -153,6 +154,9 @@ public class GuiMain {
 //			frame.setLocationByPlatform(true);
 			frame.setSize(1280, 960);
 			frame.setLocationRelativeTo(null);
+			if (Platform.startMinimized() && replay == null) {
+				frame.setState(JFrame.ICONIFIED);
+			}
 			frame.setVisible(true);
 			frame.add(tabPane);
 			if (replay != null) {
