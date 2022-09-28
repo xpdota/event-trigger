@@ -781,7 +781,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				log.info("Cthonic Vent: Start");
 				List<AbilityCastStart> initialCasts = s.waitEvents(2, AbilityCastStart.class, event -> event.abilityIdMatches(0x7925));
-				s.refreshCombatants(100);
+				s.waitThenRefreshCombatants(100);
 				List<XivCombatant> initialSpots = initialCasts.stream()
 						.map(AbilityCastStart::getSource)
 						.map(cbt -> getState().getLatestCombatantData(cbt))
@@ -801,7 +801,7 @@ public class P8S extends AutoChildEventHandler implements FilteredEventHandler {
 					List<ArenaSector> nextBadSpots;
 					while (true) {
 						// To make this work better in testing,
-						s.refreshCombatants(100);
+						s.waitThenRefreshCombatants(100);
 						nextBadSpots = turns.stream()
 								.map(AbilityUsedEvent::getSource)
 								.map(cbt -> getState().getLatestCombatantData(cbt))

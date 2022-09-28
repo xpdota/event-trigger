@@ -349,6 +349,10 @@
             <groupId>gg.xp</groupId>
             <artifactId>testutils-samplelogs</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>personal-cast-bar-overlay</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

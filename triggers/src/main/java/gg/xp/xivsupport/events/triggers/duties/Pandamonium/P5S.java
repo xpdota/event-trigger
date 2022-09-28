@@ -131,8 +131,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 					return;
 				}
 
-				s.waitMs(100);
-				s.refreshCombatants(100);
+				s.waitThenRefreshCombatants(100);
 				List<XivCombatant> topazCrystals = crystalSummons.stream().map(acs -> this.getState().getLatestCombatantData(acs.getSource())).toList();
 
 				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.quadrants);
@@ -245,8 +244,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 				// 7706 is 11.2s
 				// Can use either ID or duration to differentiate
 				log.info("Topaz Cluster: Start");
-				s.waitMs(200);
-				s.refreshCombatants(200);
+				s.waitThenRefreshCombatants(200);
 				log.info("Topaz Cluster: Done Waiting");
 				Map<Integer, List<ArenaSector>> unsafeSpots = new HashMap<>();
 				Map<Integer, AbilityCastStart> sampleCasts = new HashMap<>();
