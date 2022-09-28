@@ -521,6 +521,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	// you did for first alchemy
 	private static @Nullable TowerColor towerColor(List<MapEffectEvent> mapEffects) {
 		for (MapEffectEvent mapEffect : mapEffects) {
+			log.info("MapEffect: 0x%X".formatted(mapEffect.getIndex()));
 			long index = mapEffect.getIndex();
 			if (index > 0x24 && index <= 0x2D) {
 				return TowerColor.Blue;
@@ -528,7 +529,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 			else if (index > 0x2E && index <= 0x37) {
 				return TowerColor.Green;
 			}
-			else if (index > 0x1E && index <= 0x23) {
+			else if (index > 0x1A && index <= 0x23) {
 				return TowerColor.Purple;
 			}
 		}
