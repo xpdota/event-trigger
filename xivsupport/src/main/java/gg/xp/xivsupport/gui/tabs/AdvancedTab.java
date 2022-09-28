@@ -9,6 +9,8 @@ import gg.xp.xivsupport.gui.KeyValueDisplaySet;
 import gg.xp.xivsupport.gui.KeyValuePairDisplay;
 import gg.xp.xivsupport.gui.Refreshable;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.TitleBorderPanel;
+import gg.xp.xivsupport.gui.WindowConfig;
 import gg.xp.xivsupport.gui.WrapperPanel;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
@@ -18,6 +20,7 @@ import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.sys.Threading;
 import org.picocontainer.PicoContainer;
 import org.swingexplorer.Launcher;
@@ -213,11 +216,10 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			c.gridx = 0;
 			c.gridy++;
 			{
-				JPanel devToolsPanel = new TitleBorderFullsizePanel("Dev Tools");
+				JPanel devToolsPanel = new TitleBorderPanel("Dev Tools");
 				JButton swexpButton = new JButton("Launch Swing Explorer");
 				swexpButton.addActionListener((l) -> exs.submit(Launcher::launch));
 				devToolsPanel.add(swexpButton);
-				devToolsPanel.setPreferredSize(null);
 				statsAndMemory.add(devToolsPanel, c);
 			}
 			c.gridx++;
@@ -231,7 +233,15 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			}
 			c.gridy++;
 			c.gridx = 0;
+			{
+				JPanel windowSettings = new TitleBorderPanel("Window");
+				BooleanSetting startMinimized = container.getComponent(WindowConfig.class).getStartMinimized();
+				BooleanSettingGui checkbox = new BooleanSettingGui(startMinimized, "Start Minimized");
+				windowSettings.add(checkbox.getComponent());
+				statsAndMemory.add(windowSettings, c);
+			}
 			c.weighty = 1;
+			c.gridy++;
 			{
 				statsAndMemory.add(Box.createGlue(), c);
 			}

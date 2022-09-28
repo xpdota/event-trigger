@@ -145,6 +145,7 @@ public class GuiMain {
 		this.rightClicks = container.getComponent(RightClickOptionRepo.class);
 		columns = container.getComponent(StandardColumns.class);
 		replay = container.getComponent(ReplayController.class);
+		WindowConfig wc = container.getComponent(WindowConfig.class);
 		long start = System.currentTimeMillis();
 		SwingUtilities.invokeLater(() -> {
 			JFrame frame = new JFrame("Triggevent");
@@ -154,7 +155,7 @@ public class GuiMain {
 //			frame.setLocationByPlatform(true);
 			frame.setSize(1280, 960);
 			frame.setLocationRelativeTo(null);
-			if (Platform.startMinimized() && replay == null) {
+			if (wc.getStartMinimized().get() && replay == null) {
 				frame.setState(JFrame.ICONIFIED);
 			}
 			frame.setVisible(true);
