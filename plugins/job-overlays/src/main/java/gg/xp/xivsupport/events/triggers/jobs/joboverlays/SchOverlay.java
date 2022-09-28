@@ -52,7 +52,11 @@ public class SchOverlay extends BaseJobOverlay {
 
 	// Stuff for tracking AF CD
 	private final CustomTableModel<VisualCdInfo> tableModel;
-	private volatile List<VisualCdInfo> croppedCds = Collections.emptyList();
+	private static final List<Cooldown> defaultCds = List.of(Cooldown.ChainStratagem, Cooldown.Aetherflow, Cooldown.Dissipation);
+	private final List<VisualCdInfo> croppedCds = new ArrayList<>(3);
+	{
+		defaultCds.forEach(dcd -> croppedCds.add(new VisualCdInfoMain(dcd)));
+	}
 
 	private enum SchSummon {
 		NONE(810),
@@ -87,13 +91,13 @@ public class SchOverlay extends BaseJobOverlay {
 		this.state = state;
 		this.buffs = buffs;
 		this.cdh = cdh;
-		setPreferredSize(new Dimension(250, 100));
+		setPreferredSize(new Dimension(250, 120));
 		add(listRenderer);
 		listRenderer.setBounds(0, 5, 250, 50);
 		BaseCdTrackerTable tableHolder = new BaseCdTrackerTable(() -> croppedCds);
 		tableModel = tableHolder.getTableModel();
 		JTable table = tableHolder.getTable();
-		table.setBounds(0, 60, 250, 40);
+		table.setBounds(0, 60, 250, 60);
 		add(table);
 	}
 
@@ -259,17 +263,18 @@ public class SchOverlay extends BaseJobOverlay {
 				.orElse(null);
 	}
 
+
 	private void recalcCds() {
-		CooldownStatus personalCd = cdh.getPersonalCd(Cooldown.Aetherflow);
-		VisualCdInfo vci;
-		if (personalCd == null) {
-			// Not used yet - display placeholder
-			vci = new VisualCdInfoMain(Cooldown.Aetherflow);
+		for (int i = 0; i < defaultCds.size(); i++) {
+			Cooldown cooldown = defaultCds.get(i);
+			CooldownStatus personalCd = cdh.getPersonalCd(cooldown);
+			if (personalCd == null) {
+				croppedCds.set(i, new VisualCdInfoMain(cooldown));
+			}
+			else {
+				croppedCds.set(i, new VisualCdInfoMain(personalCd));
+			}
 		}
-		else {
-			vci = new VisualCdInfoMain(personalCd);
-		}
-		croppedCds = Collections.singletonList(vci);
 	}
 
 	@Override

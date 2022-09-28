@@ -104,6 +104,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	ChainStratagem(true, CooldownType.PARTY_BUFF, 0x1d0c),
 	Protraction(true, CooldownType.HEAL, 0x650b),
 	Aetherflow(true, CooldownType.PERSONAL_UTILITY, 0xa6),
+	Dissipation(true, CooldownType.PERSONAL_UTILITY, 0xe03),
 	Recitation(true, CooldownType.HEAL, 0x409E),
 	//	DeploymentTactics(SCH, false, 90.0, "Deployment Tactics", CooldownType.PARTY_MIT, 0xE01),
 	DeploymentTactics(builder(CooldownType.PARTY_MIT, false, 0xE01).cooldown(90)),
