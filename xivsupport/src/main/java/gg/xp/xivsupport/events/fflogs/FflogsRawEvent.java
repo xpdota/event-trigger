@@ -3,6 +3,8 @@ package gg.xp.xivsupport.events.fflogs;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
@@ -11,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SystemEvent
-public class FflogsRawEvent extends BaseEvent {
+public class FflogsRawEvent extends BaseEvent implements HasPrimaryValue {
 	private static final ObjectMapper mapper = new ObjectMapper();
 	@Serial
 	private static final long serialVersionUID = -2965533757777832824L;
@@ -33,12 +35,21 @@ public class FflogsRawEvent extends BaseEvent {
 		return getTypedField(key, expectedType, null);
 	}
 
+	@Contract("_, _, !null -> !null")
 	public @Nullable <X> X getTypedField(String key, Class<X> expectedType, @Nullable X dflt) {
 		Object value = fields.get(key);
 		if (value == null) {
 			return dflt;
 		}
 		return mapper.convertValue(value, expectedType);
+	}
+
+	public @Nullable Long getHexField(String key) {
+		String strVal = getTypedField(key, String.class);
+		if (strVal == null || strVal.isEmpty()) {
+			return null;
+		}
+		return Long.parseLong(strVal, 16);
 	}
 
 	// Some common fields
@@ -68,5 +79,12 @@ public class FflogsRawEvent extends BaseEvent {
 
 	public @Nullable Long timestamp() {
 		return getTypedField("timestamp", Long.class);
+	}
+
+
+	@Override
+	public String getPrimaryValue() {
+		String type = type();
+		return type == null ? "null" : type;
 	}
 }

@@ -5,14 +5,21 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
+import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.RawJobGaugeEvent;
+import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.TickEvent;
 import gg.xp.xivsupport.events.actlines.events.TickType;
+import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeFflogsTimeSource;
 import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
@@ -161,6 +168,13 @@ public class FflogsEventProcessor {
 			switch (type) {
 				// Leaving possible NPEs in place because those wouldn't make sense anyway
 				case "combatantinfo" -> {
+					if (source instanceof XivPlayerCharacter pc) {
+						if (rawEvent.getTypedField("mind", Long.class, null) != null) {
+							context.accept(new RawPlayerChangeEvent(source));
+						}
+						partyList.add(pc);
+						state.setPartyList(partyList.stream().map(pm -> new RawXivPartyInfo(pm.getId(), pm.getName(), 0, pm.getJob().getId(), (int) pm.getLevel(), true)).toList());
+					}
 					Object aurasRaw = rawEvent.getField("auras");
 					if (aurasRaw != null) {
 						List<CombatantsInfoAura> auras = mapper.convertValue(aurasRaw, new TypeReference<>() {
@@ -170,13 +184,9 @@ public class FflogsEventProcessor {
 							context.accept(new BuffApplied(convertStatus(aura.ability % 1_000_000), 9999, auraSource, source, aura.stacks));
 						});
 					}
-					if (source instanceof XivPlayerCharacter pc) {
-						partyList.add(pc);
-						state.setPartyList(partyList.stream().map(pm -> new RawXivPartyInfo(pm.getId(), pm.getName(), 0, pm.getJob().getId(), (int) pm.getLevel(), true)).toList());
-					}
 				}
 				case "damage", "calculateddamage" -> {
-					Long amount = rawEvent.getTypedField("amount", Long.class, 0L);
+					long amount = rawEvent.getTypedField("amount", Long.class, 0L);
 					if (rawEvent.getTypedField("tick", boolean.class, false)) {
 						long rawEffectId = rawEvent.abilityId();
 						// 500k is "combined"
@@ -189,7 +199,7 @@ public class FflogsEventProcessor {
 					}
 				}
 				case "heal", "calculatedheal" -> {
-					Long amount = rawEvent.getTypedField("amount", Long.class, 0L);
+					long amount = rawEvent.getTypedField("amount", Long.class, 0L);
 					if (rawEvent.getTypedField("tick", boolean.class, false)) {
 						XivStatusEffect status;
 						long rawEffectId = rawEvent.abilityId();
@@ -207,7 +217,6 @@ public class FflogsEventProcessor {
 						// TODO: severity
 						context.accept(new GenericHealEvent(source, target, new XivAbility(rawEvent.abilityId()), amount, HitSeverity.NORMAL));
 					}
-					break;
 				}
 				case "begincast" -> {
 					double duration;
@@ -260,6 +269,53 @@ public class FflogsEventProcessor {
 							getCombatant(rawEvent.getTypedField("targetID", Long.class), rawEvent.getTypedField("targetInstance", Long.class)),
 							0
 					));
+				}
+				case "gaugeupdate" -> {
+					long data0 = rawEvent.getHexField("data1");
+					long data1 = rawEvent.getHexField("data2");
+					long data2 = rawEvent.getHexField("data3");
+					long data3 = rawEvent.getHexField("data4");
+					long[] in = {data0, data1, data2, data3};
+					byte[] out = new byte[16];
+					for (int i = 0; i < 4; i++) {
+						long part = in[i];
+						for (int j = 0; j < 4; j++) {
+							out[4 * i + j] = (byte) (part & 0xff);
+							part >>= 8;
+						}
+					}
+					Job job = Job.getById(data0 & 0xff);
+					context.accept(new RawJobGaugeEvent(
+							getCombatant(rawEvent.getHexField("gaugeID"), null),
+							job,
+							out
+					));
+				}
+				case "tether" -> {
+					context.accept(new TetherEvent(
+							source,
+							target,
+							rawEvent.getTypedField("tetherID", Long.class)
+					));
+				}
+				case "headmarker" -> {
+					// fflogs reverses these from what we do - the source is the target
+					context.accept(new HeadMarkerEvent(
+							target,
+							rawEvent.getTypedField("markerID", Long.class)
+					));
+				}
+				case "death" -> {
+					context.accept(new EntityKilledEvent(source, target));
+				}
+				case "encounterend" -> {
+					boolean killed = rawEvent.getTypedField("kill", boolean.class, false);
+					if (killed) {
+						context.accept(new VictoryEvent());
+					}
+					else {
+						context.accept(new WipeEvent());
+					}
 				}
 
 				default -> {
