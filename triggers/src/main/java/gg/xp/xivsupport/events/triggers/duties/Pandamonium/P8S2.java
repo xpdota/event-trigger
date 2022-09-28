@@ -12,6 +12,8 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivsupport.events.actlines.events.MapEffectEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
@@ -19,11 +21,9 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
-import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
-import org.apache.commons.lang3.time.DurationUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,6 @@ import java.util.Optional;
 @CalloutRepo(name = "P8S Final Boss", duty = KnownDuty.P8S)
 public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(P8S2.class);
-	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
 	private final ModifiableCallout<AbilityCastStart> tyrantsUnholyDarkness = ModifiableCallout.durationBasedCall("Tyrant's Unholy Darkness", "Split Buster");
 	private final ModifiableCallout<AbilityCastStart> aioniopyr = ModifiableCallout.durationBasedCall("Aioniopyr", "Raidwide with Bleed");
@@ -53,9 +52,8 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 //		s.updateCall(hc1dontDoSecondTowers.getModified());
 //	}
 
-	public P8S2(XivState state, ActiveCastRepository acr, StatusEffectRepository buffs) {
+	public P8S2(XivState state, StatusEffectRepository buffs) {
 		this.state = state;
-		this.acr = acr;
 		this.buffs = buffs;
 	}
 
@@ -63,12 +61,6 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 
 	private XivState getState() {
 		return this.state;
-	}
-
-	private final ActiveCastRepository acr;
-
-	private ActiveCastRepository getAcr() {
-		return acr;
 	}
 
 	private final StatusEffectRepository buffs;
@@ -261,9 +253,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 				log.info("NA1: Front Safe? {}", frontSafe);
 				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
 				switch (roleStatus) {
-					case ON_YOU -> {
-						s.updateCall(iceFireNothing.getModified(safeSpotParams));
-					}
+					case ON_YOU -> s.updateCall(iceFireNothing.getModified(safeSpotParams));
 					case SAME_ROLE -> {
 						if (partnersFirst) {
 							s.updateCall(firePairsSameRole.getModified(safeSpotParams));
@@ -288,9 +278,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 				log.info("NA1: Front Safe? {}", frontSafe);
 				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
 				switch (roleStatus) {
-					case ON_YOU -> {
-						s.updateCall(iceFireNothing.getModified(safeSpotParams));
-					}
+					case ON_YOU -> s.updateCall(iceFireNothing.getModified(safeSpotParams));
 					case SAME_ROLE -> {
 						if (!partnersFirst) {
 							s.updateCall(firePairsSameRole.getModified(safeSpotParams));
@@ -416,9 +404,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 				log.info("NA2: Front Safe? {}", frontSafe);
 				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
 				switch (roleStatus) {
-					case ON_YOU -> {
-						s.updateCall(iceFireNothing.getModified(safeSpotParams));
-					}
+					case ON_YOU -> s.updateCall(iceFireNothing.getModified(safeSpotParams));
 					case SAME_ROLE -> {
 						if (partnersFirst) {
 							s.updateCall(firePairsSameRole.getModified(safeSpotParams));
@@ -443,9 +429,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 				log.info("NA2: Front Safe? {}", frontSafe);
 				Map<String, Object> safeSpotParams = Map.of("frontSafe", frontSafe);
 				switch (roleStatus) {
-					case ON_YOU -> {
-						s.updateCall(iceFireNothing.getModified(safeSpotParams));
-					}
+					case ON_YOU -> s.updateCall(iceFireNothing.getModified(safeSpotParams));
 					case SAME_ROLE -> {
 						if (!partnersFirst) {
 							s.updateCall(firePairsSameRole.getModified(safeSpotParams));
@@ -492,9 +476,11 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<BuffApplied> hc1longGamma = new ModifiableCallout<BuffApplied>("HC1: Long Gamma", "Long Gamma - Avoid Defamation").autoIcon();
 	private final ModifiableCallout<BuffApplied> hc1multiSplice = new ModifiableCallout<BuffApplied>("HC1: Multisplice", "2-Stack").autoIcon();
 	private final ModifiableCallout<BuffApplied> hc1superSplice = new ModifiableCallout<BuffApplied>("HC1: Supersplice", "3-Stack").autoIcon();
-	private final ModifiableCallout<?> hc1doAlchemy = new ModifiableCallout<>("HC1: Do Alchemy", "Alch if {color1} or {color2} tower");
+	private final ModifiableCallout<?> hc1doAlchemy = new ModifiableCallout<>("HC1: Maybe Alchemy (Legacy)", "Alch if {color1} or {color2} tower");
+	private final ModifiableCallout<?> hc1yesAlchemy = new ModifiableCallout<>("HC1: Do First Alchemy", "Do Alchemy");
 	private final ModifiableCallout<?> hc1dontDoAlchemy = new ModifiableCallout<>("HC1: Don't Do Alchemy", "Avoid Alchemy");
-	private final ModifiableCallout<?> hc1doTower = new ModifiableCallout<>("HC1: Do Tower", "{safe} safe, Soak Tower if {color1} or {color2}");
+	private final ModifiableCallout<?> hc1doTower = new ModifiableCallout<>("HC1: Maybe First Tower (Legacy)", "{safe} safe, Soak Tower if {color1} or {color2}");
+	private final ModifiableCallout<?> hc1yesTower = new ModifiableCallout<>("HC1: Soak First Tower", "{safe} safe, Soak Tower");
 	private final ModifiableCallout<?> hc1dontDoTower = new ModifiableCallout<>("HC1: Don't Do Tower", "{safe} safe, Avoid Tower");
 	private final ModifiableCallout<?> hc1shortAlphaFup = new ModifiableCallout<>("HC1: Short Alpha Followup", "Avoid Defamations");
 	private final ModifiableCallout<?> hc1shortBetaFup = new ModifiableCallout<>("HC1: Short Beta Followup", "Avoid Defamations");
@@ -507,183 +493,261 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> hc1longGammaFup = new ModifiableCallout<>("HC1: Long Gamma Followup", "Gamma Defamation");
 	private final ModifiableCallout<?> hc1multiSpliceFup = new ModifiableCallout<>("HC1: Multisplice Followup", "Avoid {emptyDefa}");
 	private final ModifiableCallout<?> hc1superSpliceFup = new ModifiableCallout<>("HC1: Supersplice Followup", "Avoid {emptyDefa}");
-	private final ModifiableCallout<?> hc1doSecondAlch = new ModifiableCallout<>("HC1: Do Second Alchemy", "Alch if {color1} or {color2} tower");
+	private final ModifiableCallout<?> hc1doSecondAlch = new ModifiableCallout<>("HC1: Maybe Second Alchemy (Legacy)", "Alch if {color1} or {color2} tower");
+	private final ModifiableCallout<?> hc1yesSecondAlch = new ModifiableCallout<>("HC1: Do Second Alchemy", "Do Alchemy");
 	private final ModifiableCallout<?> hc1dontDoSecondAlch = new ModifiableCallout<>("HC1: Don't Do Second Alchemy", "Avoid Alchemy");
-	private final ModifiableCallout<?> hc1doSecondTower = new ModifiableCallout<>("HC1: Do Tower", "{safe} safe, Soak Tower if {color1} or {color2}");
+	private final ModifiableCallout<?> hc1doSecondTower = new ModifiableCallout<>("HC1: Maybe Second Tower (Legacy)", "{safe} safe, Soak Tower if {color1} or {color2}");
+	private final ModifiableCallout<?> hc1yesSecondTower = new ModifiableCallout<>("HC1: Do Second Tower", "{safe} safe, Soak Tower");
 	private final ModifiableCallout<?> hc1dontDoSecondTower = new ModifiableCallout<>("HC1: Don't Do Tower", "{safe} safe, Avoid Tower");
+
+	private static boolean towerMapEffect(MapEffectEvent mee) {
+		// 257|2022-09-20T20:35:41.6976112-07:00|800375AB|00020001|2E|00|0000|ba9ec316960643c8
+		return mee.getFlags() == 0x2_0001;
+	}
+
+	/*
+		https://discord.com/channels/551474815727304704/594899820976668673/1022314330538127450
+		|          | Blue   | Purple | Green |
+		| HC1 2x   | 28-29  | 1E-1F  | 32-33 |
+		| HC1 4x   | 24-27  | 1A-1D  | 2E-31 |
+		| HC2 2x   | 28-29  | 1E-1F  | 32-33 |
+		| HC2 NW   | 2A     | 20     | 34    |
+		| HC2 NE   | 2B     | 21     | 35    |
+		| HC2 SW   | 2C     | 22     | 36    |
+		| HC2 SE   | 2D     | 23     | 37    |
+	 */
+	// The only case where the singular return type doesn't work is HC2 quad tower,
+	// but you already 100% know if you're doing alchemy or not based on whether
+	// you did for first alchemy
+	private static @Nullable TowerColor towerColor(List<MapEffectEvent> mapEffects) {
+		for (MapEffectEvent mapEffect : mapEffects) {
+			log.info("MapEffect: 0x%X".formatted(mapEffect.getIndex()));
+			long index = mapEffect.getIndex();
+			if (index > 0x24 && index <= 0x2D) {
+				return TowerColor.Blue;
+			}
+			else if (index > 0x2E && index <= 0x37) {
+				return TowerColor.Green;
+			}
+			else if (index > 0x1A && index <= 0x23) {
+				return TowerColor.Purple;
+			}
+		}
+		return null;
+	}
+
+	private enum ShouldAlch {
+		MAYBE,
+		YES,
+		NO
+	}
 
 	private void hc1(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 		log.info("HC1: Begin");
 		s.updateCall(hc1start.getModified(e1));
 		BuffApplied playerBuff = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(impAlpha, impBeta, impGamma, supersplice, multisplice));
 		log.info("HC1: Player Buff: {}", playerBuff.getBuff().getId());
-		long seconds = playerBuff.getInitialDuration().toSeconds();
-		ModifiableCallout<BuffApplied> initialCall;
 		ModifiableCallout<?> followupCall;
-		boolean maybeDoingTower = false;
-		@Nullable TowerColor neededTowerColor1 = null;
-		@Nullable TowerColor neededTowerColor2 = null;
-		// Set up first couple callouts since they're static based on debuff
-		switch ((int) playerBuff.getBuff().getId()) {
-			case impAlpha -> {
-				if (seconds < 15) {
-					initialCall = hc1shortAlpha;
-					followupCall = hc1shortAlphaFup;
-					maybeDoingTower = true;
-					neededTowerColor1 = TowerColor.Blue;
-					neededTowerColor2 = TowerColor.Green;
-				}
-				else {
-					initialCall = hc1longAlpha;
-					followupCall = hc1longAlphaFup;
-				}
-			}
-			case impBeta -> {
-				if (seconds < 15) {
-					initialCall = hc1shortBeta;
-					followupCall = hc1shortBetaFup;
-					maybeDoingTower = true;
-					neededTowerColor1 = TowerColor.Purple;
-					neededTowerColor2 = TowerColor.Green;
-				}
-				else {
-					initialCall = hc1longBeta;
-					followupCall = hc1longBetaFup;
-				}
-			}
-			case impGamma -> {
-				if (seconds < 15) {
-					initialCall = hc1shortGamma;
-					followupCall = hc1shortGammaFup;
-					maybeDoingTower = true;
-					neededTowerColor1 = TowerColor.Purple;
-					neededTowerColor2 = TowerColor.Blue;
-				}
-				else {
-					initialCall = hc1longGamma;
-					followupCall = hc1longGammaFup;
-				}
-			}
-			case multisplice -> {
-				initialCall = hc1multiSplice;
-				followupCall = hc1multiSpliceFup;
-			}
-			case supersplice -> {
-				initialCall = hc1superSplice;
-				followupCall = hc1superSpliceFup;
-			}
-			default -> {
-				log.warn("HC1: Unknown debuff {}", playerBuff);
-				return;
-			}
-		}
-		log.info("HC1: First Calc: {} {} {} {} {} {} {}", playerBuff.getBuff().getId(), seconds, initialCall, followupCall, maybeDoingTower, neededTowerColor1, neededTowerColor2);
-		s.updateCall(initialCall.getModified(playerBuff));
-		// This debuff means first defamations have gone off
-		s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(inconceivable));
-		log.info("HC1: Checkpoint 1");
-		if (maybeDoingTower) {
-			s.updateCall(hc1doAlchemy.getModified(Map.of("color1", neededTowerColor1, "color2", neededTowerColor2)));
-		}
-		else {
-			s.updateCall(hc1dontDoAlchemy.getModified());
-		}
 		{
+			long seconds = playerBuff.getInitialDuration().toSeconds();
+			ModifiableCallout<BuffApplied> initialCall;
+			boolean maybeDoingTower = false;
+			@Nullable TowerColor neededTowerColor1 = null;
+			@Nullable TowerColor neededTowerColor2 = null;
+			// Set up first couple callouts since they're static based on debuff
+			switch ((int) playerBuff.getBuff().getId()) {
+				case impAlpha -> {
+					if (seconds < 15) {
+						initialCall = hc1shortAlpha;
+						followupCall = hc1shortAlphaFup;
+						maybeDoingTower = true;
+						neededTowerColor1 = TowerColor.Blue;
+						neededTowerColor2 = TowerColor.Green;
+					}
+					else {
+						initialCall = hc1longAlpha;
+						followupCall = hc1longAlphaFup;
+					}
+				}
+				case impBeta -> {
+					if (seconds < 15) {
+						initialCall = hc1shortBeta;
+						followupCall = hc1shortBetaFup;
+						maybeDoingTower = true;
+						neededTowerColor1 = TowerColor.Purple;
+						neededTowerColor2 = TowerColor.Green;
+					}
+					else {
+						initialCall = hc1longBeta;
+						followupCall = hc1longBetaFup;
+					}
+				}
+				case impGamma -> {
+					if (seconds < 15) {
+						initialCall = hc1shortGamma;
+						followupCall = hc1shortGammaFup;
+						maybeDoingTower = true;
+						neededTowerColor1 = TowerColor.Purple;
+						neededTowerColor2 = TowerColor.Blue;
+					}
+					else {
+						initialCall = hc1longGamma;
+						followupCall = hc1longGammaFup;
+					}
+				}
+				case multisplice -> {
+					initialCall = hc1multiSplice;
+					followupCall = hc1multiSpliceFup;
+				}
+				case supersplice -> {
+					initialCall = hc1superSplice;
+					followupCall = hc1superSpliceFup;
+				}
+				default -> {
+					log.warn("HC1: Unknown debuff {}", playerBuff);
+					return;
+				}
+			}
+			log.info("HC1: First Calc: {} {} {} {} {} {} {}", playerBuff.getBuff().getId(), seconds, initialCall, followupCall, maybeDoingTower, neededTowerColor1, neededTowerColor2);
+			s.updateCall(initialCall.getModified(playerBuff));
+			// This debuff means first defamations have gone off
+			s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(inconceivable));
+			// Wait for optional MapEffects by using the vuln up removal as a stop condition
+			ShouldAlch doFirstAlch;
+			log.info("HC1: Waiting for tower color");
+			List<MapEffectEvent> mapEffects = s.waitEventsUntil(2, MapEffectEvent.class, P8S2::towerMapEffect, BuffRemoved.class, ba -> ba.buffIdMatches(0xB7D));
+			@Nullable TowerColor towerColor = towerColor(mapEffects);
+			log.info("HC1: Tower Color 1: {}", towerColor);
+			log.info("HC1: Checkpoint 1");
+			if (towerColor == null) {
+				doFirstAlch = maybeDoingTower ? ShouldAlch.MAYBE : ShouldAlch.NO;
+			}
+			else {
+				doFirstAlch = towerColor == neededTowerColor1 || towerColor == neededTowerColor2 ? ShouldAlch.YES : ShouldAlch.NO;
+			}
+			s.updateCall(switch (doFirstAlch) {
+				case MAYBE ->
+						hc1doAlchemy.getModified(Map.of("color1", neededTowerColor1, "color2", neededTowerColor2));
+				case YES ->
+						hc1yesAlchemy.getModified(Map.of("towerColor", towerColor, "color1", neededTowerColor1, "color2", neededTowerColor2));
+				case NO -> hc1dontDoAlchemy.getModified();
+			});
 			// Cleave and towers
 			AbilityCastStart cleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x79D7, 0x79D8));
 			ArenaSector safe = cleave.abilityIdMatches(0x79D7) ? ArenaSector.EAST : ArenaSector.WEST;
 			log.info("HC1: Cleave Safe Spot {}", safe);
 			log.info("HC1: Checkpoint 2");
-			if (maybeDoingTower) {
-				s.updateCall(hc1doTower.getModified(Map.of("safe", safe, "color1", neededTowerColor1, "color2", neededTowerColor2)));
-			}
-			else {
-				s.updateCall(hc1dontDoTower.getModified(Map.of("safe", safe)));
-			}
+			s.updateCall(switch (doFirstAlch) {
+				case MAYBE ->
+						hc1doTower.getModified(Map.of("safe", safe, "color1", neededTowerColor1, "color2", neededTowerColor2));
+				case YES -> hc1yesTower.getModified(Map.of("safe", safe, "towerColor", towerColor));
+				case NO -> hc1dontDoTower.getModified(Map.of("safe", safe));
+			});
 		}
-		s.waitMs(5_000);
-		log.info("HC1: Checkpoint 3");
-		String emptyDefa;
-		List<BuffApplied> perfectBuffs = getBuffs().getBuffs().stream()
-				.filter(ba -> ba.buffIdMatches(perfAlpha, perfBeta, perfGamma))
-				.toList();
-
-		if (perfectBuffs.size() != 1) {
-			emptyDefa = "Error";
-		}
-		else {
-			// These are for the previously-unused defamation
-			switch ((int) perfectBuffs.get(0).getBuff().getId()) {
-				case perfAlpha -> {
-					emptyDefa = "Alpha";
-					if (followupCall == hc1shortAlphaFup) {
-						followupCall = hc1shortAlphaFupNoAlch;
-					}
-				}
-				case perfBeta -> {
-					emptyDefa = "Beta";
-					if (followupCall == hc1shortBetaFup) {
-						followupCall = hc1shortBetaFupNoAlch;
-					}
-				}
-				case perfGamma -> {
-					emptyDefa = "Gamma";
-					if (followupCall == hc1shortGammaFup) {
-						followupCall = hc1shortGammaFupNoAlch;
-					}
-				}
-				default -> emptyDefa = "Error";
-			}
-		}
-		log.info("HC1: Avoid {}", emptyDefa);
-		s.updateCall(followupCall.getModified(Map.of("emptyDefa", emptyDefa)));
-		s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(inconceivable));
-		log.info("HC1: Checkpoint 4");
-
-		s.waitMs(500);
-		BuffApplied secondAlchBuff = getBuffs().statusesOnTarget(getState().getPlayer())
-				.stream().filter(ba -> ba.buffIdMatches(perfAlpha, perfBeta, perfGamma))
-				.findAny().orElse(null);
-		boolean secondAlchMaybe = false;
-		// Second towers and cleaves
-		if (secondAlchBuff != null) {
-
-			switch ((int) secondAlchBuff.getBuff().getId()) {
-				case perfAlpha -> {
-					neededTowerColor1 = TowerColor.Blue;
-					neededTowerColor2 = TowerColor.Green;
-					secondAlchMaybe = true;
-				}
-				case perfBeta -> {
-					neededTowerColor1 = TowerColor.Purple;
-					neededTowerColor2 = TowerColor.Green;
-					secondAlchMaybe = true;
-				}
-				case perfGamma -> {
-					neededTowerColor1 = TowerColor.Blue;
-					neededTowerColor2 = TowerColor.Purple;
-					secondAlchMaybe = true;
-				}
-			}
-		}
-		log.info("HC1: Second alch buff: {} {} {} {}", secondAlchBuff, secondAlchMaybe, neededTowerColor1, neededTowerColor2);
-		if (secondAlchMaybe) {
-			s.updateCall(hc1doSecondAlch.getModified(Map.of("color1", neededTowerColor1, "color2", neededTowerColor2)));
-		}
-		else {
-			s.updateCall(hc1dontDoSecondAlch.getModified());
-		}
-		log.info("HC1: Checkpoint 5");
 		{
-			AbilityCastStart cleave2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x79D7, 0x79D8));
-			ArenaSector safe2 = cleave2.abilityIdMatches(0x79D7) ? ArenaSector.EAST : ArenaSector.WEST;
-			log.info("NA1: Cleave Safe Spot {}", safe2);
-			log.info("HC1: Checkpoint 6");
-			if (secondAlchMaybe) {
-				s.updateCall(hc1doSecondTower.getModified(Map.of("safe", safe2, "color1", neededTowerColor1, "color2", neededTowerColor2)));
+			s.waitMs(5_000);
+			log.info("HC1: Checkpoint 3");
+			String emptyDefa;
+			List<BuffApplied> perfectBuffs = getBuffs().getBuffs().stream()
+					.filter(ba -> ba.buffIdMatches(perfAlpha, perfBeta, perfGamma))
+					.toList();
+
+			if (perfectBuffs.size() != 1) {
+				emptyDefa = "Error";
 			}
 			else {
-				s.updateCall(hc1dontDoSecondTower.getModified(Map.of("safe", safe2)));
+				// These are for the previously-unused defamation
+				switch ((int) perfectBuffs.get(0).getBuff().getId()) {
+					case perfAlpha -> {
+						emptyDefa = "Alpha";
+						if (followupCall == hc1shortAlphaFup) {
+							followupCall = hc1shortAlphaFupNoAlch;
+						}
+					}
+					case perfBeta -> {
+						emptyDefa = "Beta";
+						if (followupCall == hc1shortBetaFup) {
+							followupCall = hc1shortBetaFupNoAlch;
+						}
+					}
+					case perfGamma -> {
+						emptyDefa = "Gamma";
+						if (followupCall == hc1shortGammaFup) {
+							followupCall = hc1shortGammaFupNoAlch;
+						}
+					}
+					default -> emptyDefa = "Error";
+				}
+			}
+			log.info("HC1: Avoid {}", emptyDefa);
+			s.updateCall(followupCall.getModified(Map.of("emptyDefa", emptyDefa)));
+			s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(inconceivable));
+			TowerColor towerColor2;
+			log.info("HC1: Waiting for tower color");
+			{
+				List<MapEffectEvent> mapEffects = s.waitEventsUntil(2, MapEffectEvent.class, P8S2::towerMapEffect, BuffRemoved.class, ba -> ba.buffIdMatches(0xB7D));
+				towerColor2 = towerColor(mapEffects);
+				log.info("HC1: Tower Color 2: {}", towerColor2);
+			}
+
+			log.info("HC1: Checkpoint 4");
+			s.waitMs(500);
+			BuffApplied secondAlchBuff = getBuffs().statusesOnTarget(getState().getPlayer())
+					.stream().filter(ba -> ba.buffIdMatches(perfAlpha, perfBeta, perfGamma))
+					.findAny().orElse(null);
+			boolean secondAlchMaybe = false;
+			@Nullable TowerColor neededTowerColor1 = null;
+			@Nullable TowerColor neededTowerColor2 = null;
+			// Second towers and cleaves
+			if (secondAlchBuff != null) {
+
+				switch ((int) secondAlchBuff.getBuff().getId()) {
+					case perfAlpha -> {
+						neededTowerColor1 = TowerColor.Blue;
+						neededTowerColor2 = TowerColor.Green;
+						secondAlchMaybe = true;
+					}
+					case perfBeta -> {
+						neededTowerColor1 = TowerColor.Purple;
+						neededTowerColor2 = TowerColor.Green;
+						secondAlchMaybe = true;
+					}
+					case perfGamma -> {
+						neededTowerColor1 = TowerColor.Blue;
+						neededTowerColor2 = TowerColor.Purple;
+						secondAlchMaybe = true;
+					}
+				}
+			}
+			{
+				log.info("HC1: Second alch buff: {} {} {} {}", secondAlchBuff, secondAlchMaybe, neededTowerColor1, neededTowerColor2);
+				ShouldAlch doSecondAlch;
+				if (towerColor2 == null) {
+					doSecondAlch = secondAlchMaybe ? ShouldAlch.MAYBE : ShouldAlch.NO;
+				}
+				else {
+					doSecondAlch = towerColor2 == neededTowerColor1 || towerColor2 == neededTowerColor2 ? ShouldAlch.YES : ShouldAlch.NO;
+				}
+				s.updateCall(switch (doSecondAlch) {
+					case MAYBE ->
+							hc1doSecondAlch.getModified(Map.of("color1", neededTowerColor1, "color2", neededTowerColor2));
+					case YES ->
+							hc1yesSecondAlch.getModified(Map.of("towerColor", towerColor2, "color1", neededTowerColor1, "color2", neededTowerColor2));
+					case NO -> hc1dontDoSecondAlch.getModified();
+				});
+				log.info("HC1: Checkpoint 5");
+				{
+					AbilityCastStart cleave2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x79D7, 0x79D8));
+					ArenaSector safe2 = cleave2.abilityIdMatches(0x79D7) ? ArenaSector.EAST : ArenaSector.WEST;
+					log.info("HC1: Cleave Safe Spot {}", safe2);
+					log.info("HC1: Checkpoint 6");
+					s.updateCall(switch (doSecondAlch) {
+						case MAYBE ->
+								hc1doSecondTower.getModified(Map.of("safe", safe2, "color1", neededTowerColor1, "color2", neededTowerColor2));
+						case YES -> hc1yesSecondTower.getModified(Map.of("safe", safe2, "towerColor", towerColor2));
+						case NO -> hc1dontDoSecondTower.getModified(Map.of("safe", safe2));
+					});
+				}
 			}
 		}
 	}
@@ -692,11 +756,13 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> hc2nothingInitial = new ModifiableCallout<>("HC2: Nothing Initial", "Nothing");
 	private final ModifiableCallout<?> hc2nothingSecond = new ModifiableCallout<>("HC2: Nothing Post-Defa", "");
 	private final ModifiableCallout<?> hc2ShortAlphaInitial = new ModifiableCallout<>("HC2: Short Alpha Initial", "Short Alpha").statusIcon(3330);
-	private final ModifiableCallout<?> hc2ShortAlphaSecond = new ModifiableCallout<>("HC2: Short Alpha Post-Defa", "Alch if Blue Tower").statusIcon(3333);
+	private final ModifiableCallout<?> hc2ShortAlphaSecond = new ModifiableCallout<>("HC2: Short Alpha Post-Defa (Legacy)", "Alch if Blue Tower").statusIcon(3333);
 	private final ModifiableCallout<?> hc2ShortBetaInitial = new ModifiableCallout<>("HC2: Short Beta Initial", "Short Beta").statusIcon(3331);
-	private final ModifiableCallout<?> hc2ShortBetaSecond = new ModifiableCallout<>("HC2: Short Beta Post-Defa", "Alch if Purple Tower").statusIcon(3334);
+	private final ModifiableCallout<?> hc2ShortBetaSecond = new ModifiableCallout<>("HC2: Short Beta Post-Defa (Legacy)", "Alch if Purple Tower").statusIcon(3334);
 	private final ModifiableCallout<?> hc2ShortGammaInitial = new ModifiableCallout<>("HC2: Short Gamma Initial", "Short Gamma").statusIcon(3332);
-	private final ModifiableCallout<?> hc2ShortGammaSecond = new ModifiableCallout<>("HC2: Short Gamma Post-Defa", "Alch if Blue or Purple Tower").statusIcon(3335);
+	private final ModifiableCallout<?> hc2ShortGammaSecond = new ModifiableCallout<>("HC2: Short Gamma Post-Defa (Legacy)", "Alch if Blue or Purple Tower").statusIcon(3335);
+	private final ModifiableCallout<?> hc2ShortCombinedYesAlch = new ModifiableCallout<>("HC2: Short Gamma Yes Alch", "Do Alchemy and Towers");
+	private final ModifiableCallout<?> hc2ShortCombinedNoAlch = new ModifiableCallout<>("HC2: Short Gamma No Alch", "Avoid Alchemy and Towers");
 	private final ModifiableCallout<?> hc2LongAlphaInitial = new ModifiableCallout<>("HC2: Long Alpha Initial (No Splice)", "Long Alpha").statusIcon(3330);
 	private final ModifiableCallout<?> hc2LongAlphaSecond = new ModifiableCallout<>("HC2: Long Alpha Post-Defa", "Preposition to Alpha").statusIcon(3330);
 	private final ModifiableCallout<?> hc2LongBetaInitial = new ModifiableCallout<>("HC2: Long Beta Initial (No Splice)", "Long Beta").statusIcon(3331);
@@ -712,8 +778,8 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> hc2LongBetaDefa = new ModifiableCallout<>("HC2: Second Beta Defa", "Beta").statusIcon(3331);
 	private final ModifiableCallout<?> hc2LongGammaDefa = new ModifiableCallout<>("HC2: Second Gamma Defa", "Gamma").statusIcon(3332);
 	private final ModifiableCallout<?> hc2withAlphaDefa = new ModifiableCallout<>("HC2: Stack with Second Alpha", "Stack with Alpha");
-	private final ModifiableCallout<?> hc2withBetaDefa = new ModifiableCallout<>("HC2: Stack with Second Beta", "Stack with Beta");;
-	private final ModifiableCallout<?> hc2withGammaDefa = new ModifiableCallout<>("HC2: Stack with Second Gamma", "Stack with Gamma");;
+	private final ModifiableCallout<?> hc2withBetaDefa = new ModifiableCallout<>("HC2: Stack with Second Beta", "Stack with Beta");
+	private final ModifiableCallout<?> hc2withGammaDefa = new ModifiableCallout<>("HC2: Stack with Second Gamma", "Stack with Gamma");
 	private final ModifiableCallout<?> hc2avoidSecondDefa = new ModifiableCallout<>("HC2: Avoid Second Defa", "Avoid Defa");
 	private final ModifiableCallout<?> hc2finalBaitAsNothing = new ModifiableCallout<>("HC2: Bait Charge (Original Nothing)", "Bait Charge");
 	private final ModifiableCallout<?> hc2finalBaitFirstAlch = new ModifiableCallout<>("HC2: Bait Charge (Original Alch)", "Bait Charge");
@@ -787,6 +853,22 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 		}
 		s.updateCall(initialCall.getModified());
 		s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(inconceivable));
+		TowerColor towerColor;
+		log.info("HC2: Waiting for tower color");
+		{
+			List<MapEffectEvent> mapEffects = s.waitEventsUntil(2, MapEffectEvent.class, P8S2::towerMapEffect, BuffRemoved.class, ba -> ba.buffIdMatches(0xB7D));
+			towerColor = towerColor(mapEffects);
+			log.info("HC2: Tower Color 1: {}", towerColor);
+		}
+		// IF we got a tower, replace these calls
+		if (towerColor != null) {
+			boolean doingAlch = switch (towerColor) {
+				case Blue -> secondCall == hc2ShortAlphaSecond || secondCall == hc2ShortGammaSecond;
+				case Purple -> secondCall == hc2ShortBetaSecond || secondCall == hc2ShortGammaSecond;
+				case Green -> secondCall == hc2ShortAlphaSecond || secondCall == hc2ShortBetaSecond;
+			};
+			secondCall = doingAlch ? hc2ShortCombinedYesAlch : hc2ShortCombinedNoAlch;
+		}
 		s.updateCall(secondCall.getModified());
 		log.info("HC2: Checkpoint 1");
 		{
@@ -804,7 +886,7 @@ public class P8S2 extends AutoChildEventHandler implements FilteredEventHandler 
 		// This set of calls is for the second defamation positions
 		ModifiableCallout<?> secondDefaCall;
 		if (playerHasAnimalAfterFirstSet) {
-			secondDefaCall = (hc2avoidSecondDefa);
+			secondDefaCall = hc2avoidSecondDefa;
 		}
 		else {
 			if (letterBuff != null) {

@@ -158,6 +158,9 @@ public class CalloutProcessor {
 	// Default conversions
 	@SuppressWarnings("unused")
 	public String singleReplacement(Object rawValue) {
+		if (rawValue == null) {
+			return "null";
+		}
 		if (rawValue instanceof String strVal) {
 			return strVal;
 		}

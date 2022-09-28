@@ -71,6 +71,8 @@ public final class CommonGuiSetup {
 		SwingUtilities.invokeLater(() -> {
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		});
+		// Increase tooltip hang time from 4s to 60s
+		ToolTipManager.sharedInstance().setDismissDelay(60_000);
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
 		if (toolkit.isDynamicLayoutActive()) {
 			toolkit.setDynamicLayout(true);
