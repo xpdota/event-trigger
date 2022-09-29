@@ -13,6 +13,8 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.MapEffectEvent;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
@@ -20,12 +22,18 @@ import gg.xp.xivsupport.events.state.combatstate.CastResult;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
+import gg.xp.xivsupport.models.ArenaSector;
+import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @CalloutRepo(name = "P6S", duty = KnownDuty.P6S)
 public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -380,16 +388,270 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			}
 	);
 
-//	@HandleEvents
-//	public void buffApplied(EventContext context, BuffApplied event) {
-//		long id = event.getBuff().getId();
-//		Duration duration = event.getInitialDuration();
-//		ModifiableCallout<HasDuration> call;
-//		if (event.getTarget().isThePlayer() && id == 0x0 && !event.isRefresh()) //???+8 bad glossomorph
-//			call = glossomorph;
-//		else
-//			return;
-//
-//		context.accept(call.getModified(event));
-//	}
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> aethericPolyminoidSq = SqtTemplates.multiInvocation(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7866),
+			this::poly1,
+			this::poly2,
+			this::poly3,
+			this::poly4,
+			this::poly5,
+			this::poly6,
+			this::poly7,
+			this::poly8);
+
+	private final ModifiableCallout<AbilityCastStart> poly1safe = ModifiableCallout.durationBasedCall("Poly 1 safe spots", "{in} in, {out} out");
+	private final ModifiableCallout<AbilityCastStart> poly2safe = ModifiableCallout.durationBasedCall("Poly 2 bait then safe spot", "Bait middle, then {safe}");
+	private final ModifiableCallout<AbilityCastStart> poly3safe = ModifiableCallout.durationBasedCall("Poly 3 safe spots", "Light parties, {safe1} {safe2}");
+	private final ModifiableCallout<AbilityCastStart> poly5safe = ModifiableCallout.durationBasedCall("Poly 5 start spot", "Start inner {start}");
+	private final ModifiableCallout<AbilityCastStart> poly7safe = ModifiableCallout.durationBasedCall("Poly 7 bait then safe spot", "Bait middle, then {safe}");
+	private final ModifiableCallout<AbilityCastStart> poly8safe = ModifiableCallout.durationBasedCall("Poly 8 safe side", "{in}");
+
+	/*
+	00020001 = Plus
+	00400020 = Cross
+
+	grid layout:
+	01|02|03|04
+	--+--+--+--
+	0F|05|06|10
+	--+--+--+--
+	0D|07|08|0E
+	--+--+--+--
+	09|0A|0B|0C
+	 */
+	//Only need to know one of the tiles, so just look at the first found
+	private void poly1(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+		log.info("Poly 1: Begin, waiting for map effects");
+		List<MapEffectEvent> mapEffects = s.waitEvents(2, MapEffectEvent.class, me -> me.getFlags() == 0x00020001);
+		log.info("Poly 1: MapEffect grid positions(index): {}, {}", mapEffects.get(0).getIndex(), mapEffects.get(1).getIndex());
+		//01 or 03, west in east out. 02 or 04, east in west out
+		List<Integer> tilesToCheck = Arrays.asList(0x01, 0x02, 0x03, 0x04, 0x09, 0x0A, 0x0B, 0x0C);
+		mapEffects.stream().filter(e -> tilesToCheck.contains((int) e.getIndex())).findFirst().ifPresent(e -> s.updateCall(switch ((int) e.getIndex()) {
+			case 0x01, 0x03, 0x09, 0x0B -> poly1safe.getModified(Map.of("in", ArenaSector.WEST, "out", ArenaSector.EAST));
+			case 0x02, 0x04, 0x0A, 0x0C -> poly1safe.getModified(Map.of("out", ArenaSector.WEST, "in", ArenaSector.EAST));
+			default -> poly1safe.getModified(Map.of("in", ArenaSector.UNKNOWN, "out", ArenaSector.UNKNOWN));
+		}));
+		log.info("Poly 1: End");
+	}
+
+	//Find tile not in corner, always CW from it?
+	private void poly2(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+		log.info("Poly 2: Begin, waiting for map effects.");
+		List<MapEffectEvent> mapEffects = s.waitEvents(4, MapEffectEvent.class, me -> me.getFlags() == 0x000200001 || me.getFlags() == 0x00400020);
+		log.info("Poly 2: found map effects");
+		//based on assumption that it is only ever rotated from a possible pattern
+		List<Integer> tilesToCheck = Arrays.asList(0x03, 0x0E, 0x0A, 0x0F);
+		mapEffects.stream().filter(e -> tilesToCheck.contains((int) e.getIndex())).findFirst().ifPresent(e -> s.updateCall(switch ((int) e.getIndex()) {
+			case 0x03 -> poly2safe.getModified(Map.of("safe", ArenaSector.SOUTHEAST));
+			case 0x0E -> poly2safe.getModified(Map.of("safe", ArenaSector.SOUTHWEST));
+			case 0x0A -> poly2safe.getModified(Map.of("safe", ArenaSector.NORTHWEST));
+			case 0x0F -> poly2safe.getModified(Map.of("safe", ArenaSector.NORTHEAST));
+			default -> poly2safe.getModified(Map.of("safe", ArenaSector.UNKNOWN));
+		}));
+		log.info("Poly 2: End");
+	}
+
+	//Only care about any inner plus tile, so just look at the first found
+	private void poly3(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+		log.info("Poly 3: Begin, finding map effects.");
+		List<MapEffectEvent> mapEffects = s.waitEvents(2, MapEffectEvent.class, me -> me.getFlags() == 0x00020001);
+		log.info("Poly 3: Found map effects");
+		//always adjacent to plus that isnt in a corner
+		List<Integer> tilesToCheck = Arrays.asList(0x02, 0x03, 0x0E, 0x0B, 0x0A, 0x0D, 0x0F, 0x10);
+		mapEffects.stream().filter(e -> tilesToCheck.contains((int) e.getIndex())).findFirst().ifPresent(e -> s.updateCall(switch ((int) e.getIndex()) {
+			//SW, NE
+			case 0x03,0x0A, 0x0D, 0x10 -> poly3safe.getModified(Map.of("safe1", ArenaSector.SOUTHWEST, "safe2", ArenaSector.NORTHEAST));
+			//NW, SE
+			case 0x02, 0x0B, 0x0E, 0x0F -> poly3safe.getModified(Map.of("safe1", ArenaSector.NORTHWEST, "safe2", ArenaSector.SOUTHEAST));
+			default -> poly3safe.getModified(Map.of("safe1", ArenaSector.UNKNOWN, "safe2", ArenaSector.UNKNOWN));
+		}));
+		log.info("Poly 3: End");
+	}
+
+	//Unsure how to call this one
+	private void poly4(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+
+	}
+
+	//Find tethered plus, start diagonal inner from it
+	private void poly5(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+		log.info("Poly 5: Begin, finding correct map effects");
+		List<MapEffectEvent> mapEffects = s.waitEvents(3, MapEffectEvent.class, me -> me.getFlags() == 0x00020001 || me.getFlags() == 0x00400020);
+		TetherEvent tetherEvent = s.waitEvent(TetherEvent.class, te -> true); //TODO: find tether id
+		s.refreshCombatants(100);
+		//use this if i want to call where to move after chorus ixou starts
+		MapEffectEvent crossMapEffect = mapEffects.stream().filter(e -> e.getFlags() == 0x00400020).findFirst().get();
+		MapEffectEvent tetheredPlusMapEffect = findFirstTetheredTile(mapEffects.stream().filter(e -> e.getFlags() == 0x00020001).collect(Collectors.toList()), tetherEvent);
+		log.info("Poly 5: Finished finding correct map effects");
+		s.updateCall(switch ((int) tetheredPlusMapEffect.getIndex()) {
+			case 0x04 -> poly5safe.getModified(Map.of("start", ArenaSector.NORTHEAST));
+			case 0x0C -> poly5safe.getModified(Map.of("start", ArenaSector.SOUTHEAST));
+			case 0x09 -> poly5safe.getModified(Map.of("start", ArenaSector.SOUTHWEST));
+			case 0x01 -> poly5safe.getModified(Map.of("start", ArenaSector.NORTHWEST));
+			default -> poly5safe.getModified(Map.of("start", ArenaSector.UNKNOWN));
+		});
+
+	}
+
+	//Aka cachexia 2
+	private void poly6(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+
+	}
+
+	//on diagonal of pluses and adjascent to cross or not adjascent to plus
+	private void poly7(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+		log.info("Poly 7: Begin, finding map effects");
+		List<MapEffectEvent> mapEffects = s.waitEvents(4, MapEffectEvent.class, me -> me.getFlags() == 0x00020001 || me.getFlags() == 0x00400020);
+		//either gives same info
+		List<Integer> tilesToCheck = Arrays.asList(0x01, 0x04, 0x09, 0x0C);
+		MapEffectEvent plusMapEffect = mapEffects.stream().filter(e -> tilesToCheck.contains((int) e.getIndex()) && e.getFlags() == 0x00020001).findFirst().get();
+		List<MapEffectEvent> crossMapEffects = mapEffects.stream().filter(e -> e.getFlags() == 0x00400020).collect(Collectors.toList());
+		log.info("Poly 7: Found map effects");
+		//first get two possible safe spots
+		List<ArenaSector> safeSpots = null;
+				safeSpots = switch ((int) plusMapEffect.getIndex()) {
+					case 0x01, 0x0C -> Arrays.asList(ArenaSector.NORTHWEST, ArenaSector.SOUTHEAST);
+					case 0x04, 0x09 -> Arrays.asList(ArenaSector.SOUTHWEST, ArenaSector.NORTHEAST);
+					default -> Arrays.asList(ArenaSector.UNKNOWN);
+				};
+		log.info("Poly 7: possible safespots are: {}", safeSpots);
+		List<Integer> innerTilesToCheck = Arrays.asList(0x02, 0x03, 0x0A, 0x0B, 0x0D, 0x0E, 0x0F, 0x10);
+		MapEffectEvent oddOneOut = mapEffects.stream().filter(e -> innerTilesToCheck.contains(e.getIndex())).findFirst().get();
+		if(oddOneOut.getFlags() == 0x00020001) {
+			//plus
+			switch ((int) oddOneOut.getIndex()) {
+				case 0x02, 0x0A -> {
+					safeSpots.remove(ArenaSector.NORTHWEST);
+					safeSpots.remove(ArenaSector.SOUTHWEST);
+				}
+				case 0x03, 0x0B -> {
+					safeSpots.remove(ArenaSector.NORTHEAST);
+					safeSpots.remove(ArenaSector.SOUTHEAST);
+				}
+				case 0x0F, 0x10 -> {
+					safeSpots.remove(ArenaSector.NORTHWEST);
+					safeSpots.remove(ArenaSector.NORTHEAST);
+				}
+				case 0x0D, 0x0E -> {
+					safeSpots.remove(ArenaSector.SOUTHWEST);
+					safeSpots.remove(ArenaSector.SOUTHEAST);
+				}
+				default -> log.info("Poly 7: Weird oddOneOut index: {}", oddOneOut.getIndex());
+			}
+		} else {
+			//cross
+			switch ((int) oddOneOut.getIndex()) {
+				case 0x02, 0x0E -> safeSpots.remove(ArenaSector.NORTHEAST);
+				case 0x03, 0x0D -> safeSpots.remove(ArenaSector.NORTHWEST);
+				case 0x10, 0x0A -> safeSpots.remove(ArenaSector.SOUTHEAST);
+				case 0x0B, 0x0F -> safeSpots.remove(ArenaSector.SOUTHWEST);
+				default -> log.info("Poly 7: Weird oddOneOut index: {}", oddOneOut.getIndex());
+			}
+		}
+
+
+	}
+
+	//same pattern as first, just dodge chorus ixou
+	private void poly8(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
+		log.info("Poly 8: Begin, waiting for map effects");
+		List<MapEffectEvent> mapEffects = s.waitEvents(2, MapEffectEvent.class, me -> me.getFlags() == 0x00020001);
+		log.info("Poly 8: MapEffect grid positions(index): {}, {}", mapEffects.get(0).getIndex(), mapEffects.get(1).getIndex());
+		//01 or 03, west in east out. 02 or 04, east in west out
+		List<Integer> tilesToCheck = Arrays.asList(0x01, 0x02, 0x03, 0x04, 0x09, 0x0A, 0x0B, 0x0C);
+		mapEffects.stream().filter(e -> tilesToCheck.contains((int) e.getIndex())).findFirst().ifPresent(e -> s.updateCall(switch ((int) e.getIndex()) {
+			case 0x01, 0x03, 0x09, 0x0B -> poly8safe.getModified(Map.of("in", ArenaSector.WEST));
+			case 0x02, 0x04, 0x0A, 0x0C -> poly8safe.getModified(Map.of("in", ArenaSector.EAST));
+			default -> poly1safe.getModified(Map.of("in", ArenaSector.UNKNOWN, "out", ArenaSector.UNKNOWN));
+		}));
+		log.info("Poly 8: End");
+	}
+
+	private MapEffectEvent findFirstTetheredTile(List<MapEffectEvent> mel, TetherEvent t) {
+		MapEffectEvent match = null;
+		for (MapEffectEvent me : mel) {
+			switch((int)me.getIndex()) {
+				case 0x01:
+					if (isApproximatelyNearbyTether(85, 85, t))
+						match = me;
+					break;
+				case 0x02:
+					if (isApproximatelyNearbyTether(95, 85, t))
+						match = me;
+					break;
+				case 0x03:
+					if (isApproximatelyNearbyTether(105, 85, t))
+						match = me;
+					break;
+				case 0x04:
+					if (isApproximatelyNearbyTether(115, 85, t))
+						match = me;
+					break;
+				case 0x05:
+					if (isApproximatelyNearbyTether(95, 95, t))
+						match = me;
+					break;
+				case 0x06:
+					if (isApproximatelyNearbyTether(105, 95, t))
+						match = me;
+					break;
+				case 0x07:
+					if (isApproximatelyNearbyTether(95, 105, t))
+						match = me;
+					break;
+				case 0x08:
+					if (isApproximatelyNearbyTether(105, 105, t))
+						match = me;
+					break;
+				case 0x09:
+					if (isApproximatelyNearbyTether(85, 115, t))
+						match = me;
+					break;
+				case 0x0A:
+					if (isApproximatelyNearbyTether(95, 115, t))
+						match = me;
+					break;
+				case 0x0B:
+					if (isApproximatelyNearbyTether(105, 115, t))
+						match = me;
+					break;
+				case 0x0C:
+					if (isApproximatelyNearbyTether(115, 115, t))
+						match = me;
+					break;
+				case 0x0D:
+					if (isApproximatelyNearbyTether(85, 105, t))
+						match = me;
+					break;
+				case 0x0E:
+					if(isApproximatelyNearbyTether(115, 105, t))
+						match = me;
+					break;
+				case 0x0F:
+					if(isApproximatelyNearbyTether(85, 95, t))
+						match = me;
+					break;
+				case 0x10:
+					if(isApproximatelyNearbyTether(115, 95, t))
+						match = me;
+
+			}
+			if(match != null)
+				break;
+		}
+		return match;
+	}
+
+	private boolean isApproximatelyNearbyTether(long x, long y, TetherEvent t) {
+		boolean nearX = false;
+		boolean nearY = false;
+		for(XivCombatant c : t.getTargets()) {
+			Position pos = c.getPos();
+			nearX = pos.x() > (x - 0.05) && pos.x() < (x + 0.05);
+			nearY = pos.y() > (y - 0.05) && pos.y() < (y + 0.05);;
+		}
+
+		return nearX && nearY;
+	}
 }
