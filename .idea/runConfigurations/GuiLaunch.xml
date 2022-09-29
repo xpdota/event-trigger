@@ -8,7 +8,7 @@
     <option name="VM_PARAMETERS" value="-XX:MaxHeapFreeRatio=30 -XX:MinHeapFreeRatio=10 -Dstart-minimized=true" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="gg.xp.xivsupport.gui.*" />
+        <option name="PATTERN" value="gg.xp.xivsupport.gui.imprt.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

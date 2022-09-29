@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="GuiLaunchSwexp" type="Application" factoryName="Application" nameIsGenerated="true">
+  <configuration default="false" name="gg.xp.xivsupport.gui.GuiLaunchSwexp" type="Application" factoryName="Application" nameIsGenerated="true">
     <envs>
       <env name="TRIGGEVENT_TESTING" value="true" />
     </envs>
@@ -7,7 +7,7 @@
     <module name="launcher" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="gg.xp.xivsupport.gui.*" />
+        <option name="PATTERN" value="gg.xp.xivsupport.gui.imprt.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

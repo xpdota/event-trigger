@@ -67,9 +67,9 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 				}
 				if (!failed.isEmpty()) {
 					String failedSetting = pers.get(failuresKey, String.class, "[]");
-					List<String> otherFailues = mapper.readValue(failedSetting, new TypeReference<>() {
+					List<String> otherFailures = mapper.readValue(failedSetting, new TypeReference<>() {
 					});
-					List<String> failures = new ArrayList<>(otherFailues);
+					List<String> failures = new ArrayList<>(otherFailures);
 					failures.addAll(failed.stream().map(Object::toString).toList());
 					pers.save(failuresKey, mapper.writeValueAsString(failures));
 					log.error("One or more {} items failed to load - they have been saved to the setting '{}'", type, failuresKey);
@@ -94,7 +94,12 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 
 	public void commit() {
 		try {
-			String serialized = mapper.writeValueAsString(items);
+			List<JsonNode> nodes = new ArrayList<>();
+			//noinspection Convert2streamapi
+			for (X item : items) {
+				nodes.add(mapper.valueToTree(item));
+			}
+			String serialized = mapper.writeValueAsString(nodes);
 			pers.save(settingKey, serialized);
 			notifyListeners();
 		}

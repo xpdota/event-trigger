@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="GuiWithTestData" type="Application" factoryName="Application" nameIsGenerated="true">
+  <configuration default="false" name="gg.xp.xivsupport.gui.GuiWithTestData" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="gg.xp.xivsupport.gui.GuiWithTestData" />
     <module name="xivsupport" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="gg.xp.xivsupport.gui.*" />
+        <option name="PATTERN" value="gg.xp.xivsupport.gui.imprt.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
