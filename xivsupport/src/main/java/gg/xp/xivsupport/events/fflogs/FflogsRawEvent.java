@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
@@ -81,6 +82,11 @@ public class FflogsRawEvent extends BaseEvent implements HasPrimaryValue {
 		return getTypedField("timestamp", Long.class);
 	}
 
+	public HitSeverity severity() {
+		boolean dhit = getTypedField("directHit", boolean.class, false);
+		boolean chit = getTypedField("hitType", int.class, 1) == 2;
+		return HitSeverity.of(chit, dhit);
+	}
 
 	@Override
 	public String getPrimaryValue() {

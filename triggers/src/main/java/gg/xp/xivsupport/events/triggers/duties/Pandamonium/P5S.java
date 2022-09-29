@@ -190,6 +190,7 @@ public class P5S extends AutoChildEventHandler implements FilteredEventHandler {
 					if (Math.abs(yOffset) < 2) {
 						break;
 					}
+					s.waitThenRefreshCombatants(200);
 				}
 				// +y == south
 				if (yOffset > 0) {

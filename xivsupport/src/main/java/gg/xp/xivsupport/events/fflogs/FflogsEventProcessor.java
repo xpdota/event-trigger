@@ -18,7 +18,6 @@ import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.TickEvent;
 import gg.xp.xivsupport.events.actlines.events.TickType;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeFflogsTimeSource;
 import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
@@ -44,12 +43,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public class FflogsEventProcessor {
 	private static final Logger log = LoggerFactory.getLogger(FflogsEventProcessor.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 	private final AtomicInteger counter = new AtomicInteger();
 	private final Map<Long, Long> fflogsProvidedMapping = new HashMap<>();
+	private final Map<Long, Function<Long, RawXivCombatantInfo>> cbtInstanceMapping = new HashMap<>();
 	private final List<XivPlayerCharacter> partyList = new ArrayList<>();
 	private final XivStateImpl state;
 	private final @Nullable FakeFflogsTimeSource fakeTimeSource;
@@ -60,7 +61,7 @@ public class FflogsEventProcessor {
 		fakeTimeSource = container.getComponent(FakeFflogsTimeSource.class);
 	}
 
-	// TODO: multiple instances
+	// TODO: multiple instances don't actually work
 	private @Nullable XivCombatant getCombatant(@Nullable Long id, @Nullable Long instanceId) {
 		if (id == null) {
 			return null;
@@ -68,21 +69,41 @@ public class FflogsEventProcessor {
 		else if (id == -1) {
 			return XivCombatant.ENVIRONMENT;
 		}
-		Long gameId = fflogsProvidedMapping.get(id);
-		// Give unique IDs to each instanceId
-		if (gameId == null) {
-			gameId = 0x4800_0000 + id * 0x100 + (instanceId == null ? 0 : instanceId + 1);
+		if (instanceId == null || instanceId == 0) {
+			instanceId = 1L;
 		}
-		XivCombatant knownCbt = state.getCombatant(gameId);
+		Long cbtId = fflogsProvidedMapping.get(id);
+		if (cbtId != null) {
+			cbtId = cbtId + instanceId - 1;
+			XivCombatant knownCbt = state.getCombatant(cbtId);
+			if (knownCbt != null) {
+				return knownCbt;
+			}
+			else {
+				Function<Long, RawXivCombatantInfo> mapping = cbtInstanceMapping.get(id);
+				if (mapping != null) {
+					log.info("Calculating instanced combatant: ID: {}, Inst: {}", id, instanceId);
+					RawXivCombatantInfo applied = mapping.apply(instanceId);
+					state.setSpecificCombatants(Collections.singletonList(applied));
+					return state.getCombatant(applied.getId());
+				}
+			}
+		}
+		// Fallback plan
+		// Use a distinct ID range so as to not collide with known combatants
+		if (cbtId == null) {
+			cbtId = 0x4800_0000 + id * 0x100 + instanceId - 1;
+		}
+		XivCombatant knownCbt = state.getCombatant(cbtId);
 		if (knownCbt == null) {
-			return new XivCombatant(id, "Combatant " + id);
+			return new XivCombatant(id, "Unknown #%s inst %s".formatted(id, instanceId));
 		}
 		else {
 			return knownCbt;
 		}
 	}
 
-	private double convertCoordinate(long rawCoord) {
+	private static double convertCoordinate(long rawCoord) {
 		return (rawCoord) / 100.0;
 	}
 
@@ -124,7 +145,7 @@ public class FflogsEventProcessor {
 	) {
 	}
 
-	private Job convertJob(String jobName) {
+	private static Job convertJob(String jobName) {
 		jobName = jobName.replaceAll(" ", "");
 		String finalJobName = jobName;
 		return Arrays.stream(Job.values()).filter(j -> j.getFriendlyName().replaceAll(" ", "").equalsIgnoreCase(finalJobName))
@@ -138,16 +159,27 @@ public class FflogsEventProcessor {
 		List<FflogsMasterDataEvent.Actor> actors = masterData.getActors();
 		List<RawXivCombatantInfo> combatants = actors.stream()
 				.map(actor -> {
-					long id = actor.gameID();
-					// TODO: primary player
+					long rawId = actor.gameID();
+
 					boolean isPlayer = actor.type().equals("Player");
-					Long ownerId = actor.petOwner();
-					if (ownerId == null) {
+					long id = isPlayer ? (rawId % 10_000 + 0x1000_000) : (rawId * 100 + 0x4000_0000);
+					fflogsProvidedMapping.put(actor.id(), id);
+					// TODO: this owner ID doesn't actually work
+					Long rawOwnerId = actor.petOwner();
+					long ownerId;
+					int type;
+					if (rawOwnerId == null) {
 						ownerId = 0L;
+						type = isPlayer ? 1 : 2;
 					}
-					fflogsProvidedMapping.put(actor.id(), actor.gameID());
-					// TODO: Job
-					return new RawXivCombatantInfo(id, actor.name(), isPlayer ? convertJob(actor.subType()).getId() : 0, isPlayer ? 1 : 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, "TODO", 0, 0, 0, ownerId);
+					else {
+						// 3 = pet
+						type = 3;
+						ownerId = rawOwnerId;
+					}
+					Function<Long, RawXivCombatantInfo> rawDataProducer = i -> new RawXivCombatantInfo(id - 1 + i, actor.name(), isPlayer ? convertJob(actor.subType()).getId() : 0, type, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, "TODO", 0, 0, 0, ownerId);
+					cbtInstanceMapping.put(actor.id(), rawDataProducer);
+					return rawDataProducer.apply(1L);
 				})
 				.toList();
 		state.setPlayer(new XivEntity(0x1234_5678, "Bogus Player"));
@@ -194,8 +226,7 @@ public class FflogsEventProcessor {
 						context.accept(new TickEvent(target, TickType.DOT, amount, effectId));
 					}
 					else {
-						// TODO: severity
-						context.accept(new GenericDamageEvent(source, target, new XivAbility(rawEvent.abilityId()), amount, HitSeverity.NORMAL));
+						context.accept(new GenericDamageEvent(source, target, new XivAbility(rawEvent.abilityId()), amount, rawEvent.severity()));
 					}
 				}
 				case "heal", "calculatedheal" -> {
@@ -214,8 +245,7 @@ public class FflogsEventProcessor {
 						context.accept(new TickEvent(target, TickType.HOT, amount, status));
 					}
 					else {
-						// TODO: severity
-						context.accept(new GenericHealEvent(source, target, new XivAbility(rawEvent.abilityId()), amount, HitSeverity.NORMAL));
+						context.accept(new GenericHealEvent(source, target, new XivAbility(rawEvent.abilityId()), amount, rawEvent.severity()));
 					}
 				}
 				case "begincast" -> {
@@ -332,7 +362,7 @@ public class FflogsEventProcessor {
 
 	}
 
-	private XivStatusEffect convertStatus(long rawStatus) {
+	private static XivStatusEffect convertStatus(long rawStatus) {
 		return new XivStatusEffect(rawStatus % 1_000_000);
 	}
 }

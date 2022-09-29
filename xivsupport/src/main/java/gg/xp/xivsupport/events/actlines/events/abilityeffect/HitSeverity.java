@@ -14,6 +14,10 @@ public enum HitSeverity {
 		this.friendlyName = friendlyName;
 	}
 
+	public static HitSeverity of(boolean chit, boolean dhit) {
+		return dhit ? (chit ? CRIT_DHIT : DHIT) : (chit ? CRIT : NORMAL);
+	}
+
 	public String getSymbol() {
 		return this.symbol;
 	}
