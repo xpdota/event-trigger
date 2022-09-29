@@ -5,7 +5,10 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
+import gg.xp.xivsupport.eventstorage.EventReader;
+import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
@@ -14,10 +17,14 @@ import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class LaunchImportedSession {
+	private static final ExecutorService exs = Executors.newCachedThreadPool();
 	private static final Logger log = LoggerFactory.getLogger(LaunchImportedSession.class);
 
 	private LaunchImportedSession() {
@@ -25,6 +32,17 @@ public final class LaunchImportedSession {
 
 	public static void fromEvents(List<? extends Event> events) {
 		fromEvents(events, false);
+	}
+
+	public static void fromFile(File file, boolean decompress, Runnable after) {
+		exs.submit(() -> {
+			List<Event> events = EventReader.readEventsFromFile(file);
+			CatchFatalError.run(() -> {
+				fromEvents(events, decompress);
+			});
+			after.run();
+		});
+
 	}
 
 	public static void fromEvents(List<? extends Event> events, boolean decompress) {
