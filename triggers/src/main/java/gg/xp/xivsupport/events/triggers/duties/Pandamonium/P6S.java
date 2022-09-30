@@ -21,6 +21,7 @@ import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastResult;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
@@ -390,7 +391,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> aethericPolyminoidSq = SqtTemplates.multiInvocation(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7866),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7866, 0x7868),
 			this::poly1,
 			this::poly2,
 			this::poly3,
@@ -400,10 +401,25 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			this::poly7,
 			this::poly8);
 
+	private enum TileType {
+		PLUS(0x00020001),
+		CROSS(0x00400020);
+
+		private final long flag;
+		TileType(long flag) {
+			this.flag = flag;
+		}
+
+		private static boolean isValidFlag(long flag) {
+			return flag == PLUS.flag || flag == CROSS.flag;
+		}
+	}
+
 	private final ModifiableCallout<AbilityCastStart> poly1safe = ModifiableCallout.durationBasedCall("Poly 1 safe spots", "{in} in, {out} out");
 	private final ModifiableCallout<AbilityCastStart> poly2safe = ModifiableCallout.durationBasedCall("Poly 2 bait then safe spot", "Bait middle, then {safe}");
 	private final ModifiableCallout<AbilityCastStart> poly3safe = ModifiableCallout.durationBasedCall("Poly 3 safe spots", "Light parties, {safe1} {safe2}");
 	private final ModifiableCallout<AbilityCastStart> poly5safe = ModifiableCallout.durationBasedCall("Poly 5 start spot", "Start inner {start}");
+	private final ModifiableCallout<AbilityCastStart> poly6safe = ModifiableCallout.durationBasedCall("Poly 6 reference tile", "Corners of inner {ref}");
 	private final ModifiableCallout<AbilityCastStart> poly7safe = ModifiableCallout.durationBasedCall("Poly 7 bait then safe spot", "Bait middle, then {safe}");
 	private final ModifiableCallout<AbilityCastStart> poly8safe = ModifiableCallout.durationBasedCall("Poly 8 safe side", "{in}");
 
@@ -423,7 +439,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	//Only need to know one of the tiles, so just look at the first found
 	private void poly1(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 		log.info("Poly 1: Begin, waiting for map effects");
-		List<MapEffectEvent> mapEffects = s.waitEvents(2, MapEffectEvent.class, me -> me.getFlags() == 0x00020001);
+		List<MapEffectEvent> mapEffects = s.waitEvents(2, MapEffectEvent.class, me -> me.getFlags() == TileType.PLUS.flag);
 		log.info("Poly 1: MapEffect grid positions(index): {}, {}", mapEffects.get(0).getIndex(), mapEffects.get(1).getIndex());
 		//01 or 03, west in east out. 02 or 04, east in west out
 		List<Integer> tilesToCheck = Arrays.asList(0x01, 0x02, 0x03, 0x04, 0x09, 0x0A, 0x0B, 0x0C);
@@ -438,7 +454,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	//Find tile not in corner, always CW from it?
 	private void poly2(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 		log.info("Poly 2: Begin, waiting for map effects.");
-		List<MapEffectEvent> mapEffects = s.waitEvents(4, MapEffectEvent.class, me -> me.getFlags() == 0x000200001 || me.getFlags() == 0x00400020);
+		List<MapEffectEvent> mapEffects = s.waitEvents(4, MapEffectEvent.class, me -> TileType.isValidFlag(me.getFlags()));
 		log.info("Poly 2: found map effects");
 		//based on assumption that it is only ever rotated from a possible pattern
 		List<Integer> tilesToCheck = Arrays.asList(0x03, 0x0E, 0x0A, 0x0F);
@@ -455,7 +471,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	//Only care about any inner plus tile, so just look at the first found
 	private void poly3(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 		log.info("Poly 3: Begin, finding map effects.");
-		List<MapEffectEvent> mapEffects = s.waitEvents(2, MapEffectEvent.class, me -> me.getFlags() == 0x00020001);
+		List<MapEffectEvent> mapEffects = s.waitEvents(2, MapEffectEvent.class, me -> me.getFlags() == TileType.PLUS.flag);
 		log.info("Poly 3: Found map effects");
 		//always adjacent to plus that isnt in a corner
 		List<Integer> tilesToCheck = Arrays.asList(0x02, 0x03, 0x0E, 0x0B, 0x0A, 0x0D, 0x0F, 0x10);
@@ -477,12 +493,13 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	//Find tethered plus, start diagonal inner from it
 	private void poly5(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 		log.info("Poly 5: Begin, finding correct map effects");
-		List<MapEffectEvent> mapEffects = s.waitEvents(3, MapEffectEvent.class, me -> me.getFlags() == 0x00020001 || me.getFlags() == 0x00400020);
+		List<MapEffectEvent> mapEffects = s.waitEvents(3, MapEffectEvent.class, me -> TileType.isValidFlag(me.getFlags()));
 		TetherEvent tetherEvent = s.waitEvent(TetherEvent.class, te -> true); //TODO: find tether id
+		//TODO: use s.collectEvents
 		s.refreshCombatants(100);
 		//use this if i want to call where to move after chorus ixou starts
 		MapEffectEvent crossMapEffect = mapEffects.stream().filter(e -> e.getFlags() == 0x00400020).findFirst().get();
-		MapEffectEvent tetheredPlusMapEffect = findFirstTetheredTile(mapEffects.stream().filter(e -> e.getFlags() == 0x00020001).collect(Collectors.toList()), tetherEvent);
+		MapEffectEvent tetheredPlusMapEffect = findFirstTetheredTile(mapEffects.stream().filter(e -> e.getFlags() == TileType.PLUS.flag).collect(Collectors.toList()), tetherEvent);
 		log.info("Poly 5: Finished finding correct map effects");
 		s.updateCall(switch ((int) tetheredPlusMapEffect.getIndex()) {
 			case 0x04 -> poly5safe.getModified(Map.of("start", ArenaSector.NORTHEAST));
@@ -494,19 +511,26 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	}
 
-	//Aka cachexia 2
+	//Aka cachexia 2. find plus in middle, check if tethered
 	private void poly6(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
-
+		log.info("Poly 6: Begin, finding correct map events");
+		List<MapEffectEvent> mapEffects = s.waitEvents(4, MapEffectEvent.class, me -> TileType.isValidFlag(me.getFlags()));
+		TetherEvent tetherEvent = s.waitEvent(TetherEvent.class, te -> true); //TODO: find tether id
+		s.refreshCombatants(100);
+		List<Integer> tilesToCheck = Arrays.asList(0x05, 0x06, 0x07, 0x08);
+		List<MapEffectEvent> middleMapEffects = mapEffects.stream().filter(e -> tilesToCheck.contains((int) e.getIndex())).collect(Collectors.toList());
+		long middleType = middleMapEffects.isEmpty() ? 0x0 : middleMapEffects.get(0).getFlags();
+		MapEffectEvent tetheredMiddleEffect = findFirstTetheredTile(middleMapEffects, tetherEvent);
 	}
 
 	//on diagonal of pluses and adjascent to cross or not adjascent to plus
 	private void poly7(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 		log.info("Poly 7: Begin, finding map effects");
-		List<MapEffectEvent> mapEffects = s.waitEvents(4, MapEffectEvent.class, me -> me.getFlags() == 0x00020001 || me.getFlags() == 0x00400020);
+		List<MapEffectEvent> mapEffects = s.waitEvents(4, MapEffectEvent.class, me -> TileType.isValidFlag(me.getFlags()));
 		//either gives same info
 		List<Integer> tilesToCheck = Arrays.asList(0x01, 0x04, 0x09, 0x0C);
-		MapEffectEvent plusMapEffect = mapEffects.stream().filter(e -> tilesToCheck.contains((int) e.getIndex()) && e.getFlags() == 0x00020001).findFirst().get();
-		List<MapEffectEvent> crossMapEffects = mapEffects.stream().filter(e -> e.getFlags() == 0x00400020).collect(Collectors.toList());
+		MapEffectEvent plusMapEffect = mapEffects.stream().filter(e -> tilesToCheck.contains((int) e.getIndex()) && e.getFlags() == TileType.PLUS.flag).findFirst().get();
+		List<MapEffectEvent> crossMapEffects = mapEffects.stream().filter(e -> e.getFlags() == TileType.CROSS.flag).collect(Collectors.toList());
 		log.info("Poly 7: Found map effects");
 		//first get two possible safe spots
 		List<ArenaSector> safeSpots = null;
@@ -518,7 +542,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		log.info("Poly 7: possible safespots are: {}", safeSpots);
 		List<Integer> innerTilesToCheck = Arrays.asList(0x02, 0x03, 0x0A, 0x0B, 0x0D, 0x0E, 0x0F, 0x10);
 		MapEffectEvent oddOneOut = mapEffects.stream().filter(e -> innerTilesToCheck.contains(e.getIndex())).findFirst().get();
-		if(oddOneOut.getFlags() == 0x00020001) {
+		if(oddOneOut.getFlags() == TileType.PLUS.flag) {
 			//plus
 			switch ((int) oddOneOut.getIndex()) {
 				case 0x02, 0x0A -> {
@@ -549,14 +573,14 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 				default -> log.info("Poly 7: Weird oddOneOut index: {}", oddOneOut.getIndex());
 			}
 		}
-
-
+		s.updateCall(poly7safe.getModified(Map.of("safe", safeSpots)));
+		log.info("Poly 7: End");
 	}
 
 	//same pattern as first, just dodge chorus ixou
 	private void poly8(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 		log.info("Poly 8: Begin, waiting for map effects");
-		List<MapEffectEvent> mapEffects = s.waitEvents(2, MapEffectEvent.class, me -> me.getFlags() == 0x00020001);
+		List<MapEffectEvent> mapEffects = s.waitEvents(2, MapEffectEvent.class, me -> me.getFlags() == TileType.PLUS.flag);
 		log.info("Poly 8: MapEffect grid positions(index): {}, {}", mapEffects.get(0).getIndex(), mapEffects.get(1).getIndex());
 		//01 or 03, west in east out. 02 or 04, east in west out
 		List<Integer> tilesToCheck = Arrays.asList(0x01, 0x02, 0x03, 0x04, 0x09, 0x0A, 0x0B, 0x0C);
@@ -649,7 +673,9 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		for(XivCombatant c : t.getTargets()) {
 			Position pos = c.getPos();
 			nearX = pos.x() > (x - 0.05) && pos.x() < (x + 0.05);
-			nearY = pos.y() > (y - 0.05) && pos.y() < (y + 0.05);;
+			nearY = pos.y() > (y - 0.05) && pos.y() < (y + 0.05);
+			if(nearX && nearY)
+				break;
 		}
 
 		return nearX && nearY;
