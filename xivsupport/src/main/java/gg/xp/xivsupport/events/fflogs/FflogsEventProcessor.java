@@ -61,7 +61,6 @@ public class FflogsEventProcessor {
 		fakeTimeSource = container.getComponent(FakeFflogsTimeSource.class);
 	}
 
-	// TODO: multiple instances don't actually work
 	private @Nullable XivCombatant getCombatant(@Nullable Long id, @Nullable Long instanceId) {
 		if (id == null) {
 			return null;
