@@ -6,6 +6,8 @@ import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.callouts.CalloutProcessor;
 import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
 import gg.xp.xivsupport.callouts.conversions.DefaultArenaSectorConversion;
+import gg.xp.xivsupport.callouts.conversions.GlobalCallReplacer;
+import gg.xp.xivsupport.callouts.gui.GlobalReplacementGui;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -37,12 +39,14 @@ public class CalloutStyleConfigGui implements PluginTab {
 	private final CalloutProcessor calloutProcessor;
 	private final EventMaster master;
 	private final GlobalArenaSectorConverter asc;
+	private final GlobalCallReplacer gcr;
 
-	public CalloutStyleConfigGui(FlyingTextOverlay overlay, CalloutProcessor calloutProcessor, EventMaster master, GlobalArenaSectorConverter asc) {
+	public CalloutStyleConfigGui(FlyingTextOverlay overlay, CalloutProcessor calloutProcessor, EventMaster master, GlobalArenaSectorConverter asc, GlobalCallReplacer gcr) {
 		this.overlay = overlay;
 		this.calloutProcessor = calloutProcessor;
 		this.master = master;
 		this.asc = asc;
+		this.gcr = gcr;
 	}
 
 
@@ -135,6 +139,11 @@ public class CalloutStyleConfigGui implements PluginTab {
 			GuiUtil.simpleTopDownLayout(panel, 400, components.toArray(Component[]::new));
 			tpane.add("Arena Directions", panel);
 		}
+		{
+			GlobalReplacementGui grg = new GlobalReplacementGui(gcr);
+			tpane.add("Text Replacements", grg);
+		}
+
 		return tpane;
 	}
 

@@ -4,6 +4,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
+import gg.xp.xivsupport.callouts.conversions.GlobalCallReplacer;
 import gg.xp.xivsupport.callouts.conversions.PlayerNameConversion;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.groovy.GroovyManager;
@@ -48,13 +49,15 @@ public class CalloutProcessor {
 	private final BooleanSetting replaceYou;
 	private final EnumSetting<PlayerNameConversion> pcNameStyle;
 	private final GlobalArenaSectorConverter asc;
+	private final GlobalCallReplacer gcr;
 
 	// TODO: make interface/autoscan for all the converters
-	public CalloutProcessor(GroovyManager groovyMgr, PersistenceProvider pers, GlobalArenaSectorConverter asc) {
+	public CalloutProcessor(GroovyManager groovyMgr, PersistenceProvider pers, GlobalArenaSectorConverter asc, GlobalCallReplacer gcr) {
 		this.groovyMgr = groovyMgr;
 		this.replaceYou = new BooleanSetting(pers, "callout-processor.replace-you", true);
 		this.pcNameStyle = new EnumSetting<>(pers, "callout-processor.pc-style", PlayerNameConversion.class, PlayerNameConversion.FULL_NAME);
 		this.asc = asc;
+		this.gcr = gcr;
 	}
 
 	@HandleEvents
@@ -101,8 +104,8 @@ public class CalloutProcessor {
 //		Binding binding = new Binding(arguments);
 
 		// TODO: fast path for when there are no {}
-		String tts = applyReplacements(raw, raw.getTts(), binding);
-		Supplier<String> text = () -> applyReplacements(raw, raw.getText(), binding);
+		String tts = applyReplacements(raw, raw.getTts(), binding, true);
+		Supplier<String> text = () -> applyReplacements(raw, raw.getText(), binding, false);
 
 		ProcessedCalloutEvent out = new ProcessedCalloutEvent(
 				raw.trackingKey(),
@@ -122,16 +125,17 @@ public class CalloutProcessor {
 		return interpreter.parse(input);
 	}
 
-	@Contract("_, null, _ -> null")
-	public @Nullable String applyReplacements(RawModifiedCallout<?> raw, @Nullable String input, Binding binding) {
+	@Contract("_, null, _, _ -> null")
+	public @Nullable String applyReplacements(RawModifiedCallout<?> raw, @Nullable String input, Binding binding, boolean isTts) {
 		if (input == null) {
 			return null;
 		}
 		if (!input.contains("{")) {
 			return input;
 		}
+		String resolved;
 		synchronized (interpLock) {
-			return replacer.matcher(input).replaceAll(m -> {
+			resolved = replacer.matcher(input).replaceAll(m -> {
 				try {
 					Object rawEval;
 					try (SandboxScope ignored = groovyMgr.getSandbox().enter()) {
@@ -153,6 +157,8 @@ public class CalloutProcessor {
 				}
 			});
 		}
+		String replaced = gcr.doReplacements(resolved, isTts);
+		return replaced;
 	}
 
 	// Default conversions
