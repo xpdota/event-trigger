@@ -164,4 +164,8 @@ public final class XivMain {
 		}
 	}
 
+	public static PersistenceProvider importPersProvider() {
+		return PropertiesFilePersistenceProvider.inUserDataFolder("imports", false);
+	}
+
 }
