@@ -1,6 +1,6 @@
-280275cca242bc9b59c8e27dde649614  triggevent.exe
-f6b1415663a8cad213db826c577d8582  triggevent-import.exe
-4ccf80238c93be648320e4572bc9ff5e  triggevent-upd.exe
+ebdb090fbc7198c6930857cb8fd34ae0  triggevent.exe
+2a812ab05232b73888929ba5ebee9167  triggevent-import.exe
+c5824bf6d3671098e73c51d9bf15f80f  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 f5d9a3b0c695bfb3f9ca34af1be6f2c8  deps/actimport-1.0-SNAPSHOT.jar
 42a7237fd6425e6c384bb5c9a73c5ce6  deps/aether-api-1.8.jar
@@ -44,6 +44,7 @@ b65aab69953cfc5b9edffff15fb04034  deps/hudson-maven-embedder-3.2.jar
 2352a291fc39d23cfe5c100728de1ea7  deps/jackson-annotations-2.13.2.jar
 c56433d75479665998ccbd50678480fa  deps/jackson-core-2.13.2.jar
 b66a191219300cdb6113af6a6360326d  deps/jackson-databind-2.13.2.1.jar
+7693a537daa6acd34cc6da0a4a3dc2da  deps/jackson-datatype-jdk8-2.13.2.jar
 17bdcd75d19c619681e11394097fd556  deps/java2html-5.0.jar
 1a2dd8c76321cef26cc2669fe70a2557  deps/javassist-3.28.0-GA.jar
 8a2f8c473c9a8548dc307d040fabcf2e  deps/Java-WebSocket-1.5.2.jar
@@ -109,6 +110,6 @@ b013e44a47b7ffe1fb34b9b6371c89c7  deps/wagon-ssh-1.0-beta-7.jar
 fec05c4eb4cda7ca8b001a2b9e081eba  deps/wagon-webdav-1.0-beta-2-hudson-1.jar
 f807f86d7d9db25edbfc782aca7ca2a9  deps/xercesImpl-2.9.1.jar
 71cb13865a6605df256ac29bb90d3020  deps/xivdata-1.0-SNAPSHOT.jar
-5a6778226af243635db8b87d213d7dd8  deps/xivsupport-1.0-SNAPSHOT.jar
+70bd21f70911fd8e458ff6f1d2723b04  deps/xivsupport-1.0-SNAPSHOT.jar
 9ae9c29e4497fc35a3eade1e6dd0bbeb  deps/xml-apis-1.3.04.jar
 1d56fcb25932c6cfb5bdce4298ed35e2  deps/xml-im-exporter-1.1.jar
