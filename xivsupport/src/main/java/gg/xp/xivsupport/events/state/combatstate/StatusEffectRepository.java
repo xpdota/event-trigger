@@ -88,7 +88,7 @@ public class StatusEffectRepository {
 			);
 			BuffApplied preapp = preApps.remove(key);
 			if (preapp != null) {
-				event.setPreAppInfo(preapp.getPreAppInfo());
+				event.setPreAppInfo(preapp.getPreAppAbility(), preapp.getPreAppInfo());
 			}
 			onTargetCache.computeIfAbsent(target, k -> new LinkedHashMap<>()).put(key, event);
 		}

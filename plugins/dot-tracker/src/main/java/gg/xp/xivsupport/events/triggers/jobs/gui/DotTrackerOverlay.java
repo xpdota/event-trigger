@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,6 +47,7 @@ public class DotTrackerOverlay extends XivOverlay {
 	private volatile List<BuffApplied> currentDots = Collections.emptyList();
 	private volatile List<VisualDotInfo> croppedDots = Collections.emptyList();
 	private final BooleanSetting showTicks;
+	private final BooleanSetting showAppDelay;
 	private volatile boolean tickUpdatePending;
 
 	private static final int BAR_WIDTH = 150;
@@ -55,6 +57,7 @@ public class DotTrackerOverlay extends XivOverlay {
 		super("Dot Tracker", "dot-tracker.overlay", oc, persistence);
 		this.numberOfRows = dots.getNumberToDisplay();
 		this.showTicks = new BooleanSetting(persistence, "dot-tracker.overlay.show-ticks", true);
+		this.showAppDelay = new BooleanSetting(persistence, "dot-tracker.overlay.show-app-delay", true);
 		this.ticker = ticker;
 		numberOfRows.addListener(this::repackSize);
 		this.dots = dots;
@@ -135,6 +138,7 @@ public class DotTrackerOverlay extends XivOverlay {
 						.sorted(Comparator.comparing(b -> b.getEstimatedRemainingDuration().toMillis()))
 						.collect(Collectors.groupingBy(b -> {
 							long est = b.getEstimatedRemainingDuration().toMillis();
+							// TODO: isn't ml supposed to get updated?
 							long lastValue = ml.longValue();
 							if (Math.abs(est - lastValue) < 500) {
 								return lastValue;
@@ -146,21 +150,25 @@ public class DotTrackerOverlay extends XivOverlay {
 						.forEach((k, v) -> {
 							BuffApplied first = v.get(0);
 							if (v.size() == 1) {
+								Duration appDelay = showAppDelay.get() ? first.getDelay() : null;
+								if (appDelay != null && appDelay.toMillis() < 10) {
+									appDelay = null;
+								}
 								if (first.getTarget().isThePlayer()) {
-									out.add(new VisualDotInfo(first, first.getBuff().getName(), null));
+									out.add(new VisualDotInfo(first, first.getBuff().getName(), null, appDelay));
 								}
 								else {
 									TickInfo tick = showTicks.get() ? ticker.getTick(first.getTarget()) : null;
-									out.add(new VisualDotInfo(first, null, tick));
+									out.add(new VisualDotInfo(first, null, tick, appDelay));
 								}
 							}
 							else {
 								String firstTargetName = first.getTarget().getName();
 								if (v.stream().allMatch(e -> e.getTarget().getName().equals(firstTargetName))) {
-									out.add(new VisualDotInfo(first, String.format("%s x%s", firstTargetName, v.size()), null));
+									out.add(new VisualDotInfo(first, String.format("%s x%s", firstTargetName, v.size()), null, null));
 								}
 								else {
-									out.add(new VisualDotInfo(first, String.format("%s Targets", v.size()), null));
+									out.add(new VisualDotInfo(first, String.format("%s Targets", v.size()), null, null));
 								}
 							}
 						});
@@ -188,5 +196,9 @@ public class DotTrackerOverlay extends XivOverlay {
 
 	public BooleanSetting showTicks() {
 		return showTicks;
+	}
+
+	public BooleanSetting showAppDelay() {
+		return showAppDelay;
 	}
 }
