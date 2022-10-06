@@ -151,7 +151,7 @@ public class DotTrackerOverlay extends XivOverlay {
 							BuffApplied first = v.get(0);
 							if (v.size() == 1) {
 								Duration appDelay = showAppDelay.get() ? first.getDelay() : null;
-								if (appDelay != null && appDelay.toMillis() < 10) {
+								if (appDelay != null && appDelay.toMillis() < 75) {
 									appDelay = null;
 								}
 								if (first.getTarget().isThePlayer()) {
