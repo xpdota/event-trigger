@@ -1,6 +1,6 @@
-96d4ce2e517b9359283ab0b590b6a5fb  triggevent.exe
-f2949a4e1c4698cde4a98f9531ef8851  triggevent-import.exe
-94e9a0fc52cba5b8c99942d3e01f0c36  triggevent-upd.exe
+840618afb5b6681ff0822d44ebc16811  triggevent.exe
+0536bd5f524f356c70437e026d8faf4e  triggevent-import.exe
+e2c4ff3fd3a1c523088080d12558313f  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 f5d9a3b0c695bfb3f9ca34af1be6f2c8  deps/actimport-1.0-SNAPSHOT.jar
 42a7237fd6425e6c384bb5c9a73c5ce6  deps/aether-api-1.8.jar
@@ -28,7 +28,7 @@ f54a8510f834a1a57166970bfc982e94  deps/commons-collections-3.2.2.jar
 677994920c9fb126c9d4f98100707204  deps/commons-net-2.0.jar
 c1c130c369aa86bfe4f7a7a920bc0223  deps/commons-text-1.9.jar
 4f1fb3bb69d5c04aa62db704bc55d852  deps/custom-party-overlay-1.0-SNAPSHOT.jar
-7059194ffdc0cb714764a5c799623635  deps/dot-tracker-1.0-SNAPSHOT.jar
+b17080be5663582ed3b848aa9782f408  deps/dot-tracker-1.0-SNAPSHOT.jar
 04067d1b5c9ac4447fd376632b13fba0  deps/doxia-sink-api-1.0.jar
 fabbe8e110e772f6ecf336b1a487af24  deps/easytriggers-1.0-SNAPSHOT.jar
 c7c713647df7e68cbfea23f7cf98e941  deps/findbugs-4.19.jar
