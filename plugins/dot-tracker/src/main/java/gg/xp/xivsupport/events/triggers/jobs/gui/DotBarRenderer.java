@@ -8,6 +8,7 @@ import gg.xp.xivsupport.gui.tables.renderers.TickRenderInfo;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.time.Duration;
 import java.time.Instant;
 
 public class DotBarRenderer extends ResourceBarRenderer<VisualDotInfo> {
@@ -27,7 +28,7 @@ public class DotBarRenderer extends ResourceBarRenderer<VisualDotInfo> {
 		TickInfo tick = item.getTick();
 		BuffApplied event = item.getEvent();
 		if (tick == null || event.isPreApp()) {
-			bar.setTicks(null);
+			bar.setBottomTicks(null);
 		}
 		else {
 			Instant dotAppliedAt = event.getHappenedAt();
@@ -35,7 +36,16 @@ public class DotBarRenderer extends ResourceBarRenderer<VisualDotInfo> {
 			int interval = tick.getIntervalMs();
 			double normalizedInterval = ((double) interval) / duration;
 			double offset = ((double) tick.getMsToNextTick(dotAppliedAt)) / duration;
-			bar.setTicks(new TickRenderInfo(offset, normalizedInterval));
+			bar.setBottomTicks(new TickRenderInfo(offset, normalizedInterval));
+		}
+		Duration applicationDelay = item.getAppDelay();
+		if (applicationDelay == null || event.isPreApp()) {
+			bar.setTopTicks(null);
+		}
+		else {
+			long duration = event.getInitialDuration().toMillis();
+			long delay = applicationDelay.toMillis();
+			bar.setTopTicks(new TickRenderInfo( 1.0 - (delay / (double) duration), 1.0f));
 		}
 	}
 
