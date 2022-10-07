@@ -7,11 +7,13 @@ public class P6STileEvent extends BaseEvent implements HasPrimaryValue {
 	private final int x;
 	private final int y;
 	private final TileType tileType;
+	private final int index;
 
-	public P6STileEvent(int x, int y, TileType tileType) {
+	public P6STileEvent(int x, int y, TileType tileType, int index) {
 		this.x = x;
 		this.y = y;
 		this.tileType = tileType;
+		this.index = index;
 	}
 
 	@Override
@@ -29,5 +31,9 @@ public class P6STileEvent extends BaseEvent implements HasPrimaryValue {
 
 	public TileType getTileType() {
 		return tileType;
+	}
+
+	public int getIndex() {
+		return index;
 	}
 }
