@@ -19,7 +19,8 @@ public class ResourceBar extends JComponent {
 	private double percent1;
 	private double percent2;
 	private String[] textOptions;
-	private @Nullable TickRenderInfo ticks;
+	private @Nullable TickRenderInfo bottomTicks;
+	private @Nullable TickRenderInfo topTicks;
 
 	public ResourceBar() {
 		setTextOptions("");
@@ -125,26 +126,42 @@ public class ResourceBar extends JComponent {
 			g.fillRect(width1 + width2 + borderWidth, borderWidth, width3 + borderWidth, innerHeight);
 		}
 
-		if (borderColor != null) {
-			g.setColor(borderColor);
-			g.drawRect(0, 0, realWidth - 1, realHeight - 1);
-		}
-
-		if (ticks != null) {
+		if (bottomTicks != null) {
 			if (tickColor == null) {
 				g.setColor(label.getForeground());
 			}
 			else {
 				g.setColor(tickColor);
 			}
-			double current = ticks.offset();
+			double current = bottomTicks.offset();
 			while (current < 1.0d) {
 				int x = (int) (borderWidth + innerWidth * current);
 				int top = (int) ((4.0d * realHeight / 5.0d) - borderWidth);
-				int height = realHeight - top - 1;
+				int height = realHeight - top - borderWidth;
 				g.fillRect(x, top, 3, height);
-				current += ticks.interval();
+				current += bottomTicks.interval();
 			}
+		}
+		if (topTicks != null) {
+			if (tickColor == null) {
+				g.setColor(label.getForeground());
+			}
+			else {
+				g.setColor(tickColor);
+			}
+			double current = topTicks.offset();
+			while (current < 1.0d) {
+				int x = (int) (borderWidth + innerWidth * current);
+				int height = (int) ((1.0d * realHeight / 5.0d));
+				int top = borderWidth;
+				g.fillRect(x, top, 3, height);
+				current += topTicks.interval();
+			}
+		}
+
+		if (borderColor != null) {
+			g.setColor(borderColor);
+			g.drawRect(0, 0, realWidth - 1, realHeight - 1);
 		}
 
 		g.setTransform(old);
@@ -154,7 +171,11 @@ public class ResourceBar extends JComponent {
 		this.label.setForeground(textColor);
 	}
 
-	public void setTicks(@Nullable TickRenderInfo ticks) {
-		this.ticks = ticks;
+	public void setBottomTicks(@Nullable TickRenderInfo bottomTicks) {
+		this.bottomTicks = bottomTicks;
+	}
+
+	public void setTopTicks(@Nullable TickRenderInfo topTicks) {
+		this.topTicks = topTicks;
 	}
 }
