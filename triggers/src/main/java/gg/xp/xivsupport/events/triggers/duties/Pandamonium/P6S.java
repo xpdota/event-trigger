@@ -152,7 +152,6 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		*/
 		switch (id) {
 			case 30858 -> call = chelicSynergy;
-			case 0x7891 -> call = unholyDarknessHealer;
 			case 0x7887 -> call = synergy;
 			case 0x788D -> call = darkAshes;
 			case 0x788F -> call = darkSphere;
@@ -400,15 +399,17 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			this::poly7,
 			this::poly8);
 
-	private final ModifiableCallout<?> poly1safeWIn = new ModifiableCallout<>("Poly 1 W in, E out", "West in, East out");
-	private final ModifiableCallout<?> poly1safeWOut = new ModifiableCallout<>("Poly 1 W out, E in", "West out, East in");
+	private final ModifiableCallout<?> poly1safeWIn = new ModifiableCallout<>("Poly 1 W in, E out", "Healer stacks, West in, East out");
+	private final ModifiableCallout<?> poly1safeWOut = new ModifiableCallout<>("Poly 1 W out, E in", "Healer stacks, West out, East in");
 	private final ModifiableCallout<?> poly1error = new ModifiableCallout<>("Poly 1 Error", "Error");
 	private final ModifiableCallout<?> poly2safe = new ModifiableCallout<>("Poly 2 bait then safe spot", "Bait middle, then {safe}");
-	private final ModifiableCallout<?> poly3safe = new ModifiableCallout<>("Poly 3 safe spots", "Light parties, {safe1} {safe2}");
+	private final ModifiableCallout<?> poly3safe = new ModifiableCallout<>("Poly 3 safe spots", "Healer stacks, {safe1} {safe2}");
 //	private final ModifiableCallout<?> poly5safe = new ModifiableCallout<>("Poly 5 start spot", "Start inner {start}");
 	private final ModifiableCallout<?> poly6safeUP = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner untethered plus");
 	private final ModifiableCallout<?> poly6safeTC = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner tethered cross");
 	private final ModifiableCallout<?> poly6error = new ModifiableCallout<>("Poly 6 error", "Error");
+	private final ModifiableCallout<?> poly6spread = new ModifiableCallout<>("Poly 6 Spread", "AOE on you");
+	private final ModifiableCallout<?> poly6stack = new ModifiableCallout<>("Poly 6 Stack", "Stack");
 	private final ModifiableCallout<?> poly7safe = new ModifiableCallout<>("Poly 7 bait then safe spot", "Bait middle, then {safe}");
 	private final ModifiableCallout<?> poly7error = new ModifiableCallout<>("Poly 7 call", "Error");
 	private final ModifiableCallout<?> poly8safe = new ModifiableCallout<>("Poly 8 safe side", "{in}");
@@ -544,16 +545,26 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		log.info("Poly 6: Found middle effect type {}", middleMapEffects.get(0).getTileType());
 
 		if (middleMapEffects.get(0).getTileType() == TileType.PLUS) {
-//			s.updateCall(poly6safeUP.getModified());
-//			poly6safe.getModified(Map.of("ref", "untethered plus"));
+			s.updateCall(poly6safeUP.getModified());
 		}
 		else if (middleMapEffects.get(0).getTileType() == TileType.CROSS) {
-//			s.updateCall(poly6safeTC.getModified());
-//			poly6safe.getModified(Map.of("ref", "tethered cross"));
+			s.updateCall(poly6safeTC.getModified());
 		}
 		else {
-			poly6error.getModified();
+			s.updateCall(poly6error.getModified());
 		}
+
+		log.info("Waiting for Dark Spheres");
+		List<AbilityCastStart> darkSpheres = s.waitEvents(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7880));
+		for(AbilityCastStart darkSphere : darkSpheres) {
+			if (darkSphere.getTarget() == getState().getPlayer()) {
+				s.updateCall(poly6spread.getModified());
+			}
+			else {
+				s.updateCall(poly6stack.getModified());
+			}
+		}
+
 		log.info("Poly 6: End.");
 	}
 
