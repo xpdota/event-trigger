@@ -10,11 +10,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.time.Duration;
+import java.time.Instant;
 
 /**
  * Represents a buff being applied
  */
-public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect, HasDuration {
+public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasStatusEffect, HasDuration, HasOptionalDelay {
 	@Serial
 	private static final long serialVersionUID = -3698392943125561045L;
 	private final XivStatusEffect buff;
@@ -25,12 +26,14 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	private final long rawStacks;
 	private final boolean isPreApp;
 	private boolean isRefresh;
+	private @Nullable AbilityUsedEvent preAppAbility;
 	private @Nullable StatusAppliedEffect preAppInfo;
 
 
 	// Only for pre-apps
 	public BuffApplied(AbilityUsedEvent event, StatusAppliedEffect effect) {
 		this(effect.getStatus(), 9999, event.getSource(), event.getTarget(), effect.getRawStacks(), true);
+		preAppAbility = event;
 		preAppInfo = effect;
 	}
 
@@ -110,12 +113,17 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		return buff.getInfo();
 	}
 
-	public void setPreAppInfo(StatusAppliedEffect preAppInfo) {
+	public void setPreAppInfo(AbilityUsedEvent original, StatusAppliedEffect preAppInfo) {
+		preAppAbility = original;
 		this.preAppInfo = preAppInfo;
 	}
 
 	public @Nullable StatusAppliedEffect getPreAppInfo() {
 		return preAppInfo;
+	}
+
+	public AbilityUsedEvent getPreAppAbility() {
+		return preAppAbility;
 	}
 
 	public boolean shouldDisplayDuration() {
@@ -146,5 +154,13 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 				", stacks=" + rawStacks +
 				", isRefresh=" + isRefresh +
 				'}';
+	}
+
+	@Override
+	public @Nullable Instant getPrecursorHappenedAt() {
+		if (preAppAbility == null) {
+			return null;
+		}
+		return preAppAbility.getEffectiveHappenedAt();
 	}
 }

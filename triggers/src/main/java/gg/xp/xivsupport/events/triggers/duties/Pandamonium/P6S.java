@@ -29,6 +29,7 @@ import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -407,7 +408,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> poly1error = new ModifiableCallout<>("Poly 1 Error", "Error");
 	private final ModifiableCallout<?> poly2safe = new ModifiableCallout<>("Poly 2 bait then safe spot", "Bait middle, then {safe}");
 	private final ModifiableCallout<?> poly3safe = new ModifiableCallout<>("Poly 3 safe spots", "Light parties, {safe1} {safe2}");
-	private final ModifiableCallout<?> poly5safe = new ModifiableCallout<>("Poly 5 start spot", "Start inner {start}");
+//	private final ModifiableCallout<?> poly5safe = new ModifiableCallout<>("Poly 5 start spot", "Start inner {start}");
 	private final ModifiableCallout<?> poly6safeUP = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner untethered plus");
 	private final ModifiableCallout<?> poly6safeTC = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner tethered cross");
 	private final ModifiableCallout<?> poly6error = new ModifiableCallout<>("Poly 6 error", "Error");
@@ -444,15 +445,6 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			}
 		}
 		context.accept(event);
-	}
-
-	@HandleEvents
-	public void p6stether(EventContext context, TetherEvent te) {
-		P6STetherEvent event;
-		if (te.getId() != 0xCF)
-			return;
-
-		event = new P6STetherEvent(te.getSource(), te.getTarget());
 	}
 
 	/*
@@ -528,7 +520,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	//Find tethered plus, start diagonal inner from it
 	private void poly5(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
-		log.info("Poly 5: Begin, finding correct map effects");
+		/*log.info("Poly 5: Begin, finding correct map effects");
 		List<P6STileEvent> tileEvents = s.waitEvents(3, P6STileEvent.class, te -> true);
 		TetherEvent tetherEvent = s.waitEvent(TetherEvent.class, te -> te.getId() == 0xCF);
 		s.refreshCombatants(100);
@@ -543,7 +535,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			case 0x01 -> poly5safe.getModified(Map.of("start", ArenaSector.NORTHWEST));
 			default -> poly5safe.getModified(Map.of("start", ArenaSector.UNKNOWN));
 		});
-		log.info("Poly 5: End.");
+		log.info("Poly 5: End.");*/
 	}
 
 	//Aka cachexia 2. find middle type, call cross or plus

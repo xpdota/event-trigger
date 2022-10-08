@@ -624,7 +624,7 @@ public class XivStateImpl implements XivState {
 		}
 
 		public void setRaw(@Nullable RawXivCombatantInfo raw) {
-			if (!Objects.equals(this.raw, raw)) {
+			if (!Objects.equals(this.raw, raw) || posOverride != null) {
 				this.raw = raw;
 				this.posOverride = null;
 				dirty = true;
