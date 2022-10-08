@@ -28,14 +28,12 @@ import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
-import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @CalloutRepo(name = "P6S", duty = KnownDuty.P6S)
 public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -402,17 +400,18 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			this::poly7,
 			this::poly8);
 
-	private final ModifiableCallout<AbilityCastStart> poly1safeWIn = ModifiableCallout.durationBasedCall("Poly 1 W in, E out", "West in, East out");
-	private final ModifiableCallout<AbilityCastStart> poly1safeWOut = ModifiableCallout.durationBasedCall("Poly 1 W out, E in", "West out, East in");
-	private final ModifiableCallout<AbilityCastStart> poly1error = ModifiableCallout.durationBasedCall("Poly 1 Error", "Error");
-	private final ModifiableCallout<AbilityCastStart> poly2safe = ModifiableCallout.durationBasedCall("Poly 2 bait then safe spot", "Bait middle, then {safe}");
-	private final ModifiableCallout<AbilityCastStart> poly3safe = ModifiableCallout.durationBasedCall("Poly 3 safe spots", "Light parties, {safe1} {safe2}");
-	/*private final ModifiableCallout<AbilityCastStart> poly5safe = ModifiableCallout.durationBasedCall("Poly 5 start spot", "Start inner {start}");*/
-	private final ModifiableCallout<AbilityCastStart> poly6safe = ModifiableCallout.durationBasedCall("Poly 6 reference tile", "Corners of inner {ref}");
-	private final ModifiableCallout<AbilityCastStart> poly6error = ModifiableCallout.durationBasedCall("Poly 6 error", "Error");
-	private final ModifiableCallout<AbilityCastStart> poly7safe = ModifiableCallout.durationBasedCall("Poly 7 bait then safe spot", "Bait middle, then {safe}");
-	private final ModifiableCallout<AbilityCastStart> poly7error = ModifiableCallout.durationBasedCall("Poly 7 call", "Error");
-	private final ModifiableCallout<AbilityCastStart> poly8safe = ModifiableCallout.durationBasedCall("Poly 8 safe side", "{in}");
+	private final ModifiableCallout<?> poly1safeWIn = new ModifiableCallout<>("Poly 1 W in, E out", "West in, East out");
+	private final ModifiableCallout<?> poly1safeWOut = new ModifiableCallout<>("Poly 1 W out, E in", "West out, East in");
+	private final ModifiableCallout<?> poly1error = new ModifiableCallout<>("Poly 1 Error", "Error");
+	private final ModifiableCallout<?> poly2safe = new ModifiableCallout<>("Poly 2 bait then safe spot", "Bait middle, then {safe}");
+	private final ModifiableCallout<?> poly3safe = new ModifiableCallout<>("Poly 3 safe spots", "Light parties, {safe1} {safe2}");
+//	private final ModifiableCallout<?> poly5safe = new ModifiableCallout<>("Poly 5 start spot", "Start inner {start}");
+	private final ModifiableCallout<?> poly6safeUP = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner untethered plus");
+	private final ModifiableCallout<?> poly6safeTC = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner tethered cross");
+	private final ModifiableCallout<?> poly6error = new ModifiableCallout<>("Poly 6 error", "Error");
+	private final ModifiableCallout<?> poly7safe = new ModifiableCallout<>("Poly 7 bait then safe spot", "Bait middle, then {safe}");
+	private final ModifiableCallout<?> poly7error = new ModifiableCallout<>("Poly 7 call", "Error");
+	private final ModifiableCallout<?> poly8safe = new ModifiableCallout<>("Poly 8 safe side", "{in}");
 
 	@HandleEvents
 	public void p6stile(EventContext context, MapEffectEvent mee) {
@@ -469,11 +468,11 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		P6STileEvent tileEvent = s.waitEvent(P6STileEvent.class);
 		log.info("Poly 1: Found map effect at: {}, {}", tileEvent.getX(), tileEvent.getY());
 		//01 or 03, west in east out. 02 or 04, east in west out
-		s.updateCall(switch (tileEvent.getX()) {
-			case 0, 2 -> poly1safeWIn.getModified();
-			case 1, 3 -> poly1safeWOut.getModified();
-			default -> poly1error.getModified();
-		});
+		s.updateCall((switch (tileEvent.getX()) {
+			case 0, 2 -> poly1safeWIn;
+			case 1, 3 -> poly1safeWOut;
+			default -> poly1error;
+		}).getModified());
 		log.info("Poly 1: End");
 	}
 
@@ -484,13 +483,13 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		P6STileEvent tileEvent = s.waitEvent(P6STileEvent.class, te -> tilesToCheck.contains(te.getIndex()));
 		log.info("Poly 2: found map effect at {}, {}", tileEvent.getX(), tileEvent.getY());
 		//based on assumption that it is only ever rotated from a possible pattern
-		s.updateCall(switch (tileEvent.getIndex()) {
-			case 0x03 -> poly2safe.getModified(Map.of("safe", ArenaSector.SOUTHEAST));
-			case 0x0E -> poly2safe.getModified(Map.of("safe", ArenaSector.SOUTHWEST));
-			case 0x0A -> poly2safe.getModified(Map.of("safe", ArenaSector.NORTHWEST));
-			case 0x0F -> poly2safe.getModified(Map.of("safe", ArenaSector.NORTHEAST));
-			default -> poly2safe.getModified(Map.of("safe", ArenaSector.UNKNOWN));
-		});
+		s.updateCall(poly2safe.getModified(Map.of("safe", switch (tileEvent.getIndex()) {
+			case 0x03 -> ArenaSector.SOUTHEAST;
+			case 0x0E -> ArenaSector.SOUTHWEST;
+			case 0x0A -> ArenaSector.NORTHWEST;
+			case 0x0F -> ArenaSector.NORTHEAST;
+			default -> ArenaSector.UNKNOWN;
+		})));
 		log.info("Poly 2: End");
 	}
 
@@ -501,13 +500,13 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		P6STileEvent tileEvent = s.waitEvent(P6STileEvent.class, te -> tilesToCheck.contains(te.getIndex()) && te.getTileType() == TileType.PLUS);
 		log.info("Poly 3: Found map effect at {}, {}", tileEvent.getX(), tileEvent.getY());
 		//always adjacent to plus that isnt in a corner
-		s.updateCall(switch (tileEvent.getIndex()) {
+		s.updateCall(poly3safe.getModified(switch (tileEvent.getIndex()) {
 			//SW, NE
-			case 0x03,0x0A, 0x0D, 0x10 -> poly3safe.getModified(Map.of("safe1", ArenaSector.SOUTHWEST, "safe2", ArenaSector.NORTHEAST));
+			case 0x03, 0x0A, 0x0D, 0x10 -> Map.of("safe1", ArenaSector.SOUTHWEST, "safe2", ArenaSector.NORTHEAST);
 			//NW, SE
-			case 0x02, 0x0B, 0x0E, 0x0F -> poly3safe.getModified(Map.of("safe1", ArenaSector.NORTHWEST, "safe2", ArenaSector.SOUTHEAST));
-			default -> poly3safe.getModified(Map.of("safe1", ArenaSector.UNKNOWN, "safe2", ArenaSector.UNKNOWN));
-		});
+			case 0x02, 0x0B, 0x0E, 0x0F -> Map.of("safe1", ArenaSector.NORTHWEST, "safe2", ArenaSector.SOUTHEAST);
+			default -> Map.of("safe1", ArenaSector.UNKNOWN, "safe2", ArenaSector.UNKNOWN);
+		}));
 		log.info("Poly 3: End");
 	}
 
@@ -541,20 +540,25 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		log.info("Poly 6: Begin, finding correct map event");
 		List<P6STileEvent> tileEvents = s.waitEvents(4, P6STileEvent.class, te -> true);
 		List<Integer> tilesToCheck = Arrays.asList(0x05, 0x06, 0x07, 0x08);
-		List<P6STileEvent> middleMapEffects = tileEvents.stream().filter(e -> tilesToCheck.contains(e.getIndex())).collect(Collectors.toList());
+		List<P6STileEvent> middleMapEffects = tileEvents.stream().filter(e -> tilesToCheck.contains(e.getIndex())).toList();
 		log.info("Poly 6: Found middle effect type {}", middleMapEffects.get(0).getTileType());
 
 		if (middleMapEffects.get(0).getTileType() == TileType.PLUS) {
-			poly6safe.getModified(Map.of("ref", "untethered plus"));
-		} else if (middleMapEffects.get(0).getTileType() == TileType.CROSS) {
-			poly6safe.getModified(Map.of("ref", "tethered cross"));
-		} else {
+//			s.updateCall(poly6safeUP.getModified());
+//			poly6safe.getModified(Map.of("ref", "untethered plus"));
+		}
+		else if (middleMapEffects.get(0).getTileType() == TileType.CROSS) {
+//			s.updateCall(poly6safeTC.getModified());
+//			poly6safe.getModified(Map.of("ref", "tethered cross"));
+		}
+		else {
 			poly6error.getModified();
 		}
 		log.info("Poly 6: End.");
 	}
 
 	//on diagonal of pluses and adjascent to cross or not adjascent to plus
+	@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 	private void poly7(AbilityCastStart e1, SequentialTriggerController<BaseEvent> s) {
 		log.info("Poly 7: Begin, finding map effects");
 		List<P6STileEvent> mapEffects = s.waitEvents(4, P6STileEvent.class, me -> true);
@@ -563,7 +567,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		P6STileEvent plusMapEffect = mapEffects.stream().filter(e -> tilesToCheck.contains(e.getIndex()) && e.getTileType() == TileType.PLUS).findFirst().get();
 		log.info("Poly 7: Found map effects");
 		//first get two possible safe spots
-		List<ArenaSector> safeSpots = null;
+		List<ArenaSector> safeSpots;
 		safeSpots = switch (plusMapEffect.getIndex()) {
 			case 0x01, 0x0C -> Arrays.asList(ArenaSector.NORTHWEST, ArenaSector.SOUTHEAST);
 			case 0x04, 0x09 -> Arrays.asList(ArenaSector.SOUTHWEST, ArenaSector.NORTHEAST);
@@ -572,7 +576,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		log.info("Poly 7: possible safespots are: {}", safeSpots);
 		List<Integer> innerTilesToCheck = Arrays.asList(0x02, 0x03, 0x0A, 0x0B, 0x0D, 0x0E, 0x0F, 0x10);
 		P6STileEvent oddOneOut = mapEffects.stream().filter(e -> innerTilesToCheck.contains(e.getIndex())).findFirst().get();
-		if(oddOneOut.getTileType() == TileType.PLUS) {
+		if (oddOneOut.getTileType() == TileType.PLUS) {
 			//plus
 			switch (oddOneOut.getIndex()) {
 				case 0x02, 0x0A -> {
@@ -593,7 +597,8 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 				default -> log.info("Poly 7: Weird oddOneOut index: {}", oddOneOut.getIndex());
 			}
-		} else {
+		}
+		else {
 			//cross
 			switch (oddOneOut.getIndex()) {
 				case 0x02, 0x0E -> safeSpots.remove(ArenaSector.NORTHEAST);
@@ -603,9 +608,10 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 				default -> log.info("Poly 7: Weird oddOneOut index: {}", oddOneOut.getIndex());
 			}
 		}
-		if(safeSpots.size() != 1) {
+		if (safeSpots.size() != 1) {
 			poly7error.getModified();
-		} else {
+		}
+		else {
 			poly7safe.getModified(Map.of("safe", safeSpots));
 		}
 		log.info("Poly 7: End");
@@ -626,100 +632,16 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		log.info("Poly 8: End");
 	}
 
-	private P6STileEvent findFirstTetheredTile(List<P6STileEvent> tel, TetherEvent t) {
-		P6STileEvent match = null;
-		for (P6STileEvent te : tel) {
-			log.info("Current tile is {}", te.getIndex());
-			switch(te.getIndex()) {
-				case 0x01:
-					if (isApproximatelyNearbyTether(85, 85, t))
-						match = te;
-					break;
-				case 0x02:
-					if (isApproximatelyNearbyTether(95, 85, t))
-						match = te;
-					break;
-				case 0x03:
-					if (isApproximatelyNearbyTether(105, 85, t))
-						match = te;
-					break;
-				case 0x04:
-					if (isApproximatelyNearbyTether(115, 85, t))
-						match = te;
-					break;
-				case 0x05:
-					if (isApproximatelyNearbyTether(95, 95, t))
-						match = te;
-					break;
-				case 0x06:
-					if (isApproximatelyNearbyTether(105, 95, t))
-						match = te;
-					break;
-				case 0x07:
-					if (isApproximatelyNearbyTether(95, 105, t))
-						match = te;
-					break;
-				case 0x08:
-					if (isApproximatelyNearbyTether(105, 105, t))
-						match = te;
-					break;
-				case 0x09:
-					if (isApproximatelyNearbyTether(85, 115, t))
-						match = te;
-					break;
-				case 0x0A:
-					if (isApproximatelyNearbyTether(95, 115, t))
-						match = te;
-					break;
-				case 0x0B:
-					if (isApproximatelyNearbyTether(105, 115, t))
-						match = te;
-					break;
-				case 0x0C:
-					if (isApproximatelyNearbyTether(115, 115, t))
-						match = te;
-					break;
-				case 0x0D:
-					if (isApproximatelyNearbyTether(85, 105, t))
-						match = te;
-					break;
-				case 0x0E:
-					if(isApproximatelyNearbyTether(115, 105, t))
-						match = te;
-					break;
-				case 0x0F:
-					if(isApproximatelyNearbyTether(85, 95, t))
-						match = te;
-					break;
-				case 0x10:
-					if(isApproximatelyNearbyTether(115, 95, t))
-						match = te;
-
-			}
-			if(match != null) {
-				log.info("Tethered tile is at {}: {}, {}", te.getIndex(), te.getX(), te.getY());
-				break;
-			}
-		}
-		return match;
+	private static P6STileEvent findFirstTetheredTile(List<P6STileEvent> tel, TetherEvent t) {
+		return tel.stream().filter(te -> isApproximatelyNearbyTether(te.tilePos(), t))
+				.findFirst()
+				.orElseThrow(null);
 	}
 
-	private boolean isApproximatelyNearbyTether(long x, long y, TetherEvent t) {
-		boolean nearX = false;
-		boolean nearY = false;
-		log.info("Current tether coords: {}, {}", x, y);
-		for(XivCombatant c : t.getTargets()) {
-			Position pos = c.getPos();
-			nearX = pos.x() > (x - 0.05) && pos.x() < (x + 0.05);
-			nearY = pos.y() > (y - 0.05) && pos.y() < (y + 0.05);
-			if(nearX && nearY) {
-				log.info("Found tethered tile at {}, {}", pos.x(), pos.y());
-				break;
-			} else {
-				log.info("Didn't find a tether at {}, {}", pos.x(), pos.y());
-			}
-		}
-
-		return nearX && nearY;
+	private static boolean isApproximatelyNearbyTether(Position pos, TetherEvent t) {
+		return t.eitherTargetMatches(target -> {
+			Position tpos = target.getPos();
+			return tpos != null && tpos.distanceFrom2D(pos) < 0.05;
+		});
 	}
 }
