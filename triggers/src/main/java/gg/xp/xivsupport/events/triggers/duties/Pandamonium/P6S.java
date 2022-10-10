@@ -406,7 +406,8 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> poly1error = new ModifiableCallout<>("Poly 1 Error", "Error");
 	private final ModifiableCallout<?> poly2safe = new ModifiableCallout<>("Poly 2 bait then safe spot", "Bait middle, then {safe}");
 	private final ModifiableCallout<?> poly3safe = new ModifiableCallout<>("Poly 3 safe spots", "Healer stacks, {safe1} {safe2}");
-	private final ModifiableCallout<?> poly5safe = new ModifiableCallout<>("Poly 5 start spot", "Start inner {start}");
+	private final ModifiableCallout<?> poly5start = new ModifiableCallout<>("Poly 5 start spot", "Start inner {start}");
+	private final ModifiableCallout<?> poly5safe = new ModifiableCallout<>("Poly 5 actual safe spot", "Move {move}");
 	private final ModifiableCallout<?> poly6safeUP = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner untethered plus");
 	private final ModifiableCallout<?> poly6safeTC = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner tethered cross");
 	private final ModifiableCallout<?> poly6error = new ModifiableCallout<>("Poly 6 error", "Error");
@@ -529,16 +530,68 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		}
 		log.info("Poly 5: Tether is at {}, {} and {}, {}", tetherEvent.getSource().getPos().getX(), tetherEvent.getSource().getPos().getY(), tetherEvent.getTarget().getPos().getX(), tetherEvent.getTarget().getPos().getY());
 		//use this if i want to call where to move after chorus ixou starts
-		//P6STileEvent crossMapEffect = tileEvents.stream().filter(e -> e.getTileType() == TileType.CROSS).findFirst().get();
+		P6STileEvent crossMapEffect = tileEvents.stream().filter(e -> e.getTileType() == TileType.CROSS).findFirst().get();
 		P6STileEvent tetheredPlusMapEffect = findFirstTetheredTile(tileEvents.stream().filter(e -> e.getTileType() == TileType.PLUS).collect(Collectors.toList()), tetherEvent);
 		log.info("Poly 5: Finished finding tethered map effect: {}, {}", tetheredPlusMapEffect.getX(), tetheredPlusMapEffect.getY());
-		s.updateCall(switch (tetheredPlusMapEffect.getIndex()) {
-			case 0x04 -> poly5safe.getModified(Map.of("start", ArenaSector.NORTHEAST));
-			case 0x0C -> poly5safe.getModified(Map.of("start", ArenaSector.SOUTHEAST));
-			case 0x09 -> poly5safe.getModified(Map.of("start", ArenaSector.SOUTHWEST));
-			case 0x01 -> poly5safe.getModified(Map.of("start", ArenaSector.NORTHWEST));
-			default -> poly5safe.getModified(Map.of("start", ArenaSector.UNKNOWN));
-		});
+		ArenaSector startref = switch (tetheredPlusMapEffect.getIndex()) {
+			case 0x04 -> ArenaSector.NORTHEAST;
+			case 0x0C -> ArenaSector.SOUTHEAST;
+			case 0x09 -> ArenaSector.SOUTHWEST;
+			case 0x01 -> ArenaSector.NORTHWEST;
+			default -> ArenaSector.UNKNOWN;
+		};
+		s.updateCall(poly5start.getModified(Map.of("start", startref)));
+		AbilityCastStart cleaving = s.waitEvent(AbilityCastStart.class, aue -> aue.abilityIdMatches(0x7881, 0x7883));
+
+		ArenaSector move;
+		long crossIndex = crossMapEffect.getIndex();
+		long plusIndex = tetheredPlusMapEffect.getIndex();
+		boolean moveDiagonal = (crossIndex == 0x05 && plusIndex == 0x01) ||
+				(crossIndex == 0x06 && plusIndex == 0x04) ||
+				(crossIndex == 0x07 && plusIndex == 0x09) ||
+				(crossIndex == 0x08 && plusIndex == 0x0C);
+
+
+		//TODO: dont overlap with sides/frontback call
+		if(cleaving.getAbility().getId() == 0x7881) { //frontback
+			if(moveDiagonal) { //diagonal
+				switch (startref) {
+					case NORTHWEST -> move = ArenaSector.NORTHEAST;
+					case NORTHEAST -> move = ArenaSector.NORTHWEST;
+					case SOUTHEAST -> move = ArenaSector.SOUTHWEST;
+					case SOUTHWEST -> move = ArenaSector.SOUTHEAST;
+					default -> move = ArenaSector.UNKNOWN;
+				}
+			}
+			else { //perpendicular
+				switch (startref) {
+					case NORTHWEST, NORTHEAST -> move = ArenaSector.NORTH;
+					case SOUTHWEST, SOUTHEAST -> move = ArenaSector.SOUTH;
+					default -> move = ArenaSector.UNKNOWN;
+				}
+			}
+		}
+		else { //sides
+			if(moveDiagonal) { //diagonal
+				switch (startref) {
+					case NORTHWEST -> move = ArenaSector.SOUTHWEST;
+					case NORTHEAST -> move = ArenaSector.SOUTHEAST;
+					case SOUTHEAST -> move = ArenaSector.NORTHEAST;
+					case SOUTHWEST -> move = ArenaSector.NORTHWEST;
+					default -> move = ArenaSector.UNKNOWN;
+				}
+
+			}
+			else { //perpendicular
+				switch (startref) {
+					case NORTHWEST, SOUTHWEST -> move = ArenaSector.WEST;
+					case NORTHEAST, SOUTHEAST -> move = ArenaSector.EAST;
+					default -> move = ArenaSector.UNKNOWN;
+				}
+			}
+		}
+
+		s.updateCall(poly5safe.getModified(Map.of("move", move)));
 		log.info("Poly 5: End.");
 	}
 
@@ -654,15 +707,16 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 		log.info("Poly 8: End");
 	}
 
-	private static P6STileEvent findFirstTetheredTile(List<P6STileEvent> tel, TetherEvent t) {
+	private P6STileEvent findFirstTetheredTile(List<P6STileEvent> tel, TetherEvent t) {
 		return tel.stream().filter(te -> isApproximatelyNearbyTether(te.tilePos(), t))
 				.findFirst()
-				.orElseThrow(null);
+				.orElse(null);
 	}
 
-	private static boolean isApproximatelyNearbyTether(Position pos, TetherEvent t) {
+	private boolean isApproximatelyNearbyTether(Position pos, TetherEvent t) {
 		return t.eitherTargetMatches(target -> {
-			Position tpos = target.getPos();
+			Position tpos = getState().getLatestCombatantData(target).getPos();
+			log.info("isApproximatelyNearbyTeher: tpos is {} and pos is {}", tpos, pos);
 			return tpos != null && tpos.distanceFrom2D(pos) < 0.05;
 		});
 	}
