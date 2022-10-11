@@ -3,12 +3,13 @@ package gg.xp.reevent.scan;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
+import gg.xp.reevent.events.TypedEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 
-public class AutoHandler implements EventHandler<Event> {
+public class AutoHandler implements TypedEventHandler<Event> {
 
 	private static final Logger log = LoggerFactory.getLogger(AutoHandler.class);
 
@@ -145,5 +146,10 @@ public class AutoHandler implements EventHandler<Event> {
 		catch (Throwable e) {
 			log.error("Error invoking trigger method {}", methodLabel, e);
 		}
+	}
+
+	@Override
+	public Class<? extends Event> getType() {
+		return eventClass;
 	}
 }

@@ -349,7 +349,8 @@ public class GuiMain {
 
 		@Override
 		public void refresh() {
-			refreshables.forEach(r -> SwingUtilities.invokeLater(r::refresh));
+			SwingUtilities.invokeLater(() -> refreshables.forEach(Refreshable::refresh));
+//			refreshables.forEach(r -> SwingUtilities.invokeLater(r::refresh));
 		}
 	}
 

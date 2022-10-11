@@ -94,18 +94,30 @@ public class CalloutProcessor {
 	}
 
 	public <X> CalloutEvent processCallout(RawModifiedCallout<X> raw) {
-		Map<String, Object> arguments = new HashMap<>(raw.getArguments());
+		String rawTts = raw.getTts();
+		String rawText = raw.getText();
+		String tts;
+		Supplier<String> text;
 		X event = raw.getEvent();
-		if (event != null) {
-			arguments.put("event", event);
+		boolean fastPath = (rawTts == null || !rawTts.contains("{")) && (rawText == null || !rawText.contains("{"));
+		if (fastPath) {
+			// Fast path for when there are no {}
+			tts = rawTts == null ? null : gcr.doReplacements(rawTts, true);
+			String finalText = rawText == null ? null : gcr.doReplacements(rawText, false);
+			text = () -> finalText;
 		}
-		Binding binding = groovyMgr.makeBinding();
-		arguments.forEach(binding::setVariable);
+		else {
+			Map<String, Object> arguments = new HashMap<>(raw.getArguments());
+			if (event != null) {
+				arguments.put("event", event);
+			}
+			Binding binding = groovyMgr.makeBinding();
+			arguments.forEach(binding::setVariable);
 //		Binding binding = new Binding(arguments);
 
-		// TODO: fast path for when there are no {}
-		String tts = applyReplacements(raw, raw.getTts(), binding, true);
-		Supplier<String> text = () -> applyReplacements(raw, raw.getText(), binding, false);
+			tts = applyReplacements(raw, rawTts, binding, true);
+			text = () -> applyReplacements(raw, rawText, binding, false);
+		}
 
 		ProcessedCalloutEvent out = new ProcessedCalloutEvent(
 				raw.trackingKey(),

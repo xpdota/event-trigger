@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class AutoEventDistributor extends BasicEventDistributor {
@@ -18,6 +21,7 @@ public class AutoEventDistributor extends BasicEventDistributor {
 	private final AutoHandlerScan scanner;
 	private final TopologyInfo topoInfo;
 	private final Object loadLock = new Object();
+	private final Map<Class<? extends Event>, List<EventHandler<Event>>> eventClassMap = new HashMap<>();
 	boolean isLoaded;
 	private Topology topology;
 
@@ -32,7 +36,7 @@ public class AutoEventDistributor extends BasicEventDistributor {
 	// We get double events after reloading
 	public void reload() {
 		// TODO: kind of jank - maybe just have another list of manually-added handlers?
-		List<EventHandler<Event>> handlersToKeep = handlers.stream().filter(e -> !(e instanceof AutoHandler)).collect(Collectors.toList());
+		List<EventHandler<Event>> handlersToKeep = handlers.stream().filter(e -> !(e instanceof AutoHandler)).toList();
 		handlers.clear();
 		handlers.addAll(handlersToKeep);
 		List<AutoHandler> handlers = scanner.build();
@@ -42,6 +46,24 @@ public class AutoEventDistributor extends BasicEventDistributor {
 		isLoaded = true;
 	}
 
+	@Override
+	protected void sortHandlers() {
+		super.sortHandlers();
+		eventClassMap.clear();
+	}
+
+	@Override
+	protected List<EventHandler<Event>> getHandlersForEvent(Event event) {
+		Class<? extends Event> eventClass = event.getClass();
+		return eventClassMap.computeIfAbsent(eventClass, cls -> handlers.stream().filter(eh -> {
+			if (eh instanceof TypedEventHandler<Event> teh) {
+				return teh.getType().isAssignableFrom(eventClass);
+			}
+			else {
+				return true;
+			}
+		}).sorted(Comparator.comparing(EventHandler::getOrder)).toList());
+	}
 
 	public Topology getTopology() {
 		return topology;

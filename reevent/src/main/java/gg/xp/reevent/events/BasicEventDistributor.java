@@ -51,6 +51,10 @@ public class BasicEventDistributor implements EventDistributor {
 		handlers.sort(Comparator.comparing(EventHandler::getOrder));
 	}
 
+	protected List<EventHandler<Event>> getHandlersForEvent(Event event) {
+		return Collections.unmodifiableList(handlers);
+	}
+
 
 	@Override
 	public void setQueue(EventQueue queue) {
@@ -81,21 +85,17 @@ public class BasicEventDistributor implements EventDistributor {
 			if (updateTimes) {
 				current.setPumpedAt(TimeUtils.now());
 			}
-			// TODO: this doesn't work, because handlers filter it themselves
-			if (handlers.isEmpty()) {
-				log.warn("No handlers for event {}!", event);
-			}
 			List<EventHandler<Event>> handlersTmp;
-			// TODO: this would be nice to get rid of, don't want an O(n) creation right here
 			synchronized (handlersLock) {
-				handlersTmp = new ArrayList<>(handlers);
+				handlersTmp = getHandlersForEvent(current);
 			}
 			if (handlersTmp.isEmpty()) {
-				log.warn("No handlers!");
+				log.warn("No handlers for event {}!", event);
 			}
 			for (EventHandler<Event> handler : handlersTmp) {
 				log.trace("Sending event {} to handler {} with {} immediate events", current, handler, eventsForImmediateProcessing.size());
-				LongSummaryStatistics stats = executionTimes.computeIfAbsent(handler, unused -> new LongSummaryStatistics());
+				boolean enableProfiling = this.enableProfiling;
+				LongSummaryStatistics stats = enableProfiling ? executionTimes.computeIfAbsent(handler, unused -> new LongSummaryStatistics()) : null;
 				AtomicBoolean isDone = new AtomicBoolean();
 				long timeBefore = enableProfiling ? System.nanoTime() : 0;
 				try {
