@@ -591,7 +591,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 			}
 		}
 
-		s.updateCall(poly5safe.getModified(Map.of("move", move)));
+//		s.updateCall(poly5safe.getModified(Map.of("move", move)));
 		log.info("Poly 5: End.");
 	}
 
