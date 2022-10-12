@@ -407,7 +407,7 @@ public class P6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> poly2safe = new ModifiableCallout<>("Poly 2 bait then safe spot", "Bait middle, then {safe}");
 	private final ModifiableCallout<?> poly3safe = new ModifiableCallout<>("Poly 3 safe spots", "Healer stacks, {safe1} {safe2}");
 	private final ModifiableCallout<?> poly5start = new ModifiableCallout<>("Poly 5 start spot", "Start inner {start}");
-	private final ModifiableCallout<?> poly5safe = new ModifiableCallout<>("Poly 5 actual safe spot", "Move {move}");
+//	private final ModifiableCallout<?> poly5safe = new ModifiableCallout<>("Poly 5 actual safe spot", "Move {move}");
 	private final ModifiableCallout<?> poly6safeUP = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner untethered plus");
 	private final ModifiableCallout<?> poly6safeTC = new ModifiableCallout<>("Poly 6 reference tile", "Corners of inner tethered cross");
 	private final ModifiableCallout<?> poly6error = new ModifiableCallout<>("Poly 6 error", "Error");
