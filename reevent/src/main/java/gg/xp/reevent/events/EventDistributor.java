@@ -19,9 +19,22 @@ public interface EventDistributor {
 	 * @param <Y>     Type of event
 	 */
 	default <Y extends Event> void registerHandler(Class<Y> clazz, EventHandler<? super Y> handler) {
-		registerHandler((context, event) -> {
-			if (clazz.isInstance(event)) {
-				handler.handle(context, clazz.cast(event));
+		registerHandler(new TypedEventHandler<>() {
+			@Override
+			public Class<? extends Event> getType() {
+				return clazz;
+			}
+
+			@Override
+			public void handle(EventContext context, Event event) {
+				if (clazz.isInstance(event)) {
+					handler.handle(context, clazz.cast(event));
+				}
+			}
+
+			@Override
+			public String toString() {
+				return String.format("TypedHandler(%s:%s)", handler, clazz.getSimpleName());
 			}
 		});
 	}

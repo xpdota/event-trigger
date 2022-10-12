@@ -13,6 +13,7 @@ public class ReplayAdvancePseudoFilter<X extends Event> {
 	private final ReplayController replay;
 	private final Class<X> clazz;
 	private final TableWithFilterAndDetails<X, ?> table;
+	private volatile boolean isPlaying;
 
 	public ReplayAdvancePseudoFilter(Class<X> clazz, EventMaster master, ReplayController replay, TableWithFilterAndDetails<X, ?> table) {
 		this.replay = replay;
@@ -20,13 +21,12 @@ public class ReplayAdvancePseudoFilter<X extends Event> {
 		this.table = table;
 		EventDistributor dist = master.getDistributor();
 		dist.registerHandler(clazz, (c, e) -> {
-			if (eventPassesTableFilter(e)) {
+			if (isPlaying && eventPassesTableFilter(e)) {
 				isPlaying = false;
 			}
 		});
 	}
 
-	private volatile boolean isPlaying;
 
 	private boolean eventPassesTableFilter(X event) {
 		if (table == null) {
