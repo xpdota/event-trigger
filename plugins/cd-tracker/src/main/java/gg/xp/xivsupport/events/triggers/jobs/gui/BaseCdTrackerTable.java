@@ -1,15 +1,19 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
-import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
+import gg.xp.xivsupport.models.XivAbility;
 
 import javax.swing.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class BaseCdTrackerTable {
 	private final CustomTableModel<VisualCdInfo> tableModel;
@@ -24,11 +28,25 @@ public class BaseCdTrackerTable {
 		tableModel = CustomTableModel.builder(supplier)
 				.addColumn(new CustomColumn<>("Icon", c -> {
 					AbilityUsedEvent ability = c.getEvent();
+					// If there was no ability (e.g. CD has not fired yet), try to use
+					// the icon of the cooldown's primary ability.
 					if (ability == null) {
 						return ActionLibrary.iconForId(c.getPrimaryAbilityId());
 					}
-					return ability.getAbility();
-
+					else {
+						// If there was an ability use, try to use the icon from that.
+						ActionIcon icon = ActionLibrary.iconForId(ability.getAbility().getId());
+						// If the above failed to get us a usable icon, our last resort is to see if the
+						if (icon == null) {
+							return ability.getEffectsOfType(StatusAppliedEffect.class)
+									.stream()
+									.map(sae -> StatusEffectLibrary.iconForId(sae.getStatus().getId(), sae.getStacks()))
+									.filter(Objects::nonNull)
+									.findFirst()
+									.orElse(null);
+						}
+						return icon;
+					}
 				}, c -> {
 					c.setCellRenderer(new ActionAndStatusRenderer(true, false, false));
 					c.setMaxWidth(22);

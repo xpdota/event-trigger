@@ -1,7 +1,10 @@
 package gg.xp.xivdata.data;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static gg.xp.xivdata.data.Job.*;
@@ -65,12 +68,26 @@ public class CdBuilder {
 		this.abilityIds = abilityIds;
 	}
 
-	public ActionInfo getActionInfo() {
-		return getActionInfo(abilityIds[0]);
+	public ActionInfo getActionInfoRequired() {
+		if (abilityIds.length == 0) {
+			throw new IllegalStateException("Cannot ask for action info when the cooldown has no ability IDs");
+		}
+		return getActionInfoRequired(abilityIds[0]);
 	}
 
-	public static ActionInfo getActionInfo(long id) {
-		ActionInfo actionInfo = ActionLibrary.forId(id);
+	public @Nullable ActionInfo getActionInfoOpt() {
+		if (abilityIds.length == 0) {
+			return null;
+		}
+		return getActionInfoOpt(abilityIds[0]);
+	}
+
+	public static @Nullable ActionInfo getActionInfoOpt(long id) {
+		return ActionLibrary.forId(id);
+	}
+
+	public static ActionInfo getActionInfoRequired(long id) {
+		ActionInfo actionInfo = getActionInfoOpt(id);
 		if (actionInfo == null) {
 			throw new RuntimeException(String.format("Could not find ActionInfo for action %X", id));
 		}
@@ -78,12 +95,12 @@ public class CdBuilder {
 	}
 
 	public List<ActionInfo> getAllActionInfo() {
-		return Arrays.stream(abilityIds).mapToObj(CdBuilder::getActionInfo).toList();
+		return Arrays.stream(abilityIds).mapToObj(CdBuilder::getActionInfoOpt).filter(Objects::nonNull).toList();
 	}
 
 	public double getCooldown() {
 		if (cooldown == null) {
-			return getActionInfo().getCd();
+			return getActionInfoRequired().getCd();
 		}
 		else {
 			return cooldown;
@@ -92,7 +109,14 @@ public class CdBuilder {
 
 	public String getName() {
 		if (name == null) {
-			return getAllActionInfo().stream()
+			List<ActionInfo> all = getAllActionInfo();
+			if (all.isEmpty()) {
+				if (abilityIds.length == 0) {
+					return "None";
+				}
+				return String.format("Unknown (0x%X, %s)", abilityIds[0], abilityIds[0]);
+			}
+			return all.stream()
 					.map(ActionInfo::name)
 					.map(ActionUtils.adjustNameReverse())
 					.collect(Collectors.joining("/"));
@@ -104,7 +128,11 @@ public class CdBuilder {
 
 	public JobType getJobType() {
 		if (jobType == null) {
-			return switch (Integer.parseInt(getActionInfo().categoryRaw())) {
+			ActionInfo ai = getActionInfoOpt();
+			if (ai == null) {
+				return UNKNOWN;
+			}
+			return switch (Integer.parseInt(ai.categoryRaw())) {
 				case 66, 105, 123, 171 -> PRANGED;
 				case 67, 76, 84, 114, 148 -> MELEE_DPS;
 				case 89, 116, 175 -> CASTER;
@@ -114,7 +142,7 @@ public class CdBuilder {
 				case 120 -> CASTER;
 				// This is actually DoM, but no category for that yet
 				case 161 -> TANK;
-				default -> null;
+				default -> UNKNOWN;
 			};
 		}
 		else {
@@ -123,9 +151,13 @@ public class CdBuilder {
 	}
 
 	// TODO: just pull this from data files
-	public Job getJob() {
+	public @Nullable Job getJob() {
 		if (job == null) {
-			int rawJobCategory = Integer.parseInt(getActionInfo().categoryRaw());
+			ActionInfo ai = getActionInfoOpt();
+			if (ai == null) {
+				return null;
+			}
+			int rawJobCategory = Integer.parseInt(ai.categoryRaw());
 			return switch (rawJobCategory) {
 				case 2, 20, 38 -> PLD;
 				case 3, 21 -> MNK;
@@ -169,7 +201,11 @@ public class CdBuilder {
 
 	public int getMaxCharges() {
 		if (maxCharges == null) {
-			return getActionInfo().maxCharges();
+			ActionInfo ai = getActionInfoOpt();
+			if (ai == null) {
+				return 1;
+			}
+			return ai.maxCharges();
 		}
 		else {
 			return maxCharges;

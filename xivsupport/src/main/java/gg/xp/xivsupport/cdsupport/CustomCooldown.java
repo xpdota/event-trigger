@@ -51,6 +51,4 @@ public class CustomCooldown {
 	public void invalidate() {
 		cached = null;
 	}
-
-	;
 }

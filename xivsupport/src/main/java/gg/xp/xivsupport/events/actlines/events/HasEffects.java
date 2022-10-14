@@ -20,4 +20,9 @@ public interface HasEffects {
 		}
 		return amount;
 	}
+
+	@SuppressWarnings("unchecked")
+	default <X> List<X> getEffectsOfType(Class<X> type) {
+		return (List<X>) getEffects().stream().filter(type::isInstance).toList();
+	}
 }

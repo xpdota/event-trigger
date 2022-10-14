@@ -1,10 +1,7 @@
 package gg.xp.xivsupport.gui.cooldowns;
 
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.ActionInfo;
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.ExtendedCooldownDescriptor;
-import gg.xp.xivdata.data.StatusEffectInfo;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.cdsupport.CustomCooldown;
 import gg.xp.xivsupport.cdsupport.CustomCooldownManager;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
@@ -21,6 +18,7 @@ import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
+import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityListCellRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -258,6 +256,12 @@ public class CustomCooldownTab implements PluginTab {
 	private void addnew(long id) {
 		CustomCooldown newCc = new CustomCooldown();
 		newCc.primaryAbilityId = id;
+		// For potions etc
+		if (CdBuilder.getActionInfoOpt(newCc.primaryAbilityId) == null) {
+			newCc.nameOverride = "Please Enter a Name";
+			newCc.cooldown = 123.456;
+			JOptionPane.showMessageDialog(outer, "Information for this ability could not be determined automatically.\n\nPlease enter the name, cooldown, and charges manually.");
+		}
 		backend.addCooldown(newCc);
 		refresh();
 		SwingUtilities.invokeLater(() -> {
@@ -317,7 +321,7 @@ public class CustomCooldownTab implements PluginTab {
 						icon = IconTextRenderer.getComponent(ai.getIcon(), new JLabel(' ' + ai.name()), false, false, true);
 					}
 					else {
-						icon = new JLabel("None");
+						icon = new JLabel("Unknown (0x%X, %s)".formatted(selection.primaryAbilityId, selection.primaryAbilityId));
 					}
 					gbh.addRow(label, icon);
 				}
@@ -355,7 +359,12 @@ public class CustomCooldownTab implements PluginTab {
 				c.gridy++;
 
 				{
-					TextFieldWithValidation<Double> cdField = new TextFieldWithValidation<>(emptyToNull(Double::parseDouble), modifyCd(selection, value -> selection.cooldown = value), valueToStr(() -> selection.cooldown));
+					TextFieldWithValidation<Double> cdField = new TextFieldWithValidation<>(emptyToNull(Double::parseDouble), modifyCd(selection, value -> {
+						if (value == null && ActionLibrary.forId(selection.primaryAbilityId) == null) {
+							throw new ValidationError("You must set the cooldown manually because it could not be determined automatically.");
+						}
+						selection.cooldown = value;
+					}), valueToStr(() -> selection.cooldown));
 					JLabel cdLabel = GuiUtil.labelFor("Cooldown", cdField);
 					gbh.addRow(cdLabel, cdField);
 				}

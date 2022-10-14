@@ -94,8 +94,14 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 		setClickThrough(this, clickThrough);
 	}
 
+	// https://learn.microsoft.com/en-us/windows/win32/winmsg/window-styles
 	// https://docs.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
-	private static final long WS_NOACTIVATE = 0x08000000L;
+	// Other things that may be of note:
+	// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowrgn
+	// For performance, WS_EX_TRANSPARENT says that it waits for the underlying window, which I wonder - is this the
+	// reason for the small FPS drop when rendering overlays?
+	// Also try turning OFF some of the default flags (like WS_CLIPSIBLINGS)
+	private static final long WS_EX_NOACTIVATE = 0x08000000L;
 
 	private static void setClickThrough(JFrame w, boolean clickThrough) {
 		log.trace("Click-through: {}", clickThrough);
@@ -105,17 +111,29 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 			return;
 		}
 		WinDef.HWND hwnd = getHWnd(w);
-		int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
+		int st = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_STYLE);
+		int ex = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
+		// TODO: test using WS_DISABLED
 		if (clickThrough) {
-			wl |= WinUser.WS_EX_TRANSPARENT;
-			wl |= WS_NOACTIVATE;
+			ex |= WinUser.WS_EX_TRANSPARENT;
+			ex |= WS_EX_NOACTIVATE;
+//			ex |= WinUser.WS_EX_LAYERED;
+//			st |= WinUser.WS_EX_LAYERED;
+//			st |= WinUser.WS_DISABLED;
 		}
 		else {
-			wl &= ~WinUser.WS_EX_TRANSPARENT;
-			wl &= ~WS_NOACTIVATE;
+			ex &= ~WinUser.WS_EX_TRANSPARENT;
+			ex &= ~WS_EX_NOACTIVATE;
+//			ex &= ~WinUser.WS_EX_LAYERED;
+//			st &= ~WinUser.WS_EX_LAYERED;
+//			st &= ~WinUser.WS_DISABLED;
 		}
 		w.setBackground(new Color(0, 0, 0, 0));
-		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
+		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_STYLE, st);
+		User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, ex);
+//		if (clickThrough) {
+//			User32.INSTANCE.SetLayeredWindowAttributes(hwnd, 0, (byte) 100, 2);
+//		}
 	}
 
 	/**

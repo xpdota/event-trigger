@@ -91,7 +91,13 @@ public class CdTracker {
 		personalCdsCustom.clear();
 		partyCdsCustom.clear();
 		for (CustomCooldown custom : customs) {
-			ExtendedCooldownDescriptor cd = custom.buildCd();
+			ExtendedCooldownDescriptor cd;
+			try {
+				cd = custom.buildCd();
+			} catch (Throwable t) {
+				log.error("Error loading custom cooldown ({}, {})", custom.nameOverride, String.format("0x%X", custom.primaryAbilityId));
+				continue;
+			}
 			personalCdsCustom.put(cd, new CooldownSetting(persistence, getKey(cd), cd.defaultPersOverlay(), false));
 			partyCdsCustom.put(cd, new CooldownSetting(persistence, getKey(cd) + ".party", false, false));
 		}
