@@ -100,7 +100,13 @@ public class DotRefreshReminderGui implements PluginTab {
 		GridBagConstraints c = new GridBagConstraints();
 		Map<DotBuff, BooleanSetting> dots = backend.getEnabledDots();
 		Map<Job, List<DotBuff>> byJob = dots.keySet().stream().collect(Collectors.groupingBy(DotBuff::getJob));
-		List<Job> jobKeys = byJob.keySet().stream().sorted(Comparator.comparing(Job::getFriendlyName)).toList();
+		List<Job> jobKeys = byJob.keySet().stream().sorted(Comparator.comparing(j -> {
+			if (j == Job.ADV) {
+				// Sorting hack, TODO fix this
+				return "_";
+			}
+			return j.getFriendlyName();
+		})).toList();
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.CENTER;
 		c.ipadx = 50;
@@ -113,7 +119,7 @@ public class DotRefreshReminderGui implements PluginTab {
 			// left filler
 			innerPanel.add(new JPanel());
 			c.gridx ++;
-			JLabel label = new JLabel(job.getFriendlyName());
+			JLabel label = new JLabel(job == Job.ADV ? "Other" : job.getFriendlyName());
 			innerPanel.add(label, c);
 			dotsForJob.forEach(dot -> {
 				c.gridx++;
