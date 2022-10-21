@@ -11,6 +11,7 @@ import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.misc.pulls.ForceCombatEnd;
 import gg.xp.xivsupport.events.state.InCombatChangeEvent;
@@ -18,6 +19,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
+import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -25,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 
@@ -45,8 +48,13 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final ModifiableCallout<AbilityCastStart> underGreen = ModifiableCallout.durationBasedCall("Under Green", "Get Under Green");
 	private final ModifiableCallout<AbilityCastStart> underBoss = ModifiableCallout.durationBasedCall("Under Green", "Get Under Green");
 	private final ModifiableCallout<AbilityCastStart> totalWash = ModifiableCallout.durationBasedCall("Total Wash", "Raidwide with Bleed");
+	private final ModifiableCallout<AbilityCastStart> fp1_begin = new ModifiableCallout<>("Fresh Puff 1: Begin", "Three Puffs");
+	private final ModifiableCallout<AbilityCastStart> fp2_begin = new ModifiableCallout<>("Fresh Puff 2: Begin", "Four Puffs and Tethers");
 	private final ModifiableCallout<TetherEvent> fp2_blueTether = new ModifiableCallout<>("Fresh Puff 2: Blue Tether", "Blue Tether");
 	private final ModifiableCallout<TetherEvent> fp2_yellowTether = new ModifiableCallout<>("Fresh Puff 2: Yellow Tether", "Yellow Tether");
+	private final ModifiableCallout<AbilityCastStart> fp3_begin = new ModifiableCallout<>("Fresh Puff 3: Begin", "Eight Puffs");
+	private final ModifiableCallout<AbilityCastStart> fp4_begin = new ModifiableCallout<>("Fresh Puff 3: Begin", "Four Puffs and Tethers");
+	private final ModifiableCallout<BuffApplied> forkedLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Forked Lightning", "Spread").autoIcon();
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -113,6 +121,8 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 		}
 	}
 
+	private final RepeatSuppressor greenSupp = new RepeatSuppressor(Duration.ofSeconds(2));
+
 	@HandleEvents
 	public void fakeCasts(EventContext ctx, AbilityCastStart acs) {
 		if (acs.abilityIdMatches(0x7755)) {
@@ -122,7 +132,16 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 			ctx.accept(squeakyCleanRightSafe.getModified(acs));
 		}
 		else if (acs.abilityIdMatches(0x776B) && buffColor(acs.getSource()) == Color.GREEN) {
-			ctx.accept(underGreen.getModified(acs));
+			if (greenSupp.check(acs)) {
+				ctx.accept(underGreen.getModified(acs));
+			}
+		}
+	}
+
+	@HandleEvents
+	public void debuffs(EventContext ctx, BuffApplied ba) {
+		if (ba.buffIdMatches(0x24B) && ba.getTarget().isThePlayer()) {
+			ctx.accept(forkedLightning.getModified(ba));
 		}
 	}
 
@@ -153,8 +172,10 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final SequentialTrigger<BaseEvent> freshPuff = SqtTemplates.multiInvocation(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7766),
 			(e1, s) -> {
 				// First invocation: handled by other triggers already
+				s.updateCall(fp1_begin.getModified(e1));
 			},
 			(e1, s) -> {
+				s.updateCall(fp2_begin.getModified(e1));
 				// Second invocation: four puffs, with tethers
 				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer));
 				XivCombatant puff = tether.getTargetMatching(cbt -> !cbt.isPc());
@@ -180,7 +201,12 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 				}
 			},
 			(e1, s) -> {
-				// Eight puffs
+				s.updateCall(fp3_begin.getModified(e1));
+				// Eight puffs, six get cleaned
+			},
+			(e1, s) -> {
+				s.updateCall(fp4_begin.getModified(e1));
+				// Four puffs, with tethers
 			}
 	);
 
