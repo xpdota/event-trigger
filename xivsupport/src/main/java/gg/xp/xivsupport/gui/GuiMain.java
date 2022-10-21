@@ -780,7 +780,10 @@ public class GuiMain {
 					col.setMinWidth(50);
 					col.setMaxWidth(50);
 				}))
-				.addMainColumn(new CustomColumn<>("Zone", p -> p.getZone().getName(), col -> {
+				.addMainColumn(new CustomColumn<>("Zone", p -> {
+					XivZone zone = p.getZone();
+					return zone == null ? "Unknown" : zone.getName();
+				}, col -> {
 					col.setPreferredWidth(200);
 				}))
 				.addMainColumn(new CustomColumn<>("Status", pull -> pull.getStatus().getFriendlyName(), col -> {

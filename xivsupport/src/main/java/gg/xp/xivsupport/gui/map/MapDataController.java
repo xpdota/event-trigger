@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.map;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.CurrentTimeSource;
+import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
@@ -10,6 +11,9 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -74,7 +78,8 @@ public class MapDataController {
 	                         StatusEffectRepository statuses,
 	                         SequenceIdTracker sqid,
 	                         PersistenceProvider pers,
-	                         PicoContainer container) {
+	                         PicoContainer container,
+	                         RightClickOptionRepo rc) {
 		realState = state;
 		realAcr = acr;
 		realStatuses = statuses;
@@ -92,6 +97,21 @@ public class MapDataController {
 		});
 		maxCaptures = new IntSetting(pers, "map-replay.max-snapshots", 50_000, 100, 2_000_000_000);
 		msBetweenCaptures = new IntSetting(pers, "map-replay.capture-interval", 200, 0, 10_000);
+		rc.addOption(CustomRightClickOption.forRow("Seek Map Tab", Event.class, event -> {
+			Instant effectiveHappenedAt = event.getEffectiveHappenedAt();
+			// TODO: replace this with binary search
+			for (int i = 0; i < snapshots.size(); i++) {
+				Snapshot snap = snapshots.get(i);
+				if (snap.time != null && snap.time.isAfter(effectiveHappenedAt)) {
+					setIndex(i);
+					MapTab map = container.getComponent(MapTab.class);
+					if (map != null) {
+						GuiUtil.bringToFront(map);
+					}
+					return;
+				}
+			}
+		}));
 	}
 
 	// record to capture all the data used by the map panel
