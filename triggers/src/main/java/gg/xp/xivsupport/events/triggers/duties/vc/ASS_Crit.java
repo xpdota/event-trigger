@@ -10,26 +10,32 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.misc.pulls.ForceCombatEnd;
 import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @ScanMe
 @CalloutRepo(name = "Another Sil'Dihn Subterrane (Criterion)", duty = KnownDuty.ASS_Criterion)
@@ -37,6 +43,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 
 	private static final Logger log = LoggerFactory.getLogger(ASS_Crit.class);
 
+	// First boss
 	private final ModifiableCallout<AbilityCastStart> cardSafe = ModifiableCallout.durationBasedCall("Soap's Up: Cardinal Safe", "Cardinal Safe");
 	private final ModifiableCallout<AbilityCastStart> dustBluster = ModifiableCallout.durationBasedCall("Dust Bluster", "Knockback");
 	private final ModifiableCallout<AbilityCastStart> squeakyCleanLeftSafe = ModifiableCallout.durationBasedCall("Squeaky Clean: Left Safe", "Left");
@@ -56,8 +63,17 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final ModifiableCallout<AbilityCastStart> fp4_begin = new ModifiableCallout<>("Fresh Puff 3: Begin", "Four Puffs and Tethers");
 	private final ModifiableCallout<BuffApplied> forkedLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Forked Lightning", "Spread").autoIcon();
 
+
 	private final XivState state;
 	private final StatusEffectRepository buffs;
+
+	private StatusEffectRepository getBuffs() {
+		return buffs;
+	}
+
+	private XivState getState() {
+		return state;
+	}
 
 	private final ArenaPos firstBossArena = new ArenaPos(-335.01, -155.02, 5, 5);
 
@@ -99,7 +115,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	}
 
 	@HandleEvents
-	public void basicCast(EventContext ctx, AbilityCastStart acs) {
+	public void basicCastFirstBoss(EventContext ctx, AbilityCastStart acs) {
 		if (!(acs.getSource().getbNpcId() == 14834)) {
 			return;
 		}
@@ -233,4 +249,141 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 //		}
 //	}
 //
+
+	// Second boss
+	private final ModifiableCallout<AbilityCastStart> flashOfSteel = ModifiableCallout.durationBasedCall("Flash of Steel", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> rushOfMight = ModifiableCallout.durationBasedCall("Rush of Might Windup", "Inside Lines, Watch Charges");
+	private final ModifiableCallout<?> rushOfMightFollowup = new ModifiableCallout<>("Rush of Might Followup", "Move Out");
+	private final ModifiableCallout<AbilityCastStart> sculptorsPassion = ModifiableCallout.durationBasedCall("Sculptor's Passion", "Line Stack, Tank in Front");
+	private final ModifiableCallout<AbilityCastStart> mightySmite = ModifiableCallout.durationBasedCall("Mighty Smite", "Buster on {event.target}");
+
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_stackSpread = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Stack then Spread", "Stack on {stack} then Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_spreadStack = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Spread then Stack", "Spread then Stack on {stack}").autoIcon();
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_baitSpread = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Bait then Spread", "Bait then Spread").autoIcon();
+	// Is this possible?
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_spreadBait = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Spread then Bait", "Spread then Bait").autoIcon();
+
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenStack = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Spread Followup", "Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Stack Followup", "Stack on {stack}").autoIcon();
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenBait = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Bait Followup", "Bait").autoIcon();
+
+	private final ModifiableCallout<AbilityCastStart> checkerboard1 = ModifiableCallout.durationBasedCall("Wrath of Ruin 1", "Avoid Lines and Orbs");
+	private final ModifiableCallout<AbilityCastStart> checkerboard2_2gold = ModifiableCallout.<AbilityCastStart>durationBasedCall("Wrath of Ruin 2: 2 Gold", "Get Hit By Two Silver Orbs").statusIcon(0xCDF, 2);
+	private final ModifiableCallout<AbilityCastStart> checkerboard2_2silver = ModifiableCallout.<AbilityCastStart>durationBasedCall("Wrath of Ruin 2: 2 Silver", "Get Hit By Two Gold Orbs").statusIcon(0xCE0, 2);
+	private final ModifiableCallout<AbilityCastStart> checkerboard2_1each = ModifiableCallout.<AbilityCastStart>durationBasedCall("Wrath of Ruin 2: 1 of Each", "Get Hit By Silver and Gold").statusIcon(0xCE0, 1);
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> rushOfMightSq = SqtTemplates.beginningAndEndingOfCast(
+			// TODO: Find IDs, see if there's any additional data from them. However, it's likely that these three alone are short/medium/long
+			acs -> acs.abilityIdMatches(0x7658, 0x7659, 0x765A),
+			rushOfMight, rushOfMightFollowup);
+
+	@HandleEvents
+	public void secondBossBasicCasts(EventContext context, AbilityCastStart acs) {
+		ModifiableCallout<AbilityCastStart> call;
+		switch ((int) acs.getAbility().getId()) {
+			case 0x7671 -> call = flashOfSteel;
+			case 0x766c -> call = sculptorsPassion;
+			case 0x7672 -> call = mightySmite;
+			default -> {
+				return;
+			}
+		}
+		context.accept(call.getModified(acs));
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> curseOfTheFallenSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7674),
+			(e1, s) -> {
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7674));
+				// Curse of the fallen cast itself does nothing
+				EventCollector<BuffApplied> spreads = new EventCollector<>(ba -> ba.buffIdMatches(0xCDA));
+				EventCollector<BuffApplied> stacks = new EventCollector<>(ba -> ba.buffIdMatches(0xCDD));
+				EventCollector<BuffApplied> baits = new EventCollector<>(ba -> ba.buffIdMatches(0xCDC));
+				s.collectEvents(6, 2_500, BuffApplied.class, true, List.of(spreads, stacks, baits));
+
+				BuffApplied stack = stacks.getEvents().get(0);
+
+				boolean spreadFirst = stack.getInitialDuration().toMillis() > 15_000;
+				BuffApplied timingBasis = spreadFirst ? spreads.getEvents().get(0) : stack;
+
+				RawModifiedCallout<BuffApplied> first;
+				RawModifiedCallout<BuffApplied> second;
+
+				Map<String, Object> params = Map.of("stack", stack.getTarget());
+
+				if (baits.anyMatch(ba -> ba.getTarget().isThePlayer())) {
+					if (spreadFirst) {
+						first = curseOfTheFallen_spreadBait.getModified(spreads.getEvents().get(0), params);
+						second = curseOfTheFallen_thenBait.getModified(baits.getEvents().get(0), params);
+					}
+					else {
+						first = curseOfTheFallen_baitSpread.getModified(baits.getEvents().get(0), params);
+						second = curseOfTheFallen_thenSpread.getModified(spreads.getEvents().get(0), params);
+					}
+				}
+				else {
+					if (spreadFirst) {
+						first = curseOfTheFallen_spreadStack.getModified(spreads.getEvents().get(0), params);
+						second = curseOfTheFallen_thenStack.getModified(stacks.getEvents().get(0), params);
+					}
+					else {
+						first = curseOfTheFallen_stackSpread.getModified(stacks.getEvents().get(0), params);
+						second = curseOfTheFallen_thenSpread.getModified(spreads.getEvents().get(0), params);
+					}
+				}
+				s.updateCall(first);
+				s.waitMs(timingBasis.getEstimatedRemainingDuration().toMillis());
+				s.updateCall(second);
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> wrathOfRuin = SqtTemplates.multiInvocation(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7663),
+			(e1, s) -> {
+				// First checkerboard, just dodge lines and orbs
+				checkerboard1.getModified(e1);
+			}, (e1, s) -> {
+				XivPlayerCharacter player = getState().getPlayer();
+				AbilityCastStart orbCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7670));
+				// Second checkerboard, have to look at debuff
+				int goldBuffStacks = getBuffs().buffStacksOnTarget(player, 0xCDF);
+				int silverBuffStacks = getBuffs().buffStacksOnTarget(player, 0xCE0);
+				if (goldBuffStacks == 2) {
+					// get hit by two silver
+					s.updateCall(checkerboard2_2gold.getModified(orbCast));
+				}
+				else if (silverBuffStacks == 2) {
+					s.updateCall(checkerboard2_2silver.getModified(orbCast));
+				}
+				else if (silverBuffStacks == 1 && goldBuffStacks == 1) {
+					s.updateCall(checkerboard2_1each.getModified(orbCast));
+				}
+				else {
+					s.updateCall(checkerboard1.getModified(e1));
+				}
+			});
+
+	// Third Boss
+	private final ModifiableCallout<BuffApplied> brand1 = ModifiableCallout.<BuffApplied>durationBasedCall("Infern Brand: #1", "First Brand").autoIcon();
+	private final ModifiableCallout<BuffApplied> brand2 = ModifiableCallout.<BuffApplied>durationBasedCall("Infern Brand: #2", "Second Brand").autoIcon();
+	private final ModifiableCallout<BuffApplied> brand3 = ModifiableCallout.<BuffApplied>durationBasedCall("Infern Brand: #3", "Third Brand").autoIcon();
+	private final ModifiableCallout<BuffApplied> brand4 = ModifiableCallout.<BuffApplied>durationBasedCall("Infern Brand: #4", "Fourth Brand").autoIcon();
+
+	@HandleEvents
+	public void brandBuffs(EventContext context, BuffApplied ba) {
+		if (ba.getTarget().isThePlayer()) {
+			ModifiableCallout<BuffApplied> call;
+			switch ((int) ba.getBuff().getId()) {
+				case 0xCC4 -> call = brand1;
+				case 0xCC5 -> call = brand2;
+				case 0xCC6 -> call = brand3;
+				case 0xCC7 -> call = brand4;
+				default -> {
+					return;
+				}
+			}
+			context.accept(call.getModified(ba));
+		}
+	}
+
 }

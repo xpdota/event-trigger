@@ -157,6 +157,18 @@ public class ModifiableCallout<X> {
 	}
 
 	/**
+	 * Adds a specific status icon to a callout.
+	 *
+	 * @param statusId The status effect ID
+	 * @param stacks   The stack count to use for the icon
+	 * @return this (builder pattern)
+	 */
+	public ModifiableCallout<X> statusIcon(long statusId, long stacks) {
+		this.guiProvider = e -> IconTextRenderer.getStretchyIcon(StatusEffectLibrary.iconForId(statusId, stacks));
+		return this;
+	}
+
+	/**
 	 * Adds a specific ability icon to a callout.
 	 *
 	 * @param abilityId The ability ID

@@ -41,4 +41,8 @@ public final class EventCollector<X> implements Predicate<X> {
 	public Optional<X> findAny(Predicate<X> subFilter) {
 		return events.stream().filter(subFilter).findAny();
 	}
+
+	public boolean anyMatch(Predicate<X> subFilter) {
+		return events.stream().anyMatch(subFilter);
+	}
 }
