@@ -37,7 +37,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	@SuppressWarnings({"ConstantConditions", "unchecked"})
 	AbstractACTLineParser(PicoContainer container, int logLineNumber, List<@Nullable F> groups) {
 		this.state = Objects.requireNonNull(container.getComponent(XivState.class), "XivState is required");
-		this.fakeTimeSource = container.getComponent(FakeTimeSource.class);
+		this.fakeTimeSource = container.getComponent(FakeACTTimeSource.class);
 		if (groups.isEmpty()) {
 			// TODO: could some of them make sense as empty?
 			throw new IllegalArgumentException("Capture groups cannot be empty");

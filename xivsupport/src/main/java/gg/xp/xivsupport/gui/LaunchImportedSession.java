@@ -5,7 +5,7 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
-import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.parsers.FakeImportTimeSource;
 import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.eventstorage.EventReader;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
@@ -51,7 +51,7 @@ public final class LaunchImportedSession {
 		MutablePicoContainer pico = XivMain.importInit();
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
-		FakeTimeSource timeSource = new FakeTimeSource();
+		FakeTimeSource timeSource = new FakeImportTimeSource();
 		ReplayController replayController = new ReplayController(master, events, decompress) {
 			@Override
 			protected void preProcessEvent(Event event) {
@@ -66,6 +66,7 @@ public final class LaunchImportedSession {
 			}
 		};
 		// TODO: this will interfere with AbstractACTLineParser
+		pico.addComponent(timeSource);
 //		pico.addComponent(timeSource);
 		pico.addComponent(replayController);
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.WEBSOCKET_REPLAY);

@@ -16,6 +16,7 @@ import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivZone;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +51,8 @@ public class PullTracker implements SubState {
 		if (currentPull != null) {
 			currentPull.setEnd(event);
 		}
-		Pull myPull = new Pull(pullCounter.getAndIncrement(), event, context.getStateInfo().get(XivState.class).getZone());
+		XivZone zone = state.getZone();
+		Pull myPull = new Pull(pullCounter.getAndIncrement(), event, zone);
 		pulls.add(myPull);
 		currentPull = myPull;
 		state.getPartyList().forEach(currentPull::addPlayer);
@@ -122,6 +124,14 @@ public class PullTracker implements SubState {
 	@HandleEvents
 	public void victory(EventContext context, VictoryEvent victory) {
 		doPullEnd(context, victory);
+	}
+
+	@HandleEvents
+	public void forceEnd(EventContext context, ForceCombatEnd end) {
+//		doPullEnd(context, end);
+		if (getCurrentStatus() == PullStatus.COMBAT) {
+			doPullStart(context, end);
+		}
 	}
 
 	public List<Pull> getPulls() {

@@ -59,7 +59,7 @@ public class Pull {
 		this.end = end;
 	}
 
-	public @NotNull XivZone getZone() {
+	public @Nullable XivZone getZone() {
 		return zone;
 	}
 
