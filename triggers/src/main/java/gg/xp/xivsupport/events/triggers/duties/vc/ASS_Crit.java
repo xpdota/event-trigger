@@ -46,7 +46,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final ModifiableCallout<AbilityCastStart> intercardSafe = ModifiableCallout.durationBasedCall("Intercard Safe", "Intercard Safe");
 	private final ModifiableCallout<AbilityCastStart> carpetBeater = ModifiableCallout.durationBasedCall("Carpet Beater", "Buster on {event.target}");
 	private final ModifiableCallout<AbilityCastStart> underGreen = ModifiableCallout.durationBasedCall("Under Green", "Get Under Green");
-	private final ModifiableCallout<AbilityCastStart> underBoss = ModifiableCallout.durationBasedCall("Under Green", "Get Under Green");
+	private final ModifiableCallout<AbilityCastStart> underBoss = ModifiableCallout.durationBasedCall("Under Green", "Get Under Boss");
 	private final ModifiableCallout<AbilityCastStart> totalWash = ModifiableCallout.durationBasedCall("Total Wash", "Raidwide with Bleed");
 	private final ModifiableCallout<AbilityCastStart> fp1_begin = new ModifiableCallout<>("Fresh Puff 1: Begin", "Three Puffs");
 	private final ModifiableCallout<AbilityCastStart> fp2_begin = new ModifiableCallout<>("Fresh Puff 2: Begin", "Four Puffs and Tethers");
@@ -161,11 +161,14 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 				// If there's a blue on the bottom row, you need to hit the opposite side so that N is safe
 				// If there's a yellow on the bottom row, you need to hit N so that the opposite south corner is afe
 				s.updateCall(lineStack.getModified(e1));
-				s.waitMs(2_000);
-				s.updateCall(keepMoving.getModified(e1));
-				s.waitMs(2_000);
 				// TODO: is this always the right call here? Or should this method be split out into other sequentials?
-				s.updateCall(intercardSafe.getModified(e1));
+				Color color = buffColor(e1.getSource());
+				if (color == Color.BLUE) {
+					s.waitMs(2_000);
+					s.updateCall(keepMoving.getModified(e1));
+					s.waitMs(2_000);
+					s.updateCall(intercardSafe.getModified(e1));
+				}
 			});
 
 	@AutoFeed
