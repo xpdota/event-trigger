@@ -50,8 +50,8 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final ModifiableCallout<AbilityCastStart> totalWash = ModifiableCallout.durationBasedCall("Total Wash", "Raidwide with Bleed");
 	private final ModifiableCallout<AbilityCastStart> fp1_begin = new ModifiableCallout<>("Fresh Puff 1: Begin", "Three Puffs");
 	private final ModifiableCallout<AbilityCastStart> fp2_begin = new ModifiableCallout<>("Fresh Puff 2: Begin", "Four Puffs and Tethers");
-	private final ModifiableCallout<TetherEvent> fp2_blueTether = new ModifiableCallout<>("Fresh Puff 2: Blue Tether", "Blue Tether");
-	private final ModifiableCallout<TetherEvent> fp2_yellowTether = new ModifiableCallout<>("Fresh Puff 2: Yellow Tether", "Yellow Tether");
+	private final ModifiableCallout<TetherEvent> fp2_blueTether = new ModifiableCallout<>("Fresh Puff 2: Blue Tether", "{where} Blue Tether");
+	private final ModifiableCallout<TetherEvent> fp2_yellowTether = new ModifiableCallout<>("Fresh Puff 2: Yellow Tether", "{where} Yellow Tether");
 	private final ModifiableCallout<AbilityCastStart> fp3_begin = new ModifiableCallout<>("Fresh Puff 3: Begin", "Eight Puffs");
 	private final ModifiableCallout<AbilityCastStart> fp4_begin = new ModifiableCallout<>("Fresh Puff 3: Begin", "Four Puffs and Tethers");
 	private final ModifiableCallout<BuffApplied> forkedLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Forked Lightning", "Spread").autoIcon();
@@ -169,6 +169,11 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 					s.waitMs(2_000);
 					s.updateCall(intercardSafe.getModified(e1));
 				}
+				else if (color == Color.YELLOW) {
+					// Spread call already handled
+					s.waitMs(4_000);
+					s.updateCall(cardSafe.getModified(e1));
+				}
 			});
 
 	@AutoFeed
@@ -185,14 +190,16 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 				if (puff == null) {
 					log.error("Null puff!");
 				}
-				Color color = buffColor(puff);
-				ArenaSector arenaSector = firstBossArena.forCombatant(puff);
-				Map<String, Object> params = Map.of("where", arenaSector);
-				if (color == Color.BLUE) {
-					s.updateCall(fp2_blueTether.getModified(tether, params));
-				}
-				else if (color == Color.YELLOW) {
-					s.updateCall(fp2_yellowTether.getModified(tether, params));
+				else {
+					Color color = buffColor(puff);
+					ArenaSector arenaSector = firstBossArena.forCombatant(puff);
+					Map<String, Object> params = Map.of("where", arenaSector);
+					if (color == Color.BLUE) {
+						s.updateCall(fp2_blueTether.getModified(tether, params));
+					}
+					else if (color == Color.YELLOW) {
+						s.updateCall(fp2_yellowTether.getModified(tether, params));
+					}
 				}
 				AbilityCastStart bossMechanic = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7767));
 				Color bossColor = buffColor(bossMechanic.getSource());
