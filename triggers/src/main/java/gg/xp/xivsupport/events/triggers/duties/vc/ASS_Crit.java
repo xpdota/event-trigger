@@ -263,8 +263,8 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	// Is this possible?
 	private final ModifiableCallout<BuffApplied> curseOfTheFallen_spreadBait = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Spread then Bait", "Spread then Bait").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenStack = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Spread Followup", "Spread").autoIcon();
-	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Stack Followup", "Stack on {stack}").autoIcon();
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenStack = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Stack Followup", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Spread Followup", "Spread on {stack}").autoIcon();
 	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenBait = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Bait Followup", "Bait").autoIcon();
 
 	private final ModifiableCallout<AbilityCastStart> checkerboard1 = ModifiableCallout.durationBasedCall("Wrath of Ruin 1", "Avoid Lines and Orbs");
