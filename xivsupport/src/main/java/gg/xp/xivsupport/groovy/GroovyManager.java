@@ -97,6 +97,8 @@ public class GroovyManager {
 				"gg.xp.xivdata.data",
 				"gg.xp.xivsupport.gui",
 				"gg.xp.xivsupport.events.actlines.events.abilityeffect",
+				"gg.xp.xivsupport.events.actlines.events.actorcontrol",
+				"gg.xp.xivsupport.models",
 				"gg.xp.xivsupport.gui.tables"
 		);
 		Reflections reflections = new Reflections(

@@ -50,6 +50,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final ModifiableCallout<AbilityCastStart> squeakyCleanRightSafe = ModifiableCallout.durationBasedCall("Squeaky Clean: Right Safe", "Right");
 	private final ModifiableCallout<AbilityCastStart> lineStack = ModifiableCallout.durationBasedCall("Line Stack", "Line Stack");
 	private final ModifiableCallout<AbilityCastStart> keepMoving = ModifiableCallout.durationBasedCall("Keep Moving", "Keep Moving");
+	private final ModifiableCallout<AbilityCastStart> slipperyKB = ModifiableCallout.durationBasedCall("Knockback (Slippery Soap)", "Knockback");
 	private final ModifiableCallout<AbilityCastStart> intercardSafe = ModifiableCallout.durationBasedCall("Intercard Safe", "Intercard Safe");
 	private final ModifiableCallout<AbilityCastStart> carpetBeater = ModifiableCallout.durationBasedCall("Carpet Beater", "Buster on {event.target}");
 	private final ModifiableCallout<AbilityCastStart> underGreen = ModifiableCallout.durationBasedCall("Under Green", "Get Under Green");
@@ -60,6 +61,8 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final ModifiableCallout<TetherEvent> fp2_blueTether = new ModifiableCallout<>("Fresh Puff 2: Blue Tether", "{where} Blue Tether");
 	private final ModifiableCallout<TetherEvent> fp2_yellowTether = new ModifiableCallout<>("Fresh Puff 2: Yellow Tether", "{where} Yellow Tether");
 	private final ModifiableCallout<AbilityCastStart> fp3_begin = new ModifiableCallout<>("Fresh Puff 3: Begin", "Eight Puffs");
+	private final ModifiableCallout<AbilityCastStart> fp3_dodgeOrbs = new ModifiableCallout<>("Fresh Puff 3: Dodge First Set", "Dodge Glowing Orb Patterns");
+	private final ModifiableCallout<AbilityCastStart> fp3_dodgeOrbs2 = new ModifiableCallout<>("Fresh Puff 3: Dodge Second Set", "Under Boss, Dodge Orb Patterns");
 	private final ModifiableCallout<AbilityCastStart> fp4_begin = new ModifiableCallout<>("Fresh Puff 3: Begin", "Four Puffs and Tethers");
 	private final ModifiableCallout<BuffApplied> forkedLightning = ModifiableCallout.<BuffApplied>durationBasedCall("Forked Lightning", "Spread").autoIcon();
 
@@ -190,10 +193,16 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 					s.waitMs(4_000);
 					s.updateCall(cardSafe.getModified(e1));
 				}
+				else if (color == Color.GREEN) {
+					s.waitMs(2_000);
+					s.updateCall(slipperyKB.getModified(e1));
+					s.waitMs(2_800);
+					s.updateCall(underBoss.getModified(e1));
+				}
 			});
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> freshPuff = SqtTemplates.multiInvocation(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7766),
+	private final SequentialTrigger<BaseEvent> freshPuff = SqtTemplates.multiInvocation(90_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7766),
 			(e1, s) -> {
 				// First invocation: handled by other triggers already
 				s.updateCall(fp1_begin.getModified(e1));
@@ -229,6 +238,11 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 			(e1, s) -> {
 				s.updateCall(fp3_begin.getModified(e1));
 				// Eight puffs, six get cleaned
+				AbilityCastStart bossCast1 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7767));
+				// TODO: identify orb casts and give instruction
+				s.updateCall(fp3_dodgeOrbs.getModified(bossCast1));
+				AbilityCastStart bossCast2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7767));
+				s.updateCall(fp3_dodgeOrbs2.getModified(bossCast2));
 			},
 			(e1, s) -> {
 				s.updateCall(fp4_begin.getModified(e1));
@@ -348,6 +362,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 				// Second checkerboard, have to look at debuff
 				int goldBuffStacks = getBuffs().buffStacksOnTarget(player, 0xCDF);
 				int silverBuffStacks = getBuffs().buffStacksOnTarget(player, 0xCE0);
+				// TODO: identify *where* someone can stand for each of these
 				if (goldBuffStacks == 2) {
 					// get hit by two silver
 					s.updateCall(checkerboard2_2gold.getModified(orbCast));
@@ -363,11 +378,78 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 				}
 			});
 
+	private final ModifiableCallout<AbilityCastStart> monument_centerForChain = ModifiableCallout.durationBasedCall("Monument: Wait Center for Chain", "Wait In Middle for Chain");
+	private final ModifiableCallout<BuffApplied> monument_breakChain = ModifiableCallout.<BuffApplied>durationBasedCall("Monument: Break Chain", "Break Chain").autoIcon();
+	private final ModifiableCallout<BuffApplied> monument_1out = new ModifiableCallout<BuffApplied>("Monument: First in Line, Out", "Stay Out").autoIcon();
+	private final ModifiableCallout<BuffApplied> monument_1in = new ModifiableCallout<BuffApplied>("Monument: First in Line, In", "Soak Tower").autoIcon();
+	private final ModifiableCallout<BuffApplied> monument_2in = new ModifiableCallout<BuffApplied>("Monument: Second in Line, In", "Soak Tower then Out").autoIcon();
+	private final ModifiableCallout<BuffApplied> monument_2out = new ModifiableCallout<BuffApplied>("Monument: Second in Line, Out", "Out").autoIcon();
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> curseOfTheMonumentSq = SqtTemplates.sq(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7666),
+			(e1, s) -> {
+				s.updateCall(monument_centerForChain.getModified(e1));
+				// Wait for chain
+				BuffApplied chain = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xCDE));
+				s.updateCall(monument_breakChain.getModified(chain));
+				// Wait for first explosion
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7668));
+				@Nullable BuffApplied firstInLine = getBuffs().findStatusOnTarget(getState().getPlayer(), 0xBBC);
+				@Nullable BuffApplied secondInLine = getBuffs().findStatusOnTarget(getState().getPlayer(), 0xBBD);
+				if (firstInLine != null) {
+					s.updateCall(monument_1out.getModified(firstInLine));
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x766A));
+					s.updateCall(monument_1in.getModified(firstInLine));
+				}
+				else if (secondInLine != null) {
+					s.updateCall(monument_2in.getModified(secondInLine));
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x766A));
+					s.updateCall(monument_2out.getModified(secondInLine));
+				}
+			});
+
 	// Third Boss
-	private final ModifiableCallout<BuffApplied> brand1 = ModifiableCallout.<BuffApplied>durationBasedCall("Infern Brand: #1", "First Brand").autoIcon();
-	private final ModifiableCallout<BuffApplied> brand2 = ModifiableCallout.<BuffApplied>durationBasedCall("Infern Brand: #2", "Second Brand").autoIcon();
-	private final ModifiableCallout<BuffApplied> brand3 = ModifiableCallout.<BuffApplied>durationBasedCall("Infern Brand: #3", "Third Brand").autoIcon();
-	private final ModifiableCallout<BuffApplied> brand4 = ModifiableCallout.<BuffApplied>durationBasedCall("Infern Brand: #4", "Fourth Brand").autoIcon();
+	private final ModifiableCallout<AbilityCastStart> showOfStrength = ModifiableCallout.durationBasedCall("Show of Strength", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> firesteelFracture = ModifiableCallout.durationBasedCall("Firesteel Fracture", "Buster on {event.target}");
+	private final ModifiableCallout<AbilityUsedEvent> firesteel_standInFront = new ModifiableCallout<>("Firesteel Strike: Cover", "Stand in Front");
+	private final ModifiableCallout<AbilityUsedEvent> firesteel_standBehind = new ModifiableCallout<>("Firesteel Strike: Get Covered", "Stand Behind");
+	private final ModifiableCallout<BuffApplied> brand1 = new ModifiableCallout<BuffApplied>("Infern Brand: #1", "First Brand", 40_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> brand2 = new ModifiableCallout<BuffApplied>("Infern Brand: #2", "Second Brand", 40_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> brand3 = new ModifiableCallout<BuffApplied>("Infern Brand: #3", "Third Brand", 40_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> brand4 = new ModifiableCallout<BuffApplied>("Infern Brand: #4", "Fourth Brand", 40_000).autoIcon();
+
+	@HandleEvents
+	public void thirdBossBasicCasts(EventContext context, AbilityCastStart acs) {
+		ModifiableCallout<AbilityCastStart> call;
+		switch ((int) acs.getAbility().getId()) {
+			case 0x74AD -> call = firesteelFracture;
+			case 0x74AF -> call = showOfStrength;
+			default -> {
+				return;
+			}
+		}
+		context.accept(call.getModified(acs));
+	}
+
+	@AutoFeed
+	public final SequentialTrigger<BaseEvent> firesteelStrikeSq = SqtTemplates.sq(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x74b0),
+			(e1, s) -> {
+				// If you got hit with the magic vuln, stand behind someone else.
+				AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2) && aue.isFirstTarget());
+				if (firstHit.getTarget().isThePlayer()) {
+					s.updateCall(firesteel_standBehind.getModified(firstHit));
+				}
+				else {
+					AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2) && aue.isFirstTarget());
+					if (secondHit.getTarget().isThePlayer()) {
+						s.updateCall(firesteel_standBehind.getModified(secondHit));
+					}
+					else {
+						s.updateCall(firesteel_standInFront.getModified(secondHit));
+					}
+				}
+
+			});
 
 	@HandleEvents
 	public void brandBuffs(EventContext context, BuffApplied ba) {

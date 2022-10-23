@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class StatusEffectRepository {
 
@@ -234,6 +235,14 @@ public class StatusEffectRepository {
 			}
 			return new ArrayList<>(cached.values());
 		}
+	}
+
+	public @Nullable BuffApplied findStatusOnTarget(XivEntity entity, long buffId) {
+		return findStatusOnTarget(entity, ba -> ba.buffIdMatches(buffId));
+	}
+
+	public @Nullable BuffApplied findStatusOnTarget(XivEntity entity, Predicate<BuffApplied> filter) {
+		return statusesOnTarget(entity).stream().filter(filter).findAny().orElse(null);
 	}
 
 	/**
