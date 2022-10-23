@@ -182,7 +182,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 				if (color == Color.BLUE) {
 					s.waitMs(2_000);
 					s.updateCall(keepMoving.getModified(e1));
-					s.waitMs(2_000);
+					s.waitMs(2_800);
 					s.updateCall(intercardSafe.getModified(e1));
 				}
 				else if (color == Color.YELLOW) {
