@@ -263,8 +263,8 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	// Is this possible?
 	private final ModifiableCallout<BuffApplied> curseOfTheFallen_spreadBait = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Spread then Bait", "Spread then Bait").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenStack = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Stack Followup", "Stack").autoIcon();
-	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Spread Followup", "Spread on {stack}").autoIcon();
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenStack = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Stack Followup", "Stack on {stack}").autoIcon();
+	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Spread Followup", "Spread").autoIcon();
 	private final ModifiableCallout<BuffApplied> curseOfTheFallen_thenBait = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Bait Followup", "Bait").autoIcon();
 
 	private final ModifiableCallout<AbilityCastStart> checkerboard1 = ModifiableCallout.durationBasedCall("Wrath of Ruin 1", "Avoid Lines and Orbs");
@@ -341,7 +341,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final SequentialTrigger<BaseEvent> wrathOfRuin = SqtTemplates.multiInvocation(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7663),
 			(e1, s) -> {
 				// First checkerboard, just dodge lines and orbs
-				checkerboard1.getModified(e1);
+				s.updateCall(checkerboard1.getModified(e1));
 			}, (e1, s) -> {
 				XivPlayerCharacter player = getState().getPlayer();
 				AbilityCastStart orbCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7670));
