@@ -246,7 +246,7 @@ public class StatusEffectRepository {
 	}
 
 	/**
-	 * Given an entity and a buff ID, return how many stacks the buff has if present
+	 * Given an entity and a buff ID, return how many stacks the buff has if present.
 	 *
 	 * @param entity The entity to check
 	 * @param buffId The buff ID
@@ -256,6 +256,25 @@ public class StatusEffectRepository {
 		return statusesOnTarget(entity).stream().filter(ba -> ba.buffIdMatches(buffId))
 				.findFirst()
 				.map(ba -> (int) ba.getStacks())
+				.orElse(-1);
+	}
+
+	/**
+	 * Given an entity and a buff ID, return how many raw stacks the buff has if present.
+	 *
+	 * The difference between this and {@link #buffStacksOnTarget(XivEntity, long)} is that this one uses the
+	 * 'raw' stacks. Some status effects use the 'stacks' field to convey mechanical differences rather than an actual
+	 * stack count. 'Stacks' tries to filter these out and instead report a stack count of zero, whereas raw stacks
+	 * keeps the original value intact.
+	 *
+	 * @param entity The entity to check
+	 * @param buffId The buff ID
+	 * @return The number of stacks, or 0 if it is stackless, or -1 if the buff was not present at all.
+	 */
+	public int rawBuffStacksOnTarget(XivEntity entity, long buffId) {
+		return statusesOnTarget(entity).stream().filter(ba -> ba.buffIdMatches(buffId))
+				.findFirst()
+				.map(ba -> (int) ba.getRawStacks())
 				.orElse(-1);
 	}
 

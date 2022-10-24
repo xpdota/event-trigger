@@ -90,4 +90,9 @@ public class TickEvent extends BaseEvent implements HasTargetEntity, HasEffects,
 	public long getStacks() {
 		return 0;
 	}
+
+	@Override
+	public long getRawStacks() {
+		return 0;
+	}
 }

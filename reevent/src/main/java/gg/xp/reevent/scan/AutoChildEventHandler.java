@@ -8,6 +8,7 @@ import gg.xp.reevent.events.TypedEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,10 +46,10 @@ public abstract class AutoChildEventHandler {
 
 	@HandleEvents
 	public void initAutoChildHandler(EventContext ctx, InitEvent event) {
-		checkInit();
+		checkInit(ctx);
 	}
 
-	private void checkInit() {
+	private void checkInit(EventContext ctx) {
 		if (isInitDone) {
 			return;
 		}
@@ -58,26 +59,24 @@ public abstract class AutoChildEventHandler {
 					.toList();
 
 			for (Field field : fields) {
-				if (!field.isAnnotationPresent(AutoFeed.class)) {
-					continue;
-				}
-				TypedEventHandler<?> handler;
-				try {
-					field.setAccessible(true);
-					Object fieldValue = field.get(this);
-					if (fieldValue instanceof TypedEventHandler<?> teh) {
-						handler = teh;
-					}
-					else {
-						continue;
+				if (field.isAnnotationPresent(AutoFeed.class)) {
+					TypedEventHandler<?> handler;
+					try {
+						field.setAccessible(true);
+						Object fieldValue = field.get(this);
+						if (fieldValue instanceof TypedEventHandler<?> teh) {
+							handler = teh;
+						}
+						else {
+							continue;
 
+						}
 					}
-				}
-				catch (IllegalAccessException e) {
-					throw new RuntimeException(e);
-				}
-				//noinspection unchecked,rawtypes
-				handlers.add(new ChildEventHandler(handler, handler.getType(), field.getName()));
+					catch (IllegalAccessException e) {
+						throw new RuntimeException(e);
+					}
+					//noinspection unchecked,rawtypes
+					handlers.add(new ChildEventHandler(handler, handler.getType(), field.getName()));
 //					Class<?> realType;
 //					// Two possibilities:
 //					// 1. The item directly implements EventHandler<X>, in which case we get the generic type directly from
@@ -110,6 +109,36 @@ public abstract class AutoChildEventHandler {
 //						throw new RuntimeException(e);
 //					}
 //					handlers.add(new ChildEventHandler(handler, realType, field.getName()));
+				}
+				else {
+					for (Annotation annotation : field.getAnnotations()) {
+						FeedHelper fh = annotation.annotationType().getAnnotation(FeedHelper.class);
+						if (fh == null) {
+							continue;
+						}
+						FeedHelperAdapter<?, ?, ?> fha = ctx.getStateInfo().get(fh.value());
+						if (fha == null) {
+							throw new IllegalStateException(String.format("FeedHelperAdapter not found! (%s#%s)", getClass().getSimpleName(), field.getName()));
+						}
+						field.setAccessible(true);
+						EventHandler<?> handler;
+						try {
+							handler = fha.makeHandler(new FeedHandlerChildInfo(getClass(), this, field, field.get(this), annotation));
+						}
+						catch (Throwable t) {
+							throw new RuntimeException(t);
+						}
+						Class<?> eventCls;
+						if (handler instanceof TypedEventHandler<?> typed) {
+							eventCls = typed.getType();
+						}
+						else {
+							eventCls = Event.class;
+						}
+						ChildEventHandler ceh = new ChildEventHandler(handler, eventCls, field.getName());
+						handlers.add(ceh);
+					}
+				}
 			}
 			log.info("Class {}: found {} child event handlers", getClass().getSimpleName(), handlers.size());
 		}
@@ -173,7 +202,7 @@ public abstract class AutoChildEventHandler {
 
 	@HandleEvents
 	public void callChildEventHandlers(EventContext ctx, Event event) {
-		checkInit();
+		checkInit(ctx);
 		handlers.forEach(handler -> handler.run(ctx, event));
 	}
 

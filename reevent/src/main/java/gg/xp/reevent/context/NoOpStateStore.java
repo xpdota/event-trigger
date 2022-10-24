@@ -7,7 +7,7 @@ public final class NoOpStateStore implements StateStore {
 	}
 
 	@Override
-	public <X extends SubState> X get(Class<X> clazz) {
+	public <X> X get(Class<X> clazz) {
 		throw new UnsupportedOperationException("This state store does not do anything");
 	}
 

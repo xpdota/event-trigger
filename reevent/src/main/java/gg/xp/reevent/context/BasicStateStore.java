@@ -10,7 +10,7 @@ public class BasicStateStore implements StateStore {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X extends SubState> X get(Class<X> clazz) {
+	public <X> X get(Class<X> clazz) {
 		return (X) map.computeIfAbsent(clazz, (cls) -> {
 			try {
 				return cls.getConstructor().newInstance();

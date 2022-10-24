@@ -22,6 +22,7 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
+import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
@@ -32,16 +33,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 @ScanMe
 @CalloutRepo(name = "Another Sil'Dihn Subterrane (Criterion)", duty = KnownDuty.ASS_Criterion)
 public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(ASS_Crit.class);
+
+	// First trash
+	@NpcCastCallout(0x7962)
+	private final ModifiableCallout<AbilityCastStart> deracinator = ModifiableCallout.durationBasedCall("Deracinator", "Buster on {event.target}");
+	@NpcCastCallout(0x7963)
+	private final ModifiableCallout<AbilityCastStart> rightSweep = ModifiableCallout.durationBasedCall("Right Sweep", "Left");
+	@NpcCastCallout(0x7964)
+	private final ModifiableCallout<AbilityCastStart> leftSweep = ModifiableCallout.durationBasedCall("Left Sweep", "Right");
+	@NpcCastCallout(0x7965)
+	private final ModifiableCallout<AbilityCastStart> creepingIvy = ModifiableCallout.durationBasedCall("Creeping Ivy", "Out of Front");
+	@NpcCastCallout(0x795B)
+	private final ModifiableCallout<AbilityCastStart> honeyedLeft = ModifiableCallout.durationBasedCall("Honeyed Left", "Right");
+	@NpcCastCallout(0x795C)
+	private final ModifiableCallout<AbilityCastStart> honeyedRight = ModifiableCallout.durationBasedCall("Honeyed Right", "Left");
+	@NpcCastCallout(0x795D)
+	private final ModifiableCallout<AbilityCastStart> honeyedFront = ModifiableCallout.durationBasedCall("Honeyed Front", "Out of Front");
+	@NpcCastCallout(0x7957)
+	private final ModifiableCallout<AbilityCastStart> arborealStorm = ModifiableCallout.durationBasedCall("Arboreal Storm", "Out");
 
 	// First boss
 	private final ModifiableCallout<AbilityCastStart> cardSafe = ModifiableCallout.durationBasedCall("Soap's Up: Cardinal Safe", "Cardinal Safe");
@@ -264,11 +283,28 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 //	}
 //
 
+	// Second trash
+	@NpcCastCallout(0x796C)
+	private final ModifiableCallout<AbilityCastStart> hellsNebula = ModifiableCallout.durationBasedCall("Hells' Nebula", "1 HP");
+	@NpcCastCallout(0x796B)
+	private final ModifiableCallout<AbilityCastStart> infernalWeight = ModifiableCallout.durationBasedCall("Infernal Weight", "Raidwide and Heavy");
+	@NpcCastCallout(0x796A)
+	private final ModifiableCallout<AbilityCastStart> dominionSlash = ModifiableCallout.durationBasedCall("Dominion Slash", "Out of Front");
+	@NpcCastCallout(0x7969)
+	private final ModifiableCallout<AbilityCastStart> infernalPain = ModifiableCallout.durationBasedCall("Infernal Pain", "Raidwide with Bleed");
+	@NpcCastCallout(0x7966)
+	private final ModifiableCallout<AbilityCastStart> blightedGloom = ModifiableCallout.durationBasedCall("Blighted Gloom", "Out");
+	@NpcCastCallout(0x7968)
+	private final ModifiableCallout<AbilityCastStart> kingsWill = ModifiableCallout.durationBasedCall("King's Will", "Heavy Autos");
+
 	// Second boss
+	@NpcCastCallout(0x7671)
 	private final ModifiableCallout<AbilityCastStart> flashOfSteel = ModifiableCallout.durationBasedCall("Flash of Steel", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> rushOfMight = ModifiableCallout.durationBasedCall("Rush of Might Windup", "Inside Lines, Watch Charges");
 	private final ModifiableCallout<?> rushOfMightFollowup = new ModifiableCallout<>("Rush of Might Followup", "Move Out");
+	@NpcCastCallout(0x776c)
 	private final ModifiableCallout<AbilityCastStart> sculptorsPassion = ModifiableCallout.durationBasedCall("Sculptor's Passion", "Line Stack, Tank in Front");
+	@NpcCastCallout(0x7672)
 	private final ModifiableCallout<AbilityCastStart> mightySmite = ModifiableCallout.durationBasedCall("Mighty Smite", "Buster on {event.target}");
 
 	private final ModifiableCallout<BuffApplied> curseOfTheFallen_stackSpread = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Stack then Spread", "Stack on {stack} then Spread").autoIcon();
@@ -291,20 +327,6 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 			// TODO: Find IDs, see if there's any additional data from them. However, it's likely that these three alone are short/medium/long
 			acs -> acs.abilityIdMatches(0x7658, 0x7659, 0x765A),
 			rushOfMight, rushOfMightFollowup);
-
-	@HandleEvents
-	public void secondBossBasicCasts(EventContext context, AbilityCastStart acs) {
-		ModifiableCallout<AbilityCastStart> call;
-		switch ((int) acs.getAbility().getId()) {
-			case 0x7671 -> call = flashOfSteel;
-			case 0x766c -> call = sculptorsPassion;
-			case 0x7672 -> call = mightySmite;
-			default -> {
-				return;
-			}
-		}
-		context.accept(call.getModified(acs));
-	}
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> curseOfTheFallenSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7674),
@@ -409,27 +431,22 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 			});
 
 	// Third Boss
+	@NpcCastCallout(0x74AF)
 	private final ModifiableCallout<AbilityCastStart> showOfStrength = ModifiableCallout.durationBasedCall("Show of Strength", "Raidwide");
+	@NpcCastCallout(0x74AD)
 	private final ModifiableCallout<AbilityCastStart> firesteelFracture = ModifiableCallout.durationBasedCall("Firesteel Fracture", "Buster on {event.target}");
 	private final ModifiableCallout<AbilityUsedEvent> firesteel_standInFront = new ModifiableCallout<>("Firesteel Strike: Cover", "Stand in Front");
 	private final ModifiableCallout<AbilityUsedEvent> firesteel_standBehind = new ModifiableCallout<>("Firesteel Strike: Get Covered", "Stand Behind");
+	private final ModifiableCallout<AbilityCastStart> infernBrand1 = ModifiableCallout.durationBasedCall("Infern Brand 1", "Watch Portals");
 	private final ModifiableCallout<BuffApplied> brand1 = new ModifiableCallout<BuffApplied>("Infern Brand: #1", "First Brand", 40_000).autoIcon();
 	private final ModifiableCallout<BuffApplied> brand2 = new ModifiableCallout<BuffApplied>("Infern Brand: #2", "Second Brand", 40_000).autoIcon();
 	private final ModifiableCallout<BuffApplied> brand3 = new ModifiableCallout<BuffApplied>("Infern Brand: #3", "Third Brand", 40_000).autoIcon();
 	private final ModifiableCallout<BuffApplied> brand4 = new ModifiableCallout<BuffApplied>("Infern Brand: #4", "Fourth Brand", 40_000).autoIcon();
-
-	@HandleEvents
-	public void thirdBossBasicCasts(EventContext context, AbilityCastStart acs) {
-		ModifiableCallout<AbilityCastStart> call;
-		switch ((int) acs.getAbility().getId()) {
-			case 0x74AD -> call = firesteelFracture;
-			case 0x74AF -> call = showOfStrength;
-			default -> {
-				return;
-			}
-		}
-		context.accept(call.getModified(acs));
-	}
+	private final ModifiableCallout<?> wireCut1_startingSpot = new ModifiableCallout<>("Wire Cutting: Starting Spot", "Start {startingCorner}");
+	private final ModifiableCallout<BuffApplied> portals_westCCW = new ModifiableCallout<>("Self Portal West CCW", "West Counterclockwise", 10_000);
+	private final ModifiableCallout<BuffApplied> portals_westCW = new ModifiableCallout<>("Self Portal West CW", "West Clockwise", 10_000);
+	private final ModifiableCallout<BuffApplied> portals_eastCCW = new ModifiableCallout<>("Self Portal East CCW", "East Counterclockwise", 10_000);
+	private final ModifiableCallout<BuffApplied> portals_eastCW = new ModifiableCallout<>("Self Portal East CW", "East Clockwise", 10_000);
 
 	@AutoFeed
 	public final SequentialTrigger<BaseEvent> firesteelStrikeSq = SqtTemplates.sq(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x74b0),
@@ -448,7 +465,6 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 						s.updateCall(firesteel_standInFront.getModified(secondHit));
 					}
 				}
-
 			});
 
 	@HandleEvents
@@ -467,5 +483,123 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 			context.accept(call.getModified(ba));
 		}
 	}
+
+	private enum WirePosition {
+		// North/south from left to right
+		NS1(ArenaSector.WEST), NS2(ArenaSector.WEST), NS3(ArenaSector.EAST), NS4(ArenaSector.EAST),
+		// East/west from north to south
+		EW1(ArenaSector.NORTH), EW2(ArenaSector.NORTH), EW3(ArenaSector.SOUTH), EW4(ArenaSector.SOUTH);
+
+		final ArenaSector sector;
+
+		WirePosition(ArenaSector sector) {
+			this.sector = sector;
+		}
+	}
+
+	private List<XivCombatant> getWiresRaw() {
+		 return state.getCombatantsListCopy().stream().filter(cbt -> cbt.getbNpcId() == 14764)
+				.filter(cbt -> getWireNumber(cbt) > 0)
+				.toList();
+	}
+
+	private int getWireNumber(XivCombatant wire) {
+		int stacks = buffs.rawBuffStacksOnTarget(wire, 0x95D);
+		return switch (stacks) {
+			case 450, 454 -> 1;
+			case 451, 455 -> 2;
+			case 452, 456 -> 3;
+			case 453, 457 -> 4;
+			default -> -1;
+		};
+	}
+
+	private Map<WirePosition, Integer> getWires1() {
+		List<XivCombatant> wires = getWiresRaw();
+		Map<WirePosition, Integer> wireNumbers = new EnumMap<>(WirePosition.class);
+		for (XivCombatant wire : wires) {
+			int num = getWireNumber(wire);
+			WirePosition pos = switch ((int) Math.round(wire.getPos().x())) {
+				case 286 -> WirePosition.NS1;
+				case 288 -> WirePosition.NS2;
+				case 290 -> WirePosition.NS3;
+				case 292 -> WirePosition.NS4;
+				default -> switch ((int) Math.round(wire.getPos().y())) {
+					case -108 -> WirePosition.EW1;
+					case -106 -> WirePosition.EW2;
+					case -104 -> WirePosition.EW3;
+					case -102 -> WirePosition.EW4;
+					default -> null;
+				};
+			};
+			if (pos != null) {
+				Integer existing = wireNumbers.put(pos, num);
+				if (existing != null) {
+					throw new IllegalStateException("Duplicate wire position: " + wire.getPos());
+				}
+			}
+		}
+		return wireNumbers;
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> infernBrandSq = SqtTemplates.multiInvocation(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7491),
+			(e1, s) -> {
+				// Spinny no work in log :(
+				s.updateCall(infernBrand1.getModified(e1));
+			}, (e1, s) -> {
+				BuffApplied brandBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xCC4, 0xCC5, 0xCC6, 0xCC7));
+				int brandNumber = (int) (brandBuff.getBuff().getId() - 0xCC3);
+				s.waitThenRefreshCombatants(1_000);
+				Map<WirePosition, Integer> wires = getWires1();
+				if (wires.size() != 8) {
+					throw new IllegalStateException("Did not find 8 wires! Found: " + wires);
+				}
+				List<ArenaSector> neededSides = wires.entrySet().stream().filter(e -> e.getValue() == brandNumber).map(Map.Entry::getKey).map(wp -> wp.sector).toList();
+				ArenaSector combined = ArenaSector.tryCombineTwoCardinals(neededSides);
+				s.updateCall(wireCut1_startingSpot.getModified(Map.of("startingCorner", combined == null ? ArenaSector.UNKNOWN : combined)));
+			}, (e1, s) -> {
+				BuffApplied portalBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xB9A) && ba.getTarget().isThePlayer());
+				ModifiableCallout<BuffApplied> call = switch ((int) portalBuff.getRawStacks()) {
+					case 467 -> portals_westCCW;
+					case 462 -> portals_westCW;
+					case 461 -> portals_eastCCW;
+					case 466 -> portals_eastCW;
+					default -> throw new IllegalArgumentException("Not a valid buff stack count: " + portalBuff.getRawStacks());
+				};
+				s.updateCall(call.getModified(portalBuff));
+			});
+
+	/*
+		Wire cutting:
+		Status effect 0x95D's stack count indicates the number on that wire
+		Orange 1 = 450
+		Orange 2 = 451
+		Orange 3 = 452
+		Orange 4 = 453
+		Blue 1 = 454
+		Blue 2 = 455
+		Blue 3 = 456
+		Blue 4 = 457
+		Uncuttable = 449
+		Radial bait = 460
+
+		X Positions:
+		286, 288, 290, 292
+
+		Y Positions (north to south):
+		-108, -106, -104, -102
+	 */
+
+	/*
+		Portals and brands:
+		Status effect 0xB9A on players:
+		467 => West CCW
+		462 => West CW
+		466 => East CW
+		461 => East CCW
+
+		First set of brands has lower ID maybe?
+	 */
 
 }

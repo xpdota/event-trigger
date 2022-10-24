@@ -32,4 +32,16 @@ public final class TimeUtils {
 			return input;
 		}
 	}
+
+	/**
+	 * Converts a duration to a double representing seconds and ms.
+	 *
+	 * e.g. 1200ms becomes 1.2. 1.33333.... becomes 1.333.
+	 *
+	 * @param input A duration
+	 * @return      A double representing seconds, with 3 digits of precision past the decimal.
+	 */
+	public static double durationToDouble(Duration input) {
+		return input.toMillis() / 1000.0;
+	}
 }

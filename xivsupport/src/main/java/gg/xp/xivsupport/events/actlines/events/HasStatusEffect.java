@@ -16,4 +16,6 @@ public interface HasStatusEffect {
 		}
 		return false;
 	}
+
+	long getRawStacks();
 }

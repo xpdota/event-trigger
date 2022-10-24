@@ -67,6 +67,7 @@ public class BuffRemoved extends BaseEvent implements HasSourceEntity, HasTarget
 		return stacks;
 	}
 
+	@Override
 	public long getRawStacks() {
 		return rawStacks;
 	}

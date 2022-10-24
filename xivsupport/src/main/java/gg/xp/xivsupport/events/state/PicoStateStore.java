@@ -13,7 +13,7 @@ public class PicoStateStore implements StateStore {
 	}
 
 	@Override
-	public <X extends SubState> X get(Class<X> clazz) {
+	public <X> X get(Class<X> clazz) {
 		return pico.getComponent(clazz);
 	}
 

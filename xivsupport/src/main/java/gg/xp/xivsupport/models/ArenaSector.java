@@ -108,6 +108,44 @@ public enum ArenaSector implements HasFriendlyName {
 	}
 
 	/**
+	 * Given two cardinals, check if there is an intercardinal adjacent to both of them.
+	 * <p>
+	 * r e.g. W, N == NW; S, E == SE; W, E == null
+	 * <p>
+	 * null will also be returned if the input is invalid, e.g. if the list size was not 2,
+	 * or if one or more item was not a cardinal.
+	 *
+	 * @param cardinals The two cardinals
+	 * @return The adjacent intercardinal, or null they are opposites, or if the input is invalid.
+	 */
+	public static @Nullable ArenaSector tryCombineTwoCardinals(List<ArenaSector> cardinals) {
+		if (cardinals.size() != 2) {
+			log.warn("Expected two cardinals, but got: {}", cardinals);
+			return null;
+		}
+		cardinals = new ArrayList<>(cardinals);
+		cardinals.sort(Comparator.naturalOrder());
+		ArenaSector firstQuadrant = cardinals.get(0);
+		ArenaSector secondQuadrant = cardinals.get(1);
+		return switch (firstQuadrant) {
+			case NORTH -> switch (secondQuadrant) {
+				case WEST -> NORTHWEST;
+				case EAST -> NORTHEAST;
+				default -> null;
+			};
+			case EAST -> switch (secondQuadrant) {
+				case SOUTH -> SOUTHEAST;
+				default -> null;
+			};
+			case SOUTH -> switch (secondQuadrant) {
+				case WEST -> SOUTHWEST;
+				default -> null;
+			};
+			default -> null;
+		};
+	}
+
+	/**
 	 * Like {@link #tryCombineTwoQuadrants(List)} (List)}, but returns a list. If they were combined, the list will
 	 * contain the single combined item. Otherwise, returns the original input.
 	 * @param quadrants The quadrants to combine.

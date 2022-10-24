@@ -1,7 +1,10 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
+import gg.xp.reevent.time.TimeUtils;
+import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.models.XivStatusEffect;
+import org.apache.commons.lang3.time.DurationUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -36,14 +39,23 @@ public class StatusEffectListRenderer implements TableCellRenderer {
 						tooltipBuilder.append(status.getBuff().getName());
 						long id = status.getBuff().getId();
 						tooltipBuilder.append(" (0x").append(Long.toString(id, 16))
-								.append(", ").append(id).append(", Stacks: ").append(status.getStacks()).append(")\n\n");
+								.append(", ").append(id).append(", Stacks: ").append(status.getStacks()).append(", Raw Stacks: ").append(status.getRawStacks()).append(")\n");
+						if (obj instanceof HasDuration dur) {
+							if (!dur.isIndefinite()) {
+								tooltipBuilder.append("  ")
+										.append(String.format("%.03fs / %.03fs remaining", TimeUtils.durationToDouble(dur.getEstimatedRemainingDuration()), TimeUtils.durationToDouble(dur.getInitialDuration())))
+										.append('\n');
+
+							}
+						}
 					}
 					else if (obj instanceof XivStatusEffect status) {
 						tooltipBuilder.append(status.getName());
 						long id = status.getId();
 						tooltipBuilder.append(" (0x").append(Long.toString(id, 16))
-								.append(", ").append(id).append(")\n\n");
+								.append(", ").append(id).append(")\n");
 					}
+					tooltipBuilder.append('\n');
 				});
 				listRenderer.setToolTipText(tooltipBuilder.toString().stripTrailing());
 			}

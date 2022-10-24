@@ -70,4 +70,8 @@ public interface HasDuration {
 	default boolean wouldBeExpired() {
 		return getEstimatedRemainingDuration().isZero();
 	}
+
+	default boolean isIndefinite() {
+		return getInitialDuration().toSeconds() == 9999;
+	}
 }
