@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class StatusEffectRepository {
 
@@ -234,6 +235,28 @@ public class StatusEffectRepository {
 			}
 			return new ArrayList<>(cached.values());
 		}
+	}
+
+	public @Nullable BuffApplied findStatusOnTarget(XivEntity entity, long buffId) {
+		return findStatusOnTarget(entity, ba -> ba.buffIdMatches(buffId));
+	}
+
+	public @Nullable BuffApplied findStatusOnTarget(XivEntity entity, Predicate<BuffApplied> filter) {
+		return statusesOnTarget(entity).stream().filter(filter).findAny().orElse(null);
+	}
+
+	/**
+	 * Given an entity and a buff ID, return how many stacks the buff has if present
+	 *
+	 * @param entity The entity to check
+	 * @param buffId The buff ID
+	 * @return The number of stacks, or 0 if it is stackless, or -1 if the buff was not present at all.
+	 */
+	public int buffStacksOnTarget(XivEntity entity, long buffId) {
+		return statusesOnTarget(entity).stream().filter(ba -> ba.buffIdMatches(buffId))
+				.findFirst()
+				.map(ba -> (int) ba.getStacks())
+				.orElse(-1);
 	}
 
 	public List<BuffApplied> sortedStatusesOnTarget(XivEntity entity) {

@@ -134,7 +134,7 @@ public enum ArenaSector implements HasFriendlyName {
 	}
 
 	/**
-	 * Add the given number of eigth-turns (clockwise) to this sector and return the result.
+	 * Add the given number of eighth-turns (clockwise) to this sector and return the result.
 	 * <p>
 	 * e.g. NORTHEAST.plusEights(2) == SOUTHEAST and NORTHEAST.plusEights(-3) == WEST
 	 * <p>
@@ -142,17 +142,17 @@ public enum ArenaSector implements HasFriendlyName {
 	 * <p>
 	 * If 'this' is center/unknown, returns this unmodified.
 	 *
-	 * @param eights Eigth-turns. Positive is clockwise, negative is CCW.
+	 * @param eighths Eigth-turns. Positive is clockwise, negative is CCW.
 	 * @return The result.
 	 */
-	public ArenaSector plusEighths(int eights) {
+	public ArenaSector plusEighths(int eighths) {
 		if (this == CENTER || this == UNKNOWN) {
 			return this;
 		}
-		if (eights < 0) {
-			eights += 8;
+		if (eighths < 0) {
+			eighths += 8;
 		}
-		return values()[(ordinal() + eights) % 8];
+		return values()[(ordinal() + eighths) % 8];
 	}
 
 	/**

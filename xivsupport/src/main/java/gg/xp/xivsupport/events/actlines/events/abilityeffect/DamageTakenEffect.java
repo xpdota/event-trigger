@@ -21,7 +21,7 @@ public class DamageTakenEffect extends BaseDamageEffect {
 	protected @Nullable String describeModification() {
 		int cb = getComboBonus();
 		if (cb != 0) {
-			return "+" + cb + "%s from combo/positional";
+			return "+%d%% from combo/positional".formatted(cb);
 		}
 		else {
 			return null;
