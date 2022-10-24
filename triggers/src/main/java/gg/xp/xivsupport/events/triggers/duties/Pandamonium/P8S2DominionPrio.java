@@ -172,6 +172,7 @@ public class P8S2DominionPrio extends AutoChildEventHandler implements FilteredE
 							.map(AbilityCastStart::getTarget)
 							.toList();
 				}
+				s.waitThenRefreshCombatants(100);
 				while (true) {
 					// Make sure the four towers have actually updated their positions
 					List<? extends ModifiableCallout<?>> callouts = towers.stream()
