@@ -65,6 +65,7 @@ gg.xp.xivsupport.events.triggers.marks
 gg.xp.xivsupport.events.triggers.marks.adv
 gg.xp.xivsupport.events.triggers.marks.gui
 gg.xp.xivsupport.events.triggers.seq
+gg.xp.xivsupport.events.triggers.support
 gg.xp.xivsupport.events.triggers.util
 gg.xp.xivsupport.events.ws
 gg.xp.xivsupport.eventstorage
