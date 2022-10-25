@@ -221,6 +221,11 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
+                <artifactId>trigger-support</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
                 <artifactId>triggers</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -316,6 +321,11 @@
                 <artifactId>personal-cast-bar-overlay</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>skill-hit-overlay</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -333,8 +343,9 @@
         <module>plugins</module>
         <module>triggers/titan-jails</module>
         <module>telesto-support</module>
-        <module>triggers/custom-party-overlay</module>
+        <module>plugins/custom-party-overlay</module>
         <module>testutils/testutils-samplelogs</module>
         <module>groovy-sandboxing</module>
+        <module>trigger-support</module>
     </modules>
 </project>

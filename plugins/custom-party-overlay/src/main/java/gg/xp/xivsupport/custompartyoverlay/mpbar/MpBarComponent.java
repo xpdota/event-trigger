@@ -1,12 +1,10 @@
 package gg.xp.xivsupport.custompartyoverlay.mpbar;
 
 import gg.xp.xivsupport.custompartyoverlay.BasePartyListComponent;
-import gg.xp.xivsupport.gui.tables.renderers.BarFractionDisplayOption;
 import gg.xp.xivsupport.gui.tables.renderers.MpBar;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
 import java.awt.*;
 
 public class MpBarComponent extends BasePartyListComponent {

@@ -2,8 +2,6 @@ package gg.xp.xivsupport.custompartyoverlay.castbar;
 
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
-import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
-import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 
 import javax.swing.*;
 import java.awt.*;

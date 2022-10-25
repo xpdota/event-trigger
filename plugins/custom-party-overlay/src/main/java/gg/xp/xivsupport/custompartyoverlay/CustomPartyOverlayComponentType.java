@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.custompartyoverlay;
 
-import gg.xp.xivsupport.custompartyoverlay.buffs.BuffsBar;
 import gg.xp.xivsupport.custompartyoverlay.buffs.BuffsBarComponentGui;
 import gg.xp.xivsupport.custompartyoverlay.buffs.BuffsBarPartyComponent;
 import gg.xp.xivsupport.custompartyoverlay.castbar.CastBarComponentGui;
