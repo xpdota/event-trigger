@@ -22,8 +22,10 @@ import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.TableHeaderUI;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,6 +38,7 @@ import java.util.Map;
 public class SkillHitTracker extends XivOverlay implements FilteredEventHandler {
 
 	private final IntSetting numberOfRows;
+	private final IntSetting updateInterval;
 	private final ColorSetting fg;
 	private final ColorSetting bg;
 	private final JTable table;
@@ -44,6 +47,7 @@ public class SkillHitTracker extends XivOverlay implements FilteredEventHandler 
 	public SkillHitTracker(OverlayConfig oc, PersistenceProvider pers) {
 		super("Skill Hit Tracker", "skill-hit-tracker", oc, pers);
 		numberOfRows = new IntSetting(pers, "skill-hit-tracker.num-rows", 6, 1, 20);
+		updateInterval = new IntSetting(pers, "skill-hit-tracker.update-interval", 1000, 1, 30_000);
 		fg = new ColorSetting(pers, "skill-hit-tracker.fg-color", new Color(255, 255, 255));
 		bg = new ColorSetting(pers, "skill-hit-tracker.bg-color", new Color(20, 20, 20, 20));
 		model = CustomTableModel.builder(() -> displaySkillList)
@@ -62,8 +66,17 @@ public class SkillHitTracker extends XivOverlay implements FilteredEventHandler 
 		table.setCellSelectionEnabled(false);
 		table.setOpaque(false);
 		table.setBackground(new Color(0, 0, 0, 0));
+		table.setCellSelectionEnabled(false);
 		fg.addAndRunListener(() -> table.setForeground(fg.get()));
 		JTableHeader header = table.getTableHeader();
+		TableCellRenderer originalRenderer = header.getDefaultRenderer();
+		header.setDefaultRenderer((table, value, isSelected, hasFocus, row, column) -> {
+			Component comp = originalRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+			if (comp instanceof JComponent jc) {
+				jc.setBorder(new EmptyBorder(0, 0, 0, 0));
+			}
+			return comp;
+		});
 		header.setBackground(new Color(0, 0, 0, 0));
 		fg.addAndRunListener(() -> header.setForeground(fg.get()));
 		header.setOpaque(false);
@@ -81,9 +94,13 @@ public class SkillHitTracker extends XivOverlay implements FilteredEventHandler 
 		innerPanel.add(table, BorderLayout.CENTER);
 		innerPanel.add(header, BorderLayout.NORTH);
 		getPanel().add(innerPanel);
-		RefreshLoop<SkillHitTracker> refresher = new RefreshLoop<>("DotTrackerOverlay", this, SkillHitTracker::refresh, unused -> 1000L);
+		RefreshLoop<SkillHitTracker> refresher = new RefreshLoop<>("SkillHitOverlay", this, SkillHitTracker::refresh, unused -> (long) updateInterval.get());
 		repackSize();
 		refresher.start();
+		numberOfRows.addListener(() -> {
+			repackSize();
+			refresher.refreshNow();
+		});
 	}
 
 	private void refresh() {
@@ -176,4 +193,19 @@ public class SkillHitTracker extends XivOverlay implements FilteredEventHandler 
 		}
 	}
 
+	public IntSetting getNumberOfRows() {
+		return numberOfRows;
+	}
+
+	public IntSetting getUpdateInterval() {
+		return updateInterval;
+	}
+
+	public ColorSetting getFg() {
+		return fg;
+	}
+
+	public ColorSetting getBg() {
+		return bg;
+	}
 }
