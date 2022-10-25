@@ -94,7 +94,7 @@ d1bfea03e53299ead14e84ca7651430b  spotbugs-annotations-4.6.0.jar
 a17767f1f1e56d19bf598e64efdf668f  testutils-samplelogs-1.0-SNAPSHOT.jar
 fd5695850d585755ab8444e3a0fcac93  timelines-1.0-SNAPSHOT.jar
 583be34c48eadbf189ff17f428679ae3  titan-jails-1.0-SNAPSHOT.jar
-17b9d96db7f75ce333d070fc38883d7b  triggers-1.0-SNAPSHOT.jar
+fab2f7be640de7e6aa4b7088b314f81a  triggers-1.0-SNAPSHOT.jar
 37873eaccb682342b4190ca43f02d740  wagon-file-1.0-beta-7.jar
 e60cb645e82467db61d66f3923e38da4  wagon-ftp-1.0-beta-7.jar
 7e301d126c9dc0889597b0443cb6f954  wagon-http-lightweight-1.0-beta-7.jar
