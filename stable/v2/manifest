@@ -1,6 +1,6 @@
-f10447ad03a9dbfc07c86d82c1c1af84  triggevent.exe
-5a6d6c5a9d030c3312c427e4af7bd892  triggevent-import.exe
-8c6570e5bb37bb1c182a21e6c1521e70  triggevent-upd.exe
+15a8af27069258e339624a35c8b1014f  triggevent.exe
+561991c25c74d36638a07a02be535ffa  triggevent-import.exe
+1d8656de32ecc14349a032e32e519fcf  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 2481e8358dff1ef4138f722323472e5b  deps/actimport-1.0-SNAPSHOT.jar
 42a7237fd6425e6c384bb5c9a73c5ce6  deps/aether-api-1.8.jar
@@ -27,7 +27,7 @@ f54a8510f834a1a57166970bfc982e94  deps/commons-collections-3.2.2.jar
 040b4b4d8eac886f6b4a2a3bd2f31b00  deps/commons-logging-1.2.jar
 677994920c9fb126c9d4f98100707204  deps/commons-net-2.0.jar
 c1c130c369aa86bfe4f7a7a920bc0223  deps/commons-text-1.9.jar
-4f1fb3bb69d5c04aa62db704bc55d852  deps/custom-party-overlay-1.0-SNAPSHOT.jar
+26c6883be79bae3336471f76f8875a16  deps/custom-party-overlay-1.0-SNAPSHOT.jar
 4b5d5763ea8d5da8b11db5bda0e2ec62  deps/dot-tracker-1.0-SNAPSHOT.jar
 04067d1b5c9ac4447fd376632b13fba0  deps/doxia-sink-api-1.0.jar
 fabbe8e110e772f6ecf336b1a487af24  deps/easytriggers-1.0-SNAPSHOT.jar
@@ -53,7 +53,7 @@ c1ab841070c388ec32b77cdc05f084fb  deps/jna-platform-5.10.0.jar
 9d9576fc366854c32f4d1daf9dcc4b1c  deps/job-overlays-1.0-SNAPSHOT.jar
 07828623a79ab4b59c33e6ace5814299  deps/jsch-0.1.38.jar
 dd83accb899363c32b07d7a1b2e4ce40  deps/jsr305-3.0.2.jar
-b0f33b1e2a57cd7ecf5c07614f3fc1c1  deps/launcher-1.0-SNAPSHOT.jar
+26db11f1aa7fddd5de19d5bb92933bf9  deps/launcher-1.0-SNAPSHOT.jar
 3fd4f82feb669400377ea8ac047425e3  deps/library-2.0.0-hudson3a.jar
 196b120a3c9f01a5b9b2ed5220359963  deps/logback-classic-1.2.6.jar
 b1930b5651377477a06ade2319f70dfc  deps/logback-core-1.2.6.jar
@@ -91,6 +91,7 @@ e57fcf72a8e45ab48a367cc75a247458  deps/plexus-utils-2.0.4.jar
 2524dbf014f6d007d64c1fdbf5b54a7c  deps/sisu-guice-2.9.1-noaop.jar
 6ce441227d27fae991d084b0cd1b2782  deps/sisu-inject-bean-1.4.3.1.jar
 64e4b2a0025d8aba67d9c5ef701128ad  deps/sisu-inject-plexus-1.4.3.1.jar
+1bdf1353663c34ee45eb88697aac8f97  deps/skill-hit-overlay-1.0-SNAPSHOT.jar
 fbcf58513bc25b80f075d812aad3e3cf  deps/slf4j-api-1.7.32.jar
 adba879de8b67fd8fb89984f7dfacabe  deps/slide-webdavlib-2.1.jar
 d1bfea03e53299ead14e84ca7651430b  deps/spotbugs-annotations-4.6.0.jar
@@ -98,7 +99,8 @@ d1bfea03e53299ead14e84ca7651430b  deps/spotbugs-annotations-4.6.0.jar
 a17767f1f1e56d19bf598e64efdf668f  deps/testutils-samplelogs-1.0-SNAPSHOT.jar
 fd5695850d585755ab8444e3a0fcac93  deps/timelines-1.0-SNAPSHOT.jar
 583be34c48eadbf189ff17f428679ae3  deps/titan-jails-1.0-SNAPSHOT.jar
-fab2f7be640de7e6aa4b7088b314f81a  deps/triggers-1.0-SNAPSHOT.jar
+6bba8c9fbad5e0ab5c51ebf7b013c7dc  deps/triggers-1.0-SNAPSHOT.jar
+3ff77bbf36e1b9b568948357323bac81  deps/trigger-support-1.0-SNAPSHOT.jar
 37873eaccb682342b4190ca43f02d740  deps/wagon-file-1.0-beta-7.jar
 e60cb645e82467db61d66f3923e38da4  deps/wagon-ftp-1.0-beta-7.jar
 7e301d126c9dc0889597b0443cb6f954  deps/wagon-http-lightweight-1.0-beta-7.jar
@@ -110,6 +112,6 @@ b013e44a47b7ffe1fb34b9b6371c89c7  deps/wagon-ssh-1.0-beta-7.jar
 fec05c4eb4cda7ca8b001a2b9e081eba  deps/wagon-webdav-1.0-beta-2-hudson-1.jar
 f807f86d7d9db25edbfc782aca7ca2a9  deps/xercesImpl-2.9.1.jar
 210bb8f4b03adb428b90c83b9aa5da78  deps/xivdata-1.0-SNAPSHOT.jar
-cfbd57010e6de689159735cccd6c6c57  deps/xivsupport-1.0-SNAPSHOT.jar
+90ead7519d100a6fa585d2c5bb093ffb  deps/xivsupport-1.0-SNAPSHOT.jar
 9ae9c29e4497fc35a3eade1e6dd0bbeb  deps/xml-apis-1.3.04.jar
 1d56fcb25932c6cfb5bdce4298ed35e2  deps/xml-im-exporter-1.1.jar

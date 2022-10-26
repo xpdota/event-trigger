@@ -93,6 +93,7 @@ gg.xp.xivsupport.persistence.gui
 gg.xp.xivsupport.persistence.settings
 gg.xp.xivsupport.replay
 gg.xp.xivsupport.replay.gui
+gg.xp.xivsupport.skillhitoverlay
 gg.xp.xivsupport.slf4j
 gg.xp.xivsupport.speech
 gg.xp.xivsupport.sys
