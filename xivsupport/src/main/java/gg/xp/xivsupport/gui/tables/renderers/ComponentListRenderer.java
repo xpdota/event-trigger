@@ -98,7 +98,11 @@ public class ComponentListRenderer extends JComponent {
 					break;
 				}
 				component.setBounds(curX, 0, actualWidth, actualHeight);
-				component.paint(g);
+				try {
+					component.paint(g);
+				} catch (Throwable ignored) {
+
+				}
 				int delta = actualWidth + xPadding;
 				transform.translate(delta, 0);
 				graphics.setTransform(transform);

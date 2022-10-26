@@ -35,6 +35,7 @@ import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.GlobalGuiOptions;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -116,6 +117,7 @@ public class GuiMain {
 	private final StandardColumns columns;
 	private final @Nullable ReplayController replay;
 	private final RightClickOptionRepo rightClicks;
+	private final GlobalGuiOptions globalGuiOpts;
 	private JTabbedPane tabPane;
 	private Component eventPanel;
 
@@ -145,6 +147,7 @@ public class GuiMain {
 		this.rightClicks = container.getComponent(RightClickOptionRepo.class);
 		columns = container.getComponent(StandardColumns.class);
 		replay = container.getComponent(ReplayController.class);
+		globalGuiOpts = container.getComponent(GlobalGuiOptions.class);
 		WindowConfig wc = container.getComponent(WindowConfig.class);
 		long start = System.currentTimeMillis();
 		SwingUtilities.invokeLater(() -> {
@@ -569,6 +572,11 @@ public class GuiMain {
 		// Main table
 		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
 		PullTracker pulls = container.getComponent(PullTracker.class);
+		ActionAndStatusRenderer asRenderer = ActionAndStatusRenderer.full();
+		NameJobRenderer nameJobRenderer = new NameJobRenderer();
+		BooleanSetting displayIdsSetting = globalGuiOpts.displayIds();
+		displayIdsSetting.addAndRunListener(() -> asRenderer.setShowId(displayIdsSetting.get()));
+		displayIdsSetting.addAndRunListener(() -> nameJobRenderer.setShowId(displayIdsSetting.get()));
 		TableWithFilterAndDetails<Event, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", rawStorage::getEvents,
 						currentEvent -> {
 							if (currentEvent == null) {
@@ -592,8 +600,8 @@ public class GuiMain {
 					col.setMaxWidth(100);
 				}))
 				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
-				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(new NameJobRenderer())))
-				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(new NameJobRenderer())))
+				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(nameJobRenderer)))
+				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(nameJobRenderer)))
 				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> {
 					return e;
 //					if (e instanceof HasAbility) {
@@ -604,7 +612,7 @@ public class GuiMain {
 //					}
 //					return null;
 				}, c -> {
-					c.setCellRenderer(new ActionAndStatusRenderer());
+					c.setCellRenderer(asRenderer);
 				}))
 				.addMainColumn(new CustomColumn<>("Effects", e -> {
 					if (e instanceof HasEffects event) {
@@ -635,9 +643,12 @@ public class GuiMain {
 					container.addComponent(pullNumberFilter);
 					return pullNumberFilter;
 				})
+				.addWidget(unused -> new BooleanSettingGui(displayIdsSetting, "Show IDs", true).getComponent())
 				.addWidget(replayNextPseudoFilter(Event.class))
 				.setAppendOrPruneOnly(true)
 				.build();
+
+		displayIdsSetting.addListener(table::repaint);
 		master.getDistributor().registerHandler(Event.class, (ctx, e) -> table.signalNewData());
 		return table;
 

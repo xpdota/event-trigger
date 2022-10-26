@@ -45,23 +45,23 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private static final Logger log = LoggerFactory.getLogger(ASS_Crit.class);
 
 	// First trash
-	@NpcCastCallout(0x7960)
+	@NpcCastCallout({0x7960, 0x7978})
 	private final ModifiableCallout<AbilityCastStart> atropineSpore = ModifiableCallout.durationBasedCall("Atropine Spore", "Big Donut");
-	@NpcCastCallout(0x7962)
+	@NpcCastCallout({0x7962, 0x797A})
 	private final ModifiableCallout<AbilityCastStart> deracinator = ModifiableCallout.durationBasedCall("Deracinator", "Buster on {event.target}");
-	@NpcCastCallout(0x7963)
+	@NpcCastCallout({0x7963, 0x797B})
 	private final ModifiableCallout<AbilityCastStart> rightSweep = ModifiableCallout.durationBasedCall("Right Sweep", "Left");
-	@NpcCastCallout(0x7964)
+	@NpcCastCallout({0x7964, 0x797C})
 	private final ModifiableCallout<AbilityCastStart> leftSweep = ModifiableCallout.durationBasedCall("Left Sweep", "Right");
-	@NpcCastCallout(0x7965)
+	@NpcCastCallout({0x79650, 0x797D})
 	private final ModifiableCallout<AbilityCastStart> creepingIvy = ModifiableCallout.durationBasedCall("Creeping Ivy", "Out of Front");
-	@NpcCastCallout(0x795B)
+	@NpcCastCallout({0x795B, 0x7973})
 	private final ModifiableCallout<AbilityCastStart> honeyedLeft = ModifiableCallout.durationBasedCall("Honeyed Left", "Right");
-	@NpcCastCallout(0x795C)
+	@NpcCastCallout({0x795C, 0x7974})
 	private final ModifiableCallout<AbilityCastStart> honeyedRight = ModifiableCallout.durationBasedCall("Honeyed Right", "Left");
-	@NpcCastCallout(0x795D)
+	@NpcCastCallout({0x795D, 0x7975})
 	private final ModifiableCallout<AbilityCastStart> honeyedFront = ModifiableCallout.durationBasedCall("Honeyed Front", "Out of Front");
-	@NpcCastCallout(0x7957)
+	@NpcCastCallout({0x7957, 0x796F})
 	private final ModifiableCallout<AbilityCastStart> arborealStorm = ModifiableCallout.durationBasedCall("Arboreal Storm", "Out");
 
 	// First boss
@@ -145,15 +145,15 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 		}
 		@Nullable Color color = buffColor(acs.getSource());
 		ModifiableCallout<AbilityCastStart> call = switch ((int) acs.getAbility().getId()) {
-			case 0x775a -> {
+			case 0x775a, 0x777d -> {
 				if (color == Color.YELLOW) {
 					yield cardSafe;
 				}
 				yield null;
 			}
-			case 0x776c -> dustBluster;
-			case 0x774F -> carpetBeater;
-			case 0x7750 -> totalWash;
+			case 0x776c, 0x778f -> dustBluster;
+			case 0x774F, 0x7772 -> carpetBeater;
+			case 0x7750, 0x7773 -> totalWash;
 			default -> null;
 		};
 		if (call != null) {
@@ -165,13 +165,13 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 
 	@HandleEvents
 	public void fakeCasts(EventContext ctx, AbilityCastStart acs) {
-		if (acs.abilityIdMatches(0x7755)) {
+		if (acs.abilityIdMatches(0x7755, 0x7778)) {
 			ctx.accept(squeakyCleanLeftSafe.getModified(acs));
 		}
-		else if (acs.abilityIdMatches(0x7756)) {
+		else if (acs.abilityIdMatches(0x7756, 0x7779)) {
 			ctx.accept(squeakyCleanRightSafe.getModified(acs));
 		}
-		else if (acs.abilityIdMatches(0x776B) && buffColor(acs.getSource()) == Color.GREEN) {
+		else if (acs.abilityIdMatches(0x776B, 0x778A) && buffColor(acs.getSource()) == Color.GREEN) {
 			if (greenSupp.check(acs)) {
 				ctx.accept(underGreen.getModified(acs));
 			}
@@ -189,13 +189,14 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final SequentialTrigger<BaseEvent> combatEndHack = SqtTemplates.sq(10_000,
 			InCombatChangeEvent.class, event -> !event.isInCombat(),
 			(e1, s) -> {
+				// TODO: this doesn't work as well as I'd like
 				s.waitMs(3000);
 				s.accept(new ForceCombatEnd());
 			}
 	);
 
 	@AutoFeed
-	public SequentialTrigger<BaseEvent> slipperySoap = SqtTemplates.sq(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x775E),
+	public SequentialTrigger<BaseEvent> slipperySoap = SqtTemplates.sq(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x775E, 7781),
 			(e1, s) -> {
 				// TODO logic for which one to point the stack at
 				// If there's a blue on the bottom row, you need to hit the opposite side so that N is safe
@@ -223,7 +224,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 			});
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> freshPuff = SqtTemplates.multiInvocation(90_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7766),
+	private final SequentialTrigger<BaseEvent> freshPuff = SqtTemplates.multiInvocation(90_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7766, 0x7789),
 			(e1, s) -> {
 				// First invocation: handled by other triggers already
 				s.updateCall(fp1_begin.getModified(e1));
@@ -247,7 +248,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 						s.updateCall(fp2_yellowTether.getModified(tether, params));
 					}
 				}
-				AbilityCastStart bossMechanic = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7767));
+				AbilityCastStart bossMechanic = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7767, 0x778A));
 				Color bossColor = buffColor(bossMechanic.getSource());
 				if (bossColor == Color.BLUE) {
 					s.updateCall(intercardSafe.getModified(bossMechanic));
@@ -259,10 +260,16 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 			(e1, s) -> {
 				s.updateCall(fp3_begin.getModified(e1));
 				// Eight puffs, six get cleaned
-				AbilityCastStart bossCast1 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7767));
+				AbilityCastStart bossCast1 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7767, 0x778A));
 				// TODO: identify orb casts and give instruction
-				s.updateCall(fp3_dodgeOrbs.getModified(bossCast1));
-				AbilityCastStart bossCast2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7767));
+				// This is currently gated because the green callout is already handled
+				if (getState().getCombatantsListCopy().stream()
+						.map(this::buffColor)
+						.filter(Objects::nonNull)
+						.noneMatch(color -> color == Color.GREEN)) {
+					s.updateCall(fp3_dodgeOrbs.getModified(bossCast1));
+				}
+				AbilityCastStart bossCast2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7767, 0x778A));
 				s.updateCall(fp3_dodgeOrbs2.getModified(bossCast2));
 			},
 			(e1, s) -> {
@@ -286,27 +293,27 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 //
 
 	// Second trash
-	@NpcCastCallout(0x796C)
+	@NpcCastCallout({0x796C, 0x7984})
 	private final ModifiableCallout<AbilityCastStart> hellsNebula = ModifiableCallout.durationBasedCall("Hells' Nebula", "1 HP");
-	@NpcCastCallout(0x796B)
+	@NpcCastCallout({0x796B, 0x7983})
 	private final ModifiableCallout<AbilityCastStart> infernalWeight = ModifiableCallout.durationBasedCall("Infernal Weight", "Raidwide and Heavy");
-	@NpcCastCallout(0x796A)
+	@NpcCastCallout({0x796A, 0x7982})
 	private final ModifiableCallout<AbilityCastStart> dominionSlash = ModifiableCallout.durationBasedCall("Dominion Slash", "Out of Front");
-	@NpcCastCallout(0x7969)
+	@NpcCastCallout({0x7969, 0x7981})
 	private final ModifiableCallout<AbilityCastStart> infernalPain = ModifiableCallout.durationBasedCall("Infernal Pain", "Raidwide with Bleed");
-	@NpcCastCallout(0x7966)
+	@NpcCastCallout({0x7966, 0x7973})
 	private final ModifiableCallout<AbilityCastStart> blightedGloom = ModifiableCallout.durationBasedCall("Blighted Gloom", "Out");
-	@NpcCastCallout(0x7968)
+	@NpcCastCallout({0x7968, 0x7980})
 	private final ModifiableCallout<AbilityCastStart> kingsWill = ModifiableCallout.durationBasedCall("King's Will", "Heavy Autos");
 
 	// Second boss
-	@NpcCastCallout(0x7671)
+	@NpcCastCallout({0x7671, 0x77B3})
 	private final ModifiableCallout<AbilityCastStart> flashOfSteel = ModifiableCallout.durationBasedCall("Flash of Steel", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> rushOfMight = ModifiableCallout.durationBasedCall("Rush of Might Windup", "Inside Lines, Watch Charges");
 	private final ModifiableCallout<?> rushOfMightFollowup = new ModifiableCallout<>("Rush of Might Followup", "Move Out");
-	@NpcCastCallout(0x766c)
+	@NpcCastCallout({0x766c, 0x77AE})
 	private final ModifiableCallout<AbilityCastStart> sculptorsPassion = ModifiableCallout.durationBasedCall("Sculptor's Passion", "Line Stack, Tank in Front");
-	@NpcCastCallout(0x7672)
+	@NpcCastCallout({0x7672, 0x77B4})
 	private final ModifiableCallout<AbilityCastStart> mightySmite = ModifiableCallout.durationBasedCall("Mighty Smite", "Buster on {event.target}");
 
 	private final ModifiableCallout<BuffApplied> curseOfTheFallen_stackSpread = ModifiableCallout.<BuffApplied>durationBasedCall("CotF: Stack then Spread", "Stack on {stack} then Spread").autoIcon();
@@ -327,13 +334,13 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> rushOfMightSq = SqtTemplates.beginningAndEndingOfCast(
 			// TODO: Find IDs, see if there's any additional data from them. However, it's likely that these three alone are short/medium/long
-			acs -> acs.abilityIdMatches(0x7658, 0x7659, 0x765A),
+			acs -> acs.abilityIdMatches(0x7658, 0x7659, 0x765A, 0x779A, 0x779B, 0x779C),
 			rushOfMight, rushOfMightFollowup);
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> curseOfTheFallenSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7674),
+	private final SequentialTrigger<BaseEvent> curseOfTheFallenSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7674, 0x77B6),
 			(e1, s) -> {
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7674));
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7674, 0x77B6));
 				// Curse of the fallen cast itself does nothing
 				EventCollector<BuffApplied> spreads = new EventCollector<>(ba -> ba.buffIdMatches(0xCDA));
 				EventCollector<BuffApplied> stacks = new EventCollector<>(ba -> ba.buffIdMatches(0xCDD));
@@ -376,13 +383,13 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 			});
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> wrathOfRuin = SqtTemplates.multiInvocation(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7663),
+	private final SequentialTrigger<BaseEvent> wrathOfRuin = SqtTemplates.multiInvocation(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7663, 0x77A5),
 			(e1, s) -> {
 				// First checkerboard, just dodge lines and orbs
 				s.updateCall(checkerboard1.getModified(e1));
 			}, (e1, s) -> {
 				XivPlayerCharacter player = getState().getPlayer();
-				AbilityCastStart orbCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7670));
+				AbilityCastStart orbCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7670, 0x77B2));
 				// Second checkerboard, have to look at debuff
 				int goldBuffStacks = getBuffs().buffStacksOnTarget(player, 0xCDF);
 				int silverBuffStacks = getBuffs().buffStacksOnTarget(player, 0xCE0);
@@ -410,32 +417,32 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final ModifiableCallout<BuffApplied> monument_2out = new ModifiableCallout<BuffApplied>("Monument: Second in Line, Out", "Out").autoIcon();
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> curseOfTheMonumentSq = SqtTemplates.sq(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7666),
+	private final SequentialTrigger<BaseEvent> curseOfTheMonumentSq = SqtTemplates.sq(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7666, 0x77A8),
 			(e1, s) -> {
 				s.updateCall(monument_centerForChain.getModified(e1));
 				// Wait for chain
 				BuffApplied chain = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xCDE));
 				s.updateCall(monument_breakChain.getModified(chain));
 				// Wait for first explosion
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7668));
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7668, 0x77AA));
 				@Nullable BuffApplied firstInLine = getBuffs().findStatusOnTarget(getState().getPlayer(), 0xBBC);
 				@Nullable BuffApplied secondInLine = getBuffs().findStatusOnTarget(getState().getPlayer(), 0xBBD);
 				if (firstInLine != null) {
 					s.updateCall(monument_1out.getModified(firstInLine));
-					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x766A));
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x766A, 0x77AC));
 					s.updateCall(monument_1in.getModified(firstInLine));
 				}
 				else if (secondInLine != null) {
 					s.updateCall(monument_2in.getModified(secondInLine));
-					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x766A));
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x766A, 0x77AC));
 					s.updateCall(monument_2out.getModified(secondInLine));
 				}
 			});
 
 	// Third Boss
-	@NpcCastCallout(0x74AF)
+	@NpcCastCallout({0x74AF, 0x76C5})
 	private final ModifiableCallout<AbilityCastStart> showOfStrength = ModifiableCallout.durationBasedCall("Show of Strength", "Raidwide");
-	@NpcCastCallout(0x74AD)
+	@NpcCastCallout({0x74AD, 0x76C4})
 	private final ModifiableCallout<AbilityCastStart> firesteelFracture = ModifiableCallout.durationBasedCall("Firesteel Fracture", "Buster on {event.target}");
 	private final ModifiableCallout<AbilityUsedEvent> firesteel_standInFront = new ModifiableCallout<>("Firesteel Strike: Cover", "Stand in Front");
 	private final ModifiableCallout<AbilityUsedEvent> firesteel_standBehind = new ModifiableCallout<>("Firesteel Strike: Get Covered", "Stand Behind");
@@ -462,12 +469,12 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	public final SequentialTrigger<BaseEvent> firesteelStrikeSq = SqtTemplates.sq(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x74b0),
 			(e1, s) -> {
 				// If you got hit with the magic vuln, stand behind someone else.
-				AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2) && aue.isFirstTarget());
+				AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2, 0x74C6, 0x76C7) && aue.isFirstTarget());
 				if (firstHit.getTarget().isThePlayer()) {
 					s.updateCall(firesteel_standBehind.getModified(firstHit));
 				}
 				else {
-					AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2) && aue.isFirstTarget());
+					AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2, 0x74C6, 0x76C7) && aue.isFirstTarget());
 					if (secondHit.getTarget().isThePlayer()) {
 						s.updateCall(firesteel_standBehind.getModified(secondHit));
 					}
@@ -491,7 +498,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	}
 
 	private List<XivCombatant> getWiresRaw() {
-		 return state.getCombatantsListCopy().stream().filter(cbt -> cbt.getbNpcId() == 14764)
+		return state.getCombatantsListCopy().stream().filter(cbt -> cbt.getbNpcId() == 14764)
 				.filter(cbt -> getWireNumber(cbt) > 0)
 				.toList();
 	}

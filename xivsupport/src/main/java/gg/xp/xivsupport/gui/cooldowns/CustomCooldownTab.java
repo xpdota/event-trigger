@@ -318,7 +318,7 @@ public class CustomCooldownTab implements PluginTab {
 					JLabel label = new JLabel("Primary Ability");
 					Component icon;
 					if (ai != null) {
-						icon = IconTextRenderer.getComponent(ai.getIcon(), new JLabel(' ' + ai.name()), false, false, true);
+						icon = IconTextRenderer.getComponent(ai.getIcon(), new JLabel(' ' + ai.name()), false, false, true, null);
 					}
 					else {
 						icon = new JLabel("Unknown (0x%X, %s)".formatted(selection.primaryAbilityId, selection.primaryAbilityId));

@@ -15,6 +15,7 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.OverlayNameJobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -44,7 +45,7 @@ public class PartyOverlay extends XivOverlay {
 
 	private static final CustomColumn<XivCombatant> nameJobColumnTransparent
 			= new CustomColumn<>("Name", c -> c, c -> {
-		c.setCellRenderer(new NameJobRenderer(true, true));
+		c.setCellRenderer(new OverlayNameJobRenderer(true, true));
 		c.setPreferredWidth(125);
 	});
 	private CustomColumn<XivCombatant> statusEffectsColumn() {

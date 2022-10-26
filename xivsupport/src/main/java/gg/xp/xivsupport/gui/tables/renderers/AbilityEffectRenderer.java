@@ -13,7 +13,6 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpLoss;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -90,15 +89,15 @@ public class AbilityEffectRenderer {
 		}
 		defaultLabel = fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
 		if (iconOnly) {
-			return Collections.singletonList(IconTextRenderer.getComponent(icon, defaultLabel, true, textOnRight, true));
+			return Collections.singletonList(IconTextRenderer.getComponent(icon, defaultLabel, true, textOnRight, true, null));
 		}
 		List<Component> components = new ArrayList<>();
 		if (textOnRight) {
 			components.add(fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column));
-			components.add(IconTextRenderer.getComponent(icon, defaultLabel, true, false, true));
+			components.add(IconTextRenderer.getComponent(icon, defaultLabel, true, false, true, null));
 		}
 		else {
-			components.add(IconTextRenderer.getComponent(icon, defaultLabel, true, false, true));
+			components.add(IconTextRenderer.getComponent(icon, defaultLabel, true, false, true, null));
 			components.add(fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column));
 		}
 		return Collections.unmodifiableList(components);

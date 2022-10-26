@@ -48,7 +48,7 @@ public class BaseCdTrackerTable {
 						return icon;
 					}
 				}, c -> {
-					c.setCellRenderer(new ActionAndStatusRenderer(true, false, false));
+					c.setCellRenderer(ActionAndStatusRenderer.iconOnlyNoTip());
 					c.setMaxWidth(22);
 					c.setMinWidth(22);
 				}))

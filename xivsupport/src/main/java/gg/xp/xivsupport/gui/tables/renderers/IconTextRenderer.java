@@ -18,7 +18,7 @@ public final class IconTextRenderer {
 	}
 
 	public static Component getComponent(HasIconURL value, Component defaultLabel, boolean iconOnly) {
-		return getComponent(value, defaultLabel, iconOnly, false, false);
+		return getComponent(value, defaultLabel, iconOnly, false, false, null);
 	}
 
 	public static @Nullable AutoHeightScalingIcon getStretchyIcon(HasIconURL value) {
@@ -45,7 +45,7 @@ public final class IconTextRenderer {
 	}
 
 	// TODO: we might be able to get rid of the whole 'bypassCache' thing if we use ComponentListRenderer everywhere
-	public static Component getComponent(HasIconURL value, Component defaultLabel, boolean iconOnly, boolean textOnleft, boolean bypassCache) {
+	public static Component getComponent(HasIconURL value, Component defaultLabel, boolean iconOnly, boolean textOnleft, boolean bypassCache, @Nullable Component extra) {
 
 		ScaledImageComponent scaled = getIconOnly(value);
 		if (scaled != null && bypassCache) {
@@ -63,6 +63,10 @@ public final class IconTextRenderer {
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		if (textOnleft) {
+			c.weightx = 0;
+			if (extra != null) {
+				panel.add(extra, c);
+			}
 			c.ipadx = 0;
 			c.ipady = 0;
 			c.weightx = 1;
@@ -86,6 +90,11 @@ public final class IconTextRenderer {
 			c.weightx = 1;
 			c.anchor = GridBagConstraints.FIRST_LINE_START;
 			panel.add(defaultLabel, c);
+			c.weightx = 0;
+			c.ipadx = 0;
+			if (extra != null) {
+				panel.add(extra, c);
+			}
 		}
 		return panel;
 	}

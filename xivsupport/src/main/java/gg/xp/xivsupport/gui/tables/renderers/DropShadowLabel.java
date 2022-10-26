@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
 import gg.xp.xivsupport.gui.overlay.TextAlignment;
-import org.java_websocket.util.NamedThreadFactory;
+import gg.xp.xivsupport.sys.Threading;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +16,7 @@ public class DropShadowLabel extends Component {
 
 	private static final int xPad = 3;
 
-	private static final ExecutorService exs = Executors.newCachedThreadPool(new NamedThreadFactory("DropShadowLabelRender"));
+	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("DropShadowLabelRender"));
 
 	private static final Color shadow1 = new Color(0, 0, 0, 192);
 	private static final Color shadow2 = new Color(0, 0, 0, 64);
@@ -118,8 +118,8 @@ public class DropShadowLabel extends Component {
 		}
 		FontRenderRequest req = new FontRenderRequest(text, height, font, scale);
 //		if (!req.equals(this.lastReq)) {
-			format(req);
-			SwingUtilities.invokeLater(this::repaint);
+		format(req);
+		SwingUtilities.invokeLater(this::repaint);
 //		}
 	}
 

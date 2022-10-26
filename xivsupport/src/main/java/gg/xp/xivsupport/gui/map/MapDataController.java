@@ -20,6 +20,7 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import gg.xp.xivsupport.sys.Threading;
 import org.java_websocket.util.NamedThreadFactory;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
@@ -45,7 +46,7 @@ public class MapDataController {
 	private final ActiveCastRepository realAcr;
 	private final StatusEffectRepository realStatuses;
 	private final SequenceIdTracker sqid;
-	private final ExecutorService exs = Executors.newSingleThreadExecutor(new NamedThreadFactory("MapDataController"));
+	private final ExecutorService exs = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("MapDataController"));
 	private static final Snapshot initialEmptySnapshot = new Snapshot(
 			Instant.EPOCH,
 			XivMap.UNKNOWN,

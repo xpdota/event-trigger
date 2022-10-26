@@ -63,7 +63,7 @@ public class DotTrackerOverlay extends XivOverlay {
 		this.dots = dots;
 		tableModel = CustomTableModel.builder(() -> croppedDots)
 				.addColumn(new CustomColumn<>("Icon", c -> c.getEvent().getBuff(), c -> {
-					c.setCellRenderer(new ActionAndStatusRenderer(true, false, false));
+					c.setCellRenderer(ActionAndStatusRenderer.iconOnlyNoTip());
 					c.setMaxWidth(20);
 					c.setMinWidth(20);
 				}))
