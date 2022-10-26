@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists;
 
 //import hudson.Extension;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 
 import java.lang.reflect.AccessibleObject;
@@ -55,7 +55,7 @@ public final class AnnotatedWhitelist extends AclAwareWhitelist {
 			this.restricted = restricted;
 		}
 
-		private boolean allowed(@NonNull AccessibleObject o) {
+		private boolean allowed(@NotNull AccessibleObject o) {
 			Whitelisted ann = o.getAnnotation(Whitelisted.class);
 			if (ann == null) {
 				return false;

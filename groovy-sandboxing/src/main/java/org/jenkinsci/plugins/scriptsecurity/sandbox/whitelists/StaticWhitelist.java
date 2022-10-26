@@ -24,9 +24,8 @@
 
 package org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
 //import org.kohsuke.accmod.Restricted;
 //import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -102,7 +101,7 @@ public final class StaticWhitelist extends EnumeratingWhitelist {
 	 * @param line Line to filter.
 	 * @return {@code null} if the like must be skipped or the content to process if not.
 	 */
-	static @CheckForNull String filter(@NonNull String line) {
+	static @Nullable String filter(@NotNull String line) {
 		line = line.trim();
 		if (line.isEmpty() || line.startsWith("#")) {
 			return null;
@@ -113,7 +112,7 @@ public final class StaticWhitelist extends EnumeratingWhitelist {
 	/**
 	 * Returns true if the given method is permanently blacklisted in {@link #PERMANENTLY_BLACKLISTED_METHODS}
 	 */
-	public static boolean isPermanentlyBlacklistedMethod(@NonNull Method m) {
+	public static boolean isPermanentlyBlacklistedMethod(@NotNull Method m) {
 		String signature = canonicalMethodSig(m);
 		return asList(PERMANENTLY_BLACKLISTED_METHODS).contains(signature);
 	}
@@ -121,7 +120,7 @@ public final class StaticWhitelist extends EnumeratingWhitelist {
 	/**
 	 * Returns true if the given method is permanently blacklisted in {@link #PERMANENTLY_BLACKLISTED_STATIC_METHODS}
 	 */
-	public static boolean isPermanentlyBlacklistedStaticMethod(@NonNull Method m) {
+	public static boolean isPermanentlyBlacklistedStaticMethod(@NotNull Method m) {
 		String signature = canonicalStaticMethodSig(m);
 		return asList(PERMANENTLY_BLACKLISTED_STATIC_METHODS).contains(signature);
 	}
@@ -129,7 +128,7 @@ public final class StaticWhitelist extends EnumeratingWhitelist {
 	/**
 	 * Returns true if the given constructor is permanently blacklisted in {@link #PERMANENTLY_BLACKLISTED_CONSTRUCTORS}
 	 */
-	public static boolean isPermanentlyBlacklistedConstructor(@NonNull Constructor c) {
+	public static boolean isPermanentlyBlacklistedConstructor(@NotNull Constructor c) {
 		String signature = canonicalConstructorSig(c);
 		return asList(PERMANENTLY_BLACKLISTED_CONSTRUCTORS).contains(signature);
 	}
@@ -141,7 +140,7 @@ public final class StaticWhitelist extends EnumeratingWhitelist {
 	 * @return the equivalent {@link Signature}
 	 * @throws IOException if the signature string could not be parsed.
 	 */
-	public static Signature parse(@NonNull String line) throws IOException {
+	public static Signature parse(@NotNull String line) throws IOException {
 		String[] toks = line.split(" ");
 		switch (toks[0]) {
 			case "method":
@@ -236,31 +235,31 @@ public final class StaticWhitelist extends EnumeratingWhitelist {
 		return staticFieldSignatures;
 	}
 
-	public static RejectedAccessException rejectMethod(@NonNull Method m) {
+	public static RejectedAccessException rejectMethod(@NotNull Method m) {
 		assert (m.getModifiers() & Modifier.STATIC) == 0;
 		return blacklist(new RejectedAccessException("method", EnumeratingWhitelist.getName(m.getDeclaringClass()) + " " + m.getName() + printArgumentTypes(m.getParameterTypes())));
 	}
 
-	public static RejectedAccessException rejectMethod(@NonNull Method m, String info) {
+	public static RejectedAccessException rejectMethod(@NotNull Method m, String info) {
 		assert (m.getModifiers() & Modifier.STATIC) == 0;
 		return blacklist(new RejectedAccessException("method", EnumeratingWhitelist.getName(m.getDeclaringClass()) + " " + m.getName() + printArgumentTypes(m.getParameterTypes()), info));
 	}
 
-	public static RejectedAccessException rejectNew(@NonNull Constructor<?> c) {
+	public static RejectedAccessException rejectNew(@NotNull Constructor<?> c) {
 		return blacklist(new RejectedAccessException("new", EnumeratingWhitelist.getName(c.getDeclaringClass()) + printArgumentTypes(c.getParameterTypes())));
 	}
 
-	public static RejectedAccessException rejectStaticMethod(@NonNull Method m) {
+	public static RejectedAccessException rejectStaticMethod(@NotNull Method m) {
 		assert (m.getModifiers() & Modifier.STATIC) != 0;
 		return blacklist(new RejectedAccessException("staticMethod", EnumeratingWhitelist.getName(m.getDeclaringClass()) + " " + m.getName() + printArgumentTypes(m.getParameterTypes())));
 	}
 
-	public static RejectedAccessException rejectField(@NonNull Field f) {
+	public static RejectedAccessException rejectField(@NotNull Field f) {
 		assert (f.getModifiers() & Modifier.STATIC) == 0;
 		return blacklist(new RejectedAccessException("field", EnumeratingWhitelist.getName(f.getDeclaringClass()) + " " + f.getName()));
 	}
 
-	public static RejectedAccessException rejectStaticField(@NonNull Field f) {
+	public static RejectedAccessException rejectStaticField(@NotNull Field f) {
 		assert (f.getModifiers() & Modifier.STATIC) != 0;
 		return blacklist(new RejectedAccessException("staticField", EnumeratingWhitelist.getName(f.getDeclaringClass()) + " " + f.getName()));
 	}
@@ -276,7 +275,6 @@ public final class StaticWhitelist extends EnumeratingWhitelist {
 
 	private static final Set<String> BLACKLIST;
 
-	@SuppressFBWarnings(value = "OS_OPEN_STREAM", justification = "https://sourceforge.net/p/findbugs/bugs/786/")
 	private static Set<String> loadBlacklist() throws IOException {
 		try (InputStream is = StaticWhitelist.class.getResourceAsStream("blacklist"); InputStreamReader isr = new InputStreamReader(is, StandardCharsets.US_ASCII); BufferedReader br = new BufferedReader(isr)) {
 			Set<String> blacklist = new HashSet<>();

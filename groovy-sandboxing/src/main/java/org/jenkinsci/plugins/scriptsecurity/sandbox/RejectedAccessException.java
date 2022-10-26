@@ -24,7 +24,7 @@
 
 package org.jenkinsci.plugins.scriptsecurity.sandbox;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
+import org.jetbrains.annotations.Nullable;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.StandardGroovySandbox;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.StaticWhitelist;
 
@@ -73,7 +73,7 @@ public final class RejectedAccessException extends SecurityException {
      * Gets the signature of the member to which access was rejected.
      * @return a line in the format understood by {@link StaticWhitelist}, or null in case something was rejected for which a known exemption is not available
      */
-    public @CheckForNull String getSignature() {
+    public @Nullable String getSignature() {
         return signature;
     }
 

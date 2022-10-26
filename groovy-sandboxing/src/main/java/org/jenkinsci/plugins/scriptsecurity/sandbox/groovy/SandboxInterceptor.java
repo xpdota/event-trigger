@@ -40,8 +40,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.EncodingGroovyMethods;
@@ -367,7 +367,7 @@ final class SandboxInterceptor extends GroovyInterceptor {
 
     // TODO Java 8: @FunctionalInterface
     private interface Rejector {
-        @NonNull RejectedAccessException reject();
+        @NotNull RejectedAccessException reject();
     }
 
     @Override public Object onGetAttribute(Invoker invoker, Object receiver, String attribute) throws Throwable {
@@ -455,7 +455,7 @@ final class SandboxInterceptor extends GroovyInterceptor {
         return b.toString();
     }
 
-    private static @CheckForNull MetaMethod findMetaMethod(@NonNull Object receiver, @NonNull String method, @NonNull Object[] args) {
+    private static @Nullable MetaMethod findMetaMethod(@NotNull Object receiver, @NotNull String method, @NotNull Object[] args) {
         Class<?>[] types = new Class[args.length];
         for (int i = 0; i < types.length; i++) {
             Object arg = args[i];

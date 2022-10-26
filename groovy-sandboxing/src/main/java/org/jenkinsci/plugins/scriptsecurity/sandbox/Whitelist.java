@@ -24,50 +24,52 @@
 
 package org.jenkinsci.plugins.scriptsecurity.sandbox;
 
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.StandardGroovySandbox;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.StandardGroovySandbox;
 
 /**
  * Determines which methods and similar members which scripts may call.
  */
 public abstract class Whitelist {
 
-    private static final Logger LOGGER = Logger.getLogger(Whitelist.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(Whitelist.class.getName());
 
-    /**
-     * Checks whether a given virtual method may be invoked.
-     * <p>Note that {@code method} should not be implementing or overriding a method in a supertype;
-     * in such a case the caller must pass that supertype method instead.
-     * In other words, call site selection is the responsibility of the caller (such as {@link StandardGroovySandbox}), not the whitelist.
-     * @param method a method defined in the JVM
-     * @param receiver {@code this}, the receiver of the method call
-     * @param args zero or more arguments
-     * @return true to allow the method to be called, false to reject it
-     */
-    public abstract boolean permitsMethod(@NonNull Method method, @NonNull Object receiver, @NonNull Object[] args);
+	/**
+	 * Checks whether a given virtual method may be invoked.
+	 * <p>Note that {@code method} should not be implementing or overriding a method in a supertype;
+	 * in such a case the caller must pass that supertype method instead.
+	 * In other words, call site selection is the responsibility of the caller (such as {@link StandardGroovySandbox}), not the whitelist.
+	 *
+	 * @param method   a method defined in the JVM
+	 * @param receiver {@code this}, the receiver of the method call
+	 * @param args     zero or more arguments
+	 * @return true to allow the method to be called, false to reject it
+	 */
+	public abstract boolean permitsMethod(@NotNull Method method, @NotNull Object receiver, @NotNull Object[] args);
 
-    public abstract boolean permitsConstructor(@NonNull Constructor<?> constructor, @NonNull Object[] args);
+	public abstract boolean permitsConstructor(@NotNull Constructor<?> constructor, @NotNull Object[] args);
 
-    public abstract boolean permitsStaticMethod(@NonNull Method method, @NonNull Object[] args);
+	public abstract boolean permitsStaticMethod(@NotNull Method method, @NotNull Object[] args);
 
-    public abstract boolean permitsFieldGet(@NonNull Field field, @NonNull Object receiver);
+	public abstract boolean permitsFieldGet(@NotNull Field field, @NotNull Object receiver);
 
-    public abstract boolean permitsFieldSet(@NonNull Field field, @NonNull Object receiver, @CheckForNull Object value);
+	public abstract boolean permitsFieldSet(@NotNull Field field, @NotNull Object receiver, @Nullable Object value);
 
-    public abstract boolean permitsStaticFieldGet(@NonNull Field field);
+	public abstract boolean permitsStaticFieldGet(@NotNull Field field);
 
-    public abstract boolean permitsStaticFieldSet(@NonNull Field field, @CheckForNull Object value);
+	public abstract boolean permitsStaticFieldSet(@NotNull Field field, @Nullable Object value);
 
-//    /**
+	//    /**
 //     * Checks for all whitelists registered as {@link Extension}s and aggregates them.
 //     * @return an aggregated default list
 //     */
-    public static synchronized @NonNull Whitelist all() {
+	public static synchronized @NotNull Whitelist all() {
 //        Jenkins j = Jenkins.getInstanceOrNull();
 //        if (j == null) {
 //            LOGGER.log(Level.WARNING, "No Jenkins.instance", new Throwable("here"));
@@ -85,9 +87,9 @@ public abstract class Whitelist {
 //            all = new ProxyWhitelist(allWhitelists);
 //            allByJenkins.put(j, all);
 //        }
-        throw new UnsupportedOperationException("AAAAAA");
+		throw new UnsupportedOperationException("AAAAAA");
 //        return all;
-    }
+	}
 //    private static final Map<Jenkins,Whitelist> allByJenkins = new WeakHashMap<>();
 
 }

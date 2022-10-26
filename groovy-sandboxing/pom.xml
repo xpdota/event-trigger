@@ -62,20 +62,28 @@
             <artifactId>test-harness</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.jvnet.hudson.plugins</groupId>
-            <artifactId>findbugs</artifactId>
-            <version>4.19</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs-annotations</artifactId>
-            <version>4.6.0</version>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.jvnet.hudson.plugins</groupId>-->
+        <!--            <artifactId>findbugs</artifactId>-->
+        <!--            <version>4.19</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.github.spotbugs</groupId>-->
+        <!--            <artifactId>spotbugs-annotations</artifactId>-->
+        <!--            <version>4.6.0</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy</artifactId>
             <version>3.0.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
         </dependency>
     </dependencies>
 </project>

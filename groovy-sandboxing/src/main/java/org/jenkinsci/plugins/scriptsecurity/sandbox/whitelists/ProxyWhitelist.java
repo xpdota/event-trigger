@@ -28,8 +28,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import net.jcip.annotations.GuardedBy;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
+
+//import javax.annotation.concurrent.GuardedBy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,29 +44,29 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Aggregates several whitelists.
  */
 public class ProxyWhitelist extends Whitelist {
-    @GuardedBy("lock")
+//    @GuardedBy("lock")
     private Collection<? extends Whitelist> originalDelegates;
 
-    @GuardedBy("lock")
+//    @GuardedBy("lock")
     final List<Whitelist> delegates = new ArrayList<>();
 
-    @GuardedBy("lock")
+//    @GuardedBy("lock")
     private final List<EnumeratingWhitelist.MethodSignature> methodSignatures = new ArrayList<>();
 
-    @GuardedBy("lock")
+//    @GuardedBy("lock")
     private final List<EnumeratingWhitelist.NewSignature> newSignatures = new ArrayList<>();
 
-    @GuardedBy("lock")
+//    @GuardedBy("lock")
     private final List<EnumeratingWhitelist.MethodSignature> staticMethodSignatures = new ArrayList<>();
 
-    @GuardedBy("lock")
+//    @GuardedBy("lock")
     private final List<EnumeratingWhitelist.FieldSignature> fieldSignatures = new ArrayList<>();
 
-    @GuardedBy("lock")
+//    @GuardedBy("lock")
     private final List<EnumeratingWhitelist.FieldSignature> staticFieldSignatures = new ArrayList<>();
 
     /** anything wrapping us, so that we can propagate {@link #reset} calls up the chain */
-    @GuardedBy("lock")
+//    @GuardedBy("lock")
     private final Map<ProxyWhitelist,Void> wrappers = new WeakHashMap<>();
 
     // TODO Consider StampedLock when we switch to Java8 for better performance - https://dzone.com/articles/a-look-at-stampedlock
