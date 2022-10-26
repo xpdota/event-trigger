@@ -9,15 +9,13 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>plugins</artifactId>
+    <artifactId>trigger-support</artifactId>
 
-    <packaging>pom</packaging>
-    <modules>
-        <module>dot-tracker</module>
-        <module>cd-tracker</module>
-        <module>job-overlays</module>
-        <module>personal-cast-bar-overlay</module>
-        <module>skill-hit-overlay</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>xivsupport</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

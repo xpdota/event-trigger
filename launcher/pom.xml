@@ -353,6 +353,10 @@
             <groupId>gg.xp</groupId>
             <artifactId>personal-cast-bar-overlay</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>skill-hit-overlay</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

@@ -15,7 +15,10 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>trigger-support</artifactId>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
