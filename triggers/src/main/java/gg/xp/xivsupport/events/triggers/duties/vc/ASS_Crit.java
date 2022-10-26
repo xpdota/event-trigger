@@ -45,6 +45,8 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private static final Logger log = LoggerFactory.getLogger(ASS_Crit.class);
 
 	// First trash
+	@NpcCastCallout(0x7960)
+	private final ModifiableCallout<AbilityCastStart> atropineSpore = ModifiableCallout.durationBasedCall("Atropine Spore", "Big Donut");
 	@NpcCastCallout(0x7962)
 	private final ModifiableCallout<AbilityCastStart> deracinator = ModifiableCallout.durationBasedCall("Deracinator", "Buster on {event.target}");
 	@NpcCastCallout(0x7963)
@@ -437,16 +439,24 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final ModifiableCallout<AbilityCastStart> firesteelFracture = ModifiableCallout.durationBasedCall("Firesteel Fracture", "Buster on {event.target}");
 	private final ModifiableCallout<AbilityUsedEvent> firesteel_standInFront = new ModifiableCallout<>("Firesteel Strike: Cover", "Stand in Front");
 	private final ModifiableCallout<AbilityUsedEvent> firesteel_standBehind = new ModifiableCallout<>("Firesteel Strike: Get Covered", "Stand Behind");
-	private final ModifiableCallout<AbilityCastStart> infernBrand1 = ModifiableCallout.durationBasedCall("Infern Brand 1", "Watch Portals");
-	private final ModifiableCallout<BuffApplied> brand1 = new ModifiableCallout<BuffApplied>("Infern Brand: #1", "First Brand", 40_000).autoIcon();
-	private final ModifiableCallout<BuffApplied> brand2 = new ModifiableCallout<BuffApplied>("Infern Brand: #2", "Second Brand", 40_000).autoIcon();
-	private final ModifiableCallout<BuffApplied> brand3 = new ModifiableCallout<BuffApplied>("Infern Brand: #3", "Third Brand", 40_000).autoIcon();
-	private final ModifiableCallout<BuffApplied> brand4 = new ModifiableCallout<BuffApplied>("Infern Brand: #4", "Fourth Brand", 40_000).autoIcon();
+	private final ModifiableCallout<AbilityCastStart> infernBrand1 = ModifiableCallout.durationBasedCallWithoutDurationText("Infern Brand 1", "Watch Portals");
+	private final ModifiableCallout<AbilityCastStart> infernBrand2 = ModifiableCallout.durationBasedCallWithoutDurationText("Infern Brand 2", "Cut Wires in Debuff Order");
+	private final ModifiableCallout<BuffApplied> brand1 = new ModifiableCallout<BuffApplied>("Infern Brand First Set: #1", "First Brand", 40_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> brand2 = new ModifiableCallout<BuffApplied>("Infern Brand First Set: #2", "Second Brand", 40_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> brand3 = new ModifiableCallout<BuffApplied>("Infern Brand First Set: #3", "Third Brand", 40_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> brand4 = new ModifiableCallout<BuffApplied>("Infern Brand First Set: #4", "Fourth Brand", 40_000).autoIcon();
 	private final ModifiableCallout<?> wireCut1_startingSpot = new ModifiableCallout<>("Wire Cutting: Starting Spot", "Start {startingCorner}");
+	private final ModifiableCallout<AbilityCastStart> infernBrand3 = ModifiableCallout.durationBasedCallWithoutDurationText("Infern Brand 3", "Portals and Baits");
 	private final ModifiableCallout<BuffApplied> portals_westCCW = new ModifiableCallout<>("Self Portal West CCW", "West Counterclockwise", 10_000);
 	private final ModifiableCallout<BuffApplied> portals_westCW = new ModifiableCallout<>("Self Portal West CW", "West Clockwise", 10_000);
 	private final ModifiableCallout<BuffApplied> portals_eastCCW = new ModifiableCallout<>("Self Portal East CCW", "East Counterclockwise", 10_000);
 	private final ModifiableCallout<BuffApplied> portals_eastCW = new ModifiableCallout<>("Self Portal East CW", "East Clockwise", 10_000);
+	private final ModifiableCallout<AbilityCastStart> infernBrand4 = ModifiableCallout.durationBasedCallWithoutDurationText("Infern Brand 4", "Watch Portals, Find Safe");
+	private final ModifiableCallout<AbilityCastStart> infernBrand5 = ModifiableCallout.durationBasedCallWithoutDurationText("Infern Brand 5", "Wires and Baits");
+	private final ModifiableCallout<BuffApplied> secondBrand1 = new ModifiableCallout<BuffApplied>("Infern Brand Second Set: #1", "Cut Wire 1 then Bait", 40_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> secondBrand2 = new ModifiableCallout<BuffApplied>("Infern Brand Second Set: #2", "Cut Wire 2 then Bait", 40_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> secondBrand3 = new ModifiableCallout<BuffApplied>("Infern Brand Second Set: #3", "Bait then Cut Wire 3", 40_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> secondBrand4 = new ModifiableCallout<BuffApplied>("Infern Brand Second Set: #4", "Bait then Cut Wire 4", 40_000).autoIcon();
 
 	@AutoFeed
 	public final SequentialTrigger<BaseEvent> firesteelStrikeSq = SqtTemplates.sq(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x74b0),
@@ -466,23 +476,6 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 					}
 				}
 			});
-
-	@HandleEvents
-	public void brandBuffs(EventContext context, BuffApplied ba) {
-		if (ba.getTarget().isThePlayer()) {
-			ModifiableCallout<BuffApplied> call;
-			switch ((int) ba.getBuff().getId()) {
-				case 0xCC4 -> call = brand1;
-				case 0xCC5 -> call = brand2;
-				case 0xCC6 -> call = brand3;
-				case 0xCC7 -> call = brand4;
-				default -> {
-					return;
-				}
-			}
-			context.accept(call.getModified(ba));
-		}
-	}
 
 	private enum WirePosition {
 		// North/south from left to right
@@ -548,17 +541,38 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 				// Spinny no work in log :(
 				s.updateCall(infernBrand1.getModified(e1));
 			}, (e1, s) -> {
-				BuffApplied brandBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xCC4, 0xCC5, 0xCC6, 0xCC7));
+				s.updateCall(infernBrand2.getModified(e1));
+				BuffApplied brandBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xCC4, 0xCC5, 0xCC6, 0xCC7) && ba.getTarget().isThePlayer());
 				int brandNumber = (int) (brandBuff.getBuff().getId() - 0xCC3);
+				log.info("IB2: Brand number: {}", brandNumber);
+				ModifiableCallout<BuffApplied> brandCall;
+				switch (brandNumber) {
+					case 1 -> brandCall = brand1;
+					case 2 -> brandCall = brand2;
+					case 3 -> brandCall = brand3;
+					case 4 -> brandCall = brand4;
+					default -> {
+						log.error("Invalid brand number {}! Buff: {}", brandBuff, brandBuff);
+						return;
+					}
+				}
+				s.accept(brandCall.getModified(brandBuff));
 				s.waitThenRefreshCombatants(1_000);
 				Map<WirePosition, Integer> wires = getWires1();
 				if (wires.size() != 8) {
 					throw new IllegalStateException("Did not find 8 wires! Found: " + wires);
 				}
-				List<ArenaSector> neededSides = wires.entrySet().stream().filter(e -> e.getValue() == brandNumber).map(Map.Entry::getKey).map(wp -> wp.sector).toList();
+				log.info("IB2: Wires: {}", wires);
+				List<ArenaSector> neededSides = wires.entrySet().stream()
+						.filter(e -> e.getValue() == brandNumber)
+						.map(Map.Entry::getKey)
+						.peek(wp -> log.info("IB2: Need to cut {}", wp))
+						.map(wp -> wp.sector).toList();
+				log.info("IB2: Needed sides: {}", neededSides);
 				ArenaSector combined = ArenaSector.tryCombineTwoCardinals(neededSides);
 				s.updateCall(wireCut1_startingSpot.getModified(Map.of("startingCorner", combined == null ? ArenaSector.UNKNOWN : combined)));
 			}, (e1, s) -> {
+				s.updateCall(infernBrand3.getModified(e1));
 				BuffApplied portalBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xB9A) && ba.getTarget().isThePlayer());
 				ModifiableCallout<BuffApplied> call = switch ((int) portalBuff.getRawStacks()) {
 					case 467 -> portals_westCCW;
@@ -568,6 +582,25 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 					default -> throw new IllegalArgumentException("Not a valid buff stack count: " + portalBuff.getRawStacks());
 				};
 				s.updateCall(call.getModified(portalBuff));
+			}, (e1, s) -> {
+				s.updateCall(infernBrand4.getModified(e1));
+			}, (e1, s) -> {
+				s.updateCall(infernBrand5.getModified(e1));
+				BuffApplied brandBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xCC4, 0xCC5, 0xCC6, 0xCC7) && ba.getTarget().isThePlayer());
+				int brandNumber = (int) (brandBuff.getBuff().getId() - 0xCC3);
+				log.info("IB2: Brand number: {}", brandNumber);
+				ModifiableCallout<BuffApplied> brandCall;
+				switch (brandNumber) {
+					case 1 -> brandCall = secondBrand1;
+					case 2 -> brandCall = secondBrand2;
+					case 3 -> brandCall = secondBrand3;
+					case 4 -> brandCall = secondBrand4;
+					default -> {
+						log.error("Invalid brand number {}! Buff: {}", brandBuff, brandBuff);
+						return;
+					}
+				}
+				s.accept(brandCall.getModified(brandBuff));
 			});
 
 	/*
