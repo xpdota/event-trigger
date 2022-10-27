@@ -4,7 +4,7 @@ import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
-import org.java_websocket.util.NamedThreadFactory;
+import gg.xp.xivsupport.sys.Threading;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 public class BuffsBar extends Component {
 	private List<BuffApplied> rawBuffs = Collections.emptyList();
@@ -38,7 +39,7 @@ public class BuffsBar extends Component {
 	private static final Stroke stroke2 = new BasicStroke(3);
 	private static final Map<FontShapeKey, Shape> shapeCache = new HashMap<>();
 	private static final Map<TextRenderKey, Image> imageCache = new ConcurrentHashMap<>();
-	private static final NamedThreadFactory threadFactory = new NamedThreadFactory("BuffsWithTimersRender");
+	private static final ThreadFactory threadFactory = Threading.namedDaemonThreadFactory("BuffsWithTimersRender");
 	private final ExecutorService exs = Executors.newSingleThreadExecutor(threadFactory);
 	private int xPadding;
 	private boolean enableTimers = true;

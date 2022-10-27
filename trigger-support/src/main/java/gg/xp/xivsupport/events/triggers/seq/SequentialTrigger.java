@@ -59,4 +59,8 @@ public class SequentialTrigger<X extends BaseEvent> implements TypedEventHandler
 	public Class<X> getType() {
 		return type;
 	}
+
+	public boolean isActive() {
+		return instance != null;
+	}
 }

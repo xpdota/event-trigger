@@ -1,9 +1,6 @@
 package gg.xp.xivsupport.gui.map;
 
 import gg.xp.xivdata.data.*;
-import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
-import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
@@ -565,7 +562,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 //					inner.setBorder(new LineBorder(otherPlayerColor));
 //					inner.setBackground(otherPlayerColor);
 				}
-				icon = IconTextRenderer.getComponent(job, defaultLabel, true, false, true);
+				icon = IconTextRenderer.getComponent(job, defaultLabel, true, false, true, null);
 //				inner.setOpaque(true);
 				// TODO: this doesn't work because it hasn't been added to the container yet
 //				MapPanel.this.setComponentZOrder(this, 0);

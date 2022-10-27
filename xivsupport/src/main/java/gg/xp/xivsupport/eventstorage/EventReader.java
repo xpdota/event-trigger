@@ -153,14 +153,18 @@ public final class EventReader {
 					Long zoneId = mapper.convertValue(zoneIdNode, Long.class);
 					JsonNode zoneNameNode = rootNode.at("/reportData/report/fights/0/gameZone/id");
 					String zoneName = mapper.convertValue(zoneNameNode, String.class);
-					ZoneChangeEvent zce = new ZoneChangeEvent(new XivZone(zoneId, zoneName));
-					out.add(zce);
+					if (zoneId != null) {
+						ZoneChangeEvent zce = new ZoneChangeEvent(new XivZone(zoneId, zoneName == null ? "" : zoneName));
+						out.add(zce);
+					}
 				}
 				{
 					JsonNode mapIdNode = rootNode.at("/reportData/report/fights/0/maps/0/id");
 					Long mapId = mapper.convertValue(mapIdNode, Long.class);
-					MapChangeEvent mce = new MapChangeEvent(XivMap.forId(mapId));
-					out.add(mce);
+					if (mapId != null) {
+						MapChangeEvent mce = new MapChangeEvent(XivMap.forId(mapId));
+						out.add(mce);
+					}
 				}
 				first = false;
 			}

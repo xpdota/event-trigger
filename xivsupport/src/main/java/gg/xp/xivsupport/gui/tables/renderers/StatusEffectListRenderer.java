@@ -17,7 +17,7 @@ import java.util.List;
 
 public class StatusEffectListRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
-	private final ActionAndStatusRenderer renderer = new ActionAndStatusRenderer(true, false, false);
+	private final ActionAndStatusRenderer renderer = ActionAndStatusRenderer.iconOnlyNoTip();
 	private final ComponentListRenderer listRenderer = new ComponentListRenderer(0);
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {

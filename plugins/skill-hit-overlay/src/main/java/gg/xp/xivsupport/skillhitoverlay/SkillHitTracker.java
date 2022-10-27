@@ -5,6 +5,10 @@ import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.actlines.events.AbilityResolvedEvent;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasEffects;
+import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
 import gg.xp.xivsupport.events.misc.ProxyForAppendOnlyList;
@@ -18,6 +22,7 @@ import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 
@@ -43,6 +48,7 @@ public class SkillHitTracker extends XivOverlay implements FilteredEventHandler 
 	private final ColorSetting bg;
 	private final JTable table;
 	private final CustomTableModel<SkillTracker> model;
+	private final BooleanSetting useSnapshot;
 
 	public SkillHitTracker(OverlayConfig oc, PersistenceProvider pers) {
 		super("Skill Hit Tracker", "skill-hit-tracker", oc, pers);
@@ -50,6 +56,7 @@ public class SkillHitTracker extends XivOverlay implements FilteredEventHandler 
 		updateInterval = new IntSetting(pers, "skill-hit-tracker.update-interval", 1000, 1, 30_000);
 		fg = new ColorSetting(pers, "skill-hit-tracker.fg-color", new Color(255, 255, 255));
 		bg = new ColorSetting(pers, "skill-hit-tracker.bg-color", new Color(20, 20, 20, 20));
+		useSnapshot = new BooleanSetting(pers, "skill-hit-tracker.use-snapshot", false);
 		model = CustomTableModel.builder(() -> displaySkillList)
 				.addColumn(new CustomColumn<>("Skill", i -> i.ability, c -> {
 					c.setCellRenderer(new ActionAndStatusRenderer());
@@ -177,7 +184,18 @@ public class SkillHitTracker extends XivOverlay implements FilteredEventHandler 
 	}
 
 	@HandleEvents
-	public void hit(EventContext context, AbilityResolvedEvent event) {
+	public void resolved(EventContext context, AbilityResolvedEvent event) {
+		if (!useSnapshot.get()) {
+			processDamage(event);
+		}
+	}
+	@HandleEvents
+	public void snapshot(EventContext context, AbilityUsedEvent event) {
+		if (useSnapshot.get()) {
+			processDamage(event);
+		}
+	}
+	private <X extends HasEffects & HasSourceEntity & HasAbility> void processDamage(X event) {
 		if (resetOnNext) {
 			doReset();
 			resetOnNext = false;
@@ -207,5 +225,9 @@ public class SkillHitTracker extends XivOverlay implements FilteredEventHandler 
 
 	public ColorSetting getBg() {
 		return bg;
+	}
+
+	public BooleanSetting getUseSnapshot() {
+		return useSnapshot;
 	}
 }

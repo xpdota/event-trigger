@@ -1,9 +1,6 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.HasIconURL;
-import gg.xp.xivdata.data.StatusEffectLibrary;
-import gg.xp.xivdata.data.URLIcon;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
@@ -12,6 +9,7 @@ import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivStatusEffect;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -21,47 +19,67 @@ import java.net.URL;
 
 public class ActionAndStatusRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
+	private final IconNameIdRenderer renderer = new IconNameIdRenderer();
 	private final boolean iconOnly;
-	private final boolean bypassCache;
 	private final boolean enableTooltips;
+	private boolean showId;
 
 	public ActionAndStatusRenderer() {
-		this(false, false, true);
+		this(false, true, false);
 	}
 
-	public ActionAndStatusRenderer(boolean iconOnly, boolean bypassCache, boolean enableTooltips) {
+
+	public ActionAndStatusRenderer(boolean iconOnly, boolean enableTooltips, boolean showId) {
 		this.iconOnly = iconOnly;
-		this.bypassCache = bypassCache;
 		this.enableTooltips = enableTooltips;
+		this.showId = showId;
+		renderer.setIdAlpha(128);
+	}
+
+	public static ActionAndStatusRenderer full() {
+		return new ActionAndStatusRenderer();
+	}
+
+	public static ActionAndStatusRenderer iconOnlyNoTip() {
+		return new ActionAndStatusRenderer(true, false, false);
+	}
+
+	public static ActionAndStatusRenderer withIdByDefault() {
+		return new ActionAndStatusRenderer(false, true, true);
 	}
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 
 
-		HasIconURL icon;
+		@Nullable HasIconURL icon;
 		final String tooltip;
 		final String text;
+		@Nullable String idText = null;
 		if (value instanceof XivAbility ability) {
 			text = ability.getName();
 			icon = ActionLibrary.iconForId(ability.getId());
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
+			idText = String.format("%X", ability.getId());
 		}
 		else if (value instanceof XivStatusEffect status) {
 			text = status.getName();
 			icon = StatusEffectLibrary.iconForId(status.getId(), 1);
 			tooltip = String.format("%s (0x%x, %s)", status.getName(), status.getId(), status.getId());
+			idText = String.format("%X", status.getId());
 		}
 		else if (value instanceof URL url) {
 			text = "";
 			icon = new URLIcon(url);
 			tooltip = "";
+			idText = null;
 		}
 		else if (value instanceof HasAbility hasAbility) {
 			XivAbility ability = hasAbility.getAbility();
 			text = ability.getName();
 			icon = ActionLibrary.iconForId(ability.getId());
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
+			idText = String.format("%X", ability.getId());
 		}
 		else if (value instanceof HasStatusEffect hasStatus) {
 			XivStatusEffect status = hasStatus.getBuff();
@@ -86,6 +104,7 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 			}
 
 			tooltip = String.format("%s (0x%x, %s)%s", status.getName(), status.getId(), status.getId(), preAppText);
+			idText = String.format("%X", status.getId());
 		}
 		else if (value instanceof NameIdPair pair) {
 			return fallback.getTableCellRendererComponent(table, pair.getName(), isSelected, hasFocus, row, column);
@@ -106,11 +125,21 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		Component defaultLabel;
 		defaultLabel = fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
 
-		if (icon == null && iconOnly) {
-			icon = StatusEffectLibrary.iconForId(760, 0);
-		}
+		if (iconOnly) {
+			if (icon == null) {
+				icon = StatusEffectLibrary.iconForId(760, 0);
+			}
 
-		Component component = IconTextRenderer.getComponent(icon, defaultLabel, iconOnly, false, bypassCache);
+			return IconTextRenderer.getIconOnly(icon);
+		}
+//
+//		Component component = IconTextRenderer.getComponent(icon, defaultLabel, iconOnly, false, bypassCache, extraComponent);
+		Component component = renderer;
+		renderer.reset();
+		renderer.setMainText(text);
+		renderer.setIcon(icon);
+		renderer.setIdText(showId ? idText : null);
+		renderer.formatFrom(defaultLabel);
 		if (enableTooltips) {
 			RenderUtils.setTooltip(component, tooltip);
 		}
@@ -120,5 +149,13 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		return component;
 
 
+	}
+
+	public boolean isShowId() {
+		return showId;
+	}
+
+	public void setShowId(boolean showId) {
+		this.showId = showId;
 	}
 }

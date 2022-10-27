@@ -85,6 +85,7 @@ public class IntSettingSpinner {
 			box.add(getSpinnerOnly());
 			box.add(getLabelOnly());
 		}
+		box.setMinimumSize(box.getPreferredSize());
 		box.setMaximumSize(box.getPreferredSize());
 		return box;
 	}

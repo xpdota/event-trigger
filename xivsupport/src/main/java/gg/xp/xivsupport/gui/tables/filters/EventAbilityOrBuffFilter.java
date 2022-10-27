@@ -37,11 +37,11 @@ public class EventAbilityOrBuffFilter extends TextBasedFilter<Object> {
 		throw new IllegalStateException("Item not correct class - should have been pre-filtered");
 	}
 
+	// TODO: support ranges, commas, including mixed numeric/string, etc
 	@Override
 	protected @Nullable Predicate<Object> getFilterForInput(@NotNull String input) {
 		if (input.startsWith("0x")) {
 			validationError = false;
-			// TODO: this is also inefficient because we should just be parsing the input text
 			long wantedId;
 			try {
 				wantedId = Long.parseLong(input.substring(2).trim(), 16);
@@ -53,7 +53,20 @@ public class EventAbilityOrBuffFilter extends TextBasedFilter<Object> {
 			return item -> getIdForItem(item) == wantedId;
 		}
 		// TODO: Also account for effect results
-		return super.getFilterForInput(input);
+		long wantedId;
+		Predicate<Object> stringFilter = super.getFilterForInput(input);
+		if (stringFilter == null) {
+			// null means NO FILTER i.e. thing -> true
+			return null;
+		}
+		try {
+			wantedId = Long.parseLong(input.trim(), 10);
+		}
+		catch (NumberFormatException nfe) {
+			return stringFilter;
+		}
+		return stringFilter.or(item -> getIdForItem(item) == wantedId);
+
 	}
 
 	@Override
