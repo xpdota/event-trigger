@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.util;
 
+import gg.xp.xivsupport.gui.WrapperPanel;
 import gg.xp.xivsupport.gui.tables.filters.InputValidationState;
 import gg.xp.xivsupport.gui.tables.filters.MultiLineTextAreaWithValidation;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -42,7 +43,8 @@ public final class GuiUtil {
 	public static void openUrl(String url) {
 		try {
 			Desktop.getDesktop().browse(new URI(url));
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			log.error("Error opening url '{}'", url, t);
 		}
 	}
@@ -83,7 +85,7 @@ public final class GuiUtil {
 		GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 5);
 		JPanel container = new JPanel();
 
-		simpleLayoutInternal(container, c, components);
+		simpleLayoutInternal(container, c, null, components);
 
 		outer.setLayout(new BorderLayout());
 		outer.getInsets().set(10, 10, 10, 10);
@@ -131,12 +133,13 @@ public final class GuiUtil {
 				}
 			};
 
-			simpleLayoutInternal(container, c, components);
+			simpleLayoutInternal(container, c, width - 10, components);
 		}
 
 		{
 
 			outer.setLayout(new GridBagLayout());
+			outer.setMinimumSize(new Dimension(width, 1));
 			GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.NORTHWEST, GridBagConstraints.BOTH, outer.getInsets(), 0, 0);
 			c.weightx = 1;
 			outer.add(Box.createHorizontalGlue(), c);
@@ -150,8 +153,14 @@ public final class GuiUtil {
 
 	}
 
-	private static void simpleLayoutInternal(JPanel container, GridBagConstraints c, Component[] components) {
+	private static void simpleLayoutInternal(JPanel container, GridBagConstraints c, @Nullable Integer strutWidth, Component[] components) {
 		container.setLayout(new GridBagLayout());
+
+		if (strutWidth != null) {
+			container.add(Box.createHorizontalStrut(strutWidth), c);
+//			container.add(Box.createHorizontalBox(), c);
+			c.gridy++;
+		}
 
 		for (Component component : components) {
 			container.add(component, c);
