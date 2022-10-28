@@ -17,7 +17,7 @@ import java.util.function.Predicate;
  * and {@link #getTargets()}. In addition, for computing multiple tethers, there is a {@link #getUnitsTetheredTo} method
  * which you may find convenient.
  */
-public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity {
+public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = 7043671273943254143L;
@@ -99,5 +99,10 @@ public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTarget
 				", target=" + target +
 				", id=" + id +
 				'}';
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		return String.format("0x%X (%s)", id, id);
 	}
 }

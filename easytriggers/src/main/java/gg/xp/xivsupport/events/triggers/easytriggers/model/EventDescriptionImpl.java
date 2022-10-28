@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -68,10 +69,10 @@ public class EventDescriptionImpl<X> implements EventDescription<X> {
 	}
 
 	@Override
-	public EasyTrigger<X> newEmptyInst() {
+	public EasyTrigger<X> newEmptyInst(@Nullable String callText) {
 		EasyTrigger<X> easy = new EasyTrigger<>();
 		easy.setEventType(type);
-		easy.addAction(defaultCallout());
+		easy.addAction(defaultCallout(callText));
 		return easy;
 	}
 
@@ -79,15 +80,29 @@ public class EventDescriptionImpl<X> implements EventDescription<X> {
 	public EasyTrigger<X> newDefaultInst() {
 		EasyTrigger<X> easy = new EasyTrigger<>();
 		easy.setEventType(type);
-		easy.addAction(defaultCallout());
+		easy.addAction(defaultCallout(null));
 		defaultFilters.forEach(fp -> easy.addCondition(fp.get()));
 		return easy;
 	}
 
-	protected Action<? super X> defaultCallout() {
+	protected Action<? super X> defaultCallout(String customText) {
+		String text;
+		String tts;
+		if (customText == null || customText.isBlank()) {
+			text = defaultText;
+			tts = defaultTts;
+		}
+		else {
+			text = customText;
+			tts = customText;
+		}
+		return defaultCallout(text, tts);
+	}
+
+	protected Action<? super X> defaultCallout(String text, String tts) {
 		CalloutAction call = new CalloutAction();
-		call.setTts(defaultTts);
-		call.setText(defaultText);
+		call.setTts(tts);
+		call.setText(text);
 		return (Action<? super X>) call;
 	}
 

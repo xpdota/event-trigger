@@ -33,7 +33,9 @@ import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.AutoMarkTargetAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.ClearAllMarksAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.SoundActionEditor;
@@ -79,6 +81,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
+import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -92,6 +95,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 @ScanMe
 public final class EasyTriggers {
@@ -236,11 +240,26 @@ public final class EasyTriggers {
 					"{event.ability} ({event.estimatedRemainingDuration})",
 					List.of(AbilityIdFilter::new)) {
 				@Override
-				protected Action<? super AbilityCastStart> defaultCallout() {
+				protected Action<? super AbilityCastStart> defaultCallout(String text, String tts) {
 					DurationBasedCalloutAction call = new DurationBasedCalloutAction();
-					call.setTts(defaultTts);
-					call.setText(defaultText);
+					call.setTts(tts);
+					call.setText(text);
 					return call;
+				}
+
+				@Override
+				protected Action<? super AbilityCastStart> defaultCallout(String customText) {
+					String text;
+					String tts;
+					if (customText == null || customText.isBlank()) {
+						text = defaultText;
+						tts = defaultTts;
+					}
+					else {
+						text = customText + " ({event.estimatedRemainingDuration})";
+						tts = customText;
+					}
+					return defaultCallout(text, tts);
 				}
 			},
 			new EventDescriptionImpl<>(AbilityUsedEvent.class,
@@ -258,7 +277,16 @@ public final class EasyTriggers {
 			new EventDescriptionImpl<>(BuffApplied.class,
 					"A buff or debuff has been applied. Corresponds to ACT 26 lines.",
 					"{event.buff} on {event.target}",
-					List.of(StatusIdFilter::new)),
+					List.of(StatusIdFilter::new)) {
+				@Override
+				protected Action<? super BuffApplied> defaultCallout(String text, String tts) {
+					DurationBasedCalloutAction call = new DurationBasedCalloutAction();
+					call.setTts(tts);
+					call.setText(text);
+					call.setPlusDuration(false);
+					return call;
+				}
+			},
 			new EventDescriptionImpl<>(BuffRemoved.class,
 					"A buff or debuff has been removed. Corresponds to ACT 30 lines.",
 					"{event.buff} lost from {event.target}",
@@ -324,6 +352,8 @@ public final class EasyTriggers {
 	private final List<ActionDescription<?, ?>> actions = List.of(
 			new ActionDescription<>(CalloutAction.class, Event.class, "Basic TTS/Text Callout", CalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
 			new ActionDescription<>(DurationBasedCalloutAction.class, HasDuration.class, "Duration-Based TTS/Text Callout", DurationBasedCalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
+			new ActionDescription<>(AutoMarkTargetAction.class, HasTargetEntity.class, "Mark The Target", () -> new AutoMarkTargetAction(inject(GlobalUiRegistry.class)), this::generic),
+			new ActionDescription<>(ClearAllMarksAction.class, Event.class, "Clear All Marks", () -> new ClearAllMarksAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action))
 	);
 
@@ -365,9 +395,9 @@ public final class EasyTriggers {
 		return (ActionDescription<X, Y>) conditionDescription;
 	}
 
-	public @Nullable EasyTrigger<?> makeTriggerFromEvent(Event event) {
+	public @Nullable EasyTrigger<?> makeTriggerFromEvent(Event event, Supplier<String> callTextSupplier) {
 		if (event instanceof AbilityCastStart acs) {
-			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newEmptyInst();
+			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(acs.getAbility().getName() + " casting");
 			makeSourceConditions(acs).forEach(trigger::addCondition);
 			makeTargetConditions(acs).forEach(trigger::addCondition);
@@ -375,7 +405,7 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof AbilityUsedEvent abu) {
-			EasyTrigger<AbilityUsedEvent> trigger = getEventDescription(AbilityUsedEvent.class).newEmptyInst();
+			EasyTrigger<AbilityUsedEvent> trigger = getEventDescription(AbilityUsedEvent.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(abu.getAbility().getName() + " used");
 			makeSourceConditions(abu).forEach(trigger::addCondition);
 			makeTargetConditions(abu).forEach(trigger::addCondition);
@@ -384,14 +414,14 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof AbilityCastCancel acc) {
-			EasyTrigger<AbilityCastCancel> trigger = getEventDescription(AbilityCastCancel.class).newEmptyInst();
+			EasyTrigger<AbilityCastCancel> trigger = getEventDescription(AbilityCastCancel.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(acc.getAbility().getName() + " cancelled");
 			makeSourceConditions(acc).forEach(trigger::addCondition);
 			makeAbilityConditions(acc).forEach(trigger::addCondition);
 			return trigger;
 		}
 		else if (event instanceof AbilityResolvedEvent are) {
-			EasyTrigger<AbilityResolvedEvent> trigger = getEventDescription(AbilityResolvedEvent.class).newEmptyInst();
+			EasyTrigger<AbilityResolvedEvent> trigger = getEventDescription(AbilityResolvedEvent.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(are.getAbility().getName() + " resolved");
 			makeSourceConditions(are).forEach(trigger::addCondition);
 			makeTargetConditions(are).forEach(trigger::addCondition);
@@ -400,7 +430,7 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof BuffApplied ba) {
-			EasyTrigger<BuffApplied> trigger = getEventDescription(BuffApplied.class).newEmptyInst();
+			EasyTrigger<BuffApplied> trigger = getEventDescription(BuffApplied.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(ba.getBuff().getName() + " applied");
 			makeSourceConditions(ba).forEach(trigger::addCondition);
 			makeTargetConditions(ba).forEach(trigger::addCondition);
@@ -408,7 +438,7 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof BuffRemoved br) {
-			EasyTrigger<BuffRemoved> trigger = getEventDescription(BuffRemoved.class).newEmptyInst();
+			EasyTrigger<BuffRemoved> trigger = getEventDescription(BuffRemoved.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(br.getBuff().getName() + " removed");
 			makeSourceConditions(br).forEach(trigger::addCondition);
 			makeTargetConditions(br).forEach(trigger::addCondition);
