@@ -20,6 +20,8 @@ public record StatusEffectInfo(
 		boolean isFcBuff
 ) {
 
+	// TODO: column 19 == 1 means it's FC buff, food, etc and so should be hidden
+	// Column 20 == HoT/DoT (as well as psuedos like Horoscope)
 
 	public List<Long> getAllIconIds() {
 		if (maxStacks == 0 || maxStacks == 1) {

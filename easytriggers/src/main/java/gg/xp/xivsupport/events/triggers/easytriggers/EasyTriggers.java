@@ -239,8 +239,8 @@ public final class EasyTriggers {
 				@Override
 				protected Action<? super AbilityCastStart> defaultCallout(String text, String tts) {
 					DurationBasedCalloutAction call = new DurationBasedCalloutAction();
-					call.setTts(text);
-					call.setText(tts);
+					call.setTts(tts);
+					call.setText(text);
 					return call;
 				}
 			},
@@ -263,8 +263,8 @@ public final class EasyTriggers {
 				@Override
 				protected Action<? super BuffApplied> defaultCallout(String text, String tts) {
 					DurationBasedCalloutAction call = new DurationBasedCalloutAction();
-					call.setTts(text);
-					call.setText(tts);
+					call.setTts(tts);
+					call.setText(text);
 					call.setPlusDuration(false);
 					return call;
 				}

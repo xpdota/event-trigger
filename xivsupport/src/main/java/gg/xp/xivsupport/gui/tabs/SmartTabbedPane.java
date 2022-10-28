@@ -74,8 +74,9 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 		}
 	}
 
-	public void addTabLazy(String title, Supplier<Component> componentFunc) {
+	public int addTabLazy(String title, Supplier<Component> componentFunc) {
 		addTab(title, new DummyMarkerComponent(componentFunc));
+		return getTabCount() - 1;
 	}
 
 	@Override

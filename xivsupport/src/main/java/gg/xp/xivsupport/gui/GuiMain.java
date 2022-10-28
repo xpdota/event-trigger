@@ -53,10 +53,10 @@ import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
+import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
-import gg.xp.xivsupport.gui.tabs.TabAware;
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -65,7 +65,6 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
-import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -119,6 +118,8 @@ public class GuiMain {
 	private final @Nullable ReplayController replay;
 	private final RightClickOptionRepo rightClicks;
 	private final GlobalGuiOptions globalGuiOpts;
+	private final GlobalUiRegistry guiReg;
+	private JFrame mainFrame;
 	private SmartTabbedPane tabPane;
 	private Component eventPanel;
 
@@ -149,42 +150,50 @@ public class GuiMain {
 		columns = container.getComponent(StandardColumns.class);
 		replay = container.getComponent(ReplayController.class);
 		globalGuiOpts = container.getComponent(GlobalGuiOptions.class);
+		guiReg = container.getComponent(GlobalUiRegistry.class);
 		WindowConfig wc = container.getComponent(WindowConfig.class);
 		long start = System.currentTimeMillis();
 		SwingUtilities.invokeLater(() -> {
-			JFrame frame = new JFrame("Triggevent");
+			mainFrame = new JFrame("Triggevent");
 			tabPane = new SmartTabbedPane();
-			frame.setLayout(new BorderLayout());
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			mainFrame.setLayout(new BorderLayout());
+			mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 //			frame.setLocationByPlatform(true);
-			frame.setSize(1280, 960);
-			frame.setLocationRelativeTo(null);
+			mainFrame.setSize(1280, 960);
+			mainFrame.setLocationRelativeTo(null);
 			if (wc.getStartMinimized().get() && replay == null) {
-				frame.setState(JFrame.ICONIFIED);
+				mainFrame.setState(JFrame.ICONIFIED);
 			}
-			frame.setVisible(true);
-			frame.add(tabPane);
+			mainFrame.setVisible(true);
+			mainFrame.add(tabPane);
 			if (replay != null) {
-				frame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
+				mainFrame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
 			}
 		});
-		SwingUtilities.invokeLater(() -> tabPane.addTab("General", new SystemTabPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTabLazy("Plugin Settings", PluginSettingsPanel::new));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Combatants", getCombatantsPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Buffs", getStatusEffectsPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Events", (eventPanel = getEventsPanel())));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("ACT Log", getActLogPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("System Log", getSystemLogPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Pulls", getPullsTab()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Overlays", getOverlayConfigTab()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Map", container.getComponent(MapTab.class)));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Library", container.getComponent(LibraryTab.class)));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class))));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class))));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Advanced", new AdvancedTab(container)));
+		addTab("General", new SystemTabPanel());
+		addTab("Plugin Settings", new PluginSettingsPanel());
+		addTab("Combatants", getCombatantsPanel());
+		addTab("Buffs", getStatusEffectsPanel());
+		addTab("Events", (eventPanel = getEventsPanel()));
+		addTab("ACT Log", getActLogPanel());
+		addTab("System Log", getSystemLogPanel());
+		addTab("Pulls", getPullsTab());
+		addTab("Overlays", getOverlayConfigTab());
+		addTab("Map", container.getComponent(MapTab.class));
+		addTab("Library", container.getComponent(LibraryTab.class));
+		addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class)));
+		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class)));
+		addTab("Advanced", new AdvancedTab(container));
 		SwingUtilities.invokeLater(() -> {
 			long end = System.currentTimeMillis();
 			log.info("GUI startup time: {}", end - start);
+		});
+	}
+
+	private void addTab(String name, Component component) {
+		SwingUtilities.invokeLater(() -> {
+			tabPane.addTab(name, component);
+			guiReg.registerItem(component, () -> tabPane.setSelectedComponent(component));
 		});
 	}
 
@@ -434,20 +443,21 @@ public class GuiMain {
 
 	private class PluginSettingsPanel extends JPanel {
 
-		private final SmartTabbedPane tabPanel;
+		private final SmartTabbedPane pluginsTabPane;
 
 		public PluginSettingsPanel() {
 //			super("Plugin Settings");
 			setLayout(new BorderLayout());
-			tabPanel = new SmartTabbedPane(SwingConstants.LEFT);
-			add(tabPanel);
+			pluginsTabPane = new SmartTabbedPane(SwingConstants.LEFT);
+			add(pluginsTabPane);
 			exs.submit(this::getAndAddTabs);
 		}
 
 		private void addTab(PluginTab tab) {
 			String tabName = tab.getTabName();
+//			tabReg.registerTab(this, pane);
 			if (tab.asyncOk()) {
-				tabPanel.addTabLazy(tabName, () -> {
+				int index = pluginsTabPane.addTabLazy(tabName, () -> {
 					long start = System.currentTimeMillis();
 					log.info("Adding Plugin Tab {}", tabName);
 					Component contents = tab.getTabContents();
@@ -455,6 +465,7 @@ public class GuiMain {
 					log.info("Done Making Plugin Tab {} (took {}ms)", tabName, end - start);
 					return contents;
 				});
+				guiReg.registerTab(tab, pluginsTabPane, index, this);
 			}
 			else {
 				long start = System.currentTimeMillis();
@@ -462,8 +473,11 @@ public class GuiMain {
 				Component contents = tab.getTabContents();
 				long end = System.currentTimeMillis();
 				log.info("Done Making Plugin Tab {} (took {}ms)", tabName, end - start);
-				tabPane.addTab(tabName, contents);
-
+				pluginsTabPane.addTab(tabName, contents);
+				tab.installActivationHook(() -> SwingUtilities.invokeLater(() -> {
+					pluginsTabPane.setSelectedComponent(contents);
+				}));
+				guiReg.registerItem(tab, () -> pluginsTabPane.setSelectedComponent(contents), this);
 			}
 		}
 
@@ -934,4 +948,7 @@ public class GuiMain {
 		return table -> new ReplayAdvancePseudoFilter<>(clazz, master, replay, table).getComponent();
 	}
 
+	public JFrame getMainFrame() {
+		return mainFrame;
+	}
 }

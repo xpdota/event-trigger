@@ -41,4 +41,17 @@ public interface PluginTab {
 	default boolean asyncOk() {
 		return true;
 	}
+
+	/**
+	 * Provides the tab with a hook for bringing itself to the front. Since these are lazy-loaded now, you can't use
+	 * the old trick of grabbing some UI component of the tab in question and walking back up the tree to find
+	 * JTabbedPane instances that need to switch tabs. Instead, use the provided runnable as the "activate me" button.
+	 * <p>
+	 * This default method is a no-op since most tabs won't ever need to be force-activated.
+	 *
+	 * @param hook A hook to use.
+	 */
+	default void installActivationHook(Runnable hook) {
+
+	}
 }

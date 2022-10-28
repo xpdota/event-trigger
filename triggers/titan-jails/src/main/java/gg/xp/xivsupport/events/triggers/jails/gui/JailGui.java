@@ -116,13 +116,6 @@ public class JailGui implements DutyPluginTab {
 		return KnownDuty.UWU;
 	}
 
-
-	public void tryBringToFront() {
-		if (panel != null) {
-			GuiUtil.bringToFront(panel);
-		}
-	}
-
 //	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
 //	// determine exactly what should trigger it. Maybe better to just stick it on a timer that only applies when the
 //	// tab is visible?

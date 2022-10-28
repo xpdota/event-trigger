@@ -15,6 +15,7 @@ import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tabs.FixedWidthVerticalTabPane;
+import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import org.picocontainer.PicoContainer;
@@ -38,19 +39,22 @@ public class DutiesTab implements PluginTab {
 	private final EventMaster master;
 	private final GlobalArenaSectorConverter asc;
 	private final SoundFileTab sft;
+	private final GlobalUiRegistry reg;
 
 	public DutiesTab(ModifiedCalloutRepository backend,
 	                 PicoContainer container,
 	                 SoundFilesManager soundMgr,
 	                 EventMaster master,
 	                 GlobalArenaSectorConverter asc,
-	                 SoundFileTab sft) {
+	                 SoundFileTab sft,
+	                 GlobalUiRegistry reg) {
 		this.backend = backend;
 		this.container = container;
 		this.soundMgr = soundMgr;
 		this.master = master;
 		this.asc = asc;
 		this.sft = sft;
+		this.reg = reg;
 	}
 
 	@Override
@@ -71,6 +75,31 @@ public class DutiesTab implements PluginTab {
 
 	private final Set<KnownDuty> alreadyHasAscTab = EnumSet.noneOf(KnownDuty.class);
 
+	// TODO
+	private void activateItem(Object item) {
+
+	}
+
+	private void activateExpac(Expansion expac) {
+
+	}
+
+	private void activateDutyType(DutyType type) {
+
+	}
+
+	private void activateDuty(Duty duty) {
+
+	}
+
+	private void activateExtraTab(Class<?> extraTabClass) {
+
+	}
+
+	private void activateGeneralTab() {
+
+	}
+
 	@Override
 	public Component getTabContents() {
 		SmartTabbedPane tabPane = new SmartTabbedPane(JTabbedPane.LEFT);
@@ -84,6 +113,7 @@ public class DutiesTab implements PluginTab {
 				nonSpecific.calls.add(group);
 				return;
 			}
+			reg.registerItem(duty, () -> activateItem(duty), DutiesTab.class);
 			DutyTabContents tabContents = contents.computeIfAbsent(duty.getExpac(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty, DutyTabContents::new);
@@ -223,5 +253,10 @@ public class DutiesTab implements PluginTab {
 	@Override
 	public int getSortOrder() {
 		return 0;
+	}
+
+	@Override
+	public boolean asyncOk() {
+		return false;
 	}
 }
