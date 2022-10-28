@@ -440,9 +440,12 @@ public class EasyTriggersTab implements PluginTab {
 		}
 	}
 
+	private String askForCalloutText() {
+		return JOptionPane.showInputDialog("Enter Callout Text (or leave blank for default)");
+	}
 
 	private void makeTriggerFromEvent(Event event) {
-		EasyTrigger<?> newTrigger = backend.makeTriggerFromEvent(event);
+		EasyTrigger<?> newTrigger = backend.makeTriggerFromEvent(event, this::askForCalloutText);
 		if (newTrigger == null) {
 			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(outer), "Unfortunately, this event type is not possible to automatically make a trigger for.");
 		}

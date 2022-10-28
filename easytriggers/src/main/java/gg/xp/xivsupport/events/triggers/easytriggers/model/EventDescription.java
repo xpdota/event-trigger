@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
+import org.jetbrains.annotations.Nullable;
+
 public interface EventDescription<X> {
 	Class<X> type();
 
@@ -9,7 +11,7 @@ public interface EventDescription<X> {
 
 	String defaultText();
 
-	EasyTrigger<X> newEmptyInst();
+	EasyTrigger<X> newEmptyInst(@Nullable String callText);
 
 	EasyTrigger<X> newDefaultInst();
 }

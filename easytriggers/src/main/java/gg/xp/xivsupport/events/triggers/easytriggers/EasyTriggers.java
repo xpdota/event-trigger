@@ -92,6 +92,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 @ScanMe
 public final class EasyTriggers {
@@ -236,10 +237,10 @@ public final class EasyTriggers {
 					"{event.ability} ({event.estimatedRemainingDuration})",
 					List.of(AbilityIdFilter::new)) {
 				@Override
-				protected Action<? super AbilityCastStart> defaultCallout() {
+				protected Action<? super AbilityCastStart> defaultCallout(String text, String tts) {
 					DurationBasedCalloutAction call = new DurationBasedCalloutAction();
-					call.setTts(defaultTts);
-					call.setText(defaultText);
+					call.setTts(text);
+					call.setText(tts);
 					return call;
 				}
 			},
@@ -258,7 +259,16 @@ public final class EasyTriggers {
 			new EventDescriptionImpl<>(BuffApplied.class,
 					"A buff or debuff has been applied. Corresponds to ACT 26 lines.",
 					"{event.buff} on {event.target}",
-					List.of(StatusIdFilter::new)),
+					List.of(StatusIdFilter::new)) {
+				@Override
+				protected Action<? super BuffApplied> defaultCallout(String text, String tts) {
+					DurationBasedCalloutAction call = new DurationBasedCalloutAction();
+					call.setTts(text);
+					call.setText(tts);
+					call.setPlusDuration(false);
+					return call;
+				}
+			},
 			new EventDescriptionImpl<>(BuffRemoved.class,
 					"A buff or debuff has been removed. Corresponds to ACT 30 lines.",
 					"{event.buff} lost from {event.target}",
@@ -365,9 +375,9 @@ public final class EasyTriggers {
 		return (ActionDescription<X, Y>) conditionDescription;
 	}
 
-	public @Nullable EasyTrigger<?> makeTriggerFromEvent(Event event) {
+	public @Nullable EasyTrigger<?> makeTriggerFromEvent(Event event, Supplier<String> callTextSupplier) {
 		if (event instanceof AbilityCastStart acs) {
-			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newEmptyInst();
+			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(acs.getAbility().getName() + " casting");
 			makeSourceConditions(acs).forEach(trigger::addCondition);
 			makeTargetConditions(acs).forEach(trigger::addCondition);
@@ -375,7 +385,7 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof AbilityUsedEvent abu) {
-			EasyTrigger<AbilityUsedEvent> trigger = getEventDescription(AbilityUsedEvent.class).newEmptyInst();
+			EasyTrigger<AbilityUsedEvent> trigger = getEventDescription(AbilityUsedEvent.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(abu.getAbility().getName() + " used");
 			makeSourceConditions(abu).forEach(trigger::addCondition);
 			makeTargetConditions(abu).forEach(trigger::addCondition);
@@ -384,14 +394,14 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof AbilityCastCancel acc) {
-			EasyTrigger<AbilityCastCancel> trigger = getEventDescription(AbilityCastCancel.class).newEmptyInst();
+			EasyTrigger<AbilityCastCancel> trigger = getEventDescription(AbilityCastCancel.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(acc.getAbility().getName() + " cancelled");
 			makeSourceConditions(acc).forEach(trigger::addCondition);
 			makeAbilityConditions(acc).forEach(trigger::addCondition);
 			return trigger;
 		}
 		else if (event instanceof AbilityResolvedEvent are) {
-			EasyTrigger<AbilityResolvedEvent> trigger = getEventDescription(AbilityResolvedEvent.class).newEmptyInst();
+			EasyTrigger<AbilityResolvedEvent> trigger = getEventDescription(AbilityResolvedEvent.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(are.getAbility().getName() + " resolved");
 			makeSourceConditions(are).forEach(trigger::addCondition);
 			makeTargetConditions(are).forEach(trigger::addCondition);
@@ -400,7 +410,7 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof BuffApplied ba) {
-			EasyTrigger<BuffApplied> trigger = getEventDescription(BuffApplied.class).newEmptyInst();
+			EasyTrigger<BuffApplied> trigger = getEventDescription(BuffApplied.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(ba.getBuff().getName() + " applied");
 			makeSourceConditions(ba).forEach(trigger::addCondition);
 			makeTargetConditions(ba).forEach(trigger::addCondition);
@@ -408,7 +418,7 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof BuffRemoved br) {
-			EasyTrigger<BuffRemoved> trigger = getEventDescription(BuffRemoved.class).newEmptyInst();
+			EasyTrigger<BuffRemoved> trigger = getEventDescription(BuffRemoved.class).newEmptyInst(callTextSupplier.get());
 			trigger.setName(br.getBuff().getName() + " removed");
 			makeSourceConditions(br).forEach(trigger::addCondition);
 			makeTargetConditions(br).forEach(trigger::addCondition);
