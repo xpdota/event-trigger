@@ -3,8 +3,7 @@ package gg.xp.xivsupport.events.state.combatstate;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.StatusEffectInfo;
-import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -119,9 +118,35 @@ public class StatusEffectRepository {
 
 	@HandleEvents(order = -500)
 	public void statusList(EventContext context, StatusEffectList list) {
-		if (!targetHasAnyStatus(list.getTarget())) {
-			list.getStatusEffects().forEach(context::accept);
+		XivCombatant target = list.getTarget();
+		if (targetHasAnyStatus(target)) {
+			return;
 		}
+		// TODO: is this still desired behavior?
+		if (target.isFake()) {
+			return;
+		}
+		synchronized (lock) {
+			for (BuffApplied event : list.getStatusEffects()) {
+				BuffTrackingKey key = BuffTrackingKey.of(event);
+				// Previous is never present since we specifically only allow this for entities with no existing
+				// buffs, but leaving it here in case I decide to change this later.
+//				BuffApplied previous;
+//				previous = buffs.put(
+//						key,
+//						event
+//				);
+				BuffApplied preapp = preApps.remove(key);
+				if (preapp != null) {
+					event.setPreAppInfo(preapp.getPreAppAbility(), preapp.getPreAppInfo());
+				}
+				onTargetCache.computeIfAbsent(target, k -> new LinkedHashMap<>()).put(key, event);
+//				if (previous != null) {
+//					event.setIsRefresh(true);
+//				}
+			}
+		}
+		context.accept(new XivBuffsUpdatedEvent());
 	}
 
 	// TODO: issues with buffs that persist through wipes (like tank stance)
@@ -279,7 +304,7 @@ public class StatusEffectRepository {
 
 	/**
 	 * Given an entity and a buff ID, return how many raw stacks the buff has if present.
-	 *
+	 * <p>
 	 * The difference between this and {@link #buffStacksOnTarget(XivEntity, long)} is that this one uses the
 	 * 'raw' stacks. Some status effects use the 'stacks' field to convey mechanical differences rather than an actual
 	 * stack count. 'Stacks' tries to filter these out and instead report a stack count of zero, whereas raw stacks

@@ -58,6 +58,7 @@ public class Line38Parser extends AbstractACTLineParser<Line38Parser.Fields> {
 				if (effectId == 0 || effectId == 1) {
 					continue;
 				}
+				long rawStacks = part1full >> 16;
 				long durationAsInt = Long.parseLong(part2, 16);
 				float duration;
 				duration = Float.intBitsToFloat((int) durationAsInt);
@@ -71,7 +72,7 @@ public class Line38Parser extends AbstractACTLineParser<Line38Parser.Fields> {
 					duration = 9999;
 				}
 				XivCombatant source = fields.getEntity(Long.parseLong(part3, 16));
-				BuffApplied fakeBa = new BuffApplied(status, duration, source, target, 0);
+				BuffApplied fakeBa = new BuffApplied(status, duration, source, target, rawStacks);
 				out.add(fakeBa);
 			}
 			return new StatusEffectList(target, out);
