@@ -82,9 +82,11 @@ public class EventMaster {
 		catch (Throwable t) {
 			log.error("Error pumping event {}", event, t);
 		}
-		if (drainCallback != null && queue.pendingSize() == 0) {
+		Runnable dc = drainCallback;
+		if (dc != null && queue.pendingSize() == 0) {
+			drainCallback = null;
 			try {
-				drainCallback.run();
+				dc.run();
 			}
 			catch (Throwable t) {
 				log.error("Error running callback", t);

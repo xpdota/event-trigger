@@ -1,8 +1,7 @@
 package gg.xp.xivsupport.events.ws;
 
-import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.EventMaster;
-import gg.xp.xivdata.data.Job;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.HitPoints;
@@ -23,13 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static gg.xp.xivdata.data.Job.AST;
-import static gg.xp.xivdata.data.Job.BLM;
-import static gg.xp.xivdata.data.Job.DNC;
-import static gg.xp.xivdata.data.Job.DRG;
-import static gg.xp.xivdata.data.Job.SMN;
-import static gg.xp.xivdata.data.Job.WAR;
-import static gg.xp.xivdata.data.Job.WHM;
+import static gg.xp.xivdata.data.Job.*;
 
 public class WsHandlerTests {
 
