@@ -34,7 +34,25 @@ public class AutoHandlerScan {
 	private final AutoHandlerInstanceProvider instanceProvider;
 	private final AutoHandlerConfig config;
 	private static final Pattern jarFileName = Pattern.compile("([a-zA-Z0-9\\-.]+)\\.jar");
-	private static final List<String> scanBlacklist = List.of("groovy", "jna", "jackson", "javaassist", "httpclient", "commons", "xivdata", "sfl4j", "logback", "picocontainer", "opencsv", "Java-WebSocket", "reflections", "annotations", "httpcore");
+	private static final List<String> scanBlacklist = List.of(
+			"annotations",
+			"caffeiene",
+			"commons",
+			"flatlaf",
+			"groovy",
+			"http",
+			"jackson",
+			"Java-WebSocket",
+			"javaassist",
+			"jna",
+			"jsr",
+			"logback",
+			"opencsv",
+			"picocontainer",
+			"reflections",
+			"sfl4j",
+			"xivdata"
+	);
 
 	public AutoHandlerScan(AutoHandlerInstanceProvider instanceProvider, AutoHandlerConfig config) {
 		this.instanceProvider = instanceProvider;
