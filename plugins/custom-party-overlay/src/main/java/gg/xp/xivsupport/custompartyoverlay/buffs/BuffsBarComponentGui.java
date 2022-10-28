@@ -19,7 +19,9 @@ public class BuffsBarComponentGui extends JPanel {
 				new ColorSettingGui(backend.getMyBuffTextColor(), "Text Color (Own Buffs)", timers::get).getComponentReversed(),
 				new ColorSettingGui(backend.getRemoveableBuffColor(), "Text Color (Removable)", timers::get).getComponentReversed(),
 				new BooleanSettingGui(backend.getShadows(), "Shadows on Text", timers::get).getComponent(),
-				new IntSettingSpinner(backend.getxPadding(), "Spacing between buffs").getComponent()
+				new IntSettingSpinner(backend.getxPadding(), "Spacing between buffs").getComponent(),
+				new BooleanSettingGui(backend.getShowFcBuffs(), "Show FC Buffs").getComponent(),
+				new BooleanSettingGui(backend.getShowFoodBuff(), "Show Food Buffs").getComponent()
 		);
 		timers.addAndRunListener(this::repaint);
 	}

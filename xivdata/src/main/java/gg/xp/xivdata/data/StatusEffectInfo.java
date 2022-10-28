@@ -16,8 +16,10 @@ public record StatusEffectInfo(
 		String description,
 		boolean canDispel,
 		boolean isPermanent,
-		int partyListPriority
+		int partyListPriority,
+		boolean isFcBuff
 ) {
+
 
 	public List<Long> getAllIconIds() {
 		if (maxStacks == 0 || maxStacks == 1) {
@@ -55,5 +57,4 @@ public record StatusEffectInfo(
 			return LongStream.range(1, maxStacks + 1).mapToObj(this::getIcon).filter(Objects::nonNull).toList();
 		}
 	}
-
 }

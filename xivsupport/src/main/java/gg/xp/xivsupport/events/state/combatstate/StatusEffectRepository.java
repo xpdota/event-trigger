@@ -13,6 +13,7 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
+import gg.xp.xivsupport.events.actlines.events.StatusEffectList;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
@@ -113,6 +114,13 @@ public class StatusEffectRepository {
 		if (removed != null) {
 			log.trace("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 			context.accept(new XivBuffsUpdatedEvent());
+		}
+	}
+
+	@HandleEvents(order = -500)
+	public void statusList(EventContext context, StatusEffectList list) {
+		if (!targetHasAnyStatus(list.getTarget())) {
+			list.getStatusEffects().forEach(context::accept);
 		}
 	}
 
@@ -237,6 +245,16 @@ public class StatusEffectRepository {
 		}
 	}
 
+	public boolean targetHasAnyStatus(XivEntity entity) {
+		if (entity == null) {
+			return false;
+		}
+		synchronized (lock) {
+			Map<BuffTrackingKey, BuffApplied> cached = onTargetCache.get(entity);
+			return cached != null && !cached.isEmpty();
+		}
+	}
+
 	public @Nullable BuffApplied findStatusOnTarget(XivEntity entity, long buffId) {
 		return findStatusOnTarget(entity, ba -> ba.buffIdMatches(buffId));
 	}
@@ -280,14 +298,24 @@ public class StatusEffectRepository {
 
 	public List<BuffApplied> sortedStatusesOnTarget(XivEntity entity) {
 		List<BuffApplied> list = statusesOnTarget(entity);
-		list.sort(Comparator.comparing(ba -> {
-			StatusEffectInfo statusEffectInfo = ba.getBuff().getInfo();
-			if (statusEffectInfo == null) {
-				return 0;
-			}
-			return -1 * statusEffectInfo.partyListPriority();
-		}));
+		list.sort(standardPartyFrameSort);
 		return list;
+	}
+
+	public static Comparator<BuffApplied> standardPartyFrameSort = Comparator.comparing(ba -> {
+		StatusEffectInfo statusEffectInfo = ba.getBuff().getInfo();
+		if (statusEffectInfo == null) {
+			return 0;
+		}
+		return -1 * statusEffectInfo.partyListPriority();
+	});
+
+	public List<BuffApplied> filteredSortedStatusesOnTarget(XivEntity entity, Predicate<BuffApplied> filter) {
+		return statusesOnTarget(entity)
+				.stream()
+				.filter(filter)
+				.sorted(standardPartyFrameSort)
+				.toList();
 	}
 
 	public <X extends HasSourceEntity & HasTargetEntity & HasStatusEffect> @Nullable BuffApplied getLatest(X buff) {

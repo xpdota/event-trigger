@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.util;
 
-import gg.xp.xivsupport.gui.WrapperPanel;
 import gg.xp.xivsupport.gui.tables.filters.InputValidationState;
 import gg.xp.xivsupport.gui.tables.filters.MultiLineTextAreaWithValidation;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -194,6 +193,16 @@ public final class GuiUtil {
 		}
 		else {
 			return null;
+		}
+	}
+
+	public static void displayWaitCursorWhile(Component comp, Runnable action) {
+		SwingUtilities.getWindowAncestor(comp).setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		try {
+			action.run();
+		}
+		finally {
+			SwingUtilities.getWindowAncestor(comp).setCursor(null);
 		}
 	}
 }

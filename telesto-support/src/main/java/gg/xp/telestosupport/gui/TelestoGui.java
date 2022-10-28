@@ -12,6 +12,7 @@ import gg.xp.telestosupport.TelestoStatusUpdatedEvent;
 import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.tabs.TabAware;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.HttpURISettingGui;

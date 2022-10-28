@@ -114,6 +114,9 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 		int st = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_STYLE);
 		int ex = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
 		// TODO: test using WS_DISABLED
+		// Notes:
+		// WS_EX_TRANSPARENT has nothing to do with transparency. It makes it click-through.
+		// WS_EX_LAYERED is already set on the window. It makes it transparent.
 		if (clickThrough) {
 			ex |= WinUser.WS_EX_TRANSPARENT;
 			ex |= WS_EX_NOACTIVATE;

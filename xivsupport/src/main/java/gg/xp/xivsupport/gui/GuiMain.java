@@ -56,6 +56,7 @@ import gg.xp.xivsupport.gui.tabs.AdvancedTab;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
+import gg.xp.xivsupport.gui.tabs.TabAware;
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -118,7 +119,7 @@ public class GuiMain {
 	private final @Nullable ReplayController replay;
 	private final RightClickOptionRepo rightClicks;
 	private final GlobalGuiOptions globalGuiOpts;
-	private JTabbedPane tabPane;
+	private SmartTabbedPane tabPane;
 	private Component eventPanel;
 
 
@@ -168,7 +169,7 @@ public class GuiMain {
 			}
 		});
 		SwingUtilities.invokeLater(() -> tabPane.addTab("General", new SystemTabPanel()));
-		SwingUtilities.invokeLater(() -> tabPane.addTab("Plugin Settings", new PluginSettingsPanel()));
+		SwingUtilities.invokeLater(() -> tabPane.addTabLazy("Plugin Settings", PluginSettingsPanel::new));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Combatants", getCombatantsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Buffs", getStatusEffectsPanel()));
 		SwingUtilities.invokeLater(() -> tabPane.addTab("Events", (eventPanel = getEventsPanel())));
@@ -433,7 +434,7 @@ public class GuiMain {
 
 	private class PluginSettingsPanel extends JPanel {
 
-		private final JTabbedPane tabPanel;
+		private final SmartTabbedPane tabPanel;
 
 		public PluginSettingsPanel() {
 //			super("Plugin Settings");
@@ -445,8 +446,25 @@ public class GuiMain {
 
 		private void addTab(PluginTab tab) {
 			String tabName = tab.getTabName();
-			log.info("Adding Plugin Tab {}", tabName);
-			tabPanel.addTab(tabName, tab.getTabContents());
+			if (tab.asyncOk()) {
+				tabPanel.addTabLazy(tabName, () -> {
+					long start = System.currentTimeMillis();
+					log.info("Adding Plugin Tab {}", tabName);
+					Component contents = tab.getTabContents();
+					long end = System.currentTimeMillis();
+					log.info("Done Making Plugin Tab {} (took {}ms)", tabName, end - start);
+					return contents;
+				});
+			}
+			else {
+				long start = System.currentTimeMillis();
+				log.info("Adding Plugin Tab {}", tabName);
+				Component contents = tab.getTabContents();
+				long end = System.currentTimeMillis();
+				log.info("Done Making Plugin Tab {} (took {}ms)", tabName, end - start);
+				tabPane.addTab(tabName, contents);
+
+			}
 		}
 
 		private void addTabs(List<PluginTab> tabs) {

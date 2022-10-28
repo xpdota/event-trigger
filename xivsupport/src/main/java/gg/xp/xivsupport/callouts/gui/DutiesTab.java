@@ -2,10 +2,7 @@ package gg.xp.xivsupport.callouts.gui;
 
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.duties.Duty;
-import gg.xp.xivdata.data.duties.DutyType;
-import gg.xp.xivdata.data.duties.Expansion;
-import gg.xp.xivdata.data.duties.KnownDuty;
+import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
@@ -18,6 +15,7 @@ import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tabs.FixedWidthVerticalTabPane;
+import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import org.picocontainer.PicoContainer;
 
@@ -75,7 +73,7 @@ public class DutiesTab implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
-		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.LEFT);
+		SmartTabbedPane tabPane = new SmartTabbedPane(JTabbedPane.LEFT);
 		Map<Expansion, Map<DutyType, Map<Duty, DutyTabContents>>> contents = new LinkedHashMap<>();
 		DutyTabContents nonSpecific = new DutyTabContents(KnownDuty.None);
 		List<CalloutGroup> allCallouts = new ArrayList<>(backend.getAllCallouts());
@@ -153,18 +151,20 @@ public class DutiesTab implements PluginTab {
 
 		tabPane.add("General", makeDutyComponent(nonSpecific));
 
-		// TODO: as this gets bigger, might be worth looking into some kind of lazy
-		// loading of tabs.
 		contents.forEach((expac, types) -> {
-			JTabbedPane expacTab = new FixedWidthVerticalTabPane(80);
-			types.forEach((type, duties) -> {
-				JTabbedPane typeTab = new FixedWidthVerticalTabPane(100);
-				duties.forEach((duty, dutyContent) -> {
-					typeTab.add(duty.getName(), makeDutyComponent(dutyContent));
+			tabPane.addTabLazy(expac.getName(), () -> {
+				SmartTabbedPane expacTab = new FixedWidthVerticalTabPane(80);
+				types.forEach((type, duties) -> {
+					expacTab.addTabLazy(type.getName(), () -> {
+						JTabbedPane typeTab = new FixedWidthVerticalTabPane(100);
+						duties.forEach((duty, dutyContent) -> {
+							typeTab.add(duty.getName(), makeDutyComponent(dutyContent));
+						});
+						return typeTab;
+					});
 				});
-				expacTab.add(type.getName(), typeTab);
+				return expacTab;
 			});
-			tabPane.add(expac.getName(), expacTab);
 		});
 
 		return tabPane;

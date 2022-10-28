@@ -3,7 +3,7 @@ package gg.xp.xivsupport.gui.tabs;
 import javax.swing.*;
 import java.awt.*;
 
-public class FixedWidthVerticalTabPane extends JTabbedPane {
+public class FixedWidthVerticalTabPane extends SmartTabbedPane {
 
 	private final int width;
 
@@ -19,5 +19,13 @@ public class FixedWidthVerticalTabPane extends JTabbedPane {
 		label.setPreferredSize(new Dimension(width, label.getPreferredSize().height));
 		setTabComponentAt(indexOfComponent(out), label);
 		return out;
+	}
+
+	@Override
+	public void addTab(String title, Component component) {
+		super.addTab(title, component);
+		JLabel label = new JLabel(title);
+		label.setPreferredSize(new Dimension(width, label.getPreferredSize().height));
+		setTabComponentAt(indexOfComponent(component), label);
 	}
 }

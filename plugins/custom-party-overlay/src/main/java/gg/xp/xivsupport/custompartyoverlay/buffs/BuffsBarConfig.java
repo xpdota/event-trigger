@@ -22,6 +22,9 @@ public class BuffsBarConfig extends ObservableSetting {
 
 	private final IntSetting xPadding;
 
+	private final BooleanSetting showFcBuffs;
+	private final BooleanSetting showFoodBuff;
+
 	public BuffsBarConfig(PersistenceProvider pers) {
 		String settingKeyBase = "custom-party-overlay.buffs.";
 		normalTextColor = new ColorSetting(pers, settingKeyBase + "normal-color", BuffsBar.defaultTextColor);
@@ -30,7 +33,9 @@ public class BuffsBarConfig extends ObservableSetting {
 		timers = new BooleanSetting(pers, settingKeyBase + "show-timers", true);
 		shadows = new BooleanSetting(pers, settingKeyBase + "text-shadows", true);
 		xPadding = new IntSetting(pers, settingKeyBase + "xpad", 0, -20, 1000);
-		List.of(normalTextColor, myBuffTextColor, removeableBuffColor, timers, shadows, xPadding)
+		showFcBuffs = new BooleanSetting(pers, settingKeyBase + "fc-buffs", false);
+		showFoodBuff = new BooleanSetting(pers, settingKeyBase + "food-buffs", false);
+		List.of(normalTextColor, myBuffTextColor, removeableBuffColor, timers, shadows, xPadding, showFcBuffs, showFoodBuff)
 				.forEach(setting -> setting.addListener(this::notifyListeners));
 	}
 
@@ -56,5 +61,13 @@ public class BuffsBarConfig extends ObservableSetting {
 
 	public IntSetting getxPadding() {
 		return xPadding;
+	}
+
+	public BooleanSetting getShowFcBuffs() {
+		return showFcBuffs;
+	}
+
+	public BooleanSetting getShowFoodBuff() {
+		return showFoodBuff;
 	}
 }
