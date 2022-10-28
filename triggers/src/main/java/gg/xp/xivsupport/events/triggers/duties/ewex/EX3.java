@@ -6,7 +6,7 @@ import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.duties.KnownDuty;
+import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
@@ -22,6 +22,7 @@ import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.CombatantType;
@@ -392,7 +393,7 @@ public class EX3 extends AutoChildEventHandler implements FilteredEventHandler {
 	private static final Set<Long> headAbilities = Set.of(0x6FFCL, 0x7006L, 0x7009L, 0x700AL);
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> fiveHead = new SequentialTrigger<>(60_000, BaseEvent.class, (e) -> e instanceof AbilityUsedEvent aue && aue.getAbility().getId() == 0x7007, (e1, s) -> {
+	private final SequentialTrigger<BaseEvent> fiveHead = SqtTemplates.sq(60_000, AbilityUsedEvent.class, (e) -> e.abilityIdMatches(0x7007), (e1, s) -> {
 
 		// Map of head to list of what it did on each set
 		Map<XivCombatant, List<FiveHeadMech>> collectedMechanics = new HashMap<>();
@@ -472,47 +473,40 @@ public class EX3 extends AutoChildEventHandler implements FilteredEventHandler {
 
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> sixHead = new SequentialTrigger<>(25_000, BaseEvent.class, (e) -> {
-		if (e instanceof AbilityUsedEvent aue) {
-			long id = aue.getAbility().getId();
-			return id == 0x72B1 || id == 0x701C;
-		}
-		else {
-			return false;
-		}
-	}, (e1, s) -> {
-		// Grab 4 tethers
-		List<XivCombatant> tetheredHeads = IntStream.range(0, 4)
-				.mapToObj((i) -> s.waitEvent(TetherEvent.class, t -> t.getId() == 0x00BD || t.getId() == 0x00B5))
-				.map(TetherEvent::getSource)
-				.toList();
-		// It's okay for this to loop because it has a timeout
-		while (true) {
-			List<ArenaSector> occupied = tetheredHeads.stream()
-					.map(head -> getState().getLatestCombatantData(head))
-					.map(arenaPos::forCombatant)
-					.toList();
-			// CENTER means we don't have position data for that combatant yet
-			if (occupied.stream().anyMatch(sector -> sector == ArenaSector.CENTER)) {
-				// Send a WS combatants update request and wait for new state
-				s.accept(new RefreshSpecificCombatantsRequest(tetheredHeads.stream().map(XivCombatant::getId).toList()));
-				// TODO: This poses a problem for testing
-//				s.waitEvent(XivStateRecalculatedEvent.class, (e) -> true);
-				s.waitEvent(BaseEvent.class, (e) -> !(e instanceof RefreshSpecificCombatantsRequest));
-			}
-			else {
-				List<ArenaSector> safeSpots = new ArrayList<>(List.of(ArenaSector.SOUTHWEST, ArenaSector.WEST, ArenaSector.NORTHWEST, ArenaSector.NORTHEAST, ArenaSector.EAST, ArenaSector.SOUTHEAST));
-				occupied.forEach(safeSpots::remove);
-				if (safeSpots.size() == 2) {
-					s.accept(sixHeadSafeSpots.getModified(Map.of("safeSpot1", safeSpots.get(0), "safeSpot2", safeSpots.get(1))));
-					return;
+	private final SequentialTrigger<BaseEvent> sixHead = SqtTemplates.sq(25_000,
+			AbilityUsedEvent.class, (e) -> e.abilityIdMatches(0x72B1, 0x701C),
+			(e1, s) -> {
+				log.info("6Head: Start");
+				// Grab 4 tethers
+				List<XivCombatant> tetheredHeads = IntStream.range(0, 4)
+						.mapToObj((i) -> s.waitEvent(TetherEvent.class, t -> t.tetherIdMatches(0xBD, 0xB5)))
+						.peek(t -> log.info("6Head: Found tether from {} to {}", t.getSource().getId(), t.getTarget().getId()))
+						.map(TetherEvent::getSource)
+						.toList();
+				// It's okay for this to loop because it has a timeout
+				while (true) {
+					List<ArenaSector> occupied = tetheredHeads.stream()
+							.map(head -> getState().getLatestCombatantData(head))
+							.map(arenaPos::forCombatant)
+							.toList();
+					// CENTER means we don't have position data for that combatant yet
+					if (occupied.stream().anyMatch(sector -> sector == ArenaSector.CENTER)) {
+						// Send a WS combatants update request and wait for new state
+						s.waitThenRefreshCombatants(50);
+					}
+					else {
+						List<ArenaSector> safeSpots = new ArrayList<>(List.of(ArenaSector.SOUTHWEST, ArenaSector.WEST, ArenaSector.NORTHWEST, ArenaSector.NORTHEAST, ArenaSector.EAST, ArenaSector.SOUTHEAST));
+						occupied.forEach(safeSpots::remove);
+						if (safeSpots.size() == 2) {
+							s.accept(sixHeadSafeSpots.getModified(Map.of("safeSpot1", safeSpots.get(0), "safeSpot2", safeSpots.get(1))));
+							return;
+						}
+						else {
+							log.error("Expected exactly two safe spots, got: {}", safeSpots);
+						}
+					}
 				}
-				else {
-					log.error("Expected exactly two safe spots, got: {}", safeSpots);
-				}
-			}
-		}
-	});
+			});
 
 //	@HandleEvents
 //	public void feedHeads(EventContext context, BaseEvent event) {

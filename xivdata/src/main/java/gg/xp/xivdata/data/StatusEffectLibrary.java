@@ -46,23 +46,19 @@ public class StatusEffectLibrary {
 		List<String[]> arrays;
 		try {
 			arrays = cellProvider.get();
-			arrays.forEach(row -> {
-				int id;
-				try {
-					id = Integer.parseInt(row[0]);
-				}
-				catch (NumberFormatException nfe) {
+			arrays.forEach(rawRow -> {
+				CsvParseHelper row = CsvParseHelper.ofRow(rawRow);
+				if (!row.hasValidId()) {
 					// Ignore the bad value at the top
 					return;
 				}
-				String rawImg = row[3];
-				String stacks = row[5];
+				int id = row.getIntId();
+				String rawImg = row.getRaw(3);
 				if (rawImg.isEmpty()) {
 					return;
 				}
 				long imageId;
-				long maxStacks;
-				maxStacks = Long.parseLong(stacks);
+				long maxStacks = row.getRequiredInt(5);
 				try {
 					imageId = Long.parseLong(rawImg);
 				}
@@ -77,22 +73,18 @@ public class StatusEffectLibrary {
 //					return;
 					}
 				}
-				int partyListPrio;
-				try {
-					partyListPrio = Integer.parseInt(row[19]);
-				}
-				catch (NumberFormatException nfe) {
-					partyListPrio = 200;
-				}
+				int partyListPrio = row.getIntOrDefault(19, 200);
+				// TODO: it would be useful to have data, even if there is no image
 				if (imageId != 0) {
 					csvValues.put(id, new StatusEffectInfo(id,
 							imageId,
 							maxStacks,
-							row[1],
-							row[2],
-							Boolean.parseBoolean(row[16]),
-							Boolean.parseBoolean(row[18]),
-							partyListPrio
+							row.getRaw(1),
+							row.getRaw(2),
+							row.getRequiredBool(16),
+							row.getRequiredBool(18),
+							partyListPrio,
+							row.getRequiredBool(27)
 							));
 				}
 			});

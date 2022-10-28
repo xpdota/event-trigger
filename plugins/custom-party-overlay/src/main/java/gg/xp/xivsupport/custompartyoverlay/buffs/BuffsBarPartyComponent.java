@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.custompartyoverlay.buffs;
 
 import gg.xp.xivsupport.custompartyoverlay.BasePartyListComponent;
+import gg.xp.xivsupport.events.state.combatstate.BuffUtils;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.NotNull;
@@ -36,6 +37,10 @@ public class BuffsBarPartyComponent extends BasePartyListComponent {
 
 	@Override
 	protected void reformatComponent(@NotNull XivPlayerCharacter xpc) {
-		bar.setBuffs(buffRepo.sortedStatusesOnTarget(xpc));
+		boolean showFc = config.getShowFcBuffs().get();
+		boolean showFood = config.getShowFoodBuff().get();
+		bar.setBuffs(buffRepo.filteredSortedStatusesOnTarget(xpc, ba -> {
+			return (showFc || !BuffUtils.isFcBuff(ba)) && (showFood || !BuffUtils.isFoodBuff(ba));
+		}));
 	}
 }

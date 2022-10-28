@@ -3,8 +3,7 @@ package gg.xp.xivsupport.events.state.combatstate;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.StatusEffectInfo;
-import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -13,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
+import gg.xp.xivsupport.events.actlines.events.StatusEffectList;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
@@ -114,6 +114,39 @@ public class StatusEffectRepository {
 			log.trace("Buff removed: {} removed {} from {}. Tracking {} buffs.", event.getSource().getName(), event.getBuff().getName(), event.getTarget().getName(), buffs.size());
 			context.accept(new XivBuffsUpdatedEvent());
 		}
+	}
+
+	@HandleEvents(order = -500)
+	public void statusList(EventContext context, StatusEffectList list) {
+		XivCombatant target = list.getTarget();
+		if (targetHasAnyStatus(target)) {
+			return;
+		}
+		// TODO: is this still desired behavior?
+		if (target.isFake()) {
+			return;
+		}
+		synchronized (lock) {
+			for (BuffApplied event : list.getStatusEffects()) {
+				BuffTrackingKey key = BuffTrackingKey.of(event);
+				// Previous is never present since we specifically only allow this for entities with no existing
+				// buffs, but leaving it here in case I decide to change this later.
+//				BuffApplied previous;
+//				previous = buffs.put(
+//						key,
+//						event
+//				);
+				BuffApplied preapp = preApps.remove(key);
+				if (preapp != null) {
+					event.setPreAppInfo(preapp.getPreAppAbility(), preapp.getPreAppInfo());
+				}
+				onTargetCache.computeIfAbsent(target, k -> new LinkedHashMap<>()).put(key, event);
+//				if (previous != null) {
+//					event.setIsRefresh(true);
+//				}
+			}
+		}
+		context.accept(new XivBuffsUpdatedEvent());
 	}
 
 	// TODO: issues with buffs that persist through wipes (like tank stance)
@@ -237,6 +270,16 @@ public class StatusEffectRepository {
 		}
 	}
 
+	public boolean targetHasAnyStatus(XivEntity entity) {
+		if (entity == null) {
+			return false;
+		}
+		synchronized (lock) {
+			Map<BuffTrackingKey, BuffApplied> cached = onTargetCache.get(entity);
+			return cached != null && !cached.isEmpty();
+		}
+	}
+
 	public @Nullable BuffApplied findStatusOnTarget(XivEntity entity, long buffId) {
 		return findStatusOnTarget(entity, ba -> ba.buffIdMatches(buffId));
 	}
@@ -261,7 +304,7 @@ public class StatusEffectRepository {
 
 	/**
 	 * Given an entity and a buff ID, return how many raw stacks the buff has if present.
-	 *
+	 * <p>
 	 * The difference between this and {@link #buffStacksOnTarget(XivEntity, long)} is that this one uses the
 	 * 'raw' stacks. Some status effects use the 'stacks' field to convey mechanical differences rather than an actual
 	 * stack count. 'Stacks' tries to filter these out and instead report a stack count of zero, whereas raw stacks
@@ -280,14 +323,24 @@ public class StatusEffectRepository {
 
 	public List<BuffApplied> sortedStatusesOnTarget(XivEntity entity) {
 		List<BuffApplied> list = statusesOnTarget(entity);
-		list.sort(Comparator.comparing(ba -> {
-			StatusEffectInfo statusEffectInfo = ba.getBuff().getInfo();
-			if (statusEffectInfo == null) {
-				return 0;
-			}
-			return -1 * statusEffectInfo.partyListPriority();
-		}));
+		list.sort(standardPartyFrameSort);
 		return list;
+	}
+
+	public static Comparator<BuffApplied> standardPartyFrameSort = Comparator.comparing(ba -> {
+		StatusEffectInfo statusEffectInfo = ba.getBuff().getInfo();
+		if (statusEffectInfo == null) {
+			return 0;
+		}
+		return -1 * statusEffectInfo.partyListPriority();
+	});
+
+	public List<BuffApplied> filteredSortedStatusesOnTarget(XivEntity entity, Predicate<BuffApplied> filter) {
+		return statusesOnTarget(entity)
+				.stream()
+				.filter(filter)
+				.sorted(standardPartyFrameSort)
+				.toList();
 	}
 
 	public <X extends HasSourceEntity & HasTargetEntity & HasStatusEffect> @Nullable BuffApplied getLatest(X buff) {

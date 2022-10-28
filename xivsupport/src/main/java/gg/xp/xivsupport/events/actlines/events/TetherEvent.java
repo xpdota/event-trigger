@@ -45,6 +45,15 @@ public class TetherEvent extends BaseEvent implements HasSourceEntity, HasTarget
 		return id;
 	}
 
+	public boolean tetherIdMatches(long... expected) {
+		for (long e : expected) {
+			if (e == id) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public boolean eitherTargetMatches(XivCombatant cbt) {
 		return source.equals(cbt) || target.equals(cbt);
 	}
