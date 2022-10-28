@@ -27,7 +27,7 @@ public class JailLegacyGui implements PluginTab {
 		JPanel panel = new JPanel();
 		panel.add(new ReadOnlyText("This has moved to the new Duties tab!"));
 		JButton button = new JButton("Take Me There!");
-		button.addActionListener(l -> reg.activateItem(JailLegacyGui.class));
+		button.addActionListener(l -> reg.activateItem(JailGui.class));
 		panel.add(button);
 		return panel;
 	}

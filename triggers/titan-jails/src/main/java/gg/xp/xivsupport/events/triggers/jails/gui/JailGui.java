@@ -1,17 +1,12 @@
 package gg.xp.xivsupport.events.triggers.jails.gui;
 
-import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.duties.KnownDuty;
-import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.events.triggers.jails.JailSolver;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
-import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
-import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;

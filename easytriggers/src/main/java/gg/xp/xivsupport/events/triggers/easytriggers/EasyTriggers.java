@@ -33,7 +33,9 @@ import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.AutoMarkTargetAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.ClearAllMarksAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.SoundActionEditor;
@@ -79,6 +81,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
+import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -243,6 +246,21 @@ public final class EasyTriggers {
 					call.setText(text);
 					return call;
 				}
+
+				@Override
+				protected Action<? super AbilityCastStart> defaultCallout(String customText) {
+					String text;
+					String tts;
+					if (customText == null || customText.isBlank()) {
+						text = defaultText;
+						tts = defaultTts;
+					}
+					else {
+						text = customText + " ({event.estimatedRemainingDuration})";
+						tts = customText;
+					}
+					return defaultCallout(text, tts);
+				}
 			},
 			new EventDescriptionImpl<>(AbilityUsedEvent.class,
 					"An ability has snapshotted. Corresponds to ACT 21/22 lines.",
@@ -334,6 +352,8 @@ public final class EasyTriggers {
 	private final List<ActionDescription<?, ?>> actions = List.of(
 			new ActionDescription<>(CalloutAction.class, Event.class, "Basic TTS/Text Callout", CalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
 			new ActionDescription<>(DurationBasedCalloutAction.class, HasDuration.class, "Duration-Based TTS/Text Callout", DurationBasedCalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
+			new ActionDescription<>(AutoMarkTargetAction.class, HasTargetEntity.class, "Mark The Target", () -> new AutoMarkTargetAction(inject(GlobalUiRegistry.class)), this::generic),
+			new ActionDescription<>(ClearAllMarksAction.class, Event.class, "Clear All Marks", () -> new ClearAllMarksAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action))
 	);
 

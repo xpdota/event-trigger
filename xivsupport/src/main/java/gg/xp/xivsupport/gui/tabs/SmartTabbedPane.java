@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tabs;
 
+import gg.xp.xivsupport.gui.extra.TabDef;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +9,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class SmartTabbedPane extends JTabbedPane implements TabAware {
@@ -74,9 +77,46 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 		}
 	}
 
+	private final Map<Object, Integer> registeredKeys = new HashMap<>();
+
+	// TODO: doesn't work if tabs are removed or rearranged after the fact
+	public void addTab(TabDef def) {
+		addTab(def.getTabName(), def.getTabContents());
+		int i = getTabCount() - 1;
+		def.keys().forEach(k -> {
+			registeredKeys.put(k, i);
+		});
+	}
+
+	public void addTabLazy(TabDef def) {
+		int i = addTabLazy(def.getTabName(), def::getTabContents);
+		def.keys().forEach(k -> {
+			registeredKeys.put(k, i);
+		});
+	}
+
+	public void selectTabByKey(Object key) {
+		Integer index = registeredKeys.get(key);
+		if (index != null) {
+			setSelectedIndex(index);
+		}
+		else {
+			log.warn("No mapping for key: ({})", key);
+		}
+	}
+
 	public int addTabLazy(String title, Supplier<Component> componentFunc) {
 		addTab(title, new DummyMarkerComponent(componentFunc));
-		return getTabCount() - 1;
+		int index = getTabCount() - 1;
+		registeredKeys.put(title, index);
+		return index;
+	}
+
+	@Override
+	public void addTab(String title, Component component) {
+		super.addTab(title, component);
+		int index = getTabCount() - 1;
+		registeredKeys.put(title, index);
 	}
 
 	@Override

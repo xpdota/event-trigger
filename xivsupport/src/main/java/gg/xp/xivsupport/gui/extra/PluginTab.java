@@ -3,23 +3,11 @@ package gg.xp.xivsupport.gui.extra;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.tabs.TabAware;
 
-import java.awt.*;
-
 /**
  * Implement this and annotate your class with {@link ScanMe} (or any other annotation that would
  * cause it to be auto-scanned). This will give it a tab on the 'Plugins' screen.
  */
-public interface PluginTab {
-
-	/**
-	 * @return The title of the tab
-	 */
-	String getTabName();
-
-	/**
-	 * @return The contents of the tab
-	 */
-	Component getTabContents();
+public interface PluginTab extends TabDef {
 
 	/**
 	 * return The sort order
@@ -40,18 +28,5 @@ public interface PluginTab {
 	 */
 	default boolean asyncOk() {
 		return true;
-	}
-
-	/**
-	 * Provides the tab with a hook for bringing itself to the front. Since these are lazy-loaded now, you can't use
-	 * the old trick of grabbing some UI component of the tab in question and walking back up the tree to find
-	 * JTabbedPane instances that need to switch tabs. Instead, use the provided runnable as the "activate me" button.
-	 * <p>
-	 * This default method is a no-op since most tabs won't ever need to be force-activated.
-	 *
-	 * @param hook A hook to use.
-	 */
-	default void installActivationHook(Runnable hook) {
-
 	}
 }

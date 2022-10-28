@@ -474,9 +474,6 @@ public class GuiMain {
 				long end = System.currentTimeMillis();
 				log.info("Done Making Plugin Tab {} (took {}ms)", tabName, end - start);
 				pluginsTabPane.addTab(tabName, contents);
-				tab.installActivationHook(() -> SwingUtilities.invokeLater(() -> {
-					pluginsTabPane.setSelectedComponent(contents);
-				}));
 				guiReg.registerItem(tab, () -> pluginsTabPane.setSelectedComponent(contents), this);
 			}
 		}
