@@ -24,9 +24,8 @@
 
 package org.jenkinsci.plugins.scriptsecurity.sandbox.groovy;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import groovy.grape.GrabAnnotationTransformation;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
@@ -49,7 +48,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 
 	public static final Logger LOGGER = Logger.getLogger(StandardGroovySandbox.class.getName());
 
-	private @CheckForNull Whitelist whitelist;
+	private @Nullable Whitelist whitelist;
 
 	/**
 	 * Creates a sandbox with default settings.
@@ -63,14 +62,14 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 *
 	 * @return {@code this}
 	 */
-	public StandardGroovySandbox withWhitelist(@CheckForNull Whitelist whitelist) {
+	public StandardGroovySandbox withWhitelist(@Nullable Whitelist whitelist) {
 		this.whitelist = whitelist;
 		return this;
 	}
 
 
 
-	private @NonNull Whitelist whitelist() {
+	private @NotNull Whitelist whitelist() {
 		return whitelist != null ? whitelist : Whitelist.all();
 	}
 
@@ -105,7 +104,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 * @param script the script to run
 	 * @return the return value of the script
 	 */
-	public Object runScript(@NonNull GroovyShell shell, @NonNull String script) {
+	public Object runScript(@NotNull GroovyShell shell, @NotNull String script) {
 		StandardGroovySandbox derived = new StandardGroovySandbox();
 //				withApprovalContext(context).
 //            withTaskListener(listener).
@@ -131,7 +130,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 * @return a compiler configuration set up to use the sandbox
 	 */
 	// TODO: use this
-	public static @NonNull CompilerConfiguration createSecureCompilerConfiguration() {
+	public static @NotNull CompilerConfiguration createSecureCompilerConfiguration() {
 		CompilerConfiguration cc = createBaseCompilerConfiguration();
 		cc.addCompilationCustomizers(new SandboxTransformer());
 		return cc;
@@ -140,7 +139,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	/**
 	 * Prepares a compiler configuration that rejects certain AST transformations. Used by {@link #createSecureCompilerConfiguration()}.
 	 */
-	public static @NonNull CompilerConfiguration createBaseCompilerConfiguration() {
+	public static @NotNull CompilerConfiguration createBaseCompilerConfiguration() {
 		CompilerConfiguration cc = new CompilerConfiguration();
 		cc.addCompilationCustomizers(new RejectASTTransformsCustomizer());
 		cc.setDisabledGlobalASTTransformations(new HashSet<>(Collections.singletonList(GrabAnnotationTransformation.class.getName())));
@@ -152,8 +151,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 * <p>
 	 * See {@link #createSecureCompilerConfiguration()} for the discussion.
 	 */
-	@SuppressFBWarnings(value = "DP_CREATE_CLASSLOADER_INSIDE_DO_PRIVILEGED", justification = "Should be managed by the caller.")
-	public static @NonNull ClassLoader createSecureClassLoader(ClassLoader base) {
+	public static @NotNull ClassLoader createSecureClassLoader(ClassLoader base) {
 		return new SandboxResolvingClassLoader(base);
 	}
 
@@ -168,7 +166,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 * @deprecated use {@link #enter}
 	 */
 	@Deprecated
-	public static void runInSandbox(@NonNull Runnable r, @NonNull Whitelist whitelist) throws RejectedAccessException {
+	public static void runInSandbox(@NotNull Runnable r, @NotNull Whitelist whitelist) throws RejectedAccessException {
 		try (SandboxScope scope = new StandardGroovySandbox().withWhitelist(whitelist).enter()) {
 			r.run();
 		}
@@ -187,7 +185,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 * @deprecated use {@link #enter}
 	 */
 	@Deprecated
-	public static <V> V runInSandbox(@NonNull Callable<V> c, @NonNull Whitelist whitelist) throws Exception {
+	public static <V> V runInSandbox(@NotNull Callable<V> c, @NotNull Whitelist whitelist) throws Exception {
 		try (SandboxScope scope = new StandardGroovySandbox().withWhitelist(whitelist).enter()) {
 			return c.call();
 		}
@@ -200,7 +198,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 * @deprecated insecure; use {@link #run(GroovyShell, String, Whitelist)} or {@link #runScript}
 	 */
 	@Deprecated
-	public static Object run(@NonNull Script script, @NonNull final Whitelist whitelist) throws RejectedAccessException {
+	public static Object run(@NotNull Script script, @NotNull final Whitelist whitelist) throws RejectedAccessException {
 //        LOGGER.log(Level.WARNING, null, new IllegalStateException(Messages.GroovySandbox_useOfInsecureRunOverload()));
 		Whitelist wrapperWhitelist = new ProxyWhitelist(
 				new ClassLoaderWhitelist(script.getClass().getClassLoader()),
@@ -222,7 +220,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 * @deprecated use {@link #runScript}
 	 */
 	@Deprecated
-	public static Object run(@NonNull final GroovyShell shell, @NonNull final String script, @NonNull final Whitelist whitelist) throws RejectedAccessException {
+	public static Object run(@NotNull final GroovyShell shell, @NotNull final String script, @NotNull final Whitelist whitelist) throws RejectedAccessException {
 		return new StandardGroovySandbox().withWhitelist(whitelist).runScript(shell, script);
 	}
 
@@ -233,7 +231,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 //     * @param classLoader The {@link GroovyClassLoader} to use during compilation.
 //     * @return The {@link FormValidation} for the compilation check.
 //     */
-//    public static @NonNull FormValidation checkScriptForCompilationErrors(String script, GroovyClassLoader classLoader) {
+//    public static @NotNull FormValidation checkScriptForCompilationErrors(String script, GroovyClassLoader classLoader) {
 //        try {
 //            CompilationUnit cu = new CompilationUnit(
 //                    createSecureCompilerConfiguration(),

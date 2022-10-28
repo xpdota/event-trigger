@@ -1,7 +1,8 @@
 package org.jenkinsci.plugins.scriptsecurity.sandbox.groovy;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
+/*
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang.StringUtils;
@@ -56,6 +57,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+ */
 
 public class Functions {
 
@@ -411,7 +413,7 @@ public class Functions {
 //	}
 //
 //	@Restricted({NoExternalUse.class})
-//	@CheckForNull
+//	@Nullable
 //	public static String getUserTimeZone() {
 //		return TimeZoneProperty.forCurrentUser();
 //	}
@@ -921,7 +923,7 @@ public class Functions {
 //	}
 //
 //	@Nullable
-//	public static String getRelativeNameFrom(@CheckForNull Item p, @CheckForNull ItemGroup g, boolean useDisplayName) {
+//	public static String getRelativeNameFrom(@Nullable Item p, @Nullable ItemGroup g, boolean useDisplayName) {
 //		if (p == null) {
 //			return null;
 //		} else if (g == null) {
@@ -970,12 +972,12 @@ public class Functions {
 //	}
 //
 //	@Nullable
-//	public static String getRelativeNameFrom(@CheckForNull Item p, @CheckForNull ItemGroup g) {
+//	public static String getRelativeNameFrom(@Nullable Item p, @Nullable ItemGroup g) {
 //		return getRelativeNameFrom(p, g, false);
 //	}
 //
 //	@Nullable
-//	public static String getRelativeDisplayNameFrom(@CheckForNull Item p, @CheckForNull ItemGroup g) {
+//	public static String getRelativeDisplayNameFrom(@Nullable Item p, @Nullable ItemGroup g) {
 //		return getRelativeNameFrom(p, g, true);
 //	}
 //
@@ -1146,8 +1148,8 @@ public class Functions {
 //		return value != null ? value : defaultValue;
 //	}
 //
-//	@NonNull
-//	public static String printThrowable(@CheckForNull Throwable t) {
+//	@NotNull
+//	public static String printThrowable(@Nullable Throwable t) {
 //		if (t == null) {
 //			return Messages.Functions_NoExceptionDetails();
 //		} else {
@@ -1157,7 +1159,7 @@ public class Functions {
 //		}
 //	}
 //
-//	private static void doPrintStackTrace(@NonNull StringBuilder s, @NonNull Throwable t, @CheckForNull Throwable higher, @NonNull String prefix, @NonNull Set<Throwable> encountered) {
+//	private static void doPrintStackTrace(@NotNull StringBuilder s, @NotNull Throwable t, @Nullable Throwable higher, @NotNull String prefix, @NotNull Set<Throwable> encountered) {
 //		if (!encountered.add(t)) {
 //			s.append("<cycle to ").append(t).append(">\n");
 //		} else if (Util.isOverridden(Throwable.class, t.getClass(), "printStackTrace", new Class[]{PrintWriter.class})) {
@@ -1211,11 +1213,11 @@ public class Functions {
 //		}
 //	}
 //
-//	public static void printStackTrace(@CheckForNull Throwable t, @NonNull PrintWriter pw) {
+//	public static void printStackTrace(@Nullable Throwable t, @NotNull PrintWriter pw) {
 //		pw.println(printThrowable(t).trim());
 //	}
 //
-//	public static void printStackTrace(@CheckForNull Throwable t, @NonNull PrintStream ps) {
+//	public static void printStackTrace(@Nullable Throwable t, @NotNull PrintStream ps) {
 //		ps.println(printThrowable(t).trim());
 //	}
 //
@@ -1278,7 +1280,7 @@ public class Functions {
 //		return buf.toString();
 //	}
 //
-//	@CheckForNull
+//	@Nullable
 //	public static String getActionUrl(String itUrl, Action action) {
 //		String urlName = action.getUrlName();
 //		if (urlName == null) {

@@ -348,6 +348,7 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>testutils-samplelogs</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
