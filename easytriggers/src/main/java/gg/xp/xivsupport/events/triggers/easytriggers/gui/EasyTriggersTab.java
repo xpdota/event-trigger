@@ -9,6 +9,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
+import gg.xp.xivsupport.gui.GuiMain;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
@@ -20,8 +21,10 @@ import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
+import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +44,8 @@ public class EasyTriggersTab implements PluginTab {
 	private static final Logger log = LoggerFactory.getLogger(EasyTriggersTab.class);
 
 	private final EasyTriggers backend;
+	private final GlobalUiRegistry tabReg;
+	private final PicoContainer pico;
 	private final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private JPanel detailsInner;
 	private CustomTableModel<EasyTrigger<?>> model;
@@ -49,8 +54,10 @@ public class EasyTriggersTab implements PluginTab {
 	private List<EasyTrigger<?>> multiSelections = Collections.emptyList();
 	private RefreshLoop<EasyTriggersTab> autoSave;
 
-	public EasyTriggersTab(EasyTriggers backend, RightClickOptionRepo rightClicks) {
+	public EasyTriggersTab(EasyTriggers backend, RightClickOptionRepo rightClicks, GlobalUiRegistry tabReg, PicoContainer pico) {
 		this.backend = backend;
+		this.tabReg = tabReg;
+		this.pico = pico;
 		rightClicks.addOption(CustomRightClickOption.forRow(
 				"Make Easy Trigger",
 				Event.class,
@@ -89,6 +96,7 @@ public class EasyTriggersTab implements PluginTab {
 				.addColumn(new CustomColumn<>("Hit", EasyTrigger::getHits, 80))
 				.addColumn(new CustomColumn<>("Miss", EasyTrigger::getMisses, 80))
 				.build();
+		log.info("Baz");
 		JTable triggerChooserTable = new JTable(model) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
@@ -261,13 +269,19 @@ public class EasyTriggersTab implements PluginTab {
 		backend.addTrigger(newTrigger);
 		refresh();
 		model.setSelectedValue(newTrigger);
+		model.scrollToSelectedValue();
 //		refreshSelection();
 	}
 
 	private void addExisting(EasyTrigger<?> trigger) {
 		backend.addTrigger(trigger);
-		refresh();
-		model.setSelectedValue(trigger);
+		SwingUtilities.invokeLater(() -> {
+			if (model != null) {
+				refresh();
+				model.setSelectedValue(trigger);
+				model.scrollToSelectedValue();
+			}
+		});
 	}
 
 	private void addnew() {
@@ -376,52 +390,6 @@ public class EasyTriggersTab implements PluginTab {
 			add(GuiUtil.labelFor("Event", eventTypeField), c);
 			c.gridx++;
 			add(eventTypeField, c);
-//			c.gridx = 0;
-//			c.gridy++;
-//			add(GuiUtil.labelFor("TTS", ttsField), c);
-//			c.gridx++;
-//			add(ttsField, c);
-//			c.gridx = 0;
-//			c.gridy++;
-//			add(GuiUtil.labelFor("Text", textField), c);
-//			c.gridx++;
-//			add(textField, c);
-//			int yReset = c.gridy + 1;
-//			c.gridx = 2;
-
-			{
-//				TextFieldWithValidation<Long> hangTime = new TextFieldWithValidation<>(Long::parseLong, editTriggerThenSave(trigger::setHangTime), () -> Long.toString(trigger.getHangTime()));
-//				JCheckBox plusDuration = new JCheckBox();
-//				plusDuration.setSelected(trigger.isUseDuration());
-//				plusDuration.addActionListener(l -> trigger.setUseDuration(plusDuration.isSelected()));
-//				plusDuration.addActionListener(l -> requestSave());
-//
-//				JCheckBox useIcon = new JCheckBox();
-//				useIcon.setSelected(trigger.isUseIcon());
-//				useIcon.addActionListener(l -> trigger.setUseIcon(useIcon.isSelected()));
-//				useIcon.addActionListener(l -> requestSave());
-//
-//				Component textColor = new ColorChooser("Text Color", trigger::getColor, editTriggerThenSave(trigger::setColor), () -> true).getButtonOnly();
-//
-//				c.gridy = 0;
-//				add(GuiUtil.labelFor("Hang Time", hangTime), c);
-//				c.gridy++;
-//				add(GuiUtil.labelFor("Plus cast/buff duration", plusDuration), c);
-//				c.gridy++;
-//				add(GuiUtil.labelFor("Use ability/buff icon", useIcon), c);
-//				c.gridy++;
-//				add(GuiUtil.labelFor("Text Color Override", textColor), c);
-//				c.gridy = 0;
-//
-//				c.gridx++;
-//				add(hangTime, c);
-//				c.gridy++;
-//				add(plusDuration, c);
-//				c.gridy++;
-//				add(useIcon, c);
-//				c.gridy++;
-//				add(textColor, c);
-			}
 
 
 			c.gridx = 0;
@@ -440,17 +408,36 @@ public class EasyTriggersTab implements PluginTab {
 		}
 	}
 
+	private String askForCalloutText() {
+		String text = JOptionPane.showInputDialog(pico.getComponent(GuiMain.class).getMainFrame(), "Enter Callout Text (or leave blank for default)");
+		if (text == null) {
+			throw new TriggerCreationCancelledException("User cancelled trigger creation");
+		}
+		if (text.isEmpty()) {
+			text = null;
+		}
+		return text;
+	}
 
 	private void makeTriggerFromEvent(Event event) {
-		EasyTrigger<?> newTrigger = backend.makeTriggerFromEvent(event);
+		EasyTrigger<?> newTrigger;
+		bringToFront();
+		try {
+			newTrigger = backend.makeTriggerFromEvent(event, this::askForCalloutText);
+		} catch (TriggerCreationCancelledException e) {
+			return;
+		}
 		if (newTrigger == null) {
-			JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(outer), "Unfortunately, this event type is not possible to automatically make a trigger for.");
+			JOptionPane.showMessageDialog(pico.getComponent(GuiMain.class).getMainFrame(), "Unfortunately, this event type is not possible to automatically make a trigger for.");
 		}
 		else {
 			addExisting(newTrigger);
-			GuiUtil.bringToFront(outer);
+			log.info("Bar");
 		}
 	}
 
-
+	public void bringToFront() {
+		log.info("Foo");
+		tabReg.activateItem(this);
+	}
 }

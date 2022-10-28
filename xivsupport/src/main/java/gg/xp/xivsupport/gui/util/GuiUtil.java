@@ -15,6 +15,7 @@ import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.function.Function;
 
 public final class GuiUtil {
@@ -197,12 +198,42 @@ public final class GuiUtil {
 	}
 
 	public static void displayWaitCursorWhile(Component comp, Runnable action) {
-		SwingUtilities.getWindowAncestor(comp).setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		Window win;
+		try {
+			win = SwingUtilities.getWindowAncestor(comp);
+		}
+		catch (Throwable t) {
+			win = Arrays.stream(Frame.getWindows())
+					.filter(window -> window.getName().equals("Triggevent"))
+					.findFirst()
+					.orElse(null);
+		}
+		if (win != null) {
+			win.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		}
 		try {
 			action.run();
 		}
 		finally {
-			SwingUtilities.getWindowAncestor(comp).setCursor(null);
+			if (win != null) {
+				win.setCursor(null);
+			}
 		}
+	}
+
+	public static void invokeLaterSequentially(Runnable... runnables) {
+		if (runnables.length == 0) {
+			return;
+		}
+		Runnable run = runnables[runnables.length - 1];
+		for (int i = runnables.length - 2; i >= 0; i--) {
+			Runnable prevRun = run;
+			int j = i;
+			run = () -> {
+				runnables[j].run();
+				SwingUtilities.invokeLater(prevRun);
+			};
+		}
+		SwingUtilities.invokeLater(run);
 	}
 }

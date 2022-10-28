@@ -111,6 +111,11 @@ public class TelestoGui implements PluginTab {
 	}
 
 	@Override
+	public boolean asyncOk() {
+		return false;
+	}
+
+	@Override
 	public int getSortOrder() {
 		return 99999;
 	}

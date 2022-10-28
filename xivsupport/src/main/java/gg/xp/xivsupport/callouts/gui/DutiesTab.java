@@ -14,14 +14,18 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.extra.TabDef;
 import gg.xp.xivsupport.gui.tabs.FixedWidthVerticalTabPane;
+import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -38,19 +42,23 @@ public class DutiesTab implements PluginTab {
 	private final EventMaster master;
 	private final GlobalArenaSectorConverter asc;
 	private final SoundFileTab sft;
+	private final GlobalUiRegistry reg;
+	private SmartTabbedPane tabPane;
 
 	public DutiesTab(ModifiedCalloutRepository backend,
 	                 PicoContainer container,
 	                 SoundFilesManager soundMgr,
 	                 EventMaster master,
 	                 GlobalArenaSectorConverter asc,
-	                 SoundFileTab sft) {
+	                 SoundFileTab sft,
+	                 GlobalUiRegistry reg) {
 		this.backend = backend;
 		this.container = container;
 		this.soundMgr = soundMgr;
 		this.master = master;
 		this.asc = asc;
 		this.sft = sft;
+		this.reg = reg;
 	}
 
 	@Override
@@ -71,9 +79,66 @@ public class DutiesTab implements PluginTab {
 
 	private final Set<KnownDuty> alreadyHasAscTab = EnumSet.noneOf(KnownDuty.class);
 
+	private void activateItem(Object item) {
+		if (item instanceof Duty duty) {
+			GuiUtil.invokeLaterSequentially(
+					() -> activateExpac(duty.getExpac()),
+					() -> activateDutyType(duty.getType()),
+					() -> activateDuty(duty)
+			);
+		}
+		else if (item instanceof DutyPluginTab dpt) {
+			KnownDuty duty = dpt.getDuty();
+			GuiUtil.invokeLaterSequentially(
+					() -> activateExpac(duty.getExpac()),
+					() -> activateDutyType(duty.getType()),
+					() -> activateDuty(duty),
+					() -> activatePluginTab(dpt)
+			);
+		}
+	}
+
+	private void activateExpac(Expansion expac) {
+		tabPane.selectTabByKey(expac);
+	}
+
+	private void activateDutyType(DutyType type) {
+		Component comp = tabPane.getSelectedComponent();
+		if (comp instanceof SmartTabbedPane pane) {
+			pane.selectTabByKey(type);
+		}
+	}
+
+	private void activateDuty(Duty duty) {
+		Component comp = tabPane.getSelectedComponent();
+		if (comp instanceof SmartTabbedPane pane) {
+			Component comp2 = pane.getSelectedComponent();
+			if (comp2 instanceof SmartTabbedPane p2) {
+				p2.selectTabByKey(duty);
+			}
+		}
+	}
+
+	private void activatePluginTab(DutyPluginTab dpt) {
+		Component comp = tabPane.getSelectedComponent();
+		if (comp instanceof SmartTabbedPane pane) {
+			Component comp2 = pane.getSelectedComponent();
+			if (comp2 instanceof SmartTabbedPane p2) {
+				Component comp3 = p2.getSelectedComponent();
+				if (comp3 instanceof SmartTabbedPane p3) {
+					p3.selectTabByKey(dpt);
+				}
+			}
+		}
+	}
+
+	private void activateGeneralTab() {
+		tabPane.selectTabByKey("General");
+	}
+
 	@Override
 	public Component getTabContents() {
-		SmartTabbedPane tabPane = new SmartTabbedPane(JTabbedPane.LEFT);
+		this.tabPane = new SmartTabbedPane(JTabbedPane.LEFT);
 		Map<Expansion, Map<DutyType, Map<Duty, DutyTabContents>>> contents = new LinkedHashMap<>();
 		DutyTabContents nonSpecific = new DutyTabContents(KnownDuty.None);
 		List<CalloutGroup> allCallouts = new ArrayList<>(backend.getAllCallouts());
@@ -84,6 +149,7 @@ public class DutiesTab implements PluginTab {
 				nonSpecific.calls.add(group);
 				return;
 			}
+			reg.registerItem(duty, () -> activateItem(duty), DutiesTab.class);
 			DutyTabContents tabContents = contents.computeIfAbsent(duty.getExpac(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty, DutyTabContents::new);
@@ -118,6 +184,7 @@ public class DutiesTab implements PluginTab {
 					.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty, DutyTabContents::new);
 			tabContents.extraTabs.add(tab);
+			reg.registerItem(tab, () -> this.activateItem(tab), DutiesTab.class, duty);
 
 		});
 
@@ -152,18 +219,59 @@ public class DutiesTab implements PluginTab {
 		tabPane.add("General", makeDutyComponent(nonSpecific));
 
 		contents.forEach((expac, types) -> {
-			tabPane.addTabLazy(expac.getName(), () -> {
-				SmartTabbedPane expacTab = new FixedWidthVerticalTabPane(80);
-				types.forEach((type, duties) -> {
-					expacTab.addTabLazy(type.getName(), () -> {
-						JTabbedPane typeTab = new FixedWidthVerticalTabPane(100);
-						duties.forEach((duty, dutyContent) -> {
-							typeTab.add(duty.getName(), makeDutyComponent(dutyContent));
+			tabPane.addTabLazy(new TabDef() {
+				@Override
+				public String getTabName() {
+					return expac.getName();
+				}
+
+				@Override
+				public List<Object> keys() {
+					return List.of(expac);
+				}
+
+				@Override
+				public Component getTabContents() {
+					SmartTabbedPane expacTab = new FixedWidthVerticalTabPane(80);
+					types.forEach((type, duties) -> {
+						expacTab.addTabLazy(new TabDef() {
+							@Override
+							public String getTabName() {
+								return type.getName();
+							}
+
+							@Override
+							public List<Object> keys() {
+								return List.of(type);
+							}
+
+							@Override
+							public Component getTabContents() {
+								SmartTabbedPane typeTab = new FixedWidthVerticalTabPane(100);
+								duties.forEach((duty, dutyContent) -> {
+									typeTab.addTab(new TabDef() {
+										@Override
+										public String getTabName() {
+											return duty.getName();
+										}
+
+										@Override
+										public List<Object> keys() {
+											return Collections.singletonList(duty);
+										}
+
+										@Override
+										public Component getTabContents() {
+											return makeDutyComponent(dutyContent);
+										}
+									});
+								});
+								return typeTab;
+							}
 						});
-						return typeTab;
 					});
-				});
-				return expacTab;
+					return expacTab;
+				}
 			});
 		});
 
@@ -171,7 +279,7 @@ public class DutiesTab implements PluginTab {
 	}
 
 	private Component makeDutyComponent(DutyTabContents dutyContent) {
-		JTabbedPane tabPane = new JTabbedPane(JTabbedPane.TOP);
+		SmartTabbedPane tabPane = new SmartTabbedPane(JTabbedPane.TOP);
 
 		{
 			JPanel panel = new JPanel(new BorderLayout());
@@ -213,7 +321,7 @@ public class DutiesTab implements PluginTab {
 
 		{
 			for (DutyPluginTab extraTab : dutyContent.extraTabs) {
-				tabPane.add(extraTab.getTabName(), extraTab.getTabContents());
+				tabPane.addTab(extraTab);
 			}
 		}
 
@@ -223,5 +331,10 @@ public class DutiesTab implements PluginTab {
 	@Override
 	public int getSortOrder() {
 		return 0;
+	}
+
+	@Override
+	public boolean asyncOk() {
+		return false;
 	}
 }

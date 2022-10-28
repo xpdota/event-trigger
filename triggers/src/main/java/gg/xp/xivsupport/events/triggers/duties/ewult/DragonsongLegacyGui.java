@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.duties.ewult;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,10 +11,11 @@ import java.awt.*;
 @ScanMe
 public class DragonsongLegacyGui implements PluginTab {
 
-	private final DragonsongAmGui realGui;
 
-	public DragonsongLegacyGui(DragonsongAmGui realGui) {
-		this.realGui = realGui;
+	private final GlobalUiRegistry reg;
+
+	public DragonsongLegacyGui(GlobalUiRegistry reg) {
+		this.reg = reg;
 	}
 
 	@Override
@@ -26,7 +28,7 @@ public class DragonsongLegacyGui implements PluginTab {
 		JPanel panel = new JPanel();
 		panel.add(new ReadOnlyText("This has moved to the new Duties tab!"));
 		JButton button = new JButton("Take Me There!");
-		button.addActionListener(l -> realGui.tryBringToFront());
+		button.addActionListener(l -> reg.activateItem(DragonsongAmGui.class));
 		panel.add(button);
 		return panel;
 	}

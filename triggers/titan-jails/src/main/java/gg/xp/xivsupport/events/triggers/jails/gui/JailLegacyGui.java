@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.jails.gui;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
+import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,10 +11,10 @@ import java.awt.*;
 @ScanMe
 public class JailLegacyGui implements PluginTab {
 
-	private final JailGui realGui;
+	private final GlobalUiRegistry reg;
 
-	public JailLegacyGui(JailGui realGui) {
-		this.realGui = realGui;
+	public JailLegacyGui(GlobalUiRegistry reg) {
+		this.reg = reg;
 	}
 
 	@Override
@@ -26,7 +27,7 @@ public class JailLegacyGui implements PluginTab {
 		JPanel panel = new JPanel();
 		panel.add(new ReadOnlyText("This has moved to the new Duties tab!"));
 		JButton button = new JButton("Take Me There!");
-		button.addActionListener(l -> realGui.tryBringToFront());
+		button.addActionListener(l -> reg.activateItem(JailGui.class));
 		panel.add(button);
 		return panel;
 	}
