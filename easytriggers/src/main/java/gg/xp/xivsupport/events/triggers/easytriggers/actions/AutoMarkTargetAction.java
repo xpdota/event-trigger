@@ -9,7 +9,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.gui.AutoMarkGui;
-import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
+import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 

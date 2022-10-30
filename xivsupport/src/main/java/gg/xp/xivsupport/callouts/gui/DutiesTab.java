@@ -16,7 +16,7 @@ import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.extra.TabDef;
 import gg.xp.xivsupport.gui.tabs.FixedWidthVerticalTabPane;
-import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
+import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,13 +144,14 @@ public class DutiesTab implements PluginTab {
 		DutyTabContents nonSpecific = new DutyTabContents(KnownDuty.None);
 		List<CalloutGroup> allCallouts = new ArrayList<>(backend.getAllCallouts());
 		allCallouts.sort(Comparator.comparing(CalloutGroup::getDuty));
+		Set<Duty> duties = new HashSet<>();
 		allCallouts.forEach(group -> {
 			KnownDuty duty = group.getDuty();
 			if (duty == KnownDuty.None) {
 				nonSpecific.calls.add(group);
 				return;
 			}
-			reg.registerItem(duty, () -> activateItem(duty), DutiesTab.class);
+			duties.add(duty);
 			DutyTabContents tabContents = contents.computeIfAbsent(duty.getExpac(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty, DutyTabContents::new);
@@ -177,6 +179,9 @@ public class DutiesTab implements PluginTab {
 				alreadyHasAscTab.add(duty);
 			}
 		});
+		for (Duty duty : duties) {
+			reg.registerItem(duty, "Duty: " + duty.getName(), List.of(duty.getName()), () -> activateItem(duty), DutiesTab.class);
+		}
 
 		container.getComponents(DutyPluginTab.class).forEach(tab -> {
 			KnownDuty duty = tab.getDuty();
@@ -184,7 +189,7 @@ public class DutiesTab implements PluginTab {
 					.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty, DutyTabContents::new);
 			tabContents.extraTabs.add(tab);
-			reg.registerItem(tab, () -> this.activateItem(tab), DutiesTab.class, duty);
+			reg.registerItem(tab, "Duty Plugin: " + tab.getTabName(), List.of(tab.getTabName()), () -> this.activateItem(tab), DutiesTab.class, duty);
 
 		});
 

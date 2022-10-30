@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events.triggers.duties.ewult;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
-import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
+import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 
 import javax.swing.*;
 import java.awt.*;

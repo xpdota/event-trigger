@@ -66,6 +66,7 @@ public class GroovyScriptHolder {
 		copy.strict = strict;
 		copy.dirty = true;
 		copy.scriptMgr = scriptMgr;
+		copy.groovyMgr = groovyMgr;
 		return copy;
 	}
 
@@ -159,7 +160,7 @@ public class GroovyScriptHolder {
 	}
 
 	public boolean isMgrSet() {
-		return scriptMgr != null;
+		return scriptMgr != null && groovyMgr != null;
 	}
 
 	public void setScriptMgr(GroovyScriptManager scriptMgr) {

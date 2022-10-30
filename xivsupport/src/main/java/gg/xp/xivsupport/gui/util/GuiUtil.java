@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.util;
 
+import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.filters.InputValidationState;
 import gg.xp.xivsupport.gui.tables.filters.MultiLineTextAreaWithValidation;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -12,10 +13,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class GuiUtil {
@@ -235,5 +240,19 @@ public final class GuiUtil {
 			};
 		}
 		SwingUtilities.invokeLater(run);
+	}
+
+	public static <X> void tableDoubleClickAction(JTable table, CustomTableModel<X> model, Consumer<X> action) {
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					X value = model.getSelectedValue();
+					if (value != null) {
+						action.accept(value);
+					}
+				}
+			}
+		});
 	}
 }

@@ -21,7 +21,7 @@ import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
-import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
+import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;

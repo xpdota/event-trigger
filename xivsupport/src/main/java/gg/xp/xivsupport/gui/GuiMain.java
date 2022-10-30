@@ -7,7 +7,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
-import gg.xp.xivdata.data.XivMap;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -25,10 +25,12 @@ import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
-import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapTab;
+import gg.xp.xivsupport.gui.nav.GlobalNavPanel;
+import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
@@ -53,7 +55,6 @@ import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
-import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
@@ -83,11 +84,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -184,6 +188,38 @@ public class GuiMain {
 		addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class)));
 		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class)));
 		addTab("Advanced", new AdvancedTab(container));
+		GlobalNavPanel nav = new GlobalNavPanel(guiReg);
+		SwingUtilities.invokeLater(() -> {
+			JPanel gp = ((JPanel) mainFrame.getGlassPane());
+			// Glass pane will take up the entire window so that we can intercept clicks outside the navigator
+			// navOuterPanel will take up just the space
+			gp.setBorder(new EmptyBorder(50, 0, 0, 0));
+//			gp.setBackground(new Color(64, 64, 64, 64));
+			gp.setOpaque(false);
+			JPanel navOuterPanel = new JPanel();
+			navOuterPanel.setLayout(new BorderLayout());
+			navOuterPanel.add(nav, BorderLayout.CENTER);
+			navOuterPanel.setPreferredSize(new Dimension(400, 400));
+//			nav.setMaximumSize(new Dimension(400, 400));
+			navOuterPanel.setBorder(new LineBorder(new Color(128, 128, 128), 3, true));
+			nav.setActivateHook(() -> gp.setVisible(false));
+			gp.add(navOuterPanel);
+			JRootPane rootPane = mainFrame.getRootPane();
+			rootPane.registerKeyboardAction(e -> {
+//				navOuterPanel.set(mainFrame.getSize());
+				gp.setVisible(true);
+				nav.goingToShow();
+			}, KeyStroke.getKeyStroke(KeyEvent.VK_G, KeyEvent.CTRL_DOWN_MASK, false), JComponent.WHEN_IN_FOCUSED_WINDOW);
+			rootPane.registerKeyboardAction(e -> {
+				gp.setVisible(false);
+			}, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, false), JComponent.WHEN_IN_FOCUSED_WINDOW);
+			gp.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mousePressed(MouseEvent e) {
+					gp.setVisible(false);
+				}
+			});
+		});
 		SwingUtilities.invokeLater(() -> {
 			long end = System.currentTimeMillis();
 			log.info("GUI startup time: {}", end - start);
@@ -193,7 +229,7 @@ public class GuiMain {
 	private void addTab(String name, Component component) {
 		SwingUtilities.invokeLater(() -> {
 			tabPane.addTab(name, component);
-			guiReg.registerItem(component, () -> tabPane.setSelectedComponent(component));
+			guiReg.registerItem(component, "Main Tab: " + name, List.of(name), () -> tabPane.setSelectedComponent(component));
 		});
 	}
 
@@ -465,7 +501,7 @@ public class GuiMain {
 					log.info("Done Making Plugin Tab {} (took {}ms)", tabName, end - start);
 					return contents;
 				});
-				guiReg.registerTab(tab, pluginsTabPane, index, this);
+				guiReg.registerTab(tab, "Plugin: " + tabName, List.of(tabName, tab.getClass().getSimpleName()), pluginsTabPane, index, this);
 			}
 			else {
 				long start = System.currentTimeMillis();
@@ -474,7 +510,7 @@ public class GuiMain {
 				long end = System.currentTimeMillis();
 				log.info("Done Making Plugin Tab {} (took {}ms)", tabName, end - start);
 				pluginsTabPane.addTab(tabName, contents);
-				guiReg.registerItem(tab, () -> pluginsTabPane.setSelectedComponent(contents), this);
+				guiReg.registerItem(tab, "Plugin: " + tabName, List.of(tabName, tab.getClass().getSimpleName()), () -> pluginsTabPane.setSelectedComponent(contents), this);
 			}
 		}
 

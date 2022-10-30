@@ -7,7 +7,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.gui.AutoMarkGui;
-import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
+import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 
 public class ClearAllMarksAction implements Action<Event> {
 

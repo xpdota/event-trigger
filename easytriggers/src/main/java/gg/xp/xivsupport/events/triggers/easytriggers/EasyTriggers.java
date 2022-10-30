@@ -81,7 +81,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
-import gg.xp.xivsupport.gui.tabs.GlobalUiRegistry;
+import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
