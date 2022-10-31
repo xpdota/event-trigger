@@ -2,11 +2,16 @@ package gg.xp.xivsupport.events.triggers.util;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventDistributor;
+import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
 import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
+import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.eventstorage.EventReader;
@@ -19,6 +24,7 @@ import org.picocontainer.MutablePicoContainer;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -55,7 +61,19 @@ public abstract class CalloutVerificationTest {
 
 		List<CalloutInitialValues> actualCalls = new ArrayList<>();
 
-		pico.getComponent(EventDistributor.class).registerHandler(CalloutEvent.class, (ctx, e) -> {
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
+		dist.registerHandler(Event.class, (ctx, e) -> {
+			// This is a really ugly hack, but the alternative is reducing real world performance for
+			// the sake of tests.
+			if (e instanceof BaseDelayedEvent bde) {
+				Event parent = bde.getParent();
+				// This doesn't happen normally because the event is queued rather than accepted
+				if (parent != null) {
+					bde.setHappenedAt(parent.getHappenedAt());
+				}
+			}
+		});
+		dist.registerHandler(CalloutEvent.class, (ctx, e) -> {
 			PullTracker pulls = pico.getComponent(PullTracker.class);
 			final long msDelta;
 			Pull currentPull = pulls.getCurrentPull();
@@ -68,12 +86,15 @@ public abstract class CalloutVerificationTest {
 					return;
 				}
 				else {
-					msDelta = Duration.between(combatStart.getHappenedAt(), ((BaseEvent) e).getEffectiveHappenedAt()).toMillis();
+					msDelta = Duration.between(combatStart.getHappenedAt(), e.getEffectiveHappenedAt()).toMillis();
 				}
 			}
 			Event parent = e.getParent();
 			if (parent instanceof RawModifiedCallout<?>) {
 				parent = parent.getParent();
+			}
+			if (msDelta > 1_000_000_000) {
+				int foo = 5 + 1;
 			}
 			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText(), parent));
 		});

@@ -23,7 +23,8 @@ public enum KnownDuty implements Duty {
 	EndsingerEx("EX3", 0x3e6, Expansion.EW, DutyType.TRIAL_EX),
 	BarbarEx("EX4", 1072, Expansion.EW, DutyType.TRIAL_EX),
 	Dragonsong("Dragonsong", 0x3C8, Expansion.EW, DutyType.ULTIMATE),
-	ASS_Criterion("Sil'dihn Subterrane (Criterion)", 0x433, Expansion.EW, DutyType.OTHER)
+	ASS_Criterion("Sil'dihn Subterrane (Criterion)", 0x433, Expansion.EW, DutyType.OTHER),
+	ASS_Savage("Sil'dihn Subterrane (Savage)", 0x434, Expansion.EW, DutyType.OTHER)
 	;
 
 	private final String name;

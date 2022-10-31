@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @ScanMe
-@CalloutRepo(name = "Another Sil'Dihn Subterrane (Criterion)", duty = KnownDuty.ASS_Criterion)
+@CalloutRepo(name = "Another Sil'Dihn Subterrane (Criterion/Savage)", duty = KnownDuty.ASS_Criterion)
 public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(ASS_Crit.class);
@@ -281,7 +281,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return state.dutyIs(KnownDuty.ASS_Criterion);
+		return state.dutyIs(KnownDuty.ASS_Criterion) || state.dutyIs(KnownDuty.ASS_Savage);
 	}
 
 //	@HandleEvents
