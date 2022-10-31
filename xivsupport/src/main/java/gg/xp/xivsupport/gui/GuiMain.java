@@ -27,6 +27,7 @@ import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapTab;
 import gg.xp.xivsupport.gui.nav.GlobalNavPanel;
@@ -233,6 +234,15 @@ public class GuiMain {
 		});
 	}
 
+	private Component newsPanel() {
+		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("News");
+		// TODO: move this external somewhere
+		panel.add(new ReadOnlyText("""
+				New: Press Ctrl-G, then type the name of a tab, plugin, or duty to navigate directly to it.
+				Triggers for Another Sil'dihn Subterrane Criterion and Savage are now available!"""
+		), BorderLayout.WEST);
+		return panel;
+	}
 
 	private class SystemTabPanel extends JPanel {
 		SystemTabPanel() {
@@ -255,10 +265,13 @@ public class GuiMain {
 			}
 
 			c.gridy++;
+			add(newsPanel(), c);
+
 			c.weightx = 0;
 			c.gridwidth = 1;
+			c.gridy++;
 			XivStateStatus xivStateStatus = new XivStateStatus();
-			xivStateStatus.setMinimumSize(new Dimension(250, 200));
+			xivStateStatus.setMinimumSize(new Dimension(300, 200));
 			xivStateStatus.setPreferredSize(xivStateStatus.getMinimumSize());
 			add(xivStateStatus, c);
 
@@ -285,6 +298,7 @@ public class GuiMain {
 			master.getDistributor().registerHandler(AbilityUsedEvent.class, update);
 			master.getDistributor().registerHandler(BuffApplied.class, update);
 			master.getDistributor().registerHandler(BuffRemoved.class, update);
+
 		}
 	}
 

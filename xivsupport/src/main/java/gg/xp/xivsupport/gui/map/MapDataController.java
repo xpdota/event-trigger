@@ -83,6 +83,7 @@ public class MapDataController {
 	                         RightClickOptionRepo rc) {
 		realState = state;
 		realAcr = acr;
+		// TODO: statuses need the same treatment as cast bars - we need to fake the time
 		realStatuses = statuses;
 		this.sqid = sqid;
 		this.enableCapture = new BooleanSetting(pers, "map-replay.record-data", false);

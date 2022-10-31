@@ -59,6 +59,9 @@ public class StatusEffectListRenderer implements TableCellRenderer {
 				});
 				listRenderer.setToolTipText(tooltipBuilder.toString().stripTrailing());
 			}
+			else {
+				listRenderer.setToolTipText(null);
+			}
 			listRenderer.setComponents(comps);
 			return listRenderer;
 		}
