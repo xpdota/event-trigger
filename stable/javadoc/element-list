@@ -79,6 +79,7 @@ gg.xp.xivsupport.gui.imprt
 gg.xp.xivsupport.gui.library
 gg.xp.xivsupport.gui.lists
 gg.xp.xivsupport.gui.map
+gg.xp.xivsupport.gui.nav
 gg.xp.xivsupport.gui.overlay
 gg.xp.xivsupport.gui.tables
 gg.xp.xivsupport.gui.tables.filters
