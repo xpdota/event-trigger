@@ -130,9 +130,11 @@ public class ActWsHandlers {
 				log.trace("Got null ActWS response for rseq {}", rseqNode.intValue());
 				return;
 			}
-			// For now, since this is the only request/response we're using, we can just look for it specifically and
-			// not bother with actually matching it back up to a request.
 			JsonNode combatantsNode = jsonNode.path("combatants");
+			if ("getVersion".equals(rseqObj)) {
+				context.accept(new ActWsJsonMsg("getVersion", rseqObj, jsonNode));
+				return;
+			}
 			if (combatantsNode.isMissingNode()) {
 				log.warn("I don't know how to handle response message: {}", rawMsg);
 			}
@@ -232,6 +234,14 @@ public class ActWsHandlers {
 		}
 	}
 
+	@HandleEvents(order = -100)
+	public static void versionResponse(EventContext context, ActWsJsonMsg jsonMsg) {
+		if ("getVersion".equals(jsonMsg.getType())) {
+			String version = jsonMsg.getJson().get("version").textValue();
+			log.info("OverlayPlugin version: {}", version);
+			context.accept(new ActWsVersionEvent(version));
+		}
+	}
 	// Disabled - trying to get off of cactbot events
 //	@HandleEvents(order = -100)
 //	public static void actWsWipe(EventContext context, ActWsJsonMsg jsonMsg) {

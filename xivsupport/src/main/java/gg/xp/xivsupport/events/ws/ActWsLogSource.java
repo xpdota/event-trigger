@@ -176,6 +176,16 @@ public class ActWsLogSource implements EventSource {
 		}
 	}
 
+	@HandleEvents
+	public void requestVersion(EventContext context, ActWsConnectedEvent event) {
+		try {
+			client.send(mapper.writeValueAsString(Map.of("call", "getVersion", "rseq", "getVersion")));
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@LiveOnly
 	@HandleEvents
 	public void getCombatants(EventContext context, RefreshCombatantsRequest event) {
