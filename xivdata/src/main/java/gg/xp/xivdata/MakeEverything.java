@@ -80,6 +80,7 @@ public class MakeEverything {
 		}
 	}
 
+	// TODO: the folder is actually the defs ver, not game ver, so this doesn't always work
 	private String getVer() {
 		try {
 			return Files.readString(Paths.get(scDir.toString(), "Definitions", "game.ver")).trim();
