@@ -33,7 +33,7 @@ public class CalloutAction implements Action<Event>, GenericCalloutAction {
 		if (color != null) {
 			modified.setColorOverride(color);
 		}
-		context.getEventContext().accept(modified);
+		context.accept(modified);
 
 	}
 

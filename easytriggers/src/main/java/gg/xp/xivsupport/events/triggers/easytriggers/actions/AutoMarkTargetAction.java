@@ -28,7 +28,7 @@ public class AutoMarkTargetAction implements Action<HasTargetEntity> {
 	public void accept(EasyTriggerContext context, HasTargetEntity event) {
 		XivCombatant target = event.getTarget();
 		if (target instanceof XivPlayerCharacter xpc) {
-			context.getEventContext().accept(new SpecificAutoMarkRequest(xpc, marker));
+			context.accept(new SpecificAutoMarkRequest(xpc, marker));
 		}
 	}
 

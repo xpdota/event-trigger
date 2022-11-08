@@ -141,6 +141,10 @@ public final class SqtTemplates {
 				});
 	}
 
+	public static SequentialTrigger<BaseEvent> nothing() {
+		return sq(10_000, BaseEvent.class, be -> false, (e1, s) -> {});
+	}
+
 	private static class AutoWipeSequentialTrigger<X> extends SequentialTrigger<BaseEvent> {
 		public AutoWipeSequentialTrigger(int timeoutMs, Class<X> startType, Predicate<X> startCondition, BiConsumer<X, SequentialTriggerController<BaseEvent>> trigger) {
 			super(timeoutMs, BaseEvent.class, e1 -> startType.isInstance(e1) && startCondition.test((X) e1), (e1, s) -> {

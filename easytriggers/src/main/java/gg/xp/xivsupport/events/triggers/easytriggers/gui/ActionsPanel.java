@@ -54,9 +54,9 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 
 	private void addNewAction() {
 		TableWithFilterAndDetails<ActionDescription<?, ?>, Object> table = TableWithFilterAndDetails.builder(
-						"Choose Condition Type",
+						"Choose Action Type",
 						() -> backend.getActionsApplicableTo(trigger))
-				.addMainColumn(new CustomColumn<>("Condition", c -> c.clazz().getSimpleName()))
+				.addMainColumn(new CustomColumn<>("Action", c -> c.clazz().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Description", ActionDescription::description))
 				.setFixedData(true)
 				.build();
