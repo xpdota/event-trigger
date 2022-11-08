@@ -79,12 +79,22 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 						ctx.setAcceptHook(s::accept);
 						ctx.setEnqueueHook(s::enqueue);
 
-						if (action instanceof SqAction sqa) {
-							sqa.accept(s, ctx, (BaseEvent) e1);
+						try {
+							if (action instanceof SqAction sqa) {
+								sqa.accept(s, ctx, (BaseEvent) e1);
+							}
+							else {
+								action.accept(ctx, e1);
+							}
+						} catch (Throwable t) {
+							if (s.isDone()) {
+								return;
+							}
+							else {
+								log.error("Error in trigger '{}' action '{}'", name, action.dynamicLabel(), t);
+							}
 						}
-						else {
-							action.accept(ctx, e1);
-						}
+
 						if (ctx.shouldStopProcessing()) {
 							return;
 						}

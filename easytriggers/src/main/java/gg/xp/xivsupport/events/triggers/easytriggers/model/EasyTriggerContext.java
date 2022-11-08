@@ -18,8 +18,14 @@ public class EasyTriggerContext {
 
 	public EasyTriggerContext(EventContext context) {
 		this.context = context;
-		acceptHook = context::accept;
-		enqueueHook = context::accept;
+		if (context == null) {
+			acceptHook = i -> {};
+			enqueueHook = i -> {};
+		}
+		else {
+			acceptHook = context::accept;
+			enqueueHook = context::accept;
+		}
 	}
 
 	public void addVariable(String key, Object value) {
