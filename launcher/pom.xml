@@ -17,7 +17,7 @@
         <mainUpdateClass>gg.xp.xivsupport.gui.Update</mainUpdateClass>
         <launcherJar>./launcher-${project.version}.jar</launcherJar>
         <launcherJarRelativeToPom>./target/windows/launcher-${project.version}.jar</launcherJarRelativeToPom>
-        <preCp>./userdata;./preload/*.jar;./deps/*.jar;./user/*.jar;${launcherJar}</preCp>
+        <preCp>./userdata;./preload/*.jar;./deps/*.jar;./user/*.jar;${launcherJar};./addon/*/*.jar</preCp>
     </properties>
     <build>
         <plugins>
