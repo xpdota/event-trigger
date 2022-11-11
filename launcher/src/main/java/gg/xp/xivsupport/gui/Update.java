@@ -163,6 +163,7 @@ public class Update {
 	}
 
 	private List<Manifest> getAllManifests() {
+		getUpdaterLocation();
 		return Stream.concat(Stream.of(getMainLocation()), getAddonLocations().stream()).toList();
 	}
 

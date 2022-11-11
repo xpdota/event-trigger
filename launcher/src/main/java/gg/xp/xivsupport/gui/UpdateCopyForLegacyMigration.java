@@ -33,8 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-// This one will NOT be launched with the full classpath - it NEEDS to be self-sufficient
-// ...which is also why the code is complete shit, no external libraries.
+// TODO: delete this
 public class UpdateCopyForLegacyMigration {
 
 	private static final String defaultUpdaterUrlTemplate = "https://xpdota.github.io/event-trigger/%s/v2/%s";
