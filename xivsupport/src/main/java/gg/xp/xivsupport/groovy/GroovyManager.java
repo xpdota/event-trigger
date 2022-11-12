@@ -4,6 +4,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -42,14 +43,24 @@ public class GroovyManager {
 	private final GroovySandbox sandbox;
 	private final BooleanSetting sandboxSetting;
 	private final AutoHandlerConfig ahc;
-	private boolean useSandbox;
+	private final boolean useSandbox;
 
 	public GroovyManager(PicoContainer container, Whitelist whitelist, PersistenceProvider pers, AutoHandlerConfig ahc) {
 		this.container = container;
 		sandboxSetting = new BooleanSetting(pers, "groovy.enable-sandbox", true);
 		this.ahc = ahc;
 		// TODO: need a secure way to make sure scripts can't change this
-		useSandbox = sandboxSetting.get() || !Platform.isInIDE();
+		// This seems reasonable enough for now - allow it if the user is specifically running in an IDE, or if
+		// it is an integration test using non-persistent settings.
+		if (Platform.isInIDE() || pers instanceof InMemoryMapPersistenceProvider) {
+			useSandbox = sandboxSetting.get();
+			if (!useSandbox) {
+				log.warn("SANDBOX IS DISABLED! SCRIPTS CAN DO ANYTHING!");
+			}
+		}
+		else {
+			useSandbox = true;
+		}
 		if (useSandbox) {
 			sandbox = new StandardGroovySandbox().withWhitelist(whitelist);
 		}
