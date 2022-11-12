@@ -600,7 +600,8 @@ public class Update {
 				AtomicInteger downloaded = new AtomicInteger();
 				filesToDownload.parallelStream().forEach((info) -> {
 					Path localFile = getLocalFile(info.filePath());
-					appendText("Downloading URL '%s' to local file '%s'".formatted(info.getUri(), localFile));
+					appendText("Downloading %s / %s (%s)".formatted(downloaded.incrementAndGet(), filesToDownload.size(), info.filePath));
+//					appendText("Downloading URL '%s' to local file '%s'".formatted(info.getUri(), localFile));
 					HttpResponse.BodyHandler<Path> handler = HttpResponse.BodyHandlers.ofFile(localFile);
 					try {
 						client.send(HttpRequest.newBuilder().GET().uri(info.getUri()).build(), handler);
@@ -608,8 +609,9 @@ public class Update {
 					catch (IOException | InterruptedException e) {
 						throw new RuntimeException(e);
 					}
-					appendText(String.format("Downloaded %s / %s files", downloaded.incrementAndGet(), filesToDownload.size()));
+//					appendText(String.format("Downloaded %s / %s files", downloaded.incrementAndGet(), filesToDownload.size()));
 				});
+				appendText("Done downloading files");
 				appendText("Update finished! %s files needed to be updated.".formatted(filesToDownload.size()));
 			}
 			// Chances of a file being deleted without anything else being touched are essentially zero
