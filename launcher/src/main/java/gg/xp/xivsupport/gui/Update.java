@@ -347,7 +347,11 @@ public class Update {
 
 	// Need forward slashes regardless of platform since we need forward slashes in HTTP URLs
 	private String fixRelativeFilePath(String relativePath) {
-		return StreamSupport.stream(installDir.toPath().relativize(Path.of(relativePath).toAbsolutePath()).spliterator(), false)
+		return fixFileSeparators(installDir.toPath().relativize(Path.of(relativePath).toAbsolutePath()));
+	}
+
+	private String fixFileSeparators(Path path) {
+		return StreamSupport.stream(path.spliterator(), false)
 				.map(Object::toString)
 				.collect(Collectors.joining("/"));
 	}
@@ -364,7 +368,9 @@ public class Update {
 		}
 
 		public URI getUri() {
-			return mft.getUriForFile(filePath);
+			// Turn 'addon/foo/bar.jar' into just 'bar.jar'
+			String pathFromAddonBase = fixFileSeparators(mft.dir.relativize(Path.of(filePath).toAbsolutePath()));
+			return mft.getUriForFile(pathFromAddonBase);
 		}
 
 		public Manifest mft() {
