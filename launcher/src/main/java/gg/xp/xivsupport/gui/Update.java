@@ -172,7 +172,7 @@ public class Update {
 					}
 					String name = split[0];
 					String urlTemplate = split[1];
-					return new Manifest(name, Path.of("addon/", name), file -> makeAddonUrl(urlTemplate, file));
+					return new Manifest(name, Path.of("addon", name), file -> makeAddonUrl(urlTemplate, file));
 				})
 				.toList();
 	}
@@ -506,7 +506,7 @@ public class Update {
 						addonFiles = new File[0];
 					}
 					for (File addonFile : addonFiles) {
-						String name = manifest.dir + addonFile.getName();
+						String name = fixRelativeFilePath(Path.of(manifest.dir.toString(), addonFile.getName()).toString());
 						ActualFile af = new ActualFile(name, md5sum(addonFile));
 						actualFiles.put(af.filePath(), af);
 					}
