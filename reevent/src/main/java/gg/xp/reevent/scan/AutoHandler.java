@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class AutoHandler implements TypedEventHandler<Event> {
 
@@ -42,10 +44,20 @@ public class AutoHandler implements TypedEventHandler<Event> {
 		String tmpMethodLabel = declaring.getSimpleName() + '.' + method.getName();
 		log.trace("Setting up method {}", tmpMethodLabel);
 		if (paramTypes.length != 2) {
-			throw new IllegalStateException("Error setting up method " + tmpMethodLabel + ": wrong number of parameters (should be 2)");
+			throw new IllegalStateException("Error setting up method %s: wrong number of parameters (should be 2, but was %d)".formatted(tmpMethodLabel, paramTypes.length));
 		}
 		if (!EventContext.class.isAssignableFrom(paramTypes[0]) || !Event.class.isAssignableFrom(paramTypes[1])) {
-			throw new IllegalStateException("Error setting up method " + tmpMethodLabel + ": method signature must be (EventContext, Event)");
+			throw new IllegalStateException("Error setting up method %s: method signature must be (EventContext, Event), but was (%s)".formatted(
+					tmpMethodLabel,
+					Arrays.stream(paramTypes).map(cls -> {
+						String cn = cls.getCanonicalName();
+						if (cn != null) {
+							return cn;
+						}
+						else {
+							return cls.toString();
+						}
+					}).collect(Collectors.joining(", "))));
 		}
 		this.eventClass = (Class<? extends Event>) paramTypes[1];
 		this.method = method;

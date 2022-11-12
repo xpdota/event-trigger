@@ -1,9 +1,11 @@
 package gg.xp.xivsupport.groovy;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -27,8 +29,8 @@ import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
-import java.util.function.Predicate;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 import static org.reflections.scanners.Scanners.SubTypes;
 
@@ -39,12 +41,15 @@ public class GroovyManager {
 	private final PicoContainer container;
 	private final GroovySandbox sandbox;
 	private final BooleanSetting sandboxSetting;
+	private final AutoHandlerConfig ahc;
 	private boolean useSandbox;
 
-	public GroovyManager(PicoContainer container, Whitelist whitelist, PersistenceProvider pers) {
+	public GroovyManager(PicoContainer container, Whitelist whitelist, PersistenceProvider pers, AutoHandlerConfig ahc) {
 		this.container = container;
 		sandboxSetting = new BooleanSetting(pers, "groovy.enable-sandbox", true);
-		useSandbox = sandboxSetting.get();
+		this.ahc = ahc;
+		// TODO: need a secure way to make sure scripts can't change this
+		useSandbox = sandboxSetting.get() || true;
 		if (useSandbox) {
 			sandbox = new StandardGroovySandbox().withWhitelist(whitelist);
 		}
@@ -53,18 +58,36 @@ public class GroovyManager {
 		}
 	}
 
-	private final Object cclock = new Object();
+	private final Object ccLock = new Object();
 	private volatile @Nullable CompilerConfiguration compilerConfig;
 
 	public CompilerConfiguration getCompilerConfig() {
 		if (compilerConfig == null) {
-			synchronized (cclock) {
+			synchronized (ccLock) {
 				if (compilerConfig == null) {
 					return compilerConfig = makeCompilerConfig();
 				}
 			}
 		}
 		return compilerConfig;
+	}
+
+	private final Object clLock = new Object();
+	private volatile @Nullable ClassLoader cl;
+
+	public ClassLoader getClassLoader() {
+		if (cl == null) {
+			synchronized (clLock) {
+				if (cl == null) {
+					return cl = makeClassLoader();
+				}
+			}
+		}
+		return cl;
+	}
+
+	private ClassLoader makeClassLoader() {
+		return new URLClassLoader(ahc.getAddonJars().toArray(URL[]::new), Thread.currentThread().getContextClassLoader());
 	}
 
 	private static final Object staticLock = new Object();
@@ -84,16 +107,16 @@ public class GroovyManager {
 	private static ImportCustomizer makeImportCustomizer() {
 		ImportCustomizer importCustomizer = new ImportCustomizer();
 		importCustomizer.addImports(
-				Predicate.class.getCanonicalName(),
 				Event.class.getCanonicalName(),
 				CompileStatic.class.getCanonicalName(),
 				TypeChecked.class.getCanonicalName());
 		// TODO: add ability effects and other common events here
 		importCustomizer.addStarImports(
 				"gg.xp.xivsupport.events.actlines.events",
-				"javax.util",
-				"javax.util.function",
+				"java.util",
+				"java.util.function",
 				"javax.swing",
+				"java.awt",
 				"gg.xp.xivdata.data",
 				"gg.xp.xivsupport.gui",
 				"gg.xp.xivsupport.events.actlines.events.abilityeffect",
@@ -106,10 +129,10 @@ public class GroovyManager {
 						.setUrls(ClasspathHelper.forJavaClassPath())
 						.setParallel(true)
 						.setScanners(Scanners.SubTypes));
-		reflections.get(SubTypes.of(Event.class).asClass())
+		reflections.get(SubTypes.of(Event.class))
 				.stream()
-				.map(Class::getCanonicalName)
-				.filter(Objects::nonNull)
+//				.map(Class::getCanonicalName)
+				.filter(s -> s != null && !s.isBlank())
 				.forEach(importCustomizer::addImports);
 		return importCustomizer;
 	}
@@ -136,7 +159,7 @@ public class GroovyManager {
 	public GroovyShell makeShell() {
 		Binding binding = makeBinding();
 
-		return new GroovyShell(binding, getCompilerConfig());
+		return new GroovyShell(makeClassLoader(), binding, getCompilerConfig());
 	}
 
 	public Binding makeBinding() {
