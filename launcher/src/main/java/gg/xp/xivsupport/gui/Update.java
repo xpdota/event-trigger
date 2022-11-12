@@ -152,7 +152,13 @@ public class Update {
 	}
 
 	private Manifest getMainLocation() {
-		return new Manifest(this::makeUrl);
+		return new Manifest(this::makeUrl) {
+			@Override
+			URI getManifestUri() {
+				// Adding random junk to bypass cache
+				return getUriForFile(manifestFile + "?q=" + System.currentTimeMillis() % 1000);
+			}
+		};
 	}
 
 	private List<Manifest> getAddonLocations() {
@@ -274,7 +280,7 @@ public class Update {
 		logging.accept(text);
 	}
 
-	private static final class Manifest {
+	private static class Manifest {
 		private final Function<String, URI> urlTemplate;
 
 		private Manifest(Function<String, URI> urlTemplate) {
