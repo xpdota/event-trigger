@@ -369,7 +369,10 @@ public class Update {
 
 		public URI getUri() {
 			// Turn 'addon/foo/bar.jar' into just 'bar.jar'
-			String pathFromAddonBase = fixFileSeparators(mft.dir.relativize(Path.of(filePath).toAbsolutePath()));
+			// filePath = addon/foo/bar.jar
+			// mft.dr = addon/foo
+			Path baseMftDir = mft.dir.toAbsolutePath();
+			String pathFromAddonBase = fixFileSeparators(baseMftDir.relativize(Path.of(filePath).toAbsolutePath()));
 			return mft.getUriForFile(pathFromAddonBase);
 		}
 
