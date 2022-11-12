@@ -15,12 +15,16 @@ import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
 import groovy.lang.GroovyShell;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URL;
+import java.util.List;
 
 public final class XivMain {
 
@@ -58,9 +62,14 @@ public final class XivMain {
 		pico.addComponent(new TopoInfoImpl(new InMemoryMapPersistenceProvider()));
 		pico.addComponent(PrimaryLogSource.class);
 		pico.addComponent(pico);
+		pico.getComponent(AutoHandlerConfig.class).setAddonJars(findAddonJars());
 		log.info("Required components done");
 		return pico;
 
+	}
+
+	private static List<URL> findAddonJars() {
+		return Platform.getAddonJars();
 	}
 
 	private static boolean isRealLauncher() {

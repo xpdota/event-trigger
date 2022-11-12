@@ -59,6 +59,10 @@ public class AutoHandlerScan {
 		this.config = config;
 	}
 
+	private Stream<URL> findAddonJars() {
+		return config.getAddonJars().stream();
+	}
+
 	public List<AutoHandler> build() {
 		log.info("Scanning packages");
 		List<AutoHandler> out = new ArrayList<>();
@@ -74,7 +78,7 @@ public class AutoHandlerScan {
 //			Thread.currentThread().setContextClassLoader(loader);
 			Collection<URL> urls = ClasspathHelper.forJavaClassPath();
 			// TODO: make package blacklist a setting
-			urls = urls.stream().filter(u -> {
+			urls = Stream.concat(urls.stream(), findAddonJars()).filter(u -> {
 				String jarName = getJarName(u.toString());
 				if (jarName == null) {
 					return true;

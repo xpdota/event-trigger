@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -52,7 +53,6 @@ public class Update {
 	private static final String updaterFilenameBackup = "triggevent-upd.bak";
 	private final File installDir;
 	private final File depsDir;
-	private final File addonDir;
 	private final File propsOverride;
 	private String rawAddonTemplates;
 
@@ -65,9 +65,9 @@ public class Update {
 		}
 	}
 
-	private URI makeAddonUrl(AddonLocation location, String filename) {
+	private URI makeAddonUrl(String urlTemplate, String filename) {
 		try {
-			return new URI(location.urlTemplate().formatted(filename));
+			return new URI(urlTemplate.formatted(filename));
 		}
 		catch (URISyntaxException e) {
 			throw new RuntimeException(e);
@@ -77,11 +77,6 @@ public class Update {
 	private record UpdaterLocation(
 			String urlTemplate,
 			String branch
-	) {
-	}
-
-	private record AddonLocation(
-			String urlTemplate
 	) {
 	}
 
@@ -135,11 +130,10 @@ public class Update {
 		return updaterLocation;
 	}
 
-	private List<AddonLocation> getAddonUrlTemplates() {
+	private List<String> getAddonUrlTemplates() {
 		return Arrays.stream(rawAddonTemplates.split("\n"))
 				.filter(s -> !s.isBlank())
 				.map(String::trim)
-				.map(AddonLocation::new)
 				.toList();
 	}
 
@@ -152,11 +146,16 @@ public class Update {
 	}
 
 	private Manifest getMainLocation() {
-		return new Manifest(this::makeUrl) {
+		return new Manifest("Main", Path.of("."), this::makeUrl) {
 			@Override
 			URI getManifestUri() {
 				// Adding random junk to bypass cache
 				return getUriForFile(manifestFile + "?q=" + System.currentTimeMillis() % 1000);
+			}
+
+			@Override
+			boolean isMainManifest() {
+				return true;
 			}
 		};
 	}
@@ -164,7 +163,16 @@ public class Update {
 	private List<Manifest> getAddonLocations() {
 		return getAddonUrlTemplates()
 				.stream()
-				.map(template -> new Manifest(file -> makeAddonUrl(template, file)))
+				.map(line -> {
+					// TODO: somewhere, there needs to be validation that someone didn't stick a : in the name of their addon
+					String[] split = line.split(":", 2);
+					if (split.length != 2) {
+						throw new IllegalArgumentException("Malformed addon spec: " + line);
+					}
+					String name = split[0];
+					String urlTemplate = split[1];
+					return new Manifest(name, Path.of("addon/", name), file -> makeAddonUrl(urlTemplate, file));
+				})
 				.toList();
 	}
 
@@ -210,7 +218,6 @@ public class Update {
 			}
 		}
 		depsDir = Paths.get(installDir.toString(), "deps").toFile();
-		addonDir = Paths.get(installDir.toString(), "addon").toFile();
 		propsOverride = Paths.get(installDir.toString(), propsOverrideFileName).toFile();
 		appendText("Install dir: " + installDir);
 		appendText("Starting update check...");
@@ -281,14 +288,15 @@ public class Update {
 	}
 
 	private static class Manifest {
+		private final String name;
+		private final Path dir;
 		private final Function<String, URI> urlTemplate;
 
-		private Manifest(Function<String, URI> urlTemplate) {
+		private Manifest(String name, Path dir, Function<String, URI> urlTemplate) {
+			this.name = name;
+			this.dir = dir;
 			this.urlTemplate = urlTemplate;
 		}
-
-		private final Map<String, String> expectedFiles = new HashMap<>();
-		private final Map<String, String> actualFiles = new HashMap<>();
 
 		URI getManifestUri() {
 			return getUriForFile(manifestFile);
@@ -298,10 +306,20 @@ public class Update {
 			return urlTemplate.apply(file);
 		}
 
-		public Function<String, URI> urlTemplate() {
-			return urlTemplate;
+		@Override
+		public String toString() {
+			return "Manifest{" +
+					"name='" + name + '\'' +
+					", dir=" + dir +
+					", urlTemplate=" + urlTemplate +
+					'}';
 		}
-//
+
+		boolean isMainManifest() {
+			return false;
+		}
+
+		//
 //		@Override
 //		public boolean equals(Object obj) {
 //			if (obj == this) return true;
@@ -326,46 +344,132 @@ public class Update {
 
 	}
 
-	private record ExpectedFile(Manifest mft, String filePath, String hash) {
+	private final class ExpectedFile {
+		private final Manifest mft;
+		private final String filePath;
+		private final String hash;
+
+		private ExpectedFile(Manifest mft, String filePath, String hash) {
+			this.mft = mft;
+			this.filePath = installDir.toPath().relativize(Path.of(filePath).toAbsolutePath()).toString();
+			this.hash = hash;
+		}
+
 		public URI getUri() {
 			return mft.getUriForFile(filePath);
 		}
+
+		public Manifest mft() {
+			return mft;
+		}
+
+		public String filePath() {
+			return filePath;
+		}
+
+		public String hash() {
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) return true;
+			if (obj == null || obj.getClass() != this.getClass()) return false;
+			var that = (ExpectedFile) obj;
+			return Objects.equals(this.mft, that.mft) &&
+					Objects.equals(this.filePath, that.filePath) &&
+					Objects.equals(this.hash, that.hash);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(mft, filePath, hash);
+		}
+
+		@Override
+		public String toString() {
+			return "ExpectedFile[" +
+					"mft=" + mft + ", " +
+					"filePath=" + filePath + ", " +
+					"hash=" + hash + ']';
+		}
+
 	}
 
-	private record ActualFile(String filePath, String hash) {
+	private final class ActualFile {
+		private final String filePath;
+		private final String hash;
+
+		private ActualFile(String filePath, String hash) {
+			this.filePath = installDir.toPath().relativize(Path.of(filePath).toAbsolutePath()).toString();
+			this.hash = hash;
+		}
+
+		public String filePath() {
+			return filePath;
+		}
+
+		public String hash() {
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) return true;
+			if (obj == null || obj.getClass() != this.getClass()) return false;
+			var that = (ActualFile) obj;
+			return Objects.equals(this.filePath, that.filePath) &&
+					Objects.equals(this.hash, that.hash);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(filePath, hash);
+		}
+
+		@Override
+		public String toString() {
+			return "ActualFile[" +
+					"filePath=" + filePath + ", " +
+					"hash=" + hash + ']';
+		}
+
 	}
 
-	private boolean doUpdateCheck() {
-		boolean anythingChanged;
-		try {
-			appendText("Beginning update check. If this hangs, freezes, or crashes, check that your AV is not interfering.");
-			// Adding random junk to bypass cache
-			List<Manifest> manifests = getAllManifests();
-			Map<String, ExpectedFile> expectedFiles = new HashMap<>();
-			for (Manifest manifest : manifests) {
-				URI uri = manifest.getManifestUri();
-				HttpResponse<String> manifestResponse = client.send(HttpRequest.newBuilder().GET().uri(uri).build(), HttpResponse.BodyHandlers.ofString());
-				if (manifestResponse.statusCode() != 200) {
-					throw new RuntimeException("Bad response: %s: %s".formatted(manifestResponse.statusCode(), manifestResponse));
-				}
-				String body = manifestResponse.body();
-				Map<String, ExpectedFile> expectedFilesForThisManifest = body.lines()
-						.map(line -> line.split("\s+"))
-						.collect(Collectors.toMap(s -> s[1], s -> new ExpectedFile(manifest, s[1], s[0])));
-				// TODO: parallelize manifest + real downloads
-				expectedFilesForThisManifest.forEach((k, newValue) -> {
-					ExpectedFile oldValue = expectedFiles.putIfAbsent(k, newValue);
-					if (oldValue != null) {
-						appendText("Warning! More than one manifest claims file path %s!".formatted(k));
-						appendText("    1: %s".formatted(oldValue));
-						appendText("    2: %s".formatted(newValue));
-					}
-				});
-			}
-			Map<String, ActualFile> actualFiles = new HashMap<>();
+	private boolean updateCheckSingleManifest(Manifest manifest) throws IOException, InterruptedException {
+		if (manifest.isMainManifest()) {
+			appendText("Checking for Triggevent updates...");
+		}
+		else {
+			appendText("Checking for updates to addon '%s'".formatted(manifest.name));
+		}
+		URI uri = manifest.getManifestUri();
+		HttpResponse<String> manifestResponse = client.send(HttpRequest.newBuilder().GET().uri(uri).build(), HttpResponse.BodyHandlers.ofString());
+		if (manifestResponse.statusCode() != 200) {
+			throw new RuntimeException("Bad response: %s: %s".formatted(manifestResponse.statusCode(), manifestResponse));
+		}
+		String body = manifestResponse.body();
+		Map<String, ExpectedFile> expectedFilesForThisManifest = body.lines()
+				.map(line -> line.split("\s+"))
+				.map(s -> new ExpectedFile(manifest, Path.of(manifest.dir.toString(), s[1]).toString(), s[0]))
+				.collect(Collectors.toMap(value -> value.filePath(), Function.identity()));
+		// TODO: parallelize manifest + real downloads
+		Map<String, ExpectedFile> expectedFiles = new HashMap<>();
+		// TODO: delete this
+		expectedFilesForThisManifest.forEach((k, newValue) -> {
+			ExpectedFile oldValue = expectedFiles.putIfAbsent(k, newValue);
+//			if (oldValue != null) {
+//				appendText("Warning! More than one manifest claims file path %s!".formatted(k));
+//				appendText("    1: %s".formatted(oldValue));
+//				appendText("    2: %s".formatted(newValue));
+//			}
+		});
+		Map<String, ActualFile> actualFiles = new HashMap<>();
+		{
+			appendText("Hashing Local Files...");
 			{
-				appendText("Hashing Local Files...");
-				{
+				// TODO: turn this all into a "get covered files" method
+				if (manifest.isMainManifest()) {
 					File[] mainFiles = installDir.listFiles((dir, name) -> {
 						String nameLower = name.toLowerCase(Locale.ROOT);
 						return nameLower.endsWith(".exe") || nameLower.endsWith(".dll");
@@ -377,110 +481,126 @@ public class Update {
 					else if (depsFiles == null) {
 						throw new RuntimeException("Error checking local deps files. Try reinstalling.");
 					}
-					File[] addonFiles = addonDir.listFiles();
-					if (addonFiles == null) {
-						addonDir.mkdirs();
-						addonFiles = new File[0];
-					}
 					for (File mainFile : mainFiles) {
 						String name = mainFile.getName();
-						actualFiles.put(name, new ActualFile(name, md5sum(mainFile)));
+						ActualFile af = new ActualFile(name, md5sum(mainFile));
+						actualFiles.put(af.filePath(), af);
 					}
 					for (File depsFile : depsFiles) {
-						String name = "deps/" + depsFile.getName();
-						actualFiles.put(name, new ActualFile(name, md5sum(depsFile)));
+						ActualFile af = new ActualFile(depsFile.toString(), md5sum(depsFile));
+						actualFiles.put(af.filePath(), af);
+					}
+				}
+				else {
+					File[] addonFiles = manifest.dir.toFile().listFiles();
+					if (addonFiles == null) {
+						addonFiles = new File[0];
 					}
 					for (File addonFile : addonFiles) {
-						String name = "addon/" + addonFile.getName();
-						actualFiles.put(name, new ActualFile(name, md5sum(addonFile)));
+						String name = manifest.dir + addonFile.getName();
+						ActualFile af = new ActualFile(name, md5sum(addonFile));
+						actualFiles.put(af.filePath(), af);
 					}
 				}
 			}
-			{
-				List<String> updaterFiles = List.of(updaterFilename, updaterFilenameBackup);
-				// For a no-op (i.e. just check for updates without applying anything), then we should check everything
-				if (!noop) {
-					// Updater will not be able to update itself
-					if (updateTheUpdaterItself) {
-						actualFiles.keySet().retainAll(updaterFiles);
-						expectedFiles.keySet().retainAll(updaterFiles);
-					}
-					else {
-						actualFiles.keySet().removeAll(updaterFiles);
-						expectedFiles.keySet().removeAll(updaterFiles);
-					}
+		}
+		{
+			List<String> updaterFiles = List.of(updaterFilename, updaterFilenameBackup);
+			// For a no-op (i.e. just check for updates without applying anything), then we should check everything
+			if (!noop && manifest.isMainManifest()) {
+				// Updater will not be able to update itself
+				if (updateTheUpdaterItself) {
+					actualFiles.keySet().retainAll(updaterFiles);
+					expectedFiles.keySet().retainAll(updaterFiles);
 				}
-				List<String> allKeys = new ArrayList<>();
-				allKeys.addAll(actualFiles.keySet());
-				allKeys.addAll(expectedFiles.keySet());
-				allKeys.sort(String::compareTo);
-				Set<String> allKeysSet = new LinkedHashSet<>(allKeys);
-				allKeysSet.forEach(key -> {
-					ActualFile actual = actualFiles.get(key);
-					ExpectedFile expected = expectedFiles.get(key);
-					String localHash = actual == null ? "null" : actual.hash();
-					String remoteHash = expected == null ? "null" : expected.hash();
-					String separator = localHash.equals(remoteHash) ? "==" : "->";
-					appendText("%32s %s %32s %s".formatted(localHash, separator, remoteHash, key));
-				});
-				appendText("Calculating update...");
-				List<ActualFile> localFilesToDelete = new ArrayList<>();
-				List<ExpectedFile> filesToDownload = new ArrayList<>();
-				actualFiles.forEach((name, info) -> {
-					String md5 = info.hash();
-					ExpectedFile expectedFile = expectedFiles.get(name);
-					String expectedHash = expectedFile == null ? null : expectedFile.hash();
-					if (!md5.equals(expectedHash)) {
-						localFilesToDelete.add(info);
-					}
-				});
-				expectedFiles.forEach((name, info) -> {
-					String md5 = info.hash();
-					ActualFile actualFile = actualFiles.get(name);
-					String actual = actualFile == null ? null : actualFile.hash();
-					if (!md5.equals(actual)) {
-						filesToDownload.add(info);
-					}
-				});
-				if (!noop) {
-					appendText(String.format("Updating %s files...", filesToDownload.size()));
-					localFilesToDelete.forEach(info -> {
-						boolean deleted;
-						do {
-							deleted = Paths.get(installDir.toString(), info.filePath()).toFile().delete();
-							if (deleted) {
-								return;
-							}
-							appendText("Could not delete file %s. Make sure the app is not running.".formatted(info.filePath()));
-							try {
-								Thread.sleep(5000);
-							}
-							catch (InterruptedException e) {
-								// ignore
-							}
-						} while (true);
-					});
-
-					// TODO: why is both mkdirs() and mkdir() being used?
-					depsDir.mkdirs();
-					depsDir.mkdir();
-					addonDir.mkdirs();
-					addonDir.mkdir();
-					AtomicInteger downloaded = new AtomicInteger();
-					filesToDownload.parallelStream().forEach((info) -> {
-						HttpResponse.BodyHandler<Path> handler = HttpResponse.BodyHandlers.ofFile(getLocalFile(info.filePath()));
+				else {
+					actualFiles.keySet().removeAll(updaterFiles);
+					expectedFiles.keySet().removeAll(updaterFiles);
+				}
+			}
+			List<String> allKeys = new ArrayList<>();
+			allKeys.addAll(actualFiles.keySet());
+			allKeys.addAll(expectedFiles.keySet());
+			allKeys.sort(String::compareTo);
+			Set<String> allKeysSet = new LinkedHashSet<>(allKeys);
+			appendText("Calculating update...");
+			allKeysSet.forEach(key -> {
+				ActualFile actual = actualFiles.get(key);
+				ExpectedFile expected = expectedFiles.get(key);
+				String localHash = actual == null ? "null" : actual.hash();
+				String remoteHash = expected == null ? "null" : expected.hash();
+				String separator = localHash.equals(remoteHash) ? "==" : "->";
+				appendText("%32s %s %32s %s".formatted(localHash, separator, remoteHash, key));
+			});
+			List<ActualFile> localFilesToDelete = new ArrayList<>();
+			List<ExpectedFile> filesToDownload = new ArrayList<>();
+			actualFiles.forEach((name, info) -> {
+				String md5 = info.hash();
+				ExpectedFile expectedFile = expectedFiles.get(name);
+				String expectedHash = expectedFile == null ? null : expectedFile.hash();
+				if (!md5.equals(expectedHash)) {
+					localFilesToDelete.add(info);
+				}
+			});
+			expectedFiles.forEach((name, info) -> {
+				String md5 = info.hash();
+				ActualFile actualFile = actualFiles.get(name);
+				String actual = actualFile == null ? null : actualFile.hash();
+				if (!md5.equals(actual)) {
+					filesToDownload.add(info);
+				}
+			});
+			if (!noop) {
+				appendText(String.format("Updating %s files...", filesToDownload.size()));
+				localFilesToDelete.forEach(info -> {
+					boolean deleted;
+					do {
+						deleted = Paths.get(installDir.toString(), info.filePath()).toFile().delete();
+						if (deleted) {
+							return;
+						}
+						appendText("Could not delete file %s. Make sure the app is not running.".formatted(info.filePath()));
 						try {
-							client.send(HttpRequest.newBuilder().GET().uri(info.getUri()).build(), handler);
+							Thread.sleep(5000);
 						}
-						catch (IOException | InterruptedException e) {
-							throw new RuntimeException(e);
+						catch (InterruptedException e) {
+							// ignore
 						}
-						appendText(String.format("Downloaded %s / %s files", downloaded.incrementAndGet(), filesToDownload.size()));
-					});
-					appendText("Update finished! %s files needed to be updated.".formatted(filesToDownload.size()));
+					} while (true);
+				});
+
+				// TODO: why is both mkdirs() and mkdir() being used?
+				depsDir.mkdirs();
+				depsDir.mkdir();
+				AtomicInteger downloaded = new AtomicInteger();
+				filesToDownload.parallelStream().forEach((info) -> {
+					HttpResponse.BodyHandler<Path> handler = HttpResponse.BodyHandlers.ofFile(getLocalFile(info.filePath()));
+					try {
+						client.send(HttpRequest.newBuilder().GET().uri(info.getUri()).build(), handler);
+					}
+					catch (IOException | InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+					appendText(String.format("Downloaded %s / %s files", downloaded.incrementAndGet(), filesToDownload.size()));
+				});
+				appendText("Update finished! %s files needed to be updated.".formatted(filesToDownload.size()));
+			}
+			// Chances of a file being deleted without anything else being touched are essentially zero
+			return !filesToDownload.isEmpty();
+		}
+	}
+
+	private boolean doUpdateCheck() {
+		boolean anythingChanged = false;
+		try {
+			appendText("Beginning update check. If this hangs, freezes, or crashes, check that your AV is not interfering.");
+			// Adding random junk to bypass cache
+			List<Manifest> manifests = getAllManifests();
+			for (Manifest manifest : manifests) {
+				boolean result = updateCheckSingleManifest(manifest);
+				if (result) {
+					anythingChanged = true;
 				}
-				// Chances of a file being deleted without anything else being touched are essentially zero
-				anythingChanged = !filesToDownload.isEmpty();
 			}
 		}
 		catch (IOException | InterruptedException e) {
