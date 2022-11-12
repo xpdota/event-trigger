@@ -49,7 +49,7 @@ public class GroovyManager {
 		sandboxSetting = new BooleanSetting(pers, "groovy.enable-sandbox", true);
 		this.ahc = ahc;
 		// TODO: need a secure way to make sure scripts can't change this
-		useSandbox = sandboxSetting.get() || true;
+		useSandbox = sandboxSetting.get() || !Platform.isInIDE();
 		if (useSandbox) {
 			sandbox = new StandardGroovySandbox().withWhitelist(whitelist);
 		}
