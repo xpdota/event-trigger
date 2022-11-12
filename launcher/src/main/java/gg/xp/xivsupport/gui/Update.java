@@ -451,6 +451,7 @@ public class Update {
 		else {
 			appendText("Checking for updates to addon '%s'".formatted(manifest.name));
 		}
+		manifest.dir.toFile().mkdirs();
 		URI uri = manifest.getManifestUri();
 		HttpResponse<String> manifestResponse = client.send(HttpRequest.newBuilder().GET().uri(uri).build(), HttpResponse.BodyHandlers.ofString());
 		if (manifestResponse.statusCode() != 200) {
@@ -578,8 +579,6 @@ public class Update {
 				});
 
 				// TODO: why is both mkdirs() and mkdir() being used?
-				depsDir.mkdirs();
-				depsDir.mkdir();
 				AtomicInteger downloaded = new AtomicInteger();
 				filesToDownload.parallelStream().forEach((info) -> {
 					HttpResponse.BodyHandler<Path> handler = HttpResponse.BodyHandlers.ofFile(getLocalFile(info.filePath()));
@@ -600,6 +599,10 @@ public class Update {
 
 	private boolean doUpdateCheck() {
 		boolean anythingChanged = false;
+		if (!noop) {
+			depsDir.mkdirs();
+			depsDir.mkdir();
+		}
 		try {
 			appendText("Beginning update check. If this hangs, freezes, or crashes, check that your AV is not interfering.");
 			// Adding random junk to bypass cache
