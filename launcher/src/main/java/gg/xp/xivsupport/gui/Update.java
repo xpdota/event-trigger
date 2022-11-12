@@ -242,7 +242,7 @@ public class Update {
 				}
 			}
 			frame = new JFrame("Triggevent Updater");
-			frame.setSize(new Dimension(800, 500));
+			frame.setSize(new Dimension(960, 640));
 			frame.setLocationRelativeTo(null);
 			content = new JPanel();
 			content.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -570,6 +570,7 @@ public class Update {
 					do {
 						File file = info.file;
 						if (!file.exists()) {
+							appendText("Warn: Tried to delete file %s but it was already gone?".formatted(fixRelativeFilePath(file.toString())));
 							return;
 						}
 						deleted = file.delete();
@@ -589,7 +590,9 @@ public class Update {
 				// TODO: why is both mkdirs() and mkdir() being used?
 				AtomicInteger downloaded = new AtomicInteger();
 				filesToDownload.parallelStream().forEach((info) -> {
-					HttpResponse.BodyHandler<Path> handler = HttpResponse.BodyHandlers.ofFile(getLocalFile(info.filePath()));
+					Path localFile = getLocalFile(info.filePath());
+					appendText("Downloading URL '%s' to local file '%s'".formatted(info.getUri(), localFile));
+					HttpResponse.BodyHandler<Path> handler = HttpResponse.BodyHandlers.ofFile(localFile);
 					try {
 						client.send(HttpRequest.newBuilder().GET().uri(info.getUri()).build(), handler);
 					}
