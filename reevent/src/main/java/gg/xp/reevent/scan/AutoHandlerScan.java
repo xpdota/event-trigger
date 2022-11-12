@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -59,8 +60,8 @@ public class AutoHandlerScan {
 		this.config = config;
 	}
 
-	private Stream<URL> findAddonJars() {
-		return config.getAddonJars().stream();
+	private List<URL> findAddonJars() {
+		return config.getAddonJars();
 	}
 
 	public List<AutoHandler> build() {
@@ -78,7 +79,8 @@ public class AutoHandlerScan {
 //			Thread.currentThread().setContextClassLoader(loader);
 			Collection<URL> urls = ClasspathHelper.forJavaClassPath();
 			// TODO: make package blacklist a setting
-			urls = Stream.concat(urls.stream(), findAddonJars()).filter(u -> {
+			List<URL> addonUrls = findAddonJars();
+			urls = Stream.concat(urls.stream(), addonUrls.stream()).filter(u -> {
 				String jarName = getJarName(u.toString());
 				if (jarName == null) {
 					return true;
@@ -89,16 +91,16 @@ public class AutoHandlerScan {
 			}).collect(Collectors.toList());
 			log.info("URLs: {}", urls);
 			// TODO: make this public so that we aren't doing as much re-scanning
+			URLClassLoader newClassLoader = new URLClassLoader(addonUrls.toArray(new URL[]{}));
+			ClassLoader[] loaders = {Thread.currentThread().getContextClassLoader(), newClassLoader};
 			Reflections reflections = new Reflections(
 					new ConfigurationBuilder()
-//							.setClassLoaders(new ClassLoader[]{loader})
-//						.addClassLoaders(new ForceReloadClassLoader(Thread.currentThread().getContextClassLoader()))
 							.setUrls(urls)
 							.setParallel(true)
-//							.forPackages("")
 							.setScanners(Scanners.TypesAnnotated, Scanners.MethodsAnnotated, Scanners.SubTypes));
-			Set<Method> annotatedMethods = reflections.get(MethodsAnnotated.with(HandleEvents.class).as(Method.class));
-			Set<Class<?>> annotatedClasses = reflections.get(Scanners.TypesAnnotated.with(ScanMe.class).asClass());
+			// TODO: make these changes in the Groovy side too
+			Set<Method> annotatedMethods = reflections.get(MethodsAnnotated.with(HandleEvents.class).as(Method.class, loaders));
+			Set<Class<?>> annotatedClasses = reflections.get(Scanners.TypesAnnotated.with(ScanMe.class).asClass(loaders));
 			log.info("Scan done, setting up topology now");
 
 			Map<Class<?>, List<Method>> classMethodMap = new LinkedHashMap<>();
