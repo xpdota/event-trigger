@@ -529,15 +529,23 @@ public class Update {
 		{
 			List<String> updaterFiles = List.of(updaterFilename, updaterFilenameBackup);
 			// For a no-op (i.e. just check for updates without applying anything), then we should check everything
-			if (!noop && manifest.isMainManifest()) {
-				// Updater will not be able to update itself
-				if (updateTheUpdaterItself) {
-					actualFiles.keySet().retainAll(updaterFiles);
-					expectedFiles.keySet().retainAll(updaterFiles);
+			if (!noop) {
+				if (manifest.isMainManifest()) {
+					// Updater will not be able to update itself
+					if (updateTheUpdaterItself) {
+						actualFiles.keySet().retainAll(updaterFiles);
+						expectedFiles.keySet().retainAll(updaterFiles);
+					}
+					else {
+						actualFiles.keySet().removeAll(updaterFiles);
+						expectedFiles.keySet().removeAll(updaterFiles);
+					}
 				}
 				else {
-					actualFiles.keySet().removeAll(updaterFiles);
-					expectedFiles.keySet().removeAll(updaterFiles);
+					if (updateTheUpdaterItself) {
+						appendText("Not going to try updating an addon while running.");
+						return false;
+					}
 				}
 			}
 			List<String> allKeys = new ArrayList<>();
