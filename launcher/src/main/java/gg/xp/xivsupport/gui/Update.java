@@ -407,9 +407,11 @@ public class Update {
 	private final class ActualFile {
 		private final String filePath;
 		private final String hash;
+		private final File file;
 
-		private ActualFile(String filePath, String hash) {
-			this.filePath = fixRelativeFilePath(filePath);
+		private ActualFile(File file, String hash) {
+			this.file = file;
+			this.filePath = fixRelativeFilePath(file.toString());
 			this.hash = hash;
 		}
 
@@ -419,6 +421,10 @@ public class Update {
 
 		public String hash() {
 			return hash;
+		}
+
+		public File getFile() {
+			return file;
 		}
 
 		@Override
@@ -491,12 +497,11 @@ public class Update {
 						throw new RuntimeException("Error checking local deps files. Try reinstalling.");
 					}
 					for (File mainFile : mainFiles) {
-						String name = mainFile.getName();
-						ActualFile af = new ActualFile(name, md5sum(mainFile));
+						ActualFile af = new ActualFile(mainFile, md5sum(mainFile));
 						actualFiles.put(af.filePath(), af);
 					}
 					for (File depsFile : depsFiles) {
-						ActualFile af = new ActualFile(depsFile.toString(), md5sum(depsFile));
+						ActualFile af = new ActualFile(depsFile, md5sum(depsFile));
 						actualFiles.put(af.filePath(), af);
 					}
 				}
@@ -506,8 +511,7 @@ public class Update {
 						addonFiles = new File[0];
 					}
 					for (File addonFile : addonFiles) {
-						String name = fixRelativeFilePath(Path.of(manifest.dir.toString(), addonFile.getName()).toString());
-						ActualFile af = new ActualFile(name, md5sum(addonFile));
+						ActualFile af = new ActualFile(addonFile, md5sum(addonFile));
 						actualFiles.put(af.filePath(), af);
 					}
 				}
@@ -564,7 +568,11 @@ public class Update {
 				localFilesToDelete.forEach(info -> {
 					boolean deleted;
 					do {
-						deleted = Paths.get(installDir.toString(), info.filePath()).toFile().delete();
+						File file = info.file;
+						if (!file.exists()) {
+							return;
+						}
+						deleted = file.delete();
 						if (deleted) {
 							return;
 						}
