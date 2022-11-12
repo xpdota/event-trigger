@@ -36,6 +36,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 // This one will NOT be launched with the full classpath - it NEEDS to be self-sufficient
 // ...which is also why the code is complete shit, no external libraries.
@@ -344,6 +345,13 @@ public class Update {
 
 	}
 
+	// Need forward slashes regardless of platform since we need forward slashes in HTTP URLs
+	private String fixRelativeFilePath(String relativePath) {
+		return StreamSupport.stream(installDir.toPath().relativize(Path.of(relativePath).toAbsolutePath()).spliterator(), false)
+				.map(Object::toString)
+				.collect(Collectors.joining("/"));
+	}
+
 	private final class ExpectedFile {
 		private final Manifest mft;
 		private final String filePath;
@@ -351,7 +359,7 @@ public class Update {
 
 		private ExpectedFile(Manifest mft, String filePath, String hash) {
 			this.mft = mft;
-			this.filePath = installDir.toPath().relativize(Path.of(filePath).toAbsolutePath()).toString();
+			this.filePath = fixRelativeFilePath(filePath);
 			this.hash = hash;
 		}
 
@@ -401,7 +409,7 @@ public class Update {
 		private final String hash;
 
 		private ActualFile(String filePath, String hash) {
-			this.filePath = installDir.toPath().relativize(Path.of(filePath).toAbsolutePath()).toString();
+			this.filePath = fixRelativeFilePath(filePath);
 			this.hash = hash;
 		}
 
