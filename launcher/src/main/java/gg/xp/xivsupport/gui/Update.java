@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -437,7 +438,15 @@ public class Update {
 	}
 
 	private void deleteRemovedAddons(List<Manifest> manifests) {
-		// TODO
+		File[] addonDirs = installDir.toPath().resolve("addon").toFile().listFiles(File::isDirectory);
+		if (addonDirs != null) {
+			for (File addonDir : addonDirs) {
+				String dirName = addonDir.getName();
+				if (manifests.stream().noneMatch(mft -> mft.name.equals(dirName))) {
+					appendText("Deleting uninstalled addon '%s'".formatted(dirName));
+				}
+			}
+		}
 	}
 
 	private boolean updateCheckSingleManifest(Manifest manifest) throws IOException, InterruptedException {

@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 public final class Platform {
 	private Platform() {
@@ -45,12 +46,15 @@ public final class Platform {
 	}
 
 	public static List<URL> getAddonJars() {
-		File[] addonDirs = getAddonsDir().toFile().listFiles();
+		File[] addonDirs = getAddonsDir().toFile().listFiles(File::isDirectory);
 		if (addonDirs == null) {
 			return Collections.emptyList();
 		}
 		return Arrays.stream(addonDirs)
-				.flatMap(addonDir -> Arrays.stream(addonDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"))))
+				.flatMap(addonDir -> {
+					File[] subFiles = addonDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
+					return subFiles == null ? Stream.empty() : Arrays.stream(subFiles);
+				})
 				.map(file -> {
 					try {
 						return file.toURI().toURL();
