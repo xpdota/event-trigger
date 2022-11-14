@@ -320,29 +320,6 @@ public class Update {
 			return false;
 		}
 
-		//
-//		@Override
-//		public boolean equals(Object obj) {
-//			if (obj == this) return true;
-//			if (obj == null || obj.getClass() != this.getClass()) return false;
-//			var that = (SingleManifest) obj;
-//			return Objects.equals(this.name, that.name) &&
-//					Objects.equals(this.urlTemplate, that.urlTemplate);
-//		}
-//
-//		@Override
-//		public int hashCode() {
-//			return Objects.hash(name, urlTemplate);
-//		}
-//
-//		@Override
-//		public String toString() {
-//			return "SingleManifest[" +
-//					"name=" + name + ", " +
-//					"urlTemplate=" + urlTemplate + ']';
-//		}
-//
-
 	}
 
 	// Need forward slashes regardless of platform since we need forward slashes in HTTP URLs
@@ -459,6 +436,10 @@ public class Update {
 
 	}
 
+	private void deleteRemovedAddons(List<Manifest> manifests) {
+		// TODO
+	}
+
 	private boolean updateCheckSingleManifest(Manifest manifest) throws IOException, InterruptedException {
 		if (manifest.isMainManifest()) {
 			appendText("Checking for Triggevent updates...");
@@ -476,18 +457,10 @@ public class Update {
 		Map<String, ExpectedFile> expectedFilesForThisManifest = body.lines()
 				.map(line -> line.split("\s+"))
 				.map(s -> new ExpectedFile(manifest, Path.of(manifest.dir.toString(), s[1]).toString(), s[0]))
-				.collect(Collectors.toMap(value -> value.filePath(), Function.identity()));
-		// TODO: parallelize manifest + real downloads
+				.collect(Collectors.toMap(ExpectedFile::filePath, Function.identity()));
+		// TODO: parallelize multiple manifests
 		Map<String, ExpectedFile> expectedFiles = new HashMap<>();
-		// TODO: delete this
-		expectedFilesForThisManifest.forEach((k, newValue) -> {
-			ExpectedFile oldValue = expectedFiles.putIfAbsent(k, newValue);
-//			if (oldValue != null) {
-//				appendText("Warning! More than one manifest claims file path %s!".formatted(k));
-//				appendText("    1: %s".formatted(oldValue));
-//				appendText("    2: %s".formatted(newValue));
-//			}
-		});
+		expectedFilesForThisManifest.forEach(expectedFiles::putIfAbsent);
 		Map<String, ActualFile> actualFiles = new HashMap<>();
 		{
 			appendText("Hashing Local Files...");
@@ -603,7 +576,17 @@ public class Update {
 						}
 					} while (true);
 				});
+				// TODO: download to temp files **first**, then delete, then replace
 
+				// Validate paths
+				Path manifestDir = manifest.dir.toAbsolutePath();
+				for (ExpectedFile expectedFile : filesToDownload) {
+					Path filePath = getLocalFile(expectedFile.filePath).toAbsolutePath();
+					Path relative = manifestDir.relativize(filePath);
+					if (relative.startsWith("..")) {
+						throw new IllegalStateException("Addon '%s' tried to escape its directory! Attempted to write to '%s'!".formatted(manifest.name, relative));
+					}
+				}
 				// TODO: why is both mkdirs() and mkdir() being used?
 				AtomicInteger downloaded = new AtomicInteger();
 				filesToDownload.parallelStream().forEach((info) -> {
@@ -643,6 +626,7 @@ public class Update {
 					anythingChanged = true;
 				}
 			}
+			deleteRemovedAddons(manifests);
 		}
 		catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
