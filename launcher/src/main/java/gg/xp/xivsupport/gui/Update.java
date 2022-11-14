@@ -17,8 +17,12 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -443,9 +447,47 @@ public class Update {
 			for (File addonDir : addonDirs) {
 				String dirName = addonDir.getName();
 				if (manifests.stream().noneMatch(mft -> mft.name.equals(dirName))) {
-					appendText("Deleting uninstalled addon '%s'".formatted(dirName));
+					appendText("Addon '%s' appears to no longer be wanted, will remove its directory.".formatted(dirName));
+					if (!noop && !updateTheUpdaterItself) {
+						deleteSubtree(addonDir);
+					}
 				}
 			}
+		}
+	}
+
+	private void deleteSubtree(File file) {
+		if (!file.exists()) {
+			return;
+		}
+		try {
+			Files.walkFileTree(file.toPath(), new FileVisitor<Path>() {
+				@Override
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					Files.delete(file);
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+					Files.delete(dir);
+					return FileVisitResult.CONTINUE;
+				}
+			});
+		}
+		catch (IOException e) {
+			appendText("Failed to remove " + file);
+			throw new RuntimeException(e);
 		}
 	}
 
