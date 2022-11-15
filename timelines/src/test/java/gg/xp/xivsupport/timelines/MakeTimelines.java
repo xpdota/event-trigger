@@ -5,16 +5,19 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Ignore;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("NewClassNamingConvention")
+@Ignore
 public final class MakeTimelines {
 
 	private static final Logger log = LoggerFactory.getLogger(MakeTimelines.class);
@@ -27,7 +30,15 @@ public final class MakeTimelines {
 		return input.substring(0, splitPoint + 1);
 	}
 
+	@Test
+	void makeTimelines() {
+		main(new String[]{});
+	}
+
+
 	public static void main(String[] args) {
+		log.info("Beginning timeline extraction");
+		log.info("Working directory: {}", Path.of(".").toAbsolutePath());
 		WebDriverManager.chromedriver().setup();
 		ChromeOptions opts = new ChromeOptions();
 		opts.setHeadless(true);
