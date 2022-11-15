@@ -2,6 +2,7 @@ name: Extract Timelines
 
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '06 */6 * * *'
 
