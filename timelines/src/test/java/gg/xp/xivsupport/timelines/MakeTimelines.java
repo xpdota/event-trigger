@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("NewClassNamingConvention")
-@Ignore
+//@Ignore
 public final class MakeTimelines {
 
 	private static final Logger log = LoggerFactory.getLogger(MakeTimelines.class);
@@ -44,6 +44,8 @@ public final class MakeTimelines {
 		opts.setHeadless(true);
 		ChromeDriver driver = new ChromeDriver(opts);
 		Map<Long, String> zoneToFile = new HashMap<>();
+		String timelineBaseDir = System.getProperty("timelinedir", "timelines/src/main/resources");
+		Path timelineBasePath = Path.of(timelineBaseDir);
 		try {
 			driver.get("https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=wss://127.0.0.1:10501");
 
@@ -69,7 +71,7 @@ public final class MakeTimelines {
 					zoneToFile.put(zoneId, timelineFileName);
 					String fileContents = ((Map<?, ?>) out).get(fullTimelineFilePath).toString().replaceAll("\r\n", "\n");
 					try {
-						Files.writeString(Path.of("timelines", "src", "main", "resources", "timeline", timelineFileName), fileContents);
+						Files.writeString(timelineBasePath.resolve("timeline").resolve(timelineFileName), fileContents);
 					}
 					catch (IOException e) {
 						throw new RuntimeException("Error processing timeline for '" + file + '\'', e);
@@ -77,7 +79,7 @@ public final class MakeTimelines {
 				}
 			});
 			String inCsvFormat = zoneToFile.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(e -> e.getKey() + ",\"" + e.getValue() + '"').collect(Collectors.joining("\n"));
-			Files.writeString(Path.of("timelines", "src", "main", "resources", "timelines.csv"), inCsvFormat, StandardCharsets.UTF_8);
+			Files.writeString(timelineBasePath.resolve("timelines.csv"), inCsvFormat, StandardCharsets.UTF_8);
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);

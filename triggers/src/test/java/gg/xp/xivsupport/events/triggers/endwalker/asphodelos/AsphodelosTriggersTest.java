@@ -50,7 +50,7 @@ public class AsphodelosTriggersTest extends CalloutVerificationTest {
 				callAppend(33_592, "Raidwide", "(4.7)"),
 				callAppend(53_558, "Go Behind Head", "(7.7)"),
 				callAppend(92_988, "Raidwide", "(4.7)"),
-				callAppend(108_761, "Knockback", "(6.0)"),
+				callAppend(108_850, "Knockback", "(6.0)"),
 				callAppend(134_744, "Stack on YOU", "(23.0)"),
 				callAppend(143_256, "Go In Front of Head", "(7.7)"),
 				callAppend(171_953, "Short East Push", "(13.0)"),

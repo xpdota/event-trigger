@@ -53,6 +53,7 @@ public abstract class CalloutVerificationTest {
 		ReplayController replayController = new ReplayController(pico.getComponent(EventMaster.class), EventReader.readActLogResource(fileName), false);
 		pico.addComponent(replayController);
 		pico.addComponent(FakeACTTimeSource.class);
+		FakeACTTimeSource timeSource = pico.getComponent(FakeACTTimeSource.class);
 
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.ACT_LOG_FILE);
 
@@ -62,15 +63,45 @@ public abstract class CalloutVerificationTest {
 		List<CalloutInitialValues> actualCalls = new ArrayList<>();
 
 		EventDistributor dist = pico.getComponent(EventDistributor.class);
-		dist.registerHandler(Event.class, (ctx, e) -> {
-			// This is a really ugly hack, but the alternative is reducing real world performance for
-			// the sake of tests.
-			if (e instanceof BaseDelayedEvent bde) {
-				Event parent = bde.getParent();
-				// This doesn't happen normally because the event is queued rather than accepted
-				if (parent != null) {
-					bde.setHappenedAt(parent.getHappenedAt());
+		dist.registerHandler(Event.class, new EventHandler<>() {
+			@Override
+			public void handle(EventContext ctx, Event e) {
+				// This is a really ugly hack, but the alternative is reducing real world performance for
+				// the sake of tests.
+				if (e instanceof BaseDelayedEvent bde) {
+					Event parent = bde.getParent();
+					// This doesn't happen normally because the event is queued rather than accepted
+					if (parent != null) {
+						bde.setHappenedAt(parent.getHappenedAt());
+					}
 				}
+				else if (e instanceof XivStateRecalculatedEvent ev) {
+				/*
+				The issue with these is more or less this:
+
+				Normally, it works like this:
+				Sequential trigger sees real event with proper time source
+				SQ starts waiting for 100ms
+				Recalc event happens very quickly after real event, and is ignored because we're still in the 100ms wait
+				SQ finishes waiting, picks up next event (perhaps it's 250ms after the first event)
+
+				But sometimes, what happens is:
+				Sequential trigger sees real event with proper time source
+				SQ starts waiting for 100ms
+				Recalc event is slow
+				SQ finishes waiting, receives the recalc event
+
+				Funny how a *slowdown* ends up causing a *speedup*
+
+				*/
+					ev.setTimeSource(timeSource);
+					ev.setHappenedAt(timeSource.now());
+				}
+			}
+
+			@Override
+			public int getOrder() {
+				return -5000;
 			}
 		});
 		dist.registerHandler(CalloutEvent.class, (ctx, e) -> {
@@ -86,7 +117,14 @@ public abstract class CalloutVerificationTest {
 					return;
 				}
 				else {
-					msDelta = Duration.between(combatStart.getHappenedAt(), e.getEffectiveHappenedAt()).toMillis();
+					Instant happenedAt;
+					if (e instanceof XivStateRecalculatedEvent) {
+						happenedAt = timeSource.now();
+					}
+					else {
+						happenedAt = e.getEffectiveHappenedAt();
+					}
+					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
 				}
 			}
 			Event parent = e.getParent();
