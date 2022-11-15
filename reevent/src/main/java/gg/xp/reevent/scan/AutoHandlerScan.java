@@ -14,10 +14,13 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -93,15 +96,38 @@ public class AutoHandlerScan {
 			// TODO: make this public so that we aren't doing as much re-scanning
 			URLClassLoader newClassLoader = new URLClassLoader(addonUrls.toArray(new URL[]{}));
 			ClassLoader[] loaders = {Thread.currentThread().getContextClassLoader(), newClassLoader};
+			final Set<Method> annotatedMethods = ConcurrentHashMap.newKeySet();
+			final Set<Class<?>> annotatedClasses = ConcurrentHashMap.newKeySet();
+			final Map<String, Throwable> failedModules = new ConcurrentHashMap<>();
+			// TODO: make these changes in the Groovy side too
+			urls.parallelStream().forEach(url -> {
+				log.info("URL: '{}'", url);
+				Reflections reflections = new Reflections(
+						new ConfigurationBuilder()
+								.setUrls(Collections.singletonList(url))
+								.setParallel(true)
+								.setScanners(Scanners.TypesAnnotated, MethodsAnnotated, SubTypes));
+				try {
+					annotatedMethods.addAll(reflections.get(MethodsAnnotated.with(HandleEvents.class).as(Method.class, loaders)));
+					annotatedClasses.addAll(reflections.get(Scanners.TypesAnnotated.with(ScanMe.class).asClass(loaders)));
+				} catch (Throwable t) {
+					String jarName = getJarName(url.toString());
+					failedModules.put(jarName, new RuntimeException("Module " + jarName + " failed to load: " + t, t));
+				}
+			});
+			if (!failedModules.isEmpty()) {
+				StringBuilder sb = new StringBuilder("One or more modules failed to load. If this problem persists, try deleting them: \n");
+				failedModules.keySet().forEach(jarName -> sb.append("  - ").append(jarName));
+				RuntimeException combined = new RuntimeException(sb.toString());
+				failedModules.values().forEach(combined::addSuppressed);
+				throw combined;
+			}
+			log.info("Scan done, setting up topology now");
 			Reflections reflections = new Reflections(
 					new ConfigurationBuilder()
 							.setUrls(urls)
 							.setParallel(true)
 							.setScanners(Scanners.TypesAnnotated, Scanners.MethodsAnnotated, Scanners.SubTypes));
-			// TODO: make these changes in the Groovy side too
-			Set<Method> annotatedMethods = reflections.get(MethodsAnnotated.with(HandleEvents.class).as(Method.class, loaders));
-			Set<Class<?>> annotatedClasses = reflections.get(Scanners.TypesAnnotated.with(ScanMe.class).asClass(loaders));
-			log.info("Scan done, setting up topology now");
 
 			Map<Class<?>, List<Method>> classMethodMap = new LinkedHashMap<>();
 			for (Class<?> annotatedClass : annotatedClasses) {
@@ -147,6 +173,7 @@ public class AutoHandlerScan {
 				topo.append("Class: ").append(clazz.getSimpleName()).append('\n');
 				// TODO: move this to AutoHandler so scope can be implemented
 				Object clazzInstance = instanceProvider.getInstance(clazz);
+				methods.sort(Comparator.comparing(Method::getName));
 				for (Method method : methods) {
 					AutoHandler rawEvh = new AutoHandler(clazz, method, clazzInstance, config);
 					out.add(rawEvh);
@@ -169,7 +196,7 @@ public class AutoHandlerScan {
 
 	// Filter out interfaces, abstract classes, and other junk
 	private static boolean isClassInstantiable(Class<?> clazz) {
-		return !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnonymousClass();
+		return !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnonymousClass() && (clazz.getDeclaringClass() == null);
 	}
 
 	private static @Nullable String getJarName(String uriStr) {
