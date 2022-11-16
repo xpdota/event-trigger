@@ -1,5 +1,4 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# A workflow that only tests, but does not publish
 
 name: Build and Test
 
@@ -25,7 +24,7 @@ jobs:
         distribution: 'adopt'
         cache: maven
     - name: Build with Maven
-      run: xvfb-run mvn -T3 clean install
+      run: xvfb-run mvn -T3 clean test
 
 
 

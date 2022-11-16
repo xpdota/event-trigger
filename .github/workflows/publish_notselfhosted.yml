@@ -1,5 +1,4 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# Same as publish.yml, but runs on the gh-hosted runner.
 
 name: Publish on gh-hosted runner
 

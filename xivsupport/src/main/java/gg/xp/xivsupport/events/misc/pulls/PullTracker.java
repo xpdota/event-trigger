@@ -63,6 +63,7 @@ public class PullTracker implements SubState {
 		state.getCombatantsListCopy().stream()
 				.filter(c -> !c.isPc())
 				.forEach(currentPull::addEnemy);
+		log.info("Pull started by event: {}", event);
 		context.accept(new PullStartedEvent());
 	}
 
@@ -70,6 +71,7 @@ public class PullTracker implements SubState {
 		if (currentPull != null) {
 			currentPull.setEnd(event);
 			currentPull = null;
+			log.info("Pull ended by event: {}", event);
 			context.accept(new PullEndedEvent());
 		}
 	}
@@ -87,7 +89,7 @@ public class PullTracker implements SubState {
 	@HandleEvents
 	public void startCombatByAbility(EventContext context, AbilityUsedEvent abilityUsed) {
 		if (currentPull != null && currentPull.getStatus() == PullStatus.PRE_PULL) {
-			if (abilityUsed.getSource().isPc() && abilityUsed.getTarget().getType() == CombatantType.NPC) {
+			if (abilityUsed.getSource().isPc() && abilityUsed.getTarget().getType() == CombatantType.NPC && !abilityUsed.getTarget().isEnvironment()) {
 				log.info("Combat started by ability: {}", abilityUsed);
 				currentPull.setCombatStart(abilityUsed);
 			}

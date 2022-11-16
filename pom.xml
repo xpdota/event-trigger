@@ -53,9 +53,9 @@
                     <version>3.0.0-M5</version>
                     <configuration>
                         <parallel>methods</parallel>
-                        <threadCount>1</threadCount>
+                        <threadCount>2</threadCount>
                         <perCoreThreadCount>true</perCoreThreadCount>
-                        <argLine>-Duser.country=US -Duser.language=en -DsequentialTriggerCycleTime=1000</argLine>
+                        <argLine>-Duser.country=US -Duser.language=en -DsequentialTriggerCycleTime=1000 -Dskip-groovy-script-load=true</argLine>
                         <trimStackTrace>false</trimStackTrace>
                     </configuration>
                 </plugin>

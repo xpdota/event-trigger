@@ -22,11 +22,8 @@ public class ArrayBackedMap<V> implements Map<Integer, V> {
 		else {
 			int maxKey = data.keySet().stream().mapToInt(Integer::intValue).max().getAsInt();
 			values = new Object[maxKey + 1];
-			data.forEach((k, v) -> {
-				values[k] = v;
-			});
+			data.forEach((k, v) -> values[k] = v);
 		}
-		;
 	}
 
 	@Override
@@ -54,8 +51,9 @@ public class ArrayBackedMap<V> implements Map<Integer, V> {
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public V get(Object key) {
+	public @Nullable V get(Object key) {
 		if (key instanceof Integer intKey) {
 			if (intKey >= size()) {
 				// Out of bounds
@@ -88,6 +86,7 @@ public class ArrayBackedMap<V> implements Map<Integer, V> {
 		throw new UnsupportedOperationException("Read-only map");
 	}
 
+	@SuppressWarnings("Convert2streamapi")
 	@NotNull
 	@Override
 	public Set<Integer> keySet() {
@@ -100,6 +99,7 @@ public class ArrayBackedMap<V> implements Map<Integer, V> {
 		return set;
 	}
 
+	@SuppressWarnings("unchecked")
 	@NotNull
 	@Override
 	public Collection<V> values() {
@@ -119,6 +119,7 @@ public class ArrayBackedMap<V> implements Map<Integer, V> {
 						return j;
 					}
 
+					@SuppressWarnings("unchecked")
 					@Override
 					public V getValue() {
 						return (V) values[j];
