@@ -20,6 +20,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+<!--                <configuration>-->
+<!--This one can generally take a larger threadcount since it's a big bottleneck in the middle of the build-->
+<!--                    <threadCount>2</threadCount>-->
+<!--                </configuration>-->
             </plugin>
         </plugins>
     </build>

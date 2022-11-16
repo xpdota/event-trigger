@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
 import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.sys.Threading;
 import groovy.lang.GroovyShell;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
@@ -11,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -18,7 +21,8 @@ import java.util.function.Predicate;
 public class GroovyFilter<X> implements SplitVisualFilter<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(GroovyFilter.class);
-	private final GroovyShell shell;
+	private @Nullable GroovyShell shell;
+	private final ExecutorService exs = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("GroovyFilter"));
 	private final TextFieldWithValidation<?> textBox;
 	private final String longClassName;
 	private final String varName;
@@ -45,11 +49,21 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		this.longClassName = dataType.getCanonicalName();
 		this.varName = varName;
 		this.mgr = mgr;
-		CompilerConfiguration compilerConfiguration = mgr.getCompilerConfig();
-		shell = new GroovyShell(compilerConfiguration);
+		exs.submit(() -> {
+			try {
+				Thread.sleep(10_000);
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			shell = mgr.makeShell();
+		});
 	}
 
 	private @Nullable Predicate<X> makeFilter(@Nullable String filterText) {
+		if (shell == null) {
+			shell = mgr.makeShell();
+		}
 		lastFilterText = filterText;
 		if (filterText == null || filterText.isBlank()) {
 			return null;
