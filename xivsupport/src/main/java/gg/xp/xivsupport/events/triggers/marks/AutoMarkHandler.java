@@ -13,11 +13,13 @@ public class AutoMarkHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(AutoMarkHandler.class);
 	private final BooleanSetting useTelesto;
+	private final BooleanSetting koreanMode;
 	private final XivState state;
 
 	public AutoMarkHandler(PersistenceProvider persistence, XivState state) {
 		// TODO: make this automatic
 		useTelesto = new BooleanSetting(persistence, "auto-marks.use-telesto", false);
+		koreanMode = new BooleanSetting(persistence, "auto-marks.korean-mode", false);
 		this.state = state;
 	}
 
@@ -25,6 +27,9 @@ public class AutoMarkHandler {
 		return useTelesto;
 	}
 
+	public BooleanSetting getKoreanMode() {
+		return koreanMode;
+	}
 
 	@HandleEvents
 	public void findPartySlot(EventContext context, AutoMarkRequest event) {

@@ -38,13 +38,14 @@ public class AutoMarkGui implements PluginTab {
 		});
 		BooleanSetting telestoSetting = marks.getUseTelesto();
 		Component useTelesto = new BooleanSettingGui(telestoSetting, "Use Telesto instead of Macros (must be installed in Dalamud)").getComponent();
+		Component krMode = new BooleanSettingGui(marks.getKoreanMode(), "Korean Client Mode (changes 'ignore' to 'stop')").getComponent();
 		Component useFKeys = new BooleanSettingGui(keyHandler.getUseFkeys(), "Use F1-F9 (Instead of NumPad 1-9)", () -> !telestoSetting.get()).getComponent();
 		telestoSetting.addListener(outer::repaint);
 
 		ReadOnlyText text = new ReadOnlyText("Note: Telesto is REQUIRED for triggers that place specific markers (rather than just doing '/mk attack' such as Titan Jails)");
 //		text.setPreferredSize(new Dimension(400, 400));
 
-		GuiUtil.simpleTopDownLayout(outer, 400, helpButton, useTelesto, useFKeys, text);
+		GuiUtil.simpleTopDownLayout(outer, 400, helpButton, useTelesto, krMode, useFKeys, text);
 
 		return outer;
 	}
@@ -79,5 +80,7 @@ public class AutoMarkGui implements PluginTab {
 			If you aren't in a party, you can still do '/e c:amtest 1' to test it on yourself.
 			
 			To test Telesto's ability to place arbitrary markers, you can do '/e attack1 1', replacing attack1 with the desired marker.
+			
+			If you are using a client that uses 'stop' instead of 'ignore', enable "Korean Client Mode".
 			""";
 }

@@ -19,9 +19,24 @@ public enum MarkerSign implements HasFriendlyName {
 	BIND2("Bind 2", "bind2", BIND_NEXT),
 	BIND3("Bind 3", "bind3", BIND_NEXT),
 
-	IGNORE_NEXT("Next Available Ignore", "ignore"),
-	IGNORE1("Ignore 1", "ignore1", IGNORE_NEXT),
-	IGNORE2("Ignore 2", "ignore2", IGNORE_NEXT),
+	IGNORE_NEXT("Next Available Ignore", "ignore") {
+		@Override
+		public String getKoreanCommand() {
+			return "stop";
+		}
+	},
+	IGNORE1("Ignore 1", "ignore1", IGNORE_NEXT) {
+		@Override
+		public String getKoreanCommand() {
+			return "stop1";
+		}
+	},
+	IGNORE2("Ignore 2", "ignore2", IGNORE_NEXT) {
+		@Override
+		public String getKoreanCommand() {
+			return "stop2";
+		}
+	},
 
 	CIRCLE("Circle", "circle"),
 	CROSS("Cross", "cross"),
@@ -59,6 +74,10 @@ public enum MarkerSign implements HasFriendlyName {
 	}
 
 	public String getCommand() {
+		return command;
+	}
+
+	public String getKoreanCommand() {
 		return command;
 	}
 

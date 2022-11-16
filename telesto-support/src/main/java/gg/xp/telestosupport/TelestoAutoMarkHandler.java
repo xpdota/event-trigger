@@ -6,6 +6,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkSlotRequest;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkSlotRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +27,10 @@ public class TelestoAutoMarkHandler implements FilteredEventHandler {
 
 	@HandleEvents
 	public void doSpecificAutoMark(EventContext context, SpecificAutoMarkSlotRequest event) {
+		MarkerSign marker = event.getMarker();
 		context.accept(new TelestoGameCommand(String.format(
 				"/mk %s <%s>",
-				event.getMarker().getCommand(),
+				am.getKoreanMode().get() ? marker.getKoreanCommand() : marker.getCommand(),
 				event.getSlotToMark())));
 	}
 
