@@ -38,7 +38,13 @@ public class GroovyScriptManager {
 
 	public GroovyScriptManager(GroovyManager mgr) {
 		this.mgr = mgr;
-		loadScripts();
+		// TODO: move this
+		if (System.getProperty("skip-groovy-script-load", "false").equalsIgnoreCase("true")) {
+			log.info("Skipping script load");
+		}
+		else {
+			loadScripts();
+		}
 	}
 
 	public List<GroovyScriptHolder> getScripts() {

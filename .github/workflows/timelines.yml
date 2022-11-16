@@ -1,5 +1,6 @@
-name: Extract Timelines
+# Grab cactbot timelines, make a pull request automatically
 
+name: Extract Timelines
 
 on:
   workflow_dispatch:
