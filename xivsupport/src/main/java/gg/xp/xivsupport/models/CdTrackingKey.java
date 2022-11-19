@@ -31,6 +31,15 @@ public final class CdTrackingKey {
 	}
 
 	@Override
+	public String toString() {
+		return "CdTrackingKey{" +
+				"source=" + source +
+				", ability=" + ability +
+				", cooldown=" + cooldown +
+				'}';
+	}
+
+	@Override
 	public int hashCode() {
 		return Objects.hash(source, cooldown);
 	}

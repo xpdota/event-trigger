@@ -153,6 +153,15 @@ public class CdTracker {
 			this.key = key;
 			this.originalResetKey = originalResetKey;
 		}
+
+		@Override
+		public String toString() {
+			return "DelayedCdCallout{" +
+					"key=" + key +
+					", originalEvent=" + originalEvent +
+					", originalResetKey=" + originalResetKey +
+					'}';
+		}
 	}
 
 	private boolean isEnabledForPersonalTts(ExtendedCooldownDescriptor cd) {
