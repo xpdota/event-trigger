@@ -144,6 +144,15 @@ public class XivCombatant extends XivEntity {
 		return bNpcId;
 	}
 
+	public boolean npcIdMatches(long... expected) {
+		for (long e : expected) {
+			if (e == bNpcId) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public long getbNpcNameId() {
 		return bNpcNameId;
 	}

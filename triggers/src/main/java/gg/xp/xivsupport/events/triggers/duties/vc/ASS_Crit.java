@@ -140,7 +140,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 
 	@HandleEvents
 	public void basicCastFirstBoss(EventContext ctx, AbilityCastStart acs) {
-		if (!(acs.getSource().getbNpcId() == 14834)) {
+		if (!acs.getSource().npcIdMatches(14834, 14837)) {
 			return;
 		}
 		@Nullable Color color = buffColor(acs.getSource());
