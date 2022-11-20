@@ -6,6 +6,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
@@ -982,6 +983,9 @@ public class GuiMain {
 			scrollPane.setPreferredSize(scrollPane.getMaximumSize());
 			c.weighty = 1;
 			panel.add(scrollPane, c);
+			master.getDistributor().registerHandler(InitEvent.class, (e, ctx) -> {
+				tableModel.signalNewData();
+			});
 		}
 
 

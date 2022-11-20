@@ -301,7 +301,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	private final ModifiableCallout<AbilityCastStart> dominionSlash = ModifiableCallout.durationBasedCall("Dominion Slash", "Out of Front");
 	@NpcCastCallout({0x7969, 0x7981})
 	private final ModifiableCallout<AbilityCastStart> infernalPain = ModifiableCallout.durationBasedCall("Infernal Pain", "Raidwide with Bleed");
-	@NpcCastCallout({0x7966, 0x7973})
+	@NpcCastCallout({0x7966, 0x797E})
 	private final ModifiableCallout<AbilityCastStart> blightedGloom = ModifiableCallout.durationBasedCall("Blighted Gloom", "Out");
 	@NpcCastCallout({0x7968, 0x7980})
 	private final ModifiableCallout<AbilityCastStart> kingsWill = ModifiableCallout.durationBasedCall("King's Will", "Heavy Autos");
@@ -469,12 +469,12 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	public final SequentialTrigger<BaseEvent> firesteelStrikeSq = SqtTemplates.sq(20_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x74b0),
 			(e1, s) -> {
 				// If you got hit with the magic vuln, stand behind someone else.
-				AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2, 0x74C6, 0x76C7) && aue.isFirstTarget());
+				AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2, 0x76C6, 0x76C7) && aue.isFirstTarget());
 				if (firstHit.getTarget().isThePlayer()) {
 					s.updateCall(firesteel_standBehind.getModified(firstHit));
 				}
 				else {
-					AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2, 0x74C6, 0x76C7) && aue.isFirstTarget());
+					AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x74B1, 0x74B2, 0x76C6, 0x76C7) && aue.isFirstTarget());
 					if (secondHit.getTarget().isThePlayer()) {
 						s.updateCall(firesteel_standBehind.getModified(secondHit));
 					}
@@ -498,7 +498,7 @@ public class ASS_Crit extends AutoChildEventHandler implements FilteredEventHand
 	}
 
 	private List<XivCombatant> getWiresRaw() {
-		return state.getCombatantsListCopy().stream().filter(cbt -> cbt.getbNpcId() == 14764)
+		return state.getCombatantsListCopy().stream().filter(cbt -> (cbt.getbNpcId() == 14764 || cbt.getbNpcId() == 14818))
 				.filter(cbt -> getWireNumber(cbt) > 0)
 				.toList();
 	}
