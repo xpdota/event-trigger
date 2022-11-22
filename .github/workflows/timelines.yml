@@ -12,7 +12,6 @@ jobs:
   timelines:
     runs-on: self-hosted
     permissions:
-      all: write
       contents: write
       pull-requests: write
     steps:
