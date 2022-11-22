@@ -24,14 +24,11 @@ import java.util.function.Consumer;
 
 public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
-	private static final String propsOverrideFileName = "update.properties";
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("UpdateCheck"));
 	private JButton button;
 	private volatile UpdateCheckStatus updateCheckStatus = UpdateCheckStatus.NOT_STARTED;
 	private JLabel checkingLabel;
 	private File installDir;
-	private File propsOverride;
-	private PersistenceProvider updatePropsFilePers;
 	private static final boolean isIde = Platform.isInIDE();
 	private final BooleanSetting updateCheckNag;
 	private boolean updateCheckedThisRun;
@@ -44,13 +41,11 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		ERROR
 	}
 
-	public UpdatesPanel(PersistenceProvider pers) {
+	public UpdatesPanel(PersistenceProvider pers, UpdaterConfig updateConfig) {
 		super("Updates");
 		updateCheckNag = new BooleanSetting(pers, "updater.nag-next-update", true);
 		try {
 			this.installDir = Platform.getInstallDir();
-			propsOverride = Paths.get(installDir.toString(), propsOverrideFileName).toFile();
-			updatePropsFilePers = new SimplifiedPropertiesFilePersistenceProvider(propsOverride);
 		}
 		catch (Throwable e) {
 			log.error("Error setting up updates tab", e);
@@ -73,14 +68,13 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		add(new JLabel("Install Dir: " + installDir), c);
 		c.gridy++;
 		JPanel content = new JPanel();
-		//noinspection InstanceVariableUsedBeforeInitialized
-		StringSetting branchSetting = new StringSetting(updatePropsFilePers, "branch", "stable");
+		StringSetting branchSetting = updateConfig.getBranchSetting();
 		content.add(new StringSettingGui(branchSetting, "Branch").getComponent());
 		branchSetting.addListener(this::doUpdateCheckInBackground);
 		content.add(button);
 		add(content, c);
 		c.gridy++;
-		StringSetting urlTemplateSetting = new StringSetting(updatePropsFilePers, "url_template", "https://xpdota.github.io/event-trigger/%s/v2/%s");
+		StringSetting urlTemplateSetting = updateConfig.getUrlTemplateSetting();
 		StringSettingGui templateGui = new StringSettingGui(urlTemplateSetting, "URL Template");
 		templateGui.getTextBoxOnly().setColumns(50);
 		add(templateGui.getComponent(), c);
