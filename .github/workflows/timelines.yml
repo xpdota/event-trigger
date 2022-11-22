@@ -13,6 +13,7 @@ jobs:
     runs-on: self-hosted
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v2
         with:
@@ -31,4 +32,6 @@ jobs:
         with:
           commit-message: 'Automatic timeline update'
           branch: timeline-auto-update
+          title: 'Automatic Timeline Update'
+          body: 'Automatic extraction of Cactbot timelines'
           delete-branch: true
