@@ -7,6 +7,7 @@ import gg.xp.xivsupport.gui.CommonGuiSetup;
 import gg.xp.xivsupport.gui.Refreshable;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import gg.xp.xivsupport.persistence.settings.FontSetting;
@@ -46,12 +47,14 @@ public class FlyingTextOverlay extends XivOverlay {
 	private final EnumSetting<TextAlignment> alignmentSetting;
 	private final ColorSetting textColorSetting;
 	private final FontSetting textFontSetting;
+	private final BooleanSetting flipVertical;
 
 	public FlyingTextOverlay(PersistenceProvider pers, OverlayConfig oc) {
 		super("Callout Text", "callout-text-overlay", oc, pers);
 		alignmentSetting = new EnumSetting<>(pers, "callout-text-overlay.text-alignment", TextAlignment.class, TextAlignment.CENTER);
 		textColorSetting = new ColorSetting(pers, "callout-text-overlay.text-color", defaultTextColor);
 		textFontSetting = new FontSetting(pers, "callout-text-overlay.text-font", new JLabel().getFont().getFontName(), 24);
+		flipVertical = new BooleanSetting(pers, "callout-text-overlay.flip-vertical", false);
 		JLabel templateJLabel = new JLabel();
 		templateJLabel.setFont(textFontSetting.get());
 		templateJLabel.setText("A");
@@ -299,16 +302,34 @@ public class FlyingTextOverlay extends XivOverlay {
 			AffineTransform oldTransform = graphics.getTransform();
 			AffineTransform newTransform = new AffineTransform(oldTransform);
 //			g.clearRect(0, 0, getWidth(), getHeight());
-			int curY = 0;
-			for (VisualCalloutItem ce : currentCalloutsTmp) {
-				if (curY + ce.getHeight() > getHeight()) {
-					break;
+			if (flipVertical.get()) {
+				int curY = getHeight();
+				newTransform.translate(0, getHeight());
+				for (VisualCalloutItem ce : currentCalloutsTmp) {
+					int height = ce.getHeight();
+					if (curY - height < 0) {
+						break;
+					}
+					int delta = height + 5;
+					newTransform.translate(0, -delta);
+					graphics.setTransform(newTransform);
+					ce.paint(graphics);
+					curY -= delta;
 				}
-				ce.paint(graphics);
-				int height = ce.getHeight();
-				newTransform.translate(0, height + 5);
-				curY += height;
-				graphics.setTransform(newTransform);
+			}
+			else {
+				int curY = 0;
+				for (VisualCalloutItem ce : currentCalloutsTmp) {
+					int height = ce.getHeight();
+					if (curY + height > getHeight()) {
+						break;
+					}
+					ce.paint(graphics);
+					int delta = height + 5;
+					newTransform.translate(0, delta);
+					curY += delta;
+					graphics.setTransform(newTransform);
+				}
 			}
 			graphics.setTransform(oldTransform);
 		}
@@ -336,11 +357,16 @@ public class FlyingTextOverlay extends XivOverlay {
 		return textFontSetting;
 	}
 
+	public BooleanSetting getFlipVertical() {
+		return flipVertical;
+	}
+
 	public static void main(String[] args) {
 		CommonGuiSetup.setup();
 		{
 			InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
 			pers.save("callout-text-overlay.text-alignment", "RIGHT");
+			pers.save("callout-text-overlay.flip-vertical", "true");
 			OverlayConfig oc = new OverlayConfig(pers);
 			FlyingTextOverlay overlay = new FlyingTextOverlay(pers, oc);
 			overlay.finishInit();
