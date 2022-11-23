@@ -71,6 +71,7 @@ gg.xp.xivsupport.events.ws
 gg.xp.xivsupport.eventstorage
 gg.xp.xivsupport.groovy
 gg.xp.xivsupport.gui
+gg.xp.xivsupport.gui.addonmgr
 gg.xp.xivsupport.gui.components
 gg.xp.xivsupport.gui.cooldowns
 gg.xp.xivsupport.gui.extra
