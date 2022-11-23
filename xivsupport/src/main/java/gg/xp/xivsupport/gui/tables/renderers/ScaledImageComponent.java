@@ -56,6 +56,14 @@ public class ScaledImageComponent extends Component {
 		paint(g, size);
 	}
 
+	public boolean isLoaded() {
+		return image.getHeight(null) >= 0;
+	}
+
+	public void forceLoadNow() {
+		new ImageIcon(image.getScaledInstance(-1, size, Image.SCALE_SMOOTH));
+	}
+
 	public void paint(Graphics g, int size) {
 		AffineTransform t = ((Graphics2D) g).getTransform();
 		((Graphics2D) g).setRenderingHint(KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
