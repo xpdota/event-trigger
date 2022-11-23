@@ -35,6 +35,7 @@ import gg.xp.xivsupport.gui.nav.GlobalNavPanel;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
+import gg.xp.xivsupport.gui.overlay.OverlaysInitEvent;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
@@ -984,7 +985,7 @@ public class GuiMain {
 			scrollPane.setPreferredSize(scrollPane.getMaximumSize());
 			c.weighty = 1;
 			panel.add(scrollPane, c);
-			master.getDistributor().registerHandler(InitEvent.class, (e, ctx) -> {
+			master.getDistributor().registerHandler(OverlaysInitEvent.class, (e, ctx) -> {
 				tableModel.signalNewData();
 			});
 		}

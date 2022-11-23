@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.overlay;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.OnlineStatus;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +27,7 @@ public final class OverlayMain {
 	private final BooleanSetting show;
 	private final BooleanSetting forceShow;
 	private final PicoContainer container;
+	private final EventMaster master;
 
 
 	@HandleEvents
@@ -76,7 +79,8 @@ public final class OverlayMain {
 	// TODO: Linux support
 	private final boolean isNonWindows;
 
-	public OverlayMain(PicoContainer container, OverlayConfig config, PersistenceProvider persistence) {
+	public OverlayMain(PicoContainer container, OverlayConfig config, EventMaster master) {
+		this.master = master;
 		if (!Platform.isWindows()) {
 			log.warn("Not running on Windows - disabling overlay support");
 			isNonWindows = true;
@@ -107,6 +111,13 @@ public final class OverlayMain {
 					recalc();
 				}
 			}, om -> 200L).start();
+			try {
+				SwingUtilities.invokeAndWait(() -> {});
+			}
+			catch (InterruptedException | InvocationTargetException e) {
+				//
+			}
+			master.pushEvent(new OverlaysInitEvent());
 		}, "OverlayStartupHelper").start();
 
 	}
