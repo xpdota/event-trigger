@@ -68,6 +68,7 @@ public class CalloutStyleConfigGui implements PluginTab {
 			Component alignment = new EnumSettingGui<>(overlay.getAlignmentSetting(), "Text Alignment", enabled::get).getComponent();
 			Component color = new ColorSettingGui(overlay.getTextColorSetting(), "Text Color", enabled::get).getComponent();
 			Component font = new FontSettingGui(overlay.getTextFontSetting(), "Text Font", GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()).getComponent();
+			Component flip = new BooleanSettingGui(overlay.getFlipVertical(), "Bottom-to-top", true).getComponent();
 
 			JButton testButton1 = new JButton("Display Simple Test Callout");
 			testButton1.addActionListener(l -> {
@@ -110,7 +111,7 @@ public class CalloutStyleConfigGui implements PluginTab {
 				});
 			});
 
-			GuiUtil.simpleTopDownLayout(panel, 400, enableDisable, alignment, color, font, testButton1, testButton2, testButton3);
+			GuiUtil.simpleTopDownLayout(panel, 400, enableDisable, alignment, color, font, flip, testButton1, testButton2, testButton3);
 			tpane.add("Visual Callouts", panel);
 		}
 		{
