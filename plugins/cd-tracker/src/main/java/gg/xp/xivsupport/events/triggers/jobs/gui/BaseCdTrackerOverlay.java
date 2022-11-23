@@ -7,6 +7,7 @@ import gg.xp.xivsupport.gui.overlay.RefreshType;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 	private final CustomTableModel<VisualCdInfo> tableModel;
 	private final JTable table;
 	private final SettingsCdTrackerColorProvider colors;
+	private final BooleanSetting onlyActive;
 	//	private volatile Map<CdTrackingKey, AbilityUsedEvent> currentCds = Collections.emptyMap();
 	private volatile List<VisualCdInfo> croppedCds = Collections.emptyList();
 //	private volatile List<BuffApplied> currentBuffs = Collections.emptyList();
@@ -48,6 +50,7 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 		onCdColor = new ColorSetting(persistence, settingKeyBase + ".oncd-color", defaults.getOnCdColor());
 		preappColor = new ColorSetting(persistence, settingKeyBase + ".preapp-color", defaults.getPreappColor());
 		fontColor = new ColorSetting(persistence, settingKeyBase + ".font-color", defaults.getFontColor());
+		onlyActive = new BooleanSetting(persistence, settingKeyBase + ".only-show-active", false);
 
 		colors = new SettingsCdTrackerColorProvider(activeColor, readyColor, onCdColor, preappColor, fontColor);
 		BaseCdTrackerTable tableHolder = new BaseCdTrackerTable(() -> croppedCds, colors);
@@ -102,6 +105,15 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 					.limit(numberOfRows.get())
 					.map((Function<? super CooldownStatus, VisualCdInfo>) VisualCdInfoMain::new)
 					.filter(VisualCdInfo::stillValid)
+					.filter(vci -> {
+						if (onlyActive.get()) {
+							CdStatus status = vci.getStatus();
+							return status == CdStatus.BUFF_ACTIVE || status == CdStatus.BUFF_PREAPP;
+						}
+						else {
+							return true;
+						}
+					})
 					.toList();
 		}
 		return RefreshType.FULL;
@@ -155,5 +167,9 @@ public abstract class BaseCdTrackerOverlay extends XivOverlay {
 
 	public SettingsCdTrackerColorProvider getColors() {
 		return colors;
+	}
+
+	public BooleanSetting getOnlyActive() {
+		return onlyActive;
 	}
 }
