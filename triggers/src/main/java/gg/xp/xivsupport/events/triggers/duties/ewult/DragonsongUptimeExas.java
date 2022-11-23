@@ -19,10 +19,12 @@ import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.EnumListSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,23 +36,31 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 	private static final Logger log = LoggerFactory.getLogger(DragonsongUptimeExas.class);
 	private final XivState state;
 	private final BooleanSetting enabled;
+	private final EnumListSetting<UptimeExaflareMovement> priority;
 
 	private final ModifiableCallout<AbilityCastStart> southPlant = new ModifiableCallout<>("South Plant", "South Plant", 8_000);
-	private final ModifiableCallout<AbilityCastStart> southNorth = new ModifiableCallout<>("South Then North", "South Then North", 8_000);
+	private final ModifiableCallout<AbilityCastStart> southNorth = new ModifiableCallout<>("South Then North (Wide)", "South Then North", 8_000);
+	private final ModifiableCallout<AbilityCastStart> southNorthNarrow = new ModifiableCallout<>("South Then North (Narrow)", "South Then North", 8_000);
 	private final ModifiableCallout<AbilityCastStart> southWest = new ModifiableCallout<>("South Then West", "South Then West", 8_000);
 	private final ModifiableCallout<AbilityCastStart> southEast = new ModifiableCallout<>("South Then East", "South Then East", 8_000);
 	private final ModifiableCallout<AbilityCastStart> northwestPlant = new ModifiableCallout<>("Northwest Plant", "Northwest Plant", 8_000);
 	private final ModifiableCallout<AbilityCastStart> northeastPlant = new ModifiableCallout<>("Northeast Plant", "Northeast Plant", 8_000);
 	private final ModifiableCallout<AbilityCastStart> badPattern = new ModifiableCallout<>("Bad Pattern", "Downtime Pattern", 8_000);
+	private final ModifiableCallout<AbilityCastStart> error = new ModifiableCallout<>("Trigger Error", "Downtime Pattern", 8_000);
 
 	// TODO: make tests for this
 	public DragonsongUptimeExas(XivState state, PersistenceProvider pers) {
 		this.state = state;
 		this.enabled = new BooleanSetting(pers, "triggers.dragonsong.south-uptime-exas.enabled", false);
+		this.priority = new EnumListSetting<>(UptimeExaflareMovement.class, pers, "triggers.dragonsong.south-uptime-exas.prio", EnumListSetting.BadKeyBehavior.OMIT, UptimeExaflareMovement.defaultOrder());
 	}
 
 	public XivState getState() {
 		return state;
+	}
+
+	public EnumListSetting<UptimeExaflareMovement> getPriority() {
+		return priority;
 	}
 
 	@Override
@@ -66,6 +76,12 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 		There's also a second strat, where you can just *always* plant. It appears that you cannot actually get a
 		pattern without a plantable exaflare.
 	 */
+
+	// Check if any of an exa's three directions are equal to some given direction.
+	// i.e. is 'direction' going to get hit by 'exaflarefacing' (front, left or right)
+	private static boolean willExaHitDirection(ArenaSector direction, ArenaSector exaflareFacing) {
+		return exaflareFacing == direction || exaflareFacing.plusQuads(1) == direction || exaflareFacing.plusQuads(-1) == direction;
+	}
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> uptimeExas = new SequentialTrigger<>(
@@ -90,6 +106,7 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 						.toList();
 				if (normalizedExaPositions.size() != 3) {
 					log.error("Missing an exaflare actor! Data: {} - {}", exaCasts, normalizedExaPositions);
+					s.updateCall(error.getModified(realThordanCast));
 					return;
 				}
 				log.info("Uptime exas: computing");
@@ -102,60 +119,71 @@ public class DragonsongUptimeExas extends AutoChildEventHandler implements Filte
 				ArenaSector eastFacing = ArenaPos.combatantFacing(eastExaPos.getHeading());
 
 				log.info("Uptime exaflares: S {}, NW {}, NE {}", southFacing, westFacing, eastFacing);
-
-				boolean sUnsafeFromW = westFacing == ArenaSector.NORTHEAST || westFacing == ArenaSector.SOUTHEAST || westFacing == ArenaSector.SOUTHWEST;
-				boolean sUnsafeFromE = eastFacing == ArenaSector.NORTHWEST || eastFacing == ArenaSector.SOUTHEAST || eastFacing == ArenaSector.SOUTHWEST;
-				boolean nUnsafeFromS = southFacing == ArenaSector.NORTH || southFacing == ArenaSector.WEST || southFacing == ArenaSector.EAST;
-				// TODO: rewrite this later
-				boolean wUnsafeFromS = southFacing == ArenaSector.NORTHWEST || southFacing == ArenaSector.NORTHEAST || southFacing == ArenaSector.SOUTHWEST;
-				boolean eUnsafeFromS = southFacing == ArenaSector.NORTHWEST || southFacing == ArenaSector.NORTHEAST || southFacing == ArenaSector.SOUTHEAST;
-				boolean wUnsafeFromE = eastFacing == ArenaSector.NORTH || eastFacing == ArenaSector.WEST || eastFacing == ArenaSector.SOUTH;
-				boolean eUnsafeFromW = westFacing == ArenaSector.NORTH || westFacing == ArenaSector.EAST || westFacing == ArenaSector.SOUTH;
-				boolean wSafe = (!wUnsafeFromS && !wUnsafeFromE);
-				boolean eSafe = (!eUnsafeFromS && !eUnsafeFromW);
-
-				ModifiableCallout<AbilityCastStart> call;
-				if (sUnsafeFromW && sUnsafeFromE) {
-					if (nUnsafeFromS) {
-						// bad pattern, can't uptime with this strat
-						if (wSafe) {
-							call = northwestPlant;
-						}
-						else if (eSafe) {
-							call = northeastPlant;
-						}
-						else {
-							call = badPattern;
-						}
-					}
-					else {
-						// south then north
-						call = southNorth;
-					}
+				List<UptimeExaflareMovement> safeSpots = getSafeMovements(southFacing, westFacing, eastFacing);
+				final ModifiableCallout<AbilityCastStart> call;
+				if (safeSpots.isEmpty()) {
+					// Should never happen, just in case
+					call = badPattern;
 				}
 				else {
-					if (!sUnsafeFromW && !sUnsafeFromE) {
-						// Neither NW nor NE will hit S, so just dodge in and plant.
-						call = southPlant;
-					}
-					else {
-						if (sUnsafeFromW) {
-							// South then slightly west
-							call = southWest;
-						}
-						else {
-							// South then slightly east
-							call = southEast;
-						}
-					}
+					call = switch (safeSpots.get(0)) {
+						case SOUTH_PLANT -> southPlant;
+						case SOUTH_NORTH -> southNorth;
+						case SOUTH_WEST -> southWest;
+						case SOUTH_EAST -> southEast;
+						case NORTHWEST_PLANT -> northwestPlant;
+						case NORTHEAST_PLANT -> northeastPlant;
+						case SOUTH_NORTH_NARROW -> southNorthNarrow;
+						case DOWNTIME -> badPattern;
+					};
 				}
-				s.accept(call.getModified(realThordanCast));
-
-				// If card/intercard - dodge into south exa, then to the side of inter
-				// If card/card - sit in south
-				// If ic/ic - dodge into south exa, then to north side of hitbox
+				s.updateCall(call.getModified(realThordanCast));
 			}
 	);
+
+	// TODO: unit test
+	final List<UptimeExaflareMovement> getSafeMovements(ArenaSector southFacing, ArenaSector westFacing, ArenaSector eastFacing) {
+		List<UptimeExaflareMovement> safeSpots = new ArrayList<>(getPriority().get());
+		// Remove things that S will hit
+		if (willExaHitDirection(ArenaSector.NORTHWEST, southFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.NORTHWEST_PLANT);
+		}
+		if (willExaHitDirection(ArenaSector.NORTHEAST, southFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.NORTHEAST_PLANT);
+		}
+		if (willExaHitDirection(ArenaSector.NORTH, southFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH_NARROW);
+		}
+		// Remove things that NW will hit
+		if (willExaHitDirection(ArenaSector.EAST, westFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.NORTHEAST_PLANT);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
+		}
+		if (willExaHitDirection(ArenaSector.SOUTH, westFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_WEST);
+		}
+		if (willExaHitDirection(ArenaSector.SOUTHEAST, westFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_PLANT);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_EAST);
+		}
+		// Remove things that NE will hit
+		if (willExaHitDirection(ArenaSector.WEST, eastFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.NORTHWEST_PLANT);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_NORTH);
+		}
+		if (willExaHitDirection(ArenaSector.SOUTH, eastFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_EAST);
+		}
+		if (willExaHitDirection(ArenaSector.SOUTHWEST, eastFacing)) {
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_PLANT);
+			safeSpots.remove(UptimeExaflareMovement.SOUTH_WEST);
+		}
+
+		log.info("Computed safe strats: {}", safeSpots);
+		return safeSpots;
+
+	}
 
 	@Override
 	public BooleanSetting getCalloutGroupEnabledSetting() {
