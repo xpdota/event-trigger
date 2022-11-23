@@ -41,6 +41,7 @@ public class UpdaterConfig {
 		addonUrlsSetting = new StringSetting(updatePropsFilePers, "addons", "");
 		addonSetting = CustomJsonListSetting.<AddonDef>builder(pers, new TypeReference<>() {
 		}, "update-config.addon-manager.addon-list", "update-config.addon-manager.addon-list-failed").build();
+		addonSetting.addListener(this::syncAddonConfig);
 	}
 
 	public StringSetting getBranchSetting() {
@@ -57,7 +58,6 @@ public class UpdaterConfig {
 
 	public void removeAddon(AddonDef addon) {
 		addonSetting.removeItem(addon);
-		syncAddonConfig();
 	}
 
 	public void addNewAddon(String addonInfoUrl) {
@@ -89,9 +89,10 @@ public class UpdaterConfig {
 			throw new AddonValidationException("Addon did not define a download URL");
 		}
 		addonSetting.addItem(newAddonDef);
-		syncAddonConfig();
 	}
 
+	// TODO: also need a way of refreshing addon info from INFO files, in case the author wants to change the icon,
+	// move the manifest, etc.
 	private void syncAddonConfig() {
 		addonUrlsSetting.set(addonSetting.getItems()
 				.stream()
