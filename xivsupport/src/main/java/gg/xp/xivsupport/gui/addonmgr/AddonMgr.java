@@ -68,6 +68,9 @@ public class AddonMgr implements PluginTab {
 					c.setCellRenderer(new DefaultTableCellRenderer() {
 						@Override
 						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+							if (value == null || value.toString().isBlank()) {
+								return super.getTableCellRendererComponent(table, "No Image", isSelected, hasFocus, row, column);
+							}
 							ScaledImageComponent element = IconTextRenderer.getIconOnly(() -> {
 								URL url;
 								try {
@@ -79,9 +82,9 @@ public class AddonMgr implements PluginTab {
 								return url;
 							});
 							if (element == null) {
-								return null;
+								return super.getTableCellRendererComponent(table, "No Image", isSelected, hasFocus, row, column);
 							}
-							Component defaultRenderer = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+							Component defaultRenderer = super.getTableCellRendererComponent(table, "Loading...", isSelected, hasFocus, row, column);
 							if (!element.isLoaded()) {
 								boolean added = pending.add(value);
 								if (added) {
