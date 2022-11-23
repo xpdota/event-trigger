@@ -28,6 +28,9 @@ public class UpdaterConfig {
 	private final StringSetting urlTemplateSetting;
 	private final CustomJsonListSetting<AddonDef> addonSetting;
 	private final StringSetting addonUrlsSetting;
+	private Runnable updateRunnable = () -> {
+
+	};
 
 	public UpdaterConfig(PersistenceProvider pers) {
 		this.installDir = Platform.getInstallDir();
@@ -98,4 +101,11 @@ public class UpdaterConfig {
 	}
 
 
+	public void runUpdaterNow() {
+		updateRunnable.run();
+	}
+
+	public void setUpdateRunnable(Runnable updateRunnable) {
+		this.updateRunnable = updateRunnable;
+	}
 }

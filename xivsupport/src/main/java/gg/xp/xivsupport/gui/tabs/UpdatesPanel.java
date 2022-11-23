@@ -98,6 +98,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				// 15 minutes * 60 seconds * 1000 ms
 				i -> 15 * 60 * 1000L
 		).start();
+		updateConfig.setUpdateRunnable(this::updateNow);
 	}
 
 	private void updateNow() {

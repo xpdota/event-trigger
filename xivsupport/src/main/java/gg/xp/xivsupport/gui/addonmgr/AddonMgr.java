@@ -135,13 +135,19 @@ public class AddonMgr implements PluginTab {
 			}
 		};
 		deleteButton.addActionListener(l -> deleteSelected());
+
+		JButton applyButton = new JButton("Apply and Restart");
+		applyButton.addActionListener(l -> updaterConfig.runUpdaterNow());
+
+		controlPanel.add(addButton);
+		controlPanel.add(deleteButton);
+		controlPanel.add(applyButton);
+		outer.add(controlPanel, BorderLayout.SOUTH);
+
 		table.getSelectionModel().addListSelectionListener(l -> {
 			refreshSelection();
 		});
 		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		controlPanel.add(addButton);
-		controlPanel.add(deleteButton);
-		outer.add(controlPanel, BorderLayout.SOUTH);
 
 		return outer;
 	}
