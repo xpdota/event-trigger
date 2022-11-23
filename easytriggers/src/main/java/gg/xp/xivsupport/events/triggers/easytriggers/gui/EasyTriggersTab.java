@@ -96,7 +96,6 @@ public class EasyTriggersTab implements PluginTab {
 				.addColumn(new CustomColumn<>("Hit", EasyTrigger::getHits, 80))
 				.addColumn(new CustomColumn<>("Miss", EasyTrigger::getMisses, 80))
 				.build();
-		log.info("Baz");
 		JTable triggerChooserTable = new JTable(model) {
 			@Override
 			public boolean isCellEditable(int row, int column) {

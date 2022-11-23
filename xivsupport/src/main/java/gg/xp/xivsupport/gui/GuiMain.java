@@ -60,6 +60,7 @@ import gg.xp.xivsupport.gui.tabs.AdvancedTab;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
+import gg.xp.xivsupport.gui.tabs.UpdaterConfig;
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -188,7 +189,7 @@ public class GuiMain {
 		addTab("Map", container.getComponent(MapTab.class));
 		addTab("Library", container.getComponent(LibraryTab.class));
 		addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class)));
-		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class)));
+		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class), container.getComponent(UpdaterConfig.class)));
 		addTab("Advanced", new AdvancedTab(container));
 		GlobalNavPanel nav = new GlobalNavPanel(guiReg);
 		SwingUtilities.invokeLater(() -> {
