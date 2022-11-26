@@ -2,8 +2,10 @@ package gg.xp.xivsupport.persistence;
 
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -107,6 +109,17 @@ public final class Platform {
 		}
 		catch (Throwable e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public static void executeUpdater() throws IOException {
+		// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
+		// can relaunch the application correctly.
+		if (isWindows()) {
+			Desktop.getDesktop().open(Paths.get(getInstallDir().toString(), "triggevent-upd.exe").toFile());
+		}
+		else {
+			Runtime.getRuntime().exec(new String[]{"sh", "triggevent-upd.sh"});
 		}
 	}
 }

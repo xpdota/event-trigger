@@ -1,17 +1,15 @@
 package gg.xp.xivsupport.events.triggers.util;
 
-import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
-import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
-import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
+import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.eventstorage.EventReader;
@@ -28,7 +26,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 public abstract class CalloutVerificationTest {
 
@@ -56,6 +53,10 @@ public abstract class CalloutVerificationTest {
 		FakeACTTimeSource timeSource = pico.getComponent(FakeACTTimeSource.class);
 
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.ACT_LOG_FILE);
+		pico.addComponent(RawEventStorage.class);
+		RawEventStorage rawStorage = pico.getComponent(RawEventStorage.class);
+		rawStorage.getMaxEventsStoredSetting().set(2_000_000);
+
 
 //		pico.addComponent(coll);
 
@@ -149,20 +150,21 @@ public abstract class CalloutVerificationTest {
 		pico.getComponent(EventMaster.class).getQueue().waitDrain();
 
 
-		compareLists(actualCalls, getExpectedCalls());
+		compareLists(rawStorage, actualCalls, getExpectedCalls());
 
 
 	}
 
 	protected abstract List<CalloutInitialValues> getExpectedCalls();
 
-	private static void compareLists(List<?> actual, List<?> expected) {
+	private static void compareLists(RawEventStorage rawStorage, List<CalloutInitialValues> actual, List<CalloutInitialValues> expected) {
 		int actSize = actual.size();
 		int expSize = expected.size();
 		int iterationSize = Math.max(actSize, expSize);
 		boolean anyFailure = false;
 		int firstFailureIndex = 0;
 		int i;
+		Event failureAdjacentEvent = null;
 		for (i = 0; i < iterationSize; i++) {
 			boolean equals;
 			if (i >= actSize) {
@@ -177,6 +179,8 @@ public abstract class CalloutVerificationTest {
 			if (!equals) {
 				anyFailure = true;
 				firstFailureIndex = i;
+				CalloutInitialValues item = actual.get(i);
+				failureAdjacentEvent = item.event();
 				break;
 			}
 		}
@@ -199,6 +203,26 @@ public abstract class CalloutVerificationTest {
 				expectedString = expectedItem == null ? "-- null --" : expectedItem.toString();
 			}
 			sb.append("| ").append(expectedString).append(" | ").append(actualString).append(" |\n");
+		}
+		if (failureAdjacentEvent != null) {
+			sb.append("\n\n");
+			List<Event> allEvents = rawStorage.getEvents();
+			Instant timeBasis = failureAdjacentEvent.getEffectiveHappenedAt();
+			int index = allEvents.indexOf(failureAdjacentEvent);
+			int range = 20;
+			int start = Math.max(0, index - range);
+			int end = Math.min(allEvents.size(), index + range);
+			List<Event> relevantEvents = allEvents.subList(start, end);
+			Event failureEvent = failureAdjacentEvent;
+			relevantEvents.forEach(event -> {
+				Duration delta = Duration.between(timeBasis, event.getEffectiveHappenedAt());
+				sb.append(delta.toMillis()).append(": ");
+				if (event == failureEvent) {
+					sb.append("****");
+				}
+				sb.append(event).append('\n');
+			});
+
 		}
 		if (anyFailure) {
 			throw new AssertionError(sb.toString());
