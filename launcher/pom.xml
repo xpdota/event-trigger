@@ -330,6 +330,18 @@
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
+            <artifactId>triggers-general</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>triggers-ew</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>triggers-sb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
         </dependency>
         <dependency>

@@ -10,35 +10,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>triggers</artifactId>
-
+    <packaging>pom</packaging>
+    <modules>
+        <module>triggers-general</module>
+        <module>triggers-ew</module>
+        <module>triggers-sb</module>
+        <module>titan-jails</module>
+    </modules>
     <dependencies>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>xivsupport</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>trigger-support</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <!-- 7.4.0 Breaks stuff-->
-            <!--suppress MavenPackageUpdate -->
-            <scope>test</scope>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.hamcrest/hamcrest-all -->
-        <!--        TODO: probably doesn't need to be hamcrest-*all*-->
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>actimport</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>testutils-xiv</artifactId>
@@ -46,18 +25,11 @@
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>testutils-generic</artifactId>
-            <scope>test</scope>
+            <artifactId>xivsupport</artifactId>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>testutils-reevent</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>testutils-samplelogs</artifactId>
-            <scope>test</scope>
+            <artifactId>trigger-support</artifactId>
         </dependency>
     </dependencies>
 
