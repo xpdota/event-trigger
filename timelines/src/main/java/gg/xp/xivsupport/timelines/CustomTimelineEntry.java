@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import gg.xp.xivdata.data.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,6 +37,7 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 	public boolean enabled = true;
 	public boolean callout;
 	public double calloutPreTime;
+	public JobSelection enabledJobs = JobSelection.allCombatJobs();
 
 	public CustomTimelineEntry() {
 		name = "Name Goes Here";
@@ -217,5 +219,10 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	public double calloutPreTime() {
 		return calloutPreTime;
+	}
+
+	@Override
+	public boolean enabledForJob(Job job) {
+		return enabledJobs.enabledForJob(job);
 	}
 }

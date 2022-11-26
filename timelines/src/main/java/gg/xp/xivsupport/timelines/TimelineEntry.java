@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.timelines;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import gg.xp.xivdata.data.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -102,5 +103,9 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 
 	default double effectiveCalloutTime() {
 		return time() - calloutPreTime();
+	}
+
+	default boolean enabledForJob(Job job) {
+		return true;
 	}
 }

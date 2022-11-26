@@ -42,10 +42,10 @@ public final class TimelineProcessor {
 	record TimelineSync(ACTLogLineEvent line, double lastSyncTime, TimelineEntry original) {
 	}
 
-	private TimelineProcessor(TimelineManager manager, List<TimelineEntry> entries) {
+	private TimelineProcessor(TimelineManager manager, List<TimelineEntry> entries, Job playerJob) {
 		this.manager = manager;
 		this.rawEntries = entries;
-		this.entries = entries.stream().filter(TimelineEntry::enabled).collect(Collectors.toList());
+		this.entries = entries.stream().filter(TimelineEntry::enabled).filter(te -> playerJob == null || te.enabledForJob(playerJob)).collect(Collectors.toList());
 		secondsFuture = manager.getSecondsFuture();
 		secondsPast = manager.getSecondsPast();
 		debugMode = manager.getDebugMode();
@@ -54,7 +54,7 @@ public final class TimelineProcessor {
 		refresher.start();
 	}
 
-	public static TimelineProcessor of(TimelineManager manager, InputStream file, List<? extends TimelineEntry> extra) {
+	public static TimelineProcessor of(TimelineManager manager, InputStream file, List<? extends TimelineEntry> extra, Job playerJob) {
 		List<TextFileTimelineEntry> timelineEntries;
 		try {
 			timelineEntries = TimelineParser.parseMultiple(IOUtils.readLines(file, StandardCharsets.UTF_8));
@@ -69,7 +69,7 @@ public final class TimelineProcessor {
 		}
 		all.addAll(extra);
 		all.sort(Comparator.naturalOrder());
-		return new TimelineProcessor(manager, all);
+		return new TimelineProcessor(manager, all, playerJob);
 	}
 
 	public double getEffectiveTime() {
