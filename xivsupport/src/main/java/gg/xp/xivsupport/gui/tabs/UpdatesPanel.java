@@ -119,14 +119,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error updating the updater. This may fix itself after updates. ");
 			}
 			try {
-				// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
-				// can relaunch the application correctly.
-				if (Platform.isWindows()) {
-					Desktop.getDesktop().open(Paths.get(installDir.toString(), "triggevent-upd.exe").toFile());
-				}
-				else {
-					Runtime.getRuntime().exec(new String[]{"sh", "triggevent-upd.sh"});
-				}
+				Platform.executeUpdater();
 			}
 			catch (Throwable e) {
 				log.error("Error launching updater", e);
