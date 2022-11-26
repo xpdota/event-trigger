@@ -25,11 +25,21 @@
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
+            <artifactId>actimport</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>trigger-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>testutils-samplelogs</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
