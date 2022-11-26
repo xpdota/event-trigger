@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.io.IOException;
 
 public final class CatchFatalError {
 
@@ -48,6 +49,8 @@ public final class CatchFatalError {
 					"\n\n" +
 					"You can also try moving/renaming the properties files in that directory to see if this error is being caused by a problem with your settings." +
 					"\n\n" +
+					"Also, try updating using the button below." +
+					"\n\n" +
 					ExceptionUtils.getStackTrace(e)
 			);
 			textArea.setEditable(false);
@@ -68,8 +71,19 @@ public final class CatchFatalError {
 				frame.setVisible(false);
 				frame.dispose();
 			});
+			JButton update = new JButton("Update/Repair");
+			update.addActionListener(l -> {
+				try {
+					Platform.executeUpdater();
+				}
+				catch (IOException ex) {
+					//
+				}
+				System.exit(1);
+			});
 			JPanel buttons = new JPanel(new WrapLayout(WrapLayout.CENTER));
 			buttons.add(exit);
+			buttons.add(update);
 //			buttons.add(tryContinue);
 			c.fill = GridBagConstraints.HORIZONTAL;
 			panel.add(buttons, c);
