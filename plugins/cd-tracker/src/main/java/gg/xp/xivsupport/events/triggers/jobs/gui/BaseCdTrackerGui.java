@@ -108,6 +108,8 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 		settingsPanel.add(enableOverlay);
 		JPanel numSetting = new IntSettingSpinner(overlayMax(), "Max in Overlay").getComponent();
 		settingsPanel.add(numSetting);
+
+		settingsPanel.add(new BooleanSettingGui(overlay.getOnlyActive(), "Only Display Active Buffs", enableOverlaySetting::get).getComponent());
 		// TODO: bug here - doesn't cancel editing, so current cell enabled/disabled is stuck
 
 		settingsPanel.add(Box.createHorizontalStrut(32_000));

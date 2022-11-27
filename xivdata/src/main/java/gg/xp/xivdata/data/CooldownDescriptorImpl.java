@@ -134,4 +134,15 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 	public int hashCode() {
 		return (int) getPrimaryAbilityId();
 	}
+
+	@Override
+	public String toString() {
+		return "CooldownDescriptorImpl{" +
+				"cooldown=" + cooldown +
+				", label='" + label + '\'' +
+				", abilityIds=" + Arrays.toString(abilityIds) +
+				", buffIds=" + Arrays.toString(buffIds) +
+				", maxCharges=" + maxCharges +
+				'}';
+	}
 }

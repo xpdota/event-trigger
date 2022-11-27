@@ -125,4 +125,8 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	public boolean shouldSave() {
 		return false;
 	}
+
+	public String getDescription() {
+		return description;
+	}
 }

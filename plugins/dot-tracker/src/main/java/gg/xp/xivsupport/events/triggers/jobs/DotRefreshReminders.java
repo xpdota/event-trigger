@@ -164,6 +164,14 @@ public class DotRefreshReminders {
 			super(delayMs);
 			this.originalEvent = originalEvent;
 		}
+
+		@Override
+		public String toString() {
+			return "DelayedBuffCallout{" +
+					"originalEvent=" + originalEvent +
+					", delay=" + delayMs +
+					'}';
+		}
 	}
 
 	private Instant lastCallout = Instant.now();

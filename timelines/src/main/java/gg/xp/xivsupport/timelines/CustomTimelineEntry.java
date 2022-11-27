@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import gg.xp.xivdata.data.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,6 +37,7 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 	public boolean enabled = true;
 	public boolean callout;
 	public double calloutPreTime;
+	public CombatJobSelection enabledJobs = CombatJobSelection.all();
 
 	public CustomTimelineEntry() {
 		name = "Name Goes Here";
@@ -83,7 +85,8 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 			@JsonProperty("replaces") @Nullable TimelineReference replaces,
 			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled,
 			@JsonProperty(value = "callout", defaultValue = "false") boolean callout,
-			@JsonProperty(value = "calloutPreTime", defaultValue = "0") double calloutPreTime
+			@JsonProperty(value = "calloutPreTime", defaultValue = "0") double calloutPreTime,
+			@JsonProperty(value = "jobs") @Nullable CombatJobSelection jobs
 	) {
 		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
 		// but it works.
@@ -99,6 +102,7 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 		this.icon = icon;
 		this.replaces = replaces;
 		this.enabled = !disabled;
+		this.enabledJobs = jobs == null ? CombatJobSelection.all() : jobs;
 	}
 
 	@Override
@@ -217,5 +221,16 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	public double calloutPreTime() {
 		return calloutPreTime;
+	}
+
+	@Override
+	public boolean enabledForJob(Job job) {
+		return enabledJobs.enabledForJob(job);
+	}
+
+	@JsonProperty("jobs")
+	public @Nullable CombatJobSelection getEnabledJobs() {
+		// Don't bother serializing if every job is selected
+		return enabledJobs.isEnabledForAll() ? null : enabledJobs;
 	}
 }

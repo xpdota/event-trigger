@@ -18,6 +18,7 @@
         <module>job-overlays</module>
         <module>personal-cast-bar-overlay</module>
         <module>skill-hit-overlay</module>
+        <module>custom-party-overlay</module>
     </modules>
 
 </project>

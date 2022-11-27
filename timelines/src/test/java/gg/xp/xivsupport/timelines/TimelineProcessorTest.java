@@ -38,7 +38,7 @@ public class TimelineProcessorTest {
 		{
 			List<VisualTimelineEntry> currentEntries = tm.getCurrentDisplayEntries();
 			VisualTimelineEntry firstEntry = currentEntries.get(0);
-			MatcherAssert.assertThat(firstEntry.timeUntil(), Matchers.closeTo(18.1, 0.1));
+			MatcherAssert.assertThat(firstEntry.timeUntil(), Matchers.closeTo(18.1, 0.11));
 		}
 	}
 }

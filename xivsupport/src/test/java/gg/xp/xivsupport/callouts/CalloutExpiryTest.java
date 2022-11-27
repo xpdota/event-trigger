@@ -47,7 +47,8 @@ public class CalloutExpiryTest {
 			}
 		}
 
-		List<?> getCurrentVisualCalls() throws Throwable {
+		// Sync is purely for thread-safety
+		synchronized List<?> getCurrentVisualCalls() throws Throwable {
 			return (List<?>) ccField.get(fto);
 		}
 	}
@@ -68,7 +69,7 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(500);
+			Thread.sleep(600);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -88,7 +89,7 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(500);
+			Thread.sleep(600);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -112,7 +113,7 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(500);
+			Thread.sleep(600);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -133,7 +134,7 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(500);
+			Thread.sleep(600);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());

@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.models;
 
-import gg.xp.xivdata.data.Cooldown;
-import gg.xp.xivdata.data.ExtendedCooldownDescriptor;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 
@@ -28,6 +27,15 @@ public final class CdTrackingKey {
 		if (o == null || getClass() != o.getClass()) return false;
 		CdTrackingKey that = (CdTrackingKey) o;
 		return Objects.equals(source, that.source) && Objects.equals(cooldown, that.cooldown);
+	}
+
+	@Override
+	public String toString() {
+		return "CdTrackingKey{" +
+				"source=" + source +
+				", ability=" + ability +
+				", cooldown=" + cooldown +
+				'}';
 	}
 
 	@Override

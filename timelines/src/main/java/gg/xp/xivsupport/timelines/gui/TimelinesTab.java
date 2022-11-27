@@ -21,6 +21,9 @@ import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
+import gg.xp.xivsupport.persistence.gui.JobMultiSelectionGui;
+import gg.xp.xivsupport.persistence.gui.LongSettingGui;
+import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.timelines.CustomTimelineEntry;
 import gg.xp.xivsupport.timelines.TimelineCustomizations;
@@ -34,14 +37,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.io.Serial;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EventObject;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -194,6 +201,37 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setMinWidth(numColMinWidth);
 					col.setMaxWidth(numColMaxWidth);
 					col.setPreferredWidth(numColPrefWidth);
+				}))
+				.addColumn(new CustomColumn<>("Jobs", timelineEntry -> {
+					if (timelineEntry instanceof CustomTimelineEntry cte) {
+						// TODO: icons
+						return cte.enabledJobs;
+					}
+					return "";
+				}, c -> {
+					DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
+						@Override
+						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+							String displayValue;
+							if (value instanceof CombatJobSelection js) {
+								displayValue = js.describeSelection();
+								if (isSelected) {
+									displayValue = "Double-click to Edit: " + displayValue;
+								}
+							}
+							else {
+								if (isSelected) {
+									displayValue = "Double-click to Edit: All";
+								}
+								else {
+									displayValue = "";
+								}
+							}
+							return super.getTableCellRendererComponent(table, displayValue, isSelected, hasFocus, row, column);
+						}
+					};
+					c.setCellRenderer(cellRenderer);
+					c.setCellEditor(new JobCellEditor(cellRenderer));
 				}))
 				.setItemEquivalence((one, two) -> one == two)
 				.build();
@@ -455,14 +493,14 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	 * @param <X>      The type for the cell
 	 * @return The lambda
 	 */
-	private <X> BiConsumer<Object, X> safeEditTimelineEntry(boolean stopEditing, BiConsumer<CustomTimelineEntry, X> editFunc) {
+	private <X> BiConsumer<TimelineEntry, X> safeEditTimelineEntry(boolean stopEditing, BiConsumer<CustomTimelineEntry, X> editFunc) {
 		return (item, value) -> {
 			pendingEdit = () -> {
 				if (item instanceof CustomTimelineEntry custom) {
 					editFunc.accept(custom, value);
 				}
 				else {
-					CustomTimelineEntry custom = CustomTimelineEntry.overrideFor((TimelineEntry) item);
+					CustomTimelineEntry custom = CustomTimelineEntry.overrideFor(item);
 					editFunc.accept(custom, value);
 					addNewEntry(custom);
 				}
@@ -612,5 +650,66 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		int minutes = (int) (time / 60);
 		double seconds = (time % 60);
 		return String.format("%s (%s:%s)", time, minutes, truncateTrailingZeroes.format(seconds));
+	}
+
+	private class JobCellEditor extends AbstractCellEditor implements TableCellEditor {
+
+		@Serial
+		private static final long serialVersionUID = 188397433845199843L;
+		private final DefaultTableCellRenderer cellRenderer;
+
+		private CombatJobSelection sel;
+
+		public JobCellEditor(DefaultTableCellRenderer cellRenderer) {
+			this.cellRenderer = cellRenderer;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			TimelineEntry entry = ((CustomTableModel<TimelineEntry>) table.getModel()).getValueForRow(row);
+			if (value instanceof CombatJobSelection js && !js.isEnabledForAll()) {
+				sel = js.copy();
+			}
+			else {
+				sel = CombatJobSelection.none();
+			}
+			Component out = cellRenderer.getTableCellRendererComponent(table, sel.describeSelection(), true, true, row, column);
+			JobMultiSelectionGui gui = new JobMultiSelectionGui(sel);
+			SwingUtilities.invokeLater(() -> {
+				while (true) {
+					int result = JOptionPane.showOptionDialog(TimelinesTab.this, gui, "Choose Jobs", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, new String[]{"OK", "Cancel"}, "OK");
+					if (result == JOptionPane.OK_OPTION) {
+						if (sel.isEmpty()) {
+							JOptionPane.showMessageDialog(TimelinesTab.this, "You did not select any jobs or categories. Please select something.", "No Jobs Selected", JOptionPane.ERROR_MESSAGE);
+							continue;
+						}
+						safeEditTimelineEntry(false, (cte, unused) -> cte.enabledJobs = sel).accept(entry, sel);
+					}
+					SwingUtilities.invokeLater(TimelinesTab.this::stopEditing);
+					break;
+				}
+			});
+//							frame = new JFrame();
+//							frame.getContentPane().add(gui);
+//							frame.pack();
+//							frame.setVisible(true);
+			return out;
+		}
+
+		@Override
+		public Object getCellEditorValue() {
+			return sel;
+		}
+
+		@Override
+		public boolean isCellEditable(EventObject anEvent) {
+			if (anEvent instanceof MouseEvent me) {
+				if (me.getClickCount() == 2) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 	}
 }

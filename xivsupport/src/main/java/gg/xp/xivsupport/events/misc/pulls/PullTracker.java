@@ -17,12 +17,16 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PullTracker implements SubState {
+
+	private static final Logger log = LoggerFactory.getLogger(PullTracker.class);
 
 	private final List<Pull> pulls = new ArrayList<>();
 	private final AtomicInteger pullCounter = new AtomicInteger(1);
@@ -59,6 +63,7 @@ public class PullTracker implements SubState {
 		state.getCombatantsListCopy().stream()
 				.filter(c -> !c.isPc())
 				.forEach(currentPull::addEnemy);
+		log.info("Pull started by event: {}", event);
 		context.accept(new PullStartedEvent());
 	}
 
@@ -66,6 +71,7 @@ public class PullTracker implements SubState {
 		if (currentPull != null) {
 			currentPull.setEnd(event);
 			currentPull = null;
+			log.info("Pull ended by event: {}", event);
 			context.accept(new PullEndedEvent());
 		}
 	}
@@ -83,7 +89,8 @@ public class PullTracker implements SubState {
 	@HandleEvents
 	public void startCombatByAbility(EventContext context, AbilityUsedEvent abilityUsed) {
 		if (currentPull != null && currentPull.getStatus() == PullStatus.PRE_PULL) {
-			if (abilityUsed.getSource().isPc() && abilityUsed.getTarget().getType() == CombatantType.NPC) {
+			if (abilityUsed.getSource().isPc() && abilityUsed.getTarget().getType() == CombatantType.NPC && !abilityUsed.getTarget().isEnvironment()) {
+				log.info("Combat started by ability: {}", abilityUsed);
 				currentPull.setCombatStart(abilityUsed);
 			}
 		}

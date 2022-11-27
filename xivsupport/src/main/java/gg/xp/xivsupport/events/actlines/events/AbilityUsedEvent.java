@@ -77,4 +77,17 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	public boolean isLastTarget() {
 		return targetIndex >= numberOfTargets - 1;
 	}
+
+	@Override
+	public String toString() {
+		return "AbilityUsedEvent{" +
+				"ability=" + ability +
+				", caster=" + caster +
+				", target=" + target +
+				", effects=" + effects +
+				", sequenceId=" + sequenceId +
+				", targetIndex=" + targetIndex +
+				", numberOfTargets=" + numberOfTargets +
+				'}';
+	}
 }

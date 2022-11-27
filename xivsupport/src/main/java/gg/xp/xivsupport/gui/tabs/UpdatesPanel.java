@@ -24,14 +24,11 @@ import java.util.function.Consumer;
 
 public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
-	private static final String propsOverrideFileName = "update.properties";
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("UpdateCheck"));
 	private JButton button;
 	private volatile UpdateCheckStatus updateCheckStatus = UpdateCheckStatus.NOT_STARTED;
 	private JLabel checkingLabel;
 	private File installDir;
-	private File propsOverride;
-	private PersistenceProvider updatePropsFilePers;
 	private static final boolean isIde = Platform.isInIDE();
 	private final BooleanSetting updateCheckNag;
 	private boolean updateCheckedThisRun;
@@ -44,13 +41,11 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		ERROR
 	}
 
-	public UpdatesPanel(PersistenceProvider pers) {
+	public UpdatesPanel(PersistenceProvider pers, UpdaterConfig updateConfig) {
 		super("Updates");
 		updateCheckNag = new BooleanSetting(pers, "updater.nag-next-update", true);
 		try {
 			this.installDir = Platform.getInstallDir();
-			propsOverride = Paths.get(installDir.toString(), propsOverrideFileName).toFile();
-			updatePropsFilePers = new SimplifiedPropertiesFilePersistenceProvider(propsOverride);
 		}
 		catch (Throwable e) {
 			log.error("Error setting up updates tab", e);
@@ -73,14 +68,13 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		add(new JLabel("Install Dir: " + installDir), c);
 		c.gridy++;
 		JPanel content = new JPanel();
-		//noinspection InstanceVariableUsedBeforeInitialized
-		StringSetting branchSetting = new StringSetting(updatePropsFilePers, "branch", "stable");
+		StringSetting branchSetting = updateConfig.getBranchSetting();
 		content.add(new StringSettingGui(branchSetting, "Branch").getComponent());
 		branchSetting.addListener(this::doUpdateCheckInBackground);
 		content.add(button);
 		add(content, c);
 		c.gridy++;
-		StringSetting urlTemplateSetting = new StringSetting(updatePropsFilePers, "url_template", "https://xpdota.github.io/event-trigger/%s/v2/%s");
+		StringSetting urlTemplateSetting = updateConfig.getUrlTemplateSetting();
 		StringSettingGui templateGui = new StringSettingGui(urlTemplateSetting, "URL Template");
 		templateGui.getTextBoxOnly().setColumns(50);
 		add(templateGui.getComponent(), c);
@@ -104,6 +98,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				// 15 minutes * 60 seconds * 1000 ms
 				i -> 15 * 60 * 1000L
 		).start();
+		updateConfig.setUpdateRunnable(this::updateNow);
 	}
 
 	private void updateNow() {
@@ -124,14 +119,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error updating the updater. This may fix itself after updates. ");
 			}
 			try {
-				// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
-				// can relaunch the application correctly.
-				if (Platform.isWindows()) {
-					Desktop.getDesktop().open(Paths.get(installDir.toString(), "triggevent-upd.exe").toFile());
-				}
-				else {
-					Runtime.getRuntime().exec(new String[]{"sh", "triggevent-upd.sh"});
-				}
+				Platform.executeUpdater();
 			}
 			catch (Throwable e) {
 				log.error("Error launching updater", e);

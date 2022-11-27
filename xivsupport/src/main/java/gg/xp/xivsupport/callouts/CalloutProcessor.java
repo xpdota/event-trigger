@@ -128,6 +128,7 @@ public class CalloutProcessor {
 				raw.getColorOverride(),
 				raw.getSound());
 		out.setReplaces(raw.getReplaces());
+		log.info("Callout: TTS='{}' from '{}' caused by '{}'", tts, raw.getDescription(), raw.getParent());
 		return out;
 	}
 

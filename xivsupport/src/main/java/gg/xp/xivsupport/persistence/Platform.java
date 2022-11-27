@@ -2,10 +2,19 @@ package gg.xp.xivsupport.persistence;
 
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 
+import java.awt.*;
 import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
 public final class Platform {
 	private Platform() {
@@ -32,6 +41,31 @@ public final class Platform {
 
 	public static Path getGroovyDir() {
 		return Paths.get(getTriggeventDir().toString(), "userscripts");
+	}
+
+	public static Path getAddonsDir() {
+		return Paths.get(getInstallDir().toString(), "addon");
+	}
+
+	public static List<URL> getAddonJars() {
+		File[] addonDirs = getAddonsDir().toFile().listFiles(File::isDirectory);
+		if (addonDirs == null) {
+			return Collections.emptyList();
+		}
+		return Arrays.stream(addonDirs)
+				.flatMap(addonDir -> {
+					File[] subFiles = addonDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
+					return subFiles == null ? Stream.empty() : Arrays.stream(subFiles);
+				})
+				.map(file -> {
+					try {
+						return file.toURI().toURL();
+					}
+					catch (MalformedURLException e) {
+						throw new RuntimeException(e);
+					}
+				})
+				.toList();
 	}
 
 	public static Path getActDir() {
@@ -75,6 +109,17 @@ public final class Platform {
 		}
 		catch (Throwable e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public static void executeUpdater() throws IOException {
+		// Desktop.open seems to open it in such a way that when we exit, we release the mutex, so the updater
+		// can relaunch the application correctly.
+		if (isWindows()) {
+			Desktop.getDesktop().open(Paths.get(getInstallDir().toString(), "triggevent-upd.exe").toFile());
+		}
+		else {
+			Runtime.getRuntime().exec(new String[]{"sh", "triggevent-upd.sh"});
 		}
 	}
 }

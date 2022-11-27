@@ -1,0 +1,37 @@
+# If a branch is deleted, this will remove its deployment files
+
+name: Clean Branches
+
+on:
+  delete:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+        with:
+          ref: gh-pages
+      - name: Delete
+        run: |
+          git fetch
+          for folder in `\ls .`; do 
+            if [ ! `git rev-parse --verify origin/$folder 2>/dev/null` ]; then 
+              echo -e "\033[31mDELETE \033[91m$folder\033[0m"
+              rm -rf $folder
+            else
+              echo -e "\033[32mKEEP   \033[92m$folder\033[0m"
+            fi
+          done
+      - uses: EndBug/add-and-commit@v9
+        name: Add, Commit, Push
+        with:
+          default_author: github_actions
+
+
+
+

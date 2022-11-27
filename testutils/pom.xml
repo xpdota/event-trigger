@@ -17,6 +17,7 @@
         <module>testutils-generic</module>
         <module>testutils-xiv</module>
         <module>testutils-reevent</module>
+        <module>testutils-samplelogs</module>
     </modules>
 
 </project>

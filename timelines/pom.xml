@@ -62,4 +62,25 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>maketimelines</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <includes>gg.xp.xivsupport.timelines.MakeTimelines</includes>
+                            <argLine>-Dtimelinedir=src/main/resources</argLine>
+                            <failIfNoTests>true</failIfNoTests>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>

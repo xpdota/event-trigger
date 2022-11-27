@@ -53,9 +53,9 @@
                     <version>3.0.0-M5</version>
                     <configuration>
                         <parallel>methods</parallel>
-                        <threadCount>1</threadCount>
+                        <threadCount>2</threadCount>
                         <perCoreThreadCount>true</perCoreThreadCount>
-                        <argLine>-Duser.country=US -Duser.language=en -DsequentialTriggerCycleTime=1000</argLine>
+                        <argLine>-Duser.country=US -Duser.language=en -DsequentialTriggerCycleTime=1000 -Dskip-groovy-script-load=true</argLine>
                         <trimStackTrace>false</trimStackTrace>
                     </configuration>
                 </plugin>
@@ -226,8 +226,29 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
+                <artifactId>triggers-ew</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>triggers-sb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>triggers-general</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>titan-jails</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
                 <artifactId>triggers</artifactId>
                 <version>${project.version}</version>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
@@ -298,11 +319,6 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
-                <artifactId>titan-jails</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>gg.xp</groupId>
                 <artifactId>telesto-support</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -329,6 +345,23 @@
         </dependencies>
     </dependencyManagement>
 
+    <profiles>
+        <profile>
+            <id>maketimelines</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <modules>
         <module>reevent</module>
@@ -341,10 +374,7 @@
         <module>easytriggers</module>
         <module>testutils</module>
         <module>plugins</module>
-        <module>triggers/titan-jails</module>
         <module>telesto-support</module>
-        <module>plugins/custom-party-overlay</module>
-        <module>testutils/testutils-samplelogs</module>
         <module>groovy-sandboxing</module>
         <module>trigger-support</module>
     </modules>

@@ -6,6 +6,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
@@ -34,6 +35,7 @@ import gg.xp.xivsupport.gui.nav.GlobalNavPanel;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
+import gg.xp.xivsupport.gui.overlay.OverlaysInitEvent;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
@@ -59,6 +61,7 @@ import gg.xp.xivsupport.gui.tabs.AdvancedTab;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
+import gg.xp.xivsupport.gui.tabs.UpdaterConfig;
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -187,7 +190,7 @@ public class GuiMain {
 		addTab("Map", container.getComponent(MapTab.class));
 		addTab("Library", container.getComponent(LibraryTab.class));
 		addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class)));
-		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class)));
+		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class), container.getComponent(UpdaterConfig.class)));
 		addTab("Advanced", new AdvancedTab(container));
 		GlobalNavPanel nav = new GlobalNavPanel(guiReg);
 		SwingUtilities.invokeLater(() -> {
@@ -982,6 +985,9 @@ public class GuiMain {
 			scrollPane.setPreferredSize(scrollPane.getMaximumSize());
 			c.weighty = 1;
 			panel.add(scrollPane, c);
+			master.getDistributor().registerHandler(OverlaysInitEvent.class, (e, ctx) -> {
+				tableModel.signalNewData();
+			});
 		}
 
 
