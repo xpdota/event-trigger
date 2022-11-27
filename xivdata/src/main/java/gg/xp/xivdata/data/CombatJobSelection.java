@@ -21,4 +21,12 @@ public class CombatJobSelection extends JobSelection {
 	public String toString() {
 		return super.toString();
 	}
+
+	public CombatJobSelection copy() {
+		CombatJobSelection cjs = new CombatJobSelection();
+		cjs.enabledForAll = this.enabledForAll;
+		cjs.enabledJobs.addAll(this.enabledJobs);
+		cjs.enabledTypes.addAll(this.enabledTypes);
+		return cjs;
+	}
 }

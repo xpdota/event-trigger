@@ -8,6 +8,7 @@ import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.OverridesCalloutGroupEnabledSetting;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.state.XivState;
@@ -33,7 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @CalloutRepo(name = "P8S Final Boss Dominion Priority", duty = KnownDuty.P8S)
-public class P8S2DominionPrio extends AutoChildEventHandler implements FilteredEventHandler {
+public class P8S2DominionPrio extends AutoChildEventHandler implements FilteredEventHandler, OverridesCalloutGroupEnabledSetting {
 	private static final Logger log = LoggerFactory.getLogger(P8S2DominionPrio.class);
 
 	private final JobSortSetting sortSetting;
@@ -193,4 +194,9 @@ public class P8S2DominionPrio extends AutoChildEventHandler implements FilteredE
 				}
 
 			});
+
+	@Override
+	public BooleanSetting getCalloutGroupEnabledSetting() {
+		return enabled;
+	}
 }

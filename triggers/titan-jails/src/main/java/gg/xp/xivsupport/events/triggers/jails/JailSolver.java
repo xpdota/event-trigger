@@ -6,6 +6,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.OverridesCalloutGroupEnabledSetting;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -33,7 +34,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @CalloutRepo(name = "Titan Gaols", duty = KnownDuty.UWU)
-public class JailSolver implements FilteredEventHandler {
+public class JailSolver implements FilteredEventHandler, OverridesCalloutGroupEnabledSetting {
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> first = new ModifiableCallout<>("First Jail", "First");
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> second = new ModifiableCallout<>("Second Jail", "Second");
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> third = new ModifiableCallout<>("Third Jail", "Third");
@@ -230,5 +231,10 @@ public class JailSolver implements FilteredEventHandler {
 
 	public BooleanSetting getOverrideZoneLock() {
 		return overrideZoneLock;
+	}
+
+	@Override
+	public BooleanSetting getCalloutGroupEnabledSetting() {
+		return enableTts;
 	}
 }

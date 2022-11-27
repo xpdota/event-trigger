@@ -667,18 +667,27 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 			TimelineEntry entry = ((CustomTableModel<TimelineEntry>) table.getModel()).getValueForRow(row);
-			if (value instanceof CombatJobSelection js) {
-				sel = js;
+			if (value instanceof CombatJobSelection js && !js.isEnabledForAll()) {
+				sel = js.copy();
 			}
 			else {
-				sel = CombatJobSelection.all();
+				sel = CombatJobSelection.none();
 			}
 			Component out = cellRenderer.getTableCellRendererComponent(table, sel.describeSelection(), true, true, row, column);
 			JobMultiSelectionGui gui = new JobMultiSelectionGui(sel);
 			SwingUtilities.invokeLater(() -> {
-				JOptionPane.showMessageDialog(TimelinesTab.this, gui, "Choose Jobs", JOptionPane.QUESTION_MESSAGE);
-				safeEditTimelineEntry(false, (cte, unused) -> cte.enabledJobs = sel).accept(entry, sel);
-				SwingUtilities.invokeLater(() -> stopEditing());
+				while (true) {
+					int result = JOptionPane.showOptionDialog(TimelinesTab.this, gui, "Choose Jobs", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, new String[]{"OK", "Cancel"}, "OK");
+					if (result == JOptionPane.OK_OPTION) {
+						if (sel.isEmpty()) {
+							JOptionPane.showMessageDialog(TimelinesTab.this, "You did not select any jobs or categories. Please select something.", "No Jobs Selected", JOptionPane.ERROR_MESSAGE);
+							continue;
+						}
+						safeEditTimelineEntry(false, (cte, unused) -> cte.enabledJobs = sel).accept(entry, sel);
+					}
+					SwingUtilities.invokeLater(TimelinesTab.this::stopEditing);
+					break;
+				}
 			});
 //							frame = new JFrame();
 //							frame.getContentPane().add(gui);
@@ -702,39 +711,5 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			return false;
 		}
 
-//
-//						@Override
-//						public boolean shouldSelectCell(EventObject anEvent) {
-//							return true;
-//						}
-//
-//						@Override
-//						public boolean stopCellEditing() {
-////							done();
-//							return true;
-//						}
-//
-//						@Override
-//						public void cancelCellEditing() {
-////							done();
-//						}
-//
-////						private void done() {
-////							if (frame != null) {
-////								frame.setVisible(false);
-////								frame.dispose();
-////							}
-//////							commitEdit();
-////						}
-//
-//						@Override
-//						public void addCellEditorListener(CellEditorListener l) {
-//
-//						}
-//
-//						@Override
-//						public void removeCellEditorListener(CellEditorListener l) {
-//
-//						}
 	}
 }

@@ -1,18 +1,19 @@
 package gg.xp.xivdata.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JobSelection {
 
-	private boolean enabledForAll;
-	private final Set<JobType> enabledTypes = EnumSet.noneOf(JobType.class);
-	private final Set<Job> enabledJobs = EnumSet.noneOf(Job.class);
+	protected boolean enabledForAll;
+	protected final Set<JobType> enabledTypes = EnumSet.noneOf(JobType.class);
+	protected final Set<Job> enabledJobs = EnumSet.noneOf(Job.class);
 
 	public boolean enabledForJob(Job job) {
 		JobSelectionState state = stateForJob(job);
@@ -145,5 +146,10 @@ public class JobSelection {
 			return "None";
 		}
 		return result;
+	}
+
+	@JsonIgnore
+	public boolean isEmpty() {
+		return !enabledForAll && enabledTypes.isEmpty() && enabledJobs.isEmpty();
 	}
 }
