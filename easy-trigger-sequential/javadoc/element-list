@@ -45,7 +45,6 @@ gg.xp.xivsupport.events.state.combatstate
 gg.xp.xivsupport.events.state.floormarkers
 gg.xp.xivsupport.events.triggers.duties
 gg.xp.xivsupport.events.triggers.duties.ewex
-gg.xp.xivsupport.events.triggers.duties.ewult
 gg.xp.xivsupport.events.triggers.duties.Pandamonium
 gg.xp.xivsupport.events.triggers.duties.Pandamonium.events
 gg.xp.xivsupport.events.triggers.duties.vc
@@ -71,6 +70,7 @@ gg.xp.xivsupport.events.ws
 gg.xp.xivsupport.eventstorage
 gg.xp.xivsupport.groovy
 gg.xp.xivsupport.gui
+gg.xp.xivsupport.gui.addonmgr
 gg.xp.xivsupport.gui.components
 gg.xp.xivsupport.gui.cooldowns
 gg.xp.xivsupport.gui.extra
