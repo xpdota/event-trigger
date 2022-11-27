@@ -69,7 +69,7 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(500);
+			Thread.sleep(600);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -89,7 +89,7 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(500);
+			Thread.sleep(600);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -113,7 +113,7 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(500);
+			Thread.sleep(600);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -134,7 +134,7 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(500);
+			Thread.sleep(600);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
