@@ -30,7 +30,7 @@ jobs:
       - uses: EndBug/add-and-commit@v9
         name: Add, Commit, Push
         with:
-          default_author: github-actions
+          default_author: github_actions
 
 
 
