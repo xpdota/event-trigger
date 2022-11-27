@@ -20,12 +20,11 @@ jobs:
         run: |
           git fetch
           for folder in `\ls .`; do 
-            echo $folder
             if [ ! `git rev-parse --verify origin/$folder 2>/dev/null` ]; then 
-              echo "Deleting $folder..."
+              echo -e "\033[31mDELETE \033[91m$folder\033[0m"
               rm -rf $folder
             else
-              echo "Keeping $folder..."
+              echo -e "\033[32mKEEP   \033[92m$folder\033[0m"
             fi
           done
         
