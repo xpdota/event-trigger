@@ -96,6 +96,10 @@ public abstract class CalloutVerificationTest {
 				Funny how a *slowdown* ends up causing a *speedup*
 
 				*/
+				/*
+				New hypothesis since that didn't do the trick: The DelayedSqtEvent might be the problem. Can this
+				event just be completely discarded in tests?
+				*/
 					ev.setTimeSource(timeSource);
 					ev.setHappenedAt(timeSource.now());
 				}

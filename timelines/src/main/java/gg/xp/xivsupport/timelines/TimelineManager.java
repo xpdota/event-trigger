@@ -12,6 +12,8 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.InCombatChangeEvent;
+import gg.xp.xivsupport.events.state.PlayerChangedJobEvent;
+import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -36,6 +38,7 @@ public final class TimelineManager {
 	private final BooleanSetting debugMode;
 	private final BooleanSetting prePullShow;
 	private final BooleanSetting resetOnMapChange;
+	private final XivState state;
 	private final PersistenceProvider pers;
 	private final EventMaster master;
 	private final IntSetting rowsToDisplay;
@@ -49,7 +52,7 @@ public final class TimelineManager {
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
 
-	public TimelineManager(EventMaster master, PersistenceProvider pers) {
+	public TimelineManager(EventMaster master, PersistenceProvider pers, XivState state) {
 		this.master = master;
 		rowsToDisplay = new IntSetting(pers, "timeline-overlay.max-displayed", 6, 1, 32);
 		secondsPast = new IntSetting(pers, "timeline-overlay.seconds-past", 0, 0, null);
@@ -57,6 +60,7 @@ public final class TimelineManager {
 		debugMode = new BooleanSetting(pers, "timeline-overlay.debug-mode", false);
 		prePullShow = new BooleanSetting(pers, "timeline-overlay.show-pre-pull", false);
 		resetOnMapChange = new BooleanSetting(pers, "timeline-overlay.reset-on-map-change", false);
+		this.state = state;
 		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutNow, pers, "timeline-support.trigger-call-now");
 		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutPre, pers, "timeline-support.trigger-call-pre");
 		this.pers = pers;
@@ -99,7 +103,7 @@ public final class TimelineManager {
 			return null;
 		}
 		try {
-			return TimelineProcessor.of(this, resource, getCustomEntries(zoneId));
+			return TimelineProcessor.of(this, resource, getCustomEntries(zoneId), state.getPlayerJob());
 		}
 		catch (Throwable e) {
 			log.error("Error loading timeline for zone {}", zoneId, e);
@@ -131,11 +135,22 @@ public final class TimelineManager {
 			pers.save(propStubForZoneId(zoneId), cust);
 		}
 		if (this.zone != null && this.zone.getId() == zoneId && currentTimeline != null) {
+			resetCurrentTimelineKeepSync();
+		}
+	}
+
+	private void resetCurrentTimelineKeepSync() {
+		if (this.zone != null && currentTimeline != null) {
 			// TODO: save/restore the timestamp so it is easier to live-edit
 			TimelineProcessor.TimelineSync lastSync = currentTimeline.getLastSync();
 			loadTimelineForCurrentZone();
 			currentTimeline.setLastSync(lastSync);
 		}
+	}
+
+	@HandleEvents
+	public void changeJob(EventContext context, PlayerChangedJobEvent jobChange) {
+		resetCurrentTimelineKeepSync();
 	}
 
 	@HandleEvents
