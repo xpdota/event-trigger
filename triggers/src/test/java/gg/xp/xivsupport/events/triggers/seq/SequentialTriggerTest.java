@@ -2,9 +2,11 @@ package gg.xp.xivsupport.events.triggers.seq;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventDistributor;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
+import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.models.XivAbility;
@@ -17,6 +19,7 @@ import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -222,6 +225,57 @@ public class SequentialTriggerTest {
 		dist.acceptEvent(new EchoEvent("Foo5"));
 		dist.acceptEvent(new EchoEvent("Bar5"));
 		Assert.assertEquals(values, List.of("Foo1", "Bar1", "XFoo2", "Foo3", "Bar3", "XFoo4", "XBar4"));
+	}
+
+	@Test
+	void testDelay() {
+		SequentialTrigger<BaseEvent> trigger = SqtTemplates.sq(30_000, EchoEvent.class, e -> e.getLine().startsWith("Foo"),
+				(e1, s) -> {
+					s.accept(new DebugCommand("Bar1"));
+					s.waitMs(500);
+					s.accept(new DebugCommand("Bar2"));
+				});
+
+		EchoEvent initial = new EchoEvent("Foo");
+		FakeTimeSource fts = new FakeTimeSource();
+		Instant time = Instant.EPOCH;
+		fts.setNewTime(time);
+		initial.setTimeSource(fts);
+		initial.setHappenedAt(time);
+
+		MutablePicoContainer pico = XivMain.testingMinimalInit();
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
+		dist.registerHandler(BaseEvent.class, trigger::feed);
+		TestEventCollector tec = new TestEventCollector();
+		dist.registerHandler(tec);
+
+		EventMaster master = pico.getComponent(EventMaster.class);
+		master.pushEventAndWait(initial);
+
+		{
+			time = Instant.EPOCH.plusMillis(499);
+			fts.setNewTime(time);
+			EchoEvent echo2 = new EchoEvent("Foo");
+			echo2.setHappenedAt(time);
+			echo2.setTimeSource(fts);
+			master.pushEventAndWait(echo2);
+		}
+		{
+			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
+			MatcherAssert.assertThat(debugs, Matchers.hasSize(1));
+		}
+		{
+			time = Instant.EPOCH.plusMillis(501);
+			fts.setNewTime(time);
+			EchoEvent echo2 = new EchoEvent("Foo");
+			echo2.setTimeSource(fts);
+			echo2.setHappenedAt(time);
+			master.pushEventAndWait(echo2);
+		}
+		{
+			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
+			MatcherAssert.assertThat(debugs, Matchers.hasSize(2));
+		}
 	}
 
 }
