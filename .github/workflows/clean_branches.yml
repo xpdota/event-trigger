@@ -27,5 +27,11 @@ jobs:
               echo -e "\033[32mKEEP   \033[92m$folder\033[0m"
             fi
           done
-        
+      - uses: EndBug/add-and-commit@v9
+        name: Add, Commit, Push
+        with:
+          default_author: github-actions
+
+
+
 
