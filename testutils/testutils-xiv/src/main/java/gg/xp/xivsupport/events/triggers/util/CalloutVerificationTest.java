@@ -75,6 +75,7 @@ public abstract class CalloutVerificationTest {
 					if (parent != null) {
 						bde.setHappenedAt(parent.getHappenedAt());
 					}
+					bde.setTimeSource(timeSource);
 				}
 				else if (e instanceof XivStateRecalculatedEvent ev) {
 				/*
@@ -118,13 +119,13 @@ public abstract class CalloutVerificationTest {
 					return;
 				}
 				else {
-					Instant happenedAt;
-					if (e instanceof XivStateRecalculatedEvent || e instanceof BaseDelayedEvent) {
-						happenedAt = timeSource.now();
-					}
-					else {
-						happenedAt = e.getEffectiveHappenedAt();
-					}
+					Instant happenedAt = timeSource.now();
+//					if (e instanceof XivStateRecalculatedEvent || e instanceof BaseDelayedEvent) {
+//						happenedAt = timeSource.now();
+//					}
+//					else {
+//						happenedAt = e.getEffectiveHappenedAt();
+//					}
 					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
 				}
 			}
