@@ -226,6 +226,26 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
+                <artifactId>triggers-ew</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>triggers-sb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>triggers-general</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>titan-jails</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
                 <artifactId>triggers</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -298,11 +318,6 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
-                <artifactId>titan-jails</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>gg.xp</groupId>
                 <artifactId>telesto-support</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -358,10 +373,7 @@
         <module>easytriggers</module>
         <module>testutils</module>
         <module>plugins</module>
-        <module>triggers/titan-jails</module>
         <module>telesto-support</module>
-        <module>plugins/custom-party-overlay</module>
-        <module>testutils/testutils-samplelogs</module>
         <module>groovy-sandboxing</module>
         <module>trigger-support</module>
     </modules>

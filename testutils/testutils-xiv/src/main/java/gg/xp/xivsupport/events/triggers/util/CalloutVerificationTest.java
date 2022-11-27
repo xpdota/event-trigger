@@ -155,6 +155,9 @@ public abstract class CalloutVerificationTest {
 	protected abstract List<CalloutInitialValues> getExpectedCalls();
 
 	private static void compareLists(RawEventStorage rawStorage, List<CalloutInitialValues> actual, List<CalloutInitialValues> expected) {
+		if (actual.isEmpty()) {
+			throw new RuntimeException("Actual list was empty!");
+		}
 		int actSize = actual.size();
 		int expSize = expected.size();
 		int iterationSize = Math.max(actSize, expSize);
