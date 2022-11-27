@@ -47,7 +47,8 @@ public class CalloutExpiryTest {
 			}
 		}
 
-		List<?> getCurrentVisualCalls() throws Throwable {
+		// Sync is purely for thread-safety
+		synchronized List<?> getCurrentVisualCalls() throws Throwable {
 			return (List<?>) ccField.get(fto);
 		}
 	}

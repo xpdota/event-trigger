@@ -123,7 +123,7 @@ public abstract class CalloutVerificationTest {
 				}
 				else {
 					Instant happenedAt;
-					if (e instanceof XivStateRecalculatedEvent) {
+					if (e instanceof XivStateRecalculatedEvent || e instanceof BaseDelayedEvent) {
 						happenedAt = timeSource.now();
 					}
 					else {
