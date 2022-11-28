@@ -377,7 +377,7 @@ public class EasyTriggersTab implements PluginTab {
 			JPanel conditionsPanel = new ConditionsPanel<>(backend, "Conditions", trigger, EasyTriggersTab.this::requestSave);
 
 			c.weightx = 0;
-			c.gridx++;
+//			c.gridx++;
 
 			JLabel firstLabel = GuiUtil.labelFor("Name", nameField);
 			Dimension pref = firstLabel.getPreferredSize();
