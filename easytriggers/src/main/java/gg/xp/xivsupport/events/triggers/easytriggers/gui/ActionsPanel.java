@@ -306,12 +306,14 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 			GridBagConstraints c = GuiUtil.defaultGbc();
 			c.anchor = GridBagConstraints.WEST;
 			c.fill = GridBagConstraints.NONE;
+			c.ipadx = 3;
 			c.weightx = 0;
 
 			{
-				JLabel dragHandle = new JLabel("Drag Me!");
+				JLabel dragHandle = new JLabel("⣿");
 				dragHandle.addMouseListener(dummyAdapter);
 				dragHandle.addMouseMotionListener(dummyAdapter);
+				dragHandle.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
 				add(dragHandle, c);
 				c.gridx++;
 			}
