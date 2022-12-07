@@ -28,7 +28,7 @@ public final class ModifiedCalloutHandle {
 	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
 		this.allTts = allTts;
 		this.allText = allText;
-		enable = new BooleanSetting(persistenceProvider, propStub + ".enabled", true);
+		enable = new BooleanSetting(persistenceProvider, propStub + ".enabled", original.isEnabledByDefault());
 		enableTts = new BooleanSetting(persistenceProvider, propStub + ".tts-enabled", true);
 		ttsSetting = new StringSetting(persistenceProvider, propStub + ".tts", original.getOriginalTts());
 		enableText = new BooleanSetting(persistenceProvider, propStub + ".text-enabled", true);

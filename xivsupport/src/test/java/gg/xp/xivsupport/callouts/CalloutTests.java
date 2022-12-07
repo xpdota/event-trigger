@@ -294,4 +294,62 @@ public class CalloutTests {
 		Assert.assertEquals(target.getVisualText(), "Tankbuster on 3");
 
 	}
+
+	@Test
+	void testEnableDisable() {
+		ModifiableCallout mc = new ModifiableCallout("Foo", "Bar");
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+		mc.attachHandle(mch);
+		Assert.assertTrue(mch.getEnable().get());
+		{
+			CalloutEvent modified = proc.processCallout(mc.getModified());
+			Assert.assertEquals(modified.getCallText(), "Bar");
+			Assert.assertEquals(modified.getVisualText(), "Bar");
+		}
+		mch.getEnable().set(false);
+		Assert.assertFalse(mch.getEnable().get());
+		{
+			CalloutEvent modified = proc.processCallout(mc.getModified());
+			Assert.assertNull(modified.getCallText());
+			Assert.assertNull(modified.getVisualText());
+		}
+		mch.getEnable().set(true);
+		Assert.assertTrue(mch.getEnable().get());
+		{
+			CalloutEvent modified = proc.processCallout(mc.getModified());
+			Assert.assertEquals(modified.getCallText(), "Bar");
+			Assert.assertEquals(modified.getVisualText(), "Bar");
+		}
+	}
+
+	@Test
+	void testDisabledByDefault() {
+		ModifiableCallout mc = new ModifiableCallout("Foo", "Bar").disabledByDefault();
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+		mc.attachHandle(mch);
+		Assert.assertFalse(mch.getEnable().get());
+		{
+			CalloutEvent modified = proc.processCallout(mc.getModified());
+			Assert.assertNull(modified.getCallText());
+			Assert.assertNull(modified.getVisualText());
+		}
+		mch.getEnable().set(true);
+		Assert.assertTrue(mch.getEnable().get());
+		{
+			CalloutEvent modified = proc.processCallout(mc.getModified());
+			Assert.assertEquals(modified.getCallText(), "Bar");
+			Assert.assertEquals(modified.getVisualText(), "Bar");
+		}
+		mch.getEnable().set(false);
+		Assert.assertFalse(mch.getEnable().get());
+		{
+			CalloutEvent modified = proc.processCallout(mc.getModified());
+			Assert.assertNull(modified.getCallText());
+			Assert.assertNull(modified.getVisualText());
+		}
+	}
 }
