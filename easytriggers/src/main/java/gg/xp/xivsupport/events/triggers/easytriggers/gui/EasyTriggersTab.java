@@ -30,6 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -370,10 +373,12 @@ public class EasyTriggersTab implements PluginTab {
 //			TextFieldWithValidation<String> ttsField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setTts), trigger.getTts());
 //			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), editTriggerThenSave(trigger::setText), trigger.getText());
 
-			JPanel actionsPanel = new ActionsPanel<>(backend, "Actions", trigger, () -> requestSave());
-			JPanel conditionsPanel = new ConditionsPanel<>(backend, "Conditions", trigger, () -> requestSave());
+			JPanel actionsPanel = new ActionsPanel<>(backend, "Actions", trigger, EasyTriggersTab.this::requestSave);
+			JPanel conditionsPanel = new ConditionsPanel<>(backend, "Conditions", trigger, EasyTriggersTab.this::requestSave);
 
 			c.weightx = 0;
+//			c.gridx++;
+
 			JLabel firstLabel = GuiUtil.labelFor("Name", nameField);
 			Dimension pref = firstLabel.getPreferredSize();
 			Dimension newSize = new Dimension(pref.width + 20, pref.height);
