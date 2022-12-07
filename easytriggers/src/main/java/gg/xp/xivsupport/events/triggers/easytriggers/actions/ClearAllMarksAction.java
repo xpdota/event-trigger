@@ -22,7 +22,7 @@ public class ClearAllMarksAction implements Action<Event> {
 
 	@Override
 	public void accept(EasyTriggerContext context, Event event) {
-		context.getEventContext().accept(new ClearAutoMarkRequest());
+		context.accept(new ClearAutoMarkRequest());
 	}
 
 	@Override

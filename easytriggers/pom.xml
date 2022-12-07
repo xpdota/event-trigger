@@ -36,6 +36,10 @@
             <artifactId>testutils-generic</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>trigger-support</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

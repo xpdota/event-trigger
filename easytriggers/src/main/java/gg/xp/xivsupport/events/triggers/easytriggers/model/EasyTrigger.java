@@ -3,23 +3,23 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.xivsupport.callouts.ModifiableCallout;
-import gg.xp.xivsupport.events.actlines.events.HasDuration;
-import gg.xp.xivsupport.gui.util.ColorUtils;
-import org.jetbrains.annotations.Nullable;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Predicate;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableActions<X> {
+
+	private static final Logger log = LoggerFactory.getLogger(EasyTrigger.class);
 
 	@JsonIgnore
 	private long misses;
@@ -33,28 +33,33 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 	private List<Condition<? super X>> conditions = Collections.emptyList();
 	private List<Action<? super X>> actions = Collections.emptyList();
 	private String name = "Give me a name";
+	private int timeoutMs = 60_000;
+
+	private SequentialTrigger<BaseEvent> sq = SqtTemplates.nothing();
+	private EasyTriggerContext ctx;
 
 	public EasyTrigger() {
 		recalc();
 	}
 
 	public void handleEvent(EventContext context, Event event) {
-		if (enabled && eventType != null && eventType.isInstance(event)) {
-			X typedEvent = eventType.cast(event);
-			EasyTriggerContext ctx = new EasyTriggerContext(context);
-			if (conditions.stream().allMatch(cond -> cond.test(ctx, typedEvent))) {
-				hits++;
-				// TODO: to allow for delays, this could be a sequential trigger
-				for (Action<? super X> action : actions) {
-					action.accept(ctx, typedEvent);
-					if (ctx.shouldStopProcessing()) {
-						return;
-					}
-				}
-			}
-			else {
-				misses++;
-			}
+		if (!(event instanceof BaseEvent)) {
+			return;
+		}
+		if (sq.isActive()) {
+			sq.feed(context, (BaseEvent) event);
+		}
+		if (!enabled || eventType == null || !eventType.isInstance(event)) {
+			return;
+		}
+		X typedEvent = eventType.cast(event);
+		ctx = new EasyTriggerContext(context);
+		if (conditions.stream().allMatch(cond -> cond.test(ctx, typedEvent))) {
+			hits++;
+			sq.feed(context, (BaseEvent) event);
+		}
+		else {
+			misses++;
 		}
 	}
 
@@ -63,6 +68,38 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 		conditions.sort(Comparator.comparing(Condition::sortOrder));
 		conditions.forEach(Condition::recalc);
 		actions.forEach(Action::recalc);
+		sq = SqtTemplates.sq(timeoutMs,
+				eventType,
+				// The start condition is handled externally
+				se -> true,
+				(e1, s) -> {
+					for (Action<? super X> action : actions) {
+
+						log.info("Action: {}", action);
+						ctx.setAcceptHook(s::accept);
+						ctx.setEnqueueHook(s::enqueue);
+
+						try {
+							if (action instanceof SqAction sqa) {
+								sqa.accept(s, ctx, (BaseEvent) e1);
+							}
+							else {
+								action.accept(ctx, e1);
+							}
+						} catch (Throwable t) {
+							if (s.isDone()) {
+								return;
+							}
+							else {
+								log.error("Error in trigger '{}' action '{}'", name, action.dynamicLabel(), t);
+							}
+						}
+
+						if (ctx.shouldStopProcessing()) {
+							return;
+						}
+					}
+				});
 	}
 
 	public Class<X> getEventType() {
