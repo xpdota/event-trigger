@@ -44,6 +44,7 @@ public class ModifiableCallout<X> {
 	private final String defaultVisualText;
 	private final Predicate<RawModifiedCallout<X>> expiry;
 	private Function<? super X, ? extends @Nullable Component> guiProvider = e -> null;
+	private boolean enabledByDefault = true;
 
 	private static final Duration defaultHangDuration = Duration.of(5, ChronoUnit.SECONDS);
 
@@ -187,6 +188,16 @@ public class ModifiableCallout<X> {
 	 */
 	public ModifiableCallout<X> guiProvider(Function<? super X, ? extends Component> guiProvider) {
 		this.guiProvider = guiProvider;
+		return this;
+	}
+
+	/**
+	 * Indicates that this should be disabled by default. The user will need to manually turn this on.
+	 *
+	 * @return this (builder pattern)
+	 */
+	public ModifiableCallout<X> disabledByDefault() {
+		enabledByDefault = false;
 		return this;
 	}
 
@@ -371,4 +382,7 @@ public class ModifiableCallout<X> {
 
 	}
 
+	public boolean isEnabledByDefault() {
+		return enabledByDefault;
+	}
 }

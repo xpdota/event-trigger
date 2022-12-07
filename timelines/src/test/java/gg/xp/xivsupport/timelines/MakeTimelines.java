@@ -39,7 +39,9 @@ public final class MakeTimelines {
 	public static void main(String[] args) {
 		log.info("Beginning timeline extraction");
 		log.info("Working directory: {}", Path.of(".").toAbsolutePath());
-		WebDriverManager.chromedriver().setup();
+		if (System.getProperty("make-timelines.use-driver-helper", "true").equals("true")) {
+			WebDriverManager.chromedriver().setup();
+		}
 		ChromeOptions opts = new ChromeOptions();
 		opts.setHeadless(true);
 		ChromeDriver driver = new ChromeDriver(opts);
