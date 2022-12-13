@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
@@ -38,6 +39,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.ClearAllMarksAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.SoundActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityNameFilter;
@@ -354,6 +356,7 @@ public final class EasyTriggers {
 			new ActionDescription<>(DurationBasedCalloutAction.class, HasDuration.class, "Duration-Based TTS/Text Callout", DurationBasedCalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
 			new ActionDescription<>(AutoMarkTargetAction.class, HasTargetEntity.class, "Mark The Target", () -> new AutoMarkTargetAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(ClearAllMarksAction.class, Event.class, "Clear All Marks", () -> new ClearAllMarksAction(inject(GlobalUiRegistry.class)), this::generic),
+			new ActionDescription<>(WaitAction.class, BaseEvent.class, "Wait a fixed time", WaitAction::new, this::generic),
 			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action))
 	);
 

@@ -33,7 +33,7 @@ public class DurationBasedCalloutAction implements Action<HasDuration>, GenericC
 		if (color != null) {
 			modified.setColorOverride(color);
 		}
-		context.getEventContext().accept(modified);
+		context.accept(modified);
 	}
 
 	@Override

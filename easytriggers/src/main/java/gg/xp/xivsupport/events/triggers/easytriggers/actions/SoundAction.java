@@ -14,7 +14,7 @@ public class SoundAction implements Action<Event> {
 	@Override
 	public void accept(EasyTriggerContext context, Event event) {
 		if (StringUtils.isNotBlank(sound)) {
-			context.getEventContext().accept(new ProcessedCalloutEvent(new CalloutTrackingKey(), null, null, () -> true, () -> null, null, sound));
+			context.accept(new ProcessedCalloutEvent(new CalloutTrackingKey(), null, null, () -> true, () -> null, null, sound));
 		}
 	}
 
