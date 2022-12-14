@@ -1,7 +1,5 @@
 package gg.xp.xivdata.data;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Set;
 
 import static gg.xp.xivdata.data.Job.*;
@@ -26,7 +24,7 @@ public enum DotBuff {
 	SAM_Fugetsu(SAM, "Fugetsu", 0x512L),
 	SAM_Fuka(SAM, "Fuka", 0x513L),
 	SCH_Bio(SCH, "Bio/II/Biolysis", 0xb3L, 0xbdL, 0x767L),
-//	SMN_Bio(SMN, "Bio/II/III", 0xb3L, 0xbdL, 0x4beL),
+	//	SMN_Bio(SMN, "Bio/II/III", 0xb3L, 0xbdL, 0x4beL),
 //	SMN_Miasma(SMN, "Miasma/II/III", 0xb4L, 0xbcL, 0x4bfL),
 	WHM_Aero(WHM, "Aero/II/III/Dia", 0x8fL, 0x90L, 0x31eL, 0x74fL),
 	SGE_Dosis(SGE, "Dosis", 2614L, 2615L, 2616L),

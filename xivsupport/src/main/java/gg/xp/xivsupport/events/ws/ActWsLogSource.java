@@ -154,6 +154,7 @@ public class ActWsLogSource implements EventSource {
 		this.allowTts = new BooleanSetting(pers, "actws-allow-tts", true);
 		this.pls = pls;
 		this.client = new ActWsClientInternal();
+		// TODO: drop this
 		stateStore.putCustom(WsState.class, state);
 	}
 
