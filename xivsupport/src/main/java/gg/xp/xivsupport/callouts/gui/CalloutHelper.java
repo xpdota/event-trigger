@@ -54,6 +54,21 @@ public class CalloutHelper extends JPanel {
 			this.add(groupControls, c);
 			c.weightx = 0;
 			c.gridwidth = 1;
+			c.gridx = 2;
+			JButton disableButton;
+			JButton enableButton;
+			{
+				JPanel disEnAll = new JPanel(new FlowLayout(FlowLayout.LEFT));
+				disableButton = new JButton("Disable All");
+				enableButton = new JButton("Enable All");
+				disEnAll.add(disableButton);
+				disEnAll.add(enableButton);
+				showHide.getModel().addChangeListener(l -> {
+					disEnAll.setVisible(showHide.isSelected());
+				});
+				c.gridy++;
+				this.add(disEnAll, c);
+			}
 			List<CalloutSettingGui> csgs = new ArrayList<>();
 			callouts.forEach(call -> {
 				c.weightx = 0;
@@ -91,6 +106,12 @@ public class CalloutHelper extends JPanel {
 			topLevelCheckbox.getModel().addChangeListener(l -> {
 				csgs.forEach(csg -> csg.setEnabledByParent(topLevelCheckbox.isSelected()));
 				group.updateChildren();
+			});
+			disableButton.addActionListener(l -> {
+				callouts.forEach(co -> co.getEnable().set(false));
+			});
+			enableButton.addActionListener(l -> {
+				callouts.forEach(co -> co.getEnable().set(true));
 			});
 			c.gridx++;
 			c.weightx = 0;
