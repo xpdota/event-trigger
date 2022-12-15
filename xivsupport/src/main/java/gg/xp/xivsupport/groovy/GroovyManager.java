@@ -173,7 +173,25 @@ public class GroovyManager {
 		return new GroovyShell(makeClassLoader(), binding, getCompilerConfig());
 	}
 
+	private final Object bindLock = new Object();
+	private volatile @Nullable Binding globalBinding;
+
+	private Binding getGlobalBinding() {
+		if (globalBinding == null) {
+			synchronized (bindLock) {
+				if (globalBinding == null) {
+					return globalBinding = makeGlobalBinding();
+				}
+			}
+		}
+		return globalBinding;
+	}
+
 	public Binding makeBinding() {
+		return new SubBinding(getGlobalBinding());
+	}
+
+	private Binding makeGlobalBinding() {
 		Binding binding = new Binding();
 		container.getComponents().forEach(item -> {
 			String simpleName = item.getClass().getSimpleName();
@@ -182,7 +200,8 @@ public class GroovyManager {
 		});
 		// TODO: find a way to systematically do these
 		// TODO: expose user scripts here
-		binding.setProperty("xivState", container.getComponent(XivState.class));
+		binding.setVariable("xivState", container.getComponent(XivState.class));
+		binding.setVariable("globals", binding);
 		return binding;
 	}
 

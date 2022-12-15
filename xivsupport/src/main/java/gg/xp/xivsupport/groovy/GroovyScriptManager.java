@@ -2,12 +2,16 @@ package gg.xp.xivsupport.groovy;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.InitEvent;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.groovy.GroovyScriptHolder;
 import gg.xp.xivsupport.gui.groovy.ScriptNameAndFileStub;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.ExternalObservable;
+import groovy.transform.builder.InitializerStrategy;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +90,16 @@ public class GroovyScriptManager {
 			}).filter(Objects::nonNull).forEachOrdered(this::addScript);
 		}
 		obs.notifyListeners();
+	}
+
+
+	@HandleEvents
+	public void runStartupScripts(EventContext context, InitEvent init) {
+		scripts.forEach(script -> {
+			if (script.isStartup()) {
+				script.run();
+			}
+		});
 	}
 
 	public void reloadAll() {

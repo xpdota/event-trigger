@@ -8,6 +8,7 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.util.EasyAction;
+import gg.xp.xivsupport.persistence.gui.BoundCheckbox;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +123,11 @@ public class GroovyPanel extends JPanel {
 				JButton runButton = run.asButtonWithKeyLabel();
 				JPanel buttonHolder = new JPanel(new WrapLayout(WrapLayout.LEFT));
 				buttonHolder.add(runButton);
+				BoundCheckbox startupCb = new BoundCheckbox("Run on Startup", script::isStartup, startup -> {
+					script.setStartup(startup);
+					script.save();
+				});
+				buttonHolder.add(startupCb);
 				top.add(buttonHolder, BorderLayout.SOUTH);
 //				runButton.addActionListener(l -> submit());
 			}
@@ -192,6 +198,7 @@ public class GroovyPanel extends JPanel {
 	}
 
 	private void openExt() {
+		script.save();
 		try {
 			Desktop.getDesktop().open(script.getFile());
 		}

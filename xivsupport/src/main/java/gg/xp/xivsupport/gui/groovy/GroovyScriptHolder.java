@@ -26,6 +26,7 @@ public class GroovyScriptHolder {
 	private String scriptName;
 	private String scriptContent;
 	private boolean strict;
+	private boolean startup;
 	private boolean dirty;
 	@Nullable
 	private File file;
@@ -111,6 +112,7 @@ public class GroovyScriptHolder {
 	@JsonProperty("scriptName")
 	public void setScriptName(String scriptName) {
 		this.scriptName = scriptName;
+		dirty = true;
 	}
 
 	public String getScriptContent() {
@@ -133,7 +135,21 @@ public class GroovyScriptHolder {
 	@JsonProperty("strict")
 	public void setStrict(boolean strict) {
 		this.strict = strict;
+		dirty = true;
 	}
+
+	@JsonProperty("startup")
+	public boolean isStartup() {
+		return startup;
+	}
+
+	@JsonProperty("startup")
+	public void setStartup(boolean startup) {
+		this.startup = startup;
+		dirty = true;
+	}
+
+
 
 	public @Nullable File getFile() {
 		return file;
