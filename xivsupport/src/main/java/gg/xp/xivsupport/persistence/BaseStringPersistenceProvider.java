@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.persistence;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,6 +53,24 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 			else {
 				return mapper.convertValue(raw, type);
 			}
+		}
+	}
+
+	@Override
+	public <X> X get(@NotNull String key, @NotNull TypeReference<X> type, @Nullable X dflt) {
+		// If Type is wrapping a non-generic class, just use the normal class logic
+		if (type.getType() instanceof Class<?> cls) {
+			if (cls.isPrimitive() && dflt == null) {
+				throw new IllegalArgumentException("Cannot use 'null' as a default if 'type' is a primitive");
+			}
+			return get(key, (Class<X>) cls, dflt);
+		}
+		String raw = getValue(rewriteKey(key));
+		if (raw == null) {
+			return dflt;
+		}
+		else {
+			return mapper.convertValue(raw, type);
 		}
 	}
 
