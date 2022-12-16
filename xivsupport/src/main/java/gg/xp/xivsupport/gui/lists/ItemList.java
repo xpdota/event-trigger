@@ -15,15 +15,29 @@ public class ItemList<X> extends JPanel {
 
 	private final Supplier<List<X>> getter;
 	private final Consumer<List<X>> setter;
-	private final Supplier<@Nullable X> addButtonAction;
 	private final JList<X> list;
 	private final DefaultListModel<X> model;
 
 	public ItemList(Supplier<List<X>> getter, Consumer<List<X>> setter, ListCellRenderer<X> renderer, Supplier<@Nullable X> addButtonAction) {
+		this(getter, setter, renderer, model -> {
+			X newValue = addButtonAction.get();
+			if (newValue != null) {
+				model.addElement(newValue);
+			}
+		});
+	}
+
+	public static <X> ItemList<X> multiSelect(Supplier<List<X>> getter, Consumer<List<X>> setter, ListCellRenderer<X> renderer, Supplier<List<X>> addButtonAction) {
+		return new ItemList<>(getter, setter, renderer, model1 -> {
+			List<X> newValues = addButtonAction.get();
+			newValues.forEach(model1::addElement);
+		});
+	}
+
+	private ItemList(Supplier<List<X>> getter, Consumer<List<X>> setter, ListCellRenderer<X> renderer, Consumer<DefaultListModel<X>> addButtonAction) {
 		setLayout(new BorderLayout());
 		this.getter = getter;
 		this.setter = setter;
-		this.addButtonAction = addButtonAction;
 
 		list = new JList<>() {
 			@Override
@@ -58,10 +72,7 @@ public class ItemList<X> extends JPanel {
 		});
 
 		addButton.addActionListener(l -> {
-			X newValue = addButtonAction.get();
-			if (newValue != null) {
-				model.addElement(newValue);
-			}
+			addButtonAction.accept(model);
 		});
 
 		buttonPanel.add(addButton);

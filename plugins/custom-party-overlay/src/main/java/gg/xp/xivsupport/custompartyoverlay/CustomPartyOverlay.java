@@ -43,6 +43,19 @@ public class CustomPartyOverlay extends XivOverlay {
 		this.elements = CustomJsonListSetting.builder(persistence, new TypeReference<CustomOverlayComponentSpec>() {
 				}, "custom-party-overlay.components", "custom-party-overlay.failures")
 				.withDefaultProvider(this::getDefaults).build();
+		List<CustomOverlayComponentSpec> existingItems = elements.getItems();
+		List<CustomOverlayComponentSpec> newItems = new ArrayList<>();
+		for (CustomPartyOverlayComponentType type : CustomPartyOverlayComponentType.values()) {
+			if (!type.shouldBePresent()) {
+				continue;
+			}
+			if (existingItems.stream().noneMatch(spec -> spec.componentType == type)) {
+				getDefaults().stream().filter(defaultItem -> defaultItem.componentType == type)
+								.findFirst()
+										.ifPresent(newItems::add);
+			}
+		}
+		newItems.forEach(elements::addItem);
 		this.yOffset = new IntSetting(persistence, "custom-party-overlay.y-offset", 39, 0, 1000);
 		this.yOffset.addListener(this::placeComponents);
 		this.elements.addListener(this::placeComponents);
@@ -154,6 +167,16 @@ public class CustomPartyOverlay extends XivOverlay {
 			comp.width = 298;
 			comp.height = 35;
 			comp.componentType = CustomPartyOverlayComponentType.BUFFS_WITH_TIMERS;
+			specs.add(comp);
+		}
+		{
+			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
+			comp.x = 50;
+			comp.y = 20;
+			comp.width = 55;
+			comp.height = 20;
+			comp.componentType = CustomPartyOverlayComponentType.CUSTOM_BUFFS;
+			comp.enabled = false;
 			specs.add(comp);
 		}
 		{
