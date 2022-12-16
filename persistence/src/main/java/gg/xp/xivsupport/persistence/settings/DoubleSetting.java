@@ -2,7 +2,7 @@ package gg.xp.xivsupport.persistence.settings;
 
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 
-public class DoubleSetting extends ObservableSetting {
+public class DoubleSetting extends ObservableSetting implements Resettable {
 
 	private final PersistenceProvider persistence;
 	private final String settingKey;
@@ -53,5 +53,15 @@ public class DoubleSetting extends ObservableSetting {
 
 	public double getMin() {
 		return min;
+	}
+
+	@Override
+	public boolean isSet() {
+		return persistence.get(settingKey, Double.class, null) != null;
+	}
+
+	@Override
+	public void delete() {
+		reset();
 	}
 }
