@@ -2,11 +2,14 @@ package gg.xp.xivsupport.persistence.settings;
 
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class ParentedBooleanSettingTest {
 
+	private static final Logger log = LoggerFactory.getLogger(ParentedBooleanSettingTest.class);
 	@Test
 	void theTest() {
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
@@ -16,9 +19,18 @@ public class ParentedBooleanSettingTest {
 		BooleanSetting parent = new BooleanSetting(pers, "parent", false);
 		ParentedBooleanSetting middle = new ParentedBooleanSetting(pers, "middle", parent);
 		ParentedBooleanSetting child = new ParentedBooleanSetting(pers, "child", middle);
-		parent.addListener(parentCount::increment);
-		middle.addListener(middleCount::increment);
-		child.addListener(childCount::increment);
+		parent.addListener(() -> {
+			parentCount.increment();
+			log.info("Parent");
+		});
+		middle.addListener(() -> {
+			middleCount.increment();
+			log.info("Middle");
+		});
+		child.addListener(() -> {
+			childCount.increment();
+			log.info("Child");
+		});
 
 		{
 			Assert.assertFalse(parent.get());

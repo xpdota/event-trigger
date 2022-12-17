@@ -27,18 +27,6 @@ public class ParentedBooleanSetting extends BooleanSetting {
 	}
 
 	@Override
-	public void set(boolean value) {
-		super.set(value);
-		notifyListeners();
-	}
-
-	@Override
-	public void delete() {
-		super.delete();
-		notifyListeners();
-	}
-
-	@Override
 	public boolean hasParent() {
 		return true;
 	}
