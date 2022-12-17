@@ -11,7 +11,7 @@ f54a8510f834a1a57166970bfc982e94  commons-collections-3.2.2.jar
 19fe50567358922bdad277959ea69545  commons-lang3-3.12.0.jar
 040b4b4d8eac886f6b4a2a3bd2f31b00  commons-logging-1.2.jar
 c1c130c369aa86bfe4f7a7a920bc0223  commons-text-1.9.jar
-cdd9f61ba2aed100be13a643642b03d7  custom-party-overlay-1.0-SNAPSHOT.jar
+7ed9f07dace51c1d122af4beb8e44ada  custom-party-overlay-1.0-SNAPSHOT.jar
 a89d22f4802437651cbb40b76125a529  dot-tracker-1.0-SNAPSHOT.jar
 108aa2ed46cdf1e13971aa3a983c9fad  easytriggers-1.0-SNAPSHOT.jar
 655814242aa5fa27b4f4eaca9390c951  flatlaf-1.6.5.jar
@@ -35,6 +35,7 @@ a6e6ff60516bfe2cc06d2c487709b744  launcher-1.0-SNAPSHOT.jar
 196b120a3c9f01a5b9b2ed5220359963  logback-classic-1.2.6.jar
 b1930b5651377477a06ade2319f70dfc  logback-core-1.2.6.jar
 29418013eb2b66fbf9bcd48a2dcd7543  opencsv-5.6.jar
+93f8f73eef68a32736891e202764a8f3  persistence-1.0-SNAPSHOT.jar
 b379db6e4ee67fd2d731faadc3a5afa5  personal-cast-bar-overlay-1.0-SNAPSHOT.jar
 462404f92bdbd710aa2abf6fc1168247  picocontainer-2.15.jar
 a554efc304371008696802317848593e  reevent-1.0-SNAPSHOT.jar
@@ -49,4 +50,4 @@ a79006557cc3031a9dc2aedddfed0969  triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  triggers-sb-1.0-SNAPSHOT.jar
 51053342648f306c835396a89a26400b  trigger-support-1.0-SNAPSHOT.jar
 3089a627dd41f74c426743a6457541a6  xivdata-1.0-SNAPSHOT.jar
-ec553dc1dc37f22521820262910be4ba  xivsupport-1.0-SNAPSHOT.jar
+a5273a873615764ab14191285426c545  xivsupport-1.0-SNAPSHOT.jar
