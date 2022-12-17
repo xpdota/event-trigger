@@ -21,10 +21,33 @@ public class CalloutHelper extends JPanel {
 //		enableOverlay.addActionListener(l -> this.repaint());
 		this.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.BOTH;
+		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.LINE_START;
 		c.ipadx = 5;
-		c.gridy = 3;
+		c.gridy = 0;
+		c.gridwidth = GridBagConstraints.REMAINDER;
+		JPanel settingsPanel = new JPanel();
+		JButton expandAll = new JButton("Expand All");
+		expandAll.addActionListener(l -> setAllShowHide(true));
+		settingsPanel.add(expandAll);
+
+		JButton collapseAll = new JButton("Collapse All");
+		collapseAll.addActionListener(l -> setAllShowHide(false));
+		settingsPanel.add(collapseAll);
+
+		JButton enableAll = new JButton("Enable All Groups");
+		enableAll.addActionListener(l -> setAllEnableDisable(true));
+		settingsPanel.add(enableAll);
+
+		JButton disableAll = new JButton("Disable All Groups");
+		disableAll.addActionListener(l -> setAllEnableDisable(false));
+		settingsPanel.add(disableAll);
+
+		add(settingsPanel, c);
+		c.gridy++;
+		c.fill = GridBagConstraints.BOTH;
+
+
 		groups.forEach((group) -> {
 			List<ModifiedCalloutHandle> callouts = group.getCallouts();
 			c.gridx = 0;

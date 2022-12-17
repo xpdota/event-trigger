@@ -40,4 +40,8 @@ public class BooleanSetting extends ObservableSetting implements ObservableMutab
 		persistence.save(settingKey, newValue);
 		notifyListeners();
 	}
+
+	public boolean hasParent() {
+		return false;
+	}
 }
