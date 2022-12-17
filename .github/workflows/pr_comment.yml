@@ -18,3 +18,4 @@ jobs:
             
             Don't forget to change back when you are done testing. You should reset your 
             branch either to 'stable' for normal releases, or 'master' for beta builds.
+          comment_tag: helpfulcomment
