@@ -42,6 +42,17 @@ public class BooleanSettingGui {
 			protected Color getBorderColor(Component c, boolean selected) {
 				return colorize(super.getBorderColor(c, selected));
 			}
+
+			@Override
+			protected Color getFocusColor(Component c) {
+				Color fc = super.getFocusColor(c);
+				if (isOverriding()) {
+					return new Color(fc.getBlue(), fc.getGreen(), fc.getRed());
+				}
+				else {
+					return fc;
+				}
+			}
 		};
 		checkBox.setIcon(icon);
 		checkBox.setSelectedIcon(icon);
@@ -84,7 +95,8 @@ public class BooleanSettingGui {
 				checkBox.getModel().setSelected(setting.get());
 //				checkBox.setBackground(setting.isSet() ? Color.PINK : null);
 				checkBox.repaint();
-			} finally {
+			}
+			finally {
 				ignoreChanges = false;
 			}
 		});
