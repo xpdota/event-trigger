@@ -1,4 +1,4 @@
-name: Leave a helpful comment on a PR
+name: PR Comment Bot
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
 jobs:
   comment:
     steps:
-      - name: Comment on the PR
+      - name: Leave a helpful comment on the PR
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
