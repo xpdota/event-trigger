@@ -2,7 +2,7 @@ name: PR Comment Bot
 
 on:
   pull_request:
-
+    types: [opened]
 
 jobs:
   comment:
@@ -13,7 +13,7 @@ jobs:
         with:
           message: |
             Once this branch successfully builds, you will be able to try the branch out
-            for yourself by changing the "branch" in your updater to ${{ github.ref_name }}.
+            for yourself by changing the "branch" in your updater to ${{ github.head_ref }}.
             This setting can be found under the "Updates" tab.
             
             Don't forget to change back when you are done testing. You should reset your 
