@@ -6,6 +6,7 @@ on:
 
 jobs:
   comment:
+    runs-on: linux
     steps:
       - name: Leave a helpful comment on the PR
         uses: thollander/actions-comment-pull-request@v2
