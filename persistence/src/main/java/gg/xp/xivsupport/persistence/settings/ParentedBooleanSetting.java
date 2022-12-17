@@ -2,13 +2,12 @@ package gg.xp.xivsupport.persistence.settings;
 
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 
-public class ParentedBooleanSetting extends ObservableSetting implements ObservableMutableBoolean, Resettable {
+public class ParentedBooleanSetting extends BooleanSetting {
 
 	private final ObservableBoolean parent;
-	private final BooleanSetting internalSetting;
 
 	public ParentedBooleanSetting(PersistenceProvider persistence, String settingKey, ObservableBoolean parent) {
-		this.internalSetting = new BooleanSetting(persistence, settingKey, false);
+		super(persistence, settingKey, false);
 		this.parent = parent;
 		parent.addListener(this::reprocess);
 	}
@@ -19,8 +18,8 @@ public class ParentedBooleanSetting extends ObservableSetting implements Observa
 
 	@Override
 	public boolean get() {
-		if (internalSetting.isSet()) {
-			return internalSetting.get();
+		if (super.isSet()) {
+			return super.get();
 		}
 		else {
 			return parent.get();
@@ -28,19 +27,7 @@ public class ParentedBooleanSetting extends ObservableSetting implements Observa
 	}
 
 	@Override
-	public void set(boolean value) {
-		internalSetting.set(value);
-		notifyListeners();
-	}
-
-	@Override
-	public boolean isSet() {
-		return internalSetting.isSet();
-	}
-
-	@Override
-	public void delete() {
-		internalSetting.delete();
-		notifyListeners();
+	public boolean hasParent() {
+		return true;
 	}
 }

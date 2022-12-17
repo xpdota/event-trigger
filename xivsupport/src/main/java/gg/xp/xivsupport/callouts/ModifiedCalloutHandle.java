@@ -4,10 +4,9 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
+import gg.xp.xivsupport.persistence.settings.ParentedBooleanSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Objects;
 
 public final class ModifiedCalloutHandle {
 
@@ -25,13 +24,24 @@ public final class ModifiedCalloutHandle {
 	private final ColorSetting textColorOverride;
 	private boolean isEnabledByParent = true;
 
-	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
+	// Only used for testing
+	ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
+		this(persistenceProvider, propStub, original, allTts, allText, CalloutDefaults.dummy());
+	}
+
+	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText, CalloutDefaults defaults) {
 		this.allTts = allTts;
 		this.allText = allText;
-		enable = new BooleanSetting(persistenceProvider, propStub + ".enabled", original.isEnabledByDefault());
-		enableTts = new BooleanSetting(persistenceProvider, propStub + ".tts-enabled", true);
+		boolean enabledByDefault = original.isEnabledByDefault();
+		if (enabledByDefault) {
+			enable = new ParentedBooleanSetting(persistenceProvider, propStub + ".enabled", defaults.getEnableCallout());
+		}
+		else {
+			enable = new BooleanSetting(persistenceProvider, propStub + ".enabled", false);
+		}
+		enableTts = new ParentedBooleanSetting(persistenceProvider, propStub + ".tts-enabled", defaults.getEnableTts());
 		ttsSetting = new StringSetting(persistenceProvider, propStub + ".tts", original.getOriginalTts());
-		enableText = new BooleanSetting(persistenceProvider, propStub + ".text-enabled", true);
+		enableText = new ParentedBooleanSetting(persistenceProvider, propStub + ".text-enabled", defaults.getEnableText());
 		textSetting = new StringSetting(persistenceProvider, propStub + ".text", original.getOriginalVisualText());
 		soundSetting = new StringSetting(persistenceProvider, propStub + ".sound", "");
 		sameText = new BooleanSetting(persistenceProvider, propStub + ".text-same", false);
@@ -56,11 +66,12 @@ public final class ModifiedCalloutHandle {
 
 	@SuppressWarnings("UnusedReturnValue")
 	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub) {
-		return installHandle(original, pers, propStub, null, null);
+		// TODO
+		return installHandle(original, pers, propStub, null, null, CalloutDefaults.dummy());
 	}
 
-	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
-		ModifiedCalloutHandle modified = new ModifiedCalloutHandle(pers, propStub, original, allTts, allText);
+	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText, CalloutDefaults parent) {
+		ModifiedCalloutHandle modified = new ModifiedCalloutHandle(pers, propStub, original, allTts, allText, parent);
 		original.attachHandle(modified);
 		return modified;
 	}
@@ -159,5 +170,11 @@ public final class ModifiedCalloutHandle {
 
 	public ColorSetting getTextColorOverride() {
 		return textColorOverride;
+	}
+
+	public void resetAllBooleans() {
+		enable.delete();
+		enableTts.delete();
+		enableText.delete();
 	}
 }

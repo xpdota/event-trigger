@@ -3,6 +3,8 @@ package gg.xp.xivsupport.callouts.gui;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.duties.*;
+import gg.xp.xivsupport.callouts.CalloutDefaults;
+import gg.xp.xivsupport.callouts.CalloutDefaultsRepository;
 import gg.xp.xivsupport.callouts.CalloutGroup;
 import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
@@ -23,6 +25,7 @@ import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +47,7 @@ public class DutiesTab implements PluginTab {
 	private final GlobalArenaSectorConverter asc;
 	private final SoundFileTab sft;
 	private final GlobalUiRegistry reg;
+	private final CalloutDefaultsRepository defaultsRepo;
 	private SmartTabbedPane tabPane;
 
 	public DutiesTab(ModifiedCalloutRepository backend,
@@ -52,7 +56,10 @@ public class DutiesTab implements PluginTab {
 	                 EventMaster master,
 	                 GlobalArenaSectorConverter asc,
 	                 SoundFileTab sft,
-	                 GlobalUiRegistry reg) {
+	                 GlobalUiRegistry reg,
+	                 CalloutDefaultsRepository defaultsRepo
+
+	) {
 		this.backend = backend;
 		this.container = container;
 		this.soundMgr = soundMgr;
@@ -60,6 +67,7 @@ public class DutiesTab implements PluginTab {
 		this.asc = asc;
 		this.sft = sft;
 		this.reg = reg;
+		this.defaultsRepo = defaultsRepo;
 	}
 
 	@Override
@@ -295,29 +303,20 @@ public class DutiesTab implements PluginTab {
 			panel.add(scroller, BorderLayout.CENTER);
 
 			JPanel settingsPanel = new JPanel();
+			settingsPanel.setBorder(new TitledBorder("Global Settings (All Duties)"));
 			settingsPanel.setLayout(new WrapLayout());
 
-			JCheckBox enableTts = new BooleanSettingGui(backend.getEnableTts(), "Enable TTS (Global)").getComponent();
+			CalloutDefaults globalDefaults = defaultsRepo.getGlobalDefaults();
+			JCheckBox defaultEnable = new BooleanSettingGui(globalDefaults.getEnableCallout(), "Enable By Default", true).getComponent();
+			settingsPanel.add(defaultEnable);
+			JCheckBox defaultTts = new BooleanSettingGui(globalDefaults.getEnableTts(), "Enable TTS By Default", true).getComponent();
+			settingsPanel.add(defaultTts);
+			JCheckBox defaultText = new BooleanSettingGui(globalDefaults.getEnableText(), "Enable Text By Default", true).getComponent();
+			settingsPanel.add(defaultText);
+			JCheckBox enableTts = new BooleanSettingGui(backend.getEnableTts(), "Allow TTS").getComponent();
 			settingsPanel.add(enableTts);
-			JCheckBox enableOverlay = new BooleanSettingGui(backend.getEnableOverlay(), "Enable Overlay (Global)").getComponent();
+			JCheckBox enableOverlay = new BooleanSettingGui(backend.getEnableOverlay(), "Enable Overlay").getComponent();
 			settingsPanel.add(enableOverlay);
-
-			JButton expandAll = new JButton("Expand All");
-			expandAll.addActionListener(l -> ch.setAllShowHide(true));
-			settingsPanel.add(expandAll);
-
-			JButton collapseAll = new JButton("Collapse All");
-			collapseAll.addActionListener(l -> ch.setAllShowHide(false));
-			settingsPanel.add(collapseAll);
-
-			JButton enableAll = new JButton("Enable All");
-			enableAll.addActionListener(l -> ch.setAllEnableDisable(true));
-			settingsPanel.add(enableAll);
-
-			JButton disableAll = new JButton("Disable All");
-			disableAll.addActionListener(l -> ch.setAllEnableDisable(false));
-			settingsPanel.add(disableAll);
-
 
 			panel.add(settingsPanel, BorderLayout.NORTH);
 
