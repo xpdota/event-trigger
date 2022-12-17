@@ -1,0 +1,19 @@
+name: Leave a helpful comment on a PR
+
+on:
+  pull_request:
+
+
+jobs:
+  comment:
+    steps:
+      - name: Comment on the PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            Once this branch successfully builds, you will be able to try the branch out
+            for yourself by changing the "branch" in your updater to ${{ github.ref_name }}.
+            This setting can be found under the "Updates" tab.
+            
+            Don't forget to change back when you are done testing. You should reset your 
+            branch either to 'stable' for normal releases, or 'master' for beta builds.
