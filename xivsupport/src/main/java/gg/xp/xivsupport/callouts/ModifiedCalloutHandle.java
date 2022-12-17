@@ -8,8 +8,6 @@ import gg.xp.xivsupport.persistence.settings.ParentedBooleanSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
-
 public final class ModifiedCalloutHandle {
 
 	private final BooleanSetting enable;
@@ -172,5 +170,11 @@ public final class ModifiedCalloutHandle {
 
 	public ColorSetting getTextColorOverride() {
 		return textColorOverride;
+	}
+
+	public void resetAllBooleans() {
+		enable.delete();
+		enableTts.delete();
+		enableText.delete();
 	}
 }
