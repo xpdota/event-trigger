@@ -74,13 +74,4 @@ public class PersistenceTests {
 		testPersistenceRead(new PropertiesFilePersistenceProvider(new File("target/testdata/foo.properties")));
 	}
 
-	@Test
-	public void testDefaultPropsLocation() throws InterruptedException {
-		testPersistenceWrite(PropertiesFilePersistenceProvider.inUserDataFolder("integration-test"));
-		// Wait for file flush
-		Thread.sleep(200);
-		testPersistenceRead(PropertiesFilePersistenceProvider.inUserDataFolder("integration-test"));
-	}
-
-
 }

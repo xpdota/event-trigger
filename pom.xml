@@ -302,6 +302,16 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
+                <artifactId>groovy-sandboxing</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>persistence</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
                 <artifactId>job-overlays</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -377,5 +387,6 @@
         <module>telesto-support</module>
         <module>groovy-sandboxing</module>
         <module>trigger-support</module>
+        <module>persistence</module>
     </modules>
 </project>

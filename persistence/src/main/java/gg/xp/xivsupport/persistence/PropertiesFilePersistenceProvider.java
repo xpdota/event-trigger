@@ -33,17 +33,6 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 	private final BooleanSetting readOnlySetting;
 	private boolean readOnly;
 
-	// TODO: is this threadsafe?
-	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName) {
-		return inUserDataFolder(baseName, false);
-	}
-	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName, boolean readOnly) {
-		String userDataDir = Platform.getTriggeventDir().toString();
-		log.info("Data dir: {}", userDataDir);
-		File file = Paths.get(userDataDir, baseName + ".properties").toFile();
-		log.info("Using file: {}", file);
-		return new PropertiesFilePersistenceProvider(file, readOnly);
-	}
 
 	public PropertiesFilePersistenceProvider(File file) {
 		this(file, false);
