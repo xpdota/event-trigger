@@ -280,6 +280,7 @@ public class CustomPartyCdTrackerComponent extends BasePartyListComponent {
 					clipPoly.translate(width / 2, height / 2);
 					clipped.clip(clipPoly);
 				}
+				clipped.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 				clipped.fill(outer);
 			}
 			AffineTransform tf = g2d.getTransform();
