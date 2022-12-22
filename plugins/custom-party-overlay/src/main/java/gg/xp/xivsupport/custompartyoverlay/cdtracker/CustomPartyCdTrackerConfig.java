@@ -42,6 +42,7 @@ public class CustomPartyCdTrackerConfig extends ObservableSetting {
 	private final IntSetting borderWidth;
 	private final IntSetting borderRoundness;
 	private final BooleanSetting rightToLeft;
+	private final BooleanSetting scOnlyRez;
 	private final SettingsCdTrackerColorProvider colors;
 
 	public CustomPartyCdTrackerConfig(CustomCooldownManager customCooldownManager, PersistenceProvider persistence) {
@@ -60,7 +61,8 @@ public class CustomPartyCdTrackerConfig extends ObservableSetting {
 		this.borderWidth = new IntSetting(persistence, settingKeyBase + ".border-width", 2, 1, 100);
 		this.borderRoundness = new IntSetting(persistence, settingKeyBase + ".border-roundness", 0, 0, 100);
 		this.rightToLeft = new BooleanSetting(persistence, settingKeyBase + ".right-to-left", true);
-		List.of(spacing, borderWidth, borderRoundness, rightToLeft)
+		this.scOnlyRez = new BooleanSetting(persistence, settingKeyBase + ".swiftcast-only-rez", true);
+		List.of(spacing, borderWidth, borderRoundness, rightToLeft, scOnlyRez)
 				.forEach(setting -> setting.addListener(this::notifyListeners));
 		refreshCustoms();
 	}
@@ -140,6 +142,10 @@ public class CustomPartyCdTrackerConfig extends ObservableSetting {
 		return borderWidth;
 	}
 
+	public BooleanSetting getScOnlyRez() {
+		return scOnlyRez;
+	}
+
 	@SuppressWarnings("SuspiciousMethodCalls")
 	private static boolean defaultSetting(ExtendedCooldownDescriptor ecd) {
 		return defaultEnabled.contains(ecd);
@@ -161,6 +167,7 @@ public class CustomPartyCdTrackerConfig extends ObservableSetting {
 			Cooldown.Mug,
 			Cooldown.ArcaneCircle,
 			Cooldown.Troubadour,
+			Cooldown.Tactician,
 			Cooldown.RadiantFinale,
 			Cooldown.TechnicalStep,
 			Cooldown.Devilment,

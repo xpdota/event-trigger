@@ -118,13 +118,22 @@ public class CustomPartyCdTrackerComponent extends BasePartyListComponent {
 			SwingUtilities.invokeLater(panel::removeAll);
 		}
 //		Map<ExtendedCooldownDescriptor, VisualCdInfo> statusNew = new HashMap<>();
+		boolean scOnlyRez = config.getScOnlyRez().get();
 		List<ExtendedCooldownDescriptor> enabled = this.enabled.stream()
-				.filter(extendedCooldownDescriptor ->
-						extendedCooldownDescriptor.getJob() == job
-								|| extendedCooldownDescriptor.getJobType() == jobCat
-								|| extendedCooldownDescriptor == Cooldown.Swiftcast
-								&& (jobCat == JobType.HEALER || jobCat == JobType.CASTER)
-								&& ActionLibrary.iconForId(extendedCooldownDescriptor.getPrimaryAbilityId()) != null)
+				.filter(extendedCooldownDescriptor -> {
+					if (extendedCooldownDescriptor == Cooldown.Swiftcast) {
+						if (scOnlyRez) {
+							return job.usesSwiftRez();
+						}
+						else {
+							return jobCat == JobType.HEALER || jobCat == JobType.CASTER;
+						}
+					}
+					else {
+						return extendedCooldownDescriptor.getJob() == job
+								|| extendedCooldownDescriptor.getJobType() == jobCat;
+					}
+				})
 				.limit(maxItems())
 				.toList();
 		for (ExtendedCooldownDescriptor extendedCooldownDescriptor : enabled.subList(0, Math.min(enabled.size(), maxItems()))) {

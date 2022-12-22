@@ -33,23 +33,23 @@ public class CustomPartyCdTrackerGui extends JPanel {
 	public CustomPartyCdTrackerGui(CustomPartyCdTrackerConfig config) {
 		this.config = config;
 		setLayout(new BorderLayout());
-		JPanel settingsPanel = new JPanel();
-		settingsPanel.setLayout(new WrapLayout());
+		JPanel topSettingsPanel = new JPanel();
+		topSettingsPanel.setLayout(new WrapLayout());
 
-		settingsPanel.add(new BooleanSettingGui(config.getRightToLeft(), "Right to Left", true).getComponent());
-		settingsPanel.add(new IntSettingSpinner(config.getSpacing(), "Spacing Between Items").getComponent());
-		settingsPanel.add(new IntSettingSpinner(config.getBorderWidth(), "Border Thickness").getComponent());
-		settingsPanel.add(new IntSettingSpinner(config.getBorderRoundness(), "Roundness").getComponent());
+		topSettingsPanel.add(new BooleanSettingGui(config.getRightToLeft(), "Right to Left", true).getComponent());
+		topSettingsPanel.add(new IntSettingSpinner(config.getSpacing(), "Spacing Between Items").getComponent());
+		topSettingsPanel.add(new IntSettingSpinner(config.getBorderWidth(), "Border Thickness").getComponent());
+		topSettingsPanel.add(new IntSettingSpinner(config.getBorderRoundness(), "Roundness").getComponent());
 
-		settingsPanel.add(Box.createHorizontalStrut(32_000));
+		topSettingsPanel.add(Box.createHorizontalStrut(32_000));
 		SettingsCdTrackerColorProvider colors = config.getColors();
-		settingsPanel.add(new ColorSettingGui(colors.getActiveSetting(), "Active Color", () -> true).getComponent());
-		settingsPanel.add(new ColorSettingGui(colors.getReadySetting(), "Ready Color", () -> true).getComponent());
-		settingsPanel.add(new ColorSettingGui(colors.getOnCdSetting(), "On CD Color", () -> true).getComponent());
-		settingsPanel.add(new ColorSettingGui(colors.getPreappSetting(), "Preapp Color", () -> true).getComponent());
-//		settingsPanel.add(new ColorSettingGui(colors.getFontSetting(), "Font Color", () -> true).getComponent());
+		topSettingsPanel.add(new ColorSettingGui(colors.getActiveSetting(), "Active Color", () -> true).getComponent());
+		topSettingsPanel.add(new ColorSettingGui(colors.getReadySetting(), "Ready Color", () -> true).getComponent());
+		topSettingsPanel.add(new ColorSettingGui(colors.getOnCdSetting(), "On CD Color", () -> true).getComponent());
+		topSettingsPanel.add(new ColorSettingGui(colors.getPreappSetting(), "Preapp Color", () -> true).getComponent());
+//		topSettingsPanel.add(new ColorSettingGui(colors.getFontSetting(), "Font Color", () -> true).getComponent());
 
-		add(settingsPanel, BorderLayout.PAGE_START);
+		add(topSettingsPanel, BorderLayout.PAGE_START);
 
 		JTable table = new JTable() {
 			@Override
@@ -131,6 +131,10 @@ public class CustomPartyCdTrackerGui extends JPanel {
 		JScrollPane scroll = new JScrollPane(table);
 		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		add(scroll, BorderLayout.CENTER);
+		JPanel bottomBettingsPanel = new JPanel();
+		bottomBettingsPanel.setLayout(new WrapLayout());
+		bottomBettingsPanel.add(new BooleanSettingGui(config.getScOnlyRez(), "Hide Swiftcast on BLM/RDM", true).getComponent());
+		add(bottomBettingsPanel, BorderLayout.SOUTH);
 		config.addListener(model::signalNewData);
 	}
 
