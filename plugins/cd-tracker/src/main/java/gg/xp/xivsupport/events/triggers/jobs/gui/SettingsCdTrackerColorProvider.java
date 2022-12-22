@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
 
 import java.awt.*;
@@ -63,6 +65,20 @@ public class SettingsCdTrackerColorProvider implements CdColorProvider {
 
 	public ColorSetting getFontSetting() {
 		return font;
+	}
+
+	public static SettingsCdTrackerColorProvider of(PersistenceProvider persistence, String settingKeyBase, CdColorProvider defaults) {
+		ColorSetting activeColor;
+		ColorSetting readyColor;
+		ColorSetting onCdColor;
+		ColorSetting preappColor;
+		ColorSetting fontColor;
+		activeColor = new ColorSetting(persistence, settingKeyBase + ".active-color", defaults.getActiveColor());
+		readyColor = new ColorSetting(persistence, settingKeyBase + ".ready-color", defaults.getReadyColor());
+		onCdColor = new ColorSetting(persistence, settingKeyBase + ".oncd-color", defaults.getOnCdColor());
+		preappColor = new ColorSetting(persistence, settingKeyBase + ".preapp-color", defaults.getPreappColor());
+		fontColor = new ColorSetting(persistence, settingKeyBase + ".font-color", defaults.getFontColor());
+		return new SettingsCdTrackerColorProvider(activeColor, readyColor, onCdColor, preappColor, fontColor);
 	}
 
 }

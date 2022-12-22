@@ -1,11 +1,13 @@
 package gg.xp.xivsupport.custompartyoverlay;
 
 import gg.xp.xivsupport.custompartyoverlay.buffs.CustomBuffsBarComponentGui;
-import gg.xp.xivsupport.custompartyoverlay.buffs.NormalBuffsBarComponentGui;
 import gg.xp.xivsupport.custompartyoverlay.buffs.CustomBuffsBarPartyComponent;
+import gg.xp.xivsupport.custompartyoverlay.buffs.NormalBuffsBarComponentGui;
 import gg.xp.xivsupport.custompartyoverlay.buffs.NormalBuffsBarPartyComponent;
 import gg.xp.xivsupport.custompartyoverlay.castbar.CastBarComponentGui;
 import gg.xp.xivsupport.custompartyoverlay.castbar.CastBarPartyComponent;
+import gg.xp.xivsupport.custompartyoverlay.cdtracker.CustomPartyCdTrackerComponent;
+import gg.xp.xivsupport.custompartyoverlay.cdtracker.CustomPartyCdTrackerGui;
 import gg.xp.xivsupport.custompartyoverlay.hpbar.HpBarComponent;
 import gg.xp.xivsupport.custompartyoverlay.hpbar.HpBarComponentGui;
 import gg.xp.xivsupport.custompartyoverlay.mpbar.MpBarComponent;
@@ -30,7 +32,8 @@ public enum CustomPartyOverlayComponentType implements HasFriendlyName {
 	BUFFS_WITH_TIMERS("Buffs", NormalBuffsBarPartyComponent.class, NormalBuffsBarComponentGui.class),
 	CAST_BAR("Cast Bar", CastBarPartyComponent.class, CastBarComponentGui.class),
 	MP_BAR("MP Bar", MpBarComponent.class, MpBarComponentGui.class),
-	CUSTOM_BUFFS("Custom Buffs", CustomBuffsBarPartyComponent.class, CustomBuffsBarComponentGui.class);
+	CUSTOM_BUFFS("Custom Buffs", CustomBuffsBarPartyComponent.class, CustomBuffsBarComponentGui.class),
+	COOLDOWNS("Cooldown Icons", CustomPartyCdTrackerComponent.class, CustomPartyCdTrackerGui.class);
 
 	private final String friendlyName;
 	private final Class<? extends RefreshablePartyListComponent> componentClass;

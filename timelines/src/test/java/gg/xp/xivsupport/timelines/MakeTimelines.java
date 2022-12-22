@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -51,7 +52,7 @@ public final class MakeTimelines {
 		try {
 			driver.get("https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=wss://127.0.0.1:10501");
 
-			Object out = driver.executeScript("""
+			Map<?, ?> out = (Map<?, ?>) driver.executeScript("""
 					return await new Promise((resolve) => {
 					    const id = 'fakeId' + Math.random();
 					    window['webpackChunkcactbot'].push([[id], null, (req) => resolve(req)]);
@@ -60,7 +61,7 @@ public final class MakeTimelines {
 					});
 					""");
 
-			((Map<?, ?>) out).forEach((file, content) -> {
+			out.forEach((file, content) -> {
 				if (content instanceof Map contentMap) {
 					Object timelineFileRaw = contentMap.get("timelineFile");
 					if (timelineFileRaw == null) {
@@ -71,12 +72,25 @@ public final class MakeTimelines {
 					Long zoneId = (Long) zoneIdRaw;
 					String fullTimelineFilePath = stripFileName(file.toString()) + timelineFileName;
 					zoneToFile.put(zoneId, timelineFileName);
-					String fileContents = ((Map<?, ?>) out).get(fullTimelineFilePath).toString().replaceAll("\r\n", "\n");
+					String fileContents = out.get(fullTimelineFilePath).toString().replaceAll("\r\n", "\n");
 					try {
 						Files.writeString(timelineBasePath.resolve("timeline").resolve(timelineFileName), fileContents);
 					}
 					catch (IOException e) {
 						throw new RuntimeException("Error processing timeline for '" + file + '\'', e);
+					}
+					/*
+						TODO: timeline translations
+						Should be able to grab the "timelineReplace" array, which has one object for each language
+					 */
+					Object timelineReplace = contentMap.get("timelineReplace");
+					if (timelineReplace instanceof List timelineReplaceList) {
+						for (Object o : timelineReplaceList) {
+							if (o instanceof Map timelineReplaceMap) {
+								// This works - just need to figure out how to work it in
+//								log.info("Timeline Replacement Map: zone {} -> {}", zoneId, timelineReplaceMap);
+							}
+						}
 					}
 				}
 			});
@@ -90,6 +104,7 @@ public final class MakeTimelines {
 			driver.quit();
 		}
 	}
+
 
 
 }
