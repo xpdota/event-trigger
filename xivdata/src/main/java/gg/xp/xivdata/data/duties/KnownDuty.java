@@ -25,7 +25,7 @@ public enum KnownDuty implements Duty {
 	Dragonsong("Dragonsong", 0x3C8, Expansion.EW, DutyType.ULTIMATE),
 	ASS_Criterion("Sil'dihn Subterrane (Criterion)", 0x433, Expansion.EW, DutyType.OTHER),
 	ASS_Savage("Sil'dihn Subterrane (Savage)", 0x434, Expansion.EW, DutyType.OTHER),
-	TBD_Ultimate("Unknown 6.3 Ultimate", 0x0, Expansion.EW, DutyType.ULTIMATE)
+	OMEGA_PROTOCOL("Omega Protocol", 0x0, Expansion.EW, DutyType.ULTIMATE)
 	;
 
 	private final String name;
