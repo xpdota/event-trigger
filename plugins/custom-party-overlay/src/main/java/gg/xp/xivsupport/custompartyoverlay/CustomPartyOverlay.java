@@ -51,8 +51,8 @@ public class CustomPartyOverlay extends XivOverlay {
 			}
 			if (existingItems.stream().noneMatch(spec -> spec.componentType == type)) {
 				getDefaults().stream().filter(defaultItem -> defaultItem.componentType == type)
-								.findFirst()
-										.ifPresent(newItems::add);
+						.findFirst()
+						.ifPresent(newItems::add);
 			}
 		}
 		newItems.forEach(elements::addItem);
@@ -117,17 +117,25 @@ public class CustomPartyOverlay extends XivOverlay {
 						continue;
 					}
 					Component component = ref.getComponent();
+					panel.add(component);
 					component.setBounds(spec.x, spec.y + offset, spec.width, spec.height);
 					maxX = Math.max(maxX, spec.x + spec.width);
 					maxY = Math.max(maxY, spec.y + offset + spec.height);
-					panel.add(component);
 					list.add(ref);
 					log.trace("Added: {} -> {} -> {}", i, spec.componentType, component);
 				}
 			}
 			panel.setPreferredSize(new Dimension(maxX + 10, maxY + 10));
 			this.refreshables = refreshables;
+			try {
+				panel.validate();
+			}
+			catch (Throwable t) {
+				log.error("Error validating!", t);
+			}
 			repackSize();
+			SwingUtilities.invokeLater(() -> {
+			});
 		});
 	}
 
@@ -195,6 +203,16 @@ public class CustomPartyOverlay extends XivOverlay {
 			comp.width = 60;
 			comp.height = 14;
 			comp.componentType = CustomPartyOverlayComponentType.MP_BAR;
+			specs.add(comp);
+		}
+		{
+			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
+			comp.x = 0;
+			comp.y = 0;
+			comp.width = 120;
+			comp.height = 40;
+			comp.enabled = false;
+			comp.componentType = CustomPartyOverlayComponentType.COOLDOWNS;
 			specs.add(comp);
 		}
 		return specs;
