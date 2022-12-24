@@ -37,6 +37,6 @@ public class Line249Parser extends AbstractACTLineParser<Line249Parser.Fields> i
 			GameLanguage lang = GameLanguage.valueOf(langNameMatcher.group(1));
 			return new GameLanguageInfoEvent(lang);
 		}
-			return null;
+		return null;
 	}
 }
