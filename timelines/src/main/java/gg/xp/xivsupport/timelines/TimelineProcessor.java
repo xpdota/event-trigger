@@ -6,6 +6,7 @@ import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -21,7 +22,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class TimelineProcessor {
@@ -54,7 +58,7 @@ public final class TimelineProcessor {
 		refresher.start();
 	}
 
-	public static TimelineProcessor of(TimelineManager manager, InputStream file, List<? extends TimelineEntry> extra, Job playerJob) {
+	public static TimelineProcessor of(TimelineManager manager, InputStream file, List<? extends TimelineEntry> extra, Job playerJob, LanguageReplacements replacements) {
 		List<TextFileTimelineEntry> timelineEntries;
 		try {
 			timelineEntries = TimelineParser.parseMultiple(IOUtils.readLines(file, StandardCharsets.UTF_8));
@@ -63,6 +67,28 @@ public final class TimelineProcessor {
 			throw new RuntimeException(e);
 		}
 		List<TimelineEntry> all = new ArrayList<>(timelineEntries);
+		for (int i = 0; i < all.size(); i++) {
+			TimelineEntry currentItem = all.get(i);
+			final String originalName = currentItem.name();
+			final String originalSync = currentItem.sync() == null ? null : currentItem.sync().pattern();
+			String newName = originalName;
+			String newSync = originalSync;
+			if (originalName != null) {
+				for (var textReplacement : replacements.replaceText().entrySet()) {
+					newName = textReplacement.getKey().matcher(newName).replaceAll(textReplacement.getValue());
+				}
+			}
+			if (originalSync != null) {
+				for (var syncReplacement : replacements.replaceSync().entrySet()) {
+					newSync = syncReplacement.getKey().matcher(newSync).replaceAll(syncReplacement.getValue());
+				}
+			}
+			if (!Objects.equals(originalName, newName) || !Objects.equals(originalSync, newSync)) {
+				Pattern newSyncFinal = newSync == null ? null : Pattern.compile(newSync);
+				all.set(i, new TranslatedTextFileEntry(currentItem, newName, newSyncFinal));
+			}
+		}
+
 		// Remove things that have been overridden
 		for (TimelineEntry customEntry : extra) {
 			all.removeIf(customEntry::shouldSupersede);
