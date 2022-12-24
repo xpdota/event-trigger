@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-// There is a global instance of this
 @ScanMe
 public class RightClickOptionRepo {
 	private final List<CustomRightClickOption> options = new ArrayList<>();
@@ -35,7 +34,7 @@ public class RightClickOptionRepo {
 		return out;
 	}
 
-	public void configureTable(JTable table,CustomTableModel<?> model) {
+	public void configureTable(JTable table, CustomTableModel<?> model) {
 		CustomRightClickOption.configureTable(table, model, () -> options);
 	}
 }
