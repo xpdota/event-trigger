@@ -176,7 +176,7 @@ public class GroovyManager {
 	private final Object bindLock = new Object();
 	private volatile @Nullable Binding globalBinding;
 
-	private Binding getGlobalBinding() {
+	Binding getGlobalBinding() {
 		if (globalBinding == null) {
 			synchronized (bindLock) {
 				if (globalBinding == null) {

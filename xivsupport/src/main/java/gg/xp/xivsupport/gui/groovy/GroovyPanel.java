@@ -35,6 +35,7 @@ public class GroovyPanel extends JPanel {
 	private static final Color invalidBackground = new Color(62, 27, 27);
 	// TODO: way of cancelling computation
 	private static final ExecutorService evaluator = Executors.newSingleThreadExecutor();
+	private static final ExecutorService saver = Executors.newSingleThreadExecutor();
 
 	private static final Font mono = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 
@@ -255,6 +256,9 @@ public class GroovyPanel extends JPanel {
 
 	private void submit() {
 		setResultDisplay(textDisplayComponent("Processing..."));
+		if (script.isSaveable()) {
+			script.save();
+		}
 		evaluator.submit(() -> {
 			GroovyScriptResult result = script.run();
 			setResult(result);
