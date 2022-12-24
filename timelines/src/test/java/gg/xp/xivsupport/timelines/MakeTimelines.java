@@ -84,11 +84,12 @@ public final class MakeTimelines {
 						Should be able to grab the "timelineReplace" array, which has one object for each language
 					 */
 					Object timelineReplace = contentMap.get("timelineReplace");
+					Map<String, >
 					if (timelineReplace instanceof List timelineReplaceList) {
 						for (Object o : timelineReplaceList) {
 							if (o instanceof Map timelineReplaceMap) {
 								// This works - just need to figure out how to work it in
-//								log.info("Timeline Replacement Map: zone {} -> {}", zoneId, timelineReplaceMap);
+								log.info("Timeline Replacement Map: zone {} -> {}", zoneId, timelineReplaceMap);
 							}
 						}
 					}
