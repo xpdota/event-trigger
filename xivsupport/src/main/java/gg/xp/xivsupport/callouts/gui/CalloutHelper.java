@@ -135,7 +135,7 @@ public class CalloutHelper extends JPanel {
 
 	private void askThenReset() {
 		SwingUtilities.invokeLater(() -> {
-			int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to reset all enabled/disabled settings on this page? This cannot be reverted!", "Reset?", JOptionPane.YES_NO_OPTION);
+			int result = JOptionPane.showConfirmDialog(SwingUtilities.getWindowAncestor(this), "Are you sure you want to reset all enabled/disabled settings on this page? This cannot be reverted!", "Reset?", JOptionPane.YES_NO_OPTION);
 			if (result == JOptionPane.OK_OPTION) {
 				groups.forEach(CalloutGroup::resetAllBooleans);
 			}
