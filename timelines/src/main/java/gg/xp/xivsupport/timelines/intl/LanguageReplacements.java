@@ -20,6 +20,16 @@ public record LanguageReplacements(
 		);
 	}
 
+	@JsonProperty("replaceSync")
+	public Map<String, String> sortedReplaceSync() {
+		return replaceSync.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().pattern(), e -> e.getValue()));
+	}
+
+	@JsonProperty("replaceText")
+	public Map<String, String> sortedReplaceText() {
+		return replaceText.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().pattern(), e -> e.getValue()));
+	}
+
 	public static LanguageReplacements empty() {
 		return new LanguageReplacements(Collections.emptyMap(), Collections.emptyMap());
 	}

@@ -1,6 +1,9 @@
 package gg.xp.xivsupport.timelines;
 
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -19,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("NewClassNamingConvention")
@@ -26,7 +30,9 @@ import java.util.stream.Collectors;
 public final class MakeTimelines {
 
 	private static final Logger log = LoggerFactory.getLogger(MakeTimelines.class);
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = JsonMapper.builder()
+			.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
+			.build();
 
 	private MakeTimelines() {
 	}
@@ -102,8 +108,8 @@ public final class MakeTimelines {
 								if (locale != null) {
 									@SuppressWarnings("unchecked")
 									LanguageReplacements reps = LanguageReplacements.fromRaw(
-											replaceSync instanceof Map rsm ? rsm : Collections.emptyMap(),
-											replaceText instanceof Map rtm ? rtm : Collections.emptyMap()
+											replaceSync instanceof Map rsm ? ordered(rsm) : Collections.<String, String>emptyMap(),
+											replaceText instanceof Map rtm ? ordered(rtm) : Collections.<String, String>emptyMap()
 									);
 									allLangs.put(locale.toString(), reps);
 								}
@@ -133,5 +139,7 @@ public final class MakeTimelines {
 		}
 	}
 
-
+	private static <K extends Comparable<K>, V> Map<K, V> ordered(Map<K, V> map) {
+		return map.entrySet().stream().sorted(Map.Entry.comparingByKey()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+	}
 }
