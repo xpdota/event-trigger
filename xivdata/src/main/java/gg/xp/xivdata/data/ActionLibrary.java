@@ -1,5 +1,6 @@
 package gg.xp.xivdata.data;
 
+import gg.xp.xivdata.util.ArrayBackedMap;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,8 @@ public class ActionLibrary {
 
 	private static volatile boolean loaded;
 	// TODO: improve cache performance by making a map implementation backed by an array
-	private static final Map<Long, ActionIcon> cache = new ConcurrentHashMap<>();
-	private static final Map<Long, ActionInfo> csvValues = new HashMap<>();
+	private static final Map<Long, ActionIcon> iconCache = new ConcurrentHashMap<>();
+	private static Map<Integer, ActionInfo> csvValues = new HashMap<>();
 
 	private static void readCsv() {
 		readCsv(() -> ReadCsv.cellsFromResource("/xiv/actions/Action.csv"));
@@ -31,6 +32,7 @@ public class ActionLibrary {
 
 	// TODO: this is kind of jank
 	private static void readCsv(Supplier<List<String[]>> cellProvider) {
+		final Map<Integer, ActionInfo> csvValues = new HashMap<>();
 		List<String[]> arrays;
 		try {
 			arrays = cellProvider.get();
@@ -72,7 +74,7 @@ public class ActionLibrary {
 
 				if (imageId != 0) {
 					String categoryRaw = row[50];
-					csvValues.put(id, new ActionInfo(id, row[1].intern(), imageId, cd, maxCharges, categoryRaw.intern(), isPlayerAbility, recast));
+					csvValues.put((int) id, new ActionInfo(id, row[1].intern(), imageId, cd, maxCharges, categoryRaw.intern(), isPlayerAbility, recast));
 				}
 			});
 		}
@@ -81,6 +83,7 @@ public class ActionLibrary {
 			return;
 		}
 		finally {
+			ActionLibrary.csvValues = new ArrayBackedMap<>(csvValues);
 			loaded = true;
 		}
 
@@ -136,14 +139,19 @@ public class ActionLibrary {
 		}
 	}
 
-	public static Map<Long, ActionInfo> getAll() {
+	public static Map<Integer, ActionInfo> getAll() {
 		ensureLoaded();
 		return Collections.unmodifiableMap(csvValues);
 	}
 
-	public static @Nullable ActionInfo forId(long id) {
+	public static @Nullable ActionInfo forId(int id) {
 		ensureLoaded();
 		return csvValues.get(id);
+	}
+
+	public static @Nullable ActionInfo forId(long id) {
+		ensureLoaded();
+		return csvValues.get((int) id);
 	}
 
 	public static void readAltCsv(File file) {
@@ -165,7 +173,7 @@ public class ActionLibrary {
 	// Unlike status effects, which are more complicated due to multi-icon for different stack numbers, this maps
 	// the ability ID to icon directly, skipping the "icon ID" step.
 	public static @Nullable ActionIcon iconForId(long id) {
-		ActionIcon result = cache.computeIfAbsent(id, missingId -> {
+		ActionIcon result = iconCache.computeIfAbsent(id, missingId -> {
 			ActionInfo actionInfo = forId(missingId);
 			if (actionInfo == null) {
 				return NULL_MARKER;
@@ -184,7 +192,7 @@ public class ActionLibrary {
 	}
 
 	static @Nullable ActionIcon iconForInfo(ActionInfo info) {
-		ActionIcon result = cache.computeIfAbsent(info.actionid(), missingId -> {
+		ActionIcon result = iconCache.computeIfAbsent(info.actionid(), missingId -> {
 			long iconId = info.iconId();
 			URL resource = ActionIcon.class.getResource(String.format("/xiv/icon/%06d_hr1.png", iconId));
 			if (resource == null) {
