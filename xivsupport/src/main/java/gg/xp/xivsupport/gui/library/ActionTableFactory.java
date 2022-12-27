@@ -39,7 +39,7 @@ public final class ActionTableFactory {
 		//						return icon.getIconUrl();
 		//					}
 		return TableWithFilterAndDetails.builder("Actions/Abilities", () -> {
-					Map<Long, ActionInfo> csvValues = ActionLibrary.getAll();
+					Map<Integer, ActionInfo> csvValues = ActionLibrary.getAll();
 					List<ActionInfo> values = new ArrayList<>(csvValues.values());
 					values.sort(Comparator.comparing(ActionInfo::actionid));
 					return values;
