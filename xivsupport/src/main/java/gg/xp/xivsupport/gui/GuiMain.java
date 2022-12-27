@@ -555,7 +555,7 @@ public class GuiMain {
 				}
 			}
 			List<PluginTab> allComponents = components;
-			allComponents.sort(Comparator.comparing(PluginTab::getSortOrder));
+			allComponents.sort(Comparator.comparing(PluginTab::getSortOrder).thenComparing(PluginTab::getTabName));
 			SwingUtilities.invokeLater(() -> this.addTabs(allComponents));
 		}
 

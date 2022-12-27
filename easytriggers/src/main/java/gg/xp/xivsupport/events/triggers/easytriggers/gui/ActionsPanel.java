@@ -170,6 +170,8 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 						trigger.removeAction((Action<? super X>) action);
 						remove(component);
 						invalidate();
+						SwingUtilities.invokeLater(this::revalidate);
+						SwingUtilities.invokeLater(this::repaint);
 						return;
 					}
 				}
@@ -195,6 +197,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 				addAt(action, newIndex);
 			}
 			invalidate();
+			SwingUtilities.invokeLater(this::repaint);
 
 		}
 	}

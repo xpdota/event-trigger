@@ -2,7 +2,7 @@ package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 
-public record ZoneInfo(int id, String dutyName, XivMap mapInfo) {
+public record ZoneInfo(int id, @Nullable String dutyName, @Nullable XivMap mapInfo) {
 
 	public ZoneInfo {
 		if (dutyName == null && mapInfo == null) {
