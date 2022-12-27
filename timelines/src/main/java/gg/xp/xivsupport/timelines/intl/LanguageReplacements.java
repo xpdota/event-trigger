@@ -20,6 +20,10 @@ public record LanguageReplacements(
 		);
 	}
 
+	/*
+		The purpose of these @JsonProperty methods is to convert the "Pattern" back to a "String" so that it
+		can be sorted.
+	 */
 	@JsonProperty("replaceSync")
 	public Map<String, String> sortedReplaceSync() {
 		return replaceSync.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().pattern(), e -> e.getValue()));

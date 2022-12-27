@@ -31,6 +31,8 @@ public final class MakeTimelines {
 
 	private static final Logger log = LoggerFactory.getLogger(MakeTimelines.class);
 	private static final ObjectMapper mapper = JsonMapper.builder()
+			// Need deterministic map key ordering, otherwise all the translation files will change every time you
+			// run the script, despite the actual substance being the same.
 			.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
 			.build();
 
@@ -63,8 +65,10 @@ public final class MakeTimelines {
 		Path translationsDir = timelineBasePath.resolve("timeline").resolve("translations");
 		translationsDir.toFile().mkdirs();
 		try {
+			// Go to hosted Cactbot
 			driver.get("https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=wss://127.0.0.1:10501");
 
+			// Dump the contents of the webpack
 			Map<?, ?> out = (Map<?, ?>) driver.executeScript("""
 					return await new Promise((resolve) => {
 					    const id = 'fakeId' + Math.random();
@@ -75,6 +79,7 @@ public final class MakeTimelines {
 					""");
 
 			out.forEach((file, content) -> {
+				// Ignore flat files and other junk
 				if (content instanceof Map contentMap) {
 					Object timelineFileRaw = contentMap.get("timelineFile");
 					if (timelineFileRaw == null) {
@@ -83,8 +88,10 @@ public final class MakeTimelines {
 					String timelineFileName = timelineFileRaw.toString();
 					Object zoneIdRaw = contentMap.get("zoneId");
 					Long zoneId = (Long) zoneIdRaw;
+					// Get the timeline file name
 					String fullTimelineFilePath = stripFileName(file.toString()) + timelineFileName;
 					zoneToFile.put(zoneId, timelineFileName);
+					// Get the actual timeline file contents
 					String fileContents = out.get(fullTimelineFilePath).toString().replaceAll("\r\n", "\n");
 					try {
 						Files.writeString(timelineBasePath.resolve("timeline").resolve(timelineFileName), fileContents);
@@ -92,10 +99,7 @@ public final class MakeTimelines {
 					catch (IOException e) {
 						throw new RuntimeException("Error processing timeline for '" + file + '\'', e);
 					}
-					/*
-						TODO: timeline translations
-						Should be able to grab the "timelineReplace" array, which has one object for each language
-					 */
+					// Get the timeline translations
 					Object timelineReplace = contentMap.get("timelineReplace");
 					Map<String, LanguageReplacements> allLangs = new LinkedHashMap<>();
 					if (timelineReplace instanceof List timelineReplaceList) {
@@ -120,6 +124,7 @@ public final class MakeTimelines {
 						}
 					}
 					TimelineReplacements tr = new TimelineReplacements(allLangs);
+					// Write them
 					try {
 						mapper.writeValue(translationsDir.resolve(timelineFileName + ".json").toFile(), tr);
 					}
