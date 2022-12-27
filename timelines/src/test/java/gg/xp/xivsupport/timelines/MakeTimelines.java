@@ -1,6 +1,9 @@
 package gg.xp.xivsupport.timelines;
 
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -19,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("NewClassNamingConvention")
@@ -26,7 +30,11 @@ import java.util.stream.Collectors;
 public final class MakeTimelines {
 
 	private static final Logger log = LoggerFactory.getLogger(MakeTimelines.class);
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = JsonMapper.builder()
+			// Need deterministic map key ordering, otherwise all the translation files will change every time you
+			// run the script, despite the actual substance being the same.
+			.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
+			.build();
 
 	private MakeTimelines() {
 	}
@@ -57,8 +65,10 @@ public final class MakeTimelines {
 		Path translationsDir = timelineBasePath.resolve("timeline").resolve("translations");
 		translationsDir.toFile().mkdirs();
 		try {
+			// Go to hosted Cactbot
 			driver.get("https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=wss://127.0.0.1:10501");
 
+			// Dump the contents of the webpack
 			Map<?, ?> out = (Map<?, ?>) driver.executeScript("""
 					return await new Promise((resolve) => {
 					    const id = 'fakeId' + Math.random();
@@ -69,6 +79,7 @@ public final class MakeTimelines {
 					""");
 
 			out.forEach((file, content) -> {
+				// Ignore flat files and other junk
 				if (content instanceof Map contentMap) {
 					Object timelineFileRaw = contentMap.get("timelineFile");
 					if (timelineFileRaw == null) {
@@ -77,8 +88,10 @@ public final class MakeTimelines {
 					String timelineFileName = timelineFileRaw.toString();
 					Object zoneIdRaw = contentMap.get("zoneId");
 					Long zoneId = (Long) zoneIdRaw;
+					// Get the timeline file name
 					String fullTimelineFilePath = stripFileName(file.toString()) + timelineFileName;
 					zoneToFile.put(zoneId, timelineFileName);
+					// Get the actual timeline file contents
 					String fileContents = out.get(fullTimelineFilePath).toString().replaceAll("\r\n", "\n");
 					try {
 						Files.writeString(timelineBasePath.resolve("timeline").resolve(timelineFileName), fileContents);
@@ -86,10 +99,7 @@ public final class MakeTimelines {
 					catch (IOException e) {
 						throw new RuntimeException("Error processing timeline for '" + file + '\'', e);
 					}
-					/*
-						TODO: timeline translations
-						Should be able to grab the "timelineReplace" array, which has one object for each language
-					 */
+					// Get the timeline translations
 					Object timelineReplace = contentMap.get("timelineReplace");
 					Map<String, LanguageReplacements> allLangs = new LinkedHashMap<>();
 					if (timelineReplace instanceof List timelineReplaceList) {
@@ -102,8 +112,8 @@ public final class MakeTimelines {
 								if (locale != null) {
 									@SuppressWarnings("unchecked")
 									LanguageReplacements reps = LanguageReplacements.fromRaw(
-											replaceSync instanceof Map rsm ? rsm : Collections.emptyMap(),
-											replaceText instanceof Map rtm ? rtm : Collections.emptyMap()
+											replaceSync instanceof Map rsm ? ordered(rsm) : Collections.<String, String>emptyMap(),
+											replaceText instanceof Map rtm ? ordered(rtm) : Collections.<String, String>emptyMap()
 									);
 									allLangs.put(locale.toString(), reps);
 								}
@@ -114,6 +124,7 @@ public final class MakeTimelines {
 						}
 					}
 					TimelineReplacements tr = new TimelineReplacements(allLangs);
+					// Write them
 					try {
 						mapper.writeValue(translationsDir.resolve(timelineFileName + ".json").toFile(), tr);
 					}
@@ -133,5 +144,7 @@ public final class MakeTimelines {
 		}
 	}
 
-
+	private static <K extends Comparable<K>, V> Map<K, V> ordered(Map<K, V> map) {
+		return map.entrySet().stream().sorted(Map.Entry.comparingByKey()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+	}
 }
