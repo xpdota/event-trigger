@@ -25,7 +25,19 @@ public enum KnownDuty implements Duty {
 	Dragonsong("Dragonsong", 0x3C8, Expansion.EW, DutyType.ULTIMATE),
 	ASS_Criterion("Sil'dihn Subterrane (Criterion)", 0x433, Expansion.EW, DutyType.OTHER),
 	ASS_Savage("Sil'dihn Subterrane (Savage)", 0x434, Expansion.EW, DutyType.OTHER),
-	OMEGA_PROTOCOL("Omega Protocol", 0x0, Expansion.EW, DutyType.ULTIMATE)
+	OMEGA_PROTOCOL("Omega Protocol", 0x0, Expansion.EW, DutyType.ULTIMATE),
+	O1S("O1S", 752, Expansion.SB, DutyType.SAVAGE_RAID),
+	O2S("O2S", 753, Expansion.SB, DutyType.SAVAGE_RAID),
+	O3S("O3S", 754, Expansion.SB, DutyType.SAVAGE_RAID),
+	O4S("O4S", 755, Expansion.SB, DutyType.SAVAGE_RAID),
+	O5S("O5S", 695, Expansion.SB, DutyType.SAVAGE_RAID),
+	O6S("O6S", 696, Expansion.SB, DutyType.SAVAGE_RAID),
+	O7S("O7S", 697, Expansion.SB, DutyType.SAVAGE_RAID),
+	O8S("O8S", 698, Expansion.SB, DutyType.SAVAGE_RAID),
+	O9S("O9S", 802, Expansion.SB, DutyType.SAVAGE_RAID),
+	O10S("O10S", 803, Expansion.SB, DutyType.SAVAGE_RAID),
+	O11S("O11S", 804, Expansion.SB, DutyType.SAVAGE_RAID),
+	O12S("O12S", 805, Expansion.SB, DutyType.SAVAGE_RAID)
 	;
 
 	private final String name;
