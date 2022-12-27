@@ -82,7 +82,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 		ActionDescription<?, ?> desc = ChooserDialog.chooserReturnItem(SwingUtilities.getWindowAncestor(this), table);
 		if (desc != null) {
 			Action<?> newInst = desc.newInst();
-			inner.add(new ActionPanel<>(newInst));
+			inner.add(newInst);
 			revalidate();
 		}
 	}

@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.callouts;
 
-import gg.xp.xivdata.data.duties.Duty;
 import gg.xp.xivdata.data.duties.KnownDuty;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -59,5 +58,9 @@ public class CalloutGroup {
 		else {
 			return ann.duty();
 		}
+	}
+
+	public void resetAllBooleans() {
+		callouts.forEach(ModifiedCalloutHandle::resetAllBooleans);
 	}
 }

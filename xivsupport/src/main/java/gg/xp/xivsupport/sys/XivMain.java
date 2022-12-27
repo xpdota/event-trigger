@@ -17,6 +17,7 @@ import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
+import gg.xp.xivsupport.persistence.UserDirPropsPersistenceProvider;
 import groovy.lang.GroovyShell;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
@@ -131,10 +132,10 @@ public final class XivMain {
 		MutablePicoContainer pico = requiredComponents();
 		pico.addComponent(ActWsLogSource.class);
 		if (isRealLauncher()) {
-			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent"));
+			pico.addComponent(UserDirPropsPersistenceProvider.inUserDataFolder("triggevent"));
 		}
 		else {
-			pico.addComponent(PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing"));
+			pico.addComponent(UserDirPropsPersistenceProvider.inUserDataFolder("triggevent-testing"));
 		}
 
 		new Thread(() -> {
@@ -166,15 +167,15 @@ public final class XivMain {
 
 	public static PersistenceProvider persistenceProvider() {
 		if (isRealLauncher()) {
-			return PropertiesFilePersistenceProvider.inUserDataFolder("triggevent", true);
+			return UserDirPropsPersistenceProvider.inUserDataFolder("triggevent", true);
 		}
 		else {
-			return PropertiesFilePersistenceProvider.inUserDataFolder("triggevent-testing", true);
+			return UserDirPropsPersistenceProvider.inUserDataFolder("triggevent-testing", true);
 		}
 	}
 
 	public static PersistenceProvider importPersProvider() {
-		return PropertiesFilePersistenceProvider.inUserDataFolder("imports", false);
+		return UserDirPropsPersistenceProvider.inUserDataFolder("imports", false);
 	}
 
 }

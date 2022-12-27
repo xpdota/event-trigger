@@ -247,10 +247,10 @@ public class CustomPartyConfig implements PluginTab {
 					continue;
 				}
 				Component component = rplc.getComponent();
+				dragArea.add(component);
 				Point adjustedLoc = dragArea.logicalToScreen(new Point(item.x, item.y));
 				component.setBounds(adjustedLoc.x, adjustedLoc.y, item.width, item.height);
 				rplc.refresh(dummyCharacter);
-				dragArea.add(component);
 				componentToSpecMapping.put(component, item);
 				specToComponentMapping.put(item, component);
 			}

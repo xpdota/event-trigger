@@ -15,16 +15,46 @@ public class CalloutHelper extends JPanel {
 
 	private final List<JCheckBox> showHides = new ArrayList<>();
 	private final List<JCheckBox> topLevel = new ArrayList<>();
+	private final List<CalloutGroup> groups;
 
 	public CalloutHelper(List<CalloutGroup> groups, SoundFilesManager soundMgr, SoundFileTab sft) {
 //		enableTts.addActionListener(l -> this.repaint());
 //		enableOverlay.addActionListener(l -> this.repaint());
 		this.setLayout(new GridBagLayout());
+		this.groups = new ArrayList<>(groups);
 		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.BOTH;
+		c.fill = GridBagConstraints.NONE;
 		c.anchor = GridBagConstraints.LINE_START;
 		c.ipadx = 5;
-		c.gridy = 3;
+		c.gridy = 0;
+		c.gridwidth = GridBagConstraints.REMAINDER;
+		JPanel settingsPanel = new JPanel();
+		JButton expandAll = new JButton("Expand All");
+		expandAll.addActionListener(l -> setAllShowHide(true));
+		settingsPanel.add(expandAll);
+
+		JButton collapseAll = new JButton("Collapse All");
+		collapseAll.addActionListener(l -> setAllShowHide(false));
+		settingsPanel.add(collapseAll);
+
+		JButton enableAll = new JButton("Enable All Groups");
+		enableAll.addActionListener(l -> setAllEnableDisable(true));
+		settingsPanel.add(enableAll);
+
+		JButton disableAll = new JButton("Disable All Groups");
+		disableAll.addActionListener(l -> setAllEnableDisable(false));
+		settingsPanel.add(disableAll);
+
+		JButton resetAll = new JButton("Reset Enabled/Disabled Status");
+		resetAll.addActionListener(l -> askThenReset());
+		settingsPanel.add(resetAll);
+
+
+		add(settingsPanel, c);
+		c.gridy++;
+		c.fill = GridBagConstraints.BOTH;
+
+
 		groups.forEach((group) -> {
 			List<ModifiedCalloutHandle> callouts = group.getCallouts();
 			c.gridx = 0;
@@ -101,6 +131,19 @@ public class CalloutHelper extends JPanel {
 		});
 		c.weighty = 1;
 		this.add(new JPanel(), c);
+	}
+
+	private void askThenReset() {
+		SwingUtilities.invokeLater(() -> {
+			int result = JOptionPane.showConfirmDialog(SwingUtilities.getWindowAncestor(this), "Are you sure you want to reset all enabled/disabled settings on this page? This cannot be reverted!", "Reset?", JOptionPane.YES_NO_OPTION);
+			if (result == JOptionPane.OK_OPTION) {
+				groups.forEach(CalloutGroup::resetAllBooleans);
+			}
+			SwingUtilities.invokeLater(() -> {
+				updateUI();
+				repaint();
+			});
+		});
 	}
 
 	public void setAllShowHide(boolean showHide) {

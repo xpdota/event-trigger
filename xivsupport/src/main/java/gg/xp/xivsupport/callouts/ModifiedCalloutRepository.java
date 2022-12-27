@@ -24,13 +24,15 @@ public class ModifiedCalloutRepository {
 	private final PicoContainer container;
 	private final PersistenceProvider persistence;
 	private final BooleanSetting enableTts;
+	private final CalloutDefaultsRepository globalDefaults;
 	private final BooleanSetting enableOverlay;
 
-	public ModifiedCalloutRepository(PicoContainer container, PersistenceProvider persistence, FlyingTextOverlay overlay) {
+	public ModifiedCalloutRepository(PicoContainer container, PersistenceProvider persistence, FlyingTextOverlay overlay, CalloutDefaultsRepository defaults) {
 		this.container = container;
 		this.persistence = persistence;
 		enableOverlay = overlay.getEnabled();
 		enableTts = new BooleanSetting(persistence, "enable-tts-callouts", true);
+		this.globalDefaults = defaults;
 	}
 
 	private final List<CalloutGroup> allCallouts = new ArrayList<>();
@@ -65,7 +67,7 @@ public class ModifiedCalloutRepository {
 				catch (IllegalAccessException e) {
 					throw new RuntimeException(e);
 				}
-				ModifiedCalloutHandle modified = ModifiedCalloutHandle.installHandle(original, persistence, fullPropStub, enableTts, enableOverlay);
+				ModifiedCalloutHandle modified = ModifiedCalloutHandle.installHandle(original, persistence, fullPropStub, enableTts, enableOverlay, globalDefaults.getGlobalDefaults());
 				callouts.add(modified);
 			});
 			CalloutGroup cg;

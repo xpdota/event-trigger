@@ -32,6 +32,7 @@ import gg.xp.xivsupport.timelines.TimelineInfo;
 import gg.xp.xivsupport.timelines.TimelineManager;
 import gg.xp.xivsupport.timelines.TimelineOverlay;
 import gg.xp.xivsupport.timelines.TimelineProcessor;
+import gg.xp.xivsupport.timelines.TranslatedTextFileEntry;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,15 +87,29 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		int timeColPrefWidth = 80;
 		timelineChooserModel = CustomTableModel.builder(() -> TimelineManager.getTimelines().values()
 						.stream().sorted(Comparator.comparing(TimelineInfo::zoneId)).toList())
-				.addColumn(new CustomColumn<>("Zone", TimelineInfo::zoneId, col -> {
-					col.setMinWidth(50);
-					col.setMaxWidth(50);
+				.addColumn(new CustomColumn<>("Zone/Timeline", ti -> {
+					StringBuilder builder = new StringBuilder();
+					int zid = (int) ti.zoneId();
+					builder.append(zid).append(": ");
+					String name = ZoneLibrary.capitalizedNameForZone(zid);
+					if (name == null) {
+						builder.append('?');
+					}
+					else {
+						builder.append(name);
+					}
+					builder.append(" (").append(ti.filename()).append(')');
+					return builder.toString();
 				}))
-				.addColumn(new CustomColumn<>("File", TimelineInfo::filename, col -> {
-					col.setMinWidth(50);
-					col.setMaxWidth(300);
-					col.setPreferredWidth(100);
-				}))
+//				.addColumn(new CustomColumn<>("Zone", TimelineInfo::zoneId, col -> {
+//					col.setMinWidth(50);
+//					col.setMaxWidth(50);
+//				}))
+//				.addColumn(new CustomColumn<>("File", TimelineInfo::filename, col -> {
+//					col.setMinWidth(50);
+//					col.setMaxWidth(300);
+//					col.setPreferredWidth(100);
+//				}))
 				.build();
 
 		timelineModel = CustomTableModel.builder(() -> {
@@ -618,6 +633,10 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					text = "O";
 					tooltip = "Override of builtin timeline entry";
 				}
+			}
+			else if (value instanceof TranslatedTextFileEntry) {
+				text = "T";
+				tooltip = "Builtin timeline entry with translations applied";
 			}
 			else if (value instanceof TimelineEntry) {
 				text = "B";

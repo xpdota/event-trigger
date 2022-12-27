@@ -239,7 +239,7 @@ public class MakeEverything {
 		// ACTIONS/ABILITIES
 		{
 			ActionLibrary.readAltCsv(maker.getTargetFile("xiv", "actions", "Action.csv"));
-			Map<Long, ActionInfo> actionCsvMap = ActionLibrary.getAll();
+			Map<Integer, ActionInfo> actionCsvMap = ActionLibrary.getAll();
 			List<Long> actionIcons;
 			{
 				actionIcons = actionCsvMap.values().stream().mapToLong(ActionInfo::iconId).distinct().boxed().toList();

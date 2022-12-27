@@ -17,6 +17,10 @@
             <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>cd-tracker</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

@@ -8,7 +8,9 @@ import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
+import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,7 +59,11 @@ public final class StatusTable {
 		ChooserDialog.showChooser(frame, table, callback);
 	}
 
-	public static StatusEffectInfo pickItem(Window window) {
+	public static List<StatusEffectInfo> pickItems(Window window) {
+		return ChooserDialog.chooserReturnItems(window, table());
+	}
+
+	public static @Nullable StatusEffectInfo pickItem(Window window) {
 		return ChooserDialog.chooserReturnItem(window, table());
 	}
 }

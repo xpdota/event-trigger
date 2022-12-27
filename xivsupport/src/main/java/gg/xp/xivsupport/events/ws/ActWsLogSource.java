@@ -154,6 +154,7 @@ public class ActWsLogSource implements EventSource {
 		this.allowTts = new BooleanSetting(pers, "actws-allow-tts", true);
 		this.pls = pls;
 		this.client = new ActWsClientInternal();
+		// TODO: drop this
 		stateStore.putCustom(WsState.class, state);
 	}
 
@@ -185,6 +186,17 @@ public class ActWsLogSource implements EventSource {
 			throw new RuntimeException(e);
 		}
 	}
+
+	@HandleEvents
+	public void requestLanguage(EventContext context, ActWsConnectedEvent event) {
+		try {
+			client.send(mapper.writeValueAsString(Map.of("call", "getLanguage", "rseq", "getLanguage")));
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 
 	@LiveOnly
 	@HandleEvents

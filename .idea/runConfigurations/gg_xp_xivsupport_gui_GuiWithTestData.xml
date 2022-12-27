@@ -1,7 +1,10 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="gg.xp.xivsupport.gui.GuiWithTestData" type="Application" factoryName="Application" nameIsGenerated="true">
+    <envs>
+      <env name="TRIGGEVENT_TESTING" value="true" />
+    </envs>
     <option name="MAIN_CLASS_NAME" value="gg.xp.xivsupport.gui.GuiWithTestData" />
-    <module name="xivsupport" />
+    <module name="launcher" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="gg.xp.xivsupport.gui.imprt.*" />

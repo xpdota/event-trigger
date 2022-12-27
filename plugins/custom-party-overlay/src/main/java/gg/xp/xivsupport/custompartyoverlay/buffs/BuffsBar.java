@@ -44,6 +44,7 @@ public class BuffsBar extends Component {
 	private int xPadding;
 	private boolean enableTimers = true;
 	private boolean enableShadows = true;
+	private boolean rtl;
 
 	private record FontShapeKey(String string, Font font) {
 
@@ -114,35 +115,70 @@ public class BuffsBar extends Component {
 		Rectangle bounds = getBounds();
 		int cellWidth = bounds.width;
 		AffineTransform transform = g.getTransform();
-		int curX = 5;
-		transform.translate(curX, 0);
-		int buffHeight = iconSize();
-		buffWidth = (int) Math.ceil(buffHeight * 0.75);
-		for (Tracker tracker : buffs) {
-			g.setTransform(transform);
-			ScaledImageComponent component = tracker.component;
-			if (component == null) {
-				continue;
-			}
-			int remainingX = cellWidth - curX;
-			if (buffWidth > remainingX) {
-				break;
-			}
-			Image textImage = tracker.image;
-			component.paint(g, buffHeight);
-			if (textImage != null) {
+		if (rtl) {
+			int buffHeight = iconSize();
+			buffWidth = (int) Math.ceil(buffHeight * 0.75);
+			int curX = cellWidth - 5 - buffWidth;
+			transform.translate(curX, 0);
+			for (Tracker tracker : buffs) {
+				g.setTransform(transform);
+				ScaledImageComponent component = tracker.component;
+				if (component == null) {
+					continue;
+				}
+				if (curX < 0) {
+					break;
+				}
+				Image textImage = tracker.image;
+				component.paint(g, buffHeight);
+				if (textImage != null) {
 //						g.drawString(text, 0, 0);
-				AffineTransform shapeTrans = new AffineTransform(transform);
-				shapeTrans.translate(-5.0, 0);
-				shapeTrans.scale(1.0f / shapeTrans.getScaleX(), 1.0f / shapeTrans.getScaleY());
+					AffineTransform shapeTrans = new AffineTransform(transform);
+					shapeTrans.translate(-5.0, 0);
+					shapeTrans.scale(1.0f / shapeTrans.getScaleX(), 1.0f / shapeTrans.getScaleY());
 //						shapeTrans.translate(buffWidth / 2 - (tracker.textWidth / 2), cellHeight - tracker.yPad);
-				g.setTransform(shapeTrans);
-				g.drawImage(textImage, 0, 0, null);
-			}
-			int delta = buffWidth + xPadding;
-			transform.translate(delta, 0);
+					g.setTransform(shapeTrans);
+					g.drawImage(textImage, 0, 0, null);
+				}
+				int delta = buffWidth + xPadding;
+				transform.translate(-delta, 0);
 //			g.translate(delta, 0);
-			curX += delta;
+				curX -= delta;
+			}
+
+		}
+		else {
+
+			int curX = 5;
+			transform.translate(curX, 0);
+			int buffHeight = iconSize();
+			buffWidth = (int) Math.ceil(buffHeight * 0.75);
+			for (Tracker tracker : buffs) {
+				g.setTransform(transform);
+				ScaledImageComponent component = tracker.component;
+				if (component == null) {
+					continue;
+				}
+				int remainingX = cellWidth - curX;
+				if (buffWidth > remainingX) {
+					break;
+				}
+				Image textImage = tracker.image;
+				component.paint(g, buffHeight);
+				if (textImage != null) {
+//						g.drawString(text, 0, 0);
+					AffineTransform shapeTrans = new AffineTransform(transform);
+					shapeTrans.translate(-5.0, 0);
+					shapeTrans.scale(1.0f / shapeTrans.getScaleX(), 1.0f / shapeTrans.getScaleY());
+//						shapeTrans.translate(buffWidth / 2 - (tracker.textWidth / 2), cellHeight - tracker.yPad);
+					g.setTransform(shapeTrans);
+					g.drawImage(textImage, 0, 0, null);
+				}
+				int delta = buffWidth + xPadding;
+				transform.translate(delta, 0);
+//			g.translate(delta, 0);
+				curX += delta;
+			}
 		}
 
 	}
@@ -322,5 +358,9 @@ public class BuffsBar extends Component {
 
 	public void setXPadding(int xPadding) {
 		this.xPadding = xPadding;
+	}
+
+	public void setRtl(boolean rtl) {
+		this.rtl = rtl;
 	}
 }

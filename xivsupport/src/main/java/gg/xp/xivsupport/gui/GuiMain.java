@@ -241,7 +241,8 @@ public class GuiMain {
 		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("News");
 		// TODO: move this external somewhere
 		panel.add(new ReadOnlyText("""
-				New: Press Ctrl-G, then type the name of a tab, plugin, or duty to navigate directly to it.
+				New: You can drag-and-drop to rearrange easy trigger actions. There is also a "Wait" action if you need something to be delayed.
+				Press Ctrl-G, then type the name of a tab, plugin, or duty to navigate directly to it.
 				Triggers for Another Sil'dihn Subterrane Criterion and Savage are now available!"""
 		), BorderLayout.WEST);
 		return panel;

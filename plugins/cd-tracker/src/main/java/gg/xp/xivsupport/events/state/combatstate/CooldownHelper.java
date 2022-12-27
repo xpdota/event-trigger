@@ -10,6 +10,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CdTrackingKey;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
@@ -76,5 +77,12 @@ public class CooldownHelper {
 
 	public @Nullable CooldownStatus getPersonalCd(Cooldown cd) {
 		return getCooldowns(XivCombatant::isThePlayer, cd::equals).stream().findFirst().orElse(null);
+	}
+
+	public @Nullable CooldownStatus getCdStatusForPlayer(XivPlayerCharacter player, ExtendedCooldownDescriptor ecd) {
+		return getCooldowns(source -> source.equals(player), cd -> cd.equals(ecd))
+				.stream()
+				.findFirst()
+				.orElse(null);
 	}
 }

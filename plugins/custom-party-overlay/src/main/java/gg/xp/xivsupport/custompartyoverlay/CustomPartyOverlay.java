@@ -43,6 +43,19 @@ public class CustomPartyOverlay extends XivOverlay {
 		this.elements = CustomJsonListSetting.builder(persistence, new TypeReference<CustomOverlayComponentSpec>() {
 				}, "custom-party-overlay.components", "custom-party-overlay.failures")
 				.withDefaultProvider(this::getDefaults).build();
+		List<CustomOverlayComponentSpec> existingItems = elements.getItems();
+		List<CustomOverlayComponentSpec> newItems = new ArrayList<>();
+		for (CustomPartyOverlayComponentType type : CustomPartyOverlayComponentType.values()) {
+			if (!type.shouldBePresent()) {
+				continue;
+			}
+			if (existingItems.stream().noneMatch(spec -> spec.componentType == type)) {
+				getDefaults().stream().filter(defaultItem -> defaultItem.componentType == type)
+						.findFirst()
+						.ifPresent(newItems::add);
+			}
+		}
+		newItems.forEach(elements::addItem);
 		this.yOffset = new IntSetting(persistence, "custom-party-overlay.y-offset", 39, 0, 1000);
 		this.yOffset.addListener(this::placeComponents);
 		this.elements.addListener(this::placeComponents);
@@ -104,17 +117,25 @@ public class CustomPartyOverlay extends XivOverlay {
 						continue;
 					}
 					Component component = ref.getComponent();
+					panel.add(component);
 					component.setBounds(spec.x, spec.y + offset, spec.width, spec.height);
 					maxX = Math.max(maxX, spec.x + spec.width);
 					maxY = Math.max(maxY, spec.y + offset + spec.height);
-					panel.add(component);
 					list.add(ref);
 					log.trace("Added: {} -> {} -> {}", i, spec.componentType, component);
 				}
 			}
 			panel.setPreferredSize(new Dimension(maxX + 10, maxY + 10));
 			this.refreshables = refreshables;
+			try {
+				panel.validate();
+			}
+			catch (Throwable t) {
+				log.error("Error validating!", t);
+			}
 			repackSize();
+			SwingUtilities.invokeLater(() -> {
+			});
 		});
 	}
 
@@ -158,6 +179,16 @@ public class CustomPartyOverlay extends XivOverlay {
 		}
 		{
 			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
+			comp.x = 50;
+			comp.y = 20;
+			comp.width = 55;
+			comp.height = 20;
+			comp.componentType = CustomPartyOverlayComponentType.CUSTOM_BUFFS;
+			comp.enabled = false;
+			specs.add(comp);
+		}
+		{
+			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
 			comp.x = 110;
 			comp.y = 20;
 			comp.width = 120;
@@ -172,6 +203,16 @@ public class CustomPartyOverlay extends XivOverlay {
 			comp.width = 60;
 			comp.height = 14;
 			comp.componentType = CustomPartyOverlayComponentType.MP_BAR;
+			specs.add(comp);
+		}
+		{
+			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
+			comp.x = 0;
+			comp.y = 0;
+			comp.width = 120;
+			comp.height = 40;
+			comp.enabled = false;
+			comp.componentType = CustomPartyOverlayComponentType.COOLDOWNS;
 			specs.add(comp);
 		}
 		return specs;
