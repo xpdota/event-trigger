@@ -87,4 +87,14 @@ public final class ZoneLibrary {
 		ZoneInfo value = fileValues.get(id);
 		return value == null ? null : value.getCapitalizedName();
 	}
+
+	public static ZoneInfo infoForZoneOrUnknown(int id) {
+		ZoneInfo zoneInfo = infoForZone(id);
+		if (zoneInfo == null) {
+			return new ZoneInfo(id, "Unknown", null);
+		}
+		else {
+			return zoneInfo;
+		}
+	}
 }

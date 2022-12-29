@@ -37,9 +37,13 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.AutoMarkTargetAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.ClearAllMarksAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.ConditionalAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.ConditionalActionEditor;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.GroovyActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.SoundActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityNameFilter;
@@ -79,6 +83,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerMigrationHelper;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasEventType;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.groovy.GroovyManager;
@@ -228,14 +233,9 @@ public final class EasyTriggers {
 		save();
 	}
 
-	public void setTriggers(List<EasyTrigger<?>> triggers) {
-		this.triggers = new ArrayList<>(triggers);
-		save();
-	}
-
 	// Be sure to add new types to EasyTriggersTest
 	// TODO: might be nice to wire some of the "single value replacement" logic from ModifiableCallout into here, to skip the need for .name on everything
-	private final List<EventDescription<?>> eventTypes = List.of(
+	private final List<EventDescription<?>> eventTypes = new ArrayList<>(List.of(
 			new EventDescriptionImpl<>(AbilityCastStart.class,
 					"An ability has started casting. Corresponds to ACT 20 lines.",
 					"{event.ability}",
@@ -314,15 +314,16 @@ public final class EasyTriggers {
 					"{event.name} says {event.line}",
 					"Chat Line {event.name}: {event.line}",
 					List.of(ChatLineRegexFilter::new))
-	);
+	));
 
 
-	private Component generic(Object object, EasyTrigger<?> trigger) {
+	// TODO: what should the actual type be
+	private Component generic(Object object, Object trigger) {
 		return new GenericFieldEditor(object, pico);
 	}
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
-	private final List<ConditionDescription<?, ?>> conditions = List.of(
+	private final List<ConditionDescription<?, ?>> conditions = new ArrayList<>(List.of(
 			new ConditionDescription<>(RefireFilter.class, Event.class, "Refire Suppression", RefireFilter::new, this::generic),
 			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, this::generic),
 			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, this::generic),
@@ -347,21 +348,26 @@ public final class EasyTriggers {
 			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, this::generic),
 			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, this::generic),
 			new ConditionDescription<>(HitSeverityFilter.class, HasEffects.class, "Hit Severity (Crit/Direct Hit)", HitSeverityFilter::new, this::generic),
-			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, (EasyTrigger<Event>) b)),
+			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, b)),
 			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic)
-	);
+	));
 
-	private final List<ActionDescription<?, ?>> actions = List.of(
+	private final List<ActionDescription<?, ?>> actions = new ArrayList<>(List.of(
 			new ActionDescription<>(CalloutAction.class, Event.class, "Basic TTS/Text Callout", CalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
 			new ActionDescription<>(DurationBasedCalloutAction.class, HasDuration.class, "Duration-Based TTS/Text Callout", DurationBasedCalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
 			new ActionDescription<>(AutoMarkTargetAction.class, HasTargetEntity.class, "Mark The Target", () -> new AutoMarkTargetAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(ClearAllMarksAction.class, Event.class, "Clear All Marks", () -> new ClearAllMarksAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(WaitAction.class, BaseEvent.class, "Wait a fixed time", WaitAction::new, this::generic),
+			new ActionDescription<>(GroovyAction.class, Event.class, "Custom script action", () -> new GroovyAction(inject(GroovyManager.class)), (action, trigger) -> new GroovyActionEditor<>(action, trigger)),
+//			(ActionDescription<ConditionalAction<BaseEvent>, BaseEvent>) new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)),
 			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action))
-	);
+	));
+	{
+		registerActionType(new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this,  action)));
+	}
 
 	public List<EventDescription<?>> getEventDescriptions() {
-		return eventTypes;
+		return Collections.unmodifiableList(eventTypes);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -370,7 +376,7 @@ public final class EasyTriggers {
 	}
 
 	public List<ConditionDescription<?, ?>> getConditions() {
-		return conditions;
+		return Collections.unmodifiableList(conditions);
 	}
 
 	public <X> List<ConditionDescription<?, ?>> getConditionsApplicableTo(HasMutableConditions<X> trigger) {
@@ -378,11 +384,23 @@ public final class EasyTriggers {
 	}
 
 	public List<ActionDescription<?, ?>> getActions() {
-		return actions;
+		return Collections.unmodifiableList(actions);
 	}
 
 	public <X> List<ActionDescription<?, ?>> getActionsApplicableTo(HasMutableActions<X> trigger) {
 		return actions.stream().filter(adesc -> adesc.appliesTo(trigger.classForActions())).toList();
+	}
+
+	public void registerEventType(EventDescription<?> eventDescription) {
+		eventTypes.add(eventDescription);
+	}
+
+	public void registerActionType(ActionDescription<?, ?> actionDescription) {
+		actions.add(actionDescription);
+	}
+
+	public void registerConditionType(ConditionDescription<?, ?> conditionDescription) {
+		conditions.add(conditionDescription);
 	}
 
 

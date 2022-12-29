@@ -30,7 +30,7 @@ public class ProcessedCalloutEvent extends BaseCalloutEvent {
 
 	@Override
 	public @Nullable String getVisualText() {
-		return visualText.get();
+		return visualText == null ? null : visualText.get();
 	}
 
 	@Override

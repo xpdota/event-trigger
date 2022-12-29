@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
@@ -64,10 +65,13 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		JButton newButton = new JButton("New");
 		add(newButton);
+		add(Box.createHorizontalGlue());
 		inner = new ActionsPanelInner();
-		add(inner);
 		newButton.addActionListener(l -> addNewAction());
 		inner.initialize();
+//		inner.setMinimumSize(new Dimension(100, 400));
+		add(inner);
+		revalidate();
 	}
 
 	private void addNewAction() {
@@ -93,7 +97,33 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 
 		{
 			setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+			setMaximumSize(new Dimension(32768, 32768));
+//			setMinimumSize(new Dimension(50, 50));
 		}
+
+		@Override
+		public Dimension getMinimumSize() {
+			if (getComponentCount() == 0) {
+//				return super.getMinimumSize();
+				return new Dimension(200, 26);
+			}
+			else {
+				return super.getMinimumSize();
+			}
+		}
+
+		@Override
+		public Dimension getPreferredSize() {
+			if (getComponentCount() == 0) {
+				return new Dimension(200, 26);
+//				return super.getPreferredSize();
+			}
+			else {
+				return super.getPreferredSize();
+			}
+		}
+
+
 
 		@Override
 		public int indexFor(Point point) {
@@ -128,7 +158,11 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 			super.paint(g);
 			int index = previewIndex;
 			Component[] components = getComponents();
-			if (index >= 0 && index < components.length) {
+			if (index == 0) {
+				g.setColor(Color.RED);
+				g.fillRect(0, 0, this.getWidth(), 2);
+			}
+			else if (index >= 0 && index < components.length) {
 				Component comp = components[index];
 				g.setColor(Color.RED);
 				g.fillRect(comp.getX(), comp.getY(), comp.getWidth(), 2);
@@ -143,6 +177,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 
 		public void initialize() {
 			trigger.getActions().forEach(this::addPanel);
+//			setBorder(new LineBorder(Color.PINK, 5));
 		}
 
 		public void add(Action<?> action) {
@@ -170,6 +205,8 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 						trigger.removeAction((Action<? super X>) action);
 						remove(component);
 						invalidate();
+						SwingUtilities.invokeLater(this::revalidate);
+						SwingUtilities.invokeLater(this::repaint);
 						return;
 					}
 				}
@@ -195,6 +232,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 				addAt(action, newIndex);
 			}
 			invalidate();
+			SwingUtilities.invokeLater(this::repaint);
 
 		}
 	}
@@ -341,7 +379,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 					component = new JLabel("Error: cannot find component");
 				}
 				else {
-					component = desc.guiprovider().apply(action, (EasyTrigger<? super Y>) trigger);
+					component = desc.guiprovider().apply(action, trigger);
 					if (component == null) {
 						component = new JLabel("Error: null component");
 					}
@@ -379,6 +417,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 		}
 		else {
 			addtp.addt().doDrop(addtp.index, action);
+			inner.remove(action);
 		}
 		save();
 	}
