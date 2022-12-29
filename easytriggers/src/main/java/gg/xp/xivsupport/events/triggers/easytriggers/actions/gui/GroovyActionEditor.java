@@ -1,34 +1,37 @@
-package gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui;
+package gg.xp.xivsupport.events.triggers.easytriggers.actions.gui;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasEventType;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerCreationContext;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 
 import javax.swing.*;
 import java.util.function.Function;
 
-public class GroovyFilterEditor<X extends Event> extends JPanel {
+public class GroovyActionEditor<X extends Event> extends JPanel {
 	private final TextFieldWithValidation<String> textBox;
 	private final JCheckBox checkBox;
 
-	public GroovyFilterEditor(GroovyEventFilter filter, HasEventType trigger) {
+	public GroovyActionEditor(GroovyAction action, HasEventType trigger) {
 		setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
-		filter.eventType = (Class<? extends Event>) trigger.getEventType();
+		action.eventType = (Class<? extends Event>) trigger.getEventType();
 		textBox = new TextFieldWithValidation<>(Function.identity(), groovyScript -> {
 			try {
-				filter.setGroovyScript(groovyScript);
+				action.setGroovyScript(groovyScript);
 			}
 			catch (Throwable t) {
 				throw new ValidationError(t.getMessage());
 			}
 
-		}, filter::getGroovyScript);
-		checkBox = new JCheckBox("Strict", filter.isStrict());
+		}, action::getGroovyScript);
+		checkBox = new JCheckBox("Strict", action.isStrict());
 		checkBox.addActionListener(l -> {
-			filter.setStrict(checkBox.isSelected());
+			action.setStrict(checkBox.isSelected());
 		});
 		add(checkBox);
 		add(Box.createHorizontalStrut(2));

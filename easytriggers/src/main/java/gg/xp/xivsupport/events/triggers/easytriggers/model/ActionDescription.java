@@ -9,7 +9,7 @@ public record ActionDescription<X extends Action<Y>, Y>(
 		Class<Y> appliesTo,
 		String description,
 		Supplier<X> instanceCreator,
-		BiFunction<X, EasyTrigger<? super Y>, Component> guiprovider
+		BiFunction<X, HasMutableActions<?>, Component> guiprovider
 ) {
 	public boolean appliesTo(Class<?> eventType) {
 		return appliesTo.isAssignableFrom(eventType);
