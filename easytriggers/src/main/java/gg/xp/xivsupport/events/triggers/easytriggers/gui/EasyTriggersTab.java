@@ -184,6 +184,7 @@ public class EasyTriggersTab implements PluginTab {
 			JScrollPane detailsScroller = new JScrollPane(detailsInner);
 			detailsScroller.setBorder(null);
 			detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
+			detailsScroller.getVerticalScrollBar().setUnitIncrement(20);
 			TitleBorderFullsizePanel detailsOuter = new TitleBorderFullsizePanel("Trigger Details");
 			detailsOuter.setLayout(new BorderLayout());
 			detailsOuter.add(detailsScroller, BorderLayout.CENTER);

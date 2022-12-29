@@ -4,6 +4,9 @@ import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasEventType;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerCreationContext;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 
@@ -11,12 +14,12 @@ import javax.swing.*;
 import java.util.function.Function;
 
 public class GroovyActionEditor<X extends Event> extends JPanel {
-	private TextFieldWithValidation<String> textBox;
+	private final TextFieldWithValidation<String> textBox;
 	private final JCheckBox checkBox;
 
-	public GroovyActionEditor(GroovyAction action, EasyTrigger<X> trigger) {
+	public GroovyActionEditor(GroovyAction action, HasEventType trigger) {
 		setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
-		action.eventType = trigger.getEventType();
+		action.eventType = (Class<? extends Event>) trigger.getEventType();
 		textBox = new TextFieldWithValidation<>(Function.identity(), groovyScript -> {
 			try {
 				action.setGroovyScript(groovyScript);

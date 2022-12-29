@@ -103,7 +103,7 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 					component = new JLabel("Error: cannot find component");
 				}
 				else {
-					component = desc.guiprovider().apply(condition, (EasyTrigger<? super Y>) trigger);
+					component = desc.guiprovider().apply(condition, trigger);
 					if (component == null) {
 						component = new JLabel("Error: null component");
 					}
