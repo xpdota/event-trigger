@@ -2,7 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
 import java.util.List;
 
-public interface HasMutableActions<X> {
+public interface HasMutableActions<X> extends HasEventType {
 
 	List<Action<? super X>> getActions();
 
@@ -15,4 +15,9 @@ public interface HasMutableActions<X> {
 	void removeAction(Action<? super X> action);
 
 	Class<X> classForActions();
+
+	@Override
+	default Class<?> getEventType() {
+		return classForActions();
+	}
 }

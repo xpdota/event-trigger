@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableActions<X> {
@@ -53,7 +54,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 			return;
 		}
 		X typedEvent = eventType.cast(event);
-		ctx = new EasyTriggerContext(context);
+		ctx = new EasyTriggerContext(context, this);
 		if (conditions.stream().allMatch(cond -> cond.test(ctx, typedEvent))) {
 			hits++;
 			sq.feed(context, (BaseEvent) event);
@@ -73,35 +74,16 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 				// The start condition is handled externally
 				se -> true,
 				(e1, s) -> {
-					for (Action<? super X> action : actions) {
-
-						log.info("Action: {}", action);
-						ctx.setAcceptHook(s::accept);
-						ctx.setEnqueueHook(s::enqueue);
-
-						try {
-							if (action instanceof SqAction sqa) {
-								sqa.accept(s, ctx, (BaseEvent) e1);
-							}
-							else {
-								action.accept(ctx, e1);
-							}
-						} catch (Throwable t) {
-							if (s.isDone()) {
-								return;
-							}
-							else {
-								log.error("Error in trigger '{}' action '{}'", name, action.dynamicLabel(), t);
-							}
-						}
-
-						if (ctx.shouldStopProcessing()) {
-							return;
-						}
-					}
+					ctx.runActions((List) actions, s, (BaseEvent) e1);
 				});
+		Stream.concat(conditions.stream(), actions.stream()).forEach(item -> {
+			if (item instanceof HasMutableEventType het) {
+				het.setEventType(getEventType());
+			}
+		});
 	}
 
+	@Override
 	public Class<X> getEventType() {
 		return eventType;
 	}

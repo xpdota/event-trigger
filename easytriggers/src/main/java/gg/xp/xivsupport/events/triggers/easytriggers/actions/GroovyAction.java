@@ -1,13 +1,13 @@
-package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
+package gg.xp.xivsupport.events.triggers.easytriggers.actions;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -17,43 +17,45 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class GroovyEventFilter implements Condition<Event> {
+public class GroovyAction implements Action<Event> {
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
-	private static final Logger log = LoggerFactory.getLogger(GroovyEventFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(GroovyAction.class);
 
 	private final GroovyManager mgr;
 	private @Nullable GroovyShell shell;
 
 
 	public Class<? extends Event> eventType = Event.class;
-	private String groovyScript = "event != null";
+	private String groovyScript = "globals.groovyActionEvent = event";
 	private boolean strict = true;
 	@JsonIgnore
-	private Predicate<? extends Event> groovyCompiledScript;
+	private Consumer<? extends Event> groovyCompiledScript;
 	@JsonIgnore
 	private volatile Throwable lastError;
 	private volatile EasyTriggerContext currentContext;
 
-	public GroovyEventFilter(@JacksonInject GroovyManager mgr) {
+	public GroovyAction(@JacksonInject GroovyManager mgr) {
 		this.mgr = mgr;
 	}
 
 	@JsonCreator
-	public GroovyEventFilter(@JsonProperty("groovyScript") String groovyScript,
-	                         @JsonProperty("strict") boolean strict,
-	                         @JsonProperty("eventType") Class<? extends Event> eventType,
-	                         @JacksonInject GroovyManager mgr
+	public GroovyAction(@JsonProperty("groovyScript") String groovyScript,
+	                    @JsonProperty("strict") boolean strict,
+	                    @JsonProperty("eventType") Class<? extends Event> eventType,
+	                    @JacksonInject GroovyManager mgr
 	) {
 		this(mgr);
 		this.strict = strict;
 		this.eventType = eventType;
 		this.groovyScript = groovyScript;
-		exs.submit(() -> groovyCompiledScript = compile(groovyScript));
+		exs.submit(() -> {
+			this.groovyCompiledScript = compile(groovyScript);
+		});
 	}
 
 	public boolean isStrict() {
@@ -76,7 +78,7 @@ public class GroovyEventFilter implements Condition<Event> {
 		catch (Throwable t) {
 			// Special handling for deserialization
 			if (groovyCompiledScript == null) {
-				groovyCompiledScript = (o) -> false;
+				groovyCompiledScript = (o) -> {};
 				// TODO: expose pre-existing errors on the UI
 				log.error("Error compiling groovy script", t);
 			}
@@ -87,7 +89,7 @@ public class GroovyEventFilter implements Condition<Event> {
 		this.groovyScript = groovyScript;
 	}
 
-	private Predicate<? extends Event> compile(String script) {
+	private Consumer<? extends Event> compile(String script) {
 		if (shell == null) {
 			shell = mgr.makeShell();
 		}
@@ -107,11 +109,11 @@ public class GroovyEventFilter implements Condition<Event> {
 //				""".formatted(longClassName, shortClassName, checkType, shortClassName, varName, script);
 		String inJavaForm = """
 				%s
-				public boolean test(%s %s) {
+				public void accept(%s %s) {
 					%s
 				}
-				Predicate<%s> myPredicate = this::test;
-				return myPredicate;
+				Consumer<%s> myConsumer = this::accept;
+				return myConsumer;
 				""".formatted(checkType, longClassName, varName, script, longClassName);
 		try (SandboxScope ignored = mgr.getSandbox().enter()) {
 			Script parsedScript = shell.parse(inJavaForm);
@@ -139,15 +141,41 @@ public class GroovyEventFilter implements Condition<Event> {
 				}
 			};
 			parsedScript.setBinding(mergedBinding);
-			return (Predicate<? extends Event>) parsedScript.run();
+			return (Consumer<? extends Event>) parsedScript.run();
 		}
 
 	}
 
 
 	@Override
+	public void accept(EasyTriggerContext context, Event event) {
+		if (groovyCompiledScript == null) {
+			try {
+				groovyCompiledScript = compile(groovyScript);
+			}
+			catch (Throwable t) {
+				log.error("Error compiling script, disabling", t);
+				groovyCompiledScript = (e) -> {};
+			}
+		}
+		if (eventType.isInstance(event)) {
+			currentContext = context;
+			try (SandboxScope ignored = mgr.getSandbox().enter()) {
+				((Consumer<Event>) groovyCompiledScript).accept(event);
+			}
+			catch (Throwable t) {
+				log.error("Easy trigger Groovy script encountered an error (returning false)", t);
+				lastError = t;
+			}
+			finally {
+				currentContext = null;
+			}
+		}
+	}
+
+	@Override
 	public String fixedLabel() {
-		return "Groovy Filter";
+		return "Groovy Action";
 	}
 
 	@Override
@@ -159,34 +187,5 @@ public class GroovyEventFilter implements Condition<Event> {
 		return lastError;
 	}
 
-	@Override
-	public boolean test(EasyTriggerContext context, Event event) {
-		if (groovyCompiledScript == null) {
-			try {
-				groovyCompiledScript = compile(groovyScript);
-			}
-			catch (Throwable t) {
-				log.error("Error compiling script, disabling", t);
-				groovyCompiledScript = (e) -> false;
-			}
-		}
-		if (eventType.isInstance(event)) {
-			currentContext = context;
-			try (SandboxScope ignored = mgr.getSandbox().enter()) {
-				return ((Predicate<Event>) groovyCompiledScript).test(event);
-			}
-			catch (Throwable t) {
-				log.error("Easy trigger Groovy script encountered an error (returning false)", t);
-				lastError = t;
-				return false;
-			}
-			finally {
-				currentContext = null;
-			}
-		}
-		else {
-			return false;
-		}
-	}
 
 }

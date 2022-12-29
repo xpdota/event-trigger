@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
