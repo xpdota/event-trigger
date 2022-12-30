@@ -83,12 +83,11 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerMigrationHelper;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.HasEventType;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.groovy.GroovyManager;
-import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
+import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -133,6 +132,7 @@ public final class EasyTriggers {
 				.withMapper(mapper)
 				.postConstruct(this::doLegacyMigration)
 				.build();
+		setting.tryRecoverFailures();
 		this.triggers = new ArrayList<>(setting.getItems());
 		recalc();
 	}
@@ -339,6 +339,7 @@ public final class EasyTriggers {
 			new ConditionDescription<>(TetherIdFilter.class, TetherEvent.class, "Tether ID", TetherIdFilter::new, this::generic),
 			new ConditionDescription<>(PlayerHasStatusFilter.class, Event.class, "Player has a specific status effect", () -> new PlayerHasStatusFilter(inject(XivState.class), inject(StatusEffectRepository.class)), this::generic),
 			new ConditionDescription<>(SourceHasStatusFilter.class, HasSourceEntity.class, "Source has a specific status effect", () -> new SourceHasStatusFilter(inject(StatusEffectRepository.class)), this::generic),
+//			new ConditionDescription<>(SourceHasStatusFilter.class, HasSourceEntity.class, "Source has a specific status effect", () -> new SourceHasStatusFilter(), this::generic),
 			new ConditionDescription<>(TargetHasStatusFilter.class, HasTargetEntity.class, "Target has a specific status effect", () -> new TargetHasStatusFilter(inject(StatusEffectRepository.class)), this::generic),
 			new ConditionDescription<>(TargetIndexFilter.class, HasTargetIndex.class, "Target Index", TargetIndexFilter::new, this::generic),
 			new ConditionDescription<>(TargetCountFilter.class, HasTargetIndex.class, "Target Count", TargetCountFilter::new, this::generic),
@@ -362,8 +363,9 @@ public final class EasyTriggers {
 //			(ActionDescription<ConditionalAction<BaseEvent>, BaseEvent>) new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)),
 			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action))
 	));
+
 	{
-		registerActionType(new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this,  action)));
+		registerActionType(new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)));
 	}
 
 	public List<EventDescription<?>> getEventDescriptions() {

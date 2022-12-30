@@ -141,24 +141,28 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 	@Override
 	public void setActions(List<Action<? super X>> actions) {
 		this.actions = new ArrayList<>(actions);
+		recalc();
 	}
 
 	@Override
 	public void addAction(Action<? super X> action) {
 		makeWritable();
 		actions.add(action);
+		recalc();
 	}
 
 	@Override
 	public void addAction(Action<? super X> action, int index) {
 		makeWritable();
 		actions.add(index, action);
+		recalc();
 	}
 
 	@Override
 	public void removeAction(Action<? super X> action) {
 		makeWritable();
 		actions.remove(action);
+		recalc();
 	}
 
 	public String getName() {

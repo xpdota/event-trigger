@@ -2,6 +2,7 @@ package gg.xp.xivsupport.persistence.settings;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -130,6 +131,53 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 			commit();
 		}
 		return removed;
+	}
+
+	public List<String> getFailedItems() {
+		String failedSetting = pers.get(failuresKey, String.class, "[]");
+		List<String> failures;
+		try {
+			failures = mapper.readValue(failedSetting, new TypeReference<>() {
+			});
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+		return failures;
+	}
+
+	public void tryRecoverFailures() {
+		List<String> failed = getFailedItems();
+		if (failed.isEmpty()) {
+			// Nothing to do
+			return;
+		}
+		log.info("Attempting to recover {} items", failed.size());
+		List<String> stillFailing = new ArrayList<>();
+		List<X> noLongerFailing = new ArrayList<>();
+		for (String failedItem : failed) {
+			try {
+				JsonNode node = mapper.readTree(failedItem);
+				X item = mapper.convertValue(node, type);
+				postContstruct.accept(node, item);
+				noLongerFailing.add(item);
+			}
+			catch (JsonProcessingException e) {
+				stillFailing.add(failedItem);
+				log.trace("Failure: ", e);
+			}
+		}
+		String value;
+		try {
+			value = mapper.writeValueAsString(stillFailing);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+		log.info("After recovery: {} recovered, {} still failing", noLongerFailing.size(), stillFailing.size());
+		noLongerFailing.forEach(this::addItem);
+		pers.save(failuresKey, value);
+		log.info("Recovery complete");
 	}
 
 	public static <X> Builder<X> builder(@NotNull PersistenceProvider pers, @NotNull TypeReference<X> type, @NotNull String settingKey, @NotNull String failuresKey) {

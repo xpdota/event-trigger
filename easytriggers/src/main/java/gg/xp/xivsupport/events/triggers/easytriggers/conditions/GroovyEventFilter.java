@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -17,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
@@ -39,7 +38,7 @@ public class GroovyEventFilter implements Condition<Event> {
 	private volatile Throwable lastError;
 	private volatile EasyTriggerContext currentContext;
 
-	public GroovyEventFilter(@JacksonInject GroovyManager mgr) {
+	public GroovyEventFilter(@JacksonInject(useInput = OptBoolean.FALSE) GroovyManager mgr) {
 		this.mgr = mgr;
 	}
 
@@ -47,7 +46,7 @@ public class GroovyEventFilter implements Condition<Event> {
 	public GroovyEventFilter(@JsonProperty("groovyScript") String groovyScript,
 	                         @JsonProperty("strict") boolean strict,
 	                         @JsonProperty("eventType") Class<? extends Event> eventType,
-	                         @JacksonInject GroovyManager mgr
+	                         @JacksonInject(useInput = OptBoolean.FALSE) GroovyManager mgr
 	) {
 		this(mgr);
 		this.strict = strict;
