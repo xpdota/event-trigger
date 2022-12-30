@@ -85,7 +85,7 @@ public class ConditionalAction<X extends BaseEvent> implements SqAction<X>, HasM
 
 	@Override
 	public void setEventType(Class<?> eventType) {
-		log.info("Event type {} -> {}", this.eventType, eventType);
+		log.trace("Event type {} -> {}", this.eventType, eventType);
 		this.eventType = (Class<X>) eventType;
 		Stream.of(conditions, trueActions, falseActions)
 				.flatMap(Collection::stream)

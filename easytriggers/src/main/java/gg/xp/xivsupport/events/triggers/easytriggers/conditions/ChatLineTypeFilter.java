@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 
 
 public class ChatLineTypeFilter implements SimpleCondition<ChatLineEvent> {

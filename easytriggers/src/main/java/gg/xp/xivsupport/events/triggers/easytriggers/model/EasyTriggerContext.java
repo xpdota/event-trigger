@@ -29,8 +29,10 @@ public class EasyTriggerContext {
 		this.context = context;
 		this.triggerName = name;
 		if (context == null) {
-			acceptHook = i -> {};
-			enqueueHook = i -> {};
+			acceptHook = i -> {
+			};
+			enqueueHook = i -> {
+			};
 		}
 		else {
 			acceptHook = context::accept;
@@ -60,7 +62,8 @@ public class EasyTriggerContext {
 				else {
 					action.accept(this, e1);
 				}
-			} catch (Throwable t) {
+			}
+			catch (Throwable t) {
 				if (s.isDone()) {
 					return;
 				}
@@ -90,13 +93,15 @@ public class EasyTriggerContext {
 		return Collections.unmodifiableMap(extraVariables);
 	}
 
-//	public EventContext getEventContext() {
+	//	public EventContext getEventContext() {
 //		return context;
 //	}
 //
 	public void accept(Event event) {
 		acceptHook.accept(event);
-	};
+	}
+
+	;
 
 	public void enqueue(Event event) {
 		enqueueHook.accept(event);

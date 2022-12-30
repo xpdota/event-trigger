@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import groovy.lang.Binding;
@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 public class GroovyAction implements Action<Event> {
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
@@ -39,7 +38,7 @@ public class GroovyAction implements Action<Event> {
 	private volatile Throwable lastError;
 	private volatile EasyTriggerContext currentContext;
 
-	public GroovyAction(@JacksonInject GroovyManager mgr) {
+	public GroovyAction(@JacksonInject(useInput = OptBoolean.FALSE) GroovyManager mgr) {
 		this.mgr = mgr;
 	}
 
@@ -47,7 +46,7 @@ public class GroovyAction implements Action<Event> {
 	public GroovyAction(@JsonProperty("groovyScript") String groovyScript,
 	                    @JsonProperty("strict") boolean strict,
 	                    @JsonProperty("eventType") Class<? extends Event> eventType,
-	                    @JacksonInject GroovyManager mgr
+	                    @JacksonInject(useInput = OptBoolean.FALSE) GroovyManager mgr
 	) {
 		this(mgr);
 		this.strict = strict;
@@ -78,7 +77,8 @@ public class GroovyAction implements Action<Event> {
 		catch (Throwable t) {
 			// Special handling for deserialization
 			if (groovyCompiledScript == null) {
-				groovyCompiledScript = (o) -> {};
+				groovyCompiledScript = (o) -> {
+				};
 				// TODO: expose pre-existing errors on the UI
 				log.error("Error compiling groovy script", t);
 			}
@@ -155,7 +155,8 @@ public class GroovyAction implements Action<Event> {
 			}
 			catch (Throwable t) {
 				log.error("Error compiling script, disabling", t);
-				groovyCompiledScript = (e) -> {};
+				groovyCompiledScript = (e) -> {
+				};
 			}
 		}
 		if (eventType.isInstance(event)) {

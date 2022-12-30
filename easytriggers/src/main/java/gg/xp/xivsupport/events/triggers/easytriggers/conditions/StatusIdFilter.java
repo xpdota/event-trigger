@@ -1,10 +1,9 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
-import gg.xp.xivdata.data.StatusEffectInfo;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
-import gg.xp.xivsupport.models.XivStatusEffect;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 
 
 public class StatusIdFilter implements SimpleCondition<HasStatusEffect> {

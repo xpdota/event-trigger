@@ -1,11 +1,9 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
-import gg.xp.xivdata.data.ActionInfo;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
-import gg.xp.xivsupport.models.XivAbility;
 
 public class AbilityIdFilter implements SimpleCondition<HasAbility> {
 

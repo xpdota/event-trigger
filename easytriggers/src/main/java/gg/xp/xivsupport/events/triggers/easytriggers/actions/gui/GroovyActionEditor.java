@@ -2,11 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.actions.gui;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
-import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasEventType;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerCreationContext;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.actions;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
@@ -22,7 +23,7 @@ public class AutoMarkTargetAction implements Action<HasTargetEntity> {
 	@JsonIgnore
 	public Runnable configure;
 
-	public AutoMarkTargetAction(@JacksonInject GlobalUiRegistry reg) {
+	public AutoMarkTargetAction(@JacksonInject(useInput = OptBoolean.FALSE) GlobalUiRegistry reg) {
 		configure = () -> reg.activateItem(AutoMarkGui.class);
 	}
 

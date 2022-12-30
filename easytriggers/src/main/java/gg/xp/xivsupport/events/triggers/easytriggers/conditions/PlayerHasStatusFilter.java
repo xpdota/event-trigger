@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.state.XivState;
@@ -19,7 +20,7 @@ public class PlayerHasStatusFilter implements SimpleCondition<Event> {
 	@IdType(StatusEffectInfo.class)
 	public long expected;
 
-	public PlayerHasStatusFilter(@JacksonInject XivState state, @JacksonInject StatusEffectRepository buffs) {
+	public PlayerHasStatusFilter(@JacksonInject(useInput = OptBoolean.FALSE) XivState state, @JacksonInject(useInput = OptBoolean.FALSE) StatusEffectRepository buffs) {
 		this.state = state;
 		this.buffs = buffs;
 	}
@@ -31,7 +32,7 @@ public class PlayerHasStatusFilter implements SimpleCondition<Event> {
 
 	@Override
 	public String dynamicLabel() {
-		return "Player %s status effect 0x%X".formatted(invert ? "does not have" : "has",  expected);
+		return "Player %s status effect 0x%X".formatted(invert ? "does not have" : "has", expected);
 	}
 
 	@Override

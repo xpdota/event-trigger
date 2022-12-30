@@ -14,6 +14,7 @@ public class EventDescriptionImpl<X> implements EventDescription<X> {
 	protected final String defaultText;
 	protected final String defaultTts;
 	protected final List<Supplier<Condition<? super X>>> defaultFilters;
+
 	public EventDescriptionImpl(
 			Class<X> type,
 			String description,

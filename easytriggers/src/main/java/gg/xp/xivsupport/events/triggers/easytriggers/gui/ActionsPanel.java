@@ -4,13 +4,8 @@ import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.AcceptsSaveCallback;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
-import gg.xp.xivsupport.gui.components.DummyTransferrable;
-import gg.xp.xivsupport.gui.components.RearrangeableList;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -20,21 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragGestureEvent;
-import java.awt.dnd.DragGestureListener;
-import java.awt.dnd.DragGestureRecognizer;
-import java.awt.dnd.DragSource;
-import java.awt.dnd.DragSourceAdapter;
-import java.awt.dnd.DragSourceDropEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.io.Serial;
-import java.util.Collections;
 import java.util.List;
 
 public class ActionsPanel<X> extends TitleBorderFullsizePanel {
@@ -122,7 +106,6 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 				return super.getPreferredSize();
 			}
 		}
-
 
 
 		@Override
@@ -249,7 +232,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 
 			MouseAdapter dummyAdapter = new MouseAdapter() {
 
-//				private Component lastEnteredComponent;
+				//				private Component lastEnteredComponent;
 				private ActionDragDropTarget lastAddt;
 
 				@Override
