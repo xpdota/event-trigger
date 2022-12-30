@@ -162,7 +162,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 				postContstruct.accept(node, item);
 				noLongerFailing.add(item);
 			}
-			catch (JsonProcessingException e) {
+			catch (Throwable e) {
 				stillFailing.add(failedItem);
 				log.trace("Failure: ", e);
 			}
