@@ -116,7 +116,7 @@ public class XivCombatant extends XivEntity {
 	 * 2 = Combatant NPCs and pets? Both Selene and Chocobo seem to be in here, as do enemies
 	 * 3 = Non-combat NPC?
 	 * 4 = Treasure coffer?
-	 * 5 = ?
+	 * 5 = Aetheryte?
 	 * 6 = Gathering point? I got "Mature Tree" in here
 	 * 7 = Gardening patch?
 	 * 9 = Minion?

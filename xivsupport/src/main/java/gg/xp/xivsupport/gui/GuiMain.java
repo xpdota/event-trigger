@@ -57,6 +57,8 @@ import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
+import gg.xp.xivsupport.gui.tables.timedisplay.TimeDisplayController;
+import gg.xp.xivsupport.gui.tables.timedisplay.TimeDisplayOption;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
@@ -81,6 +83,8 @@ import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
@@ -238,13 +242,21 @@ public class GuiMain {
 	}
 
 	private Component newsPanel() {
-		TitleBorderFullsizePanel panel = new TitleBorderFullsizePanel("News");
+		JPanel panel = new TitleBorderFullsizePanel("News and Tips");
+//		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
+		panel.setLayout(new GridBagLayout());
+		GridBagConstraints c = GuiUtil.defaultGbc();
+		c.fill = GridBagConstraints.VERTICAL;
+		c.weightx = 1;
+		c.weighty = 1;
 		// TODO: move this external somewhere
-		panel.add(new ReadOnlyText("""
-				New: You can drag-and-drop to rearrange easy trigger actions. There is also a "Wait" action if you need something to be delayed.
-				Press Ctrl-G, then type the name of a tab, plugin, or duty to navigate directly to it.
-				Triggers for Another Sil'dihn Subterrane Criterion and Savage are now available!"""
-		), BorderLayout.WEST);
+		// TODO: figure out why this text is reporting its minimum height as 5000-something and messing up the layout
+		ReadOnlyText text = new ReadOnlyText("""
+				New: On the Events tab, you can choose between "Local Time" and "Relative to Selection". The latter will display timestamps relative to the selected event. 
+				You can drag-and-drop to rearrange easy trigger actions. There is also a "Wait" action if you need something to be delayed. 
+				Press Ctrl-G, then type the name of a tab, plugin, or duty to navigate directly to it."""
+		);
+		panel.add(text, c);
 		return panel;
 	}
 
@@ -660,6 +672,7 @@ public class GuiMain {
 		BooleanSetting displayIdsSetting = globalGuiOpts.displayIds();
 		displayIdsSetting.addAndRunListener(() -> asRenderer.setShowId(displayIdsSetting.get()));
 		displayIdsSetting.addAndRunListener(() -> nameJobRenderer.setShowId(displayIdsSetting.get()));
+		TimeDisplayController tdc = new TimeDisplayController();
 		TableWithFilterAndDetails<Event, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", rawStorage::getEvents,
 						currentEvent -> {
 							if (currentEvent == null) {
@@ -673,28 +686,11 @@ public class GuiMain {
 										.collect(Collectors.toList());
 							}
 						})
-				.addMainColumn(new CustomColumn<>("Time", event -> {
-					return event.getEffectiveHappenedAt()
-							.atZone(ZoneId.systemDefault())
-							.format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
-//					return DateTimeFormatter.ISO_TIME.format(event.getHappenedAt());
-////					return event.getHappenedAt();
-				}, col -> {
-					col.setMaxWidth(100);
-				}))
+				.addMainColumn(tdc.getColumnDef())
 				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(nameJobRenderer)))
 				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(nameJobRenderer)))
-				.addMainColumn(new CustomColumn<>("Buff/Ability", e -> {
-					return e;
-//					if (e instanceof HasAbility) {
-//						return ((HasAbility) e).getAbility();
-//					}
-//					if (e instanceof HasStatusEffect) {
-//						return ((HasStatusEffect) e).getBuff();
-//					}
-//					return null;
-				}, c -> {
+				.addMainColumn(new CustomColumn<>("Buff/Ability", Function.identity(), c -> {
 					c.setCellRenderer(asRenderer);
 				}))
 				.addMainColumn(new CustomColumn<>("Effects", e -> {
@@ -728,6 +724,7 @@ public class GuiMain {
 				})
 				.addWidget(unused -> new BooleanSettingGui(displayIdsSetting, "Show IDs", true).getComponent())
 				.addWidget(replayNextPseudoFilter(Event.class))
+				.addWidget(tdc::configureWidget)
 				.setAppendOrPruneOnly(true)
 				.build();
 
