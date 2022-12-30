@@ -49,7 +49,7 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 				jpm.removeAll();
 				// This is set by our mouse listener
 				int index = lastRightClick;
-				log.info("Popup: index ({})", index);
+				log.trace("Popup: index ({})", index);
 				JMenuItem menuItem;
 				// Determine whether to offer the split or the unsplit option for this tab
 				if (isTabSplit(index)) {
@@ -87,7 +87,7 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 				// If we right click on a tab, figure out which one, and show the popup menu for that tab
 				if (e.getButton() == MouseEvent.BUTTON3) {
 					int tabForCoordinate = getUI().tabForCoordinate(SmartTabbedPane.this, e.getX(), e.getY());
-					log.info("tabForCoordinate({})", tabForCoordinate);
+					log.trace("tabForCoordinate({})", tabForCoordinate);
 					if (tabForCoordinate < 0) {
 						return;
 					}
@@ -201,7 +201,7 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 
 	@Override
 	public void setSelectedIndex(int index) {
-		log.info("setSelectedIndex({})", index);
+		log.trace("setSelectedIndex({})", index);
 		Component tabAt = getComponentAt(index);
 		if (tabAt instanceof SplitWindowComponent swc) {
 			// TODO
@@ -222,7 +222,7 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 		lastGoodIndex = super.getSelectedIndex();
 		super.setSelectedIndex(index);
 		if (tabAt instanceof DummyMarkerComponent dmc) {
-			log.info("Replacing tab at index {}", index);
+			log.trace("Replacing tab at index {}", index);
 			SwingUtilities.invokeLater(() -> {
 				GuiUtil.displayWaitCursorWhile(this, () -> {
 					setComponentAt(index, dmc.getActualComponent());
@@ -271,6 +271,18 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 		super.addTab(title, component);
 		int index = getTabCount() - 1;
 		registeredKeys.put(title, index);
+	}
+
+	@Override
+	public void setSelectedComponent(Component c) {
+		Component[] components = getComponents();
+		for (Component component : components) {
+			if (component instanceof SplitWindowComponent swc && swc.actualComponent == c) {
+				super.setSelectedComponent(swc);
+				return;
+			}
+		}
+		super.setSelectedComponent(c);
 	}
 
 	@Override
