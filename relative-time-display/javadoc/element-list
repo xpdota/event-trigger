@@ -23,6 +23,7 @@ gg.xp.xivsupport.cdsupport
 gg.xp.xivsupport.custompartyoverlay
 gg.xp.xivsupport.custompartyoverlay.buffs
 gg.xp.xivsupport.custompartyoverlay.castbar
+gg.xp.xivsupport.custompartyoverlay.cdtracker
 gg.xp.xivsupport.custompartyoverlay.gui
 gg.xp.xivsupport.custompartyoverlay.hpbar
 gg.xp.xivsupport.custompartyoverlay.mpbar
@@ -88,6 +89,7 @@ gg.xp.xivsupport.gui.tables.timedisplay
 gg.xp.xivsupport.gui.tabs
 gg.xp.xivsupport.gui.tree
 gg.xp.xivsupport.gui.util
+gg.xp.xivsupport.lang
 gg.xp.xivsupport.models
 gg.xp.xivsupport.overlays.castbar
 gg.xp.xivsupport.persistence
@@ -101,6 +103,7 @@ gg.xp.xivsupport.speech
 gg.xp.xivsupport.sys
 gg.xp.xivsupport.timelines
 gg.xp.xivsupport.timelines.gui
+gg.xp.xivsupport.timelines.intl
 org.jenkinsci.plugins.scriptsecurity.sandbox
 org.jenkinsci.plugins.scriptsecurity.sandbox.groovy
 org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists
