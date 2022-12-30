@@ -1,12 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
-import gg.xp.xivdata.data.ActionInfo;
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.HasIconURL;
-import gg.xp.xivdata.data.StatusEffectInfo;
-import gg.xp.xivdata.data.StatusEffectLibrary;
-import gg.xp.xivsupport.gui.library.ActionTableFactory;
-import gg.xp.xivsupport.gui.library.StatusTable;
+import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.gui.ResettableField;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
@@ -20,7 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class IdPicker<X> extends JPanel {
+public class IdPicker<X> extends JPanel implements ResettableField {
 
 	private static final Logger log = LoggerFactory.getLogger(IdPicker.class);
 
@@ -104,4 +99,8 @@ public class IdPicker<X> extends JPanel {
 		}
 	}
 
+	@Override
+	public void reset() {
+		refresh();
+	}
 }

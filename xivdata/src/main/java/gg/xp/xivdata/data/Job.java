@@ -184,4 +184,8 @@ public enum Job implements HasIconURL {
 	public boolean caresAboutInterrupt() {
 		return category == JobType.TANK || category == JobType.PRANGED;
 	}
+
+	public boolean usesSwiftRez() {
+		return category.isHealer() || this == SMN;
+	}
 }

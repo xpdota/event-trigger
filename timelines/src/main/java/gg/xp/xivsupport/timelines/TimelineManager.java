@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.timelines;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
@@ -15,15 +16,18 @@ import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.PlayerChangedJobEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
+import gg.xp.xivsupport.lang.LanguageController;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
-import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
+import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,10 +39,12 @@ public final class TimelineManager {
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineManager.class);
 	private static final Map<Long, TimelineInfo> zoneIdToTimelineFile = new HashMap<>();
+	private static final ObjectMapper mapper = new ObjectMapper();
 	private final BooleanSetting debugMode;
 	private final BooleanSetting prePullShow;
 	private final BooleanSetting resetOnMapChange;
 	private final XivState state;
+	private final LanguageController lang;
 	private final PersistenceProvider pers;
 	private final EventMaster master;
 	private final IntSetting rowsToDisplay;
@@ -52,7 +58,7 @@ public final class TimelineManager {
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
 
-	public TimelineManager(EventMaster master, PersistenceProvider pers, XivState state) {
+	public TimelineManager(EventMaster master, PersistenceProvider pers, XivState state, LanguageController lang) {
 		this.master = master;
 		rowsToDisplay = new IntSetting(pers, "timeline-overlay.max-displayed", 6, 1, 32);
 		secondsPast = new IntSetting(pers, "timeline-overlay.seconds-past", 0, 0, null);
@@ -61,6 +67,7 @@ public final class TimelineManager {
 		prePullShow = new BooleanSetting(pers, "timeline-overlay.show-pre-pull", false);
 		resetOnMapChange = new BooleanSetting(pers, "timeline-overlay.reset-on-map-change", false);
 		this.state = state;
+		this.lang = lang;
 		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutNow, pers, "timeline-support.trigger-call-now");
 		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutPre, pers, "timeline-support.trigger-call-pre");
 		this.pers = pers;
@@ -102,8 +109,26 @@ public final class TimelineManager {
 			log.info("Timeline file '{}' for zone '{}' is missing", filename, zoneId);
 			return null;
 		}
+		InputStream translationsStream = TimelineManager.class.getResourceAsStream("/timeline/translations/" + filename + ".json");
+		LanguageReplacements lr;
+		if (translationsStream == null) {
+			lr = LanguageReplacements.empty();
+		}
+		else {
+			try {
+				TimelineReplacements tr = mapper.readValue(translationsStream, TimelineReplacements.class);
+				String lang = this.lang.getGameLanguage().getShortCode();
+				lr = tr.langs().getOrDefault(lang, LanguageReplacements.empty());
+				log.info("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
+			}
+			catch (IOException e) {
+				log.error("Error loading timeline translations for zone {}", zoneId, e);
+				lr = LanguageReplacements.empty();
+			}
+		}
+
 		try {
-			return TimelineProcessor.of(this, resource, getCustomEntries(zoneId), state.getPlayerJob());
+			return TimelineProcessor.of(this, resource, getCustomEntries(zoneId), state.getPlayerJob(), lr);
 		}
 		catch (Throwable e) {
 			log.error("Error loading timeline for zone {}", zoneId, e);
@@ -126,7 +151,7 @@ public final class TimelineManager {
 		return customizations.computeIfAbsent(zoneId, (k) -> pers.get(propStubForZoneId(k), TimelineCustomizations.class, new TimelineCustomizations()));
 	}
 
-	public void commitCustomSettings(long zoneId)  {
+	public void commitCustomSettings(long zoneId) {
 		TimelineCustomizations cust = customizations.get(zoneId);
 		if (cust == null) {
 			log.warn("Customization was not found for zone {}", zoneId);

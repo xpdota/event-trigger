@@ -2,11 +2,8 @@ package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.AcceptsSaveCallback;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
@@ -103,7 +100,7 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 					component = new JLabel("Error: cannot find component");
 				}
 				else {
-					component = desc.guiprovider().apply(condition, (EasyTrigger<? super Y>) trigger);
+					component = desc.guiprovider().apply(condition, trigger);
 					if (component == null) {
 						component = new JLabel("Error: null component");
 					}

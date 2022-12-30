@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
-import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
@@ -14,7 +14,7 @@ public class TargetPartyMemberFilter implements SimpleCondition<HasTargetEntity>
 	@EditorIgnore
 	private final XivState state;
 
-	public TargetPartyMemberFilter(@JacksonInject XivState state) {
+	public TargetPartyMemberFilter(@JacksonInject(useInput = OptBoolean.FALSE) XivState state) {
 		this.state = state;
 	}
 

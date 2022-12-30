@@ -78,12 +78,16 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		if (overrides == null) {
 			return false;
 		}
+		// To allow users to switch languages freely without losing their overrides,
+		// compare to the untranslated versions.
+		that = that.untranslated();
 		// Rules:
 		// 1. Time must match
 		// 2. Name must match
 		// 3. Sync must match
-		// 4. For backwards compatibility, treat replacing an empty/null pattern as always matching
+		// 4. For backwards compatibility, treat replacing an empty/null pattern as always matching for step 2
 		String desiredName = overrides.name();
+		//noinspection FloatingPointEquality
 		if (overrides.time() == that.time()) {
 			String thatPattern = that.sync() == null ? null : that.sync().pattern();
 			if (!Objects.equals(desiredName, that.name())) {
@@ -107,5 +111,9 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 
 	default boolean enabledForJob(Job job) {
 		return true;
+	}
+
+	default TimelineEntry untranslated() {
+		return this;
 	}
 }

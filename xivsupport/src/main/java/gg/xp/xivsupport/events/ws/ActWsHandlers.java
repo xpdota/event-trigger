@@ -30,6 +30,8 @@ import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.lang.GameLanguage;
+import gg.xp.xivsupport.lang.GameLanguageInfoEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivZone;
@@ -133,6 +135,10 @@ public class ActWsHandlers {
 			JsonNode combatantsNode = jsonNode.path("combatants");
 			if ("getVersion".equals(rseqObj)) {
 				context.accept(new ActWsJsonMsg("getVersion", rseqObj, jsonNode));
+				return;
+			}
+			if ("getLanguage".equals(rseqObj)) {
+				context.accept(new ActWsJsonMsg("getLanguage", rseqObj, jsonNode));
 				return;
 			}
 			if (combatantsNode.isMissingNode()) {
@@ -240,6 +246,15 @@ public class ActWsHandlers {
 			String version = jsonMsg.getJson().get("version").textValue();
 			log.info("OverlayPlugin version: {}", version);
 			context.accept(new ActWsVersionEvent(version));
+		}
+	}
+
+	@HandleEvents(order = -100)
+	public static void languageResponse(EventContext context, ActWsJsonMsg jsonMsg) {
+		if ("getLanguage".equals(jsonMsg.getType())) {
+			GameLanguage lang = GameLanguage.valueOf(jsonMsg.getJson().get("language").textValue());
+			log.info("Game Language: {}", lang);
+			context.accept(new GameLanguageInfoEvent(lang));
 		}
 	}
 	// Disabled - trying to get off of cactbot events

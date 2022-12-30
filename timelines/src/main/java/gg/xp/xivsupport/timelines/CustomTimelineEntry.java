@@ -202,7 +202,7 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 				other.timelineWindow(),
 				other.jump(),
 				other.icon(),
-				new TimelineReference(other.time(), other.name(), other.sync() == null ? null : other.sync().pattern()),
+				TimelineReference.of(other),
 				false,
 				false,
 				0

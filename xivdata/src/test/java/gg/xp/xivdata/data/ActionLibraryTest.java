@@ -8,7 +8,7 @@ public class ActionLibraryTest {
 
 	@Test
 	public void testCheckForErrors() {
-		Map<Long, ActionInfo> all = ActionLibrary.getAll();
+		Map<Integer, ActionInfo> all = ActionLibrary.getAll();
 		if (all.isEmpty()) {
 			throw new RuntimeException("ActionLibrary was empty!");
 		}

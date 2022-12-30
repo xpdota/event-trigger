@@ -1,12 +1,10 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.ActionInfo;
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.StatusEffectInfo;
-import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.library.ActionTableFactory;
 import gg.xp.xivsupport.gui.library.StatusTable;
+import gg.xp.xivsupport.gui.library.ZonesTable;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +29,9 @@ public class IdPickerFactory {
 		}
 		else if (clazz.equals(StatusEffectInfo.class)) {
 			return new IdPicker<>(getter, setter, StatusEffectLibrary::forId, StatusEffectInfo::statusEffectId, StatusEffectInfo::name, StatusTable::pickItem, statusEffectInfo -> statusEffectInfo.getIcon(0));
+		}
+		else if (clazz.equals(ZoneInfo.class)) {
+			return new IdPicker<>(getter, setter, id -> ZoneLibrary.infoForZoneOrUnknown(id.intValue()), zi -> (long) zi.id(), ZoneInfo::getCapitalizedName, ZonesTable::pickItem, zone -> null);
 		}
 		else {
 			log.error("No picker for {}, falling back to basic text field with validation", clazz);

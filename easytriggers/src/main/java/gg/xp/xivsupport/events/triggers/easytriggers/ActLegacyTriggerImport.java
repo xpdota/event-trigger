@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
 import gg.xp.xivsupport.events.ACTLogLineEvent;
-import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import org.apache.commons.text.StringEscapeUtils;
 

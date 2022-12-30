@@ -13,6 +13,7 @@ import gg.xp.xivsupport.gui.GuiMain;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
+import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
@@ -21,7 +22,6 @@ import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
-import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
@@ -30,9 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -184,6 +181,7 @@ public class EasyTriggersTab implements PluginTab {
 			JScrollPane detailsScroller = new JScrollPane(detailsInner);
 			detailsScroller.setBorder(null);
 			detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
+			detailsScroller.getVerticalScrollBar().setUnitIncrement(20);
 			TitleBorderFullsizePanel detailsOuter = new TitleBorderFullsizePanel("Trigger Details");
 			detailsOuter.setLayout(new BorderLayout());
 			detailsOuter.add(detailsScroller, BorderLayout.CENTER);
@@ -428,7 +426,8 @@ public class EasyTriggersTab implements PluginTab {
 		bringToFront();
 		try {
 			newTrigger = backend.makeTriggerFromEvent(event, this::askForCalloutText);
-		} catch (TriggerCreationCancelledException e) {
+		}
+		catch (TriggerCreationCancelledException e) {
 			return;
 		}
 		if (newTrigger == null) {

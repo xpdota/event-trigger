@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.actions;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
@@ -16,7 +17,7 @@ public class ClearAllMarksAction implements Action<Event> {
 	@JsonIgnore
 	public Runnable configure;
 
-	public ClearAllMarksAction(@JacksonInject GlobalUiRegistry reg) {
+	public ClearAllMarksAction(@JacksonInject(useInput = OptBoolean.FALSE) GlobalUiRegistry reg) {
 		configure = () -> reg.activateItem(AutoMarkGui.class);
 	}
 
