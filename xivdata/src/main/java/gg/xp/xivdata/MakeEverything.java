@@ -2,6 +2,7 @@ package gg.xp.xivdata;
 
 import gg.xp.xivdata.data.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 
 import java.io.File;
@@ -27,6 +28,7 @@ public class MakeEverything {
 
 	private final File scDir;
 	private final File xivDir;
+	private final String version;
 
 	public MakeEverything(File scDir, File xivDir) {
 		this.scDir = scDir;
@@ -41,8 +43,15 @@ public class MakeEverything {
 		if (!xivDir.exists()) {
 			printAndFail("The specified XIV dir does not exist: " + scDir);
 		}
-		if (!scDir.isDirectory()) {
+		if (!xivDir.isDirectory()) {
 			printAndFail("The specified XIV dir is not a directory: " + scDir);
+		}
+		File gameVerFile = xivDir.toPath().resolve("game").resolve("ffxivgame.ver").toFile();
+		try {
+			version = FileUtils.readLines(gameVerFile, StandardCharsets.UTF_8).get(0).strip();
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -82,12 +91,13 @@ public class MakeEverything {
 
 	// TODO: the folder is actually the defs ver, not game ver, so this doesn't always work
 	private String getVer() {
-		try {
-			return Files.readString(Paths.get(scDir.toString(), "Definitions", "game.ver")).trim();
-		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		return version;
+//		try {
+//			return Files.readString(Paths.get(scDir.toString(), "Definitions", "game.ver")).trim();
+//		}
+//		catch (IOException e) {
+//			throw new RuntimeException(e);
+//		}
 	}
 
 	private Path getOutputDir() {
@@ -100,6 +110,11 @@ public class MakeEverything {
 
 	private File getTargetFile(String... filePathParts) {
 		return Paths.get(Paths.get(System.getProperty("user.dir"), "src", "main", "resources").toString(), filePathParts).toFile();
+	}
+
+	private void copyFileToDir(List<String> extractedFilePath, List<String> targetDirPath) {
+		getTargetFile(targetDirPath.toArray(String[]::new)).mkdirs();
+		copyFile(extractedFilePath, targetDirPath);
 	}
 
 	private void copyFile(List<String> extractedFilePath, List<String> targetFilePath) {
@@ -214,21 +229,27 @@ public class MakeEverything {
 		{
 			Process command = maker.runScCmd("rawexd Action Map Status");
 			waitForCommand(command);
-			maker.copyFile(List.of("rawexd", "Action.csv"), List.of("xiv", "actions"));
-			maker.copyFile(List.of("rawexd", "Map.csv"), List.of("xiv", "maps"));
-			maker.copyFile(List.of("rawexd", "Status.csv"), List.of("xiv", "statuseffect"));
+			maker.copyFileToDir(List.of("rawexd", "Action.csv"), List.of("xiv", "actions"));
+			maker.copyFileToDir(List.of("rawexd", "Map.csv"), List.of("xiv", "maps"));
+			maker.copyFileToDir(List.of("rawexd", "Status.csv"), List.of("xiv", "statuseffect"));
+		}
+		{
+			// We don't want the raw for this one
+			Process command = maker.runScCmd("exd TerritoryType");
+			waitForCommand(command);
+			maker.copyFileToDir(List.of("exd", "TerritoryType.csv"), List.of("xiv", "territory"));
 		}
 
 		// STATUS EFFECTS
 		{
-			StatusEffectLibrary.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
-			Map<Integer, StatusEffectInfo> statusCsvMap = StatusEffectLibrary.getAll();
+			StatusEffectLibraryImpl statusLibrary = StatusEffectLibrary.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
+			Map<Integer, StatusEffectInfo> statusCsvMap = statusLibrary.getAll();
 			List<Long> statusIcons;
 			// TODO: it looks like the way status effects work is that there is one icon for each stack value.
 			// Maximum stack amounts are defined in Status.csv. Maybe it's time to improve the CSV reading?
 			// There's also fields for whether it can be dispelled or not.
 			{
-				statusIcons = statusCsvMap.values().stream().flatMap((data) -> data.getAllIconIds().stream()).distinct().toList();
+				statusIcons = statusCsvMap.values().stream().flatMap((data) -> data.getAllIconIds().stream().filter(id -> id > 0)).distinct().toList();
 				System.out.println("Number of status effect icons: " + statusIcons.size());
 				maker.extractIconRange(statusIcons);
 				System.out.println("Copying Icons");
@@ -238,11 +259,11 @@ public class MakeEverything {
 		}
 		// ACTIONS/ABILITIES
 		{
-			ActionLibrary.readAltCsv(maker.getTargetFile("xiv", "actions", "Action.csv"));
-			Map<Integer, ActionInfo> actionCsvMap = ActionLibrary.getAll();
+			ActionLibraryImpl actionLibrary = ActionLibrary.readAltCsv(maker.getTargetFile("xiv", "actions", "Action.csv"));
+			Map<Integer, ActionInfo> actionCsvMap = actionLibrary.getAll();
 			List<Long> actionIcons;
 			{
-				actionIcons = actionCsvMap.values().stream().mapToLong(ActionInfo::iconId).distinct().boxed().toList();
+				actionIcons = actionCsvMap.values().stream().mapToLong(ActionInfo::iconId).filter(id -> id > 0).distinct().boxed().toList();
 				System.out.println("Number of action icons: " + actionIcons.size());
 				maker.extractIconRange(actionIcons);
 				System.out.println("Copying Icons");

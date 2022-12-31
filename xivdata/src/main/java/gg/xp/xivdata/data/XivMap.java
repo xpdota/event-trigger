@@ -1,86 +1,26 @@
 package gg.xp.xivdata.data;
 
-import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Serial;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class XivMap implements Serializable {
 
 	private static final Logger log = LoggerFactory.getLogger(XivMap.class);
 	@Serial
 	private static final long serialVersionUID = -4708756454369252820L;
-	private static boolean loaded;
-	private static final Map<Long, XivMap> maps = new HashMap<>();
-
-	private static void readCsv() {
-		List<String[]> arrays;
-		try (CSVReader csvReader = new CSVReader(new InputStreamReader(XivMap.class.getResourceAsStream("/xiv/maps/Map.csv")))) {
-			arrays = csvReader.readAll();
-		}
-		catch (IOException | CsvException e) {
-			log.error("Could not load icons!", e);
-			return;
-		}
-		finally {
-			loaded = true;
-		}
-		arrays.forEach(row -> {
-			long id;
-			int offsetX;
-			int offsetY;
-			int scale;
-			String region;
-			String place;
-			String subPlace;
-			String filename;
-
-			try {
-				id = Long.parseLong(row[0]);
-				scale = Integer.parseInt(row[8]);
-				offsetX = Integer.parseInt(row[9]);
-				offsetY = Integer.parseInt(row[10]);
-			}
-			catch (NumberFormatException nfe) {
-				// Ignore the bad value at the top
-				return;
-			}
-			filename = row[7];
-			if (filename.isBlank()) {
-				filename = null;
-			}
-			region = row[11];
-			place = row[12];
-			subPlace = row[13];
-			if (subPlace.isEmpty()) {
-				subPlace = null;
-			}
-			maps.put(id, new XivMap(offsetX, offsetY, scale, filename, region, place, subPlace));
-		});
-		log.info("Loaded {} maps", maps.size());
-
-	}
 
 	public static final XivMap UNKNOWN = new XivMap(0, 0, 100, null, "Unknown", "Unknown", "Unknown");
 
+	@Deprecated // Use MapLibrary directly
 	public static XivMap forId(long id) {
-		if (!loaded) {
-			readCsv();
-		}
-		return maps.getOrDefault(id, UNKNOWN);
+		return MapLibrary.forId(id);
 	}
-
 
 	private final int offsetX;
 	private final int offsetY;

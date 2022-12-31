@@ -2,18 +2,16 @@ package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.BooleanSupplier;
-
-public class CsvParseHelper {
+public class CsvRowHelper {
 
 	private final String[] cells;
 
-	private CsvParseHelper(String[] cells) {
+	private CsvRowHelper(String[] cells) {
 		this.cells = cells;
 	}
 
-	public static CsvParseHelper ofRow(String[] row) {
-		return new CsvParseHelper(row);
+	public static CsvRowHelper ofRow(String[] row) {
+		return new CsvRowHelper(row);
 	}
 
 	// STRING
@@ -78,7 +76,7 @@ public class CsvParseHelper {
 
 	public int getIntOrDefault(int col, int dflt) {
 		try {
-			return Integer.parseInt(cells[0]);
+			return Integer.parseInt(cells[col]);
 		}
 		catch (NumberFormatException nfe) {
 			// Ignore the bad value at the top
@@ -101,6 +99,33 @@ public class CsvParseHelper {
 	}
 
 	// LONG
+	public long getRequiredLong(int col) {
+		return Long.parseLong(cells[col]);
+	}
+
+	public long getLongOrDefault(int col, long dflt) {
+		try {
+			return Long.parseLong(cells[col]);
+		}
+		catch (NumberFormatException nfe) {
+			return dflt;
+		}
+	}
+
+	public @Nullable Long getOptionalLong(int col) {
+		String raw = cells[col];
+		if (raw == null || raw.isBlank()) {
+			return null;
+		}
+		try {
+			return Long.parseLong(raw);
+		}
+		catch (NumberFormatException nfe) {
+			// Ignore the bad value at the top
+			return null;
+		}
+	}
+
 
 	public long getLongId() {
 		try {
@@ -133,4 +158,7 @@ public class CsvParseHelper {
 		}
 	}
 
+	public String getLine() {
+		return String.join(",", cells);
+	}
 }

@@ -2,30 +2,22 @@ package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 
-public record ZoneInfo(int id, @Nullable String dutyName, @Nullable XivMap mapInfo) {
+public record ZoneInfo(int id, @Nullable String dutyName, @Nullable String placeName) {
 
 	public ZoneInfo {
-		if (dutyName == null && mapInfo == null) {
+		if (dutyName == null && placeName == null) {
 			throw new IllegalArgumentException("Useless ZoneInfo for zone " + id + "! Both dutyName and mapInfo were null.");
 		}
 	}
 
-	public @Nullable String placeName() {
-		if (mapInfo == null) {
-			return null;
-		}
-		return mapInfo.getPlace();
-	}
-
 	public String name() {
 		if (dutyName == null) {
-			return mapInfo.getPlace();
+			return placeName;
 		}
 		else {
 			return dutyName;
 		}
 	}
-
 
 	public String getCapitalizedName() {
 		String name = name();
