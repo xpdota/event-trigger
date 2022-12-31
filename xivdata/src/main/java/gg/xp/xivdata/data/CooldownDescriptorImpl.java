@@ -5,7 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.Collections;
+import java.util.List;
 
 public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 
@@ -32,6 +33,7 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 		}
 		buffIds = builder.buffIds;
 		autoBuffs = builder.autoBuffs;
+		auxAbilities = builder.auxAbilities;
 	}
 
 	@Override
@@ -67,6 +69,16 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public @Nullable CdAuxAbility auxMatch(long abilityId) {
+		for (CdAuxAbility auxAbility : auxAbilities) {
+			if (auxAbility.getAbilityId() == abilityId) {
+				return auxAbility;
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -110,6 +122,11 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 		return !autoBuffs && buffIds.length == 0;
 	}
 
+	@Override
+	public List<CdAuxAbility> getAuxAbilities() {
+		return Collections.unmodifiableList(auxAbilities);
+	}
+
 	private final JobType jobType;
 	private final Job job;
 	private final double cooldown;
@@ -121,6 +138,7 @@ public class CooldownDescriptorImpl implements ExtendedCooldownDescriptor {
 	private final int maxCharges;
 	private final boolean defaultPersOverlay;
 	private final @Nullable Double durationOverride;
+	private final List<CdAuxAbility> auxAbilities;
 
 	@Override
 	public boolean equals(Object o) {

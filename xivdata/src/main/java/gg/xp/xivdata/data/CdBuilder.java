@@ -2,7 +2,9 @@ package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -25,6 +27,7 @@ public class CdBuilder {
 	public Double durationOverride;
 	public String name;
 	public boolean autoBuffs = true;
+	public List<CdAuxAbility> auxAbilities = new ArrayList<>();
 
 	public ExtendedCooldownDescriptor build() {
 		return new CooldownDescriptorImpl(this);
@@ -58,6 +61,15 @@ public class CdBuilder {
 
 	public CdBuilder name(String name) {
 		this.name = name;
+		return this;
+	}
+
+	public CdBuilder auxAbility(long abilityId, double durationModifier) {
+		return auxAbility(new CdAuxAbility(abilityId, durationModifier));
+	}
+
+	public CdBuilder auxAbility(CdAuxAbility aux) {
+		this.auxAbilities.add(aux);
 		return this;
 	}
 
@@ -210,5 +222,9 @@ public class CdBuilder {
 		else {
 			return maxCharges;
 		}
+	}
+
+	public List<CdAuxAbility> getAuxAbilities() {
+		return Collections.unmodifiableList(auxAbilities);
 	}
 }
