@@ -3,6 +3,8 @@ package gg.xp.xivdata.data;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 
 public interface BasicCooldownDescriptor {
 	String getLabel();
@@ -28,4 +30,13 @@ public interface BasicCooldownDescriptor {
 	};
 
 	boolean noStatusEffect();
+
+	default List<CdAuxAbility> getAuxAbilities() {
+		return Collections.emptyList();
+	}
+
+	default @Nullable CdAuxAbility auxMatch(long abilityId) {
+		return null;
+	};
+
 }

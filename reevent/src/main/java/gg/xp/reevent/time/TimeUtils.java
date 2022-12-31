@@ -21,6 +21,18 @@ public final class TimeUtils {
 		return TimeUtils.last = now;
 	}
 
+	public static Instant clampInstant(Instant input, Instant min, Instant max) {
+		if (input.compareTo(min) < 0) {
+			return min;
+		}
+		else if (input.compareTo(max) > 0) {
+			return max;
+		}
+		else {
+			return input;
+		}
+	}
+
 	public static Duration clampDuration(Duration input, Duration min, Duration max) {
 		if (input.compareTo(min) < 0) {
 			return min;

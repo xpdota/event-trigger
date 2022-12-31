@@ -3,6 +3,7 @@ package gg.xp.xivdata.data;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.List;
 
 public enum Cooldown implements ExtendedCooldownDescriptor {
 
@@ -51,7 +52,16 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	Upheaval(builder(CooldownType.PERSONAL_BURST, true, 0x1CDB, 0x6498)),
 	ShakeItOff(true, CooldownType.PARTY_MIT, 0x1cdc),
 	Equilibrium(false, CooldownType.HEAL, 0xDE0),
-	// TODO: infuriate requires CD reduction support
+	Infuriate(builder(CooldownType.PERSONAL_BURST, true, 0x34)
+			// Fell cleave
+			.auxAbility(0xDDD, -5)
+			// Decimate
+			.auxAbility(0xDDE, -5)
+			// Inner Chaos
+			.auxAbility(0x404F, -5)
+			// Chaotic Cyclone
+			.auxAbility(0x4051, -5)
+	),
 	// TODO: level based modifications
 	Onslaught(builder(CooldownType.PERSONAL_UTILITY, true, 0x1CDA).maxCharges(3)),
 //	Onslaught(WAR, true, 30.0, 3, "Onslaught", CooldownType.PERSONAL_UTILITY, 0x1CDA),
@@ -257,6 +267,16 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	@Override
 	public boolean abilityIdMatches(long abilityId) {
 		return delegate.abilityIdMatches(abilityId);
+	}
+
+	@Override
+	public List<CdAuxAbility> getAuxAbilities() {
+		return delegate.getAuxAbilities();
+	}
+
+	@Override
+	public @Nullable CdAuxAbility auxMatch(long abilityId) {
+		return delegate.auxMatch(abilityId);
 	}
 
 	@Override
