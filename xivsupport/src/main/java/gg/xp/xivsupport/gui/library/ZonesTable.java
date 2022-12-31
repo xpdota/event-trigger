@@ -27,9 +27,9 @@ public final class ZonesTable {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
 				}))
-//				.addMainColumn(new CustomColumn<>("Place Name", zi -> zi.placeName(), col -> {
-////					col.setPreferredWidth(200);
-//				}))
+				.addMainColumn(new CustomColumn<>("Place Name", ZoneInfo::placeName, col -> {
+//					col.setPreferredWidth(200);
+				}))
 				.addMainColumn(new CustomColumn<>("Duty Name", ZoneInfo::dutyName, col -> {
 //					col.setPreferredWidth(200);
 				}))
