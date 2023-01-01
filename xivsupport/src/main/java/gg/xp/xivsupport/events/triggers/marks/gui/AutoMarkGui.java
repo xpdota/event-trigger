@@ -36,6 +36,10 @@ public class AutoMarkGui implements PluginTab {
 		helpButton.addActionListener(l -> {
 			JOptionPane.showMessageDialog(SwingUtilities.getRoot(helpButton), helpText);
 		});
+		JButton macroHelpButton = new JButton("Macro Help");
+		macroHelpButton.addActionListener(l -> {
+			JOptionPane.showMessageDialog(SwingUtilities.getRoot(macroHelpButton), macroHelpText);
+		});
 		BooleanSetting telestoSetting = marks.getUseTelesto();
 		Component useTelesto = new BooleanSettingGui(telestoSetting, "Use Telesto instead of Macros (must be installed in Dalamud)").getComponent();
 		Component krMode = new BooleanSettingGui(marks.getKoreanMode(), "Korean Client Mode (changes 'ignore' to 'stop')").getComponent();
@@ -45,13 +49,30 @@ public class AutoMarkGui implements PluginTab {
 		ReadOnlyText text = new ReadOnlyText("Note: Telesto is REQUIRED for triggers that place specific markers (rather than just doing '/mk attack' such as Titan Jails)");
 //		text.setPreferredSize(new Dimension(400, 400));
 
-		GuiUtil.simpleTopDownLayout(outer, 400, helpButton, useTelesto, krMode, useFKeys, text);
+		GuiUtil.simpleTopDownLayout(outer, 400, helpButton, macroHelpButton, useTelesto, krMode, useFKeys, text);
 
 		return outer;
 	}
 
 	private static final String helpText = """
 			Instructions:
+			You can use automarkers via Telesto or old-style macros. Telesto is recommended, since there is less setup
+			and supports all the different marker types.
+						
+			To set up Telesto, install it in-game (Dalamud plugin), then head to the Telesto tab in triggevent to
+			enable it and make sure it's working. Then, on the Automarks page, enable Telesto automarks.
+						
+			Then, test it with the command '/e c:samtest bind1 1'.
+						
+			If you are using a client that calls the red marker 'stop' instead of 'ignore', enable "Korean Client Mode".
+						
+			If you wish to use Macros instead, click the "Macro Help" button.
+			""";
+
+	private static final String macroHelpText = """
+			You only need these instructions if you would prefer to use macros instead of Telesto. You should use
+			Telesto if possible.
+			
 			You need one free hotbar for this.
 						
 			Place nine macros on a hotbar. The should look like this:
@@ -78,9 +99,5 @@ public class AutoMarkGui implements PluginTab {
 			To test, use the command '/e c:amtest x y z' (without the quotes) where x, y, and z are the party slots of the players you want to mark.
 						
 			If you aren't in a party, you can still do '/e c:amtest 1' to test it on yourself.
-			
-			To test Telesto's ability to place arbitrary markers, you can do '/e attack1 1', replacing attack1 with the desired marker.
-			
-			If you are using a client that uses 'stop' instead of 'ignore', enable "Korean Client Mode".
 			""";
 }
