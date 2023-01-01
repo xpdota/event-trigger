@@ -2,6 +2,8 @@ package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+
 public interface ExtendedCooldownDescriptor extends BasicCooldownDescriptor {
 	@Nullable Job getJob();
 
@@ -25,7 +27,8 @@ public interface ExtendedCooldownDescriptor extends BasicCooldownDescriptor {
 		}
 		// Then jobs
 		return job.defaultPartySortOrder() + 10000;
-
 	};
+
+	Collection<Long> getAllRelevantAbilityIds();
 
 }

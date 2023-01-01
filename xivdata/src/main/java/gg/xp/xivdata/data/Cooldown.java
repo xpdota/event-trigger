@@ -3,6 +3,7 @@ package gg.xp.xivdata.data;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 
 public enum Cooldown implements ExtendedCooldownDescriptor {
@@ -257,6 +258,11 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	@Override
 	public String getSettingKeyStub() {
 		return name();
+	}
+
+	@Override
+	public Collection<Long> getAllRelevantAbilityIds() {
+		return delegate.getAllRelevantAbilityIds();
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.time.TimeUtils;
+import gg.xp.util.BitField;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.cdsupport.CustomCooldown;
 import gg.xp.xivsupport.cdsupport.CustomCooldownManager;
@@ -33,10 +34,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -59,6 +62,7 @@ public class CdTracker {
 	private Map<ExtendedCooldownDescriptor, CooldownSetting> personalCds = Collections.emptyMap();
 	private Map<ExtendedCooldownDescriptor, CooldownSetting> partyCds = Collections.emptyMap();
 	private List<ExtendedCooldownDescriptor> allCds = Collections.emptyList();
+	private BitField interestingAbilityIds = new BitField();
 	private final XivState state;
 	private final CustomCooldownManager customCdManager;
 	private final PersistenceProvider persistence;
@@ -111,11 +115,17 @@ public class CdTracker {
 		personalCds.putAll(personalCdsBuiltin);
 		this.partyCds = partyCds;
 		this.personalCds = personalCds;
-		List<ExtendedCooldownDescriptor> all = new ArrayList<>(Arrays.asList(Cooldown.values()));
+		Set<ExtendedCooldownDescriptor> all = new HashSet<>();
 		for (CustomCooldown custom : customs) {
 			all.add(custom.buildCd());
 		}
-		allCds = all;
+		all.addAll(Arrays.asList(Cooldown.values()));
+		allCds = all.stream().toList();
+		Set<Long> interestingIds = new HashSet<>();
+		for (ExtendedCooldownDescriptor cd : all) {
+			interestingIds.addAll(cd.getAllRelevantAbilityIds());
+		}
+		this.interestingAbilityIds = BitField.fromLong(interestingIds);
 		log.info("Number of CDs: {} builtin, {} custom", Cooldown.values().length, customs.size());
 	}
 
@@ -214,6 +224,10 @@ public class CdTracker {
 			return;
 		}
 		long id = event.getAbility().getId();
+		// Pre-filter for performance
+		if (!interestingAbilityIds.get(id)) {
+			return;
+		}
 		List<CdAuxUsage> aux = getAuxInfo(id);
 		{
 			ExtendedCooldownDescriptor cd = getCdInfo(id);
