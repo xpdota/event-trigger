@@ -68,7 +68,8 @@ public class ItemList<X> extends JPanel {
 		};
 
 		deleteButton.addActionListener(l -> {
-			model.removeElement(list.getSelectedValue());
+			List<X> selected = list.getSelectedValuesList();
+			selected.forEach(model::removeElement);
 		});
 
 		addButton.addActionListener(l -> {
