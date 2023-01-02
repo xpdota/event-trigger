@@ -54,6 +54,9 @@ import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
+import gg.xp.xivsupport.gui.tables.filters.SystemLogLoggerNameFilter;
+import gg.xp.xivsupport.gui.tables.filters.SystemLogTextFilter;
+import gg.xp.xivsupport.gui.tables.filters.SystemLogThreadFilter;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
@@ -844,6 +847,9 @@ public class GuiMain {
 					.addDetailsColumn(StandardColumns.fieldType)
 					.addDetailsColumn(StandardColumns.fieldDeclaredIn)
 					.addFilter(LogLevelVisualFilter::new)
+					.addFilter(SystemLogThreadFilter::new)
+					.addFilter(SystemLogLoggerNameFilter::new)
+					.addFilter(SystemLogTextFilter::new)
 					.setAppendOrPruneOnly(true)
 					.build();
 			instance.addCallback(table::signalNewData);
