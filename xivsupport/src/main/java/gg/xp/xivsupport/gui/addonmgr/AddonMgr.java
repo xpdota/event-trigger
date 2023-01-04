@@ -1,26 +1,22 @@
 package gg.xp.xivsupport.gui.addonmgr;
 
-import com.formdev.flatlaf.util.ScaledImageIcon;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
-import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.renderers.AutoHeightScalingIcon;
-import gg.xp.xivsupport.gui.tables.renderers.ComponentListStretchyRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.MultiLineVerticalCenteredTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.gui.tabs.AddonDef;
 import gg.xp.xivsupport.gui.tabs.UpdaterConfig;
-import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -112,8 +108,12 @@ public class AddonMgr implements PluginTab {
 						}
 					});
 				}))
-				.addColumn(new CustomColumn<>("Name", item -> item.name))
-				.addColumn(new CustomColumn<>("Subdirectory", item -> item.dirName))
+				.addColumn(new CustomColumn<>("Name", item -> item.name, c -> c.setPreferredWidth(300)))
+				.addColumn(new CustomColumn<>("Description", item -> item.description, c -> {
+					c.setPreferredWidth(1000);
+					c.setCellRenderer(new MultiLineVerticalCenteredTextRenderer("No Description"));
+				}))
+				.addColumn(new CustomColumn<>("Subdirectory", item -> item.dirName, c -> c.setPreferredWidth(200)))
 				.build();
 		addonSetting.addListener(model::signalNewData);
 		JTable table = model.makeTable();

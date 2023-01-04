@@ -16,5 +16,16 @@ public class AddonDef {
 	public String urlPattern;
 	@JsonProperty("icon_url")
 	public String iconUrl;
+	@JsonProperty("description")
+	public String description;
+
+	public void readFrom(AddonDef that) {
+		this.name = that.name;
+		this.dirName = that.dirName;
+		this.url = that.url;
+		this.urlPattern = that.urlPattern;
+		this.iconUrl = that.iconUrl;
+		this.description = that.description;
+	}
 
 }
