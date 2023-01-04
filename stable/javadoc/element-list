@@ -85,6 +85,7 @@ gg.xp.xivsupport.gui.overlay
 gg.xp.xivsupport.gui.tables
 gg.xp.xivsupport.gui.tables.filters
 gg.xp.xivsupport.gui.tables.renderers
+gg.xp.xivsupport.gui.tables.timedisplay
 gg.xp.xivsupport.gui.tabs
 gg.xp.xivsupport.gui.tree
 gg.xp.xivsupport.gui.util
