@@ -75,6 +75,7 @@ public class BasicEventQueue implements EventQueue {
 				else {
 					backingQueue.add(tracker);
 				}
+//				log.info("Push: {}", event);
 				queueLock.notifyAll();
 			}
 		}
@@ -99,6 +100,7 @@ public class BasicEventQueue implements EventQueue {
 				else {
 					tracker.markExit();
 					queueLock.notifyAll();
+//					log.info("Pull: {}", tracker.event);
 					return tracker.event;
 				}
 			}

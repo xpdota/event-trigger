@@ -151,7 +151,7 @@ public class AutoHandlerScan {
 				Class<?> clazz = method.getDeclaringClass();
 				// If you extend a class with an annotated method, the method still "belongs" to the superclass.
 				// Thus, we need to explicitly scan for children of the class too.
-				Set<Class<?>> implementingClasses = reflections.get(SubTypes.of(clazz).asClass());
+				Set<Class<?>> implementingClasses = reflections.get(SubTypes.of(clazz).asClass(loaders));
 				if (!implementingClasses.isEmpty()) {
 					log.info("Class {} has implementors: {}", clazz, implementingClasses);
 				}
