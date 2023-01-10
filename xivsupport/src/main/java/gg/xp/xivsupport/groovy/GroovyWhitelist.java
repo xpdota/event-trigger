@@ -103,7 +103,9 @@ public class GroovyWhitelist extends Whitelist {
 		}
 	}
 
-	private boolean objectAllowed(Object object) {
+	private boolean receiverObjectAllowed(Object object) {
+		// This is fine because a receiver should never be null. That doesn't make sense, and it's a bit suspicious
+		// if it gets to this point, so be safe.
 		if (object == null) {
 			return false;
 		}
@@ -115,9 +117,22 @@ public class GroovyWhitelist extends Whitelist {
 		return classAllowed(object.getClass());
 	}
 
-	private boolean objectsAllowed(Object[] objects) {
+	private boolean generalObjectAllowed(Object object) {
+		if (object == null) {
+			// General objects such as arguments and field values may be null
+			return true;
+		}
+		for (Class<?> cls : classBlacklist) {
+			if (cls.isInstance(object)) {
+				return false;
+			}
+		}
+		return classAllowed(object.getClass());
+	}
+
+	private boolean generalObjectsAllowed(Object[] objects) {
 		for (Object object : objects) {
-			if (!objectAllowed(object)) {
+			if (!generalObjectAllowed(object)) {
 				return false;
 			}
 		}
@@ -127,38 +142,38 @@ public class GroovyWhitelist extends Whitelist {
 	@Override
 	public boolean permitsMethod(@NotNull Method method, @NotNull Object receiver, @NotNull Object[] args) {
 		log.trace("{}", method);
-		return methodAllowed(method) && objectAllowed(receiver) && objectsAllowed(args);
+		return methodAllowed(method) && receiverObjectAllowed(receiver) && generalObjectsAllowed(args);
 	}
 
 	@Override
 	public boolean permitsConstructor(@NotNull Constructor<?> constructor, @NotNull Object[] args) {
 		log.trace("{}", constructor);
-		return ctorAllowed(constructor) && objectsAllowed(args);
+		return ctorAllowed(constructor) && generalObjectsAllowed(args);
 	}
 
 	@Override
 	public boolean permitsStaticMethod(@NotNull Method method, @NotNull Object[] args) {
 		log.trace("{}", method);
-		return methodAllowed(method) && objectsAllowed(args);
+		return methodAllowed(method) && generalObjectsAllowed(args);
 	}
 
 	@Override
 	public boolean permitsFieldGet(@NotNull Field field, @NotNull Object receiver) {
 		log.trace("{}", field);
-		return fieldAllowed(field) && objectAllowed(receiver);
+		return fieldAllowed(field) && receiverObjectAllowed(receiver);
 	}
 
 	@Override
 	public boolean permitsFieldSet(@NotNull Field field, @NotNull Object receiver, Object value) {
 		log.trace("{}", field);
-		return fieldAllowed(field) && objectAllowed(receiver) && objectAllowed(value);
+		return fieldAllowed(field) && receiverObjectAllowed(receiver) && generalObjectAllowed(value);
 	}
 
 	@Override
 	public boolean permitsStaticFieldGet(@NotNull Field field) {
 		log.trace("{}", field);
 		try {
-			return fieldAllowed(field) && objectAllowed(field.get(null));
+			return fieldAllowed(field) && generalObjectAllowed(field.get(null));
 		}
 		catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
@@ -168,6 +183,6 @@ public class GroovyWhitelist extends Whitelist {
 	@Override
 	public boolean permitsStaticFieldSet(@NotNull Field field, Object value) {
 		log.trace("{}", field);
-		return fieldAllowed(field) && objectAllowed(value);
+		return fieldAllowed(field) && generalObjectAllowed(value);
 	}
 }
