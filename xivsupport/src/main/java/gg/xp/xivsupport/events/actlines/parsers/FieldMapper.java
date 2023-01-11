@@ -45,6 +45,11 @@ public class FieldMapper<K extends Enum<K>> {
 		return Long.parseLong(raw.get(key), 10);
 	}
 
+	public int getInt(K key) {
+		return Integer.parseInt(raw.get(key), 10);
+	}
+
+
 	public @Nullable Long getOptionalHex(K key) {
 		String rawStr = raw.get(key);
 		if (rawStr.isEmpty()) {

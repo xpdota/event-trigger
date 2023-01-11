@@ -63,14 +63,6 @@ public class BrokenACTHack implements FilteredEventHandler {
 //		return new XivCombatant(npcCounter.getAndIncrement(), name, false, false, 2, fakeHp, fakeMp, fakePos, npcId, npcNameId, 0, 90, 0, 0);
 //	}
 //
-//	private final XivPlayerCharacter pc1 = makePc("Wynn Dohz", Job.SGE, true);
-//	private final XivPlayerCharacter pc2 = makePc("Mari Haunt", Job.PLD, false);
-//	private final XivPlayerCharacter pc3 = makePc("Fay Chan", Job.DRK, false);
-//	private final XivPlayerCharacter pc4 = makePc("Kait Pyre", Job.WHM, false);
-//	private final XivPlayerCharacter pc5 = makePc("Sensha Desu", Job.DRG, false);
-//	private final XivPlayerCharacter pc6 = makePc("Tenebris Solais", Job.NIN, false);
-//	private final XivPlayerCharacter pc7 = makePc("Cherry Raven", Job.BRD, false);
-//	private final XivPlayerCharacter pc8 = makePc("Jane Mayus", Job.SMN, false);
 //
 //	private final XivCombatant thordan = makeNpc("King Thordan", 12604, 3632);
 //	private final XivCombatant grin = makeNpc("Ser Grinnaux", 12602, 3639);

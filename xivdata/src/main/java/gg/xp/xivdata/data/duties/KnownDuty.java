@@ -38,7 +38,11 @@ public enum KnownDuty implements Duty {
 	O10S("O10S", 803, Expansion.SB, DutyType.SAVAGE_RAID),
 	O11S("O11S", 804, Expansion.SB, DutyType.SAVAGE_RAID),
 	O12S("O12S", 805, Expansion.SB, DutyType.SAVAGE_RAID),
-	RubicanteEx("EX5", 1096, Expansion.EW, DutyType.TRIAL_EX)
+	RubicanteEx("EX5", 1096, Expansion.EW, DutyType.TRIAL_EX),
+	Aglaia("Aglaia", 0x41E, Expansion.EW, DutyType.ALLIANCE_RAID),
+	Euphrosyne("Euphrosyne", 0x45E, Expansion.EW, DutyType.ALLIANCE_RAID),
+	UCoB("Unending Coil of Bahamut", 0x2DD, Expansion.SB, DutyType.ULTIMATE),
+
 	;
 
 	private final String name;
