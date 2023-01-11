@@ -37,7 +37,8 @@ public enum KnownDuty implements Duty {
 	O9S("O9S", 802, Expansion.SB, DutyType.SAVAGE_RAID),
 	O10S("O10S", 803, Expansion.SB, DutyType.SAVAGE_RAID),
 	O11S("O11S", 804, Expansion.SB, DutyType.SAVAGE_RAID),
-	O12S("O12S", 805, Expansion.SB, DutyType.SAVAGE_RAID)
+	O12S("O12S", 805, Expansion.SB, DutyType.SAVAGE_RAID),
+	RubicanteEx("EX5", 1096, Expansion.EW, DutyType.TRIAL_EX)
 	;
 
 	private final String name;
