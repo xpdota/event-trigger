@@ -2,6 +2,8 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.xivdata.data.*;
 
+import java.io.Serializable;
+
 public record PlayerStats(
 		Job job,
 		int strength,
@@ -14,12 +16,10 @@ public record PlayerStats(
 		int directHit,
 		int criticalHit,
 		int attackMagicPotency,
+		int healMagicPotency,
 		int determination,
 		int skillSpeed,
 		int spellSpeed,
-		int unknown0,
-		int tenacity,
-		int localContentId
-) {
-
+		int tenacity
+) implements Serializable {
 }
