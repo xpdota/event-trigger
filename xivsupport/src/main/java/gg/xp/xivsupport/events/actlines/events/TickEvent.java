@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Represents a DoT tick. ACT provides us with only the combined tick, but FFLogs gives us the full breakdown as well.
+ * Represents a DoT/HoT tick. ACT provides us with only the combined tick, but FFLogs gives us the full breakdown as well.
  *
  * The effect ID is usually 0, in which case it is treated as a combined DoT/HoT tick. However, ground effects will
  * have the correct ID here.
