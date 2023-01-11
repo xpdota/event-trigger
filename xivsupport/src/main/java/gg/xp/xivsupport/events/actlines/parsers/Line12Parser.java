@@ -17,13 +17,14 @@ public class Line12Parser extends AbstractACTLineParser<Line12Parser.Fields> {
 	}
 
 	enum Fields {
-		strength, dexterity, vitality, intelligence, mind, piety, attackPower, directHit, criticalHit, attackMagicPotency, healMagicPotency, determination, skillSpeed, spellSpeed, unknown0, tenacity, localContentId
+		jobId, strength, dexterity, vitality, intelligence, mind, piety, attackPower, directHit, criticalHit, attackMagicPotency, healMagicPotency, determination, skillSpeed, spellSpeed, unknown0, tenacity, localContentId
 	}
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		PlayerStats stats = new PlayerStats(
-				Job.getById(fields.getInt(Fields.strength)),
+				Job.getById(fields.getInt(Fields.jobId)),
+				fields.getInt(Fields.strength),
 				fields.getInt(Fields.dexterity),
 				fields.getInt(Fields.vitality),
 				fields.getInt(Fields.intelligence),
@@ -37,9 +38,7 @@ public class Line12Parser extends AbstractACTLineParser<Line12Parser.Fields> {
 				fields.getInt(Fields.determination),
 				fields.getInt(Fields.skillSpeed),
 				fields.getInt(Fields.spellSpeed),
-				fields.getInt(Fields.unknown0),
-				fields.getInt(Fields.tenacity),
-				fields.getInt(Fields.localContentId));
+				fields.getInt(Fields.tenacity));
 		return new PlayerStatsUpdatedEvent(stats);
 	}
 
