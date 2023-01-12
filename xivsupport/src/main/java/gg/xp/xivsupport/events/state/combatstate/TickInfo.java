@@ -1,16 +1,20 @@
 package gg.xp.xivsupport.events.state.combatstate;
 
+import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.TickEvent;
 
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Timing info for DoT/HoT ticks
+ */
 public class TickInfo {
 
 	private final int intervalMs;
 	private final long basis;
 
-	public TickInfo(TickEvent basis, Duration interval) {
+	public TickInfo(Event basis, Duration interval) {
 		this.basis = basis.getHappenedAt().toEpochMilli();
 		intervalMs = (int) interval.toMillis();
 	}
