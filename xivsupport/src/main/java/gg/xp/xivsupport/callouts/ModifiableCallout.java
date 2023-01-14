@@ -42,6 +42,7 @@ public class ModifiableCallout<X> {
 	private final String description;
 	private final String defaultTtsText;
 	private final String defaultVisualText;
+	private @Nullable String extendedDescription;
 	private final Predicate<RawModifiedCallout<X>> expiry;
 	private Function<? super X, ? extends @Nullable Component> guiProvider = e -> null;
 	private boolean enabledByDefault = true;
@@ -198,6 +199,17 @@ public class ModifiableCallout<X> {
 	 */
 	public ModifiableCallout<X> disabledByDefault() {
 		enabledByDefault = false;
+		return this;
+	}
+
+	/**
+	 * Adds an extended description.
+	 *
+	 * @param extendedDescription The extended description
+	 * @return this (builder pattern)
+	 */
+	public ModifiableCallout<X> extendedDescription(String extendedDescription) {
+		this.extendedDescription = extendedDescription;
 		return this;
 	}
 
@@ -384,5 +396,9 @@ public class ModifiableCallout<X> {
 
 	public boolean isEnabledByDefault() {
 		return enabledByDefault;
+	}
+
+	public @Nullable String getExtendedDescription() {
+		return extendedDescription;
 	}
 }

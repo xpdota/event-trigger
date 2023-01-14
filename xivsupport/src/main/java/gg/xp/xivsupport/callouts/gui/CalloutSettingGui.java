@@ -1,18 +1,18 @@
 package gg.xp.xivsupport.callouts.gui;
 
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
-import gg.xp.xivsupport.callouts.audio.SoundFile;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.StringSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.event.ListDataListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
@@ -32,10 +32,12 @@ public class CalloutSettingGui {
 	private final BooleanSetting allTts;
 	private final JPanel colorPickerPanel;
 	private final JButton colorPicker;
+	private final @Nullable Component extendedDescription;
 	private boolean enabledByParent = true;
 
 	public CalloutSettingGui(ModifiedCalloutHandle call, SoundFilesManager soundMgr, SoundFileTab sft) {
 		callCheckbox = new BooleanSettingGui(call.getEnable(), call.getDescription(), () -> enabledByParent).getComponent();
+		this.extendedDescription = makeExtendedDescription(call.getOriginal().getExtendedDescription());
 		this.sft = sft;
 		BooleanSetting enableTts = call.getEnableTts();
 		StringSetting ttsSetting = call.getTtsSetting();
@@ -86,62 +88,6 @@ public class CalloutSettingGui {
 			JLabel soundLabel = new JLabel("Sound: ");
 
 			JComboBox<String> filePicker = new SoundFilePicker(sft, soundMgr, () -> call.getSoundSetting().get(), file -> call.getSoundSetting().set(file)).getPicker();
-//
-//			JComboBox<String> filePicker = new JComboBox<>();
-//			ComboBoxModel<String> fpModel = new ComboBoxModel<>() {
-//				@Override
-//				public void setSelectedItem(Object item) {
-//					if (item.equals("Add New...")) {
-//						SoundFile soundFile = sft.addNew();
-//						if (soundFile != null) {
-//							call.getSoundSetting().set(soundFile.name);
-//						}
-//						else {
-//							return;
-//						}
-//					}
-//					else {
-//						if (item.equals("None")) {
-//							item = "";
-//						}
-//						call.getSoundSetting().set(item.toString());
-//					}
-//					SwingUtilities.invokeLater(filePicker::repaint);
-//				}
-//
-//				@Override
-//				public Object getSelectedItem() {
-//					String s = call.getSoundSetting().get();
-//					if (s.isEmpty()) {
-//						return "None";
-//					}
-//					return s;
-//				}
-//
-//				@Override
-//				public int getSize() {
-//					return soundMgr.getSoundFilesAndNone().size() + 1;
-//				}
-//
-//				@Override
-//				public String getElementAt(int index) {
-//					if (index == soundMgr.getSoundFilesAndNone().size()) {
-//						return "Add New...";
-//					}
-//					return soundMgr.getSoundFilesAndNone().get(index);
-//				}
-//
-//				@Override
-//				public void addListDataListener(ListDataListener l) {
-//
-//				}
-//
-//				@Override
-//				public void removeListDataListener(ListDataListener l) {
-//
-//				}
-//			};
-//			filePicker.setModel(fpModel);
 			soundPanel.add(soundLabel);
 			soundPanel.add(filePicker);
 		}
@@ -193,6 +139,17 @@ public class CalloutSettingGui {
 		return callCheckbox;
 	}
 
+	public @Nullable Component getExtendedDescription() {
+		return extendedDescription;
+	}
+
+	private static @Nullable Component makeExtendedDescription(@Nullable String edesc) {
+		if (edesc == null) {
+			return null;
+		}
+		return new ReadOnlyText(edesc);
+	}
+
 	public JPanel getTtsPanel() {
 		return ttsPanel;
 	}
@@ -227,6 +184,9 @@ public class CalloutSettingGui {
 		textPanel.setVisible(visible);
 		colorPickerPanel.setVisible(visible);
 		soundPanel.setVisible(visible);
+		if (extendedDescription != null) {
+			extendedDescription.setVisible(visible);
+		}
 
 	}
 }

@@ -297,9 +297,7 @@ public class DutiesTab implements PluginTab {
 		{
 			JPanel panel = new JPanel(new BorderLayout());
 			CalloutHelper ch = new CalloutHelper(dutyContent.calls, soundMgr, sft);
-			JScrollPane scroller = new JScrollPane(ch);
-			scroller.getVerticalScrollBar().setUnitIncrement(20);
-			scroller.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+			JScrollPane scroller = new JScrollPane(ch, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			panel.add(scroller, BorderLayout.CENTER);
 
 			JPanel settingsPanel = new JPanel();
