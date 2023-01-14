@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class MakeEverything {
 
@@ -239,6 +241,13 @@ public class MakeEverything {
 			waitForCommand(command);
 			maker.copyFileToDir(List.of("exd", "TerritoryType.csv"), List.of("xiv", "territory"));
 		}
+		List<String> iconDir = List.of("xiv", "icon");
+		// General
+		{
+			maker.extractIconRange(60011, 60013);
+			IntStream.rangeClosed(60011, 60013)
+					.forEach(icon -> maker.copyIconIfExists(icon, iconDir));
+		}
 
 		// STATUS EFFECTS
 		{
@@ -253,8 +262,7 @@ public class MakeEverything {
 				System.out.println("Number of status effect icons: " + statusIcons.size());
 				maker.extractIconRange(statusIcons);
 				System.out.println("Copying Icons");
-				List<String> statusIconDir = List.of("xiv", "icon");
-				statusIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, statusIconDir));
+				statusIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, iconDir));
 			}
 		}
 		// ACTIONS/ABILITIES
@@ -267,8 +275,7 @@ public class MakeEverything {
 				System.out.println("Number of action icons: " + actionIcons.size());
 				maker.extractIconRange(actionIcons);
 				System.out.println("Copying Icons");
-				List<String> actionIconDir = List.of("xiv", "icon");
-				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, actionIconDir));
+				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, iconDir));
 			}
 		}
 	}
