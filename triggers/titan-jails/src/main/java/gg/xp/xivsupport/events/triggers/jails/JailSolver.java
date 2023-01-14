@@ -25,6 +25,7 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,8 @@ public class JailSolver implements FilteredEventHandler, OverridesCalloutGroupEn
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> first = new ModifiableCallout<>("First Jail", "First");
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> second = new ModifiableCallout<>("Second Jail", "Second");
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> third = new ModifiableCallout<>("Third Jail", "Third");
-	private final ModifiableCallout<EntityKilledEvent> playerDied = new ModifiableCallout<>("Jailed Player Died", "Cover {jailnum}");
+	private final ModifiableCallout<EntityKilledEvent> playerDied = new ModifiableCallout<EntityKilledEvent>("Jailed Player Died", "Cover {jailnum}")
+			.extendedDescription(StringUtils.repeat("When a player dies, this trigger will tell you which spot to cover.", 3));
 	private static final Logger log = LoggerFactory.getLogger(JailSolver.class);
 
 	private final List<XivPlayerCharacter> jailedPlayers = new ArrayList<>();

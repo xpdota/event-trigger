@@ -11,7 +11,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CalloutHelper extends JPanel {
+public class CalloutHelper extends JPanel implements Scrollable {
 
 	private final List<JCheckBox> showHides = new ArrayList<>();
 	private final List<JCheckBox> topLevel = new ArrayList<>();
@@ -80,7 +80,7 @@ public class CalloutHelper extends JPanel {
 //				collapseAll.addActionListener(l -> showHide.setSelected(false));
 //				expandAll.addActionListener(l -> showHide.setSelected(true));
 			}
-			c.weightx = 1;
+			c.weightx = 0;
 			this.add(groupControls, c);
 			c.weightx = 0;
 			c.gridwidth = 1;
@@ -98,8 +98,24 @@ public class CalloutHelper extends JPanel {
 
 				csgs.add(csg);
 
-				this.add(csg.getCallCheckbox(), c);
+				c.gridwidth = GridBagConstraints.REMAINDER;
 
+				JCheckBox callCheckbox = csg.getCallCheckbox();
+				Component extendedDescription = csg.getExtendedDescription();
+				this.add(callCheckbox, c);
+
+				if (extendedDescription != null) {
+					c.gridy++;
+					c.gridx += 2;
+					this.add(extendedDescription, c);
+					c.gridx -= 2;
+				}
+
+				c.gridwidth = 1;
+				c.gridy++;
+				c.gridx++;
+//				this.add(new JLabel("Foo"), c);
+				this.add(Box.createHorizontalStrut(50), c);
 				c.gridx++;
 				c.weightx = 1;
 				this.add(csg.getTtsPanel(), c);
@@ -111,7 +127,7 @@ public class CalloutHelper extends JPanel {
 				this.add(csg.getTextPanel(), c);
 
 				c.gridy++;
-				c.gridx = 3;
+				c.gridx = 4;
 				this.add(csg.getSoundPanel(), c);
 				c.gridx += 2;
 				this.add(csg.getColorPickerPanel(), c);
@@ -154,4 +170,28 @@ public class CalloutHelper extends JPanel {
 		SwingUtilities.invokeLater(() -> topLevel.forEach(sh -> sh.setSelected(enable)));
 	}
 
+	@Override
+	public Dimension getPreferredScrollableViewportSize() {
+		return getPreferredSize();
+	}
+
+	@Override
+	public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+		return 20;
+	}
+
+	@Override
+	public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+		return (int) (getVisibleRect().height / 2.5);
+	}
+
+	@Override
+	public boolean getScrollableTracksViewportWidth() {
+		return true;
+	}
+
+	@Override
+	public boolean getScrollableTracksViewportHeight() {
+		return false;
+	}
 }

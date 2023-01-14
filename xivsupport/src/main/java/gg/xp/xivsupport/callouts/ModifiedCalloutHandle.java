@@ -22,6 +22,7 @@ public final class ModifiedCalloutHandle {
 	private final @Nullable BooleanSetting allTts;
 	private final @Nullable BooleanSetting allText;
 	private final ColorSetting textColorOverride;
+	private final ModifiableCallout<?> originalCallout;
 	private boolean isEnabledByParent = true;
 
 	// Only used for testing
@@ -30,6 +31,7 @@ public final class ModifiedCalloutHandle {
 	}
 
 	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText, CalloutDefaults defaults) {
+		this.originalCallout = original;
 		this.allTts = allTts;
 		this.allText = allText;
 		boolean enabledByDefault = original.isEnabledByDefault();
@@ -170,6 +172,10 @@ public final class ModifiedCalloutHandle {
 
 	public ColorSetting getTextColorOverride() {
 		return textColorOverride;
+	}
+
+	public ModifiableCallout<?> getOriginal() {
+		return original;
 	}
 
 	public void resetAllBooleans() {
