@@ -45,7 +45,7 @@ fbcf58513bc25b80f075d812aad3e3cf  slf4j-api-1.7.32.jar
 55d0d3398a0e33b65eefd0b10c01aecb  telesto-support-1.0-SNAPSHOT.jar
 05c0808f78d700dd7926c386ac74d5c0  timelines-1.0-SNAPSHOT.jar
 fc0105adb2c8752d01b8d6c67d54cd22  titan-jails-1.0-SNAPSHOT.jar
-16d4978aeaf7a581b653b47e2d0b4fb5  triggers-ew-1.0-SNAPSHOT.jar
+ed7f24a0866e8e40b35b5b7b8efe4b6c  triggers-ew-1.0-SNAPSHOT.jar
 a79006557cc3031a9dc2aedddfed0969  triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  triggers-sb-1.0-SNAPSHOT.jar
 517c19f9eca8eb78a2d5acd7853511dd  trigger-support-1.0-SNAPSHOT.jar
