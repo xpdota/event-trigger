@@ -80,7 +80,7 @@ public class CalloutHelper extends JPanel implements Scrollable {
 //				collapseAll.addActionListener(l -> showHide.setSelected(false));
 //				expandAll.addActionListener(l -> showHide.setSelected(true));
 			}
-			c.weightx = 0;
+			c.weightx = 1;
 			this.add(groupControls, c);
 			c.weightx = 0;
 			c.gridwidth = 1;
