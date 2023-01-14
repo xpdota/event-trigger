@@ -1,11 +1,10 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.HasIconURL;
-import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageType;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.InvulnBlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpGain;
@@ -41,7 +40,13 @@ public class AbilityEffectRenderer {
 		boolean textOnRight = false;
 		if (value instanceof DamageTakenEffect dte) {
 			text = dte.getSeverity().getSymbol() + dte.getAmount();
-			icon = ActionLibrary.iconForId(9);
+			DamageType type = dte.getDamageType();
+			icon = switch (type) {
+				case Piercing, Slashing, Blunt, Shot -> GeneralIcons.DAMAGE_PHYS;
+				case Magic -> GeneralIcons.DAMAGE_MAGIC;
+				default -> GeneralIcons.DAMAGE_OTHER;
+			};
+//			icon = ActionLibrary.iconForId(9);
 		}
 		else if (value instanceof HealEffect heal) {
 			text = heal.getSeverity().getSymbol() + heal.getAmount();
