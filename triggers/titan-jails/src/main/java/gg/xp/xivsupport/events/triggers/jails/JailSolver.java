@@ -40,7 +40,7 @@ public class JailSolver implements FilteredEventHandler, OverridesCalloutGroupEn
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> second = new ModifiableCallout<>("Second Jail", "Second");
 	private final ModifiableCallout<FinalTitanJailsSolvedEvent> third = new ModifiableCallout<>("Third Jail", "Third");
 	private final ModifiableCallout<EntityKilledEvent> playerDied = new ModifiableCallout<EntityKilledEvent>("Jailed Player Died", "Cover {jailnum}")
-			.extendedDescription(StringUtils.repeat("When a player dies, this trigger will tell you which spot to cover.", 3));
+			.extendedDescription("When a player dies, this trigger will tell you which spot to cover.");
 	private static final Logger log = LoggerFactory.getLogger(JailSolver.class);
 
 	private final List<XivPlayerCharacter> jailedPlayers = new ArrayList<>();
