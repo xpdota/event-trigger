@@ -435,7 +435,6 @@ public class P4S implements FilteredEventHandler {
 
 	private boolean isPhase2;
 
-	// Resetting HM counter on phase 2 since there are other HMs in p1
 	@HandleEvents
 	public void searing(EventContext context, AbilityCastStart event) {
 		if (event.getAbility().getId() == 0x6A2D) {
@@ -448,27 +447,14 @@ public class P4S implements FilteredEventHandler {
 	public void reset(EventContext context, DutyCommenceEvent event) {
 		isPhase2 = false;
 		currentAct = Act.PRE;
-		firstHeadmark = null;
 		fleetingImpulseDebuffCount = 0;
 		myFleetingImpulseNumber = 0;
 		fleetingImpulseTetherCount = 0;
 	}
 
-	private Long firstHeadmark;
-
-	private int getHeadmarkOffset(HeadMarkerEvent event) {
-		if (firstHeadmark == null) {
-			firstHeadmark = event.getMarkerId();
-		}
-		return (int) (event.getMarkerId() - firstHeadmark);
-	}
-
-
 	@HandleEvents
 	public void act2headmark(EventContext context, HeadMarkerEvent event) {
-		// This is done unconditionally to create the headmarker offset
-		int headmarkOffset = getHeadmarkOffset(event);
-		// But after that, we only want the actual player
+		int headmarkOffset = event.getMarkerOffset();
 		if (!event.getTarget().isThePlayer()) {
 			return;
 		}
