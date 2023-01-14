@@ -36,25 +36,6 @@ public class P2S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> foreTide = ModifiableCallout.durationBasedCall("Fore Push", "{longshort} North Push");
 	private final ModifiableCallout<BuffApplied> rearTide = ModifiableCallout.durationBasedCall("Rear Push", "{longshort} South Push");
 
-	/*
-			case -114:
-				yield blue1;
-			case -113:
-				yield blue2;
-			case -112:
-				yield blue3;
-			case -111:
-				yield blue4;
-			case -110:
-				yield purp1;
-			case -109:
-				yield purp2;
-			case -108:
-				yield purp3;
-			case -107:
-				yield purp4;
-
-	 */
 	@PlayerHeadmarker(value = -114, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> blue1 = new ModifiableCallout<>("Blue #1", "Blue 1");
 	@PlayerHeadmarker(value = -113, offset = true)
@@ -212,40 +193,6 @@ public class P2S extends AutoChildEventHandler implements FilteredEventHandler {
 			}
 		}
 	}
-
-
-//	@HandleEvents
-//	public void sequentialHeadmarkSolver(EventContext context, HeadMarkerEvent event) {
-//		// This is done unconditionally to create the headmarker offset
-//		int headmarkOffset = event.getMarkerOffset();
-//		// But after that, we only want the actual player
-//		if (!event.getTarget().isThePlayer()) {
-//			return;
-//		}
-//		ModifiableCallout<HeadMarkerEvent> call = switch (headmarkOffset) {
-//			case -114:
-//				yield blue1;
-//			case -113:
-//				yield blue2;
-//			case -112:
-//				yield blue3;
-//			case -111:
-//				yield blue4;
-//			case -110:
-//				yield purp1;
-//			case -109:
-//				yield purp2;
-//			case -108:
-//				yield purp3;
-//			case -107:
-//				yield purp4;
-//			default:
-//				yield null;
-//		};
-//		if (call != null) {
-//			context.accept(call.getModified(event));
-//		}
-//	}
 
 	@Override
 	public boolean enabled(EventContext context) {
