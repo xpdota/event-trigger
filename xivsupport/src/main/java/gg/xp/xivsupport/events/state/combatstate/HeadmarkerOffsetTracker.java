@@ -6,8 +6,15 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Deals with the offset headmarkers in newer content.
+ */
 public class HeadmarkerOffsetTracker {
+
+	private static final Logger log = LoggerFactory.getLogger(HeadmarkerOffsetTracker.class);
 
 	private Long firstId;
 
@@ -23,20 +30,29 @@ public class HeadmarkerOffsetTracker {
 
 	@HandleEvents
 	public void reset(EventContext context, PullStartedEvent event) {
-		reset();
+		resetOffset();
 	}
 
 	@HandleEvents
 	public void reset(EventContext context, ZoneChangeEvent event) {
-		reset();
+		resetOffset();
 	}
 
 	@HandleEvents
 	public void reset(EventContext context, DutyCommenceEvent event) {
-		reset();
+		resetOffset();
 	}
 
+	/**
+	 * Manually reset the tracking. This is global, so use sparingly. This would
+	 * mostly be used for phase transitions.
+	 */
 	public void reset() {
+		log.info("Headmarker offset tracking manually reset");
+		resetOffset();
+	}
+
+	private void resetOffset() {
 		firstId = null;
 	}
 
