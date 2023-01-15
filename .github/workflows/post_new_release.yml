@@ -37,7 +37,7 @@ jobs:
         run: JAVA_HOME=$JAVA_HOME_17_X64 mvn -T3 clean install
 
       - name: Copy artifacts
-        run: cp
+        run: mv launcher/target/*.zip ./
 
       - name: Release
         uses: softprops/action-gh-release@v1
