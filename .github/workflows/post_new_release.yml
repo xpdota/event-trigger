@@ -47,7 +47,7 @@ jobs:
           body: ${{ inputs.body }}
           tag_name: ${{ inputs.tag }}
           draft: true
-          target_comitish: stable
+          target_commitish: stable
           files: |
             triggevent-linux.zip
             triggevent-win-byoj.zip
