@@ -20,8 +20,8 @@ import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
-import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.HeadmarkerOffsetTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
@@ -217,14 +217,16 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
+	private final HeadmarkerOffsetTracker headmarkerOffsetTracker;
 
-	public Dragonsong(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
+	public Dragonsong(XivState state, StatusEffectRepository buffs, PersistenceProvider pers, HeadmarkerOffsetTracker headmarkerOffsetTracker) {
 		this.state = state;
 		this.buffs = buffs;
 		p6_useAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.use-auto-marks", false);
 		p6_altMarkMode = new BooleanSetting(pers, "triggers.dragonsong.alt-mark-mode", true);
 		p6_rotPrioHigh = new BooleanSetting(pers, "triggers.dragonsong.rot-highest-prio", true);
 		p6_reverseSort = new BooleanSetting(pers, "triggers.dragonsong.rot-reverse-sort", true);
+		this.headmarkerOffsetTracker = headmarkerOffsetTracker;
 		sortSetting = new JobSortSetting(pers, "triggers.dragonsong.job-prio", state);
 	}
 
@@ -291,12 +293,6 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				s.updateCall(p1_puddleBaitAfter.getModified(removed));
 			});
 
-
-	@HandleEvents
-	public void reset(EventContext context, PullStartedEvent event) {
-		firstHeadmark = null;
-	}
-
 	@HandleEvents
 	public void zoneChange(EventContext context, ZoneChangeEvent zce) {
 		isSecondPhase = false;
@@ -307,31 +303,17 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		// Covers transition from first to second phase
 		if (event.getSource().getbNpcId() == 0x313C && !isSecondPhase) {
 			isSecondPhase = true;
-			firstHeadmark = null;
+			headmarkerOffsetTracker.reset();
 		}
 	}
 
 	private boolean isSecondPhase;
-	private Long firstHeadmark;
-
-	private int getHeadmarkOffset(HeadMarkerEvent event) {
-		if (firstHeadmark == null) {
-			firstHeadmark = event.getMarkerId();
-		}
-		return (int) (event.getMarkerId() - firstHeadmark);
-	}
-
-	@HandleEvents(order = -50_000)
-	public void sequentialHeadmarkSolver(EventContext context, HeadMarkerEvent event) {
-		getHeadmarkOffset(event);
-	}
-
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> p1_fourHeadMark = new SequentialTrigger<>(30_000, BaseEvent.class,
 			e -> e instanceof AbilityCastStart acs && acs.getAbility().getId() == 0x62DD,
 			(e1, s) -> {
-				if (s.waitEvents(4, HeadMarkerEvent.class, event -> getHeadmarkOffset(event) == 0)
+				if (s.waitEvents(4, HeadMarkerEvent.class, event -> event.getMarkerOffset() == 0)
 						.stream().anyMatch(e -> e.getTarget().isThePlayer())) {
 					s.accept(p1_firstCleaveMarker.getModified());
 				}
@@ -345,7 +327,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 			e -> e instanceof AbilityUsedEvent acs && acs.getAbility().getId() == 0x62D5,
 			(e1, s) -> {
 				List<HeadMarkerEvent> marks = s.waitEventsUntil(8, HeadMarkerEvent.class, e -> {
-					int headmarkOffset = getHeadmarkOffset(e);
+					int headmarkOffset = e.getMarkerOffset();
 					return headmarkOffset >= 47 && headmarkOffset <= 50;
 				}, AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x62DE);
 				marks.stream().filter(e -> e.getTarget().isThePlayer())
@@ -353,7 +335,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 						.ifPresentOrElse(myMark -> {
 							Optional<HeadMarkerEvent> partnerMarker = marks.stream().filter(e -> !e.getTarget().isThePlayer() && e.getMarkerId() == myMark.getMarkerId())
 									.findAny();
-							int adjustedId = getHeadmarkOffset(myMark);
+							int adjustedId = myMark.getMarkerOffset();
 							final ModifiableCallout<HeadMarkerEvent> call;
 							switch (adjustedId) {
 								case 47 -> call = circle;
@@ -429,7 +411,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 
 				List<HeadMarkerEvent> marks = s.waitEventsUntil(3,
-						HeadMarkerEvent.class, e -> getHeadmarkOffset(e) == 0,
+						HeadMarkerEvent.class, e -> e.getMarkerOffset() == 0,
 						AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x63DE);
 
 				Job job = getState().getPlayerJob();
@@ -471,17 +453,17 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 				List<HeadMarkerEvent> swordMarks = s.waitEventsUntil(2,
 						HeadMarkerEvent.class, e -> {
-							int offSet = getHeadmarkOffset(e);
+							int offSet = e.getMarkerOffset();
 							log.info("Thordan Trio 2: Headmark offset {}", offSet);
 							return offSet == -280 || offSet == -279;
 						},
 						AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x63D0);
 
-				XivCombatant first = swordMarks.stream().filter(mark -> getHeadmarkOffset(mark) == -280)
+				XivCombatant first = swordMarks.stream().filter(mark -> mark.getMarkerOffset() == -280)
 						.map(HeadMarkerEvent::getTarget)
 						.findAny()
 						.orElse(null);
-				XivCombatant second = swordMarks.stream().filter(mark -> getHeadmarkOffset(mark) == -279)
+				XivCombatant second = swordMarks.stream().filter(mark -> mark.getMarkerOffset() == -279)
 						.map(HeadMarkerEvent::getTarget)
 						.findAny()
 						.orElse(null);
@@ -964,7 +946,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				log.info("Death of the Heavens: player has doom? {}", playerHasDoom);
 
 				List<HeadMarkerEvent> marks = s.waitEventsUntil(8, HeadMarkerEvent.class, e -> {
-					int headmarkOffset = getHeadmarkOffset(e);
+					int headmarkOffset = e.getMarkerOffset();
 					return headmarkOffset >= baseHeadmarkerOffset && headmarkOffset <= endHeadmarkerOffset;
 				}, AbilityCastStart.class, acs -> acs.getAbility().getId() == 0x62DE);
 				marks.stream().filter(e -> e.getTarget().isThePlayer())
@@ -972,7 +954,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 						.ifPresentOrElse(myMark -> {
 							Optional<HeadMarkerEvent> partnerMarker = marks.stream().filter(e -> !e.getTarget().isThePlayer() && e.getMarkerId() == myMark.getMarkerId())
 									.findAny();
-							int adjustedId = getHeadmarkOffset(myMark);
+							int adjustedId = myMark.getMarkerOffset();
 							final ModifiableCallout<HeadMarkerEvent> call;
 							switch (adjustedId) {
 								case baseHeadmarkerOffset -> call = t2_circleDoom;

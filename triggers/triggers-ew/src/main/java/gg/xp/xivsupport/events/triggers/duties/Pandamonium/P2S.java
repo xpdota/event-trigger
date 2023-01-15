@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
+import gg.xp.xivsupport.events.triggers.support.PlayerHeadmarker;
 import gg.xp.xivsupport.models.Position;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,13 +36,21 @@ public class P2S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> foreTide = ModifiableCallout.durationBasedCall("Fore Push", "{longshort} North Push");
 	private final ModifiableCallout<BuffApplied> rearTide = ModifiableCallout.durationBasedCall("Rear Push", "{longshort} South Push");
 
+	@PlayerHeadmarker(value = -114, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> blue1 = new ModifiableCallout<>("Blue #1", "Blue 1");
+	@PlayerHeadmarker(value = -113, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> blue2 = new ModifiableCallout<>("Blue #2", "Blue 2");
+	@PlayerHeadmarker(value = -112, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> blue3 = new ModifiableCallout<>("Blue #3", "Blue 3");
+	@PlayerHeadmarker(value = -111, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> blue4 = new ModifiableCallout<>("Blue #4", "Blue 4");
+	@PlayerHeadmarker(value = -110, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> purp1 = new ModifiableCallout<>("Purple #1", "Purple 1");
+	@PlayerHeadmarker(value = -109, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> purp2 = new ModifiableCallout<>("Purple #2", "Purple 2");
+	@PlayerHeadmarker(value = -108, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> purp3 = new ModifiableCallout<>("Purple #3", "Purple 3");
+	@PlayerHeadmarker(value = -107, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> purp4 = new ModifiableCallout<>("Purple #4", "Purple 4");
 
 	private final ModifiableCallout<AbilityCastStart> shockwave = ModifiableCallout.durationBasedCall("Shockwave", "Knockback");
@@ -103,7 +112,6 @@ public class P2S extends AutoChildEventHandler implements FilteredEventHandler {
 	@HandleEvents
 	public void resetAll(EventContext context, DutyCommenceEvent event) {
 		resetStackSpread();
-		firstHeadmark = null;
 	}
 
 	private void resetStackSpread() {
@@ -185,49 +193,6 @@ public class P2S extends AutoChildEventHandler implements FilteredEventHandler {
 			}
 		}
 	}
-
-	private Long firstHeadmark;
-
-	@HandleEvents
-	public void sequentialHeadmarkSolver(EventContext context, HeadMarkerEvent event) {
-		// This is done unconditionally to create the headmarker offset
-		int headmarkOffset = getHeadmarkOffset(event);
-		// But after that, we only want the actual player
-		if (!event.getTarget().isThePlayer()) {
-			return;
-		}
-		ModifiableCallout<HeadMarkerEvent> call = switch (headmarkOffset) {
-			case -114:
-				yield blue1;
-			case -113:
-				yield blue2;
-			case -112:
-				yield blue3;
-			case -111:
-				yield blue4;
-			case -110:
-				yield purp1;
-			case -109:
-				yield purp2;
-			case -108:
-				yield purp3;
-			case -107:
-				yield purp4;
-			default:
-				yield null;
-		};
-		if (call != null) {
-			context.accept(call.getModified(event));
-		}
-	}
-
-	private int getHeadmarkOffset(HeadMarkerEvent event) {
-		if (firstHeadmark == null) {
-			firstHeadmark = event.getMarkerId();
-		}
-		return (int) (event.getMarkerId() - firstHeadmark);
-	}
-
 
 	@Override
 	public boolean enabled(EventContext context) {

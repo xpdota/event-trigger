@@ -129,16 +129,21 @@ public class ActWsLogSource implements EventSource {
 
 		private void subscribeEvents() {
 			log.info("Subscribing to WS events");
-			send("{\"call\":\"subscribe\",\"events\":[\"ChangePrimaryPlayer\"]}");
-			send("{\"call\":\"subscribe\",\"events\":[\"ChangeZone\"]}");
-			send("{\"call\":\"subscribe\",\"events\":[\"ChangeMap\"]}");
-			send("{\"call\":\"subscribe\",\"events\":[\"PartyChanged\"]}");
-			send("{\"call\":\"subscribe\",\"events\":[\"LogLine\"]}");
-			send("{\"call\":\"subscribe\",\"events\":[\"InCombat\"]}");
+			subscribeEvent("ChangePrimaryPlayer");
+			subscribeEvent("ChangeZone");
+			subscribeEvent("ChangeMap");
+			subscribeEvent("PartyChanged");
+			subscribeEvent("LogLine");
+			subscribeEvent("InCombat");
+			subscribeEvent("OnlineStatusChanged");
+			subscribeEvent("GameVersion");
 			// EnmityTargetData is spammy even if there is no change
 //			send("{\"call\":\"subscribe\",\"events\":[\"EnmityTargetData\"]}");
-			send("{\"call\":\"subscribe\",\"events\":[\"OnlineStatusChanged\"]}");
 			log.info("Subscribed to WS events");
+		}
+
+		private void subscribeEvent(String event) {
+			send("{\"call\":\"subscribe\",\"events\":[\"" + event + "\"]}");
 		}
 	}
 

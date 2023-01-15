@@ -14,6 +14,7 @@ public class LanguageController {
 	private static final Logger log = LoggerFactory.getLogger(LanguageController.class);
 	private static final GameLanguage defaultGameLanguage = GameLanguage.English;
 	private @Nullable GameLanguage reportedGameLanguage;
+	// TODO: expose this somewhere
 	private @Nullable GameLanguage overrideGameLangauge;
 
 

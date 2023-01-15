@@ -14,26 +14,43 @@ public class HeadMarkerEvent extends BaseEvent implements HasTargetEntity, HasPr
 	private static final long serialVersionUID = -413687601479469145L;
 	private final XivCombatant target;
 	private final long markerId;
+	private int pullOffset;
 
 	public HeadMarkerEvent(XivCombatant target, long markerId) {
 		this.target = target;
 		this.markerId = markerId;
 	}
 
+	/**
+	 * @return The target of this headmarker
+	 */
 	@Override
 	public XivCombatant getTarget() {
 		return target;
 	}
 
+	/**
+	 * @return The ID of this headmarker
+	 */
 	public long getMarkerId() {
 		return markerId;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("HeadMarkerEvent(%s on %s)", markerId, target);
+		return String.format("HeadMarkerEvent(%s on %s, offset %s)", markerId, target, pullOffset);
 	}
 
+	/**
+	 * @return The ID of this headmarker relative to the beginning of the pull
+	 */
+	public int getMarkerOffset() {
+		return pullOffset;
+	}
+
+	public void setPullOffset(int pullOffset) {
+		this.pullOffset = pullOffset;
+	}
 
 	@Override
 	public String getPrimaryValue() {
