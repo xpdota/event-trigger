@@ -30,6 +30,7 @@ import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.gameversion.GameVersionEvent;
 import gg.xp.xivsupport.lang.GameLanguage;
 import gg.xp.xivsupport.lang.GameLanguageInfoEvent;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -219,6 +220,15 @@ public class ActWsHandlers {
 		if ("ChangeMap".equals(jsonMsg.getType())) {
 			long id = jsonMsg.getJson().get("mapID").intValue();
 			context.accept(new MapChangeEvent(XivMap.forId(id)));
+		}
+	}
+
+	@HandleEvents(order = -100)
+	public static void actWsVersionChange(EventContext context, ActWsJsonMsg jsonMsg) {
+		if ("GameVersion".equals(jsonMsg.getType())) {
+			String version = jsonMsg.getJson().get("gameVersion").textValue();
+			log.info("Game version: {}", version);
+			context.accept(GameVersionEvent.fromString(version));
 		}
 	}
 
