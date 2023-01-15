@@ -47,6 +47,7 @@ jobs:
           name: ${{ inputs.title }}
           body: ${{ inputs.body }}
           tag_name: ${{ inputs.tag }}
+          draft: true
           files: |
             triggevent-linux.zip
             triggevent-win-bjoy.zip
