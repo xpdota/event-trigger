@@ -1,9 +1,7 @@
 package gg.xp.xivsupport.gui.map;
 
-import gg.xp.xivsupport.gui.tables.renderers.FractionDisplayHelper;
 import gg.xp.xivsupport.gui.tables.renderers.ResourceBar;
 import gg.xp.xivsupport.gui.util.GuiUtil;
-import gg.xp.xivsupport.models.CurrentMaxPairImpl;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 
 import javax.swing.*;
@@ -12,7 +10,22 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import static java.awt.RenderingHints.KEY_ANTIALIASING;
+import static java.awt.RenderingHints.KEY_INTERPOLATION;
+import static java.awt.RenderingHints.KEY_RENDERING;
+import static java.awt.RenderingHints.KEY_TEXT_ANTIALIASING;
+import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
+import static java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR;
+import static java.awt.RenderingHints.VALUE_RENDER_QUALITY;
+import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_GASP;
+import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_VRGB;
+import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_ON;
 
 @SuppressWarnings({"SerializableNonStaticInnerClassWithoutSerialVersionUID", "SerializableStoresNonSerializable"})
 public class MapDataScrubber extends JPanel {
@@ -92,11 +105,13 @@ public class MapDataScrubber extends JPanel {
 
 	private class IndicatorAndScrubber extends ResourceBar implements MouseListener, MouseMotionListener {
 
-		private final FractionDisplayHelper fdh = new FractionDisplayHelper();
+		// TODO: is this still needed
+//		private final FractionDisplayHelper fdh = new FractionDisplayHelper();
 		private final JLabel leftLabel = new JLabel("Drag anywhere in this area to scrub");
 		private final JLabel rightLabel = new JLabel("Shift-Drag for slower scrub, Ctrl-Drag for faster scrub");
 		private Point dragPoint;
 		private static final Color green = new Color(0, 170, 0);
+		private final DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
 		{
 			leftLabel.setHorizontalAlignment(SwingConstants.LEFT);
@@ -111,7 +126,7 @@ public class MapDataScrubber extends JPanel {
 		@Override
 		public void setBounds(int x, int y, int width, int height) {
 			super.setBounds(x, y, width, height);
-			fdh.setBounds(0, height / 2, width, height / 2);
+//			fdh.setBounds(0, height / 2, width, height / 2);
 			leftLabel.setBounds(0, height / 2, width, height / 2);
 			rightLabel.setBounds(0, height / 2, width, height / 2);
 		}
@@ -129,21 +144,55 @@ public class MapDataScrubber extends JPanel {
 			}
 
 			// TODO this shouldn't be here
-			fdh.setValue(new CurrentMaxPairImpl(controller.getIndex(), maxFrame));
+//			fdh.setValue(new CurrentMaxPairImpl(controller.getIndex(), maxFrame));
 			Dimension dim = getSize();
 			int vBarWidth = 3;
 			int hBarHeight = 2;
+			// Static stuff
+			// Left vertical bar
 			graphics.fillRect(0, 0, vBarWidth, dim.height / 2);
+			// Right vertical bar
 			graphics.fillRect(dim.width - vBarWidth, 0, vBarWidth, dim.height / 2);
+			// Horizontal bar
 			graphics.fillRect(vBarWidth, 5, dim.width - 2 * vBarWidth, hBarHeight);
-			if (controller.isLive()) {
+
+			// Calculate moving bar location
+			int barX = vBarWidth + (int) (((double) dim.width - 3 * vBarWidth) * curFrame / maxFrame);
+			// Timestamp label
+			Instant rawTime = controller.getTime();
+			String timeStr;
+			boolean isLive = controller.isLive();
+			if (rawTime.equals(Instant.EPOCH)) {
+				timeStr = "Beginning";
+			}
+			else if (isLive) {
+				timeStr = "Live";
+			}
+			else {
+				ZonedDateTime time = rawTime.atZone(ZoneId.systemDefault());
+				timeStr = format.format(time);
+			}
+			int timestampStringX;
+			// Decide whether to place text to the left or right of the bar
+			// Try left first
+			int strWidth = graphics.getFontMetrics().stringWidth(timeStr);
+			timestampStringX = barX - strWidth - 2;
+			// Fall back to right if we know left isn't going to work
+			if (timestampStringX < vBarWidth) {
+				timestampStringX = barX + vBarWidth + 2;
+			}
+			int strHeight = graphics.getFontMetrics().getHeight();
+			Graphics2D g2d = ((Graphics2D) graphics);
+			g2d.setRenderingHint(KEY_TEXT_ANTIALIASING, VALUE_TEXT_ANTIALIAS_ON);
+			graphics.drawString(timeStr, timestampStringX, 7 + strHeight);
+
+			// Actually paint the moving bar now
+			if (isLive) {
 				graphics.setColor(green);
 			}
 			else {
 				graphics.setColor(Color.RED);
 			}
-
-			int barX = vBarWidth + (int) (((double) dim.width - 3 * vBarWidth) * curFrame / maxFrame);
 			graphics.fillRect(barX, 0, vBarWidth, dim.height / 2);
 		}
 
