@@ -42,6 +42,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 // TODO: EventSource interface
+// TODO: persistent setting of overridden remote player
 public class ActWsLogSource implements EventSource {
 
 	private static final Logger log = LoggerFactory.getLogger(ActWsLogSource.class);
