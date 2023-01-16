@@ -222,19 +222,30 @@ public class ActWsLogSource implements EventSource {
 	@LiveOnly
 	@HandleEvents
 	public void sayTts(EventContext context, TtsRequest event) {
-		if (allowTts.get()) {
-			try {
-				String ttsString = event.getTtsString();
-				log.info("Sending TTS to ACT: {}", ttsString);
-				client.send(mapper.writeValueAsString(Map.ofEntries(
-						Map.entry("call", "say"),
-						Map.entry("text", ttsString),
-						Map.entry("rseq", rseqCounter.getAndIncrement()))));
-			}
-			catch (JsonProcessingException e) {
-				throw new RuntimeException(e);
-			}
+		if (allowTts.get() && state.isConnected() && !event.isHandled()) {
+			String ttsString = event.getTtsString();
+			log.info("Sending TTS to ACT: {}", ttsString);
+			sendObject(Map.ofEntries(
+					Map.entry("call", "say"),
+					Map.entry("text", ttsString),
+					Map.entry("rseq", rseqCounter.getAndIncrement())));
+			event.setHandled();
 		}
+	}
+
+	public void sendString(String string) {
+		client.send(string);
+	}
+
+	public void sendObject(Object object) {
+		String asString;
+		try {
+			asString = mapper.writeValueAsString(object);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+		sendString(asString);
 	}
 
 	@LiveOnly
@@ -389,5 +400,9 @@ public class ActWsLogSource implements EventSource {
 
 	public BooleanSetting getAllowTts() {
 		return allowTts;
+	}
+
+	public boolean isConnected() {
+		return state.isConnected();
 	}
 }

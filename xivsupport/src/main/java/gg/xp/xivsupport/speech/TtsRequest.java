@@ -1,14 +1,16 @@
 package gg.xp.xivsupport.speech;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.util.Handleable;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 
 import java.io.Serial;
 
-public class TtsRequest extends BaseEvent implements HasPrimaryValue {
+public class TtsRequest extends BaseEvent implements HasPrimaryValue, Handleable {
 	@Serial
 	private static final long serialVersionUID = -9029735608941333470L;
 	private final String ttsString;
+	private boolean isHandled;
 
 	public TtsRequest(String ttsString) {
 		this.ttsString = ttsString;
@@ -26,5 +28,15 @@ public class TtsRequest extends BaseEvent implements HasPrimaryValue {
 	@Override
 	public String getPrimaryValue() {
 		return String.valueOf(ttsString);
+	}
+
+	@Override
+	public boolean isHandled() {
+		return isHandled;
+	}
+
+	@Override
+	public void setHandled() {
+		isHandled = true;
 	}
 }
