@@ -56,11 +56,13 @@ public class ActWsHandlers {
 	private final EventMaster master;
 	private final XivState state;
 	private final PullTracker pulls;
+	private final ActWsLogSource ws;
 
-	public ActWsHandlers(EventMaster master, XivState state, PullTracker pulls) {
+	public ActWsHandlers(EventMaster master, XivState state, PullTracker pulls, ActWsLogSource ws) {
 		this.master = master;
 		this.state = state;
 		this.pulls = pulls;
+		this.ws = ws;
 	}
 
 	// Memory saving hacks
@@ -81,6 +83,9 @@ public class ActWsHandlers {
 						// number of current combatants, or whether the current zone is a raid, or
 						// whether a pull is actually started.
 						Thread.sleep(2_000);
+						if (!ws.isConnected()) {
+							continue;
+						}
 						master.pushEvent(new RefreshCombatantsRequest());
 						for (int i = 0; i < 3; i++) {
 							Thread.sleep(2_000);

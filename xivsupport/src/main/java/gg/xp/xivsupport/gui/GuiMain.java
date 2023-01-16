@@ -339,7 +339,7 @@ public class GuiMain {
 			Border badBorder = new TitledBorder(new LineBorder(Color.RED), "System Status");
 
 			connectedDisp = new KeyValueDisplaySet(List.of(new KeyValuePairDisplay<>(
-					"Connected to ACT WS",
+					"Connected to OverlayPlugin WS",
 					box,
 					wsState::isConnected,
 					(cb, connected) -> {

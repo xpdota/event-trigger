@@ -11,6 +11,7 @@ import gg.xp.xivsupport.gui.Refreshable;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.WindowConfig;
+import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.WrapperPanel;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
@@ -21,6 +22,7 @@ import gg.xp.xivsupport.persistence.gui.IntSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.speech.PowerShellSpeechProcessor;
 import gg.xp.xivsupport.sys.Threading;
 import org.picocontainer.PicoContainer;
 import org.swingexplorer.Launcher;
@@ -251,14 +253,22 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			addTab("Party", container.getComponent(PartyConfigTab.class));
 		}
 
+		ActWsLogSource actWs = container.getComponent(ActWsLogSource.class);
 		{
 			TitleBorderFullsizePanel wsPanel = new TitleBorderFullsizePanel("Websocket (Restart Required)");
 			wsPanel.setPreferredSize(new Dimension(300, 150));
-			ActWsLogSource actWs = container.getComponent(ActWsLogSource.class);
-			wsPanel.add(new WsURISettingGui(actWs.getUriSetting(), "ACT WS URI").getComponent());
+			wsPanel.add(new WsURISettingGui(actWs.getUriSetting(), "OverlayPlugin WS URI").getComponent());
 			wsPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
 			wsPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Enable TTS").getComponent());
 			addTab("Websocket", wsPanel);
+		}
+		{
+			TitleBorderFullsizePanel soundPanel = new TitleBorderFullsizePanel("TTS and Sound");
+			soundPanel.setPreferredSize(new Dimension(300, 150));
+			soundPanel.setLayout(new WrapLayout());
+			soundPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Use OP WebSocket for TTS").getComponent());
+			soundPanel.add(new BooleanSettingGui(container.getComponent(PowerShellSpeechProcessor.class).getEnabledSetting(), "Local TTS as Backup").getComponent());
+			addTab("TTS and Sound", soundPanel);
 		}
 		{
 			addTab("Topology", new PluginTopologyPanel(container));
