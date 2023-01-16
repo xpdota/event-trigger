@@ -73,7 +73,7 @@ public class PowerShellSpeechProcessor implements FilteredEventHandler {
 
 	private final BooleanSetting enable;
 	public PowerShellSpeechProcessor(PersistenceProvider pers) {
-		this.enable = new BooleanSetting(pers, "powershell-tts.enable", true);
+		this.enable = new BooleanSetting(pers, "fallback-local-tts.enable-tts", false);
 	}
 
 	// This is a fallback option
