@@ -31,6 +31,7 @@ public class ReplayController {
 	private final List<Runnable> callbacks = new ArrayList<>();
 	private final boolean decompress;
 	private int currentIndex;
+	private volatile boolean stop;
 
 
 	public ReplayController(EventMaster master, List<? extends Event> events, boolean decompress) {
@@ -100,8 +101,10 @@ public class ReplayController {
 	}
 
 	public Future<?> advanceByAsyncWhile(Supplier<Boolean> advWhile) {
+		stop = true;
 		return exs.submit(() -> {
-			for (; advWhile.get() && hasMoreEvents(); currentIndex++) {
+			stop = false;
+			for (; !stop && advWhile.get() && hasMoreEvents(); currentIndex++) {
 				Event event = events.get(currentIndex);
 				events.set(currentIndex, null);
 				if (decompress && event instanceof Compressible compressedEvent) {

@@ -126,8 +126,9 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 	public JPanel getComponent() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BorderLayout());
-		JLabel label = new JLabel("Groovy: ");
+		JLabel label = new JLabel("Groovy: " + varName + " -> {");
 		label.setLabelFor(textBox);
+		JLabel postLabel = new JLabel("} ");
 		JCheckBox cb = new JCheckBox("Strict");
 		cb.addActionListener(l -> {
 			strict = cb.isSelected();
@@ -135,7 +136,8 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		});
 		panel.add(label, BorderLayout.WEST);
 		panel.add(textBox, BorderLayout.CENTER);
-		panel.add(cb, BorderLayout.EAST);
+		panel.add(postLabel, BorderLayout.EAST);
+//		panel.add(cb, BorderLayout.EAST);
 		cb.setSelected(true);
 		strict = cb.isSelected();
 		return panel;

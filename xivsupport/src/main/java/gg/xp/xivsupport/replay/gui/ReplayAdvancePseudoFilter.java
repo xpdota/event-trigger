@@ -41,8 +41,11 @@ public class ReplayAdvancePseudoFilter<X extends Event> {
 	public Component getComponent() {
 		JButton theButton = new JButton("Play to Next Matching");
 		theButton.addActionListener(l -> {
-			isPlaying = true;
-			replay.advanceByAsyncWhile(() -> isPlaying);
+			boolean isCurrentlyPlaying = isPlaying;
+			isPlaying = !isCurrentlyPlaying;
+			if (isPlaying) {
+				replay.advanceByAsyncWhile(() -> isPlaying);
+			}
 		});
 		return theButton;
 	}
