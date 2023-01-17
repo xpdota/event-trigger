@@ -74,6 +74,10 @@ public class FieldMapper<K extends Enum<K>> {
 		return Double.parseDouble(rawStr);
 	}
 
+	public int fieldCount() {
+		return rawLineSplit.length;
+	}
+
 	public List<String> getRawLineSplit() {
 		return Arrays.asList(rawLineSplit);
 	}
@@ -112,6 +116,10 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public XivCombatant getEntity(K idKey, K nameKey, K currentHpKey, K maxHpKey, K currentMpKey, K maxMpKey, K posXKey, K posYKey, K posZKey, K headingKey) {
 		return getEntity(idKey, nameKey, currentHpKey, maxHpKey, currentMpKey, maxMpKey, posXKey, posYKey, posZKey, headingKey, null);
+	}
+
+	public boolean hasField(K field) {
+		return raw.containsKey(field);
 	}
 
 	public XivCombatant getEntity(K idKey, K nameKey, K currentHpKey, K maxHpKey, K currentMpKey, K maxMpKey, K posXKey, K posYKey, K posZKey, K headingKey, K shieldPctKey) {

@@ -12,6 +12,10 @@ public class HealEffect extends AbilityEffect implements HasSeverity {
 		onTarget = ((flags >> 8) & 1) == 0;
 	}
 
+	public HealEffect(HitSeverity severity, long amount) {
+		this(0, 0, severity, amount);
+	}
+
 	@Override
 	public HitSeverity getSeverity() {
 		return severity;
