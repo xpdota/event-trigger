@@ -6,16 +6,12 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
-import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
-import gg.xp.xivsupport.events.actlines.events.HasEffects;
-import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
-import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
@@ -26,7 +22,6 @@ import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
-import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
@@ -44,25 +39,19 @@ import gg.xp.xivsupport.gui.tables.GlobalGuiOptions;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
-import gg.xp.xivsupport.gui.tables.filters.AbilityResolutionFilter;
 import gg.xp.xivsupport.gui.tables.filters.ActLineFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventAbilityOrBuffFilter;
-import gg.xp.xivsupport.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
-import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.LogLevelVisualFilter;
 import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
-import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemLogLoggerNameFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemLogTextFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemLogThreadFilter;
-import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
-import gg.xp.xivsupport.gui.tables.timedisplay.TimeDisplayController;
-import gg.xp.xivsupport.gui.tables.timedisplay.TimeDisplayOption;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
+import gg.xp.xivsupport.gui.tabs.EventsTabFactory;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.tabs.LibraryTab;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
@@ -86,8 +75,6 @@ import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
-import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
@@ -134,6 +121,7 @@ public class GuiMain {
 	private final RightClickOptionRepo rightClicks;
 	private final GlobalGuiOptions globalGuiOpts;
 	private final GlobalUiRegistry guiReg;
+	private final EventsTabFactory eventsTabFactory;
 	private JFrame mainFrame;
 	private SmartTabbedPane tabPane;
 	private Component eventPanel;
@@ -166,6 +154,7 @@ public class GuiMain {
 		replay = container.getComponent(ReplayController.class);
 		globalGuiOpts = container.getComponent(GlobalGuiOptions.class);
 		guiReg = container.getComponent(GlobalUiRegistry.class);
+		eventsTabFactory = container.getComponent(EventsTabFactory.class);
 		WindowConfig wc = container.getComponent(WindowConfig.class);
 		long start = System.currentTimeMillis();
 		SwingUtilities.invokeLater(() -> {
@@ -665,76 +654,8 @@ public class GuiMain {
 
 	}
 
-	private JPanel getEventsPanel() {
-		// TODO: jump to parent button
-		// Main table
-		RawEventStorage rawStorage = container.getComponent(RawEventStorage.class);
-		PullTracker pulls = container.getComponent(PullTracker.class);
-		ActionAndStatusRenderer asRenderer = ActionAndStatusRenderer.full();
-		NameJobRenderer nameJobRenderer = new NameJobRenderer();
-		BooleanSetting displayIdsSetting = globalGuiOpts.displayIds();
-		displayIdsSetting.addAndRunListener(() -> asRenderer.setShowId(displayIdsSetting.get()));
-		displayIdsSetting.addAndRunListener(() -> nameJobRenderer.setShowId(displayIdsSetting.get()));
-		TimeDisplayController tdc = new TimeDisplayController();
-		TableWithFilterAndDetails<Event, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", rawStorage::getEvents,
-						currentEvent -> {
-							if (currentEvent == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return currentEvent.dumpFields()
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
-				.addMainColumn(tdc.getColumnDef())
-				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
-				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(nameJobRenderer)))
-				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(nameJobRenderer)))
-				.addMainColumn(new CustomColumn<>("Buff/Ability", Function.identity(), c -> {
-					c.setCellRenderer(asRenderer);
-				}))
-				.addMainColumn(new CustomColumn<>("Effects", e -> {
-					if (e instanceof HasEffects event) {
-						return event.getEffects();
-					}
-					return null;
-				}, c -> c.setCellRenderer(new AbilityEffectListRenderer())))
-				.addMainColumn(new CustomColumn<>("Parent", e -> {
-					Event parent = e.getParent();
-					return parent == null ? null : parent.getClass().getSimpleName();
-				}))
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
-				.withRightClickRepo(rightClicks)
-				.addFilter(SystemEventFilter::new)
-				.addFilter(EventClassFilterFilter::new)
-				.addFilter(AbilityResolutionFilter::new)
-				.addFilter(EventEntityFilter::eventSourceFilter)
-				.addFilter(EventEntityFilter::eventTargetFilter)
-				.addFilter(EventAbilityOrBuffFilter::new)
-//				.addFilter(FreeformEventFilter::new)
-				.addFilter(GroovyFilter.forClass(Event.class, container.getComponent(GroovyManager.class)))
-				.addFilter(r -> {
-					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);
-					container.addComponent(pullNumberFilter);
-					return pullNumberFilter;
-				})
-				.addWidget(unused -> new BooleanSettingGui(displayIdsSetting, "Show IDs", true).getComponent())
-				.addWidget(replayNextPseudoFilter(Event.class))
-				.addWidget(tdc::configureWidget)
-				.setAppendOrPruneOnly(true)
-				.build();
-
-		displayIdsSetting.addListener(table::repaint);
-		master.getDistributor().registerHandler(Event.class, (ctx, e) -> table.signalNewData());
-		return table;
-
+	private Component getEventsPanel() {
+		return eventsTabFactory.getEventsTab();
 	}
 
 	private JPanel getActLogPanel() {
