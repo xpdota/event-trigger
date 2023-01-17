@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.tables.renderers;
 
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.AggroIncrease;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageType;
@@ -37,7 +38,7 @@ public class AbilityEffectRenderer {
 		}
 		String text;
 		HasIconURL icon;
-		boolean textOnRight = false;
+		boolean reverseLayout = false;
 		if (value instanceof DamageTakenEffect dte) {
 			text = dte.getSeverity().getSymbol() + dte.getAmount();
 			DamageType type = dte.getDamageType();
@@ -81,23 +82,27 @@ public class AbilityEffectRenderer {
 			if (icon == null) {
 				icon = StatusEffectLibrary.iconForId(760, 0);
 			}
-			textOnRight = true;
+			reverseLayout = true;
 		}
 		else if (value instanceof StatusNoEffect sne) {
 			// TODO: does this also have a 'stacks' value?
 			text = "X";
 			icon = StatusEffectLibrary.iconForId(sne.getStatus().getId(), 1);
-			textOnRight = true;
+			reverseLayout = true;
+		}
+		else if (value instanceof AggroIncrease ai) {
+			text = "+" + ai.getAmount();
+			icon = ActionLibrary.iconForId(0x1D6D);
 		}
 		else {
 			return Collections.singletonList(fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column));
 		}
 		defaultLabel = fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);
 		if (iconOnly) {
-			return Collections.singletonList(IconTextRenderer.getComponent(icon, defaultLabel, true, textOnRight, true, null));
+			return Collections.singletonList(IconTextRenderer.getComponent(icon, defaultLabel, true, reverseLayout, true, null));
 		}
 		List<Component> components = new ArrayList<>();
-		if (textOnRight) {
+		if (reverseLayout) {
 			components.add(fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column));
 			components.add(IconTextRenderer.getComponent(icon, defaultLabel, true, false, true, null));
 		}

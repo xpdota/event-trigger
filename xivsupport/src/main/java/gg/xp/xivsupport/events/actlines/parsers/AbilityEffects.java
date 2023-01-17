@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.AggroIncrease;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.FullyResistedEffect;
@@ -103,8 +104,13 @@ public final class AbilityEffects {
 			case 20: //14
 				return new StatusNoEffect(flags, value, value >> 16);
 
+			case 24:
+				return new AggroIncrease(flags, value, calcDamage(value));
+
 			// 1d,0x60000 = reflect?
 			case 27: //1B
+				// This seems to be on a lot of things that aren't involved in combos
+				// It's almost always either "1b" or "11b" for flags, and the value is ((abilityId << 16) + 0x8000)
 				// Not sure - seems to do "combo" as well as certain boss mechanics like "Subtract" from the math boss
 
 			case 32:
