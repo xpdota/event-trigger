@@ -7,6 +7,10 @@ public class DamageTakenEffect extends BaseDamageEffect {
 		super(flags, value, amount, severity, AbilityEffectType.DAMAGE);
 	}
 
+	public DamageTakenEffect(HitSeverity severity, long amount) {
+		this(0, 0, severity, amount);
+	}
+
 	@Override
 	protected String shortName() {
 		return "D";

@@ -61,8 +61,10 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 			String line = event.getLogLine();
 			String[] splits = event.getRawFields();
 			Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
+			// Subtract 3 - line number, timestamp, hash
+			int fieldCount = Math.min(groups.size(), splits.length - 3);
 			// TODO: validate number of fields
-			for (int i = 0; i < groups.size(); i++) {
+			for (int i = 0; i < fieldCount; i++) {
 				// i + 2 is because the first two are the line number and timestamp.
 				out.put(groups.get(i), splits[i + 2]);
 			}

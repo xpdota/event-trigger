@@ -12,6 +12,12 @@ public abstract class AbilityEffect {
 		this.effectType = effectType;
 	}
 
+	protected AbilityEffect(AbilityEffectType effectType) {
+		this.flags = 0;
+		this.value = 0;
+		this.effectType = effectType;
+	}
+
 	public AbilityEffectType getEffectType() {
 		return effectType;
 	}
@@ -29,6 +35,9 @@ public abstract class AbilityEffect {
 	};
 
 	public final String getDescription() {
+		if (flags == 0 && value == 0) {
+			return getBaseDescription();
+		}
 		return String.format("%s (raw: %08x %08x)", getBaseDescription(), flags, value);
 	}
 }
