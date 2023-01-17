@@ -71,6 +71,15 @@ public class PartyConfigTab extends TitleBorderFullsizePanel {
 			EnumListSetting<JobType> catSort = pso.getCategorySortSetting();
 			{
 				RearrangeableList<JobType> categoryList = new RearrangeableEnumListSetting<>(catSort).getListGui();
+				categoryList.setCellRenderer(new DefaultListCellRenderer() {
+					@Override
+					public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+						if (value instanceof JobType jt) {
+							value = jt.getFriendlyName();
+						}
+						return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+					}
+				});
 				JScrollPane scroll = new JScrollPane(categoryList);
 				scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 				add(scroll, c);
