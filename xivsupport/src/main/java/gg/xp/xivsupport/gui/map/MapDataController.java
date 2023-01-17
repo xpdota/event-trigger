@@ -275,7 +275,7 @@ public class MapDataController {
 				time = timeBasis.effectiveTimeNow();
 			}
 			else {
-				time = null;
+				time = timeSource.now();
 			}
 			List<BuffApplied> rawBuffs = realStatuses.getBuffs();
 			Map<Long, List<BuffApplied>> oldBuffs = snap.statuses;
@@ -394,6 +394,10 @@ public class MapDataController {
 		else {
 			return getCurrent().pendingDamage.getOrDefault(xivCombatant.getId(), 0L);
 		}
+	}
+
+	public Instant getTime() {
+		return getCurrent().time();
 	}
 
 	// Settings
