@@ -2,6 +2,7 @@ package gg.xp.xivsupport.models;
 
 import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.rsv.*;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,6 +30,9 @@ public class XivStatusEffect implements Serializable, NameIdPair {
 
 	public XivStatusEffect(long id, String name) {
 		this.id = id;
+		if (name != null && name.startsWith("_rsv")) {
+			name = DefaultRsvLibrary.tryResolve(name);
+		}
 		this.name = name == null ? null : name.intern();
 	}
 
