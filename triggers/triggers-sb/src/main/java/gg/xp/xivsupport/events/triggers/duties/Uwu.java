@@ -17,12 +17,16 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
+import gg.xp.xivsupport.models.ArenaPos;
+import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,6 +48,7 @@ public class Uwu extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> aerialBlast = ModifiableCallout.durationBasedCall("Aerial Blast", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> friction = ModifiableCallout.durationBasedCall("Friction", "Stack");
 
+	private final ModifiableCallout<AbilityCastStart> crimsonCycloneTransition = ModifiableCallout.durationBasedCall("Crimson Cyclone Transition", "{direction}");
 	private final ModifiableCallout<BuffApplied> fetters = ModifiableCallout.<BuffApplied>durationBasedCall("Fetters", "Fetters").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> searingWindInitial = ModifiableCallout.<AbilityCastStart>durationBasedCall("Searing Wind (Initial)", "Searing Wind on {event.target}").statusIcon(0x62a);
 	private final ModifiableCallout<BuffApplied> searingWindLinger = new ModifiableCallout<BuffApplied>("Searing Wind (Linger Time)", "", "Searing Wind on {event.target} ({event.estimatedRemainingDuration})", ModifiableCallout.durationExpiryPlusDefaultLinger()).statusIcon(0x62a);
@@ -67,6 +72,7 @@ public class Uwu extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> roulette3 = new ModifiableCallout<>("Primal Roulette: Last", "{primal3}", "{primal3}");
 
 	private final XivState state;
+	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
 	public Uwu(XivState state) {
 		this.state = state;
@@ -301,5 +307,68 @@ public class Uwu extends AutoChildEventHandler implements FilteredEventHandler {
 //		}
 //	}
 
+	//Called relative to looking at ifrit
+	@AutoFeed
+	public SequentialTrigger<BaseEvent> crimsonCycloneTransitionSq = SqtTemplates.sq(10_000, AbilityCastStart.class,
+			acs -> acs.abilityIdMatches(0x2B5F),
+			(e1, s) -> {
+				log.info("Crimson Cyclone Transition: Start");
+				List<AbilityCastStart> plumes = s.waitEvents(10, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x2B61));
+				List<ArenaSector> safe = new ArrayList<>(ArenaSector.cardinals);
 
+				for (AbilityCastStart acs : plumes) {
+					ArenaSector unsafe = arenaPos.forCombatant(acs.getSource());
+					safe.remove(unsafe);
+				}
+
+				log.info("Crimson Cyclone Transition: Possible spots: {}", safe);
+				ArenaSector ifritLocation = arenaPos.forCombatant(e1.getSource());
+				switch (ifritLocation) {
+					case NORTH, SOUTH -> {
+						safe.remove(ArenaSector.NORTH);
+						safe.remove(ArenaSector.SOUTH);
+					}
+					case EAST, WEST -> {
+						safe.remove(ArenaSector.EAST);
+						safe.remove(ArenaSector.WEST);
+					}
+				}
+
+				String direction;
+				ArenaSector oneSafe = safe.get(0);
+				switch (oneSafe) {
+					case NORTH -> {
+						if (ifritLocation == ArenaSector.WEST) {
+							direction = "right";
+						} else {
+							direction = "left";
+						}
+					}
+					case SOUTH -> {
+						if (ifritLocation == ArenaSector.EAST) {
+							direction = "right";
+						} else {
+							direction = "left";
+						}
+					}
+					case WEST -> {
+						if (ifritLocation == ArenaSector.NORTH) {
+							direction = "left";
+						} else {
+							direction = "right";
+						}
+					}
+					case EAST -> {
+						if (ifritLocation == ArenaSector.SOUTH) {
+							direction = "left";
+						} else {
+							direction = "right";
+						}
+					}
+					default -> direction = "unknown";
+				}
+
+				log.info("Crimson Cyclone Transition: Ifrit is at {}, safe should be {}", ifritLocation, safe);
+				s.accept(crimsonCycloneTransition.getModified(e1, Map.of("cardinal", safe, "direction", direction)));
+			});
 }
