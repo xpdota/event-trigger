@@ -25,7 +25,7 @@ public final class PersistentRsvLibrary implements RsvLibrary {
 
 	private PersistentRsvLibrary() {
 		Path rsvDir = Platform.getTriggeventDir()
-				.resolve("rsvDir");
+				.resolve("rsv");
 		rsvDir.toFile().mkdirs();
 		for (GameLanguage lang : GameLanguage.values()) {
 			Path rsvFile = rsvDir.resolve(lang.getShortCode() + ".properties");
