@@ -159,7 +159,10 @@ public final class AbilityEffects {
 		data[1] = 0xff & (byte) (damageRawTmp >>= 8);
 		data[0] = 0xff & (byte) (damageRawTmp >> 8);
 		if (data[2] == 0x40) {
-			return (long) (data[3] << 16) + (data[0] << 8) + (data[1] - data[3]);
+			// Old?
+//			return (long) (data[3] << 16) + (data[0] << 8) + (data[1] - data[3]);
+			// New
+			return (long) (data[3] << 16) + (data[0] << 8) + (data[1]);
 		}
 		else {
 			return damageRaw >> 16;
