@@ -74,6 +74,14 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 		}
 	}
 
+	public @Nullable String getRaw(@NotNull String key) {
+		return getValue(key);
+	}
+
+	public void saveRaw(String key, String value) {
+		setValue(key, value);
+	}
+
 	@Override
 	public void clearAll() {
 		clearAllValues();

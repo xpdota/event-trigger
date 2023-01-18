@@ -70,6 +70,7 @@ import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayAdvancePseudoFilter;
 import gg.xp.xivsupport.replay.gui.ReplayControllerGui;
+import gg.xp.xivsupport.rsv.PersistentRsvLibrary;
 import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
@@ -131,6 +132,14 @@ public class GuiMain {
 		long start = System.currentTimeMillis();
 		log.info("GUI Init");
 		log.info("Classpath: {}", System.getProperty("java.class.path"));
+		// TODO: is this really the place for this?
+		// It makes sense from a use case standpoint - if you intend to look at things visually (i.e. a GUI), you'd
+		// want RSV support. If you're running integration tests and stuff like that, you probably don't care.
+		new Thread(() -> {
+			log.info("Installing persistent RSV library");
+			PersistentRsvLibrary.install();
+			log.info("Installed persistent RSV library");
+		}).start();
 		CatchFatalError.run(() -> {
 			log.info("GUI Setup");
 			CommonGuiSetup.setup();

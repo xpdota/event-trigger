@@ -20,6 +20,9 @@ public final class Platform {
 	private Platform() {
 	}
 
+	/**
+	 * @return The settings dir
+	 */
 	public static Path getTriggeventDir() {
 		String appData = System.getenv("APPDATA");
 		Path userDataDir;

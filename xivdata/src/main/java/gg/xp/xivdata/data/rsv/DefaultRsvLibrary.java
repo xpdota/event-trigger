@@ -1,0 +1,33 @@
+package gg.xp.xivdata.data.rsv;
+
+import org.jetbrains.annotations.Nullable;
+
+public final class DefaultRsvLibrary {
+
+	private static RsvLibrary library = new NoopRsvLibrary();
+
+	private DefaultRsvLibrary() {
+	}
+
+	public static RsvLibrary getLibrary() {
+		return library;
+	}
+
+	public static void setLibrary(RsvLibrary library) {
+		DefaultRsvLibrary.library = library;
+	}
+
+	public static @Nullable String get(String key) {
+		return library.get(key);
+	}
+
+	public static String tryResolve(String original) {
+		if (original.startsWith("_rsv")) {
+			String decodedMaybe = get(original);
+			if (decodedMaybe != null) {
+				return decodedMaybe;
+			}
+		}
+		return original;
+	}
+}

@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.lang;
+package gg.xp.xivdata.data;
 
 public enum GameLanguage {
 
