@@ -2,6 +2,7 @@ package gg.xp.xivsupport.models;
 
 import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
+import gg.xp.xivdata.data.rsv.*;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 
 import java.io.Serial;
@@ -27,6 +28,9 @@ public class XivAbility implements Serializable, NameIdPair {
 
 	public XivAbility(long id, String name) {
 		this.id = id;
+		if (name != null && name.startsWith("_rsv")) {
+			name = DefaultRsvLibrary.tryResolve(name);
+		}
 		this.name = name == null ? null : name.intern();
 	}
 

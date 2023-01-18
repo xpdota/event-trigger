@@ -18,7 +18,11 @@ public final class DefaultRsvLibrary {
 	}
 
 	public static @Nullable String get(String key) {
-		return library.get(key);
+		String libValue = library.get(key);
+		if (libValue == null) {
+			return null;
+		}
+		return libValue.intern();
 	}
 
 	public static String tryResolve(String original) {
