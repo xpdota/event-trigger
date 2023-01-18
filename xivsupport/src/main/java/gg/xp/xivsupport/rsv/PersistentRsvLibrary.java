@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.rsv;
 
-import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.rsv.*;
 import gg.xp.xivsupport.persistence.Platform;
