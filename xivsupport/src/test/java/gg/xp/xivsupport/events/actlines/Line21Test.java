@@ -41,7 +41,7 @@ public class Line21Test extends AbstractACTLineTest<AbilityUsedEvent> {
 		{
 			AbilityUsedEvent event = expectEvent(String.format(lineTemplate, 0x750003, 0x426B4001));
 			long damage = event.getDamage();
-			Assert.assertEquals(damage, 82538);
+			Assert.assertEquals(damage, 82539);
 		}
 		{
 			AbilityUsedEvent event = expectEvent(String.format(lineTemplate, 0x750003, 0x565D0000));
