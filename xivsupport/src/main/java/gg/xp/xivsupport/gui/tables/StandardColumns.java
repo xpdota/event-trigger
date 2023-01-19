@@ -235,6 +235,7 @@ public final class StandardColumns {
 
 		Object value = fieldObjectEntry.getValue();
 		if (value instanceof Long || value instanceof Integer) {
+			//noinspection MalformedFormatString
 			return String.format("0x%x (%d)", value, value);
 		}
 		return value;

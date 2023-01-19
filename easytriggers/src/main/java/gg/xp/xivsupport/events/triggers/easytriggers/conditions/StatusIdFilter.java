@@ -26,6 +26,6 @@ public class StatusIdFilter implements SimpleCondition<HasStatusEffect> {
 
 	@Override
 	public String dynamicLabel() {
-		return "Status Effect ID " + operator.getFriendlyName() + ' ' + expected;
+		return String.format("Status Effect ID %s 0x%x (%s)", operator.getFriendlyName(), expected, expected);
 	}
 }

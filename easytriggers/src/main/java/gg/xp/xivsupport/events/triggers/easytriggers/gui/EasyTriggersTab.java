@@ -5,6 +5,7 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
+import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
@@ -410,22 +411,52 @@ public class EasyTriggersTab implements PluginTab {
 		}
 	}
 
-	private String askForCalloutText() {
-		String text = JOptionPane.showInputDialog(pico.getComponent(GuiMain.class).getMainFrame(), "Enter Callout Text (or leave blank for default)");
-		if (text == null) {
+	private class QuestionAnswerer implements EasyTriggerCreationQuestions {
+
+		private Component getParent() {
+			return pico.getComponent(GuiMain.class).getMainFrame();
+		}
+
+		@Override
+		public @Nullable String askOptionalString(String label) {
+			String text = JOptionPane.showInputDialog(getParent(), label);
+			if (text == null) {
+				throw new TriggerCreationCancelledException("User cancelled trigger creation");
+			}
+			if (text.isEmpty()) {
+				text = null;
+			}
+			return text;
+		}
+
+		@Override
+		public boolean askYesNo(String label, String yesButton, String noButton) {
+			int result = JOptionPane.showOptionDialog(getParent(),
+					label,
+					"Question",
+					JOptionPane.YES_NO_CANCEL_OPTION,
+					JOptionPane.PLAIN_MESSAGE,
+					null,
+					new Object[]{yesButton, noButton, "Cancel"},
+					JOptionPane.YES_OPTION
+			);
+			switch (result) {
+				case JOptionPane.YES_OPTION -> {
+					return true;
+				}
+				case JOptionPane.NO_OPTION -> {
+					return false;
+				}
+			}
 			throw new TriggerCreationCancelledException("User cancelled trigger creation");
 		}
-		if (text.isEmpty()) {
-			text = null;
-		}
-		return text;
 	}
 
 	private void makeTriggerFromEvent(Event event) {
 		EasyTrigger<?> newTrigger;
 		bringToFront();
 		try {
-			newTrigger = backend.makeTriggerFromEvent(event, this::askForCalloutText);
+			newTrigger = backend.makeTriggerFromEvent(event, new QuestionAnswerer());
 		}
 		catch (TriggerCreationCancelledException e) {
 			return;
