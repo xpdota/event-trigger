@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.events.actlines.parsers;
+package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AggroIncrease;
@@ -16,6 +16,7 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.OtherEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
+import gg.xp.xivsupport.events.actlines.parsers.StatusRemovedEffect;
 import org.jetbrains.annotations.Nullable;
 
 public final class AbilityEffects {
@@ -60,7 +61,17 @@ public final class AbilityEffects {
 				return new ParriedDamageEffect(flags, value, calcDamage(value), calcSeverity(severityByte));
 
 			case 7:
-				return new InvulnBlockedDamageEffect(flags, value, calcDamage(value), calcSeverity(severityByte));
+				// This actually has two different cases
+				// If the value is 0, it means damage was blocked
+				//  Omega-Invulnerable! Omega-F takes no damage.
+				// If the value is >0, it means a status effect of that value was blocked
+				//  Omega-M nullifies the effect of Eukrasian Dosis III.
+				if (value == 0) {
+					return new InvulnBlockedDamageEffect(flags, 0, 0, calcSeverity(severityByte));
+				}
+				else {
+					return new StatusNoEffect(flags, value, value >> 16);
+				}
 
 			case 8:
 				return new NoEffect(flags, value);
@@ -100,6 +111,9 @@ public final class AbilityEffects {
 
 			case 15: //0f
 				return new StatusAppliedEffect(flags, value, value >> 16, unknownByte, false);
+
+			case 16:
+				return new StatusRemovedEffect(flags, value, value >> 16);
 
 			case 20: //14
 				return new StatusNoEffect(flags, value, value >> 16);
