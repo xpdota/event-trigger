@@ -13,6 +13,7 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpLoss;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
+import gg.xp.xivsupport.events.actlines.parsers.StatusRemovedEffect;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -79,6 +80,14 @@ public class AbilityEffectRenderer {
 		else if (value instanceof StatusAppliedEffect statusApplied) {
 			text = "+";
 			icon = StatusEffectLibrary.iconForId(statusApplied.getStatus().getId(), statusApplied.getStacks());
+			if (icon == null) {
+				icon = StatusEffectLibrary.iconForId(760, 0);
+			}
+			reverseLayout = true;
+		}
+		else if (value instanceof StatusRemovedEffect statusRemoved) {
+			text = "-";
+			icon = StatusEffectLibrary.iconForId(statusRemoved.getStatus().getId(), 0);
 			if (icon == null) {
 				icon = StatusEffectLibrary.iconForId(760, 0);
 			}
