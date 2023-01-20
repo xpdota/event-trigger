@@ -48,7 +48,8 @@ public class Line24Parser extends AbstractACTLineParser<Line24Parser.Fields> {
 		long damage = fields.getHex(Fields.damage);
 		if (fields.hasField(Fields.damageType) && fields.hasField(Fields.sourceId) && effectId != 0) {
 			// 6.3+ path specifically for ground effects
-			DamageType damageType = DamageType.forByte(fields.getInt(Fields.damageType));
+			int rawDamageType = (int) fields.getHex(Fields.damageType);
+			DamageType damageType = DamageType.forByte(rawDamageType);
 			XivCombatant source = fields.getEntity(Fields.sourceId, Fields.sourceName, Fields.sourceCurHp, Fields.sourceMaxHp, Fields.sourceCurMp, Fields.sourceMaxMp, Fields.sourceX, Fields.sourceY, Fields.sourceZ, Fields.sourceHeading);
 			return new GroundTickEvent(target, type, damage, damageType, effectId, source);
 		}
