@@ -261,7 +261,7 @@ public class CalloutTests {
 		{
 			BuffApplied ba = new BuffApplied(new XivStatusEffect(123, "FooStatus"), 15, new XivCombatant(1, "Cbt1"), new XivCombatant(2, "Cbt2"), 5);
 			String.format("%X", ba.getBuff().getId());
-			"X".formatted(ba.getBuff().getId());
+//			"X".formatted(ba.getBuff().getId());
 
 			CalloutEvent modified = proc.processCallout(mc.getModified(ba));
 			{

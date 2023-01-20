@@ -243,6 +243,7 @@ public class GroovyPanel extends JPanel {
 				.makeTable();
 	}
 
+	@SuppressWarnings("MalformedFormatString")
 	private static String singleValueConversion(Object obj) {
 		if (obj == null) {
 			return "(null)";

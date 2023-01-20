@@ -24,5 +24,5 @@ public enum AbilityEffectType {
 	VFX,
 	HP_SET_TO,
 	AGGRO_INCREASE,
-	OTHER
+	STATUS_REMOVED, OTHER
 }

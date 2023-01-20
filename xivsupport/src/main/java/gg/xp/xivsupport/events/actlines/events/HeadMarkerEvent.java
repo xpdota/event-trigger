@@ -54,6 +54,6 @@ public class HeadMarkerEvent extends BaseEvent implements HasTargetEntity, HasPr
 
 	@Override
 	public String getPrimaryValue() {
-		return String.format("HM %d (0x%X)", markerId, markerId);
+		return String.format("HM %d (0x%X), offset %s%s", markerId, markerId, pullOffset >= 0 ? "+" : "-", Math.abs(pullOffset));
 	}
 }

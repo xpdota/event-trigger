@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.persistence;
 
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +14,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -138,5 +140,23 @@ public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProv
 		log.info("Settings wiped");
 		properties.clear();
 		writeChangesToDisk();
+	}
+
+	public void writeDatedBackupFile() {
+		if (!readOnly) {
+			File datedBackupDir = file.getParentFile().toPath().resolve("setting backups").toFile();
+			datedBackupDir.mkdirs();
+			File datedBackupFile = datedBackupDir.toPath().resolve(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH_mm_ss")) + '_' + file.getName()).toFile();
+			try {
+				datedBackupFile.createNewFile();
+				try (FileOutputStream stream = new FileOutputStream(datedBackupFile)) {
+					properties.store(stream, "Saved programmatically - this is a backup file");
+				}
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+
+		}
 	}
 }

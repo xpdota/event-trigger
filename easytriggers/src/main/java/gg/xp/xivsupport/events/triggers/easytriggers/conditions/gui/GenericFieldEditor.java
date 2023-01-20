@@ -71,6 +71,7 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 		Object fieldValue = getField(field);
 		if (type.equals(long.class) || type.equals(Long.class)) {
 			if (idPick == null) {
+				// TODO: replace simple parseLong with something that allows hex
 				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), () -> valueToString(getField(field).toString()));
 			}
 			else {

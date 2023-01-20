@@ -44,6 +44,8 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 		this.mapper = mapper;
 		this.postContstruct = postContstruct;
 
+		boolean forceCommit = false;
+
 		String strVal = pers.get(settingKey, String.class, null);
 		List<X> items;
 		if (strVal == null) {
@@ -74,6 +76,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 					failures.addAll(failed.stream().map(Object::toString).toList());
 					pers.save(failuresKey, mapper.writeValueAsString(failures));
 					log.error("One or more {} items failed to load - they have been saved to the setting '{}'", type, failuresKey);
+					forceCommit = true;
 
 				}
 			}
@@ -85,6 +88,9 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 		}
 		log.info("Loaded setting {}", settingKey);
 		this.items = items;
+		if (forceCommit) {
+			commit();
+		}
 	}
 
 	private void makeListWritable() {
@@ -177,6 +183,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 		log.info("After recovery: {} recovered, {} still failing", noLongerFailing.size(), stillFailing.size());
 		noLongerFailing.forEach(this::addItem);
 		pers.save(failuresKey, value);
+		commit();
 		log.info("Recovery complete");
 	}
 

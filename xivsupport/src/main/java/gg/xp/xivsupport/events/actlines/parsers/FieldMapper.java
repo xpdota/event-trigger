@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffects;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
