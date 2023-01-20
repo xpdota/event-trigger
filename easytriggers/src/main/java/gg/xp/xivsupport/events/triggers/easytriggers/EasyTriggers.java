@@ -31,6 +31,7 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
+import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -52,6 +53,8 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineTypeFilt
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DurationFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EntityType;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerAbsoluteIdFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerRelativeIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HitSeverityFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineNumberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
@@ -74,6 +77,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TetherIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
+import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
@@ -101,7 +105,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 @ScanMe
 public final class EasyTriggers {
@@ -305,6 +308,10 @@ public final class EasyTriggers {
 					"Conveys various state changes, such as wiping or finishing a raid. Corresponds to ACT 33 lines.",
 					"Actor control {event.command}",
 					List.of()),
+			new EventDescriptionImpl<>(HeadMarkerEvent.class,
+					"Represents a headmarker. Corresponds to ACT 27 line.",
+					"Headmarker",
+					List.of()),
 			new EventDescriptionImpl<>(ACTLogLineEvent.class,
 					"Any log line, in text form. Use as a last resort.",
 					"Log Line {event.rawFields[0]}",
@@ -337,6 +344,8 @@ public final class EasyTriggers {
 			new ConditionDescription<>(TargetPartyMemberFilter.class, HasTargetEntity.class, "Target is (not) in Party", () -> new TargetPartyMemberFilter(inject(XivState.class)), this::generic),
 			new ConditionDescription<>(TetherEntityTypeFilter.class, TetherEvent.class, "Target types for Tether Events", TetherEntityTypeFilter::new, this::generic),
 			new ConditionDescription<>(TetherIdFilter.class, TetherEvent.class, "Tether ID", TetherIdFilter::new, this::generic),
+			new ConditionDescription<>(HeadmarkerAbsoluteIdFilter.class, HeadMarkerEvent.class, "Headmarker ID (Absolute)", HeadmarkerAbsoluteIdFilter::new, this::generic),
+			new ConditionDescription<>(HeadmarkerRelativeIdFilter.class, HeadMarkerEvent.class, "Headmarker ID (Relative)", HeadmarkerRelativeIdFilter::new, this::generic),
 			new ConditionDescription<>(PlayerHasStatusFilter.class, Event.class, "Player has a specific status effect", () -> new PlayerHasStatusFilter(inject(XivState.class), inject(StatusEffectRepository.class)), this::generic),
 			new ConditionDescription<>(SourceHasStatusFilter.class, HasSourceEntity.class, "Source has a specific status effect", () -> new SourceHasStatusFilter(inject(StatusEffectRepository.class)), this::generic),
 //			new ConditionDescription<>(SourceHasStatusFilter.class, HasSourceEntity.class, "Source has a specific status effect", () -> new SourceHasStatusFilter(), this::generic),
@@ -418,9 +427,9 @@ public final class EasyTriggers {
 		return (ActionDescription<X, Y>) conditionDescription;
 	}
 
-	public @Nullable EasyTrigger<?> makeTriggerFromEvent(Event event, Supplier<String> callTextSupplier) {
+	public @Nullable EasyTrigger<?> makeTriggerFromEvent(Event event, EasyTriggerCreationQuestions questions) {
 		if (event instanceof AbilityCastStart acs) {
-			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newEmptyInst(callTextSupplier.get());
+			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newEmptyInst(questions.askCalloutText());
 			trigger.setName(acs.getAbility().getName() + " casting");
 			makeSourceConditions(acs).forEach(trigger::addCondition);
 			makeTargetConditions(acs).forEach(trigger::addCondition);
@@ -428,7 +437,7 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof AbilityUsedEvent abu) {
-			EasyTrigger<AbilityUsedEvent> trigger = getEventDescription(AbilityUsedEvent.class).newEmptyInst(callTextSupplier.get());
+			EasyTrigger<AbilityUsedEvent> trigger = getEventDescription(AbilityUsedEvent.class).newEmptyInst(questions.askCalloutText());
 			trigger.setName(abu.getAbility().getName() + " used");
 			makeSourceConditions(abu).forEach(trigger::addCondition);
 			makeTargetConditions(abu).forEach(trigger::addCondition);
@@ -437,14 +446,14 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof AbilityCastCancel acc) {
-			EasyTrigger<AbilityCastCancel> trigger = getEventDescription(AbilityCastCancel.class).newEmptyInst(callTextSupplier.get());
+			EasyTrigger<AbilityCastCancel> trigger = getEventDescription(AbilityCastCancel.class).newEmptyInst(questions.askCalloutText());
 			trigger.setName(acc.getAbility().getName() + " cancelled");
 			makeSourceConditions(acc).forEach(trigger::addCondition);
 			makeAbilityConditions(acc).forEach(trigger::addCondition);
 			return trigger;
 		}
 		else if (event instanceof AbilityResolvedEvent are) {
-			EasyTrigger<AbilityResolvedEvent> trigger = getEventDescription(AbilityResolvedEvent.class).newEmptyInst(callTextSupplier.get());
+			EasyTrigger<AbilityResolvedEvent> trigger = getEventDescription(AbilityResolvedEvent.class).newEmptyInst(questions.askCalloutText());
 			trigger.setName(are.getAbility().getName() + " resolved");
 			makeSourceConditions(are).forEach(trigger::addCondition);
 			makeTargetConditions(are).forEach(trigger::addCondition);
@@ -453,7 +462,7 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof BuffApplied ba) {
-			EasyTrigger<BuffApplied> trigger = getEventDescription(BuffApplied.class).newEmptyInst(callTextSupplier.get());
+			EasyTrigger<BuffApplied> trigger = getEventDescription(BuffApplied.class).newEmptyInst(questions.askCalloutText());
 			trigger.setName(ba.getBuff().getName() + " applied");
 			makeSourceConditions(ba).forEach(trigger::addCondition);
 			makeTargetConditions(ba).forEach(trigger::addCondition);
@@ -461,12 +470,33 @@ public final class EasyTriggers {
 			return trigger;
 		}
 		else if (event instanceof BuffRemoved br) {
-			EasyTrigger<BuffRemoved> trigger = getEventDescription(BuffRemoved.class).newEmptyInst(callTextSupplier.get());
+			EasyTrigger<BuffRemoved> trigger = getEventDescription(BuffRemoved.class).newEmptyInst(questions.askCalloutText());
 			trigger.setName(br.getBuff().getName() + " removed");
 			makeSourceConditions(br).forEach(trigger::addCondition);
 			makeTargetConditions(br).forEach(trigger::addCondition);
 			makeStatusConditions(br).forEach(trigger::addCondition);
 			return trigger;
+		}
+		else if (event instanceof HeadMarkerEvent hme) {
+			EasyTrigger<HeadMarkerEvent> trigger = getEventDescription(HeadMarkerEvent.class).newEmptyInst(questions.askCalloutText());
+			boolean relative = questions.askYesNo("Relative or Absolute Headmarker? Usually, 'Relative' is needed for ShB and higher.", "Relative", "Absolute");
+			makeTargetConditions(hme).forEach(trigger::addCondition);
+			if (relative) {
+				int offset = hme.getMarkerOffset();
+				trigger.setName(String.format("Headmarker %s%s", offset >= 0 ? "+" : "-", Math.abs(offset)));
+				HeadmarkerRelativeIdFilter filter = new HeadmarkerRelativeIdFilter();
+				filter.expected = offset;
+				trigger.addCondition(filter);
+			}
+			else {
+				long id = hme.getMarkerId();
+				trigger.setName(String.format("Headmarker 0x%x", id));
+				HeadmarkerAbsoluteIdFilter filter = new HeadmarkerAbsoluteIdFilter();
+				filter.expected = id;
+				trigger.addCondition(filter);
+			}
+			return trigger;
+
 		}
 
 		return null;
@@ -525,8 +555,8 @@ public final class EasyTriggers {
 		}
 	}
 
-	private List<Condition<HasTargetEntity>> makeTargetConditions(HasTargetEntity hse) {
-		XivCombatant target = hse.getTarget();
+	private List<Condition<HasTargetEntity>> makeTargetConditions(HasTargetEntity hte) {
+		XivCombatant target = hte.getTarget();
 		if (target.isThePlayer()) {
 			TargetEntityTypeFilter etf = new TargetEntityTypeFilter();
 			etf.type = EntityType.THE_PLAYER;

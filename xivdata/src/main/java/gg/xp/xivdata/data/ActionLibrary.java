@@ -22,10 +22,10 @@ public class ActionLibrary {
 	private static final ActionLibraryImpl INSTANCE = new ActionLibraryImpl(() -> ReadCsv.cellsFromResource("/xiv/actions/Action.csv"));
 
 
-	public static void main(String[] args) {
-		getAll().values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
-	}
-
+//	public static void main(String[] args) {
+//		getAll().values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
+//	}
+//
 	public static Map<Integer, ActionInfo> getAll() {
 		return INSTANCE.getAll();
 	}

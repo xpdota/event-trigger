@@ -25,6 +25,6 @@ public class AbilityIdFilter implements SimpleCondition<HasAbility> {
 
 	@Override
 	public String dynamicLabel() {
-		return "Ability ID " + operator.getFriendlyName() + ' ' + expected;
+		return String.format("Ability ID %s 0x%x (%s)", operator.getFriendlyName(), expected, expected);
 	}
 }
