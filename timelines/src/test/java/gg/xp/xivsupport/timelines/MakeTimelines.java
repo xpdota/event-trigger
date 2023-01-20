@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
@@ -49,6 +50,8 @@ public final class MakeTimelines {
 		main(new String[]{});
 	}
 
+	private static boolean foundGeneral;
+
 
 	public static void main(String[] args) {
 		log.info("Beginning timeline extraction");
@@ -82,22 +85,36 @@ public final class MakeTimelines {
 				// Ignore flat files and other junk
 				if (content instanceof Map contentMap) {
 					Object timelineFileRaw = contentMap.get("timelineFile");
+					boolean isGeneral = false;
 					if (timelineFileRaw == null) {
-						return;
+						if (contentMap.containsKey("timelineReplace") && contentMap.get("zoneId") == null) {
+							if (foundGeneral) {
+								// TODO: does this need to be supported?
+								throw new RuntimeException("Found more than one general timeline replacement set!");
+							}
+							foundGeneral = true;
+							isGeneral = true;
+							timelineFileRaw = "global_timeline_replacements.txt";
+						}
+						else {
+							return;
+						}
 					}
 					String timelineFileName = timelineFileRaw.toString();
 					Object zoneIdRaw = contentMap.get("zoneId");
 					Long zoneId = (Long) zoneIdRaw;
-					// Get the timeline file name
-					String fullTimelineFilePath = stripFileName(file.toString()) + timelineFileName;
-					zoneToFile.put(zoneId, timelineFileName);
-					// Get the actual timeline file contents
-					String fileContents = out.get(fullTimelineFilePath).toString().replaceAll("\r\n", "\n");
-					try {
-						Files.writeString(timelineBasePath.resolve("timeline").resolve(timelineFileName), fileContents);
-					}
-					catch (IOException e) {
-						throw new RuntimeException("Error processing timeline for '" + file + '\'', e);
+					if (!isGeneral) {
+						// Get the timeline file name
+						String fullTimelineFilePath = stripFileName(file.toString()) + timelineFileName;
+						zoneToFile.put(zoneId, timelineFileName);
+						// Get the actual timeline file contents
+						String fileContents = out.get(fullTimelineFilePath).toString().replaceAll("\r\n", "\n");
+						try {
+							Files.writeString(timelineBasePath.resolve("timeline").resolve(timelineFileName), fileContents);
+						}
+						catch (IOException e) {
+							throw new RuntimeException("Error processing timeline for '" + file + '\'', e);
+						}
 					}
 					// Get the timeline translations
 					Object timelineReplace = contentMap.get("timelineReplace");
