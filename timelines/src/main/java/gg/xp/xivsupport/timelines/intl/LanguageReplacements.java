@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,5 +38,23 @@ public record LanguageReplacements(
 
 	public static LanguageReplacements empty() {
 		return new LanguageReplacements(Collections.emptyMap(), Collections.emptyMap());
+	}
+
+	public static LanguageReplacements combine(List<LanguageReplacements> all) {
+		if (all.isEmpty()) {
+			return empty();
+		}
+		else if (all.size() == 1) {
+			return all.get(0);
+		}
+		else {
+			Map<String, String> syncRaw = new HashMap<>();
+			Map<String, String> textRaw = new HashMap<>();
+			for (LanguageReplacements lr : all) {
+				syncRaw.putAll(lr.sortedReplaceSync());
+				textRaw.putAll(lr.sortedReplaceText());
+			}
+			return fromRaw(syncRaw, textRaw);
+		}
 	}
 }
