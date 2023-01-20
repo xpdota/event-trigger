@@ -5,6 +5,7 @@ import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
+import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
 import gg.xp.xivsupport.persistence.SimplifiedPropertiesFilePersistenceProvider;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.StringSettingGui;
@@ -25,6 +26,7 @@ import java.util.function.Consumer;
 public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("UpdateCheck"));
+	private final PersistenceProvider pers;
 	private JButton button;
 	private volatile UpdateCheckStatus updateCheckStatus = UpdateCheckStatus.NOT_STARTED;
 	private JLabel checkingLabel;
@@ -43,6 +45,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 
 	public UpdatesPanel(PersistenceProvider pers, UpdaterConfig updateConfig) {
 		super("Updates");
+		this.pers = pers;
 		updateCheckNag = new BooleanSetting(pers, "updater.nag-next-update", true);
 		try {
 			this.installDir = Platform.getInstallDir();
@@ -103,6 +106,16 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 
 	private void updateNow() {
 		exs.submit(() -> {
+			// Before doing anything else, back up settings
+			if (pers instanceof PropertiesFilePersistenceProvider pfpp) {
+				try {
+					pfpp.writeDatedBackupFile();
+				}
+				catch (Throwable t) {
+					log.error("Error writing backup settings!", t);
+					JOptionPane.showMessageDialog(this, "There was an error saving a backup of your settings! You can still update, but you should fix this.", "Error!", JOptionPane.ERROR_MESSAGE);
+				}
+			}
 			// First, try to update the updater itself
 			try {
 				try {
