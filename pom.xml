@@ -16,6 +16,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!--        Reproducible builds - allows updater to not download stuff that didn't actually change-->
         <project.build.outputTimestamp>10</project.build.outputTimestamp>
+        <surefire.threadcount>2</surefire.threadcount>
+        <jackson.version>2.14.1</jackson.version>
     </properties>
     <packaging>pom</packaging>
 
@@ -50,11 +52,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.0.0-M5</version>
+                    <version>3.0.0-M7</version>
                     <configuration>
                         <parallel>methods</parallel>
-                        <threadCount>2</threadCount>
-                        <perCoreThreadCount>true</perCoreThreadCount>
+                        <threadCount>${surefire.threadcount}</threadCount>
+                        <!-- Whoops, this actually never worked with testng -->
+                        <perCoreThreadCount>false</perCoreThreadCount>
                         <argLine>-Duser.country=US -Duser.language=en -DsequentialTriggerCycleTime=1000
                             -Dskip-groovy-script-load=true
                         </argLine>
@@ -122,7 +125,7 @@
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>7.3.0</version>
+                <version>7.7.1</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
@@ -168,7 +171,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>2.13.2.1</version>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.picocontainer</groupId>
@@ -365,32 +368,12 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
                         <configuration>
                             <skip>true</skip>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>lessthreads</id>
-            <build>
-                <pluginManagement>
-
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-surefire-plugin</artifactId>
-                            <version>3.0.0-M5</version>
-                            <configuration>
-                                <threadCount>1</threadCount>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-
         </profile>
     </profiles>
 
