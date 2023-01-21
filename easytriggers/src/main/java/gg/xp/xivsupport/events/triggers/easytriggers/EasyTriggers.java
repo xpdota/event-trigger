@@ -32,6 +32,7 @@ import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -73,6 +74,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityType
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetHasStatusFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetIndexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetPartyMemberFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetabilityChangeFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TetherEntityTypeFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TetherIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
@@ -311,9 +313,13 @@ public final class EasyTriggers {
 					"Actor control {event.command}",
 					List.of()),
 			new EventDescriptionImpl<>(HeadMarkerEvent.class,
-					"Represents a headmarker. Corresponds to ACT 27 line.",
+					"Represents a headmarker. Corresponds to ACT 27 lines.",
 					"Headmarker",
 					List.of()),
+			new EventDescriptionImpl<>(TargetabilityUpdate.class,
+					"Represents an enemy become targetable or untargetable. Corresponds to ACT 34 lines.",
+					"{event.target} {event.targetable ? 'Targetable' : 'Untargetable'}",
+					List.of(TargetabilityChangeFilter::new)),
 			new EventDescriptionImpl<>(ACTLogLineEvent.class,
 					"Any log line, in text form. Use as a last resort.",
 					"Log Line {event.rawFields[0]}",
@@ -360,6 +366,7 @@ public final class EasyTriggers {
 			new ConditionDescription<>(ChatLineRegexFilter.class, ChatLineEvent.class, "Chat Line Regular Expression (Regex)", ChatLineRegexFilter::new, this::generic),
 			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, this::generic),
 			new ConditionDescription<>(HitSeverityFilter.class, HasEffects.class, "Hit Severity (Crit/Direct Hit)", HitSeverityFilter::new, this::generic),
+			new ConditionDescription<>(TargetabilityChangeFilter.class, TargetabilityUpdate.class, "Combatant becomes (un)targetable", TargetabilityChangeFilter::new, this::generic),
 			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, b)),
 			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic)
 	));
