@@ -7,10 +7,10 @@ import gg.xp.reevent.topology.BaseToggleableTopo;
 import gg.xp.reevent.topology.TopoItem;
 import gg.xp.reevent.topology.Topology;
 import gg.xp.xivsupport.sys.XivMain;
-import org.junit.Assert;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TopoPersistence {
