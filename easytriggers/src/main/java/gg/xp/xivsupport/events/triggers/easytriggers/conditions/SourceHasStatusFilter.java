@@ -15,7 +15,7 @@ public class SourceHasStatusFilter implements SimpleCondition<HasSourceEntity> {
 //	@EditorIgnore
 //	private final StatusEffectRepository buffs;
 	@Description("Status ID")
-	@IdType(StatusEffectInfo.class)
+	@IdType(value = StatusEffectInfo.class, matchRequired = false)
 	public long expected;
 
 	public SourceHasStatusFilter(@JacksonInject(useInput = OptBoolean.FALSE) StatusEffectRepository buffs) {

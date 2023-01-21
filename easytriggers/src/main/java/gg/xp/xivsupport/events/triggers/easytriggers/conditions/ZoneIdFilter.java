@@ -18,7 +18,7 @@ public class ZoneIdFilter implements SimpleCondition<Object> {
 
 	public NumericOperator operator = NumericOperator.EQ;
 	@Description("Zone ID")
-	@IdType(ZoneInfo.class)
+	@IdType(value = ZoneInfo.class, matchRequired = false)
 	public long expected;
 
 	@Description("Use Current Zone")

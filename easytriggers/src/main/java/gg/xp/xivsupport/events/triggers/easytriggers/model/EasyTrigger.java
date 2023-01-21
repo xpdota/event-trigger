@@ -90,6 +90,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 
 	public void setEventType(Class<X> eventType) {
 		this.eventType = eventType;
+		recalc();
 	}
 
 	@Override
@@ -100,6 +101,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 	@Override
 	public void setConditions(List<Condition<? super X>> conditions) {
 		this.conditions = new ArrayList<>(conditions);
+		recalc();
 	}
 
 	private void makeWritable() {
@@ -125,12 +127,14 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 	public void addCondition(Condition<? super X> condition) {
 		makeWritable();
 		conditions.add(condition);
+		recalc();
 	}
 
 	@Override
 	public void removeCondition(Condition<? super X> condition) {
 		makeWritable();
 		conditions.remove(condition);
+		recalc();
 	}
 
 	@Override

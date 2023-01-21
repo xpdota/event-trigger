@@ -75,7 +75,7 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 				editorComponent = new TextFieldWithValidation<>(Long::parseLong, l -> setField(field, l), () -> valueToString(getField(field).toString()));
 			}
 			else {
-				editorComponent = idPickerFactory.pickerFor(idPick.value(), () -> (long) getField(field), l -> setField(field, l));
+				editorComponent = idPickerFactory.pickerFor(idPick.value(), idPick.matchRequired(), () -> (long) getField(field), l -> setField(field, l));
 			}
 		}
 		else if (type.equals(int.class) || type.equals(Integer.class)) {

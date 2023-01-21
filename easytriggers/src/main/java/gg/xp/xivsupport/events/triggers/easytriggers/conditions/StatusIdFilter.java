@@ -10,7 +10,7 @@ public class StatusIdFilter implements SimpleCondition<HasStatusEffect> {
 
 	public NumericOperator operator = NumericOperator.EQ;
 	@Description("Status ID")
-	@IdType(StatusEffectInfo.class)
+	@IdType(value = StatusEffectInfo.class, matchRequired = false)
 	public long expected;
 
 	@Override
