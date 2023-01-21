@@ -23,15 +23,15 @@ public class IdPickerFactory {
 		this.actionTableFactory = actionTableFactory;
 	}
 
-	public <X> Component pickerFor(Class<X> clazz, Supplier<Long> getter, Consumer<Long> setter) {
+	public <X> Component pickerFor(Class<X> clazz, boolean required, Supplier<Long> getter, Consumer<Long> setter) {
 		if (clazz.equals(ActionInfo.class)) {
-			return new IdPicker<>(getter, setter, ActionLibrary::forId, ActionInfo::actionid, ActionInfo::name, actionTableFactory::pickItem, ActionInfo::getIcon);
+			return new IdPicker<>(required, getter, setter, ActionLibrary::forId, ActionInfo::actionid, ActionInfo::name, actionTableFactory::pickItem, ActionInfo::getIcon);
 		}
 		else if (clazz.equals(StatusEffectInfo.class)) {
-			return new IdPicker<>(getter, setter, StatusEffectLibrary::forId, StatusEffectInfo::statusEffectId, StatusEffectInfo::name, StatusTable::pickItem, statusEffectInfo -> statusEffectInfo.getIcon(0));
+			return new IdPicker<>(required, getter, setter, StatusEffectLibrary::forId, StatusEffectInfo::statusEffectId, StatusEffectInfo::name, StatusTable::pickItem, statusEffectInfo -> statusEffectInfo.getIcon(0));
 		}
 		else if (clazz.equals(ZoneInfo.class)) {
-			return new IdPicker<>(getter, setter, id -> ZoneLibrary.infoForZoneOrUnknown(id.intValue()), zi -> (long) zi.id(), ZoneInfo::getCapitalizedName, ZonesTable::pickItem, zone -> null);
+			return new IdPicker<>(required, getter, setter, id -> ZoneLibrary.infoForZoneOrUnknown(id.intValue()), zi -> (long) zi.id(), ZoneInfo::getCapitalizedName, ZonesTable::pickItem, zone -> null);
 		}
 		else {
 			log.error("No picker for {}, falling back to basic text field with validation", clazz);

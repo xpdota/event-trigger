@@ -58,6 +58,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerRelati
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HitSeverityFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineNumberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.OrFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.PlayerHasStatusFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.RefireFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityNpcIdFilter;
@@ -75,6 +76,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetPartyMembe
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TetherEntityTypeFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TetherIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.CompoundConditionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
@@ -374,6 +376,7 @@ public final class EasyTriggers {
 	));
 
 	{
+		registerConditionType(new ConditionDescription<>(OrFilter.class, Object.class, "Logical OR or multiple conditions", OrFilter::new, (action, trigger) -> new CompoundConditionEditor(this, action)));
 		registerActionType(new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)));
 	}
 

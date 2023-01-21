@@ -19,7 +19,7 @@ public class IdPicker<X> extends JPanel implements ResettableField {
 
 	private static final Logger log = LoggerFactory.getLogger(IdPicker.class);
 
-	private final TextFieldWithValidation<X> textBox;
+	private final TextFieldWithValidation<Long> textBox;
 	private final JLabel currentItemLabel;
 	private final Function<X, String> itemToLabel;
 	private final Supplier<Long> getter;
@@ -28,7 +28,7 @@ public class IdPicker<X> extends JPanel implements ResettableField {
 	private final JPanel iconHolder;
 	private final Function<X, HasIconURL> itemToIcon;
 
-	public IdPicker(Supplier<Long> getter, Consumer<Long> setter, Function<Long, X> idToItem, Function<X, Long> itemToId, Function<X, String> itemToLabel, Function<Window, X> picker, Function<X, HasIconURL> itemToIcon) {
+	public IdPicker(boolean required, Supplier<Long> getter, Consumer<Long> setter, Function<Long, X> idToItem, Function<X, Long> itemToId, Function<X, String> itemToLabel, Function<Window, X> picker, Function<X, HasIconURL> itemToIcon) {
 		this.itemToLabel = itemToLabel;
 		this.idToItem = idToItem;
 		this.itemToId = itemToId;
@@ -40,12 +40,12 @@ public class IdPicker<X> extends JPanel implements ResettableField {
 		textBox = new TextFieldWithValidation<>(s -> {
 			long id = Long.parseLong(s);
 			X apply = idToItem.apply(id);
-			if (apply == null) {
+			if (apply == null && required) {
 				throw new IllegalArgumentException("Cannot be null");
 			}
-			return apply;
+			return id;
 		}, newValue -> {
-			setter.accept(itemToId.apply(newValue));
+			setter.accept(newValue);
 			refresh();
 		}, () -> getter.get().toString());
 		currentItemLabel = new JLabel();
@@ -77,7 +77,9 @@ public class IdPicker<X> extends JPanel implements ResettableField {
 	private void refresh() {
 		X current = currentItem();
 		if (current == null) {
-			currentItemLabel.setText("Unknown Item");
+			iconHolder.removeAll();
+			Long id = getter.get();
+			currentItemLabel.setText(String.format("Unknown Item (%s, 0x%x)", id, id));
 			return;
 		}
 		else {

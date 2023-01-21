@@ -9,7 +9,7 @@ public class AbilityIdFilter implements SimpleCondition<HasAbility> {
 
 	public NumericOperator operator = NumericOperator.EQ;
 	@Description("Ability ID")
-	@IdType(ActionInfo.class)
+	@IdType(value = ActionInfo.class, matchRequired = false)
 	public long expected;
 
 	@Override

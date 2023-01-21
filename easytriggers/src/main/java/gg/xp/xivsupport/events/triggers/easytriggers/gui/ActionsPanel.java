@@ -72,10 +72,11 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 			Action<?> newInst = desc.newInst();
 			inner.add(newInst);
 			revalidate();
+			saveCallback.run();
 		}
 	}
 
-	private class ActionsPanelInner extends JPanel implements ActionDragDropTarget {
+	private class ActionsPanelInner extends JPanel implements DragDropTarget {
 
 		private int previewIndex = -1;
 
@@ -107,6 +108,10 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 			}
 		}
 
+		@Override
+		public Class<?> expectedClass() {
+			return Action.class;
+		}
 
 		@Override
 		public int indexFor(Point point) {
@@ -233,7 +238,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 			MouseAdapter dummyAdapter = new MouseAdapter() {
 
 				//				private Component lastEnteredComponent;
-				private ActionDragDropTarget lastAddt;
+				private DragDropTarget lastAddt;
 
 				@Override
 				public void mouseClicked(MouseEvent e) {
@@ -313,7 +318,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 					// Then, find the component there
 					Component c = SwingUtilities.getDeepestComponentAt(window, deltaWithinWindow.x, deltaWithinWindow.y);
 					while (c != null) {
-						if (c instanceof ActionDragDropTarget addt) {
+						if (c instanceof DragDropTarget addt && addt.expectedClass().isAssignableFrom(Action.class)) {
 							Point compLos = c.getLocationOnScreen();
 							Point relative = new Point(eventPoint.x - compLos.x, eventPoint.y - compLos.y);
 							return new AddtPosition(addt, relative, addt.indexFor(relative));
@@ -389,12 +394,12 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 		saveCallback.run();
 	}
 
-	record AddtPosition(ActionDragDropTarget addt, Point relativePoint, int index) {
+	record AddtPosition(DragDropTarget addt, Point relativePoint, int index) {
 
 	}
 
 	private <Y> void doDnd(AddtPosition addtp, Action<Y> action) {
-		ActionDragDropTarget target = addtp.addt;
+		DragDropTarget target = addtp.addt;
 		if (target == this.inner) {
 			inner.rearrange(action, addtp.index);
 		}

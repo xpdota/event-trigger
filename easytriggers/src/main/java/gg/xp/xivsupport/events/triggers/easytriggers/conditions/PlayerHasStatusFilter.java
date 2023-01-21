@@ -17,7 +17,7 @@ public class PlayerHasStatusFilter implements SimpleCondition<Event> {
 	@EditorIgnore
 	private final StatusEffectRepository buffs;
 	@Description("Status ID")
-	@IdType(StatusEffectInfo.class)
+	@IdType(value = StatusEffectInfo.class, matchRequired = false)
 	public long expected;
 
 	public PlayerHasStatusFilter(@JacksonInject(useInput = OptBoolean.FALSE) XivState state, @JacksonInject(useInput = OptBoolean.FALSE) StatusEffectRepository buffs) {

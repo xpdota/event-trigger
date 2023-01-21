@@ -64,6 +64,7 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 			trigger.addCondition((Condition<? super X>) newInst);
 			add(new ConditionPanel<>(newInst));
 			revalidate();
+			saveCallback.run();
 		}
 	}
 

@@ -4,9 +4,10 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 
 import java.awt.*;
 
-public interface ActionDragDropTarget {
+public interface DragDropTarget {
 
 	// TODO: validation
+	Class<?> expectedClass();
 
 	int indexFor(Point pointOnScreen);
 
