@@ -1,7 +1,11 @@
 package gg.xp.xivsupport.groovy;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.AutoHandlerConfig;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
@@ -193,16 +197,26 @@ public class GroovyManager {
 
 	private Binding makeGlobalBinding() {
 		Binding binding = new Binding();
+		binding.setVariable("globals", binding);
+		return binding;
+	}
+
+	@HandleEvents(order = -10_000_000)
+	public void finishInit(EventContext context, InitEvent init) {
+		Binding binding = getGlobalBinding();
 		container.getComponents().forEach(item -> {
 			String simpleName = item.getClass().getSimpleName();
 			simpleName = StringUtils.uncapitalize(simpleName);
 			binding.setProperty(simpleName, item);
 		});
-		// TODO: find a way to systematically do these
-		// TODO: expose user scripts here
+		// TODO: find a way to systematically do these exceptions
+		binding.setVariable("pico", container);
+		binding.setVariable("container", container);
+		binding.setVariable("picoContainer", container);
 		binding.setVariable("xivState", container.getComponent(XivState.class));
-		binding.setVariable("globals", binding);
-		return binding;
+		binding.setVariable("state", container.getComponent(XivState.class));
+		binding.setVariable("master", container.getComponent(EventMaster.class));
+
 	}
 
 
