@@ -9,7 +9,6 @@ public class TetherIdFilter implements SimpleCondition<TetherEvent> {
 
 	public NumericOperator operator = NumericOperator.EQ;
 	@Description("Tether ID: ")
-	@IdType(ActionInfo.class)
 	public long expected;
 
 	@Override

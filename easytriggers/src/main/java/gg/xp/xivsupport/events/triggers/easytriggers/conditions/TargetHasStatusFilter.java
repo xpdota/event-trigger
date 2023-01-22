@@ -14,7 +14,7 @@ public class TargetHasStatusFilter implements SimpleCondition<HasTargetEntity> {
 	@EditorIgnore
 	private final StatusEffectRepository buffs;
 	@Description("Status ID")
-	@IdType(StatusEffectInfo.class)
+	@IdType(value = StatusEffectInfo.class, matchRequired = false)
 	public long expected;
 
 	public TargetHasStatusFilter(@JacksonInject(useInput = OptBoolean.FALSE) StatusEffectRepository buffs) {

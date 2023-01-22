@@ -33,7 +33,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 public final class TimelineManager {
 
@@ -109,26 +111,32 @@ public final class TimelineManager {
 			log.info("Timeline file '{}' for zone '{}' is missing", filename, zoneId);
 			return null;
 		}
-		InputStream translationsStream = TimelineManager.class.getResourceAsStream("/timeline/translations/" + filename + ".json");
-		LanguageReplacements lr;
-		if (translationsStream == null) {
-			lr = LanguageReplacements.empty();
-		}
-		else {
-			try {
-				TimelineReplacements tr = mapper.readValue(translationsStream, TimelineReplacements.class);
-				String lang = this.lang.getGameLanguage().getShortCode();
-				lr = tr.langs().getOrDefault(lang, LanguageReplacements.empty());
-				log.info("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
-			}
-			catch (IOException e) {
-				log.error("Error loading timeline translations for zone {}", zoneId, e);
-				lr = LanguageReplacements.empty();
-			}
-		}
+		InputStream generalTranslationStream = TimelineManager.class.getResourceAsStream("/timeline/translations/global_timeline_replacements.txt.json");
+		InputStream specificTranslationsStream = TimelineManager.class.getResourceAsStream("/timeline/translations/" + filename + ".json");
+
+		LanguageReplacements combined = LanguageReplacements.combine(
+				Stream.of(generalTranslationStream, specificTranslationsStream)
+						.filter(Objects::nonNull)
+						.map(translationsStream -> {
+									LanguageReplacements lr;
+									try {
+										TimelineReplacements tr = mapper.readValue(translationsStream, TimelineReplacements.class);
+										String lang = this.lang.getGameLanguage().getShortCode();
+										lr = tr.langs().getOrDefault(lang, LanguageReplacements.empty());
+										log.info("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
+										return lr;
+									}
+									catch (IOException e) {
+										log.error("Error loading timeline translations for zone {}", zoneId, e);
+										return null;
+									}
+								}
+						)
+						.filter(Objects::nonNull)
+						.toList());
 
 		try {
-			return TimelineProcessor.of(this, resource, getCustomEntries(zoneId), state.getPlayerJob(), lr);
+			return TimelineProcessor.of(this, resource, getCustomEntries(zoneId), state.getPlayerJob(), combined);
 		}
 		catch (Throwable e) {
 			log.error("Error loading timeline for zone {}", zoneId, e);

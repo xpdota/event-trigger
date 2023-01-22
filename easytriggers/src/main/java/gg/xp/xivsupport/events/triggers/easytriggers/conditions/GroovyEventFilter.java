@@ -9,6 +9,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.SubBinding;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
@@ -116,8 +117,7 @@ public class GroovyEventFilter implements Condition<Event> {
 			Script parsedScript = shell.parse(inJavaForm);
 			Binding originalBinding = parsedScript.getBinding();
 			// TODO: does getVariables() also need to be overridden?
-			// TODO: make this more official
-			Binding mergedBinding = new Binding(originalBinding.getVariables()) {
+			SubBinding mergedBinding = new SubBinding(originalBinding) {
 				@Override
 				public Object getVariable(String name) {
 					Object extra = currentContext.getExtraVariables().get(name);
@@ -128,13 +128,13 @@ public class GroovyEventFilter implements Condition<Event> {
 				}
 
 				@Override
-				public void setVariable(String name, Object value) {
-					currentContext.addVariable(name, value);
+				public boolean hasVariable(String name) {
+					return currentContext.getExtraVariables().containsKey(name) || super.hasVariable(name);
 				}
 
 				@Override
-				public boolean hasVariable(String name) {
-					return currentContext.getExtraVariables().containsKey(name) || super.hasVariable(name);
+				public void setVariable(String name, Object value) {
+					currentContext.addVariable(name, value);
 				}
 			};
 			parsedScript.setBinding(mergedBinding);

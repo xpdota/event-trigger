@@ -9,8 +9,8 @@ import groovy.lang.GroovyShell;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
-import org.junit.Assert;
 import org.picocontainer.MutablePicoContainer;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class GroovyTest {
