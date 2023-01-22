@@ -40,7 +40,7 @@ public class AutoHandlerScan {
 	private static final Pattern jarFileName = Pattern.compile("([a-zA-Z0-9\\-.]+)\\.jar");
 	private static final List<String> scanBlacklist = List.of(
 			"annotations",
-			"caffeiene",
+			"caffeine",
 			"commons",
 			"flatlaf",
 			"groovy",
