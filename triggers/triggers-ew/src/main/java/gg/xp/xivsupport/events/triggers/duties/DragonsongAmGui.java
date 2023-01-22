@@ -26,7 +26,7 @@ public class DragonsongAmGui implements DutyPluginTab {
 
 	@Override
 	public String getTabName() {
-		return "DSR Automarks";
+		return "DSR Wroth+Thunder Automarks";
 	}
 
 	@Override
@@ -44,8 +44,13 @@ public class DragonsongAmGui implements DutyPluginTab {
 			}
 		};
 		outer.setLayout(new BorderLayout());
+		JPanel topCheckboxes = new JPanel();
+		topCheckboxes.setLayout(new BoxLayout(topCheckboxes, BoxLayout.PAGE_AXIS));
+		JCheckBox p5marks = new BooleanSettingGui(ds.getP5_thunderstruckAutoMarks(), "P5 Thunderstruck Automarks").getComponent();
 		JCheckBox p6marks = new BooleanSettingGui(ds.getP6_useAutoMarks(), "P6 Wroth Flames Automarks").getComponent();
-		outer.add(p6marks, BorderLayout.NORTH);
+		topCheckboxes.add(p5marks);
+		topCheckboxes.add(p6marks);
+		outer.add(topCheckboxes, BorderLayout.NORTH);
 		GridBagConstraints c = new GridBagConstraints(0, 0, 2, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
 
 		inner = new JPanel();
@@ -56,17 +61,17 @@ public class DragonsongAmGui implements DutyPluginTab {
 		ReadOnlyText helpText = new ReadOnlyText("""
 				The four players with the 'spread' debuffs will receive 'attack' markers.
 				In addition, if Telesto is in use:
-				
+								
 				If "Alt Mode" is disabled:
 				The two players with 'stack' debuffs will receive 'bind1' and 'bind2' markers,
 				and the two players with nothing will receive 'ignore1 and ignore2' markers.
 				The intent is that the '1' players will stack together, and '2' players stack together.
-				
+								
 				If "Alt Mode" is enabled:
 				The two players with 'stack' debuffs will receive 'bind1' and 'ignore1' markers,
 				and the two players with nothing will receive 'bind2' and 'ignore2' markers.
 				The intent is that the 'bind' players will stack together, and 'ignore' players stack together.
-				
+								
 				In both cases, higher priority jobs will get lower number markers. To reverse this, check "Reverse Sort".
 				""");
 
