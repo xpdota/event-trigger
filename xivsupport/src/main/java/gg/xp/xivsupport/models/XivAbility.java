@@ -4,6 +4,8 @@ import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.rsv.*;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
+import gg.xp.xivsupport.util.RsvLookupUtil;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -17,21 +19,16 @@ public class XivAbility implements Serializable, NameIdPair {
 
 	public XivAbility(long id) {
 		this.id = id;
-		ActionInfo actionInfo = ActionLibrary.forId(id);
-		if (actionInfo == null) {
-			name = String.format("Unknown_%x", id);
-		}
-		else {
-			name = actionInfo.name();
-		}
+		this.name = findName(id, null);
 	}
 
 	public XivAbility(long id, String name) {
 		this.id = id;
-		if (name != null && name.startsWith("_rsv")) {
-			name = DefaultRsvLibrary.tryResolve(name);
-		}
-		this.name = name == null ? null : name.intern();
+		this.name = findName(id, name);
+	}
+
+	private static String findName(long id, @Nullable String givenName) {
+		return RsvLookupUtil.lookup(id, givenName, ActionLibrary::forId, ActionInfo::name);
 	}
 
 	@Override

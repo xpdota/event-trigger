@@ -1,5 +1,6 @@
 package gg.xp.xivdata.data.rsv;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 public final class DefaultRsvLibrary {
@@ -25,7 +26,11 @@ public final class DefaultRsvLibrary {
 		return libValue.intern();
 	}
 
+	@Contract("null -> null")
 	public static String tryResolve(String original) {
+		if (original == null) {
+			return null;
+		}
 		if (original.startsWith("_rsv")) {
 			String decodedMaybe = get(original);
 			if (decodedMaybe != null) {
