@@ -7,7 +7,7 @@ import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.*;
-import gg.xp.xivdata.data.duties.KnownDuty;
+import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
@@ -20,9 +20,11 @@ import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.HeadmarkerOffsetTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
@@ -209,6 +211,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	private final ModifiableCallout<BuffApplied> pyretic = new ModifiableCallout<BuffApplied>("Pyretic", "Stop Moving", "Stop Moving", buff -> !getBuffs().originalStatusActive(buff)).statusIcon(0x3C0);
 
 
+	private final BooleanSetting p5_thunderstruckAutoMarks;
 	private final BooleanSetting p6_useAutoMarks;
 	private final BooleanSetting p6_altMarkMode;
 	private final BooleanSetting p6_rotPrioHigh;
@@ -222,6 +225,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 	public Dragonsong(XivState state, StatusEffectRepository buffs, PersistenceProvider pers, HeadmarkerOffsetTracker headmarkerOffsetTracker) {
 		this.state = state;
 		this.buffs = buffs;
+		p5_thunderstruckAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.p5-use-auto-marks", false);
 		p6_useAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.use-auto-marks", false);
 		p6_altMarkMode = new BooleanSetting(pers, "triggers.dragonsong.alt-mark-mode", true);
 		p6_rotPrioHigh = new BooleanSetting(pers, "triggers.dragonsong.rot-highest-prio", true);
@@ -858,10 +862,35 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 				log.info("Haurch HP tracker end");
 			});
 
+	private boolean needAmClear;
+
 	@HandleEvents
 	public void lightning(EventContext context, BuffApplied event) {
-		if (event.getTarget().isThePlayer() && event.buffIdMatches(0xB11)) {
-			context.accept(thordan2_trio1_lightningOnYou.getModified(event));
+		if (event.buffIdMatches(0xB11)) {
+			XivCombatant target = event.getTarget();
+			if (target.isThePlayer()) {
+				context.accept(thordan2_trio1_lightningOnYou.getModified(event));
+			}
+			if (p5_thunderstruckAutoMarks.get() && target instanceof XivPlayerCharacter pc) {
+				context.accept(new AutoMarkRequest(pc));
+				needAmClear = true;
+			}
+		}
+	}
+
+	@HandleEvents
+	public void lightningClearAm(EventContext context, AbilityUsedEvent aue) {
+		if (needAmClear && aue.abilityIdMatches(0x62DA)) {
+			context.accept(new ClearAutoMarkRequest());
+			needAmClear = false;
+		}
+	}
+
+	@HandleEvents
+	public void lightningClearAm(EventContext context, PullStartedEvent pse) {
+		if (needAmClear) {
+			context.accept(new ClearAutoMarkRequest());
+			needAmClear = false;
 		}
 	}
 
@@ -1755,6 +1784,9 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	 */
 
+	public BooleanSetting getP5_thunderstruckAutoMarks() {
+		return p5_thunderstruckAutoMarks;
+	}
 
 	public BooleanSetting getP6_useAutoMarks() {
 		return p6_useAutoMarks;
