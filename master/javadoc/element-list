@@ -9,6 +9,8 @@ gg.xp.reevent.topology
 gg.xp.reevent.util
 gg.xp.telestosupport
 gg.xp.telestosupport.doodle
+gg.xp.telestosupport.easytriggers
+gg.xp.telestosupport.easytriggers.gui
 gg.xp.telestosupport.gui
 gg.xp.telestosupport.rightclicks
 gg.xp.util
