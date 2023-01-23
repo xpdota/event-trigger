@@ -9,6 +9,7 @@ import gg.xp.telestosupport.TelestoHttpError;
 import gg.xp.telestosupport.TelestoGameCommand;
 import gg.xp.telestosupport.TelestoMain;
 import gg.xp.telestosupport.TelestoStatusUpdatedEvent;
+import gg.xp.telestosupport.rightclicks.TelestoRightClickOptions;
 import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
@@ -28,13 +29,15 @@ public class TelestoGui implements PluginTab {
 
 	private final TelestoMain backend;
 	private final EventMaster master;
+	private final TelestoRightClickOptions trco;
 	private final JLabel statusLabel;
 	private JTextArea label;
 	private TelestoGameCommand lastEvent;
 
-	public TelestoGui(TelestoMain backend, EventMaster master) {
+	public TelestoGui(TelestoMain backend, EventMaster master, TelestoRightClickOptions trco) {
 		this.backend = backend;
 		this.master = master;
+		this.trco = trco;
 		this.statusLabel = new JLabel();
 		label = new JTextArea("Press the 'Test' button");
 		updateLabel();
@@ -72,8 +75,9 @@ public class TelestoGui implements PluginTab {
 			testPanel.setMaximumSize(newPref);
 		}
 		JCheckBox partyListCb = new BooleanSettingGui(backend.getEnablePartyList(), "Enable Party List").getComponent();
+		JCheckBox rightClicksCb = new BooleanSettingGui(trco.getEnableExtraOptions(), "Install Right Click Debug Options").getComponent();
 
-		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, scroll, testPanel, partyListCb);
+		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, scroll, testPanel, partyListCb, rightClicksCb);
 
 		return outer;
 	}
