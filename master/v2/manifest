@@ -1,6 +1,6 @@
-51d38dafe2935257f9acced898930e9a  triggevent.exe
-198bc19eb7c4ed4da674d23be3b73665  triggevent-import.exe
-3fda71fa5eb69c02b752be2046ce436f  triggevent-upd.exe
+c479d293412051f04c7e027b2cef0dae  triggevent.exe
+60378c50ae06396300ebb09ace8509b1  triggevent-import.exe
+008bbdc3e0d691e8badc1d9aec89fe33  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 b9e19f96299334e586775e57c0f0037e  deps/actimport-1.0-SNAPSHOT.jar
 879614e1a8678b4db231a05cae8cdb03  deps/annotations-24.0.0.jar
@@ -21,7 +21,7 @@ a89d22f4802437651cbb40b76125a529  deps/dot-tracker-1.0-SNAPSHOT.jar
 655814242aa5fa27b4f4eaca9390c951  deps/flatlaf-1.6.5.jar
 4fbc34bbf1ec28670693ee90ba5948fc  deps/groovy-3.0.14.jar
 d42b8855e3b7e4f3506ffc0b5b85d149  deps/groovy-sandbox-1.27.jar
-ab06a0b93f72f90c38978caa3f50ae18  deps/groovy-sandboxing-1.0-SNAPSHOT.jar
+4d00b50e441b672f1a81c9ab6d0e2995  deps/groovy-sandboxing-1.0-SNAPSHOT.jar
 2cb357c4b763f47e58af6cad47df6ba3  deps/httpclient-4.5.14.jar
 28d2cd9bf8789fd2ec774fb88436ebd1  deps/httpcore-4.4.16.jar
 714c4ae31c40e6633c0bcaa4e6264153  deps/httpmime-4.5.14.jar
@@ -35,7 +35,7 @@ bd2e5bc6b4b020c2d9a6e17a8e9bcef1  deps/jna-5.13.0.jar
 7cc7af47ad1f151faa57ef0624b2f271  deps/jna-platform-5.13.0.jar
 9d9576fc366854c32f4d1daf9dcc4b1c  deps/job-overlays-1.0-SNAPSHOT.jar
 dd83accb899363c32b07d7a1b2e4ce40  deps/jsr305-3.0.2.jar
-a6e6ff60516bfe2cc06d2c487709b744  deps/launcher-1.0-SNAPSHOT.jar
+449a4380bc69a6a3df8cfa65dc2fa549  deps/launcher-1.0-SNAPSHOT.jar
 9d6a0bfe0f105ddda17dc398134d2384  deps/logback-classic-1.4.5.jar
 baf749c68aacc6d719f3ce3d7345af38  deps/logback-core-1.4.5.jar
 b402eabb88aca7b196dc3089e109f6b3  deps/opencsv-5.7.1.jar
@@ -46,7 +46,9 @@ b379db6e4ee67fd2d731faadc3a5afa5  deps/personal-cast-bar-overlay-1.0-SNAPSHOT.ja
 1d0070839d825f57fe6f4d8e2a82989b  deps/reflections-0.10.2.jar
 9c3b7321b1be9dc1dbac775ffbc76d7c  deps/skill-hit-overlay-1.0-SNAPSHOT.jar
 0dd65c386e8c5f4e6e014de3f7a7ae60  deps/slf4j-api-2.0.6.jar
-55d0d3398a0e33b65eefd0b10c01aecb  deps/telesto-support-1.0-SNAPSHOT.jar
+6cf4f5a4c091ac27e02d9bc465171d1d  deps/telesto-core-1.0-SNAPSHOT.jar
+2d91bdfd588d1d1a143a551609712ed7  deps/telesto-gui-1.0-SNAPSHOT.jar
+c49eecf9f7676e0688a157cc059378f2  deps/telesto-right-clicks-1.0-SNAPSHOT.jar
 42ede325c8c3a17e92d656cfb7677163  deps/timelines-1.0-SNAPSHOT.jar
 8b1e6f9016b5c091131ed0f2c83b6bcd  deps/titan-jails-1.0-SNAPSHOT.jar
 287b1ef5a79f03527e8be5fe6acb8269  deps/triggers-ew-1.0-SNAPSHOT.jar
@@ -54,4 +56,4 @@ a79006557cc3031a9dc2aedddfed0969  deps/triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  deps/triggers-sb-1.0-SNAPSHOT.jar
 517c19f9eca8eb78a2d5acd7853511dd  deps/trigger-support-1.0-SNAPSHOT.jar
 9b647cf0156592b064fe61f9b84a3257  deps/xivdata-1.0-SNAPSHOT.jar
-8667876a1acf6c882b694e890248fac7  deps/xivsupport-1.0-SNAPSHOT.jar
+f873fec2adf1507b5059d16b5570106e  deps/xivsupport-1.0-SNAPSHOT.jar
