@@ -23,5 +23,9 @@
             <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>telesto-easy-triggers</artifactId>
+        </dependency>
     </dependencies>
 </project>

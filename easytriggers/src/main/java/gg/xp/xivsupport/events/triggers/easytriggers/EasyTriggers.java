@@ -409,7 +409,7 @@ public final class EasyTriggers {
 	}
 
 	public <X> List<ActionDescription<?, ?>> getActionsApplicableTo(HasMutableActions<X> trigger) {
-		return actions.stream().filter(adesc -> adesc.appliesTo(trigger.classForActions())).toList();
+		return actions.stream().filter(adesc -> adesc.isEnabled() && adesc.appliesTo(trigger.classForActions())).toList();
 	}
 
 	public void registerEventType(EventDescription<?> eventDescription) {

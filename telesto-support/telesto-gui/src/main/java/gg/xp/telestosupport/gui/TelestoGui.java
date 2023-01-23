@@ -9,6 +9,8 @@ import gg.xp.telestosupport.TelestoHttpError;
 import gg.xp.telestosupport.TelestoGameCommand;
 import gg.xp.telestosupport.TelestoMain;
 import gg.xp.telestosupport.TelestoStatusUpdatedEvent;
+import gg.xp.telestosupport.doodle.DoodleProcessor;
+import gg.xp.telestosupport.easytriggers.TelestoEasyTriggersAddons;
 import gg.xp.telestosupport.rightclicks.TelestoRightClickOptions;
 import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
@@ -17,6 +19,7 @@ import gg.xp.xivsupport.gui.tabs.TabAware;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.HttpURISettingGui;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import javax.swing.*;
@@ -30,14 +33,18 @@ public class TelestoGui implements PluginTab {
 	private final TelestoMain backend;
 	private final EventMaster master;
 	private final TelestoRightClickOptions trco;
+	private final TelestoEasyTriggersAddons et;
+	private final DoodleProcessor doodles;
 	private final JLabel statusLabel;
 	private JTextArea label;
 	private TelestoGameCommand lastEvent;
 
-	public TelestoGui(TelestoMain backend, EventMaster master, TelestoRightClickOptions trco) {
+	public TelestoGui(TelestoMain backend, EventMaster master, TelestoRightClickOptions trco, TelestoEasyTriggersAddons et, DoodleProcessor doodles) {
 		this.backend = backend;
 		this.master = master;
 		this.trco = trco;
+		this.et = et;
+		this.doodles = doodles;
 		this.statusLabel = new JLabel();
 		label = new JTextArea("Press the 'Test' button");
 		updateLabel();
@@ -76,8 +83,34 @@ public class TelestoGui implements PluginTab {
 		}
 		JCheckBox partyListCb = new BooleanSettingGui(backend.getEnablePartyList(), "Enable Party List").getComponent();
 		JCheckBox rightClicksCb = new BooleanSettingGui(trco.getEnableExtraOptions(), "Install Right Click Debug Options").getComponent();
+		BooleanSetting doodles = this.doodles.enableDoodles();
+		JCheckBox doodleCb = new BooleanSettingGui(doodles, "Enable Doodle Support").getComponent();
+		JCheckBox doodleAddonCb = new BooleanSettingGui(et.getEnableAddons(), "Install Easy Trigger Doodle Actions").getComponent();
+		doodleCb.addActionListener(l -> {
+			boolean selected = doodleCb.isSelected();
+			if (selected) {
+				int result = JOptionPane.showConfirmDialog(outer, "WARNING: Please do not abuse this functionality! By enabling this, you agree to only use these for debugging purposes and not in the course of real gameplay.", "WARNING", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+				if (result != JOptionPane.OK_OPTION) {
+					doodleCb.setSelected(false);
+				}
+			}
+			else {
+				et.getEnableAddons().set(false);
+			}
+			doodleAddonCb.setEnabled(selected);
 
-		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, scroll, testPanel, partyListCb, rightClicksCb);
+		});
+		doodleAddonCb.addActionListener(l -> {
+			if (doodleAddonCb.isSelected()) {
+				int result = JOptionPane.showConfirmDialog(outer, "WARNING: Please do not abuse this functionality! By enabling this, you agree to only use these for debugging purposes and not in the course of real gameplay.", "WARNING", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+				if (result != JOptionPane.OK_OPTION) {
+					doodleAddonCb.setSelected(false);
+				}
+			}
+		});
+
+
+		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, scroll, testPanel, partyListCb, rightClicksCb, doodleCb, doodleAddonCb);
 
 		return outer;
 	}
