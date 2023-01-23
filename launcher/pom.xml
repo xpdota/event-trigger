@@ -347,7 +347,15 @@
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>telesto-support</artifactId>
+            <artifactId>telesto-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>telesto-gui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>telesto-right-clicks</artifactId>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>

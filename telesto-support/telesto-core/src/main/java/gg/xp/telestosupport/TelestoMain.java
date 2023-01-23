@@ -76,7 +76,7 @@ public class TelestoMain implements FilteredEventHandler {
 		context.accept(makeMessage(GAME_CMD_ID, "ExecuteCommand", Map.of("command", cmd), true));
 	}
 
-	private TelestoOutgoingMessage makeMessage(int id, @NotNull String type, @Nullable Object payload, boolean delay) {
+	public TelestoOutgoingMessage makeMessage(int id, @NotNull String type, @Nullable Object payload, boolean delay) {
 		if (payload == null) {
 			//noinspection AssignmentToMethodParameter
 			payload = Collections.emptyMap();
@@ -90,7 +90,7 @@ public class TelestoMain implements FilteredEventHandler {
 				), delay);
 	}
 
-	private TelestoOutgoingMessage makeMessage(Map<String, Object> payload, boolean delay) {
+	public TelestoOutgoingMessage makeMessage(Map<String, Object> payload, boolean delay) {
 		return new TelestoOutgoingMessage(mapper.valueToTree(payload), delay);
 	}
 

@@ -356,6 +356,21 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
+                <artifactId>telesto-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>telesto-right-clicks</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>telesto-gui</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
                 <artifactId>skill-hit-overlay</artifactId>
                 <version>${project.version}</version>
             </dependency>

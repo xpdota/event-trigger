@@ -35,6 +35,19 @@ public final class CustomRightClickOption {
 	}
 
 	@SuppressWarnings("unchecked")
+	public static <X> CustomRightClickOption forRow(String label, Class<X> expectedClass, Consumer<X> action, Predicate<X> shouldAppear) {
+		return new CustomRightClickOption(label, t -> {
+			Object value = getTableRowValue(t);
+			return expectedClass.isInstance(value) && shouldAppear.test((X) value);
+		}, t -> {
+			Object actualObject = getTableRowValue(t);
+			if (expectedClass.isInstance(actualObject)) {
+				action.accept((X) actualObject);
+			}
+		});
+	}
+
+	@SuppressWarnings("unchecked")
 	public static <X, Y> CustomRightClickOption forRowWithConverter(String label, Class<X> initialClass, Function<X, @Nullable Y> conversion, Consumer<Y> action) {
 		return new CustomRightClickOption(label, t -> {
 			Object rowVal = getTableRowValue(t);

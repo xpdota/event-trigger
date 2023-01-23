@@ -1,21 +1,5 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.AggroIncrease;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.FullyResistedEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.HitSeverity;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.InvulnBlockedDamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.MissEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpGain;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpLoss;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.NoEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.OtherEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
-import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
 import gg.xp.xivsupport.events.actlines.parsers.StatusRemovedEffect;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,6 +60,10 @@ public final class AbilityEffects {
 			case 8:
 				return new NoEffect(flags, value);
 
+			// 9 seems to be a miss of sorts
+			// I saw it when using PVP deployment tactics on an enemy. Enemies would take the DoT,
+			// allies took a 9. Perhaps it means "no effect because friendly fire"?
+
 			case 10:
 				return new MpLoss(flags, value, calcDamage(value));
 
@@ -131,6 +119,11 @@ public final class AbilityEffects {
 				// Super cyclone did it
 			case 40:
 //					 mount -- TODO maybe use the actual mount icons?
+
+				// 59 (3B) - saw in pvp, unclear what it means
+				// Deployment Tactics shows it as flags 0x13B, value either 0x566_0000 or 0x567_0000 (buffed vs unbuffed perhaps?)
+				// Superflare shows flags 0x1_013B, value 0x553_0000 or 0x554_0000
+				// Seems that 553 is the DoT, while 554 is the stack-based additional effect
 //					
 			case 60:
 //					// bunch of random stuff like Aether Compass

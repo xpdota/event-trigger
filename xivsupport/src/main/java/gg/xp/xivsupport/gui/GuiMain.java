@@ -444,7 +444,7 @@ public class GuiMain {
 
 			partyMembersTable.setModel(partyTableModel);
 			partyTableModel.configureColumns(partyMembersTable);
-			RightClickOptionRepo.of(
+			rightClicks.withMore(
 					CustomRightClickOption.forRow(
 							"Set As Primary Player",
 							XivPlayerCharacter.class,
@@ -487,6 +487,7 @@ public class GuiMain {
 					.setItemEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable table = new JTable(combatantsTableModel);
+			rightClicks.configureTable(table, combatantsTableModel);
 			combatantsTableModel.configureColumns(table);
 			JScrollPane scrollPane = new JScrollPane(table);
 			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -599,6 +600,7 @@ public class GuiMain {
 				.setDetailsSelectionEquivalence((a, b) -> a.getKey().equals(b.getKey()))
 				.addFilter(EventEntityFilter::selfFilter)
 				.addFilter(NonCombatEntityFilter::new)
+				.withRightClickRepo(rightClicks)
 				.build();
 		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalNewData());
@@ -647,6 +649,7 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::buffSourceFilter)
 				.addFilter(EventEntityFilter::buffTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
+				.withRightClickRepo(rightClicks)
 				.build();
 		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivBuffsUpdatedEvent.class, (ctx, e) -> table.signalNewData());
@@ -820,7 +823,7 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
-				.withRightClickRepo(RightClickOptionRepo.of(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
+				.withRightClickRepo(rightClicks.withMore(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
 					PullNumberFilter pnf = container.getComponent(PullNumberFilter.class);
 					pnf.setPullNumberExternally(pull.getPullNum());
 					// TODO: messy
@@ -897,6 +900,7 @@ public class GuiMain {
 					.addColumn(StandardColumns.doubleSettingSliderColumn("Opacity", XivOverlay::opacity, 200, 0.05))
 					.build();
 			table.setModel(tableModel);
+			rightClicks.configureTable(table, tableModel);
 			table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			visibleSetting.addListener(() -> {
 				TableCellEditor cellEditor = table.getCellEditor();
