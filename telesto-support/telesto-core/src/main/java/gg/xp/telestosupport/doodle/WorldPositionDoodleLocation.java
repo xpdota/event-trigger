@@ -20,7 +20,8 @@ public class WorldPositionDoodleLocation extends DoodleLocation {
 
 	@JsonAnyGetter
 	public Map<String, Object> flattenPosition() {
-		return Map.of("x", position.x(), "y", position.y(), "z", position.y());
+		// Uses the in-game style rather than ACT-style
+		return Map.of("x", position.x(), "z", position.y(), "y", position.z());
 	}
 
 	@Override
