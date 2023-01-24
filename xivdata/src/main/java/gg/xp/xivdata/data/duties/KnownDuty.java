@@ -25,7 +25,6 @@ public enum KnownDuty implements Duty {
 	Dragonsong("Dragonsong", 0x3C8, Expansion.EW, DutyType.ULTIMATE),
 	ASS_Criterion("Sil'dihn Subterrane (Criterion)", 0x433, Expansion.EW, DutyType.OTHER),
 	ASS_Savage("Sil'dihn Subterrane (Savage)", 0x434, Expansion.EW, DutyType.OTHER),
-//	OMEGA_PROTOCOL("Omega Protocol", 0x0, Expansion.EW, DutyType.ULTIMATE),
 	O1S("O1S", 752, Expansion.SB, DutyType.SAVAGE_RAID),
 	O2S("O2S", 753, Expansion.SB, DutyType.SAVAGE_RAID),
 	O3S("O3S", 754, Expansion.SB, DutyType.SAVAGE_RAID),
@@ -42,6 +41,7 @@ public enum KnownDuty implements Duty {
 	Aglaia("Aglaia", 0x41E, Expansion.EW, DutyType.ALLIANCE_RAID),
 	Euphrosyne("Euphrosyne", 0x45E, Expansion.EW, DutyType.ALLIANCE_RAID),
 	UCoB("Unending Coil of Bahamut", 0x2DD, Expansion.SB, DutyType.ULTIMATE),
+	OmegaProtocol("Omega Protocol", 0x462, Expansion.EW, DutyType.ULTIMATE),
 
 	;
 
