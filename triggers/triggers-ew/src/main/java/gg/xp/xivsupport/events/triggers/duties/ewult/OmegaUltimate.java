@@ -13,9 +13,6 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
-import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
-import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
-import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
@@ -24,7 +21,6 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -33,14 +29,14 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private static final Logger log = LoggerFactory.getLogger(OmegaUltimate.class);
 
 	// Looper
-	private final ModifiableCallout<BuffApplied> firstInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop First: Start/Tower", "One, take tower").statusIcon(0xBBC);
-	private final ModifiableCallout<?> firstInLineTether = new ModifiableCallout<>("Loop First: Tether", "Take tether").statusIcon(0xBBC);
+	private final ModifiableCallout<BuffApplied> firstInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop First: Start/Tower", "One, Take Tower").statusIcon(0xBBC);
+	private final ModifiableCallout<?> firstInLineTether = new ModifiableCallout<>("Loop First: Tether", "Take Tether").statusIcon(0xBBC);
 	private final ModifiableCallout<?> secondInLineLoop = new ModifiableCallout<>("Loop Second: Start", "Two").statusIcon(0xBBC);
-	private final ModifiableCallout<BuffApplied> secondInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop Second: Tower", "Take tower").statusIcon(0xBBD);
+	private final ModifiableCallout<BuffApplied> secondInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop Second: Tower", "Take Tower").statusIcon(0xBBD);
 	private final ModifiableCallout<?> secondInLineTether = new ModifiableCallout<>("Loop Second: Tether", "Take tether").statusIcon(0xBBD);
 	;
-	private final ModifiableCallout<BuffApplied> thirdInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop Third: Tower", "Take tower").statusIcon(0xBBE);
-	private final ModifiableCallout<?> thirdInLineTether = new ModifiableCallout<>("Loop Third: Start/Tether", "Three, Take tether").statusIcon(0xBBE);
+	private final ModifiableCallout<?> thirdInLineTether = new ModifiableCallout<>("Loop Third: Start/Tether", "Three, Take Tether").statusIcon(0xBBE);
+	private final ModifiableCallout<BuffApplied> thirdInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop Third: Tower", "Take Tower").statusIcon(0xBBE);
 	;
 	private final ModifiableCallout<?> fourthInLineLoop = new ModifiableCallout<>("Loop Fourth: Start", "Four").statusIcon(0xD7B);
 	;
