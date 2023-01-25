@@ -5,12 +5,14 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -19,9 +21,11 @@ import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -31,36 +35,58 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private static final Logger log = LoggerFactory.getLogger(OmegaUltimate.class);
 
 	// Looper
-	private final ModifiableCallout<BuffApplied> firstInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop First: Start/Tower", "One, Take Tower").statusIcon(0xBBC);
+	private static final Duration looperOffset = Duration.ofMillis(-2650);
+	private final ModifiableCallout<BuffApplied> firstInLineTower = ModifiableCallout.<BuffApplied>durationBasedCallWithOffset("Loop First: Start/Tower", "One with {buddy}, Take Tower", looperOffset).statusIcon(0xBBC);
 	private final ModifiableCallout<?> firstInLineTether = new ModifiableCallout<>("Loop First: Tether", "Take Tether").statusIcon(0xBBC);
-	private final ModifiableCallout<?> secondInLineLoop = new ModifiableCallout<>("Loop Second: Start", "Two").statusIcon(0xBBD);
-	private final ModifiableCallout<BuffApplied> secondInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop Second: Tower", "Take Tower").statusIcon(0xBBD);
+	private final ModifiableCallout<?> firstNotYou = new ModifiableCallout<>("Loop First: Not You", "1");
+
+	private final ModifiableCallout<?> secondInLineLoop = new ModifiableCallout<>("Loop Second: Start", "Two with {buddy}").statusIcon(0xBBD);
+	private final ModifiableCallout<BuffApplied> secondInLineTower = ModifiableCallout.<BuffApplied>durationBasedCallWithOffset("Loop Second: Tower", "Take Tower", looperOffset).statusIcon(0xBBD);
 	private final ModifiableCallout<?> secondInLineTether = new ModifiableCallout<>("Loop Second: Tether", "Take tether").statusIcon(0xBBD);
-	;
-	private final ModifiableCallout<?> thirdInLineTether = new ModifiableCallout<>("Loop Third: Start/Tether", "Three, Take Tether").statusIcon(0xBBE);
-	private final ModifiableCallout<BuffApplied> thirdInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop Third: Tower", "Take Tower").statusIcon(0xBBE);
-	;
-	private final ModifiableCallout<?> fourthInLineLoop = new ModifiableCallout<>("Loop Fourth: Start", "Four").statusIcon(0xD7B);
-	;
-	private final ModifiableCallout<BuffApplied> fourthInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop Fourth: Tower", "Take tower").statusIcon(0xD7B);
-	;
+	private final ModifiableCallout<?> secondNotYou = new ModifiableCallout<>("Loop Second: Not You", "2");
+
+	private final ModifiableCallout<?> thirdInLineTether = new ModifiableCallout<>("Loop Third: Start/Tether", "Three with {buddy}, Take Tether").statusIcon(0xBBE);
+	private final ModifiableCallout<BuffApplied> thirdInLineTower = ModifiableCallout.<BuffApplied>durationBasedCallWithOffset("Loop Third: Tower", "Take Tower", looperOffset).statusIcon(0xBBE);
+	private final ModifiableCallout<?> thirdNotYou = new ModifiableCallout<>("Loop Third: Not You", "3");
+
+	private final ModifiableCallout<?> fourthInLineLoop = new ModifiableCallout<>("Loop Fourth: Start", "Four with {buddy}").statusIcon(0xD7B);
+	private final ModifiableCallout<BuffApplied> fourthInLineTower = ModifiableCallout.<BuffApplied>durationBasedCallWithOffset("Loop Fourth: Tower", "Take tower", looperOffset).statusIcon(0xD7B);
 	private final ModifiableCallout<?> fourthInLineTether = new ModifiableCallout<>("Loop Fourth: Tether", "Take tether").statusIcon(0xD7B);
-	;
+	private final ModifiableCallout<?> fourthNotYou = new ModifiableCallout<>("Loop Fourth: Not You", "4");
+
 	//Pantokrator
-	private final ModifiableCallout<BuffApplied> pantoFirstInLine = new ModifiableCallout<BuffApplied>("Panto First", "One - Missile now then Cannon", "One - Missile ({missile.estimatedRemainingDuration}) then Cannon ({cannon.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xBBC);
-	private final ModifiableCallout<BuffApplied> pantoSecondInLine = new ModifiableCallout<BuffApplied>("Panto Second", "Two", "Two - Missile ({missile.estimatedRemainingDuration}) then Cannon ({cannon.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xBBD);
-	private final ModifiableCallout<?> pantoSecondInLineOut = new ModifiableCallout<BuffApplied>("Panto Second: Out", "Missile Now then Cannon", "Missile Now Two - Missile ({missile.estimatedRemainingDuration}) then Cannon ({cannon.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
-	private final ModifiableCallout<BuffApplied> pantoThirdInLine = new ModifiableCallout<BuffApplied>("Panto Third", "Three", "Three - Cannon ({cannon.estimatedRemainingDuration}) then Missile ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xBBE);
-	private final ModifiableCallout<?> pantoThirdInLineOut = new ModifiableCallout<BuffApplied>("Panto Third: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
-	private final ModifiableCallout<BuffApplied> pantoFourthInLine = new ModifiableCallout<BuffApplied>("Panto Fourth", "Four", "Four - Cannon ({cannon.estimatedRemainingDuration}) then Missile ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD7B);
-	private final ModifiableCallout<?> pantoFourthInLineOut = new ModifiableCallout<BuffApplied>("Panto Fourth: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
-	//TODO: add "move back" trigger
+	private final ModifiableCallout<BuffApplied> pantoFirstInLine = new ModifiableCallout<BuffApplied>("Panto First", "One - Missile Now", "One with {buddy} - Missile in ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xBBC);
+	private final ModifiableCallout<BaseEvent> pantoFirstGoBackIn = new ModifiableCallout<BaseEvent>("Panto First: Back In", "Stack", "Stack", ModifiableCallout.expiresIn(15)).statusIcon(0xBBC);
 
-	private final ModifiableCallout<?> pantoBuster1 = new ModifiableCallout<>("Panto Buster 1", "Buster and Baits");
-	private final ModifiableCallout<?> pantoBuster2 = new ModifiableCallout<>("Panto Buster 2", "Buster and Baits");
+	private final ModifiableCallout<BuffApplied> pantoSecondInLine = new ModifiableCallout<BuffApplied>("Panto Second", "Two", "Two with {buddy} - Missile in ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xBBD);
+	private final ModifiableCallout<BaseEvent> pantoSecondInLineOut = new ModifiableCallout<BaseEvent>("Panto Second: Out", "Missile Now then Cannon", "Missile Now Two - Missile ({missile.estimatedRemainingDuration}) then Cannon ({cannon.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
+	private final ModifiableCallout<BaseEvent> pantoSecondGoBackIn = new ModifiableCallout<BaseEvent>("Panto Second: Back In", "Stack", "Stack", ModifiableCallout.expiresIn(15)).statusIcon(0xBBD);
+	private final ModifiableCallout<BaseEvent> pantoSecondNotYou = new ModifiableCallout<>("Panto Second: Not You", "2 - Stay Stacked");
 
-	private final ModifiableCallout<BuffApplied> midGlitch = ModifiableCallout.durationBasedCall("Mid Glitch with Buddy", "Close to {tetherBuddy}");
-	private final ModifiableCallout<BuffApplied> remoteGlitch = ModifiableCallout.durationBasedCall("Remote Glitch with Buddy", "Far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> pantoThirdInLine = new ModifiableCallout<BuffApplied>("Panto Third", "Three", "Three with {buddy} - Missile in ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xBBE);
+	private final ModifiableCallout<BaseEvent> pantoThirdInLineOut = new ModifiableCallout<BaseEvent>("Panto Third: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
+	private final ModifiableCallout<BaseEvent> pantoThirdGoBackIn = new ModifiableCallout<BaseEvent>("Panto Third: Back In", "Stack", "Stack", ModifiableCallout.expiresIn(15)).statusIcon(0xBBE);
+	private final ModifiableCallout<BaseEvent> pantoThirdNotYou = new ModifiableCallout<>("Panto Third: Not You", "3 - Stay Stacked");
+
+	private final ModifiableCallout<BuffApplied> pantoFourthInLine = new ModifiableCallout<BuffApplied>("Panto Fourth", "Four", "Four with {buddy} - Missile in ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD7B);
+	private final ModifiableCallout<BaseEvent> pantoFourthInLineOut = new ModifiableCallout<BaseEvent>("Panto Fourth: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
+	private final ModifiableCallout<BaseEvent> pantoFourthNotYou = new ModifiableCallout<>("Panto Fourth: Not You", "4 - Stay Stacked");
+
+	private final ModifiableCallout<BaseEvent> pantoCleave1asTank = new ModifiableCallout<>("Panto Buster 1: Prep As Tank", "Go Far, Bait Tankbusters");
+	private final ModifiableCallout<BaseEvent> pantoCleave1asNonTank = new ModifiableCallout<>("Panto Buster 1: Prep As Non-Tank", "Cleave Baits");
+	private final ModifiableCallout<BaseEvent> pantoCleave1withMarker = new ModifiableCallout<>("Panto Buster 1: Marker on You", "Position for Cleave");
+	private final ModifiableCallout<BaseEvent> pantoCleave1noMarker = new ModifiableCallout<>("Panto Buster 1: No Marker", "Avoid Cleaves");
+	private final ModifiableCallout<BaseEvent> pantoCleave2hadMarker = new ModifiableCallout<>("Panto Buster 2: Had Marker", "Avoid Cleaves");
+	private final ModifiableCallout<BaseEvent> pantoCleave2hadNoMarker = new ModifiableCallout<>("Panto Buster 2: Did Not Have Marker", "Bait Cleaves");
+
+	private final ModifiableCallout<BuffApplied> midGlitchO = ModifiableCallout.durationBasedCall("Mid Glitch with O Buddy", "Circle, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> midGlitchS = ModifiableCallout.durationBasedCall("Mid Glitch with □ Buddy", "Square, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> midGlitchT = ModifiableCallout.durationBasedCall("Mid Glitch with △ Buddy", "Triangle, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> midGlitchX = ModifiableCallout.durationBasedCall("Mid Glitch with X Buddy", "X, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> remoteGlitchO = ModifiableCallout.durationBasedCall("Remote Glitch with O Buddy", "Circle, far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> remoteGlitchS = ModifiableCallout.durationBasedCall("Remote Glitch with □ Buddy", "Square, far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> remoteGlitchT = ModifiableCallout.durationBasedCall("Remote Glitch with △ Buddy", "Triangle, far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> remoteGlitchX = ModifiableCallout.durationBasedCall("Remote Glitch with X Buddy", "X, far from {tetherBuddy}");
 
 	// Panto
 //	@PlayerStatusCallout({0xDB3, 0xDB4, 0xDB5, 0xDB6})
@@ -165,6 +191,24 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		}
 	}
 
+	private @Nullable XivPlayerCharacter findLineBuddy() {
+		return findLineBuddy(state.getPlayer());
+	}
+
+	private @Nullable XivPlayerCharacter findLineBuddy(XivPlayerCharacter xpc) {
+		BuffApplied ba = buffs.findStatusOnTarget(xpc, OmegaUltimate::isLineDebuff);
+		if (ba == null) {
+			log.warn("No buff!");
+			return null;
+		}
+		return buffs.getBuffs().stream()
+				.filter(buff -> buff.buffIdMatches(ba.getBuff().getId()))
+				.map(buff -> (XivPlayerCharacter) buff.getTarget())
+				.filter(target -> !target.equals(xpc))
+				.findFirst()
+				.orElse(null);
+	}
+
 	//returns first player with line debuff
 	private XivPlayerCharacter supPlayerFromLine(NumberInLine il) {
 		List<XivPlayerCharacter> players = state.getPartyList().stream().filter(p -> p.getJob().isTank() || p.getJob().isHealer()).toList();
@@ -204,48 +248,64 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				s.waitMs(50);
 				BuffApplied looperDebuff = getBuffs().findStatusOnTarget(getState().getPlayer(), 0xD80);
 				NumberInLine num = NumberInLine.debuffToLine(lineDebuff);
+				XivPlayerCharacter buddy = findLineBuddy();
+				Map<String, Object> params = Map.of("buddy", buddy == null ? "error" : buddy);
 				switch (num) {
 
-					case FIRST -> s.accept(firstInLineTower.getModified(looperDebuff));
-					case SECOND -> s.accept(secondInLineLoop.getModified());
-					case THIRD -> s.accept(thirdInLineTether.getModified());
-					case FOURTH -> s.accept(fourthInLineLoop.getModified());
+					case FIRST -> s.updateCall(firstInLineTower.getModified(looperDebuff, params));
+					case SECOND -> s.updateCall(secondInLineLoop.getModified(params));
+					case THIRD -> s.updateCall(thirdInLineTether.getModified(params));
+					case FOURTH -> s.updateCall(fourthInLineLoop.getModified(params));
 					case UNKNOWN -> {
 						log.error("Unknown number! {}", lineDebuff);
 						return;
 					}
 				}
+				s.waitMs(3000);
+				if (num != NumberInLine.FIRST) {
+					s.accept(firstNotYou.getModified(params));
+				}
 
 				//First tower goes off
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04) && aue.isFirstTarget());
 				if (num == NumberInLine.SECOND) {
-					s.updateCall(secondInLineTower.getModified(looperDebuff));
+					s.updateCall(secondInLineTower.getModified(looperDebuff, params));
 				}
 				else if (num == NumberInLine.FOURTH) {
-					s.updateCall(fourthInLineTether.getModified());
+					s.updateCall(fourthInLineTether.getModified(params));
+				}
+				else {
+					s.accept(secondNotYou.getModified(params));
 				}
 
 				//Second tower goes off
 				s.waitMs(100);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04) && aue.isFirstTarget());
 				if (num == NumberInLine.THIRD) {
-					s.updateCall(thirdInLineTower.getModified(looperDebuff));
+					s.updateCall(thirdInLineTower.getModified(looperDebuff, params));
 				}
 				else if (num == NumberInLine.FIRST) {
-					s.updateCall(firstInLineTether.getModified());
+					s.updateCall(firstInLineTether.getModified(params));
+				}
+				else {
+					s.accept(thirdNotYou.getModified(params));
 				}
 
 				//Third tower goes off
 				s.waitMs(100);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04) && aue.isFirstTarget());
 				if (num == NumberInLine.FOURTH) {
-					s.updateCall(fourthInLineTower.getModified(looperDebuff));
+					s.updateCall(fourthInLineTower.getModified(looperDebuff, params));
 				}
 				else if (num == NumberInLine.SECOND) {
-					s.updateCall(secondInLineTether.getModified());
+					s.updateCall(secondInLineTether.getModified(params));
+				}
+				else {
+					s.accept(fourthNotYou.getModified(params));
 				}
 			});
 
+	@SuppressWarnings("ReuseOfLocalVariable")
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> pantokratorSq = SqtTemplates.sq(50_000, AbilityCastStart.class,
 			acs -> acs.abilityIdMatches(0x7B0B),
@@ -267,7 +327,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				// Guided missile is LONGER
 				// First group is 12 missile, 24
 
-				Map<String, Object> params = Map.of("missile", guidedMissile, "cannon", waveCannon);
+				XivPlayerCharacter buddy = findLineBuddy();
+				Map<String, Object> params = Map.of("missile", guidedMissile, "cannon", waveCannon, "buddy", buddy == null ? "error" : buddy);
 				switch (number) {
 					case FIRST -> s.updateCall(pantoFirstInLine.getModified(myLineBuff, params));
 					case SECOND -> s.updateCall(pantoSecondInLine.getModified(myLineBuff, params));
@@ -279,43 +340,81 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					}
 				}
 
+				BaseEvent last = myLineBuff;
+
 				for (int i = 1; i <= 4; i++) {
 					// TODO doesn't stick on screen
 
 					log.info("Iteration: {} vs {}", number.lineNumber, i);
 					if (number.lineNumber == i) {
 						switch (number) {
-							case SECOND -> s.updateCall(pantoSecondInLineOut.getModified(params));
-							case THIRD -> s.updateCall(pantoThirdInLineOut.getModified(params));
-							case FOURTH -> s.updateCall(pantoFourthInLineOut.getModified(params));
+							case SECOND -> s.updateCall(pantoSecondInLineOut.getModified(last, params));
+							case THIRD -> s.updateCall(pantoThirdInLineOut.getModified(last, params));
+							case FOURTH -> s.updateCall(pantoFourthInLineOut.getModified(last, params));
 						}
 					}
-					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B0E) && aue.isFirstTarget());
+					else if (number.lineNumber + 1 == i) {
+						switch (number) {
+							case FIRST -> s.updateCall(pantoFirstGoBackIn.getModified(last, params));
+							case SECOND -> s.updateCall(pantoSecondGoBackIn.getModified(last, params));
+							case THIRD -> s.updateCall(pantoThirdGoBackIn.getModified(last, params));
+						}
+					}
+					else {
+						switch (i) {
+							case 2 -> s.accept(pantoSecondNotYou.getModified(params));
+							case 3 -> s.accept(pantoThirdNotYou.getModified(params));
+							case 4 -> s.accept(pantoFourthNotYou.getModified(params));
+						}
+
+					}
+					last = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B0E) && aue.isFirstTarget());
 					s.waitMs(100);
 				}
 				s.waitMs(1000);
-				s.updateCall(pantoBuster1.getModified());
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B11) && aue.isFirstTarget());
-				s.updateCall(pantoBuster2.getModified());
+				if (getState().playerJobMatches(Job::isTank)) {
+					s.updateCall(pantoCleave1asTank.getModified(last));
+				}
+				else {
+					s.updateCall(pantoCleave1asNonTank.getModified(last));
+					List<HeadMarkerEvent> hme = s.waitEventsQuickSuccession(3, HeadMarkerEvent.class, he -> true, Duration.ofMillis(250));
+					last = hme.get(0);
+					@Nullable HeadMarkerEvent myHm = hme.stream().filter(h -> h.getTarget().isThePlayer()).findFirst().orElse(null);
+					if (myHm != null) {
+						s.updateCall(pantoCleave1withMarker.getModified(myHm, params));
+					}
+					else {
+						s.updateCall(pantoCleave1noMarker.getModified(last, params));
+					}
+					last = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B11) && aue.isFirstTarget());
+					if (myHm == null) {
+						s.updateCall(pantoCleave2hadNoMarker.getModified(last, params));
+					}
+					else {
+						s.updateCall(pantoCleave2hadMarker.getModified(last, params));
+					}
+				}
 			});
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> midRemoteGlitch = SqtTemplates.sq(50_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
 			(e1, s) -> {
-				// TODO: playstation marker - probably same order as DSR
 				// TODO: tether IDs - are there multiple?
 //				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer) && te.tetherIdMatches(0xDE));
 				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer));
 				XivCombatant buddy = tether.getTargetMatching(xpc -> !xpc.isThePlayer());
+				HeadMarkerEvent myHm = s.waitEvent(HeadMarkerEvent.class, hm -> hm.getTarget().isThePlayer());
 				Map<String, Object> params = Map.of("tetherBuddy", buddy);
 
 				BuffApplied status = getBuffs().findStatusOnTarget(getState().getPlayer(), ba -> ba.buffIdMatches(0xD63, 0xD64));
-				if (status.buffIdMatches(0xD63)) {
-					s.updateCall(midGlitch.getModified(status, params));
-				}
-				else {
-					s.updateCall(remoteGlitch.getModified(status, params));
-				}
+				boolean mid = status.buffIdMatches(0xD63);
+				s.updateCall((switch (myHm.getMarkerOffset()) {
+					case 393 -> mid ? midGlitchO : remoteGlitchO;
+					case 394 -> mid ? midGlitchS : remoteGlitchS;
+					case 395 -> mid ? midGlitchT : remoteGlitchT;
+					case 396 -> mid ? midGlitchX : remoteGlitchX;
+					default -> throw new IllegalStateException("Unexpected value: " + myHm.getMarkerOffset());
+				}).getModified(status, params));
 			});
 //
 //	@AutoFeed
