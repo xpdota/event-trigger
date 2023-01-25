@@ -47,11 +47,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	//Pantokrator
 	private final ModifiableCallout<BuffApplied> pantoFirstInLine = new ModifiableCallout<BuffApplied>("Panto First", "One - Missile now then Cannon", "One - Missile ({missile.estimatedRemainingDuration}) then Cannon ({cannon.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xBBC);
 	private final ModifiableCallout<BuffApplied> pantoSecondInLine = new ModifiableCallout<BuffApplied>("Panto Second", "Two", "Two - Missile ({missile.estimatedRemainingDuration}) then Cannon ({cannon.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xBBD);
-	private final ModifiableCallout<BuffApplied> pantoSecondInLineOut = new ModifiableCallout<BuffApplied>("Panto Second: Out", "Missile Now then Cannon", "Missile Now Two - Missile ({missile.estimatedRemainingDuration}) then Cannon ({cannon.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
+	private final ModifiableCallout<?> pantoSecondInLineOut = new ModifiableCallout<BuffApplied>("Panto Second: Out", "Missile Now then Cannon", "Missile Now Two - Missile ({missile.estimatedRemainingDuration}) then Cannon ({cannon.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
 	private final ModifiableCallout<BuffApplied> pantoThirdInLine = new ModifiableCallout<BuffApplied>("Panto Third", "Three", "Three - Cannon ({cannon.estimatedRemainingDuration}) then Missile ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xBBE);
-	private final ModifiableCallout<BuffApplied> pantoThirdInLineOut = new ModifiableCallout<BuffApplied>("Panto Third: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
+	private final ModifiableCallout<?> pantoThirdInLineOut = new ModifiableCallout<BuffApplied>("Panto Third: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
 	private final ModifiableCallout<BuffApplied> pantoFourthInLine = new ModifiableCallout<BuffApplied>("Panto Fourth", "Four", "Four - Cannon ({cannon.estimatedRemainingDuration}) then Missile ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD7B);
-	private final ModifiableCallout<BuffApplied> pantoFourthInLineOut = new ModifiableCallout<BuffApplied>("Panto Fourth: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
+	private final ModifiableCallout<?> pantoFourthInLineOut = new ModifiableCallout<BuffApplied>("Panto Fourth: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
 
 	private final ModifiableCallout<?> pantoBuster1 = new ModifiableCallout<>("Panto Buster 1", "Buster and Baits");
 	private final ModifiableCallout<?> pantoBuster2 = new ModifiableCallout<>("Panto Buster 2", "Buster and Baits");
@@ -277,16 +277,18 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 
 				for (int i = 1; i <= 4; i++) {
+					log.info("Iteration: {} vs {}", number.lineNumber, i);
 					if (number.lineNumber == 1) {
 						switch (number) {
-							case SECOND -> s.updateCall(pantoSecondInLineOut.getModified(myLineBuff, params));
-							case THIRD -> s.updateCall(pantoThirdInLineOut.getModified(myLineBuff, params));
-							case FOURTH -> s.updateCall(pantoFourthInLineOut.getModified(myLineBuff, params));
+							case SECOND -> s.updateCall(pantoSecondInLineOut.getModified(params));
+							case THIRD -> s.updateCall(pantoThirdInLineOut.getModified(params));
+							case FOURTH -> s.updateCall(pantoFourthInLineOut.getModified(params));
 						}
 					}
-					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7E70) && aue.isFirstTarget());
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B0E) && aue.isFirstTarget());
 					s.waitMs(100);
 				}
+				s.waitMs(1000);
 				s.updateCall(pantoBuster1.getModified());
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B11) && aue.isFirstTarget());
 				s.updateCall(pantoBuster2.getModified());
