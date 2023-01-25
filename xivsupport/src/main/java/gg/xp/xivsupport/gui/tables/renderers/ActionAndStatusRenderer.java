@@ -98,7 +98,7 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 				sb.append(" (").append(stacks).append(')');
 			}
 			if (value instanceof HasDuration hd && !hd.isIndefinite()) {
-				sb.append(" (").append(String.format("%.02f", hd.getInitialDuration().toMillis() / 1_000.0));
+				sb.append(" (").append(String.format("%.02f", hd.getInitialDuration().toMillis() / 1_000.0)).append(')');
 			}
 			text = sb.toString();
 			icon = StatusEffectLibrary.iconForId(status.getId(), stacks);

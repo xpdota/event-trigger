@@ -131,7 +131,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		FIRST(1, 0xBBC),
 		SECOND(2, 0xBBD),
 		THIRD(3, 0xBBE),
-		FOURTH(4, 0xB7D),
+		FOURTH(4, 0xD7B),
 		UNKNOWN;
 
 		private final int id;
@@ -295,7 +295,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> midRemoteGlitch = SqtTemplates.sq(50_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
 			(e1, s) -> {
-				// TODO: playstation marker
+				// TODO: playstation marker - probably same order as DSR
 				// TODO: tether IDs - are there multiple?
 //				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer) && te.tetherIdMatches(0xDE));
 				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer));
