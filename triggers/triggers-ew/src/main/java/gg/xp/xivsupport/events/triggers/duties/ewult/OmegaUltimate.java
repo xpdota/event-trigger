@@ -60,10 +60,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> remoteGlitch = ModifiableCallout.durationBasedCall("Remote Glitch with Buddy", "Far from {tetherBuddy}");
 
 	// Panto
-	@PlayerStatusCallout({0xDB3, 0xDB4, 0xDB5, 0xDB6})
-	private final ModifiableCallout<BuffApplied> waveCannonKyrios = new ModifiableCallout<BuffApplied>("Condensed Wave Cannon Kyrios", "Wave Cannon on You").autoIcon();
-	@PlayerStatusCallout({0xD60, 0xDA7, 0xDA8, 0xDA9})
-	private final ModifiableCallout<BuffApplied> guidedMissileKyrios = new ModifiableCallout<BuffApplied>("Guided Missile Kyrios", "Missile on You").autoIcon();
+//	@PlayerStatusCallout({0xDB3, 0xDB4, 0xDB5, 0xDB6})
+//	private final ModifiableCallout<BuffApplied> waveCannonKyrios = new ModifiableCallout<BuffApplied>("Condensed Wave Cannon Kyrios", "Wave Cannon on You").autoIcon();
+//	@PlayerStatusCallout({0xD60, 0xDA7, 0xDA8, 0xDA9})
+//	private final ModifiableCallout<BuffApplied> guidedMissileKyrios = new ModifiableCallout<BuffApplied>("Guided Missile Kyrios", "Missile on You").autoIcon();
 
 	// Mechanics
 	@PlayerStatusCallout(0xDC8)
