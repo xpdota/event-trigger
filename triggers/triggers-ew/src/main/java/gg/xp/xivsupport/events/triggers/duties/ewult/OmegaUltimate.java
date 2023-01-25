@@ -6,6 +6,7 @@ import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.xivdata.data.duties.*;
+import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
+@CalloutRepo(name = "TOP Triggers", duty = KnownDuty.OmegaProtocol)
 public class OmegaUltimate extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(OmegaUltimate.class);
@@ -31,7 +33,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	// Looper
 	private final ModifiableCallout<BuffApplied> firstInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop First: Start/Tower", "One, Take Tower").statusIcon(0xBBC);
 	private final ModifiableCallout<?> firstInLineTether = new ModifiableCallout<>("Loop First: Tether", "Take Tether").statusIcon(0xBBC);
-	private final ModifiableCallout<?> secondInLineLoop = new ModifiableCallout<>("Loop Second: Start", "Two").statusIcon(0xBBC);
+	private final ModifiableCallout<?> secondInLineLoop = new ModifiableCallout<>("Loop Second: Start", "Two").statusIcon(0xBBD);
 	private final ModifiableCallout<BuffApplied> secondInLineTower = ModifiableCallout.<BuffApplied>durationBasedCall("Loop Second: Tower", "Take Tower").statusIcon(0xBBD);
 	private final ModifiableCallout<?> secondInLineTether = new ModifiableCallout<>("Loop Second: Tether", "Take tether").statusIcon(0xBBD);
 	;
@@ -52,6 +54,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<?> pantoThirdInLineOut = new ModifiableCallout<BuffApplied>("Panto Third: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
 	private final ModifiableCallout<BuffApplied> pantoFourthInLine = new ModifiableCallout<BuffApplied>("Panto Fourth", "Four", "Four - Cannon ({cannon.estimatedRemainingDuration}) then Missile ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD7B);
 	private final ModifiableCallout<?> pantoFourthInLineOut = new ModifiableCallout<BuffApplied>("Panto Fourth: Out", "Missile Now", "Missile Now ({missile.estimatedRemainingDuration})", ModifiableCallout.expiresIn(15)).statusIcon(0xD60);
+	//TODO: add "move back" trigger
 
 	private final ModifiableCallout<?> pantoBuster1 = new ModifiableCallout<>("Panto Buster 1", "Buster and Baits");
 	private final ModifiableCallout<?> pantoBuster2 = new ModifiableCallout<>("Panto Buster 2", "Buster and Baits");
@@ -277,8 +280,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 
 				for (int i = 1; i <= 4; i++) {
+					// TODO doesn't stick on screen
+
 					log.info("Iteration: {} vs {}", number.lineNumber, i);
-					if (number.lineNumber == 1) {
+					if (number.lineNumber == i) {
 						switch (number) {
 							case SECOND -> s.updateCall(pantoSecondInLineOut.getModified(params));
 							case THIRD -> s.updateCall(pantoThirdInLineOut.getModified(params));
