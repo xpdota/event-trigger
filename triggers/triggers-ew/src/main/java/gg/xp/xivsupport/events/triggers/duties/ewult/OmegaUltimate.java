@@ -21,6 +21,8 @@ import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,10 +143,12 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
+	private final JobSortSetting groupPrioJobSort;
 
-	public OmegaUltimate(XivState state, StatusEffectRepository buffs) {
+	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
 		this.buffs = buffs;
+		groupPrioJobSort = new JobSortSetting(pers, "triggers.omega-ultimate.groupsPrio", state);
 	}
 
 	@Override
@@ -447,4 +451,29 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 //				}
 //			});
 
+
+	public JobSortSetting getGroupPrioJobSort() {
+		return groupPrioJobSort;
+	}
+
+	public boolean shouldSwap(XivPlayerCharacter first, XivPlayerCharacter second) {
+		int result = groupPrioJobSort.getPlayerJailSortComparator().compare(first, second);
+		if (result == 0) {
+			log.warn("Players had the same job and name! Falling back to ID.");
+			result = Long.compare(first.getId(), second.getId());
+			if (result == 0) {
+				throw new IllegalArgumentException(String.format("Both entities had the same ID! (%s) vs (%s)", first, second));
+			}
+		}
+		return result > 0;
+	}
+
+	public List<XivPlayerCharacter> sortAccordingToJobPrio(XivPlayerCharacter first, XivPlayerCharacter second) {
+		if (shouldSwap(first, second)) {
+			return List.of(first, second);
+		}
+		else {
+			return List.of(second, first);
+		}
+	}
 }
