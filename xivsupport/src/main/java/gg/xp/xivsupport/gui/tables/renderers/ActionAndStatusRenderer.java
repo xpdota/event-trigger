@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.tables.renderers;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
@@ -92,12 +93,14 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 					preAppText = "\nValues from Pre-App: %s\nRaw: %X %X".formatted(preAppInfo.getPreAppFlagsFormatted(), preAppInfo.getFlags(), preAppInfo.getValue());
 				}
 			}
+			StringBuilder sb = new StringBuilder(status.getName());
 			if (stacks > 0) {
-				text = String.format("%s (%s)", status.getName(), stacks);
+				sb.append(" (").append(stacks).append(')');
 			}
-			else {
-				text = String.format("%s", status.getName());
+			if (value instanceof HasDuration hd && !hd.isIndefinite()) {
+				sb.append(" (").append(String.format("%.02f", hd.getInitialDuration().toMillis() / 1_000.0)).append(')');
 			}
+			text = sb.toString();
 			icon = StatusEffectLibrary.iconForId(status.getId(), stacks);
 			if (icon == null && status.getId() != 0) {
 				icon = StatusEffectLibrary.iconForId(760, 0);

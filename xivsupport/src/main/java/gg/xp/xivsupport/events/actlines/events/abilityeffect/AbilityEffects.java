@@ -103,6 +103,9 @@ public final class AbilityEffects {
 			case 16:
 				return new StatusRemovedEffect(flags, value, value >> 16);
 
+			// TODO: 0x11 (17) is also status removed? Is it the same distinction as applying a status where
+			// there's remove-from-target and remove-from-caster?
+
 			case 20: //14
 				return new StatusNoEffect(flags, value, value >> 16);
 

@@ -165,6 +165,10 @@ public enum Job implements HasIconURL {
 		return category.isDps();
 	}
 
+	public boolean isSupport() {
+		return isTank() || isHealer();
+	}
+
 	public boolean isCaster() {
 		return category.isCaster();
 	}
