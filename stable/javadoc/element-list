@@ -98,6 +98,7 @@ gg.xp.xivsupport.gui.tree
 gg.xp.xivsupport.gui.util
 gg.xp.xivsupport.lang
 gg.xp.xivsupport.models
+gg.xp.xivsupport.models.groupmodels
 gg.xp.xivsupport.overlays.castbar
 gg.xp.xivsupport.persistence
 gg.xp.xivsupport.persistence.gui
