@@ -91,9 +91,11 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			TitleBorderPanel mappingPanel = new TitleBorderPanel("Marker Mapping");
 			mappingPanel.setLayout(new GridBagLayout());
 			GridBagConstraints mc = GuiUtil.defaultGbc();
+			mc.ipadx = 15;
 			mc.gridx = 1;
 			mc.gridy = 0;
-			mappingPanel.add(new JLabel("Group 1"), mc);
+			JLabel g1l = new JLabel("Group 1");
+			mappingPanel.add(g1l, mc);
 			mc.gridx++;
 			mappingPanel.add(new JLabel("Group 2"), mc);
 
@@ -101,13 +103,13 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 
 			for (int row = 0; row < 4; row++) {
 				mc.gridy++;
-				mc.gridx=0;
+				mc.gridx = 0;
 				mappingPanel.add(new JLabel("Number " + (row + 1)), mc);
 				AutomarkSetting g1setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row]);
-				mc.gridx=1;
+				mc.gridx = 1;
 				mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
 				AutomarkSetting g2setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row + 4]);
-				mc.gridx=2;
+				mc.gridx = 2;
 				mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
 			}
 //			markSettings.addListener(mappingPanel::updateUI);
