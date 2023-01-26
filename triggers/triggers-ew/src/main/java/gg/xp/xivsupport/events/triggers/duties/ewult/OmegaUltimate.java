@@ -81,6 +81,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BaseEvent> pantoCleave2hadMarker = new ModifiableCallout<>("Panto Buster 2: Had Marker", "Avoid Cleaves");
 	private final ModifiableCallout<BaseEvent> pantoCleave2hadNoMarker = new ModifiableCallout<>("Panto Buster 2: Did Not Have Marker", "Bait Cleaves");
 
+	private final ModifiableCallout<AbilityCastStart> checkMfPattern = new ModifiableCallout<>("Check M/F Sword/Shield");
 	private final ModifiableCallout<BuffApplied> midGlitchO = ModifiableCallout.durationBasedCall("Mid Glitch with O Buddy", "Circle, Close to {tetherBuddy}");
 	private final ModifiableCallout<BuffApplied> midGlitchS = ModifiableCallout.durationBasedCall("Mid Glitch with □ Buddy", "Square, Close to {tetherBuddy}");
 	private final ModifiableCallout<BuffApplied> midGlitchT = ModifiableCallout.durationBasedCall("Mid Glitch with △ Buddy", "Triangle, Close to {tetherBuddy}");
@@ -89,6 +90,18 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> remoteGlitchS = ModifiableCallout.durationBasedCall("Remote Glitch with □ Buddy", "Square, far from {tetherBuddy}");
 	private final ModifiableCallout<BuffApplied> remoteGlitchT = ModifiableCallout.durationBasedCall("Remote Glitch with △ Buddy", "Triangle, far from {tetherBuddy}");
 	private final ModifiableCallout<BuffApplied> remoteGlitchX = ModifiableCallout.durationBasedCall("Remote Glitch with X Buddy", "X, far from {tetherBuddy}");
+
+	private final ModifiableCallout<AbilityCastStart> eyeLaserStart = ModifiableCallout.durationBasedCall("Eye Laser Starts Casting", "Eye Laser");
+	private final ModifiableCallout<AbilityUsedEvent> eyeLaserDone = new ModifiableCallout<>("Eye Laser Done Casting", "Knockback Stacks");
+
+//	private final ModifiableCallout<BuffApplied> followUpMidGlitchO = ModifiableCallout.durationBasedCall("Mid Glitch with O Buddy: Followup", "Circle, Close to {tetherBuddy}");
+//	private final ModifiableCallout<BuffApplied> followUpMidGlitchS = ModifiableCallout.durationBasedCall("Mid Glitch with □ Buddy: Followup", "Square, Close to {tetherBuddy}");
+//	private final ModifiableCallout<BuffApplied> followUpMidGlitchT = ModifiableCallout.durationBasedCall("Mid Glitch with △ Buddy: Followup", "Triangle, Close to {tetherBuddy}");
+//	private final ModifiableCallout<BuffApplied> followUpMidGlitchX = ModifiableCallout.durationBasedCall("Mid Glitch with X Buddy: Followup", "X, Close to {tetherBuddy}");
+//	private final ModifiableCallout<BuffApplied> followUpRemoteGlitchO = ModifiableCallout.durationBasedCall("Remote Glitch with O Buddy: Followup", "Circle, far from {tetherBuddy}");
+//	private final ModifiableCallout<BuffApplied> followUpRemoteGlitchS = ModifiableCallout.durationBasedCall("Remote Glitch with □ Buddy: Followup", "Square, far from {tetherBuddy}");
+//	private final ModifiableCallout<BuffApplied> followUpRemoteGlitchT = ModifiableCallout.durationBasedCall("Remote Glitch with △ Buddy: Followup", "Triangle, far from {tetherBuddy}");
+//	private final ModifiableCallout<BuffApplied> followUpRemoteGlitchX = ModifiableCallout.durationBasedCall("Remote Glitch with X Buddy: Followup", "X, far from {tetherBuddy}");
 
 	// Panto
 //	@PlayerStatusCallout({0xDB3, 0xDB4, 0xDB5, 0xDB6})
@@ -403,12 +416,18 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> midRemoteGlitch = SqtTemplates.sq(50_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
 			(e1, s) -> {
+				s.updateCall(checkMfPattern.getModified(e1));
 				// TODO: tether IDs - are there multiple?
 //				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer) && te.tetherIdMatches(0xDE));
 				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer));
 				XivCombatant buddy = tether.getTargetMatching(xpc -> !xpc.isThePlayer());
 				HeadMarkerEvent myHm = s.waitEvent(HeadMarkerEvent.class, hm -> hm.getTarget().isThePlayer());
 				Map<String, Object> params = Map.of("tetherBuddy", buddy);
+
+				// TODO: get all the ability IDs instead of using the buff
+//				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B25, 0x7B2D));
+				s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0x68C));
+
 
 				BuffApplied status = getBuffs().findStatusOnTarget(getState().getPlayer(), ba -> ba.buffIdMatches(0xD63, 0xD64));
 				boolean mid = status.buffIdMatches(0xD63);
@@ -419,6 +438,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					case 396 -> mid ? midGlitchX : remoteGlitchX;
 					default -> throw new IllegalStateException("Unexpected value: " + myHm.getMarkerOffset());
 				}).getModified(status, params));
+
+				AbilityCastStart eyeLaser = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B21));
+				s.updateCall(eyeLaserStart.getModified(eyeLaser, params));
+				AbilityUsedEvent eyeLaserUsed = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B21));
+				s.updateCall(eyeLaserDone.getModified(eyeLaserUsed, params));
 			});
 //
 //	@AutoFeed
