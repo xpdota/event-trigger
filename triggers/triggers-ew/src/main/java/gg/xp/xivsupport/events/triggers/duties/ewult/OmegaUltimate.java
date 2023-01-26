@@ -447,8 +447,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				boolean mid = status.buffIdMatches(0xD63);
 				s.updateCall((switch (myHm.getMarkerOffset()) {
 					case 393 -> mid ? midGlitchO : remoteGlitchO;
-					case 394 -> mid ? midGlitchS : remoteGlitchS;
-					case 395 -> mid ? midGlitchT : remoteGlitchT;
+					case 394 -> mid ? midGlitchT : remoteGlitchT;
+					case 395 -> mid ? midGlitchS : remoteGlitchS;
 					case 396 -> mid ? midGlitchX : remoteGlitchX;
 					default -> throw new IllegalStateException("Unexpected value: " + myHm.getMarkerOffset());
 				}).getModified(status, params));
