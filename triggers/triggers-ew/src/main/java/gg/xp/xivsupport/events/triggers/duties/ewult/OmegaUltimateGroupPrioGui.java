@@ -3,10 +3,16 @@ package gg.xp.xivsupport.events.triggers.duties.ewult;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
+import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
+import gg.xp.xivsupport.persistence.gui.AutomarkSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
+import gg.xp.xivsupport.persistence.settings.AutomarkSetting;
+import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,7 +35,7 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 
 	@Override
 	public String getTabName() {
-		return "Group Swap Priority";
+		return "Group Swap Priority/Automarks";
 	}
 
 	@Override
@@ -79,11 +85,43 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 //		inner.add(p6altMark, c);
 //		c.gridy++;
 		inner.add(helpText, c);
+		c.gridy++;
+
+		{
+			TitleBorderPanel mappingPanel = new TitleBorderPanel("Marker Mapping");
+			mappingPanel.setLayout(new GridBagLayout());
+			GridBagConstraints mc = GuiUtil.defaultGbc();
+			mc.gridx = 1;
+			mc.gridy = 0;
+			mappingPanel.add(new JLabel("Group 1"), mc);
+			mc.gridx++;
+			mappingPanel.add(new JLabel("Group 2"), mc);
+
+			MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings = backend.getMarkSettings();
+
+			for (int row = 0; row < 4; row++) {
+				mc.gridy++;
+				mc.gridx=0;
+				mappingPanel.add(new JLabel("Number " + (row + 1)), mc);
+				AutomarkSetting g1setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row]);
+				mc.gridx=1;
+				mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
+				AutomarkSetting g2setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row + 4]);
+				mc.gridx=2;
+				mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
+			}
+//			markSettings.addListener(mappingPanel::updateUI);
+			markSettings.addListener(mappingPanel::repaint);
+
+			inner.add(mappingPanel, c);
+			c.gridy++;
+		}
+
+
 //		c.gridy++;
 //		inner.add(rotFirst, c);
 //		c.gridy++;
 //		inner.add(reverseSort, c);
-		c.gridy++;
 		c.fill = GridBagConstraints.NONE;
 		inner.add(jsg.getResetButton(), c);
 		c.fill = GridBagConstraints.BOTH;

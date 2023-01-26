@@ -197,7 +197,7 @@ public class DutiesTab implements PluginTab {
 					.computeIfAbsent(duty.getType(), d -> new LinkedHashMap<>())
 					.computeIfAbsent(duty, DutyTabContents::new);
 			tabContents.extraTabs.add(tab);
-			reg.registerItem(tab, "Duty Plugin: " + tab.getTabName(), List.of(tab.getTabName()), () -> this.activateItem(tab), DutiesTab.class, duty);
+			reg.registerItem(tab, "Duty Plugin: " + duty.getName() + " -> " + tab.getTabName(), List.of(tab.getTabName()), () -> this.activateItem(tab), DutiesTab.class, duty);
 
 		});
 
