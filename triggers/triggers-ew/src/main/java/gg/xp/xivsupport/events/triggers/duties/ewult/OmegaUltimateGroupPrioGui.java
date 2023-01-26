@@ -8,8 +8,10 @@ import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.models.groupmodels.PsMarkerGroups;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.persistence.gui.AutomarkSettingGui;
+import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
 import gg.xp.xivsupport.persistence.settings.AutomarkSetting;
 import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
@@ -70,9 +72,15 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 
 		inner = new JPanel();
 		inner.setLayout(new GridBagLayout());
-//		JCheckBox p6altMark = new BooleanSettingGui(ds.getP6_altMarkMode(), "Alt Mode").getComponent();
-//		JCheckBox rotFirst = new BooleanSettingGui(ds.getP6_rotPrioHigh(), "Rot takes highest priority").getComponent();
-//		JCheckBox reverseSort = new BooleanSettingGui(ds.getP6_reverseSort(), "Reverse sort (higher priority gets larger number)").getComponent();
+
+		JCheckBox looperMark = new BooleanSettingGui(backend.getLooperAM(), "Looper Automark").getComponent();
+		inner.add(looperMark, c);
+		c.gridy++;
+
+		JCheckBox pantoMark = new BooleanSettingGui(backend.getPantoAmEnable(), "Panto Automark").getComponent();
+		inner.add(pantoMark, c);
+		c.gridy++;
+
 		ReadOnlyText helpText = new ReadOnlyText("""
 				Instructions:
 				Jobs higher on the list will be preferred for group 1.
@@ -82,8 +90,6 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 				""");
 
 
-//		inner.add(p6altMark, c);
-//		c.gridy++;
 		inner.add(helpText, c);
 		c.gridy++;
 
@@ -104,7 +110,7 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			for (int row = 0; row < 4; row++) {
 				mc.gridy++;
 				mc.gridx = 0;
-				mappingPanel.add(new JLabel("Number " + (row + 1)), mc);
+				mappingPanel.add(new JLabel("#" + (row + 1)), mc);
 				AutomarkSetting g1setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row]);
 				mc.gridx = 1;
 				mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
@@ -112,8 +118,28 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 				mc.gridx = 2;
 				mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
 			}
-//			markSettings.addListener(mappingPanel::updateUI);
 			markSettings.addListener(mappingPanel::repaint);
+
+			MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettings = backend.getPsMarkSettings();
+			for (int row = 0; row < 4; row++) {
+				mc.gridy++;
+				mc.gridx = 0;
+				String shape = switch (row) {
+					case 0 -> "Circle";
+					case 1 -> "Triangle";
+					case 2 -> "Square";
+					case 3 -> "X";
+					default -> "";
+				};
+				mappingPanel.add(new JLabel(shape), mc);
+				AutomarkSetting g1setting = psMarkSettings.getSettings().get(PsMarkerGroups.values()[row]);
+				mc.gridx = 1;
+				mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
+				AutomarkSetting g2setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row + 4]);
+				mc.gridx = 2;
+				mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
+			}
+			psMarkSettings.addListener(mappingPanel::repaint);
 
 			inner.add(mappingPanel, c);
 			c.gridy++;

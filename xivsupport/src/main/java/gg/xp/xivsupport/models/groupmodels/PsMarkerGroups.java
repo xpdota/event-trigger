@@ -2,23 +2,23 @@ package gg.xp.xivsupport.models.groupmodels;
 
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 
-public enum TwoGroupsOfFour implements HasFriendlyName {
+public enum PsMarkerGroups implements HasFriendlyName {
 
-	GROUP1_NUM1("Group 1 Number 1", 1, 1),
-	GROUP1_NUM2("Group 1 Number 2", 1, 2),
-	GROUP1_NUM3("Group 1 Number 3", 1, 3),
-	GROUP1_NUM4("Group 1 Number 4", 1, 4),
-	GROUP2_NUM1("Group 2 Number 1", 2, 1),
-	GROUP2_NUM2("Group 2 Number 2", 2, 2),
-	GROUP2_NUM3("Group 2 Number 3", 2, 3),
-	GROUP2_NUM4("Group 2 Number 4", 2, 4),
+	GROUP1_CIRCLE("Group 1 Circle", 1, 1),
+	GROUP1_TRIANGLE("Group 1 Triangle", 1, 2),
+	GROUP1_SQUARE("Group 1 Square", 1, 3),
+	GROUP1_X("Group 1 X", 1, 4),
+	GROUP2_CIRCLE("Group 2 Circle", 2, 1),
+	GROUP2_TRIANGLE("Group 2 Triangle", 2, 2),
+	GROUP2_SQUARE("Group 2 Square", 2, 3),
+	GROUP2_X("Group 2 X", 2, 4),
 	;
 
 	private final String friendlyName;
 	private final int group;
 	private final int number;
 
-	TwoGroupsOfFour(String friendlyName, int group, int number) {
+	PsMarkerGroups(String friendlyName, int group, int number) {
 		this.friendlyName = friendlyName;
 		this.group = group;
 		this.number = number;
@@ -37,7 +37,7 @@ public enum TwoGroupsOfFour implements HasFriendlyName {
 		return number;
 	}
 
-	public TwoGroupsOfFour getCounterpart() {
+	public PsMarkerGroups getCounterpart() {
 		if (this.group == 1) {
 			return values()[this.ordinal() + 4];
 		}
@@ -46,7 +46,7 @@ public enum TwoGroupsOfFour implements HasFriendlyName {
 		}
 	}
 
-	public static TwoGroupsOfFour forNumbers(int groupNum, int num) {
+	public static PsMarkerGroups forNumbers(int groupNum, int num) {
 		return values()[(groupNum - 1) * 4 + (num - 1)];
 	}
 }
