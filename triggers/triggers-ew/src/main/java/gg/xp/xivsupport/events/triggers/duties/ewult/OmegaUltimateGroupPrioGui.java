@@ -10,6 +10,7 @@ import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.persistence.gui.AutomarkSettingGui;
+import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
 import gg.xp.xivsupport.persistence.settings.AutomarkSetting;
 import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
@@ -70,9 +71,10 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 
 		inner = new JPanel();
 		inner.setLayout(new GridBagLayout());
-//		JCheckBox p6altMark = new BooleanSettingGui(ds.getP6_altMarkMode(), "Alt Mode").getComponent();
-//		JCheckBox rotFirst = new BooleanSettingGui(ds.getP6_rotPrioHigh(), "Rot takes highest priority").getComponent();
-//		JCheckBox reverseSort = new BooleanSettingGui(ds.getP6_reverseSort(), "Reverse sort (higher priority gets larger number)").getComponent();
+		JCheckBox looperMark = new BooleanSettingGui(backend.getLooperAM(), "Looper Automark").getComponent();
+		inner.add(looperMark, c);
+		c.gridy++;
+
 		ReadOnlyText helpText = new ReadOnlyText("""
 				Instructions:
 				Jobs higher on the list will be preferred for group 1.
@@ -82,8 +84,6 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 				""");
 
 
-//		inner.add(p6altMark, c);
-//		c.gridy++;
 		inner.add(helpText, c);
 		c.gridy++;
 

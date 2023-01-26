@@ -1,10 +1,12 @@
 package gg.xp.xivsupport.events.triggers.duties.ewult;
 
+import ch.qos.logback.classic.spi.EventArgUtil;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
@@ -17,6 +19,7 @@ import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
+import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
@@ -24,15 +27,21 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serial;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @CalloutRepo(name = "TOP Triggers", duty = KnownDuty.OmegaProtocol)
 public class OmegaUltimate extends AutoChildEventHandler implements FilteredEventHandler {
@@ -161,12 +170,14 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final StatusEffectRepository buffs;
 	private final JobSortSetting groupPrioJobSort;
 	private final MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings;
+	private final BooleanSetting looperAM;
 
 	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
 		this.buffs = buffs;
-		groupPrioJobSort = new JobSortSetting(pers, "triggers.omega-ultimate.groupsPrio", state);
-		markSettings = new MultiSlotAutomarkSetting<>(pers, "triggers.omega-ultimate.groupsPrio.am-slot-settings", TwoGroupsOfFour.class, Map.of(
+		String settingKeyBase = "triggers.omega-ultimate.";
+		groupPrioJobSort = new JobSortSetting(pers, settingKeyBase + "groupsPrio", state);
+		markSettings = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.am-slot-settings", TwoGroupsOfFour.class, Map.of(
 				TwoGroupsOfFour.GROUP1_NUM1, MarkerSign.ATTACK1,
 				TwoGroupsOfFour.GROUP1_NUM2, MarkerSign.ATTACK2,
 				TwoGroupsOfFour.GROUP1_NUM3, MarkerSign.ATTACK3,
@@ -176,6 +187,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				TwoGroupsOfFour.GROUP2_NUM3, MarkerSign.BIND3,
 				TwoGroupsOfFour.GROUP2_NUM4, MarkerSign.CROSS
 		));
+		looperAM = new BooleanSetting(pers, settingKeyBase + "looper-am.enabled", false);
 	}
 
 	@Override
@@ -219,6 +231,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			}
 			return UNKNOWN;
+		}
+
+		static NumberInLine forNumber(int number) {
+			if (number < 1 || number > 4) {
+				throw new IllegalArgumentException(String.valueOf(number));
+			}
+			return values()[number - 1];
 		}
 	}
 
@@ -270,25 +289,73 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		return buffs;
 	}
 
+	public static final class ProgramLoopAssignments extends BaseEvent {
+		@Serial
+		private static final long serialVersionUID = 4309367966218905867L;
+		private final Map<TwoGroupsOfFour, XivPlayerCharacter> groups;
+
+		public ProgramLoopAssignments(Map<TwoGroupsOfFour, XivPlayerCharacter> groups) {
+			this.groups = new EnumMap<>(groups);
+		}
+
+		public TwoGroupsOfFour forPlayer(XivPlayerCharacter xpc) {
+			return groups.entrySet().stream()
+					.filter(e -> e.getValue().equals(xpc))
+					.map(Map.Entry::getKey)
+					.findFirst()
+					.orElse(null);
+		}
+
+		public Map<TwoGroupsOfFour, XivPlayerCharacter> getGroups() {
+			return Collections.unmodifiableMap(groups);
+		}
+	}
+
+	private Map<TwoGroupsOfFour, XivPlayerCharacter> getLineGroups() {
+		Map<NumberInLine, List<XivPlayerCharacter>> groups = new EnumMap<>(NumberInLine.class);
+		buffs.getBuffs().forEach(item -> {
+			NumberInLine num = NumberInLine.debuffToLine(item);
+			if (num != null && num != NumberInLine.UNKNOWN) {
+				XivCombatant target = item.getTarget();
+				if (target instanceof XivPlayerCharacter xpc) {
+					groups.computeIfAbsent(num, unused -> new ArrayList<>()).add(xpc);
+				}
+			}
+		});
+		Map<TwoGroupsOfFour, XivPlayerCharacter> finalMap = new EnumMap<>(TwoGroupsOfFour.class);
+		groups.forEach((k, v) -> {
+			v.sort(groupPrioJobSort.getPlayerJailSortComparator());
+			finalMap.put(TwoGroupsOfFour.forNumbers(1, k.lineNumber), v.get(0));
+			finalMap.put(TwoGroupsOfFour.forNumbers(2, k.lineNumber), v.get(1));
+		});
+		return finalMap;
+	}
+
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> programLoopSq = SqtTemplates.sq(50_000, AbilityCastStart.class,
+	private final SequentialTrigger<BaseEvent> programLoopGather = SqtTemplates.sq(50_000, AbilityCastStart.class,
 			acs -> acs.abilityIdMatches(0x7B03),
 			(e1, s) -> {
 				log.info("Program Loop: Start");
-				BuffApplied lineDebuff = s.waitEvent(BuffApplied.class, ba -> isLineDebuff(ba) && ba.getTarget().isThePlayer());
+				s.waitEvents(8, BuffApplied.class, OmegaUltimate::isLineDebuff);
 				s.waitMs(50);
+				s.accept(new ProgramLoopAssignments(getLineGroups()));
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> programLoopExecute = SqtTemplates.sq(50_000, ProgramLoopAssignments.class, unused -> true,
+			(e1, s) -> {
 				BuffApplied looperDebuff = getBuffs().findStatusOnTarget(getState().getPlayer(), 0xD80);
-				NumberInLine num = NumberInLine.debuffToLine(lineDebuff);
-				XivPlayerCharacter buddy = findLineBuddy();
+				TwoGroupsOfFour myGroup = e1.forPlayer(getState().getPlayer());
+				NumberInLine num = NumberInLine.forNumber(myGroup.getNumber());
+				XivPlayerCharacter buddy = e1.groups.get(myGroup.getCounterpart());
 				Map<String, Object> params = Map.of("buddy", buddy == null ? "error" : buddy);
 				switch (num) {
-
 					case FIRST -> s.updateCall(firstInLineTower.getModified(looperDebuff, params));
 					case SECOND -> s.updateCall(secondInLineLoop.getModified(params));
 					case THIRD -> s.updateCall(thirdInLineTether.getModified(params));
 					case FOURTH -> s.updateCall(fourthInLineLoop.getModified(params));
 					case UNKNOWN -> {
-						log.error("Unknown number! {}", lineDebuff);
+						log.error("Unknown number!");
 						return;
 					}
 				}
@@ -334,6 +401,18 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				else {
 					s.accept(fourthNotYou.getModified(params));
 				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> programLoopAM = SqtTemplates.sq(50_000, ProgramLoopAssignments.class, unused -> true,
+			(e1, s) -> {
+
+				e1.groups.forEach((assignment, player) -> {
+					MarkerSign marker = getMarkSettings().getMarkerFor(assignment);
+					if (marker != null) {
+						s.accept(new SpecificAutoMarkRequest(player, marker));
+					}
+				});
 			});
 
 	@SuppressWarnings("ReuseOfLocalVariable")
@@ -517,5 +596,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public MultiSlotAutomarkSetting<TwoGroupsOfFour> getMarkSettings() {
 		return markSettings;
+	}
+
+	public BooleanSetting getLooperAM() {
+		return looperAM;
 	}
 }
