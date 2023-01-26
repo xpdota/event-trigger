@@ -16,13 +16,16 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
+import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,11 +160,22 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final XivState state;
 	private final StatusEffectRepository buffs;
 	private final JobSortSetting groupPrioJobSort;
+	private final MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings;
 
 	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
 		this.buffs = buffs;
 		groupPrioJobSort = new JobSortSetting(pers, "triggers.omega-ultimate.groupsPrio", state);
+		markSettings = new MultiSlotAutomarkSetting<>(pers, "triggers.omega-ultimate.groupsPrio.am-slot-settings", TwoGroupsOfFour.class, Map.of(
+				TwoGroupsOfFour.GROUP1_NUM1, MarkerSign.ATTACK1,
+				TwoGroupsOfFour.GROUP1_NUM2, MarkerSign.ATTACK2,
+				TwoGroupsOfFour.GROUP1_NUM3, MarkerSign.ATTACK3,
+				TwoGroupsOfFour.GROUP1_NUM4, MarkerSign.ATTACK4,
+				TwoGroupsOfFour.GROUP2_NUM1, MarkerSign.BIND1,
+				TwoGroupsOfFour.GROUP2_NUM2, MarkerSign.BIND2,
+				TwoGroupsOfFour.GROUP2_NUM3, MarkerSign.BIND3,
+				TwoGroupsOfFour.GROUP2_NUM4, MarkerSign.CROSS
+		));
 	}
 
 	@Override
@@ -433,8 +447,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				boolean mid = status.buffIdMatches(0xD63);
 				s.updateCall((switch (myHm.getMarkerOffset()) {
 					case 393 -> mid ? midGlitchO : remoteGlitchO;
-					case 394 -> mid ? midGlitchS : remoteGlitchS;
-					case 395 -> mid ? midGlitchT : remoteGlitchT;
+					case 394 -> mid ? midGlitchT : remoteGlitchT;
+					case 395 -> mid ? midGlitchS : remoteGlitchS;
 					case 396 -> mid ? midGlitchX : remoteGlitchX;
 					default -> throw new IllegalStateException("Unexpected value: " + myHm.getMarkerOffset());
 				}).getModified(status, params));
@@ -499,5 +513,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		else {
 			return List.of(second, first);
 		}
+	}
+
+	public MultiSlotAutomarkSetting<TwoGroupsOfFour> getMarkSettings() {
+		return markSettings;
 	}
 }
