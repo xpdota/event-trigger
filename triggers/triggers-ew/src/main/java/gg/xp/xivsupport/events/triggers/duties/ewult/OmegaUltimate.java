@@ -247,6 +247,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			return UNKNOWN;
 		}
 
+		static NumberInLine groupToLine(TwoGroupsOfFour group) {
+			return forNumber(group.getNumber());
+		}
+
 		static NumberInLine forNumber(int number) {
 			if (number < 1 || number > 4) {
 				throw new IllegalArgumentException(String.valueOf(number));
@@ -351,6 +355,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						return;
 					}
 				}
+				log.info("Loop start: player has {}, buddy {}", num, buddy.getName());
 				s.waitMs(3000);
 				if (num != NumberInLine.FIRST) {
 					s.accept(firstNotYou.getModified(params));
@@ -358,6 +363,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 				//First tower goes off
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04) && aue.isFirstTarget());
+				log.info("First tower done");
 				if (num == NumberInLine.SECOND) {
 					s.updateCall(secondInLineTower.getModified(looperDebuff, params));
 				}
@@ -369,8 +375,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 
 				//Second tower goes off
-				s.waitMs(100);
+				s.waitMs(1000);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04) && aue.isFirstTarget());
+				log.info("Second tower done");
 				if (num == NumberInLine.THIRD) {
 					s.updateCall(thirdInLineTower.getModified(looperDebuff, params));
 				}
@@ -382,8 +389,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 
 				//Third tower goes off
-				s.waitMs(100);
+				s.waitMs(1000);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04) && aue.isFirstTarget());
+				log.info("Third tower done");
 				if (num == NumberInLine.FOURTH) {
 					s.updateCall(fourthInLineTower.getModified(looperDebuff, params));
 				}
@@ -444,8 +452,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				log.info("Program Loop: Start");
 				s.waitEvents(8, BuffApplied.class, OmegaUltimate::isLineDebuff);
 				s.waitMs(50);
-				s.accept(new PantoAssignments(getLineGroups()));
-				BuffApplied myLineBuff = s.waitEvent(BuffApplied.class, ba -> isLineDebuff(ba) && ba.getTarget().isThePlayer());
+				PantoAssignments assignments = new PantoAssignments(getLineGroups());
+				s.accept(assignments);
+				BuffApplied myLineBuff = getBuffs().findStatusOnTarget(getState().getPlayer(), OmegaUltimate::isLineDebuff);
 				NumberInLine number = NumberInLine.debuffToLine(myLineBuff);
 				s.waitMs(100);
 				BuffApplied guidedMissile = getBuffs().findStatusOnTarget(getState().getPlayer(), ba -> ba.buffIdMatches(0xD60, 0xDA7, 0xDA8, 0xDA9));
