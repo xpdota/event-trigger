@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.duties.ewult;
 
-import ch.qos.logback.classic.spi.EventArgUtil;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
@@ -16,8 +15,12 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PantoAssignments;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.ProgramLoopAssignments;
+import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
@@ -25,6 +28,7 @@ import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.groupmodels.PsMarkerGroups;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -34,14 +38,11 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serial;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @CalloutRepo(name = "TOP Triggers", duty = KnownDuty.OmegaProtocol)
 public class OmegaUltimate extends AutoChildEventHandler implements FilteredEventHandler {
@@ -170,7 +171,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final StatusEffectRepository buffs;
 	private final JobSortSetting groupPrioJobSort;
 	private final MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings;
+	private final MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettings;
 	private final BooleanSetting looperAM;
+	private final BooleanSetting pantoAmEnable;
 
 	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
@@ -187,7 +190,18 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				TwoGroupsOfFour.GROUP2_NUM3, MarkerSign.BIND3,
 				TwoGroupsOfFour.GROUP2_NUM4, MarkerSign.CROSS
 		));
+		psMarkSettings = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.ps-am-slot-settings", PsMarkerGroups.class, Map.of(
+				PsMarkerGroups.GROUP1_CIRCLE, MarkerSign.ATTACK1,
+				PsMarkerGroups.GROUP1_TRIANGLE, MarkerSign.ATTACK2,
+				PsMarkerGroups.GROUP1_SQUARE, MarkerSign.ATTACK3,
+				PsMarkerGroups.GROUP1_X, MarkerSign.ATTACK4,
+				PsMarkerGroups.GROUP2_CIRCLE, MarkerSign.BIND1,
+				PsMarkerGroups.GROUP2_TRIANGLE, MarkerSign.BIND2,
+				PsMarkerGroups.GROUP2_SQUARE, MarkerSign.BIND3,
+				PsMarkerGroups.GROUP2_X, MarkerSign.CROSS
+		));
 		looperAM = new BooleanSetting(pers, settingKeyBase + "looper-am.enabled", false);
+		pantoAmEnable = new BooleanSetting(pers, settingKeyBase + "panto-am.enabled", false);
 	}
 
 	@Override
@@ -289,28 +303,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		return buffs;
 	}
 
-	public static final class ProgramLoopAssignments extends BaseEvent {
-		@Serial
-		private static final long serialVersionUID = 4309367966218905867L;
-		private final Map<TwoGroupsOfFour, XivPlayerCharacter> groups;
-
-		public ProgramLoopAssignments(Map<TwoGroupsOfFour, XivPlayerCharacter> groups) {
-			this.groups = new EnumMap<>(groups);
-		}
-
-		public TwoGroupsOfFour forPlayer(XivPlayerCharacter xpc) {
-			return groups.entrySet().stream()
-					.filter(e -> e.getValue().equals(xpc))
-					.map(Map.Entry::getKey)
-					.findFirst()
-					.orElse(null);
-		}
-
-		public Map<TwoGroupsOfFour, XivPlayerCharacter> getGroups() {
-			return Collections.unmodifiableMap(groups);
-		}
-	}
-
 	private Map<TwoGroupsOfFour, XivPlayerCharacter> getLineGroups() {
 		Map<NumberInLine, List<XivPlayerCharacter>> groups = new EnumMap<>(NumberInLine.class);
 		buffs.getBuffs().forEach(item -> {
@@ -347,7 +339,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				BuffApplied looperDebuff = getBuffs().findStatusOnTarget(getState().getPlayer(), 0xD80);
 				TwoGroupsOfFour myGroup = e1.forPlayer(getState().getPlayer());
 				NumberInLine num = NumberInLine.forNumber(myGroup.getNumber());
-				XivPlayerCharacter buddy = e1.groups.get(myGroup.getCounterpart());
+				XivPlayerCharacter buddy = e1.getAssignments().get(myGroup.getCounterpart());
 				Map<String, Object> params = Map.of("buddy", buddy == null ? "error" : buddy);
 				switch (num) {
 					case FIRST -> s.updateCall(firstInLineTower.getModified(looperDebuff, params));
@@ -403,23 +395,56 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
+	private boolean isLooperAmEnabled() {
+		return looperAM.get();
+	}
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> programLoopAM = SqtTemplates.sq(50_000, ProgramLoopAssignments.class, unused -> true,
 			(e1, s) -> {
 
-				e1.groups.forEach((assignment, player) -> {
-					MarkerSign marker = getMarkSettings().getMarkerFor(assignment);
-					if (marker != null) {
-						s.accept(new SpecificAutoMarkRequest(player, marker));
-					}
-				});
+				if (isLooperAmEnabled()) {
+					e1.getAssignments().forEach((assignment, player) -> {
+						MarkerSign marker = getMarkSettings().getMarkerFor(assignment);
+						if (marker != null) {
+							s.accept(new SpecificAutoMarkRequest(player, marker));
+						}
+					});
+					s.waitMs(35_000);
+					s.accept(new ClearAutoMarkRequest());
+				}
 			});
+
+	// TODO: make this centralized somewhere
+	private volatile boolean amActive;
+
+	@HandleEvents
+	public void checkAm(EventContext context, SpecificAutoMarkRequest samr) {
+		amActive = true;
+	}
+
+	@HandleEvents
+	public void clearedAm(EventContext context, ClearAutoMarkRequest samr) {
+		amActive = false;
+	}
+
+	@HandleEvents
+	public void clearAm(EventContext context, DutyRecommenceEvent event) {
+		if (amActive) {
+			context.accept(new ClearAutoMarkRequest());
+			amActive = false;
+		}
+	}
 
 	@SuppressWarnings("ReuseOfLocalVariable")
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> pantokratorSq = SqtTemplates.sq(50_000, AbilityCastStart.class,
 			acs -> acs.abilityIdMatches(0x7B0B),
 			(e1, s) -> {
+				log.info("Program Loop: Start");
+				s.waitEvents(8, BuffApplied.class, OmegaUltimate::isLineDebuff);
+				s.waitMs(50);
+				s.accept(new PantoAssignments(getLineGroups()));
 				BuffApplied myLineBuff = s.waitEvent(BuffApplied.class, ba -> isLineDebuff(ba) && ba.getTarget().isThePlayer());
 				NumberInLine number = NumberInLine.debuffToLine(myLineBuff);
 				s.waitMs(100);
@@ -506,6 +531,25 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
+	private boolean isPantoAmEnabled() {
+		return pantoAmEnable.get();
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> pantoAm = SqtTemplates.sq(50_000, PantoAssignments.class, unused -> true,
+			(e1, s) -> {
+				if (isPantoAmEnabled()) {
+					e1.getAssignments().forEach((assignment, player) -> {
+						MarkerSign marker = getMarkSettings().getMarkerFor(assignment);
+						if (marker != null) {
+							s.accept(new SpecificAutoMarkRequest(player, marker));
+						}
+					});
+					s.waitMs(35_000);
+					s.accept(new ClearAutoMarkRequest());
+				}
+			});
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> midRemoteGlitch = SqtTemplates.sq(50_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
 			(e1, s) -> {
@@ -585,7 +629,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		return result > 0;
 	}
 
-	public List<XivPlayerCharacter> sortAccordingToJobPrio(XivPlayerCharacter first, XivPlayerCharacter second) {
+	public List<XivPlayerCharacter> sortAccordingToJobPrio(XivPlayerCharacter first, XivPlayerCharacter
+			second) {
 		if (shouldSwap(first, second)) {
 			return List.of(first, second);
 		}
@@ -598,7 +643,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		return markSettings;
 	}
 
+	public MultiSlotAutomarkSetting<PsMarkerGroups> getPsMarkSettings() {
+		return psMarkSettings;
+	}
+
 	public BooleanSetting getLooperAM() {
 		return looperAM;
+	}
+
+	public BooleanSetting getPantoAmEnable() {
+		return pantoAmEnable;
 	}
 }
