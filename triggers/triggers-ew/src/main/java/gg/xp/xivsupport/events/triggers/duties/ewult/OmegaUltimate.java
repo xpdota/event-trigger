@@ -388,7 +388,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					last = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B0E) && aue.isFirstTarget());
 					s.waitMs(100);
 				}
-				s.waitMs(1000);
+				s.waitMs(1500);
 				if (getState().playerJobMatches(Job::isTank)) {
 					s.updateCall(pantoCleave1asTank.getModified(last));
 				}
