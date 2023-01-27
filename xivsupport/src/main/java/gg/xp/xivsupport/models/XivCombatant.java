@@ -17,14 +17,47 @@ public class XivCombatant extends XivEntity {
 	private final @Nullable HitPoints hp;
 	private final @Nullable ManaPoints mp;
 	private final @Nullable Position pos;
-	private final long bNpcId;
-	private final long bNpcNameId;
-	private final long partyType;
-	private final long level;
+	private final int bNpcId;
+	private final int bNpcNameId;
+	private final int partyType;
+	private final int level;
 	private final long ownerId;
 	private boolean isFake;
 	private @Nullable XivCombatant parent;
-	private final long shieldAmount;
+	private final int shieldAmount;
+	private final short transformationId;
+
+	public XivCombatant(
+			long id,
+			String name,
+			boolean isPc,
+			boolean isThePlayer,
+			long rawType,
+			@Nullable HitPoints hp,
+			@Nullable ManaPoints mp,
+			@Nullable Position pos,
+			long bNpcId,
+			long bNpcNameId,
+			long partyType,
+			long level,
+			long ownerId,
+			long shieldAmount,
+			short transformationId) {
+		super(id, name);
+		this.isPc = isPc;
+		this.isThePlayer = isThePlayer;
+		this.rawType = rawType;
+		this.hp = hp;
+		this.mp = mp;
+		this.pos = pos;
+		this.bNpcId = (int) bNpcId;
+		this.bNpcNameId = (int) bNpcNameId;
+		this.partyType = (int) partyType;
+		this.level = (int) level;
+		this.ownerId = ownerId;
+		this.shieldAmount = (int) shieldAmount;
+		this.transformationId = transformationId;
+	}
 
 	public XivCombatant(
 			long id,
@@ -41,19 +74,7 @@ public class XivCombatant extends XivEntity {
 			long level,
 			long ownerId,
 			long shieldAmount) {
-		super(id, name);
-		this.isPc = isPc;
-		this.isThePlayer = isThePlayer;
-		this.rawType = rawType;
-		this.hp = hp;
-		this.mp = mp;
-		this.pos = pos;
-		this.bNpcId = bNpcId;
-		this.bNpcNameId = bNpcNameId;
-		this.partyType = partyType;
-		this.level = level;
-		this.ownerId = ownerId;
-		this.shieldAmount = shieldAmount;
+		this(id, name, isPc, isThePlayer, rawType, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount, (short) -1);
 	}
 
 	/**
@@ -220,6 +241,10 @@ public class XivCombatant extends XivEntity {
 		return shieldAmount;
 	}
 
+	public short getTransformationId() {
+		return transformationId;
+	}
+
 	public RawXivCombatantInfo toRaw() {
 		HitPoints hp = getHp();
 		if (hp == null) {
@@ -233,6 +258,7 @@ public class XivCombatant extends XivEntity {
 		if (mp == null) {
 			mp = new ManaPoints(10_000, 10_000);
 		}
-		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.current(), hp.max(), mp.current(), mp.max(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId());
+		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.current(), hp.max(), mp.current(), mp.max(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId(), getTransformationId());
 	}
+
 }

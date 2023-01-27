@@ -19,21 +19,46 @@ public final class RawXivCombatantInfo implements Serializable {
 	private final String name;
 	private final long jobId;
 	private final long type;
-	private final long curHp;
-	private final long maxHp;
-	private final long curMp;
-	private final long maxMp;
-	private final long level;
+	private final int curHp;
+	private final int maxHp;
+	private final int curMp;
+	private final int maxMp;
+	private final int level;
 	private final double posX;
 	private final double posY;
 	private final double posZ;
 	private final double heading;
 	private final long worldId;
 	private final String worldName;
-	private final long bnpcId;
-	private final long bnpcNameId;
-	private final long partyType;
+	private final int bnpcId;
+	private final int bnpcNameId;
+	private final int partyType;
 	private final long ownerId;
+	private final short transformationId;
+
+	public RawXivCombatantInfo(
+			long id,
+			String name,
+			long jobId,
+			long type,
+			long curHp,
+			long maxHp,
+			long curMp,
+			long maxMp,
+			long level,
+			double posX,
+			double posY,
+			double posZ,
+			double heading,
+			long worldId,
+			String worldName,
+			long bnpcId,
+			long bnpcNameId,
+			long partyType,
+			long ownerId
+	) {
+		this(id, name, jobId, type, curHp, maxHp, curMp, maxMp, level, posX, posY, posZ, heading, worldId, worldName, bnpcId, bnpcNameId, partyType, ownerId, (short) -1);
+	}
 
 	public RawXivCombatantInfo(
 			@JsonProperty("ID") long id,
@@ -54,18 +79,18 @@ public final class RawXivCombatantInfo implements Serializable {
 			@JsonProperty("BNpcID") long bnpcId,
 			@JsonProperty("BNpcNameID") long bnpcNameId,
 			@JsonProperty("PartyType") long partyType,
-			@JsonProperty("OwnerID") long ownerId
-	) {
+			@JsonProperty("OwnerID") long ownerId,
+			@JsonProperty(value = "TransformationId", defaultValue = "-1") short transformationId) {
 		this.id = id;
 		// Reuse strings
 		this.name = name != null ? name.intern() : null;
 		this.jobId = jobId;
 		this.type = type;
-		this.curHp = curHp;
-		this.maxHp = maxHp;
-		this.curMp = curMp;
-		this.maxMp = maxMp;
-		this.level = level;
+		this.curHp = (int) curHp;
+		this.maxHp = (int) maxHp;
+		this.curMp = (int) curMp;
+		this.maxMp = (int) maxMp;
+		this.level = (int) level;
 		this.posX = posX;
 		this.posY = posY;
 		this.posZ = posZ;
@@ -78,10 +103,11 @@ public final class RawXivCombatantInfo implements Serializable {
 		else {
 			this.worldName = worldName.intern();
 		}
-		this.bnpcId = bnpcId;
-		this.bnpcNameId = bnpcNameId;
-		this.partyType = partyType;
+		this.bnpcId = (int) bnpcId;
+		this.bnpcNameId = (int) bnpcNameId;
+		this.partyType = (int) partyType;
 		this.ownerId = ownerId;
+		this.transformationId = transformationId;
 	}
 
 	public long getId() {
@@ -146,6 +172,10 @@ public final class RawXivCombatantInfo implements Serializable {
 
 	public long getLevel() {
 		return level;
+	}
+
+	public short getTransformationId() {
+		return transformationId;
 	}
 
 	@Override

@@ -370,7 +370,8 @@ public class ActWsLogSource implements EventSource {
 					"TargetID",
 					// I think whether or not it is visible might be in here
 					"ModelStatus",
-					"IsTargetable"
+					"IsTargetable",
+					"TransformationId"
 			};
 			allCbtRequest = mapper.writeValueAsString(
 					Map.ofEntries(

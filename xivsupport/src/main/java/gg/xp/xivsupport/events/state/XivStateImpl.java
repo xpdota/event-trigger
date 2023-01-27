@@ -725,6 +725,7 @@ public class XivStateImpl implements XivState {
 			// TODO: changing primary player should dirty this
 			boolean isPlayer = rawType == 1;
 			long shieldAmount = hp != null ? shieldPercent * hp.max() / 100 : 0;
+			short transformationId = raw != null ? raw.getTransformationId() : -1;
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
 						id,
@@ -741,7 +742,8 @@ public class XivStateImpl implements XivState {
 						partyType,
 						level,
 						ownerId,
-						shieldAmount);
+						shieldAmount,
+						transformationId);
 			}
 			else {
 				computed = new XivCombatant(
@@ -758,7 +760,8 @@ public class XivStateImpl implements XivState {
 						partyType,
 						level,
 						ownerId,
-						shieldAmount);
+						shieldAmount,
+						transformationId);
 				if (bnpcId == 9020) {
 					fake = true;
 				}
