@@ -370,7 +370,8 @@ public class ActWsLogSource implements EventSource {
 					"TargetID",
 					// I think whether or not it is visible might be in here
 					"ModelStatus",
-					"IsTargetable"
+					"IsTargetable",
+					"TransformationId"
 			};
 			allCbtRequest = mapper.writeValueAsString(
 					Map.ofEntries(
@@ -382,8 +383,8 @@ public class ActWsLogSource implements EventSource {
 					Map.ofEntries(
 							Map.entry("call", "getCombatants"),
 							Map.entry("rseq", "specificCombatants"),
-							Map.entry("ids", List.of(123456))
-//							Map.entry("props", cbtProps)
+							Map.entry("ids", List.of(123456)),
+							Map.entry("props", cbtProps)
 					));
 		}
 		catch (JsonProcessingException e) {

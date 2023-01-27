@@ -742,7 +742,8 @@ public class XivStateImpl implements XivState {
 						partyType,
 						level,
 						ownerId,
-						shieldAmount);
+						shieldAmount,
+						transformationId);
 			}
 			else {
 				computed = new XivCombatant(
