@@ -14,6 +14,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
@@ -25,7 +26,9 @@ import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
+import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.groupmodels.PsMarkerGroups;
@@ -41,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -95,6 +99,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BaseEvent> pantoCleave2hadNoMarker = new ModifiableCallout<>("Panto Buster 2: Did Not Have Marker", "Bait Cleaves");
 
 	private final ModifiableCallout<AbilityCastStart> checkMfPattern = new ModifiableCallout<>("Check M/F Sword/Shield");
+
+	private final ModifiableCallout<?> partySynergyBothIn = new ModifiableCallout<>("Party Synergy: Both In", "On Male");
+	private final ModifiableCallout<?> partySynergyBothOut = new ModifiableCallout<>("Party Synergy: Both Out", "Out of Both");
+	private final ModifiableCallout<?> partySynergyFoutMin = new ModifiableCallout<>("Party Synergy: F Out, M In", "Sides of Male");
+	private final ModifiableCallout<?> partySynergyFinMout = new ModifiableCallout<>("Party Synergy: F In, M Out", "On Female");
+
+
 	private final ModifiableCallout<BuffApplied> midGlitchO = ModifiableCallout.durationBasedCall("Mid Glitch with O Buddy", "Circle, Close to {tetherBuddy}");
 	private final ModifiableCallout<BuffApplied> midGlitchS = ModifiableCallout.durationBasedCall("Mid Glitch with □ Buddy", "Square, Close to {tetherBuddy}");
 	private final ModifiableCallout<BuffApplied> midGlitchT = ModifiableCallout.durationBasedCall("Mid Glitch with △ Buddy", "Triangle, Close to {tetherBuddy}");
@@ -106,6 +117,21 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private final ModifiableCallout<AbilityCastStart> eyeLaserStart = ModifiableCallout.durationBasedCall("Eye Laser Starts Casting", "Eye Laser");
 	private final ModifiableCallout<AbilityUsedEvent> eyeLaserDone = new ModifiableCallout<>("Eye Laser Done Casting", "Knockback Stacks");
+	private final ModifiableCallout<HeadMarkerEvent> glitchStacks = new ModifiableCallout<>("Glitch Stacks", "Stacks on {stackPlayers[0]} and {stackPlayers[1]}");
+
+	private final ModifiableCallout<AbilityCastStart> limitlessSynergy = new ModifiableCallout<>("Limitless Synergy", "Limitless Synergy");
+
+	private final ModifiableCallout<TetherEvent> limitlessSynergyGrabTether = new ModifiableCallout<>("Limitless Synergy as Tank: Grab Tether", "Grab Tethers");
+	private final ModifiableCallout<TetherEvent> limitlessSynergyGiveTether = new ModifiableCallout<>("Limitless Synergy as non-Tank: Give Away Tether", "Give Tethers to Tanks");
+	private final ModifiableCallout<BuffApplied> limitlessSynergyFlare = new ModifiableCallout<>("Limitless Synergy: Flare", "Out for Flare, In for Stack");
+	private final ModifiableCallout<BuffApplied> limitlessSynergyNoFlare = new ModifiableCallout<>("Limitless Synergy: No Flare", "Spread, Avoid Flares, Stack");
+	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyStack = new ModifiableCallout<>("Limitless Synergy: Stack", "Stack");
+	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyDontStack = new ModifiableCallout<AbilityUsedEvent>("Limitless Synergy: Don't Stack", "Stack")
+			.extendedDescription("This trigger activates if you were hit by beyond defense and it was actually intended for you.");
+	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyDontStackMistake = new ModifiableCallout<AbilityUsedEvent>("Limitless Synergy: Don't Stack (Mistake)", "Stack")
+			.extendedDescription("This trigger is activated instead of the one above if you were clipped by someone else's Beyond Defense hit");
+
+	private static final Position center = Position.of2d(100, 100);
 
 //	private final ModifiableCallout<BuffApplied> followUpMidGlitchO = ModifiableCallout.durationBasedCall("Mid Glitch with O Buddy: Followup", "Circle, Close to {tetherBuddy}");
 //	private final ModifiableCallout<BuffApplied> followUpMidGlitchS = ModifiableCallout.durationBasedCall("Mid Glitch with □ Buddy: Followup", "Square, Close to {tetherBuddy}");
@@ -166,6 +192,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@PlayerStatusCallout(0xDAB)
 	private final ModifiableCallout<BuffApplied> packetFilterM = new ModifiableCallout<BuffApplied>("Packet Filter M", "Attack F").autoIcon();
 
+	@NpcCastCallout(0x7B22)
+	private final ModifiableCallout<AbilityCastStart> cosmoMemory = new ModifiableCallout<>("Cosmo Memory", "Raidwides");
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -589,6 +617,98 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				s.updateCall(eyeLaserStart.getModified(eyeLaser, params));
 				AbilityUsedEvent eyeLaserUsed = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B21));
 				s.updateCall(eyeLaserDone.getModified(eyeLaserUsed, params));
+
+				List<HeadMarkerEvent> stackMarkers = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == 77);
+				List<XivPlayerCharacter> stackPlayers = stackMarkers.stream()
+						.map(HeadMarkerEvent::getTarget)
+						.map(XivPlayerCharacter.class::cast)
+						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.toList();
+				params = new HashMap<>(params);
+				params.put("stackPlayers", stackPlayers);
+				s.updateCall(glitchStacks.getModified(stackMarkers.get(0), params));
+			});
+
+	@SuppressWarnings("ConstantValue") // clarity
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> partySynergySafeSpot = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
+			(e1, s) -> {
+				// Wait for bosses to go untargetable
+				s.waitEvent(TargetabilityUpdate.class, tu -> tu.getTarget().equals(e1.getSource()) && !tu.isTargetable());
+				log.info("Party Synergy Safe Spot: Waiting for boss data...");
+				XivCombatant omegaF;
+				XivCombatant omegaM;
+				do {
+					s.waitThenRefreshCombatants(50);
+					omegaF = getState().getCombatantsListCopy()
+							.stream()
+							.filter(cbt -> cbt.npcIdMatches(15715))
+							.findFirst()
+							.orElse(null);
+					omegaM = getState().getCombatantsListCopy()
+							.stream()
+							.filter(cbt -> cbt.npcIdMatches(15714))
+							.findFirst()
+							.orElse(null);
+					// Validate data
+				} while (omegaF == null || omegaM == null
+				         || omegaF.getPos() == null || omegaM.getPos() == null
+				         || omegaF.getTransformationId() == -1 || omegaM.getTransformationId() == -1);
+				s.waitMs(100);
+				omegaF = getState().getLatestCombatantData(omegaF);
+				omegaM = getState().getLatestCombatantData(omegaM);
+				short ft = omegaF.getTransformationId();
+				short mt = omegaM.getTransformationId();
+				log.info("F transformation: {}; M transformation: {}",ft, mt);
+				boolean inF = ft == 4;
+				boolean inM = mt == 4;
+				if (inF && inM) {
+					s.updateCall(partySynergyBothIn.getModified());
+				}
+				else if (inF && !inM) {
+					s.updateCall(partySynergyFinMout.getModified());
+				}
+				else if (!inF && inM) {
+					s.updateCall(partySynergyFoutMin.getModified());
+				}
+				else {
+					s.updateCall(partySynergyBothOut.getModified());
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> limitlessSynergySq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B38),
+			(e1, s) -> {
+				s.updateCall(limitlessSynergy.getModified(e1));
+				TetherEvent tether = s.waitEvent(TetherEvent.class, t -> t.tetherIdMatches(0x54));
+				if (getState().playerJobMatches(Job::isTank)) {
+					s.updateCall(limitlessSynergyGrabTether.getModified(tether));
+				}
+				else {
+					s.updateCall(limitlessSynergyGiveTether.getModified(tether));
+				}
+				List<BuffApplied> flares = s.waitEvents(3, BuffApplied.class, buff -> buff.buffIdMatches(0x232));
+				BuffApplied myBuff = flares.stream().filter(b -> b.getTarget().isThePlayer()).findAny().orElse(null);
+				if (myBuff != null) {
+					s.updateCall(limitlessSynergyFlare.getModified(myBuff));
+				}
+				else {
+					s.updateCall(limitlessSynergyNoFlare.getModified(flares.get(0)));
+					List<AbilityUsedEvent> peopleThatGotHit = s.collectAoeHits(aue -> aue.abilityIdMatches(0x7B28));
+					AbilityUsedEvent firstEvent = peopleThatGotHit.get(0);
+					if (firstEvent.getTarget().isThePlayer()) {
+						s.updateCall(limitlessSynergyDontStack.getModified(firstEvent));
+					}
+					else {
+						peopleThatGotHit.stream()
+								.filter(item -> item.getTarget().isThePlayer())
+								.findAny()
+								.ifPresentOrElse(item -> s.updateCall(limitlessSynergyDontStackMistake.getModified(item)),
+										() -> s.updateCall(limitlessSynergyStack.getModified(firstEvent)));
+					}
+				}
 			});
 //
 //	@AutoFeed
