@@ -123,8 +123,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private final ModifiableCallout<TetherEvent> limitlessSynergyGrabTether = new ModifiableCallout<>("Limitless Synergy as Tank: Grab Tether", "Grab Tethers");
 	private final ModifiableCallout<TetherEvent> limitlessSynergyGiveTether = new ModifiableCallout<>("Limitless Synergy as non-Tank: Give Away Tether", "Give Tethers to Tanks");
-	private final ModifiableCallout<BuffApplied> limitlessSynergyFlare = new ModifiableCallout<>("Limitless Synergy: Flare", "Out for Flare, In for Stack");
-	private final ModifiableCallout<BuffApplied> limitlessSynergyNoFlare = new ModifiableCallout<>("Limitless Synergy: No Flare", "Spread, Avoid Flares, Stack");
+	private final ModifiableCallout<BuffApplied> limitlessSynergyFlare = new ModifiableCallout<>("Limitless Synergy: Flare", "Out for Flare");
+	private final ModifiableCallout<BuffApplied> limitlessSynergyNoFlare = new ModifiableCallout<>("Limitless Synergy: No Flare", "Spread");
 	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyStack = new ModifiableCallout<>("Limitless Synergy: Stack", "Stack");
 	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyDontStack = new ModifiableCallout<AbilityUsedEvent>("Limitless Synergy: Don't Stack", "Stack")
 			.extendedDescription("This trigger activates if you were hit by beyond defense and it was actually intended for you.");
@@ -641,16 +641,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				XivCombatant omegaM;
 				do {
 					s.waitThenRefreshCombatants(50);
-					omegaF = getState().getCombatantsListCopy()
-							.stream()
-							.filter(cbt -> cbt.npcIdMatches(15715))
-							.findFirst()
-							.orElse(null);
-					omegaM = getState().getCombatantsListCopy()
-							.stream()
-							.filter(cbt -> cbt.npcIdMatches(15714))
-							.findFirst()
-							.orElse(null);
+					omegaF = getState().npcById(15715);
+					omegaM = getState().npcById(15714);
 					// Validate data
 				} while (omegaF == null || omegaM == null
 				         || omegaF.getPos() == null || omegaM.getPos() == null
@@ -681,6 +673,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final SequentialTrigger<BaseEvent> limitlessSynergySq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B38),
 			(e1, s) -> {
+				log.info("Limitless Synergy Start");
 				s.updateCall(limitlessSynergy.getModified(e1));
 				TetherEvent tether = s.waitEvent(TetherEvent.class, t -> t.tetherIdMatches(0x54));
 				if (getState().playerJobMatches(Job::isTank)) {
