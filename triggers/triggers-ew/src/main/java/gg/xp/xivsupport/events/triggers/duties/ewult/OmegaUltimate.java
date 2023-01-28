@@ -100,10 +100,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private final ModifiableCallout<AbilityCastStart> checkMfPattern = new ModifiableCallout<>("Check M/F Sword/Shield");
 
-	private final ModifiableCallout<?> partySynergyBothIn = new ModifiableCallout<>("Party Synergy: Both In", "On Male");
-	private final ModifiableCallout<?> partySynergyBothOut = new ModifiableCallout<>("Party Synergy: Both Out", "Out of Both");
-	private final ModifiableCallout<?> partySynergyFoutMin = new ModifiableCallout<>("Party Synergy: F Out, M In", "Sides of Male");
-	private final ModifiableCallout<?> partySynergyFinMout = new ModifiableCallout<>("Party Synergy: F In, M Out", "On Female");
+	private final ModifiableCallout<?> partySynergyBothIn = new ModifiableCallout<>("(NOT WORKING) Party Synergy: Both In", "On Male").disabledByDefault();
+	private final ModifiableCallout<?> partySynergyBothOut = new ModifiableCallout<>("(NOT WORKING) Party Synergy: Both Out", "Out of Both").disabledByDefault();
+	private final ModifiableCallout<?> partySynergyFoutMin = new ModifiableCallout<>("(NOT WORKING) Party Synergy: F Out, M In", "Sides of Male").disabledByDefault();
+	private final ModifiableCallout<?> partySynergyFinMout = new ModifiableCallout<>("(NOT WORKING) Party Synergy: F In, M Out", "On Female").disabledByDefault();
 
 
 	private final ModifiableCallout<BuffApplied> midGlitchO = ModifiableCallout.durationBasedCall("Mid Glitch with O Buddy", "Circle, Close to {tetherBuddy}");
@@ -637,6 +637,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				// Wait for bosses to go untargetable
 				s.waitEvent(TargetabilityUpdate.class, tu -> tu.getTarget().equals(e1.getSource()) && !tu.isTargetable());
 				log.info("Party Synergy Safe Spot: Waiting for boss data...");
+				s.waitMs(5000);
 				XivCombatant omegaF;
 				XivCombatant omegaM;
 				do {
@@ -646,13 +647,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					// Validate data
 				} while (omegaF == null || omegaM == null
 				         || omegaF.getPos() == null || omegaM.getPos() == null
+				         || (omegaF.getPos().distanceFrom2D(center) < 9) || omegaM.getPos().distanceFrom2D(center) < 9
 				         || omegaF.getTransformationId() == -1 || omegaM.getTransformationId() == -1);
-				s.waitMs(100);
 				omegaF = getState().getLatestCombatantData(omegaF);
 				omegaM = getState().getLatestCombatantData(omegaM);
 				short ft = omegaF.getTransformationId();
 				short mt = omegaM.getTransformationId();
-				log.info("F transformation: {}; M transformation: {}",ft, mt);
+				log.info("F transformation: {}; M transformation: {}", ft, mt);
 				boolean inF = ft == 4;
 				boolean inM = mt == 4;
 				if (inF && inM) {
