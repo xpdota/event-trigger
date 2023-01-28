@@ -5,6 +5,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
@@ -287,6 +288,16 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		while (repo.statusOrRefreshActive(buff)) {
 			waitEvent(BuffRemoved.class, br -> br.getBuff().equals(buff.getBuff()) && br.getTarget().equals(buff.getTarget()));
 		}
+	}
+
+	public List<AbilityUsedEvent> collectAoeHits(Predicate<AbilityUsedEvent> condition) {
+		List<AbilityUsedEvent> out = new ArrayList<>(8);
+		AbilityUsedEvent aue;
+		do {
+			aue = waitEvent(AbilityUsedEvent.class, condition);
+			out.add(aue);
+		} while (!aue.isLastTarget());
+		return out;
 	}
 
 	public <Y, Z> List<Y> waitEventsUntil(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {

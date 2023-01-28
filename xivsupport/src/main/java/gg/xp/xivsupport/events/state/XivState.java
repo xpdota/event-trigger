@@ -89,4 +89,12 @@ public interface XivState extends SubState {
 	boolean inCombat();
 
 	void provideCombatantShieldPct(XivCombatant cbt, long shieldPct);
+
+	default @Nullable XivCombatant npcById(long id) {
+		return getCombatantsListCopy()
+				.stream()
+				.filter(cbt -> cbt.npcIdMatches(id))
+				.findAny()
+				.orElse(null);
+	}
 }
