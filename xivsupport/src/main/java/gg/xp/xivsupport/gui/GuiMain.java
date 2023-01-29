@@ -167,9 +167,6 @@ public class GuiMain {
 //			frame.setLocationByPlatform(true);
 			mainFrame.setSize(1280, 960);
 			mainFrame.setLocationRelativeTo(null);
-			if (wc.getStartMinimized().get() && replay == null) {
-				mainFrame.setState(JFrame.ICONIFIED);
-			}
 			mainFrame.addWindowStateListener(new WindowAdapter() {
 				@Override
 				public void windowStateChanged(WindowEvent e) {
@@ -184,20 +181,20 @@ public class GuiMain {
 						}
 					}
 				}
-
-//					@Override
-//					public void windowIconified(WindowEvent e) {
-//						mainFrame.setVisible(false);
-//						super.windowIconified(e);
-//					}
-//
-//					@Override
-//					public void windowDeiconified(WindowEvent e) {
-//						mainFrame.setVisible(true);
-//						super.windowDeiconified(e);
-//					}
 			});
-			mainFrame.setVisible(true);
+			if (wc.getStartMinimized().get() && replay == null) {
+				mainFrame.setState(JFrame.ICONIFIED);
+				if (wc.getMinimizeToTray().get()) {
+					setUpTrayIcon();
+					mainFrame.setVisible(false);
+				}
+				else {
+					mainFrame.setVisible(true);
+				}
+			}
+			else {
+				mainFrame.setVisible(true);
+			}
 			mainFrame.add(tabPane);
 			if (replay != null) {
 				mainFrame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
