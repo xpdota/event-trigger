@@ -101,13 +101,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private final ModifiableCallout<AbilityCastStart> checkMfPattern = new ModifiableCallout<>("Check M/F Sword/Shield");
 
-	private final ModifiableCallout<?> partySynergyBothIn = new ModifiableCallout<>("(Requires Special OverlayPlugin Build) Party Synergy: Both In", "On Male").disabledByDefault()
+	private final ModifiableCallout<?> partySynergyBothIn = new ModifiableCallout<>("Party Synergy: Both In", "On Male")
 			.extendedDescription("Shield and Skates: Stand on Male");
-	private final ModifiableCallout<?> partySynergyBothOut = new ModifiableCallout<>("(Requires Special OverlayPlugin Build) Party Synergy: Both Out", "Out of Both").disabledByDefault()
+	private final ModifiableCallout<?> partySynergyBothOut = new ModifiableCallout<>("Party Synergy: Both Out", "Out of Both")
 			.extendedDescription("Neither Shield nor Skates: Cross + Chariot, stand off to the sides");
-	private final ModifiableCallout<?> partySynergyFoutMin = new ModifiableCallout<>("(Requires Special OverlayPlugin Build) Party Synergy: F Out, M In", "Sides of Male").disabledByDefault()
+	private final ModifiableCallout<?> partySynergyFoutMin = new ModifiableCallout<>("Party Synergy: F Out, M In", "Sides of Male")
 			.extendedDescription("Shield, no Skates: Small safe areas to the sides of Male");
-	private final ModifiableCallout<?> partySynergyFinMout = new ModifiableCallout<>("(Requires Special OverlayPlugin Build) Party Synergy: F In, M Out", "On Female").disabledByDefault()
+	private final ModifiableCallout<?> partySynergyFinMout = new ModifiableCallout<>("Party Synergy: F In, M Out", "On Female")
 			.extendedDescription("Skates, no Shield: Stand close to Female");
 
 
