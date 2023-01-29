@@ -637,7 +637,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				// Wait for bosses to go untargetable
 				s.waitEvent(TargetabilityUpdate.class, tu -> tu.getTarget().equals(e1.getSource()) && !tu.isTargetable());
 				log.info("Party Synergy Safe Spot: Waiting for boss data...");
-				s.waitMs(5000);
+				s.waitMs(2000);
 				XivCombatant omegaF;
 				XivCombatant omegaM;
 				do {
@@ -649,7 +649,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				         || omegaF.getPos() == null || omegaM.getPos() == null
 				         || (omegaF.getPos().distanceFrom2D(center) < 9) || omegaM.getPos().distanceFrom2D(center) < 9
 				         || omegaF.getWeaponId() == -1 || omegaM.getWeaponId() == -1);
-				s.waitMs(2000);
+				s.waitMs(400);
 				{
 					omegaF = getState().getLatestCombatantData(omegaF);
 					omegaM = getState().getLatestCombatantData(omegaM);
