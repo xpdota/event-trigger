@@ -93,7 +93,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -171,19 +170,20 @@ public class GuiMain {
 			if (wc.getStartMinimized().get() && replay == null) {
 				mainFrame.setState(JFrame.ICONIFIED);
 			}
-			if (true) {
-				mainFrame.addWindowStateListener(new WindowAdapter() {
-					@Override
-					public void windowStateChanged(WindowEvent e) {
+			mainFrame.addWindowStateListener(new WindowAdapter() {
+				@Override
+				public void windowStateChanged(WindowEvent e) {
+					if (wc.getMinimizeToTray().get()) {
 						if ((e.getNewState() & JFrame.ICONIFIED) != 0) {
-							mainFrame.setVisible(false);
 							setUpTrayIcon();
+							mainFrame.setVisible(false);
 						}
 						else {
 							mainFrame.setVisible(true);
 							removeTrayIcon();
 						}
 					}
+				}
 
 //					@Override
 //					public void windowIconified(WindowEvent e) {
@@ -196,8 +196,7 @@ public class GuiMain {
 //						mainFrame.setVisible(true);
 //						super.windowDeiconified(e);
 //					}
-				});
-			}
+			});
 			mainFrame.setVisible(true);
 			mainFrame.add(tabPane);
 			if (replay != null) {
@@ -266,7 +265,14 @@ public class GuiMain {
 
 	private void setUpTrayIcon() {
 		if (icon == null) {
-			icon = new TrayIcon(new ImageIcon(GeneralIcons.DAMAGE_MAGIC.getIconUrl()).getImage());
+			Dimension size = SystemTray.getSystemTray().getTrayIconSize();
+			icon = new TrayIcon(new ImageIcon(GeneralIcons.DAMAGE_MAGIC.getIconUrl()).getImage().getScaledInstance(size.width, size.height, Image.SCALE_SMOOTH));
+			icon.addActionListener(l -> {
+				mainFrame.setVisible(true);
+				mainFrame.setState(mainFrame.getState() & ~JFrame.ICONIFIED);
+				mainFrame.requestFocus();
+				removeTrayIcon();
+			});
 		}
 		try {
 			SystemTray.getSystemTray().add(icon);
