@@ -81,8 +81,8 @@ public final class RawXivCombatantInfo implements Serializable {
 			@JsonProperty("BNpcNameID") long bnpcNameId,
 			@JsonProperty("PartyType") long partyType,
 			@JsonProperty("OwnerID") long ownerId,
-			@JsonProperty(value = "TransformationId", defaultValue = "-1") short transformationId,
-			@JsonProperty(value = "WeaponId", defaultValue = "-1") short weaponId
+			@JsonProperty(value = "TransformationId") Short transformationId,
+			@JsonProperty(value = "WeaponId") Short weaponId
 
 	) {
 		this.id = id;
@@ -111,8 +111,8 @@ public final class RawXivCombatantInfo implements Serializable {
 		this.bnpcNameId = (int) bnpcNameId;
 		this.partyType = (int) partyType;
 		this.ownerId = ownerId;
-		this.transformationId = transformationId;
-		this.weaponId = weaponId;
+		this.transformationId = transformationId == null ? -1 : transformationId;
+		this.weaponId = weaponId == null ? -1 : weaponId;
 	}
 
 	public long getId() {
