@@ -237,9 +237,9 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			c.gridx = 0;
 			{
 				JPanel windowSettings = new TitleBorderPanel("Startup/Shutdown");
-				BooleanSetting startMinimized = container.getComponent(WindowConfig.class).getStartMinimized();
-				BooleanSettingGui checkbox = new BooleanSettingGui(startMinimized, "Start Minimized");
-				windowSettings.add(checkbox.getComponent());
+				WindowConfig wc = container.getComponent(WindowConfig.class);
+				windowSettings.add(new BooleanSettingGui(wc.getStartMinimized(), "Start Minimized").getComponent());
+				windowSettings.add(new BooleanSettingGui(wc.getMinimizeToTray(), "Minimize to Tray").getComponent());
 				statsAndMemory.add(windowSettings, c);
 			}
 			c.weighty = 1;

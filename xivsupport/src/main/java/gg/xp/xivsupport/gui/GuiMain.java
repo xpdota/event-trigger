@@ -91,6 +91,8 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -165,10 +167,34 @@ public class GuiMain {
 //			frame.setLocationByPlatform(true);
 			mainFrame.setSize(1280, 960);
 			mainFrame.setLocationRelativeTo(null);
+			mainFrame.addWindowStateListener(new WindowAdapter() {
+				@Override
+				public void windowStateChanged(WindowEvent e) {
+					if (wc.getMinimizeToTray().get()) {
+						if ((e.getNewState() & JFrame.ICONIFIED) != 0) {
+							setUpTrayIcon();
+							mainFrame.setVisible(false);
+						}
+						else {
+							mainFrame.setVisible(true);
+							removeTrayIcon();
+						}
+					}
+				}
+			});
 			if (wc.getStartMinimized().get() && replay == null) {
 				mainFrame.setState(JFrame.ICONIFIED);
+				if (wc.getMinimizeToTray().get()) {
+					setUpTrayIcon();
+					mainFrame.setVisible(false);
+				}
+				else {
+					mainFrame.setVisible(true);
+				}
 			}
-			mainFrame.setVisible(true);
+			else {
+				mainFrame.setVisible(true);
+			}
 			mainFrame.add(tabPane);
 			if (replay != null) {
 				mainFrame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
@@ -224,6 +250,33 @@ public class GuiMain {
 			long end = System.currentTimeMillis();
 			log.info("GUI startup time: {}", end - start);
 		});
+	}
+
+	private @Nullable TrayIcon icon;
+
+	private void removeTrayIcon() {
+		if (icon != null) {
+			SystemTray.getSystemTray().remove(icon);
+		}
+	}
+
+	private void setUpTrayIcon() {
+		if (icon == null) {
+			Dimension size = SystemTray.getSystemTray().getTrayIconSize();
+			icon = new TrayIcon(new ImageIcon(GeneralIcons.DAMAGE_MAGIC.getIconUrl()).getImage().getScaledInstance(size.width, size.height, Image.SCALE_SMOOTH));
+			icon.addActionListener(l -> {
+				mainFrame.setVisible(true);
+				mainFrame.setState(mainFrame.getState() & ~JFrame.ICONIFIED);
+				mainFrame.requestFocus();
+				removeTrayIcon();
+			});
+		}
+		try {
+			SystemTray.getSystemTray().add(icon);
+		}
+		catch (AWTException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void addTab(String name, Component component) {
