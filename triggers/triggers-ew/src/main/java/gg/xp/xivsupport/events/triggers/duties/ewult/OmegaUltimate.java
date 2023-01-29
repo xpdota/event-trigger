@@ -648,25 +648,37 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				} while (omegaF == null || omegaM == null
 				         || omegaF.getPos() == null || omegaM.getPos() == null
 				         || (omegaF.getPos().distanceFrom2D(center) < 9) || omegaM.getPos().distanceFrom2D(center) < 9
-				         || omegaF.getTransformationId() == -1 || omegaM.getTransformationId() == -1);
-				omegaF = getState().getLatestCombatantData(omegaF);
-				omegaM = getState().getLatestCombatantData(omegaM);
-				short ft = omegaF.getTransformationId();
-				short mt = omegaM.getTransformationId();
-				log.info("F transformation: {}; M transformation: {}", ft, mt);
-				boolean inF = ft == 4;
-				boolean inM = mt == 4;
-				if (inF && inM) {
-					s.updateCall(partySynergyBothIn.getModified());
+				         || omegaF.getWeaponId() == -1 || omegaM.getWeaponId() == -1);
+				s.waitMs(2000);
+				{
+					omegaF = getState().getLatestCombatantData(omegaF);
+					omegaM = getState().getLatestCombatantData(omegaM);
+					short fw = omegaF.getWeaponId();
+					short mw = omegaM.getWeaponId();
+					log.info("F weapon: {}; M weapon: {}", fw, mw);
+					boolean inF = fw == 4;
+					boolean inM = mw == 4;
+					if (inF && inM) {
+						s.updateCall(partySynergyBothIn.getModified());
+					}
+					else if (inF && !inM) {
+						s.updateCall(partySynergyFinMout.getModified());
+					}
+					else if (!inF && inM) {
+						s.updateCall(partySynergyFoutMin.getModified());
+					}
+					else {
+						s.updateCall(partySynergyBothOut.getModified());
+					}
 				}
-				else if (inF && !inM) {
-					s.updateCall(partySynergyFinMout.getModified());
-				}
-				else if (!inF && inM) {
-					s.updateCall(partySynergyFoutMin.getModified());
-				}
-				else {
-					s.updateCall(partySynergyBothOut.getModified());
+				for (int i = 0; i < 30; i++) {
+					s.waitThenRefreshCombatants(100);
+					omegaF = getState().getLatestCombatantData(omegaF);
+					omegaM = getState().getLatestCombatantData(omegaM);
+					short fw = omegaF.getWeaponId();
+					short mw = omegaM.getWeaponId();
+					log.info("F weapon: {}; M weapon: {}", fw, mw);
+
 				}
 			});
 

@@ -13,6 +13,7 @@
         <module>telesto-right-clicks</module>
         <module>telesto-gui</module>
         <module>telesto-easy-triggers</module>
+        <module>telesto-subscriber</module>
     </modules>
     <modelVersion>4.0.0</modelVersion>
 

@@ -1,11 +1,10 @@
 package gg.xp.telestosupport;
 
-import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 
 import java.io.Serial;
 
-public class TelestoConnectionError extends BaseEvent implements HasPrimaryValue {
+public class TelestoConnectionError extends BaseTelestoResponse implements HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = 5675470435257672749L;

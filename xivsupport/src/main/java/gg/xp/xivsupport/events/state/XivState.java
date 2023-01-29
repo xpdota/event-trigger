@@ -97,4 +97,6 @@ public interface XivState extends SubState {
 				.findAny()
 				.orElse(null);
 	}
+
+	void provideTransformation(long entityId, short transformationId);
 }
