@@ -22,6 +22,7 @@ public class XivCombatant extends XivEntity {
 	private final int partyType;
 	private final int level;
 	private final long ownerId;
+	private final short weaponId;
 	private boolean isFake;
 	private @Nullable XivCombatant parent;
 	private final int shieldAmount;
@@ -42,7 +43,8 @@ public class XivCombatant extends XivEntity {
 			long level,
 			long ownerId,
 			long shieldAmount,
-			short transformationId) {
+			short transformationId,
+			short weaponId) {
 		super(id, name);
 		this.isPc = isPc;
 		this.isThePlayer = isThePlayer;
@@ -57,6 +59,7 @@ public class XivCombatant extends XivEntity {
 		this.ownerId = ownerId;
 		this.shieldAmount = (int) shieldAmount;
 		this.transformationId = transformationId;
+		this.weaponId = weaponId;
 	}
 
 	public XivCombatant(
@@ -74,7 +77,7 @@ public class XivCombatant extends XivEntity {
 			long level,
 			long ownerId,
 			long shieldAmount) {
-		this(id, name, isPc, isThePlayer, rawType, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount, (short) -1);
+		this(id, name, isPc, isThePlayer, rawType, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount, (short) -1, (short) -1);
 	}
 
 	/**
@@ -245,6 +248,10 @@ public class XivCombatant extends XivEntity {
 		return transformationId;
 	}
 
+	public short getWeaponId() {
+		return weaponId;
+	}
+
 	public RawXivCombatantInfo toRaw() {
 		HitPoints hp = getHp();
 		if (hp == null) {
@@ -258,7 +265,7 @@ public class XivCombatant extends XivEntity {
 		if (mp == null) {
 			mp = new ManaPoints(10_000, 10_000);
 		}
-		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.current(), hp.max(), mp.current(), mp.max(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId(), getTransformationId());
+		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.current(), hp.max(), mp.current(), mp.max(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId(), getTransformationId(), getWeaponId());
 	}
 
 }

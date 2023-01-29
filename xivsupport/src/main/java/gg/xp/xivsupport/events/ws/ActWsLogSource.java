@@ -183,6 +183,7 @@ public class ActWsLogSource implements EventSource {
 		}
 	}
 
+	// TODO: Request* methods should only work if we are running live
 	@HandleEvents
 	public void requestVersion(EventContext context, ActWsConnectedEvent event) {
 		try {
@@ -371,7 +372,8 @@ public class ActWsLogSource implements EventSource {
 					// I think whether or not it is visible might be in here
 					"ModelStatus",
 					"IsTargetable",
-					"TransformationId"
+					"TransformationId",
+					"WeaponId"
 			};
 			allCbtRequest = mapper.writeValueAsString(
 					Map.ofEntries(

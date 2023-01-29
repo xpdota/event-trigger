@@ -2,9 +2,11 @@ package gg.xp.telestosupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.SystemEvent;
 
 import java.io.Serial;
 
+@SystemEvent
 public class TelestoOutgoingMessage extends BaseEvent {
 	@Serial
 	private static final long serialVersionUID = -4682203569109709940L;
@@ -22,5 +24,10 @@ public class TelestoOutgoingMessage extends BaseEvent {
 
 	public boolean shouldDelay() {
 		return delay;
+	}
+
+	@Override
+	public boolean shouldSave() {
+		return false;
 	}
 }

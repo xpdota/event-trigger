@@ -452,6 +452,12 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
+	public void provideTransformation(long entityId, short transformationId) {
+		getOrCreateData(entityId).setTransformationId(transformationId);
+		dirtyOverrides = true;
+	}
+
+	@Override
 	public @Nullable XivCombatant getCombatant(long id) {
 		CombatantData cbt = combatantData.get(id);
 		if (cbt == null) {
@@ -594,6 +600,7 @@ public class XivStateImpl implements XivState {
 		private boolean removed;
 		private XivCombatant owner;
 		private long shieldPercent;
+		private short tfId = -1;
 
 		private CombatantData(long id) {
 			this.id = id;
@@ -677,6 +684,11 @@ public class XivStateImpl implements XivState {
 			dirty = true;
 		}
 
+		public void setTransformationId(short tfId) {
+			this.tfId = tfId;
+			dirty = true;
+		}
+
 		public OnlineStatus getStatus() {
 			return status;
 		}
@@ -725,7 +737,8 @@ public class XivStateImpl implements XivState {
 			// TODO: changing primary player should dirty this
 			boolean isPlayer = rawType == 1;
 			long shieldAmount = hp != null ? shieldPercent * hp.max() / 100 : 0;
-			short transformationId = raw != null ? raw.getTransformationId() : -1;
+			short transformationId = tfId != -1 ? tfId : (raw != null ? raw.getTransformationId() : -1);
+			short weaponId = (raw != null ? raw.getWeaponId() : -1);
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
 						id,
@@ -743,7 +756,8 @@ public class XivStateImpl implements XivState {
 						level,
 						ownerId,
 						shieldAmount,
-						transformationId);
+						transformationId,
+						weaponId);
 			}
 			else {
 				computed = new XivCombatant(
@@ -761,7 +775,8 @@ public class XivStateImpl implements XivState {
 						level,
 						ownerId,
 						shieldAmount,
-						transformationId);
+						transformationId,
+						weaponId);
 				if (bnpcId == 9020) {
 					fake = true;
 				}

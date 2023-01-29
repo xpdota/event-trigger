@@ -9,4 +9,9 @@ import java.io.Serial;
 public class OverlaysInitEvent extends BaseEvent {
 	@Serial
 	private static final long serialVersionUID = 955609138557290272L;
+
+	@Override
+	public boolean shouldSave() {
+		return false;
+	}
 }

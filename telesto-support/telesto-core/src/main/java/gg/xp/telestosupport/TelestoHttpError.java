@@ -6,7 +6,7 @@ import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import java.io.Serial;
 import java.net.http.HttpResponse;
 
-public class TelestoHttpError extends BaseEvent implements HasPrimaryValue {
+public class TelestoHttpError extends BaseTelestoResponse implements HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = 5675470435257672749L;

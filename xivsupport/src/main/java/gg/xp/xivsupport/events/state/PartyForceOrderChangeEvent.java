@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.state;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.SystemEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;

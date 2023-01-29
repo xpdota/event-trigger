@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
@@ -12,6 +13,7 @@ import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.PartyForceOrderChangeEvent;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.HttpURISetting;
@@ -28,6 +30,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -52,9 +55,11 @@ public class TelestoMain implements FilteredEventHandler {
 	private static final int GAME_CMD_ID = 1_000_000;
 	private static final int PARTY_UPDATE_ID = 1_000_001;
 	private final EventMaster master;
+	private final RefreshLoop<TelestoMain> refresher;
 
 	private volatile TelestoStatus status = TelestoStatus.UNKNOWN;
 	private final PrimaryLogSource pls;
+	private List<Long> partyActorIds;
 
 	public TelestoMain(EventMaster master, PersistenceProvider pers, PrimaryLogSource pls) {
 		this.master = master;
@@ -68,6 +73,18 @@ public class TelestoMain implements FilteredEventHandler {
 		catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
+		refresher = new RefreshLoop<>("TelestoPartyRefresh", this, TelestoMain::refreshPartyList, tm -> getStatus() == TelestoStatus.GOOD ? 10_000L : 60_000L);
+	}
+
+	private void refreshPartyList() {
+		if (enablePartyList.get()) {
+			master.pushEvent(makePartyMemberMsg());
+		}
+	}
+
+	@HandleEvents
+	public void init(EventContext context, InitEvent init) {
+		refresher.startIfNotStarted();
 	}
 
 	@HandleEvents
@@ -135,7 +152,7 @@ public class TelestoMain implements FilteredEventHandler {
 	@HandleEvents
 	public void handlePartyReponse(EventContext context, TelestoResponse event) {
 		if (event.getId() == PARTY_UPDATE_ID) {
-			log.info("Received Telesto party list");
+			log.trace("Received Telesto party list");
 			List<Map<String, Object>> partyData = (List<Map<String, Object>>) event.getResponse();
 			List<Long> partyActorIds = partyData.stream()
 					.sorted(Comparator.comparing(entry -> Integer.parseInt(entry.get("order").toString(), 16)))
@@ -145,8 +162,14 @@ public class TelestoMain implements FilteredEventHandler {
 					.filter(s -> !s.isBlank())
 					.map(str -> Long.parseLong(str, 16))
 					.toList();
-			log.info("New Telesto Party List: {}", partyActorIds);
-			context.accept(new PartyForceOrderChangeEvent(partyActorIds.isEmpty() ? null : partyActorIds));
+			if (!Objects.equals(this.partyActorIds, partyActorIds)) {
+				this.partyActorIds = partyActorIds;
+				log.info("New Telesto Party List: {}", partyActorIds);
+				context.accept(new PartyForceOrderChangeEvent(partyActorIds.isEmpty() ? null : partyActorIds));
+			}
+			else {
+				log.trace("Ignored Telesto party list update because it is identical to the previous.");
+			}
 		}
 	}
 
@@ -155,7 +178,7 @@ public class TelestoMain implements FilteredEventHandler {
 		Runnable task = () -> {
 			try {
 				String body = mapper.writeValueAsString(msg.getJson());
-				log.info("Sending Telesto message: {}", body);
+				log.trace("Sending Telesto message: {}", body);
 				HttpResponse<String> response = http.send(
 						HttpRequest
 								.newBuilder(uriSetting.get())
@@ -164,16 +187,16 @@ public class TelestoMain implements FilteredEventHandler {
 												.ofString(
 														body)).build(),
 						HttpResponse.BodyHandlers.ofString());
-				log.info("Telesto message done");
+				log.trace("Telesto message done");
 				if (response.statusCode() == 200) {
 					TelestoResponse event = new TelestoResponse(mapper.readValue(response.body(), new TypeReference<>() {
 					}));
-					event.setParent(msg);
+					event.setResponseTo(msg);
 					master.pushEvent(event);
 				}
 				else {
 					TelestoHttpError error = new TelestoHttpError(response);
-					error.setParent(msg);
+					error.setResponseTo(msg);
 					master.pushEvent(error);
 					log.error("Error in Telesto response: {} {}", response.statusCode(), response.body());
 				}
@@ -182,7 +205,7 @@ public class TelestoMain implements FilteredEventHandler {
 			catch (Throwable e) {
 				log.error("Error sending Telesto message {}", e.toString());
 				TelestoConnectionError error = new TelestoConnectionError(e);
-				error.setParent(msg);
+				error.setResponseTo(msg);
 				master.pushEvent(error);
 				updateStatus(TelestoStatus.BAD);
 			}

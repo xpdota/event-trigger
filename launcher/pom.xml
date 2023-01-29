@@ -378,6 +378,10 @@
             <groupId>gg.xp</groupId>
             <artifactId>skill-hit-overlay</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>gg.xp</groupId>-->
+<!--            <artifactId>telesto-subscriber</artifactId>-->
+<!--        </dependency>-->
     </dependencies>
 
 </project>

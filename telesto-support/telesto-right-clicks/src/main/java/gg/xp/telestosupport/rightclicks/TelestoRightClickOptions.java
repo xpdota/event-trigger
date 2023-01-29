@@ -26,6 +26,7 @@ public class TelestoRightClickOptions {
 
 	public TelestoRightClickOptions(RightClickOptionRepo repo, EventMaster master, PersistenceProvider pers, XivState state) {
 		this.enableExtraOptions = new BooleanSetting(pers, "telesto-support.right-click-options.enabled", false);
+		// TODO: these should also only enable if doodles are enabled
 		repo.addOption(CustomRightClickOption.forRow("Mark with Circle",
 				XivPlayerCharacter.class,
 				xpc -> master.pushEvent(new SpecificAutoMarkRequest(xpc, MarkerSign.CIRCLE)),
