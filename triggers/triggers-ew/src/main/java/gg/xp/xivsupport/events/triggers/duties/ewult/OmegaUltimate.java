@@ -682,15 +682,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						s.updateCall(partySynergyBothOut.getModified());
 					}
 				}
-//				for (int i = 0; i < 30; i++) {
-//					s.waitThenRefreshCombatants(100);
-//					omegaF = getState().getLatestCombatantData(omegaF);
-//					omegaM = getState().getLatestCombatantData(omegaM);
-//					short fw = omegaF.getWeaponId();
-//					short mw = omegaM.getWeaponId();
-//					log.info("F weapon: {}; M weapon: {}", fw, mw);
-//
-//				}
 			});
 
 	@AutoFeed
