@@ -14,6 +14,7 @@ import gg.xp.xivsupport.models.XivZone;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -94,7 +95,7 @@ public interface XivState extends SubState {
 		return getCombatantsListCopy()
 				.stream()
 				.filter(cbt -> cbt.npcIdMatches(id))
-				.findAny()
+				.min(Comparator.comparing(XivCombatant::getId))
 				.orElse(null);
 	}
 

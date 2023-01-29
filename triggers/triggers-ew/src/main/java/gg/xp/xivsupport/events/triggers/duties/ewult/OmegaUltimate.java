@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -100,10 +101,14 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private final ModifiableCallout<AbilityCastStart> checkMfPattern = new ModifiableCallout<>("Check M/F Sword/Shield");
 
-	private final ModifiableCallout<?> partySynergyBothIn = new ModifiableCallout<>("(NOT WORKING) Party Synergy: Both In", "On Male").disabledByDefault();
-	private final ModifiableCallout<?> partySynergyBothOut = new ModifiableCallout<>("(NOT WORKING) Party Synergy: Both Out", "Out of Both").disabledByDefault();
-	private final ModifiableCallout<?> partySynergyFoutMin = new ModifiableCallout<>("(NOT WORKING) Party Synergy: F Out, M In", "Sides of Male").disabledByDefault();
-	private final ModifiableCallout<?> partySynergyFinMout = new ModifiableCallout<>("(NOT WORKING) Party Synergy: F In, M Out", "On Female").disabledByDefault();
+	private final ModifiableCallout<?> partySynergyBothIn = new ModifiableCallout<>("(Requires Special OverlayPlugin Build) Party Synergy: Both In", "On Male").disabledByDefault()
+			.extendedDescription("Shield and Skates: Stand on Male");
+	private final ModifiableCallout<?> partySynergyBothOut = new ModifiableCallout<>("(Requires Special OverlayPlugin Build) Party Synergy: Both Out", "Out of Both").disabledByDefault()
+			.extendedDescription("Neither Shield nor Skates: Cross + Chariot, stand off to the sides");
+	private final ModifiableCallout<?> partySynergyFoutMin = new ModifiableCallout<>("(Requires Special OverlayPlugin Build) Party Synergy: F Out, M In", "Sides of Male").disabledByDefault()
+			.extendedDescription("Shield, no Skates: Small safe areas to the sides of Male");
+	private final ModifiableCallout<?> partySynergyFinMout = new ModifiableCallout<>("(Requires Special OverlayPlugin Build) Party Synergy: F In, M Out", "On Female").disabledByDefault()
+			.extendedDescription("Skates, no Shield: Stand close to Female");
 
 
 	private final ModifiableCallout<BuffApplied> midGlitchO = ModifiableCallout.durationBasedCall("Mid Glitch with O Buddy", "Circle, Close to {tetherBuddy}");
@@ -127,9 +132,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> limitlessSynergyNoFlare = new ModifiableCallout<>("Limitless Synergy: No Flare", "Spread");
 	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyStack = new ModifiableCallout<>("Limitless Synergy: Stack", "Stack");
 	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyDontStack = new ModifiableCallout<AbilityUsedEvent>("Limitless Synergy: Don't Stack", "Stack")
-			.extendedDescription("This trigger activates if you were hit by beyond defense and it was actually intended for you.");
+			.extendedDescription("This trigger activates if you were chosen for beyond defense, but not if you were clipped by someone else's hit.");
 	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyDontStackMistake = new ModifiableCallout<AbilityUsedEvent>("Limitless Synergy: Don't Stack (Mistake)", "Stack")
-			.extendedDescription("This trigger is activated instead of the one above if you were clipped by someone else's Beyond Defense hit");
+			.extendedDescription("This trigger is activated instead of the one above if you were clipped by someone else's Beyond Defense hit.");
 
 	private static final Position center = Position.of2d(100, 100);
 
@@ -643,16 +648,22 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				do {
 					s.waitThenRefreshCombatants(50);
 					omegaF = getState().npcById(15715);
+					// TODO: is it more reliable to use the ID ordering, or positions?
 					omegaM = getState().npcById(15714);
-					// Validate data
+					// Validate date
 				} while (omegaF == null || omegaM == null
 				         || omegaF.getPos() == null || omegaM.getPos() == null
 				         || (omegaF.getPos().distanceFrom2D(center) < 9) || omegaM.getPos().distanceFrom2D(center) < 9
 				         || omegaF.getWeaponId() == -1 || omegaM.getWeaponId() == -1);
-				s.waitMs(400);
+				log.info("Party Synergy Safe Spot: Sleeping");
+				s.waitMs(200);
+				s.waitThenRefreshCombatants(200);
+				log.info("Party Synergy Safe Spot: Done Sleeping");
 				{
 					omegaF = getState().getLatestCombatantData(omegaF);
 					omegaM = getState().getLatestCombatantData(omegaM);
+					log.info("F: {}", omegaF);
+					log.info("M: {}", omegaM);
 					short fw = omegaF.getWeaponId();
 					short mw = omegaM.getWeaponId();
 					log.info("F weapon: {}; M weapon: {}", fw, mw);
@@ -671,15 +682,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						s.updateCall(partySynergyBothOut.getModified());
 					}
 				}
-				for (int i = 0; i < 30; i++) {
-					s.waitThenRefreshCombatants(100);
-					omegaF = getState().getLatestCombatantData(omegaF);
-					omegaM = getState().getLatestCombatantData(omegaM);
-					short fw = omegaF.getWeaponId();
-					short mw = omegaM.getWeaponId();
-					log.info("F weapon: {}; M weapon: {}", fw, mw);
-
-				}
+//				for (int i = 0; i < 30; i++) {
+//					s.waitThenRefreshCombatants(100);
+//					omegaF = getState().getLatestCombatantData(omegaF);
+//					omegaM = getState().getLatestCombatantData(omegaM);
+//					short fw = omegaF.getWeaponId();
+//					short mw = omegaM.getWeaponId();
+//					log.info("F weapon: {}; M weapon: {}", fw, mw);
+//
+//				}
 			});
 
 	@AutoFeed
