@@ -13,7 +13,7 @@ f54a8510f834a1a57166970bfc982e94  commons-collections-3.2.2.jar
 4afc9bfa2d31dbf7330c98fcc954b892  commons-text-1.10.0.jar
 bc8a63a2f04f8922f08b7ed36855e5ca  custom-party-overlay-1.0-SNAPSHOT.jar
 a89d22f4802437651cbb40b76125a529  dot-tracker-1.0-SNAPSHOT.jar
-71b46930d3059b22bafdec30ffeedc7c  easytriggers-1.0-SNAPSHOT.jar
+14532825a17032bd28f4c420d65f1778  easytriggers-1.0-SNAPSHOT.jar
 655814242aa5fa27b4f4eaca9390c951  flatlaf-1.6.5.jar
 4fbc34bbf1ec28670693ee90ba5948fc  groovy-3.0.14.jar
 d42b8855e3b7e4f3506ffc0b5b85d149  groovy-sandbox-1.27.jar
@@ -42,7 +42,7 @@ b379db6e4ee67fd2d731faadc3a5afa5  personal-cast-bar-overlay-1.0-SNAPSHOT.jar
 1d0070839d825f57fe6f4d8e2a82989b  reflections-0.10.2.jar
 9c3b7321b1be9dc1dbac775ffbc76d7c  skill-hit-overlay-1.0-SNAPSHOT.jar
 0dd65c386e8c5f4e6e014de3f7a7ae60  slf4j-api-2.0.6.jar
-2773414aefab18cf7cb6515411ebaa28  telesto-core-1.0-SNAPSHOT.jar
+3d920853e91326a855b86d3e8e665f43  telesto-core-1.0-SNAPSHOT.jar
 85f925252ca241d212ff54edb85e007a  telesto-easy-triggers-1.0-SNAPSHOT.jar
 67d9874e8ccaa497de31ec6b68dc02c2  telesto-gui-1.0-SNAPSHOT.jar
 40eaf43340bbe2eaaddecc43617603f5  telesto-right-clicks-1.0-SNAPSHOT.jar
@@ -53,4 +53,4 @@ a79006557cc3031a9dc2aedddfed0969  triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  triggers-sb-1.0-SNAPSHOT.jar
 55da2e031548dc6a2dd5c8bbcf72c1bf  trigger-support-1.0-SNAPSHOT.jar
 2b210d18f49fc5c3a826ddf0f64668b5  xivdata-1.0-SNAPSHOT.jar
-14abf5c49c6ad9491c291d4e1ff43901  xivsupport-1.0-SNAPSHOT.jar
+7f366e9c1a3c3b1bd2f585a9667abe00  xivsupport-1.0-SNAPSHOT.jar
