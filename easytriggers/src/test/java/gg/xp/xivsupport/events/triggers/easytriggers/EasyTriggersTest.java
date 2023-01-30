@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
+import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.ExampleSetup;
@@ -208,8 +209,11 @@ public class EasyTriggersTest {
 			MutablePicoContainer pico = ExampleSetup.setup();
 			pers = pico.getComponent(PersistenceProvider.class);
 			TestEventCollector coll = new TestEventCollector();
-			EventDistributor dist = pico.getComponent(EventDistributor.class);
-			dist.registerHandler(coll);
+			EventMaster master = pico.getComponent(EventMaster.class);
+			{
+				EventDistributor dist = pico.getComponent(EventDistributor.class);
+				dist.registerHandler(coll);
+			}
 			EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
 			EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
 			AbilityIdFilter cond = new AbilityIdFilter();
@@ -223,13 +227,15 @@ public class EasyTriggersTest {
 			trig1.addAction(action);
 			ez1.addTrigger(trig1);
 
-			dist.acceptEvent(abilityUsed1);
+			// TODO: make another version of this test with a fake time source
+			master.pushEventAndWait(abilityUsed1);
 			{
 				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
 				Assert.assertEquals(calls.size(), 0);
 			}
 			try {
-				Thread.sleep(2_000);
+				Thread.sleep(400);
+				master.pushEventAndWait(new AbilityUsedEvent(otherAbility, caster, target, Collections.emptyList(), 123, 0, 1));
 			}
 			catch (InterruptedException e) {
 				throw new RuntimeException(e);
