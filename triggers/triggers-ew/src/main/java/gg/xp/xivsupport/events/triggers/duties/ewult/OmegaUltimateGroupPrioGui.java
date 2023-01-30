@@ -73,13 +73,29 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		inner = new JPanel();
 		inner.setLayout(new GridBagLayout());
 
-		JCheckBox looperMark = new BooleanSettingGui(backend.getLooperAM(), "Looper Automark").getComponent();
-		inner.add(looperMark, c);
-		c.gridy++;
+		{
+			JCheckBox looperMark = new BooleanSettingGui(backend.getLooperAM(), "Looper Automark").getComponent();
+			inner.add(looperMark, c);
+			c.gridy++;
+		}
 
-		JCheckBox pantoMark = new BooleanSettingGui(backend.getPantoAmEnable(), "Panto Automark").getComponent();
-		inner.add(pantoMark, c);
-		c.gridy++;
+		{
+			JCheckBox pantoMark = new BooleanSettingGui(backend.getPantoAmEnable(), "Panto Automark").getComponent();
+			inner.add(pantoMark, c);
+			c.gridy++;
+		}
+
+		{
+			JCheckBox psMark = new BooleanSettingGui(backend.getPsAmEnable(), "P2 Headmarker Automark").getComponent();
+			inner.add(psMark, c);
+			c.gridy++;
+		}
+
+		{
+			JCheckBox sniperMark = new BooleanSettingGui(backend.getSniperAmEnable(), "Sniper Cannon").getComponent();
+			inner.add(sniperMark, c);
+			c.gridy++;
+		}
 
 		ReadOnlyText helpText = new ReadOnlyText("""
 				Instructions:
