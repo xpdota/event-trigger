@@ -219,11 +219,15 @@ public class EasyTriggersTest {
 			trig1.addCondition(cond);
 			GroovyManager groovy = pico.getComponent(GroovyManager.class);
 			GroovyAction action = new GroovyAction(groovy);
-			action.setGroovyScript("s.waitMs(100); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
+			action.setGroovyScript("s.waitMs(400); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
 			trig1.addAction(action);
 			ez1.addTrigger(trig1);
 
 			dist.acceptEvent(abilityUsed1);
+			{
+				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+				Assert.assertEquals(calls.size(), 0);
+			}
 			try {
 				Thread.sleep(1_000);
 			}
