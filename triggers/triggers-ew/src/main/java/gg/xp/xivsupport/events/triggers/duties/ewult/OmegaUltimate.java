@@ -37,17 +37,20 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @CalloutRepo(name = "TOP Triggers", duty = KnownDuty.OmegaProtocol)
 public class OmegaUltimate extends AutoChildEventHandler implements FilteredEventHandler {
@@ -187,10 +190,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@PlayerStatusCallout(0xDCA)
 	private final ModifiableCallout<BuffApplied> remoteRegression = new ModifiableCallout<BuffApplied>("Remote Regression", "Far Tether").autoIcon();
 
-//	@PlayerStatusCallout(0xD62)
-//	private final ModifiableCallout<BuffApplied> highPoweredSniperCannon = new ModifiableCallout<BuffApplied>("High-powered Sniper Cannon", "Super sniper soon").autoIcon();
-//	@PlayerStatusCallout(0xD61)
-//	private final ModifiableCallout<BuffApplied> sniperCannon = new ModifiableCallout<BuffApplied>("Sniper Cannon", "Sniper Soon").autoIcon();
+	private final ModifiableCallout<BuffApplied> sniperCannonCall = new ModifiableCallout<BuffApplied>("Sniper Cannon", "Sniper Soon").statusIcon(0xD61);
+	private final ModifiableCallout<BuffApplied> highPoweredSniperCannonCall = new ModifiableCallout<BuffApplied>("High-powered Sniper Cannon", "High Powered Sniper Soon").statusIcon(0xD62);
+	private final ModifiableCallout<BuffApplied> noSniperCannonCall = new ModifiableCallout<>("No Sniper Cannon", "Nothing");
 
 	@PlayerStatusCallout(0xDAC)
 	private final ModifiableCallout<BuffApplied> packetFilterF = new ModifiableCallout<BuffApplied>("Packet Filter F", "Attack M").autoIcon();
@@ -206,7 +208,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings;
 	private final MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettings;
 	private final BooleanSetting looperAM;
+	private final BooleanSetting psAmEnable;
 	private final BooleanSetting pantoAmEnable;
+	private final BooleanSetting sniperAmEnable;
 
 	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
@@ -235,6 +239,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		));
 		looperAM = new BooleanSetting(pers, settingKeyBase + "looper-am.enabled", false);
 		pantoAmEnable = new BooleanSetting(pers, settingKeyBase + "panto-am.enabled", false);
+		sniperAmEnable = new BooleanSetting(pers, settingKeyBase + "sniper-am.enabled", false);
+		psAmEnable = new BooleanSetting(pers, settingKeyBase + "ps-marker-am.enabled", false);
 	}
 
 	@Override
@@ -309,28 +315,28 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				.findFirst()
 				.orElse(null);
 	}
-
-	//returns first player with line debuff
-	private XivPlayerCharacter supPlayerFromLine(NumberInLine il) {
-		List<XivPlayerCharacter> players = state.getPartyList().stream().filter(p -> p.getJob().isTank() || p.getJob().isHealer()).toList();
-		int lineId = il.lineId();
-
-		return players.stream()
-				.filter(xpc -> this.buffs.findStatusOnTarget(xpc, lineId) != null)
-				.findFirst()
-				.orElse(null);
-	}
-
-	//returns first player with line debuff
-	private XivPlayerCharacter dpsPlayerFromLine(NumberInLine il) {
-		List<XivPlayerCharacter> players = state.getPartyList().stream().filter(p -> p.getJob().isDps()).toList();
-		int lineId = il.lineId();
-
-		return players.stream()
-				.filter(xpc -> this.buffs.findStatusOnTarget(xpc, lineId) != null)
-				.findFirst()
-				.orElse(null);
-	}
+//
+//	//returns first player with line debuff
+//	private XivPlayerCharacter supPlayerFromLine(NumberInLine il) {
+//		List<XivPlayerCharacter> players = state.getPartyList().stream().filter(p -> p.getJob().isTank() || p.getJob().isHealer()).toList();
+//		int lineId = il.lineId();
+//
+//		return players.stream()
+//				.filter(xpc -> this.buffs.findStatusOnTarget(xpc, lineId) != null)
+//				.findFirst()
+//				.orElse(null);
+//	}
+//
+//	//returns first player with line debuff
+//	private XivPlayerCharacter dpsPlayerFromLine(NumberInLine il) {
+//		List<XivPlayerCharacter> players = state.getPartyList().stream().filter(p -> p.getJob().isDps()).toList();
+//		int lineId = il.lineId();
+//
+//		return players.stream()
+//				.filter(xpc -> this.buffs.findStatusOnTarget(xpc, lineId) != null)
+//				.findFirst()
+//				.orElse(null);
+//	}
 
 	private XivState getState() {
 		return state;
@@ -593,6 +599,55 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			});
 
 	@AutoFeed
+	private final SequentialTrigger<BaseEvent> psAmSq = SqtTemplates.sq(50_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
+			(e1, s) -> {
+				if (!getPsAmEnable().get()) {
+					return;
+				}
+				Map<PsMarkerGroups, XivPlayerCharacter> headmarkers = new EnumMap<>(PsMarkerGroups.class);
+				// We now have a mapping from the headmarker offset to the players with that ID
+				s.waitEventsQuickSuccession(8, HeadMarkerEvent.class, hm -> hm.getTarget().isPc(), Duration.ofSeconds(1))
+						.stream()
+						// Group by marker offset
+						.collect(Collectors.groupingBy(HeadMarkerEvent::getMarkerOffset))
+						.forEach((key, value) -> {
+							List<XivPlayerCharacter> sorted = value
+									.stream()
+									.map(HeadMarkerEvent::getTarget)
+									.map(XivPlayerCharacter.class::cast)
+									.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+									.limit(2)
+									.toList();
+							PsMarkerGroups firstAssignment = (switch (key) {
+								case 393 -> PsMarkerGroups.GROUP1_CIRCLE;
+								case 394 -> PsMarkerGroups.GROUP1_TRIANGLE;
+								case 395 -> PsMarkerGroups.GROUP1_SQUARE;
+								case 396 -> PsMarkerGroups.GROUP1_X;
+								default -> throw new IllegalArgumentException("Unknown marker");
+							});
+							// Doing it like this so that it doesn't break if you're missing a player
+							for (int i = 0; i < sorted.size(); i++) {
+								XivPlayerCharacter player = sorted.get(i);
+								if (i == 0) {
+									headmarkers.put(firstAssignment, player);
+								}
+								else {
+									PsMarkerGroups secondAssignment = firstAssignment.getCounterpart();
+									headmarkers.put(secondAssignment, player);
+								}
+							}
+						});
+				log.info("Headmarkers map: {}", headmarkers);
+				headmarkers.forEach((assignment, player) -> {
+					MarkerSign marker = getPsMarkSettings().getMarkerFor(assignment);
+					log.info("PS Marker: {} on {}", marker, player);
+					if (marker != null) {
+						s.accept(new SpecificAutoMarkRequest(player, marker));
+					}
+				});
+			});
+
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> midRemoteGlitch = SqtTemplates.sq(50_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
 			(e1, s) -> {
 				s.updateCall(checkMfPattern.getModified(e1));
@@ -749,6 +804,63 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 //				}
 //			});
 
+	@SuppressWarnings("SuspiciousMethodCalls")
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> sniperCannonSq = SqtTemplates.sq(30_000,
+			BuffApplied.class, ba -> ba.buffIdMatches(0xD61),
+			(e1, s) -> {
+				s.waitMs(100);
+				// The buffs have already gone out, there just wasn't a good pre-tell in the log
+				List<BuffApplied> sniper = new ArrayList<>(4);
+				List<BuffApplied> hpSniper = new ArrayList<>(2);
+				List<XivPlayerCharacter> nothing = new ArrayList<>(getState().getPartyList());
+				Mutable<BuffApplied> playerBuffM = new MutableObject<>();
+				getBuffs().getBuffs().forEach(ba -> {
+					if (ba.buffIdMatches(0xD61)) {
+						sniper.add(ba);
+						nothing.remove(ba.getTarget());
+					}
+					else if (ba.buffIdMatches(0xD62)) {
+						hpSniper.add(ba);
+						nothing.remove(ba.getTarget());
+					}
+					else {
+						return;
+					}
+					if (ba.getTarget().isThePlayer()) {
+						playerBuffM.setValue(ba);
+					}
+				});
+				BuffApplied playerBuff = playerBuffM.getValue();
+				if (playerBuff == null) {
+					s.updateCall(noSniperCannonCall.getModified(e1));
+				}
+				else {
+					if (playerBuff.buffIdMatches(0xD61)) {
+						s.updateCall(sniperCannonCall.getModified(playerBuff));
+					}
+					else {
+						s.updateCall(highPoweredSniperCannonCall.getModified(playerBuff));
+					}
+				}
+				if (getSniperAmEnable().get()) {
+					s.accept(new ClearAutoMarkRequest());
+					s.waitMs(100);
+					sniper.stream()
+							.map(BuffApplied::getTarget)
+							.map(XivPlayerCharacter.class::cast)
+							.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+							.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.ATTACK_NEXT)));
+					hpSniper.stream()
+							.map(BuffApplied::getTarget)
+							.map(XivPlayerCharacter.class::cast)
+							.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+							.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.BIND_NEXT)));
+					nothing.stream()
+							.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+							.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.IGNORE_NEXT)));
+				}
+			});
 
 	public JobSortSetting getGroupPrioJobSort() {
 		return groupPrioJobSort;
@@ -766,6 +878,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		return result > 0;
 	}
 
+	@SuppressWarnings("unused")
 	public List<XivPlayerCharacter> sortAccordingToJobPrio(XivPlayerCharacter first, XivPlayerCharacter
 			second) {
 		if (shouldSwap(first, second)) {
@@ -790,5 +903,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public BooleanSetting getPantoAmEnable() {
 		return pantoAmEnable;
+	}
+
+	public BooleanSetting getSniperAmEnable() {
+		return sniperAmEnable;
+	}
+
+	public BooleanSetting getPsAmEnable() {
+		return psAmEnable;
 	}
 }
