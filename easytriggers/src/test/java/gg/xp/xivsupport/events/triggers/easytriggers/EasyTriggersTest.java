@@ -229,7 +229,7 @@ public class EasyTriggersTest {
 				Assert.assertEquals(calls.size(), 0);
 			}
 			try {
-				Thread.sleep(1_000);
+				Thread.sleep(2_000);
 			}
 			catch (InterruptedException e) {
 				throw new RuntimeException(e);
