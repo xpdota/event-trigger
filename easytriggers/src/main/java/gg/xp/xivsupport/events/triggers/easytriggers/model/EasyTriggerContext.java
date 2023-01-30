@@ -54,9 +54,9 @@ public class EasyTriggerContext {
 			log.info("Action: {}", action);
 			setAcceptHook(s::accept);
 			setEnqueueHook(s::enqueue);
-			extraVariables.put("s", s);
+			addVariable("s", s);
 			if (context != null) {
-				extraVariables.put("context", context);
+				addVariable("context", context);
 			}
 
 			try {

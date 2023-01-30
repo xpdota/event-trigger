@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
@@ -31,6 +32,7 @@ import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.TtsRequest;
 import groovy.lang.MissingPropertyException;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.hamcrest.MatcherAssert;
@@ -197,6 +199,48 @@ public class EasyTriggersTest {
 				Assert.assertEquals(theCall.getCallText(), "123");
 			}
 		}
+	}
+
+	@Test
+	void extraVarsTest() {
+		PersistenceProvider pers;
+		{
+			MutablePicoContainer pico = ExampleSetup.setup();
+			pers = pico.getComponent(PersistenceProvider.class);
+			TestEventCollector coll = new TestEventCollector();
+			EventDistributor dist = pico.getComponent(EventDistributor.class);
+			dist.registerHandler(coll);
+			EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+			EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
+			AbilityIdFilter cond = new AbilityIdFilter();
+			cond.operator = NumericOperator.EQ;
+			cond.expected = 123;
+			trig1.setEventType(AbilityUsedEvent.class);
+			trig1.addCondition(cond);
+			GroovyManager groovy = pico.getComponent(GroovyManager.class);
+			GroovyAction action = new GroovyAction(groovy);
+			action.setGroovyScript("s.waitMs(100); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
+			trig1.addAction(action);
+			ez1.addTrigger(trig1);
+
+			dist.acceptEvent(abilityUsed1);
+			try {
+				Thread.sleep(1_000);
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+
+			{
+				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+				Assert.assertEquals(calls.size(), 1);
+				TtsRequest theCall = calls.get(0);
+				Assert.assertEquals(theCall.getTtsString(), "true");
+				Assert.assertEquals(groovy.makeBinding().getVariable("foo"), "bar");
+			}
+		}
+		// Now load the serialized version and make sure it all still works
+
 	}
 
 	@Test
