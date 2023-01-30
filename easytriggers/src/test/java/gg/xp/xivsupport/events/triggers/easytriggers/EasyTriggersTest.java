@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
@@ -16,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
@@ -47,6 +49,7 @@ import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -234,12 +237,72 @@ public class EasyTriggersTest {
 				Assert.assertEquals(calls.size(), 0);
 			}
 			try {
-				Thread.sleep(400);
+				Thread.sleep(500);
 				master.pushEventAndWait(new AbilityUsedEvent(otherAbility, caster, target, Collections.emptyList(), 123, 0, 1));
+				Thread.sleep(100);
+				master.pushEventAndWait(new BaseEvent() {
+				});
+				Thread.sleep(2000);
 			}
 			catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
+
+			{
+				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+				Assert.assertEquals(calls.size(), 1);
+				TtsRequest theCall = calls.get(0);
+				Assert.assertEquals(theCall.getTtsString(), "true");
+				Assert.assertEquals(groovy.makeBinding().getVariable("foo"), "bar");
+			}
+		}
+		// Now load the serialized version and make sure it all still works
+
+	}
+
+	@Test
+	void extraVarsTestFakeTimeSource() {
+		PersistenceProvider pers;
+		{
+			MutablePicoContainer pico = ExampleSetup.setup();
+			pico.getComponent(FakeTimeSource.class);
+			pers = pico.getComponent(PersistenceProvider.class);
+			TestEventCollector coll = new TestEventCollector();
+			EventMaster master = pico.getComponent(EventMaster.class);
+			{
+				EventDistributor dist = pico.getComponent(EventDistributor.class);
+				dist.registerHandler(coll);
+			}
+			EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+			EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
+			AbilityIdFilter cond = new AbilityIdFilter();
+			cond.operator = NumericOperator.EQ;
+			cond.expected = 123;
+			trig1.setEventType(AbilityUsedEvent.class);
+			trig1.addCondition(cond);
+			GroovyManager groovy = pico.getComponent(GroovyManager.class);
+			GroovyAction action = new GroovyAction(groovy);
+			action.setGroovyScript("s.waitMs(400); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
+			trig1.addAction(action);
+			ez1.addTrigger(trig1);
+
+			FakeTimeSource fts = new FakeTimeSource();
+			Instant now = Instant.now();
+			fts.setNewTime(now);
+			// TODO: make another version of this test with a fake time source
+			AbilityUsedEvent abilityUsed1 = new AbilityUsedEvent(matchingAbility, caster, target, Collections.emptyList(), 123, 0, 1);
+			abilityUsed1.setTimeSource(fts);
+			abilityUsed1.setHappenedAt(fts.now());
+			master.pushEventAndWait(abilityUsed1);
+			{
+				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+				Assert.assertEquals(calls.size(), 0);
+			}
+			AbilityUsedEvent abilityUsed2 = new AbilityUsedEvent(otherAbility, caster, target, Collections.emptyList(), 123, 0, 1);
+			fts.setNewTime(now.plusMillis(500));
+			abilityUsed2.setHappenedAt(fts.now());
+			abilityUsed2.setTimeSource(fts);
+			master.pushEventAndWait(abilityUsed2);
 
 			{
 				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
