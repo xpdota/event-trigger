@@ -54,6 +54,10 @@ public class EasyTriggerContext {
 			log.info("Action: {}", action);
 			setAcceptHook(s::accept);
 			setEnqueueHook(s::enqueue);
+			extraVariables.put("s", s);
+			if (context != null) {
+				extraVariables.put("context", context);
+			}
 
 			try {
 				if (action instanceof SqAction sqa) {

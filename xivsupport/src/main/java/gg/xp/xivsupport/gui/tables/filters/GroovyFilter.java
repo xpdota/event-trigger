@@ -23,7 +23,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 	private static final Logger log = LoggerFactory.getLogger(GroovyFilter.class);
 	private @Nullable GroovyShell shell;
 	private final ExecutorService exs = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("GroovyFilter"));
-	private final TextFieldWithValidation<?> textBox;
+	private final TextFieldAsync<?> textBox;
 	private final String longClassName;
 	private final String varName;
 	private final GroovyManager mgr;
@@ -45,7 +45,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 	public GroovyFilter(Runnable filterUpdatedCallback, GroovyManager mgr, Class<X> dataType, String varName) {
 		this.filterUpdatedCallback = filterUpdatedCallback;
 		this.dataType = dataType;
-		this.textBox = new TextFieldWithValidation<>(this::makeFilter, this::setFilter, "");
+		this.textBox = new TextFieldAsync<>(this::makeFilter, this::setFilter, "");
 		this.longClassName = dataType.getCanonicalName();
 		this.varName = varName;
 		this.mgr = mgr;
