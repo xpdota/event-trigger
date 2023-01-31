@@ -8,8 +8,8 @@ import org.picocontainer.PicoContainer;
 import javax.swing.*;
 import java.lang.reflect.Field;
 
-public abstract class BaseTelestoActionEditor extends TitleBorderPanel {
-	protected BaseTelestoActionEditor(String title, BaseTelestoDoodleAction action, PicoContainer container) {
+public abstract class BaseTelestoDoodleActionEditor extends TitleBorderPanel {
+	protected BaseTelestoDoodleActionEditor(String title, BaseTelestoDoodleAction action, PicoContainer container) {
 		super(title);
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		try {

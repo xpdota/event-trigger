@@ -10,24 +10,18 @@ import gg.xp.telestosupport.TelestoMain;
 import gg.xp.xivsupport.callouts.SingleValueReplacement;
 import gg.xp.xivsupport.callouts.conversions.GlobalCallReplacer;
 import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyScriptProcessor;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import groovy.lang.Script;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
 public class DoodleProcessor implements FilteredEventHandler {
 
@@ -39,15 +33,11 @@ public class DoodleProcessor implements FilteredEventHandler {
 	private final Object dynamicDoodlesLock = new Object();
 	private final List<DynamicDoodle> dynamicDoodles = new ArrayList<>();
 
-	private final Map<String, Script> scriptCache = new ConcurrentHashMap<>();
 	private final GroovyManager groovyMgr;
 	private final SingleValueReplacement svr;
 	private final GlobalCallReplacer gr;
+	private final GroovyScriptProcessor gsp;
 	private final RefreshLoop<DoodleProcessor> dynamicDoodleRefreshLoop;
-	private volatile GroovyShell interpreter;
-	// TODO: this *shouldn't* need to be static, but something is up with it
-	private static final Object interpLock = new Object();
-	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
 
 
 	public DoodleProcessor(TelestoMain telesto,
@@ -55,13 +45,16 @@ public class DoodleProcessor implements FilteredEventHandler {
 	                       EventMaster master,
 	                       GroovyManager mgr,
 	                       SingleValueReplacement svr,
-	                       GlobalCallReplacer gr) {
+	                       GlobalCallReplacer gr,
+	                       GroovyScriptProcessor gsp
+	                       ) {
 		this.telesto = telesto;
 		doodleSetting = new BooleanSetting(pers, "telesto-support.doodle-support.enable", false);
 		this.master = master;
 		groovyMgr = mgr;
 		this.svr = svr;
 		this.gr = gr;
+		this.gsp = gsp;
 		// TODO: make refresh time a setting
 		this.dynamicDoodleRefreshLoop = new RefreshLoop<>("DynamicDoodleRefresh", this, DoodleProcessor::refreshDynamics, ignored -> 50L);
 	}
@@ -93,7 +86,12 @@ public class DoodleProcessor implements FilteredEventHandler {
 				dyn.setProcessor(new DynamicValueProcessor() {
 					@Override
 					public <X> X process(String input, Class<X> outputType) {
-						return applyReplacements(input, binding, outputType);
+						return gsp.runScript(input, binding, outputType);
+					}
+
+					@Override
+					public String processString(DynamicText input) {
+						return gsp.replaceInString(input.text(), binding, input.singleReplacements(), input.globalReplacements());
 					}
 				});
 				dynamicDoodles.add(dyn);
@@ -129,62 +127,4 @@ public class DoodleProcessor implements FilteredEventHandler {
 			dynamicDoodles.removeAll(toRemove);
 		}
 	}
-
-	private void setupShell() {
-		if (interpreter == null) {
-			synchronized (interpLock) {
-				if (interpreter == null) {
-					interpreter = groovyMgr.makeShell();
-				}
-			}
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	@Contract("null, _, _ -> null")
-	private @Nullable <X> X applyReplacements(@Nullable String input, Binding binding, Class<X> expectedType) {
-		if (input == null) {
-			return null;
-		}
-		if (!input.contains("{") && expectedType.equals(String.class)) {
-			return (X) input;
-		}
-		if (!expectedType.equals(String.class)) {
-			throw new IllegalArgumentException("Only strings are supported at this time, not " + expectedType);
-		}
-		synchronized (interpLock) {
-			return (X) replacer.matcher(input).replaceAll(m -> {
-				try {
-					Object rawEval;
-					try (SandboxScope ignored = groovyMgr.getSandbox().enter()) {
-						Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
-						script.setBinding(binding);
-						rawEval = script.run();
-					}
-					if (rawEval == null) {
-						return "null";
-//						return m.group(0);
-					}
-					if (expectedType.equals(String.class)) {
-						String firstPass = svr.singleReplacement(rawEval);
-						return gr.doReplacements(firstPass, false);
-					}
-					else {
-						log.error("Unsupported type: {}", expectedType);
-						return null;
-					}
-				}
-				catch (Throwable e) {
-					log.error("Eval error for input '{}'", input, e);
-					return "Error";
-				}
-			});
-		}
-	}
-
-	private Script compile(String input) {
-		setupShell();
-		return interpreter.parse(input);
-	}
-
 }

@@ -103,7 +103,7 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 		else if (String.class.isAssignableFrom(type)) {
 			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
 			if (field.isAnnotationPresent(WideTextField.class)) {
-				textField.setColumns(80);
+				textField.setColumns(50);
 			}
 			editorComponent = textField;
 		}

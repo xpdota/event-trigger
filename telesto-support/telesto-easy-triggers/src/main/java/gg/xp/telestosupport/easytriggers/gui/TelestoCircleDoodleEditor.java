@@ -6,7 +6,7 @@ import org.picocontainer.PicoContainer;
 
 import java.lang.reflect.Field;
 
-public class TelestoCircleDoodleEditor extends BaseTelestoActionEditor {
+public class TelestoCircleDoodleEditor extends BaseTelestoDoodleActionEditor {
 
 	public TelestoCircleDoodleEditor(TelestoCircleDoodleAction action, PicoContainer pico) {
 		super("Telesto Circle Doodle", action, pico);

@@ -6,14 +6,18 @@ import org.picocontainer.PicoContainer;
 
 import java.lang.reflect.Field;
 
-public class TelestoTextDoodleEditor extends BaseTelestoActionEditor {
+public class TelestoTextDoodleEditor extends BaseTelestoDoodleActionEditor {
 
 	public TelestoTextDoodleEditor(TelestoTextDoodleAction action, PicoContainer pico) {
 		super("Telesto Text Doodle", action, pico);
 		try {
 			add(new GenericFieldEditor(action, pico, new Field[]{
-					TelestoTextDoodleAction.class.getField("textSize"),
-					TelestoTextDoodleAction.class.getField("textScript")
+					TelestoTextDoodleAction.class.getField("textScript"),
+			}));
+			add(new GenericFieldEditor(action, pico, new Field[]{
+					TelestoTextDoodleAction.class.getField("textScript"),
+					TelestoTextDoodleAction.class.getField("singleReplacements"),
+					TelestoTextDoodleAction.class.getField("globalReplacements"),
 			}));
 		}
 		catch (NoSuchFieldException e) {
