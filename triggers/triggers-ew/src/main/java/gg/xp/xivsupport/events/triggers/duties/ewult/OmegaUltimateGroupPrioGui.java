@@ -121,41 +121,44 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			mc.gridx++;
 			mappingPanel.add(new JLabel("Group 2"), mc);
 
-			MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings = backend.getMarkSettings();
-
-			for (int row = 0; row < 4; row++) {
-				mc.gridy++;
-				mc.gridx = 0;
-				mappingPanel.add(new JLabel("#" + (row + 1)), mc);
-				AutomarkSetting g1setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row]);
-				mc.gridx = 1;
-				mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
-				AutomarkSetting g2setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row + 4]);
-				mc.gridx = 2;
-				mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
+			{
+				MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings = backend.getMarkSettings();
+				for (int row = 0; row < 4; row++) {
+					mc.gridy++;
+					mc.gridx = 0;
+					mappingPanel.add(new JLabel("#" + (row + 1)), mc);
+					AutomarkSetting g1setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row]);
+					mc.gridx = 1;
+					mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
+					AutomarkSetting g2setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row + 4]);
+					mc.gridx = 2;
+					mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
+				}
+				markSettings.addListener(mappingPanel::repaint);
 			}
-			markSettings.addListener(mappingPanel::repaint);
 
-			MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettings = backend.getPsMarkSettings();
-			for (int row = 0; row < 4; row++) {
-				mc.gridy++;
-				mc.gridx = 0;
-				String shape = switch (row) {
-					case 0 -> "Circle";
-					case 1 -> "Triangle";
-					case 2 -> "Square";
-					case 3 -> "X";
-					default -> "";
-				};
-				mappingPanel.add(new JLabel(shape), mc);
-				AutomarkSetting g1setting = psMarkSettings.getSettings().get(PsMarkerGroups.values()[row]);
-				mc.gridx = 1;
-				mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
-				AutomarkSetting g2setting = markSettings.getSettings().get(TwoGroupsOfFour.values()[row + 4]);
-				mc.gridx = 2;
-				mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
+			{
+				MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettings = backend.getPsMarkSettings();
+				for (int row = 0; row < 4; row++) {
+					mc.gridy++;
+					mc.gridx = 0;
+					String shape = switch (row) {
+						case 0 -> "Circle";
+						case 1 -> "Triangle";
+						case 2 -> "Square";
+						case 3 -> "X";
+						default -> "";
+					};
+					mappingPanel.add(new JLabel(shape), mc);
+					AutomarkSetting g1setting = psMarkSettings.getSettings().get(PsMarkerGroups.values()[row]);
+					mc.gridx = 1;
+					mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
+					AutomarkSetting g2setting = psMarkSettings.getSettings().get(PsMarkerGroups.values()[row + 4]);
+					mc.gridx = 2;
+					mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
+				}
+				psMarkSettings.addListener(mappingPanel::repaint);
 			}
-			psMarkSettings.addListener(mappingPanel::repaint);
 
 			inner.add(mappingPanel, c);
 			c.gridy++;
