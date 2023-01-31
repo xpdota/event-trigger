@@ -2,6 +2,7 @@ package gg.xp.telestosupport.easytriggers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.telestosupport.doodle.DoodleSpec;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
@@ -26,12 +27,13 @@ public abstract class BaseTelestoDoodleAction implements Action<Event>, HasMutab
 
 	private Class<?> eventType;
 
-	protected void finishSpec(DoodleSpec spec) {
+	protected void finishSpec(DoodleSpec spec, BaseEvent triggerEvent) {
 		if (name != null && !name.isBlank()) {
 			spec.name = name;
 		}
 		spec.color = color;
 		spec.expiryTime = Duration.ofMillis(duration);
+		spec.timeBasis = triggerEvent;
 	}
 
 	@Override

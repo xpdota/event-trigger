@@ -8,31 +8,30 @@ import gg.xp.reevent.events.Event;
 import gg.xp.telestosupport.doodle.CircleDoodleSpec;
 import gg.xp.telestosupport.doodle.CreateDoodleRequest;
 import gg.xp.telestosupport.doodle.DoodleLocation;
+import gg.xp.telestosupport.doodle.DynamicTextDoodleSpec;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovySubScriptHelper;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
+import gg.xp.xivsupport.events.triggers.easytriggers.gui.WideTextField;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.groovy.GroovyManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class TelestoCircleDoodleAction extends BaseTelestoDoodleAction {
-
-	private static final Logger log = LoggerFactory.getLogger(TelestoCircleDoodleAction.class);
+public class TelestoTextDoodleAction extends BaseTelestoDoodleAction {
 
 	@JsonProperty("location")
 	public TelestoLocation location;
-	@JsonProperty("radius")
-	@Description("Radius")
-	public double radius = 10.0;
-	@JsonProperty("filled")
-	@Description("Filled")
-	public boolean filled;
+	@JsonProperty("size")
+	@Description("Font Size")
+	public int textSize = 20;
+	@JsonProperty("textScript")
+	@Description("Text Script")
+	@WideTextField
+	public String textScript = "";
 
 	@JsonIgnore
 	private final XivState state;
 
-	public TelestoCircleDoodleAction(@JacksonInject XivState state, @JacksonInject GroovyManager groovyManager) {
+	public TelestoTextDoodleAction(@JacksonInject XivState state, @JacksonInject GroovyManager groovyManager) {
 		this.state = state;
 		location = new TelestoLocation();
 		location.customExpression = new GroovySubScriptHelper(groovyManager);
@@ -43,9 +42,9 @@ public class TelestoCircleDoodleAction extends BaseTelestoDoodleAction {
 		if (location == null) {
 			return;
 		}
-		DoodleLocation circleLocation = location.toDoodleLocation(event, context, state);
-		if (circleLocation != null) {
-			CircleDoodleSpec spec = new CircleDoodleSpec(circleLocation, radius, filled);
+		DoodleLocation location = this.location.toDoodleLocation(event, context, state);
+		if (location != null) {
+			DynamicTextDoodleSpec spec = new DynamicTextDoodleSpec(location, textSize, textScript);
 			finishSpec(spec, (BaseEvent) event);
 			context.accept(new CreateDoodleRequest(spec));
 		}
@@ -53,6 +52,6 @@ public class TelestoCircleDoodleAction extends BaseTelestoDoodleAction {
 
 	@Override
 	public String dynamicLabel() {
-		return "Telesto Circle Doodle";
+		return "Text Doodle (%s)".formatted(textScript);
 	}
 }

@@ -1,5 +1,6 @@
 package gg.xp.telestosupport;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
@@ -23,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -171,21 +173,39 @@ public class TelestoMain implements FilteredEventHandler {
 		}
 	}
 
+	public @Nullable HttpResponse<String> sendMessageDirectly(TelestoOutgoingMessage msg) {
+		if (!enabled()) {
+			return null;
+		}
+		String body;
+		try {
+			body = mapper.writeValueAsString(msg.getJson());
+			log.trace("Sending Telesto message: {}", body);
+			HttpResponse<String> response = http.send(
+					HttpRequest
+							.newBuilder(uriSetting.get())
+							.POST(
+									HttpRequest.BodyPublishers
+											.ofString(
+													body)).build(),
+					HttpResponse.BodyHandlers.ofString());
+			return response;
+		}
+		catch (IOException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+
+	}
+
 	@HandleEvents
 	public void handleMessage(EventContext context, TelestoOutgoingMessage msg) {
 		Runnable task = () -> {
 			try {
-				String body = mapper.writeValueAsString(msg.getJson());
-				log.trace("Sending Telesto message: {}", body);
-				HttpResponse<String> response = http.send(
-						HttpRequest
-								.newBuilder(uriSetting.get())
-								.POST(
-										HttpRequest.BodyPublishers
-												.ofString(
-														body)).build(),
-						HttpResponse.BodyHandlers.ofString());
 				log.trace("Telesto message done");
+				HttpResponse<String> response = sendMessageDirectly(msg);
+				if (response == null) {
+					return;
+				}
 				if (response.statusCode() == 200) {
 					TelestoResponse event = new TelestoResponse(mapper.readValue(response.body(), new TypeReference<>() {
 					}));
@@ -247,8 +267,12 @@ public class TelestoMain implements FilteredEventHandler {
 		return enablePartyList;
 	}
 
+	private boolean enabled() {
+		return pls.getLogSource() == KnownLogSource.WEBSOCKET_LIVE;
+	}
+
 	@Override
 	public boolean enabled(EventContext context) {
-		return pls.getLogSource() == KnownLogSource.WEBSOCKET_LIVE;
+		return enabled();
 	}
 }

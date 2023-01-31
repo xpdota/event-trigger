@@ -3,6 +3,7 @@ package gg.xp.telestosupport.easytriggers;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.telestosupport.doodle.CreateDoodleRequest;
 import gg.xp.telestosupport.doodle.DoodleLocation;
@@ -46,7 +47,7 @@ public class TelestoLineDoodleAction extends BaseTelestoDoodleAction {
 		DoodleLocation endLocation = end.toDoodleLocation(event, context, state);
 		if (start != null && end != null) {
 			LineDoodleSpec spec = new LineDoodleSpec(startLocation, endLocation, thickness);
-			finishSpec(spec);
+			finishSpec(spec, (BaseEvent) event);
 			context.accept(new CreateDoodleRequest(spec));
 		}
 	}

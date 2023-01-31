@@ -5,9 +5,9 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 
 public class TetherEntityTypeFilter implements SimpleCondition<TetherEvent> {
 
-	@Description("One Target Is: ")
+	@Description("One Target Is")
 	public EntityType firstType = EntityType.ANY;
-	@Description("Other Target Is: ")
+	@Description("Other Target Is")
 	public EntityType secondType = EntityType.ANY;
 
 	@Override

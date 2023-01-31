@@ -4,6 +4,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.telestosupport.easytriggers.gui.TelestoCircleDoodleEditor;
 import gg.xp.telestosupport.easytriggers.gui.TelestoLineDoodleEditor;
+import gg.xp.telestosupport.easytriggers.gui.TelestoTextDoodleEditor;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
@@ -34,6 +35,14 @@ public class TelestoEasyTriggersAddons {
 				"Telesto Line Doodle",
 				() -> new TelestoLineDoodleAction(state, mgr),
 				(action, trigger) -> new TelestoLineDoodleEditor(action, container),
+				doodleAddonsSetting::get
+		));
+		easyTriggers.registerActionType(new ActionDescription<>(
+				TelestoTextDoodleAction.class,
+				Event.class,
+				"Telesto Text Doodle",
+				() -> new TelestoTextDoodleAction(state, mgr),
+				(action, trigger) -> new TelestoTextDoodleEditor(action, container),
 				doodleAddonsSetting::get
 		));
 	}

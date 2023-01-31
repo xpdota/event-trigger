@@ -4,6 +4,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EditorIgnore;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdPickerFactory;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdType;
+import gg.xp.xivsupport.events.triggers.easytriggers.gui.WideTextField;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.AcceptsSaveCallback;
 import gg.xp.xivsupport.gui.ColorPickerGui;
 import gg.xp.xivsupport.gui.ResettableField;
@@ -100,7 +101,11 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 			editorComponent = new TextFieldWithValidation<>(Double::parseDouble, l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
 		}
 		else if (String.class.isAssignableFrom(type)) {
-			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
+			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
+			if (field.isAnnotationPresent(WideTextField.class)) {
+				textField.setColumns(80);
+			}
+			editorComponent = textField;
 		}
 		else if (type.equals(Pattern.class)) {
 			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), () -> valueToString(getField(field).toString()));
