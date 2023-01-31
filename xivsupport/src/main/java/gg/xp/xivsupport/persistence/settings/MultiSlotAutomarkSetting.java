@@ -10,9 +10,11 @@ import java.util.Map;
 
 public class MultiSlotAutomarkSetting<X extends Enum<X>> extends ObservableSetting {
 
+	private final BooleanSetting touched;
 	private final Map<X, AutomarkSetting> settings;
 
 	public MultiSlotAutomarkSetting(PersistenceProvider pers, String settingKeyBase, Class<X> enumCls, Map<X, MarkerSign> defaults) {
+		touched = new BooleanSetting(pers, settingKeyBase, false);
 		settings = new EnumMap<>(enumCls);
 		for (X member : enumCls.getEnumConstants()) {
 			MarkerSign dflt = defaults.get(member);
@@ -26,6 +28,11 @@ public class MultiSlotAutomarkSetting<X extends Enum<X>> extends ObservableSetti
 			}
 			AutomarkSetting setting = new AutomarkSetting(pers, settingKeyBase + '.' + member.name() + '.', enableByDefault, dflt);
 			setting.addListener(this::notifyListeners);
+			setting.addAndRunListener(() -> {
+				if (setting.isSet()) {
+					touched.set(true);
+				}
+			});
 			settings.put(member, setting);
 		}
 	}
@@ -41,5 +48,18 @@ public class MultiSlotAutomarkSetting<X extends Enum<X>> extends ObservableSetti
 			return null;
 		}
 		return setting.getEffectiveMarker();
+	}
+
+	public void copyDefaultsFrom(MultiSlotAutomarkSetting<X> other) {
+		if (this.touched.get()) {
+			return;
+		}
+		other.getSettings().forEach((k, v) -> {
+			EnumSetting<MarkerSign> thisSetting = this.getSettings().get(k).getWhichMark();
+			EnumSetting<MarkerSign> thatSetting = v.getWhichMark();
+			if (thatSetting.isSet() && !thisSetting.isSet()) {
+				thisSetting.set(thatSetting.get());
+			}
+		});
 	}
 }

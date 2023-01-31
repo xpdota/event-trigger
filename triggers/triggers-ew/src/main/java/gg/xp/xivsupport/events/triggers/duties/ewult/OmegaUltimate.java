@@ -207,6 +207,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final JobSortSetting groupPrioJobSort;
 	private final MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings;
 	private final MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettings;
+	private final MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettingsFar;
 	private final BooleanSetting looperAM;
 	private final BooleanSetting psAmEnable;
 	private final BooleanSetting pantoAmEnable;
@@ -237,6 +238,17 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				PsMarkerGroups.GROUP2_SQUARE, MarkerSign.BIND3,
 				PsMarkerGroups.GROUP2_X, MarkerSign.CROSS
 		));
+		psMarkSettingsFar = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.ps-far-am-slot-settings", PsMarkerGroups.class, Map.of(
+				PsMarkerGroups.GROUP1_CIRCLE, MarkerSign.ATTACK1,
+				PsMarkerGroups.GROUP1_TRIANGLE, MarkerSign.ATTACK2,
+				PsMarkerGroups.GROUP1_SQUARE, MarkerSign.ATTACK3,
+				PsMarkerGroups.GROUP1_X, MarkerSign.ATTACK4,
+				PsMarkerGroups.GROUP2_CIRCLE, MarkerSign.BIND1,
+				PsMarkerGroups.GROUP2_TRIANGLE, MarkerSign.BIND2,
+				PsMarkerGroups.GROUP2_SQUARE, MarkerSign.BIND3,
+				PsMarkerGroups.GROUP2_X, MarkerSign.CROSS
+		));
+		psMarkSettingsFar.copyDefaultsFrom(psMarkSettings);
 		looperAM = new BooleanSetting(pers, settingKeyBase + "looper-am.enabled", false);
 		pantoAmEnable = new BooleanSetting(pers, settingKeyBase + "panto-am.enabled", false);
 		sniperAmEnable = new BooleanSetting(pers, settingKeyBase + "sniper-am.enabled", false);
@@ -638,8 +650,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 							}
 						});
 				log.info("Headmarkers map: {}", headmarkers);
+				BuffApplied status = getBuffs().getBuffs().stream().filter(ba -> ba.buffIdMatches(0xD63, 0xD64)).findFirst().orElse(null);
+				boolean mid = status.buffIdMatches(0xD63);
 				headmarkers.forEach((assignment, player) -> {
-					MarkerSign marker = getPsMarkSettings().getMarkerFor(assignment);
+					MarkerSign marker = (mid ? getPsMarkSettings() : getPsMarkSettingsFarGlitch()).getMarkerFor(assignment);
 					log.info("PS Marker: {} on {}", marker, player);
 					if (marker != null) {
 						s.accept(new SpecificAutoMarkRequest(player, marker));
@@ -895,6 +909,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public MultiSlotAutomarkSetting<PsMarkerGroups> getPsMarkSettings() {
 		return psMarkSettings;
+	}
+
+	public MultiSlotAutomarkSetting<PsMarkerGroups> getPsMarkSettingsFarGlitch() {
+		return psMarkSettingsFar;
 	}
 
 	public BooleanSetting getLooperAM() {

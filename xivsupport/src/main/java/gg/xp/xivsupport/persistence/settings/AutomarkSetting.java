@@ -33,4 +33,8 @@ public class AutomarkSetting extends ObservableSetting {
 			return null;
 		}
 	}
+
+	public boolean isSet() {
+		return enabled.isSet() || whichMark.isSet();
+	}
 }
