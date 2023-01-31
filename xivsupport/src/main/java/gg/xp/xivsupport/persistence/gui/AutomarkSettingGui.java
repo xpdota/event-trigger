@@ -28,10 +28,11 @@ public class AutomarkSettingGui {
 
 	public JPanel getCombined() {
 		JPanel out = new JPanel();
-		out.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-		out.add(enabler);
-		out.add(Box.createHorizontalStrut(5));
-		out.add(picker);
+		out.setLayout(new BorderLayout());
+//		out.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		out.add(enabler, BorderLayout.WEST);
+//		out.add(Box.createHorizontalStrut(5));
+		out.add(picker, BorderLayout.CENTER);
 		return out;
 	}
 

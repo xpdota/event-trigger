@@ -110,10 +110,10 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		c.gridy++;
 
 		{
-			TitleBorderPanel mappingPanel = new TitleBorderPanel("Marker Mapping");
+			TitleBorderPanel mappingPanel = new TitleBorderPanel("Marker Mapping (X in line)");
 			mappingPanel.setLayout(new GridBagLayout());
 			GridBagConstraints mc = GuiUtil.defaultGbc();
-			mc.ipadx = 15;
+			mc.ipadx = 10;
 			mc.gridx = 1;
 			mc.gridy = 0;
 			JLabel g1l = new JLabel("Group 1");
@@ -136,9 +136,26 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 				}
 				markSettings.addListener(mappingPanel::repaint);
 			}
+			inner.add(mappingPanel, c);
+		}
 
+		{
+			TitleBorderPanel mappingPanel = new TitleBorderPanel("PS Markers");
+			mappingPanel.setLayout(new GridBagLayout());
+			GridBagConstraints mc = GuiUtil.defaultGbc();
+			mc.ipadx = 10;
+			mc.gridx = 1;
+			mc.gridy = 0;
+			mappingPanel.add(new JLabel("Group 1, Mid"), mc);
+			mc.gridx++;
+			mappingPanel.add(new JLabel("Group 2, Mid"), mc);
+			mc.gridx++;
+			mappingPanel.add(new JLabel("Group 1, Far"), mc);
+			mc.gridx++;
+			mappingPanel.add(new JLabel("Group 2, Far"), mc);
 			{
 				MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettings = backend.getPsMarkSettings();
+				MultiSlotAutomarkSetting<PsMarkerGroups> psMarkFarSettings = backend.getPsMarkSettingsFarGlitch();
 				for (int row = 0; row < 4; row++) {
 					mc.gridy++;
 					mc.gridx = 0;
@@ -151,17 +168,25 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 					};
 					mappingPanel.add(new JLabel(shape), mc);
 					AutomarkSetting g1setting = psMarkSettings.getSettings().get(PsMarkerGroups.values()[row]);
-					mc.gridx = 1;
+					mc.gridx++;
 					mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
 					AutomarkSetting g2setting = psMarkSettings.getSettings().get(PsMarkerGroups.values()[row + 4]);
-					mc.gridx = 2;
+					mc.gridx++;
 					mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
+					AutomarkSetting g1farSetting = psMarkFarSettings.getSettings().get(PsMarkerGroups.values()[row]);
+					mc.gridx++;
+					mappingPanel.add(new AutomarkSettingGui(g1farSetting, null).getCombined(), mc);
+					AutomarkSetting g2farSetting = psMarkFarSettings.getSettings().get(PsMarkerGroups.values()[row + 4]);
+					mc.gridx++;
+					mappingPanel.add(new AutomarkSettingGui(g2farSetting, null).getCombined(), mc);
 				}
 				psMarkSettings.addListener(mappingPanel::repaint);
 			}
-
-			inner.add(mappingPanel, c);
+//			c.gridx++;
 			c.gridy++;
+			inner.add(mappingPanel, c);
+//			c.gridx = 0;
+
 		}
 
 
