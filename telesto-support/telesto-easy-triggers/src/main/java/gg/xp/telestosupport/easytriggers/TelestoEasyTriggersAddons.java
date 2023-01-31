@@ -3,12 +3,14 @@ package gg.xp.telestosupport.easytriggers;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.telestosupport.easytriggers.gui.TelestoCircleDoodleEditor;
+import gg.xp.telestosupport.easytriggers.gui.TelestoCommandEditor;
 import gg.xp.telestosupport.easytriggers.gui.TelestoLineDoodleEditor;
 import gg.xp.telestosupport.easytriggers.gui.TelestoTextDoodleEditor;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.groovy.GroovyManager;
+import gg.xp.xivsupport.groovy.GroovyScriptProcessor;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import org.picocontainer.PicoContainer;
@@ -44,6 +46,14 @@ public class TelestoEasyTriggersAddons {
 				() -> new TelestoTextDoodleAction(state, mgr),
 				(action, trigger) -> new TelestoTextDoodleEditor(action, container),
 				doodleAddonsSetting::get
+		));
+		easyTriggers.registerActionType(new ActionDescription<>(
+				TelestoCommandAction.class,
+				Event.class,
+				"Telesto In-Game Command",
+				() -> new TelestoCommandAction(container.getComponent(GroovyScriptProcessor.class), mgr),
+				(action, trigger) -> new TelestoCommandEditor(action, container),
+				() -> true
 		));
 	}
 

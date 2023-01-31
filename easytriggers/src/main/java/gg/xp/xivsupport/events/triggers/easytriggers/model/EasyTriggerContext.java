@@ -4,6 +4,7 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
+import groovy.lang.Binding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +55,7 @@ public class EasyTriggerContext {
 			log.info("Action: {}", action);
 			setAcceptHook(s::accept);
 			setEnqueueHook(s::enqueue);
+			addVariable("event", e1);
 			addVariable("s", s);
 			if (context != null) {
 				addVariable("context", context);
@@ -125,5 +127,28 @@ public class EasyTriggerContext {
 
 	public void setEnqueueHook(Consumer<Event> enqueue) {
 		this.enqueueHook = enqueue;
+	}
+
+	public Binding makeBinding(Binding originalBinding) {
+		return new Binding(originalBinding.getVariables()) {
+			@Override
+			public Object getVariable(String name) {
+				Object extra = getExtraVariables().get(name);
+				if (extra != null) {
+					return extra;
+				}
+				return super.getVariable(name);
+			}
+
+			@Override
+			public void setVariable(String name, Object value) {
+				addVariable(name, value);
+			}
+
+			@Override
+			public boolean hasVariable(String name) {
+				return getExtraVariables().containsKey(name) || super.hasVariable(name);
+			}
+		};
 	}
 }

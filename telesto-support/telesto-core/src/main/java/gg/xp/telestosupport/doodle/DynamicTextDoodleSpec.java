@@ -14,18 +14,17 @@ public class DynamicTextDoodleSpec extends DoodleSpec implements DynamicDoodle {
 	@JsonProperty("size")
 	public final int size;
 	@JsonIgnore
-	public final String textScript;
+	public final DynamicText textScript;
 	@JsonProperty("text")
 	public transient String text;
 	@JsonIgnore
 	private transient DynamicValueProcessor processor;
 
-	public DynamicTextDoodleSpec(DoodleLocation position, int size, String textScript) {
+	public DynamicTextDoodleSpec(DoodleLocation position, int size, DynamicText textScript) {
 		this.position = position;
 		this.size = size;
 		this.textScript = textScript;
 	}
-
 
 
 	@JsonProperty("text")
@@ -47,7 +46,7 @@ public class DynamicTextDoodleSpec extends DoodleSpec implements DynamicDoodle {
 	@Override
 	@JsonIgnore
 	public boolean reprocess() {
-		String newText = processor.process(textScript, String.class);
+		String newText = processor.processString(textScript);
 		boolean dirty = !Objects.equals(newText, text);
 		text = newText;
 		return dirty;

@@ -8,6 +8,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.telestosupport.doodle.CircleDoodleSpec;
 import gg.xp.telestosupport.doodle.CreateDoodleRequest;
 import gg.xp.telestosupport.doodle.DoodleLocation;
+import gg.xp.telestosupport.doodle.DynamicText;
 import gg.xp.telestosupport.doodle.DynamicTextDoodleSpec;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovySubScriptHelper;
@@ -31,6 +32,13 @@ public class TelestoTextDoodleAction extends BaseTelestoDoodleAction {
 	@JsonIgnore
 	private final XivState state;
 
+	@Description("Single Replacements")
+	@JsonProperty("replaceSingle")
+	public boolean singleReplacements = true;
+	@Description("Global Replacements")
+	@JsonProperty("replaceGlobal")
+	public boolean globalReplacements;
+
 	public TelestoTextDoodleAction(@JacksonInject XivState state, @JacksonInject GroovyManager groovyManager) {
 		this.state = state;
 		location = new TelestoLocation();
@@ -44,7 +52,7 @@ public class TelestoTextDoodleAction extends BaseTelestoDoodleAction {
 		}
 		DoodleLocation location = this.location.toDoodleLocation(event, context, state);
 		if (location != null) {
-			DynamicTextDoodleSpec spec = new DynamicTextDoodleSpec(location, textSize, textScript);
+			DynamicTextDoodleSpec spec = new DynamicTextDoodleSpec(location, textSize, new DynamicText(textScript, singleReplacements, globalReplacements));
 			finishSpec(spec, (BaseEvent) event);
 			context.accept(new CreateDoodleRequest(spec));
 		}
