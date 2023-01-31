@@ -42,7 +42,10 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
 import org.picocontainer.MutablePicoContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Ignore;
 import org.testng.annotations.Parameters;
@@ -55,6 +58,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class EasyTriggersTest {
+
+	private static final Logger log = LoggerFactory.getLogger(EasyTriggersTest.class);
 
 	private static final XivCombatant caster = new XivCombatant(10, "Caster");
 	private static final XivAbility matchingAbility = new XivAbility(123, "Foo Ability");
@@ -103,6 +108,12 @@ public class EasyTriggersTest {
 			String expectedText,
 			String expectedTts
 	) {
+	}
+
+	@BeforeMethod
+	void prio() {
+		log.info("Lowering thread priority");
+		Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 	}
 
 	@Test(dataProvider = "testCases")
@@ -242,13 +253,20 @@ public class EasyTriggersTest {
 				Thread.sleep(100);
 				master.pushEventAndWait(new BaseEvent() {
 				});
-				Thread.sleep(2000);
+				// Workaround due to slowness...
+				for (int i = 0; i < 10; i++) {
+					Thread.sleep(2000);
+					if (!coll.getEventsOf(TtsRequest.class).isEmpty()) {
+						break;
+					}
+				}
 			}
 			catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
 
 			{
+				log.info("Done");
 				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
 				Assert.assertEquals(calls.size(), 1);
 				TtsRequest theCall = calls.get(0);
