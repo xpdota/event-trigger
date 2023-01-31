@@ -59,7 +59,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	// Looper
 	private static final Duration looperOffset = Duration.ofMillis(-2650);
-	private final ModifiableCallout<BuffApplied> firstInLineTower = ModifiableCallout.<BuffApplied>durationBasedCallWithOffset("Loop First: Start/Tower", "One with {buddy}, Take Tower", looperOffset).statusIcon(0xBBC);
+	private final ModifiableCallout<?> firstInLineLoop = new ModifiableCallout<>("Loop First: Start", "One with {buddy}").statusIcon(0xBBC);
+	private final ModifiableCallout<BuffApplied> firstInLineTower = ModifiableCallout.<BuffApplied>durationBasedCallWithOffset("Loop First: Tower", "Take Tower", looperOffset).statusIcon(0xBBC);
 	private final ModifiableCallout<?> firstInLineTether = new ModifiableCallout<>("Loop First: Tether", "Take Tether").statusIcon(0xBBC);
 	private final ModifiableCallout<?> firstNotYou = new ModifiableCallout<>("Loop First: Not You", "1");
 
@@ -68,7 +69,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<?> secondInLineTether = new ModifiableCallout<>("Loop Second: Tether", "Take tether").statusIcon(0xBBD);
 	private final ModifiableCallout<?> secondNotYou = new ModifiableCallout<>("Loop Second: Not You", "2");
 
-	private final ModifiableCallout<?> thirdInLineTether = new ModifiableCallout<>("Loop Third: Start/Tether", "Three with {buddy}, Take Tether").statusIcon(0xBBE);
+	private final ModifiableCallout<?> thirdInLineLoop = new ModifiableCallout<>("Loop Third: Start/Tether", "Three with {buddy}, First Tethers").statusIcon(0xBBE);
+	private final ModifiableCallout<?> thirdInLineTether = new ModifiableCallout<>("Loop Third: Start/Tether", "Take Tether").statusIcon(0xBBE);
 	private final ModifiableCallout<BuffApplied> thirdInLineTower = ModifiableCallout.<BuffApplied>durationBasedCallWithOffset("Loop Third: Tower", "Take Tower", looperOffset).statusIcon(0xBBE);
 	private final ModifiableCallout<?> thirdNotYou = new ModifiableCallout<>("Loop Third: Not You", "3");
 
@@ -397,9 +399,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				XivPlayerCharacter buddy = e1.getAssignments().get(myGroup.getCounterpart());
 				Map<String, Object> params = Map.of("buddy", buddy == null ? "error" : buddy);
 				switch (num) {
-					case FIRST -> s.updateCall(firstInLineTower.getModified(looperDebuff, params));
+					case FIRST -> s.updateCall(firstInLineLoop.getModified(params));
 					case SECOND -> s.updateCall(secondInLineLoop.getModified(params));
-					case THIRD -> s.updateCall(thirdInLineTether.getModified(params));
+					case THIRD -> s.updateCall(thirdInLineLoop.getModified(params));
 					case FOURTH -> s.updateCall(fourthInLineLoop.getModified(params));
 					case UNKNOWN -> {
 						log.error("Unknown number!");
@@ -408,8 +410,17 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 				log.info("Loop start: player has {}, buddy {}", num, buddy.getName());
 				s.waitMs(3000);
-				if (num != NumberInLine.FIRST) {
-					s.accept(firstNotYou.getModified(params));
+				if (num == NumberInLine.THIRD) {
+					s.updateCall(thirdInLineTether.getModified(params));
+				}
+				else {
+					s.waitEvent(TetherEvent.class, te -> true);
+					if (num == NumberInLine.FIRST) {
+						s.updateCall(firstInLineTower.getModified(looperDebuff, params));
+					}
+					else {
+						s.accept(firstNotYou.getModified(params));
+					}
 				}
 
 				//First tower goes off
