@@ -66,7 +66,7 @@ public class MapTab extends JPanel {
 						})
 				.addMainColumn(StandardColumns.entityIdColumn)
 				.addMainColumn(StandardColumns.nameJobColumn)
-				.addMainColumn(StandardColumns.statusEffectsColumn(mdc::buffsOnCombatant))
+				.addMainColumn(StandardColumns.sortedStatusEffectsColumn(mdc::buffsOnCombatant))
 //				.addMainColumn(StandardColumns.parentNameJobColumn)
 				.addMainColumn(StandardColumns.combatantTypeColumn)
 				// HP comes from the Combatant object directly, no need to do any funny business here

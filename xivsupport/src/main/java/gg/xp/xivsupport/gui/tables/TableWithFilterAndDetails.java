@@ -111,7 +111,14 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		});
 
 		// Top panel
-		JPanel topBasicPanel = new JPanel();
+		JPanel topBasicPanel = new JPanel() {
+			@Override
+			public void setBounds(int x, int y, int width, int height) {
+				super.setBounds(x, y, width, height);
+				log.info("Table top panel setBounds");
+				SwingUtilities.invokeLater(this::revalidate);
+			}
+		};
 		List<Component> extraPanels = new ArrayList<>();
 		topBasicPanel.setLayout(new WrapLayout(WrapLayout.LEFT, 7, 7));
 

@@ -163,4 +163,8 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 		}
 		return preAppAbility.getEffectiveHappenedAt();
 	}
+
+	public BuffApplied withNewCurrentTime(Instant time) {
+		return null;
+	}
 }

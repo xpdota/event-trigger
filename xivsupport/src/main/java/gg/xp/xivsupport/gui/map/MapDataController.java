@@ -343,12 +343,16 @@ public class MapDataController {
 		if (live) {
 			return realStatuses.statusesOnTarget(cbt);
 		}
+		Instant time = getCurrent().time;
 		List<BuffApplied> buffs = getCurrent().statuses.get(cbt.getId());
 		if (buffs == null || buffs.isEmpty()) {
 			return Collections.emptyList();
 		}
 		else {
-			return Collections.unmodifiableList(buffs);
+			if (time == null) {
+				return Collections.unmodifiableList(buffs);
+			}
+			return buffs.stream().map(ba -> ba.withNewCurrentTime(time)).toList();
 		}
 //		return realStatuses.statusesOnTarget(cbt);
 	}
@@ -365,16 +369,16 @@ public class MapDataController {
 		if (live) {
 			return realAcr.getCastFor(cbt);
 		}
-		Instant timeBasis = getCurrent().time;
+		Instant time = getCurrent().time;
 		CastTracker tracker = getCurrent().casts.get(cbt.getId());
 		if (tracker == null) {
 			return null;
 		}
-		else if (timeBasis == null) {
+		else if (time == null) {
 			return tracker;
 		}
 		else {
-			return tracker.withNewCurrentTime(timeBasis);
+			return tracker.withNewCurrentTime(time);
 		}
 //		return realAcr.getCastFor(cbt);
 	}
