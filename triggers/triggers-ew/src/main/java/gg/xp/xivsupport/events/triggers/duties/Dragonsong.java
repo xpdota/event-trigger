@@ -28,8 +28,6 @@ import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.MultiSlotAutoMarkHandler;
-import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkHandler;
-import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.gui.tables.renderers.RefreshingHpBar;
@@ -242,7 +240,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 						DragonsongWrothAssignments.Spread_3, MarkerSign.ATTACK3,
 						DragonsongWrothAssignments.Spread_4, MarkerSign.ATTACK4,
 						DragonsongWrothAssignments.Stack_Buff_1, MarkerSign.BIND1,
-						DragonsongWrothAssignments.Stack_Buff_2, legacyAltMode ? MarkerSign.IGNORE1 : MarkerSign.BIND2 ,
+						DragonsongWrothAssignments.Stack_Buff_2, legacyAltMode ? MarkerSign.IGNORE1 : MarkerSign.BIND2,
 						DragonsongWrothAssignments.Nothing_1, legacyAltMode ? MarkerSign.BIND2 : MarkerSign.IGNORE1,
 						DragonsongWrothAssignments.Nothing_2, MarkerSign.IGNORE2
 				));
