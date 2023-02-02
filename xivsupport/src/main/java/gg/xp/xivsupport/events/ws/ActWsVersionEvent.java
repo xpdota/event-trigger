@@ -15,6 +15,10 @@ public class ActWsVersionEvent extends BaseEvent implements HasPrimaryValue {
 		this.version = version;
 	}
 
+	public String getVersion() {
+		return version;
+	}
+
 	@Override
 	public String getPrimaryValue() {
 		return version;

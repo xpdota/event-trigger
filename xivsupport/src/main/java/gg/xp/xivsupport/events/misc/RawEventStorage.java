@@ -106,7 +106,11 @@ public class RawEventStorage {
 				list.add(event);
 			}
 		});
+		// TODO: make it so this can't be zero
 		int maxEvents = maxEventsStored.get();
+		if (maxEvents == 0) {
+			maxEvents = 50_000;
+		}
 		if (events.size() > maxEvents) {
 			log.info("Pruning events");
 			synchronized (eventsPruneLock) {

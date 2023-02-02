@@ -113,7 +113,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@PlayerStatusCallout(0xDAB)
 	private final ModifiableCallout<BuffApplied> packetFilterM = new ModifiableCallout<BuffApplied>("Packet Filter M", "Attack F").autoIcon();
 
-	private final ModifiableCallout<AbilityCastStart> checkMfPattern = new ModifiableCallout<>("Check M/F Sword/Shield");
+	private final ModifiableCallout<AbilityCastStart> checkMfPattern = new ModifiableCallout<AbilityCastStart>("Check M/F Sword/Shield")
+			.extendedDescription("If the callouts below do not work, make sure your OverlayPlugin is at least version 0.19.14.");
 
 	private final ModifiableCallout<?> partySynergyBothIn = new ModifiableCallout<>("Party Synergy: Both In", "On Male")
 			.extendedDescription("Shield and Skates: Stand on Male");
@@ -135,8 +136,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> remoteGlitchX = ModifiableCallout.durationBasedCall("Remote Glitch with X Buddy", "X, far from {tetherBuddy}");
 
 	private final ModifiableCallout<AbilityCastStart> eyeLaserStart = ModifiableCallout.durationBasedCall("Eye Laser Starts Casting", "Eye Laser");
-	private final ModifiableCallout<AbilityUsedEvent> eyeLaserDone = new ModifiableCallout<>("Eye Laser Done Casting", "Knockback Stacks");
-	private final ModifiableCallout<HeadMarkerEvent> glitchStacks = new ModifiableCallout<>("Glitch Stacks", "Stacks on {stackPlayers[0]} and {stackPlayers[1]}");
+	private final ModifiableCallout<AbilityUsedEvent> eyeLaserDone = new ModifiableCallout<AbilityUsedEvent>("Eye Laser Done Casting", "Knockback Stacks").disabledByDefault();
+	// TODO icon
+	private final ModifiableCallout<HeadMarkerEvent> glitchStacksMid = new ModifiableCallout<HeadMarkerEvent>("Glitch Stacks Mid", "Close Stacks on {stackPlayers[0]} and {stackPlayers[1]}", 10_000).statusIcon(0xD63);
+	// TODO icon
+	private final ModifiableCallout<HeadMarkerEvent> glitchStacksFar = new ModifiableCallout<HeadMarkerEvent>("Glitch Stacks Far", "Far Stacks on {stackPlayers[0]} and {stackPlayers[1]}", 10_000).statusIcon(0xD64);
 
 	private final ModifiableCallout<AbilityCastStart> limitlessSynergy = new ModifiableCallout<>("Limitless Synergy", "Limitless Synergy");
 
@@ -716,7 +720,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						.toList();
 				params = new HashMap<>(params);
 				params.put("stackPlayers", stackPlayers);
-				s.updateCall(glitchStacks.getModified(stackMarkers.get(0), params));
+				// TODO
+				s.updateCall((mid ? glitchStacksMid : glitchStacksFar).getModified(stackMarkers.get(0), params));
 			});
 
 	@SuppressWarnings("ConstantValue") // clarity
