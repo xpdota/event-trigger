@@ -96,6 +96,15 @@ public final class StandardColumns {
 		});
 	}
 
+	public static CustomColumn<XivCombatant> sortedStatusEffectsColumn(Function<XivEntity, List<BuffApplied>> buffGetter) {
+		return new CustomColumn<>("Statuses", t -> {
+			return buffGetter.apply(t).stream().sorted(StatusEffectRepository.standardPartyFrameSort).toList();
+		}, c -> {
+			c.setCellRenderer(new StatusEffectListRenderer());
+			c.setPreferredWidth(300);
+		});
+	}
+
 	public CustomColumn<XivCombatant> statusEffectsColumn() {
 		return statusEffectsColumn(statuses::statusesOnTarget);
 	}
