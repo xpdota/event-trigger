@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.groovy;
 import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import gg.xp.xivsupport.groovy.GroovyScriptResult;
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.components.LateAdjustJSplitPane;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -10,6 +11,8 @@ import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.persistence.gui.BoundCheckbox;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +27,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -41,6 +45,7 @@ public class GroovyPanel extends JPanel {
 
 	private final JTextArea entryArea;
 	private final JScrollPane resultScroll;
+	private final JScrollPane resultPropertiesScroll;
 	private final GroovyScriptManager mgr;
 	private final GroovyTab tab;
 	private final GroovyScriptHolder script;
@@ -136,17 +141,23 @@ public class GroovyPanel extends JPanel {
 		}
 		{
 			this.resultScroll = new JScrollPane();
+			this.resultPropertiesScroll = new JScrollPane();
+			JSplitPane jsp = new LateAdjustJSplitPane(JSplitPane.VERTICAL_SPLIT, resultScroll, resultPropertiesScroll);
 			bottom = new JPanel(new BorderLayout());
 //			bottom.setPreferredSize(bottom.getMaximumSize());
-			bottom.add(resultScroll, BorderLayout.CENTER);
+			bottom.add(jsp, BorderLayout.CENTER);
+			jsp.setOneTouchExpandable(true);
+			jsp.setResizeWeight(0.8);
+			jsp.setDividerLocation(0.8);
+			jsp.setDividerSize(10);
 		}
 		{
-			split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, bottom);
-			split.setOneTouchExpandable(true);
-			split.setDividerLocation(0.5);
-			split.setResizeWeight(0.5);
-			split.setDividerSize(10);
+			split = new LateAdjustJSplitPane(JSplitPane.VERTICAL_SPLIT, top, bottom);
 			add(split, BorderLayout.CENTER);
+			split.setOneTouchExpandable(true);
+			split.setResizeWeight(0.5);
+			split.setDividerLocation(0.5);
+			split.setDividerSize(10);
 		}
 		GroovyScriptResult result = script.getLastResult();
 		if (result != null) {
@@ -256,7 +267,7 @@ public class GroovyPanel extends JPanel {
 	}
 
 	private void submit() {
-		setResultDisplay(textDisplayComponent("Processing..."));
+		setResultDisplay(null, textDisplayComponent("Processing..."));
 		if (script.isSaveable()) {
 			script.save();
 		}
@@ -271,16 +282,16 @@ public class GroovyPanel extends JPanel {
 			if (resultHolder.success()) {
 				Object result = resultHolder.result();
 				if (result == null) {
-					setResultDisplay(textDisplayComponent("null"));
+					setResultDisplay(result, textDisplayComponent("null"));
 				}
 				else if (result instanceof Throwable t) {
-					setResultDisplay(textDisplayComponent(ExceptionUtils.getStackTrace(t)));
+					setResultDisplay(result, textDisplayComponent(ExceptionUtils.getStackTrace(t)));
 				}
 				else if (result instanceof Map map) {
-					setResultDisplay(simpleMapDisplay(map));
+					setResultDisplay(result, simpleMapDisplay(map));
 				}
 				else if (result instanceof Collection coll) {
-					setResultDisplay(simpleListDisplay(coll));
+					setResultDisplay(result, simpleListDisplay(coll));
 				}
 				else if (result.getClass().isArray()) {
 					try {
@@ -289,33 +300,53 @@ public class GroovyPanel extends JPanel {
 						for (int i = 0; i < length; i++) {
 							converted.add(Array.get(result, i));
 						}
-						setResultDisplay(simpleListDisplay(converted));
+						setResultDisplay(result, simpleListDisplay(converted));
 					}
 					catch (Throwable t) {
 						log.error("Error converting array to list", t);
-						setResultDisplay(textDisplayComponent("This was supposed to be an array, but there was an error converting it to a list.\n\n" + result));
+						setResultDisplay(result, textDisplayComponent("This was supposed to be an array, but there was an error converting it to a list.\n\n" + result));
 					}
 
 				}
 				else if (result instanceof Component comp) {
-					setResultDisplay(comp);
+					setResultDisplay(result, comp);
 				}
+//				else if (result instanceof String string) {
+//					setResultDisplay(textDisplayComponent(string));
+//				}
 				else {
-					setResultDisplay(textDisplayComponent(result.toString()));
+					setResultDisplay(result, textDisplayComponent(result.toString()));
 				}
 			}
 			else {
 				//noinspection ConstantConditions
-				setResultDisplay(errorDisplayComponent(ExceptionUtils.getStackTrace(resultHolder.failure())));
+				Throwable failure = resultHolder.failure();
+				setResultDisplay(failure, errorDisplayComponent(ExceptionUtils.getStackTrace(failure)));
 			}
 		}
 		catch (Throwable t) {
-			setResultDisplay(errorDisplayComponent(ExceptionUtils.getStackTrace(t)));
+			setResultDisplay(t, errorDisplayComponent(ExceptionUtils.getStackTrace(t)));
 		}
 	}
 
-	private void setResultDisplay(Component display) {
-		SwingUtilities.invokeLater(() -> resultScroll.setViewportView(display));
+	private void setResultDisplay(@Nullable Object obj, Component display) {
+		Map<?, ?> props;
+		if (obj == null) {
+			props = Collections.emptyMap();
+		}
+		else {
+			try {
+				props = DefaultGroovyMethods.getProperties(obj);
+			}
+			catch (Throwable t) {
+				props = Collections.emptyMap();
+			}
+		}
+		JTable md = simpleMapDisplay(props);
+		SwingUtilities.invokeLater(() -> {
+			resultPropertiesScroll.setViewportView(md);
+			resultScroll.setViewportView(display);
+		});
 	}
 
 }
