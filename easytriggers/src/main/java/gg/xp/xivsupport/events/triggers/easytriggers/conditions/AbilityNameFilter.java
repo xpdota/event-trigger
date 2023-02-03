@@ -20,7 +20,7 @@ public class AbilityNameFilter implements SimpleCondition<HasAbility> {
 	@Override
 	public boolean test(HasAbility hasAbility) {
 		String abilityName;
-		if (localLanguage) {
+		if (!localLanguage) {
 			ActionInfo actionInfo = ActionLibrary.forId(hasAbility.getAbility().getId());
 			if (actionInfo == null) {
 				return false;

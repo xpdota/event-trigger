@@ -149,7 +149,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> limitlessSynergyFlare = new ModifiableCallout<>("Limitless Synergy: Flare", "Out for Flare");
 	private final ModifiableCallout<BuffApplied> limitlessSynergyNoFlare = new ModifiableCallout<>("Limitless Synergy: No Flare", "Spread");
 	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyStack = new ModifiableCallout<>("Limitless Synergy: Stack", "Stack");
-	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyDontStack = new ModifiableCallout<AbilityUsedEvent>("Limitless Synergy: Don't Stack", "Stack")
+	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyDontStack = new ModifiableCallout<AbilityUsedEvent>("Limitless Synergy: Don't Stack", "Don't Stack")
 			.extendedDescription("This trigger activates if you were chosen for beyond defense, but not if you were clipped by someone else's hit.");
 	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyDontStackMistake = new ModifiableCallout<AbilityUsedEvent>("Limitless Synergy: Don't Stack (Mistake)", "Stack")
 			.extendedDescription("This trigger is activated instead of the one above if you were clipped by someone else's Beyond Defense hit.");
@@ -631,7 +631,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			});
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> psAmSq = SqtTemplates.sq(50_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
+	private final SequentialTrigger<BaseEvent> psAmSq = SqtTemplates.sq(40_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
 			(e1, s) -> {
 				if (!getPsAmEnable().get()) {
 					return;
@@ -679,6 +679,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						s.accept(new SpecificAutoMarkRequest(player, marker));
 					}
 				});
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B30));
+				s.accept(new ClearAutoMarkRequest());
 			});
 
 	@AutoFeed
@@ -690,7 +692,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer));
 				XivCombatant buddy = tether.getTargetMatching(xpc -> !xpc.isThePlayer());
 				HeadMarkerEvent myHm = s.waitEvent(HeadMarkerEvent.class, hm -> hm.getTarget().isThePlayer());
-				Map<String, Object> params = Map.of("tetherBuddy", buddy);
+				Map<String, Object> params = buddy == null ? Map.of() : Map.of("tetherBuddy", buddy);
 
 				// TODO: get all the ability IDs instead of using the buff
 //				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B25, 0x7B2D));
@@ -894,6 +896,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					nothing.stream()
 							.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
 							.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.IGNORE_NEXT)));
+					s.waitMs(30_000);
+					s.accept(new ClearAutoMarkRequest());
 				}
 			});
 	private static final int grayDefa = 0xD6D;
