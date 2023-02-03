@@ -1076,9 +1076,11 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 					});
 					playerMechs.put(WrothFlamesRole.NOTHING, noBuff);
 
-					log.info("Wroth player mechs: {}", playerMechs);
+					log.info("Wroth player mechs, unsorted: {}", playerMechs);
+					JobSortSetting sortSetting = getP6_sortSetting();
+					Comparator<XivPlayerCharacter> jobSort = sortSetting.getPlayerJailSortComparator();
+					log.info("Wroth job prio: {}", sortSetting.getCurrentJailSort());
 
-					Comparator<XivPlayerCharacter> jobSort = getP6_sortSetting().getPlayerJailSortComparator();
 					Comparator<XivPlayerCharacter> sort;
 					if (getP6_rotPrioHigh().get()) {
 						@Nullable XivCombatant rotPlayer = getBuffs().getBuffs().stream()
@@ -1086,6 +1088,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 								.map(BuffApplied::getTarget)
 								.findAny()
 								.orElse(null);
+						log.info("Wroth rot player: {}", rotPlayer);
 						sort = Comparator.<XivPlayerCharacter, Integer>comparing(pc -> pc.equals(rotPlayer) ? -1 : 0).thenComparing(jobSort);
 					}
 					else {
@@ -1096,6 +1099,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 					}
 					Comparator<XivPlayerCharacter> finalSort = sort;
 					playerMechs.values().forEach(list -> list.sort(finalSort));
+					log.info("Wroth player mechs, sorted: {}", playerMechs);
 
 					List<XivPlayerCharacter> spreaders = playerMechs.get(WrothFlamesRole.SPREAD);
 					List<XivPlayerCharacter> stackers = playerMechs.get(WrothFlamesRole.STACK);
