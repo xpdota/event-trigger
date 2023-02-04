@@ -3,12 +3,16 @@ package gg.xp.xivsupport.events.triggers.duties;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.persistence.gui.AutomarkSettingGui;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
+import gg.xp.xivsupport.persistence.settings.AutomarkSetting;
+import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 
 import javax.swing.*;
 import java.awt.*;
@@ -55,30 +59,58 @@ public class DragonsongAmGui implements DutyPluginTab {
 
 		inner = new JPanel();
 		inner.setLayout(new GridBagLayout());
-		JCheckBox p6altMark = new BooleanSettingGui(ds.getP6_altMarkMode(), "Alt Mode").getComponent();
 		JCheckBox rotFirst = new BooleanSettingGui(ds.getP6_rotPrioHigh(), "Rot takes highest priority").getComponent();
 		JCheckBox reverseSort = new BooleanSettingGui(ds.getP6_reverseSort(), "Reverse sort (higher priority gets larger number)").getComponent();
 		ReadOnlyText helpText = new ReadOnlyText("""
-				The four players with the 'spread' debuffs will receive 'attack' markers.
-				In addition, if Telesto is in use:
-								
-				If "Alt Mode" is disabled:
-				The two players with 'stack' debuffs will receive 'bind1' and 'bind2' markers,
-				and the two players with nothing will receive 'ignore1 and ignore2' markers.
-				The intent is that the '1' players will stack together, and '2' players stack together.
-								
-				If "Alt Mode" is enabled:
-				The two players with 'stack' debuffs will receive 'bind1' and 'ignore1' markers,
-				and the two players with nothing will receive 'bind2' and 'ignore2' markers.
-				The intent is that the 'bind' players will stack together, and 'ignore' players stack together.
-								
-				In both cases, higher priority jobs will get lower number markers. To reverse this, check "Reverse Sort".
+				Configure your priority using the job list below. Jobs higher on the list receive a higher priority.
+				The "Reverse sort" setting configures whether "high priority" means they get a higher marker number,
+				or a lower number. The "Rot takes highest priority" checkbox will cause the current rot holder to
+				receive the lowest possible marker (or highest, if "Reverse sort" is enabled).
+
+				If you are using classic macros rather than Telesto, you MUST use the basic "Next Available Attack"
+				macros.
 				""");
 
 
-		inner.add(p6altMark, c);
-		c.gridy++;
 		inner.add(helpText, c);
+		c.gridy++;
+		{
+			TitleBorderPanel mappingPanel = new TitleBorderPanel("Wroth Marker Mapping");
+			mappingPanel.setLayout(new GridBagLayout());
+			GridBagConstraints mc = GuiUtil.defaultGbc();
+			mc.ipadx = 5;
+			mc.gridy = 0;
+
+			MultiSlotAutomarkSetting<DragonsongWrothAssignments> markSettings = ds.getP6_amAssignments();
+			for (int row = 0; row < 4; row++) {
+				mc.gridx = 0;
+				mappingPanel.add(new JLabel("Spread #" + (row + 1)), mc);
+
+				AutomarkSetting g1setting = markSettings.getSettings().get(DragonsongWrothAssignments.values()[row]);
+				mc.gridx++;
+				mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
+
+				mc.gridx++;
+				mappingPanel.add(Box.createHorizontalStrut(10));
+
+				mc.gridx++;
+				mappingPanel.add(new JLabel(switch (row) {
+					case 0 -> "Stack #1";
+					case 1 -> "Stack #2";
+					case 2 -> "Nothing #1";
+					case 3 -> "Nothing #2";
+					default -> "?";
+				}), mc);
+
+
+				AutomarkSetting g2setting = markSettings.getSettings().get(DragonsongWrothAssignments.values()[row + 4]);
+				mc.gridx++;
+				mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
+				mc.gridy++;
+			}
+			markSettings.addListener(mappingPanel::repaint);
+			inner.add(mappingPanel, c);
+		}
 		c.gridy++;
 		inner.add(rotFirst, c);
 		c.gridy++;

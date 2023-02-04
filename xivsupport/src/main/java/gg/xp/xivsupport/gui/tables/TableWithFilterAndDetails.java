@@ -115,7 +115,6 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			@Override
 			public void setBounds(int x, int y, int width, int height) {
 				super.setBounds(x, y, width, height);
-				log.info("Table top panel setBounds");
 				SwingUtilities.invokeLater(this::revalidate);
 			}
 		};

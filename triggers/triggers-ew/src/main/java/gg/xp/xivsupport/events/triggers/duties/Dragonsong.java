@@ -27,7 +27,7 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
-import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.marks.adv.MultiSlotAutoMarkHandler;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.gui.tables.renderers.RefreshingHpBar;
@@ -39,6 +39,7 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
+import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -213,7 +214,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	private final BooleanSetting p5_thunderstruckAutoMarks;
 	private final BooleanSetting p6_useAutoMarks;
-	private final BooleanSetting p6_altMarkMode;
+	private final MultiSlotAutomarkSetting<DragonsongWrothAssignments> p6_amAssignments;
 	private final BooleanSetting p6_rotPrioHigh;
 	private final BooleanSetting p6_reverseSort;
 	private final JobSortSetting sortSetting;
@@ -227,11 +228,22 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		this.buffs = buffs;
 		p5_thunderstruckAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.p5-use-auto-marks", false);
 		p6_useAutoMarks = new BooleanSetting(pers, "triggers.dragonsong.use-auto-marks", false);
-		p6_altMarkMode = new BooleanSetting(pers, "triggers.dragonsong.alt-mark-mode", true);
+		boolean legacyAltMode = new BooleanSetting(pers, "triggers.dragonsong.alt-mark-mode", true).get();
 		p6_rotPrioHigh = new BooleanSetting(pers, "triggers.dragonsong.rot-highest-prio", true);
 		p6_reverseSort = new BooleanSetting(pers, "triggers.dragonsong.rot-reverse-sort", true);
 		this.headmarkerOffsetTracker = headmarkerOffsetTracker;
 		sortSetting = new JobSortSetting(pers, "triggers.dragonsong.job-prio", state);
+		p6_amAssignments = new MultiSlotAutomarkSetting<>(pers, "triggers.dragonsong.wroth-marker-assignments", DragonsongWrothAssignments.class,
+				Map.of(
+						DragonsongWrothAssignments.Spread_1, MarkerSign.ATTACK1,
+						DragonsongWrothAssignments.Spread_2, MarkerSign.ATTACK2,
+						DragonsongWrothAssignments.Spread_3, MarkerSign.ATTACK3,
+						DragonsongWrothAssignments.Spread_4, MarkerSign.ATTACK4,
+						DragonsongWrothAssignments.Stack_Buff_1, MarkerSign.BIND1,
+						DragonsongWrothAssignments.Stack_Buff_2, legacyAltMode ? MarkerSign.IGNORE1 : MarkerSign.BIND2,
+						DragonsongWrothAssignments.Nothing_1, legacyAltMode ? MarkerSign.BIND2 : MarkerSign.IGNORE1,
+						DragonsongWrothAssignments.Nothing_2, MarkerSign.IGNORE2
+				));
 	}
 
 	@Override
@@ -1064,9 +1076,11 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 					});
 					playerMechs.put(WrothFlamesRole.NOTHING, noBuff);
 
-					log.info("Wroth player mechs: {}", playerMechs);
+					log.info("Wroth player mechs, unsorted: {}", playerMechs);
+					JobSortSetting sortSetting = getP6_sortSetting();
+					Comparator<XivPlayerCharacter> jobSort = sortSetting.getPlayerJailSortComparator();
+					log.info("Wroth job prio: {}", sortSetting.getCurrentJailSort());
 
-					Comparator<XivPlayerCharacter> jobSort = getP6_sortSetting().getPlayerJailSortComparator();
 					Comparator<XivPlayerCharacter> sort;
 					if (getP6_rotPrioHigh().get()) {
 						@Nullable XivCombatant rotPlayer = getBuffs().getBuffs().stream()
@@ -1074,6 +1088,7 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 								.map(BuffApplied::getTarget)
 								.findAny()
 								.orElse(null);
+						log.info("Wroth rot player: {}", rotPlayer);
 						sort = Comparator.<XivPlayerCharacter, Integer>comparing(pc -> pc.equals(rotPlayer) ? -1 : 0).thenComparing(jobSort);
 					}
 					else {
@@ -1084,24 +1099,31 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 					}
 					Comparator<XivPlayerCharacter> finalSort = sort;
 					playerMechs.values().forEach(list -> list.sort(finalSort));
+					log.info("Wroth player mechs, sorted: {}", playerMechs);
 
 					List<XivPlayerCharacter> spreaders = playerMechs.get(WrothFlamesRole.SPREAD);
 					List<XivPlayerCharacter> stackers = playerMechs.get(WrothFlamesRole.STACK);
 					List<XivPlayerCharacter> otherStackers = playerMechs.get(WrothFlamesRole.NOTHING);
 
-					// Give out markers
-					spreaders.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.ATTACK_NEXT)));
+					MultiSlotAutoMarkHandler<DragonsongWrothAssignments> handler = new MultiSlotAutoMarkHandler<>(s::accept, getP6_amAssignments());
 
-					boolean altMode = getP6_altMarkMode().get();
+					// Give out markers
+					for (int i = 0; i < Math.min(spreaders.size(), 4); i++) {
+						XivPlayerCharacter player = spreaders.get(i);
+						DragonsongWrothAssignments assignment = DragonsongWrothAssignments.values()[i];
+						handler.process(assignment, player);
+					}
+//					spreaders.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.ATTACK_NEXT)));
+
 
 					// People might be dead, so check count
 					if (stackers.size() >= 1 && otherStackers.size() >= 1) {
-						s.accept(new SpecificAutoMarkRequest(stackers.get(0), MarkerSign.BIND1));
-						s.accept(new SpecificAutoMarkRequest(otherStackers.get(0), altMode ? MarkerSign.BIND2 : MarkerSign.IGNORE1));
+						handler.process(DragonsongWrothAssignments.Stack_Buff_1, stackers.get(0));
+						handler.process(DragonsongWrothAssignments.Nothing_1, otherStackers.get(0));
 					}
 					if (stackers.size() >= 2 && otherStackers.size() >= 2) {
-						s.accept(new SpecificAutoMarkRequest(stackers.get(1), altMode ? MarkerSign.IGNORE1 : MarkerSign.BIND2));
-						s.accept(new SpecificAutoMarkRequest(otherStackers.get(1), MarkerSign.IGNORE2));
+						handler.process(DragonsongWrothAssignments.Stack_Buff_2, stackers.get(1));
+						handler.process(DragonsongWrothAssignments.Nothing_2, otherStackers.get(1));
 					}
 					else {
 						// but still warn that something went wrong
@@ -1792,10 +1814,6 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 		return p6_useAutoMarks;
 	}
 
-	public BooleanSetting getP6_altMarkMode() {
-		return p6_altMarkMode;
-	}
-
 	public JobSortSetting getP6_sortSetting() {
 		return sortSetting;
 	}
@@ -1806,6 +1824,10 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 	public BooleanSetting getP6_reverseSort() {
 		return p6_reverseSort;
+	}
+
+	public MultiSlotAutomarkSetting<DragonsongWrothAssignments> getP6_amAssignments() {
+		return p6_amAssignments;
 	}
 
 	private XivState getState() {
