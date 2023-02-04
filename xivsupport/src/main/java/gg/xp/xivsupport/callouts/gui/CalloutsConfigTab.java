@@ -8,10 +8,13 @@ import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,9 +45,11 @@ public class CalloutsConfigTab implements PluginTab {
 
 	@Override
 	public Component getTabContents() {
-		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Callouts");
+		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel("Callouts (Legacy View, Deprecated)");
+		((TitledBorder) outerPanel.getBorder()).setBorder(new LineBorder(new Color(160, 20, 20)));
 		outerPanel.setLayout(new BorderLayout());
 
+		JPanel outerSettingsPanel = new JPanel(new BorderLayout());
 		JPanel settingsPanel = new JPanel();
 		settingsPanel.setLayout(new WrapLayout());
 
@@ -57,7 +62,14 @@ public class CalloutsConfigTab implements PluginTab {
 		JButton collapseAll = new JButton("Collapse All");
 		settingsPanel.add(collapseAll);
 
-		outerPanel.add(settingsPanel, BorderLayout.PAGE_START);
+		outerSettingsPanel.add(settingsPanel, BorderLayout.PAGE_START);
+
+		ReadOnlyText warningText = new ReadOnlyText("This view is being removed soon. Use the 'Duties' menu on the left. For faster navigation, press " +
+		                                             "Ctrl-G and type the name of the duty.");
+		outerSettingsPanel.add(warningText, BorderLayout.CENTER);
+
+
+		outerPanel.add(outerSettingsPanel, BorderLayout.PAGE_START);
 
 		JPanel innerPanel = new JPanel();
 		enableTts.addActionListener(l -> innerPanel.repaint());

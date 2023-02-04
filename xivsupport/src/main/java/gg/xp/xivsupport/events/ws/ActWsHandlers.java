@@ -90,9 +90,10 @@ public class ActWsHandlers {
 						for (int i = 0; i < 3; i++) {
 							Thread.sleep(2_000);
 							Set<Long> fastRefreshEntities = state.getPartyList().stream().map(XivEntity::getId).collect(Collectors.toSet());
+							boolean refreshNonCombatant = ws.getFastRefreshNonCombatant().get();
 							if (pulls.getCurrentStatus() == PullStatus.COMBAT) {
 								state.getCombatantsListCopy().stream()
-										.filter(XivCombatant::isCombative)
+										.filter(xivCombatant -> refreshNonCombatant || xivCombatant.isCombative())
 										.map(XivCombatant::getId)
 										.forEach(fastRefreshEntities::add);
 							}
@@ -313,6 +314,4 @@ public class ActWsHandlers {
 			}
 		}
 	}
-//	@HandleEvents
-//	public st
 }
