@@ -2,7 +2,7 @@ package gg.xp.xivsupport.models.groupmodels;
 
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 
-public enum PsMarkerGroups implements HasFriendlyName {
+public enum PsMarkerGroup implements HasFriendlyName {
 
 	GROUP1_CIRCLE("Group 1 Circle", 1, 1),
 	GROUP1_TRIANGLE("Group 1 Triangle", 1, 2),
@@ -18,7 +18,7 @@ public enum PsMarkerGroups implements HasFriendlyName {
 	private final int group;
 	private final int number;
 
-	PsMarkerGroups(String friendlyName, int group, int number) {
+	PsMarkerGroup(String friendlyName, int group, int number) {
 		this.friendlyName = friendlyName;
 		this.group = group;
 		this.number = number;
@@ -37,7 +37,7 @@ public enum PsMarkerGroups implements HasFriendlyName {
 		return number;
 	}
 
-	public PsMarkerGroups getCounterpart() {
+	public PsMarkerGroup getCounterpart() {
 		if (this.group == 1) {
 			return values()[this.ordinal() + 4];
 		}
@@ -46,7 +46,7 @@ public enum PsMarkerGroups implements HasFriendlyName {
 		}
 	}
 
-	public static PsMarkerGroups forNumbers(int groupNum, int num) {
+	public static PsMarkerGroup forNumbers(int groupNum, int num) {
 		return values()[(groupNum - 1) * 4 + (num - 1)];
 	}
 }

@@ -22,6 +22,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PantoAssignments;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.ProgramLoopAssignments;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PsMarkerAssignments;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
@@ -29,10 +30,12 @@ import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
+import gg.xp.xivsupport.models.ArenaPos;
+import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
-import gg.xp.xivsupport.models.groupmodels.PsMarkerGroups;
+import gg.xp.xivsupport.models.groupmodels.PsMarkerGroup;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -46,14 +49,14 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @CalloutRepo(name = "TOP Triggers", duty = KnownDuty.OmegaProtocol)
 public class OmegaUltimate extends AutoChildEventHandler implements FilteredEventHandler {
@@ -140,9 +143,25 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<AbilityCastStart> eyeLaserStart = ModifiableCallout.durationBasedCall("Eye Laser Starts Casting", "Eye Laser");
 	private final ModifiableCallout<AbilityUsedEvent> eyeLaserDone = new ModifiableCallout<AbilityUsedEvent>("Eye Laser Done Casting", "Knockback Stacks").disabledByDefault();
 	// TODO icon
-	private final ModifiableCallout<HeadMarkerEvent> glitchStacksMid = new ModifiableCallout<HeadMarkerEvent>("Glitch Stacks Mid", "Close Stacks on {stackPlayers[0]} and {stackPlayers[1]}", 10_000).statusIcon(0xD63);
+	private final ModifiableCallout<HeadMarkerEvent> glitchStacksMid = new ModifiableCallout<HeadMarkerEvent>("Glitch Stacks Mid", "Close Stacks on {stackPlayers[0]} and {stackPlayers[1]}", 10_000).statusIcon(0xD63)
+			.extendedDescription("""
+					Example to have safe spots called out for west plant:
+					{unsafe.plusQuads(-1)}, {unsafe.opposite()}
+					For east plant:
+					{unsafe.opposite()}, {unsafe.plusQuads(1)}
+					""");
 	// TODO icon
-	private final ModifiableCallout<HeadMarkerEvent> glitchStacksFar = new ModifiableCallout<HeadMarkerEvent>("Glitch Stacks Far", "Far Stacks on {stackPlayers[0]} and {stackPlayers[1]}", 10_000).statusIcon(0xD64);
+	private final ModifiableCallout<HeadMarkerEvent> glitchStacksFar = new ModifiableCallout<HeadMarkerEvent>("Glitch Stacks Far", "Far Stacks on {stackPlayers[0]} and {stackPlayers[1]}", 10_000).statusIcon(0xD64)
+			.extendedDescription("""
+					Example to have safe spots called out:
+					{unsafe.plusQuads(-1)}, {unsafe.plusQuads(1)}
+					""");
+	private final ModifiableCallout<HeadMarkerEvent> furthestFromEyeSwap = new ModifiableCallout<HeadMarkerEvent>("Glitch Stack Swap", "{swapper} and {swapee} Swap", 7_000)
+			.disabledByDefault()
+			.extendedDescription("This call will call out the players who need to swap using the 'furthest stack marker from eye' strategy.");
+	private final ModifiableCallout<HeadMarkerEvent> furthestFromEyeNoSwap = new ModifiableCallout<HeadMarkerEvent>("Glitch Stack No Swap", "No Swap", 7_000)
+			.disabledByDefault()
+			.extendedDescription("See above.");
 
 	private final ModifiableCallout<AbilityCastStart> limitlessSynergy = new ModifiableCallout<>("Limitless Synergy", "Limitless Synergy");
 
@@ -159,7 +178,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@NpcCastCallout(0x7B22)
 	private final ModifiableCallout<AbilityCastStart> cosmoMemory = new ModifiableCallout<>("Cosmo Memory", "Raidwide");
 
-	private static final Position center = Position.of2d(100, 100);
 
 	private final ModifiableCallout<AbilityUsedEvent> waveRepeaterMoveIn1 = new ModifiableCallout<>("Wave Repeater: First Move In", "In");
 	private final ModifiableCallout<AbilityUsedEvent> waveRepeaterMoveIn2 = new ModifiableCallout<>("Wave Repeater: Second Move In", "In, Dodge Hand");
@@ -171,12 +189,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor").autoIcon();
 	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<>("Oversampled Wave Cannon on You", "No Monitor");
 
+	private static final Position center = Position.of2d(100, 100);
+	private static final ArenaPos pos = new ArenaPos(100, 100, 5, 5);
+
 	private final XivState state;
 	private final StatusEffectRepository buffs;
 	private final JobSortSetting groupPrioJobSort;
 	private final MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings;
-	private final MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettings;
-	private final MultiSlotAutomarkSetting<PsMarkerGroups> psMarkSettingsFar;
+	private final MultiSlotAutomarkSetting<PsMarkerGroup> psMarkSettings;
+	private final MultiSlotAutomarkSetting<PsMarkerGroup> psMarkSettingsFar;
 	private final BooleanSetting looperAM;
 	private final BooleanSetting psAmEnable;
 	private final BooleanSetting pantoAmEnable;
@@ -198,25 +219,25 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				TwoGroupsOfFour.GROUP2_NUM3, MarkerSign.BIND3,
 				TwoGroupsOfFour.GROUP2_NUM4, MarkerSign.CROSS
 		));
-		psMarkSettings = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.ps-am-slot-settings", PsMarkerGroups.class, Map.of(
-				PsMarkerGroups.GROUP1_CIRCLE, MarkerSign.ATTACK1,
-				PsMarkerGroups.GROUP1_TRIANGLE, MarkerSign.ATTACK2,
-				PsMarkerGroups.GROUP1_SQUARE, MarkerSign.ATTACK3,
-				PsMarkerGroups.GROUP1_X, MarkerSign.ATTACK4,
-				PsMarkerGroups.GROUP2_CIRCLE, MarkerSign.BIND1,
-				PsMarkerGroups.GROUP2_TRIANGLE, MarkerSign.BIND2,
-				PsMarkerGroups.GROUP2_SQUARE, MarkerSign.BIND3,
-				PsMarkerGroups.GROUP2_X, MarkerSign.CROSS
+		psMarkSettings = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.ps-am-slot-settings", PsMarkerGroup.class, Map.of(
+				PsMarkerGroup.GROUP1_CIRCLE, MarkerSign.ATTACK1,
+				PsMarkerGroup.GROUP1_TRIANGLE, MarkerSign.ATTACK2,
+				PsMarkerGroup.GROUP1_SQUARE, MarkerSign.ATTACK3,
+				PsMarkerGroup.GROUP1_X, MarkerSign.ATTACK4,
+				PsMarkerGroup.GROUP2_CIRCLE, MarkerSign.BIND1,
+				PsMarkerGroup.GROUP2_TRIANGLE, MarkerSign.BIND2,
+				PsMarkerGroup.GROUP2_SQUARE, MarkerSign.BIND3,
+				PsMarkerGroup.GROUP2_X, MarkerSign.CROSS
 		));
-		psMarkSettingsFar = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.ps-far-am-slot-settings", PsMarkerGroups.class, Map.of(
-				PsMarkerGroups.GROUP1_CIRCLE, MarkerSign.ATTACK1,
-				PsMarkerGroups.GROUP1_TRIANGLE, MarkerSign.ATTACK2,
-				PsMarkerGroups.GROUP1_SQUARE, MarkerSign.ATTACK3,
-				PsMarkerGroups.GROUP1_X, MarkerSign.ATTACK4,
-				PsMarkerGroups.GROUP2_CIRCLE, MarkerSign.BIND1,
-				PsMarkerGroups.GROUP2_TRIANGLE, MarkerSign.BIND2,
-				PsMarkerGroups.GROUP2_SQUARE, MarkerSign.BIND3,
-				PsMarkerGroups.GROUP2_X, MarkerSign.CROSS
+		psMarkSettingsFar = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.ps-far-am-slot-settings", PsMarkerGroup.class, Map.of(
+				PsMarkerGroup.GROUP1_CIRCLE, MarkerSign.ATTACK1,
+				PsMarkerGroup.GROUP1_TRIANGLE, MarkerSign.ATTACK2,
+				PsMarkerGroup.GROUP1_SQUARE, MarkerSign.ATTACK3,
+				PsMarkerGroup.GROUP1_X, MarkerSign.ATTACK4,
+				PsMarkerGroup.GROUP2_CIRCLE, MarkerSign.BIND1,
+				PsMarkerGroup.GROUP2_TRIANGLE, MarkerSign.BIND2,
+				PsMarkerGroup.GROUP2_SQUARE, MarkerSign.BIND3,
+				PsMarkerGroup.GROUP2_X, MarkerSign.CROSS
 		));
 		psMarkSettingsFar.copyDefaultsFrom(psMarkSettings);
 		looperAM = new BooleanSetting(pers, settingKeyBase + "looper-am.enabled", false);
@@ -591,12 +612,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			});
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> psAmSq = SqtTemplates.sq(40_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
+	private final SequentialTrigger<BaseEvent> psCollectorSq = SqtTemplates.sq(40_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
 			(e1, s) -> {
-				if (!getPsAmEnable().get()) {
-					return;
-				}
-				Map<PsMarkerGroups, XivPlayerCharacter> headmarkers = new EnumMap<>(PsMarkerGroups.class);
+				Map<PsMarkerGroup, XivPlayerCharacter> headmarkers = new EnumMap<>(PsMarkerGroup.class);
 				// We now have a mapping from the headmarker offset to the players with that ID
 				s.waitEventsQuickSuccession(8, HeadMarkerEvent.class, hm -> hm.getTarget().isPc(), Duration.ofSeconds(1))
 						.stream()
@@ -610,11 +628,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 									.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
 									.limit(2)
 									.toList();
-							PsMarkerGroups firstAssignment = (switch (key) {
-								case 393 -> PsMarkerGroups.GROUP1_CIRCLE;
-								case 394 -> PsMarkerGroups.GROUP1_TRIANGLE;
-								case 395 -> PsMarkerGroups.GROUP1_SQUARE;
-								case 396 -> PsMarkerGroups.GROUP1_X;
+							PsMarkerGroup firstAssignment = (switch (key) {
+								case 393 -> PsMarkerGroup.GROUP1_CIRCLE;
+								case 394 -> PsMarkerGroup.GROUP1_TRIANGLE;
+								case 395 -> PsMarkerGroup.GROUP1_SQUARE;
+								case 396 -> PsMarkerGroup.GROUP1_X;
 								default -> throw new IllegalArgumentException("Unknown marker");
 							});
 							// Doing it like this so that it doesn't break if you're missing a player
@@ -624,15 +642,24 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 									headmarkers.put(firstAssignment, player);
 								}
 								else {
-									PsMarkerGroups secondAssignment = firstAssignment.getCounterpart();
+									PsMarkerGroup secondAssignment = firstAssignment.getCounterpart();
 									headmarkers.put(secondAssignment, player);
 								}
 							}
 						});
 				log.info("Headmarkers map: {}", headmarkers);
-				BuffApplied status = getBuffs().getBuffs().stream().filter(ba -> ba.buffIdMatches(0xD63, 0xD64)).findFirst().orElse(null);
-				boolean mid = status.buffIdMatches(0xD63);
-				headmarkers.forEach((assignment, player) -> {
+				boolean mid = getBuffs().getBuffs().stream().filter(ba -> ba.buffIdMatches(0xD63, 0xD64)).findFirst().map(ba -> ba.buffIdMatches(0xD63)).stream().findFirst().orElse(false);
+				s.accept(new PsMarkerAssignments(headmarkers, mid));
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> psMarkerAm = SqtTemplates.sq(50_000, PsMarkerAssignments.class, e -> true,
+			(e1, s) -> {
+				if (!getPsAmEnable().get()) {
+					return;
+				}
+				boolean mid = e1.isMid();
+				e1.getAssignments().forEach((assignment, player) -> {
 					MarkerSign marker = (mid ? getPsMarkSettings() : getPsMarkSettingsFarGlitch()).getMarkerFor(assignment);
 					log.info("PS Marker: {} on {}", marker, player);
 					if (marker != null) {
@@ -647,12 +674,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final SequentialTrigger<BaseEvent> midRemoteGlitch = SqtTemplates.sq(50_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
 			(e1, s) -> {
 				s.updateCall(checkMfPattern.getModified(e1));
-				// TODO: tether IDs - are there multiple?
-//				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer) && te.tetherIdMatches(0xDE));
-				TetherEvent tether = s.waitEvent(TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isThePlayer));
-				XivCombatant buddy = tether.getTargetMatching(xpc -> !xpc.isThePlayer());
-				HeadMarkerEvent myHm = s.waitEvent(HeadMarkerEvent.class, hm -> hm.getTarget().isThePlayer());
-				Map<String, Object> params = buddy == null ? Map.of() : Map.of("tetherBuddy", buddy);
+				PsMarkerAssignments assignments = s.waitEvent(PsMarkerAssignments.class);
+
+				PsMarkerGroup myAssignment = assignments.forPlayer(getState().getPlayer());
+				XivCombatant buddy = assignments.getPlayerForAssignment(myAssignment.getCounterpart());
+
 
 				// TODO: get all the ability IDs instead of using the buff
 //				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B25, 0x7B2D));
@@ -660,13 +686,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 
 				BuffApplied status = getBuffs().findStatusOnTarget(getState().getPlayer(), ba -> ba.buffIdMatches(0xD63, 0xD64));
-				boolean mid = status.buffIdMatches(0xD63);
-				s.updateCall((switch (myHm.getMarkerOffset()) {
-					case 393 -> mid ? midGlitchO : remoteGlitchO;
-					case 394 -> mid ? midGlitchT : remoteGlitchT;
-					case 395 -> mid ? midGlitchS : remoteGlitchS;
-					case 396 -> mid ? midGlitchX : remoteGlitchX;
-					default -> throw new IllegalStateException("Unexpected value: " + myHm.getMarkerOffset());
+				boolean mid = assignments.isMid();
+				Map<String, Object> params = buddy == null ? Map.of() : Map.of("tetherBuddy", buddy, "mid", mid);
+				s.updateCall((switch (myAssignment) {
+					case GROUP1_CIRCLE, GROUP2_CIRCLE -> mid ? midGlitchO : remoteGlitchO;
+					case GROUP1_TRIANGLE, GROUP2_TRIANGLE -> mid ? midGlitchT : remoteGlitchT;
+					case GROUP1_SQUARE, GROUP2_SQUARE -> mid ? midGlitchS : remoteGlitchS;
+					case GROUP1_X, GROUP2_X -> mid ? midGlitchX : remoteGlitchX;
 				}).getModified(status, params));
 
 				AbilityCastStart eyeLaser = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B21));
@@ -682,8 +708,44 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						.toList();
 				params = new HashMap<>(params);
 				params.put("stackPlayers", stackPlayers);
-				// TODO
+				XivCombatant male = getState().npcById(15713);
+				ArenaSector unsafeSpot = pos.forCombatant(male);
+				params.put("unsafe", unsafeSpot);
 				s.updateCall((mid ? glitchStacksMid : glitchStacksFar).getModified(stackMarkers.get(0), params));
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> psStackLocationSwap = SqtTemplates.sq(50_000, PsMarkerAssignments.class, e -> true,
+			(e1, s) -> {
+				boolean mid = e1.isMid();
+				List<HeadMarkerEvent> stackMarkers = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == 77);
+				s.waitThenRefreshCombatants(100);
+				List<XivPlayerCharacter> stackPlayers = stackMarkers.stream()
+						.map(HeadMarkerEvent::getTarget)
+						.map(XivPlayerCharacter.class::cast)
+						.toList();
+				// Find optical unit
+				XivCombatant eye = getState().npcById(15716);
+				Position eyePos = eye.getPos();
+				// This gives us basically the "eye's view" - that is, all positions are normalized to the eye
+				Map<XivPlayerCharacter, Position> normalized = stackPlayers.stream().collect(Collectors.toMap(
+						Function.identity(),
+						player -> player.getPos().normalizedTo(eyePos)));
+				// Check if both on one side
+				s.waitMs(1000);
+				if (normalized.values().stream().allMatch(p -> p.x() < 0)
+				    || normalized.values().stream().allMatch(p -> p.x() > 0)) {
+					normalized.entrySet().stream().max(Comparator.comparing(e -> e.getValue().distanceFrom2D(eyePos)))
+							.ifPresent(furthest -> {
+								XivPlayerCharacter swapper = furthest.getKey();
+								XivPlayerCharacter swapee = e1.getPlayerForAssignment(e1.forPlayer(swapper).getCounterpart());
+								Map<String, Object> params = Map.of("swapper", swapper, "swapee", swapee, "mid", mid);
+								s.updateCall(furthestFromEyeSwap.getModified(stackMarkers.get(0), params));
+							});
+				}
+				else {
+					s.updateCall(furthestFromEyeNoSwap.getModified(stackMarkers.get(0)));
+				}
 			});
 
 	@SuppressWarnings("ConstantValue") // clarity
@@ -770,36 +832,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					}
 				}
 			});
-//
-//	@AutoFeed
-//	public SequentialTrigger<BaseEvent> pantokratorSqOther = SqtTemplates.sq(50_000, AbilityCastStart.class,
-//			acs -> acs.abilityIdMatches(0x7B0B),
-//			(e1, s) -> {
-//				EventCollector<BuffApplied> sup = new EventCollector<>(ba -> isLineDebuff(ba) && ((XivPlayerCharacter) ba.getTarget()).getJob().isSupport());
-//				EventCollector<BuffApplied> dps = new EventCollector<>(ba -> isLineDebuff(ba) && ((XivPlayerCharacter) ba.getTarget()).getJob().isDps());
-//				s.collectEvents(8, 30_000, BuffApplied.class, true, List.of(sup, dps));
-//
-//				List<NumberInLine> supBuffs = sup.getEvents().stream().map(NumberInLine::debuffToLine).sorted(Comparator.naturalOrder()).toList();
-//				List<NumberInLine> dpsBuffs = dps.getEvents().stream().map(NumberInLine::debuffToLine).sorted(Comparator.naturalOrder()).toList();
-//
-//				NumberInLine priorSup = null;
-//				for (NumberInLine n : supBuffs) {
-//					if (priorSup == n) {
-//						s.accept(new SpecificAutoMarkRequest(supPlayerFromLine(n), MarkerSign.BIND2));
-//						break;
-//					}
-//					priorSup = n;
-//				}
-//
-//				NumberInLine priorDps = null;
-//				for (NumberInLine n : dpsBuffs) {
-//					if (priorDps == n) {
-//						s.accept(new SpecificAutoMarkRequest(dpsPlayerFromLine(n), MarkerSign.BIND1));
-//						break;
-//					}
-//					priorDps = n;
-//				}
-//			});
 
 	@SuppressWarnings("SuspiciousMethodCalls")
 	@AutoFeed
@@ -1081,11 +1113,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		return markSettings;
 	}
 
-	public MultiSlotAutomarkSetting<PsMarkerGroups> getPsMarkSettings() {
+	public MultiSlotAutomarkSetting<PsMarkerGroup> getPsMarkSettings() {
 		return psMarkSettings;
 	}
 
-	public MultiSlotAutomarkSetting<PsMarkerGroups> getPsMarkSettingsFarGlitch() {
+	public MultiSlotAutomarkSetting<PsMarkerGroup> getPsMarkSettingsFarGlitch() {
 		return psMarkSettingsFar;
 	}
 
