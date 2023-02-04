@@ -92,8 +92,14 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		}
 
 		{
-			JCheckBox sniperMark = new BooleanSettingGui(backend.getSniperAmEnable(), "Sniper Cannon").getComponent();
+			JCheckBox sniperMark = new BooleanSettingGui(backend.getSniperAmEnable(), "Sniper Cannon Automark (Attack = Spread Debuff, Bind = Stack Debuff, Ignore = Nothing)").getComponent();
 			inner.add(sniperMark, c);
+			c.gridy++;
+		}
+
+		{
+			JCheckBox monitorMark = new BooleanSettingGui(backend.getMonitorAmEnable(), "Monitor Automark (Attack = Nothing, Bind = Monitor)").getComponent();
+			inner.add(monitorMark, c);
 			c.gridy++;
 		}
 
@@ -110,7 +116,7 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		c.gridy++;
 
 		{
-			TitleBorderPanel mappingPanel = new TitleBorderPanel("Marker Mapping (X in line)");
+			TitleBorderPanel mappingPanel = new TitleBorderPanel("Looper/Panto Markers");
 			mappingPanel.setLayout(new GridBagLayout());
 			GridBagConstraints mc = GuiUtil.defaultGbc();
 			mc.ipadx = 10;
@@ -140,7 +146,7 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		}
 
 		{
-			TitleBorderPanel mappingPanel = new TitleBorderPanel("PS Markers");
+			TitleBorderPanel mappingPanel = new TitleBorderPanel("P2 PS Markers");
 			mappingPanel.setLayout(new GridBagLayout());
 			GridBagConstraints mc = GuiUtil.defaultGbc();
 			mc.ipadx = 10;

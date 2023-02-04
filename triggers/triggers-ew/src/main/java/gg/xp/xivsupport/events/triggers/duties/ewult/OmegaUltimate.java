@@ -51,7 +51,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @CalloutRepo(name = "TOP Triggers", duty = KnownDuty.OmegaProtocol)
 public class OmegaUltimate extends AutoChildEventHandler implements FilteredEventHandler {
@@ -154,64 +156,20 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<AbilityUsedEvent> limitlessSynergyDontStackMistake = new ModifiableCallout<AbilityUsedEvent>("Limitless Synergy: Don't Stack (Mistake)", "Stack")
 			.extendedDescription("This trigger is activated instead of the one above if you were clipped by someone else's Beyond Defense hit.");
 
+	@NpcCastCallout(0x7B22)
+	private final ModifiableCallout<AbilityCastStart> cosmoMemory = new ModifiableCallout<>("Cosmo Memory", "Raidwide");
+
 	private static final Position center = Position.of2d(100, 100);
 
-//	private final ModifiableCallout<BuffApplied> followUpMidGlitchO = ModifiableCallout.durationBasedCall("Mid Glitch with O Buddy: Followup", "Circle, Close to {tetherBuddy}");
-//	private final ModifiableCallout<BuffApplied> followUpMidGlitchS = ModifiableCallout.durationBasedCall("Mid Glitch with □ Buddy: Followup", "Square, Close to {tetherBuddy}");
-//	private final ModifiableCallout<BuffApplied> followUpMidGlitchT = ModifiableCallout.durationBasedCall("Mid Glitch with △ Buddy: Followup", "Triangle, Close to {tetherBuddy}");
-//	private final ModifiableCallout<BuffApplied> followUpMidGlitchX = ModifiableCallout.durationBasedCall("Mid Glitch with X Buddy: Followup", "X, Close to {tetherBuddy}");
-//	private final ModifiableCallout<BuffApplied> followUpRemoteGlitchO = ModifiableCallout.durationBasedCall("Remote Glitch with O Buddy: Followup", "Circle, far from {tetherBuddy}");
-//	private final ModifiableCallout<BuffApplied> followUpRemoteGlitchS = ModifiableCallout.durationBasedCall("Remote Glitch with □ Buddy: Followup", "Square, far from {tetherBuddy}");
-//	private final ModifiableCallout<BuffApplied> followUpRemoteGlitchT = ModifiableCallout.durationBasedCall("Remote Glitch with △ Buddy: Followup", "Triangle, far from {tetherBuddy}");
-//	private final ModifiableCallout<BuffApplied> followUpRemoteGlitchX = ModifiableCallout.durationBasedCall("Remote Glitch with X Buddy: Followup", "X, far from {tetherBuddy}");
-
-	// Panto
-//	@PlayerStatusCallout({0xDB3, 0xDB4, 0xDB5, 0xDB6})
-//	private final ModifiableCallout<BuffApplied> waveCannonKyrios = new ModifiableCallout<BuffApplied>("Condensed Wave Cannon Kyrios", "Wave Cannon on You").autoIcon();
-//	@PlayerStatusCallout({0xD60, 0xDA7, 0xDA8, 0xDA9})
-//	private final ModifiableCallout<BuffApplied> guidedMissileKyrios = new ModifiableCallout<BuffApplied>("Guided Missile Kyrios", "Missile on You").autoIcon();
-
-	// Mechanics
-//	@PlayerStatusCallout(0xDC8)
-//	private final ModifiableCallout<BuffApplied> cascadingLatentDefect = new ModifiableCallout<BuffApplied>("Cascading Latent Defect", "Pick Up Rot").autoIcon();
-//	@PlayerStatusCallout(0xDC5)
-//	private final ModifiableCallout<BuffApplied> criticalOverflowBug = new ModifiableCallout<BuffApplied>("Critical Overflow Bug", "Defamation").autoIcon();
-//	@PlayerStatusCallout(0xDC4)
-//	private final ModifiableCallout<BuffApplied> criticalSynchronizationBug = new ModifiableCallout<BuffApplied>("Critical Synchronization Bug", "Stack").autoIcon();
-//	@PlayerStatusCallout(0xDC6)
-//	private final ModifiableCallout<BuffApplied> criticalUnderflowBug = new ModifiableCallout<BuffApplied>("Critical Underflow Bug", "Rot on You").autoIcon();
-//
-//	// Get hit by stuff
-//	@PlayerStatusCallout(0xDC7)
-//	private final ModifiableCallout<BuffApplied> latentDefect = new ModifiableCallout<BuffApplied>("Latent Defect", "Get Hit by Defamation").autoIcon();
-//	@PlayerStatusCallout(0xD6A)
-//	private final ModifiableCallout<BuffApplied> latentSynchronizationBug = new ModifiableCallout<BuffApplied>("Latent Synchronization Bug", "Stack").autoIcon();
-//
-//	// Soon
-//	@PlayerStatusCallout(0xD6D)
-//	private final ModifiableCallout<BuffApplied> overflowCodeSmell = new ModifiableCallout<BuffApplied>("Overflow Code Smell", "Defamation Soon").autoIcon();
-//	@PlayerStatusCallout(0xD6C)
-//	private final ModifiableCallout<BuffApplied> synchronizationCodeSmell = new ModifiableCallout<BuffApplied>("Synchronization Code Smell", "Stack Soon").autoIcon();
-//	@PlayerStatusCallout(0xD6E)
-//	private final ModifiableCallout<BuffApplied> underflowCodeSmell = new ModifiableCallout<BuffApplied>("Underflow Code Smell", "Rot Soon").autoIcon();
-
-	// Tethers
-//	@PlayerStatusCallout({0xD70, 0xDAF})
-//	private final ModifiableCallout<BuffApplied> localCodeSmell = new ModifiableCallout<BuffApplied>("Local Code Smell", "Close Tether Soon").autoIcon();
-//	@PlayerStatusCallout(0xDC9)
-//	private final ModifiableCallout<BuffApplied> localRegression = new ModifiableCallout<BuffApplied>("Local Regression", "Close Tether").autoIcon();
-//	@PlayerStatusCallout({0xD71, 0xDB0})
-//	private final ModifiableCallout<BuffApplied> remoteCodeSmell = new ModifiableCallout<BuffApplied>("Remote Code Smell", "Far Tether Soon").autoIcon();
-//	@PlayerStatusCallout(0xDCA)
-//	private final ModifiableCallout<BuffApplied> remoteRegression = new ModifiableCallout<BuffApplied>("Remote Regression", "Far Tether").autoIcon();
+	private final ModifiableCallout<AbilityUsedEvent> waveRepeaterMoveIn1 = new ModifiableCallout<>("Wave Repeater: First Move In", "In");
+	private final ModifiableCallout<AbilityUsedEvent> waveRepeaterMoveIn2 = new ModifiableCallout<>("Wave Repeater: Second Move In", "In, Dodge Hand");
 
 	private final ModifiableCallout<BuffApplied> sniperCannonCall = ModifiableCallout.<BuffApplied>durationBasedCall("Sniper Cannon", "Sniper Soon").statusIcon(0xD61);
 	private final ModifiableCallout<BuffApplied> highPoweredSniperCannonCall = ModifiableCallout.<BuffApplied>durationBasedCall("High-powered Sniper Cannon", "High-Power Sniper - Stack on {nothings[0]} or {nothings[1]}").statusIcon(0xD62);
 	private final ModifiableCallout<BuffApplied> noSniperCannonCall = ModifiableCallout.durationBasedCall("No Sniper Cannon", "Nothing - Stack on {snipers[0]} or {snipers[1]}");
 
-
-	@NpcCastCallout(0x7B22)
-	private final ModifiableCallout<AbilityCastStart> cosmoMemory = new ModifiableCallout<>("Cosmo Memory", "Raidwides");
+	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor").autoIcon();
+	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<>("Oversampled Wave Cannon on You", "No Monitor");
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
@@ -223,6 +181,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final BooleanSetting psAmEnable;
 	private final BooleanSetting pantoAmEnable;
 	private final BooleanSetting sniperAmEnable;
+	private final BooleanSetting monitorAmEnable;
 
 	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
@@ -264,6 +223,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		pantoAmEnable = new BooleanSetting(pers, settingKeyBase + "panto-am.enabled", false);
 		sniperAmEnable = new BooleanSetting(pers, settingKeyBase + "sniper-am.enabled", false);
 		psAmEnable = new BooleanSetting(pers, settingKeyBase + "ps-marker-am.enabled", false);
+		monitorAmEnable = new BooleanSetting(pers, settingKeyBase + "monitor-am.enabled", false);
 	}
 
 	@Override
@@ -896,7 +856,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					nothing.stream()
 							.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
 							.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.IGNORE_NEXT)));
-					s.waitMs(30_000);
+				}
+				// Wait for third ring to go off
+				AbilityUsedEvent ring1 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B51) && aue.isFirstTarget());
+				s.updateCall(waveRepeaterMoveIn1.getModified(ring1));
+				AbilityUsedEvent ring2 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B51) && aue.isFirstTarget());
+				s.updateCall(waveRepeaterMoveIn2.getModified(ring2));
+				if (getSniperAmEnable().get()) {
 					s.accept(new ClearAutoMarkRequest());
 				}
 			});
@@ -913,6 +879,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private static final int longReg = 0xDCa;
 
 
+	private final ModifiableCallout<AbilityCastStart> hwCastBar = ModifiableCallout.durationBasedCall("Hello World: Initial Cast", "Raidwide");
 	private final ModifiableCallout<?> hw0_defaOnBlue = new ModifiableCallout<>("Hello World Start: Defa on Blue", "Blue has Defa");
 	private final ModifiableCallout<?> hw0_defaOnRed = new ModifiableCallout<>("Hello World Start: Defa on Red", "Red has Defa");
 
@@ -937,10 +904,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> helloWorld = SqtTemplates.sq(120_000,
+	private final SequentialTrigger<BaseEvent> helloWorldSq = SqtTemplates.sq(120_000,
 			AbilityCastStart.class, a -> a.abilityIdMatches(0x7B55),
 			(e1, s) -> {
 				log.info("Hello World: Start");
+				s.updateCall(hwCastBar.getModified(e1));
 				// https://ff14.toolboxgaming.space/?id=073180945764761&preview=1
 				s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(0xDAF), Duration.ofMillis(100));
 				log.info("Hello World: Got Initial");
@@ -972,6 +940,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				else {
 					s.accept(hw0_defaOnRed.getModified());
 				}
+				Map<String, Object> params = Map.of("blueDefa", defaIsOnBlue);
 				log.info("Hello World Checkpoint 1");
 				s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(redRot));
 				for (int i = 1; i <= 4; i++) {
@@ -988,45 +957,45 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					log.info("Found buffs: {} {} {} {} {} {}", defaBuff, stackBuff, blueRotBuff, redRotBuff, shortTetherBuff, longTetherBuff);
 					if (blueRotBuff != null) {
 						if (stackBuff != null) {
-							s.updateCall(hw1a_stackBlue.getModified(stackBuff));
+							s.updateCall(hw1a_stackBlue.getModified(stackBuff, params));
 							s.waitBuffRemoved(getBuffs(), stackBuff);
-							s.updateCall(hw1b_stackBlue.getModified(blueRotBuff));
+							s.updateCall(hw1b_stackBlue.getModified(blueRotBuff, params));
 						}
 						else if (defaBuff != null) {
-							s.updateCall(hw1a_defaBlue.getModified(defaBuff));
+							s.updateCall(hw1a_defaBlue.getModified(defaBuff, params));
 							s.waitBuffRemoved(getBuffs(), defaBuff);
-							s.updateCall(hw1b_defaBlue.getModified(blueRotBuff));
+							s.updateCall(hw1b_defaBlue.getModified(blueRotBuff, params));
 						}
 					}
 					else if (redRotBuff != null) {
 						if (stackBuff != null) {
-							s.updateCall(hw1a_stackRed.getModified(stackBuff));
+							s.updateCall(hw1a_stackRed.getModified(stackBuff, params));
 							s.waitBuffRemoved(getBuffs(), stackBuff);
-							s.updateCall(hw1b_stackRed.getModified(redRotBuff));
+							s.updateCall(hw1b_stackRed.getModified(redRotBuff, params));
 						}
 						else if (defaBuff != null) {
-							s.updateCall(hw1a_defaRed.getModified(defaBuff));
+							s.updateCall(hw1a_defaRed.getModified(defaBuff, params));
 							s.waitBuffRemoved(getBuffs(), defaBuff);
-							s.updateCall(hw1b_defaRed.getModified(redRotBuff));
+							s.updateCall(hw1b_defaRed.getModified(redRotBuff, params));
 						}
 					}
 					else if (shortTetherBuff != null && shortTetherBuff.getEstimatedRemainingDuration().toMillis() < 25_000) {
 						if (i == 4) {
-							s.updateCall(hw1a_shortTetherFinal.getModified(shortTetherBuff));
+							s.updateCall(hw1a_shortTetherFinal.getModified(shortTetherBuff, params));
 						}
 						else {
-							s.updateCall(hw1a_shortTether.getModified(shortTetherBuff));
+							s.updateCall(hw1a_shortTether.getModified(shortTetherBuff, params));
 						}
 						BuffApplied shortRegBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(shortReg));
 						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defaReal));
 						// TODO: tether follow-up calls should cancel when they are satisfied
-						s.updateCall(hw1b_shortTether.getModified(shortRegBuff));
+						s.updateCall(hw1b_shortTether.getModified(shortRegBuff, params));
 					}
 					else if (longTetherBuff != null && longTetherBuff.getEstimatedRemainingDuration().toMillis() < 25_000) {
-						s.updateCall(hw1a_longTether.getModified(longTetherBuff));
+						s.updateCall(hw1a_longTether.getModified(longTetherBuff, params));
 						BuffApplied longRegBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(longReg));
 						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defaReal));
-						s.updateCall(hw1b_longTether.getModified(longRegBuff));
+						s.updateCall(hw1b_longTether.getModified(longRegBuff, params));
 					}
 					else {
 						log.error("I have no idea what debuff you have!");
@@ -1035,6 +1004,47 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					// Wait for "Performance Debugger"
 					log.info("Hello World: Waiting for next cycle");
 					s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xD69));
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> monitorsSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B6B),
+			(e1, s) -> {
+				List<BuffApplied> buffs = getBuffs().getBuffs().stream()
+						// TODO: is one of these left, one right?
+						.filter(ba -> ba.buffIdMatches(0xD7C, 0xD7D))
+						.toList();
+
+				List<XivPlayerCharacter> monitorPlayers = buffs.stream()
+						.map(BuffApplied::getTarget)
+						.map(XivPlayerCharacter.class::cast)
+						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.toList();
+
+				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers);
+
+				buffs.stream()
+						.filter(ba -> ba.getTarget().isThePlayer())
+						.findFirst()
+						.ifPresentOrElse(
+								ba -> s.updateCall(monitorOnYou.getModified(ba, params)),
+								() -> s.updateCall(noMonitorOnYou.getModified(buffs.get(0), params)));
+				// TODO: proper AM settings
+				if (getMonitorAmEnable().get()) {
+					s.accept(new ClearAutoMarkRequest());
+					s.waitMs(100);
+					List<XivPlayerCharacter> nonMonitorPlayers = new ArrayList<>(getState().getPartyList());
+					nonMonitorPlayers.removeAll(monitorPlayers);
+					nonMonitorPlayers.sort(getGroupPrioJobSort().getPlayerJailSortComparator());
+					for (XivPlayerCharacter mp : monitorPlayers) {
+						s.accept(new SpecificAutoMarkRequest(mp, MarkerSign.BIND_NEXT));
+					}
+					for (XivPlayerCharacter nmp : nonMonitorPlayers) {
+						s.accept(new SpecificAutoMarkRequest(nmp, MarkerSign.ATTACK_NEXT));
+					}
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B6B));
+					s.accept(new ClearAutoMarkRequest());
 				}
 			});
 
@@ -1093,5 +1103,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public BooleanSetting getPsAmEnable() {
 		return psAmEnable;
+	}
+
+	public BooleanSetting getMonitorAmEnable() {
+		return monitorAmEnable;
 	}
 }
