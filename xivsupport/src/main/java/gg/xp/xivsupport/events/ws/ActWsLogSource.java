@@ -53,6 +53,7 @@ public class ActWsLogSource implements EventSource {
 	private final WsURISetting uriSetting;
 	private final BooleanSetting allowBadCert;
 	private final BooleanSetting allowTts;
+	private final BooleanSetting fastRefreshNonCombatant;
 
 	private final class ActWsClientInternal extends WebSocketClient {
 
@@ -63,12 +64,12 @@ public class ActWsLogSource implements EventSource {
 
 				TrustManager tm = new X509TrustManager() {
 					@Override
-					public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+					public void checkClientTrusted(X509Certificate[] chain, String authType) {
 
 					}
 
 					@Override
-					public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+					public void checkServerTrusted(X509Certificate[] chain, String authType) {
 
 					}
 
@@ -158,6 +159,7 @@ public class ActWsLogSource implements EventSource {
 		this.allowBadCert = new BooleanSetting(pers, "acts-allow-bad-cert", false);
 		this.eventConsumer = master::pushEvent;
 		this.allowTts = new BooleanSetting(pers, "actws-allow-tts", true);
+		this.fastRefreshNonCombatant = new BooleanSetting(pers, "actws-fast-noncombatants-refresh", false);
 		this.pls = pls;
 		this.client = new ActWsClientInternal();
 		// TODO: drop this
@@ -317,7 +319,7 @@ public class ActWsLogSource implements EventSource {
 					return;
 				}
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(2500);
 					log.info("Reconnecting");
 					boolean connected = client.reconnectBlocking();
 					if (connected) {
@@ -404,6 +406,10 @@ public class ActWsLogSource implements EventSource {
 
 	public BooleanSetting getAllowTts() {
 		return allowTts;
+	}
+
+	public BooleanSetting getFastRefreshNonCombatant() {
+		return fastRefreshNonCombatant;
 	}
 
 	public boolean isConnected() {

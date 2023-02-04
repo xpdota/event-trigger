@@ -255,11 +255,39 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 
 		ActWsLogSource actWs = container.getComponent(ActWsLogSource.class);
 		{
-			TitleBorderFullsizePanel wsPanel = new TitleBorderFullsizePanel("Websocket (Restart Required)");
-			wsPanel.setPreferredSize(new Dimension(300, 150));
-			wsPanel.add(new WsURISettingGui(actWs.getUriSetting(), "OverlayPlugin WS URI").getComponent());
-			wsPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
-			wsPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Enable TTS").getComponent());
+			JPanel wsPanel = new JPanel();
+			wsPanel.setLayout(new GridBagLayout());
+			GridBagConstraints gbc = GuiUtil.defaultGbc();
+//			wsPanel.setPreferredSize(new Dimension(300, 150));
+			{
+				gbc.gridwidth = 2;
+				gbc.gridx = 0;
+				gbc.gridy = 0;
+				gbc.weighty = 1;
+				gbc.fill = GridBagConstraints.BOTH;
+				JPanel connPanel = new TitleBorderPanel("Connection");
+				connPanel.setLayout(new FlowLayout());
+				connPanel.add(new WsURISettingGui(actWs.getUriSetting(), "OverlayPlugin WS URI").getComponent());
+				connPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
+				wsPanel.add(connPanel, gbc);
+			}
+			{
+				gbc.gridwidth = 1;
+				gbc.gridy = 1;
+				JPanel ttsPanel = new TitleBorderPanel("TTS and Sound");
+				ttsPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Enable TTS").getComponent());
+				wsPanel.add(ttsPanel, gbc);
+			}
+			{
+				gbc.gridx = 1;
+				wsPanel.add(new TitleBorderPanel("Advanced", new BooleanSettingGui(actWs.getFastRefreshNonCombatant(), "Fast refresh of non-combat entities").getComponent()), gbc);
+			}
+			{
+				gbc.gridy++;
+				gbc.gridx = 0;
+				gbc.weighty = 1;
+				wsPanel.add(Box.createGlue(), gbc);
+			}
 			addTab("Websocket", wsPanel);
 		}
 		{
