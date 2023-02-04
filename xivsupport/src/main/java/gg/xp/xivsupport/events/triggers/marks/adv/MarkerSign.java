@@ -7,19 +7,19 @@ import java.util.Locale;
 
 public enum MarkerSign implements HasFriendlyName {
 
-	ATTACK_NEXT("Next Available Attack", "attack"),
+	ATTACK_NEXT("Next Attack", "attack"),
 	ATTACK1("Attack 1", "attack1", ATTACK_NEXT),
 	ATTACK2("Attack 2", "attack2", ATTACK_NEXT),
 	ATTACK3("Attack 3", "attack3", ATTACK_NEXT),
 	ATTACK4("Attack 4", "attack4", ATTACK_NEXT),
 	ATTACK5("Attack 5", "attack5", ATTACK_NEXT),
 
-	BIND_NEXT("Next Available Bind", "bind"),
+	BIND_NEXT("Next Bind", "bind"),
 	BIND1("Bind 1", "bind1", BIND_NEXT),
 	BIND2("Bind 2", "bind2", BIND_NEXT),
 	BIND3("Bind 3", "bind3", BIND_NEXT),
 
-	IGNORE_NEXT("Next Available Ignore", "ignore") {
+	IGNORE_NEXT("Next Ignore", "ignore") {
 		@Override
 		public String getKoreanCommand() {
 			return "stop";
