@@ -11,9 +11,12 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
+import gg.xp.xivsupport.events.state.floormarkers.FloorMarkerRepository;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -30,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,9 +58,11 @@ public class MapDataController {
 			Collections.emptyList(),
 			Collections.emptyMap(),
 			Collections.emptyMap(),
+			Collections.emptyMap(),
 			Collections.emptyMap()
 	);
 	private final BooleanSetting enableCapture;
+	private final FloorMarkerRepository floorMarkers;
 	private final IntSetting maxCaptures;
 	private final IntSetting msBetweenCaptures;
 	// TODO: is timeBasis still needed with this?
@@ -80,13 +86,16 @@ public class MapDataController {
 	                         SequenceIdTracker sqid,
 	                         PersistenceProvider pers,
 	                         PicoContainer container,
-	                         RightClickOptionRepo rc) {
+	                         RightClickOptionRepo rc,
+	                         FloorMarkerRepository floorMarkers
+	) {
 		realState = state;
 		realAcr = acr;
 		// TODO: statuses need the same treatment as cast bars - we need to fake the time
 		realStatuses = statuses;
 		this.sqid = sqid;
 		this.enableCapture = new BooleanSetting(pers, "map-replay.record-data", false);
+		this.floorMarkers = floorMarkers;
 		CurrentTimeSource timeSource = container.getComponent(CurrentTimeSource.class);
 		this.timeSource = timeSource == null ? Instant::now : timeSource;
 		enableCapture.addAndRunListener(() -> {
@@ -124,7 +133,9 @@ public class MapDataController {
 			List<XivCombatant> combatants,
 			Map<Long, List<BuffApplied>> statuses,
 			Map<Long, CastTracker> casts,
-			Map<Long, Long> pendingDamage
+			Map<Long, Long> pendingDamage,
+			Map<FloorMarker, Position> floorMarkers
+
 	) {
 	}
 
@@ -280,6 +291,7 @@ public class MapDataController {
 			List<BuffApplied> rawBuffs = realStatuses.getBuffs();
 			Map<Long, List<BuffApplied>> oldBuffs = snap.statuses;
 			Map<Long, List<BuffApplied>> buffs = new HashMap<>(rawBuffs.size());
+			Map<FloorMarker, Position> floorMarkers = this.floorMarkers.getMarkers();
 			for (BuffApplied rawBuff : rawBuffs) {
 				buffs.computeIfAbsent(rawBuff.getTarget().getId(), unused -> new ArrayList<>()).add(rawBuff);
 			}
@@ -292,7 +304,8 @@ public class MapDataController {
 //				dedup(combatantsListCopy, snap.combatants),
 					dedup(buffs, oldBuffs),
 					dedup(casts, snap.casts),
-					pendingDamage.isEmpty() ? Collections.emptyMap() : dedup(pendingDamage, snap.pendingDamage)
+					pendingDamage.isEmpty() ? Collections.emptyMap() : dedup(pendingDamage, snap.pendingDamage),
+					dedup(floorMarkers, snap.floorMarkers)
 			));
 			checkLength();
 		});
@@ -397,6 +410,15 @@ public class MapDataController {
 		}
 		else {
 			return getCurrent().pendingDamage.getOrDefault(xivCombatant.getId(), 0L);
+		}
+	}
+
+	public Map<FloorMarker, Position> getFloorMarkers() {
+		if (live) {
+			return floorMarkers.getMarkers();
+		}
+		else {
+			return new EnumMap<>(getCurrent().floorMarkers);
 		}
 	}
 

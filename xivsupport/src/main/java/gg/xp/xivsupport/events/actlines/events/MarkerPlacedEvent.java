@@ -7,6 +7,9 @@ import gg.xp.xivsupport.models.XivCombatant;
 
 import java.io.Serial;
 
+/**
+ * Event indicating that a floor marker (1234ABCD) has been placed
+ */
 public class MarkerPlacedEvent extends BaseEvent implements HasSourceEntity, HasPrimaryValue {
 	@Serial
 	private static final long serialVersionUID = -769814754258708514L;
