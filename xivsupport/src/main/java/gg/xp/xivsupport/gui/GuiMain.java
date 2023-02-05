@@ -372,7 +372,7 @@ public class GuiMain {
 		public void setVisible(boolean aFlag) {
 			super.setVisible(aFlag);
 			if (aFlag) {
-				generalTabRefresh.start();
+				generalTabRefresh.refreshNow();
 			}
 		}
 	}
