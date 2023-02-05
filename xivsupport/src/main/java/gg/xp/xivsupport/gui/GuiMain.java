@@ -353,6 +353,7 @@ public class GuiMain {
 			c.gridy++;
 			c.weighty = 1;
 			add(combatantsPanel, c);
+			// TODO: this is good enough for now, but really should have a separate "welcome" page as the default
 			generalTabRefresh = new RefreshLoop<>("GeneralTabRefresh", SystemTabPanel.class, stp -> {
 				xivStateStatus.refresh();
 				xivPartyPanel.refresh();
