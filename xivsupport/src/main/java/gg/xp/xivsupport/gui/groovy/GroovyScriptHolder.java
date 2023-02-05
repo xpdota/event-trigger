@@ -6,7 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import gg.xp.xivsupport.groovy.GroovyScriptResult;
+import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,18 +39,22 @@ public class GroovyScriptHolder {
 	private GroovyShell shell;
 
 	public GroovyScriptResult run() {
+		DisplayControl dc = new DisplayControl();
 		try {
 			if (shell == null) {
 				shell = getGroovyMgr().makeShell();
 			}
 			Object result;
 			try (AutoCloseable ignored = getGroovyMgr().getSandbox().enter()) {
-				result = shell.parse(getScriptContent()).run();
+				Script parsed = shell.parse(getScriptContent());
+				Binding binding = parsed.getBinding();
+				binding.setVariable("displayControl", dc);
+				result = parsed.run();
 			}
-			return lastResult = GroovyScriptResult.success(result);
+			return lastResult = GroovyScriptResult.success(dc, result);
 		}
 		catch (Throwable t) {
-			return lastResult = GroovyScriptResult.failure(t);
+			return lastResult = GroovyScriptResult.failure(dc, t);
 		}
 	}
 

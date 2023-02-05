@@ -28,15 +28,19 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class GroovyPanel extends JPanel {
 
@@ -306,6 +310,31 @@ public class GroovyPanel extends JPanel {
 				.makeTable();
 	}
 
+	private JTable customTableListDisplay(DisplayControl dc, Collection<?> values) {
+		List<String> explicitCols = dc.getListTableColumns();
+		boolean autoCols = explicitCols == null || explicitCols.isEmpty();
+		Collection<String> cols = new LinkedHashSet<>();
+		cols.add("toString");
+		if (!autoCols) {
+			cols.addAll(explicitCols);
+		}
+		List<Map<String, Object>> processedValues = values.stream().map(val -> {
+			Map<String, Object> map = new HashMap<>();
+			Map props = DefaultGroovyMethods.getProperties(val);
+			map.put("toString", val.toString());
+			map.putAll(props);
+			if (autoCols) {
+				cols.addAll(map.keySet());
+			}
+			return map;
+		}).toList();
+		CustomTableModel.CustomTableModelBuilder<Map<String, Object>> builder = CustomTableModel.builder(() -> processedValues);
+		for (String col : cols) {
+			builder = builder.addColumn(new CustomColumn<>(col, val -> singleValueConversion(val.get(col))));
+		}
+		return builder.build().makeTable();
+	}
+
 	private JTable simpleMapDisplay(Map<?, ?> map) {
 		return CustomTableModel.builder(() -> new ArrayList<>(map.entrySet()))
 				.addColumn(new CustomColumn<>("Key", e -> singleValueConversion(e.getKey())))
@@ -321,6 +350,18 @@ public class GroovyPanel extends JPanel {
 		}
 		if (obj instanceof Byte || obj instanceof Integer || obj instanceof Long || obj instanceof Short) {
 			return String.format("%d (0x%x)", obj, obj);
+		}
+		// TODO: arrays
+//		if (obj instanceof Array arr) {
+//			arr.getClass().arrayType()
+//		}
+		if (obj.getClass().isArray()) {
+			int length = Array.getLength(obj);
+			List<Object> converted = new ArrayList<>();
+			for (int i = 0; i < length; i++) {
+				converted.add(Array.get(obj, i));
+			}
+			return converted.stream().map(GroovyPanel::singleValueConversion).collect(Collectors.joining(", ", "[", "]"));
 		}
 		return obj.toString();
 
@@ -351,7 +392,7 @@ public class GroovyPanel extends JPanel {
 					setResultDisplay(result, simpleMapDisplay(map));
 				}
 				else if (result instanceof Collection coll) {
-					setResultDisplay(result, simpleListDisplay(coll));
+					setResultDisplay(result, listDisplay(resultHolder, coll));
 				}
 				else if (result.getClass().isArray()) {
 					try {
@@ -387,6 +428,15 @@ public class GroovyPanel extends JPanel {
 		catch (Throwable t) {
 			setResultDisplay(t, errorDisplayComponent(ExceptionUtils.getStackTrace(t)));
 		}
+	}
+
+	private Component listDisplay(GroovyScriptResult result, Collection<?> coll) {
+		DisplayControl dc = result.displayControl();
+		DisplayControl.ListDisplayMode ldm = dc.getListDisplayMode();
+		return switch (ldm) {
+			case AUTO -> simpleListDisplay(coll);
+			case TABLE -> customTableListDisplay(dc, coll);
+		};
 	}
 
 	private void setResultDisplay(@Nullable Object obj, Component display) {
