@@ -13,7 +13,7 @@ f54a8510f834a1a57166970bfc982e94  commons-collections-3.2.2.jar
 4afc9bfa2d31dbf7330c98fcc954b892  commons-text-1.10.0.jar
 bc8a63a2f04f8922f08b7ed36855e5ca  custom-party-overlay-1.0-SNAPSHOT.jar
 a89d22f4802437651cbb40b76125a529  dot-tracker-1.0-SNAPSHOT.jar
-26c1816bf94717c8e212e9887bcd3858  easytriggers-1.0-SNAPSHOT.jar
+46a0354c4f4162f738b34b706e133d68  easytriggers-1.0-SNAPSHOT.jar
 655814242aa5fa27b4f4eaca9390c951  flatlaf-1.6.5.jar
 4fbc34bbf1ec28670693ee90ba5948fc  groovy-3.0.14.jar
 d42b8855e3b7e4f3506ffc0b5b85d149  groovy-sandbox-1.27.jar
@@ -48,9 +48,9 @@ ff0f407a787034d4a6bbb47d0ae5f20c  telesto-easy-triggers-1.0-SNAPSHOT.jar
 fcec109838d7080f20982e9050ef4b06  telesto-right-clicks-1.0-SNAPSHOT.jar
 8c37a164560ce518f0f827a1e2353a01  timelines-1.0-SNAPSHOT.jar
 8b1e6f9016b5c091131ed0f2c83b6bcd  titan-jails-1.0-SNAPSHOT.jar
-f6dfd5fb140767515827a7dd564e380c  triggers-ew-1.0-SNAPSHOT.jar
+2586db44441923930e6a73155869de86  triggers-ew-1.0-SNAPSHOT.jar
 a79006557cc3031a9dc2aedddfed0969  triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  triggers-sb-1.0-SNAPSHOT.jar
 55da2e031548dc6a2dd5c8bbcf72c1bf  trigger-support-1.0-SNAPSHOT.jar
 2b210d18f49fc5c3a826ddf0f64668b5  xivdata-1.0-SNAPSHOT.jar
-fd441edb156bd5fd276e8a5fe0ea1ecd  xivsupport-1.0-SNAPSHOT.jar
+071d5e4b07c542e867e4081b1aa89697  xivsupport-1.0-SNAPSHOT.jar
