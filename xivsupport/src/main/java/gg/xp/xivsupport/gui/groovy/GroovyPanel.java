@@ -12,6 +12,10 @@ import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.persistence.gui.BoundCheckbox;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.Theme;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +26,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -43,7 +48,7 @@ public class GroovyPanel extends JPanel {
 
 	private static final Font mono = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 
-	private final JTextArea entryArea;
+	private final RSyntaxTextArea entryArea;
 	private final JScrollPane resultScroll;
 	private final JScrollPane resultPropertiesScroll;
 	private final GroovyScriptManager mgr;
@@ -73,11 +78,19 @@ public class GroovyPanel extends JPanel {
 		EasyAction reloadAll = new EasyAction("Reload All", this::reloadAll, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
 		EasyAction openExt = new EasyAction("Open in External Editor", this::openExt, () -> true, null);
 		EasyAction run = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK));
+//		EasyAction run1 = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.ALT_DOWN_MASK));
+//		// Annoying workaround
+//		EasyAction run2 = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.ALT_GRAPH_DOWN_MASK));
+//		EasyAction run3 = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.ALT_DOWN_MASK | InputEvent.ALT_GRAPH_DOWN_MASK));
+
 		newScript.configureComponent(this);
 		save.configureComponent(this);
 		saveAll.configureComponent(this);
 		saveAs.configureComponent(this);
 		run.configureComponent(this);
+//		run1.configureComponent(this);
+//		run2.configureComponent(this);
+//		run3.configureComponent(this);
 		delete.configureComponent(this);
 		rename.configureComponent(this);
 //		reloadOne.configureComponent(this);
@@ -105,7 +118,8 @@ public class GroovyPanel extends JPanel {
 
 		{
 			top = new JPanel(new BorderLayout());
-			entryArea = new JTextArea(script.getScriptContent());
+			entryArea = new RSyntaxTextArea(script.getScriptContent());
+//			run.configureComponent(entryArea);
 			entryArea.getDocument().addDocumentListener(new DocumentListener() {
 				@Override
 				public void insertUpdate(DocumentEvent e) {
@@ -122,8 +136,54 @@ public class GroovyPanel extends JPanel {
 					update();
 				}
 			});
+			entryArea.addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent e) {
+					if (e.getKeyCode() == KeyEvent.VK_ENTER && e.getModifiersEx() == InputEvent.CTRL_DOWN_MASK) {
+						run.run();
+						e.consume();
+					}
+					super.keyPressed(e);
+				}
+			});
 			entryArea.setFont(mono);
-			JScrollPane entryScroll = new JScrollPane(entryArea);
+			// TODO: this is adding some heavy deps
+			entryArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+			entryArea.setCodeFoldingEnabled(true);
+//			AutoCompletion ac = new AutoCompletion(new LanguageAwareCompletionProvider(new DefaultCompletionProvider()));
+//			ac.install(entryArea);
+//			DefaultCompletionProvider dcp = new DefaultCompletionProvider();
+//			GroovyCompletionProvider completion = new GroovyCompletionProvider() {
+//				@Override
+//				protected CompletionProvider createCodeCompletionProvider() {
+//					JarManager jarMan = new JarManager();
+//					try {
+////						jarMan.addClassFileSource(LibraryInfo.getMainJreJarInfo());
+//						jarMan.addClassFileSource(new File("C:\\Users\\Matt\\Desktop\\triggevent\\deps\\xivsupport-1.0-SNAPSHOT.jar"));
+//						jarMan.addClassFileSource(new File("./xivsupport/target/xivsupport-1.0-SNAPSHOT.jar"));
+////						jarMan.addClassFileSource(LibraryInfo.getMainJreJarInfo());
+//					}
+//					catch (IOException e) {
+//						throw new RuntimeException(e);
+//					}
+//					return new GroovySourceCompletionProvider(jarMan);
+//				}
+//			};
+//			completion.setParent(dcp);
+//			AutoCompletion ac = new AutoCompletion(completion);
+//			ac.setAutoActivationEnabled(true);
+//			ac.setAutoActivationDelay(10);
+////			ac.setAutoCompleteEnabled(true);
+//			ac.setShowDescWindow(true);
+//			ac.install(entryArea);
+			try {
+				Theme theme = Theme.load(GroovyPanel.class.getResourceAsStream("/org/fife/ui/rsyntaxtextarea/themes/dark.xml"));
+				theme.apply(entryArea);
+			}
+			catch (IOException e) {
+				log.error("Error loading editor theme!", e);
+			}
+			JScrollPane entryScroll = new RTextScrollPane(entryArea);
 			top.add(entryScroll, BorderLayout.CENTER);
 			{
 				JButton runButton = run.asButtonWithKeyLabel();
