@@ -244,9 +244,13 @@ public class MakeEverything {
 		List<String> iconDir = List.of("xiv", "icon");
 		// General
 		{
-			maker.extractIconRange(60011, 60013);
-			IntStream.rangeClosed(60011, 60013)
-					.forEach(icon -> maker.copyIconIfExists(icon, iconDir));
+			// Damage types
+			maker.extractAndCopyIconRange(60011, 60013, iconDir);
+			// Floor Markers
+			maker.extractAndCopyIconRange(61241, 61248, iconDir);
+
+			// Head markers
+			maker.extractAndCopyIconRange(60701, 60714, iconDir);
 		}
 
 		// STATUS EFFECTS
@@ -278,6 +282,11 @@ public class MakeEverything {
 				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, iconDir));
 			}
 		}
+	}
+
+	private void extractAndCopyIconRange(int startClosed, int endClosed, List<String> dest) {
+		extractIconRange(startClosed, endClosed);
+		IntStream.rangeClosed(startClosed, endClosed).forEach(icon -> copyIconIfExists(icon, dest));
 	}
 
 	private static int waitForCommand(Process command) {

@@ -73,6 +73,26 @@ public enum MarkerSign implements HasFriendlyName {
 		}
 	}
 
+	public static MarkerSign fromId(int id) {
+		return switch (id) {
+			case 0 -> ATTACK1;
+			case 1 -> ATTACK2;
+			case 2 -> ATTACK3;
+			case 3 -> ATTACK4;
+			case 4 -> ATTACK5;
+			case 5 -> BIND1;
+			case 6 -> BIND2;
+			case 7 -> BIND3;
+			case 8 -> IGNORE1;
+			case 9 -> IGNORE2;
+			case 10 -> SQUARE;
+			case 11 -> CIRCLE;
+			case 12 -> CROSS;
+			case 13 -> TRIANGLE;
+			default -> throw new IllegalArgumentException("Unrecognized marker sign: " + id);
+		};
+	}
+
 	public String getCommand() {
 		return command;
 	}
