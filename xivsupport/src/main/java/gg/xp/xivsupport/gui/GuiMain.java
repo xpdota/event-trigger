@@ -31,6 +31,7 @@ import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.OverlaysInitEvent;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
@@ -306,6 +307,9 @@ public class GuiMain {
 	}
 
 	private class SystemTabPanel extends JPanel {
+
+		private final RefreshLoop<Class<SystemTabPanel>> generalTabRefresh;
+
 		SystemTabPanel() {
 
 			setLayout(new GridBagLayout());
@@ -349,17 +353,26 @@ public class GuiMain {
 			c.gridy++;
 			c.weighty = 1;
 			add(combatantsPanel, c);
-			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
-			EventHandler<Event> update = (ctx, e) -> {
+			generalTabRefresh = new RefreshLoop<>("GeneralTabRefresh", SystemTabPanel.class, stp -> {
 				xivStateStatus.refresh();
 				xivPartyPanel.refresh();
 				combatantsPanel.refresh();
-			};
-			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, update);
-			master.getDistributor().registerHandler(AbilityUsedEvent.class, update);
-			master.getDistributor().registerHandler(BuffApplied.class, update);
-			master.getDistributor().registerHandler(BuffRemoved.class, update);
+			}, unused -> {
+				if (isVisible()) {
+					return 100L;
+				} else {
+					return 1000L;
+				}
+			});
+			generalTabRefresh.start();
+		}
 
+		@Override
+		public void setVisible(boolean aFlag) {
+			super.setVisible(aFlag);
+			if (aFlag) {
+				generalTabRefresh.start();
+			}
 		}
 	}
 
