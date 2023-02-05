@@ -1,44 +1,32 @@
 package gg.xp.xivsupport.gui.tabs;
 
+import gg.xp.xivsupport.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.gui.extra.TabDef;
 import gg.xp.xivsupport.gui.groovy.GroovyPanel;
 import gg.xp.xivsupport.gui.groovy.GroovyScriptHolder;
-import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GroovyTab extends JPanel {
 
-	private final JTabbedPane tabPane;
+	private final SmartTabbedPane tabPane;
 	private final GroovyScriptManager mgr;
-	private final Map<GroovyScriptHolder, GroovyPanel> componentCache = new HashMap<>();
+	private final Map<GroovyScriptHolder, GroovyPanel> componentCache = new ConcurrentHashMap<>();
 
 	public GroovyTab(GroovyScriptManager mgr) {
 		this.mgr = mgr;
 		// Idea: have an "Add New" button just be a tab
-		tabPane = new JTabbedPane(JTabbedPane.LEFT) {
-			//
-			@Override
-			public String getTitleAt(int index) {
-				Component comp = getComponentAt(index);
-				if (comp instanceof GroovyPanel gp) {
-					return StringUtils.abbreviate(gp.getName(), 30);
-				}
-				else {
-					return super.getTitleAt(index);
-				}
-			}
-
-		};
+		tabPane = new SmartTabbedPane(JTabbedPane.LEFT);
 		setLayout(new BorderLayout(0, 0));
-		mgr.getScripts().forEach(this::addTab);
+		mgr.getScripts().forEach(this::addTabLazy);
 		add(tabPane, BorderLayout.CENTER);
 		mgr.addListener(this::resetAllTabs);
 	}
@@ -48,6 +36,31 @@ public class GroovyTab extends JPanel {
 		GroovyPanel component = new GroovyPanel(mgr, this, holder);
 		componentCache.put(holder, component);
 		tabPane.addTab("Ignored", component);
+	}
+
+	private void addTabLazy(GroovyScriptHolder holder) {
+		tabPane.addTabLazy(new TabDef() {
+			@Override
+			public String getTabName() {
+				return holder.getScriptName();
+			}
+
+			@Override
+			public Component getTabContents() {
+				GroovyPanel component = new GroovyPanel(mgr, GroovyTab.this, holder);
+				componentCache.put(holder, component);
+				return component;
+			}
+
+			@Override
+			public List<Object> keys() {
+				File file = holder.getFile();
+				if (file == null) {
+					return List.of(this, getTabName(), holder);
+				}
+				return List.of(this, getTabName(), holder, file);
+			}
+		});
 	}
 
 	private void clear() {
@@ -68,13 +81,12 @@ public class GroovyTab extends JPanel {
 		SwingUtilities.invokeLater(() -> {
 			GroovyScriptHolder newEquivalentHolder;
 			clear();
-			newScripts.forEach(this::addTab);
+			newScripts.forEach(this::addTabLazy);
 			if (previouslySelectedScript != null && newScripts.contains(previouslySelectedScript)) {
-				GroovyPanel tab = getTabForScript(previouslySelectedScript);
-				tabPane.setSelectedComponent(tab);
+				tabPane.selectTabByKey(previouslySelectedScript);
 			}
 			else if ((newEquivalentHolder = newScripts.stream().filter(s -> Objects.equals(s.getFile(), previouslySelectedFile)).findFirst().orElse(null)) != null) {
-				tabPane.setSelectedComponent(getTabForScript(newEquivalentHolder));
+				tabPane.selectTabByKey(newEquivalentHolder.getFile());
 			}
 			else {
 				tabPane.setSelectedIndex(Math.max(0, Math.max(index, tabPane.getTabCount() - 1)));
@@ -84,7 +96,7 @@ public class GroovyTab extends JPanel {
 
 	public void selectScript(GroovyScriptHolder newScript) {
 		SwingUtilities.invokeLater(() -> {
-			tabPane.setSelectedComponent(getTabForScript(newScript));
+			tabPane.selectTabByKey(newScript);
 		});
 	}
 }

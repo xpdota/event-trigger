@@ -259,6 +259,13 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 		}
 	}
 
+	@Override
+	public void removeAll() {
+		registeredKeys.clear();
+		lastGoodIndex = -1;
+		super.removeAll();
+	}
+
 	public int addTabLazy(String title, Supplier<Component> componentFunc) {
 		addTab(title, new DummyMarkerComponent(componentFunc));
 		int index = getTabCount() - 1;

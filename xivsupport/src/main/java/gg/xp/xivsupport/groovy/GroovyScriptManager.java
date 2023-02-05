@@ -288,7 +288,7 @@ public class GroovyScriptManager {
 
 			By default, everything in the DI container is injected as a variable, with the first letter of the class name lowercased.
 
-			For example, I can see that there are currently ${rawEventStorage.getEvents().size()} events on record. The current player name is ${xivState.getPlayer()?.getName()}.
+			For example, I can see that there are currently ${rawEventStorage.events.size()} events on record. The current player name is ${xivState.player?.name}.
 						
 			You could also run propertiesFilePersistenceProvider.@properties to dump all settings into a key/value display.
 

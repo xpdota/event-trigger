@@ -153,5 +153,20 @@
             <artifactId>jackson-datatype-jdk8</artifactId>
             <version>${jackson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.fifesoft</groupId>
+            <artifactId>rsyntaxtextarea</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.fifesoft</groupId>-->
+<!--            <artifactId>autocomplete</artifactId>-->
+<!--            <version>3.3.0</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fifesoft</groupId>-->
+<!--            <artifactId>languagesupport</artifactId>-->
+<!--            <version>3.3.0</version>-->
+<!--        </dependency>-->
     </dependencies>
 </project>
