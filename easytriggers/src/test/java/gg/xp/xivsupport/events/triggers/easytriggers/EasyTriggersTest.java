@@ -251,14 +251,14 @@ public class EasyTriggersTest {
 				Thread.sleep(500);
 				master.pushEventAndWait(new AbilityUsedEvent(otherAbility, caster, target, Collections.emptyList(), 123, 0, 1));
 				Thread.sleep(100);
-				master.pushEventAndWait(new BaseEvent() {
-				});
 				// Workaround due to slowness...
 				for (int i = 0; i < 10; i++) {
 					Thread.sleep(2000);
 					if (!coll.getEventsOf(TtsRequest.class).isEmpty()) {
 						break;
 					}
+					master.pushEventAndWait(new BaseEvent() {
+					});
 				}
 			}
 			catch (InterruptedException e) {
