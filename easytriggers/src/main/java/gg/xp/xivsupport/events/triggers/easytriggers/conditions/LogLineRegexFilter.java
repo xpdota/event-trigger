@@ -27,6 +27,7 @@ public class LogLineRegexFilter implements Condition<ACTLogLineEvent> {
 		}
 	}
 
+	@Description("Line Type")
 	public LogLineType lineType = LogLineType.NETWORK;
 	@Description("Regex")
 	public Pattern regex = Pattern.compile("^Regex Here$");

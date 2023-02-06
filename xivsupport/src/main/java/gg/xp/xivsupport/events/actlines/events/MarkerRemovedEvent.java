@@ -8,6 +8,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 
+/**
+ * Event indicating that a floor marker (1234ABCD) has been removed
+ */
 public class MarkerRemovedEvent extends BaseEvent implements HasSourceEntity, HasPrimaryValue {
 	@Serial
 	private static final long serialVersionUID = -1493204821969682620L;

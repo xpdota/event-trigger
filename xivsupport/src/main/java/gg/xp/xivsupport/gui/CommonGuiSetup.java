@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -122,6 +124,11 @@ public final class CommonGuiSetup {
 						}
 
 					}
+//					if (event instanceof KeyEvent key) {
+//						String d = InputEvent.getModifiersExText(key.getModifiersEx()) + " + " + KeyEvent.getKeyText(key.getKeyCode());
+//
+//						log.info("Key event: {}", d);
+//					}
 					super.dispatchEvent(event);
 				}
 				finally {

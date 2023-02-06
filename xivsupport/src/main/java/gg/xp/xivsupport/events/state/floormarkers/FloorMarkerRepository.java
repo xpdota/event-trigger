@@ -37,7 +37,7 @@ public class FloorMarkerRepository {
 
 	public EnumMap<FloorMarker, Position> getMarkers() {
 		synchronized (lock) {
-			return map.clone();
+			return new EnumMap<>(map);
 		}
 	}
 }

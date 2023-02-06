@@ -12,6 +12,7 @@ public class MultiSlotAutomarkSetting<X extends Enum<X>> extends ObservableSetti
 
 	private final BooleanSetting touched;
 	private final Map<X, AutomarkSetting> settings;
+	private final Class<X> enumCls;
 
 	public MultiSlotAutomarkSetting(PersistenceProvider pers, String settingKeyBase, Class<X> enumCls, Map<X, MarkerSign> defaults) {
 		touched = new BooleanSetting(pers, settingKeyBase, false);
@@ -35,6 +36,11 @@ public class MultiSlotAutomarkSetting<X extends Enum<X>> extends ObservableSetti
 			});
 			settings.put(member, setting);
 		}
+		this.enumCls = enumCls;
+	}
+
+	public Class<X> getEnumCls() {
+		return enumCls;
 	}
 
 	public Map<X, AutomarkSetting> getSettings() {

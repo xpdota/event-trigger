@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.marks.adv;
 
-import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.debug.DebugCommand;
@@ -10,7 +9,6 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serial;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,7 +19,7 @@ public class SpecificAutoMarkHandler {
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private final XivState state;
 
-	public SpecificAutoMarkHandler(PersistenceProvider persistence, XivState state) {
+	public SpecificAutoMarkHandler(XivState state) {
 		this.state = state;
 	}
 
@@ -47,11 +45,11 @@ public class SpecificAutoMarkHandler {
 		int index = state.getPartySlotOf(player);
 		if (index >= 0) {
 			int partySlot = index + 1;
-			log.info("Resolved player {} to party slot {}", player.getName(), partySlot);
+			log.info("Resolved player {} to party slot {} for marker {}", player.getName(), partySlot, event.getMarker());
 			context.accept(new SpecificAutoMarkSlotRequest(partySlot, event.getMarker()));
 		}
 		else {
-			log.error("Couldn't resolve player '{}' to party slot", player.getName());
+			log.error("Couldn't resolve player '{}' to party slot for marker {}", player.getName(), event.getMarker());
 		}
 	}
 }

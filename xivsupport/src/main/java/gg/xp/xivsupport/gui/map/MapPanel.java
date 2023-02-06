@@ -2,12 +2,15 @@ package gg.xp.xivsupport.gui.map;
 
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
+import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
+import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.OverlapLayout;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
+import gg.xp.xivsupport.gui.tables.renderers.ScaledImageComponent;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
@@ -33,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +63,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private volatile long selection = -1;
 	private Consumer<@Nullable XivCombatant> selectionCallback = l -> {
 	};
+	private Map<FloorMarker, FloorMarkerDoohickey> markers;
+	private boolean needZorderCheck;
 
 	private static final Color enemyColor = new Color(145, 0, 0);
 	private static final Color fakeEnemyColor = new Color(170, 120, 0);
@@ -144,6 +150,17 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			setNewBackgroundImage(mapNow);
 			resetPanAndZoom();
 		}
+		if (markers == null) {
+			markers = new EnumMap<>(FloorMarker.class);
+			for (FloorMarker value : FloorMarker.values()) {
+				FloorMarkerDoohickey component = new FloorMarkerDoohickey(value);
+				component.setVisible(false);
+				markers.put(value, component);
+				add(component);
+				needZorderCheck = true;
+			}
+		}
+		markers.forEach((marker, component) -> component.reposition(mdc.getFloorMarkers().get(marker)));
 		combatants.stream()
 				.filter(cbt -> {
 					// Further filtering is no longer necessary here since the table pre-filters for us.
@@ -169,6 +186,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			toRemove.setVisible(false);
 			remove(toRemove);
 		});
+		if (needZorderCheck) {
+			fixZorder();
+		}
 		revalidate();
 		repaint();
 	}
@@ -176,6 +196,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private PlayerDoohickey createNew(XivCombatant cbt) {
 		PlayerDoohickey player = new PlayerDoohickey(cbt);
 		add(player);
+		needZorderCheck = true;
 		return player;
 	}
 
@@ -340,6 +361,12 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					this.selection == -1 ? "none" : String.format("0x%X", this.selection),
 					newSelection == -1 ? "none" : String.format("0x%X", newSelection));
 			this.selection = newSelection;
+			fixZorder();
+		}
+	}
+
+	private void fixZorder() {
+		if (SwingUtilities.isEventDispatchThread()) {
 			Component[] components = getComponents();
 			removeAll();
 			Arrays.stream(components).sorted(Comparator.comparing(comp -> {
@@ -352,10 +379,13 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					}
 				}
 				else {
-					return -1;
+					return 5;
 				}
 			})).forEach(this::add);
 			repaint();
+		}
+		else {
+			SwingUtilities.invokeLater(this::fixZorder);
 		}
 	}
 
@@ -393,6 +423,36 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 //		});
 //	}
 
+	private final class FloorMarkerDoohickey extends JPanel {
+		private static final int SIZE = 50;
+
+		private FloorMarkerDoohickey(FloorMarker marker) {
+			super(null);
+			setOpaque(false);
+			ScaledImageComponent iconPre = IconTextRenderer.getIconOnly(marker);
+			if (iconPre != null) {
+				Component icon = iconPre.cloneThis().withNewSize(SIZE);
+				add(icon);
+				icon.setBounds(0, 0, SIZE, SIZE);
+			}
+			else {
+				log.warn("Could not load marker icon for {}", marker);
+			}
+		}
+
+		private void reposition(@Nullable Position position) {
+			if (position == null) {
+				setVisible(false);
+			}
+			else {
+				int x = translateX(position.x()) - (getSize().width / 2);
+				int y = translateY(position.y()) - (getSize().height / 2);
+				setBounds(x, y, SIZE, SIZE);
+				setVisible(true);
+//				MapPanel.this.setComponentZOrder(this, MapPanel.this.getComponentCount() - 1);
+			}
+		}
+	}
 
 	// TODO: name....
 	private class PlayerDoohickey extends JPanel {

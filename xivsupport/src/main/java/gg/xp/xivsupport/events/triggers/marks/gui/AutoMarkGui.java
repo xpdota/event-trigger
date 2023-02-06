@@ -42,7 +42,7 @@ public class AutoMarkGui implements PluginTab {
 		});
 		BooleanSetting telestoSetting = marks.getUseTelesto();
 		Component useTelesto = new BooleanSettingGui(telestoSetting, "Use Telesto instead of Macros (must be installed in Dalamud)").getComponent();
-		Component krMode = new BooleanSettingGui(marks.getKoreanMode(), "Korean Client Mode (changes 'ignore' to 'stop')").getComponent();
+		Component krMode = new BooleanSettingGui(marks.getKoreanMode(), "JP/KR Client Mode (changes 'ignore' to 'stop')").getComponent();
 		Component useFKeys = new BooleanSettingGui(keyHandler.getUseFkeys(), "Use F1-F9 (Instead of NumPad 1-9)", () -> !telestoSetting.get()).getComponent();
 		telestoSetting.addListener(outer::repaint);
 

@@ -27,6 +27,12 @@ public class EasyAction {
 		}
 	}
 
+	public void run() {
+		if (enabled.get()) {
+			runAction.run();
+		}
+	}
+
 	public Action asAction() {
 		return new AbstractAction(name) {
 //			{

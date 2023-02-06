@@ -25,6 +25,7 @@ import gg.xp.xivsupport.events.triggers.duties.ewult.omega.ProgramLoopAssignment
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PsMarkerAssignments;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
+import gg.xp.xivsupport.events.triggers.marks.adv.MultiSlotAutoMarkHandler;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
@@ -37,6 +38,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.groupmodels.PsMarkerGroup;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
+import gg.xp.xivsupport.models.groupmodels.WrothStyleAssignment;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
@@ -204,6 +206,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings;
 	private final MultiSlotAutomarkSetting<PsMarkerGroup> psMarkSettings;
 	private final MultiSlotAutomarkSetting<PsMarkerGroup> psMarkSettingsFar;
+	private final MultiSlotAutomarkSetting<WrothStyleAssignment> sniperAmSettings;
 	private final BooleanSetting looperAM;
 	private final BooleanSetting psAmEnable;
 	private final BooleanSetting pantoAmEnable;
@@ -246,6 +249,16 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				PsMarkerGroup.GROUP2_X, MarkerSign.CROSS
 		));
 		psMarkSettingsFar.copyDefaultsFrom(psMarkSettings);
+		sniperAmSettings = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.sniper-am-settings", WrothStyleAssignment.class, Map.of(
+				WrothStyleAssignment.SPREAD_1, MarkerSign.ATTACK1,
+				WrothStyleAssignment.SPREAD_2, MarkerSign.ATTACK2,
+				WrothStyleAssignment.SPREAD_3, MarkerSign.ATTACK3,
+				WrothStyleAssignment.SPREAD_4, MarkerSign.ATTACK4,
+				WrothStyleAssignment.STACK_1, MarkerSign.BIND1,
+				WrothStyleAssignment.STACK_2, MarkerSign.IGNORE1,
+				WrothStyleAssignment.NOTHING_1, MarkerSign.BIND2,
+				WrothStyleAssignment.NOTHING_2, MarkerSign.IGNORE2
+		));
 		looperAM = new BooleanSetting(pers, settingKeyBase + "looper-am.enabled", false);
 		pantoAmEnable = new BooleanSetting(pers, settingKeyBase + "panto-am.enabled", false);
 		sniperAmEnable = new BooleanSetting(pers, settingKeyBase + "sniper-am.enabled", false);
@@ -873,34 +886,39 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						playerBuffM.setValue(ba);
 					}
 				});
+				List<XivPlayerCharacter> sniperPlayers = sniper.stream()
+						.map(BuffApplied::getTarget)
+						.map(XivPlayerCharacter.class::cast)
+						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.toList();
+				List<XivPlayerCharacter> hpSniperPlayers = hpSniper.stream()
+						.map(BuffApplied::getTarget)
+						.map(XivPlayerCharacter.class::cast)
+						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.toList();
+				List<XivPlayerCharacter> nothingPlayers = nothing.stream()
+						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.toList();
 				BuffApplied playerBuff = playerBuffM.getValue();
+				Map<String, Object> params = Map.of("snipers", sniperPlayers, "hpSnipers", hpSniperPlayers, "nothings", nothingPlayers);
 				if (playerBuff == null) {
-					s.updateCall(noSniperCannonCall.getModified(e1, Map.of("snipers", hpSniper.stream().map(BuffApplied::getTarget).toList())));
+					s.updateCall(noSniperCannonCall.getModified(e1, params));
 				}
 				else {
 					if (playerBuff.buffIdMatches(0xD61)) {
-						s.updateCall(sniperCannonCall.getModified(playerBuff));
+						s.updateCall(sniperCannonCall.getModified(playerBuff, params));
 					}
 					else {
-						s.updateCall(highPoweredSniperCannonCall.getModified(playerBuff, Map.of("nothings", nothing)));
+						s.updateCall(highPoweredSniperCannonCall.getModified(playerBuff, params));
 					}
 				}
 				if (getSniperAmEnable().get()) {
 					s.accept(new ClearAutoMarkRequest());
 					s.waitMs(100);
-					sniper.stream()
-							.map(BuffApplied::getTarget)
-							.map(XivPlayerCharacter.class::cast)
-							.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
-							.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.ATTACK_NEXT)));
-					hpSniper.stream()
-							.map(BuffApplied::getTarget)
-							.map(XivPlayerCharacter.class::cast)
-							.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
-							.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.BIND_NEXT)));
-					nothing.stream()
-							.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
-							.forEach(player -> s.accept(new SpecificAutoMarkRequest(player, MarkerSign.IGNORE_NEXT)));
+					MultiSlotAutoMarkHandler<WrothStyleAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getSniperAmSettings());
+					handler.processRange(sniperPlayers, WrothStyleAssignment.SPREAD_1, WrothStyleAssignment.SPREAD_4);
+					handler.processRange(hpSniperPlayers, WrothStyleAssignment.STACK_1, WrothStyleAssignment.STACK_2);
+					handler.processRange(nothingPlayers, WrothStyleAssignment.NOTHING_1, WrothStyleAssignment.NOTHING_2);
 				}
 				// Wait for third ring to go off
 				AbilityUsedEvent ring1 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B51) && aue.isFirstTarget());
@@ -911,6 +929,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					s.accept(new ClearAutoMarkRequest());
 				}
 			});
+
 	private static final int grayDefa = 0xD6D;
 	private static final int grayBlue = 0xD6F;
 	private static final int grayRed = 0xD6E;
@@ -1152,5 +1171,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public BooleanSetting getMonitorAmEnable() {
 		return monitorAmEnable;
+	}
+
+	public MultiSlotAutomarkSetting<WrothStyleAssignment> getSniperAmSettings() {
+		return sniperAmSettings;
 	}
 }

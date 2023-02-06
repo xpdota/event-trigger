@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.groovy;
 import gg.xp.xivsupport.groovy.GroovyScriptManager;
 import gg.xp.xivsupport.groovy.GroovyScriptResult;
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.components.LateAdjustJSplitPane;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -10,6 +11,12 @@ import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.persistence.gui.BoundCheckbox;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.Theme;
+import org.fife.ui.rtextarea.RTextScrollPane;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,15 +26,21 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class GroovyPanel extends JPanel {
 
@@ -39,8 +52,9 @@ public class GroovyPanel extends JPanel {
 
 	private static final Font mono = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 
-	private final JTextArea entryArea;
+	private final RSyntaxTextArea entryArea;
 	private final JScrollPane resultScroll;
+	private final JScrollPane resultPropertiesScroll;
 	private final GroovyScriptManager mgr;
 	private final GroovyTab tab;
 	private final GroovyScriptHolder script;
@@ -68,11 +82,19 @@ public class GroovyPanel extends JPanel {
 		EasyAction reloadAll = new EasyAction("Reload All", this::reloadAll, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK));
 		EasyAction openExt = new EasyAction("Open in External Editor", this::openExt, () -> true, null);
 		EasyAction run = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.CTRL_DOWN_MASK));
+//		EasyAction run1 = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.ALT_DOWN_MASK));
+//		// Annoying workaround
+//		EasyAction run2 = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.ALT_GRAPH_DOWN_MASK));
+//		EasyAction run3 = new EasyAction("Execute", this::submit, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.ALT_DOWN_MASK | InputEvent.ALT_GRAPH_DOWN_MASK));
+
 		newScript.configureComponent(this);
 		save.configureComponent(this);
 		saveAll.configureComponent(this);
 		saveAs.configureComponent(this);
 		run.configureComponent(this);
+//		run1.configureComponent(this);
+//		run2.configureComponent(this);
+//		run3.configureComponent(this);
 		delete.configureComponent(this);
 		rename.configureComponent(this);
 //		reloadOne.configureComponent(this);
@@ -100,7 +122,8 @@ public class GroovyPanel extends JPanel {
 
 		{
 			top = new JPanel(new BorderLayout());
-			entryArea = new JTextArea(script.getScriptContent());
+			entryArea = new RSyntaxTextArea(script.getScriptContent());
+//			run.configureComponent(entryArea);
 			entryArea.getDocument().addDocumentListener(new DocumentListener() {
 				@Override
 				public void insertUpdate(DocumentEvent e) {
@@ -117,8 +140,54 @@ public class GroovyPanel extends JPanel {
 					update();
 				}
 			});
+			entryArea.addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent e) {
+					if (e.getKeyCode() == KeyEvent.VK_ENTER && e.getModifiersEx() == InputEvent.CTRL_DOWN_MASK) {
+						run.run();
+						e.consume();
+					}
+					super.keyPressed(e);
+				}
+			});
 			entryArea.setFont(mono);
-			JScrollPane entryScroll = new JScrollPane(entryArea);
+			// TODO: this is adding some heavy deps
+			entryArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+			entryArea.setCodeFoldingEnabled(true);
+//			AutoCompletion ac = new AutoCompletion(new LanguageAwareCompletionProvider(new DefaultCompletionProvider()));
+//			ac.install(entryArea);
+//			DefaultCompletionProvider dcp = new DefaultCompletionProvider();
+//			GroovyCompletionProvider completion = new GroovyCompletionProvider() {
+//				@Override
+//				protected CompletionProvider createCodeCompletionProvider() {
+//					JarManager jarMan = new JarManager();
+//					try {
+////						jarMan.addClassFileSource(LibraryInfo.getMainJreJarInfo());
+//						jarMan.addClassFileSource(new File("C:\\Users\\Matt\\Desktop\\triggevent\\deps\\xivsupport-1.0-SNAPSHOT.jar"));
+//						jarMan.addClassFileSource(new File("./xivsupport/target/xivsupport-1.0-SNAPSHOT.jar"));
+////						jarMan.addClassFileSource(LibraryInfo.getMainJreJarInfo());
+//					}
+//					catch (IOException e) {
+//						throw new RuntimeException(e);
+//					}
+//					return new GroovySourceCompletionProvider(jarMan);
+//				}
+//			};
+//			completion.setParent(dcp);
+//			AutoCompletion ac = new AutoCompletion(completion);
+//			ac.setAutoActivationEnabled(true);
+//			ac.setAutoActivationDelay(10);
+////			ac.setAutoCompleteEnabled(true);
+//			ac.setShowDescWindow(true);
+//			ac.install(entryArea);
+			try {
+				Theme theme = Theme.load(GroovyPanel.class.getResourceAsStream("/org/fife/ui/rsyntaxtextarea/themes/dark.xml"));
+				theme.apply(entryArea);
+			}
+			catch (IOException e) {
+				log.error("Error loading editor theme!", e);
+			}
+			JScrollPane entryScroll = new RTextScrollPane(entryArea);
 			top.add(entryScroll, BorderLayout.CENTER);
 			{
 				JButton runButton = run.asButtonWithKeyLabel();
@@ -136,17 +205,23 @@ public class GroovyPanel extends JPanel {
 		}
 		{
 			this.resultScroll = new JScrollPane();
+			this.resultPropertiesScroll = new JScrollPane();
+			JSplitPane jsp = new LateAdjustJSplitPane(JSplitPane.VERTICAL_SPLIT, resultScroll, resultPropertiesScroll);
 			bottom = new JPanel(new BorderLayout());
 //			bottom.setPreferredSize(bottom.getMaximumSize());
-			bottom.add(resultScroll, BorderLayout.CENTER);
+			bottom.add(jsp, BorderLayout.CENTER);
+			jsp.setOneTouchExpandable(true);
+			jsp.setResizeWeight(0.8);
+			jsp.setDividerLocation(0.8);
+			jsp.setDividerSize(10);
 		}
 		{
-			split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, bottom);
-			split.setOneTouchExpandable(true);
-			split.setDividerLocation(0.5);
-			split.setResizeWeight(0.5);
-			split.setDividerSize(10);
+			split = new LateAdjustJSplitPane(JSplitPane.VERTICAL_SPLIT, top, bottom);
 			add(split, BorderLayout.CENTER);
+			split.setOneTouchExpandable(true);
+			split.setResizeWeight(0.5);
+			split.setDividerLocation(0.5);
+			split.setDividerSize(10);
 		}
 		GroovyScriptResult result = script.getLastResult();
 		if (result != null) {
@@ -235,6 +310,31 @@ public class GroovyPanel extends JPanel {
 				.makeTable();
 	}
 
+	private JTable customTableListDisplay(DisplayControl dc, Collection<?> values) {
+		List<String> explicitCols = dc.getListTableColumns();
+		boolean autoCols = explicitCols == null || explicitCols.isEmpty();
+		Collection<String> cols = new LinkedHashSet<>();
+		cols.add("toString");
+		if (!autoCols) {
+			cols.addAll(explicitCols);
+		}
+		List<Map<String, Object>> processedValues = values.stream().map(val -> {
+			Map<String, Object> map = new HashMap<>();
+			Map props = DefaultGroovyMethods.getProperties(val);
+			map.put("toString", val.toString());
+			map.putAll(props);
+			if (autoCols) {
+				cols.addAll(map.keySet());
+			}
+			return map;
+		}).toList();
+		CustomTableModel.CustomTableModelBuilder<Map<String, Object>> builder = CustomTableModel.builder(() -> processedValues);
+		for (String col : cols) {
+			builder = builder.addColumn(new CustomColumn<>(col, val -> singleValueConversion(val.get(col))));
+		}
+		return builder.build().makeTable();
+	}
+
 	private JTable simpleMapDisplay(Map<?, ?> map) {
 		return CustomTableModel.builder(() -> new ArrayList<>(map.entrySet()))
 				.addColumn(new CustomColumn<>("Key", e -> singleValueConversion(e.getKey())))
@@ -251,12 +351,24 @@ public class GroovyPanel extends JPanel {
 		if (obj instanceof Byte || obj instanceof Integer || obj instanceof Long || obj instanceof Short) {
 			return String.format("%d (0x%x)", obj, obj);
 		}
+		// TODO: arrays
+//		if (obj instanceof Array arr) {
+//			arr.getClass().arrayType()
+//		}
+		if (obj.getClass().isArray()) {
+			int length = Array.getLength(obj);
+			List<Object> converted = new ArrayList<>();
+			for (int i = 0; i < length; i++) {
+				converted.add(Array.get(obj, i));
+			}
+			return converted.stream().map(GroovyPanel::singleValueConversion).collect(Collectors.joining(", ", "[", "]"));
+		}
 		return obj.toString();
 
 	}
 
 	private void submit() {
-		setResultDisplay(textDisplayComponent("Processing..."));
+		setResultDisplay(null, textDisplayComponent("Processing..."));
 		if (script.isSaveable()) {
 			script.save();
 		}
@@ -271,16 +383,16 @@ public class GroovyPanel extends JPanel {
 			if (resultHolder.success()) {
 				Object result = resultHolder.result();
 				if (result == null) {
-					setResultDisplay(textDisplayComponent("null"));
+					setResultDisplay(result, textDisplayComponent("null"));
 				}
 				else if (result instanceof Throwable t) {
-					setResultDisplay(textDisplayComponent(ExceptionUtils.getStackTrace(t)));
+					setResultDisplay(result, textDisplayComponent(ExceptionUtils.getStackTrace(t)));
 				}
 				else if (result instanceof Map map) {
-					setResultDisplay(simpleMapDisplay(map));
+					setResultDisplay(result, simpleMapDisplay(map));
 				}
 				else if (result instanceof Collection coll) {
-					setResultDisplay(simpleListDisplay(coll));
+					setResultDisplay(result, listDisplay(resultHolder, coll));
 				}
 				else if (result.getClass().isArray()) {
 					try {
@@ -289,33 +401,62 @@ public class GroovyPanel extends JPanel {
 						for (int i = 0; i < length; i++) {
 							converted.add(Array.get(result, i));
 						}
-						setResultDisplay(simpleListDisplay(converted));
+						setResultDisplay(result, simpleListDisplay(converted));
 					}
 					catch (Throwable t) {
 						log.error("Error converting array to list", t);
-						setResultDisplay(textDisplayComponent("This was supposed to be an array, but there was an error converting it to a list.\n\n" + result));
+						setResultDisplay(result, textDisplayComponent("This was supposed to be an array, but there was an error converting it to a list.\n\n" + result));
 					}
 
 				}
 				else if (result instanceof Component comp) {
-					setResultDisplay(comp);
+					setResultDisplay(result, comp);
 				}
+//				else if (result instanceof String string) {
+//					setResultDisplay(textDisplayComponent(string));
+//				}
 				else {
-					setResultDisplay(textDisplayComponent(result.toString()));
+					setResultDisplay(result, textDisplayComponent(result.toString()));
 				}
 			}
 			else {
 				//noinspection ConstantConditions
-				setResultDisplay(errorDisplayComponent(ExceptionUtils.getStackTrace(resultHolder.failure())));
+				Throwable failure = resultHolder.failure();
+				setResultDisplay(failure, errorDisplayComponent(ExceptionUtils.getStackTrace(failure)));
 			}
 		}
 		catch (Throwable t) {
-			setResultDisplay(errorDisplayComponent(ExceptionUtils.getStackTrace(t)));
+			setResultDisplay(t, errorDisplayComponent(ExceptionUtils.getStackTrace(t)));
 		}
 	}
 
-	private void setResultDisplay(Component display) {
-		SwingUtilities.invokeLater(() -> resultScroll.setViewportView(display));
+	private Component listDisplay(GroovyScriptResult result, Collection<?> coll) {
+		DisplayControl dc = result.displayControl();
+		DisplayControl.ListDisplayMode ldm = dc.getListDisplayMode();
+		return switch (ldm) {
+			case AUTO -> simpleListDisplay(coll);
+			case TABLE -> customTableListDisplay(dc, coll);
+		};
+	}
+
+	private void setResultDisplay(@Nullable Object obj, Component display) {
+		Map<?, ?> props;
+		if (obj == null) {
+			props = Collections.emptyMap();
+		}
+		else {
+			try {
+				props = DefaultGroovyMethods.getProperties(obj);
+			}
+			catch (Throwable t) {
+				props = Collections.emptyMap();
+			}
+		}
+		JTable md = simpleMapDisplay(props);
+		SwingUtilities.invokeLater(() -> {
+			resultPropertiesScroll.setViewportView(md);
+			resultScroll.setViewportView(display);
+		});
 	}
 
 }

@@ -50,10 +50,12 @@ public class AutoHandlerScan {
 			"javaassist",
 			"jna",
 			"jsr",
+			"nonexistent",
 			"logback",
 			"opencsv",
 			"picocontainer",
 			"reflections",
+			"rsyntaxtextarea",
 			"sfl4j",
 			"xivdata"
 	);
