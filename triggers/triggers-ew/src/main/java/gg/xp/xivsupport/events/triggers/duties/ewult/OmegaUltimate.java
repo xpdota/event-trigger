@@ -227,8 +227,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				WrothStyleAssignment.SPREAD_4, MarkerSign.ATTACK4,
 				WrothStyleAssignment.STACK_1, MarkerSign.BIND1,
 				WrothStyleAssignment.STACK_2, MarkerSign.IGNORE1,
-				WrothStyleAssignment.NOTHING_1, MarkerSign.BIND1,
-				WrothStyleAssignment.NOTHING_2, MarkerSign.IGNORE1
+				WrothStyleAssignment.NOTHING_1, MarkerSign.BIND2,
+				WrothStyleAssignment.NOTHING_2, MarkerSign.IGNORE2
 		));
 		looperAM = new BooleanSetting(pers, settingKeyBase + "looper-am.enabled", false);
 		pantoAmEnable = new BooleanSetting(pers, settingKeyBase + "panto-am.enabled", false);

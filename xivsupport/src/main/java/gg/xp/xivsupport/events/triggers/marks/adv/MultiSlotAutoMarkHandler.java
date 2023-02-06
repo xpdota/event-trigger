@@ -31,8 +31,8 @@ public class MultiSlotAutoMarkHandler<X extends Enum<X>> {
 	public void processRange(List<XivPlayerCharacter> players, X startInclusive, X endInclusive) {
 		int startOrdinal = startInclusive.ordinal();
 		int endOrdinal = endInclusive.ordinal();
-		if (startOrdinal < endOrdinal) {
-			throw new IllegalArgumentException("Start was a lower ordinal than the end: %s vs %s".formatted(startInclusive, endInclusive));
+		if (startOrdinal > endOrdinal) {
+			throw new IllegalArgumentException("Start was a higher ordinal than the end: %s vs %s".formatted(startInclusive, endInclusive));
 		}
 		for (int i = 0; i < players.size(); i++) {
 			int ordinal = startOrdinal + i;
