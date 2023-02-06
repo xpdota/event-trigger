@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tabs;
 
 import gg.xp.reevent.events.BasicEventDistributor;
+import gg.xp.xivsupport.callouts.audio.SoundPlayer;
 import gg.xp.xivsupport.events.misc.Management;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.Stats;
@@ -276,6 +277,7 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 				gbc.gridy = 1;
 				JPanel ttsPanel = new TitleBorderPanel("TTS and Sound");
 				ttsPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Enable TTS").getComponent());
+				ttsPanel.add(new BooleanSettingGui(actWs.getAllowSound(), "Enable Sounds").getComponent());
 				wsPanel.add(ttsPanel, gbc);
 			}
 			{
@@ -295,7 +297,10 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			soundPanel.setPreferredSize(new Dimension(300, 150));
 			soundPanel.setLayout(new WrapLayout());
 			soundPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Use OP WebSocket for TTS").getComponent());
-			soundPanel.add(new BooleanSettingGui(container.getComponent(PowerShellSpeechProcessor.class).getEnabledSetting(), "Local TTS as Backup").getComponent());
+			soundPanel.add(new BooleanSettingGui(container.getComponent(PowerShellSpeechProcessor.class).getEnabledSetting(), "Local TTS as Fallback").getComponent());
+			soundPanel.add(Box.createHorizontalGlue());
+			soundPanel.add(new BooleanSettingGui(actWs.getAllowSound(), "Use OP WebSocket for Sound").getComponent());
+			soundPanel.add(new BooleanSettingGui(container.getComponent(SoundPlayer.class).getLocalSoundEnabled(), "Local Sound as Fallback").getComponent());
 			addTab("TTS and Sound", soundPanel);
 		}
 		{

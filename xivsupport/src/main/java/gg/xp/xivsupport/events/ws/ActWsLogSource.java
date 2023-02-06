@@ -9,6 +9,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.EventSource;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
+import gg.xp.xivsupport.callouts.audio.PlaySoundFileRequest;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.events.state.RefreshSpecificCombatantsRequest;
@@ -53,6 +54,7 @@ public class ActWsLogSource implements EventSource {
 	private final WsURISetting uriSetting;
 	private final BooleanSetting allowBadCert;
 	private final BooleanSetting allowTts;
+	private final BooleanSetting allowSound;
 	private final BooleanSetting fastRefreshNonCombatant;
 
 	private final class ActWsClientInternal extends WebSocketClient {
@@ -159,6 +161,7 @@ public class ActWsLogSource implements EventSource {
 		this.allowBadCert = new BooleanSetting(pers, "acts-allow-bad-cert", false);
 		this.eventConsumer = master::pushEvent;
 		this.allowTts = new BooleanSetting(pers, "actws-allow-tts", true);
+		this.allowSound = new BooleanSetting(pers, "actws-allow-sound", false);
 		this.fastRefreshNonCombatant = new BooleanSetting(pers, "actws-fast-noncombatants-refresh", false);
 		this.pls = pls;
 		this.client = new ActWsClientInternal();
@@ -232,6 +235,20 @@ public class ActWsLogSource implements EventSource {
 			sendObject(Map.ofEntries(
 					Map.entry("call", "say"),
 					Map.entry("text", ttsString),
+					Map.entry("rseq", rseqCounter.getAndIncrement())));
+			event.setHandled();
+		}
+	}
+
+	@LiveOnly
+	@HandleEvents
+	public void playSound(EventContext context, PlaySoundFileRequest event) {
+		if (allowSound.get() && state.isConnected() && !event.isHandled()) {
+			String soundFile = event.getFile().toString();
+			log.info("Playing sound via ACT: {}", soundFile);
+			sendObject(Map.ofEntries(
+					Map.entry("call", "playSound"),
+					Map.entry("file", soundFile),
 					Map.entry("rseq", rseqCounter.getAndIncrement())));
 			event.setHandled();
 		}
@@ -406,6 +423,10 @@ public class ActWsLogSource implements EventSource {
 
 	public BooleanSetting getAllowTts() {
 		return allowTts;
+	}
+
+	public BooleanSetting getAllowSound() {
+		return allowSound;
 	}
 
 	public BooleanSetting getFastRefreshNonCombatant() {
