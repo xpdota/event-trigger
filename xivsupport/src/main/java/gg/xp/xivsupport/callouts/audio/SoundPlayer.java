@@ -47,6 +47,7 @@ public class SoundPlayer {
 		if (localSoundEnabled.get()) {
 			File file = event.getFile();
 			exs.submit(() -> playSound(file));
+			event.setHandled();
 		}
 	}
 
