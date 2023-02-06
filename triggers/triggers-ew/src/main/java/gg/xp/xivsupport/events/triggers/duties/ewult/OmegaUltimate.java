@@ -131,7 +131,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			.extendedDescription("Skates, no Shield: Stand close to Female");
 
 
-	private final ModifiableCallout<BuffApplied> midGlitchO = ModifiableCallout.durationBasedCall("Mid Glitch with O Buddy", "Circle, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> midGlitchO = ModifiableCallout.<BuffApplied>durationBasedCall("Mid Glitch with O Buddy", "Circle, Close to {tetherBuddy}")
+			.extendedDescription("""
+					The mid/remote glitch callouts can be modified to call out swap or no swap based on priority.
+					There is a variable called 'group' which will be 1 or 2 (or 0 if you had no tether buddy which shouldn't happen).
+					For example, you could use the callout '{(group == 2) ? "Right, Furthest" : "Left, Closest"}' to make the call
+					switch what it says based on your group.
+					""");
 	private final ModifiableCallout<BuffApplied> midGlitchS = ModifiableCallout.durationBasedCall("Mid Glitch with □ Buddy", "Square, Close to {tetherBuddy}");
 	private final ModifiableCallout<BuffApplied> midGlitchT = ModifiableCallout.durationBasedCall("Mid Glitch with △ Buddy", "Triangle, Close to {tetherBuddy}");
 	private final ModifiableCallout<BuffApplied> midGlitchX = ModifiableCallout.durationBasedCall("Mid Glitch with X Buddy", "X, Close to {tetherBuddy}");
@@ -679,6 +685,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				PsMarkerGroup myAssignment = assignments.forPlayer(getState().getPlayer());
 				XivCombatant buddy = assignments.getPlayerForAssignment(myAssignment.getCounterpart());
 
+				int group;
+				if (buddy == null) {
+					group = 0;
+				}
+				else {
+					group = shouldSwap(getState().getPlayer(), (XivPlayerCharacter) buddy) ? 2 : 1;
+				}
 
 				// TODO: get all the ability IDs instead of using the buff
 //				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B25, 0x7B2D));
@@ -687,7 +700,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 				BuffApplied status = getBuffs().findStatusOnTarget(getState().getPlayer(), ba -> ba.buffIdMatches(0xD63, 0xD64));
 				boolean mid = assignments.isMid();
-				Map<String, Object> params = buddy == null ? Map.of() : Map.of("tetherBuddy", buddy, "mid", mid);
+				Map<String, Object> params = buddy == null ? Map.of() : Map.of("tetherBuddy", buddy, "mid", mid, "group", group);
 				s.updateCall((switch (myAssignment) {
 					case GROUP1_CIRCLE, GROUP2_CIRCLE -> mid ? midGlitchO : remoteGlitchO;
 					case GROUP1_TRIANGLE, GROUP2_TRIANGLE -> mid ? midGlitchT : remoteGlitchT;
