@@ -2,6 +2,8 @@ package gg.xp.xivsupport.callouts.audio;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +26,11 @@ public class SoundPlayer {
 	private static final Logger log = LoggerFactory.getLogger(SoundPlayer.class);
 
 	private final SoundFilesManager mgr;
+	private final BooleanSetting localSoundEnabled;
 
-	public SoundPlayer(SoundFilesManager mgr) {
+	public SoundPlayer(SoundFilesManager mgr, PersistenceProvider pers) {
 		this.mgr = mgr;
+		this.localSoundEnabled = new BooleanSetting(pers, "local-sound-player.enabled", true);
 	}
 
 	@HandleEvents
@@ -40,8 +44,10 @@ public class SoundPlayer {
 
 	@HandleEvents
 	public void playSound(EventContext context, PlaySoundFileRequest event) {
-		File file = event.getFile();
-		exs.submit(() -> playSound(file));
+		if (localSoundEnabled.get()) {
+			File file = event.getFile();
+			exs.submit(() -> playSound(file));
+		}
 	}
 
 	private void playSound(File file) {
@@ -64,4 +70,7 @@ public class SoundPlayer {
 		}
 	}
 
+	public BooleanSetting getLocalSoundEnabled() {
+		return localSoundEnabled;
+	}
 }
