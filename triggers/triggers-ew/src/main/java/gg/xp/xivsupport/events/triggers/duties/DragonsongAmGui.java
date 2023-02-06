@@ -3,15 +3,13 @@ package gg.xp.xivsupport.events.triggers.duties;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
-import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
-import gg.xp.xivsupport.persistence.gui.AutomarkSettingGui;
+import gg.xp.xivsupport.persistence.gui.BasicAutomarkSettingGroupGui;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
-import gg.xp.xivsupport.persistence.settings.AutomarkSetting;
 import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 
 import javax.swing.*;
@@ -57,8 +55,8 @@ public class DragonsongAmGui implements DutyPluginTab {
 		outer.add(topCheckboxes, BorderLayout.NORTH);
 		GridBagConstraints c = new GridBagConstraints(0, 0, 2, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
 
-		inner = new JPanel();
-		inner.setLayout(new GridBagLayout());
+		inner = new JPanel(new BorderLayout());
+		JPanel innerUpper = new JPanel(new GridBagLayout());
 		JCheckBox rotFirst = new BooleanSettingGui(ds.getP6_rotPrioHigh(), "Rot takes highest priority").getComponent();
 		JCheckBox reverseSort = new BooleanSettingGui(ds.getP6_reverseSort(), "Reverse sort (higher priority gets larger number)").getComponent();
 		ReadOnlyText helpText = new ReadOnlyText("""
@@ -72,61 +70,21 @@ public class DragonsongAmGui implements DutyPluginTab {
 				""");
 
 
-		inner.add(helpText, c);
+		innerUpper.add(helpText, c);
 		c.gridy++;
 		{
-			TitleBorderPanel mappingPanel = new TitleBorderPanel("Wroth Marker Mapping");
-			mappingPanel.setLayout(new GridBagLayout());
-			GridBagConstraints mc = GuiUtil.defaultGbc();
-			mc.ipadx = 5;
-			mc.gridy = 0;
-
 			MultiSlotAutomarkSetting<DragonsongWrothAssignments> markSettings = ds.getP6_amAssignments();
-			for (int row = 0; row < 4; row++) {
-				mc.gridx = 0;
-				mappingPanel.add(new JLabel("Spread #" + (row + 1)), mc);
-
-				AutomarkSetting g1setting = markSettings.getSettings().get(DragonsongWrothAssignments.values()[row]);
-				mc.gridx++;
-				mappingPanel.add(new AutomarkSettingGui(g1setting, null).getCombined(), mc);
-
-				mc.gridx++;
-				mappingPanel.add(Box.createHorizontalStrut(10));
-
-				mc.gridx++;
-				mappingPanel.add(new JLabel(switch (row) {
-					case 0 -> "Stack #1";
-					case 1 -> "Stack #2";
-					case 2 -> "Nothing #1";
-					case 3 -> "Nothing #2";
-					default -> "?";
-				}), mc);
-
-
-				AutomarkSetting g2setting = markSettings.getSettings().get(DragonsongWrothAssignments.values()[row + 4]);
-				mc.gridx++;
-				mappingPanel.add(new AutomarkSettingGui(g2setting, null).getCombined(), mc);
-				mc.gridy++;
-			}
-			markSettings.addListener(mappingPanel::repaint);
-			inner.add(mappingPanel, c);
+			BasicAutomarkSettingGroupGui<DragonsongWrothAssignments> mappingPanel = new BasicAutomarkSettingGroupGui<>("Wroth Marker Mapping", markSettings, 4, true);
+			innerUpper.add(mappingPanel, c);
 		}
 		c.gridy++;
-		inner.add(rotFirst, c);
+		innerUpper.add(rotFirst, c);
 		c.gridy++;
-		inner.add(reverseSort, c);
+		innerUpper.add(reverseSort, c);
 		c.gridy++;
-		c.fill = GridBagConstraints.NONE;
-		inner.add(jsg.getResetButton(), c);
+		inner.add(innerUpper, BorderLayout.NORTH);
 		c.fill = GridBagConstraints.BOTH;
-		c.gridy++;
-		c.weightx = 0;
-		c.gridwidth = 1;
-		c.weighty = 1;
-		inner.add(jsg.getJobListWithButtons(), c);
-		c.gridx++;
-		c.weightx = 1;
-		inner.add(jsg.getPartyPane(), c);
+		inner.add(jsg.getCombined(), BorderLayout.CENTER);
 
 		ds.getP6_useAutoMarks().addAndRunListener(this::checkVis);
 		outer.add(inner, BorderLayout.CENTER);
@@ -148,19 +106,4 @@ public class DragonsongAmGui implements DutyPluginTab {
 		return 101;
 	}
 
-//	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
-//	// determine exactly what should trigger it. Maybe better to just stick it on a timer that only applies when the
-//	// tab is visible?
-//	@HandleEvents(order = 20_000)
-//	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-//		if (jsg != null) {
-//			jsg.externalRefresh();
-//		}
-//	}
-
-	public void tryBringToFront() {
-		if (inner != null) {
-			GuiUtil.bringToFront(inner);
-		}
-	}
 }

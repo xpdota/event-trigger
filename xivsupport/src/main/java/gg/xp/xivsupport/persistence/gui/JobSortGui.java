@@ -104,11 +104,23 @@ public class JobSortGui {
 	public JPanel getJobListWithButtons() {
 		JPanel panel = new JPanel(new BorderLayout());
 		panel.add(jobListPane, BorderLayout.CENTER);
-		JPanel bottom = new JPanel();
-		bottom.setLayout(new BoxLayout(bottom, BoxLayout.LINE_AXIS));
-		bottom.add(exportButton);
-		bottom.add(importButton);
-		panel.add(bottom, BorderLayout.NORTH);
+		JPanel top = new JPanel();
+		top.setLayout(new BoxLayout(top, BoxLayout.LINE_AXIS));
+		top.add(exportButton);
+		top.add(importButton);
+		panel.add(top, BorderLayout.NORTH);
+		return panel;
+	}
+
+	public JPanel getJobListWithAllButtons() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(jobListPane, BorderLayout.CENTER);
+		JPanel top = new JPanel();
+		top.setLayout(new BoxLayout(top, BoxLayout.LINE_AXIS));
+		top.add(exportButton);
+		top.add(importButton);
+		panel.add(top, BorderLayout.NORTH);
+		panel.add(resetButton, BorderLayout.SOUTH);
 		return panel;
 	}
 
@@ -126,5 +138,12 @@ public class JobSortGui {
 				partyTableModel.fullRefresh();
 			}
 		});
+	}
+
+	public JPanel getCombined() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(getJobListWithAllButtons(), BorderLayout.WEST);
+		panel.add(getPartyPane(), BorderLayout.CENTER);
+		return panel;
 	}
 }
