@@ -1,4 +1,4 @@
-olackage gg.xp.xivsupport.events.triggers.duties.ewult;
+package gg.xp.xivsupport.events.triggers.duties.ewult;
 
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.duties.*;
