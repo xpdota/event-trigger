@@ -49,6 +49,7 @@ gg.xp.xivsupport.events.misc.pulls
 gg.xp.xivsupport.events.state
 gg.xp.xivsupport.events.state.combatstate
 gg.xp.xivsupport.events.state.floormarkers
+gg.xp.xivsupport.events.state.playermarkers
 gg.xp.xivsupport.events.triggers.duties
 gg.xp.xivsupport.events.triggers.duties.ewex
 gg.xp.xivsupport.events.triggers.duties.ewult
