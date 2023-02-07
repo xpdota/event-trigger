@@ -921,6 +921,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					handler.processRange(nothingPlayers, WrothStyleAssignment.NOTHING_1, WrothStyleAssignment.NOTHING_2);
 				}
 				// Wait for third ring to go off
+				// 7B4F = initial cast (inner circle)
+				// 7B50 = second circle
+				// 7B51 = third circle
+				// 7B52 = outermost circle
 				AbilityUsedEvent ring1 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B51) && aue.isFirstTarget());
 				s.updateCall(waveRepeaterMoveIn1.getModified(ring1));
 				AbilityUsedEvent ring2 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B51) && aue.isFirstTarget());
@@ -1109,6 +1113,58 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					}
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B6B));
 					s.accept(new ClearAutoMarkRequest());
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> waveCannon1Start = ModifiableCallout.durationBasedCall("Wave Cannon 1: Start", "Spread");
+	private final ModifiableCallout<AbilityCastStart> waveCannon1Stacks = ModifiableCallout.durationBasedCall("Wave Cannon 1: Stacks", "Stacks");
+	private final ModifiableCallout<AbilityCastStart> waveCannon2Start = ModifiableCallout.durationBasedCall("Wave Cannon 2: Start", "Spread Outside");
+	private final ModifiableCallout<AbilityCastStart> waveCannon2Stacks = ModifiableCallout.durationBasedCall("Wave Cannon 2: Stacks", "In Now then Stacks");
+	private final ModifiableCallout<AbilityCastStart> waveCannon3Start = ModifiableCallout.durationBasedCall("Wave Cannon 3: Start", "Spread Outside");
+	private final ModifiableCallout<AbilityCastStart> waveCannon3Stacks = ModifiableCallout.durationBasedCall("Wave Cannon 3: Stacks", "Stacks Outside");
+	private final ModifiableCallout<AbilityUsedEvent> waveCannon3MoveInEarly = new ModifiableCallout<AbilityUsedEvent>("Wave Cannon 3: Move In (Center)", "Move In")
+			.disabledByDefault()
+			.extendedDescription("""
+					This calls out when the center goes off.
+					If your group is dodging into the second ring instead, disable this call and enable the one below.
+					""");
+	private final ModifiableCallout<AbilityUsedEvent> waveCannon3MoveInLate = new ModifiableCallout<AbilityUsedEvent>("Wave Cannon 3: Move In (Ring)", "Move In")
+			.extendedDescription("""
+					This calls out when the second ring goes off (the one just outside the center).
+					If your group is dodging into the center circle instead, disable this call and enable the one above.
+					""");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p4waveCannonSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B81),
+			(e1, s) -> {
+				// TODO: stack markers? doesn't look like a HM. I see two people targeted with 0x5779 on each wave, could that be it?
+				// First set
+				{
+					s.updateCall(waveCannon1Start.getModified(e1));
+					AbilityCastStart stackCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B80));
+					// This cast starts about half a second before the wave cannons go off, so wait a bit
+					s.waitMs(300);
+					s.updateCall(waveCannon1Stacks.getModified(stackCast));
+				}
+				// Second set
+				{
+					AbilityCastStart secondWaveCannonStart = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B81));
+					s.updateCall(waveCannon2Start.getModified(secondWaveCannonStart));
+					AbilityCastStart stackCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B80));
+					s.waitMs(300);
+					s.updateCall(waveCannon2Stacks.getModified(stackCast));
+				}
+				// Third set
+				{
+					AbilityCastStart thirdWaveCannonStart = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B81));
+					s.updateCall(waveCannon3Start.getModified(thirdWaveCannonStart));
+					AbilityCastStart stackCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B80));
+					s.updateCall(waveCannon3Stacks.getModified(stackCast));
+					AbilityUsedEvent center = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B4F));
+					s.updateCall(waveCannon3MoveInEarly.getModified(center));
+					AbilityUsedEvent secondRing = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B50));
+					s.updateCall(waveCannon3MoveInLate.getModified(secondRing));
 				}
 			});
 
