@@ -33,6 +33,6 @@ public enum FloorMarker implements HasIconURL {
 
 	@Override
 	public URL getIconUrl() {
-		return FloorMarker.class.getResource(String.format("/xiv/icon/%06d_hr1.png", iconId));
+		return IconUtils.iconUrl(iconId);
 	}
 }
