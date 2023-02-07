@@ -424,7 +424,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 //	}
 
 	private final class FloorMarkerDoohickey extends JPanel {
+
 		private static final int SIZE = 50;
+		private double x;
+		private double y;
 
 		private FloorMarkerDoohickey(FloorMarker marker) {
 			super(null);
@@ -445,12 +448,27 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				setVisible(false);
 			}
 			else {
-				int x = translateX(position.x()) - (getSize().width / 2);
-				int y = translateY(position.y()) - (getSize().height / 2);
-				setBounds(x, y, SIZE, SIZE);
 				setVisible(true);
-//				MapPanel.this.setComponentZOrder(this, MapPanel.this.getComponentCount() - 1);
+				x = position.x();
+				y = position.y();
+				setBounds(getBounds());
 			}
+		}
+
+		@Override
+		public int getX() {
+			return translateX(this.x) - (getSize().width / 2);
+		}
+
+
+		@Override
+		public int getY() {
+			return translateY(this.y) - (getSize().height / 2);
+		}
+
+		@Override
+		public Rectangle getBounds() {
+			return new Rectangle(getX(), getY(), SIZE, SIZE);
 		}
 	}
 
@@ -553,6 +571,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		long oldHpMax = -2;
 		long oldUnresolved = -2;
 
+		// TODO: add debuffs or something to this
 		public void update(XivCombatant cbt, @Nullable CastTracker castData) {
 			RenderUtils.setTooltip(this, formatTooltip(cbt));
 			setBounds(getBounds());
