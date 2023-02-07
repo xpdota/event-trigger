@@ -418,7 +418,11 @@ public class MapDataController {
 			return floorMarkers.getMarkers();
 		}
 		else {
-			return new EnumMap<>(getCurrent().floorMarkers);
+			Map<FloorMarker, Position> markers = getCurrent().floorMarkers;
+			if (markers.isEmpty()) {
+				return Collections.emptyMap();
+			}
+			return new EnumMap<>(markers);
 		}
 	}
 
