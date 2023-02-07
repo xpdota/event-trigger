@@ -248,7 +248,6 @@ public class MakeEverything {
 			maker.extractAndCopyIconRange(60011, 60013, iconDir);
 			// Floor Markers
 			maker.extractAndCopyIconRange(61241, 61248, iconDir);
-
 			// Head markers
 			maker.extractAndCopyIconRange(60701, 60714, iconDir);
 		}

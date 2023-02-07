@@ -4,10 +4,14 @@ import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
+import gg.xp.xivsupport.events.actlines.events.HasFloorMarker;
+import gg.xp.xivsupport.events.actlines.events.HasPlayerHeadMarker;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
+import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
+import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivStatusEffect;
 import org.jetbrains.annotations.Nullable;
@@ -18,6 +22,11 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.net.URL;
 
+/**
+ * Class might as well be renamed "AllTheStuffInThePrimaryValueColumnRenderer" at this point.
+ *
+ * Renderer for status effects, actions, and other stuff.
+ */
 public class ActionAndStatusRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
 	private final IconNameIdRenderer renderer = new IconNameIdRenderer();
@@ -108,6 +117,18 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 
 			tooltip = String.format("%s (0x%x, %s)%s", status.getName(), status.getId(), status.getId(), preAppText);
 			idText = String.format("%X", status.getId());
+		}
+		else if (value instanceof HasPlayerHeadMarker phm) {
+			MarkerSign marker = phm.getMarker();
+			icon = marker.getIconUrl();
+			text = phm.extraDescription();
+			idText = marker.getCommand();
+			tooltip = "";
+		}
+		else if (value instanceof HasFloorMarker hfm) {
+			icon = hfm.getMarker();
+			text = hfm.extraDescription();
+			tooltip = "";
 		}
 		else if (value instanceof NameIdPair pair) {
 			return fallback.getTableCellRendererComponent(table, pair.getName(), isSelected, hasFocus, row, column);

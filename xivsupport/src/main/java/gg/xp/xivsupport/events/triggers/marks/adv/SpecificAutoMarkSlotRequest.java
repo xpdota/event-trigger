@@ -1,11 +1,13 @@
 package gg.xp.xivsupport.events.triggers.marks.adv;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivsupport.events.actlines.events.HasPlayerHeadMarker;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 
-public class SpecificAutoMarkSlotRequest extends BaseEvent implements HasPrimaryValue {
+public class SpecificAutoMarkSlotRequest extends BaseEvent implements HasPrimaryValue, HasPlayerHeadMarker {
 
 	@Serial
 	private static final long serialVersionUID = 792969414398476188L;
@@ -26,8 +28,14 @@ public class SpecificAutoMarkSlotRequest extends BaseEvent implements HasPrimary
 		return slotToMark;
 	}
 
+	@Override
 	public MarkerSign getMarker() {
 		return marker;
+	}
+
+	@Override
+	public @Nullable String extraDescription() {
+		return getPrimaryValue();
 	}
 
 	@Override

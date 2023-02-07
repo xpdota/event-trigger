@@ -1,23 +1,25 @@
 package gg.xp.xivsupport.events.triggers.marks.adv;
 
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Locale;
 
-public enum MarkerSign implements HasFriendlyName {
+public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 
 	ATTACK_NEXT("Next Attack", "attack"),
-	ATTACK1("Attack 1", "attack1", ATTACK_NEXT),
-	ATTACK2("Attack 2", "attack2", ATTACK_NEXT),
-	ATTACK3("Attack 3", "attack3", ATTACK_NEXT),
-	ATTACK4("Attack 4", "attack4", ATTACK_NEXT),
-	ATTACK5("Attack 5", "attack5", ATTACK_NEXT),
+	ATTACK1("Attack 1", "attack1", ATTACK_NEXT, 60701),
+	ATTACK2("Attack 2", "attack2", ATTACK_NEXT, 60702),
+	ATTACK3("Attack 3", "attack3", ATTACK_NEXT, 60703),
+	ATTACK4("Attack 4", "attack4", ATTACK_NEXT, 60704),
+	ATTACK5("Attack 5", "attack5", ATTACK_NEXT, 60705),
 
 	BIND_NEXT("Next Bind", "bind"),
-	BIND1("Bind 1", "bind1", BIND_NEXT),
-	BIND2("Bind 2", "bind2", BIND_NEXT),
-	BIND3("Bind 3", "bind3", BIND_NEXT),
+	BIND1("Bind 1", "bind1", BIND_NEXT, 60706),
+	BIND2("Bind 2", "bind2", BIND_NEXT, 60707),
+	BIND3("Bind 3", "bind3", BIND_NEXT, 60708),
 
 	IGNORE_NEXT("Next Ignore", "ignore") {
 		@Override
@@ -25,40 +27,57 @@ public enum MarkerSign implements HasFriendlyName {
 			return "stop";
 		}
 	},
-	IGNORE1("Ignore 1", "ignore1", IGNORE_NEXT) {
+	IGNORE1("Ignore 1", "ignore1", IGNORE_NEXT, 60709) {
 		@Override
 		public String getKoreanCommand() {
 			return "stop1";
 		}
 	},
-	IGNORE2("Ignore 2", "ignore2", IGNORE_NEXT) {
+	IGNORE2("Ignore 2", "ignore2", IGNORE_NEXT, 60710) {
 		@Override
 		public String getKoreanCommand() {
 			return "stop2";
 		}
 	},
 
-	CIRCLE("Circle", "circle"),
-	CROSS("Cross", "cross"),
-	SQUARE("Square", "square"),
-	TRIANGLE("Triangle", "triangle"),
+	CIRCLE("Circle", "circle", 60712),
+	CROSS("Cross", "cross", 60713),
+	SQUARE("Square", "square", 60711),
+	TRIANGLE("Triangle", "triangle", 60714),
 
 	CLEAR("Clear Marker", "clear");
 
 	private final String desc;
 	private final String command;
 	private final MarkerSign base;
+	private final @Nullable HasIconURL iconUrl;
 
 	MarkerSign(String desc, String command) {
 		this.desc = desc;
 		this.command = command;
 		this.base = this;
+		iconUrl = null;
 	}
 
-	MarkerSign(String desc, String command, MarkerSign base) {
+	MarkerSign(String desc, String command, int icon) {
+		this.desc = desc;
+		this.command = command;
+		this.base = this;
+		iconUrl = makeIcon(icon);
+	}
+
+	MarkerSign(String desc, String command, MarkerSign base, int icon) {
 		this.desc = desc;
 		this.command = command;
 		this.base = base;
+		iconUrl = makeIcon(icon);
+	}
+
+	private static @Nullable HasIconURL makeIcon(@Nullable Integer icon) {
+		if (icon == null) {
+			return null;
+		}
+		return IconUtils.makeIcon(icon);
 	}
 
 	public static MarkerSign of(String s) {
@@ -103,6 +122,11 @@ public enum MarkerSign implements HasFriendlyName {
 
 	public MarkerSign getBase() {
 		return base;
+	}
+
+	@Override
+	public @Nullable HasIconURL getIconUrl() {
+		return iconUrl;
 	}
 
 	@Override

@@ -4,13 +4,14 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 
 /**
  * Event indicating that a floor marker (1234ABCD) has been placed
  */
-public class MarkerPlacedEvent extends BaseEvent implements HasSourceEntity, HasPrimaryValue {
+public class MarkerPlacedEvent extends BaseEvent implements HasSourceEntity, HasPrimaryValue, HasFloorMarker {
 	@Serial
 	private static final long serialVersionUID = -769814754258708514L;
 	private final FloorMarker marker;
@@ -23,8 +24,14 @@ public class MarkerPlacedEvent extends BaseEvent implements HasSourceEntity, Has
 		this.placer = placer;
 	}
 
+	@Override
 	public FloorMarker getMarker() {
 		return marker;
+	}
+
+	@Override
+	public @Nullable String extraDescription() {
+		return getPrimaryValue();
 	}
 
 	public Position getPosition() {

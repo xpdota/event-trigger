@@ -1,14 +1,16 @@
 package gg.xp.xivsupport.events.triggers.marks.adv;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivsupport.events.actlines.events.HasPlayerHeadMarker;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 
-public class SpecificAutoMarkRequest extends BaseEvent implements HasPrimaryValue, HasTargetEntity {
+public class SpecificAutoMarkRequest extends BaseEvent implements HasPrimaryValue, HasTargetEntity, HasPlayerHeadMarker {
 
 	@Serial
 	private static final long serialVersionUID = -1398496564300407615L;
@@ -29,8 +31,14 @@ public class SpecificAutoMarkRequest extends BaseEvent implements HasPrimaryValu
 		return playerToMark;
 	}
 
+	@Override
 	public MarkerSign getMarker() {
 		return marker;
+	}
+
+	@Override
+	public @Nullable String extraDescription() {
+		return getPrimaryValue();
 	}
 
 	@Override

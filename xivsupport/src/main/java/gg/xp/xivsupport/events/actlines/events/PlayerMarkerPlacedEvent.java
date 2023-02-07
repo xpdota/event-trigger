@@ -3,10 +3,11 @@ package gg.xp.xivsupport.events.actlines.events;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 
-public class PlayerMarkerPlacedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasPrimaryValue {
+public class PlayerMarkerPlacedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasPrimaryValue, HasPlayerHeadMarker {
 
 	@Serial
 	private static final long serialVersionUID = 4273043478384517415L;
@@ -32,6 +33,11 @@ public class PlayerMarkerPlacedEvent extends BaseEvent implements HasSourceEntit
 	@Override
 	public XivCombatant getTarget() {
 		return target;
+	}
+
+	@Override
+	public @Nullable String extraDescription() {
+		return getPrimaryValue();
 	}
 
 	@Override

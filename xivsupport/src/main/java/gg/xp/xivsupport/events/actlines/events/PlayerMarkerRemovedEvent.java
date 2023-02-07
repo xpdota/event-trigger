@@ -3,10 +3,11 @@ package gg.xp.xivsupport.events.actlines.events;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 
-public class PlayerMarkerRemovedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasPrimaryValue {
+public class PlayerMarkerRemovedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasPrimaryValue, HasPlayerHeadMarker {
 
 	@Serial
 	private static final long serialVersionUID = 1170627458816079017L;
@@ -20,6 +21,7 @@ public class PlayerMarkerRemovedEvent extends BaseEvent implements HasSourceEnti
 		this.target = target;
 	}
 
+	@Override
 	public MarkerSign getMarker() {
 		return marker;
 	}
@@ -32,6 +34,11 @@ public class PlayerMarkerRemovedEvent extends BaseEvent implements HasSourceEnti
 	@Override
 	public XivCombatant getTarget() {
 		return target;
+	}
+
+	@Override
+	public @Nullable String extraDescription() {
+		return getPrimaryValue();
 	}
 
 	@Override
