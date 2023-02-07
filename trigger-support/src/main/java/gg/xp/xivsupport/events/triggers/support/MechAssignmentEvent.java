@@ -1,14 +1,16 @@
 package gg.xp.xivsupport.events.triggers.support;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-public abstract class MechAssignmentEvent<K> extends BaseEvent {
+public abstract class MechAssignmentEvent<K> extends BaseEvent implements HasPrimaryValue {
 	@Serial
 	private static final long serialVersionUID = -5975570546647941261L;
 	private final Map<K, XivPlayerCharacter> assignments;
@@ -29,4 +31,14 @@ public abstract class MechAssignmentEvent<K> extends BaseEvent {
 		return Collections.unmodifiableMap(assignments);
 	}
 
+	public @Nullable XivPlayerCharacter getPlayerForAssignment(K assignment) {
+		return assignments.get(assignment);
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		return assignments.entrySet().stream()
+				.map(e -> String.format("%s: %s", e.getKey(), e.getValue().getName()))
+				.collect(Collectors.joining("; "));
+	}
 }
