@@ -1077,7 +1077,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> monitorsSq = SqtTemplates.sq(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B6B),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B6B, 0x7B6C),
 			(e1, s) -> {
 				List<BuffApplied> buffs = getBuffs().getBuffs().stream()
 						// TODO: is one of these left, one right?

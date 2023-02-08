@@ -448,10 +448,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				setVisible(false);
 			}
 			else {
-				setVisible(true);
 				x = position.x();
 				y = position.y();
 				setBounds(getBounds());
+				setVisible(true);
 			}
 		}
 
