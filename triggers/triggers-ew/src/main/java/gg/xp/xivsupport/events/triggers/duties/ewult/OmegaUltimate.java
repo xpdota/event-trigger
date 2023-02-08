@@ -1139,6 +1139,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B81),
 			(e1, s) -> {
 				// TODO: stack markers? doesn't look like a HM. I see two people targeted with 0x5779 on each wave, could that be it?
+				//  - Yes, that is it. The challenge is that it needs to be called out at a reasonable time.
+				//    Idea: Secondary optional callout that calls out stacks as soon as they are selected. Primary callout also mentions stack buddies, but this is ~3s later.
 				// First set
 				{
 					s.updateCall(waveCannon1Start.getModified(e1));
