@@ -1139,6 +1139,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B81),
 			(e1, s) -> {
 				// TODO: stack markers? doesn't look like a HM. I see two people targeted with 0x5779 on each wave, could that be it?
+				//  - Yes, that is it. The challenge is that it needs to be called out at a reasonable time.
+				//    Idea: Secondary optional callout that calls out stacks as soon as they are selected. Primary callout also mentions stack buddies, but this is ~3s later.
 				// First set
 				{
 					s.updateCall(waveCannon1Start.getModified(e1));
@@ -1168,7 +1170,50 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
-	// TODO: eye position
+	@NpcCastCallout(0x81AC)
+	private final ModifiableCallout<AbilityCastStart> solarRay = ModifiableCallout.durationBasedCall("Solar Ray", "Buster on {event.target}");
+
+	private final ModifiableCallout<AbilityCastStart> runDynamisDelta = ModifiableCallout.durationBasedCall("Run Dynamis Delta", "Run Dynamis Delta");
+	private final ModifiableCallout<TetherEvent> runDynamisDeltaRemoteNear = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Remote, Near", "Remote with {buddy}, Near World on {nearWorld.target}")
+			.statusIcon(0xDB0)
+			.extendedDescription("""
+					This callout is used when you have a remote tether and either you or your buddy has 'Hello, Near World'.
+					You can make the callout say different things based on whether you or your buddy has it using this syntax: {nearWorld.isThePlayer() ? "On You" : "On Buddy"}""");
+	private final ModifiableCallout<TetherEvent> runDynamisDeltaRemoteDistant = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Remote, Distant", "Remote with {buddy}, Distant World on {distWorld.target}")
+			.statusIcon(0xDB0)
+			.extendedDescription("""
+					This callout is used when you have a remote tether and either you or your buddy has 'Hello, Distant World'.
+					You can make the callout say different things based on whether you or your buddy has it using this syntax: {distWorld.isThePlayer() ? "On You" : "On Buddy"}""");
+	private final ModifiableCallout<TetherEvent> runDynamisDeltaLocal = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Local", "Local with {buddy}")
+			.statusIcon(0xD70);
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> runDynamisDeltaSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B88),
+			(e1, s) -> {
+				log.info("Dynamis Delta: Start");
+				s.updateCall(runDynamisDelta.getModified(e1));
+				List<TetherEvent> tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.tetherIdMatches(200, 201), Duration.ofMillis(300));
+				log.info("Dynamic Delta: Tethers: {}", tethers);
+				s.waitMs(100);
+				BuffApplied helloNearWorld = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD72));
+				BuffApplied helloDistantWorld = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD73));
+				TetherEvent myTether = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst().orElseThrow(() -> new RuntimeException("Couldn't find player's tether!"));
+				Map<String, Object> params = Map.of("nearWorld", helloNearWorld, "distWorld", helloDistantWorld, "buddy", myTether.getTargetMatching(cbt -> !cbt.isThePlayer()));
+				boolean remote = myTether.tetherIdMatches(0xDB0);
+				if (remote) {
+					boolean withNear = myTether.eitherTargetMatches(helloNearWorld.getTarget());
+					if (withNear) {
+						runDynamisDeltaRemoteNear.getModified(myTether, params);
+					}
+					else {
+						runDynamisDeltaRemoteDistant.getModified(myTether, params);
+					}
+				}
+				else {
+					s.updateCall(runDynamisDeltaLocal.getModified(myTether, params));
+				}
+			});
+
 
 	public JobSortSetting getGroupPrioJobSort() {
 		return groupPrioJobSort;

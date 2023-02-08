@@ -292,6 +292,14 @@ public class StatusEffectRepository {
 		return statusesOnTarget(entity).stream().filter(filter).findAny().orElse(null);
 	}
 
+	public @Nullable BuffApplied findBuff(Predicate<BuffApplied> filter) {
+		return getBuffs().stream().filter(filter).findFirst().orElse(null);
+	}
+
+	public @Nullable List<BuffApplied> findBuffs(Predicate<BuffApplied> filter) {
+		return getBuffs().stream().filter(filter).toList();
+	}
+
 	/**
 	 * Given an entity and a buff ID, return how many stacks the buff has if present.
 	 *
