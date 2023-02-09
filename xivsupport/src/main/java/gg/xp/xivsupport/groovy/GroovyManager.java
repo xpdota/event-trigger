@@ -8,6 +8,7 @@ import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
@@ -43,6 +44,7 @@ import static org.reflections.scanners.Scanners.SubTypes;
 public class GroovyManager {
 
 	private static final Logger log = LoggerFactory.getLogger(GroovyManager.class);
+	private static final Logger scriptLogger = LoggerFactory.getLogger("gg.xp.xivsupport.groovy.Scripts");
 	private final PicoContainer container;
 	private final GroovySandbox sandbox;
 	private final BooleanSetting sandboxSetting;
@@ -137,7 +139,9 @@ public class GroovyManager {
 				"gg.xp.xivsupport.events.actlines.events.abilityeffect",
 				"gg.xp.xivsupport.events.actlines.events.actorcontrol",
 				"gg.xp.xivsupport.models",
-				"gg.xp.xivsupport.gui.tables"
+				"gg.xp.xivsupport.gui.tables",
+				"gg.xp.xivsupport.events.triggers.marks",
+				"gg.xp.xivsupport.events.triggers.marks.adv"
 		);
 		Reflections reflections = new Reflections(
 				new ConfigurationBuilder()
@@ -210,12 +214,15 @@ public class GroovyManager {
 			binding.setProperty(simpleName, item);
 		});
 		// TODO: find a way to systematically do these exceptions
+		// TODO: can't these be in makeGlobalBinding?
 		binding.setVariable("pico", container);
 		binding.setVariable("container", container);
 		binding.setVariable("picoContainer", container);
 		binding.setVariable("xivState", container.getComponent(XivState.class));
 		binding.setVariable("state", container.getComponent(XivState.class));
 		binding.setVariable("master", container.getComponent(EventMaster.class));
+		binding.setVariable("buffs", container.getComponent(StatusEffectRepository.class));
+		binding.setVariable("log", scriptLogger);
 
 	}
 

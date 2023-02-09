@@ -165,7 +165,7 @@ public class GroovyAction implements Action<Event> {
 				((Consumer<Event>) groovyCompiledScript).accept(event);
 			}
 			catch (Throwable t) {
-				log.error("Easy trigger Groovy script encountered an error (returning false)", t);
+				log.error("Easy trigger Groovy script encountered an error", t);
 				lastError = t;
 			}
 			finally {
