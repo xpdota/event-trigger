@@ -73,6 +73,7 @@ public class TelestoMain implements FilteredEventHandler {
 		catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
+		// TODO: party list needs to be moved out of here so that it works in replays
 		refresher = new RefreshLoop<>("TelestoPartyRefresh", this, TelestoMain::refreshPartyList, tm -> getStatus() == TelestoStatus.GOOD ? 10_000L : 60_000L);
 	}
 

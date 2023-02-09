@@ -18,6 +18,7 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
+import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PantoAssignments;
@@ -1023,7 +1024,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					BuffApplied shortTetherBuff = getBuffs().findStatusOnTarget(player, shortTether);
 					BuffApplied longTetherBuff = getBuffs().findStatusOnTarget(player, longTether);
 					log.info("Found buffs: {} {} {} {} {} {}", defaBuff, stackBuff, blueRotBuff, redRotBuff, shortTetherBuff, longTetherBuff);
-					if (blueRotBuff != null) {
+					if (blueRotBuff != null && blueRotBuff.getEstimatedRemainingDuration().toMillis() > 15_000) {
+						if (stackBuff == null && defaBuff == null) {
+							if (defaIsOnBlue) {
+								defaBuff = getBuffs().findBuff(ba -> ba.buffIdMatches(defaReal));
+							}
+							else {
+								stackBuff = getBuffs().findBuff(ba -> ba.buffIdMatches(stack));
+							}
+						}
 						if (stackBuff != null) {
 							s.updateCall(hw1a_stackBlue.getModified(stackBuff, params));
 							s.waitBuffRemoved(getBuffs(), stackBuff);
@@ -1034,8 +1043,19 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 							s.waitBuffRemoved(getBuffs(), defaBuff);
 							s.updateCall(hw1b_defaBlue.getModified(blueRotBuff, params));
 						}
+						else {
+							log.error("You have blue rot but I don't know what to do with it.");
+						}
 					}
-					else if (redRotBuff != null) {
+					else if (redRotBuff != null && redRotBuff.getEstimatedRemainingDuration().toMillis() > 15_000) {
+						if (stackBuff == null && defaBuff == null) {
+							if (defaIsOnBlue) {
+								defaBuff = getBuffs().findBuff(ba -> ba.buffIdMatches(defaReal));
+							}
+							else {
+								stackBuff = getBuffs().findBuff(ba -> ba.buffIdMatches(stack));
+							}
+						}
 						if (stackBuff != null) {
 							s.updateCall(hw1a_stackRed.getModified(stackBuff, params));
 							s.waitBuffRemoved(getBuffs(), stackBuff);
@@ -1045,6 +1065,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 							s.updateCall(hw1a_defaRed.getModified(defaBuff, params));
 							s.waitBuffRemoved(getBuffs(), defaBuff);
 							s.updateCall(hw1b_defaRed.getModified(redRotBuff, params));
+						}
+						else {
+							log.error("You have red rot but I don't know what to do with it.");
 						}
 					}
 					else if (shortTetherBuff != null && shortTetherBuff.getEstimatedRemainingDuration().toMillis() < 25_000) {
