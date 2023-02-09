@@ -18,7 +18,6 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
-import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PantoAssignments;
@@ -195,8 +194,18 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> highPoweredSniperCannonCall = ModifiableCallout.<BuffApplied>durationBasedCall("High-powered Sniper Cannon", "High-Power Sniper - Stack on {nothings[0]} or {nothings[1]}").statusIcon(0xD62);
 	private final ModifiableCallout<BuffApplied> noSniperCannonCall = ModifiableCallout.durationBasedCall("No Sniper Cannon", "Nothing - Stack on {hpSnipers[0]} or {hpSnipers[1]}");
 
-	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor").autoIcon();
-	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<>("Oversampled Wave Cannon on You", "No Monitor");
+	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor").autoIcon()
+			.extendedDescription("""
+					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
+					To have the callout indicate which monitor you are, use the syntax `{monitorPlayers.indexOf(state.player) + 1}`.
+					This uses the prio list on the "Group Swap Priority" tab.
+					""");
+	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "No Monitor")
+			.extendedDescription("""
+					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
+					To have the callout indicate which non-monitor you are, use the syntax `{nonMonitorPlayers.indexOf(state.player) + 1}`.
+					This uses the prio list on the "Group Swap Priority" tab.
+					""");
 
 	private static final Position center = Position.of2d(100, 100);
 	private static final ArenaPos pos = new ArenaPos(100, 100, 5, 5);
@@ -1024,8 +1033,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					BuffApplied shortTetherBuff = getBuffs().findStatusOnTarget(player, shortTether);
 					BuffApplied longTetherBuff = getBuffs().findStatusOnTarget(player, longTether);
 					log.info("Found buffs: {} {} {} {} {} {}", defaBuff, stackBuff, blueRotBuff, redRotBuff, shortTetherBuff, longTetherBuff);
-					// TODO: would it simplify the logic to just use the defa/stack as the primary indicator?
-					s.accept(new DebugCommand("asdfasdfsdafsadf"));
 					if (stackBuff != null) {
 						// Defa on blue = red stack
 						if (defaIsOnBlue) {
@@ -1107,7 +1114,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
 						.toList();
 
-				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers);
+				List<XivPlayerCharacter> nonMonitorPlayers = new ArrayList<>(getState().getPartyList());
+				nonMonitorPlayers.removeAll(monitorPlayers);
+				nonMonitorPlayers.sort(getGroupPrioJobSort().getPlayerJailSortComparator());
+
+				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers, "nonMonitorPlayers", nonMonitorPlayers);
 
 				buffs.stream()
 						.filter(ba -> ba.getTarget().isThePlayer())
@@ -1119,9 +1130,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				if (getMonitorAmEnable().get()) {
 					s.accept(new ClearAutoMarkRequest());
 					s.waitMs(100);
-					List<XivPlayerCharacter> nonMonitorPlayers = new ArrayList<>(getState().getPartyList());
-					nonMonitorPlayers.removeAll(monitorPlayers);
-					nonMonitorPlayers.sort(getGroupPrioJobSort().getPlayerJailSortComparator());
 					for (XivPlayerCharacter mp : monitorPlayers) {
 						s.accept(new SpecificAutoMarkRequest(mp, MarkerSign.BIND_NEXT));
 					}
