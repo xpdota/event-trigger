@@ -18,7 +18,6 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
-import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PantoAssignments;
@@ -195,8 +194,18 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> highPoweredSniperCannonCall = ModifiableCallout.<BuffApplied>durationBasedCall("High-powered Sniper Cannon", "High-Power Sniper - Stack on {nothings[0]} or {nothings[1]}").statusIcon(0xD62);
 	private final ModifiableCallout<BuffApplied> noSniperCannonCall = ModifiableCallout.durationBasedCall("No Sniper Cannon", "Nothing - Stack on {hpSnipers[0]} or {hpSnipers[1]}");
 
-	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor").autoIcon();
-	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<>("Oversampled Wave Cannon on You", "No Monitor");
+	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor").autoIcon()
+			.extendedDescription("""
+					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
+					To have the callout indicate which monitor you are, use the syntax `{monitorPlayers.indexOf(state.player) + 1}`.
+					This uses the prio list on the "Group Swap Priority" tab.
+					""");
+	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "No Monitor")
+			.extendedDescription("""
+					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
+					To have the callout indicate which non-monitor you are, use the syntax `{nonMonitorPlayers.indexOf(state.player) + 1}`.
+					This uses the prio list on the "Group Swap Priority" tab.
+					""");
 
 	private static final Position center = Position.of2d(100, 100);
 	private static final ArenaPos pos = new ArenaPos(100, 100, 5, 5);
@@ -1009,10 +1018,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				else {
 					s.accept(hw0_defaOnRed.getModified());
 				}
-				Map<String, Object> params = Map.of("blueDefa", defaIsOnBlue);
 				log.info("Hello World Checkpoint 1");
 				s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(redRot));
 				for (int i = 1; i <= 4; i++) {
+					Map<String, Object> params = Map.of("blueDefa", defaIsOnBlue, "i", i);
 					log.info("Hello World Iteration {}", i);
 					s.waitMs(200);
 					// Should have real debuffs now
@@ -1024,50 +1033,42 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					BuffApplied shortTetherBuff = getBuffs().findStatusOnTarget(player, shortTether);
 					BuffApplied longTetherBuff = getBuffs().findStatusOnTarget(player, longTether);
 					log.info("Found buffs: {} {} {} {} {} {}", defaBuff, stackBuff, blueRotBuff, redRotBuff, shortTetherBuff, longTetherBuff);
-					if (blueRotBuff != null && blueRotBuff.getEstimatedRemainingDuration().toMillis() > 15_000) {
-						if (stackBuff == null && defaBuff == null) {
-							if (defaIsOnBlue) {
-								defaBuff = getBuffs().findBuff(ba -> ba.buffIdMatches(defaReal));
+					if (stackBuff != null) {
+						// Defa on blue = red stack
+						if (defaIsOnBlue) {
+							s.updateCall(hw1a_stackRed.getModified(stackBuff, params));
+							s.waitBuffRemoved(getBuffs(), stackBuff);
+							// If the player did not have one, but we have the stack for some reason, find a different one
+							if (redRotBuff == null) {
+								redRotBuff = getBuffs().findBuffById(redRot);
 							}
-							else {
-								stackBuff = getBuffs().findBuff(ba -> ba.buffIdMatches(stack));
-							}
+							s.updateCall(hw1b_stackRed.getModified(redRotBuff, params));
 						}
-						if (stackBuff != null) {
+						else {
 							s.updateCall(hw1a_stackBlue.getModified(stackBuff, params));
 							s.waitBuffRemoved(getBuffs(), stackBuff);
+							if (blueRotBuff == null) {
+								blueRotBuff = getBuffs().findBuffById(redRot);
+							}
 							s.updateCall(hw1b_stackBlue.getModified(blueRotBuff, params));
 						}
-						else if (defaBuff != null) {
+					}
+					else if (defaBuff != null) {
+						if (defaIsOnBlue) {
 							s.updateCall(hw1a_defaBlue.getModified(defaBuff, params));
 							s.waitBuffRemoved(getBuffs(), defaBuff);
+							if (blueRotBuff == null) {
+								blueRotBuff = getBuffs().findBuffById(redRot);
+							}
 							s.updateCall(hw1b_defaBlue.getModified(blueRotBuff, params));
 						}
 						else {
-							log.error("You have blue rot but I don't know what to do with it.");
-						}
-					}
-					else if (redRotBuff != null && redRotBuff.getEstimatedRemainingDuration().toMillis() > 15_000) {
-						if (stackBuff == null && defaBuff == null) {
-							if (defaIsOnBlue) {
-								defaBuff = getBuffs().findBuff(ba -> ba.buffIdMatches(defaReal));
-							}
-							else {
-								stackBuff = getBuffs().findBuff(ba -> ba.buffIdMatches(stack));
-							}
-						}
-						if (stackBuff != null) {
-							s.updateCall(hw1a_stackRed.getModified(stackBuff, params));
-							s.waitBuffRemoved(getBuffs(), stackBuff);
-							s.updateCall(hw1b_stackRed.getModified(redRotBuff, params));
-						}
-						else if (defaBuff != null) {
 							s.updateCall(hw1a_defaRed.getModified(defaBuff, params));
 							s.waitBuffRemoved(getBuffs(), defaBuff);
+							if (redRotBuff == null) {
+								redRotBuff = getBuffs().findBuffById(redRot);
+							}
 							s.updateCall(hw1b_defaRed.getModified(redRotBuff, params));
-						}
-						else {
-							log.error("You have red rot but I don't know what to do with it.");
 						}
 					}
 					else if (shortTetherBuff != null && shortTetherBuff.getEstimatedRemainingDuration().toMillis() < 25_000) {
@@ -1113,7 +1114,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
 						.toList();
 
-				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers);
+				List<XivPlayerCharacter> nonMonitorPlayers = new ArrayList<>(getState().getPartyList());
+				nonMonitorPlayers.removeAll(monitorPlayers);
+				nonMonitorPlayers.sort(getGroupPrioJobSort().getPlayerJailSortComparator());
+
+				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers, "nonMonitorPlayers", nonMonitorPlayers);
 
 				buffs.stream()
 						.filter(ba -> ba.getTarget().isThePlayer())
@@ -1125,9 +1130,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				if (getMonitorAmEnable().get()) {
 					s.accept(new ClearAutoMarkRequest());
 					s.waitMs(100);
-					List<XivPlayerCharacter> nonMonitorPlayers = new ArrayList<>(getState().getPartyList());
-					nonMonitorPlayers.removeAll(monitorPlayers);
-					nonMonitorPlayers.sort(getGroupPrioJobSort().getPlayerJailSortComparator());
 					for (XivPlayerCharacter mp : monitorPlayers) {
 						s.accept(new SpecificAutoMarkRequest(mp, MarkerSign.BIND_NEXT));
 					}

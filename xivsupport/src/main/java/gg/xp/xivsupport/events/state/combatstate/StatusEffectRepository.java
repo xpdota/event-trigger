@@ -296,6 +296,14 @@ public class StatusEffectRepository {
 		return getBuffs().stream().filter(filter).findFirst().orElse(null);
 	}
 
+	public @Nullable BuffApplied findBuffById(long id) {
+		return findBuff(ba -> ba.buffIdMatches(id));
+	}
+
+	public @Nullable List<BuffApplied> findBuffsById(long id) {
+		return findBuffs(ba -> ba.buffIdMatches(id));
+	}
+
 	public @Nullable List<BuffApplied> findBuffs(Predicate<BuffApplied> filter) {
 		return getBuffs().stream().filter(filter).toList();
 	}

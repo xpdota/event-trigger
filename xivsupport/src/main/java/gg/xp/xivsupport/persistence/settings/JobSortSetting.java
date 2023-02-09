@@ -89,6 +89,13 @@ public class JobSortSetting {
 		}).thenComparing(XivPlayerCharacter::getName);
 	}
 
+	public Comparator<XivPlayerCharacter> getComparator() {
+		return getPlayerJailSortComparator();
+	}
+
+	public List<Job> getJobOrder() {
+		return Collections.unmodifiableList(currentJailSort);
+	}
 
 	public List<Job> getCurrentJailSort() {
 		return Collections.unmodifiableList(currentJailSort);
