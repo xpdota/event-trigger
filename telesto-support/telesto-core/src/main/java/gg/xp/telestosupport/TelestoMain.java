@@ -1,6 +1,5 @@
 package gg.xp.telestosupport;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
@@ -12,7 +11,6 @@ import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
-import gg.xp.xivsupport.events.state.PartyForceOrderChangeEvent;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -32,10 +30,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -52,14 +48,13 @@ public class TelestoMain implements FilteredEventHandler {
 	private final BooleanSetting enablePartyList;
 
 	private static final int VERSION = 1;
-	private static final int GAME_CMD_ID = 1_000_000;
-	private static final int PARTY_UPDATE_ID = 1_000_001;
+	public static final int GAME_CMD_ID = 1_000_000;
+	public static final int PARTY_UPDATE_ID = 1_000_001;
 	private final EventMaster master;
 	private final RefreshLoop<TelestoMain> refresher;
 
 	private volatile TelestoStatus status = TelestoStatus.UNKNOWN;
 	private final PrimaryLogSource pls;
-	private List<Long> partyActorIds;
 
 	public TelestoMain(EventMaster master, PersistenceProvider pers, PrimaryLogSource pls) {
 		this.master = master;
@@ -73,7 +68,6 @@ public class TelestoMain implements FilteredEventHandler {
 		catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
-		// TODO: party list needs to be moved out of here so that it works in replays
 		refresher = new RefreshLoop<>("TelestoPartyRefresh", this, TelestoMain::refreshPartyList, tm -> getStatus() == TelestoStatus.GOOD ? 10_000L : 60_000L);
 	}
 
@@ -147,31 +141,6 @@ public class TelestoMain implements FilteredEventHandler {
 
 	private TelestoOutgoingMessage makePartyMemberMsg() {
 		return makeMessage(PARTY_UPDATE_ID, "GetPartyMembers", null, false);
-	}
-
-
-	@HandleEvents
-	public void handlePartyReponse(EventContext context, TelestoResponse event) {
-		if (event.getId() == PARTY_UPDATE_ID) {
-			log.trace("Received Telesto party list");
-			List<Map<String, Object>> partyData = (List<Map<String, Object>>) event.getResponse();
-			List<Long> partyActorIds = partyData.stream()
-					.sorted(Comparator.comparing(entry -> Integer.parseInt(entry.get("order").toString(), 16)))
-					.map(entry -> entry.get("actor"))
-					.filter(Objects::nonNull)
-					.map(Object::toString)
-					.filter(s -> !s.isBlank())
-					.map(str -> Long.parseLong(str, 16))
-					.toList();
-			if (!Objects.equals(this.partyActorIds, partyActorIds)) {
-				this.partyActorIds = partyActorIds;
-				log.info("New Telesto Party List: {}", partyActorIds);
-				context.accept(new PartyForceOrderChangeEvent(partyActorIds.isEmpty() ? null : partyActorIds));
-			}
-			else {
-				log.trace("Ignored Telesto party list update because it is identical to the previous.");
-			}
-		}
 	}
 
 	public @Nullable HttpResponse<String> sendMessageDirectly(TelestoOutgoingMessage msg) {
