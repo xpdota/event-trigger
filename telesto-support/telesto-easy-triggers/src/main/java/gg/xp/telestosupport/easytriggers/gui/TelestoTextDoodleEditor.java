@@ -13,9 +13,6 @@ public class TelestoTextDoodleEditor extends BaseTelestoDoodleActionEditor {
 		try {
 			add(new GenericFieldEditor(action, pico, new Field[]{
 					TelestoTextDoodleAction.class.getField("textScript"),
-			}));
-			add(new GenericFieldEditor(action, pico, new Field[]{
-					TelestoTextDoodleAction.class.getField("textScript"),
 					TelestoTextDoodleAction.class.getField("singleReplacements"),
 					TelestoTextDoodleAction.class.getField("globalReplacements"),
 			}));
@@ -23,7 +20,7 @@ public class TelestoTextDoodleEditor extends BaseTelestoDoodleActionEditor {
 		catch (NoSuchFieldException e) {
 			throw new RuntimeException(e);
 		}
-		add(new TelestoLocationEditor("Location", action.location));
+		add(new TelestoLocationEditor("Location", action.location, pico));
 	}
 
 }

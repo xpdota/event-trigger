@@ -19,8 +19,8 @@ public class TelestoLineDoodleEditor extends BaseTelestoDoodleActionEditor {
 		catch (NoSuchFieldException e) {
 			throw new RuntimeException(e);
 		}
-		add(new TelestoLocationEditor("Start", action.start));
-		add(new TelestoLocationEditor("End", action.start));
+		add(new TelestoLocationEditor("Start", action.start, pico));
+		add(new TelestoLocationEditor("End", action.start, pico));
 	}
 
 }

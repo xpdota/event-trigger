@@ -5,41 +5,44 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
-import gg.xp.telestosupport.doodle.CircleDoodleSpec;
-import gg.xp.telestosupport.doodle.CoordSystem;
 import gg.xp.telestosupport.doodle.CreateDoodleRequest;
 import gg.xp.telestosupport.doodle.DoodleLocation;
+import gg.xp.telestosupport.doodle.ImageIconDoodleSpec;
+import gg.xp.telestosupport.doodle.img.HAlign;
+import gg.xp.telestosupport.doodle.img.VAlign;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovySubScriptHelper;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.groovy.GroovyManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class TelestoCircleDoodleAction extends BaseTelestoDoodleAction {
+import java.awt.*;
 
-	private static final Logger log = LoggerFactory.getLogger(TelestoCircleDoodleAction.class);
+public class TelestoImageDoodleAction extends BaseTelestoDoodleAction {
 
 	@JsonProperty("location")
 	public TelestoLocation location;
-	@JsonProperty("radius")
-	@Description("Radius")
-	public double radius = 10.0;
-	@JsonProperty("filled")
-	@Description("Filled")
-	public boolean filled;
-	@JsonIgnore
-	@Description("System")
-	public CoordSystem system = CoordSystem.Screen;
+
+	@JsonProperty("iconSpec")
+	public IconSpec iconSpec;
+
+	@JsonProperty
+	@Description("H Alignment")
+	public HAlign hAlign = HAlign.middle;
+	@JsonProperty
+	@Description("V Alignment")
+	public VAlign vAlign = VAlign.middle;
 
 	@JsonIgnore
 	private final XivState state;
 
-	public TelestoCircleDoodleAction(@JacksonInject XivState state, @JacksonInject GroovyManager groovyManager) {
+	@SuppressWarnings("AssignmentToSuperclassField")
+	public TelestoImageDoodleAction(@JacksonInject XivState state, @JacksonInject GroovyManager groovyManager) {
 		this.state = state;
 		location = new TelestoLocation();
 		location.customExpression = new GroovySubScriptHelper(groovyManager);
+		iconSpec = new IconSpec();
+		color = Color.WHITE;
 	}
 
 	@Override
@@ -47,16 +50,18 @@ public class TelestoCircleDoodleAction extends BaseTelestoDoodleAction {
 		if (location == null) {
 			return;
 		}
-		DoodleLocation circleLocation = location.toDoodleLocation(event, context, state);
-		if (circleLocation != null) {
-			CircleDoodleSpec spec = new CircleDoodleSpec(circleLocation, radius, filled);
+		DoodleLocation doodleLocation = location.toDoodleLocation(event, context, state);
+		Long iconId = iconSpec.toIconId(event);
+		if (doodleLocation != null && iconId != null) {
+			ImageIconDoodleSpec spec = new ImageIconDoodleSpec(doodleLocation, iconId, hAlign, vAlign);
 			finishSpec(spec, (BaseEvent) event);
 			context.accept(new CreateDoodleRequest(spec));
 		}
+
 	}
 
 	@Override
 	public String dynamicLabel() {
-		return "Telesto Circle Doodle";
+		return "Telesto Image Icon ID";
 	}
 }
