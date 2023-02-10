@@ -13,13 +13,14 @@ public class TelestoCircleDoodleEditor extends BaseTelestoDoodleActionEditor {
 		try {
 			add(new GenericFieldEditor(action, pico, new Field[]{
 					TelestoCircleDoodleAction.class.getField("radius"),
-					TelestoCircleDoodleAction.class.getField("filled")
+					TelestoCircleDoodleAction.class.getField("filled"),
+					TelestoCircleDoodleAction.class.getField("system")
 			}));
 		}
 		catch (NoSuchFieldException e) {
 			throw new RuntimeException(e);
 		}
-		add(new TelestoLocationEditor("Location", action.location));
+		add(new TelestoLocationEditor("Location", action.location, pico));
 	}
 
 }

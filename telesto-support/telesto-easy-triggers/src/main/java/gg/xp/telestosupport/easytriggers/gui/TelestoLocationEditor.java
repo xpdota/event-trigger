@@ -5,7 +5,9 @@ import gg.xp.telestosupport.easytriggers.TelestoLocation;
 import gg.xp.telestosupport.easytriggers.TelestoLocationType;
 import gg.xp.telestosupport.easytriggers.TelestoPositionRefType;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.GroovySubScriptEditor;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
+import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +20,7 @@ public class TelestoLocationEditor extends JPanel {
 	private final JComboBox<TelestoPositionRefType> position;
 	private final JComboBox<TelestoLocationType> dropdown;
 
-	public TelestoLocationEditor(String labelText, TelestoLocation location) {
+	public TelestoLocationEditor(String labelText, TelestoLocation location, PicoContainer container) {
 		this.location = location;
 		JLabel label = new JLabel(labelText);
 		// TODO: restrict to valid values
@@ -37,6 +39,7 @@ public class TelestoLocationEditor extends JPanel {
 		add(dropdown);
 		add(position);
 		add(scriptEditor);
+		add(new GenericFieldEditor(location.offsets, container));
 		reprocess();
 	}
 

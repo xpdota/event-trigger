@@ -5,7 +5,6 @@ import gg.xp.reevent.events.Event;
 import gg.xp.telestosupport.doodle.DoodleLocation;
 import gg.xp.telestosupport.doodle.EntityDoodleLocation;
 import gg.xp.telestosupport.doodle.WorldPositionDoodleLocation;
-import gg.xp.telestosupport.easytriggers.gui.TelestoLocationEditor;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.state.XivState;
@@ -25,9 +24,23 @@ public class TelestoLocation {
 	public boolean usePosition;
 	@Description("Custom Expression")
 	public GroovySubScriptHelper customExpression;
+	@Description("Offsets")
+	public TelestoOffsets offsets = new TelestoOffsets();
 
 	@JsonIgnore
 	public @Nullable DoodleLocation toDoodleLocation(Event event, EasyTriggerContext context, XivState state) {
+		DoodleLocation dl = makeDoodleLocation(event, context, state);
+		if (dl == null) {
+			return null;
+		}
+		dl.xOffset = offsets.xOffset;
+		dl.yOffset = offsets.yOffset;
+		dl.zOffset = offsets.zOffset;
+		return dl;
+	}
+
+	@Nullable
+	private DoodleLocation makeDoodleLocation(Event event, EasyTriggerContext context, XivState state) {
 		switch (type) {
 			case SOURCE -> {
 				if (event instanceof HasSourceEntity hse) {

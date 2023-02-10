@@ -16,4 +16,9 @@ public class CreateDoodleRequest extends BaseEvent {
 	public DoodleSpec getSpec() {
 		return spec;
 	}
+
+	@Override
+	public boolean shouldSave() {
+		return false;
+	}
 }
