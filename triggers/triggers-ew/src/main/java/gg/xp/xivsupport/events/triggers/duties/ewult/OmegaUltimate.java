@@ -1072,6 +1072,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						}
 					}
 					else if (shortTetherBuff != null && shortTetherBuff.getEstimatedRemainingDuration().toMillis() < 25_000) {
+						// TODO: should all of them work like this, or just rely on the fact that we pass i in as a param?
+						// Leaning towards splitting them
 						if (i == 4) {
 							s.updateCall(hw1a_shortTetherFinal.getModified(shortTetherBuff, params));
 						}
@@ -1098,6 +1100,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xD69));
 				}
 			});
+
+	@NpcCastCallout(0x7B64)
+	private final ModifiableCallout<AbilityCastStart> criticalError = ModifiableCallout.durationBasedCall("Critical Error", "Raidwide");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> monitorsSq = SqtTemplates.sq(30_000,
