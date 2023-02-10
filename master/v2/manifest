@@ -1,6 +1,6 @@
-2ea5532e4f2cd77e719a5114123479e4  triggevent.exe
-328450004151b83e3096fdaf3ffbe6d8  triggevent-import.exe
-9070fba3b95025ee0438adad6b31d34d  triggevent-upd.exe
+a3d6a46b48cbf66005b2bba96d259e04  triggevent.exe
+0ba6be1d61e142bd44d4ebfe875c6845  triggevent-import.exe
+e15d2a6afd5c4f8f8b799fa8a3b1a46e  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 b9e19f96299334e586775e57c0f0037e  deps/actimport-1.0-SNAPSHOT.jar
 879614e1a8678b4db231a05cae8cdb03  deps/annotations-24.0.0.jar
@@ -47,8 +47,8 @@ b379db6e4ee67fd2d731faadc3a5afa5  deps/personal-cast-bar-overlay-1.0-SNAPSHOT.ja
 862efd265ece43f40921eddd06536327  deps/rsyntaxtextarea-3.3.1.jar
 9c3b7321b1be9dc1dbac775ffbc76d7c  deps/skill-hit-overlay-1.0-SNAPSHOT.jar
 0dd65c386e8c5f4e6e014de3f7a7ae60  deps/slf4j-api-2.0.6.jar
-680a253a592fcadde848bef81ded57e7  deps/telesto-core-1.0-SNAPSHOT.jar
-ff0f407a787034d4a6bbb47d0ae5f20c  deps/telesto-easy-triggers-1.0-SNAPSHOT.jar
+73f3271bcfeeb382eb48b2df6ba0ee47  deps/telesto-core-1.0-SNAPSHOT.jar
+3c185079172e8453c5c8a69b0e3a7131  deps/telesto-easy-triggers-1.0-SNAPSHOT.jar
 67d9874e8ccaa497de31ec6b68dc02c2  deps/telesto-gui-1.0-SNAPSHOT.jar
 fcec109838d7080f20982e9050ef4b06  deps/telesto-right-clicks-1.0-SNAPSHOT.jar
 b6ee28948aa74691497be8ce90092646  deps/timelines-1.0-SNAPSHOT.jar
