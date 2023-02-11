@@ -24,7 +24,7 @@ public class TimeDisplayController {
 
 	private TimeDisplayOption displayMode = TimeDisplayOption.LOCAL_TIME;
 	private Supplier<@Nullable Event> selectionSupplier = () -> null;
-	private DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+	private final DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 	private Runnable updateCallback = () -> {
 	};
 	private volatile @Nullable Event currentSelection;
