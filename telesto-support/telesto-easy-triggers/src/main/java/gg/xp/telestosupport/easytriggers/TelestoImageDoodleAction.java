@@ -62,6 +62,6 @@ public class TelestoImageDoodleAction extends BaseTelestoDoodleAction {
 
 	@Override
 	public String dynamicLabel() {
-		return "Telesto Image Icon ID";
+		return "Telesto Image/Icon";
 	}
 }

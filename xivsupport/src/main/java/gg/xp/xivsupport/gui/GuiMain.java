@@ -4,7 +4,6 @@ import ch.qos.logback.classic.Level;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivdata.data.*;
@@ -76,6 +75,8 @@ import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
+import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
@@ -95,6 +96,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -848,6 +850,13 @@ public class GuiMain {
 		}
 	}
 
+	private final DateTimeFormatter format = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+
+	private String formatLocalTime(@NotNull Instant t) {
+		return t.atZone(ZoneId.systemDefault()).format(format);
+	}
+
+
 	private JPanel getPullsTab() {
 		PullTracker pulls = state.get(PullTracker.class);
 		TableWithFilterAndDetails<Pull, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Pulls",
@@ -879,10 +888,26 @@ public class GuiMain {
 					col.setMaxWidth(100);
 					col.setResizable(false);
 				}))
-				.addMainColumn(new CustomColumn<>("Start", Pull::startTime, col -> {
+				.addMainColumn(new CustomColumn<>("Start", pull -> {
+					return formatLocalTime(pull.startTime());
+				}, col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addMainColumn(new CustomColumn<>("Duration", Pull::getCombatDuration, col -> {
+				.addMainColumn(new CustomColumn<>("Combat Duration", pull -> {
+					Duration cdur = pull.getCombatDuration();
+					if (cdur == null) {
+						return "";
+					}
+					else {
+						if (cdur.toHours() > 0) {
+							return String.format("%d:%02d:%02d.%03d", cdur.toHours(), cdur.toMinutesPart(), cdur.toSecondsPart(), cdur.toMillisPart());
+						}
+						else {
+							return String.format("%d:%02d.%03d", cdur.toMinutes(), cdur.toSecondsPart(), cdur.toMillisPart());
+
+						}
+					}
+				}, col -> {
 					col.setPreferredWidth(200);
 				}))
 				.addDetailsColumn(StandardColumns.fieldName)
