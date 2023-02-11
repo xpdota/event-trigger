@@ -194,17 +194,19 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> highPoweredSniperCannonCall = ModifiableCallout.<BuffApplied>durationBasedCall("High-powered Sniper Cannon", "High-Power Sniper - Stack on {nothings[0]} or {nothings[1]}").statusIcon(0xD62);
 	private final ModifiableCallout<BuffApplied> noSniperCannonCall = ModifiableCallout.durationBasedCall("No Sniper Cannon", "Nothing - Stack on {hpSnipers[0]} or {hpSnipers[1]}");
 
-	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor").autoIcon()
+	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor, Boss Cleaving {bossMonitor}").autoIcon()
 			.extendedDescription("""
 					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
 					To have the callout indicate which monitor you are, use the syntax `{monitorPlayers.indexOf(state.player) + 1}`.
 					This uses the prio list on the "Group Swap Priority" tab.
+					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
 					""");
-	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "No Monitor")
+	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "No Monitor, Boss Cleaving {bossMonitor}")
 			.extendedDescription("""
 					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
 					To have the callout indicate which non-monitor you are, use the syntax `{nonMonitorPlayers.indexOf(state.player) + 1}`.
 					This uses the prio list on the "Group Swap Priority" tab.
+					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
 					""");
 
 	private static final Position center = Position.of2d(100, 100);
@@ -1122,8 +1124,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<XivPlayerCharacter> nonMonitorPlayers = new ArrayList<>(getState().getPartyList());
 				nonMonitorPlayers.removeAll(monitorPlayers);
 				nonMonitorPlayers.sort(getGroupPrioJobSort().getPlayerJailSortComparator());
+				ArenaSector bossMonitor = e1.abilityIdMatches(0x7B6B) ? ArenaSector.EAST : ArenaSector.WEST;
 
-				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers, "nonMonitorPlayers", nonMonitorPlayers);
+				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers, "nonMonitorPlayers", nonMonitorPlayers, "bossMonitor", bossMonitor);
 
 				buffs.stream()
 						.filter(ba -> ba.getTarget().isThePlayer())
@@ -1141,7 +1144,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					for (XivPlayerCharacter nmp : nonMonitorPlayers) {
 						s.accept(new SpecificAutoMarkRequest(nmp, MarkerSign.ATTACK_NEXT));
 					}
-					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B6B));
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B6B, 0x7B6C));
 					s.accept(new ClearAutoMarkRequest());
 				}
 			});
