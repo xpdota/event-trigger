@@ -32,7 +32,7 @@ public final class CommonGuiSetup {
 	}
 
 	private static final RenderMode mode = RenderMode.SOFTWARE;
-	private static final int GUI_WARN_MS = 100;
+	private static final int GUI_WARN_MS = 200;
 
 	private CommonGuiSetup() {
 	}

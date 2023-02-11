@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui;
 
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovySubScriptHelper;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.GroovySubScriptEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EditorIgnore;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdPickerFactory;
@@ -112,6 +114,9 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 			textField.setColumns(30);
 			editorComponent = textField;
 //			editorComponent.setPreferredSize(new Dimension(2500, editorComponent.getPreferredSize().height));
+		}
+		else if (type.equals(GroovySubScriptHelper.class)) {
+			editorComponent = new GroovySubScriptEditor((GroovySubScriptHelper) getField(field));
 		}
 		else if (type.isEnum()) {
 			JComboBox<?> comboBox = new JComboBox<>(type.getEnumConstants());

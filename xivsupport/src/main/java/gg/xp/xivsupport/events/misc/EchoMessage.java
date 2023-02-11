@@ -14,7 +14,9 @@ public final class EchoMessage {
 	public static void handle(EventContext context, ChatLineEvent event) {
 		if (event.getCode() == 0x38) {
 			String line = event.getLine();
-			log.info("Echo Message: {}", line);
+			if (!line.startsWith("Hojoring>[EX]")) {
+				log.info("Echo Message: {}", line);
+			}
 			context.accept(new EchoEvent(line));
 		}
 	}

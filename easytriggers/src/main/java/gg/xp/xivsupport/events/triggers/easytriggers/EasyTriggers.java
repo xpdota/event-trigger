@@ -40,6 +40,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.actions.AutoMarkTargetActio
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.ClearAllMarksAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.ConditionalAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.DebugAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
@@ -379,7 +380,8 @@ public final class EasyTriggers {
 			new ActionDescription<>(WaitAction.class, BaseEvent.class, "Wait a fixed time", WaitAction::new, this::generic),
 			new ActionDescription<>(GroovyAction.class, Event.class, "Custom script action", () -> new GroovyAction(inject(GroovyManager.class)), (action, trigger) -> new GroovyActionEditor<>(action, trigger)),
 //			(ActionDescription<ConditionalAction<BaseEvent>, BaseEvent>) new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)),
-			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action))
+			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action)),
+			new ActionDescription<>(DebugAction.class, Event.class, "Generate a Debug Event", () -> new DebugAction(inject(GroovyManager.class)), this::generic)
 	));
 
 	{
