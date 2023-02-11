@@ -34,7 +34,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 	private List<Condition<? super X>> conditions = Collections.emptyList();
 	private List<Action<? super X>> actions = Collections.emptyList();
 	private String name = "Give me a name";
-	private int timeoutMs = 60_000;
+	private int timeoutMs = 600_000;
 
 	private SequentialTrigger<BaseEvent> sq = SqtTemplates.nothing();
 	private EasyTriggerContext ctx;

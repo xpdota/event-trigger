@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.reevent.events.Event;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableEventType;
 import gg.xp.xivsupport.groovy.GroovyManager;
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class GroovySubScriptHelper implements HasMutableEventType {
@@ -146,7 +144,7 @@ public class GroovySubScriptHelper implements HasMutableEventType {
 		return null;
 	}
 
-//	@Override
+	//	@Override
 //	public String fixedLabel() {
 //		return "Groovy Action";
 //	}

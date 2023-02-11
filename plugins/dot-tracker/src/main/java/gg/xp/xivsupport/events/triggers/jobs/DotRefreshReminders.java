@@ -184,7 +184,7 @@ public class DotRefreshReminders {
 		BuffApplied originalEvent = event.originalEvent;
 		BuffApplied mostRecentEvent = buffs.get(BuffTrackingKey.of(originalEvent));
 		if (originalEvent == mostRecentEvent) {
-			log.debug("Dot refresh callout still valid");
+			log.trace("Dot refresh callout still valid");
 			Instant now = Instant.now();
 			// BRD special case
 			if (DotBuff.BRD_CombinedDots.matches(originalEvent.getBuff().getId())) {
@@ -206,7 +206,7 @@ public class DotRefreshReminders {
 			}
 		}
 		else {
-			log.debug("Not calling");
+			log.trace("Not calling");
 		}
 	}
 

@@ -1,9 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.actions.gui;
 
-import gg.xp.reevent.events.Event;
-import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovySubScriptHelper;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.HasEventType;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 

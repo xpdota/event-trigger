@@ -385,7 +385,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
-	private static final int defaultCycleProcessingTime = 100;
+	private static final int defaultCycleProcessingTime = 250;
 	private static final int cycleProcessingTime;
 
 	// Workaround for integration tests exceeding cycle time

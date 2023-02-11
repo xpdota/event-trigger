@@ -362,11 +362,11 @@ public class CdTracker {
 			replenishedAt = getReplenishedAt(key);
 		}
 		if (Objects.equals(replenishedAt, event.replenishedAt)) {
-			log.info("CD callout still valid");
+			log.trace("CD callout still valid");
 			context.accept(makeCallout(originalAbility));
 		}
 		else {
-			log.info("Not calling {} - no longer valid", originalAbility.getName());
+			log.trace("Not calling {} - no longer valid", originalAbility.getName());
 		}
 	}
 

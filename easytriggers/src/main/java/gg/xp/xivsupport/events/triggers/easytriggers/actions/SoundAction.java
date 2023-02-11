@@ -27,4 +27,11 @@ public class SoundAction implements Action<Event> {
 	public String dynamicLabel() {
 		return "Play Sound " + (sound == null ? "(nothing)" : sound);
 	}
+
+	@Override
+	public String toString() {
+		return "SoundAction{" +
+		       "sound='" + sound + '\'' +
+		       '}';
+	}
 }
