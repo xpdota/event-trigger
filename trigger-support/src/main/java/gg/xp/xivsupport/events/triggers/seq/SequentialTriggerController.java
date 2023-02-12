@@ -119,6 +119,11 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		DelayedSqtEvent(long ms) {
 			super(ms);
 		}
+
+		@Override
+		public String toString() {
+			return "DelayedSqtEvent(%s)".formatted(delayMs);
+		}
 	}
 
 	public void waitMs(long ms) {
@@ -126,12 +131,12 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		if (ms <= 0) {
 			log.warn("waitMs called with non-positive value: {}", ms);
 		}
+		long initial = initialEvent.getEffectiveTimeSince().toMillis();
+		long doneAt = initial + ms;
 		// This can stop waiting when it hits the original event (due to the delay), OR any other event (which is more
 		// likely when replaying)
 		DelayedSqtEvent event = new DelayedSqtEvent(ms);
 		enqueue(event);
-		long initial = initialEvent.getEffectiveTimeSince().toMillis();
-		long doneAt = initial + ms;
 		waitEvent(BaseEvent.class, e -> initialEvent.getEffectiveTimeSince().toMillis() >= doneAt);
 	}
 

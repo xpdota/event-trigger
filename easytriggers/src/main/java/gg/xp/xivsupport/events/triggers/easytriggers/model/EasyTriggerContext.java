@@ -70,15 +70,14 @@ public class EasyTriggerContext {
 				}
 			}
 			catch (Throwable t) {
+				log.error("Error in trigger '{}' action '{}'", triggerName, action.dynamicLabel(), t);
 				if (s.isDone()) {
 					return;
-				}
-				else {
-					log.error("Error in trigger '{}' action '{}'", triggerName, action.dynamicLabel(), t);
 				}
 			}
 
 			if (shouldStopProcessing()) {
+				log.info("Easy Trigger wants to stop processing (trigger {}, action {})", triggerName, action.dynamicLabel());
 				return;
 			}
 		}
