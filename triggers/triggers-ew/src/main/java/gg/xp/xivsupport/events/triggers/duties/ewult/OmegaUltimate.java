@@ -194,20 +194,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> highPoweredSniperCannonCall = ModifiableCallout.<BuffApplied>durationBasedCall("High-powered Sniper Cannon", "High-Power Sniper - Stack on {nothings[0]} or {nothings[1]}").statusIcon(0xD62);
 	private final ModifiableCallout<BuffApplied> noSniperCannonCall = ModifiableCallout.durationBasedCall("No Sniper Cannon", "Nothing - Stack on {hpSnipers[0]} or {hpSnipers[1]}");
 
-	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor, Boss Cleaving {bossMonitor}").autoIcon()
-			.extendedDescription("""
-					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
-					To have the callout indicate which monitor you are, use the syntax `{monitorPlayers.indexOf(state.player) + 1}`.
-					This uses the prio list on the "Group Swap Priority" tab.
-					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
-					""");
-	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "No Monitor, Boss Cleaving {bossMonitor}")
-			.extendedDescription("""
-					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
-					To have the callout indicate which non-monitor you are, use the syntax `{nonMonitorPlayers.indexOf(state.player) + 1}`.
-					This uses the prio list on the "Group Swap Priority" tab.
-					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
-					""");
 
 	private static final Position center = Position.of2d(100, 100);
 	private static final ArenaPos pos = new ArenaPos(100, 100, 5, 5);
@@ -1105,6 +1091,21 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	@NpcCastCallout(0x7B64)
 	private final ModifiableCallout<AbilityCastStart> criticalError = ModifiableCallout.durationBasedCall("Critical Error", "Raidwide");
+
+	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor, Boss Cleaving {bossMonitor}").autoIcon()
+			.extendedDescription("""
+					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
+					To have the callout indicate which monitor you are, use the syntax `{monitorPlayers.indexOf(state.player) + 1}`.
+					This uses the prio list on the "Group Swap Priority" tab.
+					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
+					""");
+	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "No Monitor, Boss Cleaving {bossMonitor}")
+			.extendedDescription("""
+					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
+					To have the callout indicate which non-monitor you are, use the syntax `{nonMonitorPlayers.indexOf(state.player) + 1}`.
+					This uses the prio list on the "Group Swap Priority" tab.
+					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
+					""");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> monitorsSq = SqtTemplates.sq(30_000,

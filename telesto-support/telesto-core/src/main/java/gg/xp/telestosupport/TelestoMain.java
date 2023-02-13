@@ -78,11 +78,6 @@ public class TelestoMain implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void init(EventContext context, InitEvent init) {
-		refresher.startIfNotStarted();
-	}
-
-	@HandleEvents
 	public void handleGameCommand(EventContext context, TelestoGameCommand event) {
 		String cmd = event.getCommand();
 		context.accept(makeMessage(GAME_CMD_ID, "ExecuteCommand", Map.of("command", cmd), true));
@@ -221,6 +216,9 @@ public class TelestoMain implements FilteredEventHandler {
 		if (newStatus != oldStatus) {
 			status = newStatus;
 			master.pushEvent(new TelestoStatusUpdatedEvent(oldStatus, status));
+			if (newStatus == TelestoStatus.GOOD) {
+				refresher.startIfNotStarted();
+			}
 
 		}
 	}
