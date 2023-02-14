@@ -194,20 +194,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> highPoweredSniperCannonCall = ModifiableCallout.<BuffApplied>durationBasedCall("High-powered Sniper Cannon", "High-Power Sniper - Stack on {nothings[0]} or {nothings[1]}").statusIcon(0xD62);
 	private final ModifiableCallout<BuffApplied> noSniperCannonCall = ModifiableCallout.durationBasedCall("No Sniper Cannon", "Nothing - Stack on {hpSnipers[0]} or {hpSnipers[1]}");
 
-	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor, Boss Cleaving {bossMonitor}").autoIcon()
-			.extendedDescription("""
-					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
-					To have the callout indicate which monitor you are, use the syntax `{monitorPlayers.indexOf(state.player) + 1}`.
-					This uses the prio list on the "Group Swap Priority" tab.
-					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
-					""");
-	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "No Monitor, Boss Cleaving {bossMonitor}")
-			.extendedDescription("""
-					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
-					To have the callout indicate which non-monitor you are, use the syntax `{nonMonitorPlayers.indexOf(state.player) + 1}`.
-					This uses the prio list on the "Group Swap Priority" tab.
-					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
-					""");
 
 	private static final Position center = Position.of2d(100, 100);
 	private static final ArenaPos pos = new ArenaPos(100, 100, 5, 5);
@@ -1106,6 +1092,21 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@NpcCastCallout(0x7B64)
 	private final ModifiableCallout<AbilityCastStart> criticalError = ModifiableCallout.durationBasedCall("Critical Error", "Raidwide");
 
+	private final ModifiableCallout<BuffApplied> monitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "Monitor, Boss Cleaving {bossMonitor}").autoIcon()
+			.extendedDescription("""
+					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
+					To have the callout indicate which monitor you are, use the syntax `{monitorPlayers.indexOf(state.player) + 1}`.
+					This uses the prio list on the "Group Swap Priority" tab.
+					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
+					""");
+	private final ModifiableCallout<BuffApplied> noMonitorOnYou = new ModifiableCallout<BuffApplied>("Oversampled Wave Cannon on You", "No Monitor, Boss Cleaving {bossMonitor}")
+			.extendedDescription("""
+					In this callout and the one below, the variables `monitorPlayers` and `nonMonitorPlayers` are available.
+					To have the callout indicate which non-monitor you are, use the syntax `{nonMonitorPlayers.indexOf(state.player) + 1}`.
+					This uses the prio list on the "Group Swap Priority" tab.
+					The parameter "bossMonitor" will indicate where the boss's monitor is cleaving.
+					""");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> monitorsSq = SqtTemplates.sq(30_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B6B, 0x7B6C),
@@ -1151,9 +1152,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private final ModifiableCallout<AbilityCastStart> waveCannon1Start = ModifiableCallout.durationBasedCall("Wave Cannon 1: Start", "Spread");
 	private final ModifiableCallout<AbilityCastStart> waveCannon1Stacks = ModifiableCallout.durationBasedCall("Wave Cannon 1: Stacks", "Stacks");
-	private final ModifiableCallout<AbilityCastStart> waveCannon2Start = ModifiableCallout.durationBasedCall("Wave Cannon 2: Start", "Spread Outside");
+	private final ModifiableCallout<AbilityUsedEvent> waveCannon2Start = new ModifiableCallout<>("Wave Cannon 2: Start", "Spread Outside");
 	private final ModifiableCallout<AbilityCastStart> waveCannon2Stacks = ModifiableCallout.durationBasedCall("Wave Cannon 2: Stacks", "In Now then Stacks");
-	private final ModifiableCallout<AbilityCastStart> waveCannon3Start = ModifiableCallout.durationBasedCall("Wave Cannon 3: Start", "Spread Outside");
+	private final ModifiableCallout<AbilityUsedEvent> waveCannon3Start = new ModifiableCallout<>("Wave Cannon 3: Start", "Spread Outside");
 	private final ModifiableCallout<AbilityCastStart> waveCannon3Stacks = ModifiableCallout.durationBasedCall("Wave Cannon 3: Stacks", "Stacks Outside");
 	private final ModifiableCallout<AbilityUsedEvent> waveCannon3MoveInEarly = new ModifiableCallout<AbilityUsedEvent>("Wave Cannon 3: Move In (Center)", "Move In")
 			.disabledByDefault()
@@ -1174,6 +1175,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				// TODO: stack markers? doesn't look like a HM. I see two people targeted with 0x5779 on each wave, could that be it?
 				//  - Yes, that is it. The challenge is that it needs to be called out at a reasonable time.
 				//    Idea: Secondary optional callout that calls out stacks as soon as they are selected. Primary callout also mentions stack buddies, but this is ~3s later.
+				/*
+					Summary of casts and such:
+					7B81: initial cast
+					7B80: fake something
+					7B7E: protean damage
+					7B7F: stack damage
+
+					5779: stack markers
+				 */
 				// First set
 				{
 					s.updateCall(waveCannon1Start.getModified(e1));
@@ -1184,7 +1194,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 				// Second set
 				{
-					AbilityCastStart secondWaveCannonStart = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B81));
+					// TODO: these don't work - there is no pre-cast for these
+					AbilityUsedEvent secondWaveCannonStart = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B7F) && aue.isFirstTarget());
 					s.updateCall(waveCannon2Start.getModified(secondWaveCannonStart));
 					AbilityCastStart stackCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B80));
 					s.waitMs(300);
@@ -1192,7 +1203,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 				// Third set
 				{
-					AbilityCastStart thirdWaveCannonStart = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B81));
+					AbilityUsedEvent thirdWaveCannonStart = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B7F) && aue.isFirstTarget());
 					s.updateCall(waveCannon3Start.getModified(thirdWaveCannonStart));
 					AbilityCastStart stackCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B80));
 					s.updateCall(waveCannon3Stacks.getModified(stackCast));
