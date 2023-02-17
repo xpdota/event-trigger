@@ -440,11 +440,11 @@ public class JailExampleTest {
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
-		List<Job> currentJailSort = new ArrayList<>(jail.getSort().getCurrentJailSort());
+		List<Job> currentJailSort = new ArrayList<>(jail.getSort().getJobOrder());
 		Collections.reverse(currentJailSort);
-		jail.getSort().setJailSort(currentJailSort);
+		jail.getSort().setJobOrder(currentJailSort);
 
-		jail.getSort().resetJailSort();
+		jail.getSort().resetJobOrder();
 
 		// Send events
 		dist.acceptEvent(new ACTLogLineEvent("21|2021-09-30T19:43:43.1650000-07:00|40016AA1|Titan|2B6C|Rock Throw|13|Random Person|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|42489|50128|9900|10000|0|1000|86.77625|95.90898|-4.091016E-13|1.591002|2477238|4476950|0|10000|0|1000|113.7886|86.21142|-1.378858E-12|-0.7854581|00009CA2|0|9|cd69a51d5f584b836fa20c4a5b356612"));
@@ -535,9 +535,9 @@ public class JailExampleTest {
 		dist.registerHandler(collector);
 
 		JailSolver jail = container.getComponent(JailSolver.class);
-		List<Job> currentJailSort = new ArrayList<>(jail.getSort().getCurrentJailSort());
+		List<Job> currentJailSort = new ArrayList<>(jail.getSort().getJobOrder());
 		Collections.reverse(currentJailSort);
-		jail.getSort().setJailSort(currentJailSort);
+		jail.getSort().setJobOrder(currentJailSort);
 
 
 		// Send events
@@ -631,18 +631,18 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		JailSolver jail = container.getComponent(JailSolver.class);
 		// Insufficient size
-		Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJailSort(List.of(Job.WHM, Job.SCH)));
+		Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJobOrder(List.of(Job.WHM, Job.SCH)));
 		{
-			List<Job> current = new ArrayList<>(jail.getSort().getCurrentJailSort());
+			List<Job> current = new ArrayList<>(jail.getSort().getJobOrder());
 			// Make a duplicate
 			current.set(0, current.get(1));
-			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJailSort(current));
+			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJobOrder(current));
 		}
 		{
-			List<Job> current = new ArrayList<>(jail.getSort().getCurrentJailSort());
+			List<Job> current = new ArrayList<>(jail.getSort().getJobOrder());
 			// Too many
 			current.add(current.get(0));
-			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJailSort(current));
+			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJobOrder(current));
 		}
 	}
 

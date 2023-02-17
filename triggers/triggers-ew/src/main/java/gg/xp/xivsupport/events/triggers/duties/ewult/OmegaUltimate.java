@@ -36,6 +36,7 @@ import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.groupmodels.DynamisDeltaAssignment;
 import gg.xp.xivsupport.models.groupmodels.PsMarkerGroup;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.models.groupmodels.WrothStyleAssignment;
@@ -206,11 +207,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final MultiSlotAutomarkSetting<PsMarkerGroup> psMarkSettings;
 	private final MultiSlotAutomarkSetting<PsMarkerGroup> psMarkSettingsFar;
 	private final MultiSlotAutomarkSetting<WrothStyleAssignment> sniperAmSettings;
+	private final MultiSlotAutomarkSetting<DynamisDeltaAssignment> deltaAmSettings;
 	private final BooleanSetting looperAM;
 	private final BooleanSetting psAmEnable;
 	private final BooleanSetting pantoAmEnable;
 	private final BooleanSetting sniperAmEnable;
 	private final BooleanSetting monitorAmEnable;
+	private final BooleanSetting deltaAmEnable;
 
 	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
@@ -258,11 +261,16 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				WrothStyleAssignment.NOTHING_1, MarkerSign.BIND2,
 				WrothStyleAssignment.NOTHING_2, MarkerSign.IGNORE2
 		));
+		deltaAmSettings = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.dynamis-am-settings", DynamisDeltaAssignment.class, Map.of(
+				DynamisDeltaAssignment.NearWorld, MarkerSign.IGNORE1,
+				DynamisDeltaAssignment.DistantWorld, MarkerSign.IGNORE2
+		));
 		looperAM = new BooleanSetting(pers, settingKeyBase + "looper-am.enabled", false);
 		pantoAmEnable = new BooleanSetting(pers, settingKeyBase + "panto-am.enabled", false);
 		sniperAmEnable = new BooleanSetting(pers, settingKeyBase + "sniper-am.enabled", false);
 		psAmEnable = new BooleanSetting(pers, settingKeyBase + "ps-marker-am.enabled", false);
 		monitorAmEnable = new BooleanSetting(pers, settingKeyBase + "monitor-am.enabled", false);
+		deltaAmEnable = new BooleanSetting(pers, settingKeyBase + "delta-am.enabled", false);
 	}
 
 	@Override
@@ -381,7 +389,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		});
 		Map<TwoGroupsOfFour, XivPlayerCharacter> finalMap = new EnumMap<>(TwoGroupsOfFour.class);
 		groups.forEach((k, v) -> {
-			v.sort(groupPrioJobSort.getPlayerJailSortComparator());
+			v.sort(groupPrioJobSort.getComparator());
 			finalMap.put(TwoGroupsOfFour.forNumbers(1, k.lineNumber), v.get(0));
 			finalMap.put(TwoGroupsOfFour.forNumbers(2, k.lineNumber), v.get(1));
 		});
@@ -643,7 +651,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 									.stream()
 									.map(HeadMarkerEvent::getTarget)
 									.map(XivPlayerCharacter.class::cast)
-									.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+									.sorted(getGroupPrioJobSort().getComparator())
 									.limit(2)
 									.toList();
 							PsMarkerGroup firstAssignment = (switch (key) {
@@ -729,7 +737,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<XivPlayerCharacter> stackPlayers = stackMarkers.stream()
 						.map(HeadMarkerEvent::getTarget)
 						.map(XivPlayerCharacter.class::cast)
-						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.sorted(getGroupPrioJobSort().getComparator())
 						.toList();
 				params = new HashMap<>(params);
 				params.put("stackPlayers", stackPlayers);
@@ -888,15 +896,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<XivPlayerCharacter> sniperPlayers = sniper.stream()
 						.map(BuffApplied::getTarget)
 						.map(XivPlayerCharacter.class::cast)
-						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.sorted(getGroupPrioJobSort().getComparator())
 						.toList();
 				List<XivPlayerCharacter> hpSniperPlayers = hpSniper.stream()
 						.map(BuffApplied::getTarget)
 						.map(XivPlayerCharacter.class::cast)
-						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.sorted(getGroupPrioJobSort().getComparator())
 						.toList();
 				List<XivPlayerCharacter> nothingPlayers = nothing.stream()
-						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.sorted(getGroupPrioJobSort().getComparator())
 						.toList();
 				BuffApplied playerBuff = playerBuffM.getValue();
 				Map<String, Object> params = Map.of("snipers", sniperPlayers, "hpSnipers", hpSniperPlayers, "nothings", nothingPlayers);
@@ -950,24 +958,35 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<?> hw0_defaOnBlue = new ModifiableCallout<>("Hello World Start: Defa on Blue", "Blue has Defa");
 	private final ModifiableCallout<?> hw0_defaOnRed = new ModifiableCallout<>("Hello World Start: Defa on Red", "Red has Defa");
 
-	private final ModifiableCallout<BuffApplied> hw1a_defaBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Blue Rot + Defa", "Blue Rot with Defa").autoIcon();
-	private final ModifiableCallout<BuffApplied> hw1b_defaBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Blue Rot + Defa", "Pass Rot").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_defaBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Blue Rot + Defa", "Defa in Blue").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_defaBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Blue Rot + Defa", "Pass Rot then Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_defaBlueFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Blue Rot + Defa, Final Cycle", "Defa in Blue").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_defaBlueFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Blue Rot + Defa, Final Cycle", "Spread for Rot").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> hw1a_stackBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Blue Rot + Stack", "Blue Rot, Stack").autoIcon();
-	private final ModifiableCallout<BuffApplied> hw1b_stackBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Blue Rot + Stack", "Pass Rot").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_stackBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Blue Rot + Stack", "Stack in Blue").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_stackBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Blue Rot + Stack", "Pass Rot then Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_stackBlueFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Blue Rot + Stack, Final Cycle", "Stack in Blue").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_stackBlueFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Blue Rot + Stack, Final Cycle", "Spread for Rot").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> hw1a_defaRed = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Red Rot + Defa", "Red Rot with Defa").autoIcon();
-	private final ModifiableCallout<BuffApplied> hw1b_defaRed = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Red Rot + Defa", "Pass Rot").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_defaRed = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Red Rot + Defa", "Defa in Red").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_defaRed = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Red Rot + Defa", "Pass Rot then Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_defaRedFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Red Rot + Defa, Final Cycle", "Defa in Red").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_defaRedFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Red Rot + Defa, Final Cycle", "Spread for Rot").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> hw1a_stackRed = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Red Rot + Stack", "Red Rot, Stack").autoIcon();
-	private final ModifiableCallout<BuffApplied> hw1b_stackRed = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Red Rot + Stack", "Pass Rot").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_stackRed = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Red Rot + Stack", "Stack in Red").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_stackRed = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Red Rot + Stack", "Pass Rot then Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_stackRedFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Red Rot + Stack, Final Cycle", "Red Rot, Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_stackRedFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Red Rot + Stack, Final Cycle", "Spread for Rot").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> hw1a_shortTether = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Short Tether", "Get Defa").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_shortTether = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Short Tether", "Get Defa from {blueDefa ? \"Blue\" : \"Red\"}").autoIcon();
 	private final ModifiableCallout<BuffApplied> hw1b_shortTether = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Short Tether", "Get Rot, Shrink Tether").autoIcon();
-	private final ModifiableCallout<BuffApplied> hw1a_shortTetherFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Short Tether, Final Cycle", "Stretch Tether, Get Defa").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_shortTetherFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Short Tether, Final Cycle", "Stack between {blueDefa ? \"Red\" : \"Blue\"}").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_shortTetherFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Short Tether, Final Cycle", "Watch Rots").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> hw1a_longTether = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Long Tether", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_longTether = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Long Tether", "Stack between {blueDefa ? \"Red\" : \"Blue\"}").autoIcon();
 	private final ModifiableCallout<BuffApplied> hw1b_longTether = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Long Tether", "Get Rot, Stretch Tether").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1a_longTetherFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech First Part: Long Tether, Final Cycle", "Stack between {blueDefa ? \"Red\" : \"Blue\"}").autoIcon();
+	private final ModifiableCallout<BuffApplied> hw1b_longTetherFinal = ModifiableCallout.<BuffApplied>durationBasedCall("Hello World Mech Second Part: Long Tether, Final Cycle", "Stretch Tether, Watch Rots").autoIcon();
 
 
 	@AutoFeed
@@ -1010,6 +1029,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				log.info("Hello World Checkpoint 1");
 				s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(redRot));
 				for (int i = 1; i <= 4; i++) {
+					boolean last = i == 4;
 					Map<String, Object> params = Map.of("blueDefa", defaIsOnBlue, "i", i);
 					log.info("Hello World Iteration {}", i);
 					s.waitMs(200);
@@ -1025,60 +1045,55 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					if (stackBuff != null) {
 						// Defa on blue = red stack
 						if (defaIsOnBlue) {
-							s.updateCall(hw1a_stackRed.getModified(stackBuff, params));
+							s.updateCall((last ? hw1a_stackRedFinal : hw1a_stackRed).getModified(stackBuff, params));
 							s.waitBuffRemoved(getBuffs(), stackBuff);
 							// If the player did not have one, but we have the stack for some reason, find a different one
 							if (redRotBuff == null) {
 								redRotBuff = getBuffs().findBuffById(redRot);
 							}
-							s.updateCall(hw1b_stackRed.getModified(redRotBuff, params));
+							s.updateCall((last ? hw1b_stackRedFinal : hw1b_stackRed).getModified(redRotBuff, params));
 						}
 						else {
-							s.updateCall(hw1a_stackBlue.getModified(stackBuff, params));
+							s.updateCall((last ? hw1a_stackBlueFinal : hw1a_stackBlue).getModified(stackBuff, params));
 							s.waitBuffRemoved(getBuffs(), stackBuff);
 							if (blueRotBuff == null) {
 								blueRotBuff = getBuffs().findBuffById(redRot);
 							}
-							s.updateCall(hw1b_stackBlue.getModified(blueRotBuff, params));
+							s.updateCall((last ? hw1b_stackBlueFinal : hw1b_stackBlue).getModified(blueRotBuff, params));
 						}
 					}
 					else if (defaBuff != null) {
 						if (defaIsOnBlue) {
-							s.updateCall(hw1a_defaBlue.getModified(defaBuff, params));
+							s.updateCall((last ? hw1a_defaBlueFinal : hw1a_defaBlue).getModified(defaBuff, params));
 							s.waitBuffRemoved(getBuffs(), defaBuff);
 							if (blueRotBuff == null) {
 								blueRotBuff = getBuffs().findBuffById(redRot);
 							}
-							s.updateCall(hw1b_defaBlue.getModified(blueRotBuff, params));
+							s.updateCall((last ? hw1b_defaBlueFinal : hw1b_defaBlue).getModified(blueRotBuff, params));
 						}
 						else {
-							s.updateCall(hw1a_defaRed.getModified(defaBuff, params));
+							s.updateCall((last ? hw1a_defaRedFinal : hw1a_defaRed).getModified(defaBuff, params));
 							s.waitBuffRemoved(getBuffs(), defaBuff);
 							if (redRotBuff == null) {
 								redRotBuff = getBuffs().findBuffById(redRot);
 							}
-							s.updateCall(hw1b_defaRed.getModified(redRotBuff, params));
+							s.updateCall((last ? hw1b_defaRedFinal : hw1b_defaRed).getModified(redRotBuff, params));
 						}
 					}
 					else if (shortTetherBuff != null && shortTetherBuff.getEstimatedRemainingDuration().toMillis() < 25_000) {
 						// TODO: should all of them work like this, or just rely on the fact that we pass i in as a param?
 						// Leaning towards splitting them
-						if (i == 4) {
-							s.updateCall(hw1a_shortTetherFinal.getModified(shortTetherBuff, params));
-						}
-						else {
-							s.updateCall(hw1a_shortTether.getModified(shortTetherBuff, params));
-						}
+						s.updateCall((last ? hw1a_shortTetherFinal : hw1a_shortTether).getModified(shortTetherBuff, params));
 						BuffApplied shortRegBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(shortReg));
 						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defaReal));
 						// TODO: tether follow-up calls should cancel when they are satisfied
-						s.updateCall(hw1b_shortTether.getModified(shortRegBuff, params));
+						s.updateCall((last ? hw1b_shortTetherFinal : hw1b_shortTether).getModified(shortRegBuff, params));
 					}
 					else if (longTetherBuff != null && longTetherBuff.getEstimatedRemainingDuration().toMillis() < 25_000) {
-						s.updateCall(hw1a_longTether.getModified(longTetherBuff, params));
+						s.updateCall((last ? hw1a_longTetherFinal : hw1a_longTether).getModified(longTetherBuff, params));
 						BuffApplied longRegBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(longReg));
 						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defaReal));
-						s.updateCall(hw1b_longTether.getModified(longRegBuff, params));
+						s.updateCall((last ? hw1b_longTetherFinal : hw1b_longTether).getModified(longRegBuff, params));
 					}
 					else {
 						log.error("I have no idea what debuff you have!");
@@ -1120,12 +1135,12 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<XivPlayerCharacter> monitorPlayers = buffs.stream()
 						.map(BuffApplied::getTarget)
 						.map(XivPlayerCharacter.class::cast)
-						.sorted(getGroupPrioJobSort().getPlayerJailSortComparator())
+						.sorted(getGroupPrioJobSort().getComparator())
 						.toList();
 
 				List<XivPlayerCharacter> nonMonitorPlayers = new ArrayList<>(getState().getPartyList());
 				nonMonitorPlayers.removeAll(monitorPlayers);
-				nonMonitorPlayers.sort(getGroupPrioJobSort().getPlayerJailSortComparator());
+				nonMonitorPlayers.sort(getGroupPrioJobSort().getComparator());
 				ArenaSector bossMonitor = e1.abilityIdMatches(0x7B6B) ? ArenaSector.EAST : ArenaSector.WEST;
 
 				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers, "nonMonitorPlayers", nonMonitorPlayers, "bossMonitor", bossMonitor);
@@ -1151,7 +1166,12 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
-	private final ModifiableCallout<AbilityUsedEvent> waveCannonStacks = new ModifiableCallout<>("Wave Cannon 1: Stacks", "Stacks on {stacks}");
+	private final ModifiableCallout<AbilityUsedEvent> waveCannonStacks = new ModifiableCallout<AbilityUsedEvent>("Wave Cannon 1: Stacks", "Stacks on {stacks}")
+			.extendedDescription("""
+					This callout calls the stacks, but the {stacks} variable is also available for the 'stacks' callouts below.
+					It is sorted by the Y position of each character (North to South), so for the "southernmost stack swaps"
+					strategy, you can use some logic in the callout to call a swap/no swap.
+					""");
 	private final ModifiableCallout<AbilityCastStart> waveCannon1Start = ModifiableCallout.durationBasedCall("Wave Cannon 1: Start", "Spread");
 	private final ModifiableCallout<AbilityCastStart> waveCannon1Stacks = ModifiableCallout.durationBasedCall("Wave Cannon 1: Stacks", "Stacks");
 	private final ModifiableCallout<AbilityUsedEvent> waveCannon2Start = new ModifiableCallout<>("Wave Cannon 2: Start", "Spread Outside");
@@ -1180,6 +1200,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 							.stream()
 							.map(AbilityUsedEvent::getTarget)
 							.map(XivPlayerCharacter.class::cast)
+							.sorted(Comparator.comparing(xpc -> xpc.getPos().y()))
 							.toList();
 					s.updateCall(waveCannonStacks.getModified(events.get(0), Map.of("stacks", p4wcStacks)));
 				}
@@ -1246,7 +1267,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			.statusIcon(0xD70);
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> runDynamisDeltaSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B88),
+	private final SequentialTrigger<BaseEvent> runDynamisDeltaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B88),
 			(e1, s) -> {
 				log.info("Dynamis Delta: Start");
 				s.updateCall(runDynamisDelta.getModified(e1));
@@ -1261,14 +1282,23 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				if (remote) {
 					boolean withNear = myTether.eitherTargetMatches(helloNearWorld.getTarget());
 					if (withNear) {
-						runDynamisDeltaRemoteNear.getModified(myTether, params);
+						s.updateCall(runDynamisDeltaRemoteNear.getModified(myTether, params));
 					}
 					else {
-						runDynamisDeltaRemoteDistant.getModified(myTether, params);
+						s.updateCall(runDynamisDeltaRemoteDistant.getModified(myTether, params));
 					}
 				}
 				else {
 					s.updateCall(runDynamisDeltaLocal.getModified(myTether, params));
+				}
+				if (getDeltaAmEnable().get()) {
+					MultiSlotAutoMarkHandler<DynamisDeltaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getDeltaAmSettings());
+					XivPlayerCharacter nearPlayer = (XivPlayerCharacter) helloNearWorld.getTarget();
+					XivPlayerCharacter distPlayer = (XivPlayerCharacter) helloDistantWorld.getTarget();
+					handler.process(DynamisDeltaAssignment.NearWorld, nearPlayer);
+					handler.process(DynamisDeltaAssignment.DistantWorld, distPlayer);
+					s.waitMs(44_000);
+					handler.clearAll();
 				}
 			});
 
@@ -1278,7 +1308,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	}
 
 	public boolean shouldSwap(XivPlayerCharacter first, XivPlayerCharacter second) {
-		int result = groupPrioJobSort.getPlayerJailSortComparator().compare(first, second);
+		int result = groupPrioJobSort.getComparator().compare(first, second);
 		if (result == 0) {
 			log.warn("Players had the same job and name! Falling back to ID.");
 			result = Long.compare(first.getId(), second.getId());
@@ -1312,6 +1342,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		return psMarkSettingsFar;
 	}
 
+	public MultiSlotAutomarkSetting<DynamisDeltaAssignment> getDeltaAmSettings() {
+		return deltaAmSettings;
+	}
+
 	public BooleanSetting getLooperAM() {
 		return looperAM;
 	}
@@ -1330,6 +1364,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public BooleanSetting getMonitorAmEnable() {
 		return monitorAmEnable;
+	}
+
+	public BooleanSetting getDeltaAmEnable() {
+		return deltaAmEnable;
 	}
 
 	public MultiSlotAutomarkSetting<WrothStyleAssignment> getSniperAmSettings() {

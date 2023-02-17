@@ -124,7 +124,7 @@ public class P8S2DominionPrio extends AutoChildEventHandler implements FilteredE
 				int playerIndex;
 				if (firstSet.contains(player)) {
 					inFirstSet = true;
-					firstSet.sort(getSortSetting().getPlayerJailSortComparator());
+					firstSet.sort(getSortSetting().getComparator());
 					call = switch (playerIndex = firstSet.indexOf(player)) {
 						case 0 -> dominionFirstSet1;
 						case 1 -> dominionFirstSet2;
@@ -136,7 +136,7 @@ public class P8S2DominionPrio extends AutoChildEventHandler implements FilteredE
 				}
 				else if (secondSet.contains(player)) {
 					inFirstSet = false;
-					secondSet.sort(getSortSetting().getPlayerJailSortComparator());
+					secondSet.sort(getSortSetting().getComparator());
 					call = switch (playerIndex = secondSet.indexOf(player)) {
 						case 0 -> dominionSecondSet1;
 						case 1 -> dominionSecondSet2;

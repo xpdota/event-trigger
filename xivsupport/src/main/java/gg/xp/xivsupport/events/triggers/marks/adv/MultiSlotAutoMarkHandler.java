@@ -5,6 +5,7 @@ import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -14,6 +15,7 @@ public class MultiSlotAutoMarkHandler<X extends Enum<X>> {
 	private final Consumer<SpecificAutoMarkRequest> eventConsumer;
 	private final MultiSlotAutomarkSetting<X> setting;
 	private final Class<X> clazz;
+	private final List<XivPlayerCharacter> toClear = new ArrayList<>();
 
 	public MultiSlotAutoMarkHandler(Consumer<SpecificAutoMarkRequest> eventConsumer, MultiSlotAutomarkSetting<X> setting) {
 		this.eventConsumer = eventConsumer;
@@ -25,7 +27,15 @@ public class MultiSlotAutoMarkHandler<X extends Enum<X>> {
 		MarkerSign markerFor = setting.getMarkerFor(slot);
 		if (markerFor != null) {
 			eventConsumer.accept(new SpecificAutoMarkRequest(player, markerFor));
+			toClear.add(player);
 		}
+	}
+
+	public void clearAll() {
+		for (XivPlayerCharacter xpc : toClear) {
+			eventConsumer.accept(new SpecificAutoMarkRequest(xpc, MarkerSign.CLEAR));
+		}
+		toClear.clear();
 	}
 
 	public void processRange(List<XivPlayerCharacter> players, X startInclusive, X endInclusive) {

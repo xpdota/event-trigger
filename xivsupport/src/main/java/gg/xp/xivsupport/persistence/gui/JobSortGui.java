@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.persistence.gui;
 
-import gg.xp.xivdata.data.Job;
-import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.components.RearrangeableList;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -41,17 +40,17 @@ public class JobSortGui {
 				.setItemEquivalence((a, b) -> a.getId() == b.getId() && a.getJob() == b.getJob())
 				.build();
 
-		List<Job> items = sorter.getCurrentJailSort();
+		List<Job> items = sorter.getJobOrder();
 		RearrangeableList<Job> jobList = new RearrangeableList<>(items, l -> {
-			sorter.setJailSort(l);
+			sorter.setJobOrder(l);
 			log.info("Changed jail prio: {}", l.stream().map(Enum::name).collect(Collectors.joining(", ")));
 			partyTableModel.fullRefresh();
 		});
 		resetButton = new JButton("Reset Order");
 		resetButton.addActionListener(l -> {
-			sorter.resetJailSort();
+			sorter.resetJobOrder();
 			partyTableModel.fullRefresh();
-			jobList.setValues(sorter.getCurrentJailSort());
+			jobList.setValues(sorter.getJobOrder());
 		});
 		importButton = new JButton("Import");
 		importButton.addActionListener(l -> {
@@ -62,17 +61,18 @@ public class JobSortGui {
 							.toList();
 					sorter.validateJobSortOrder(jobs);
 					return jobs;
-				} catch (Throwable t) {
+				}
+				catch (Throwable t) {
 					throw new ValidationError("Bad job order: " + t.getMessage(), t);
 				}
 			});
-			sorter.setJailSort(newJobOrder);
+			sorter.setJobOrder(newJobOrder);
 			partyTableModel.fullRefresh();
-			jobList.setValues(sorter.getCurrentJailSort());
+			jobList.setValues(sorter.getJobOrder());
 		});
 		exportButton = new JButton("Export");
 		exportButton.addActionListener(l -> {
-			String exportedJobList = sorter.getCurrentJailSort().stream().map(Enum::name).collect(Collectors.joining(","));
+			String exportedJobList = sorter.getJobOrder().stream().map(Enum::name).collect(Collectors.joining(","));
 			GuiUtil.copyTextToClipboard(exportedJobList);
 			JOptionPane.showMessageDialog(exportButton, "Copied to clipboard");
 		});

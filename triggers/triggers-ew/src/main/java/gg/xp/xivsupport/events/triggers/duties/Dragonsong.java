@@ -1078,8 +1078,8 @@ public class Dragonsong extends AutoChildEventHandler implements FilteredEventHa
 
 					log.info("Wroth player mechs, unsorted: {}", playerMechs);
 					JobSortSetting sortSetting = getP6_sortSetting();
-					Comparator<XivPlayerCharacter> jobSort = sortSetting.getPlayerJailSortComparator();
-					log.info("Wroth job prio: {}", sortSetting.getCurrentJailSort());
+					Comparator<XivPlayerCharacter> jobSort = sortSetting.getComparator();
+					log.info("Wroth job prio: {}", sortSetting.getJobOrder());
 
 					Comparator<XivPlayerCharacter> sort;
 					if (getP6_rotPrioHigh().get()) {
