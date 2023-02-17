@@ -70,19 +70,19 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			upper.setLayout(new GridBagLayout());
 
 			{
-				JCheckBox looperMark = new BooleanSettingGui(backend.getLooperAM(), "Looper Automark").getComponent();
+				JCheckBox looperMark = new BooleanSettingGui(backend.getLooperAM(), "Looper Automark (Configure Below)").getComponent();
 				upper.add(looperMark, c);
 				c.gridy++;
 			}
 
 			{
-				JCheckBox pantoMark = new BooleanSettingGui(backend.getPantoAmEnable(), "Panto Automark").getComponent();
+				JCheckBox pantoMark = new BooleanSettingGui(backend.getPantoAmEnable(), "Panto Automark (Configure Below)").getComponent();
 				upper.add(pantoMark, c);
 				c.gridy++;
 			}
 
 			{
-				JCheckBox psMark = new BooleanSettingGui(backend.getPsAmEnable(), "P2 Headmarker Automark").getComponent();
+				JCheckBox psMark = new BooleanSettingGui(backend.getPsAmEnable(), "P2 Headmarker Automark (Configure Below)").getComponent();
 				upper.add(psMark, c);
 				c.gridy++;
 			}
@@ -99,13 +99,17 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 				c.gridy++;
 			}
 
+			{
+				JCheckBox deltaMark = new BooleanSettingGui(backend.getDeltaAmEnable(), "Delta Automark (Configure Below)").getComponent();
+				upper.add(deltaMark, c);
+				c.gridy++;
+			}
+
 			ReadOnlyText helpText = new ReadOnlyText("""
 					Instructions:
 					Jobs higher on the list will be preferred for group 1.
 					Jobs lower on the list will be preferred for group 2.
-					The easiest way to set this up is to simply put your group 1 jobs at the top,
-					and your group 2 jobs at the bottom.
-					""");
+					The easiest way to set this up is to simply put your group 1 jobs at the top, and your group 2 jobs at the bottom.""");
 
 			upper.add(helpText, c);
 			c.gridy++;
@@ -131,6 +135,10 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			{
 				TitleBorderPanel mappingPanel = makePsMarkersPanel();
 				upper.add(mappingPanel, c);
+				c.gridy++;
+			}
+			{
+				upper.add(new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Delta)", backend.getDeltaAmSettings(), 2, false), c);
 			}
 
 

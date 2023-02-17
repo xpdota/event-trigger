@@ -114,4 +114,8 @@ public class EnumListSetting<X extends Enum<X>> extends ObservableSetting {
 		notifyListeners();
 	}
 
+	public boolean isSet() {
+		return persistence.get(propertyKey, String.class, null) != null;
+	}
+
 }
