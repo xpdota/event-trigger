@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -1112,7 +1113,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B6B, 0x7B6C),
 			(e1, s) -> {
 				List<BuffApplied> buffs = getBuffs().getBuffs().stream()
-						// TODO: is one of these left, one right?
+						// D7C is right monitor, D7D is left monitor
 						.filter(ba -> ba.buffIdMatches(0xD7C, 0xD7D))
 						.toList();
 
@@ -1150,6 +1151,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
+	private final ModifiableCallout<AbilityUsedEvent> waveCannonStacks = new ModifiableCallout<>("Wave Cannon 1: Stacks", "Stacks on {stacks}");
 	private final ModifiableCallout<AbilityCastStart> waveCannon1Start = ModifiableCallout.durationBasedCall("Wave Cannon 1: Start", "Spread");
 	private final ModifiableCallout<AbilityCastStart> waveCannon1Stacks = ModifiableCallout.durationBasedCall("Wave Cannon 1: Stacks", "Stacks");
 	private final ModifiableCallout<AbilityUsedEvent> waveCannon2Start = new ModifiableCallout<>("Wave Cannon 2: Start", "Spread Outside");
@@ -1168,13 +1170,25 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					If your group is dodging into the center circle instead, disable this call and enable the one above.
 					""");
 
+	private List<XivPlayerCharacter> p4wcStacks = Collections.emptyList();
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p4waveCannonStackCollector = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B81),
+			(e1, s) -> {
+				for (int i = 0; i < 3; i++) {
+					List<AbilityUsedEvent> events = s.waitEventsQuickSuccession(2, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x5779), Duration.ofMillis(100));
+					p4wcStacks = events
+							.stream()
+							.map(AbilityUsedEvent::getTarget)
+							.map(XivPlayerCharacter.class::cast)
+							.toList();
+					s.updateCall(waveCannonStacks.getModified(events.get(0), Map.of("stacks", p4wcStacks)));
+				}
+			});
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> p4waveCannonSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B81),
 			(e1, s) -> {
-				// TODO: stack markers? doesn't look like a HM. I see two people targeted with 0x5779 on each wave, could that be it?
-				//  - Yes, that is it. The challenge is that it needs to be called out at a reasonable time.
-				//    Idea: Secondary optional callout that calls out stacks as soon as they are selected. Primary callout also mentions stack buddies, but this is ~3s later.
 				/*
 					Summary of casts and such:
 					7B81: initial cast
@@ -1186,31 +1200,31 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				 */
 				// First set
 				{
-					s.updateCall(waveCannon1Start.getModified(e1));
+					s.updateCall(waveCannon1Start.getModified(e1, Map.of("stacks", p4wcStacks)));
 					AbilityCastStart stackCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B80));
 					// This cast starts about half a second before the wave cannons go off, so wait a bit
 					s.waitMs(300);
-					s.updateCall(waveCannon1Stacks.getModified(stackCast));
+					s.updateCall(waveCannon1Stacks.getModified(stackCast, Map.of("stacks", p4wcStacks)));
 				}
 				// Second set
 				{
 					// TODO: these don't work - there is no pre-cast for these
 					AbilityUsedEvent secondWaveCannonStart = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B7F) && aue.isFirstTarget());
-					s.updateCall(waveCannon2Start.getModified(secondWaveCannonStart));
+					s.updateCall(waveCannon2Start.getModified(secondWaveCannonStart, Map.of("stacks", p4wcStacks)));
 					AbilityCastStart stackCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B80));
 					s.waitMs(300);
-					s.updateCall(waveCannon2Stacks.getModified(stackCast));
+					s.updateCall(waveCannon2Stacks.getModified(stackCast, Map.of("stacks", p4wcStacks)));
 				}
 				// Third set
 				{
 					AbilityUsedEvent thirdWaveCannonStart = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B7F) && aue.isFirstTarget());
-					s.updateCall(waveCannon3Start.getModified(thirdWaveCannonStart));
+					s.updateCall(waveCannon3Start.getModified(thirdWaveCannonStart, Map.of("stacks", p4wcStacks)));
 					AbilityCastStart stackCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B80));
-					s.updateCall(waveCannon3Stacks.getModified(stackCast));
+					s.updateCall(waveCannon3Stacks.getModified(stackCast, Map.of("stacks", p4wcStacks)));
 					AbilityUsedEvent center = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B4F));
-					s.updateCall(waveCannon3MoveInEarly.getModified(center));
+					s.updateCall(waveCannon3MoveInEarly.getModified(center, Map.of("stacks", p4wcStacks)));
 					AbilityUsedEvent secondRing = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B50));
-					s.updateCall(waveCannon3MoveInLate.getModified(secondRing));
+					s.updateCall(waveCannon3MoveInLate.getModified(secondRing, Map.of("stacks", p4wcStacks)));
 				}
 			});
 
