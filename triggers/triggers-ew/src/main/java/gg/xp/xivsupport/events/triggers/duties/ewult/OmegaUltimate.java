@@ -59,6 +59,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -1253,18 +1254,24 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<AbilityCastStart> solarRay = ModifiableCallout.durationBasedCall("Solar Ray", "Buster on {event.target}");
 
 	private final ModifiableCallout<AbilityCastStart> runDynamisDelta = ModifiableCallout.durationBasedCall("Run Dynamis Delta", "Run Dynamis Delta");
-	private final ModifiableCallout<TetherEvent> runDynamisDeltaRemoteNear = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Remote, Near", "Remote with {buddy}, Near World on {nearWorld.target}")
-			.statusIcon(0xDB0)
-			.extendedDescription("""
-					This callout is used when you have a remote tether and either you or your buddy has 'Hello, Near World'.
-					You can make the callout say different things based on whether you or your buddy has it using this syntax: {nearWorld.isThePlayer() ? "On You" : "On Buddy"}""");
-	private final ModifiableCallout<TetherEvent> runDynamisDeltaRemoteDistant = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Remote, Distant", "Remote with {buddy}, Distant World on {distWorld.target}")
-			.statusIcon(0xDB0)
-			.extendedDescription("""
-					This callout is used when you have a remote tether and either you or your buddy has 'Hello, Distant World'.
-					You can make the callout say different things based on whether you or your buddy has it using this syntax: {distWorld.isThePlayer() ? "On You" : "On Buddy"}""");
+	private final ModifiableCallout<TetherEvent> runDynamisDeltaRemoteNear = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Remote + Near", "Near World, Tethered to {buddy}")
+			.statusIcon(0xD72);
+	private final ModifiableCallout<TetherEvent> runDynamisDeltaRemoteDistant = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Remote + Distant", "Distant World, Tethered to {buddy}")
+			.statusIcon(0xD73);
+	private final ModifiableCallout<TetherEvent> runDynamisDeltaRemoteNearBuddy = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Remote + Buddy Has Near", "Remote with {buddy}, they have Near")
+			.statusIcon(0xDB0);
+	private final ModifiableCallout<TetherEvent> runDynamisDeltaRemoteDistantBuddy = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Remote + Buddy Has Distant", "Remote with {buddy}, they have Distant")
+			.statusIcon(0xDB0);
 	private final ModifiableCallout<TetherEvent> runDynamisDeltaLocal = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Local", "Local with {buddy}")
 			.statusIcon(0xD70);
+	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaBaitSpinner = new ModifiableCallout<>("Run Dynamis Delta: Bait Spinner", "Bait Spinner");
+	private final ModifiableCallout<AbilityCastStart> runDynamisDeltaAfterBaitNoMonitor = new ModifiableCallout<>("Run Dynamis Delta: Spinner Bait Done, No Monitor", "Move In, No Monitor");
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitWithMonitor = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Spinner Bait Done, With Monitor", "{rightMonitor ? \"Right\" : \"Left\"} Monitor on You")
+			.autoIcon();
+	private final ModifiableCallout<AbilityCastStart> runDynamisDeltaFinalNothing = new ModifiableCallout<>("Run Dynamis Delta: Final Baits, Nothing", "Nothing");
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalNear = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Near", "Near World").autoIcon();
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalDistant = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Near", "Distant World").autoIcon();
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalTether = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Near", "Tether").autoIcon();
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> runDynamisDeltaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B88),
@@ -1282,24 +1289,145 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				if (remote) {
 					boolean withNear = myTether.eitherTargetMatches(helloNearWorld.getTarget());
 					if (withNear) {
-						s.updateCall(runDynamisDeltaRemoteNear.getModified(myTether, params));
+						boolean iHaveNear = helloNearWorld.getTarget().isThePlayer();
+						s.updateCall((iHaveNear ? runDynamisDeltaRemoteNear : runDynamisDeltaRemoteNearBuddy).getModified(myTether, params));
 					}
 					else {
-						s.updateCall(runDynamisDeltaRemoteDistant.getModified(myTether, params));
+						boolean iHaveDist = helloDistantWorld.getTarget().isThePlayer();
+						s.updateCall((iHaveDist ? runDynamisDeltaRemoteDistant : runDynamisDeltaRemoteDistantBuddy).getModified(myTether, params));
 					}
 				}
 				else {
 					s.updateCall(runDynamisDeltaLocal.getModified(myTether, params));
 				}
+				MultiSlotAutoMarkHandler<DynamisDeltaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getDeltaAmSettings());
 				if (getDeltaAmEnable().get()) {
-					MultiSlotAutoMarkHandler<DynamisDeltaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getDeltaAmSettings());
 					XivPlayerCharacter nearPlayer = (XivPlayerCharacter) helloNearWorld.getTarget();
 					XivPlayerCharacter distPlayer = (XivPlayerCharacter) helloDistantWorld.getTarget();
 					handler.process(DynamisDeltaAssignment.NearWorld, nearPlayer);
 					handler.process(DynamisDeltaAssignment.DistantWorld, distPlayer);
-					s.waitMs(44_000);
+				}
+				AbilityUsedEvent eyeLaser = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B21));
+				s.updateCall(runDynamisDeltaBaitSpinner.getModified(eyeLaser, params));
+				AbilityCastStart spinner = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B70));
+				BuffApplied monitor = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD7C, 0xD7D));
+				boolean rightMonitor = monitor.buffIdMatches(0xD7C);
+				params = new HashMap<>(params);
+				params.put("monitor", monitor);
+				params.put("rightMonitor", rightMonitor);
+				if (monitor.getTarget().isThePlayer()) {
+					s.updateCall(runDynamisDeltaAfterBaitWithMonitor.getModified(monitor, params));
+				}
+				else {
+					s.updateCall(runDynamisDeltaAfterBaitNoMonitor.getModified(spinner, params));
+				}
+				AbilityCastStart swivelCannon = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B94, 0x7B95));
+				if (helloNearWorld.getTarget().isThePlayer()) {
+					s.updateCall(runDynamisDeltaFinalNear.getModified(helloNearWorld, params));
+				}
+				else if (helloDistantWorld.getTarget().isThePlayer()) {
+					s.updateCall(runDynamisDeltaFinalDistant.getModified(helloDistantWorld, params));
+				}
+				else {
+					BuffApplied tethered = getBuffs().findBuff(ba -> ba.buffIdMatches(0x688) && ba.getTarget().isThePlayer());
+					if (tethered != null) {
+						s.updateCall(runDynamisDeltaFinalTether.getModified(tethered, params));
+					}
+					else {
+						s.updateCall(runDynamisDeltaFinalNothing.getModified(swivelCannon, params));
+					}
+				}
+				if (getDeltaAmEnable().get()) {
+					s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(0xD72));
 					handler.clearAll();
 				}
+			});
+
+	private final ModifiableCallout<BuffApplied> p5midGlitchO = ModifiableCallout.<BuffApplied>durationBasedCall("P5 Mid Glitch with O Buddy", "Circle, Close to {tetherBuddy}")
+			.extendedDescription("""
+					The mid/remote glitch callouts can be modified to call out swap or no swap based on priority.
+					There is a variable called 'group' which will be 1 or 2 (or 0 if you had no tether buddy which shouldn't happen).
+					For example, you could use the callout '{(group == 2) ? "Right, Furthest" : "Left, Closest"}' to make the call
+					switch what it says based on your group.
+					""");
+	private final ModifiableCallout<BuffApplied> p5midGlitchS = ModifiableCallout.durationBasedCall("P5 Mid Glitch with □ Buddy", "Square, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5midGlitchT = ModifiableCallout.durationBasedCall("P5 Mid Glitch with △ Buddy", "Triangle, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5midGlitchX = ModifiableCallout.durationBasedCall("P5 Mid Glitch with X Buddy", "X, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5remoteGlitchO = ModifiableCallout.durationBasedCall("P5 Remote Glitch with O Buddy", "Circle, far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5remoteGlitchS = ModifiableCallout.durationBasedCall("P5 Remote Glitch with □ Buddy", "Square, far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5remoteGlitchT = ModifiableCallout.durationBasedCall("P5 Remote Glitch with △ Buddy", "Triangle, far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5remoteGlitchX = ModifiableCallout.durationBasedCall("P5 Remote Glitch with X Buddy", "X, far from {tetherBuddy}");
+
+	private final ModifiableCallout<HeadMarkerEvent> sigmaPreyMarker = new ModifiableCallout<>("Run Dynamis Sigma: Prey Marker", "Marker on You");
+	private final ModifiableCallout<HeadMarkerEvent> sigmaNoPreyMarker = new ModifiableCallout<>("Run Dynamis Sigma: Prey Marker", "No Marker");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> runDynamisSigmaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8014),
+			(e1, s) -> {
+				Map<PsMarkerGroup, XivPlayerCharacter> headmarkers = new EnumMap<>(PsMarkerGroup.class);
+				// We now have a mapping from the headmarker offset to the players with that ID
+				s.waitEventsQuickSuccession(8, HeadMarkerEvent.class, hm -> hm.getTarget().isPc(), Duration.ofSeconds(1))
+						.stream()
+						// Group by marker offset
+						.collect(Collectors.groupingBy(HeadMarkerEvent::getMarkerOffset))
+						.forEach((key, value) -> {
+							List<XivPlayerCharacter> sorted = value
+									.stream()
+									.map(HeadMarkerEvent::getTarget)
+									.map(XivPlayerCharacter.class::cast)
+									.sorted(getGroupPrioJobSort().getComparator())
+									.limit(2)
+									.toList();
+							PsMarkerGroup firstAssignment = (switch (key) {
+								case 393 -> PsMarkerGroup.GROUP1_CIRCLE;
+								case 394 -> PsMarkerGroup.GROUP1_TRIANGLE;
+								case 395 -> PsMarkerGroup.GROUP1_SQUARE;
+								case 396 -> PsMarkerGroup.GROUP1_X;
+								default -> throw new IllegalArgumentException("Unknown marker");
+							});
+							// Doing it like this so that it doesn't break if you're missing a player
+							for (int i = 0; i < sorted.size(); i++) {
+								XivPlayerCharacter player = sorted.get(i);
+								if (i == 0) {
+									headmarkers.put(firstAssignment, player);
+								}
+								else {
+									PsMarkerGroup secondAssignment = firstAssignment.getCounterpart();
+									headmarkers.put(secondAssignment, player);
+								}
+							}
+						});
+				log.info("Headmarkers map: {}", headmarkers);
+				boolean mid = getBuffs().getBuffs().stream().filter(ba -> ba.buffIdMatches(0xD63, 0xD64)).findFirst().map(ba -> ba.buffIdMatches(0xD63)).stream().findFirst().orElse(false);
+				PsMarkerAssignments assignments = new PsMarkerAssignments(headmarkers, mid);
+				PsMarkerGroup myAssignment = assignments.forPlayer(getState().getPlayer());
+				XivCombatant buddy = assignments.getPlayerForAssignment(myAssignment.getCounterpart());
+				int group;
+				if (buddy == null) {
+					group = 0;
+				}
+				else {
+					group = shouldSwap(getState().getPlayer(), (XivPlayerCharacter) buddy) ? 2 : 1;
+				}
+				Map<String, Object> params = buddy == null ? Map.of() : Map.of("tetherBuddy", buddy, "mid", mid, "group", group);
+				BuffApplied status = getBuffs().findStatusOnTarget(getState().getPlayer(), ba -> ba.buffIdMatches(0xD63, 0xD64));
+				s.updateCall((switch (myAssignment) {
+					case GROUP1_CIRCLE, GROUP2_CIRCLE -> mid ? p5midGlitchO : p5remoteGlitchO;
+					case GROUP1_TRIANGLE, GROUP2_TRIANGLE -> mid ? p5midGlitchT : p5remoteGlitchT;
+					case GROUP1_SQUARE, GROUP2_SQUARE -> mid ? p5midGlitchS : p5remoteGlitchS;
+					case GROUP1_X, GROUP2_X -> mid ? p5midGlitchX : p5remoteGlitchX;
+				}).getModified(status, params));
+				List<HeadMarkerEvent> hm = s.waitEventsQuickSuccession(6, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == 221, Duration.ofMillis(100));
+				Optional<HeadMarkerEvent> myHm = hm.stream().filter(m -> m.getTarget().isThePlayer()).findFirst();
+				List<XivPlayerCharacter> marked = hm.stream().map(HeadMarkerEvent::getTarget).map(XivPlayerCharacter.class::cast).toList();
+				List<XivPlayerCharacter> unmarked = new ArrayList<>(getState().getPartyList());
+				params = new HashMap<>(params);
+				params.put("marked", marked);
+				params.put("unmarked", unmarked);
+				Map<String, Object> newParams = params;
+				unmarked.removeAll(marked);
+				myHm.ifPresentOrElse(h -> s.updateCall(sigmaPreyMarker.getModified(h, newParams)),
+						() -> s.updateCall(sigmaNoPreyMarker.getModified(hm.get(0), newParams)));
 			});
 
 
