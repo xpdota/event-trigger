@@ -196,7 +196,7 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 					dirsPanel.add(new WrapperPanel(button));
 				}
 				{
-					JButton button = new JButton("Open Settings Dir");
+					JButton button = new JButton("Open Settings/Log Dir");
 					button.addActionListener(l -> GuiUtil.openFile(Platform.getTriggeventDir().toFile()));
 					dirsPanel.add(new WrapperPanel(button));
 				}
