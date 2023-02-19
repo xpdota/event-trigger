@@ -19,17 +19,22 @@ import gg.xp.xivsupport.persistence.gui.AutomarkSettingGui;
 import gg.xp.xivsupport.persistence.gui.BasicAutomarkSettingGroupGui;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
+import gg.xp.xivsupport.persistence.gui.JobSortOverrideGui;
 import gg.xp.xivsupport.persistence.settings.AutomarkSetting;
+import gg.xp.xivsupport.persistence.settings.JobSortOverrideSetting;
 import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @ScanMe
 public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 
 	private final OmegaUltimate backend;
+	private final List<Runnable> toRefresh = new CopyOnWriteArrayList<>();
 	private JobSortGui jsg;
 
 	public OmegaUltimateGroupPrioGui(OmegaUltimate backend) {
@@ -51,16 +56,21 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		return 101;
 	}
 
+	private void refresh() {
+		toRefresh.forEach(Runnable::run);
+	}
+
 	@Override
 	public Component getTabContents() {
 		jsg = new JobSortGui(backend.getGroupPrioJobSort());
-		RefreshLoop<JobSortGui> refresher = new RefreshLoop<>("OmegaAmRefresh", jsg, JobSortGui::externalRefresh, unused -> 10_000L);
+		toRefresh.add(jsg::externalRefresh);
+		RefreshLoop<OmegaUltimateGroupPrioGui> refresher = new RefreshLoop<>("OmegaAmRefresh", this, OmegaUltimateGroupPrioGui::refresh, unused -> 10_000L);
 		TitleBorderFullsizePanel outer = new TitleBorderFullsizePanel("Group Prio") {
 			@Override
 			public void setVisible(boolean aFlag) {
 				super.setVisible(aFlag);
 				if (aFlag) {
-					jsg.externalRefresh();
+					refresh();
 					refresher.startIfNotStarted();
 				}
 			}
@@ -69,14 +79,17 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		SmartTabbedPane tabs = new SmartTabbedPane();
 		ReadOnlyText helpText = new ReadOnlyText("""
 				Instructions:
-				In the invidiual tabs below, choose which AMs you want. Some of them also allow you to pick which markers you want for each role.
-				Then, configure your job priority in the list at the bottom of the screen.
+				The first tab lets you pick your default priority. The tabs for individual markers allow you to further
+				customize each mark. Some of them allow you to override the priority for that AM specifically.
+				For light party mechanics:
 				Jobs higher on the list will be preferred for group 1.
 				Jobs lower on the list will be preferred for group 2.
 				The easiest way to set this up is to simply put your group 1 jobs at the top, and your group 2 jobs at the bottom.""");
+		{
+			JPanel combined = jsg.getCombined();
+			tabs.add("Default Prio", combined);
+		}
 
-		JPanel upper = new JPanel(new BorderLayout());
-		upper.add(helpText, BorderLayout.NORTH);
 		{
 			JCheckBox looperMark = new BooleanSettingGui(backend.getLooperAM(), "Looper Automark (Configure Below)").getComponent();
 			JCheckBox pantoMark = new BooleanSettingGui(backend.getPantoAmEnable(), "Panto Automark (Configure Below)").getComponent();
@@ -91,119 +104,51 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			looperPantoPanel.add(pantoMark, c);
 			c.gridy++;
 			looperPantoPanel.add(makeLooperPantoPanel(), c);
-			tabs.addTab("Looper", looperPantoPanel);
+			c.gridy++;
+			c.weighty = 1;
+			c.weightx = 1;
+			looperPantoPanel.add(Box.createGlue(), c);
+			JPanel combined = makeAmPanel(looperPantoPanel, backend.getP1prio());
+			tabs.addTab("Looper", combined);
 		}
 		{
-			tabs.addTab("P2", new BooleanSettingHidingPanel(backend.getPsAmEnable(), "P2 Playstation Automark", makePsMarkersPanel()));
+			tabs.addTab("P2", makeAmPanel(new BooleanSettingHidingPanel(backend.getPsAmEnable(), "P2 Playstation Automark", makePsMarkersPanel(), true), backend.getPsPrio()));
 		}
 		{
 			MultiSlotAutomarkSetting<WrothStyleAssignment> markSettings = backend.getSniperAmSettings();
 			BasicAutomarkSettingGroupGui<WrothStyleAssignment> sniperSettings = new BasicAutomarkSettingGroupGui<>("Sniper (P3 Transition)", markSettings, 4, true);
-			tabs.addTab("Transition", new BooleanSettingHidingPanel(backend.getSniperAmEnable(), "P3 Transition Automark", sniperSettings));
+			tabs.addTab("Transition", makeAmPanel(new BooleanSettingHidingPanel(backend.getSniperAmEnable(), "P3 Transition Automark", sniperSettings, true), backend.getSniperPrio()));
 		}
 		{
-			tabs.addTab("Monitor", new BooleanSettingHidingPanel(backend.getMonitorAmEnable(), "Monitor Automark", new JPanel()));
+			tabs.addTab("Monitor", makeAmPanel(new BooleanSettingHidingPanel(backend.getMonitorAmEnable(), "Monitor Automark", new JPanel(), true), backend.getMonitorPrio()));
 		}
 		{
 			BasicAutomarkSettingGroupGui<DynamisDeltaAssignment> deltaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Delta)", backend.getDeltaAmSettings(), 2, false);
-			tabs.addTab("Delta", new BooleanSettingHidingPanel(backend.getDeltaAmEnable(), "Delta Automark", deltaSettings));
+			tabs.addTab("Delta", new BooleanSettingHidingPanel(backend.getDeltaAmEnable(), "Delta Automark", deltaSettings, true));
 		}
 		{
 			BasicAutomarkSettingGroupGui<DynamisSigmaAssignment> sigmaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Sigma)", backend.getSigmaAmSettings(), 4, true);
-			tabs.addTab("Sigma", new BooleanSettingHidingPanel(backend.getSigmaAmEnable(), "Sigma Automark", sigmaSettings));
+			tabs.addTab("Sigma", makeAmPanel(new BooleanSettingHidingPanel(backend.getSigmaAmEnable(), "Sigma Automark", sigmaSettings, true), backend.getSigmaPsPrio()));
 		}
-		upper.add(tabs, BorderLayout.CENTER);
-		outer.add(upper, BorderLayout.NORTH);
+		outer.add(tabs, BorderLayout.CENTER);
+		outer.add(helpText, BorderLayout.NORTH);
 
-//		{
-//			GridBagConstraints c = new GridBagConstraints(0, 0, GridBagConstraints.REMAINDER, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
-//			JPanel upper = new JPanel();
-//			upper.setLayout(new GridBagLayout());
-//
-//			{
-//				upper.add(looperMark, c);
-//				c.gridy++;
-//			}
-//
-//			{
-//				upper.add(pantoMark, c);
-//				c.gridy++;
-//			}
-//
-//			{
-//				JCheckBox psMark = new BooleanSettingGui(backend.getPsAmEnable(), "P2 Headmarker Automark (Configure Below)").getComponent();
-//				upper.add(psMark, c);
-//				c.gridy++;
-//			}
-//
-//			{
-//				JCheckBox sniperMark = new BooleanSettingGui(backend.getSniperAmEnable(), "Sniper Cannon Automark (Attack = Spread Debuff, Bind = Stack Debuff, Ignore = Nothing)").getComponent();
-//				upper.add(sniperMark, c);
-//				c.gridy++;
-//			}
-//
-//			{
-//				JCheckBox monitorMark = new BooleanSettingGui(backend.getMonitorAmEnable(), "Monitor Automark (Attack = Nothing, Bind = Monitor)").getComponent();
-//				upper.add(monitorMark, c);
-//				c.gridy++;
-//			}
-////
-//			{
-//				JCheckBox deltaMark = new BooleanSettingGui(backend.getDeltaAmEnable(), "Delta Automark (Configure Below)").getComponent();
-//				upper.add(deltaMark, c);
-//				c.gridy++;
-//			}
-//
-//			{
-//				JCheckBox sigmaMark = new BooleanSettingGui(backend.getSigmaAmEnable(), "Sigma Automark (Configure Below)").getComponent();
-//				upper.add(sigmaMark, c);
-//				c.gridy++;
-//			}
-//
-//			ReadOnlyText helpText = new ReadOnlyText("""
-//					Instructions:
-//					Jobs higher on the list will be preferred for group 1.
-//					Jobs lower on the list will be preferred for group 2.
-//					The easiest way to set this up is to simply put your group 1 jobs at the top, and your group 2 jobs at the bottom.""");
-//
-//			upper.add(helpText, c);
-//			c.gridy++;
-//
-//			{
-//				TitleBorderPanel mappingPanel = makeLooperPantoPanel();
-//				c.weightx = 0;
-//				c.gridwidth = 1;
-//				upper.add(mappingPanel, c);
-//			}
-//			{
-//				c.gridx++;
-//				upper.add(sniperSettings, c);
-//				c.gridx++;
-//				c.gridwidth = GridBagConstraints.REMAINDER;
-//				upper.add(Box.createHorizontalGlue(), c);
-//				c.gridx = 0;
-//				c.gridy++;
-//			}
-//
-//			{
-//				TitleBorderPanel mappingPanel = makePsMarkersPanel();
-//				upper.add(mappingPanel, c);
-//				c.gridy++;
-//			}
-//			{
-//				c.gridy++;
-//			}
-//			{
-//				c.gridy++;
-//			}
-//
-//
-//			outer.add(upper, BorderLayout.NORTH);
-//		}
-		{
-			outer.add(jsg.getCombined(), BorderLayout.CENTER);
-		}
 		return outer;
+	}
+
+	private JPanel makeAmPanel(Component top, JobSortOverrideSetting override) {
+		JobSortOverrideGui overrideGui = new JobSortOverrideGui(override);
+		JPanel panel = new JPanel(new BorderLayout());
+		int HEIGHT = 250;
+		top.setPreferredSize(new Dimension(32767, HEIGHT));
+		top.setMinimumSize(new Dimension(1, HEIGHT));
+		top.setMaximumSize(new Dimension(32767, HEIGHT));
+		panel.add(top, BorderLayout.NORTH);
+		toRefresh.add(overrideGui::externalRefresh);
+		JPanel overrideGuiPanel = overrideGui.getCombined();
+		panel.add(overrideGuiPanel, BorderLayout.CENTER);
+		panel.revalidate();
+		return panel;
 	}
 
 	@NotNull

@@ -44,6 +44,7 @@ import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.models.groupmodels.WrothStyleAssignment;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.JobSortOverrideSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -206,6 +207,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final XivState state;
 	private final StatusEffectRepository buffs;
 	private final JobSortSetting groupPrioJobSort;
+	private final JobSortOverrideSetting p1prio;
+	private final JobSortOverrideSetting psPrio;
+	private final JobSortOverrideSetting sniperPrio;
+	private final JobSortOverrideSetting monitorPrio;
+	private final JobSortOverrideSetting sigmaPsPrio;
 	private final MultiSlotAutomarkSetting<TwoGroupsOfFour> markSettings;
 	private final MultiSlotAutomarkSetting<PsMarkerGroup> psMarkSettings;
 	private final MultiSlotAutomarkSetting<PsMarkerGroup> psMarkSettingsFar;
@@ -287,6 +293,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		monitorAmEnable = new BooleanSetting(pers, settingKeyBase + "monitor-am.enabled", false);
 		deltaAmEnable = new BooleanSetting(pers, settingKeyBase + "delta-am.enabled", false);
 		sigmaAmEnable = new BooleanSetting(pers, settingKeyBase + "sigma-am.enabled", false);
+		p1prio = new JobSortOverrideSetting(pers, settingKeyBase + "p1-prio-override", state, groupPrioJobSort);
+		psPrio = new JobSortOverrideSetting(pers, settingKeyBase + "ps-prio-override", state, groupPrioJobSort);
+		sniperPrio = new JobSortOverrideSetting(pers, settingKeyBase + "sniper-prio-override", state, groupPrioJobSort);
+		monitorPrio = new JobSortOverrideSetting(pers, settingKeyBase + "monitor-prio-override", state, groupPrioJobSort);
+		sigmaPsPrio = new JobSortOverrideSetting(pers, settingKeyBase + "sigma-ps-prio-override", state, groupPrioJobSort);
 	}
 
 	@Override
@@ -405,7 +416,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		});
 		Map<TwoGroupsOfFour, XivPlayerCharacter> finalMap = new EnumMap<>(TwoGroupsOfFour.class);
 		groups.forEach((k, v) -> {
-			v.sort(groupPrioJobSort.getComparator());
+			v.sort(p1prio.getComparator());
 			finalMap.put(TwoGroupsOfFour.forNumbers(1, k.lineNumber), v.get(0));
 			finalMap.put(TwoGroupsOfFour.forNumbers(2, k.lineNumber), v.get(1));
 		});
@@ -667,7 +678,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 									.stream()
 									.map(HeadMarkerEvent::getTarget)
 									.map(XivPlayerCharacter.class::cast)
-									.sorted(getGroupPrioJobSort().getComparator())
+									.sorted(getPsPrio().getComparator())
 									.limit(2)
 									.toList();
 							PsMarkerGroup firstAssignment = (switch (key) {
@@ -726,7 +737,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					group = 0;
 				}
 				else {
-					group = shouldSwap(getState().getPlayer(), (XivPlayerCharacter) buddy) ? 2 : 1;
+					group = getPsPrio().getComparator().compare(getState().getPlayer(), (XivPlayerCharacter) buddy) > 0 ? 2 : 1;
 				}
 
 				// TODO: get all the ability IDs instead of using the buff
@@ -753,7 +764,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<XivPlayerCharacter> stackPlayers = stackMarkers.stream()
 						.map(HeadMarkerEvent::getTarget)
 						.map(XivPlayerCharacter.class::cast)
-						.sorted(getGroupPrioJobSort().getComparator())
+						.sorted(getPsPrio().getComparator())
 						.toList();
 				params = new HashMap<>(params);
 				params.put("stackPlayers", stackPlayers);
@@ -912,15 +923,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<XivPlayerCharacter> sniperPlayers = sniper.stream()
 						.map(BuffApplied::getTarget)
 						.map(XivPlayerCharacter.class::cast)
-						.sorted(getGroupPrioJobSort().getComparator())
+						.sorted(getSniperPrio().getComparator())
 						.toList();
 				List<XivPlayerCharacter> hpSniperPlayers = hpSniper.stream()
 						.map(BuffApplied::getTarget)
 						.map(XivPlayerCharacter.class::cast)
-						.sorted(getGroupPrioJobSort().getComparator())
+						.sorted(getSniperPrio().getComparator())
 						.toList();
 				List<XivPlayerCharacter> nothingPlayers = nothing.stream()
-						.sorted(getGroupPrioJobSort().getComparator())
+						.sorted(getSniperPrio().getComparator())
 						.toList();
 				BuffApplied playerBuff = playerBuffM.getValue();
 				Map<String, Object> params = Map.of("snipers", sniperPlayers, "hpSnipers", hpSniperPlayers, "nothings", nothingPlayers);
@@ -1151,12 +1162,12 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<XivPlayerCharacter> monitorPlayers = buffs.stream()
 						.map(BuffApplied::getTarget)
 						.map(XivPlayerCharacter.class::cast)
-						.sorted(getGroupPrioJobSort().getComparator())
+						.sorted(getMonitorPrio().getComparator())
 						.toList();
 
 				List<XivPlayerCharacter> nonMonitorPlayers = new ArrayList<>(getState().getPartyList());
 				nonMonitorPlayers.removeAll(monitorPlayers);
-				nonMonitorPlayers.sort(getGroupPrioJobSort().getComparator());
+				nonMonitorPlayers.sort(getMonitorPrio().getComparator());
 				ArenaSector bossMonitor = e1.abilityIdMatches(0x7B6B) ? ArenaSector.EAST : ArenaSector.WEST;
 
 				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers, "nonMonitorPlayers", nonMonitorPlayers, "bossMonitor", bossMonitor);
@@ -1393,7 +1404,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 									.stream()
 									.map(HeadMarkerEvent::getTarget)
 									.map(XivPlayerCharacter.class::cast)
-									.sorted(getGroupPrioJobSort().getComparator())
+									.sorted(getSigmaPsPrio().getComparator())
 									.limit(2)
 									.toList();
 							PsMarkerGroup firstAssignment = (switch (key) {
@@ -1425,7 +1436,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					group = 0;
 				}
 				else {
-					group = shouldSwap(getState().getPlayer(), (XivPlayerCharacter) buddy) ? 2 : 1;
+					group = getSigmaPsPrio().getComparator().compare(getState().getPlayer(), (XivPlayerCharacter) buddy) > 0 ? 2 : 1;
 				}
 				Map<String, Object> params = buddy == null ? Map.of() : Map.of("tetherBuddy", buddy, "mid", mid, "group", group);
 				BuffApplied status = getBuffs().findStatusOnTarget(getState().getPlayer(), ba -> ba.buffIdMatches(0xD63, 0xD64));
@@ -1447,7 +1458,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					party.remove(near);
 					party.remove(dist);
 					// Sort is stable, so sort by job prio first then stack count
-					party.sort(getGroupPrioJobSort().getComparator());
+					party.sort(getSigmaPsPrio().getComparator());
 					// One stack first, then zero stack (returns -1)
 					party.sort(Comparator.comparing(xpc -> -getBuffs().buffStacksOnTarget(xpc, 0xD74)));
 
@@ -1519,6 +1530,26 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> runDynamisOmegaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8015),
+			(e1, s) -> {
+				log.info("Dynamis Omega: Start");
+				/*
+					D72 (3442): Near (32s short, 50s long)
+					D73 (3443): Dist (32s short, 50s long)
+					D74 (3444): Dynamis
+					BBC (3004): First in Line
+					BBD (3005): Second in Line
+					AM Behavior: Initially, mark short near/dist
+						Also mark up to 4 people who have 1 stack and are not first in line
+						If you don't have 4, mark people with 2 stacks that have neither first nor second in line
+					After first set goes off, wait, then redo marks:
+						Mark near/dist, and up to 4 people who have 2 stacks and do not have first/second in line
+					Third set:
+						Mark people who have 3 stacks and do not have first/second in line
+
+				 */
+			});
 
 	public JobSortSetting getGroupPrioJobSort() {
 		return groupPrioJobSort;
@@ -1589,6 +1620,26 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public BooleanSetting getSigmaAmEnable() {
 		return sigmaAmEnable;
+	}
+
+	public JobSortOverrideSetting getMonitorPrio() {
+		return monitorPrio;
+	}
+
+	public JobSortOverrideSetting getPsPrio() {
+		return psPrio;
+	}
+
+	public JobSortOverrideSetting getSniperPrio() {
+		return sniperPrio;
+	}
+
+	public JobSortOverrideSetting getP1prio() {
+		return p1prio;
+	}
+
+	public JobSortOverrideSetting getSigmaPsPrio() {
+		return sigmaPsPrio;
 	}
 
 	public MultiSlotAutomarkSetting<DynamisSigmaAssignment> getSigmaAmSettings() {
