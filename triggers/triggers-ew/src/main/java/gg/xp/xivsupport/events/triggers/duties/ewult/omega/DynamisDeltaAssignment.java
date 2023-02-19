@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.models.groupmodels;
+package gg.xp.xivsupport.events.triggers.duties.ewult.omega;
 
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 

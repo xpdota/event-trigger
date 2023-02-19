@@ -27,6 +27,14 @@ public abstract class MechAssignmentEvent<K> extends BaseEvent implements HasPri
 				.orElse(null);
 	}
 
+	public @Nullable K localPlayerAssignment() {
+		return assignments.entrySet().stream()
+				.filter(e -> e.getValue().isThePlayer())
+				.map(Map.Entry::getKey)
+				.findFirst()
+				.orElse(null);
+	}
+
 	public Map<K, XivPlayerCharacter> getAssignments() {
 		return Collections.unmodifiableMap(assignments);
 	}
