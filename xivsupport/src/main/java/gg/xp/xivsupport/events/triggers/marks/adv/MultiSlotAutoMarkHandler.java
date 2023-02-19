@@ -26,6 +26,9 @@ public class MultiSlotAutoMarkHandler<X extends Enum<X>> {
 	}
 
 	public void process(X slot, XivPlayerCharacter player) {
+		if (player == null) {
+			return;
+		}
 		MarkerSign markerFor = setting.getMarkerFor(slot);
 		if (markerFor != null) {
 			eventConsumer.accept(new SpecificAutoMarkRequest(player, markerFor));
