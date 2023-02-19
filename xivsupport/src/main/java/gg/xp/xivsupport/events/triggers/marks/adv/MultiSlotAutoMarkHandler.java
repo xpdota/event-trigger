@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class MultiSlotAutoMarkHandler<X extends Enum<X>> {
@@ -29,6 +31,13 @@ public class MultiSlotAutoMarkHandler<X extends Enum<X>> {
 			eventConsumer.accept(new SpecificAutoMarkRequest(player, markerFor));
 			toClear.add(player);
 		}
+	}
+
+	public void processMulti(Map<X, ? extends XivPlayerCharacter> assignments) {
+		// Sort to ensure consistent ordering even if the map implementation doesn't care about order
+		assignments.entrySet().stream()
+				.sorted(Comparator.comparing(entry -> entry.getKey().ordinal()))
+				.forEach(entry -> process(entry.getKey(), entry.getValue()));
 	}
 
 	public void clearAll() {

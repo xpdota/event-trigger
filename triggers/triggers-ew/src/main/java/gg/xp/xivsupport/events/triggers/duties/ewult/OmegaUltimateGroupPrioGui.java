@@ -105,6 +105,12 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 				c.gridy++;
 			}
 
+			{
+				JCheckBox sigmaMark = new BooleanSettingGui(backend.getSigmaAmEnable(), "Sigma Automark (Configure Below)").getComponent();
+				upper.add(sigmaMark, c);
+				c.gridy++;
+			}
+
 			ReadOnlyText helpText = new ReadOnlyText("""
 					Instructions:
 					Jobs higher on the list will be preferred for group 1.
@@ -139,6 +145,11 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			}
 			{
 				upper.add(new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Delta)", backend.getDeltaAmSettings(), 2, false), c);
+				c.gridy++;
+			}
+			{
+				upper.add(new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Sigma)", backend.getSigmaAmSettings(), 4, true), c);
+				c.gridy++;
 			}
 
 

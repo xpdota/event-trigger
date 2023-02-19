@@ -20,9 +20,12 @@ import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisDeltaAssignment;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisSigmaAssignment;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PantoAssignments;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.ProgramLoopAssignments;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PsMarkerAssignments;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.SigmaAssignments;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.MultiSlotAutoMarkHandler;
@@ -36,7 +39,6 @@ import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
-import gg.xp.xivsupport.models.groupmodels.DynamisDeltaAssignment;
 import gg.xp.xivsupport.models.groupmodels.PsMarkerGroup;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.models.groupmodels.WrothStyleAssignment;
@@ -209,12 +211,14 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final MultiSlotAutomarkSetting<PsMarkerGroup> psMarkSettingsFar;
 	private final MultiSlotAutomarkSetting<WrothStyleAssignment> sniperAmSettings;
 	private final MultiSlotAutomarkSetting<DynamisDeltaAssignment> deltaAmSettings;
+	private final MultiSlotAutomarkSetting<DynamisSigmaAssignment> sigmaAmSettings;
 	private final BooleanSetting looperAM;
 	private final BooleanSetting psAmEnable;
 	private final BooleanSetting pantoAmEnable;
 	private final BooleanSetting sniperAmEnable;
 	private final BooleanSetting monitorAmEnable;
 	private final BooleanSetting deltaAmEnable;
+	private final BooleanSetting sigmaAmEnable;
 
 	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
@@ -266,12 +270,23 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				DynamisDeltaAssignment.NearWorld, MarkerSign.IGNORE1,
 				DynamisDeltaAssignment.DistantWorld, MarkerSign.IGNORE2
 		));
+		sigmaAmSettings = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.sigma-am-settings", DynamisSigmaAssignment.class, Map.of(
+				DynamisSigmaAssignment.NearWorld, MarkerSign.IGNORE1,
+				DynamisSigmaAssignment.DistantWorld, MarkerSign.IGNORE2,
+				DynamisSigmaAssignment.OneStack1, MarkerSign.ATTACK1,
+				DynamisSigmaAssignment.OneStack2, MarkerSign.ATTACK2,
+				DynamisSigmaAssignment.OneStack3, MarkerSign.ATTACK3,
+				DynamisSigmaAssignment.OneStack4, MarkerSign.BIND1,
+				DynamisSigmaAssignment.Remaining1, MarkerSign.BIND2,
+				DynamisSigmaAssignment.Remaining2, MarkerSign.BIND3
+		));
 		looperAM = new BooleanSetting(pers, settingKeyBase + "looper-am.enabled", false);
 		pantoAmEnable = new BooleanSetting(pers, settingKeyBase + "panto-am.enabled", false);
 		sniperAmEnable = new BooleanSetting(pers, settingKeyBase + "sniper-am.enabled", false);
 		psAmEnable = new BooleanSetting(pers, settingKeyBase + "ps-marker-am.enabled", false);
 		monitorAmEnable = new BooleanSetting(pers, settingKeyBase + "monitor-am.enabled", false);
 		deltaAmEnable = new BooleanSetting(pers, settingKeyBase + "delta-am.enabled", false);
+		sigmaAmEnable = new BooleanSetting(pers, settingKeyBase + "sigma-am.enabled", false);
 	}
 
 	@Override
@@ -1358,8 +1373,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> p5remoteGlitchT = ModifiableCallout.durationBasedCall("P5 Remote Glitch with △ Buddy", "Triangle, far from {tetherBuddy}");
 	private final ModifiableCallout<BuffApplied> p5remoteGlitchX = ModifiableCallout.durationBasedCall("P5 Remote Glitch with X Buddy", "X, far from {tetherBuddy}");
 
-	private final ModifiableCallout<HeadMarkerEvent> sigmaPreyMarker = new ModifiableCallout<>("Run Dynamis Sigma: Prey Marker", "Marker on You");
+	private final ModifiableCallout<HeadMarkerEvent> sigmaPreyMarkerMarkedBuddy = new ModifiableCallout<>("Run Dynamis Sigma: Prey Marker, Marked Buddy", "Marker on You and Buddy");
+	private final ModifiableCallout<HeadMarkerEvent> sigmaPreyMarkerUnmarkedBuddy = new ModifiableCallout<>("Run Dynamis Sigma: Prey Marker, Unmarked Buddy", "Marker on You, Not on Buddy");
 	private final ModifiableCallout<HeadMarkerEvent> sigmaNoPreyMarker = new ModifiableCallout<>("Run Dynamis Sigma: Prey Marker", "No Marker");
+
+	private final ModifiableCallout<AbilityUsedEvent> sigmaKb = new ModifiableCallout<>("Run Dynamis Sigma: Prepare for KB", "Knockback into Tower");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> runDynamisSigmaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8014),
@@ -1417,17 +1435,88 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					case GROUP1_SQUARE, GROUP2_SQUARE -> mid ? p5midGlitchS : p5remoteGlitchS;
 					case GROUP1_X, GROUP2_X -> mid ? p5midGlitchX : p5remoteGlitchX;
 				}).getModified(status, params));
+
+
+				// Near D72, Dist D73, Dynamis 0xD74
+
+				s.waitMs(100);
+				try {
+					List<XivPlayerCharacter> party = new ArrayList<>(getState().getPartyList());
+					XivPlayerCharacter near = (XivPlayerCharacter) getBuffs().findBuffById(0xD72).getTarget();
+					XivPlayerCharacter dist = (XivPlayerCharacter) getBuffs().findBuffById(0xD73).getTarget();
+					party.remove(near);
+					party.remove(dist);
+					// Sort is stable, so sort by job prio first then stack count
+					party.sort(getGroupPrioJobSort().getComparator());
+					// One stack first, then zero stack (returns -1)
+					party.sort(Comparator.comparing(xpc -> -getBuffs().buffStacksOnTarget(xpc, 0xD74)));
+
+					s.accept(new SigmaAssignments(Map.of(
+							DynamisSigmaAssignment.NearWorld, near,
+							DynamisSigmaAssignment.DistantWorld, dist,
+							DynamisSigmaAssignment.OneStack1, party.get(0),
+							DynamisSigmaAssignment.OneStack2, party.get(1),
+							DynamisSigmaAssignment.OneStack3, party.get(2),
+							DynamisSigmaAssignment.OneStack4, party.get(3),
+							DynamisSigmaAssignment.Remaining1, party.get(4),
+							DynamisSigmaAssignment.Remaining2, party.get(5)
+					)));
+				}
+				catch (Throwable t) {
+					log.error("Error calculating sigma assignments!", t);
+				}
+
+
 				List<HeadMarkerEvent> hm = s.waitEventsQuickSuccession(6, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == 221, Duration.ofMillis(100));
 				Optional<HeadMarkerEvent> myHm = hm.stream().filter(m -> m.getTarget().isThePlayer()).findFirst();
+				boolean buddyHm = hm.stream().anyMatch(m -> m.getTarget().equals(buddy));
 				List<XivPlayerCharacter> marked = hm.stream().map(HeadMarkerEvent::getTarget).map(XivPlayerCharacter.class::cast).toList();
 				List<XivPlayerCharacter> unmarked = new ArrayList<>(getState().getPartyList());
+				unmarked.removeAll(marked);
 				params = new HashMap<>(params);
 				params.put("marked", marked);
 				params.put("unmarked", unmarked);
 				Map<String, Object> newParams = params;
 				unmarked.removeAll(marked);
-				myHm.ifPresentOrElse(h -> s.updateCall(sigmaPreyMarker.getModified(h, newParams)),
+				myHm.ifPresentOrElse(h -> s.updateCall((buddyHm ? sigmaPreyMarkerMarkedBuddy : sigmaPreyMarkerUnmarkedBuddy).getModified(h, newParams)),
 						() -> s.updateCall(sigmaNoPreyMarker.getModified(hm.get(0), newParams)));
+				// Part 2 is handled in the below trigger
+				AbilityUsedEvent used = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B74));
+				s.updateCall(sigmaKb.getModified(used));
+			});
+
+	private final ModifiableCallout<AbilityUsedEvent> sigmaNearWorld = new ModifiableCallout<AbilityUsedEvent>("Run Dynamis Sigma: Near", "Near World").statusIcon(0xD72);
+	private final ModifiableCallout<AbilityUsedEvent> sigmaDistWorld = new ModifiableCallout<AbilityUsedEvent>("Run Dynamis Sigma: Distant", "Distant World").statusIcon(0xD73);
+	private final ModifiableCallout<AbilityUsedEvent> sigmaOneStack = new ModifiableCallout<AbilityUsedEvent>("Run Dynamis Sigma: One Stack", "One Stack").statusIcon(0xD74, 1);
+	private final ModifiableCallout<AbilityUsedEvent> sigmaNoStacks = new ModifiableCallout<>("Run Dynamis Sigma: No Stacks", "No Stacks");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> sigmaPart2sq = SqtTemplates.sq(120_000, SigmaAssignments.class, sa -> true,
+			(e1, s) -> {
+				// These IDs are both for "storage violation" - but I assume one is the success while one is the failure? Or is it 1 person vs 2?
+				AbilityUsedEvent start = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04, 0x7B05));
+				DynamisSigmaAssignment assignment = e1.localPlayerAssignment();
+				switch (assignment) {
+					case NearWorld -> s.updateCall(sigmaNearWorld.getModified(start));
+					case DistantWorld -> s.updateCall(sigmaDistWorld.getModified(start));
+					case OneStack1 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 1)));
+					case OneStack2 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 2)));
+					case OneStack3 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 3)));
+					case OneStack4 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 4)));
+					case Remaining1 -> s.updateCall(sigmaNoStacks.getModified(start, Map.of("prio", 1)));
+					case Remaining2 -> s.updateCall(sigmaNoStacks.getModified(start, Map.of("prio", 2)));
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> sigmaAM = SqtTemplates.sq(60_000, SigmaAssignments.class, sa -> true,
+			(e1, s) -> {
+				if (getSigmaAmEnable().get()) {
+					MultiSlotAutoMarkHandler<DynamisSigmaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getSigmaAmSettings());
+					handler.processMulti(e1.getAssignments());
+					s.waitMs(56_000);
+					handler.clearAll();
+				}
 			});
 
 
@@ -1496,6 +1585,14 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public BooleanSetting getDeltaAmEnable() {
 		return deltaAmEnable;
+	}
+
+	public BooleanSetting getSigmaAmEnable() {
+		return sigmaAmEnable;
+	}
+
+	public MultiSlotAutomarkSetting<DynamisSigmaAssignment> getSigmaAmSettings() {
+		return sigmaAmSettings;
 	}
 
 	public MultiSlotAutomarkSetting<WrothStyleAssignment> getSniperAmSettings() {
