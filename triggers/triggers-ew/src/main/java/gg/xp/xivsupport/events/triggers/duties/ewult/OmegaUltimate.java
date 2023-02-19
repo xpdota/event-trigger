@@ -1540,11 +1540,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					D74 (3444): Dynamis
 					BBC (3004): First in Line
 					BBD (3005): Second in Line
-					AM Behavior: Initially, mark short near/dist
+					AM Behavior:
+					First set:
+						Initially, mark short near/dist
 						Also mark up to 4 people who have 1 stack and are not first in line
-						If you don't have 4, mark people with 2 stacks that have neither first nor second in line
+						If you don't have 4, use people with 2 stacks that have neither first nor second in line
 					After first set goes off, wait, then redo marks:
-						Mark near/dist, and up to 4 people who have 2 stacks and do not have first/second in line
+						Mark next near/dist, and up to 4 people who have 2 stacks and do not have first/second in line
 					Third set:
 						Mark people who have 3 stacks and do not have first/second in line
 

@@ -6,6 +6,7 @@ public class CircleDoodleSpec extends DoodleSpec {
 	public final boolean filled;
 	public final CoordSystem system;
 
+	@Deprecated
 	public CircleDoodleSpec(DoodleLocation position, double radius, boolean filled) {
 		this(position, radius, filled, CoordSystem.Screen);
 	}

@@ -49,7 +49,7 @@ public class TelestoCircleDoodleAction extends BaseTelestoDoodleAction {
 		}
 		DoodleLocation circleLocation = location.toDoodleLocation(event, context, state);
 		if (circleLocation != null) {
-			CircleDoodleSpec spec = new CircleDoodleSpec(circleLocation, radius, filled);
+			CircleDoodleSpec spec = new CircleDoodleSpec(circleLocation, radius, filled, system);
 			finishSpec(spec, (BaseEvent) event);
 			context.accept(new CreateDoodleRequest(spec));
 		}
