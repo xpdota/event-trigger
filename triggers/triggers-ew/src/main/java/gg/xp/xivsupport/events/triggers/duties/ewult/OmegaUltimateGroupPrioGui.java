@@ -2,11 +2,15 @@ package gg.xp.xivsupport.events.triggers.duties.ewult;
 
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.duties.*;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.BooleanSettingHidingPanel;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisDeltaAssignment;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisSigmaAssignment;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
+import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.groupmodels.PsMarkerGroup;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
@@ -62,99 +66,140 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			}
 		};
 		outer.setLayout(new BorderLayout());
+		SmartTabbedPane tabs = new SmartTabbedPane();
+		ReadOnlyText helpText = new ReadOnlyText("""
+				Instructions:
+				In the invidiual tabs below, choose which AMs you want. Some of them also allow you to pick which markers you want for each role.
+				Then, configure your job priority in the list at the bottom of the screen.
+				Jobs higher on the list will be preferred for group 1.
+				Jobs lower on the list will be preferred for group 2.
+				The easiest way to set this up is to simply put your group 1 jobs at the top, and your group 2 jobs at the bottom.""");
 
-
+		JPanel upper = new JPanel(new BorderLayout());
+		upper.add(helpText, BorderLayout.NORTH);
 		{
-			GridBagConstraints c = new GridBagConstraints(0, 0, GridBagConstraints.REMAINDER, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
-			JPanel upper = new JPanel();
-			upper.setLayout(new GridBagLayout());
-
-			{
-				JCheckBox looperMark = new BooleanSettingGui(backend.getLooperAM(), "Looper Automark (Configure Below)").getComponent();
-				upper.add(looperMark, c);
-				c.gridy++;
-			}
-
-			{
-				JCheckBox pantoMark = new BooleanSettingGui(backend.getPantoAmEnable(), "Panto Automark (Configure Below)").getComponent();
-				upper.add(pantoMark, c);
-				c.gridy++;
-			}
-
-			{
-				JCheckBox psMark = new BooleanSettingGui(backend.getPsAmEnable(), "P2 Headmarker Automark (Configure Below)").getComponent();
-				upper.add(psMark, c);
-				c.gridy++;
-			}
-
-			{
-				JCheckBox sniperMark = new BooleanSettingGui(backend.getSniperAmEnable(), "Sniper Cannon Automark (Attack = Spread Debuff, Bind = Stack Debuff, Ignore = Nothing)").getComponent();
-				upper.add(sniperMark, c);
-				c.gridy++;
-			}
-
-			{
-				JCheckBox monitorMark = new BooleanSettingGui(backend.getMonitorAmEnable(), "Monitor Automark (Attack = Nothing, Bind = Monitor)").getComponent();
-				upper.add(monitorMark, c);
-				c.gridy++;
-			}
-
-			{
-				JCheckBox deltaMark = new BooleanSettingGui(backend.getDeltaAmEnable(), "Delta Automark (Configure Below)").getComponent();
-				upper.add(deltaMark, c);
-				c.gridy++;
-			}
-
-			{
-				JCheckBox sigmaMark = new BooleanSettingGui(backend.getSigmaAmEnable(), "Sigma Automark (Configure Below)").getComponent();
-				upper.add(sigmaMark, c);
-				c.gridy++;
-			}
-
-			ReadOnlyText helpText = new ReadOnlyText("""
-					Instructions:
-					Jobs higher on the list will be preferred for group 1.
-					Jobs lower on the list will be preferred for group 2.
-					The easiest way to set this up is to simply put your group 1 jobs at the top, and your group 2 jobs at the bottom.""");
-
-			upper.add(helpText, c);
+			JCheckBox looperMark = new BooleanSettingGui(backend.getLooperAM(), "Looper Automark (Configure Below)").getComponent();
+			JCheckBox pantoMark = new BooleanSettingGui(backend.getPantoAmEnable(), "Panto Automark (Configure Below)").getComponent();
+			JPanel looperPantoPanel = new JPanel();
+			looperPantoPanel.setLayout(new GridBagLayout());
+			GridBagConstraints c = GuiUtil.defaultGbc();
+			c.anchor = GridBagConstraints.NORTHWEST;
+			c.fill = GridBagConstraints.NONE;
+			c.weighty = 0;
+			looperPantoPanel.add(looperMark, c);
 			c.gridy++;
-
-			{
-				TitleBorderPanel mappingPanel = makeLooperPantoPanel();
-				c.weightx = 0;
-				c.gridwidth = 1;
-				upper.add(mappingPanel, c);
-			}
-			{
-				MultiSlotAutomarkSetting<WrothStyleAssignment> markSettings = backend.getSniperAmSettings();
-				BasicAutomarkSettingGroupGui<WrothStyleAssignment> sniperSettings = new BasicAutomarkSettingGroupGui<>("Sniper (P3 Transition)", markSettings, 4, true);
-				c.gridx++;
-				upper.add(sniperSettings, c);
-				c.gridx++;
-				c.gridwidth = GridBagConstraints.REMAINDER;
-				upper.add(Box.createHorizontalGlue(), c);
-				c.gridx = 0;
-				c.gridy++;
-			}
-
-			{
-				TitleBorderPanel mappingPanel = makePsMarkersPanel();
-				upper.add(mappingPanel, c);
-				c.gridy++;
-			}
-			{
-				upper.add(new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Delta)", backend.getDeltaAmSettings(), 2, false), c);
-				c.gridy++;
-			}
-			{
-				upper.add(new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Sigma)", backend.getSigmaAmSettings(), 4, true), c);
-				c.gridy++;
-			}
-
-
-			outer.add(upper, BorderLayout.NORTH);
+			looperPantoPanel.add(pantoMark, c);
+			c.gridy++;
+			looperPantoPanel.add(makeLooperPantoPanel(), c);
+			tabs.addTab("Looper", looperPantoPanel);
 		}
+		{
+			tabs.addTab("P2", new BooleanSettingHidingPanel(backend.getPsAmEnable(), "P2 Playstation Automark", makePsMarkersPanel()));
+		}
+		{
+			MultiSlotAutomarkSetting<WrothStyleAssignment> markSettings = backend.getSniperAmSettings();
+			BasicAutomarkSettingGroupGui<WrothStyleAssignment> sniperSettings = new BasicAutomarkSettingGroupGui<>("Sniper (P3 Transition)", markSettings, 4, true);
+			tabs.addTab("Transition", new BooleanSettingHidingPanel(backend.getSniperAmEnable(), "P3 Transition Automark", sniperSettings));
+		}
+		{
+			tabs.addTab("Monitor", new BooleanSettingHidingPanel(backend.getMonitorAmEnable(), "Monitor Automark", new JPanel()));
+		}
+		{
+			BasicAutomarkSettingGroupGui<DynamisDeltaAssignment> deltaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Delta)", backend.getDeltaAmSettings(), 2, false);
+			tabs.addTab("Delta", new BooleanSettingHidingPanel(backend.getDeltaAmEnable(), "Delta Automark", deltaSettings));
+		}
+		{
+			BasicAutomarkSettingGroupGui<DynamisSigmaAssignment> sigmaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Sigma)", backend.getSigmaAmSettings(), 4, true);
+			tabs.addTab("Sigma", new BooleanSettingHidingPanel(backend.getSigmaAmEnable(), "Sigma Automark", sigmaSettings));
+		}
+		upper.add(tabs, BorderLayout.CENTER);
+		outer.add(upper, BorderLayout.NORTH);
+
+//		{
+//			GridBagConstraints c = new GridBagConstraints(0, 0, GridBagConstraints.REMAINDER, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
+//			JPanel upper = new JPanel();
+//			upper.setLayout(new GridBagLayout());
+//
+//			{
+//				upper.add(looperMark, c);
+//				c.gridy++;
+//			}
+//
+//			{
+//				upper.add(pantoMark, c);
+//				c.gridy++;
+//			}
+//
+//			{
+//				JCheckBox psMark = new BooleanSettingGui(backend.getPsAmEnable(), "P2 Headmarker Automark (Configure Below)").getComponent();
+//				upper.add(psMark, c);
+//				c.gridy++;
+//			}
+//
+//			{
+//				JCheckBox sniperMark = new BooleanSettingGui(backend.getSniperAmEnable(), "Sniper Cannon Automark (Attack = Spread Debuff, Bind = Stack Debuff, Ignore = Nothing)").getComponent();
+//				upper.add(sniperMark, c);
+//				c.gridy++;
+//			}
+//
+//			{
+//				JCheckBox monitorMark = new BooleanSettingGui(backend.getMonitorAmEnable(), "Monitor Automark (Attack = Nothing, Bind = Monitor)").getComponent();
+//				upper.add(monitorMark, c);
+//				c.gridy++;
+//			}
+////
+//			{
+//				JCheckBox deltaMark = new BooleanSettingGui(backend.getDeltaAmEnable(), "Delta Automark (Configure Below)").getComponent();
+//				upper.add(deltaMark, c);
+//				c.gridy++;
+//			}
+//
+//			{
+//				JCheckBox sigmaMark = new BooleanSettingGui(backend.getSigmaAmEnable(), "Sigma Automark (Configure Below)").getComponent();
+//				upper.add(sigmaMark, c);
+//				c.gridy++;
+//			}
+//
+//			ReadOnlyText helpText = new ReadOnlyText("""
+//					Instructions:
+//					Jobs higher on the list will be preferred for group 1.
+//					Jobs lower on the list will be preferred for group 2.
+//					The easiest way to set this up is to simply put your group 1 jobs at the top, and your group 2 jobs at the bottom.""");
+//
+//			upper.add(helpText, c);
+//			c.gridy++;
+//
+//			{
+//				TitleBorderPanel mappingPanel = makeLooperPantoPanel();
+//				c.weightx = 0;
+//				c.gridwidth = 1;
+//				upper.add(mappingPanel, c);
+//			}
+//			{
+//				c.gridx++;
+//				upper.add(sniperSettings, c);
+//				c.gridx++;
+//				c.gridwidth = GridBagConstraints.REMAINDER;
+//				upper.add(Box.createHorizontalGlue(), c);
+//				c.gridx = 0;
+//				c.gridy++;
+//			}
+//
+//			{
+//				TitleBorderPanel mappingPanel = makePsMarkersPanel();
+//				upper.add(mappingPanel, c);
+//				c.gridy++;
+//			}
+//			{
+//				c.gridy++;
+//			}
+//			{
+//				c.gridy++;
+//			}
+//
+//
+//			outer.add(upper, BorderLayout.NORTH);
+//		}
 		{
 			outer.add(jsg.getCombined(), BorderLayout.CENTER);
 		}
