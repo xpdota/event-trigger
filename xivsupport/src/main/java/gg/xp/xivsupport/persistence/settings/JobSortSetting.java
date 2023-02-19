@@ -50,32 +50,11 @@ public class JobSortSetting {
 		if (jobSort == null) {
 			jobSort = allValidJobs
 					.stream()
-					.sorted(defaultJailSortComparator)
+					.sorted(getDefaultSort())
 					.toList();
 		}
 		this.state = state;
 	}
-
-	private final Comparator<Job> defaultJailSortComparator = Comparator.<Job, Integer>comparing(job -> {
-		if (job.isMeleeDps()) {
-			return 1;
-		}
-		if (job.isTank()) {
-			return 2;
-		}
-		if (job.isCaster()) {
-			return 3;
-		}
-		if (job.isPranged()) {
-			return 4;
-		}
-		if (job.isHealer()) {
-			return 5;
-		}
-		// Shouldn't happen
-		log.warn("Couldn't determine jail prio for job {}", job);
-		return 6;
-	}).thenComparing(Enum::ordinal);
 
 	/**
 	 * @return A comparator which can be used to sort a list of players according to their jobs
@@ -128,10 +107,35 @@ public class JobSortSetting {
 	 */
 	public void resetJobOrder() {
 		this.jobSort = jobSort.stream()
-				.sorted(defaultJailSortComparator)
+				.sorted(getDefaultSort())
 				.toList();
 		sortSetting.delete();
 	}
+
+	protected Comparator<Job> getDefaultSort() {
+
+		return Comparator.<Job, Integer>comparing(job -> {
+			if (job.isMeleeDps()) {
+				return 1;
+			}
+			if (job.isTank()) {
+				return 2;
+			}
+			if (job.isCaster()) {
+				return 3;
+			}
+			if (job.isPranged()) {
+				return 4;
+			}
+			if (job.isHealer()) {
+				return 5;
+			}
+			// Shouldn't happen
+			log.warn("Couldn't determine jail prio for job {}", job);
+			return 6;
+		}).thenComparing(Enum::ordinal);
+	}
+
 
 	/**
 	 * Deprecated, see {@link #resetJobOrder()}
