@@ -3,6 +3,7 @@ package gg.xp.telestosupport.rightclicks;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.telestosupport.doodle.CircleDoodleSpec;
+import gg.xp.telestosupport.doodle.CoordSystem;
 import gg.xp.telestosupport.doodle.CreateDoodleRequest;
 import gg.xp.telestosupport.doodle.DoodleProcessor;
 import gg.xp.telestosupport.doodle.DoodleSpec;
@@ -36,7 +37,7 @@ public class TelestoRightClickOptions {
 		repo.addOption(CustomRightClickOption.forRow("Draw Circle on Entity",
 				XivEntity.class,
 				xe -> {
-					DoodleSpec spec = new CircleDoodleSpec(new EntityDoodleLocation(xe), 50.0d, true);
+					DoodleSpec spec = new CircleDoodleSpec(new EntityDoodleLocation(xe), 50.0d, true, CoordSystem.Screen);
 					spec.color = new Color(255, 0, 255, 192);
 					master.pushEvent(new CreateDoodleRequest(spec));
 				},

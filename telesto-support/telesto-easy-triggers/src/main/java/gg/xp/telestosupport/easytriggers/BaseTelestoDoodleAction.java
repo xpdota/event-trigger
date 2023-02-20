@@ -19,7 +19,7 @@ public abstract class BaseTelestoDoodleAction implements Action<Event>, HasMutab
 	@JsonIgnore
 	public Color color = new Color(255, 0, 255, 192);
 	@JsonProperty("name")
-	@Description("Doodle Name")
+	@Description("Doodle Name (Blank for Auto)")
 	public String name = "";
 	@JsonProperty("duration")
 	@Description("Duration (ms)")
