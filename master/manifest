@@ -43,13 +43,13 @@ b379db6e4ee67fd2d731faadc3a5afa5  personal-cast-bar-overlay-1.0-SNAPSHOT.jar
 862efd265ece43f40921eddd06536327  rsyntaxtextarea-3.3.1.jar
 9c3b7321b1be9dc1dbac775ffbc76d7c  skill-hit-overlay-1.0-SNAPSHOT.jar
 0dd65c386e8c5f4e6e014de3f7a7ae60  slf4j-api-2.0.6.jar
-1d5ec781d1b1e34bf283af4ea5ab157f  telesto-core-1.0-SNAPSHOT.jar
+b2a64131a3fdd59ac93c269e741d7b03  telesto-core-1.0-SNAPSHOT.jar
 c6db4e4f7d67c79b01c27f97a2294ff0  telesto-easy-triggers-1.0-SNAPSHOT.jar
-67d9874e8ccaa497de31ec6b68dc02c2  telesto-gui-1.0-SNAPSHOT.jar
+f977833e5750966d3de5e3b2b7775154  telesto-gui-1.0-SNAPSHOT.jar
 cefda612fd88203aa1923df3c0fec80a  telesto-right-clicks-1.0-SNAPSHOT.jar
 bfaadfc9d68c7c248b7b394ddf2cec68  timelines-1.0-SNAPSHOT.jar
 6113fc836f719fbf75da1eef9864dcce  titan-jails-1.0-SNAPSHOT.jar
-f6aadfc84750dacf95a399478a66910e  triggers-ew-1.0-SNAPSHOT.jar
+71f44f274f0dda022351f01e8b290585  triggers-ew-1.0-SNAPSHOT.jar
 a79006557cc3031a9dc2aedddfed0969  triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  triggers-sb-1.0-SNAPSHOT.jar
 3cb7be60cd904b00d20b0418c8791c35  trigger-support-1.0-SNAPSHOT.jar
