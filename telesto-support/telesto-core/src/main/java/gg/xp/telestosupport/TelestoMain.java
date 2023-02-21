@@ -15,6 +15,7 @@ import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.HttpURISetting;
+import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
 import org.jetbrains.annotations.NotNull;
@@ -55,6 +56,8 @@ public class TelestoMain implements FilteredEventHandler {
 
 	private volatile TelestoStatus status = TelestoStatus.UNKNOWN;
 	private final PrimaryLogSource pls;
+	private final IntSetting commandDelayBase;
+	private final IntSetting commandDelayPlus;
 
 	public TelestoMain(EventMaster master, PersistenceProvider pers, PrimaryLogSource pls) {
 		this.master = master;
@@ -64,6 +67,8 @@ public class TelestoMain implements FilteredEventHandler {
 			// TODO: Telesto bug....
 //			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://127.0.0.1:51323/"));
 			enablePartyList = new BooleanSetting(pers, "telesto-support.pull-party-list", true);
+			commandDelayBase = new IntSetting(pers, "telesto-support.base-cmd-delay", 100, 0, 5000);
+			commandDelayPlus = new IntSetting(pers, "telesto-support.plus-cmd-delay", 100, 0, 5000);
 		}
 		catch (URISyntaxException e) {
 			throw new RuntimeException(e);
@@ -198,7 +203,8 @@ public class TelestoMain implements FilteredEventHandler {
 				exs.submit(task);
 				try {
 					// Insert delay to avoid spamming
-					Thread.sleep(100);
+					int delay = (int) (commandDelayBase.get() + (Math.random() * commandDelayPlus.get()));
+					Thread.sleep(delay);
 				}
 				catch (InterruptedException e) {
 					log.error("Interrupted", e);
@@ -242,5 +248,13 @@ public class TelestoMain implements FilteredEventHandler {
 	@Override
 	public boolean enabled(EventContext context) {
 		return enabled();
+	}
+
+	public IntSetting getCommandDelayBase() {
+		return commandDelayBase;
+	}
+
+	public IntSetting getCommandDelayPlus() {
+		return commandDelayPlus;
 	}
 }
