@@ -1629,6 +1629,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 								.limit(4)
 								.toList();
 						List<XivPlayerCharacter> leftovers = new ArrayList<>(partyList);
+						leftovers.remove(shortNear.getTarget());
+						leftovers.remove(shortDist.getTarget());
 						leftovers.removeAll(playersToMark);
 						handler.process(DynamisOmegaAssignment.NearWorld, (XivPlayerCharacter) shortNear.getTarget());
 						handler.process(DynamisOmegaAssignment.DistantWorld, (XivPlayerCharacter) shortDist.getTarget());

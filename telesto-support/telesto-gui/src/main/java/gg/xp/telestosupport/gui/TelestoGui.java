@@ -14,11 +14,14 @@ import gg.xp.telestosupport.easytriggers.TelestoEasyTriggersAddons;
 import gg.xp.telestosupport.rightclicks.TelestoRightClickOptions;
 import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
+import gg.xp.xivsupport.gui.TitleBorderPanel;
+import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tabs.TabAware;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.HttpURISettingGui;
+import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -109,8 +112,19 @@ public class TelestoGui implements PluginTab {
 			}
 		});
 
+		TitleBorderPanel delayPanel = new TitleBorderPanel("Delays");
+		{
+			delayPanel.setLayout(new WrapLayout());
+			delayPanel.add(new JLabel("Between commands, delay "));
+			delayPanel.add(new IntSettingSpinner(backend.getCommandDelayBase(), "ms").getSpinnerOnly());
+			delayPanel.add(new JLabel("ms,"));
+			delayPanel.add(new JLabel("plus a random delay up to "));
+			delayPanel.add(new IntSettingSpinner(backend.getCommandDelayPlus(), "").getSpinnerOnly());
+			delayPanel.add(new JLabel("ms."));
+		}
 
-		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, scroll, testPanel, partyListCb, rightClicksCb, doodleCb, doodleAddonCb);
+
+		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, scroll, testPanel, partyListCb, rightClicksCb, doodleCb, doodleAddonCb, delayPanel);
 
 		return outer;
 	}
