@@ -1545,7 +1545,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
-	private final ModifiableCallout<AbilityCastStart> runDynamisOmega = ModifiableCallout.durationBasedCall("Run Dynamis Omega", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> runDynamisOmega = ModifiableCallout.<AbilityCastStart>durationBasedCall("Run Dynamis Omega", "Raidwide")
+			.extendedDescription("Please note that all Run: Dynamis (Omega) triggers are in BETA.");
 	private final ModifiableCallout<BuffApplied> runDynamisOmegaShortNear = ModifiableCallout.<BuffApplied>durationBasedCall("Run Dynamis Omega: Short Near", "Short Near").autoIcon();
 	private final ModifiableCallout<BuffApplied> runDynamisOmegaShortDist = ModifiableCallout.<BuffApplied>durationBasedCall("Run Dynamis Omega: Short Dist", "Short Distant").autoIcon();
 	private final ModifiableCallout<BuffApplied> runDynamisOmegaLongNear = ModifiableCallout.<BuffApplied>durationBasedCall("Run Dynamis Omega: Long Near", "Long Near").autoIcon();
