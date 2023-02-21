@@ -4,6 +4,7 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.BooleanSettingHidingPanel;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisDeltaAssignment;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisOmegaAssignment;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisSigmaAssignment;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.TitleBorderPanel;
@@ -129,6 +130,10 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		{
 			BasicAutomarkSettingGroupGui<DynamisSigmaAssignment> sigmaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Sigma)", backend.getSigmaAmSettings(), 4, true);
 			tabs.addTab("Sigma", makeAmPanel(new BooleanSettingHidingPanel(backend.getSigmaAmEnable(), "Sigma Automark", sigmaSettings, true), backend.getSigmaPsPrio()));
+		}
+		{
+			BasicAutomarkSettingGroupGui<DynamisOmegaAssignment> omegaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Omega)", backend.getOmegaAmSettings(), 4, true);
+			tabs.addTab("Omega (BETA)", new BooleanSettingHidingPanel(backend.getOmegaAmEnable(), "Omega Automark (BETA - NEEDS TESTING)", omegaSettings, true));
 		}
 		outer.add(tabs, BorderLayout.CENTER);
 		outer.add(helpText, BorderLayout.NORTH);
