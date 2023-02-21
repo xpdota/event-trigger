@@ -1608,6 +1608,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				// TODO
 				{
 					if (getOmegaAmEnable().get()) {
+						s.accept(new ClearAutoMarkRequest());
+						s.waitMs(200);
 						List<XivPlayerCharacter> partyList = getState().getPartyList();
 						List<XivPlayerCharacter> playersToMark = partyList.stream()
 								.sorted(Comparator.comparing(member -> getBuffs().buffStacksOnTarget(member, 3444)))
