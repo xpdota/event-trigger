@@ -7,6 +7,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.misc.Unsafe;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -28,7 +29,8 @@ public class GroovyWhitelist extends Whitelist {
 			"java.lang.Thread",
 			"org.slf4j",
 			"org.apache.commons.io",
-			"java.lang.Process"
+			"java.lang.Process",
+			"sun.misc.Unsafe"
 	);
 	private final List<Class<?>> classBlacklist = List.of(
 			Thread.class,
@@ -36,7 +38,8 @@ public class GroovyWhitelist extends Whitelist {
 			ProcessBuilder.class,
 			File.class,
 			FileUtils.class,
-			IOUtils.class
+			IOUtils.class,
+			Unsafe.class
 	);
 
 	private boolean nameAllowed(String thing) {

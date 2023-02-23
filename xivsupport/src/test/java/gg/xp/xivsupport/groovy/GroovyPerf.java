@@ -4,6 +4,7 @@ import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
@@ -20,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.util.Collections;
 
 public class GroovyPerf {
 
@@ -38,14 +41,18 @@ public class GroovyPerf {
 		XivAbility ability = new XivAbility(123, "Foo Ability");
 		XivPlayerCharacter player = new XivPlayerCharacter(0x10000001, "Me, The Player", Job.GNB, XivWorld.of(), true, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
 		XivPlayerCharacter otherCharInParty = new XivPlayerCharacter(0x10000002, "Someone Else In My Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
-		AbilityCastStart event = new AbilityCastStart(ability, player, otherCharInParty, 6.0);
+//		AbilityCastStart event = new AbilityCastStart(ability, player, otherCharInParty, 6.0);
+		AbilityUsedEvent event = new AbilityUsedEvent(ability, player, otherCharInParty, Collections.emptyList(), 12345, 0, 1);
 
 		event.getAbility();
 		event.abilityIdMatches(0x5EF8);
 		event.getSource().getName();
 		event.getTarget().getName();
 
+		mgr.precacheCommonStuff();
+
 		try (var ignored = sbx.enter()) {
+			shell.parse("\"Dummy script\"").run();
 			Script script = shell.parse("\"${event.ability}; ${event.abilityIdMatches(0x5EF8)}; ${event.source.name}; ${event.target.name}\"");
 			script.getBinding().setVariable("event", event);
 			timeIt("First", script::run);
