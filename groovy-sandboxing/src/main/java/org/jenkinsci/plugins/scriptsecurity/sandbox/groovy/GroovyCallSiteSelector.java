@@ -121,6 +121,14 @@ class GroovyCallSiteSelector {
 
 				return parameters2;
 			}
+			// TODO: other types?
+			else if (componentType == Long.class && parameters[fixedLen] instanceof Integer) {
+				Object array = DefaultTypeTransformation.castToVargsArray(parameters, fixedLen, parameterTypes[fixedLen]);
+				Object[] parameters2 = new Object[fixedLen + 1];
+				System.arraycopy(parameters, 0, parameters2, 0, fixedLen);
+				parameters2[fixedLen] = array;
+				return parameters2;
+			}
 		}
 		return parameters;
 	}
