@@ -45,6 +45,7 @@ import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
 import gg.xp.xivsupport.models.groupmodels.WrothStyleAssignment;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortOverrideSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
@@ -228,6 +229,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final BooleanSetting deltaAmEnable;
 	private final BooleanSetting sigmaAmEnable;
 	private final BooleanSetting omegaAmEnable;
+	private final IntSetting sigmaAmDelay;
 
 	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
@@ -312,6 +314,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		sniperPrio = new JobSortOverrideSetting(pers, settingKeyBase + "sniper-prio-override", state, groupPrioJobSort);
 		monitorPrio = new JobSortOverrideSetting(pers, settingKeyBase + "monitor-prio-override", state, groupPrioJobSort);
 		sigmaPsPrio = new JobSortOverrideSetting(pers, settingKeyBase + "sigma-ps-prio-override", state, groupPrioJobSort);
+		sigmaAmDelay = new IntSetting(pers, settingKeyBase + "sigma-am-delay-seconds", 0, 0, 50);
 	}
 
 	@Override
@@ -1539,8 +1542,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			(e1, s) -> {
 				if (getSigmaAmEnable().get()) {
 					MultiSlotAutoMarkHandler<DynamisSigmaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getSigmaAmSettings());
+					int delay = getSigmaAmDelay().get() * 1_000;
+					s.waitMs(delay);
 					handler.processMulti(e1.getAssignments());
-					s.waitMs(56_000);
+					s.waitMs(56_000 - delay);
 					handler.clearAll();
 				}
 			});
@@ -1792,5 +1797,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public MultiSlotAutomarkSetting<DynamisOmegaAssignment> getOmegaAmSettings() {
 		return omegaAmSettings;
+	}
+
+	public IntSetting getSigmaAmDelay() {
+		return sigmaAmDelay;
 	}
 }
