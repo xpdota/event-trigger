@@ -57,6 +57,10 @@ public class MultiSlotAutoMarkHandler<X extends Enum<X>> {
 		toClear.clear();
 	}
 
+	public void clearAllFast() {
+		eventConsumer.accept(new ClearAutoMarkRequest());
+	}
+
 	public void processRange(List<XivPlayerCharacter> players, X startInclusive, X endInclusive) {
 		int startOrdinal = startInclusive.ordinal();
 		int endOrdinal = endInclusive.ordinal();

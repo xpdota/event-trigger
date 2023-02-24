@@ -1658,28 +1658,23 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				AbilityCastStart diffuseWaveCannon = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(31643, 31644));
 				// T+14s
 
-				AbilityCastStart blaster = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(32374));
-				// T+30s or so
-				{
-					Map<String, Object> params = Map.of("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
-					if (longNear.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaLongNearP2.getModified(longNear, params));
-					}
-					else if (longDist.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaLongDistP2.getModified(longDist, params));
-					}
-					else {
-						s.updateCall(runDynamisOmegaNothingP2.getModified(shortNear, params));
-					}
+				// Wait for any of these, since at that point the mechanic is basically locked in
+				// 7B89 - near initial
+				// 8110 - dist initial
+				// 7B8A - near followup
+				// 8111 - dist followup
+				// 7B6D - Oversampled wave cannon
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B89, 0x8110, 0x7B6D));
+				// T+28s-ish
+				if (getOmegaAmEnable().get()) {
+					handler.clearAllFast();
 				}
-				// Second AM set
-				// Mark long near
-				// Mark long dist
-				// Find players to mark for tethers
+				// Try to make this resilient even if something goes very wrong
+				s.waitEventsUntil(2, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B8A) && aue.isFirstTarget(),
+						AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7E76));
+				s.waitMs(500);
 				{
 					if (getOmegaAmEnable().get()) {
-						handler.clearAll();
-						s.waitMs(1_000);
 						List<XivPlayerCharacter> partyList = getState().getPartyList();
 						List<XivPlayerCharacter> twoStackPlayers = partyList.stream()
 								.filter(member -> getBuffs().buffStacksOnTarget(member, 0xD74) == 2
@@ -1699,6 +1694,22 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						handler.processRange(threeStackPlayers, DynamisOmegaAssignment.Remaining1, DynamisOmegaAssignment.Remaining2);
 					}
 				}
+				{
+					Map<String, Object> params = Map.of("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
+					if (longNear.getTarget().isThePlayer()) {
+						s.updateCall(runDynamisOmegaLongNearP2.getModified(longNear, params));
+					}
+					else if (longDist.getTarget().isThePlayer()) {
+						s.updateCall(runDynamisOmegaLongDistP2.getModified(longDist, params));
+					}
+					else {
+						s.updateCall(runDynamisOmegaNothingP2.getModified(shortNear, params));
+					}
+				}
+				// Second AM set
+				// Mark long near
+				// Mark long dist
+				// Find players to mark for tethers
 				s.waitMs(15_000);
 				handler.clearAll();
 
