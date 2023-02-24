@@ -85,7 +85,9 @@ public class TelestoMain implements FilteredEventHandler {
 	@HandleEvents
 	public void handleGameCommand(EventContext context, TelestoGameCommand event) {
 		String cmd = event.getCommand();
-		context.accept(makeMessage(GAME_CMD_ID, "ExecuteCommand", Map.of("command", cmd), true));
+		TelestoOutgoingMessage outgoing = makeMessage(GAME_CMD_ID, "ExecuteCommand", Map.of("command", cmd), true);
+		outgoing.setLogLabel("Command: " + cmd);
+		context.accept(outgoing);
 	}
 
 	public TelestoOutgoingMessage makeMessage(int id, @NotNull String type, @Nullable Object payload, boolean delay) {
@@ -151,6 +153,10 @@ public class TelestoMain implements FilteredEventHandler {
 		try {
 			body = mapper.writeValueAsString(msg.getJson());
 			log.trace("Sending Telesto message: {}", body);
+			String logLabel = msg.getLogLabel();
+			if (logLabel != null) {
+				log.info("Sending Telesto message labeled '{}'", logLabel);
+			}
 			HttpResponse<String> response = http.send(
 					HttpRequest
 							.newBuilder(uriSetting.get())

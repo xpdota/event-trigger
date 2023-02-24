@@ -1198,7 +1198,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				// TODO: proper AM settings
 				if (getMonitorAmEnable().get()) {
 					s.accept(new ClearAutoMarkRequest());
-					s.waitMs(100);
+					s.waitMs(1000);
 					for (XivPlayerCharacter mp : monitorPlayers) {
 						s.accept(new SpecificAutoMarkRequest(mp, MarkerSign.BIND_NEXT));
 					}
@@ -1554,8 +1554,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					MultiSlotAutoMarkHandler<DynamisSigmaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getSigmaAmSettings());
 					int delay = getSigmaAmDelay().get() * 1_000;
 					s.waitMs(delay);
+					s.accept(new ClearAutoMarkRequest());
+					s.waitMs(1000);
 					handler.processMulti(e1.getAssignments());
-					s.waitMs(56_000 - delay);
+					s.waitMs(55_000 - delay);
 					handler.clearAll();
 				}
 			});
@@ -1625,7 +1627,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				{
 					if (getOmegaAmEnable().get()) {
 						s.accept(new ClearAutoMarkRequest());
-						s.waitMs(200);
+						s.waitMs(1000);
 						List<XivPlayerCharacter> partyList = getState().getPartyList();
 						List<XivPlayerCharacter> playersToMark = partyList.stream()
 								.sorted(Comparator.comparing(member -> getBuffs().buffStacksOnTarget(member, 3444)))
@@ -1655,7 +1657,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 				AbilityCastStart diffuseWaveCannon = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(31643, 31644));
 				// T+14s
-				// Do first set additional AM
+
 				AbilityCastStart blaster = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(32374));
 				// T+30s or so
 				{
@@ -1677,6 +1679,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				{
 					if (getOmegaAmEnable().get()) {
 						handler.clearAll();
+						s.waitMs(1_000);
 						List<XivPlayerCharacter> partyList = getState().getPartyList();
 						List<XivPlayerCharacter> twoStackPlayers = partyList.stream()
 								.filter(member -> getBuffs().buffStacksOnTarget(member, 0xD74) == 2

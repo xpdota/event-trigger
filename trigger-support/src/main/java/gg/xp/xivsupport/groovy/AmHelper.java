@@ -8,10 +8,6 @@ import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkSlotRequest;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import groovy.lang.Closure;
-import groovy.lang.ExpandoMetaClass;
-import groovy.lang.GroovyInterceptable;
-import groovy.lang.MetaClass;
-import org.codehaus.groovy.runtime.InvokerHelper;
 
 import java.util.function.Consumer;
 
