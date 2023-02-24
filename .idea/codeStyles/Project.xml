@@ -13,6 +13,9 @@
         </value>
       </option>
     </JavaCodeStyleSettings>
+    <codeStyleSettings language="Groovy">
+      <option name="RIGHT_MARGIN" value="160" />
+    </codeStyleSettings>
     <codeStyleSettings language="JAVA">
       <option name="ELSE_ON_NEW_LINE" value="true" />
       <option name="CATCH_ON_NEW_LINE" value="true" />

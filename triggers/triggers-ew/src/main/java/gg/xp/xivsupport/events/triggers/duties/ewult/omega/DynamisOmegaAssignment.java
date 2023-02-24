@@ -4,8 +4,8 @@ import gg.xp.xivsupport.gui.util.HasFriendlyName;
 
 public enum DynamisOmegaAssignment implements HasFriendlyName {
 
-	NearWorld("Near World #1"),
-	DistantWorld("Distant World #1"),
+	NearWorld("Near World"),
+	DistantWorld("Distant World"),
 	Baiter1("Baiter #1"),
 	Baiter2("Baiter #2"),
 	Baiter3("Baiter #3"),

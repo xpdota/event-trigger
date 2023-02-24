@@ -4,7 +4,6 @@ import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -120,6 +119,22 @@ public final class Platform {
 		}
 		else {
 			Runtime.getRuntime().exec(new String[]{"sh", "triggevent-upd.sh"});
+		}
+	}
+
+	public static void showFileInExplorer(File file) {
+		try {
+			if (isWindows() && !file.toString().contains("\"")) {
+				// Come on Oracle, why is Desktop.browseFileDirectory() "unsupported" on Windows when
+				// it's literally just this?
+				Runtime.getRuntime().exec(new String[]{"explorer.exe", "/select,\"" + file + '"'});
+			}
+			else {
+				Desktop.getDesktop().open(file.getParentFile());
+			}
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 }

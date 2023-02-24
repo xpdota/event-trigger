@@ -64,6 +64,7 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -75,7 +76,6 @@ import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
@@ -363,7 +363,8 @@ public class GuiMain {
 			}, unused -> {
 				if (isVisible()) {
 					return 100L;
-				} else {
+				}
+				else {
 					return 1000L;
 				}
 			});
@@ -772,7 +773,7 @@ public class GuiMain {
 		LogCollector instance = LogCollector.getInstance();
 		if (instance == null) {
 			JPanel panel = new TitleBorderFullsizePanel("Logs");
-			panel.add(new JLabel("Error: no LogCollector instance"));
+			panel.add(new JLabel("Error: no LogCollector instance. If you aren't using a custom logback.xml, this is a bug."));
 			return panel;
 		}
 		else {
@@ -825,7 +826,7 @@ public class GuiMain {
 						String className = callerDataTop.getClassName();
 						String[] split = className.split("\\.");
 						String simpleClassName = split[split.length - 1];
-						return simpleClassName + ":" + callerDataTop.getLineNumber();
+						return simpleClassName + ':' + callerDataTop.getLineNumber();
 //						return e.getEvent().getLoggerName() + ":";
 					}, col -> {
 						col.setPreferredWidth(200);
@@ -843,6 +844,13 @@ public class GuiMain {
 					.addFilter(SystemLogThreadFilter::new)
 					.addFilter(SystemLogLoggerNameFilter::new)
 					.addFilter(SystemLogTextFilter::new)
+					.addWidget(ignored -> {
+						JButton button = new JButton("Show Log File");
+						button.addActionListener(l -> {
+							Platform.showFileInExplorer(Platform.getTriggeventDir().resolve("triggevent.log").toFile());
+						});
+						return button;
+					})
 					.setAppendOrPruneOnly(true)
 					.build();
 			instance.addCallback(table::signalNewData);
