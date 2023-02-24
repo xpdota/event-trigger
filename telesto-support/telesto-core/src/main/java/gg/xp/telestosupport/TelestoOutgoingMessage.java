@@ -25,9 +25,4 @@ public class TelestoOutgoingMessage extends BaseEvent {
 	public boolean shouldDelay() {
 		return delay;
 	}
-
-	@Override
-	public boolean shouldSave() {
-		return false;
-	}
 }

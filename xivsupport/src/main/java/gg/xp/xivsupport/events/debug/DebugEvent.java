@@ -24,8 +24,4 @@ public class DebugEvent extends BaseEvent implements HasPrimaryValue {
 		return value;
 	}
 
-	@Override
-	public boolean shouldSave() {
-		return false;
-	}
 }

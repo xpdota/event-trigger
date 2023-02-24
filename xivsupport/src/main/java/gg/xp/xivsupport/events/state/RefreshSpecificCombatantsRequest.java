@@ -25,11 +25,6 @@ public class RefreshSpecificCombatantsRequest extends BaseEvent implements HasPr
 	}
 
 	@Override
-	public boolean shouldSave() {
-		return false;
-	}
-
-	@Override
 	public String getPrimaryValue() {
 		return "Refresh Combatants " + combatants;
 	}

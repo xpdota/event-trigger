@@ -81,6 +81,14 @@ public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 	}
 
 	public static MarkerSign of(String s) {
+		MarkerSign result = ofNullable(s);
+		if (result == null) {
+			throw new IllegalArgumentException("Not a valid marker: " + s);
+		}
+		return result;
+	}
+
+	public static MarkerSign ofNullable(String s) {
 		try {
 			return valueOf(s.trim().toUpperCase(Locale.ROOT));
 		}
@@ -88,7 +96,7 @@ public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 			return Arrays.stream(values())
 					.filter(value -> value.getCommand().equalsIgnoreCase(s))
 					.findAny()
-					.orElseThrow(() -> new IllegalArgumentException("Not a valid marker: " + s));
+					.orElse(null);
 		}
 	}
 

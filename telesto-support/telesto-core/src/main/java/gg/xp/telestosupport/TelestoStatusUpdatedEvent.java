@@ -28,4 +28,9 @@ public class TelestoStatusUpdatedEvent extends BaseEvent implements HasPrimaryVa
 	public String getPrimaryValue() {
 		return String.format("%s -> %s", oldStatus, newStatus);
 	}
+
+	@Override
+	public boolean shouldSave() {
+		return true;
+	}
 }

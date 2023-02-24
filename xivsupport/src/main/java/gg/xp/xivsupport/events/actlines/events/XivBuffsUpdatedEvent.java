@@ -12,9 +12,4 @@ import java.io.Serial;
 public class XivBuffsUpdatedEvent extends BaseEvent implements XivStateChange {
 	@Serial
 	private static final long serialVersionUID = -4921893730737138894L;
-
-	@Override
-	public boolean shouldSave() {
-		return false;
-	}
 }

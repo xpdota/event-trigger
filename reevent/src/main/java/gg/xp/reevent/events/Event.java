@@ -58,7 +58,7 @@ public interface Event extends Serializable {
 	void setSourceEventHandler(EventHandler<?> source);
 
 	default boolean shouldSave() {
-		return getParent() == null;
+		return false;
 	}
 
 	boolean isImported();

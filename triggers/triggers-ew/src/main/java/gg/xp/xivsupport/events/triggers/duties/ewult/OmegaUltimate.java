@@ -1292,6 +1292,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
+	@NpcCastCallout(0x7B7B)
+	private final ModifiableCallout<AbilityCastStart> blueScreen = ModifiableCallout.durationBasedCall("Blue Screen", "Heavy Raidwide");
+
+
 	@NpcCastCallout(0x81AC)
 	private final ModifiableCallout<AbilityCastStart> solarRay = ModifiableCallout.durationBasedCall("Solar Ray", "Buster on {event.target}");
 
@@ -1306,10 +1310,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			.statusIcon(0xDB0);
 	private final ModifiableCallout<TetherEvent> runDynamisDeltaLocal = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Local", "Local with {buddy}")
 			.statusIcon(0xD70);
-	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaBaitSpinner = new ModifiableCallout<>("Run Dynamis Delta: Bait Spinner", "Bait Spinner");
+	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaBaitSpinner = new ModifiableCallout<>("Run Dynamis Delta: After Fist Snapshot", "Bait");
 	private final ModifiableCallout<AbilityCastStart> runDynamisDeltaAfterBaitNoMonitor = new ModifiableCallout<>("Run Dynamis Delta: Spinner Bait Done, No Monitor", "Move In, No Monitor");
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitWithMonitor = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Spinner Bait Done, With Monitor", "{rightMonitor ? \"Right\" : \"Left\"} Monitor on You")
 			.autoIcon();
+	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaHitByBeyondDefense = new ModifiableCallout<>("Run Dynamis Delta: Targeted by Beyond Defense", "Don't Stack");
 	private final ModifiableCallout<AbilityCastStart> runDynamisDeltaFinalNothing = new ModifiableCallout<>("Run Dynamis Delta: Final Baits, Nothing", "Nothing");
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalNear = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Near", "Near World").autoIcon();
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalDistant = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Near", "Distant World").autoIcon();
@@ -1351,14 +1356,19 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 				AbilityUsedEvent eyeLaser = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B21));
 				s.updateCall(runDynamisDeltaBaitSpinner.getModified(eyeLaser, params));
+				AbilityUsedEvent beyondDefense = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B70));
 				AbilityCastStart spinner = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B70));
 				BuffApplied monitor = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD7C, 0xD7D));
 				boolean rightMonitor = monitor.buffIdMatches(0xD7C);
 				params = new HashMap<>(params);
 				params.put("monitor", monitor);
 				params.put("rightMonitor", rightMonitor);
+				params.put("beyondDefense", beyondDefense);
 				if (monitor.getTarget().isThePlayer()) {
 					s.updateCall(runDynamisDeltaAfterBaitWithMonitor.getModified(monitor, params));
+				}
+				else if (beyondDefense.getTarget().isThePlayer()) {
+					s.updateCall(runDynamisDeltaHitByBeyondDefense.getModified(beyondDefense, params));
 				}
 				else {
 					s.updateCall(runDynamisDeltaAfterBaitNoMonitor.getModified(spinner, params));
