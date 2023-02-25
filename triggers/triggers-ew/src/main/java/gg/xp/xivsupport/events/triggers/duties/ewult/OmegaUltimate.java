@@ -1311,7 +1311,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<TetherEvent> runDynamisDeltaLocal = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Local", "Local with {buddy}")
 			.statusIcon(0xD70);
 	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaBaitSpinner = new ModifiableCallout<>("Run Dynamis Delta: After Fist Snapshot", "Bait");
-	private final ModifiableCallout<AbilityCastStart> runDynamisDeltaAfterBaitNoMonitor = new ModifiableCallout<>("Run Dynamis Delta: Spinner Bait Done, No Monitor", "Move In, No Monitor");
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitNoMonitor = new ModifiableCallout<>("Run Dynamis Delta: Spinner Bait Done, No Monitor", "Move In, No Monitor");
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitWithMonitor = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Spinner Bait Done, With Monitor", "{rightMonitor ? \"Right\" : \"Left\"} Monitor on You")
 			.autoIcon();
 	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaHitByBeyondDefense = new ModifiableCallout<>("Run Dynamis Delta: Targeted by Beyond Defense", "Don't Stack");
@@ -1356,8 +1356,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 				AbilityUsedEvent eyeLaser = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B21));
 				s.updateCall(runDynamisDeltaBaitSpinner.getModified(eyeLaser, params));
-				AbilityUsedEvent beyondDefense = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B70));
-				AbilityCastStart spinner = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B70));
+				AbilityUsedEvent beyondDefense = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B27));
+				if (beyondDefense.getTarget().isThePlayer()) {
+					s.updateCall(runDynamisDeltaHitByBeyondDefense.getModified(beyondDefense, params));
+				}
 				BuffApplied monitor = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD7C, 0xD7D));
 				boolean rightMonitor = monitor.buffIdMatches(0xD7C);
 				params = new HashMap<>(params);
@@ -1368,10 +1370,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					s.updateCall(runDynamisDeltaAfterBaitWithMonitor.getModified(monitor, params));
 				}
 				else if (beyondDefense.getTarget().isThePlayer()) {
-					s.updateCall(runDynamisDeltaHitByBeyondDefense.getModified(beyondDefense, params));
+					// Already called above
 				}
 				else {
-					s.updateCall(runDynamisDeltaAfterBaitNoMonitor.getModified(spinner, params));
+					s.updateCall(runDynamisDeltaAfterBaitNoMonitor.getModified(monitor, params));
 				}
 				AbilityCastStart swivelCannon = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B94, 0x7B95));
 				if (helloNearWorld.getTarget().isThePlayer()) {
@@ -1421,6 +1423,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final SequentialTrigger<BaseEvent> runDynamisSigmaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8014),
 			(e1, s) -> {
 				s.updateCall(runDynamisSigma.getModified(e1));
+				if (getSigmaAmEnable().get()) {
+					s.accept(new ClearAutoMarkRequest());
+				}
 				Map<PsMarkerGroup, XivPlayerCharacter> headmarkers = new EnumMap<>(PsMarkerGroup.class);
 				// We now have a mapping from the headmarker offset to the players with that ID
 				s.waitEventsQuickSuccession(8, HeadMarkerEvent.class, hm -> hm.getTarget().isPc(), Duration.ofSeconds(1))
@@ -1554,7 +1559,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					MultiSlotAutoMarkHandler<DynamisSigmaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getSigmaAmSettings());
 					int delay = getSigmaAmDelay().get() * 1_000;
 					s.waitMs(delay);
-					s.accept(new ClearAutoMarkRequest());
 					s.waitMs(1000);
 					handler.processMulti(e1.getAssignments());
 					s.waitMs(55_000 - delay);

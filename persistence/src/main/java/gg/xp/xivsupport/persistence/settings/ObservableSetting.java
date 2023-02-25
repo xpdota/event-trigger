@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ObservableSetting {
 	private static final Logger log = LoggerFactory.getLogger(ObservableSetting.class);
@@ -25,6 +26,7 @@ public class ObservableSetting {
 	}
 
 	protected void notifyListeners() {
+		callbacks.removeIf(r -> (r instanceof WeakItem wi && wi.isGone()));
 		callbacks.forEach(runnable -> {
 			try {
 				runnable.run();
