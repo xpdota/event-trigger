@@ -46,4 +46,9 @@ public class ActWsRawMsg extends BaseEvent implements Compressible {
 			this.rawMsgData = Compressor.uncompressBytesToString(compressed);
 		}
 	}
+
+	@Override
+	public boolean shouldSave() {
+		return true;
+	}
 }

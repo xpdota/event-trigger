@@ -6,6 +6,7 @@ import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
+import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
@@ -353,6 +354,7 @@ public class EasyTriggersTab implements PluginTab {
 
 		private final EasyTrigger<?> trigger;
 
+		@SuppressWarnings("unchecked")
 		TriggerConfigPanel(EasyTrigger<?> trigger) {
 			setLayout(new GridBagLayout());
 			GridBagConstraints c = GuiUtil.defaultGbc();
@@ -398,6 +400,18 @@ public class EasyTriggersTab implements PluginTab {
 			c.gridx = 0;
 			c.gridy++;
 			c.gridwidth = GridBagConstraints.REMAINDER;
+			if (trigger.getEventType().equals(EasyTriggersInitEvent.class)) {
+				JButton button = new JButton("Re-Run");
+				button.addActionListener(l -> backend.initSpecificTrigger((EasyTrigger<EasyTriggersInitEvent>) trigger));
+				int fillBefore = c.fill;
+				int anchorBefore = c.anchor;
+				c.fill = GridBagConstraints.NONE;
+				c.anchor = GridBagConstraints.NORTHWEST;
+				add(button, c);
+				c.gridy++;
+				c.fill = fillBefore;
+				c.anchor = anchorBefore;
+			}
 			add(conditionsPanel, c);
 			c.gridy++;
 			add(actionsPanel, c);

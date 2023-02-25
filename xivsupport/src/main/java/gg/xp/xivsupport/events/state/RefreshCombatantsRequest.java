@@ -13,11 +13,6 @@ public class RefreshCombatantsRequest extends BaseEvent implements HasPrimaryVal
 	private static final long serialVersionUID = -3649990345648876155L;
 
 	@Override
-	public boolean shouldSave() {
-		return false;
-	}
-
-	@Override
 	public String getPrimaryValue() {
 		return "Refresh All Combatants";
 	}

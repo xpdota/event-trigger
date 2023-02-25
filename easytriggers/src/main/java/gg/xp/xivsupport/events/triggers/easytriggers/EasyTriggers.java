@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
@@ -83,6 +85,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.CompoundCond
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
+import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
@@ -121,14 +124,16 @@ public final class EasyTriggers {
 	private final PersistenceProvider pers;
 	private final PicoContainer pico;
 	private final XivState state;
+	private final EventMaster master;
 	private final CustomJsonListSetting<EasyTrigger<?>> setting;
 
 	private ArrayList<EasyTrigger<?>> triggers;
 
-	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state) {
+	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state, EventMaster master) {
 		this.pers = pers;
 		this.pico = pico;
 		this.state = state;
+		this.master = master;
 		mapper.setInjectableValues(new InjectableValues() {
 			@Override
 			public Object findInjectableValue(Object o, DeserializationContext deserializationContext, BeanProperty beanProperty, Object o1) {
@@ -216,7 +221,23 @@ public final class EasyTriggers {
 	}
 
 	@HandleEvents
+	public void initAll(EventContext context, InitEvent init) {
+		context.accept(new EasyTriggersInitEvent());
+	}
+
+	public void initSpecificTrigger(EasyTrigger<EasyTriggersInitEvent> trigger) {
+		master.pushEvent(new EasyTriggersInitEvent(trigger));
+	}
+
+	@HandleEvents
 	public void runEasyTriggers(EventContext context, Event event) {
+		if (event instanceof EasyTriggersInitEvent etie) {
+			EasyTrigger<EasyTriggersInitEvent> triggerToInit = etie.getTriggerToInit();
+			if (triggerToInit != null) {
+				triggerToInit.handleEvent(context, event);
+				return;
+			}
+		}
 		triggers.forEach(trig -> {
 			try {
 				trig.handleEvent(context, event);
@@ -231,9 +252,13 @@ public final class EasyTriggers {
 		return Collections.unmodifiableList(triggers);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void addTrigger(EasyTrigger<?> trigger) {
 		triggers.add(trigger);
 		save();
+		if (trigger.getEventType().equals(EasyTriggersInitEvent.class)) {
+			initSpecificTrigger((EasyTrigger<EasyTriggersInitEvent>) trigger);
+		}
 	}
 
 	public void removeTrigger(EasyTrigger<?> trigger) {
@@ -244,6 +269,21 @@ public final class EasyTriggers {
 	// Be sure to add new types to EasyTriggersTest
 	// TODO: might be nice to wire some of the "single value replacement" logic from ModifiableCallout into here, to skip the need for .name on everything
 	private final List<EventDescription<?>> eventTypes = new ArrayList<>(List.of(
+			new EventDescriptionImpl<>(EasyTriggersInitEvent.class,
+					"Startup Trigger - will run when Triggevent starts (or when importing the trigger)",
+					"", "", List.of()) {
+				@Override
+				public EasyTrigger<EasyTriggersInitEvent> newEmptyInst(@Nullable String callText) {
+					return newDefaultInst();
+				}
+
+				@Override
+				public EasyTrigger<EasyTriggersInitEvent> newDefaultInst() {
+					EasyTrigger<EasyTriggersInitEvent> easy = new EasyTrigger<>();
+					easy.setEventType(EasyTriggersInitEvent.class);
+					return easy;
+				}
+			},
 			new EventDescriptionImpl<>(AbilityCastStart.class,
 					"An ability has started casting. Corresponds to ACT 20 lines.",
 					"{event.ability}",
@@ -508,9 +548,10 @@ public final class EasyTriggers {
 				trigger.addCondition(filter);
 			}
 			return trigger;
-
 		}
-
+		else if (event instanceof InitEvent || event instanceof EasyTriggersInitEvent) {
+			return getEventDescription(EasyTriggersInitEvent.class).newEmptyInst(null);
+		}
 		return null;
 	}
 

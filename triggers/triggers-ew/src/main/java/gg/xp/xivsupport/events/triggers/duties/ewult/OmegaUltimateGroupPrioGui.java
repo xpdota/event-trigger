@@ -19,6 +19,7 @@ import gg.xp.xivsupport.models.groupmodels.WrothStyleAssignment;
 import gg.xp.xivsupport.persistence.gui.AutomarkSettingGui;
 import gg.xp.xivsupport.persistence.gui.BasicAutomarkSettingGroupGui;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
 import gg.xp.xivsupport.persistence.gui.JobSortOverrideGui;
 import gg.xp.xivsupport.persistence.settings.AutomarkSetting;
@@ -129,7 +130,10 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		}
 		{
 			BasicAutomarkSettingGroupGui<DynamisSigmaAssignment> sigmaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Sigma)", backend.getSigmaAmSettings(), 4, true);
-			tabs.addTab("Sigma", makeAmPanel(new BooleanSettingHidingPanel(backend.getSigmaAmEnable(), "Sigma Automark", sigmaSettings, true), backend.getSigmaPsPrio()));
+			JPanel panel = new JPanel(new BorderLayout());
+			panel.add(sigmaSettings, BorderLayout.CENTER);
+			panel.add(new IntSettingSpinner(backend.getSigmaAmDelay(), "AM Delay (seconds) - 15+ recommended").getComponent(), BorderLayout.SOUTH);
+			tabs.addTab("Sigma", makeAmPanel(new BooleanSettingHidingPanel(backend.getSigmaAmEnable(), "Sigma Automark", panel, true), backend.getSigmaPsPrio()));
 		}
 		{
 			BasicAutomarkSettingGroupGui<DynamisOmegaAssignment> omegaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Omega)", backend.getOmegaAmSettings(), 4, true);
