@@ -17,7 +17,7 @@ bc8a63a2f04f8922f08b7ed36855e5ca  custom-party-overlay-1.0-SNAPSHOT.jar
 655814242aa5fa27b4f4eaca9390c951  flatlaf-1.6.5.jar
 4fbc34bbf1ec28670693ee90ba5948fc  groovy-3.0.14.jar
 d42b8855e3b7e4f3506ffc0b5b85d149  groovy-sandbox-1.27.jar
-8764ce32bd1b57848b308a5540343c78  groovy-sandboxing-1.0-SNAPSHOT.jar
+c06d487456c28be8e5adc3200b6f4420  groovy-sandboxing-1.0-SNAPSHOT.jar
 2cb357c4b763f47e58af6cad47df6ba3  httpclient-4.5.14.jar
 28d2cd9bf8789fd2ec774fb88436ebd1  httpcore-4.4.16.jar
 714c4ae31c40e6633c0bcaa4e6264153  httpmime-4.5.14.jar
@@ -52,6 +52,6 @@ cefda612fd88203aa1923df3c0fec80a  telesto-right-clicks-1.0-SNAPSHOT.jar
 63aa4b33710703bd05e0e47af9d0f8d2  triggers-ew-1.0-SNAPSHOT.jar
 a79006557cc3031a9dc2aedddfed0969  triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  triggers-sb-1.0-SNAPSHOT.jar
-94749a5ceb2d50854a86defc517aea65  trigger-support-1.0-SNAPSHOT.jar
+f0d92d30d9d0d86ffc517894b707822f  trigger-support-1.0-SNAPSHOT.jar
 6fb9ff4e39ca1269f13d7d42cff60962  xivdata-1.0-SNAPSHOT.jar
-0b8e2e391bb4ac7600f6910ab6569853  xivsupport-1.0-SNAPSHOT.jar
+a6fd5e8ef11db4fc9523740c6b0f9f02  xivsupport-1.0-SNAPSHOT.jar
