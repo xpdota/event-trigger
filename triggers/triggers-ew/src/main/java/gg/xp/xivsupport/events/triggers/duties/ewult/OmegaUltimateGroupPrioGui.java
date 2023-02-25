@@ -137,7 +137,7 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		}
 		{
 			BasicAutomarkSettingGroupGui<DynamisOmegaAssignment> omegaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Omega)", backend.getOmegaAmSettings(), 4, true);
-			tabs.addTab("Omega (BETA)", new BooleanSettingHidingPanel(backend.getOmegaAmEnable(), "Omega Automark (BETA - NEEDS TESTING)", omegaSettings, true));
+			tabs.addTab("Omega", new BooleanSettingHidingPanel(backend.getOmegaAmEnable(), "Omega Automark", omegaSettings, true));
 		}
 		outer.add(tabs, BorderLayout.CENTER);
 		outer.add(helpText, BorderLayout.NORTH);
