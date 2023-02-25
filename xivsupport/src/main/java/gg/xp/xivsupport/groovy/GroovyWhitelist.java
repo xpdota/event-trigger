@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.groovy;
 
 import gg.xp.reevent.scan.ScanMe;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovyShell;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
@@ -9,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.Unsafe;
 
+import java.awt.*;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -39,7 +42,10 @@ public class GroovyWhitelist extends Whitelist {
 			File.class,
 			FileUtils.class,
 			IOUtils.class,
-			Unsafe.class
+			Unsafe.class,
+			Desktop.class,
+			GroovyShell.class,
+			GroovyClassLoader.class
 	);
 
 	private boolean nameAllowed(String thing) {

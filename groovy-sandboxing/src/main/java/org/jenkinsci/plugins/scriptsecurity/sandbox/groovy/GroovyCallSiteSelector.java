@@ -24,9 +24,11 @@
 
 package org.jenkinsci.plugins.scriptsecurity.sandbox.groovy;
 
+import groovy.lang.Closure;
 import groovy.lang.GString;
 import groovy.lang.GroovyInterceptable;
 import org.apache.commons.lang3.ClassUtils;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,8 +61,8 @@ class GroovyCallSiteSelector {
 		}
 		for (int i = 0; i < parameterTypes.length; i++) {
 			Class<?> thisParamType = parameterTypes[i];
-			Object thisParam = parameters[i];
-			if (thisParam == null) {
+			Object thisParamValue = parameters[i];
+			if (thisParamValue == null) {
 				if (thisParamType.isPrimitive()) {
 					return false;
 				}
@@ -69,24 +71,27 @@ class GroovyCallSiteSelector {
 					continue;
 				}
 			}
-			if (thisParamType.isInstance(thisParam)) {
+			if (thisParamType.isInstance(thisParamValue)) {
 				// OK, this parameter matches.
+				continue;
+			}
+			if (ClassHelper.isSAMType(ClassHelper.makeCached(thisParamType)) && thisParamValue instanceof Closure<?>) {
 				continue;
 			}
 			if (
 					thisParamType.isPrimitive()
-					&& isInstancePrimitive(ClassUtils.primitiveToWrapper(thisParamType), thisParam)
+					&& isInstancePrimitive(ClassUtils.primitiveToWrapper(thisParamType), thisParamValue)
 			) {
 				// Groovy passes primitive values as objects (for example, passes 0 as Integer(0))
 				// The prior test fails as int.class.isInstance(new Integer(0)) returns false.
 				continue;
 			}
 			// TODO what about a primitive parameter type and a wrapped parameter?
-			if (thisParamType == String.class && thisParam instanceof GString) {
+			if (thisParamType == String.class && thisParamValue instanceof GString) {
 				// Cf. SandboxInterceptorTest and class Javadoc.
 				continue;
 			}
-			if ((thisParamType == Double.class || thisParamType == double.class || thisParamType == Float.class || thisParamType == float.class) && thisParam instanceof BigDecimal) {
+			if ((thisParamType == Double.class || thisParamType == double.class || thisParamType == Float.class || thisParamType == float.class) && thisParamValue instanceof BigDecimal) {
 				continue;
 			}
 			// Mismatch.

@@ -142,6 +142,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 
 	private @Nullable HasCalloutTrackingKey lastCall;
 
+	public @Nullable HasCalloutTrackingKey getLastCall() {
+		return lastCall;
+	}
+
 	/**
 	 * Accept a new callout event, BUT mark it as "replacing" any previous call
 	 * i.e. update callout text + emit a new TTS
