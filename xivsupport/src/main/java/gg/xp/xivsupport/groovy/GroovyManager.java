@@ -10,6 +10,7 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
@@ -243,6 +244,7 @@ public class GroovyManager {
 		binding.setVariable("state", container.getComponent(XivState.class));
 		binding.setVariable("master", container.getComponent(EventMaster.class));
 		binding.setVariable("buffs", container.getComponent(StatusEffectRepository.class));
+		binding.setVariable("casts", container.getComponent(ActiveCastRepository.class));
 		binding.setVariable("log", scriptLogger);
 		// Precache some common calls
 		new Thread("GroovyStartupHelper") {
