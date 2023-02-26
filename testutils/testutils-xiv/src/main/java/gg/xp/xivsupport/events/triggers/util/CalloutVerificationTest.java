@@ -5,6 +5,8 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
@@ -12,7 +14,11 @@ import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
+import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.eventstorage.EventReader;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.sys.KnownLogSource;
@@ -43,6 +49,12 @@ public abstract class CalloutVerificationTest {
 		return new CalloutInitialValues(when, both, both, null);
 	}
 
+	protected AmVerificationValues mark(long when, MarkerSign marker, Job job) {
+		return new AmVerificationValues(when, marker, job, null);
+	}
+
+	protected void configure(MutablePicoContainer pico) {}
+
 	@Test
 	void doTheTest() {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
@@ -62,6 +74,7 @@ public abstract class CalloutVerificationTest {
 
 
 		List<CalloutInitialValues> actualCalls = new ArrayList<>();
+		List<AmVerificationValues> actualMarks = new ArrayList<>();
 
 		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		dist.registerHandler(Event.class, new EventHandler<>() {
@@ -124,12 +137,6 @@ public abstract class CalloutVerificationTest {
 				}
 				else {
 					Instant happenedAt = timeSource.now();
-//					if (e instanceof XivStateRecalculatedEvent || e instanceof BaseDelayedEvent) {
-//						happenedAt = timeSource.now();
-//					}
-//					else {
-//						happenedAt = e.getEffectiveHappenedAt();
-//					}
 					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
 				}
 			}
@@ -142,23 +149,70 @@ public abstract class CalloutVerificationTest {
 			}
 			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText(), parent));
 		});
+		dist.registerHandler(SpecificAutoMarkRequest.class, (ctx, e) -> {
+			PullTracker pulls = pico.getComponent(PullTracker.class);
+			final long msDelta;
+			Pull currentPull = pulls.getCurrentPull();
+			if (currentPull == null) {
+				return;
+			}
+			else {
+				Event combatStart = currentPull.getCombatStart();
+				if (combatStart == null) {
+					return;
+				}
+				else {
+					Instant happenedAt = timeSource.now();
+					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
+				}
+			}
+			Event parent = e.getParent();
+			actualMarks.add(new AmVerificationValues(msDelta, e.getMarker(), ((XivPlayerCharacter) e.getTarget()).getJob(), parent));
+		});
+		dist.registerHandler(AutoMarkRequest.class, (ctx, e) -> {
+			PullTracker pulls = pico.getComponent(PullTracker.class);
+			final long msDelta;
+			Pull currentPull = pulls.getCurrentPull();
+			if (currentPull == null) {
+				return;
+			}
+			else {
+				Event combatStart = currentPull.getCombatStart();
+				if (combatStart == null) {
+					return;
+				}
+				else {
+					Instant happenedAt = timeSource.now();
+					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
+				}
+			}
+			Event parent = e.getParent();
+			actualMarks.add(new AmVerificationValues(msDelta, MarkerSign.ATTACK1, ((XivPlayerCharacter) e.getTarget()).getJob(), parent));
+		});
 
-
-		// TODO: This causes issues with timing, since enqueued events don't have the proper timestamp
-//		replayController.advanceByAsyncWhile(() -> true).get();
+		// TODO: figure out why InitEvent doesn't work but a simple 'advance by 1' does
+//		dist.acceptEvent(new InitEvent());
+		replayController.advanceBy(1);
+		configure(pico);
 		replayController.advanceBy(Integer.MAX_VALUE);
 
 		pico.getComponent(EventMaster.class).getQueue().waitDrain();
 
 
 		compareLists(rawStorage, actualCalls, getExpectedCalls());
-
-
+		List<AmVerificationValues> expectedAMs = getExpectedAms();
+		if (!actualMarks.isEmpty() || !expectedAMs.isEmpty()) {
+			compareLists(rawStorage, actualMarks, expectedAMs);
+		}
 	}
 
 	protected abstract List<CalloutInitialValues> getExpectedCalls();
 
-	private static void compareLists(RawEventStorage rawStorage, List<CalloutInitialValues> actual, List<CalloutInitialValues> expected) {
+	protected List<AmVerificationValues> getExpectedAms() {
+		return List.of();
+	}
+
+	private static <X extends HasEvent> void compareLists(RawEventStorage rawStorage, List<X> actual, List<X> expected) {
 		if (actual.isEmpty()) {
 			throw new RuntimeException("Actual list was empty!");
 		}
@@ -183,7 +237,7 @@ public abstract class CalloutVerificationTest {
 			if (!equals) {
 				anyFailure = true;
 				firstFailureIndex = i;
-				CalloutInitialValues item = actual.get(i);
+				X item = actual.get(i);
 				failureAdjacentEvent = item.event();
 				break;
 			}

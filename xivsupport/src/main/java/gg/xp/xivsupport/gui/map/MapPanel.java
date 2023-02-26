@@ -80,6 +80,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		setBackground(new Color(168, 153, 114));
 		refresher = new RefreshLoop<>("MapRefresh", this, map -> {
 			SwingUtilities.invokeLater(() -> {
+				// TODO: this can flood the EDT queue
 				if (map.isShowing()) {
 					refresh();
 				}

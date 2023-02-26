@@ -1356,10 +1356,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 				AbilityUsedEvent eyeLaser = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B21));
 				s.updateCall(runDynamisDeltaBaitSpinner.getModified(eyeLaser, params));
-				AbilityUsedEvent beyondDefense = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B27));
-				if (beyondDefense.getTarget().isThePlayer()) {
-					s.updateCall(runDynamisDeltaHitByBeyondDefense.getModified(beyondDefense, params));
-				}
+				AbilityCastStart spinner = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B70));
+				// 7B27 is the fake, 7B28 is real
+				AbilityUsedEvent beyondDefense = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B28));
 				BuffApplied monitor = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD7C, 0xD7D));
 				boolean rightMonitor = monitor.buffIdMatches(0xD7C);
 				params = new HashMap<>(params);
@@ -1370,7 +1369,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					s.updateCall(runDynamisDeltaAfterBaitWithMonitor.getModified(monitor, params));
 				}
 				else if (beyondDefense.getTarget().isThePlayer()) {
-					// Already called above
+					s.updateCall(runDynamisDeltaHitByBeyondDefense.getModified(beyondDefense, params));
 				}
 				else {
 					s.updateCall(runDynamisDeltaAfterBaitNoMonitor.getModified(monitor, params));

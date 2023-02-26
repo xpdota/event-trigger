@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public record CalloutInitialValues(long ms, String tts, String text, @Nullable Event event) {
+public record CalloutInitialValues(long ms, String tts, String text, @Nullable Event event) implements HasEvent {
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;

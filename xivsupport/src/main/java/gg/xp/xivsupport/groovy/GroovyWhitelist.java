@@ -9,7 +9,6 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.misc.Unsafe;
 
 import java.awt.*;
 import java.io.File;
@@ -42,11 +41,20 @@ public class GroovyWhitelist extends Whitelist {
 			File.class,
 			FileUtils.class,
 			IOUtils.class,
-			Unsafe.class,
+			getUnsafeClass(),
 			Desktop.class,
 			GroovyShell.class,
 			GroovyClassLoader.class
 	);
+
+	private static Class<?> getUnsafeClass() {
+		try {
+			return Class.forName("sun.misc.Unsafe");
+		}
+		catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	private boolean nameAllowed(String thing) {
 		if (thing == null) {
