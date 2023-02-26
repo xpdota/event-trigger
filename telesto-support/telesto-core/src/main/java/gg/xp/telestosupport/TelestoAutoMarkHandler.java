@@ -30,7 +30,7 @@ public class TelestoAutoMarkHandler implements FilteredEventHandler {
 		MarkerSign marker = event.getMarker();
 		context.accept(new TelestoGameCommand(String.format(
 				"/mk %s <%s>",
-				am.getKoreanMode().get() ? marker.getKoreanCommand() : marker.getCommand(),
+				marker.getCommand(am.getEffectiveLanguage()),
 				event.getSlotToMark())));
 	}
 

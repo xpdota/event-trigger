@@ -8,6 +8,7 @@ import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 
 import javax.swing.*;
@@ -42,14 +43,15 @@ public class AutoMarkGui implements PluginTab {
 		});
 		BooleanSetting telestoSetting = marks.getUseTelesto();
 		Component useTelesto = new BooleanSettingGui(telestoSetting, "Use Telesto instead of Macros (must be installed in Dalamud)").getComponent();
-		Component krMode = new BooleanSettingGui(marks.getKoreanMode(), "JP/KR Client Mode (changes 'ignore' to 'stop')").getComponent();
+//		Component krMode = new BooleanSettingGui(marks.getKoreanMode(), "JP/KR Client Mode (changes 'ignore' to 'stop')").getComponent();
+		Component langMode = new EnumSettingGui<>(marks.getLanguageSetting(), "Game Client Language", () -> true).getComponent();
 		Component useFKeys = new BooleanSettingGui(keyHandler.getUseFkeys(), "Use F1-F9 (Instead of NumPad 1-9)", () -> !telestoSetting.get()).getComponent();
 		telestoSetting.addListener(outer::repaint);
 
 		ReadOnlyText text = new ReadOnlyText("Note: Telesto is REQUIRED for triggers that place specific markers (rather than just doing '/mk attack' such as Titan Jails)");
 //		text.setPreferredSize(new Dimension(400, 400));
 
-		GuiUtil.simpleTopDownLayout(outer, 400, helpButton, macroHelpButton, useTelesto, krMode, useFKeys, text);
+		GuiUtil.simpleTopDownLayout(outer, 400, helpButton, macroHelpButton, useTelesto, langMode, useFKeys, text);
 
 		return outer;
 	}
