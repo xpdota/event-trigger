@@ -26,4 +26,11 @@ public class AutoMarkRequest extends BaseEvent implements HasTargetEntity {
 	public XivCombatant getTarget() {
 		return playerToMark;
 	}
+
+	@Override
+	public String toString() {
+		return "AutoMarkRequest{" +
+		       "playerToMark=" + playerToMark +
+		       '}';
+	}
 }

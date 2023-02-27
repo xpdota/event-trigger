@@ -73,4 +73,18 @@ public class AbilityResolvedEvent extends BaseEvent implements HasSourceEntity, 
 	public @Nullable Instant getPrecursorHappenedAt() {
 		return originalEvent.getEffectiveHappenedAt();
 	}
+
+	@Override
+	public String toString() {
+		return "AbilityResolvedEvent{" +
+		       "ability=" + getAbility() +
+		       ", caster=" + source +
+		       ", target=" + target +
+		       ", effects=" + getEffects() +
+		       ", sequenceId=" + sequenceId +
+		       ", targetIndex=" + getTargetIndex() +
+		       ", numberOfTargets=" + getNumberOfTargets() +
+		       '}';
+	}
+
 }

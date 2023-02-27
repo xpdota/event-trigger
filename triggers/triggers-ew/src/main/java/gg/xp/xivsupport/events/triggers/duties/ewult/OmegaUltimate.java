@@ -23,6 +23,8 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisDeltaAssignment;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisOmegaAssignment;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisSigmaAssignment;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.OmegaFirstSetAssignments;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.OmegaSecondSetAssignments;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PantoAssignments;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.ProgramLoopAssignments;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.PsMarkerAssignments;
@@ -230,6 +232,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final BooleanSetting sigmaAmEnable;
 	private final BooleanSetting omegaAmEnable;
 	private final IntSetting sigmaAmDelay;
+	private final IntSetting omegaFirstSetDelay;
+	private final IntSetting omegaSecondSetDelay;
 
 	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
 		this.state = state;
@@ -315,6 +319,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		monitorPrio = new JobSortOverrideSetting(pers, settingKeyBase + "monitor-prio-override", state, groupPrioJobSort);
 		sigmaPsPrio = new JobSortOverrideSetting(pers, settingKeyBase + "sigma-ps-prio-override", state, groupPrioJobSort);
 		sigmaAmDelay = new IntSetting(pers, settingKeyBase + "sigma-am-delay-seconds", 0, 0, 50);
+		omegaFirstSetDelay = new IntSetting(pers, settingKeyBase + "omega-am-1-delay-seconds", 1, 0, 28);
+		omegaSecondSetDelay = new IntSetting(pers, settingKeyBase + "omega-am-2-delay-seconds", 0, 0, 20);
 	}
 
 	@Override
@@ -915,6 +921,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final SequentialTrigger<BaseEvent> sniperCannonSq = SqtTemplates.sq(30_000,
 			BuffApplied.class, ba -> ba.buffIdMatches(0xD61),
 			(e1, s) -> {
+				if (getSniperAmEnable().get()) {
+					s.accept(new ClearAutoMarkRequest());
+				}
 				s.waitMs(100);
 				// The buffs have already gone out, there just wasn't a good pre-tell in the log
 				List<BuffApplied> sniper = new ArrayList<>(4);
@@ -964,8 +973,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					}
 				}
 				if (getSniperAmEnable().get()) {
-					s.accept(new ClearAutoMarkRequest());
-					s.waitMs(100);
+					s.waitMs(300);
 					MultiSlotAutoMarkHandler<WrothStyleAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getSniperAmSettings());
 					handler.processRange(sniperPlayers, WrothStyleAssignment.SPREAD_1, WrothStyleAssignment.SPREAD_4);
 					handler.processRange(hpSniperPlayers, WrothStyleAssignment.STACK_1, WrothStyleAssignment.STACK_2);
@@ -1580,6 +1588,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final SequentialTrigger<BaseEvent> runDynamisOmegaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8015),
 			(e1, s) -> {
 				s.updateCall(runDynamisOmega.getModified(e1));
+				if (getOmegaAmEnable().get()) {
+					s.accept(new ClearAutoMarkRequest());
+				}
 				log.info("Dynamis Omega: Start");
 				/*
 					D72 (3442): Near (32s short, 50s long)
@@ -1623,40 +1634,34 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						s.updateCall(runDynamisOmegaNothing.getModified(shortNear, params));
 					}
 				}
-				// Do initial marks
-				// Mark short near
-				// Mark short dist
-				// TODO
 				{
-					if (getOmegaAmEnable().get()) {
-						s.accept(new ClearAutoMarkRequest());
-						s.waitMs(1000);
-						List<XivPlayerCharacter> partyList = getState().getPartyList();
-						List<XivPlayerCharacter> playersToMark = partyList.stream()
-								.sorted(Comparator.comparing(member -> getBuffs().buffStacksOnTarget(member, 3444)))
-								.filter(member -> {
-									if (getBuffs().isStatusOnTarget(member, 0xBBC)) {
-										return false;
-									}
-									else if (getBuffs().buffStacksOnTarget(member, 0xD74) == 1) {
-										return true;
-									}
-									else if (getBuffs().buffStacksOnTarget(member, 0xD74) == 2 && !getBuffs().isStatusOnTarget(member, 0xBBD)) {
-										return true;
-									}
+					List<XivPlayerCharacter> partyList = getState().getPartyList();
+					List<XivPlayerCharacter> playersToMark = partyList.stream()
+							.sorted(Comparator.comparing(member -> getBuffs().buffStacksOnTarget(member, 3444)))
+							.filter(member -> {
+								if (getBuffs().isStatusOnTarget(member, 0xBBC)) {
 									return false;
-								})
-								.limit(4)
-								.toList();
-						List<XivPlayerCharacter> leftovers = new ArrayList<>(partyList);
-						leftovers.remove(shortNear.getTarget());
-						leftovers.remove(shortDist.getTarget());
-						leftovers.removeAll(playersToMark);
-						handler.process(DynamisOmegaAssignment.NearWorld, (XivPlayerCharacter) shortNear.getTarget());
-						handler.process(DynamisOmegaAssignment.DistantWorld, (XivPlayerCharacter) shortDist.getTarget());
-						handler.processRange(playersToMark, DynamisOmegaAssignment.Baiter1, DynamisOmegaAssignment.Baiter4);
-						handler.processRange(leftovers, DynamisOmegaAssignment.Remaining1, DynamisOmegaAssignment.Remaining2);
-					}
+								}
+								else if (getBuffs().buffStacksOnTarget(member, 0xD74) == 1) {
+									return true;
+								}
+								else if (getBuffs().buffStacksOnTarget(member, 0xD74) == 2 && !getBuffs().isStatusOnTarget(member, 0xBBD)) {
+									return true;
+								}
+								return false;
+							})
+							.limit(4)
+							.toList();
+					List<XivPlayerCharacter> leftovers = new ArrayList<>(partyList);
+					leftovers.remove(shortNear.getTarget());
+					leftovers.remove(shortDist.getTarget());
+					leftovers.removeAll(playersToMark);
+					s.accept(new OmegaFirstSetAssignments(
+							(XivPlayerCharacter) shortNear.getTarget(),
+							(XivPlayerCharacter) shortDist.getTarget(),
+							playersToMark,
+							leftovers
+					));
 				}
 				AbilityCastStart diffuseWaveCannon = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(31643, 31644));
 				// T+14s
@@ -1667,17 +1672,28 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				// 7B8A - near followup
 				// 8111 - dist followup
 				// 7B6D - Oversampled wave cannon
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B89, 0x8110, 0x7B6D));
-				// T+28s-ish
-				if (getOmegaAmEnable().get()) {
-					handler.clearAllFast();
-				}
 				// Try to make this resilient even if something goes very wrong
 				s.waitEventsUntil(2, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B8A) && aue.isFirstTarget(),
 						AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7E76));
 				s.waitMs(500);
 				{
+					Map<String, Object> params = Map.of("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
+					if (longNear.getTarget().isThePlayer()) {
+						s.updateCall(runDynamisOmegaLongNearP2.getModified(longNear, params));
+					}
+					else if (longDist.getTarget().isThePlayer()) {
+						s.updateCall(runDynamisOmegaLongDistP2.getModified(longDist, params));
+					}
+					else {
+						s.updateCall(runDynamisOmegaNothingP2.getModified(shortNear, params));
+					}
+				}
+				{
 					if (getOmegaAmEnable().get()) {
+						// Second AM set
+						// Mark long near
+						// Mark long dist
+						// Find players to mark for tethers
 						List<XivPlayerCharacter> partyList = getState().getPartyList();
 						List<XivPlayerCharacter> twoStackPlayers = partyList.stream()
 								.filter(member -> getBuffs().buffStacksOnTarget(member, 0xD74) == 2
@@ -1691,32 +1707,57 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 								                  && !getBuffs().isStatusOnTarget(member, 0xBBD))
 								.limit(2)
 								.toList();
-						handler.process(DynamisOmegaAssignment.NearWorld, (XivPlayerCharacter) longNear.getTarget());
-						handler.process(DynamisOmegaAssignment.DistantWorld, (XivPlayerCharacter) longDist.getTarget());
-						handler.processRange(twoStackPlayers, DynamisOmegaAssignment.Baiter1, DynamisOmegaAssignment.Baiter4);
-						handler.processRange(threeStackPlayers, DynamisOmegaAssignment.Remaining1, DynamisOmegaAssignment.Remaining2);
+						s.accept(new OmegaSecondSetAssignments(
+								(XivPlayerCharacter) longNear.getTarget(),
+								(XivPlayerCharacter) longDist.getTarget(),
+								twoStackPlayers,
+								threeStackPlayers
+						));
 					}
 				}
-				{
-					Map<String, Object> params = Map.of("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
-					if (longNear.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaLongNearP2.getModified(longNear, params));
-					}
-					else if (longDist.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaLongDistP2.getModified(longDist, params));
-					}
-					else {
-						s.updateCall(runDynamisOmegaNothingP2.getModified(shortNear, params));
-					}
-				}
-				// Second AM set
-				// Mark long near
-				// Mark long dist
-				// Find players to mark for tethers
 				s.waitMs(15_000);
 				handler.clearAll();
+			});
 
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> omegaFirstSetAm = SqtTemplates.sq(60_000, OmegaFirstSetAssignments.class, sa -> true,
+			(e1, s) -> {
+				if (getOmegaAmEnable().get()) {
+					MultiSlotAutoMarkHandler<DynamisOmegaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getOmegaAmSettings());
 
+					int delay = getOmegaFirstSetDelay().get() * 1_000;
+					s.waitMs(delay);
+
+					handler.process(DynamisOmegaAssignment.NearWorld, e1.getNear());
+					handler.process(DynamisOmegaAssignment.DistantWorld, e1.getDist());
+					handler.processRange(e1.getPlayersToMark(), DynamisOmegaAssignment.Baiter1, DynamisOmegaAssignment.Baiter4);
+					handler.processRange(e1.getLeftovers(), DynamisOmegaAssignment.Remaining1, DynamisOmegaAssignment.Remaining2);
+
+					// Initial near/dist hit or wave cannon
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B89, 0x8110, 0x7B6D));
+					handler.clearAllFast();
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> omegaSecondSetAm = SqtTemplates.sq(60_000, OmegaSecondSetAssignments.class, sa -> true,
+			(e1, s) -> {
+				if (getOmegaAmEnable().get()) {
+					MultiSlotAutoMarkHandler<DynamisOmegaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getOmegaAmSettings());
+
+					int delay = getOmegaSecondSetDelay().get() * 1_000;
+					s.waitMs(delay);
+
+					handler.process(DynamisOmegaAssignment.NearWorld, e1.getNear());
+					handler.process(DynamisOmegaAssignment.DistantWorld, e1.getDist());
+					handler.processRange(e1.getPlayersToMark(), DynamisOmegaAssignment.Baiter1, DynamisOmegaAssignment.Baiter4);
+					handler.processRange(e1.getLeftovers(), DynamisOmegaAssignment.Remaining1, DynamisOmegaAssignment.Remaining2);
+
+					// Initial near/dist hit or wave cannon
+					s.waitMs(15_000 - delay);
+					// T+28s-ish
+					handler.clearAllFast();
+				}
 			});
 
 	public JobSortSetting getGroupPrioJobSort() {
@@ -1828,5 +1869,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public IntSetting getSigmaAmDelay() {
 		return sigmaAmDelay;
+	}
+
+	public IntSetting getOmegaFirstSetDelay() {
+		return omegaFirstSetDelay;
+	}
+
+	public IntSetting getOmegaSecondSetDelay() {
+		return omegaSecondSetDelay;
 	}
 }

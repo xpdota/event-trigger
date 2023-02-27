@@ -41,6 +41,8 @@ public class TopTest extends CalloutVerificationTest {
 		omega.getSigmaAmEnable().set(true);
 		omega.getSigmaAmDelay().set(15);
 		omega.getOmegaAmEnable().set(true);
+		omega.getOmegaFirstSetDelay().set(20);
+		omega.getOmegaSecondSetDelay().set(3);
 	}
 
 	@Override
@@ -127,6 +129,7 @@ public class TopTest extends CalloutVerificationTest {
 				mark(15244, BIND2, GNB),
 				mark(15244, BIND3, DNC),
 				mark(15244, CROSS, WHM),
+				clearAll(50325),
 				// Panto
 				mark(68833, ATTACK1, DRK),
 				mark(68833, ATTACK2, MNK),
@@ -136,6 +139,7 @@ public class TopTest extends CalloutVerificationTest {
 				mark(68833, BIND2, SGE),
 				mark(68833, BIND3, DNC),
 				mark(68833, CROSS, WHM),
+				clearAll(103860),
 				// PS
 				mark(160405, ATTACK1, DNC),
 				mark(160405, ATTACK2, MNK),
@@ -145,7 +149,9 @@ public class TopTest extends CalloutVerificationTest {
 				mark(160405, BIND2, DRG),
 				mark(160405, BIND3, WHM),
 				mark(160405, CROSS, GNB),
+				clearAll(185666),
 				// Sniper
+				clearAll(282287),
 				mark(283358, ATTACK1, DRG),
 				mark(283358, ATTACK2, SMN),
 				mark(283358, ATTACK3, WHM),
@@ -154,7 +160,9 @@ public class TopTest extends CalloutVerificationTest {
 				mark(283358, IGNORE1, DNC),
 				mark(283358, BIND2, MNK),
 				mark(283358, IGNORE2, DRK),
+				clearAll(299674),
 				// Monitor
+				clearAll(434447),
 				mark(435475, BIND_NEXT, DRG),
 				mark(435475, BIND_NEXT, GNB),
 				mark(435475, BIND_NEXT, DNC),
@@ -163,11 +171,14 @@ public class TopTest extends CalloutVerificationTest {
 				mark(435475, ATTACK_NEXT, SMN),
 				mark(435475, ATTACK_NEXT, WHM),
 				mark(435475, ATTACK_NEXT, SGE),
+				clearAll(444411),
 				// Delta
 				mark(563946, IGNORE1, SGE),
 				mark(563946, IGNORE2, WHM),
 				mark(607693, CLEAR, SGE),
 				mark(607693, CLEAR, WHM),
+				// Sigma pre-clear
+				clearAll(637599),
 				// Sigma
 				mark(662100, IGNORE1, SGE),
 				mark(662100, IGNORE2, DRG),
@@ -177,24 +188,28 @@ public class TopTest extends CalloutVerificationTest {
 				mark(662100, BIND1, WHM),
 				mark(662100, BIND2, MNK),
 				mark(662100, BIND3, GNB),
+				clearAll(702351),
 				// Omega 1st set
-				mark(736512, IGNORE1, SMN),
-				mark(736512, IGNORE2, GNB),
-				mark(736512, ATTACK1, DRK),
-				mark(736512, ATTACK2, MNK),
-				mark(736512, ATTACK3, DNC),
-				mark(736512, ATTACK4, SGE),
-				mark(736512, BIND1, WHM),
-				mark(736512, BIND2, DRG),
+				clearAll(727298),
+				mark(755540, IGNORE1, SMN),
+				mark(755540, IGNORE2, GNB),
+				mark(755540, ATTACK1, DRK),
+				mark(755540, ATTACK2, MNK),
+				mark(755540, ATTACK3, DNC),
+				mark(755540, ATTACK4, SGE),
+				mark(755540, BIND1, WHM),
+				mark(755540, BIND2, DRG),
 				// Omega 2nd set
-				mark(769984, IGNORE1, DRK),
-				mark(769984, IGNORE2, WHM),
-				mark(769984, ATTACK1, GNB),
-				mark(769984, ATTACK2, MNK),
-				mark(769984, ATTACK3, DRG),
-				mark(769984, ATTACK4, DNC),
-				mark(769984, BIND1, SGE),
-				mark(769984, BIND2, SMN)
+				clearAll(767438),
+				mark(773205, IGNORE1, DRK),
+				mark(773205, IGNORE2, WHM),
+				mark(773205, ATTACK1, GNB),
+				mark(773205, ATTACK2, MNK),
+				mark(773205, ATTACK3, DRG),
+				mark(773205, ATTACK4, DNC),
+				mark(773205, BIND1, SGE),
+				mark(773205, BIND2, SMN),
+				clearAll(785325)
 		);
 	}
 }

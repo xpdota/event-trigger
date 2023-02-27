@@ -37,4 +37,12 @@ public class ActionSyncEvent extends BaseEvent implements HasTargetEntity, HasPr
 	public String getPrimaryValue() {
 		return String.valueOf(sequenceId);
 	}
+
+	@Override
+	public String toString() {
+		return "ActionSyncEvent{" +
+		       "entity=" + entity +
+		       ", sequenceId=" + sequenceId +
+		       '}';
+	}
 }
