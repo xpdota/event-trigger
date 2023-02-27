@@ -42,4 +42,12 @@ public class SpecificAutoMarkSlotRequest extends BaseEvent implements HasPrimary
 	public String getPrimaryValue() {
 		return String.format("'%s' on <%s>", marker.getCommand(), slotToMark);
 	}
+
+	@Override
+	public String toString() {
+		return "SpecificAutoMarkSlotRequest{" +
+		       "slotToMark=" + slotToMark +
+		       ", marker=" + marker +
+		       '}';
+	}
 }

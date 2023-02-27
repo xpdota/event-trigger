@@ -46,7 +46,15 @@ public final class AmVerificationValues implements HasEvent {
 
 	@Override
 	public String toString() {
-		if (event == null) {
+		if (targetJob == Job.ADV) {
+			if (event == null) {
+				return String.format("clearAll(%s)", when);
+			}
+			else {
+				return String.format("clearAll(%s) // from %s", when, event);
+			}
+		}
+		else if (event == null) {
 			return String.format("mark(%s, %s, %s)", when, marker, targetJob);
 		}
 		else {

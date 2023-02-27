@@ -45,4 +45,12 @@ public class SpecificAutoMarkRequest extends BaseEvent implements HasPrimaryValu
 	public String getPrimaryValue() {
 		return String.format("'%s' on %s", marker.getCommand(), playerToMark.getName());
 	}
+
+	@Override
+	public String toString() {
+		return "SpecificAutoMarkRequest{" +
+		       "playerToMark=" + playerToMark +
+		       ", marker=" + marker +
+		       '}';
+	}
 }

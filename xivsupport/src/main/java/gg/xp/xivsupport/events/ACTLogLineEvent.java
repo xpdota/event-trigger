@@ -108,4 +108,9 @@ public class ACTLogLineEvent extends BaseEvent implements Compressible {
 	public void decompress() {
 		// Nothing to do
 	}
+
+	@Override
+	public String toString() {
+		return "ACTLogLineEvent{" + logLine + '}';
+	}
 }

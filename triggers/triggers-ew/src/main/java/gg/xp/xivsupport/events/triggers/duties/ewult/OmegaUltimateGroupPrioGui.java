@@ -130,14 +130,28 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 		}
 		{
 			BasicAutomarkSettingGroupGui<DynamisSigmaAssignment> sigmaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Sigma)", backend.getSigmaAmSettings(), 4, true);
-			JPanel panel = new JPanel(new BorderLayout());
+			JPanel panel = new JPanel();
+			sigmaSettings.setAlignmentX(0);
+			panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 			panel.add(sigmaSettings, BorderLayout.CENTER);
-			panel.add(new IntSettingSpinner(backend.getSigmaAmDelay(), "AM Delay (seconds) - 15+ recommended").getComponent(), BorderLayout.SOUTH);
+			JPanel delay = new IntSettingSpinner(backend.getSigmaAmDelay(), "AM Delay (seconds) - 15+ recommended").getComponent();
+			delay.setAlignmentX(0);
+			panel.add(delay, BorderLayout.SOUTH);
 			tabs.addTab("Sigma", makeAmPanel(new BooleanSettingHidingPanel(backend.getSigmaAmEnable(), "Sigma Automark", panel, true), backend.getSigmaPsPrio()));
 		}
 		{
 			BasicAutomarkSettingGroupGui<DynamisOmegaAssignment> omegaSettings = new BasicAutomarkSettingGroupGui<>("Run: Dynamis (Omega)", backend.getOmegaAmSettings(), 4, true);
-			tabs.addTab("Omega", new BooleanSettingHidingPanel(backend.getOmegaAmEnable(), "Omega Automark", omegaSettings, true));
+			JPanel panel = new JPanel();
+			panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+			omegaSettings.setAlignmentX(0);
+			panel.add(omegaSettings);
+			JPanel firstSetDelay = new IntSettingSpinner(backend.getOmegaFirstSetDelay(), "First Set Delay").getComponent();
+			firstSetDelay.setAlignmentX(0);
+			panel.add(firstSetDelay);
+			JPanel secondSetDelay = new IntSettingSpinner(backend.getOmegaSecondSetDelay(), "Second Set Delay").getComponent();
+			secondSetDelay.setAlignmentX(0);
+			panel.add(secondSetDelay);
+			tabs.addTab("Omega", new BooleanSettingHidingPanel(backend.getOmegaAmEnable(), "Omega Automark", panel, true));
 		}
 		outer.add(tabs, BorderLayout.CENTER);
 		outer.add(helpText, BorderLayout.NORTH);

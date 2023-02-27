@@ -5,7 +5,6 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
-import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
@@ -15,6 +14,7 @@ import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.eventstorage.EventReader;
@@ -32,6 +32,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public abstract class CalloutVerificationTest {
 
@@ -51,6 +52,10 @@ public abstract class CalloutVerificationTest {
 
 	protected AmVerificationValues mark(long when, MarkerSign marker, Job job) {
 		return new AmVerificationValues(when, marker, job, null);
+	}
+
+	protected AmVerificationValues clearAll(long when) {
+		return new AmVerificationValues(when, MarkerSign.CLEAR, Job.ADV, null);
 	}
 
 	protected void configure(MutablePicoContainer pico) {}
@@ -189,6 +194,26 @@ public abstract class CalloutVerificationTest {
 			Event parent = e.getParent();
 			actualMarks.add(new AmVerificationValues(msDelta, MarkerSign.ATTACK1, ((XivPlayerCharacter) e.getTarget()).getJob(), parent));
 		});
+		dist.registerHandler(ClearAutoMarkRequest.class, (ctx, e) -> {
+			PullTracker pulls = pico.getComponent(PullTracker.class);
+			final long msDelta;
+			Pull currentPull = pulls.getCurrentPull();
+			if (currentPull == null) {
+				return;
+			}
+			else {
+				Event combatStart = currentPull.getCombatStart();
+				if (combatStart == null) {
+					return;
+				}
+				else {
+					Instant happenedAt = timeSource.now();
+					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
+				}
+			}
+			Event parent = e.getParent();
+			actualMarks.add(new AmVerificationValues(msDelta, MarkerSign.CLEAR, Job.ADV, parent));
+		});
 
 		// TODO: figure out why InitEvent doesn't work but a simple 'advance by 1' does
 //		dist.acceptEvent(new InitEvent());
@@ -199,7 +224,12 @@ public abstract class CalloutVerificationTest {
 		pico.getComponent(EventMaster.class).getQueue().waitDrain();
 
 
-		compareLists(rawStorage, actualCalls, getExpectedCalls());
+		List<CalloutInitialValues> expectedCalls = getExpectedCalls();
+		if (expectedCalls.isEmpty()) {
+			dump(actualCalls);
+		}
+
+		compareLists(rawStorage, actualCalls, expectedCalls);
 		List<AmVerificationValues> expectedAMs = getExpectedAms();
 		if (!actualMarks.isEmpty() || !expectedAMs.isEmpty()) {
 			compareLists(rawStorage, actualMarks, expectedAMs);
@@ -285,5 +315,12 @@ public abstract class CalloutVerificationTest {
 		if (anyFailure) {
 			throw new AssertionError(sb.toString());
 		}
+	}
+
+	private static void dump(List<CalloutInitialValues> actualCalls) {
+		throw new AssertionError("No expected calls were provided. Dumping actual calls instead.\n" + actualCalls.stream().map(Object::toString).map(s -> {
+			String[] split = s.split("//");
+			return split[0].trim();
+		}).collect(Collectors.joining(",\n")));
 	}
 }
