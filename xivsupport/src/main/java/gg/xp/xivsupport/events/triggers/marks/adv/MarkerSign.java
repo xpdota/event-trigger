@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.marks.adv;
 
 import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkLanguage;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import org.jetbrains.annotations.Nullable;
 
@@ -8,6 +9,32 @@ import java.util.Arrays;
 import java.util.Locale;
 
 public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
+	/*
+		Per-language commands:
+
+		English:
+			attack1-5
+			bind1-3
+			ignore1-2
+			circle
+			cross
+			square
+			triangle
+			off/clear
+
+		Japanese:
+			ignore -> stop
+
+		German:
+			ignore -> ignor
+
+		French:
+			no difference from English
+
+		Korean: ?
+
+		Chinese: ?
+	 */
 
 	ATTACK_NEXT("Next Attack", "attack"),
 	ATTACK1("Attack 1", "attack1", ATTACK_NEXT, 60701),
@@ -26,17 +53,32 @@ public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 		public String getKoreanCommand() {
 			return "stop";
 		}
+
+		@Override
+		public String getGermanCommand() {
+			return "ignor";
+		}
 	},
 	IGNORE1("Ignore 1", "ignore1", IGNORE_NEXT, 60709) {
 		@Override
 		public String getKoreanCommand() {
 			return "stop1";
 		}
+
+		@Override
+		public String getGermanCommand() {
+			return "ignor1";
+		}
 	},
 	IGNORE2("Ignore 2", "ignore2", IGNORE_NEXT, 60710) {
 		@Override
 		public String getKoreanCommand() {
 			return "stop2";
+		}
+
+		@Override
+		public String getGermanCommand() {
+			return "ignor2";
 		}
 	},
 
@@ -126,6 +168,19 @@ public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 
 	public String getKoreanCommand() {
 		return command;
+	}
+
+	public String getGermanCommand() {
+		return command;
+	}
+
+	public String getCommand(AutoMarkLanguage language) {
+		return switch (language) {
+			// Automatic shouldn't make it to this point, whatever
+			case EN, Automatic -> getCommand();
+			case JP -> getKoreanCommand();
+			case DE -> getGermanCommand();
+		};
 	}
 
 	public MarkerSign getBase() {
