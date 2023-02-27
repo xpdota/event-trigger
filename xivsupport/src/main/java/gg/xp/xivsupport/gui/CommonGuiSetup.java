@@ -31,7 +31,7 @@ public final class CommonGuiSetup {
 		SOFTWARE
 	}
 
-	private static final RenderMode mode = RenderMode.SOFTWARE;
+	private static final RenderMode mode = RenderMode.D3D_HWSCALE;
 	private static final int GUI_WARN_MS = 200;
 
 	private CommonGuiSetup() {
