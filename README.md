@@ -1,25 +1,20 @@
-### Dragonsong's Reprise (aka Dragonsong War/Dragonsong Ultimate) Trigger Status: Basically done with the whole fight
-
-Code documentation (auto-generated) is now available [here](https://xpdota.github.io/event-trigger/master/javadoc/allclasses-index.html) (replace `master` in the URL with the branch you are using).
-
-There is also a [website for Triggevent](https://triggevent.io/) now!
-
 # Triggevent
 
-Triggevent is a comprehensive FFXIV addon that provides triggers, overlays, log analysis, and more. Triggers can even
-have custom configuration GUIs and overlays.
+Triggevent is a comprehensive FFXIV addon that provides triggers, automarkers, overlays, log analysis, and more for 
+FFXIV. Whether you're an end user, a developer yourself, or a world prog 9th man, there's something for everyone.
 
 Want to have a multi target DoT tracker without going through all the manual setup pain of Hojoring/Special Spell
 Timer (SpeSpe)?
 
-Maybe you just want a Titan Gaol plugin that actually works?
+Maybe you just want a Titan Gaol plugin that isn't a pain to set up, and doesn't require manual name entry, or 
+breaking updates just to customize priority?
 
-Want to make triggers without dealing with regex, which was never the right tool for the job in the first place?
+Want to make triggers without dealing with nasty regular expressions and arcane syntax in a clunky UI?
 
 You've come to the right place!
 
-Even if you don't plan to actually use it, its log analysis and replay functions can be invaluable for making other
-addons and triggers.
+Even if you don't plan to use it for gameplay, its log analysis and replay functions can be invaluable for 
+making other addons and triggers.
 
 Most documentation is in the app, or on the [Wiki](https://github.com/xpdota/event-trigger/wiki/).
 
@@ -44,12 +39,16 @@ seems to have good multi-target support. It even has tick display built-in if yo
 
 Shows remaining cooldown and active time. You can have two separate overlays - one for party, one for personal.
 
-### Jail Plugin
+### Jail Plugin/Automarkers
 
 Triggevent has by far the most powerful Titan Jail plugin. You choose a priority by dragging and dropping jobs - no
-typing names. It supports both automark and personal callouts, so you don't have to configure two plugins separately.
+typing names. It supports both automarker and personal callouts, so you don't have to configure two plugins separately.
 
 ![Jail Plugin](https://user-images.githubusercontent.com/14287379/142813080-c44d1ff7-873b-4119-9c15-1212c9e31133.png)
+
+Nowadays, it supports auto marks for many duties other than just UWU, such as TOP and DSR.
+
+You can even make your own auto markers, using Easy Triggers, scripts, or a complete code module.
 
 ### Triggers
 
@@ -74,7 +73,7 @@ regexes, since everything is parsed for you:
 
 ![image](https://user-images.githubusercontent.com/14287379/158667347-286d6afa-3392-4526-a8ff-0fe7a7879144.png)
 
-You can even right click an event and select "Make Easy Trigger", and it will try to fill out the data for you:
+You can even right-click an event and select "Make Easy Trigger", and it will try to fill out the data for you:
 
 ![image](https://cdn.discordapp.com/attachments/551476873717088279/956345688432721920/unknown.png)
 
@@ -86,6 +85,15 @@ event takes place, if you have the on-screen callout overlay:
 Callouts can be further customized, as they support Groovy expressions:
 
 ![image](https://user-images.githubusercontent.com/14287379/158668357-6ad34ac9-42ec-4cd0-8177-80275ef9ebc0.png)
+
+### Scripting and Addons
+
+On top of the Easy Triggers interface, you can write
+[scripts](https://github.com/xpdota/event-trigger/wiki/Groovy-Examples) which allow you to do almost everything that
+a code module could do, but right from the UI.
+
+You can also make [an entire module](https://github.com/xpdota/triggevent-example-module), complete with
+auto-updates.
 
 ### Analysis
 
@@ -119,13 +127,15 @@ line.
 * Lots of built-in features - jail plugin that doesn't suck, multi target dot+tick tracking, and a lot more
   - Ever wanted to put your entire mit plan, with icons, on a timeline? Now you can.
 * Better customizability of callouts without needing to edit triggers
+  - Don't have to miss out on update to customize!
 * Extremely easy to make basic triggers - making triggers doesn't require any knowledge of log lines nor regular expressions (and shouldn't - [because it was never the right tool for the job](https://github.com/xpdota/event-trigger/wiki/Why-is-Regex-Bad-for-Triggers%3F)!)
   - Most of it can be done by right clicking on the event you want to make a trigger from, and selecting "Make Easy Trigger". It's not perfect all the time, but you can edit the trigger if anything is off.
+* Events are significantly easier to understand than raw log lines.
 
 ### For Developers and Power Users
 * Better tools for creating and testing triggers
   - Certain types of triggers can be tested without a log file - you can use an FFLogs report instead!
-  - You can write test cases for triggers
+  - You can write test cases for triggers in code
 * Zero regex means much more readable conditions and triggers
 * Much better abstraction of incoming data out of the box
   - Specifically, log lines are parsed into rich objects that can be queried as needed
@@ -135,5 +145,7 @@ line.
 * Plugins can have their own custom configuration GUIs (see the jail config GUI for a great example)
 * Run scripts within the app, for any purpose:
   - Prototyping code that will go inside the app
+  - Triggers
+  - Automarkers with whatever logic or priority you need
   - Log analysis
   - Bulk changing of settings and the like

@@ -1319,14 +1319,16 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<TetherEvent> runDynamisDeltaLocal = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Local", "Local with {buddy}")
 			.statusIcon(0xD70);
 	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaBaitSpinner = new ModifiableCallout<>("Run Dynamis Delta: After Fist Snapshot", "Bait");
+	// TODO: these midpoint calls should also check whether you have tether
+	// TODO: same person can get BD and monitor, calls need to account for that
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitNoMonitor = new ModifiableCallout<>("Run Dynamis Delta: Spinner Bait Done, No Monitor", "Move In, No Monitor");
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitWithMonitor = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Spinner Bait Done, With Monitor", "{rightMonitor ? \"Right\" : \"Left\"} Monitor on You")
 			.autoIcon();
 	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaHitByBeyondDefense = new ModifiableCallout<>("Run Dynamis Delta: Targeted by Beyond Defense", "Don't Stack");
 	private final ModifiableCallout<AbilityCastStart> runDynamisDeltaFinalNothing = new ModifiableCallout<>("Run Dynamis Delta: Final Baits, Nothing", "Nothing");
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalNear = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Near", "Near World").autoIcon();
-	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalDistant = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Near", "Distant World").autoIcon();
-	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalTether = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Near", "Tether").autoIcon();
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalDistant = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Dist", "Distant World").autoIcon();
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalTether = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Tether", "Tether").autoIcon();
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> runDynamisDeltaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B88),
