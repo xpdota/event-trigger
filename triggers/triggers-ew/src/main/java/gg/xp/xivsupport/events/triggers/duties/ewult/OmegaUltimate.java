@@ -1318,14 +1318,20 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			.statusIcon(0xDB0);
 	private final ModifiableCallout<TetherEvent> runDynamisDeltaLocal = new ModifiableCallout<TetherEvent>("Run Dynamis Delta: Local", "Local with {buddy}")
 			.statusIcon(0xD70);
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaBaitSpinnerThenMonitor = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: After Fist Snapshot, With Monitor", "Bait then Monitor").autoIcon();
+	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaBaitSpinnerBlue = new ModifiableCallout<>("Run Dynamis Delta: After Fist Snapshot, As Blue Tether", "Bait");
 	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaBaitSpinner = new ModifiableCallout<>("Run Dynamis Delta: After Fist Snapshot", "Bait");
 	// TODO: these midpoint calls should also check whether you have tether
 	// TODO: same person can get BD and monitor, calls need to account for that
-	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitNoMonitor = new ModifiableCallout<>("Run Dynamis Delta: Spinner Bait Done, No Monitor", "Move In, No Monitor");
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitNoMonitorBlue = new ModifiableCallout<>("Run Dynamis Delta: Spinner Bait Done, No Monitor, As Blue Tether", "Move In, No Monitor");
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitNoMonitor = new ModifiableCallout<>("Run Dynamis Delta: Spinner Bait Done, No Monitor", "Get Hit by Monitor");
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitWithMonitor = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Spinner Bait Done, With Monitor", "{rightMonitor ? \"Right\" : \"Left\"} Monitor on You")
+			.autoIcon();
+	private final ModifiableCallout<BuffApplied> runDynamisDeltaAfterBaitWithMonitorAndBD = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Spinner Bait Done, With Monitor and Beyond Defense", "Don't Stack - {rightMonitor ? \"Right\" : \"Left\"} Monitor on You")
 			.autoIcon();
 	private final ModifiableCallout<AbilityUsedEvent> runDynamisDeltaHitByBeyondDefense = new ModifiableCallout<>("Run Dynamis Delta: Targeted by Beyond Defense", "Don't Stack");
 	private final ModifiableCallout<AbilityCastStart> runDynamisDeltaFinalNothing = new ModifiableCallout<>("Run Dynamis Delta: Final Baits, Nothing", "Nothing");
+	private final ModifiableCallout<AbilityCastStart> runDynamisDeltaFinalNothingWasBlue = new ModifiableCallout<>("Run Dynamis Delta: Final Baits, Nothing, Was Blue", "Nothing");
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalNear = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Near", "Near World").autoIcon();
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalDistant = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Dist", "Distant World").autoIcon();
 	private final ModifiableCallout<BuffApplied> runDynamisDeltaFinalTether = new ModifiableCallout<BuffApplied>("Run Dynamis Delta: Final Baits, Tether", "Tether").autoIcon();
@@ -1342,7 +1348,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				BuffApplied helloDistantWorld = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD73));
 				TetherEvent myTether = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst().orElseThrow(() -> new RuntimeException("Couldn't find player's tether!"));
 				Map<String, Object> params = Map.of("nearWorld", helloNearWorld, "distWorld", helloDistantWorld, "buddy", myTether.getTargetMatching(cbt -> !cbt.isThePlayer()));
-				boolean remote = myTether.tetherIdMatches(0xDB0);
+				boolean remote = myTether.tetherIdMatches(0xC9);
 				if (remote) {
 					boolean withNear = myTether.eitherTargetMatches(helloNearWorld.getTarget());
 					if (withNear) {
@@ -1365,24 +1371,44 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					handler.process(DynamisDeltaAssignment.DistantWorld, distPlayer);
 				}
 				AbilityUsedEvent eyeLaser = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B21));
-				s.updateCall(runDynamisDeltaBaitSpinner.getModified(eyeLaser, params));
+				BuffApplied monitor = s.findOrWaitForBuff(getBuffs(), ba -> ba.buffIdMatches(0xD7C, 0xD7D));
+				if (monitor.getTarget().isThePlayer()) {
+					s.updateCall(runDynamisDeltaBaitSpinnerThenMonitor.getModified(monitor, params));
+				}
+				else {
+					if (remote) {
+						s.updateCall(runDynamisDeltaBaitSpinnerBlue.getModified(eyeLaser, params));
+					}
+					else {
+						s.updateCall(runDynamisDeltaBaitSpinner.getModified(eyeLaser, params));
+					}
+				}
 				AbilityCastStart spinner = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B70));
 				// 7B27 is the fake, 7B28 is real
 				AbilityUsedEvent beyondDefense = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B28));
-				BuffApplied monitor = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD7C, 0xD7D));
 				boolean rightMonitor = monitor.buffIdMatches(0xD7C);
 				params = new HashMap<>(params);
 				params.put("monitor", monitor);
 				params.put("rightMonitor", rightMonitor);
 				params.put("beyondDefense", beyondDefense);
 				if (monitor.getTarget().isThePlayer()) {
-					s.updateCall(runDynamisDeltaAfterBaitWithMonitor.getModified(monitor, params));
+					if (beyondDefense.getTarget().isThePlayer()) {
+						s.updateCall(runDynamisDeltaAfterBaitWithMonitorAndBD.getModified(monitor, params));
+					}
+					else {
+						s.updateCall(runDynamisDeltaAfterBaitWithMonitor.getModified(monitor, params));
+					}
 				}
 				else if (beyondDefense.getTarget().isThePlayer()) {
 					s.updateCall(runDynamisDeltaHitByBeyondDefense.getModified(beyondDefense, params));
 				}
 				else {
-					s.updateCall(runDynamisDeltaAfterBaitNoMonitor.getModified(monitor, params));
+					if (remote) {
+						s.updateCall(runDynamisDeltaAfterBaitNoMonitorBlue.getModified(monitor, params));
+					}
+					else {
+						s.updateCall(runDynamisDeltaAfterBaitNoMonitor.getModified(monitor, params));
+					}
 				}
 				AbilityCastStart swivelCannon = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B94, 0x7B95));
 				if (helloNearWorld.getTarget().isThePlayer()) {
@@ -1397,7 +1423,12 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						s.updateCall(runDynamisDeltaFinalTether.getModified(tethered, params));
 					}
 					else {
-						s.updateCall(runDynamisDeltaFinalNothing.getModified(swivelCannon, params));
+						if (remote) {
+							s.updateCall(runDynamisDeltaFinalNothingWasBlue.getModified(swivelCannon, params));
+						}
+						else {
+							s.updateCall(runDynamisDeltaFinalNothing.getModified(swivelCannon, params));
+						}
 					}
 				}
 				if (getDeltaAmEnable().get()) {
@@ -1541,11 +1572,16 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<AbilityUsedEvent> sigmaNearWorld = new ModifiableCallout<AbilityUsedEvent>("Run Dynamis Sigma: Near", "Near World").statusIcon(0xD72);
 	private final ModifiableCallout<AbilityUsedEvent> sigmaDistWorld = new ModifiableCallout<AbilityUsedEvent>("Run Dynamis Sigma: Distant", "Distant World").statusIcon(0xD73);
 	private final ModifiableCallout<AbilityUsedEvent> sigmaOneStack = new ModifiableCallout<AbilityUsedEvent>("Run Dynamis Sigma: One Stack", "One Stack").statusIcon(0xD74, 1);
+	private final ModifiableCallout<AbilityUsedEvent> sigmaOneStackLeftover = new ModifiableCallout<AbilityUsedEvent>("Run Dynamis Sigma: One Stack, Low Priority", "One Stack")
+			.extendedDescription("""
+					This callout is used instead of the one above in the event that you have one stack, but were not chosen by the priority system.
+					If you do not intend to use the priority system, you should configure this callout exactly as the one above.""");
 	private final ModifiableCallout<AbilityUsedEvent> sigmaNoStacks = new ModifiableCallout<>("Run Dynamis Sigma: No Stacks", "No Stacks");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> sigmaPart2sq = SqtTemplates.sq(120_000, SigmaAssignments.class, sa -> true,
 			(e1, s) -> {
+				int stacks = getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74);
 				// These IDs are both for "storage violation" - but I assume one is the success while one is the failure? Or is it 1 person vs 2?
 				AbilityUsedEvent start = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04, 0x7B05));
 				DynamisSigmaAssignment assignment = e1.localPlayerAssignment();
@@ -1556,8 +1592,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					case OneStack2 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 2)));
 					case OneStack3 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 3)));
 					case OneStack4 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 4)));
-					case Remaining1 -> s.updateCall(sigmaNoStacks.getModified(start, Map.of("prio", 1)));
-					case Remaining2 -> s.updateCall(sigmaNoStacks.getModified(start, Map.of("prio", 2)));
+					case Remaining1 -> s.updateCall((stacks == 1 ? sigmaOneStackLeftover : sigmaNoStacks).getModified(start, Map.of("prio", 1)));
+					case Remaining2 -> s.updateCall((stacks == 1 ? sigmaOneStackLeftover : sigmaNoStacks).getModified(start, Map.of("prio", 2)));
 				}
 			});
 
@@ -1586,6 +1622,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<BuffApplied> runDynamisOmegaLongDistP2 = ModifiableCallout.<BuffApplied>durationBasedCall("Run Dynamis Omega: Long Dist Part 2", "Long Distant").autoIcon();
 	private final ModifiableCallout<BuffApplied> runDynamisOmegaNothingP2 = new ModifiableCallout<>("Run Dynamis Omega: Nothing Part 2", "Nothing - {dynamisStacks} stacks");
 
+	@SuppressWarnings("SuspiciousMethodCalls")
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> runDynamisOmegaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8015),
 			(e1, s) -> {

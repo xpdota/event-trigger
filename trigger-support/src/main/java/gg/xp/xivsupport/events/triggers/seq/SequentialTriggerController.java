@@ -299,6 +299,16 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	public BuffApplied findOrWaitForBuff(StatusEffectRepository repo, Predicate<BuffApplied> condition) {
+		BuffApplied buff = repo.findBuff(condition);
+		if (buff != null) {
+			return buff;
+		}
+		else {
+			return waitEvent(BuffApplied.class, condition);
+		}
+	}
+
 	public List<AbilityUsedEvent> collectAoeHits(Predicate<AbilityUsedEvent> condition) {
 		List<AbilityUsedEvent> out = new ArrayList<>(8);
 		AbilityUsedEvent aue;
