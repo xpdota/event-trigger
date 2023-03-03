@@ -271,7 +271,7 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 				connPanel.add(new WsURISettingGui(actWs.getUriSetting(), "OverlayPlugin WS URI").getComponent());
 				connPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
 				connPanel.add(Box.createHorizontalStrut(16384));
-				connPanel.add(new JLabel("Reminder: use 'wss://' instead of 'ws://' if using encryption."));
+				connPanel.add(new JLabel("Reminder: use 'wss://' instead of 'ws://' if using SSL."));
 				wsPanel.add(connPanel, gbc);
 			}
 			{

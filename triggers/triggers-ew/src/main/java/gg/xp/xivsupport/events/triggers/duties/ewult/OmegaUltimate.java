@@ -1457,7 +1457,17 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<HeadMarkerEvent> sigmaPreyMarkerUnmarkedBuddy = new ModifiableCallout<>("Run Dynamis Sigma: Prey Marker, Unmarked Buddy", "Marker on You, Not on Buddy");
 	private final ModifiableCallout<HeadMarkerEvent> sigmaNoPreyMarker = new ModifiableCallout<>("Run Dynamis Sigma: Prey Marker", "No Marker");
 
-	private final ModifiableCallout<AbilityUsedEvent> sigmaKb = new ModifiableCallout<>("Run Dynamis Sigma: Prepare for KB", "Knockback into Tower");
+	private final ModifiableCallout<BuffApplied> p5midGlitchOkb = ModifiableCallout.<BuffApplied>durationBasedCall("P5 Mid Glitch with O Buddy - Knockback", "Circle, Close to {tetherBuddy}")
+			.extendedDescription("""
+					These callouts work the same as above, but are called when it is time for the knockback.
+					""");
+	private final ModifiableCallout<BuffApplied> p5midGlitchSkb = ModifiableCallout.durationBasedCall("P5 Mid Glitch with □ Buddy - Knockback", "Knockback - Square, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5midGlitchTkb = ModifiableCallout.durationBasedCall("P5 Mid Glitch with △ Buddy - Knockback", "Knockback - Triangle, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5midGlitchXkb = ModifiableCallout.durationBasedCall("P5 Mid Glitch with X Buddy - Knockback", "Knockback - X, Close to {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5remoteGlitchOkb = ModifiableCallout.durationBasedCall("P5 Remote Glitch with O Buddy - Knockback", "Knockback - Circle, far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5remoteGlitchSkb = ModifiableCallout.durationBasedCall("P5 Remote Glitch with □ Buddy - Knockback", "Knockback - Square, far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5remoteGlitchTkb = ModifiableCallout.durationBasedCall("P5 Remote Glitch with △ Buddy - Knockback", "Knockback - Triangle, far from {tetherBuddy}");
+	private final ModifiableCallout<BuffApplied> p5remoteGlitchXkb = ModifiableCallout.durationBasedCall("P5 Remote Glitch with X Buddy - Knockback", "Knockback - X, far from {tetherBuddy}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> runDynamisSigmaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8014),
@@ -1556,6 +1566,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				boolean buddyHm = hm.stream().anyMatch(m -> m.getTarget().equals(buddy));
 				List<XivPlayerCharacter> marked = hm.stream().map(HeadMarkerEvent::getTarget).map(XivPlayerCharacter.class::cast).toList();
 				List<XivPlayerCharacter> unmarked = new ArrayList<>(getState().getPartyList());
+				// TODO: this should compare which pair is more in or out
 				unmarked.removeAll(marked);
 				params = new HashMap<>(params);
 				params.put("marked", marked);
@@ -1566,7 +1577,12 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						() -> s.updateCall(sigmaNoPreyMarker.getModified(hm.get(0), newParams)));
 				// Part 2 is handled in the below trigger
 				AbilityUsedEvent used = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B74));
-				s.updateCall(sigmaKb.getModified(used));
+				s.updateCall((switch (myAssignment) {
+					case GROUP1_CIRCLE, GROUP2_CIRCLE -> mid ? p5midGlitchOkb : p5remoteGlitchOkb;
+					case GROUP1_TRIANGLE, GROUP2_TRIANGLE -> mid ? p5midGlitchTkb : p5remoteGlitchTkb;
+					case GROUP1_SQUARE, GROUP2_SQUARE -> mid ? p5midGlitchSkb : p5remoteGlitchSkb;
+					case GROUP1_X, GROUP2_X -> mid ? p5midGlitchXkb : p5remoteGlitchXkb;
+				}).getModified(status, params));
 			});
 
 	private final ModifiableCallout<AbilityUsedEvent> sigmaNearWorld = new ModifiableCallout<AbilityUsedEvent>("Run Dynamis Sigma: Near", "Near World").statusIcon(0xD72);

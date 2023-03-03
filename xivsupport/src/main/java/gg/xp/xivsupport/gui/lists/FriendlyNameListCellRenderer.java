@@ -46,6 +46,7 @@ public class FriendlyNameListCellRenderer extends DefaultListCellRenderer {
 		else {
 			splitPanel.removeAll();
 			splitPanel.setBackground(label.getBackground());
+			splitPanel.setOpaque(label.isOpaque());
 			splitPanel.add(icon, BorderLayout.WEST);
 			splitPanel.add(label, BorderLayout.CENTER);
 			return splitPanel;

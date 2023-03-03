@@ -16,6 +16,7 @@ public class AutomarkSettingGui {
 		picker = new EnumSettingGui<>(setting.getWhichMark(), null, () -> setting.getEnabled().get()).getComboBoxOnly();
 		enabler = new BooleanSettingGui(setting.getEnabled(), label).getComponent();
 		enabler.setHorizontalTextPosition(SwingConstants.LEFT);
+		setting.addListener(picker::updateUI);
 	}
 
 	public JComboBox<MarkerSign> getPicker() {
