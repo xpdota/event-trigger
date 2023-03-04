@@ -354,7 +354,7 @@ public class ModifiableCallout<X> {
 			}
 			return hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0;
 		};
-		return new ModifiableCallout<>(desc, text, text + " ({event.getEstimatedRemainingDuration()})", expiry);
+		return new ModifiableCallout<>(desc, text, text + " ({event.estimatedRemainingDuration})", expiry);
 	}
 
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCall(String descAndText) {

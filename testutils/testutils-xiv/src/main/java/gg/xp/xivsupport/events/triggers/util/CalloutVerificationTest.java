@@ -5,7 +5,9 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
@@ -18,6 +20,7 @@ import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.eventstorage.EventReader;
+import gg.xp.xivsupport.gui.overlay.FlyingTextOverlay;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -58,7 +61,8 @@ public abstract class CalloutVerificationTest {
 		return new AmVerificationValues(when, MarkerSign.CLEAR, Job.ADV, null);
 	}
 
-	protected void configure(MutablePicoContainer pico) {}
+	protected void configure(MutablePicoContainer pico) {
+	}
 
 	@Test
 	void doTheTest() {
@@ -215,8 +219,18 @@ public abstract class CalloutVerificationTest {
 			actualMarks.add(new AmVerificationValues(msDelta, MarkerSign.CLEAR, Job.ADV, parent));
 		});
 
-		// TODO: figure out why InitEvent doesn't work but a simple 'advance by 1' does
-//		dist.acceptEvent(new InitEvent());
+		// Make sure everything is initialized
+		dist.acceptEvent(new InitEvent());
+		// We have to "enable" the callout overlay or the callout processor won't bother with processing text calls
+		// to save CPU.
+		pico.getComponent(FlyingTextOverlay.class).getEnabled().set(true);
+		// Force every callout enabled. Later, this could be amended to only enable needed stuff.
+		pico.getComponent(ModifiedCalloutRepository.class)
+				.getAllCallouts()
+				.stream()
+				.flatMap(group -> group.getCallouts().stream())
+				.forEach(call -> call.getEnable().set(true));
+
 		replayController.advanceBy(1);
 		configure(pico);
 		replayController.advanceBy(Integer.MAX_VALUE);
@@ -293,7 +307,7 @@ public abstract class CalloutVerificationTest {
 			sb.append("| ").append(expectedString).append(" | ").append(actualString).append(" |\n");
 		}
 		if (failureAdjacentEvent != null) {
-			sb.append("\n\n");
+			sb.append("\n\n").append("Events surrounding the failure (millisecond delta):\n\n");
 			List<Event> allEvents = rawStorage.getEvents();
 			Instant timeBasis = failureAdjacentEvent.getEffectiveHappenedAt();
 			int index = allEvents.indexOf(failureAdjacentEvent);

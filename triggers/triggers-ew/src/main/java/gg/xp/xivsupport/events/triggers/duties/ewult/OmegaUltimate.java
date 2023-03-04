@@ -19,6 +19,9 @@ import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyRecommenceEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.events.state.combatstate.CastResult;
+import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisDeltaAssignment;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.DynamisOmegaAssignment;
@@ -210,6 +213,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private final XivState state;
 	private final StatusEffectRepository buffs;
+	private final ActiveCastRepository casts;
 	private final JobSortSetting groupPrioJobSort;
 	private final JobSortOverrideSetting p1prio;
 	private final JobSortOverrideSetting psPrio;
@@ -235,9 +239,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final IntSetting omegaFirstSetDelay;
 	private final IntSetting omegaSecondSetDelay;
 
-	public OmegaUltimate(XivState state, StatusEffectRepository buffs, PersistenceProvider pers) {
+	public OmegaUltimate(XivState state, StatusEffectRepository buffs, ActiveCastRepository casts, PersistenceProvider pers) {
 		this.state = state;
 		this.buffs = buffs;
+		this.casts = casts;
 		String settingKeyBase = "triggers.omega-ultimate.";
 		groupPrioJobSort = new JobSortSetting(pers, settingKeyBase + "groupsPrio", state);
 		markSettings = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.am-slot-settings", TwoGroupsOfFour.class, Map.of(
@@ -1608,8 +1613,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					case OneStack2 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 2)));
 					case OneStack3 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 3)));
 					case OneStack4 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 4)));
-					case Remaining1 -> s.updateCall((stacks == 1 ? sigmaOneStackLeftover : sigmaNoStacks).getModified(start, Map.of("prio", 1)));
-					case Remaining2 -> s.updateCall((stacks == 1 ? sigmaOneStackLeftover : sigmaNoStacks).getModified(start, Map.of("prio", 2)));
+					case Remaining1 ->
+							s.updateCall((stacks == 1 ? sigmaOneStackLeftover : sigmaNoStacks).getModified(start, Map.of("prio", 1)));
+					case Remaining2 ->
+							s.updateCall((stacks == 1 ? sigmaOneStackLeftover : sigmaNoStacks).getModified(start, Map.of("prio", 2)));
 				}
 			});
 
@@ -1815,6 +1822,134 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
+	@NpcCastCallout(0x7B87)
+	private final ModifiableCallout<AbilityCastStart> blindFaith = ModifiableCallout.durationBasedCall("Blind Faith", "Raidwide and Knockback");
+
+	@NpcCastCallout(0x7BA1)
+	private final ModifiableCallout<AbilityCastStart> cosmoMemoryP6 = ModifiableCallout.durationBasedCall("Cosmo Memory (P6)", "Raidwide");
+
+
+	@NpcCastCallout(0x7BA6)
+	private final ModifiableCallout<AbilityCastStart> cosmoDive = ModifiableCallout.durationBasedCall("Cosmo Dive", "{state.player.job.tank ? \"Close for Buster\" : \"Party Stack\"}");
+
+	// TODO: should be pretty easy to call starting spot
+	// TODO: call puddle number like DSR meteor
+	// TODO: should coordinate with Cosmo Dive call
+	@NpcCastCallout(0x7BAC)
+	private final ModifiableCallout<AbilityCastStart> unlimitedWaveCannon = ModifiableCallout.durationBasedCall("Unlimited Wave Cannon", "Exaflares");
+
+	@NpcCastCallout(0x7BA2)
+	private final ModifiableCallout<AbilityCastStart> cosmoArrow = ModifiableCallout.<AbilityCastStart>durationBasedCall("Cosmo Arrow", "Exasquares")
+			.extendedDescription("""
+					This is a simple callout. The callouts below provide more detail, but you can disable those and use this one instead if you prefer a single callout.""")
+			.disabledByDefault();
+
+	private final ModifiableCallout<?> exasquareA_1 = new ModifiableCallout<>("Exasquare A1", "Corners First")
+			.extendedDescription("""
+					The 'A' pattern is where the cardinals get hit first.
+					The 'B' pattern is where the outer edges get hit first.""");
+	private final ModifiableCallout<?> exasquareA_2 = new ModifiableCallout<>("Exasquare A2", "In");
+	private final ModifiableCallout<?> exasquareA_3 = new ModifiableCallout<>("Exasquare A3", "Stay In");
+	private final ModifiableCallout<?> exasquareA_4 = new ModifiableCallout<>("Exasquare A4", "Corners");
+	private final ModifiableCallout<?> exasquareA_5 = new ModifiableCallout<>("Exasquare A5", "Stay Out");
+	private final ModifiableCallout<?> exasquareA_6 = new ModifiableCallout<>("Exasquare A6", "Sides");
+	private final ModifiableCallout<?> exasquareA_7 = new ModifiableCallout<>("Exasquare A7", "In");
+
+	private final ModifiableCallout<?> exasquareB_1 = new ModifiableCallout<>("Exasquare B1", "In");
+	private final ModifiableCallout<?> exasquareB_2 = new ModifiableCallout<>("Exasquare B2", "Out");
+	private final ModifiableCallout<?> exasquareB_3 = new ModifiableCallout<>("Exasquare B3", "Stay Out");
+	private final ModifiableCallout<?> exasquareB_4 = new ModifiableCallout<>("Exasquare B4", "Corners");
+	private final ModifiableCallout<?> exasquareB_5 = new ModifiableCallout<>("Exasquare B5", "Sides");
+	private final ModifiableCallout<?> exasquareB_6 = new ModifiableCallout<>("Exasquare B6", "In");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> exasquareSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BA2),
+			(e1, s) -> {
+				// Wait for all casts
+				s.waitMs(500);
+				// Easy way to differentiate patterns is 2 actors casting (out > in) or 4 (in > out)
+				List<CastTracker> casts = getCasts().getAll()
+						.stream()
+						.filter(ct -> ct.getCast().abilityIdMatches(0x7BA3) && ct.getResult() == CastResult.IN_PROGRESS)
+						.toList();
+
+				int count = casts.size();
+				if (count == 2) {
+					// 2 casts = initial cross = corners > in > stay in > corners > stay out/corners > in/cardinals/sides/whatever > in
+					s.updateCall(exasquareA_1.getModified());
+					for (ModifiableCallout<?> call : List.of(exasquareA_2, exasquareA_3, exasquareA_4, exasquareA_5, exasquareA_6, exasquareA_7)) {
+						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BA3, 0x7BA4));
+						s.waitMs(100);
+						s.updateCall(call.getModified());
+					}
+				}
+				else if (count == 4) {
+					// 4 casts = initial square = in > out > stay out > in > out > in
+					s.updateCall(exasquareB_1.getModified());
+					for (ModifiableCallout<?> call : List.of(exasquareB_2, exasquareB_3, exasquareB_4, exasquareB_5, exasquareB_6)) {
+						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BA3, 0x7BA4));
+						s.waitMs(100);
+						s.updateCall(call.getModified());
+					}
+				}
+				else {
+					// What?
+					log.error("Saw {} exasquare casts, don't know what to do.", count);
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> waveCannonSpread = new ModifiableCallout<>("Wave Cannon Spread (P6)", "Spread");
+	private final ModifiableCallout<AbilityUsedEvent> waveCannonStaySpread = new ModifiableCallout<>("Wave Cannon Stay Spread (P6)", "Stay Spread");
+	private final ModifiableCallout<AbilityCastStart> waveCannonP6Stack = ModifiableCallout.durationBasedCall("Wave Cannon Stack (P6)", "{state.player.job.tank ? \"Stand in Front\" : \"Stand Behind Tanks\"}");
+
+	// TODO: second instance of this happens *during* second exasquares - should coordinate between them so callouts don't talk over each other
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> waveCannonSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BA9),
+			(e1, s) -> {
+				s.updateCall(waveCannonSpread.getModified(e1));
+				AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BAB));
+				s.updateCall(waveCannonStaySpread.getModified(firstHit));
+				s.waitMs(300);
+				AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BAB));
+				s.updateCall(waveCannonP6Stack.getModified(e1));
+			});
+
+	private final ModifiableCallout<AbilityCastStart> cosmoMeteorStart = ModifiableCallout.durationBasedCall("Cosmo Meteor Cast", "Bait Middle then Out");
+	private final ModifiableCallout<AbilityUsedEvent> cosmoMeteorSnap = new ModifiableCallout<>("Cosmo Meteor Snap", "{state.player.job.caster ? \"Spread Outside and LB\" : \"Spread Outside\"}");
+	private final ModifiableCallout<?> cosmoMeteorRangedLbReminder = new ModifiableCallout<>("Cosmo Meteor Ranged LB Reminder", "Ranged LB Next").disabledByDefault();
+	private final ModifiableCallout<HeadMarkerEvent> cosmoMeteorFlare = new ModifiableCallout<>("Cosmo Meteor Flare", "Flare on You");
+	private final ModifiableCallout<?> cosmoMeteorNoFlare = new ModifiableCallout<>("Cosmo Meteor Flare", "Stack");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> cosmoMeteorSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BB0),
+			(e1, s) -> {
+				s.updateCall(cosmoMeteorStart.getModified(e1));
+				AbilityUsedEvent snap = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BB0));
+				s.updateCall(cosmoMeteorSnap.getModified(snap));
+				s.waitMs(3_000);
+				s.updateCall(cosmoMeteorRangedLbReminder.getModified());
+				List<HeadMarkerEvent> hms = s.waitEventsQuickSuccession(3, HeadMarkerEvent.class, hm -> hm.getMarkerOffset() == 323, Duration.ofMillis(100));
+				hms.stream()
+						.filter(hm -> hm.getTarget().isThePlayer())
+						.findFirst()
+						.ifPresentOrElse(hm -> s.updateCall(cosmoMeteorFlare.getModified(hm)),
+								() -> s.updateCall(cosmoMeteorNoFlare.getModified()));
+			});
+
+	private final ModifiableCallout<AbilityCastStart> magicNumberStart = ModifiableCallout.durationBasedCall("Magic Number: Cast", "{state.player.job.tank ? \"Tank LB Now\" : \"Raidwide\"}");
+	private final ModifiableCallout<BuffApplied> magicNumberDebuff = ModifiableCallout.durationBasedCall("Magic Number: Debuff", "{state.player.job.healer ? \"Healer LB Now\" : \"Wait for Healer LB\"}");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> magicNumberSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BB6),
+			(e1, s) -> {
+				s.updateCall(magicNumberStart.getModified(e1));
+				BuffApplied buff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xDCC));
+				s.updateCall(magicNumberDebuff.getModified(buff));
+			});
+
+	@NpcCastCallout(0x7BA0)
+	private final ModifiableCallout<AbilityCastStart> p6enrage = ModifiableCallout.durationBasedCall("P6 Enrage", "Enrage");
+
 	public JobSortSetting getGroupPrioJobSort() {
 		return groupPrioJobSort;
 	}
@@ -1932,5 +2067,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	public IntSetting getOmegaSecondSetDelay() {
 		return omegaSecondSetDelay;
+	}
+
+	private ActiveCastRepository getCasts() {
+		return casts;
 	}
 }
