@@ -48,6 +48,7 @@ public class TopTest extends CalloutVerificationTest {
 	@Override
 	protected List<CalloutInitialValues> getExpectedCalls() {
 		return List.of(
+				// P1
 				call(15244, "Four with DRK Player", "Four with DRK Player"),
 				call(20480, "1", "1"),
 				call(28570, "Take tether", "Take tether"),
@@ -60,6 +61,7 @@ public class TopTest extends CalloutVerificationTest {
 				call(100513, "Cleave Baits", "Cleave Baits"),
 				call(102432, "Position for Cleave", "Position for Cleave"),
 				call(107522, "Avoid Cleaves", "Avoid Cleaves"),
+				// P2
 				call(139040, "Attack F", "Attack F"),
 				call(154330, "Check M/F Sword/Shield", "Check M/F Sword/Shield"),
 				call(168050, "Square, far from SMN Player", "Square, far from SMN Player (19.4)"),
@@ -72,6 +74,7 @@ public class TopTest extends CalloutVerificationTest {
 				call(228533, "Spread", "Spread"),
 				call(233796, "Stack", "Stack"),
 				call(240637, "Raidwide", "Raidwide"),
+				// P3
 				call(283045, "Sniper Soon", "Sniper Soon (18.2)"),
 				call(291493, "In", "In"),
 				call(299674, "In, Dodge Hand", "In, Dodge Hand"),
@@ -87,6 +90,7 @@ public class TopTest extends CalloutVerificationTest {
 				call(401788, "Spread for Rot", "Spread for Rot (8.1)"),
 				call(415090, "Raidwide", "Raidwide (7.7)"),
 				call(434447, "No Monitor, Boss Cleaving West", "No Monitor, Boss Cleaving West"),
+				// P4
 				call(473916, "Spread", "Spread (4.7)"),
 				call(476421, "Stacks on DRK Player, DRG Player", "Stacks on DRK Player, DRG Player"),
 				call(479280, "Stacks", "Stacks (4.7)"),
@@ -99,6 +103,7 @@ public class TopTest extends CalloutVerificationTest {
 				call(504289, "Move In", "Move In"),
 				call(506435, "Move In", "Move In"),
 				call(511528, "Heavy Raidwide", "Heavy Raidwide (7.7)"),
+				// P5
 				call(539146, "Buster on GNB Player", "Buster on GNB Player (4.7)"),
 				call(555678, "Raidwide", "Raidwide (4.7)"),
 				call(563946, "Distant World, Tethered to MNK Player", "Distant World, Tethered to MNK Player"),
@@ -113,7 +118,44 @@ public class TopTest extends CalloutVerificationTest {
 				call(677487, "One Stack", "One Stack"),
 				call(727298, "Raidwide", "Raidwide (4.7)"),
 				call(735484, "Long Distant", "Long Distant (49.9)"),
-				call(769984, "Long Distant", "Long Distant (15.4)")
+				call(769984, "Long Distant", "Long Distant (15.4)"),
+				call(810679, "Raidwide and Knockback", "Raidwide and Knockback (9.7)"),
+				// P6
+				call(883744, "Raidwide", "Raidwide (5.7)"),
+				call(898131, "Exasquares", "Exasquares (5.7)"),
+				call(898707, "In", "In"),
+				call(906223, "Out", "Out"),
+				call(908271, "Stay Out", "Stay Out"),
+				call(910318, "Corners", "Corners"),
+				call(912321, "Sides", "Sides"),
+				call(913256, "Party Stack", "Party Stack (5.3)"),
+				call(914369, "In", "In"),
+				call(932212, "Exaflares", "Exaflares (4.7)"),
+				call(955385, "Spread", "Spread"),
+				call(958420, "Stay Spread", "Stay Spread"),
+				call(960429, "Stand Behind Tanks", "Stand Behind Tanks (5.6)"),
+				call(974931, "Exasquares", "Exasquares (5.7)"),
+				call(975466, "Corners First", "Corners First"),
+				call(983043, "In", "In"),
+				call(985045, "Stay In", "Stay In"),
+				call(987318, "Corners", "Corners"),
+				call(989056, "Spread", "Spread"),
+				call(989281, "Stay Out", "Stay Out"),
+				call(991151, "Sides", "Sides"),
+				call(992091, "Stay Spread", "Stay Spread"),
+				call(993161, "In", "In"),
+				call(994098, "Stand Behind Tanks", "Stand Behind Tanks (5.6)"),
+				call(1008760, "Exaflares", "Exaflares (4.7)"),
+				call(1026957, "Party Stack", "Party Stack (5.3)"),
+				call(1049058, "Bait Middle then Out", "Bait Middle then Out (4.7)"),
+				call(1054032, "Spread Outside"),
+				call(1057051, "Ranged LB Next"),
+				call(1069158, "Flare on You"),
+				call(1084422, "Raidwide", "Raidwide (4.7)"),
+				call(1091412, "Healer LB Now", "Raidwide (6.0)"),
+				call(1100572, "Raidwide", "Raidwide (4.7)"),
+				call(1107557, "Healer LB Now", "Raidwide (6.0)"),
+				call(1114754, "Enrage", "Enrage (15.7)")
 		);
 	}
 

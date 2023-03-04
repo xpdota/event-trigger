@@ -206,7 +206,6 @@ public class TelestoMain implements FilteredEventHandler {
 		};
 		if (msg.shouldDelay()) {
 			queueExs.submit(() -> {
-				exs.submit(task);
 				try {
 					// Insert delay to avoid spamming
 					int delay = (int) (commandDelayBase.get() + (Math.random() * commandDelayPlus.get()));
@@ -214,6 +213,9 @@ public class TelestoMain implements FilteredEventHandler {
 				}
 				catch (InterruptedException e) {
 					log.error("Interrupted", e);
+				}
+				finally {
+					exs.submit(task);
 				}
 			});
 		}
