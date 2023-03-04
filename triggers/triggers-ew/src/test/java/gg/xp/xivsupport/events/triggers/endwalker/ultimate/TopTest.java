@@ -152,9 +152,9 @@ public class TopTest extends CalloutVerificationTest {
 				call(1057051, "Ranged LB Next"),
 				call(1069158, "Flare on You"),
 				call(1084422, "Raidwide", "Raidwide (4.7)"),
-				call(1091412, "Healer LB Now", "Raidwide (6.0)"),
+				call(1091412, "Healer LB Now", "Healer LB Now (6.0)"),
 				call(1100572, "Raidwide", "Raidwide (4.7)"),
-				call(1107557, "Healer LB Now", "Raidwide (6.0)"),
+				call(1107557, "Healer LB Now", "Healer LB Now (6.0)"),
 				call(1114754, "Enrage", "Enrage (15.7)")
 		);
 	}
