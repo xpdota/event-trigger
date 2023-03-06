@@ -273,7 +273,7 @@ public class P3S implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return context.getStateInfo().get(XivState.class).zoneIs(0x3EF);
+		return state.dutyIs(KnownDuty.P3S);
 	}
 
 }

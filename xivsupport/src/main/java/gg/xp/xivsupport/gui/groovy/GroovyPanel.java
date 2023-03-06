@@ -16,6 +16,8 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +30,13 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +60,7 @@ public class GroovyPanel extends JPanel {
 	private final GroovyScriptManager mgr;
 	private final GroovyTab tab;
 	private final GroovyScriptHolder script;
+	private final GroovySandbox sbx;
 
 	public String getName() {
 		return script.getScriptName();
@@ -71,6 +74,7 @@ public class GroovyPanel extends JPanel {
 		this.mgr = mgr;
 		this.tab = tab;
 		this.script = script;
+		this.sbx = mgr.getGroovyManager().getSandbox();
 		EasyAction newScript = new EasyAction("New", this::newScript, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
 		EasyAction save = new EasyAction("Save", this::save, script::isSaveable, KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
 		EasyAction saveAll = new EasyAction("Save All", this::saveAll, () -> true, KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.ALT_DOWN_MASK));
@@ -311,28 +315,7 @@ public class GroovyPanel extends JPanel {
 	}
 
 	private JTable customTableListDisplay(DisplayControl dc, Collection<?> values) {
-		List<String> explicitCols = dc.getListTableColumns();
-		boolean autoCols = explicitCols == null || explicitCols.isEmpty();
-		Collection<String> cols = new LinkedHashSet<>();
-		cols.add("toString");
-		if (!autoCols) {
-			cols.addAll(explicitCols);
-		}
-		List<Map<String, Object>> processedValues = values.stream().map(val -> {
-			Map<String, Object> map = new HashMap<>();
-			Map props = DefaultGroovyMethods.getProperties(val);
-			map.put("toString", val.toString());
-			map.putAll(props);
-			if (autoCols) {
-				cols.addAll(map.keySet());
-			}
-			return map;
-		}).toList();
-		CustomTableModel.CustomTableModelBuilder<Map<String, Object>> builder = CustomTableModel.builder(() -> processedValues);
-		for (String col : cols) {
-			builder = builder.addColumn(new CustomColumn<>(col, val -> singleValueConversion(val.get(col))));
-		}
-		return builder.build().makeTable();
+		return dc.getListDisplay().makeTable(sbx, values);
 	}
 
 	private JTable simpleMapDisplay(Map<?, ?> map) {
@@ -343,8 +326,9 @@ public class GroovyPanel extends JPanel {
 				.makeTable();
 	}
 
+	// TODO: move this
 	@SuppressWarnings("MalformedFormatString")
-	private static String singleValueConversion(Object obj) {
+	public static String singleValueConversion(Object obj) {
 		if (obj == null) {
 			return "(null)";
 		}
@@ -379,7 +363,7 @@ public class GroovyPanel extends JPanel {
 	}
 
 	private void setResult(GroovyScriptResult resultHolder) {
-		try {
+		try (var ignored = sbx.enter()){
 			if (resultHolder.success()) {
 				Object result = resultHolder.result();
 				if (result == null) {
@@ -431,12 +415,7 @@ public class GroovyPanel extends JPanel {
 	}
 
 	private Component listDisplay(GroovyScriptResult result, Collection<?> coll) {
-		DisplayControl dc = result.displayControl();
-		DisplayControl.ListDisplayMode ldm = dc.getListDisplayMode();
-		return switch (ldm) {
-			case AUTO -> simpleListDisplay(coll);
-			case TABLE -> customTableListDisplay(dc, coll);
-		};
+		return customTableListDisplay(result.displayControl(), coll);
 	}
 
 	private void setResultDisplay(@Nullable Object obj, Component display) {

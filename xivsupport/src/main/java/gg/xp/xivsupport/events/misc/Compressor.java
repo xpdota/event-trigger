@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+// TODO: this can move to another module
 public final class Compressor {
 
 	private Compressor() {

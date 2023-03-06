@@ -1618,6 +1618,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					case Remaining2 ->
 							s.updateCall((stacks == 1 ? sigmaOneStackLeftover : sigmaNoStacks).getModified(start, Map.of("prio", 2)));
 				}
+				HeadMarkerEvent rotation = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(15723));
+				// TODO: is this correct? not clear from log
+				if (rotation.getMarkerOffset() == 134) {
+					// CLOCKWISE rotation I think
+				}
+				// TODO what is the number for this
+				else if (rotation.getMarkerOffset() == 999999) {
+					// COUNTER-CLOCKWISE rotation
+				}
 			});
 
 	@AutoFeed
