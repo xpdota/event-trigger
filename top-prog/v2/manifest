@@ -1,6 +1,6 @@
-5cb50af48da9e761816a04f516ed9fe7  triggevent.exe
-03c96aa42a2b0bd517420018919bcec0  triggevent-import.exe
-06140c1d64e8230ea9adfa24048d9803  triggevent-upd.exe
+56c1405369306de52cd781d3487c018f  triggevent.exe
+d392b4528dca96f00482c219df345e6f  triggevent-import.exe
+c559c0eb7b338dc983ed8ea1be6e626f  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 b9e19f96299334e586775e57c0f0037e  deps/actimport-1.0-SNAPSHOT.jar
 879614e1a8678b4db231a05cae8cdb03  deps/annotations-24.0.0.jar
@@ -53,7 +53,7 @@ f977833e5750966d3de5e3b2b7775154  deps/telesto-gui-1.0-SNAPSHOT.jar
 cefda612fd88203aa1923df3c0fec80a  deps/telesto-right-clicks-1.0-SNAPSHOT.jar
 bf4811746dc6d5607dc3ce8367aa6acd  deps/timelines-1.0-SNAPSHOT.jar
 6113fc836f719fbf75da1eef9864dcce  deps/titan-jails-1.0-SNAPSHOT.jar
-d656eac04b31940cabae8d23d685c490  deps/triggers-ew-1.0-SNAPSHOT.jar
+5f293ac64f636710185546118aa6e84a  deps/triggers-ew-1.0-SNAPSHOT.jar
 a79006557cc3031a9dc2aedddfed0969  deps/triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  deps/triggers-sb-1.0-SNAPSHOT.jar
 ab223e2b793662bcd0cf8ce222b52458  deps/trigger-support-1.0-SNAPSHOT.jar
