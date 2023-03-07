@@ -123,7 +123,7 @@ public class TopTest extends CalloutVerificationTest {
 				// P6
 				call(883744, "Raidwide", "Raidwide (5.7)"),
 				call(898131, "Exasquares", "Exasquares (5.7)"),
-				call(898707, "In", "In"),
+				call(898707, "In First then Out", "In First then Out"),
 				call(906223, "Out", "Out"),
 				call(908271, "Stay Out", "Stay Out"),
 				call(910318, "Corners", "Corners"),
@@ -135,7 +135,7 @@ public class TopTest extends CalloutVerificationTest {
 				call(958420, "Stay Spread", "Stay Spread"),
 				call(960429, "Stand Behind Tanks", "Stand Behind Tanks (5.6)"),
 				call(974931, "Exasquares", "Exasquares (5.7)"),
-				call(975466, "Corners First", "Corners First"),
+				call(975466, "Corners First then In", "Corners First then In"),
 				call(983043, "In", "In"),
 				call(985045, "Stay In", "Stay In"),
 				call(987318, "Corners", "Corners"),
