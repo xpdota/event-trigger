@@ -65,13 +65,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @CalloutRepo(name = "TOP Triggers", duty = KnownDuty.OmegaProtocol)
 public class OmegaUltimate extends AutoChildEventHandler implements FilteredEventHandler {
@@ -468,12 +468,12 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				TwoGroupsOfFour myGroup = e1.forPlayer(getState().getPlayer());
 				NumberInLine num = NumberInLine.forNumber(myGroup.getNumber());
 				XivPlayerCharacter buddy = e1.getAssignments().get(myGroup.getCounterpart());
-				Map<String, Object> params = Map.of("buddy", buddy == null ? "error" : buddy);
+				s.setParam("buddy", buddy);
 				switch (num) {
-					case FIRST -> s.updateCall(firstInLineLoop.getModified(params));
-					case SECOND -> s.updateCall(secondInLineLoop.getModified(params));
-					case THIRD -> s.updateCall(thirdInLineLoop.getModified(params));
-					case FOURTH -> s.updateCall(fourthInLineLoop.getModified(params));
+					case FIRST -> s.updateCall(firstInLineLoop);
+					case SECOND -> s.updateCall(secondInLineLoop);
+					case THIRD -> s.updateCall(thirdInLineLoop);
+					case FOURTH -> s.updateCall(fourthInLineLoop);
 					case UNKNOWN -> {
 						log.error("Unknown number!");
 						return;
@@ -482,15 +482,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				log.info("Loop start: player has {}, buddy {}", num, buddy.getName());
 				s.waitMs(3000);
 				if (num == NumberInLine.THIRD) {
-					s.updateCall(thirdInLineTether.getModified(params));
+					s.updateCall(thirdInLineTether);
 				}
 				else {
 					s.waitEvent(TetherEvent.class, te -> true);
 					if (num == NumberInLine.FIRST) {
-						s.updateCall(firstInLineTower.getModified(looperDebuff, params));
+						s.updateCall(firstInLineTower, looperDebuff);
 					}
 					else {
-						s.accept(firstNotYou.getModified(params));
+						s.call(firstNotYou);
 					}
 				}
 
@@ -498,13 +498,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04) && aue.isFirstTarget());
 				log.info("First tower done");
 				if (num == NumberInLine.SECOND) {
-					s.updateCall(secondInLineTower.getModified(looperDebuff, params));
+					s.updateCall(secondInLineTower, looperDebuff);
 				}
 				else if (num == NumberInLine.FOURTH) {
-					s.updateCall(fourthInLineTether.getModified(params));
+					s.updateCall(fourthInLineTether);
 				}
 				else {
-					s.accept(secondNotYou.getModified(params));
+					s.call(secondNotYou);
 				}
 
 				//Second tower goes off
@@ -512,13 +512,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04) && aue.isFirstTarget());
 				log.info("Second tower done");
 				if (num == NumberInLine.THIRD) {
-					s.updateCall(thirdInLineTower.getModified(looperDebuff, params));
+					s.updateCall(thirdInLineTower, looperDebuff);
 				}
 				else if (num == NumberInLine.FIRST) {
-					s.updateCall(firstInLineTether.getModified(params));
+					s.updateCall(firstInLineTether);
 				}
 				else {
-					s.accept(thirdNotYou.getModified(params));
+					s.call(thirdNotYou);
 				}
 
 				//Third tower goes off
@@ -526,13 +526,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04) && aue.isFirstTarget());
 				log.info("Third tower done");
 				if (num == NumberInLine.FOURTH) {
-					s.updateCall(fourthInLineTower.getModified(looperDebuff, params));
+					s.updateCall(fourthInLineTower, looperDebuff);
 				}
 				else if (num == NumberInLine.SECOND) {
-					s.updateCall(secondInLineTether.getModified(params));
+					s.updateCall(secondInLineTether);
 				}
 				else {
-					s.accept(fourthNotYou.getModified(params));
+					s.call(fourthNotYou);
 				}
 			});
 
@@ -605,12 +605,14 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				// First group is 12 missile, 24
 
 				XivPlayerCharacter buddy = findLineBuddy();
-				Map<String, Object> params = Map.of("missile", guidedMissile, "cannon", waveCannon, "buddy", buddy == null ? "error" : buddy);
+				s.setParam("missile", guidedMissile);
+				s.setParam("cannon", waveCannon);
+				s.setParam("buddy", buddy);
 				switch (number) {
-					case FIRST -> s.updateCall(pantoFirstInLine.getModified(myLineBuff, params));
-					case SECOND -> s.updateCall(pantoSecondInLine.getModified(myLineBuff, params));
-					case THIRD -> s.updateCall(pantoThirdInLine.getModified(myLineBuff, params));
-					case FOURTH -> s.updateCall(pantoFourthInLine.getModified(myLineBuff, params));
+					case FIRST -> s.updateCall(pantoFirstInLine, myLineBuff);
+					case SECOND -> s.updateCall(pantoSecondInLine, myLineBuff);
+					case THIRD -> s.updateCall(pantoThirdInLine, myLineBuff);
+					case FOURTH -> s.updateCall(pantoFourthInLine, myLineBuff);
 					case UNKNOWN -> {
 						log.error("Unknown number in line!");
 						return;
@@ -625,23 +627,23 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					log.info("Iteration: {} vs {}", number.lineNumber, i);
 					if (number.lineNumber == i) {
 						switch (number) {
-							case SECOND -> s.updateCall(pantoSecondInLineOut.getModified(last, params));
-							case THIRD -> s.updateCall(pantoThirdInLineOut.getModified(last, params));
-							case FOURTH -> s.updateCall(pantoFourthInLineOut.getModified(last, params));
+							case SECOND -> s.updateCall(pantoSecondInLineOut, last);
+							case THIRD -> s.updateCall(pantoThirdInLineOut, last);
+							case FOURTH -> s.updateCall(pantoFourthInLineOut, last);
 						}
 					}
 					else if (number.lineNumber + 1 == i) {
 						switch (number) {
-							case FIRST -> s.updateCall(pantoFirstGoBackIn.getModified(last, params));
-							case SECOND -> s.updateCall(pantoSecondGoBackIn.getModified(last, params));
-							case THIRD -> s.updateCall(pantoThirdGoBackIn.getModified(last, params));
+							case FIRST -> s.updateCall(pantoFirstGoBackIn, last);
+							case SECOND -> s.updateCall(pantoSecondGoBackIn, last);
+							case THIRD -> s.updateCall(pantoThirdGoBackIn, last);
 						}
 					}
 					else {
 						switch (i) {
-							case 2 -> s.accept(pantoSecondNotYou.getModified(params));
-							case 3 -> s.accept(pantoThirdNotYou.getModified(params));
-							case 4 -> s.accept(pantoFourthNotYou.getModified(params));
+							case 2 -> s.call(pantoSecondNotYou);
+							case 3 -> s.call(pantoThirdNotYou);
+							case 4 -> s.call(pantoFourthNotYou);
 						}
 
 					}
@@ -650,25 +652,25 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 				s.waitMs(1500);
 				if (getState().playerJobMatches(Job::isTank)) {
-					s.updateCall(pantoCleave1asTank.getModified(last));
+					s.updateCall(pantoCleave1asTank, last);
 				}
 				else {
-					s.updateCall(pantoCleave1asNonTank.getModified(last));
+					s.updateCall(pantoCleave1asNonTank, last);
 					List<HeadMarkerEvent> hme = s.waitEventsQuickSuccession(3, HeadMarkerEvent.class, he -> true, Duration.ofMillis(250));
 					last = hme.get(0);
 					@Nullable HeadMarkerEvent myHm = hme.stream().filter(h -> h.getTarget().isThePlayer()).findFirst().orElse(null);
 					if (myHm != null) {
-						s.updateCall(pantoCleave1withMarker.getModified(myHm, params));
+						s.updateCall(pantoCleave1withMarker, myHm);
 					}
 					else {
-						s.updateCall(pantoCleave1noMarker.getModified(last, params));
+						s.updateCall(pantoCleave1noMarker, last);
 					}
 					last = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B11) && aue.isFirstTarget());
 					if (myHm == null) {
-						s.updateCall(pantoCleave2hadNoMarker.getModified(last, params));
+						s.updateCall(pantoCleave2hadNoMarker, last);
 					}
 					else {
-						s.updateCall(pantoCleave2hadMarker.getModified(last, params));
+						s.updateCall(pantoCleave2hadMarker, last);
 					}
 				}
 			});
@@ -754,7 +756,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> midRemoteGlitch = SqtTemplates.sq(50_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B3F),
 			(e1, s) -> {
-				s.updateCall(checkMfPattern.getModified(e1));
+				s.updateCall(checkMfPattern, e1);
 				PsMarkerAssignments assignments = s.waitEvent(PsMarkerAssignments.class);
 
 				PsMarkerGroup myAssignment = assignments.forPlayer(getState().getPlayer());
@@ -775,18 +777,20 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 				BuffApplied status = getBuffs().findStatusOnTarget(getState().getPlayer(), ba -> ba.buffIdMatches(0xD63, 0xD64));
 				boolean mid = assignments.isMid();
-				Map<String, Object> params = buddy == null ? Map.of() : Map.of("tetherBuddy", buddy, "mid", mid, "group", group);
+				s.setParam("tetherBuddy", buddy);
+				s.setParam("mid", mid);
+				s.setParam("group", group);
 				s.updateCall((switch (myAssignment) {
 					case GROUP1_CIRCLE, GROUP2_CIRCLE -> mid ? midGlitchO : remoteGlitchO;
 					case GROUP1_TRIANGLE, GROUP2_TRIANGLE -> mid ? midGlitchT : remoteGlitchT;
 					case GROUP1_SQUARE, GROUP2_SQUARE -> mid ? midGlitchS : remoteGlitchS;
 					case GROUP1_X, GROUP2_X -> mid ? midGlitchX : remoteGlitchX;
-				}).getModified(status, params));
+				}), status);
 
 				AbilityCastStart eyeLaser = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B21));
-				s.updateCall(eyeLaserStart.getModified(eyeLaser, params));
+				s.updateCall(eyeLaserStart, eyeLaser);
 				AbilityUsedEvent eyeLaserUsed = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B21));
-				s.updateCall(eyeLaserDone.getModified(eyeLaserUsed, params));
+				s.updateCall(eyeLaserDone, eyeLaserUsed);
 
 				List<HeadMarkerEvent> stackMarkers = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == 77);
 				List<XivPlayerCharacter> stackPlayers = stackMarkers.stream()
@@ -794,12 +798,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						.map(XivPlayerCharacter.class::cast)
 						.sorted(getPsPrio().getComparator())
 						.toList();
-				params = new HashMap<>(params);
-				params.put("stackPlayers", stackPlayers);
+				s.setParam("stackPlayers", stackPlayers);
 				XivCombatant male = getState().npcById(15713);
 				ArenaSector unsafeSpot = pos.forCombatant(male);
-				params.put("unsafe", unsafeSpot);
-				s.updateCall((mid ? glitchStacksMid : glitchStacksFar).getModified(stackMarkers.get(0), params));
+				s.setParam("unsafe", unsafeSpot);
+				s.updateCall((mid ? glitchStacksMid : glitchStacksFar), stackMarkers.get(0));
 			});
 
 	@AutoFeed
@@ -827,12 +830,14 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 							.ifPresent(furthest -> {
 								XivPlayerCharacter swapper = furthest.getKey();
 								XivPlayerCharacter swapee = e1.getPlayerForAssignment(e1.forPlayer(swapper).getCounterpart());
-								Map<String, Object> params = Map.of("swapper", swapper, "swapee", swapee, "mid", mid);
-								s.updateCall(furthestFromEyeSwap.getModified(stackMarkers.get(0), params));
+								s.setParam("swapper", swapper);
+								s.setParam("swapee", swapee);
+								s.setParam("mid", mid);
+								s.updateCall(furthestFromEyeSwap, stackMarkers.get(0));
 							});
 				}
 				else {
-					s.updateCall(furthestFromEyeNoSwap.getModified(stackMarkers.get(0)));
+					s.updateCall(furthestFromEyeNoSwap, stackMarkers.get(0));
 				}
 			});
 
@@ -872,16 +877,16 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					boolean inF = fw == 4;
 					boolean inM = mw == 4;
 					if (inF && inM) {
-						s.updateCall(partySynergyBothIn.getModified());
+						s.updateCall(partySynergyBothIn);
 					}
 					else if (inF && !inM) {
-						s.updateCall(partySynergyFinMout.getModified());
+						s.updateCall(partySynergyFinMout);
 					}
 					else if (!inF && inM) {
-						s.updateCall(partySynergyFoutMin.getModified());
+						s.updateCall(partySynergyFoutMin);
 					}
 					else {
-						s.updateCall(partySynergyBothOut.getModified());
+						s.updateCall(partySynergyBothOut);
 					}
 				}
 			});
@@ -891,32 +896,32 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B38),
 			(e1, s) -> {
 				log.info("Limitless Synergy Start");
-				s.updateCall(limitlessSynergy.getModified(e1));
+				s.updateCall(limitlessSynergy, e1);
 				TetherEvent tether = s.waitEvent(TetherEvent.class, t -> t.tetherIdMatches(0x54));
 				if (getState().playerJobMatches(Job::isTank)) {
-					s.updateCall(limitlessSynergyGrabTether.getModified(tether));
+					s.updateCall(limitlessSynergyGrabTether, tether);
 				}
 				else {
-					s.updateCall(limitlessSynergyGiveTether.getModified(tether));
+					s.updateCall(limitlessSynergyGiveTether, tether);
 				}
 				List<BuffApplied> flares = s.waitEvents(3, BuffApplied.class, buff -> buff.buffIdMatches(0x232));
 				BuffApplied myBuff = flares.stream().filter(b -> b.getTarget().isThePlayer()).findAny().orElse(null);
 				if (myBuff != null) {
-					s.updateCall(limitlessSynergyFlare.getModified(myBuff));
+					s.updateCall(limitlessSynergyFlare, myBuff);
 				}
 				else {
-					s.updateCall(limitlessSynergyNoFlare.getModified(flares.get(0)));
+					s.updateCall(limitlessSynergyNoFlare, flares.get(0));
 					List<AbilityUsedEvent> peopleThatGotHit = s.collectAoeHits(aue -> aue.abilityIdMatches(0x7B28));
 					AbilityUsedEvent firstEvent = peopleThatGotHit.get(0);
 					if (firstEvent.getTarget().isThePlayer()) {
-						s.updateCall(limitlessSynergyDontStack.getModified(firstEvent));
+						s.updateCall(limitlessSynergyDontStack, firstEvent);
 					}
 					else {
 						peopleThatGotHit.stream()
 								.filter(item -> item.getTarget().isThePlayer())
 								.findAny()
-								.ifPresentOrElse(item -> s.updateCall(limitlessSynergyDontStackMistake.getModified(item)),
-										() -> s.updateCall(limitlessSynergyStack.getModified(firstEvent)));
+								.ifPresentOrElse(item -> s.updateCall(limitlessSynergyDontStackMistake, item),
+										() -> s.updateCall(limitlessSynergyStack, firstEvent));
 					}
 				}
 			});
@@ -965,16 +970,18 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						.sorted(getSniperPrio().getComparator())
 						.toList();
 				BuffApplied playerBuff = playerBuffM.getValue();
-				Map<String, Object> params = Map.of("snipers", sniperPlayers, "hpSnipers", hpSniperPlayers, "nothings", nothingPlayers);
+				s.setParam("snipers", sniperPlayers);
+				s.setParam("hpSnipers", hpSniperPlayers);
+				s.setParam("nothings", nothingPlayers);
 				if (playerBuff == null) {
-					s.updateCall(noSniperCannonCall.getModified(e1, params));
+					s.updateCall(noSniperCannonCall, e1);
 				}
 				else {
 					if (playerBuff.buffIdMatches(0xD61)) {
-						s.updateCall(sniperCannonCall.getModified(playerBuff, params));
+						s.updateCall(sniperCannonCall, playerBuff);
 					}
 					else {
-						s.updateCall(highPoweredSniperCannonCall.getModified(playerBuff, params));
+						s.updateCall(highPoweredSniperCannonCall, playerBuff);
 					}
 				}
 				if (getSniperAmEnable().get()) {
@@ -990,9 +997,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				// 7B51 = third circle
 				// 7B52 = outermost circle
 				AbilityUsedEvent ring1 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B51) && aue.isFirstTarget());
-				s.updateCall(waveRepeaterMoveIn1.getModified(ring1));
+				s.updateCall(waveRepeaterMoveIn1, ring1);
 				AbilityUsedEvent ring2 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B51) && aue.isFirstTarget());
-				s.updateCall(waveRepeaterMoveIn2.getModified(ring2));
+				s.updateCall(waveRepeaterMoveIn2, ring2);
 				if (getSniperAmEnable().get()) {
 					s.accept(new ClearAutoMarkRequest());
 				}
@@ -1051,7 +1058,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			AbilityCastStart.class, a -> a.abilityIdMatches(0x7B55),
 			(e1, s) -> {
 				log.info("Hello World: Start");
-				s.updateCall(hwCastBar.getModified(e1));
+				s.updateCall(hwCastBar, e1);
 				// https://ff14.toolboxgaming.space/?id=073180945764761&preview=1
 				s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(0xDAF), Duration.ofMillis(100));
 				log.info("Hello World: Got Initial");
@@ -1078,16 +1085,17 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 							return false;
 						});
 				if (defaIsOnBlue) {
-					s.accept(hw0_defaOnBlue.getModified());
+					s.call(hw0_defaOnBlue);
 				}
 				else {
-					s.accept(hw0_defaOnRed.getModified());
+					s.call(hw0_defaOnRed);
 				}
 				log.info("Hello World Checkpoint 1");
 				s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(redRot));
 				for (int i = 1; i <= 4; i++) {
 					boolean last = i == 4;
-					Map<String, Object> params = Map.of("blueDefa", defaIsOnBlue, "i", i);
+					s.setParam("blueDefa", defaIsOnBlue);
+					s.setParam("i", i);
 					log.info("Hello World Iteration {}", i);
 					s.waitMs(200);
 					// Should have real debuffs now
@@ -1102,55 +1110,55 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					if (stackBuff != null) {
 						// Defa on blue = red stack
 						if (defaIsOnBlue) {
-							s.updateCall((last ? hw1a_stackRedFinal : hw1a_stackRed).getModified(stackBuff, params));
+							s.updateCall((last ? hw1a_stackRedFinal : hw1a_stackRed), stackBuff);
 							s.waitBuffRemoved(getBuffs(), stackBuff);
 							// If the player did not have one, but we have the stack for some reason, find a different one
 							if (redRotBuff == null) {
 								redRotBuff = getBuffs().findBuffById(redRot);
 							}
-							s.updateCall((last ? hw1b_stackRedFinal : hw1b_stackRed).getModified(redRotBuff, params));
+							s.updateCall((last ? hw1b_stackRedFinal : hw1b_stackRed), redRotBuff);
 						}
 						else {
-							s.updateCall((last ? hw1a_stackBlueFinal : hw1a_stackBlue).getModified(stackBuff, params));
+							s.updateCall((last ? hw1a_stackBlueFinal : hw1a_stackBlue), stackBuff);
 							s.waitBuffRemoved(getBuffs(), stackBuff);
 							if (blueRotBuff == null) {
 								blueRotBuff = getBuffs().findBuffById(redRot);
 							}
-							s.updateCall((last ? hw1b_stackBlueFinal : hw1b_stackBlue).getModified(blueRotBuff, params));
+							s.updateCall((last ? hw1b_stackBlueFinal : hw1b_stackBlue), blueRotBuff);
 						}
 					}
 					else if (defaBuff != null) {
 						if (defaIsOnBlue) {
-							s.updateCall((last ? hw1a_defaBlueFinal : hw1a_defaBlue).getModified(defaBuff, params));
+							s.updateCall((last ? hw1a_defaBlueFinal : hw1a_defaBlue), defaBuff);
 							s.waitBuffRemoved(getBuffs(), defaBuff);
 							if (blueRotBuff == null) {
 								blueRotBuff = getBuffs().findBuffById(redRot);
 							}
-							s.updateCall((last ? hw1b_defaBlueFinal : hw1b_defaBlue).getModified(blueRotBuff, params));
+							s.updateCall((last ? hw1b_defaBlueFinal : hw1b_defaBlue), blueRotBuff);
 						}
 						else {
-							s.updateCall((last ? hw1a_defaRedFinal : hw1a_defaRed).getModified(defaBuff, params));
+							s.updateCall((last ? hw1a_defaRedFinal : hw1a_defaRed), defaBuff);
 							s.waitBuffRemoved(getBuffs(), defaBuff);
 							if (redRotBuff == null) {
 								redRotBuff = getBuffs().findBuffById(redRot);
 							}
-							s.updateCall((last ? hw1b_defaRedFinal : hw1b_defaRed).getModified(redRotBuff, params));
+							s.updateCall((last ? hw1b_defaRedFinal : hw1b_defaRed), redRotBuff);
 						}
 					}
 					else if (shortTetherBuff != null && shortTetherBuff.getEstimatedRemainingDuration().toMillis() < 25_000) {
 						// TODO: should all of them work like this, or just rely on the fact that we pass i in as a param?
 						// Leaning towards splitting them
-						s.updateCall((last ? hw1a_shortTetherFinal : hw1a_shortTether).getModified(shortTetherBuff, params));
+						s.updateCall((last ? hw1a_shortTetherFinal : hw1a_shortTether), shortTetherBuff);
 						BuffApplied shortRegBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(shortReg));
 						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defaReal));
 						// TODO: tether follow-up calls should cancel when they are satisfied
-						s.updateCall((last ? hw1b_shortTetherFinal : hw1b_shortTether).getModified(shortRegBuff, params));
+						s.updateCall((last ? hw1b_shortTetherFinal : hw1b_shortTether), shortRegBuff);
 					}
 					else if (longTetherBuff != null && longTetherBuff.getEstimatedRemainingDuration().toMillis() < 25_000) {
-						s.updateCall((last ? hw1a_longTetherFinal : hw1a_longTether).getModified(longTetherBuff, params));
+						s.updateCall((last ? hw1a_longTetherFinal : hw1a_longTether), longTetherBuff);
 						BuffApplied longRegBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(longReg));
 						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defaReal));
-						s.updateCall((last ? hw1b_longTetherFinal : hw1b_longTether).getModified(longRegBuff, params));
+						s.updateCall((last ? hw1b_longTetherFinal : hw1b_longTether), longRegBuff);
 					}
 					else {
 						log.error("I have no idea what debuff you have!");
@@ -1200,14 +1208,16 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				nonMonitorPlayers.sort(getMonitorPrio().getComparator());
 				ArenaSector bossMonitor = e1.abilityIdMatches(0x7B6B) ? ArenaSector.EAST : ArenaSector.WEST;
 
-				Map<String, Object> params = Map.of("monitorPlayers", monitorPlayers, "nonMonitorPlayers", nonMonitorPlayers, "bossMonitor", bossMonitor);
+				s.setParam("monitorPlayers", monitorPlayers);
+				s.setParam("nonMonitorPlayers", nonMonitorPlayers);
+				s.setParam("bossMonitor", bossMonitor);
 
 				buffs.stream()
 						.filter(ba -> ba.getTarget().isThePlayer())
 						.findFirst()
 						.ifPresentOrElse(
-								ba -> s.updateCall(monitorOnYou.getModified(ba, params)),
-								() -> s.updateCall(noMonitorOnYou.getModified(buffs.get(0), params)));
+								ba -> s.updateCall(monitorOnYou, ba),
+								() -> s.updateCall(noMonitorOnYou, buffs.get(0)));
 				// TODO: proper AM settings
 				if (getMonitorAmEnable().get()) {
 					s.accept(new ClearAutoMarkRequest());
@@ -1259,7 +1269,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 							.map(XivPlayerCharacter.class::cast)
 							.sorted(Comparator.comparing(xpc -> xpc.getPos().y()))
 							.toList();
-					s.updateCall(waveCannonStacks.getModified(events.get(0), Map.of("stacks", p4wcStacks)));
+					s.setParam("stacks", p4wcStacks);
+					s.updateCall(waveCannonStacks, events.get(0));
 				}
 			});
 
@@ -1345,28 +1356,30 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final SequentialTrigger<BaseEvent> runDynamisDeltaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B88),
 			(e1, s) -> {
 				log.info("Dynamis Delta: Start");
-				s.updateCall(runDynamisDelta.getModified(e1));
+				s.updateCall(runDynamisDelta, e1);
 				List<TetherEvent> tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.tetherIdMatches(200, 201), Duration.ofMillis(300));
 				log.info("Dynamic Delta: Tethers: {}", tethers);
 				s.waitMs(100);
 				BuffApplied helloNearWorld = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD72));
 				BuffApplied helloDistantWorld = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD73));
 				TetherEvent myTether = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst().orElseThrow(() -> new RuntimeException("Couldn't find player's tether!"));
-				Map<String, Object> params = Map.of("nearWorld", helloNearWorld, "distWorld", helloDistantWorld, "buddy", myTether.getTargetMatching(cbt -> !cbt.isThePlayer()));
+				s.setParam("nearWorld", helloNearWorld);
+				s.setParam("distWorld", helloDistantWorld);
+				s.setParam("buddy", myTether.getTargetMatching(cbt -> !cbt.isThePlayer()));
 				boolean remote = myTether.tetherIdMatches(0xC9);
 				if (remote) {
 					boolean withNear = myTether.eitherTargetMatches(helloNearWorld.getTarget());
 					if (withNear) {
 						boolean iHaveNear = helloNearWorld.getTarget().isThePlayer();
-						s.updateCall((iHaveNear ? runDynamisDeltaRemoteNear : runDynamisDeltaRemoteNearBuddy).getModified(myTether, params));
+						s.updateCall((iHaveNear ? runDynamisDeltaRemoteNear : runDynamisDeltaRemoteNearBuddy), myTether);
 					}
 					else {
 						boolean iHaveDist = helloDistantWorld.getTarget().isThePlayer();
-						s.updateCall((iHaveDist ? runDynamisDeltaRemoteDistant : runDynamisDeltaRemoteDistantBuddy).getModified(myTether, params));
+						s.updateCall((iHaveDist ? runDynamisDeltaRemoteDistant : runDynamisDeltaRemoteDistantBuddy), myTether);
 					}
 				}
 				else {
-					s.updateCall(runDynamisDeltaLocal.getModified(myTether, params));
+					s.updateCall(runDynamisDeltaLocal, myTether);
 				}
 				MultiSlotAutoMarkHandler<DynamisDeltaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getDeltaAmSettings());
 				if (getDeltaAmEnable().get()) {
@@ -1378,60 +1391,59 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				AbilityUsedEvent eyeLaser = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B21));
 				BuffApplied monitor = s.findOrWaitForBuff(getBuffs(), ba -> ba.buffIdMatches(0xD7C, 0xD7D));
 				if (monitor.getTarget().isThePlayer()) {
-					s.updateCall(runDynamisDeltaBaitSpinnerThenMonitor.getModified(monitor, params));
+					s.updateCall(runDynamisDeltaBaitSpinnerThenMonitor, monitor);
 				}
 				else {
 					if (remote) {
-						s.updateCall(runDynamisDeltaBaitSpinnerBlue.getModified(eyeLaser, params));
+						s.updateCall(runDynamisDeltaBaitSpinnerBlue, eyeLaser);
 					}
 					else {
-						s.updateCall(runDynamisDeltaBaitSpinner.getModified(eyeLaser, params));
+						s.updateCall(runDynamisDeltaBaitSpinner, eyeLaser);
 					}
 				}
 				// 7B27 is the fake, 7B28 is real
 				AbilityUsedEvent beyondDefense = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B28));
 				boolean rightMonitor = monitor.buffIdMatches(0xD7C);
-				params = new HashMap<>(params);
-				params.put("monitor", monitor);
-				params.put("rightMonitor", rightMonitor);
-				params.put("beyondDefense", beyondDefense);
+				s.setParam("monitor", monitor);
+				s.setParam("rightMonitor", rightMonitor);
+				s.setParam("beyondDefense", beyondDefense);
 				if (monitor.getTarget().isThePlayer()) {
 					if (beyondDefense.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisDeltaAfterBaitWithMonitorAndBD.getModified(monitor, params));
+						s.updateCall(runDynamisDeltaAfterBaitWithMonitorAndBD, monitor);
 					}
 					else {
-						s.updateCall(runDynamisDeltaAfterBaitWithMonitor.getModified(monitor, params));
+						s.updateCall(runDynamisDeltaAfterBaitWithMonitor, monitor);
 					}
 				}
 				else if (beyondDefense.getTarget().isThePlayer()) {
-					s.updateCall(runDynamisDeltaHitByBeyondDefense.getModified(beyondDefense, params));
+					s.updateCall(runDynamisDeltaHitByBeyondDefense, beyondDefense);
 				}
 				else {
 					if (remote) {
-						s.updateCall(runDynamisDeltaAfterBaitNoMonitorBlue.getModified(monitor, params));
+						s.updateCall(runDynamisDeltaAfterBaitNoMonitorBlue, monitor);
 					}
 					else {
-						s.updateCall(runDynamisDeltaAfterBaitNoMonitor.getModified(monitor, params));
+						s.updateCall(runDynamisDeltaAfterBaitNoMonitor, monitor);
 					}
 				}
 				AbilityCastStart swivelCannon = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B94, 0x7B95));
 				if (helloNearWorld.getTarget().isThePlayer()) {
-					s.updateCall(runDynamisDeltaFinalNear.getModified(helloNearWorld, params));
+					s.updateCall(runDynamisDeltaFinalNear, helloNearWorld);
 				}
 				else if (helloDistantWorld.getTarget().isThePlayer()) {
-					s.updateCall(runDynamisDeltaFinalDistant.getModified(helloDistantWorld, params));
+					s.updateCall(runDynamisDeltaFinalDistant, helloDistantWorld);
 				}
 				else {
 					BuffApplied tethered = getBuffs().findBuff(ba -> ba.buffIdMatches(0x688) && ba.getTarget().isThePlayer());
 					if (tethered != null) {
-						s.updateCall(runDynamisDeltaFinalTether.getModified(tethered, params));
+						s.updateCall(runDynamisDeltaFinalTether, tethered);
 					}
 					else {
 						if (remote) {
-							s.updateCall(runDynamisDeltaFinalNothingWasBlue.getModified(swivelCannon, params));
+							s.updateCall(runDynamisDeltaFinalNothingWasBlue, swivelCannon);
 						}
 						else {
-							s.updateCall(runDynamisDeltaFinalNothing.getModified(swivelCannon, params));
+							s.updateCall(runDynamisDeltaFinalNothing, swivelCannon);
 						}
 					}
 				}
@@ -1476,7 +1488,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> runDynamisSigmaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8014),
 			(e1, s) -> {
-				s.updateCall(runDynamisSigma.getModified(e1));
+				s.updateCall(runDynamisSigma, e1);
 				if (getSigmaAmEnable().get()) {
 					s.accept(new ClearAutoMarkRequest());
 				}
@@ -1525,14 +1537,16 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				else {
 					group = getSigmaPsPrio().getComparator().compare(getState().getPlayer(), (XivPlayerCharacter) buddy) > 0 ? 2 : 1;
 				}
-				Map<String, Object> params = buddy == null ? Map.of() : Map.of("tetherBuddy", buddy, "mid", mid, "group", group);
+				s.setParam("tetherBuddy", buddy);
+				s.setParam("mid", mid);
+				s.setParam("group", group);
 				BuffApplied status = getBuffs().findStatusOnTarget(getState().getPlayer(), ba -> ba.buffIdMatches(0xD63, 0xD64));
 				s.updateCall((switch (myAssignment) {
 					case GROUP1_CIRCLE, GROUP2_CIRCLE -> mid ? p5midGlitchO : p5remoteGlitchO;
 					case GROUP1_TRIANGLE, GROUP2_TRIANGLE -> mid ? p5midGlitchT : p5remoteGlitchT;
 					case GROUP1_SQUARE, GROUP2_SQUARE -> mid ? p5midGlitchS : p5remoteGlitchS;
 					case GROUP1_X, GROUP2_X -> mid ? p5midGlitchX : p5remoteGlitchX;
-				}).getModified(status, params));
+				}), status);
 
 
 				// Near D72, Dist D73, Dynamis 0xD74
@@ -1572,13 +1586,11 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<XivPlayerCharacter> unmarked = new ArrayList<>(getState().getPartyList());
 				// TODO: this should compare which pair is more in or out
 				unmarked.removeAll(marked);
-				params = new HashMap<>(params);
-				params.put("marked", marked);
-				params.put("unmarked", unmarked);
-				Map<String, Object> newParams = params;
+				s.setParam("marked", marked);
+				s.setParam("unmarked", unmarked);
 				unmarked.removeAll(marked);
-				myHm.ifPresentOrElse(h -> s.updateCall((buddyHm ? sigmaPreyMarkerMarkedBuddy : sigmaPreyMarkerUnmarkedBuddy).getModified(h, newParams)),
-						() -> s.updateCall(sigmaNoPreyMarker.getModified(hm.get(0), newParams)));
+				myHm.ifPresentOrElse(h -> s.updateCall((buddyHm ? sigmaPreyMarkerMarkedBuddy : sigmaPreyMarkerUnmarkedBuddy), h),
+						() -> s.updateCall(sigmaNoPreyMarker, hm.get(0)));
 				// Part 2 is handled in the below trigger
 				AbilityUsedEvent used = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B74));
 				s.updateCall((switch (myAssignment) {
@@ -1586,7 +1598,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					case GROUP1_TRIANGLE, GROUP2_TRIANGLE -> mid ? p5midGlitchTkb : p5remoteGlitchTkb;
 					case GROUP1_SQUARE, GROUP2_SQUARE -> mid ? p5midGlitchSkb : p5remoteGlitchSkb;
 					case GROUP1_X, GROUP2_X -> mid ? p5midGlitchXkb : p5remoteGlitchXkb;
-				}).getModified(status, params));
+				}), status);
 			});
 
 	private final ModifiableCallout<AbilityUsedEvent> sigmaNearWorld = new ModifiableCallout<AbilityUsedEvent>("Run Dynamis Sigma: Near", "Near World").statusIcon(0xD72);
@@ -1597,6 +1609,10 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					This callout is used instead of the one above in the event that you have one stack, but were not chosen by the priority system.
 					If you do not intend to use the priority system, you should configure this callout exactly as the one above.""");
 	private final ModifiableCallout<AbilityUsedEvent> sigmaNoStacks = new ModifiableCallout<>("Run Dynamis Sigma: No Stacks", "No Stacks");
+	private final ModifiableCallout<HeadMarkerEvent> sigmaRotationCW = new ModifiableCallout<>("Run Dynamis Sigma: Clockwise Rotation", "Clockwise");
+	private final ModifiableCallout<HeadMarkerEvent> sigmaRotationCCW = new ModifiableCallout<>("Run Dynamis Sigma: CCW Rotation", "Counter-Clockwise");
+	private final ModifiableCallout<AbilityCastStart> sigmaSlow = new ModifiableCallout<>("Run Dynamis Sigma: Slow/Out Pattern", "Slow Pattern");
+	private final ModifiableCallout<AbilityCastStart> sigmaFast = new ModifiableCallout<>("Run Dynamis Sigma: Fast/In Pattern", "Fast then Wait");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> sigmaPart2sq = SqtTemplates.sq(120_000, SigmaAssignments.class, sa -> true,
@@ -1606,8 +1622,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				AbilityUsedEvent start = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B04, 0x7B05));
 				DynamisSigmaAssignment assignment = e1.localPlayerAssignment();
 				switch (assignment) {
-					case NearWorld -> s.updateCall(sigmaNearWorld.getModified(start));
-					case DistantWorld -> s.updateCall(sigmaDistWorld.getModified(start));
+					case NearWorld -> s.updateCall(sigmaNearWorld, start);
+					case DistantWorld -> s.updateCall(sigmaDistWorld, start);
 					case OneStack1 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 1)));
 					case OneStack2 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 2)));
 					case OneStack3 -> s.updateCall(sigmaOneStack.getModified(start, Map.of("prio", 3)));
@@ -1617,13 +1633,15 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					case Remaining2 ->
 							s.updateCall((stacks == 1 ? sigmaOneStackLeftover : sigmaNoStacks).getModified(start, Map.of("prio", 2)));
 				}
+				// TODO: would be nice to just have "cumulative variables" for callouts within sequential triggers
 				HeadMarkerEvent rotation = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(15723));
 				if (rotation.getMarkerOffset() == 133) {
-					log.info("Sigma: Clockwise");
+					s.updateCall(sigmaRotationCW, rotation);
 				}
 				else if (rotation.getMarkerOffset() == 134) {
-					log.info("Sigma: Counter-Clockwise");
+					s.updateCall(sigmaRotationCCW, rotation);
 				}
+				AbilityCastStart laserCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B8F));
 				// Okay, this one is also weird. You're supposed to look at Omega-F, but ACT seems to be reporting the
 				// name as Omega-M at that point.
 				// Better plan seems to be to look for whoever has the Omega-F buff.
@@ -1634,10 +1652,12 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 							.map(XivCombatant::getWeaponId)
 							.orElse((short) -1);
 					log.info("Sigma WID: {}", wid);
+					// WID 4, cast superliminal steel: cleaves sides, safe middle (in/fast pattern)
+					// WID 11, cast optimized blizzard III, cleaves line
 					switch (wid) {
-						case -1 -> log.info("Sigma: No weapon");// invalid data
-						case 0 -> log.info("Sigma: Out/Slow");// OUT/slow pattern? unconfirmed
-						case 4 -> log.info("Sigma: In/Fast");// IN (aka fast pattern)
+						case -1 -> log.info("Sigma: No weapon info");// invalid data
+						case 4 -> s.updateCall(sigmaFast, laserCast);
+						default -> s.updateCall(sigmaSlow, laserCast);// OUT (aka slow pattern)
 					}
 				}
 				catch (Throwable t) {
@@ -1659,8 +1679,81 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				}
 			});
 
-	private final ModifiableCallout<AbilityCastStart> runDynamisOmega = ModifiableCallout.<AbilityCastStart>durationBasedCall("Run Dynamis Omega", "Raidwide")
-			.extendedDescription("Please note that all Run: Dynamis (Omega) triggers are in BETA.");
+	private final ArenaPos omegaNS = new ArenaPos(100, 100, 50, 1);
+	private final ArenaPos omegaEW = new ArenaPos(100, 100, 1, 50);
+
+	private final ModifiableCallout<AbilityCastStart> runDynamisOmega = ModifiableCallout.<AbilityCastStart>durationBasedCall("Run Dynamis Omega", "Raidwide");
+
+	private final ModifiableCallout<?> runDynamisOmegaDodge = new ModifiableCallout<>("Run Dynamis Omega Safe Spots", "{['Close', 'Mid', 'Far'][dist1]} {dir1} then {['Close', 'Mid', 'Far'][dist2]} {dir2}");
+	private final ModifiableCallout<?> runDynamisOmegaDodgeFollowup = new ModifiableCallout<>("Run Dynamis Omega Safe Spots Second Call", "{['Close', 'Mid', 'Far'][dist2]} {dir2}");
+
+	@SuppressWarnings({"SpellCheckingInspection", "ReuseOfLocalVariable"})
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> runDynamisOmegaSafeSpotSq = SqtTemplates.sq(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8015),
+			(e1, s) -> {
+				log.info("Dynamis Omega Safe Spots: Start");
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8015));
+				s.waitMs(4000);
+				XivCombatant firstM;
+				XivCombatant secondM;
+				XivCombatant firstF;
+				XivCombatant secondF;
+				log.info("Dynamis Omega Safe Spots: Finding Data");
+				while (true) {
+					// TODO: seems first set is the higher IDs, but validate this
+					s.waitThenRefreshCombatants(250);
+					List<XivCombatant> ms = getState().npcsById(15721);
+					List<XivCombatant> fs = getState().npcsById(15722);
+					if (ms.size() != 2 || fs.size() != 2) {
+						log.error("Wrong Omega M/F data: {}; {}", ms, fs);
+						continue;
+					}
+					firstM = ms.get(1);
+					secondM = ms.get(0);
+					firstF = fs.get(1);
+					secondF = fs.get(0);
+					if (Stream.of(firstM, secondM, firstF, secondF).anyMatch(c -> c.getWeaponId() == -1)) {
+						s.waitMs(250);
+					}
+					else {
+						break;
+					}
+				}
+				boolean firstMin = firstM.getWeaponId() == 4;
+				boolean secondMin = secondM.getWeaponId() == 4;
+				boolean firstFin = firstF.getWeaponId() == 4;
+				boolean secondFin = secondF.getWeaponId() == 4;
+				/*
+					Logic:
+					If F out M out: go M FAR
+					If F in  M out: go F CLOSE
+					If F out M in : go M MID
+					If F in  M in : go M CLOSE
+				 */
+				ArenaSector firstMcard = omegaNS.forCombatant(firstM);
+				ArenaSector secondMcard = omegaEW.forCombatant(secondM);
+				// This is how far on the "male" cardinal to go
+				// 0 = close, 1 = mid, 2 = far, -1 = close on F side
+				int firstDist = firstFin ? (firstMin ? 0 : -1) : (firstMin ? 1 : 2);
+				int secondDist = secondFin ? (secondMin ? 0 : -1) : (secondMin ? 1 : 2);
+				if (firstDist < 0) {
+					firstDist = 0;
+					firstMcard = firstMcard.opposite();
+				}
+				if (secondDist < 0) {
+					secondDist = 0;
+					secondMcard = secondMcard.opposite();
+				}
+				s.setParam("dir1", firstMcard);
+				s.setParam("dist1", firstDist);
+				s.setParam("dir2", secondMcard);
+				s.setParam("dist2", secondDist);
+				s.updateCall(runDynamisOmegaDodge);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getSource().npcIdMatches(15721, 15722));
+				s.updateCall(runDynamisOmegaDodgeFollowup);
+
+			});
+
 	private final ModifiableCallout<BuffApplied> runDynamisOmegaShortNear = ModifiableCallout.<BuffApplied>durationBasedCall("Run Dynamis Omega: Short Near", "Short Near").autoIcon();
 	private final ModifiableCallout<BuffApplied> runDynamisOmegaShortDist = ModifiableCallout.<BuffApplied>durationBasedCall("Run Dynamis Omega: Short Dist", "Short Distant").autoIcon();
 	private final ModifiableCallout<BuffApplied> runDynamisOmegaLongNear = ModifiableCallout.<BuffApplied>durationBasedCall("Run Dynamis Omega: Long Near", "Long Near").autoIcon();
@@ -1674,7 +1767,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> runDynamisOmegaSq = SqtTemplates.sq(120_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8015),
 			(e1, s) -> {
-				s.updateCall(runDynamisOmega.getModified(e1));
+				s.updateCall(runDynamisOmega, e1);
 				if (getOmegaAmEnable().get()) {
 					s.accept(new ClearAutoMarkRequest());
 				}
@@ -1706,19 +1799,19 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				{
 					Map<String, Object> params = Map.of("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
 					if (shortNear.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaShortNear.getModified(shortNear, params));
+						s.updateCall(runDynamisOmegaShortNear, shortNear);
 					}
 					else if (shortDist.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaShortDist.getModified(shortDist, params));
+						s.updateCall(runDynamisOmegaShortDist, shortDist);
 					}
 					else if (longNear.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaLongNear.getModified(longNear, params));
+						s.updateCall(runDynamisOmegaLongNear, longNear);
 					}
 					else if (longDist.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaLongDist.getModified(longDist, params));
+						s.updateCall(runDynamisOmegaLongDist, longDist);
 					}
 					else {
-						s.updateCall(runDynamisOmegaNothing.getModified(shortNear, params));
+						s.updateCall(runDynamisOmegaNothing, shortNear);
 					}
 				}
 				{
@@ -1766,13 +1859,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				{
 					Map<String, Object> params = Map.of("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
 					if (longNear.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaLongNearP2.getModified(longNear, params));
+						s.updateCall(runDynamisOmegaLongNearP2, longNear);
 					}
 					else if (longDist.getTarget().isThePlayer()) {
-						s.updateCall(runDynamisOmegaLongDistP2.getModified(longDist, params));
+						s.updateCall(runDynamisOmegaLongDistP2, longDist);
 					}
 					else {
-						s.updateCall(runDynamisOmegaNothingP2.getModified(shortNear, params));
+						s.updateCall(runDynamisOmegaNothingP2, shortNear);
 					}
 				}
 				{
@@ -1901,20 +1994,20 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				int count = casts.size();
 				if (count == 2) {
 					// 2 casts = initial cross = corners > in > stay in > corners > stay out/corners > in/cardinals/sides/whatever > in
-					s.updateCall(exasquareA_1.getModified());
+					s.updateCall(exasquareA_1);
 					for (ModifiableCallout<?> call : List.of(exasquareA_2, exasquareA_3, exasquareA_4, exasquareA_5, exasquareA_6, exasquareA_7)) {
 						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BA3, 0x7BA4));
 						s.waitMs(100);
-						s.updateCall(call.getModified());
+						s.updateCall(call);
 					}
 				}
 				else if (count == 4) {
 					// 4 casts = initial square = in > out > stay out > in > out > in
-					s.updateCall(exasquareB_1.getModified());
+					s.updateCall(exasquareB_1);
 					for (ModifiableCallout<?> call : List.of(exasquareB_2, exasquareB_3, exasquareB_4, exasquareB_5, exasquareB_6)) {
 						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BA3, 0x7BA4));
 						s.waitMs(100);
-						s.updateCall(call.getModified());
+						s.updateCall(call);
 					}
 				}
 				else {
@@ -1931,12 +2024,12 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> waveCannonSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BA9),
 			(e1, s) -> {
-				s.updateCall(waveCannonSpread.getModified(e1));
+				s.updateCall(waveCannonSpread, e1);
 				AbilityUsedEvent firstHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BAB));
-				s.updateCall(waveCannonStaySpread.getModified(firstHit));
+				s.updateCall(waveCannonStaySpread, firstHit);
 				s.waitMs(300);
 				AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BAB));
-				s.updateCall(waveCannonP6Stack.getModified(e1));
+				s.updateCall(waveCannonP6Stack, e1);
 			});
 
 	private final ModifiableCallout<AbilityCastStart> cosmoMeteorStart = ModifiableCallout.durationBasedCall("Cosmo Meteor Cast", "Bait Middle then Out");
@@ -1948,17 +2041,17 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> cosmoMeteorSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BB0),
 			(e1, s) -> {
-				s.updateCall(cosmoMeteorStart.getModified(e1));
+				s.updateCall(cosmoMeteorStart, e1);
 				AbilityUsedEvent snap = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BB0));
-				s.updateCall(cosmoMeteorSnap.getModified(snap));
+				s.updateCall(cosmoMeteorSnap, snap);
 				s.waitMs(3_000);
-				s.updateCall(cosmoMeteorRangedLbReminder.getModified());
+				s.updateCall(cosmoMeteorRangedLbReminder);
 				List<HeadMarkerEvent> hms = s.waitEventsQuickSuccession(3, HeadMarkerEvent.class, hm -> hm.getMarkerOffset() == 323, Duration.ofMillis(100));
 				hms.stream()
 						.filter(hm -> hm.getTarget().isThePlayer())
 						.findFirst()
-						.ifPresentOrElse(hm -> s.updateCall(cosmoMeteorFlare.getModified(hm)),
-								() -> s.updateCall(cosmoMeteorNoFlare.getModified()));
+						.ifPresentOrElse(hm -> s.updateCall(cosmoMeteorFlare, hm),
+								() -> s.updateCall(cosmoMeteorNoFlare));
 			});
 
 	private final ModifiableCallout<AbilityCastStart> magicNumberStart = ModifiableCallout.durationBasedCall("Magic Number: Cast", "{state.player.job.tank ? \"Tank LB Now\" : \"Raidwide\"}");
@@ -1967,9 +2060,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> magicNumberSq = SqtTemplates.sq(60_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BB6),
 			(e1, s) -> {
-				s.updateCall(magicNumberStart.getModified(e1));
+				s.updateCall(magicNumberStart, e1);
 				BuffApplied buff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xDCC));
-				s.updateCall(magicNumberDebuff.getModified(buff));
+				s.updateCall(magicNumberDebuff, buff);
 			});
 
 	@NpcCastCallout(0x7BA0)
