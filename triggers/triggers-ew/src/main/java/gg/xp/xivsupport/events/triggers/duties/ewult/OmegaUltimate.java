@@ -1687,7 +1687,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<?> runDynamisOmegaDodge = new ModifiableCallout<>("Run Dynamis Omega Safe Spots", "{['Close', 'Mid', 'Far'][dist1]} {dir1} then {['Close', 'Mid', 'Far'][dist2]} {dir2}");
 	private final ModifiableCallout<?> runDynamisOmegaDodgeFollowup = new ModifiableCallout<>("Run Dynamis Omega Safe Spots Second Call", "{['Close', 'Mid', 'Far'][dist2]} {dir2}");
 
-	@SuppressWarnings({"SpellCheckingInspection", "ReuseOfLocalVariable"})
+	@SuppressWarnings({"SpellCheckingInspection"})
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> runDynamisOmegaSafeSpotSq = SqtTemplates.sq(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8015),
 			(e1, s) -> {
@@ -1700,7 +1700,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				XivCombatant secondF;
 				log.info("Dynamis Omega Safe Spots: Finding Data");
 				while (true) {
-					// TODO: seems first set is the higher IDs, but validate this
 					s.waitThenRefreshCombatants(250);
 					List<XivCombatant> ms = getState().npcsById(15721);
 					List<XivCombatant> fs = getState().npcsById(15722);
@@ -1708,6 +1707,9 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						log.error("Wrong Omega M/F data: {}; {}", ms, fs);
 						continue;
 					}
+					// TODO: seems first set is the higher IDs, but validate this
+					// They all move into position at the same time, not sure what else would serve as an indicator.
+					// Unless it's finally time to support modelStatus...
 					firstM = ms.get(1);
 					secondM = ms.get(0);
 					firstF = fs.get(1);
@@ -1730,8 +1732,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					If F out M in : go M MID
 					If F in  M in : go M CLOSE
 				 */
-				ArenaSector firstMcard = omegaNS.forCombatant(firstM);
-				ArenaSector secondMcard = omegaEW.forCombatant(secondM);
+				ArenaSector firstMcard = omegaEW.forCombatant(firstM);
+				ArenaSector secondMcard = omegaNS.forCombatant(secondM);
 				// This is how far on the "male" cardinal to go
 				// 0 = close, 1 = mid, 2 = far, -1 = close on F side
 				int firstDist = firstFin ? (firstMin ? 0 : -1) : (firstMin ? 1 : 2);
@@ -1797,7 +1799,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				BuffApplied longNear = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD72) && ba.getInitialDuration().toSeconds() > 40);
 				BuffApplied longDist = getBuffs().findBuff(ba -> ba.buffIdMatches(0xD73) && ba.getInitialDuration().toSeconds() > 40);
 				{
-					Map<String, Object> params = Map.of("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
+					s.setParam("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
 					if (shortNear.getTarget().isThePlayer()) {
 						s.updateCall(runDynamisOmegaShortNear, shortNear);
 					}
@@ -1857,7 +1859,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7E76));
 				s.waitMs(500);
 				{
-					Map<String, Object> params = Map.of("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
+					s.setParam("dynamisStacks", getBuffs().buffStacksOnTarget(getState().getPlayer(), 0xD74));
 					if (longNear.getTarget().isThePlayer()) {
 						s.updateCall(runDynamisOmegaLongNearP2, longNear);
 					}
