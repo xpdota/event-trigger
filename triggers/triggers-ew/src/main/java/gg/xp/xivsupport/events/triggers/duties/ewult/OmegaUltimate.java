@@ -1388,7 +1388,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						s.updateCall(runDynamisDeltaBaitSpinner.getModified(eyeLaser, params));
 					}
 				}
-				AbilityCastStart spinner = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B70));
 				// 7B27 is the fake, 7B28 is real
 				AbilityUsedEvent beyondDefense = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7B28));
 				boolean rightMonitor = monitor.buffIdMatches(0xD7C);
@@ -1619,13 +1618,30 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 							s.updateCall((stacks == 1 ? sigmaOneStackLeftover : sigmaNoStacks).getModified(start, Map.of("prio", 2)));
 				}
 				HeadMarkerEvent rotation = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getTarget().npcIdMatches(15723));
-				// TODO: is this correct? not clear from log
-				if (rotation.getMarkerOffset() == 134) {
-					// CLOCKWISE rotation I think
+				if (rotation.getMarkerOffset() == 133) {
+					log.info("Sigma: Clockwise");
 				}
-				// TODO what is the number for this
-				else if (rotation.getMarkerOffset() == 999999) {
-					// COUNTER-CLOCKWISE rotation
+				else if (rotation.getMarkerOffset() == 134) {
+					log.info("Sigma: Counter-Clockwise");
+				}
+				// Okay, this one is also weird. You're supposed to look at Omega-F, but ACT seems to be reporting the
+				// name as Omega-M at that point.
+				// Better plan seems to be to look for whoever has the Omega-F buff.
+				try {
+					short wid = getBuffs().findBuffsById(0x68B).stream().findFirst()
+							.map(BuffApplied::getTarget)
+							.map(cbt -> getState().getLatestCombatantData(cbt))
+							.map(XivCombatant::getWeaponId)
+							.orElse((short) -1);
+					log.info("Sigma WID: {}", wid);
+					switch (wid) {
+						case -1 -> log.info("Sigma: No weapon");// invalid data
+						case 0 -> log.info("Sigma: Out/Slow");// OUT/slow pattern? unconfirmed
+						case 4 -> log.info("Sigma: In/Fast");// IN (aka fast pattern)
+					}
+				}
+				catch (Throwable t) {
+					log.error("Sigma error", t);
 				}
 			});
 
@@ -1853,7 +1869,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					This is a simple callout. The callouts below provide more detail, but you can disable those and use this one instead if you prefer a single callout.""")
 			.disabledByDefault();
 
-	private final ModifiableCallout<?> exasquareA_1 = new ModifiableCallout<>("Exasquare A1", "Corners First")
+	private final ModifiableCallout<?> exasquareA_1 = new ModifiableCallout<>("Exasquare A1", "Corners First then In")
 			.extendedDescription("""
 					The 'A' pattern is where the cardinals get hit first.
 					The 'B' pattern is where the outer edges get hit first.""");
@@ -1864,7 +1880,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final ModifiableCallout<?> exasquareA_6 = new ModifiableCallout<>("Exasquare A6", "Sides");
 	private final ModifiableCallout<?> exasquareA_7 = new ModifiableCallout<>("Exasquare A7", "In");
 
-	private final ModifiableCallout<?> exasquareB_1 = new ModifiableCallout<>("Exasquare B1", "In");
+	private final ModifiableCallout<?> exasquareB_1 = new ModifiableCallout<>("Exasquare B1", "In First then Out");
 	private final ModifiableCallout<?> exasquareB_2 = new ModifiableCallout<>("Exasquare B2", "Out");
 	private final ModifiableCallout<?> exasquareB_3 = new ModifiableCallout<>("Exasquare B3", "Stay Out");
 	private final ModifiableCallout<?> exasquareB_4 = new ModifiableCallout<>("Exasquare B4", "Corners");
