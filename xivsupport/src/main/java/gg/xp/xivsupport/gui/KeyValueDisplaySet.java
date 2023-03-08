@@ -46,6 +46,7 @@ public class KeyValueDisplaySet extends JPanel implements Refreshable {
 	@Override
 	public void refresh() {
 		log.trace("Refreshing");
+		// TODO: this is bad because it causes a lot of UI tree revalidation
 		displayed.forEach(KeyValuePairDisplay::refresh);
 	}
 

@@ -1847,6 +1847,26 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					));
 				}
 				AbilityCastStart diffuseWaveCannon = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(31643, 31644));
+				AbilityCastStart oversampledWaveCannon = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(31638, 31639));
+				{
+					// Repeat call to remind player
+					if (shortNear.getTarget().isThePlayer()) {
+						s.updateCall(runDynamisOmegaShortNear, shortNear);
+					}
+					else if (shortDist.getTarget().isThePlayer()) {
+						s.updateCall(runDynamisOmegaShortDist, shortDist);
+					}
+					else if (longNear.getTarget().isThePlayer()) {
+						s.updateCall(runDynamisOmegaLongNear, longNear);
+					}
+					else if (longDist.getTarget().isThePlayer()) {
+						s.updateCall(runDynamisOmegaLongDist, longDist);
+					}
+					else {
+						s.updateCall(runDynamisOmegaNothing, shortNear);
+					}
+				}
+
 				// T+14s
 
 				// Wait for any of these, since at that point the mechanic is basically locked in
