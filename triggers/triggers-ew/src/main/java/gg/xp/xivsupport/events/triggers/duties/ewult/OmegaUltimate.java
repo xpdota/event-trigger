@@ -1693,7 +1693,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 			(e1, s) -> {
 				log.info("Dynamis Omega Safe Spots: Start");
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8015));
-				s.waitMs(4000);
+				AbilityCastStart bossCleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7B9B, 0x7B9C));
+				boolean sideSafeFirst = bossCleave.abilityIdMatches(0x7B9B);
 				XivCombatant firstM;
 				XivCombatant secondM;
 				XivCombatant firstF;
@@ -1732,8 +1733,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					If F out M in : go M MID
 					If F in  M in : go M CLOSE
 				 */
-				ArenaSector firstMcard = omegaEW.forCombatant(firstM);
-				ArenaSector secondMcard = omegaNS.forCombatant(secondM);
+				ArenaSector firstMcard = (sideSafeFirst ? omegaEW : omegaNS).forCombatant(firstM);
+				ArenaSector secondMcard = (sideSafeFirst ? omegaNS : omegaEW).forCombatant(secondM);
 				// This is how far on the "male" cardinal to go
 				// 0 = close, 1 = mid, 2 = far, -1 = close on F side
 				int firstDist = firstFin ? (firstMin ? 0 : -1) : (firstMin ? 1 : 2);
