@@ -99,5 +99,13 @@ public interface XivState extends SubState {
 				.orElse(null);
 	}
 
+	default List<XivCombatant> npcsById(long id) {
+		return getCombatantsListCopy()
+				.stream()
+				.filter(cbt -> cbt.npcIdMatches(id))
+				.sorted(Comparator.comparing(XivCombatant::getId))
+				.toList();
+	}
+
 	void provideTransformation(long entityId, short transformationId);
 }

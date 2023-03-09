@@ -403,6 +403,24 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
+	public @Nullable XivCombatant npcById(long id) {
+		return combatantCache.values()
+				.stream()
+				.filter(cbt -> cbt.npcIdMatches(id))
+				.min(Comparator.comparing(XivCombatant::getId))
+				.orElse(null);
+	}
+
+	@Override
+	public List<XivCombatant> npcsById(long id) {
+		return combatantCache.values()
+				.stream()
+				.filter(cbt -> cbt.npcIdMatches(id))
+				.sorted(Comparator.comparing(XivCombatant::getId))
+				.toList();
+	}
+
+	@Override
 	public int getPartySlotOf(XivEntity entity) {
 		List<XivPlayerCharacter> partyList = getPartyList();
 		return IntStream.range(0, partyList.size())

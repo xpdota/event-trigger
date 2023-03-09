@@ -116,8 +116,10 @@ public class TopTest extends CalloutVerificationTest {
 				call(655840, "Marker on You and Buddy", "Marker on You and Buddy"),
 				call(664960, "Knockback - Circle, far from DRK Player", "Knockback - Circle, far from DRK Player (12.7)"),
 				call(677487, "One Stack", "One Stack"),
+				call(681777, "Counter-Clockwise"),
 				call(727298, "Raidwide", "Raidwide (4.7)"),
 				call(735484, "Long Distant", "Long Distant (49.9)"),
+				call(757865, "Long Distant", "Long Distant (27.5)"),
 				call(769984, "Long Distant", "Long Distant (15.4)"),
 				call(810679, "Raidwide and Knockback", "Raidwide and Knockback (9.7)"),
 				// P6

@@ -300,8 +300,7 @@ public class GuiMain {
 		// TODO: move this external somewhere
 		// TODO: figure out why this text is reporting its minimum height as 5000-something and messing up the layout
 		ReadOnlyText text = new ReadOnlyText("""
-				New: On the Events tab, you can choose between "Local Time" and "Relative to Selection". The latter will display timestamps relative to the selected event. 
-				You can drag-and-drop to rearrange easy trigger actions. There is also a "Wait" action if you need something to be delayed. 
+				Patch 6.35 uses TCP Oodle compression once again. This means you'll need to start ACT before logging into your character.
 				Press Ctrl-G, then type the name of a tab, plugin, or duty to navigate directly to it."""
 		);
 		panel.add(text, c);

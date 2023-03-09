@@ -4,6 +4,7 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
+import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -21,6 +22,7 @@ import java.io.Serial;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,6 +47,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	private volatile boolean die;
 	private volatile boolean cycleProcessingTimeExceeded;
 	private volatile @Nullable Predicate<X> filter;
+	private final Map<String, Object> params = new LinkedHashMap<>();
 
 	// To be called from external thread
 	public SequentialTriggerController(EventContext initialEventContext, X initialEvent, BiConsumer<X, SequentialTriggerController<X>> triggerCode, int timeout) {
@@ -158,6 +161,92 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 		lastCall = call;
 		accept(call);
+	}
+
+	/**
+	 * Retrives current callout params. Set new values using {@link #setParam(String, Object)}
+	 *
+	 * @return The current callout parameters map
+	 */
+	public Map<String, Object> getParams() {
+		return new HashMap<>(params);
+	}
+
+	/**
+	 * Sets a parameter which will be passed into ModifiableCallout instances in {@link #call} or {@link #updateCall}.
+	 *
+	 * @param name  The param/variable name
+	 * @param value The value
+	 */
+	public void setParam(String name, Object value) {
+		params.put(name, value);
+	}
+//
+//	/**
+//	 * Sets a parameter which will be passed into ModifiableCallout instances in {@link #call} or {@link #updateCall}.
+//	 * This version uses a supplier rather than a concrete value, and the value is re-evaluated every time
+//	 * {@link #getParams()} is called (including when 'call' or 'updateCall' is used).
+//	 *
+//	 * @param name  The param/variable name
+//	 * @param value The value supplier
+//	 */
+//	public void setParam(String name, Supplier<? extends Object> value) {
+//		TODO: not done
+//		params.put(name, value);
+//	}
+
+	/**
+	 * Replace the last call used with updateCall (if any) with this one. Automatically handles parameters set with
+	 * {@link #setParam(String, Object)}. Equivalent to calling {@code updateCall(call.getModified(getParams())}.
+	 * <p>
+	 * This particular version does not take an event. See {@link #updateCall(ModifiableCallout, Object)} if you are
+	 * supplying an event.
+	 *
+	 * @param call The callout
+	 */
+	public void updateCall(ModifiableCallout<?> call) {
+		updateCall(call.getModified(getParams()));
+	}
+
+	/**
+	 * Replace the last call used with updateCall (if any) with this one. Automatically handles parameters set with
+	 * {@link #setParam(String, Object)}. Equivalent to calling {@code updateCall(call.getModified(event, getParams())}.
+	 * <p>
+	 * This particular version takes an event. See {@link #updateCall(ModifiableCallout)} if you are
+	 * NOT supplying an event.
+	 *
+	 * @param call The callout
+	 */
+	public <C> void updateCall(ModifiableCallout<C> call, C event) {
+		updateCall(call.getModified(event, getParams()));
+	}
+
+	/**
+	 * Trigger a callout. Does not replace nor is replaced by any other call unless explicitly done by your code.
+	 * Automatically handles parameters set with {@link #setParam(String, Object)}.
+	 * Equivalent to calling {@code accept(call.getModified(getParams())}.
+	 * <p>
+	 * This particular version does NOT take an event. See {@link #call(ModifiableCallout, Object)} if you are
+	 * supplying an event.
+	 *
+	 * @param call The callout
+	 */
+	public void call(ModifiableCallout<?> call) {
+		accept(call.getModified(getParams()));
+	}
+
+	/**
+	 * Trigger a callout. Does not replace nor is replaced by any other call unless explicitly done by your code.
+	 * Automatically handles parameters set with {@link #setParam(String, Object)}.
+	 * Equivalent to calling {@code accept(call.getModified(getParams())}.
+	 * <p>
+	 * This particular version takes an event. See {@link #call(ModifiableCallout)} if you are
+	 * NOT supplying an event.
+	 *
+	 * @param call The callout
+	 */
+	public <C> void call(ModifiableCallout<C> call, C event) {
+		accept(call.getModified(event, getParams()));
 	}
 
 	/**
