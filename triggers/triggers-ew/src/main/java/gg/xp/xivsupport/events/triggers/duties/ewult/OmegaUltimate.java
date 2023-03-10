@@ -1684,7 +1684,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private final ModifiableCallout<AbilityCastStart> runDynamisOmega = ModifiableCallout.<AbilityCastStart>durationBasedCall("Run Dynamis Omega", "Raidwide");
 
-	private final ModifiableCallout<?> runDynamisOmegaDodge = new ModifiableCallout<>("Run Dynamis Omega Safe Spots", "{['Close', 'Mid', 'Far'][dist1]} {dir1} then {['Close', 'Mid', 'Far'][dist2]} {dir2}");
+	private final ModifiableCallout<?> runDynamisOmegaDodge = new ModifiableCallout<>("Run Dynamis Omega Safe Spots", "{['Close', 'Mid', 'Far'][dist1]} {dir1} then {['Close', 'Mid', 'Far'][dist2]} {dir2}", 15_000);
 	private final ModifiableCallout<?> runDynamisOmegaDodgeFollowup = new ModifiableCallout<>("Run Dynamis Omega Safe Spots Second Call", "{['Close', 'Mid', 'Far'][dist2]} {dir2}");
 
 	@SuppressWarnings({"SpellCheckingInspection"})
