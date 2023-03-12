@@ -118,6 +118,7 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		return this;
 	}
 
+	@JsonIgnore
 	default String toTextFormat() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(fmtDouble(time())).append(' ');
@@ -147,6 +148,7 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		return sb.toString();
 	}
 
+	@JsonIgnore
 	default Stream<String> makeTriggerTimelineEntries() {
 		if (!callout()) {
 			return Stream.empty();
@@ -157,20 +159,24 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		return Stream.of(hideAllLine, actualTimelineLine);
 	}
 
+	@JsonIgnore
 	default Stream<String> getAllTextEntries() {
 		return Stream.concat(Stream.of(toTextFormat()), makeTriggerTimelineEntries());
 	}
 
+	@JsonIgnore
 	private static String fmtDouble(double dbl) {
 		// Use US locale to force period as the decimal separator
 		return String.format(Locale.US, "%.01f", dbl);
 	}
 
+	@JsonIgnore
 	private String makeUniqueName() {
 		// And then use DE here to use a comma instead since . is special in regex
 		return String.format(Locale.GERMANY, "timeline-trig@%.02f", time());
 	}
 
+	@JsonIgnore
 	private String callTextForExport() {
 		String callText = name();
 		if (callText == null) {
@@ -179,6 +185,7 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		return callText.replaceAll("\"", "'");
 	}
 
+	@JsonIgnore
 	default @Nullable String makeTriggerJs() {
 		if (!callout()) {
 			return null;
