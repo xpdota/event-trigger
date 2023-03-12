@@ -17,6 +17,7 @@ import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
@@ -33,6 +34,7 @@ import gg.xp.xivsupport.timelines.TimelineManager;
 import gg.xp.xivsupport.timelines.TimelineOverlay;
 import gg.xp.xivsupport.timelines.TimelineProcessor;
 import gg.xp.xivsupport.timelines.TranslatedTextFileEntry;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,17 +42,24 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
 import java.io.Serial;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EventObject;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
@@ -443,12 +452,91 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					resetAll();
 				}
 			});
+			JButton exportButton = new JButton("Export Timeline File");
+			exportButton.addActionListener(l -> {
+				exportCurrent();
+			});
+			JButton chooseDirButton = new JButton("Change Cactbot User Dir");
+			chooseDirButton.addActionListener(l -> {
+				chooseCactbotUserDir();
+			});
 			JPanel buttonPanel = new JPanel(new WrapLayout());
 			buttonPanel.add(newButton);
 			buttonPanel.add(resetButton);
+			buttonPanel.add(exportButton);
+			buttonPanel.add(chooseDirButton);
 
 			this.add(buttonPanel, c);
 		});
+	}
+
+	private void exportCurrent() {
+		Long zoneId = currentZone;
+		TimelineInfo info = backend.getInfoForZone(zoneId);
+		if (info == null) {
+			log.error("TimelineInfo was null for zoneId {}", zoneId);
+			return;
+		}
+
+		// TODO: find a better home for this code
+		String exportedTxt = timelineEntries.stream()
+				.flatMap(TimelineEntry::getAllTextEntries)
+				.collect(Collectors.joining("\n", """
+								# Timeline exported from Triggevent
+								""",
+						""));
+
+		String triggersText = timelineEntries.stream()
+				.map(TimelineEntry::makeTriggerJs)
+				.filter(Objects::nonNull)
+				.collect(Collectors.joining("\n"));
+
+		String exportedJs = String.format("""
+						Options.Triggers.push({
+							zoneId: %s,
+							overrideTimelineFile: true,
+							timelineFile: '%s',
+							timelineTriggers: [
+						%s
+							]
+						});
+						""", zoneId, info.filename(), triggersText);
+
+		File cbDir = backend.cactbotDirSetting().get();
+		if (!cbDir.exists() || !cbDir.isDirectory()) {
+			JOptionPane.showMessageDialog(this, "The chosen Cactbot user directory (%s) does not exist. You may need to change it using the 'Change Cactbot User Dir' button.".formatted(cbDir), "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		Path rbDir = cbDir.toPath().resolve("raidboss");
+		rbDir.toFile().mkdirs();
+		File tlFile = rbDir.resolve(info.filename()).toFile();
+		File jsFile = rbDir.resolve(info.filename() + ".js").toFile();
+		try {
+			FileUtils.writeStringToFile(tlFile, exportedTxt, StandardCharsets.UTF_8);
+			FileUtils.writeStringToFile(jsFile, exportedJs, StandardCharsets.UTF_8);
+			JOptionPane.showMessageDialog(this, "Successfully exported file(s): \n" + tlFile + '\n' + jsFile);
+		}
+		catch (IOException e) {
+			log.error("Error saving timeline", e);
+			JOptionPane.showMessageDialog(this, "Error saving timeline, check log. Did you choose your Cactbot user dir already?", "Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private void chooseCactbotUserDir() {
+		File startIn = backend.cactbotDirSetting().get();
+		if (!startIn.exists() || !startIn.isDirectory()) {
+			startIn = Path.of(System.getenv("APPDATA"), "Advanced Combat Tracker", "Plugins").toFile();
+		}
+		JFileChooser fileChooser = new JFileChooser(startIn);
+		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		fileChooser.setPreferredSize(new Dimension(800, 600));
+		fileChooser.showDialog(this, "Choose File");
+
+		File file = fileChooser.getSelectedFile();
+		// null if the user cancelled out of the dialog
+		if (file != null) {
+			backend.cactbotDirSetting().set(file);
+		}
 	}
 
 	private void commitSettings() {

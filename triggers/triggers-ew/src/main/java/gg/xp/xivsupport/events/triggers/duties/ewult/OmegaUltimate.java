@@ -299,10 +299,28 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				DynamisSigmaAssignment.OneStack4, MarkerSign.BIND1,
 				DynamisSigmaAssignment.Remaining1, MarkerSign.BIND2,
 				DynamisSigmaAssignment.Remaining2, MarkerSign.BIND3
+		)).addPreset("Sausage Strat", Map.of(
+				DynamisSigmaAssignment.NearWorld, MarkerSign.TRIANGLE,
+				DynamisSigmaAssignment.DistantWorld, MarkerSign.CROSS,
+				DynamisSigmaAssignment.OneStack1, MarkerSign.BIND1,
+				DynamisSigmaAssignment.OneStack2, MarkerSign.BIND2,
+				DynamisSigmaAssignment.OneStack3, MarkerSign.ATTACK1,
+				DynamisSigmaAssignment.OneStack4, MarkerSign.ATTACK2,
+				DynamisSigmaAssignment.Remaining1, MarkerSign.ATTACK3,
+				DynamisSigmaAssignment.Remaining2, MarkerSign.ATTACK4
 		));
 		omegaAmSettings = new MultiSlotAutomarkSetting<>(pers, settingKeyBase + "groupsPrio.omega-am-settings", DynamisOmegaAssignment.class, Map.of(
 				DynamisOmegaAssignment.NearWorld, MarkerSign.IGNORE1,
 				DynamisOmegaAssignment.DistantWorld, MarkerSign.IGNORE2,
+				DynamisOmegaAssignment.Baiter1, MarkerSign.ATTACK1,
+				DynamisOmegaAssignment.Baiter2, MarkerSign.ATTACK2,
+				DynamisOmegaAssignment.Baiter3, MarkerSign.ATTACK3,
+				DynamisOmegaAssignment.Baiter4, MarkerSign.ATTACK4,
+				DynamisOmegaAssignment.Remaining1, MarkerSign.BIND1,
+				DynamisOmegaAssignment.Remaining2, MarkerSign.BIND2
+		)).addPreset("Sausage Strat", Map.of(
+				DynamisOmegaAssignment.NearWorld, MarkerSign.TRIANGLE,
+				DynamisOmegaAssignment.DistantWorld, MarkerSign.CROSS,
 				DynamisOmegaAssignment.Baiter1, MarkerSign.ATTACK1,
 				DynamisOmegaAssignment.Baiter2, MarkerSign.ATTACK2,
 				DynamisOmegaAssignment.Baiter3, MarkerSign.ATTACK3,
