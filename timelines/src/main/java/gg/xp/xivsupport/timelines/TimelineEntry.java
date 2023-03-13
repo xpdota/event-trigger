@@ -121,6 +121,10 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 	@JsonIgnore
 	default String toTextFormat() {
 		StringBuilder sb = new StringBuilder();
+		if (!enabled()) {
+			// If disabled, just comment out the line
+			sb.append("# ");
+		}
 		sb.append(fmtDouble(time())).append(' ');
 		String name = name();
 		if (name == null || name.isEmpty()) {
@@ -150,7 +154,7 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 
 	@JsonIgnore
 	default Stream<String> makeTriggerTimelineEntries() {
-		if (!callout()) {
+		if (!enabled() || !callout()) {
 			return Stream.empty();
 		}
 		String uniqueName = makeUniqueName();

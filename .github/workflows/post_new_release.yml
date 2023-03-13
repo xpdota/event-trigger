@@ -25,6 +25,10 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Set git to use LF instead of CRLF
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
       - uses: actions/checkout@v2
         with:
           ref: stable
@@ -36,7 +40,7 @@ jobs:
       - name: Build with Maven
         #run: JAVA_HOME=$JAVA_HOME_17_X64 mvn -T3 clean install
         # TODO: make sure this runs with the correct java
-        run: mvn -T1 clean install -Dsurefire.threadcount=1
+        run: mvn -T1 clean install '-Dsurefire.threadcount=1'
 
       - name: Copy artifacts
         run: mv launcher/target/*.zip ./
