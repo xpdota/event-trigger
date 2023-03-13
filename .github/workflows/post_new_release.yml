@@ -25,6 +25,10 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Set git to use LF instead of CRLF
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
       - uses: actions/checkout@v2
         with:
           ref: stable
