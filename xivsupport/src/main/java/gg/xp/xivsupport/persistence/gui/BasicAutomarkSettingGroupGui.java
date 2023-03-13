@@ -3,10 +3,14 @@ package gg.xp.xivsupport.persistence.gui;
 import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
+import gg.xp.xivsupport.persistence.settings.AutomarkSetting;
+import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkPreset;
 import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Class for quickly building a panel that contains many constituent auto mark assignment settings
@@ -35,8 +39,11 @@ public class BasicAutomarkSettingGroupGui<X extends Enum<X>> extends TitleBorder
 		mc.ipadx = 5;
 		mc.gridy = 0;
 //		mc.anchor = GridBagConstraints.EAST;
+		int maxY = 0;
 
-		bigSetting.getSettings().forEach((enumMember, setting) -> {
+		for (var entry : bigSetting.getSettings().entrySet()) {
+			X enumMember = entry.getKey();
+			AutomarkSetting setting = entry.getValue();
 			String name = enumMember instanceof HasFriendlyName hfn ? hfn.getFriendlyName() : enumMember.name();
 			JPanel settingComp = new AutomarkSettingGui(setting, name).getCombinedLeftPad();
 			int ord = enumMember.ordinal();
@@ -51,7 +58,38 @@ public class BasicAutomarkSettingGroupGui<X extends Enum<X>> extends TitleBorder
 //			add(label, mc);
 //			mc.gridx++;
 			add(settingComp, mc);
+			maxY = Math.max(maxY, mc.gridy);
+		}
+
+		mc.gridx = 0;
+		mc.gridy = maxY + 1;
+		mc.gridwidth = GridBagConstraints.REMAINDER;
+		List<MultiSlotAutomarkPreset<X>> presets = bigSetting.getPresets();
+		Object[] presetArray = new Object[presets.size() + 1];
+		String dummyPreset = "Choose a Preset...";
+		presetArray[0] = dummyPreset;
+		for (int i = 0; i < presets.size(); i++) {
+			presetArray[i + 1] = presets.get(i);
+		}
+		JComboBox<Object> cb = new JComboBox<>(presetArray);
+		cb.setRenderer(new DefaultListCellRenderer() {
+			@Override
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				if (value instanceof MultiSlotAutomarkPreset<?> preset) {
+					return super.getListCellRendererComponent(list, preset.getName(), index, isSelected, cellHasFocus);
+				}
+				return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+			}
 		});
+		cb.addItemListener(l -> {
+			Object sel = cb.getSelectedItem();
+			if (sel instanceof MultiSlotAutomarkPreset<?> preset) {
+				bigSetting.applyPreset((MultiSlotAutomarkPreset<X>) preset);
+				cb.setSelectedItem(dummyPreset);
+				repaint();
+			}
+		});
+		add(cb, mc);
 		bigSetting.addListener(this::repaint);
 	}
 

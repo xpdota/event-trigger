@@ -4,8 +4,10 @@ import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 public class MultiSlotAutomarkSetting<X extends Enum<X>> extends ObservableSetting {
@@ -13,6 +15,7 @@ public class MultiSlotAutomarkSetting<X extends Enum<X>> extends ObservableSetti
 	private final BooleanSetting touched;
 	private final Map<X, AutomarkSetting> settings;
 	private final Class<X> enumCls;
+	private final List<MultiSlotAutomarkPreset<X>> presets = new ArrayList<>();
 
 	public MultiSlotAutomarkSetting(PersistenceProvider pers, String settingKeyBase, Class<X> enumCls, Map<X, MarkerSign> defaults) {
 		touched = new BooleanSetting(pers, settingKeyBase, false);
@@ -37,6 +40,7 @@ public class MultiSlotAutomarkSetting<X extends Enum<X>> extends ObservableSetti
 			settings.put(member, setting);
 		}
 		this.enumCls = enumCls;
+		presets.add(new MultiSlotAutomarkPreset<>("Defaults", defaults));
 	}
 
 	public Class<X> getEnumCls() {
@@ -65,6 +69,30 @@ public class MultiSlotAutomarkSetting<X extends Enum<X>> extends ObservableSetti
 			EnumSetting<MarkerSign> thatSetting = v.getWhichMark();
 			if (thatSetting.isSet() && !thisSetting.isSet()) {
 				thisSetting.set(thatSetting.get());
+			}
+		});
+	}
+
+	public MultiSlotAutomarkSetting<X> addPreset(String label, Map<X, MarkerSign> presetData) {
+		presets.add(new MultiSlotAutomarkPreset<>(label, presetData));
+		return this;
+	}
+
+	public List<MultiSlotAutomarkPreset<X>> getPresets() {
+		return Collections.unmodifiableList(presets);
+	}
+
+	public void applyPreset(MultiSlotAutomarkPreset<X> preset) {
+		Map<X, MarkerSign> pd = preset.getPresetData();
+		getSettings().forEach((k, v) -> {
+			MarkerSign markerSignFromPreset = pd.get(k);
+			// TODO: if loading defaults, un-set settings instead
+			if (markerSignFromPreset == null) {
+				v.getEnabled().set(false);
+			}
+			else {
+				v.getEnabled().set(true);
+				v.getWhichMark().set(markerSignFromPreset);
 			}
 		});
 	}

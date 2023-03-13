@@ -13,7 +13,7 @@ public class AutomarkSettingGui {
 	private final JCheckBox enabler;
 
 	public AutomarkSettingGui(AutomarkSetting setting, @Nullable String label) {
-		picker = new EnumSettingGui<>(setting.getWhichMark(), null, () -> setting.getEnabled().get()).getComboBoxOnly();
+		picker = new EnumSettingGui<>(setting.getWhichMark(), null, () -> setting.getEnabled().get(), true).getComboBoxOnly();
 		enabler = new BooleanSettingGui(setting.getEnabled(), label).getComponent();
 		enabler.setHorizontalTextPosition(SwingConstants.LEFT);
 		setting.addListener(picker::updateUI);
