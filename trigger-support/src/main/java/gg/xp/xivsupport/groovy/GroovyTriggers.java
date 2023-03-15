@@ -9,9 +9,11 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.callouts.CalloutTrackingKey;
+import gg.xp.xivsupport.callouts.SingleValueReplacement;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
+import gg.xp.xivsupport.groovy.helpers.CustomGString;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -44,9 +46,11 @@ public class GroovyTriggers {
 
 	private static final Logger log = LoggerFactory.getLogger(GroovyTriggers.class);
 	private final GroovySandbox sandbox;
+	private final SingleValueReplacement svr;
 
-	public GroovyTriggers(GroovyManager manager) {
+	public GroovyTriggers(GroovyManager manager, SingleValueReplacement svr) {
 		this.sandbox = manager.getSandbox();
+		this.svr = svr;
 	}
 
 	private record InternalEventHandler<X extends Event>(
@@ -302,19 +306,26 @@ public class GroovyTriggers {
 			this.last = last;
 		}
 
+		private Supplier<String> convertGs(GString string) {
+			GString modified = CustomGString.of(string.getValues(), string.getStrings(), svr::singleReplacement);
+			return modified::toString;
+		}
+
 		public GroovyCalloutBuilder tts(String tts) {
 			this.tts = tts;
 			return this;
 		}
 
-		public GroovyCalloutBuilder text(String text) {
-			this.text = () -> text;
-			return this;
+		public GroovyCalloutBuilder tts(Supplier<String> tts) {
+			return tts(tts.get());
 		}
 
-		public GroovyCalloutBuilder text(GString text) {
-			this.text = text::toString;
-			return this;
+		public GroovyCalloutBuilder tts(GString tts) {
+			return tts(convertGs(tts).get());
+		}
+
+		public GroovyCalloutBuilder text(String text) {
+			return text(() -> text);
 		}
 
 		public GroovyCalloutBuilder text(Supplier<String> text) {
@@ -322,7 +333,23 @@ public class GroovyTriggers {
 			return this;
 		}
 
+		public GroovyCalloutBuilder text(GString text) {
+			return text(convertGs(text));
+		}
+
 		public GroovyCalloutBuilder both(String both) {
+			tts(both);
+			text(both);
+			return this;
+		}
+
+		public GroovyCalloutBuilder both(Supplier<String> both) {
+			tts(both);
+			text(both);
+			return this;
+		}
+
+		public GroovyCalloutBuilder both(GString both) {
 			tts(both);
 			text(both);
 			return this;
