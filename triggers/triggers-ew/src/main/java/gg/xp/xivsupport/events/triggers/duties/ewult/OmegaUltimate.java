@@ -1529,6 +1529,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 								case 394 -> PsMarkerGroup.GROUP1_TRIANGLE;
 								case 395 -> PsMarkerGroup.GROUP1_SQUARE;
 								case 396 -> PsMarkerGroup.GROUP1_X;
+								// TODO: make this not stop the rest
 								default -> throw new IllegalArgumentException("Unknown marker");
 							});
 							// Doing it like this so that it doesn't break if you're missing a player
@@ -2038,8 +2039,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					s.updateCall(exasquareA_1);
 					for (ModifiableCallout<?> call : List.of(exasquareA_2, exasquareA_3, exasquareA_4, exasquareA_5, exasquareA_6, exasquareA_7)) {
 						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BA3, 0x7BA4));
-						s.waitMs(100);
 						s.updateCall(call);
+						s.waitMs(500);
 					}
 				}
 				else if (count == 4) {
@@ -2047,8 +2048,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					s.updateCall(exasquareB_1);
 					for (ModifiableCallout<?> call : List.of(exasquareB_2, exasquareB_3, exasquareB_4, exasquareB_5, exasquareB_6)) {
 						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BA3, 0x7BA4));
-						s.waitMs(100);
 						s.updateCall(call);
+						s.waitMs(500);
 					}
 				}
 				else {
