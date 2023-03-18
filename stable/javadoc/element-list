@@ -82,6 +82,7 @@ gg.xp.xivsupport.events.ws
 gg.xp.xivsupport.eventstorage
 gg.xp.xivsupport.gameversion
 gg.xp.xivsupport.groovy
+gg.xp.xivsupport.groovy.helpers
 gg.xp.xivsupport.gui
 gg.xp.xivsupport.gui.addonmgr
 gg.xp.xivsupport.gui.components
