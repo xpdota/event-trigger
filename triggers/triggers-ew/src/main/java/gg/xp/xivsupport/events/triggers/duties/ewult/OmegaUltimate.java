@@ -1992,12 +1992,6 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@NpcCastCallout(0x7BA6)
 	private final ModifiableCallout<AbilityCastStart> cosmoDive = ModifiableCallout.durationBasedCall("Cosmo Dive", "{state.player.job.tank ? \"Close for Buster\" : \"Party Stack\"}");
 
-	// TODO: should be pretty easy to call starting spot
-	// TODO: call puddle number like DSR meteor
-	// TODO: should coordinate with Cosmo Dive call
-	@NpcCastCallout(0x7BAC)
-	private final ModifiableCallout<AbilityCastStart> unlimitedWaveCannon = ModifiableCallout.durationBasedCall("Unlimited Wave Cannon", "Exaflares");
-
 	@NpcCastCallout(0x7BA2)
 	private final ModifiableCallout<AbilityCastStart> cosmoArrow = ModifiableCallout.<AbilityCastStart>durationBasedCall("Cosmo Arrow", "Exasquares")
 			.extendedDescription("""
@@ -2072,6 +2066,35 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				s.waitMs(300);
 				AbilityUsedEvent secondHit = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x7BAB));
 				s.updateCall(waveCannonP6Stack, e1);
+			});
+
+	// TODO: call puddle number like DSR meteor
+	// TODO: should coordinate with Cosmo Dive call
+	@NpcCastCallout(0x7BAC)
+	private final ModifiableCallout<AbilityCastStart> unlimitedWaveCannon = ModifiableCallout.durationBasedCall("Unlimited Wave Cannon", "Exaflares");
+
+	private final ModifiableCallout<AbilityCastStart> exaflareDirection = new ModifiableCallout<>("Exaflare: Start Location/Direction", "Bait Middle, Then {startAt}, Rotate {clockwise ? \"Clockwise\" : \"Counter-Clockwise\"}");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> exaflareDirectionSq = SqtTemplates.sq(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BAD),
+			(e1, s) -> {
+				log.info("Exaflare direction: Start");
+				AbilityCastStart e2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BAD));
+				log.info("Exaflare direction: Got data");
+				s.waitThenRefreshCombatants(200);
+				ArenaSector exa1 = pos.forCombatant(getState().getLatestCombatantData(e1.getSource()));
+				ArenaSector exa2 = pos.forCombatant(getState().getLatestCombatantData(e2.getSource()));
+				int direction = exa1.eighthsTo(exa2);
+				ArenaSector startAt = exa1.plusEighths(-direction);
+				log.info("Exaflare direction debug: {} {} {} {}", exa1, exa2, direction, startAt);
+				s.setParam("exa1", exa1);
+				s.setParam("exa2", exa2);
+				s.setParam("startAt", startAt);
+				s.setParam("clockwise", direction > 0);
+				s.updateCall(exaflareDirection, e2);
+				log.info("Exaflare direction: done, waiting...");
+				// There's four of these, wait so that we block the second "pair" from triggering another callout
+				s.waitMs(10_000);
 			});
 
 	private final ModifiableCallout<AbilityCastStart> cosmoMeteorStart = ModifiableCallout.durationBasedCall("Cosmo Meteor Cast", "Bait Middle then Out");
