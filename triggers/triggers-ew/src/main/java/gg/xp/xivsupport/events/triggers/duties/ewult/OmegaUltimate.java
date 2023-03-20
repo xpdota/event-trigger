@@ -2130,6 +2130,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				s.updateCall(magicNumberDebuff, buff);
 			});
 
+	// TODO: Duration is wrong...fun
 	@NpcCastCallout(0x7BA0)
 	private final ModifiableCallout<AbilityCastStart> p6enrage = ModifiableCallout.durationBasedCall("P6 Enrage", "Enrage");
 
