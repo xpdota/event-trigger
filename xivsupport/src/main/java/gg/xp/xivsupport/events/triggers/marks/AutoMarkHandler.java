@@ -36,6 +36,7 @@ public class AutoMarkHandler {
 		this.state = state;
 	}
 
+	@Deprecated
 	public BooleanSetting getUseTelesto() {
 		return useTelesto;
 	}
