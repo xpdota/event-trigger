@@ -2073,7 +2073,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@NpcCastCallout(0x7BAC)
 	private final ModifiableCallout<AbilityCastStart> unlimitedWaveCannon = ModifiableCallout.durationBasedCall("Unlimited Wave Cannon", "Exaflares");
 
-	private final ModifiableCallout<AbilityCastStart> exaflareDirection = new ModifiableCallout<>("Exaflare: Start Location/Direction", "Bait Middle, Then {startAt}, Rotate {clockwise ? \"Clockwise\" : \"Counter-Clockwise\"}");
+	private final ModifiableCallout<AbilityCastStart> exaflareDirection = new ModifiableCallout<>("Exaflare: Start Location/Direction", "Bait Middle, Then {startAt}, Rotate {clockwise ? \"Clockwise\" : \"Counter-Clockwise\"}", 10_000);
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> exaflareDirectionSq = SqtTemplates.sq(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x7BAD),

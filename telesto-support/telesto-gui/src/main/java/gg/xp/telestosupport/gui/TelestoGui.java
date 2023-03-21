@@ -16,6 +16,7 @@ import gg.xp.xivsupport.events.misc.EchoEvent;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.tabs.TabAware;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -76,7 +77,7 @@ public class TelestoGui implements PluginTab {
 			});
 			testPanel.add(test);
 			scroll = new JScrollPane(label);
-			scroll.setPreferredSize(new Dimension(400, 400));
+			scroll.setPreferredSize(new Dimension(400, 300));
 //			testPanel.add(scroll);
 			Dimension pref = testPanel.getPreferredSize();
 			Dimension newPref = new Dimension(pref.width + 40, pref.height);
@@ -122,9 +123,18 @@ public class TelestoGui implements PluginTab {
 			delayPanel.add(new IntSettingSpinner(backend.getCommandDelayPlus(), "").getSpinnerOnly());
 			delayPanel.add(new JLabel("ms."));
 		}
+		Component portWarning = new ReadOnlyText("""
+				Note: The default Telesto port falls into the
+				ephemeral port range. This means other applications
+				might unknowingly use it, preventing Telesto from
+				working.
+								
+				To prevent this, change your Telesto to a port between
+				1025 and 49151, and change the Telesto URL
+				in Triggevent accordingly.""");
 
 
-		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, scroll, testPanel, partyListCb, rightClicksCb, doodleCb, doodleAddonCb, delayPanel);
+		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, scroll, testPanel, partyListCb, rightClicksCb, doodleCb, doodleAddonCb, delayPanel, portWarning);
 
 		return outer;
 	}
