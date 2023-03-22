@@ -3,10 +3,12 @@ package gg.xp.postnamazu;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.HttpURISetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +22,7 @@ import java.net.http.HttpResponse;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class PnMain {
+public class PnMain implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(PnMain.class);
 	// Being used as a queue
 	private static final ExecutorService cmdQueue = Executors.newSingleThreadExecutor();
@@ -52,6 +54,11 @@ public class PnMain {
 		catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@HandleEvents
+	public void pnGameCmd(EventContext context, PnGameCommand pgc) {
+		context.accept(new PnOutgoingMessage("command", pgc.getCommand()));
 	}
 
 	@HandleEvents
@@ -107,7 +114,7 @@ public class PnMain {
 	public HttpResponse<String> sendMessageDirectly(String command, Object payload) {
 		String body;
 		try {
-			body = mapper.writeValueAsString(payload);
+			body = payload instanceof String sp ? sp : mapper.writeValueAsString(payload);
 			HttpResponse<String> response = http.send(
 					HttpRequest
 							.newBuilder(uriSetting.get().resolve(command))
@@ -123,5 +130,10 @@ public class PnMain {
 		catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public boolean enabled(EventContext context) {
+		return pls.getLogSource() == KnownLogSource.WEBSOCKET_LIVE;
 	}
 }

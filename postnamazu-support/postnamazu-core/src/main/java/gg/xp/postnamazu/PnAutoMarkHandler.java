@@ -5,26 +5,49 @@ import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.services.ServiceDescriptor;
 import gg.xp.services.ServiceHandle;
+import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.playermarkers.PlayerMarkerRepository;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkLanguage;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.AutoMarkServiceSelector;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
+import gg.xp.xivsupport.models.XivCombatant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.*;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.ATTACK1;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.ATTACK2;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.ATTACK3;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.ATTACK4;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.ATTACK5;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.BIND1;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.BIND2;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.BIND3;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.CLEAR;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.IGNORE1;
+import static gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign.IGNORE2;
 
 public class PnAutoMarkHandler implements FilteredEventHandler {
 
+	private static final Logger log = LoggerFactory.getLogger(PnAutoMarkHandler.class);
 	private final ServiceHandle pn;
+	private final XivState state;
+	private final AutoMarkHandler amh;
+	private final PlayerMarkerRepository pmr;
 	private int atkCounter;
 	private int ignCounter;
 	private int bindCounter;
 
-	public PnAutoMarkHandler(AutoMarkServiceSelector serv) {
+	public PnAutoMarkHandler(AutoMarkServiceSelector serv, XivState state, AutoMarkHandler amh, PlayerMarkerRepository pmr) {
 		pn = serv.register(ServiceDescriptor.of("postnamazu", "PostNamazu (Requires ACT Plugin)", 11));
+		this.state = state;
+		this.amh = amh;
+		this.pmr = pmr;
 	}
 
 	@HandleEvents(order = -10_000)
@@ -33,12 +56,23 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 			return;
 		}
 		MarkerSign mark = amr.getMarker();
+		XivCombatant target = amr.getTarget();
 		if (mark == CLEAR) {
-			context.accept(new PnOutgoingMessage("mark", Map.of(
-							"ActorID", amr.getTarget().getId(),
-							"MarkType", 0
-					))
-			);
+			MarkerSign existingMarker = pmr.signOnCombatant(target);
+			if (existingMarker != null) {
+				context.accept(new PnOutgoingMessage("mark", Map.of(
+								// Yes, this is E00_0000 rather than E000_0000
+								"ActorID", 0xE00_0000,
+								"MarkType", existingMarker.getCommand(AutoMarkLanguage.EN)
+						))
+				);
+			}
+//			int slot = state.getPartySlotOf(target);
+//			if (slot < 0) {
+//				log.error("Could not resolve {}:{} to party slot", Long.toString(target.getId(), 16).toUpperCase(Locale.ROOT), target.getName());
+//				return;
+//			}
+//			context.accept(new PnGameCommand("/mk %s <%s>".formatted(mark.getCommand(amh.getEffectiveLanguage()), slot + 1)));
 		}
 		else {
 			MarkerSign markerToPlace = switch (mark) {
@@ -48,7 +82,7 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 				default -> mark;
 			};
 			context.accept(new PnOutgoingMessage("mark", Map.of(
-							"ActorID", amr.getTarget().getId(),
+							"ActorID", target.getId(),
 							"MarkType", markerToPlace.getCommand(AutoMarkLanguage.EN)
 					))
 			);

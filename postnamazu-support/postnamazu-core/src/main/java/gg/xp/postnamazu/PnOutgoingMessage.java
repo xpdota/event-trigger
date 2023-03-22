@@ -3,8 +3,12 @@ package gg.xp.postnamazu;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 
+import java.io.Serial;
+
 public class PnOutgoingMessage extends BaseEvent implements HasPrimaryValue {
 
+	@Serial
+	private static final long serialVersionUID = 5779519876994337089L;
 	private final String command;
 	private final Object payload;
 
@@ -25,4 +29,5 @@ public class PnOutgoingMessage extends BaseEvent implements HasPrimaryValue {
 	public String getPrimaryValue() {
 		return String.format("%s: %s", command, payload);
 	}
+
 }

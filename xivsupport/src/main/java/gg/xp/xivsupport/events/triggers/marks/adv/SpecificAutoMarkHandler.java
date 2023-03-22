@@ -5,7 +5,6 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
-import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,16 +25,22 @@ public class SpecificAutoMarkHandler {
 	@HandleEvents
 	public void amTest(EventContext context, DebugCommand event) {
 		if (event.getCommand().equals("samtest")) {
-
 			List<String> args = event.getArgs();
 			if (args.size() != 3) {
 				log.error("Wrong number of arguments. Syntax: samtest MARKER_TYPE PARTY_SLOT");
 				return;
 			}
-
 			int slot = Integer.parseInt(args.get(2));
+			XivPlayerCharacter playerToMark;
+			try {
+				playerToMark = state.getPartyList().get(slot - 1);
+			}
+			catch (IndexOutOfBoundsException e) {
+				log.error("Tried to mark slot {} but there were only {} party members.", slot, state.getPartyList().size());
+				return;
+			}
 			MarkerSign marker = MarkerSign.of(args.get(1));
-			context.accept(new SpecificAutoMarkSlotRequest(slot, marker));
+			context.accept(new SpecificAutoMarkRequest(playerToMark, marker));
 		}
 	}
 
