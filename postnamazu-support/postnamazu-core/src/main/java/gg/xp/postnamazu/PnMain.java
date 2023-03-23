@@ -136,4 +136,28 @@ public class PnMain implements FilteredEventHandler {
 	public boolean enabled(EventContext context) {
 		return pls.getLogSource() == KnownLogSource.WEBSOCKET_LIVE;
 	}
+
+	public IntSetting getAmDelayBase() {
+		return amDelayBase;
+	}
+
+	public IntSetting getAmDelayPlus() {
+		return amDelayPlus;
+	}
+
+	public IntSetting getCmdDelayBase() {
+		return cmdDelayBase;
+	}
+
+	public IntSetting getCmdDelayPlus() {
+		return cmdDelayPlus;
+	}
+
+	public PnStatus getStatus() {
+		return status;
+	}
+
+	public HttpURISetting getUriSetting() {
+		return uriSetting;
+	}
 }

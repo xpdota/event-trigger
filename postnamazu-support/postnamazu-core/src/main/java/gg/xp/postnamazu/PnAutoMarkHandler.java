@@ -60,8 +60,12 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 		if (mark == CLEAR) {
 			MarkerSign existingMarker = pmr.signOnCombatant(target);
 			if (existingMarker != null) {
+				// https://github.com/Natsukage/PostNamazu/issues/32#issuecomment-1478739976
+				// Clearing a mark is done by marking 0xE000000 with the marker you wish to clear.
+				// When you do `/mk clear`, the game does more or less the same logic.
 				context.accept(new PnOutgoingMessage("mark", Map.of(
 								// Yes, this is E00_0000 rather than E000_0000
+								// I don't know why, the resulting packet still shows E000_0000
 								"ActorID", 0xE00_0000,
 								"MarkType", existingMarker.getCommand(AutoMarkLanguage.EN)
 						))

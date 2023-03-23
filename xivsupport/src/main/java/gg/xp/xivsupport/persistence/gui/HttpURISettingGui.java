@@ -2,8 +2,8 @@ package gg.xp.xivsupport.persistence.gui;
 
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
-import gg.xp.xivsupport.persistence.settings.ResetMenuOption;
 import gg.xp.xivsupport.persistence.settings.HttpURISetting;
+import gg.xp.xivsupport.persistence.settings.ResetMenuOption;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,7 +27,7 @@ public class HttpURISettingGui {
 				return uri;
 			}
 			else {
-				throw new IllegalArgumentException("Protocol must be WS or WSS");
+				throw new IllegalArgumentException("Protocol must be HTTP or HTTPS");
 			}
 		}, this::setNewValue, setting.get().toString());
 		textBox.setColumns(20);
@@ -66,6 +66,7 @@ public class HttpURISettingGui {
 
 	public Component getResetButton() {
 		JButton jButton = new JButton("Reset");
+		jButton.setMargin(new Insets(3, 8, 3, 8));
 		jButton.addActionListener(l -> {
 			// TODO: Kind of bad
 			textBox.setText(setting.getDefault().toString());

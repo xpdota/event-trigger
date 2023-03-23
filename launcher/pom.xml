@@ -382,6 +382,10 @@
             <groupId>gg.xp</groupId>
             <artifactId>postnamazu-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>postnamazu-gui</artifactId>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>gg.xp</groupId>-->
 <!--            <artifactId>telesto-subscriber</artifactId>-->
