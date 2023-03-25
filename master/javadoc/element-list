@@ -1,4 +1,6 @@
 gg.xp.logback
+gg.xp.postnamazu
+gg.xp.postnamazu.gui
 gg.xp.reevent
 gg.xp.reevent.context
 gg.xp.reevent.events
@@ -7,6 +9,7 @@ gg.xp.reevent.state
 gg.xp.reevent.time
 gg.xp.reevent.topology
 gg.xp.reevent.util
+gg.xp.services
 gg.xp.telestosupport
 gg.xp.telestosupport.doodle
 gg.xp.telestosupport.doodle.img
