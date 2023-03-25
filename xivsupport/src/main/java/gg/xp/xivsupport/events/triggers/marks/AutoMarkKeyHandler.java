@@ -5,7 +5,10 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
+import gg.xp.services.ServiceDescriptor;
+import gg.xp.services.ServiceHandle;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
+import gg.xp.xivsupport.events.triggers.marks.adv.AutoMarkServiceSelector;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkSlotRequest;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -25,36 +28,51 @@ public class AutoMarkKeyHandler implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(AutoMarkKeyHandler.class);
 
 	private final BooleanSetting useFkeys;
-	private final BooleanSetting useTelesto;
+	private final ServiceHandle handle;
 
-	public AutoMarkKeyHandler(PersistenceProvider pers, AutoMarkHandler handler) {
+	public AutoMarkKeyHandler(PersistenceProvider pers, AutoMarkServiceSelector serv) {
 		useFkeys = new BooleanSetting(pers, "auto-marks.use-fkeys", false);
-		useTelesto = handler.getUseTelesto();
+		handle = serv.register(ServiceDescriptor.of("keyboard-macro", "Keyboard Macro", 15));
 	}
 
 	public BooleanSetting getUseFkeys() {
 		return useFkeys;
 	}
 
+	public ServiceHandle getHandle() {
+		return handle;
+	}
+
 	@Override
 	public boolean enabled(EventContext context) {
-		return !useTelesto.get();
+		return handle.enabled();
 	}
 
 	@HandleEvents
 	public void doMark(EventContext context, AutoMarkSlotRequest event) {
+		if (event.isHandled()) {
+			return;
+		}
 		doAutoMarkForSlot(context, event.getSlotToMark());
+		event.setHandled();
 	}
 
 	@HandleEvents
 //	@LiveOnly
 	public void clearMarks(EventContext context, ClearAutoMarkRequest event) {
+		if (event.isHandled()) {
+			return;
+		}
 		log.info("Clearing marks");
 		clearAutoMark(context);
+		event.setHandled();
 	}
 
 	@HandleEvents
 	public void doSpecificAutoMark(EventContext context, SpecificAutoMarkSlotRequest event) {
+		if (event.isHandled()) {
+			return;
+		}
 		MarkerSign marker = event.getMarker();
 		if (marker == MarkerSign.ATTACK_NEXT) {
 			context.accept(new AutoMarkSlotRequest(event.getSlotToMark()));
@@ -66,6 +84,7 @@ public class AutoMarkKeyHandler implements FilteredEventHandler {
 		else {
 			log.error("Marker unsupported by keyboard-based automarkers - {}", marker);
 		}
+		event.setHandled();
 	}
 
 

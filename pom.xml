@@ -384,6 +384,16 @@
                 <artifactId>telesto-subscriber</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>postnamazu-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>postnamazu-gui</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -419,5 +429,7 @@
         <module>groovy-sandboxing</module>
         <module>trigger-support</module>
         <module>persistence</module>
+        <module>postnamazu-support</module>
+        <module>postnamazu-support/postnamazu-gui</module>
     </modules>
 </project>
