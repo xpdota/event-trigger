@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import gg.xp.xivsupport.gui.overlay.Scaled;
 import gg.xp.xivsupport.persistence.Platform;
 import org.slf4j.Logger;
@@ -66,6 +67,7 @@ public final class CommonGuiSetup {
 		}
 		try {
 			UIManager.setLookAndFeel(new FlatDarculaLaf());
+//			UIManager.setLookAndFeel(new FlatLightLaf());
 		}
 		catch (Throwable t) {
 			log.error("Error setting up look and feel", t);

@@ -47,6 +47,10 @@ public record Position(double x, double y, double z, double heading) implements 
 		return String.format("Pos(%.2f, %.2f, %.2f : %.2f)", x, y, z, heading);
 	}
 
+	public String toStringShort() {
+		return String.format("%.2f, %.2f, %.2f θ%.2f", x, y, z, heading);
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;

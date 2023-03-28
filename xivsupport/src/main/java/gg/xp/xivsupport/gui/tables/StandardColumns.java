@@ -2,20 +2,17 @@ package gg.xp.xivsupport.gui.tables;
 
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
-import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.renderers.HpBar;
-import gg.xp.xivsupport.gui.tables.renderers.HpPredictedRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.HpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.MpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
-import gg.xp.xivsupport.models.HitPoints;
-import gg.xp.xivsupport.models.HitPointsWithPredicted;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -43,7 +40,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -234,7 +230,13 @@ public final class StandardColumns {
 			});
 
 	public static final CustomColumn<XivCombatant> posColumn
-			= new CustomColumn<>("Position", XivCombatant::getPos);
+			= new CustomColumn<>("Position", xc -> {
+		Position pos = xc.getPos();
+		if (pos == null) {
+			return "";
+		}
+		return pos.toStringShort();
+	});
 
 
 	public static final CustomColumn<Map.Entry<Field, Object>> fieldName
