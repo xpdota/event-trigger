@@ -20,6 +20,7 @@ public class AbilityNameFilter implements SimpleCondition<HasAbility> {
 	@Override
 	public boolean test(HasAbility hasAbility) {
 		String abilityName;
+		String expected = this.expected;
 		if (!localLanguage) {
 			ActionInfo actionInfo = ActionLibrary.forId(hasAbility.getAbility().getId());
 			if (actionInfo == null) {
@@ -32,6 +33,7 @@ public class AbilityNameFilter implements SimpleCondition<HasAbility> {
 		}
 		if (!caseSensitive) {
 			abilityName = abilityName.toLowerCase(Locale.ROOT);
+			expected = expected.toLowerCase(Locale.ROOT);
 		}
 		return operator.checkString(abilityName, expected);
 	}
