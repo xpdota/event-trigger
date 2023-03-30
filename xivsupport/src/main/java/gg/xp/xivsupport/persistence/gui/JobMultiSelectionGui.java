@@ -104,6 +104,8 @@ public class JobMultiSelectionGui extends JPanel {
 		public void paint(Graphics g) {
 			super.paint(g);
 			JobSelectionState state = getState();
+			// Easier to just draw the background semi-transparently over the image than to apply an alpha
+			// to the image.
 			if (state == JobSelectionState.NOT_SELECTED) {
 				g.setColor(RenderUtils.withAlpha(getBackground(), 192));
 				g.fillRect(0, 0, getWidth(), getHeight());
