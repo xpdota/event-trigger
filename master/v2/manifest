@@ -1,6 +1,6 @@
-fd5932c74dc8036bf50c8e37888ad9a2  triggevent.exe
-bd439348b1dae038229ed4f18c9e80e3  triggevent-import.exe
-a5e090125821b0a0cbd7972bf415715e  triggevent-upd.exe
+879000d54581d3f7c41a35b974fd3412  triggevent.exe
+5b6286e764c9471557915ce3b5bd2de3  triggevent-import.exe
+cebd4250974c2d2dce9048d8cfe0ce53  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 b9e19f96299334e586775e57c0f0037e  deps/actimport-1.0-SNAPSHOT.jar
 879614e1a8678b4db231a05cae8cdb03  deps/annotations-24.0.0.jar
@@ -17,7 +17,7 @@ f54a8510f834a1a57166970bfc982e94  deps/commons-collections-3.2.2.jar
 4afc9bfa2d31dbf7330c98fcc954b892  deps/commons-text-1.10.0.jar
 74150a946bc9f8239619395396daa7e5  deps/custom-party-overlay-1.0-SNAPSHOT.jar
 61fa812186056df5b39f35178dab54a1  deps/dot-tracker-1.0-SNAPSHOT.jar
-8319aed718dc9d06d93de31b435914e8  deps/easytriggers-1.0-SNAPSHOT.jar
+76419befbb2b905641c4a472954d993f  deps/easytriggers-1.0-SNAPSHOT.jar
 655814242aa5fa27b4f4eaca9390c951  deps/flatlaf-1.6.5.jar
 4fbc34bbf1ec28670693ee90ba5948fc  deps/groovy-3.0.14.jar
 d42b8855e3b7e4f3506ffc0b5b85d149  deps/groovy-sandbox-1.27.jar
