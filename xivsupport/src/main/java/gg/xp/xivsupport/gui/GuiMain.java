@@ -22,6 +22,7 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.gui.components.ReadOnlyHtml;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapTab;
@@ -58,6 +59,7 @@ import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
 import gg.xp.xivsupport.gui.tabs.UpdaterConfig;
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
+import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
@@ -66,6 +68,7 @@ import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
@@ -76,6 +79,7 @@ import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
@@ -96,6 +100,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -203,7 +208,8 @@ public class GuiMain {
 				mainFrame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
 			}
 		});
-		addTab("General", new SystemTabPanel());
+		addTab("Welcome", new WelcomeTabPanel());
+		addTab("Summary", new SummaryTabPanel());
 		addTab("Plugin Settings", new PluginSettingsPanel());
 		addTab("Combatants", getCombatantsPanel());
 		addTab("Buffs", getStatusEffectsPanel());
@@ -290,30 +296,89 @@ public class GuiMain {
 	}
 
 	private Component newsPanel() {
-		JPanel panel = new TitleBorderFullsizePanel("News and Tips");
+		JPanel panel = new TitleBorderPanel("News and Tips");
 //		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
 		panel.setLayout(new GridBagLayout());
+//		panel.setLayout(new BorderLayout());
 		GridBagConstraints c = GuiUtil.defaultGbc();
 		c.fill = GridBagConstraints.VERTICAL;
 		c.weightx = 1;
 		c.weighty = 1;
-		// TODO: move this external somewhere
+		String rawText;
+		try {
+			rawText = IOUtils.toString(GuiMain.class.getResource("/te_news.txt"), StandardCharsets.UTF_8);
+		}
+		catch (Throwable t) {
+			log.error("Error loading news", t);
+			rawText = "Error loading news";
+		}
 		// TODO: figure out why this text is reporting its minimum height as 5000-something and messing up the layout
-		ReadOnlyText text = new ReadOnlyText("""
-				Patch 6.35 uses TCP Oodle compression once again. This means you'll need to start ACT before logging into your character,
-				or use the new injection option in the ACT plugin.
-				You can now use PostNamazu for your automarkers!
-				Press Ctrl-G, then type the name of a tab, plugin, or duty to navigate directly to it."""
-		);
+		ReadOnlyText text = new ReadOnlyText(rawText, true);
 		panel.add(text, c);
+//		panel.add(text, BorderLayout.CENTER);
 		return panel;
 	}
 
-	private class SystemTabPanel extends JPanel {
+	private class WelcomeTabPanel extends JPanel {
 
-		private final RefreshLoop<Class<SystemTabPanel>> generalTabRefresh;
+		WelcomeTabPanel() {
 
-		SystemTabPanel() {
+			setLayout(new GridBagLayout());
+			GridBagConstraints c = new GridBagConstraints();
+			c.fill = GridBagConstraints.BOTH;
+			c.anchor = GridBagConstraints.CENTER;
+			c.weighty = 0;
+			c.gridx = 0;
+			c.gridy = 0;
+			c.weightx = 1;
+			c.gridwidth = GridBagConstraints.REMAINDER;
+
+			{
+				JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+				topPanel.add(new EnumSettingGui<>(WindowConfig.getThemeSettingStatic(), "Theme", () -> true).getComboBoxOnly());
+				topPanel.add(new EasyAction("Github", () -> GuiUtil.openUrl("https://github.com/xpdota/event-trigger"), () -> true, null).asButton());
+				topPanel.add(new EasyAction("Website", () -> GuiUtil.openUrl("https://triggevent.io"), () -> true, null).asButton());
+				topPanel.add(new EasyAction("Discord", () -> GuiUtil.openUrl("https://discord.gg/jxk24jC66r"), () -> true, null).asButton());
+				add(topPanel, c);
+				c.gridy++;
+			}
+
+			if (replay == null) {
+				ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
+				connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
+				add(connectionStatusPanel, c);
+				master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
+			}
+
+			c.gridy++;
+			add(newsPanel(), c);
+			c.weighty = 1;
+			c.gridy++;
+			add(changelogPanel(), c);
+		}
+	}
+
+	private Component changelogPanel() {
+		TitleBorderPanel changelog = new TitleBorderPanel("Changelog");
+		changelog.setLayout(new BorderLayout());
+		String text;
+		try {
+			text = IOUtils.toString(GuiMain.class.getResource("/te_changelog.html"), StandardCharsets.UTF_8);
+		}
+		catch (Throwable e) {
+			log.error("Error loading changelog", e);
+			text = "Error loading changelog";
+		}
+		Component rot = new ReadOnlyHtml(text);
+		changelog.add(new JScrollPane(rot));
+		return changelog;
+	}
+
+	private class SummaryTabPanel extends JPanel {
+
+		private final RefreshLoop<Class<SummaryTabPanel>> generalTabRefresh;
+
+		SummaryTabPanel() {
 
 			setLayout(new GridBagLayout());
 			GridBagConstraints c = new GridBagConstraints();
@@ -331,9 +396,6 @@ public class GuiMain {
 				add(connectionStatusPanel, c);
 				master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
 			}
-
-			c.gridy++;
-			add(newsPanel(), c);
 
 			c.weightx = 0;
 			c.gridwidth = 1;
@@ -357,7 +419,7 @@ public class GuiMain {
 			c.weighty = 1;
 			add(combatantsPanel, c);
 			// TODO: this is good enough for now, but really should have a separate "welcome" page as the default
-			generalTabRefresh = new RefreshLoop<>("GeneralTabRefresh", SystemTabPanel.class, stp -> {
+			generalTabRefresh = new RefreshLoop<>("GeneralTabRefresh", SummaryTabPanel.class, stp -> {
 				xivStateStatus.refresh();
 				xivPartyPanel.refresh();
 				combatantsPanel.refresh();

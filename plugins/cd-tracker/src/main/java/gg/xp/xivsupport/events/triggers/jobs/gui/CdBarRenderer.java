@@ -37,6 +37,7 @@ public class CdBarRenderer extends ResourceBarRenderer<VisualCdInfo> {
 
 	@Override
 	protected void formatLabel(@NotNull VisualCdInfo item) {
+		bar.setTextColor(colors.getFontColor());
 		bar.setTextOptions(item.getLabel());
 	}
 
