@@ -1,9 +1,8 @@
 package gg.xp.xivsupport.gui;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 
-public class FlatDarkestLaf extends FlatDarculaLaf {
+public class FlatDarkestLaf extends FlatDarkLaf {
 	public static final String NAME = "FlatLaf Darcula";
 
 	public FlatDarkestLaf() {
@@ -13,7 +12,9 @@ public class FlatDarkestLaf extends FlatDarculaLaf {
 		return setup(new FlatDarkestLaf());
 	}
 
-	/** @deprecated */
+	/**
+	 * @deprecated
+	 */
 	@Deprecated
 	public static boolean install() {
 		return setup();
