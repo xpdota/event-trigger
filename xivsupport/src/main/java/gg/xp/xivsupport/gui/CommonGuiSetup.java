@@ -1,16 +1,14 @@
 package gg.xp.xivsupport.gui;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.FlatLaf;
 import gg.xp.xivsupport.gui.overlay.Scaled;
-import gg.xp.xivsupport.persistence.Platform;
+import gg.xp.xivsupport.gui.themes.BuiltinTheme;
+import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -65,13 +63,8 @@ public final class CommonGuiSetup {
 				System.setProperty("sun.java2d.d3d", "false");
 			}
 		}
-		try {
-			UIManager.setLookAndFeel(new FlatDarculaLaf());
-//			UIManager.setLookAndFeel(new FlatLightLaf());
-		}
-		catch (Throwable t) {
-			log.error("Error setting up look and feel", t);
-		}
+		EnumSetting<BuiltinTheme> themeSetting = WindowConfig.getThemeSettingStatic();
+		themeSetting.addAndRunListener(() -> setTheme(themeSetting.get()));
 		SwingUtilities.invokeLater(() -> {
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		});
@@ -151,6 +144,16 @@ public final class CommonGuiSetup {
 				}
 			}
 		});
+	}
+
+	private static void setTheme(BuiltinTheme builtinTheme) {
+		try {
+			UIManager.setLookAndFeel(builtinTheme.getLaf());
+			FlatLaf.updateUI();
+		}
+		catch (Throwable t) {
+			log.error("Error setting up look and feel", t);
+		}
 	}
 
 	private static class Monitor extends Thread {

@@ -1,0 +1,4 @@
+Patch 6.35 uses TCP Oodle compression once again. This means you'll need to start ACT before logging into your character,
+or use the new injection option in the ACT plugin.
+You can now use PostNamazu for your automarkers!
+Press Ctrl-G, then type the name of a tab, plugin, or duty to navigate directly to it.

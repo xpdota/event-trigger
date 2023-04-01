@@ -33,7 +33,8 @@ public class StringSettingGui {
 					return null;
 				}
 				if (setting.isSet()) {
-					return new Color(255, defaultColor.getGreen(), defaultColor.getBlue());
+					// TODO: this can be moved to the theme
+					return new Color(Math.min(defaultColor.getRed() + 128, 255), Math.min(defaultColor.getGreen(), 200), Math.min(defaultColor.getBlue(), 200));
 				}
 				return defaultColor;
 			}
