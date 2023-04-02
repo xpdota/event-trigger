@@ -151,7 +151,7 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			JPanel secondSetDelay = new IntSettingSpinner(backend.getOmegaSecondSetDelay(), "Second Set Delay").getComponent();
 			secondSetDelay.setAlignmentX(0);
 			panel.add(secondSetDelay);
-			tabs.addTab("Omega", new BooleanSettingHidingPanel(backend.getOmegaAmEnable(), "Omega Automark", panel, true));
+			tabs.addTab("Omega", makeAmPanel(new BooleanSettingHidingPanel(backend.getOmegaAmEnable(), "Omega Automark", panel, true), backend.getOmegaPsPrio()));
 		}
 		outer.add(tabs, BorderLayout.CENTER);
 		outer.add(helpText, BorderLayout.NORTH);
