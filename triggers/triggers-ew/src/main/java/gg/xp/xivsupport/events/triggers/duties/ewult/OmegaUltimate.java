@@ -1919,7 +1919,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 						// Mark long near
 						// Mark long dist
 						// Find players to mark for tethers
-						List<XivPlayerCharacter> partyList = getState().getPartyList();
+						List<XivPlayerCharacter> partyList = new ArrayList<>(getState().getPartyList());
+						partyList.sort(getOmegaPsPrio().getComparator());
 						List<XivPlayerCharacter> twoStackPlayers = partyList.stream()
 								.filter(member -> getBuffs().buffStacksOnTarget(member, 0xD74) == 2
 								                  && !getBuffs().isStatusOnTarget(member, 0xBBC)
