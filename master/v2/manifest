@@ -1,6 +1,6 @@
-cc0ed8d6813ea4074efe0946fa9b1dd6  triggevent.exe
-b499b9805cb14f8addea3694f1e1a450  triggevent-import.exe
-2aef0accd1c5fa989efca7c0f74109f4  triggevent-upd.exe
+befb697457b0ad8c8b8e0bce93035d71  triggevent.exe
+58e02a3c6f5d51a56dd175877a54ba06  triggevent-import.exe
+11013139ec63e8e6a2c3b58a96a3a3a3  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 b9e19f96299334e586775e57c0f0037e  deps/actimport-1.0-SNAPSHOT.jar
 879614e1a8678b4db231a05cae8cdb03  deps/annotations-24.0.0.jar
@@ -35,7 +35,7 @@ bd2e5bc6b4b020c2d9a6e17a8e9bcef1  deps/jna-5.13.0.jar
 7cc7af47ad1f151faa57ef0624b2f271  deps/jna-platform-5.13.0.jar
 9d9576fc366854c32f4d1daf9dcc4b1c  deps/job-overlays-1.0-SNAPSHOT.jar
 dd83accb899363c32b07d7a1b2e4ce40  deps/jsr305-3.0.2.jar
-b766e2683378abf3dfbb3ce49e5f6d82  deps/launcher-1.0-SNAPSHOT.jar
+9133f6eae0872a965c54a01d5d6940ee  deps/launcher-1.0-SNAPSHOT.jar
 9d6a0bfe0f105ddda17dc398134d2384  deps/logback-classic-1.4.5.jar
 baf749c68aacc6d719f3ce3d7345af38  deps/logback-core-1.4.5.jar
 b402eabb88aca7b196dc3089e109f6b3  deps/opencsv-5.7.1.jar
@@ -43,6 +43,7 @@ f7400393c8bb56ed1a5bc9769502bf4a  deps/persistence-1.0-SNAPSHOT.jar
 b379db6e4ee67fd2d731faadc3a5afa5  deps/personal-cast-bar-overlay-1.0-SNAPSHOT.jar
 462404f92bdbd710aa2abf6fc1168247  deps/picocontainer-2.15.jar
 dcc2b872e307f81910d1e1ab9eba4e46  deps/postnamazu-core-1.0-SNAPSHOT.jar
+0a3c13129032051604ea334fb6976a54  deps/postnamazu-easy-triggers-1.0-SNAPSHOT.jar
 1c6e3fc3566dad4528ea0fe0893f214f  deps/postnamazu-gui-1.0-SNAPSHOT.jar
 7ea1dcf0564af932ecaf902d6fa6de50  deps/reevent-1.0-SNAPSHOT.jar
 1d0070839d825f57fe6f4d8e2a82989b  deps/reflections-0.10.2.jar
@@ -50,7 +51,7 @@ bf411d08b339225bbf53c433ac1af52b  deps/rsyntaxtextarea-3.3.2.jar
 9c3b7321b1be9dc1dbac775ffbc76d7c  deps/skill-hit-overlay-1.0-SNAPSHOT.jar
 0dd65c386e8c5f4e6e014de3f7a7ae60  deps/slf4j-api-2.0.6.jar
 80826aff9e84d10f3bb9a1fb54cc4e8d  deps/telesto-core-1.0-SNAPSHOT.jar
-c6db4e4f7d67c79b01c27f97a2294ff0  deps/telesto-easy-triggers-1.0-SNAPSHOT.jar
+835778838fb5db9d2895853732bd65ce  deps/telesto-easy-triggers-1.0-SNAPSHOT.jar
 fc228975833c2fc6d3a750b624e0c31a  deps/telesto-gui-1.0-SNAPSHOT.jar
 cefda612fd88203aa1923df3c0fec80a  deps/telesto-right-clicks-1.0-SNAPSHOT.jar
 af33704616fbb8a1b3a25068147c9947  deps/timelines-1.0-SNAPSHOT.jar
