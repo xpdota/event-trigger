@@ -16,6 +16,7 @@ public class PnCommandAction implements Action<Event> {
 	@JsonIgnore
 	private final GroovyScriptProcessor gsp;
 	private final GroovyManager mgr;
+	// TODO: what is this doing?
 	@JsonProperty("command")
 	private String command;
 
@@ -48,6 +49,6 @@ public class PnCommandAction implements Action<Event> {
 
 	@Override
 	public String dynamicLabel() {
-		return "Run Command '%s'".formatted(command);
+		return "Run Command '%s'".formatted(textScript);
 	}
 }
