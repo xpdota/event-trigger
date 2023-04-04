@@ -1,10 +1,9 @@
-package gg.xp.telestosupport.easytriggers;
+package gg.xp.postnamazu;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
-import gg.xp.telestosupport.TelestoGameCommand;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.WideTextField;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
@@ -12,7 +11,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.groovy.GroovyScriptProcessor;
 
-public class TelestoCommandAction implements Action<Event> {
+public class PnCommandAction implements Action<Event> {
 
 	@JsonIgnore
 	private final GroovyScriptProcessor gsp;
@@ -32,7 +31,7 @@ public class TelestoCommandAction implements Action<Event> {
 	@Description("Global Replacements")
 	public boolean globalReplacements;
 
-	public TelestoCommandAction(@JacksonInject GroovyScriptProcessor gsp, @JacksonInject GroovyManager mgr) {
+	public PnCommandAction(@JacksonInject GroovyScriptProcessor gsp, @JacksonInject GroovyManager mgr) {
 		this.gsp = gsp;
 		this.mgr = mgr;
 	}
@@ -40,7 +39,7 @@ public class TelestoCommandAction implements Action<Event> {
 	@Override
 	public void accept(EasyTriggerContext context, Event event) {
 		String command = gsp.replaceInString(textScript, context.makeBinding(mgr.makeBinding()), calloutReplacements, globalReplacements);
-		context.accept(new TelestoGameCommand(command));
+		context.accept(new PnGameCommand(command));
 	}
 
 	@Override
