@@ -5,15 +5,21 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>gg.xp</groupId>
-        <artifactId>triggevent</artifactId>
+        <artifactId>postnamazu-support</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <packaging>pom</packaging>
-    <modules>
-        <module>postnamazu-core</module>
-        <module>postnamazu-easy-triggers</module>
-    </modules>
 
-    <artifactId>postnamazu-support</artifactId>
+    <artifactId>postnamazu-easy-triggers</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>postnamazu-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>easytriggers</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
