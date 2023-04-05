@@ -60,6 +60,7 @@ public final class TimelineManager {
 	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutPre = ModifiableCallout.<TimelineProcessor.UpcomingCall>durationBasedCall("Timeline Callout (Precall)", "{event.getEntry().name()}")
 			.guiProvider(e -> IconTextRenderer.getStretchyIcon(e.getIconUrl()));
 	private final FileSetting cactbotUserDirSetting;
+	private final IntSetting barTimeBasis;
 
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
@@ -72,6 +73,7 @@ public final class TimelineManager {
 		debugMode = new BooleanSetting(pers, "timeline-overlay.debug-mode", false);
 		prePullShow = new BooleanSetting(pers, "timeline-overlay.show-pre-pull", false);
 		resetOnMapChange = new BooleanSetting(pers, "timeline-overlay.reset-on-map-change", false);
+		barTimeBasis = new IntSetting(pers, "timeline-overlay.bar-time-basis-seconds", 60, 1, 3600);
 
 		File defaultUserDir;
 		try {
@@ -321,5 +323,9 @@ public final class TimelineManager {
 
 	public FileSetting cactbotDirSetting() {
 		return cactbotUserDirSetting;
+	}
+
+	public IntSetting getBarTimeBasis() {
+		return barTimeBasis;
 	}
 }
