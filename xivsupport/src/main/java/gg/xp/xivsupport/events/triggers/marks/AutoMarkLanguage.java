@@ -6,7 +6,7 @@ public enum AutoMarkLanguage implements HasFriendlyName {
 	Automatic("Automatic"),
 	EN("English/French"),
 	DE("German"),
-	JP("Japanese/Korean");
+	JP("Japanese/Korean/Chinese");
 
 	private final String friendlyName;
 

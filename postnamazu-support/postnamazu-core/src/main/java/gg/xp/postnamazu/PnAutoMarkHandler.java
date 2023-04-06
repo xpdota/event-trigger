@@ -67,7 +67,7 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 								// Yes, this is E00_0000 rather than E000_0000
 								// I don't know why, the resulting packet still shows E000_0000
 								"ActorID", 0xE00_0000,
-								"MarkType", existingMarker.getCommand(AutoMarkLanguage.EN)
+								"MarkType", existingMarker.getCommand(AutoMarkLanguage.JP)
 						))
 				);
 			}
@@ -87,7 +87,7 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 			};
 			context.accept(new PnOutgoingMessage("mark", Map.of(
 							"ActorID", target.getId(),
-							"MarkType", markerToPlace.getCommand(AutoMarkLanguage.EN)
+							"MarkType", markerToPlace.getCommand(AutoMarkLanguage.JP)
 					))
 			);
 		}
@@ -101,7 +101,7 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 		}
 		context.accept(new PnOutgoingMessage("mark", Map.of(
 						"ActorID", amr.getTarget().getId(),
-						"MarkType", nextEmptyAtk().getCommand(AutoMarkLanguage.EN)
+						"MarkType", nextEmptyAtk().getCommand(AutoMarkLanguage.JP)
 				))
 		);
 		amr.setHandled();
