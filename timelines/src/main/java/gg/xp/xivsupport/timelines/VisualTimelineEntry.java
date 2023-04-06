@@ -9,8 +9,11 @@ import java.util.Objects;
 public record VisualTimelineEntry(
 		TimelineEntry originalTimelineEntry,
 		boolean isCurrentSync,
-		double timeUntil
+		double timeUntil,
+		int barTimeBasis
+
 ) implements LabelOverride, CurrentMaxPair {
+
 	@Override
 	public String getLabel() {
 		return String.format("%s%s", originalTimelineEntry.name(), isCurrentSync ? "*" : "");
@@ -25,7 +28,8 @@ public record VisualTimelineEntry(
 		if (remainingActiveTime() > 0) {
 			return (long) (remainingActiveTime() * 1000.0);
 		}
-		return (long) Math.min(60_000.0d - (1000.0 * timeUntil), 60_000.0d);
+		float timeBasis = barTimeBasis * 1000.0f;
+		return (long) Math.min(timeBasis - (1000.0 * timeUntil), timeBasis);
 	}
 
 	@Override
@@ -34,7 +38,7 @@ public record VisualTimelineEntry(
 			//noinspection ConstantConditions - known to be non-null if remaining active time is > 0
 			return (long) (originalTimelineEntry.duration() * 1000);
 		}
-		return 60_000L;
+		return barTimeBasis * 1000L;
 	}
 
 	public double remainingActiveTime() {

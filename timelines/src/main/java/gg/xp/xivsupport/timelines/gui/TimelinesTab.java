@@ -17,14 +17,11 @@ import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
-import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.JobMultiSelectionGui;
-import gg.xp.xivsupport.persistence.gui.LongSettingGui;
-import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.timelines.CustomTimelineEntry;
 import gg.xp.xivsupport.timelines.TimelineCustomizations;
@@ -40,9 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
@@ -58,7 +53,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EventObject;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -293,43 +287,54 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			c.gridx = 0;
 			c.gridy = 0;
 			{
-				JPanel settingsPanel = new JPanel();
-				settingsPanel.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
+				JPanel settingsPanel1 = new JPanel();
+				settingsPanel1.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
 
 				{
 					JCheckBox enableOverlay = new BooleanSettingGui(overlay.getEnabled(), "Enable Overlay").getComponent();
-					settingsPanel.add(enableOverlay);
+					settingsPanel1.add(enableOverlay);
 				}
 				{
 					// TODO: just add description to the settings themselves
 					JCheckBox debugMode = new BooleanSettingGui(backend.getDebugMode(), "Debug Mode").getComponent();
 					debugMode.setToolTipText("Debug mode will cause the last sync to always be displayed, and will cause sync-only entries to be displayed as well.");
-					settingsPanel.add(debugMode);
+					settingsPanel1.add(debugMode);
 				}
 				{
 					JCheckBox showPrePull = new BooleanSettingGui(backend.getPrePullSetting(), "Show Pre-Pull").getComponent();
 					showPrePull.setToolTipText("Timeline will show prior to there being a valid sync.");
-					settingsPanel.add(showPrePull);
+					settingsPanel1.add(showPrePull);
 				}
 				{
 					JCheckBox resetOnMapChange = new BooleanSettingGui(backend.getResetOnMapChangeSetting(), "Reset on Map Change").getComponent();
 					resetOnMapChange.setToolTipText("Reset on map change - this is NOT a zone change! The timeline will always reset on zone changes.\n\nResetting on a map change is sometimes desirable (e.g. raids with doorbosses, dungeons), but breaks others if they use multiple maps (e.g. O3N) and their post-map-change syncs don't have a big enough window.");
-					settingsPanel.add(resetOnMapChange);
+					settingsPanel1.add(resetOnMapChange);
 				}
+				this.add(settingsPanel1, c);
+			}
+			c.gridy++;
+			{
+				JPanel settingsPanel2 = new JPanel();
+				settingsPanel2.setLayout(new WrapLayout(FlowLayout.CENTER, 5, 0));
+
 				{
 					JPanel numSetting = new IntSettingSpinner(backend.getRowsToDisplay(), "Max in Overlay").getComponent();
-					settingsPanel.add(numSetting);
+					settingsPanel2.add(numSetting);
 				}
 				{
 					JPanel futureSetting = new IntSettingSpinner(backend.getSecondsFuture(), "Seconds in Future").getComponent();
-					settingsPanel.add(futureSetting);
+					settingsPanel2.add(futureSetting);
 				}
 				{
 					JPanel pastSetting = new IntSettingSpinner(backend.getSecondsPast(), "Seconds in Past").getComponent();
-					settingsPanel.add(pastSetting);
+					settingsPanel2.add(pastSetting);
+				}
+				{
+					JPanel barTimeBasisSetting = new IntSettingSpinner(backend.getBarTimeBasis(), "Bar Fill Seconds").getComponent();
+					settingsPanel2.add(barTimeBasisSetting);
 				}
 
-				this.add(settingsPanel, c);
+				this.add(settingsPanel2, c);
 			}
 			c.gridy++;
 			{
@@ -492,15 +497,15 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				.collect(Collectors.joining("\n"));
 
 		String exportedJs = String.format("""
-						Options.Triggers.push({
-							zoneId: %s,
-							overrideTimelineFile: true,
-							timelineFile: '%s',
-							timelineTriggers: [
-						%s
-							]
-						});
-						""", zoneId, info.filename(), triggersText);
+				Options.Triggers.push({
+					zoneId: %s,
+					overrideTimelineFile: true,
+					timelineFile: '%s',
+					timelineTriggers: [
+				%s
+					]
+				});
+				""", zoneId, info.filename(), triggersText);
 
 		File cbDir = backend.cactbotDirSetting().get();
 		if (!cbDir.exists() || !cbDir.isDirectory()) {
