@@ -51,8 +51,16 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 				update();
 			}
 		});
+		textBox.setToolTipText(boxToolTip());
 		originalBackground = textBox.getBackground();
 		update();
+	}
+
+	protected String boxToolTip() {
+		return """
+				Allowed inputs:
+				Enter plain text to filter to items containing that text anywhere.
+				Regex may be entered in the form /regex/.""";
 	}
 
 	private void update() {
