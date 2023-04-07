@@ -13,6 +13,10 @@ public class EasyAction {
 	private final Supplier<Boolean> enabled;
 	private final KeyStroke key;
 
+	public EasyAction(String name, Runnable runAction) {
+		this(name, runAction, () -> true, null);
+	}
+
 	public EasyAction(String name, Runnable runAction, Supplier<Boolean> enabled, KeyStroke key) {
 		this.name = name;
 		this.runAction = runAction;

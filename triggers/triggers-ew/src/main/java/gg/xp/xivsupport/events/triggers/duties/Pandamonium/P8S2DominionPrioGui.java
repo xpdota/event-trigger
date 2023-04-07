@@ -53,7 +53,7 @@ public class P8S2DominionPrioGui implements DutyPluginTab {
 		c.weightx = 0;
 		c.gridwidth = 1;
 		c.weighty = 1;
-		inner.add(jsg.getJobListWithButtons(), c);
+		inner.add(jsg.getJobListWithAllButtons(), c);
 		c.gridx++;
 		c.weightx = 1;
 		inner.add(jsg.getPartyPane(), c);
