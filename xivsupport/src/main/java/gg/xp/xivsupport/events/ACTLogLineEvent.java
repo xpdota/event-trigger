@@ -2,13 +2,14 @@ package gg.xp.xivsupport.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.persistence.Compressible;
 
 import java.io.Serial;
 import java.time.ZonedDateTime;
 
 @SystemEvent
-public class ACTLogLineEvent extends BaseEvent implements Compressible {
+public class ACTLogLineEvent extends BaseEvent implements Compressible, HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = -5255204546093791693L;
@@ -112,5 +113,10 @@ public class ACTLogLineEvent extends BaseEvent implements Compressible {
 	@Override
 	public String toString() {
 		return "ACTLogLineEvent{" + logLine + '}';
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		return logLine;
 	}
 }
