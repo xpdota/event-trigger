@@ -94,7 +94,7 @@ public class JailGui implements DutyPluginTab {
 		c.weighty = 1;
 		c.gridy++;
 		c.weightx = 0;
-		panel.add(jobSortGui.getJobListWithButtons(), c);
+		panel.add(jobSortGui.getJobListWithAllButtons(), c);
 
 
 		c.gridx++;
