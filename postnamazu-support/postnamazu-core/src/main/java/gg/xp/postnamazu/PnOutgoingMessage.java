@@ -21,16 +21,11 @@ public class PnOutgoingMessage extends BaseEvent implements HasPrimaryValue {
 	public PnOutgoingMessage(String command, Object payload) {
 		this.command = command;
 		this.payload = payload;
-		if (command.equals("command") && payload instanceof String cmdStr && cmdStr.startsWith("/mk")) {
-			this.queueType = PnQueueType.MARK;
-		}
-		else {
-			this.queueType = switch (command) {
-				case "command" -> PnQueueType.COMMAND;
-				case "mark" -> PnQueueType.MARK;
-				default -> PnQueueType.NONE;
-			};
-		}
+		this.queueType = switch (command) {
+			case "command" -> PnQueueType.COMMAND;
+			case "mark" -> PnQueueType.MARK;
+			default -> PnQueueType.NONE;
+		};
 	}
 
 	public PnOutgoingMessage(String command, PnQueueType queueType, Object payload) {

@@ -16,7 +16,7 @@ public class PnGameCommand extends BaseEvent implements HasPrimaryValue {
 	 * @param command The command to run.
 	 */
 	public PnGameCommand(String command) {
-		this(command, false);
+		this(command, command.startsWith("/mk") || command.startsWith("/mark") || command.startsWith("/enemysign"));
 	}
 
 	/**
