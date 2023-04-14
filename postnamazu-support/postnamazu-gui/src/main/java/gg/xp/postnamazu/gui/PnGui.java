@@ -84,10 +84,10 @@ public class PnGui implements PluginTab {
 		{
 			cmdDelayPanel.setLayout(new WrapLayout());
 			cmdDelayPanel.add(new JLabel("Between commands, delay "));
-			cmdDelayPanel.add(new IntSettingSpinner(backend.getAmDelayBase(), "ms").getSpinnerOnly());
+			cmdDelayPanel.add(new IntSettingSpinner(backend.getCmdDelayBase(), "ms").getSpinnerOnly());
 			cmdDelayPanel.add(new JLabel("ms,"));
 			cmdDelayPanel.add(new JLabel("plus a random delay up to "));
-			cmdDelayPanel.add(new IntSettingSpinner(backend.getAmDelayPlus(), "").getSpinnerOnly());
+			cmdDelayPanel.add(new IntSettingSpinner(backend.getCmdDelayPlus(), "").getSpinnerOnly());
 			cmdDelayPanel.add(new JLabel("ms."));
 		}
 

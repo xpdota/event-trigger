@@ -25,10 +25,10 @@ import java.util.concurrent.Executors;
 public class PnMain implements FilteredEventHandler {
 	private static final Logger log = LoggerFactory.getLogger(PnMain.class);
 	// Being used as a queue
-	private static final ExecutorService cmdQueue = Executors.newSingleThreadExecutor();
-	private static final ExecutorService amQueue = Executors.newSingleThreadExecutor();
+	private final ExecutorService cmdQueue = Executors.newSingleThreadExecutor();
+	private final ExecutorService amQueue = Executors.newSingleThreadExecutor();
 	// Handles the actual execution
-	private static final ExecutorService exs = Executors.newCachedThreadPool();
+	private final ExecutorService exs = Executors.newCachedThreadPool();
 	private final HttpClient http = HttpClient.newBuilder().build();
 	private final ObjectMapper mapper = new ObjectMapper();
 	private final HttpURISetting uriSetting;
@@ -57,11 +57,6 @@ public class PnMain implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void pnGameCmd(EventContext context, PnGameCommand pgc) {
-		context.accept(new PnOutgoingMessage("command", pgc.getCommand()));
-	}
-
-	@HandleEvents
 	public void handleOutgoing(EventContext context, PnOutgoingMessage message) {
 		Runnable task = () -> {
 			try {
@@ -72,39 +67,28 @@ public class PnMain implements FilteredEventHandler {
 				updateStatus(PnStatus.BAD);
 			}
 		};
-		if (message.getCommand().equals("command")) {
-			cmdQueue.submit(() -> {
-				try {
-					// Insert delay to avoid spamming
-					int delay = (int) (cmdDelayBase.get() + (Math.random() * cmdDelayPlus.get()));
-					Thread.sleep(delay);
-				}
-				catch (InterruptedException e) {
-					log.error("Interrupted", e);
-				}
-				finally {
-					exs.submit(task);
-				}
-			});
+		PnQueueType queue = message.getQueueType();
+		switch (queue) {
+			case COMMAND -> delayedEnqueue(task, cmdQueue, cmdDelayBase.get(), cmdDelayPlus.get());
+			case MARK -> delayedEnqueue(task, amQueue, cmdDelayBase.get(), cmdDelayPlus.get());
+			default -> exs.submit(task);
 		}
-		else if (message.getCommand().equals("mark")) {
-			amQueue.submit(() -> {
-				try {
-					// Insert delay to avoid spamming
-					int delay = (int) (amDelayBase.get() + (Math.random() * amDelayPlus.get()));
-					Thread.sleep(delay);
-				}
-				catch (InterruptedException e) {
-					log.error("Interrupted", e);
-				}
-				finally {
-					exs.submit(task);
-				}
-			});
-		}
-		else {
-			exs.submit(task);
-		}
+	}
+
+	private void delayedEnqueue(Runnable task, ExecutorService queue, int minDelay, int plusDelay) {
+		queue.submit(() -> {
+			try {
+				// Insert delay to avoid spamming
+				int delay = (int) (minDelay + (Math.random() * plusDelay));
+				Thread.sleep(delay);
+			}
+			catch (InterruptedException e) {
+				log.error("Interrupted", e);
+			}
+			finally {
+				exs.submit(task);
+			}
+		});
 	}
 
 	private void updateStatus(PnStatus status) {
@@ -115,6 +99,7 @@ public class PnMain implements FilteredEventHandler {
 		String body;
 		try {
 			body = payload instanceof String sp ? sp : mapper.writeValueAsString(payload);
+			log.info("PostNamazu outgoing: ({}): '{}'", command, body);
 			HttpResponse<String> response = http.send(
 					HttpRequest
 							.newBuilder(uriSetting.get().resolve(command))

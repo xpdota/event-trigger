@@ -55,6 +55,7 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 		if (amr.isHandled()) {
 			return;
 		}
+		log.info("PN auto mark request: mark {} with {}", amr.getTarget().getName(), amr.getMarker());
 		MarkerSign mark = amr.getMarker();
 		XivCombatant target = amr.getTarget();
 		if (mark == CLEAR) {
@@ -63,20 +64,16 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 				// https://github.com/Natsukage/PostNamazu/issues/32#issuecomment-1478739976
 				// Clearing a mark is done by marking 0xE000000 with the marker you wish to clear.
 				// When you do `/mk clear`, the game does more or less the same logic.
-				context.accept(new PnOutgoingMessage("mark", Map.of(
-								// Yes, this is E00_0000 rather than E000_0000
-								// I don't know why, the resulting packet still shows E000_0000
-								"ActorID", 0xE00_0000,
-								"MarkType", existingMarker.getCommand(AutoMarkLanguage.JP)
-						))
-				);
+				// PROBLEM: mixing marks and clear in the same set of AMs will cause a race condition!
+				// e.g.:
+				// Request to mark Player One with Attack1 and request to clear marker on Player Two, while Player Two
+				//     currently holds Attack1
+				// Thus, we submit the request to mark Player One, which works. But it takes time to process - so
+				//     the 'Clear Player 2' resolves to 'Get Rid of the Attack1 Marker'
+				// There WAS ALSO another problem where the ClearAll and AMs get mixed up because of having
+				//     separate queues, but PnGameCommand now has an optional argument to make it use the AM queue.
+				context.accept(PnOutgoingMessage.mark(0xE00_0000, existingMarker));
 			}
-//			int slot = state.getPartySlotOf(target);
-//			if (slot < 0) {
-//				log.error("Could not resolve {}:{} to party slot", Long.toString(target.getId(), 16).toUpperCase(Locale.ROOT), target.getName());
-//				return;
-//			}
-//			context.accept(new PnGameCommand("/mk %s <%s>".formatted(mark.getCommand(amh.getEffectiveLanguage()), slot + 1)));
 		}
 		else {
 			MarkerSign markerToPlace = switch (mark) {
@@ -85,11 +82,7 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 				case IGNORE_NEXT -> nextEmptyIgn();
 				default -> mark;
 			};
-			context.accept(new PnOutgoingMessage("mark", Map.of(
-							"ActorID", target.getId(),
-							"MarkType", markerToPlace.getCommand(AutoMarkLanguage.JP)
-					))
-			);
+			context.accept(PnOutgoingMessage.mark(target, markerToPlace));
 		}
 		amr.setHandled();
 	}
@@ -99,11 +92,7 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 		if (amr.isHandled()) {
 			return;
 		}
-		context.accept(new PnOutgoingMessage("mark", Map.of(
-						"ActorID", amr.getTarget().getId(),
-						"MarkType", nextEmptyAtk().getCommand(AutoMarkLanguage.JP)
-				))
-		);
+		context.accept(PnOutgoingMessage.mark(amr.getTarget(), nextEmptyAtk()));
 		amr.setHandled();
 	}
 
@@ -140,14 +129,14 @@ public class PnAutoMarkHandler implements FilteredEventHandler {
 		if (clear.isHandled()) {
 			return;
 		}
-		context.accept(new PnGameCommand("/mk clear <1>"));
-		context.accept(new PnGameCommand("/mk clear <2>"));
-		context.accept(new PnGameCommand("/mk clear <3>"));
-		context.accept(new PnGameCommand("/mk clear <4>"));
-		context.accept(new PnGameCommand("/mk clear <5>"));
-		context.accept(new PnGameCommand("/mk clear <6>"));
-		context.accept(new PnGameCommand("/mk clear <7>"));
-		context.accept(new PnGameCommand("/mk clear <8>"));
+		context.accept(new PnGameCommand("/mk clear <1>", true));
+		context.accept(new PnGameCommand("/mk clear <2>", true));
+		context.accept(new PnGameCommand("/mk clear <3>", true));
+		context.accept(new PnGameCommand("/mk clear <4>", true));
+		context.accept(new PnGameCommand("/mk clear <5>", true));
+		context.accept(new PnGameCommand("/mk clear <6>", true));
+		context.accept(new PnGameCommand("/mk clear <7>", true));
+		context.accept(new PnGameCommand("/mk clear <8>", true));
 		atkCounter = 0;
 		bindCounter = 0;
 		ignCounter = 0;
