@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class MultiSlotAutoMarkHandler<X extends Enum<X>> {
 
@@ -71,7 +72,7 @@ public class MultiSlotAutoMarkHandler<X extends Enum<X>> {
 		for (int i = 0; i < players.size(); i++) {
 			int ordinal = startOrdinal + i;
 			if (ordinal > endOrdinal) {
-				log.warn("Too many entries ({}) for range [{}, {}]", players.size(), startInclusive, endInclusive);
+				log.warn("Too many entries ({}) for range [{}, {}]: [{}]", players.size(), startInclusive, endInclusive, players.stream().map(p -> String.format("(0x%X: %s)", p.getId(), p.getName())).collect(Collectors.joining(", ")));
 				return;
 			}
 			X item = clazz.getEnumConstants()[ordinal];
