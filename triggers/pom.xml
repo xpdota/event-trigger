@@ -15,6 +15,7 @@
         <module>triggers-general</module>
         <module>triggers-ew</module>
         <module>triggers-sb</module>
+        <module>triggers-shb</module>
         <module>titan-jails</module>
     </modules>
     <dependencies>

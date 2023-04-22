@@ -42,7 +42,7 @@ public enum KnownDuty implements Duty {
 	Euphrosyne("Euphrosyne", 0x45E, Expansion.EW, DutyType.ALLIANCE_RAID),
 	UCoB("Unending Coil of Bahamut", 0x2DD, Expansion.SB, DutyType.ULTIMATE),
 	OmegaProtocol("Omega Protocol", 0x462, Expansion.EW, DutyType.ULTIMATE),
-
+	TEA("Epic of Alexander", 887, Expansion.ShB, DutyType.ULTIMATE)
 	;
 
 	private final String name;

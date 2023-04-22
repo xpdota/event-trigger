@@ -338,6 +338,10 @@
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
+            <artifactId>triggers-shb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
             <artifactId>xivsupport</artifactId>
         </dependency>
         <dependency>

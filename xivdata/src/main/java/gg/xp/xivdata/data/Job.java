@@ -192,4 +192,8 @@ public enum Job implements HasIconURL {
 	public boolean usesSwiftRez() {
 		return category.isHealer() || this == SMN;
 	}
+
+	public boolean caresAboutEsuna() {
+		return category.isHealer() || this == BRD;
+	}
 }

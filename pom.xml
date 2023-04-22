@@ -243,6 +243,11 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
+                <artifactId>triggers-shb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
                 <artifactId>triggers-general</artifactId>
                 <version>${project.version}</version>
             </dependency>

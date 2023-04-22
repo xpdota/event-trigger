@@ -52,6 +52,24 @@ public class HeadMarkerEvent extends BaseEvent implements HasTargetEntity, HasPr
 		this.pullOffset = pullOffset;
 	}
 
+	public boolean markerIdMatches(long... expected) {
+		for (long e : expected) {
+			if (e == markerId) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean markerOffsetMatches(long... expected) {
+		for (long e : expected) {
+			if (e == pullOffset) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public String getPrimaryValue() {
 		return String.format("HM %d (0x%X), offset %s%s", markerId, markerId, pullOffset >= 0 ? "+" : "-", Math.abs(pullOffset));
