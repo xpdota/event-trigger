@@ -71,8 +71,6 @@ public enum Job implements HasIconURL {
 		this.friendlyName = friendlyName;
 	}
 
-	// TODO: only supports default party list sort - revisit later to support custom ordering
-
 	private static final EnumMap<Job, Integer> sortOrder = new EnumMap<>(Job.class);
 	// TODO: confirm after EW what the default ordering is
 	private static final Job[] sortOrderArray = {

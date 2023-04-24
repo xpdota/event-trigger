@@ -30,7 +30,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -148,7 +150,7 @@ public class DutiesTab implements PluginTab {
 	@Override
 	public Component getTabContents() {
 		this.tabPane = new SmartTabbedPane(JTabbedPane.LEFT);
-		Map<Expansion, Map<DutyType, Map<Duty, DutyTabContents>>> contents = new LinkedHashMap<>();
+		Map<Expansion, Map<DutyType, Map<Duty, DutyTabContents>>> contents = new EnumMap<>(Expansion.class);
 		DutyTabContents nonSpecific = new DutyTabContents(KnownDuty.None);
 		List<CalloutGroup> allCallouts = new ArrayList<>(backend.getAllCallouts());
 		allCallouts.sort(Comparator.comparing(CalloutGroup::getDuty));

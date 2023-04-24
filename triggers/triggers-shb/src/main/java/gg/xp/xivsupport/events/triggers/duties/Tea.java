@@ -7,6 +7,7 @@ import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.duties.*;
+import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -30,6 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
 
+@CalloutRepo(name = "The Epic of Alexander", duty = KnownDuty.TEA)
 public class Tea implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(Tea.class);
