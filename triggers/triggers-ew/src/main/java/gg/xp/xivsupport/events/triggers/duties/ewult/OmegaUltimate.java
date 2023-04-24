@@ -44,6 +44,7 @@ import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.groupmodels.PsMarkerGroup;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
@@ -959,20 +960,26 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<BuffApplied> sniper = new ArrayList<>(4);
 				List<BuffApplied> hpSniper = new ArrayList<>(2);
 				List<XivPlayerCharacter> nothing = new ArrayList<>(getState().getPartyList());
+				if (nothing.size() != 8) {
+					log.warn("Party list size not 8! [{}]", XivEntity.fmtShortList(nothing));
+				}
 				Mutable<BuffApplied> playerBuffM = new MutableObject<>();
 				getBuffs().getBuffs().forEach(ba -> {
 					if (ba.buffIdMatches(0xD61)) {
 						sniper.add(ba);
-						nothing.remove(ba.getTarget());
 					}
 					else if (ba.buffIdMatches(0xD62)) {
 						hpSniper.add(ba);
-						nothing.remove(ba.getTarget());
 					}
 					else {
 						return;
 					}
-					if (ba.getTarget().isThePlayer()) {
+					XivCombatant target = ba.getTarget();
+					boolean removed = nothing.remove(target);
+					if (!removed) {
+						log.error("Did not remove {} from nothing list [{}]", target.toShortString(), XivEntity.fmtShortList(nothing));
+					}
+					if (target.isThePlayer()) {
 						playerBuffM.setValue(ba);
 					}
 				});
@@ -989,6 +996,14 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				List<XivPlayerCharacter> nothingPlayers = nothing.stream()
 						.sorted(getSniperPrio().getComparator())
 						.toList();
+				log.info("Sniper cannon: Snipers [{}], HP [{}], Nothing [{}]",
+						XivEntity.fmtShortList(sniperPlayers),
+						XivEntity.fmtShortList(hpSniperPlayers),
+						XivEntity.fmtShortList(nothingPlayers)
+				);
+				if (sniperPlayers.size() != 4 || hpSniperPlayers.size() != 2 || nothingPlayers.size() != 2) {
+					log.warn("Failure in sniper cannon AM!");
+				}
 				BuffApplied playerBuff = playerBuffM.getValue();
 				s.setParam("snipers", sniperPlayers);
 				s.setParam("hpSnipers", hpSniperPlayers);
