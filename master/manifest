@@ -46,9 +46,9 @@ cc5b55ba8ceb3fec67b842311c38e0eb  postnamazu-core-1.0-SNAPSHOT.jar
 bf411d08b339225bbf53c433ac1af52b  rsyntaxtextarea-3.3.2.jar
 9c3b7321b1be9dc1dbac775ffbc76d7c  skill-hit-overlay-1.0-SNAPSHOT.jar
 0dd65c386e8c5f4e6e014de3f7a7ae60  slf4j-api-2.0.6.jar
-80826aff9e84d10f3bb9a1fb54cc4e8d  telesto-core-1.0-SNAPSHOT.jar
+157785e0c7589c683a390a194fd23928  telesto-core-1.0-SNAPSHOT.jar
 f936cd4d0778b6badc49049954adacbc  telesto-easy-triggers-1.0-SNAPSHOT.jar
-fc228975833c2fc6d3a750b624e0c31a  telesto-gui-1.0-SNAPSHOT.jar
+51a74e38f166d4ab01bb49286110340e  telesto-gui-1.0-SNAPSHOT.jar
 cefda612fd88203aa1923df3c0fec80a  telesto-right-clicks-1.0-SNAPSHOT.jar
 bc69ef4a5b34e11f84d3e338e915ecf1  timelines-1.0-SNAPSHOT.jar
 00cc6620ff46b1393a6a311961646225  titan-jails-1.0-SNAPSHOT.jar
@@ -57,4 +57,4 @@ a79006557cc3031a9dc2aedddfed0969  triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  triggers-sb-1.0-SNAPSHOT.jar
 2c22b5b3a310b144140b46508c8c2c13  trigger-support-1.0-SNAPSHOT.jar
 a272cc7f93bf85c297e630516aa4e9f8  xivdata-1.0-SNAPSHOT.jar
-0de3e176fe1352f3939a4c38fbafd2b3  xivsupport-1.0-SNAPSHOT.jar
+a55d1f0fccf3f529d6454b1f0cce2c86  xivsupport-1.0-SNAPSHOT.jar
