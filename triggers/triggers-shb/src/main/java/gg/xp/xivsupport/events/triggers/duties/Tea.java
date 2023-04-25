@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.duties;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
@@ -32,7 +33,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 @CalloutRepo(name = "The Epic of Alexander", duty = KnownDuty.TEA)
-public class Tea implements FilteredEventHandler {
+public class Tea extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(Tea.class);
 
