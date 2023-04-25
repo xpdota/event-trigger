@@ -20,7 +20,7 @@ public class TelestoLineDoodleEditor extends BaseTelestoDoodleActionEditor {
 			throw new RuntimeException(e);
 		}
 		add(new TelestoLocationEditor("Start", action.start, pico));
-		add(new TelestoLocationEditor("End", action.start, pico));
+		add(new TelestoLocationEditor("End", action.end, pico));
 	}
 
 }
