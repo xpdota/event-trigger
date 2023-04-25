@@ -123,14 +123,9 @@ public class TelestoGui implements PluginTab {
 			delayPanel.add(new JLabel("ms."));
 		}
 		Component portWarning = new ReadOnlyText("""
-				Note: The default Telesto port falls into the
-				ephemeral port range. This means other applications
-				might unknowingly use it, preventing Telesto from
-				working.
-								
-				To prevent this, change your Telesto to a port between
-				1025 and 49151, and change the Telesto URL
-				in Triggevent accordingly.""");
+				Note: in Telesto 1.0.0.0, the default port
+				changed to 45678. Please check and verify
+				that your port is correct.""");
 
 
 		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, scroll, testPanel, partyListCb, rightClicksCb, doodleCb, doodleAddonCb, delayPanel, portWarning);
@@ -139,7 +134,7 @@ public class TelestoGui implements PluginTab {
 	}
 
 	private void sendTestEvent() {
-		label.setText("Waiting for response...");
+		label.setText("Waiting for response...\nPlease make sure you have /echo chat showing in-game.");
 		lastEvent = new TelestoGameCommand("/e " + testEchoMsg);
 		master.pushEvent(lastEvent);
 	}
