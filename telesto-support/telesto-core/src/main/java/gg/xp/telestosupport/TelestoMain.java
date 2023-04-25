@@ -63,7 +63,7 @@ public class TelestoMain implements FilteredEventHandler {
 		this.master = master;
 		this.pls = pls;
 		try {
-			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://localhost:51323/"));
+			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://localhost:45678/"));
 			// TODO: Telesto bug....
 //			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://127.0.0.1:51323/"));
 			enablePartyList = new BooleanSetting(pers, "telesto-support.pull-party-list", true);
