@@ -47,7 +47,7 @@ bf411d08b339225bbf53c433ac1af52b  rsyntaxtextarea-3.3.2.jar
 9c3b7321b1be9dc1dbac775ffbc76d7c  skill-hit-overlay-1.0-SNAPSHOT.jar
 0dd65c386e8c5f4e6e014de3f7a7ae60  slf4j-api-2.0.6.jar
 80826aff9e84d10f3bb9a1fb54cc4e8d  telesto-core-1.0-SNAPSHOT.jar
-835778838fb5db9d2895853732bd65ce  telesto-easy-triggers-1.0-SNAPSHOT.jar
+f936cd4d0778b6badc49049954adacbc  telesto-easy-triggers-1.0-SNAPSHOT.jar
 fc228975833c2fc6d3a750b624e0c31a  telesto-gui-1.0-SNAPSHOT.jar
 cefda612fd88203aa1923df3c0fec80a  telesto-right-clicks-1.0-SNAPSHOT.jar
 bc69ef4a5b34e11f84d3e338e915ecf1  timelines-1.0-SNAPSHOT.jar
@@ -57,4 +57,4 @@ a79006557cc3031a9dc2aedddfed0969  triggers-general-1.0-SNAPSHOT.jar
 94400a6061f459a2910df316b5ee80bf  triggers-sb-1.0-SNAPSHOT.jar
 2c22b5b3a310b144140b46508c8c2c13  trigger-support-1.0-SNAPSHOT.jar
 a272cc7f93bf85c297e630516aa4e9f8  xivdata-1.0-SNAPSHOT.jar
-e3b675d8866b2e2600979d4da50b3573  xivsupport-1.0-SNAPSHOT.jar
+0de3e176fe1352f3939a4c38fbafd2b3  xivsupport-1.0-SNAPSHOT.jar
