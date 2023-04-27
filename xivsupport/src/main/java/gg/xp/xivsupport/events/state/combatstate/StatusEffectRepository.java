@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.state.combatstate;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.Alias;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
@@ -37,6 +38,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+@Alias("buffs")
+@Alias("statuses")
 public class StatusEffectRepository {
 
 	private static final Logger log = LoggerFactory.getLogger(StatusEffectRepository.class);

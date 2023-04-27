@@ -144,7 +144,7 @@ public class XivCombatant extends XivEntity {
 	 * 6 = Gathering point? I got "Mature Tree" in here
 	 * 7 = Gardening patch?
 	 * 9 = Minion?
-	 * 12 = Interactable housing item?
+	 * 12 = Interactable housing instance?
 	 *
 	 * @return Raw type from ACT
 	 */

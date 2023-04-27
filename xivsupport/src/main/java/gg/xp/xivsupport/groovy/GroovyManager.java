@@ -1,9 +1,11 @@
 package gg.xp.xivsupport.groovy;
 
+import gg.xp.compmonitor.CompMonitor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
+import gg.xp.reevent.scan.Alias;
 import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
@@ -27,6 +29,7 @@ import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import groovy.transform.CompileStatic;
 import groovy.transform.TypeChecked;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
@@ -48,6 +51,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.reflections.scanners.Scanners.SubTypes;
 
@@ -224,29 +229,36 @@ public class GroovyManager {
 	private Binding makeGlobalBinding() {
 		Binding binding = new Binding();
 		binding.setVariable("globals", binding);
+		// TODO: external classes can't have annotations added here at the moment, so do them manually
+		binding.setVariable("pico", container);
+		binding.setVariable("container", container);
+		binding.setVariable("picoContainer", container);
+		binding.setVariable("log", scriptLogger);
+
+		container.getComponent(CompMonitor.class).addAndRunListener(item -> {
+			Object instance = item.instance();
+			String mainName = StringUtils.uncapitalize(instance.getClass().getSimpleName());
+			binding.setVariable(mainName, instance);
+			Class<?> itemCls = item.cls();
+			List<Class<?>> ifaces = new ArrayList<>(ClassUtils.getAllInterfaces(itemCls));
+			ifaces.addAll(ClassUtils.getAllSuperclasses(itemCls));
+			ifaces.add(instance.getClass());
+			for (Class<?> iface : ifaces) {
+				Alias[] aliases = iface.getAnnotationsByType(Alias.class);
+				for (Alias alias : aliases) {
+					String aliasName = alias.value();
+					binding.setVariable(aliasName, instance);
+				}
+			}
+		});
+
 		return binding;
 	}
 
 	@HandleEvents(order = -10_000_000)
 	public void finishInit(EventContext context, InitEvent init) {
-		Binding binding = getGlobalBinding();
-		container.getComponents().forEach(item -> {
-			String simpleName = item.getClass().getSimpleName();
-			simpleName = StringUtils.uncapitalize(simpleName);
-			binding.setProperty(simpleName, item);
-		});
-		// TODO: find a way to systematically do these exceptions
-		// TODO: can't these be in makeGlobalBinding?
-		binding.setVariable("pico", container);
-		binding.setVariable("container", container);
-		binding.setVariable("picoContainer", container);
-		binding.setVariable("xivState", container.getComponent(XivState.class));
-		binding.setVariable("state", container.getComponent(XivState.class));
-		binding.setVariable("master", container.getComponent(EventMaster.class));
-		binding.setVariable("buffs", container.getComponent(StatusEffectRepository.class));
-		binding.setVariable("casts", container.getComponent(ActiveCastRepository.class));
-		binding.setVariable("log", scriptLogger);
 		// Precache some common calls
+		getGlobalBinding();
 		new Thread("GroovyStartupHelper") {
 			@Override
 			public void run() {

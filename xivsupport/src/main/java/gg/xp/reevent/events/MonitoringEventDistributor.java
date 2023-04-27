@@ -1,50 +1,83 @@
 package gg.xp.reevent.events;
 
+import gg.xp.compmonitor.CompMonitor;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.scan.AutoHandler;
-import gg.xp.reevent.scan.AutoHandlerScan;
+import gg.xp.reevent.scan.AutoHandlerConfig;
+import gg.xp.reevent.scan.AutoScan;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.topology.Topology;
 import gg.xp.reevent.topology.TopologyInfo;
 import gg.xp.reevent.topology.TopologyProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public class AutoEventDistributor extends BasicEventDistributor implements TopologyProvider {
-	private static final Logger log = LoggerFactory.getLogger(AutoEventDistributor.class);
-	private final AutoHandlerScan scanner;
+public class MonitoringEventDistributor extends BasicEventDistributor implements TopologyProvider {
+	private static final Logger log = LoggerFactory.getLogger(MonitoringEventDistributor.class);
+	private final AutoScan scanner;
 	private final TopologyInfo topoInfo;
 	private final Object loadLock = new Object();
 	private final Map<Class<? extends Event>, List<EventHandler<Event>>> eventClassMap = new HashMap<>();
-	boolean isLoaded;
+	private final List<EventHandler<Event>> autoHandlers = new ArrayList<>();
+	private final List<EventHandler<Event>> manualHandlers = new ArrayList<>();
+	private volatile boolean dirty = true;
 	private Topology topology;
 
-	public AutoEventDistributor(StateStore state, AutoHandlerScan scanner, TopologyInfo topoInfo) {
+	public MonitoringEventDistributor(StateStore state, AutoScan scanner, TopologyInfo topoInfo, CompMonitor mon, AutoHandlerConfig config) {
 		super(state);
+		mon.addAndRunListener(item -> {
+			boolean dirty = false;
+			Object inst = item.instance();
+			if (inst instanceof EventHandler<?> eh) {
+				autoHandlers.add((EventHandler<Event>) eh);
+				dirty = true;
+			}
+			Class<?> clazz = inst.getClass();
+			Method[] methods = clazz.getMethods();
+			for (Method method : methods) {
+				if (method.isAnnotationPresent(HandleEvents.class)) {
+					AutoHandler rawEvh = new AutoHandler(clazz, method, inst, config);
+					autoHandlers.add(rawEvh);
+					dirty = true;
+				}
+			}
+			if (dirty) {
+				this.dirty = true;
+			}
+		});
 		this.scanner = scanner;
 		this.topoInfo = topoInfo;
 		topology = Topology.fromHandlers(Collections.emptyList(), this.topoInfo);
 	}
 
+	@Override
+	public synchronized void registerHandler(EventHandler<Event> handler) {
+		manualHandlers.add(handler);
+		dirty = true;
+	}
+
 	// TODO: this just doesn't work well until event sources are also auto-ified
 	// We get double events after reloading
-	public void reload() {
-		// TODO: kind of jank - maybe just have another list of manually-added handlers?
-		List<EventHandler<Event>> handlersToKeep = handlers.stream().filter(e -> !(e instanceof AutoHandler)).toList();
+	public void reloadIfNeeded() {
+		if (!dirty) {
+			return;
+		}
+		scanner.doScanIfNeeded();
 		handlers.clear();
-		handlers.addAll(handlersToKeep);
-		List<AutoHandler> handlers = scanner.build();
-		this.handlers.addAll(handlers);
+		handlers.addAll(manualHandlers);
+		handlers.addAll(autoHandlers);
 		sortHandlers();
 		topology = Topology.fromHandlers(new ArrayList<>(this.handlers), topoInfo);
-		isLoaded = true;
+		dirty = false;
 	}
 
 	@Override
@@ -74,18 +107,7 @@ public class AutoEventDistributor extends BasicEventDistributor implements Topol
 	// TODO: is there a better place to put this?
 	@Override
 	public void acceptEvent(Event event) {
-		if (!isLoaded) {
-			reload();
-		}
-		if (event instanceof TopologyReloadEvent) {
-			// Disabling hot reloading for now
-			// Now that log *providers* such as the WS log source expose handlers via
-			// @HandleEvents, reloading also causes them to spin up their log sources
-			// twice, with disastrous results.
-			log.error("Reloading currently disabled");
-//			log.warn("RELOAD REQUESTED - ERRORS LIKELY");
-//			reload();
-		}
+		reloadIfNeeded();
 		super.acceptEvent(event);
 	}
 

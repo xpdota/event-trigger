@@ -25,6 +25,8 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// TODO: introduce another layer here so that the tab can load async
+// This tab takes about 1/4 second to load
 @ScanMe
 public class MapTab extends JPanel {
 

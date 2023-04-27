@@ -78,7 +78,7 @@ public final class SqtTemplates {
 	/**
 	 * Trigger template for when the same event might indicate different things in a fight.
 	 * <p>
-	 * The first time this is called, it will execute the first item in the 'triggers' array.
+	 * The first time this is called, it will execute the first instance in the 'triggers' array.
 	 * The second time, it will execute the second, and so on. It will reset back to the first
 	 * on a wipe/reset.
 	 *
