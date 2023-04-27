@@ -17,8 +17,13 @@ public class HttpURISettingGui {
 	private final String label;
 	private JLabel jLabel;
 	private volatile boolean resetInProgress;
+	private volatile boolean setInProgress;
 
 	public HttpURISettingGui(HttpURISetting setting, String label) {
+		this(setting, label, false);
+	}
+
+	public HttpURISettingGui(HttpURISetting setting, String label, boolean listen) {
 		this.setting = setting;
 		textBox = new TextFieldWithValidation<>(str -> {
 			URI uri = URI.create(str);
@@ -29,15 +34,24 @@ public class HttpURISettingGui {
 			else {
 				throw new IllegalArgumentException("Protocol must be HTTP or HTTPS");
 			}
-		}, this::setNewValue, setting.get().toString());
+		}, this::setNewValue, () -> setting.get().toString());
 		textBox.setColumns(20);
 		textBox.setComponentPopupMenu(ResetMenuOption.resetOnlyMenu(setting, this::reset));
+		if (listen) {
+			setting.addListener(() -> {
+				if (!setInProgress) {
+					textBox.resetText();
+				}
+			});
+		}
 		this.label = label;
 	}
 
 	private void setNewValue(URI newValue) {
 		if (!resetInProgress) {
+			setInProgress = true;
 			setting.set(newValue);
+			setInProgress = false;
 		}
 	}
 
