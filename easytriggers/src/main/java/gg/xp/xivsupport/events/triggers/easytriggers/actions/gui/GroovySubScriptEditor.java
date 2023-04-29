@@ -27,6 +27,7 @@ public class GroovySubScriptEditor extends JPanel implements AcceptsSaveCallback
 			}
 
 		}, subScript::getGroovyScript);
+		textBox.setColumns(30);
 //		checkBox = new JCheckBox("Strict", subScript.isStrict());
 //		checkBox.addActionListener(l -> {
 //			subScript.setStrict(checkBox.isSelected());
