@@ -29,7 +29,7 @@ public class TelestoCircleDoodleAction extends BaseTelestoDoodleAction {
 	@JsonProperty("filled")
 	@Description("Filled")
 	public boolean filled;
-	@JsonIgnore
+	@JsonProperty("system")
 	@Description("System")
 	public CoordSystem system = CoordSystem.Screen;
 
