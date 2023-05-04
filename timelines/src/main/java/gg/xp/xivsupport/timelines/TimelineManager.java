@@ -115,6 +115,15 @@ public final class TimelineManager {
 		return zoneIdToTimelineFile.get(zoneId);
 	}
 
+	public @Nullable TimelineProcessor getTimelineIfEnabled(long zoneId) {
+		TimelineCustomizations cust = getCustomSettings(zoneId);
+		if (!cust.enabled) {
+			log.info("Timeline disabled for zone {}", zoneId);
+			return null;
+		}
+		return getTimeline(zoneId);
+	}
+
 	public @Nullable TimelineProcessor getTimeline(long zoneId) {
 		TimelineInfo info = getInfoForZone(zoneId);
 		if (info == null) {
@@ -143,7 +152,7 @@ public final class TimelineManager {
 										TimelineReplacements tr = mapper.readValue(translationsStream, TimelineReplacements.class);
 										String lang = this.lang.getGameLanguage().getShortCode();
 										lr = tr.langs().getOrDefault(lang, LanguageReplacements.empty());
-										log.info("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
+										log.debug("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
 										return lr;
 									}
 									catch (IOException e) {
@@ -187,17 +196,25 @@ public final class TimelineManager {
 		else {
 			pers.save(propStubForZoneId(zoneId), cust);
 		}
-		if (this.zone != null && this.zone.getId() == zoneId && currentTimeline != null) {
+		if (this.zone != null && this.zone.getId() == zoneId) {
 			resetCurrentTimelineKeepSync();
 		}
 	}
 
 	private void resetCurrentTimelineKeepSync() {
-		if (this.zone != null && currentTimeline != null) {
-			// TODO: save/restore the timestamp so it is easier to live-edit
-			TimelineProcessor.TimelineSync lastSync = currentTimeline.getLastSync();
-			loadTimelineForCurrentZone();
-			currentTimeline.setLastSync(lastSync);
+		if (this.zone != null) {
+			if (currentTimeline != null) {
+				// Save/restore the timestamp so it is easier to live-edit
+				TimelineProcessor.TimelineSync lastSync = currentTimeline.getLastSync();
+				loadTimelineForCurrentZone();
+				if (currentTimeline != null) {
+					currentTimeline.setLastSync(lastSync);
+				}
+			}
+			else {
+				// This can happen if you have just enabled the timeline
+				loadTimelineForCurrentZone();
+			}
 		}
 	}
 
@@ -263,7 +280,7 @@ public final class TimelineManager {
 			return;
 		}
 		long zoneId = zone.getId();
-		currentTimeline = getTimeline(zoneId);
+		currentTimeline = getTimelineIfEnabled(zoneId);
 		if (currentTimeline == null) {
 			log.info("No timeline for zone '{}'", zoneId);
 		}
