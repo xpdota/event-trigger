@@ -194,7 +194,7 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 	}
 
 	public static CustomTimelineEntry overrideFor(TimelineEntry other) {
-		return new CustomTimelineEntry(
+		CustomTimelineEntry newCte = new CustomTimelineEntry(
 				other.time(),
 				other.name(),
 				other.sync(),
@@ -207,6 +207,35 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 				false,
 				0
 		);
+		newCte.enabledJobs = jobSelFor(other);
+		return newCte;
+	}
+
+	public static CustomTimelineEntry cloneFor(TimelineEntry other) {
+		CustomTimelineEntry newCte = new CustomTimelineEntry(
+				other.time(),
+				other.name() + " copy",
+				other.sync(),
+				other.duration(),
+				other.timelineWindow(),
+				other.jump(),
+				other.icon(),
+				null,
+				false,
+				other.callout(),
+				other.calloutPreTime()
+		);
+		newCte.enabledJobs = jobSelFor(other);
+		return newCte;
+	}
+
+	private static CombatJobSelection jobSelFor(TimelineEntry other) {
+		if (other instanceof CustomTimelineEntry cte) {
+			return cte.enabledJobs.copy();
+		}
+		else {
+			return CombatJobSelection.all();
+		}
 	}
 
 	@JsonProperty

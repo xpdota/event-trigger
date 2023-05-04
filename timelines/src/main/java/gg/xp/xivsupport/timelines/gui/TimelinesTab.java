@@ -374,19 +374,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			this.add(chooserScroller, c);
 
 
-			CustomRightClickOption clone = CustomRightClickOption.forRow("Clone", TimelineEntry.class, e -> addNewEntry(new CustomTimelineEntry(
-					e.time(),
-					e.name() + " copy",
-					e.sync(),
-					e.duration(),
-					e.timelineWindow(),
-					e.jump(),
-					e.icon(),
-					null,
-					false,
-					e.callout(),
-					e.calloutPreTime()
-			)));
+			CustomRightClickOption clone = CustomRightClickOption.forRow("Clone", TimelineEntry.class, e -> addNewEntry(CustomTimelineEntry.cloneFor(e)));
 			CustomRightClickOption delete = CustomRightClickOption.forRow("Delete/Revert", CustomTimelineEntry.class, this::deleteEntry);
 
 			CustomRightClickOption chooseAbilityIcon = CustomRightClickOption.forRow("Use Ability Icon", TimelineEntry.class, this::chooseActionIcon);
