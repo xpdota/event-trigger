@@ -36,6 +36,9 @@ import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullEndedEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.AutoMarkTargetAction;
@@ -369,7 +372,19 @@ public final class EasyTriggers {
 					"In-game chat lines. Use as a last resort, e.g. Nael quotes.",
 					"{event.name} says {event.line}",
 					"Chat Line {event.name}: {event.line}",
-					List.of(ChatLineRegexFilter::new))
+					List.of(ChatLineRegexFilter::new)),
+			new EventDescriptionImpl<>(DutyCommenceEvent.class,
+					"Duty (re)commencement (barrier dropping)",
+					"Commence",
+					List.of()),
+			new EventDescriptionImpl<>(PullStartedEvent.class,
+					"A new pull has started, though combat has not necessarily begun",
+					"Pull Started",
+					List.of()),
+			new EventDescriptionImpl<>(PullEndedEvent.class,
+					"A pull has ended",
+					"Pull Ended",
+					List.of())
 	));
 
 
