@@ -13,11 +13,9 @@ import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-// TODO
 public class CalloutActionPanel extends TitleBorderPanel implements AcceptsSaveCallback {
 	private Runnable saveCallback;
 
-	// TODO: this doesn't receive auto-save functionality
 	public CalloutActionPanel(GenericCalloutAction action) {
 		super((action instanceof DurationBasedCalloutAction ? "Callout with Duration" : "Callout"));
 		setLayout(new GridBagLayout());

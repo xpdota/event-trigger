@@ -81,7 +81,6 @@ public record Position(double x, double y, double z, double heading) implements 
 	 * @param forward How far forward (based on its facing angle) to move the position.
 	 * @return a new Position object that has been translated in the X-Y plane, with the same Z and heading.
 	 */
-	// TODO: unit tests for this
 	public Position translateRelative(double right, double forward) {
 		// Normalize heading to north = 0, + = clockwise to make math easier
 		double effectiveHeading = northUpClockwiseHeading();

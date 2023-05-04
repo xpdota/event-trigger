@@ -187,6 +187,6 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 
 	@Override
 	public void setSaveCallback(Runnable saveCallback) {
-		saveCallback = saveCallback;
+		this.saveCallback = saveCallback;
 	}
 }
