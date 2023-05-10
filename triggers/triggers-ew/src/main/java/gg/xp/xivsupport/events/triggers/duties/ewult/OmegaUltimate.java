@@ -886,7 +886,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					omegaF = getState().npcById(15715);
 					// TODO: is it more reliable to use the ID ordering, or positions?
 					omegaM = getState().npcById(15714);
-					// Validate date
+					// Validate state
 				} while (omegaF == null || omegaM == null
 				         || omegaF.getPos() == null || omegaM.getPos() == null
 				         || (omegaF.getPos().distanceFrom2D(center) < 9) || omegaM.getPos().distanceFrom2D(center) < 9
