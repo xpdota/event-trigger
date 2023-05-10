@@ -8,6 +8,7 @@ import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkSlotRequest;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 
 import java.util.function.Consumer;
 
@@ -78,7 +79,7 @@ public class AmHelper {
 		}
 	}
 
-	public void mark(Closure<?> closure) {
+	public void mark(@DelegatesTo(Builder.class) Closure<?> closure) {
 		Builder builder = new Builder();
 		closure.setDelegate(builder);
 		closure.run();

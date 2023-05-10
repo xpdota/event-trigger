@@ -20,6 +20,7 @@ import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 import groovy.lang.GString;
 import groovy.lang.GroovyObjectSupport;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
@@ -166,7 +167,7 @@ public class GroovyTriggers {
 			return this;
 		}
 
-		public Builder<X> sequence(Closure<?> sequentialTriggerBody) {
+		public Builder<X> sequence(@DelegatesTo(GroovySqHelper.class) Closure<?> sequentialTriggerBody) {
 			if (sequentialTriggerBody.getMaximumNumberOfParameters() != 2) {
 				throw new IllegalArgumentException("Sequence must have two arguments (event and sequential trigger controller)");
 			}
@@ -221,7 +222,7 @@ public class GroovyTriggers {
 		}
 	}
 
-	public void add(Closure<?> closure) {
+	public void add(@DelegatesTo(Builder.class) Closure<?> closure) {
 		Builder<BaseEvent> builder = new Builder<>();
 		closure.setDelegate(builder);
 		closure.run();
@@ -250,7 +251,7 @@ public class GroovyTriggers {
 			this.controller = controller;
 		}
 
-		public CalloutEvent callout(Closure<?> closure) {
+		public CalloutEvent callout(@DelegatesTo(GroovyCalloutBuilder.class) Closure<?> closure) {
 			GroovyCalloutBuilder gcb = new GroovyCalloutBuilder(() -> last);
 			closure.setDelegate(gcb);
 			closure.setResolveStrategy(Closure.DELEGATE_FIRST);
