@@ -817,7 +817,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				int alpha;
 				if (cd.getEnd() instanceof HasSourceEntity hse) {
 					castPos = hse.getSource().getPos();
-					alpha = (int) (200.0 - (cd.getEstimatedTimeSinceExpiry().toMillis() / 50.0));
+					// gradually fade
+					alpha = (int) (200.0 - (cd.getEstimatedTimeSinceExpiry().toMillis() / 10.0));
 //					log.info("Since: {}, Alpha: {}", cd.getEstimatedTimeSinceExpiry().toMillis(), alpha);
 				}
 				else {
@@ -857,6 +858,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				My further notes:
 				#13 seems to be not only cones, but also things like Omega's "Swivel Cannon" in TOP P5,
 				which is a half-room cleave but with the angle offset a bit.
+
+				#10 - effect range is the outer radius
 				 */
 				// TODO: most of these are wrong due to lack of hitbox size info
 				Graphics2D g2d = (Graphics2D) g;
