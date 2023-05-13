@@ -62,6 +62,7 @@ public final class MakeTimelines {
 		ChromeOptions opts = new ChromeOptions();
 		opts.setHeadless(true);
 		opts.addArguments("--remote-allow-origins=*");
+		opts.addArguments("--disable-dev-shm-usage");
 		ChromeDriver driver = new ChromeDriver(opts);
 		Map<Long, String> zoneToFile = new HashMap<>();
 		String timelineBaseDir = System.getProperty("timelinedir", "timelines/src/main/resources");
