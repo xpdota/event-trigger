@@ -7,6 +7,7 @@ import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.gui.map.OmenType;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
@@ -86,6 +87,7 @@ public final class ActionTableFactory {
 					}
 					return cd > 0 ? cd : "";
 				}))
+				.addMainColumn(new CustomColumn<>("Range/Shape", OmenType::describe))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
 				.addWidget(InGameAbilityPickerButton::new)
 				.withRightClickRepo(RightClickOptionRepo.of(

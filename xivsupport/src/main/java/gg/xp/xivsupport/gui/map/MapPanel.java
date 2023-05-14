@@ -790,26 +790,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				if (ai == null) {
 					return;
 				}
-				OmenType type;
-				switch (ai.castType()) {
-					case 0, 1, 9 -> {
-						return;
-					}
-					case 2, 5, 6, 7 -> {
-						if (ai.effectRange() >= 100) {
-							return;
-						}
-						type = OmenType.CIRCLE;
-					}
-					case 10 -> {
-						type = OmenType.DONUT;
-					}
-					case 4, 8, 12 -> {
-						type = OmenType.RECTANGLE;
-					}
-					default -> {
-						type = OmenType.UNKNOWN;
-					}
+				OmenType type = OmenType.fromActionInfo(ai);
+				if (type == OmenType.UNKNOWN) {
+					return;
 				}
 				Position castPos;
 				Color fillColor;
@@ -856,12 +839,17 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				 */
 				/*
 				My further notes:
+				#10 - effect range is the outer radius
+
+				#11 - yes, it's cross
+
+				#12 is a rectangle, but centered on the caster, extending <effectRange> forward and back
+
 				#13 seems to be not only cones, but also things like Omega's "Swivel Cannon" in TOP P5,
 				which is a half-room cleave but with the angle offset a bit.
 
-				#10 - effect range is the outer radius
 				 */
-				// TODO: most of these are wrong due to lack of hitbox size info
+				// TODO: some of these are wrong due to lack of hitbox size info
 				Graphics2D g2d = (Graphics2D) g;
 				AffineTransform transform = g2d.getTransform();
 				switch (type) {
@@ -881,6 +869,29 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 						g2d.fillRect((int) -(xModif / 2.0), 0, (int) (xModif), (int) radius);
 						g2d.setColor(outlineColor);
 						g2d.drawRect((int) -(xModif / 2.0), 0, (int) (xModif), (int) radius);
+					}
+					case RECTANGLE_CENTERED -> {
+						g2d.setStroke(new BasicStroke(3));
+						transform.translate(xCenter, yCenter);
+						transform.rotate(-castPos.getHeading());
+						g2d.setTransform(transform);
+						g2d.setColor(fillColor);
+						g2d.fillRect((int) -(xModif / 2.0), (int) -radius, (int) (xModif), (int) (2 * radius));
+						g2d.setColor(outlineColor);
+						g2d.drawRect((int) -(xModif / 2.0), (int) -radius, (int) (xModif), (int) (2 * radius));
+					}
+					case CROSS -> {
+						g2d.setStroke(new BasicStroke(3));
+						transform.translate(xCenter, yCenter);
+						transform.rotate(-castPos.getHeading());
+						g2d.setTransform(transform);
+						g2d.setColor(fillColor);
+						g2d.fillRect((int) -(xModif / 2.0), (int) -radius, (int) (xModif), (int) (2 * radius));
+						g2d.fillRect((int) -radius, (int) -(xModif / 2.0), (int) (2 * radius), (int) (xModif));
+						g2d.setColor(outlineColor);
+						g2d.drawRect((int) -(xModif / 2.0), (int) -radius, (int) (xModif), (int) (2 * radius));
+						g2d.drawRect((int) -radius, (int) -(xModif / 2.0), (int) (2 * radius), (int) (xModif));
+
 					}
 				}
 			}
