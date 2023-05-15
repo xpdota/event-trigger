@@ -1,5 +1,6 @@
-package gg.xp.xivsupport.gui.map;
+package gg.xp.xivsupport.gui.map.omen;
 
+import com.sun.jna.platform.win32.WinDef;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +50,10 @@ public enum OmenType implements HasFriendlyName {
 				return RECTANGLE;
 			}
 			case 12 -> {
-				return RECTANGLE_CENTERED;
+				// TODO: is this correct? Lots of things have this but are not centered.
+				// Perhaps we'll know more when we get cast direction/location?
+//				return RECTANGLE_CENTERED;
+				return RECTANGLE;
 			}
 			default -> {
 				return UNKNOWN;
@@ -70,25 +74,25 @@ public enum OmenType implements HasFriendlyName {
 		OmenType omenType = fromActionInfo(ai);
 		switch (omenType) {
 			case CIRCLE -> {
-				sb.append(" (Circle)");
+				sb.append(" Circle");
 			}
 			case DONUT -> {
-				sb.append(" (Donut)");
+				sb.append(" Donut");
 			}
 			case RECTANGLE -> {
-				sb.append('×').append(ai.xAxisModifier()).append("y (Rectangle)");
+				sb.append('×').append(ai.xAxisModifier()).append("y Rectangle");
 			}
 			case RECTANGLE_CENTERED -> {
-				sb.append('×').append(ai.xAxisModifier()).append("y (Rectangle, Front/Back)");
+				sb.append('×').append(ai.xAxisModifier()).append("y Rectangle, Front/Back");
 			}
 			case CONE -> {
-				sb.append(" (Cone)");
+				sb.append(" Cone");
 			}
 			case RAIDWIDE -> {
-				sb.append(" (Raidwide)");
+				sb.append(" Raidwide");
 			}
 			case UNKNOWN -> {
-				sb.append(" (Unknown: ").append(ai.castType()).append(", ").append(ai.xAxisModifier()).append(')');
+				sb.append(" Unknown").append(ai.castType()).append(", ").append(ai.xAxisModifier()).append(')');
 			}
 		}
 		return sb.toString();

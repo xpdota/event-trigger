@@ -1,10 +1,12 @@
 package gg.xp.xivsupport.gui.map;
 
 import gg.xp.xivdata.data.*;
-import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
+import gg.xp.xivsupport.gui.map.omen.OmenDisplayMode;
+import gg.xp.xivsupport.gui.map.omen.OmenInfo;
+import gg.xp.xivsupport.gui.map.omen.OmenType;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -33,6 +35,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
 import java.io.Serial;
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -782,9 +785,17 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					}
 				}
 			}
-			CastTracker cd = castData;
-			if (cd != null) {
-				ActionInfo ai = ActionLibrary.forId(cd.getCast().getAbility().getId());
+			drawOmens(g);
+		}
+
+		private void drawOmens(Graphics g) {
+			mdc.getOmens(cbtId).forEach(omen -> drawOmen(((Graphics2D) g), omen));
+		}
+
+		private void drawOmen(Graphics2D g2d, OmenInfo omen) {
+			g2d = (Graphics2D) g2d.create();
+			try {
+				ActionInfo ai = ActionLibrary.forId(omen.getAbility().getId());
 				// Cast type 0 and 1 are uninteresting
 				// "100" effect range is just a raidwide, don't bother drawing if it's a circle
 				if (ai == null) {
@@ -798,15 +809,25 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				Color fillColor;
 				Color outlineColor;
 				int alpha;
-				if (cd.getEnd() instanceof HasSourceEntity hse) {
-					castPos = hse.getSource().getPos();
-					// gradually fade
-					alpha = (int) (200.0 - (cd.getEstimatedTimeSinceExpiry().toMillis() / 10.0));
-//					log.info("Since: {}, Alpha: {}", cd.getEstimatedTimeSinceExpiry().toMillis(), alpha);
+				XivCombatant tgt = omen.target();
+				if (tgt == null) {
+					castPos = omen.position();
+					if (castPos == null) {
+						castPos = pos;
+					}
 				}
 				else {
-					castPos = pos;
+					castPos = MapPanel.this.combatants.stream().filter(cbt -> cbt.getId() == tgt.getId()).findFirst().orElse(tgt).getPos();
+				}
+				Duration td = omen.timeDeltaFrom(mdc.getTime());
+				if (td.isNegative()) {
+					// casts - start semi transparent
 					alpha = 120;
+				}
+				else {
+					// highlight then gradually fade
+					alpha = (int) (200.0 - (td.toMillis() / 10.0));
+//					log.info("Since: {}, Alpha: {}", cd.getEstimatedTimeSinceExpiry().toMillis(), alpha);
 				}
 				// Don't draw ancient stuff
 				if (alpha <= 0) {
@@ -843,20 +864,27 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 				#11 - yes, it's cross
 
-				#12 is a rectangle, but centered on the caster, extending <effectRange> forward and back
+				#12 is a rectangle, but sometimes it is centered on the caster, extending <effectRange> forward and back
+					Perhaps cast angle/position will help
 
 				#13 seems to be not only cones, but also things like Omega's "Swivel Cannon" in TOP P5,
 				which is a half-room cleave but with the angle offset a bit.
 
 				 */
 				// TODO: some of these are wrong due to lack of hitbox size info
-				Graphics2D g2d = (Graphics2D) g;
 				AffineTransform transform = g2d.getTransform();
 				switch (type) {
-					case CIRCLE, DONUT -> {
+					case CIRCLE -> {
 						g2d.setStroke(new BasicStroke(3));
 						g2d.setColor(fillColor);
 						g2d.fillOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2.0), (int) (radius * 2.0));
+						g2d.setColor(outlineColor);
+						g2d.drawOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2.0), (int) (radius * 2.0));
+					}
+					case DONUT -> {
+						g2d.setStroke(new BasicStroke(3));
+//						g2d.setColor(fillColor);
+//						g2d.fillOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2.0), (int) (radius * 2.0));
 						g2d.setColor(outlineColor);
 						g2d.drawOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2.0), (int) (radius * 2.0));
 					}
@@ -894,6 +922,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 					}
 				}
+			} finally {
+				g2d.dispose();
 			}
 		}
 

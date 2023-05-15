@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui.map;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
+import gg.xp.xivsupport.gui.map.omen.OmenDisplayMode;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.EnumSettingGui;

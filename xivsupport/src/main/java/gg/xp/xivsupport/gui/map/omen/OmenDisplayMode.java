@@ -1,4 +1,4 @@
-package gg.xp.xivsupport.gui.map;
+package gg.xp.xivsupport.gui.map.omen;
 
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 

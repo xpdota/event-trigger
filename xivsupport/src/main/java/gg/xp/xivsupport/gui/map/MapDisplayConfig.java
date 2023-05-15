@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.map;
 
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.gui.map.omen.OmenDisplayMode;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.EnumSetting;
 
