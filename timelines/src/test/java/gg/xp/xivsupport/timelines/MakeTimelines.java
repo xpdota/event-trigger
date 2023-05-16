@@ -1,13 +1,11 @@
 package gg.xp.xivsupport.timelines;
 
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
@@ -23,7 +21,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("NewClassNamingConvention")

@@ -30,7 +30,7 @@ public record FflogsFight(
 	public static FflogsFight fromJson(
 			@JsonProperty("gameZone") Map<String, Object> gameZone,
 			@JsonProperty(value = "fightPercentage", defaultValue = "0") double fightPercentage,
-			@JsonProperty("kill") boolean kill,
+			@JsonProperty(value = "kill", defaultValue = "false") boolean kill,
 			@JsonProperty("id") int id,
 			@JsonProperty("startTime") long startTime,
 			@JsonProperty("endTime") long endTime
