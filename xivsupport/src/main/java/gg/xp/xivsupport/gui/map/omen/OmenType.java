@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.map.omen;
 
-import com.sun.jna.platform.win32.WinDef;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import org.jetbrains.annotations.Nullable;
@@ -92,7 +91,7 @@ public enum OmenType implements HasFriendlyName {
 				sb.append(" Raidwide");
 			}
 			case UNKNOWN -> {
-				sb.append(" Unknown").append(ai.castType()).append(", ").append(ai.xAxisModifier()).append(')');
+				sb.append(" Unknown (").append(ai.castType()).append(", ").append(ai.xAxisModifier()).append(')');
 			}
 		}
 		return sb.toString();
