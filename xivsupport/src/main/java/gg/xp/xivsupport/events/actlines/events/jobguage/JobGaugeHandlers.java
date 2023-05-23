@@ -15,6 +15,9 @@ public class JobGaugeHandlers {
 			case SGE -> {
 				out = doSgeGauge(event);
 			}
+			case DRK -> {
+				out = doDrkGauge(event);
+			}
 			default -> {
 				return;
 			}
@@ -32,6 +35,15 @@ public class JobGaugeHandlers {
 		boolean eukrasiaActive = data[5] > 0;
 
 		return new SgeGaugeEvent(addersGallOverall, adderSting, eukrasiaActive);
+	}
+
+	private Event doDrkGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+		int bloodGauge = data[1];
+		long darkSideDuration = bytesToInt(data[4], data[3]);
+		long esteemDuration = bytesToInt(data[8], data[7]);
+
+		return new DrkGaugeEvent(bloodGauge, darkSideDuration, esteemDuration);
 	}
 
 	private static long bytesToLong(byte... bytes) {
