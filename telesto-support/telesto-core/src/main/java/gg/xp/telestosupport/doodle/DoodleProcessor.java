@@ -11,6 +11,7 @@ import gg.xp.xivsupport.callouts.SingleValueReplacement;
 import gg.xp.xivsupport.callouts.conversions.GlobalCallReplacer;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.groovy.GroovyScriptProcessor;
+import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -56,7 +57,19 @@ public class DoodleProcessor implements FilteredEventHandler {
 		this.gr = gr;
 		this.gsp = gsp;
 		// TODO: make refresh time a setting
-		this.dynamicDoodleRefreshLoop = new RefreshLoop<>("DynamicDoodleRefresh", this, DoodleProcessor::refreshDynamics, ignored -> 50L);
+		this.dynamicDoodleRefreshLoop = new RefreshLoop<>("DynamicDoodleRefresh", this, doodleProcessor -> {
+			try {
+				doodleProcessor.refreshDynamics();
+			} catch (Throwable t) {
+				log.error("Error refreshing doodles", t);
+				try {
+					Thread.sleep(5_000);
+				}
+				catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}, ignored -> 50L);
 	}
 
 	public BooleanSetting enableDoodles() {

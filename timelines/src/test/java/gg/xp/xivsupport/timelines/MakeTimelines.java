@@ -42,6 +42,34 @@ public final class MakeTimelines {
 		return input.substring(0, splitPoint + 1);
 	}
 
+	// TODO: automate
+	private static final Map<String, Map<String, String>> commonReplacements = Map.of(
+			"(?<=00:0839::|00\\|[^|]*\\|0839\\|\\||\\\\\\|0839\\\\\\|\\[\\^\\|\\]\\*\\\\\\||^)([^|:]*) will be sealed off(?: in (?:[0-9]+ seconds)?)?", Map.of(
+					"en", "$1 will be sealed off",
+					"de", "Noch 15 Sekunden, bis sich (?:(?:der|die|das) )?(?:Zugang zu(?:[rm]| den)? )?$1 schließt",
+					"fr", "Fermeture d(?:e|u|es) (?:l'|la |les? )?$1 dans",
+					"ja", "$1の封鎖まであと",
+					"cn", "距$1被封锁还有",
+					"ko", "15초 후에 $1[이가] 봉쇄됩니다"
+			),
+			"is no longer sealed", Map.of(
+					"en", "is no longer sealed",
+					"de", "öffnet sich (?:wieder|erneut)",
+					"fr", "Ouverture ",
+					"ja", "の封鎖が解かれた",
+					"cn", "的封锁解除了",
+					"ko", "의 봉쇄가 해제되었습니다"
+			),
+			"Engage!", Map.of(
+					"en", "Engage!",
+					"de", "Start!",
+					"fr", "À l'attaque",
+					"ja", "戦闘開始！",
+					"cn", "战斗开始！",
+					"ko", "전투 시작!"
+			)
+	);
+
 	@Test
 	void makeTimelines() {
 		main(new String[]{});
@@ -87,6 +115,7 @@ public final class MakeTimelines {
 					boolean isGeneral = false;
 					if (timelineFileRaw == null) {
 						if (contentMap.containsKey("timelineReplace") && contentMap.get("zoneId") == null) {
+							// TODO: "General" is not what it seems - global replacements are in common_replacements.ts
 							if (foundGeneral) {
 								// TODO: does this need to be supported?
 								throw new RuntimeException("Found more than one general timeline replacement set!");
