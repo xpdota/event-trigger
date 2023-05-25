@@ -26,7 +26,7 @@ public class MapConfig {
 	public Component makeComponent() {
 		TitleBorderPanel panel = new TitleBorderPanel("Map/Replay Settings");
 		EnumSettingGui<NameDisplayMode> nameSetting = new EnumSettingGui<>(displayConf.getNameDisplayMode(), "Player Names", () -> true);
-		EnumSettingGui<OmenDisplayMode> omenSetting = new EnumSettingGui<>(displayConf.getOmenDisplayMode(), "Omens (BETA)", () -> true);
+		EnumSettingGui<OmenDisplayMode> omenSetting = new EnumSettingGui<>(displayConf.getOmenDisplayMode(), "AoEs (BETA)", () -> true);
 		JCheckBox recording = new BooleanSettingGui(mdc.getEnableCapture(), "Recording", true).getComponent();
 		IntSettingSpinner max = new IntSettingSpinner(mdc.getMaxCaptures(), "Max Snapshots");
 		IntSettingSpinner minInterval = new IntSettingSpinner(mdc.getMsBetweenCaptures(), "Min Snap Interval (ms)");
@@ -44,6 +44,7 @@ public class MapConfig {
 				Box.createVerticalStrut(5),
 				omenSetting.getLabel(),
 				omenSetting.getComboBoxOnly(),
+				new ReadOnlyText("This feature is beta. Do not report bugs with regards to the display (or lack thereof) of a particular ability."),
 				Box.createVerticalStrut(10),
 				recording,
 				Box.createVerticalStrut(10),
