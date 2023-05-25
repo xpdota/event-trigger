@@ -126,6 +126,10 @@ public class ActionLibraryImpl {
 			return null;
 		}
 		String categoryRaw = row.getRaw(50);
-		return new ActionInfo(id, name, imageId, cd, maxCharges, categoryRaw.intern(), isPlayerAbility, recast);
+		int castType = row.getIntOrDefault(28, 0);
+		int effectRange = row.getIntOrDefault(29, 0);
+		int xAxisModifier = row.getIntOrDefault(30, 0);
+
+		return new ActionInfo(id, name, imageId, cd, maxCharges, categoryRaw.intern(), isPlayerAbility, recast, castType, effectRange, xAxisModifier);
 	}
 }
