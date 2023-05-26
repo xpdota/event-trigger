@@ -50,6 +50,7 @@ public enum KnownDuty implements Duty {
 	P10S("P10S", 1150, Expansion.EW, DutyType.SAVAGE_RAID),
 	P11S("P11S", 1152, Expansion.EW, DutyType.SAVAGE_RAID),
 	P12S("P12S", 1154, Expansion.EW, DutyType.SAVAGE_RAID),
+	GolbezEx("EX5", 1141, Expansion.EW, DutyType.TRIAL_EX),
 	;
 
 	private final String name;

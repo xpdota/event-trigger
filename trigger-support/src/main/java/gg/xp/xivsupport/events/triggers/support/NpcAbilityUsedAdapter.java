@@ -6,21 +6,21 @@ import gg.xp.reevent.scan.FeedHandlerChildInfo;
 import gg.xp.reevent.scan.FeedHelperAdapter;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
-import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.triggers.util.RepeatSuppressor;
 
 import java.time.Duration;
 
 @ScanMe
-public class NpcCastAdapter implements FeedHelperAdapter<NpcCastCallout, AbilityCastStart, ModifiableCallout<AbilityCastStart>> {
+public class NpcAbilityUsedAdapter implements FeedHelperAdapter<NpcAbilityUsedCallout, AbilityUsedEvent, ModifiableCallout<AbilityUsedEvent>> {
 
 	@Override
-	public Class<AbilityCastStart> eventType() {
-		return AbilityCastStart.class;
+	public Class<AbilityUsedEvent> eventType() {
+		return AbilityUsedEvent.class;
 	}
 
 	@Override
-	public TypedEventHandler<AbilityCastStart> makeHandler(FeedHandlerChildInfo<NpcCastCallout, ModifiableCallout<AbilityCastStart>> info) {
+	public TypedEventHandler<AbilityUsedEvent> makeHandler(FeedHandlerChildInfo<NpcAbilityUsedCallout, ModifiableCallout<AbilityUsedEvent>> info) {
 		long[] castIds = info.getAnnotation().value();
 		long suppMs = info.getAnnotation().suppressMs();
 		RepeatSuppressor supp;
@@ -32,12 +32,12 @@ public class NpcCastAdapter implements FeedHelperAdapter<NpcCastCallout, Ability
 		}
 		return new TypedEventHandler<>() {
 			@Override
-			public Class<? extends AbilityCastStart> getType() {
-				return AbilityCastStart.class;
+			public Class<? extends AbilityUsedEvent> getType() {
+				return AbilityUsedEvent.class;
 			}
 
 			@Override
-			public void handle(EventContext context, AbilityCastStart event) {
+			public void handle(EventContext context, AbilityUsedEvent event) {
 				for (int i = 0; i < castIds.length; i++) {
 					if (!event.getSource().isPc() && castIds[i] == event.getAbility().getId()) {
 						if (supp.check(event)) {

@@ -8,9 +8,9 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * Callout adapter for enemy "starts casting" events.
  */
-@FeedHelper(NpcCastAdapter.class)
+@FeedHelper(NpcAbilityUsedAdapter.class)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface NpcCastCallout {
+public @interface NpcAbilityUsedCallout {
 	/**
 	 * @return Which cast IDs to trigger on
 	 */
