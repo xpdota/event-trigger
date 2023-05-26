@@ -23,7 +23,17 @@ public class RepeatSuppressor {
 		}
 		last = event;
 		return result;
+	}
 
+	private static final RepeatSuppressor NO_OP = new RepeatSuppressor(Duration.ZERO) {
+		@Override
+		public boolean check(BaseEvent event) {
+			return true;
+		}
+	};
+
+	public static RepeatSuppressor noOp() {
+		return NO_OP;
 	}
 
 }

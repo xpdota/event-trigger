@@ -15,4 +15,6 @@ public @interface NpcCastCallout {
 	 * @return Which cast IDs to trigger on
 	 */
 	long[] value();
+
+	long suppressMs() default -1;
 }

@@ -42,6 +42,9 @@ public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 	ATTACK3("Attack 3", "attack3", ATTACK_NEXT, 60703),
 	ATTACK4("Attack 4", "attack4", ATTACK_NEXT, 60704),
 	ATTACK5("Attack 5", "attack5", ATTACK_NEXT, 60705),
+	ATTACK6("Attack 6", "attack6", ATTACK_NEXT, 61306),
+	ATTACK7("Attack 7", "attack7", ATTACK_NEXT, 61307),
+	ATTACK8("Attack 8", "attack8", ATTACK_NEXT, 61308),
 
 	BIND_NEXT("Next Bind", "bind"),
 	BIND1("Bind 1", "bind1", BIND_NEXT, 60706),

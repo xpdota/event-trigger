@@ -3,8 +3,10 @@ package gg.xp.xivsupport.gui.map;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
+import gg.xp.xivsupport.gui.map.omen.OmenDisplayMode;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 
 import javax.swing.*;
@@ -14,13 +16,17 @@ import java.awt.*;
 public class MapConfig {
 
 	private final MapDataController mdc;
+	private final MapDisplayConfig displayConf;
 
-	public MapConfig(MapDataController mdc) {
+	public MapConfig(MapDataController mdc, MapDisplayConfig displayConf) {
 		this.mdc = mdc;
+		this.displayConf = displayConf;
 	}
 
 	public Component makeComponent() {
 		TitleBorderPanel panel = new TitleBorderPanel("Map/Replay Settings");
+		EnumSettingGui<NameDisplayMode> nameSetting = new EnumSettingGui<>(displayConf.getNameDisplayMode(), "Player Names", () -> true);
+		EnumSettingGui<OmenDisplayMode> omenSetting = new EnumSettingGui<>(displayConf.getOmenDisplayMode(), "AoEs (BETA)", () -> true);
 		JCheckBox recording = new BooleanSettingGui(mdc.getEnableCapture(), "Recording", true).getComponent();
 		IntSettingSpinner max = new IntSettingSpinner(mdc.getMaxCaptures(), "Max Snapshots");
 		IntSettingSpinner minInterval = new IntSettingSpinner(mdc.getMsBetweenCaptures(), "Min Snap Interval (ms)");
@@ -33,6 +39,13 @@ public class MapConfig {
 		ReadOnlyText help = new ReadOnlyText(helpText);
 
 		GuiUtil.simpleTopDownLayout(panel,
+				nameSetting.getLabel(),
+				nameSetting.getComboBoxOnly(),
+				Box.createVerticalStrut(5),
+				omenSetting.getLabel(),
+				omenSetting.getComboBoxOnly(),
+				new ReadOnlyText("This feature is beta. Do not report bugs with regards to the display (or lack thereof) of a particular ability."),
+				Box.createVerticalStrut(10),
 				recording,
 				Box.createVerticalStrut(10),
 				max.getLabelOnly(),

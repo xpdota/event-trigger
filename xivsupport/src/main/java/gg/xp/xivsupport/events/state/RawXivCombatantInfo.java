@@ -128,6 +128,9 @@ public final class RawXivCombatantInfo implements Serializable {
 	}
 
 	public HitPoints getHP() {
+		// TODO: this causes a lot of objects to get allocated - consider just storing it as a HitPoints object,
+		// or some kind of caching
+		// Same with Position
 		return new HitPoints(curHp, maxHp);
 	}
 
