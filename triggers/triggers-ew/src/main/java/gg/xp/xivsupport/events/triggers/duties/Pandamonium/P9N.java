@@ -45,7 +45,7 @@ public class P9N extends AutoChildEventHandler implements FilteredEventHandler {
 	//Martialist
 	@NpcCastCallout(0x8128)
 	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker = ModifiableCallout.durationBasedCall("Archaic Rockbreaker", "Knockback, then avoid fissures");
-	@NpcCastCallout(0x812F)
+	@NpcCastCallout(value = 0x812F, suppressMs = 200)
 	private final ModifiableCallout<AbilityCastStart> archaicDemolish = ModifiableCallout.durationBasedCall("Archaic Demolish", "Healer stacks");
 	@NpcCastCallout(0x8131)
 	private final ModifiableCallout<AbilityCastStart> ascendantFist = ModifiableCallout.durationBasedCall("Ascendant Fist", "Tankbuster");
@@ -55,7 +55,7 @@ public class P9N extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> frontCombo = ModifiableCallout.durationBasedCall("Front Combination", "Out, go behind");
 
 	//Behemoth
-	@NpcCastCallout(0x8132)
+	@NpcCastCallout(value = 0x8132, suppressMs = 200)
 	private final ModifiableCallout<AbilityCastStart> charybdis = ModifiableCallout.durationBasedCall("Charybdis", "AOEs with puddles");
 	@NpcCastCallout(0x8138) //TODO: gets called along with bile at the same time when its first seen. add bile but make sure it doesnt overlap
 	private final ModifiableCallout<AbilityCastStart> beastlyRoar = ModifiableCallout.durationBasedCall("Beastly Roar", "Knockback");
@@ -63,7 +63,7 @@ public class P9N extends AutoChildEventHandler implements FilteredEventHandler {
 //	private final ModifiableCallout<AbilityCastStart> beastlyBile = ModifiableCallout.durationBasedCall("Beastly Bile", "AOEs");
 	@NpcCastCallout(0x813F)
 	private final ModifiableCallout<AbilityCastStart> pulverizingPounce = ModifiableCallout.durationBasedCall("Pulverizing Pounce", "Stack");
-	@NpcCastCallout(0x8139)
+	@NpcCastCallout(value = 0x8139, suppressMs = 10_000)
 	private final ModifiableCallout<AbilityCastStart> gluttonousRampage = ModifiableCallout.durationBasedCall("Gluttonous Rampage", "Tank Tethers then proximity");
 	@NpcCastCallout(0x8134)
 	private final ModifiableCallout<AbilityCastStart> comet = ModifiableCallout.durationBasedCall("Comet", "Proximity");
