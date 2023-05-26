@@ -10,7 +10,7 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@CalloutRepo(name = "P9S", duty = KnownDuty.None)
+@CalloutRepo(name = "P9S", duty = KnownDuty.P9S)
 public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(P9S.class);
@@ -25,8 +25,7 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return false;
-//		return state.dutyIs(KnownDuty.P9S)
+		return state.dutyIs(KnownDuty.P9S);
 	}
 
 	private XivState getState() {
