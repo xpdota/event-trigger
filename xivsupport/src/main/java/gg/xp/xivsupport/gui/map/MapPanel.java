@@ -33,6 +33,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Arc2D;
 import java.io.Serial;
 import java.net.URL;
 import java.time.Duration;
@@ -919,7 +920,20 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 						g2d.setColor(outlineColor);
 						g2d.drawRect((int) -(xModif / 2.0), (int) -radius, (int) (xModif), (int) (2 * radius));
 						g2d.drawRect((int) -radius, (int) -(xModif / 2.0), (int) (2 * radius), (int) (xModif));
-
+					}
+					case CONE -> {
+						g2d.setStroke(new BasicStroke(3));
+						transform.translate(xCenter, yCenter);
+						transform.rotate(-castPos.getHeading() + Math.PI);
+						g2d.setTransform(transform);
+						g2d.setColor(fillColor);
+						int angleDegrees = ai.coneAngle();
+						// Arc2D uses the east side as "zero" and counts CCW
+						Arc2D.Double arc = new Arc2D.Double(-radius, -radius, 2 * radius, 2 * radius, 90 - (angleDegrees / 2.0f), angleDegrees, Arc2D.PIE);
+						g2d.setColor(fillColor);
+						g2d.fill(arc);
+						g2d.setColor(outlineColor);
+						g2d.draw(arc);
 					}
 				}
 			} finally {

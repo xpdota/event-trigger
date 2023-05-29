@@ -16,7 +16,8 @@ public record ActionInfo(
 		long castTimeRaw,
 		int castType,
 		int effectRange,
-		int xAxisModifier
+		int xAxisModifier,
+		int coneAngle
 		) {
 	public @Nullable ActionIcon getIcon() {
 		return ActionLibrary.iconForInfo(this);
