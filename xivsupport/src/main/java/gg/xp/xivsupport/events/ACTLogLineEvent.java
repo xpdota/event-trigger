@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
+import gg.xp.xivsupport.events.actlines.parsers.ActLineParseException;
 import gg.xp.xivsupport.persistence.Compressible;
 
 import java.io.Serial;

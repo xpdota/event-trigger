@@ -86,8 +86,13 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		}
 		else if (value instanceof HasAbility hasAbility) {
 			XivAbility ability = hasAbility.getAbility();
-			text = ability.getName();
 			icon = ActionLibrary.iconForId(ability.getId());
+			if (value instanceof HasDuration hd && !hd.isIndefinite()) {
+				text = ability.getName() + String.format(" (%.02fs)", hd.getInitialDuration().toMillis() / 1_000.0);
+			}
+			else {
+				text = ability.getName();
+			}
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 			idText = String.format("%X", ability.getId());
 		}

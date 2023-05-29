@@ -834,7 +834,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				if (alpha <= 0) {
 					return;
 				}
-				if (cbt instanceof XivPlayerCharacter) {
+				if (cbt instanceof XivPlayerCharacter || cbt.walkParentChain() instanceof XivPlayerCharacter) {
 					outlineColor = (new Color(80, 200, 255, alpha));
 				}
 				else {

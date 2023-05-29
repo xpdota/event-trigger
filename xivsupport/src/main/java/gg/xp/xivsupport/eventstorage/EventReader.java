@@ -8,6 +8,7 @@ import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
+import gg.xp.xivsupport.events.actlines.parsers.ActLineParseException;
 import gg.xp.xivsupport.events.fflogs.FflogsMasterDataEvent;
 import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
 import gg.xp.xivsupport.models.XivZone;
@@ -31,6 +32,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
@@ -127,7 +129,17 @@ public final class EventReader {
 		}
 		return lines.stream()
 				.filter(s -> !s.isEmpty())
-				.map(ACTLogLineEvent::new)
+				.map(logLine -> {
+					try {
+						return new ACTLogLineEvent(logLine);
+					}
+					catch (Throwable t) {
+						ActLineParseException exc = new ActLineParseException(logLine, t);
+						log.error("Error parsing log line", exc);
+						return null;
+					}
+				})
+				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
 	}
 
