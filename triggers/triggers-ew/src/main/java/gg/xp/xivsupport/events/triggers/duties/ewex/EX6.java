@@ -18,14 +18,18 @@ import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcAbilityUsedCallout;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
+import gg.xp.xivsupport.models.ArenaPos;
+import gg.xp.xivsupport.models.ArenaSector;
 
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
 
 @CalloutRepo(name = "EX6", duty = KnownDuty.GolbezEx)
 public class EX6 extends AutoChildEventHandler implements FilteredEventHandler {
 
-	private final XivState state;
+	private final ArenaPos ap = new ArenaPos(100, 100, 5, 5);
+	private XivState state;
 	private ActiveCastRepository acr;
 
 	public EX6(XivState state, ActiveCastRepository acr) {
@@ -170,10 +174,31 @@ public class EX6 extends AutoChildEventHandler implements FilteredEventHandler {
 				else {
 					s.updateCall(phasesOfShadowStacks, stackOrSpread);
 				}
-
-
 			}
 	);
 
+	private final ModifiableCallout<?> gale1 = new ModifiableCallout<>("Gale: Initial", "{firingOrder[0]}, {firingOrder[1]}, {firingOrder[2]}, {firingOrder[3]}");
+	private final ModifiableCallout<?> gale2 = new ModifiableCallout<>("Gale: Second", "{firingOrder[1]}", "{firingOrder[1]}, {firingOrder[2]}, {firingOrder[3]}");
+	private final ModifiableCallout<?> gale3 = new ModifiableCallout<>("Gale: Third", "{firingOrder[2]}", "{firingOrder[2]}, {firingOrder[3]}");
+	private final ModifiableCallout<?> gale4 = new ModifiableCallout<>("Gale: Fourth", "{firingOrder[3]}", "{firingOrder[3]}");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> gale = SqtTemplates.sq(30_000, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8458),
+			(e1, s) -> {
+				s.waitThenRefreshCombatants(100);
+				List<ArenaSector> firingOrder = state.npcsById(16218)
+						.stream()
+						.sorted(Comparator.comparing(cbt -> -cbt.getId()))
+						.map(ap::forCombatant)
+						.toList();
+				s.setParam("firingOrder", firingOrder);
+				s.updateCall(gale1);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8458));
+				s.updateCall(gale2);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8459));
+				s.updateCall(gale3);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x845A));
+				s.updateCall(gale4);
+			});
 
 }

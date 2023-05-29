@@ -5,7 +5,7 @@
     </envs>
     <option name="MAIN_CLASS_NAME" value="gg.xp.xivsupport.gui.GuiLaunch" />
     <module name="launcher" />
-    <option name="VM_PARAMETERS" value="-XX:MaxHeapFreeRatio=30 -XX:MinHeapFreeRatio=10 -Dstart-minimized=true" />
+    <option name="VM_PARAMETERS" value="-XX:MaxHeapFreeRatio=30 -XX:MinHeapFreeRatio=10 -Dstart-minimized=true -Dtriggevent_settings_dirr=C:\Users\Matt\Desktop\test" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="gg.xp.xivsupport.gui.imprt.*" />

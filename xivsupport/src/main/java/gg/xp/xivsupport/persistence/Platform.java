@@ -1,6 +1,9 @@
 package gg.xp.xivsupport.persistence;
 
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
@@ -16,10 +19,35 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 public final class Platform {
+
+	private static final Logger log = LoggerFactory.getLogger(Platform.class);
+
 	private Platform() {
 	}
 
+	private static @Nullable String getProp(String prop) {
+		String fromSysProps = System.getProperty(prop);
+		if (fromSysProps != null && !fromSysProps.isBlank()) {
+			return fromSysProps;
+		}
+		String fromEnv = System.getenv(prop);
+		if (fromEnv != null && !fromEnv.isBlank()) {
+			return fromEnv;
+		}
+		return null;
+	}
+
 	public static Path getTriggeventDir() {
+		String override = getProp("triggevent_settings_dir");
+		if (override != null) {
+			File fileMaybe = new File(override);
+			if (fileMaybe.isDirectory()) {
+				return fileMaybe.toPath();
+			}
+			else {
+				log.info("Invalid override path: '{}'", override);
+			}
+		}
 		String appData = System.getenv("APPDATA");
 		Path userDataDir;
 		if (appData == null) {
