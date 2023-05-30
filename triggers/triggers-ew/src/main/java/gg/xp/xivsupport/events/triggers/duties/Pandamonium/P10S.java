@@ -134,8 +134,11 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final SequentialTrigger<BaseEvent> deamoniacBonds = SqtTemplates.sq(90_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82A1),
 			(e1, s) -> {
+				log.info("Daemoniac Bonds: Start");
 				List<HeadMarkerEvent> headMarks = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -444, Duration.ofMillis(100));
+				log.info("Daemoniac Bonds: Got HMs");
 				AbilityCastStart linestack = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x829D));
+				log.info("Daemoniac Bonds: Got Line Stack");
 				Optional<HeadMarkerEvent> myMarker = headMarks.stream().filter(hme -> hme.getTarget().isThePlayer()).findAny();
 				if (myMarker.isPresent()) {
 					s.updateCall(bondsHasMarker, myMarker.get());
@@ -146,6 +149,7 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(linestack.getAbility().getId()));
 				BuffApplied spreadBuff = buffs.findBuffById(0xDDE);
 				BuffApplied stackBuff = buffs.findBuffById(0xDDF);
+				log.info("Daemoniac Bonds: Got Buffs");
 				if (spreadBuff.getInitialDuration().compareTo(stackBuff.getInitialDuration()) > 0) {
 					s.updateCall(bondsStackFirst, stackBuff);
 					s.waitBuffRemoved(buffs, stackBuff);
@@ -156,6 +160,7 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 					s.waitBuffRemoved(buffs, spreadBuff);
 					s.updateCall(bondsStack, stackBuff);
 				}
+				log.info("Daemoniac Bonds: Done");
 
 
 			}
