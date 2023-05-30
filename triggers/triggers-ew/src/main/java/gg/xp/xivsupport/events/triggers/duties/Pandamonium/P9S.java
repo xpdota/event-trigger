@@ -80,11 +80,11 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(33127)
 	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33127 = new ModifiableCallout<>("Archaic Rockbreaker: Rear+Out then In", "Rear, Out, then In");
 	@NpcCastCallout(33128)
-	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33128 = new ModifiableCallout<>("Archaic Rockbreaker: Front+In then Out", "Front, In, then Out");
+	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33128 = new ModifiableCallout<>("Archaic Rockbreaker: Rear+In then Out", "Rear, In, then Out");
 	@NpcCastCallout(33129)
 	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33129 = new ModifiableCallout<>("Archaic Rockbreaker: Front+Out then In", "Front, Out, then In");
 	@NpcCastCallout(33130)
-	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33130 = new ModifiableCallout<>("Archaic Rockbreaker: Rear+Out then In", "Rear, In, then Out");
+	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33130 = new ModifiableCallout<>("Archaic Rockbreaker: Front+Out then In", "Front, In, then Out");
 
 	@PlayerHeadmarker(value = -388, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> two = new ModifiableCallout<>("Limit Cut #2", "Two");
