@@ -40,7 +40,6 @@ public class SgeGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
 	}
 
 	public Instant replenishedAt() {
-		Instant repAt = effectiveTimeNow().plusMillis((long) (JobGaugeConstants.SGE_GAUGE_RECHARGE_TIME * (3 - getAddersGallNow())));
-		return repAt;
+		return effectiveTimeNow().plusMillis((long) (JobGaugeConstants.SGE_GAUGE_RECHARGE_TIME * (3 - getAddersGallNow())));
 	}
 }

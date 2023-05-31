@@ -17,11 +17,6 @@ public class XivStateRecalculatedEvent extends BaseEvent implements XivStateChan
 	private static final long serialVersionUID = -6310170328601920843L;
 
 	@Override
-	public boolean shouldSave() {
-		return false;
-	}
-
-	@Override
 	public @Nullable Event combineWith(Event event) {
 		if (event instanceof XivStateRecalculatedEvent) {
 			return this;

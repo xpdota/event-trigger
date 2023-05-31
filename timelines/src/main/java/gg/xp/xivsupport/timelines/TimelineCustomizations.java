@@ -11,6 +11,8 @@ import java.util.List;
 @UseJsonSer
 public class TimelineCustomizations {
 	@JsonProperty
+	public boolean enabled = true;
+	@JsonProperty
 	private List<CustomTimelineEntry> entries = Collections.emptyList();
 
 	public List<CustomTimelineEntry> getEntries() {

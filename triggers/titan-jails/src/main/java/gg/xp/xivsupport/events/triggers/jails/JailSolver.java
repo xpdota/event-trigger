@@ -165,7 +165,7 @@ public class JailSolver implements FilteredEventHandler, OverridesCalloutGroupEn
 	public void sortTheJails(EventContext context, UnsortedTitanJailsSolvedEvent event) {
 		// This is where we would do job prio, custom prio, or whatever else you can come up with
 		List<XivPlayerCharacter> jailedPlayers = new ArrayList<>(event.getJailedPlayers());
-		jailedPlayers.sort(setting.getPlayerJailSortComparator());
+		jailedPlayers.sort(setting.getComparator());
 		context.accept(new FinalTitanJailsSolvedEvent(jailedPlayers));
 		log.info("Unsorted jails: {}", event.getJailedPlayers());
 		log.info("Sorted jails: {}", jailedPlayers);

@@ -13,7 +13,16 @@
             <excludes>
                 <exclude>**/src.zip</exclude>
                 <exclude>jre/</exclude>
+                <exclude>*.sh</exclude>
             </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/target/windows</directory>
+            <outputDirectory>triggevent</outputDirectory>
+            <includes>
+                <include>*.sh</include>
+            </includes>
+            <fileMode>0755</fileMode>
         </fileSet>
     </fileSets>
 </assembly>

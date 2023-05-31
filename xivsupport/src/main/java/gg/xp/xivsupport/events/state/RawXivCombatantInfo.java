@@ -19,21 +19,47 @@ public final class RawXivCombatantInfo implements Serializable {
 	private final String name;
 	private final long jobId;
 	private final long type;
-	private final long curHp;
-	private final long maxHp;
-	private final long curMp;
-	private final long maxMp;
-	private final long level;
+	private final int curHp;
+	private final int maxHp;
+	private final int curMp;
+	private final int maxMp;
+	private final int level;
 	private final double posX;
 	private final double posY;
 	private final double posZ;
 	private final double heading;
 	private final long worldId;
 	private final String worldName;
-	private final long bnpcId;
-	private final long bnpcNameId;
-	private final long partyType;
+	private final int bnpcId;
+	private final int bnpcNameId;
+	private final int partyType;
 	private final long ownerId;
+	private final short transformationId;
+	private final short weaponId;
+
+	public RawXivCombatantInfo(
+			long id,
+			String name,
+			long jobId,
+			long type,
+			long curHp,
+			long maxHp,
+			long curMp,
+			long maxMp,
+			long level,
+			double posX,
+			double posY,
+			double posZ,
+			double heading,
+			long worldId,
+			String worldName,
+			long bnpcId,
+			long bnpcNameId,
+			long partyType,
+			long ownerId
+	) {
+		this(id, name, jobId, type, curHp, maxHp, curMp, maxMp, level, posX, posY, posZ, heading, worldId, worldName, bnpcId, bnpcNameId, partyType, ownerId, (short) -1, (short) -1);
+	}
 
 	public RawXivCombatantInfo(
 			@JsonProperty("ID") long id,
@@ -54,18 +80,21 @@ public final class RawXivCombatantInfo implements Serializable {
 			@JsonProperty("BNpcID") long bnpcId,
 			@JsonProperty("BNpcNameID") long bnpcNameId,
 			@JsonProperty("PartyType") long partyType,
-			@JsonProperty("OwnerID") long ownerId
+			@JsonProperty("OwnerID") long ownerId,
+			@JsonProperty(value = "TransformationId") Short transformationId,
+			@JsonProperty(value = "WeaponId") Short weaponId
+
 	) {
 		this.id = id;
 		// Reuse strings
 		this.name = name != null ? name.intern() : null;
 		this.jobId = jobId;
 		this.type = type;
-		this.curHp = curHp;
-		this.maxHp = maxHp;
-		this.curMp = curMp;
-		this.maxMp = maxMp;
-		this.level = level;
+		this.curHp = (int) curHp;
+		this.maxHp = (int) maxHp;
+		this.curMp = (int) curMp;
+		this.maxMp = (int) maxMp;
+		this.level = (int) level;
 		this.posX = posX;
 		this.posY = posY;
 		this.posZ = posZ;
@@ -78,10 +107,12 @@ public final class RawXivCombatantInfo implements Serializable {
 		else {
 			this.worldName = worldName.intern();
 		}
-		this.bnpcId = bnpcId;
-		this.bnpcNameId = bnpcNameId;
-		this.partyType = partyType;
+		this.bnpcId = (int) bnpcId;
+		this.bnpcNameId = (int) bnpcNameId;
+		this.partyType = (int) partyType;
 		this.ownerId = ownerId;
+		this.transformationId = transformationId == null ? -1 : transformationId;
+		this.weaponId = weaponId == null ? -1 : weaponId;
 	}
 
 	public long getId() {
@@ -97,6 +128,9 @@ public final class RawXivCombatantInfo implements Serializable {
 	}
 
 	public HitPoints getHP() {
+		// TODO: this causes a lot of objects to get allocated - consider just storing it as a HitPoints object,
+		// or some kind of caching
+		// Same with Position
 		return new HitPoints(curHp, maxHp);
 	}
 
@@ -148,28 +182,38 @@ public final class RawXivCombatantInfo implements Serializable {
 		return level;
 	}
 
+	public short getTransformationId() {
+		return transformationId;
+	}
+
+	public short getWeaponId() {
+		return weaponId;
+	}
+
 	@Override
 	public String toString() {
 		return "RawXivCombatantInfo{" +
-				"id=" + id +
-				", name='" + name + '\'' +
-				", jobId=" + jobId +
-				", type=" + type +
-				", curHp=" + curHp +
-				", maxHp=" + maxHp +
-				", curMp=" + curMp +
-				", maxMp=" + maxMp +
-				", posX=" + posX +
-				", posY=" + posY +
-				", posZ=" + posZ +
-				", heading=" + heading +
-				", worldId=" + worldId +
-				", worldName='" + worldName + '\'' +
-				", bnpcId=" + bnpcId +
-				", bnpcNameId='" + bnpcNameId + '\'' +
-				", partyType=" + partyType +
-				", ownerId=" + ownerId +
-				'}';
+		       "id=" + id +
+		       ", name='" + name + '\'' +
+		       ", jobId=" + jobId +
+		       ", type=" + type +
+		       ", curHp=" + curHp +
+		       ", maxHp=" + maxHp +
+		       ", curMp=" + curMp +
+		       ", maxMp=" + maxMp +
+		       ", posX=" + posX +
+		       ", posY=" + posY +
+		       ", posZ=" + posZ +
+		       ", heading=" + heading +
+		       ", worldId=" + worldId +
+		       ", worldName='" + worldName + '\'' +
+		       ", bnpcId=" + bnpcId +
+		       ", bnpcNameId='" + bnpcNameId + '\'' +
+		       ", partyType=" + partyType +
+		       ", ownerId=" + ownerId +
+		       ", tfId=" + transformationId +
+		       ", wepId=" + weaponId +
+		       '}';
 	}
 
 	@Override
@@ -177,11 +221,31 @@ public final class RawXivCombatantInfo implements Serializable {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		RawXivCombatantInfo that = (RawXivCombatantInfo) o;
-		return id == that.id && jobId == that.jobId && type == that.type && curHp == that.curHp && maxHp == that.maxHp && curMp == that.curMp && maxMp == that.maxMp && level == that.level && Double.compare(that.posX, posX) == 0 && Double.compare(that.posY, posY) == 0 && Double.compare(that.posZ, posZ) == 0 && Double.compare(that.heading, heading) == 0 && worldId == that.worldId && bnpcId == that.bnpcId && bnpcNameId == that.bnpcNameId && partyType == that.partyType && ownerId == that.ownerId && Objects.equals(name, that.name) && Objects.equals(worldName, that.worldName);
+		return id == that.id
+		       && jobId == that.jobId
+		       && type == that.type
+		       && curHp == that.curHp
+		       && maxHp == that.maxHp
+		       && curMp == that.curMp
+		       && maxMp == that.maxMp
+		       && level == that.level
+		       && Double.compare(that.posX, posX) == 0
+		       && Double.compare(that.posY, posY) == 0
+		       && Double.compare(that.posZ, posZ) == 0
+		       && Double.compare(that.heading, heading) == 0
+		       && worldId == that.worldId
+		       && bnpcId == that.bnpcId
+		       && bnpcNameId == that.bnpcNameId
+		       && partyType == that.partyType
+		       && ownerId == that.ownerId
+		       && Objects.equals(name, that.name)
+		       && Objects.equals(worldName, that.worldName)
+		       && Objects.equals(transformationId, that.transformationId)
+		       && Objects.equals(weaponId, that.weaponId);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, jobId, type, curHp, maxHp, curMp, maxMp, level, posX, posY, posZ, heading, worldId, worldName, bnpcId, bnpcNameId, partyType, ownerId);
+		return Objects.hash(id, name, jobId, type, curHp, maxHp, curMp, maxMp, level, posX, posY, posZ, heading, worldId, worldName, bnpcId, bnpcNameId, partyType, ownerId, transformationId, weaponId);
 	}
 }

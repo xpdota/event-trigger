@@ -7,15 +7,16 @@
         <groupId>gg.xp</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
+    <packaging>pom</packaging>
+    <modules>
+        <module>telesto-core</module>
+        <module>telesto-right-clicks</module>
+        <module>telesto-gui</module>
+        <module>telesto-easy-triggers</module>
+        <module>telesto-subscriber</module>
+    </modules>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>telesto-support</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>gg.xp</groupId>
-            <artifactId>xivsupport</artifactId>
-        </dependency>
-    </dependencies>
 
 </project>

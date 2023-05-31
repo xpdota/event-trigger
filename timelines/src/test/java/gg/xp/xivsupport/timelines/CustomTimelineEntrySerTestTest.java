@@ -31,7 +31,7 @@ public class CustomTimelineEntrySerTestTest {
 
 		String asString = pers.get("My Timeline", String.class, "");
 
-		Assert.assertEquals(asString, "{\"entries\":[{\"time\":123.4,\"name\":\"Tankbuster\",\"sync\":\"21:.*FooBar\",\"timelineWindow\":{\"start\":5.6,\"end\":8.7}}]}");
+		Assert.assertEquals(asString, "{\"enabled\":true,\"entries\":[{\"time\":123.4,\"name\":\"Tankbuster\",\"sync\":\"21:.*FooBar\",\"timelineWindow\":{\"start\":5.6,\"end\":8.7}}]}");
 
 		TimelineCustomizations myTimeline = pers.get("My Timeline", TimelineCustomizations.class, null);
 		CustomTimelineEntry entrySaved = myTimeline.getEntries().get(0);
@@ -60,7 +60,7 @@ public class CustomTimelineEntrySerTestTest {
 
 		String asString = pers.get("My Timeline", String.class, "");
 
-		Assert.assertEquals(asString, "{\"entries\":[{\"time\":123.4,\"name\":\"Tankbuster\",\"sync\":\"21:.*FooBar\",\"duration\":5.0,\"timelineWindow\":{\"start\":5.6,\"end\":8.7},\"jump\":123.5,\"icon\":\"http://foo.bar.com/baz.png\"}]}");
+		Assert.assertEquals(asString, "{\"enabled\":true,\"entries\":[{\"time\":123.4,\"name\":\"Tankbuster\",\"sync\":\"21:.*FooBar\",\"duration\":5.0,\"timelineWindow\":{\"start\":5.6,\"end\":8.7},\"jump\":123.5,\"icon\":\"http://foo.bar.com/baz.png\"}]}");
 
 		TimelineCustomizations myTimeline = pers.get("My Timeline", TimelineCustomizations.class, null);
 		CustomTimelineEntry entrySaved = myTimeline.getEntries().get(0);

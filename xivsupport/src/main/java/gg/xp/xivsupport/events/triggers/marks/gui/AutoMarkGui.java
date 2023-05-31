@@ -1,13 +1,16 @@
 package gg.xp.xivsupport.events.triggers.marks.gui;
 
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.services.ServiceSelectorGui;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkHandler;
 import gg.xp.xivsupport.events.triggers.marks.AutoMarkKeyHandler;
+import gg.xp.xivsupport.events.triggers.marks.adv.AutoMarkServiceSelector;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 
 import javax.swing.*;
@@ -18,10 +21,12 @@ public class AutoMarkGui implements PluginTab {
 
 	private final AutoMarkHandler marks;
 	private final AutoMarkKeyHandler keyHandler;
+	private final AutoMarkServiceSelector serv;
 
-	public AutoMarkGui(AutoMarkHandler marks, AutoMarkKeyHandler keyHandler) {
+	public AutoMarkGui(AutoMarkHandler marks, AutoMarkKeyHandler keyHandler, AutoMarkServiceSelector serv) {
 		this.marks = marks;
 		this.keyHandler = keyHandler;
+		this.serv = serv;
 	}
 
 	@Override
@@ -40,16 +45,15 @@ public class AutoMarkGui implements PluginTab {
 		macroHelpButton.addActionListener(l -> {
 			JOptionPane.showMessageDialog(SwingUtilities.getRoot(macroHelpButton), macroHelpText);
 		});
-		BooleanSetting telestoSetting = marks.getUseTelesto();
-		Component useTelesto = new BooleanSettingGui(telestoSetting, "Use Telesto instead of Macros (must be installed in Dalamud)").getComponent();
-		Component krMode = new BooleanSettingGui(marks.getKoreanMode(), "Korean Client Mode (changes 'ignore' to 'stop')").getComponent();
-		Component useFKeys = new BooleanSettingGui(keyHandler.getUseFkeys(), "Use F1-F9 (Instead of NumPad 1-9)", () -> !telestoSetting.get()).getComponent();
-		telestoSetting.addListener(outer::repaint);
+		Component serviceSelectorLabel = new JLabel("AutoMark System:");
+		Component serviceSelector = new ServiceSelectorGui(serv, "", () -> true, true).getComboBoxOnly();
+		serv.addListener(outer::repaint);
+		Component langMode = new EnumSettingGui<>(marks.getLanguageSetting(), "Game Client Language", () -> true).getComponent();
+		Component useFKeys = new BooleanSettingGui(keyHandler.getUseFkeys(), "For Macros Only: Use F1-F9 (Instead of NumPad 1-9)", () -> keyHandler.getHandle().enabled()).getComponent();
 
-		ReadOnlyText text = new ReadOnlyText("Note: Telesto is REQUIRED for triggers that place specific markers (rather than just doing '/mk attack' such as Titan Jails)");
-//		text.setPreferredSize(new Dimension(400, 400));
+		ReadOnlyText text = new ReadOnlyText("Note: PostNamazu or Telesto is REQUIRED for triggers that place specific markers (rather than just doing '/mk attack' such as Titan Jails)");
 
-		GuiUtil.simpleTopDownLayout(outer, 400, helpButton, macroHelpButton, useTelesto, krMode, useFKeys, text);
+		GuiUtil.simpleTopDownLayout(outer, 400, helpButton, macroHelpButton, serviceSelectorLabel, serviceSelector, langMode, useFKeys, text);
 
 		return outer;
 	}

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.ws;
 import com.fasterxml.jackson.databind.JsonNode;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
@@ -10,7 +11,7 @@ import java.lang.ref.WeakReference;
 import java.time.Instant;
 
 @SystemEvent
-public class ActWsJsonMsg extends BaseEvent {
+public class ActWsJsonMsg extends BaseEvent implements HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = -5830123394422861873L;
@@ -44,5 +45,10 @@ public class ActWsJsonMsg extends BaseEvent {
 
 	public @Nullable Object getRseq() {
 		return rseq;
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		return String.format("type: %s, rseq: %s", type, rseq);
 	}
 }

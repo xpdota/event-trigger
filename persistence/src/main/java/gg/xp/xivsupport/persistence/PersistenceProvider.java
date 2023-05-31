@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+// TODO: have some kind of annotation to allow an already-scoped persistence provider to be injected
 public interface PersistenceProvider {
 
 	void save(@NotNull String key, @NotNull Object value);

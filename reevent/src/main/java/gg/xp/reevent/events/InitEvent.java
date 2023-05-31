@@ -7,8 +7,4 @@ public class InitEvent extends BaseEvent {
 	@Serial
 	private static final long serialVersionUID = 9164816103937763589L;
 
-	@Override
-	public boolean shouldSave() {
-		return false;
-	}
 }

@@ -24,9 +24,11 @@
 
 package org.jenkinsci.plugins.scriptsecurity.sandbox.groovy;
 
+import groovy.lang.Closure;
 import groovy.lang.GString;
 import groovy.lang.GroovyInterceptable;
 import org.apache.commons.lang3.ClassUtils;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +37,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -57,8 +60,10 @@ class GroovyCallSiteSelector {
 			return false;
 		}
 		for (int i = 0; i < parameterTypes.length; i++) {
-			if (parameters[i] == null) {
-				if (parameterTypes[i].isPrimitive()) {
+			Class<?> thisParamType = parameterTypes[i];
+			Object thisParamValue = parameters[i];
+			if (thisParamValue == null) {
+				if (thisParamType.isPrimitive()) {
 					return false;
 				}
 				else {
@@ -66,22 +71,27 @@ class GroovyCallSiteSelector {
 					continue;
 				}
 			}
-			if (parameterTypes[i].isInstance(parameters[i])) {
+			if (thisParamType.isInstance(thisParamValue)) {
 				// OK, this parameter matches.
 				continue;
 			}
+			if (ClassHelper.isSAMType(ClassHelper.makeCached(thisParamType)) && thisParamValue instanceof Closure<?>) {
+				continue;
+			}
 			if (
-					parameterTypes[i].isPrimitive()
-							&& parameters[i] != null
-							&& isInstancePrimitive(ClassUtils.primitiveToWrapper(parameterTypes[i]), parameters[i])
+					thisParamType.isPrimitive()
+					&& isInstancePrimitive(ClassUtils.primitiveToWrapper(thisParamType), thisParamValue)
 			) {
 				// Groovy passes primitive values as objects (for example, passes 0 as Integer(0))
 				// The prior test fails as int.class.isInstance(new Integer(0)) returns false.
 				continue;
 			}
 			// TODO what about a primitive parameter type and a wrapped parameter?
-			if (parameterTypes[i] == String.class && parameters[i] instanceof GString) {
+			if (thisParamType == String.class && thisParamValue instanceof GString) {
 				// Cf. SandboxInterceptorTest and class Javadoc.
+				continue;
+			}
+			if ((thisParamType == Double.class || thisParamType == double.class || thisParamType == Float.class || thisParamType == float.class) && thisParamValue instanceof BigDecimal) {
 				continue;
 			}
 			// Mismatch.
@@ -114,6 +124,14 @@ class GroovyCallSiteSelector {
 				System.arraycopy(parameters, 0, parameters2, 0, fixedLen);
 				parameters2[fixedLen] = array;
 
+				return parameters2;
+			}
+			// TODO: other types?
+			else if (componentType == Long.class && parameters[fixedLen] instanceof Integer) {
+				Object array = DefaultTypeTransformation.castToVargsArray(parameters, fixedLen, parameterTypes[fixedLen]);
+				Object[] parameters2 = new Object[fixedLen + 1];
+				System.arraycopy(parameters, 0, parameters2, 0, fixedLen);
+				parameters2[fixedLen] = array;
 				return parameters2;
 			}
 		}

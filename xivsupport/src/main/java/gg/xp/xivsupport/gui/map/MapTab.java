@@ -37,13 +37,13 @@ public class MapTab extends JPanel {
 	private final JSplitPane split;
 	private volatile boolean selectionRefreshPending;
 
-	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config) {
+	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config, MapDisplayConfig mapDisplayConfig) {
 //		super("Map");
 		super(new BorderLayout());
 		split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		split.setOneTouchExpandable(true);
 		this.mapDataController = mdc;
-		this.mapPanel = new MapPanel(mdc);
+		this.mapPanel = new MapPanel(mdc, mapDisplayConfig);
 //		setPreferredSize(getMaximumSize());
 //		setLayout(new BorderLayout());
 		split.setRightComponent(mapPanel);
@@ -66,7 +66,7 @@ public class MapTab extends JPanel {
 						})
 				.addMainColumn(StandardColumns.entityIdColumn)
 				.addMainColumn(StandardColumns.nameJobColumn)
-				.addMainColumn(StandardColumns.statusEffectsColumn(mdc::buffsOnCombatant))
+				.addMainColumn(StandardColumns.sortedStatusEffectsColumn(mdc::buffsOnCombatant))
 //				.addMainColumn(StandardColumns.parentNameJobColumn)
 				.addMainColumn(StandardColumns.combatantTypeColumn)
 				// HP comes from the Combatant object directly, no need to do any funny business here

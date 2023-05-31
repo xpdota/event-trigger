@@ -3,17 +3,27 @@ package gg.xp.xivsupport.gui.map;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.CurrentTimeSource;
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
+import gg.xp.xivsupport.events.state.floormarkers.FloorMarkerRepository;
+import gg.xp.xivsupport.gui.map.omen.CastOmen;
+import gg.xp.xivsupport.gui.map.omen.OmenInfo;
+import gg.xp.xivsupport.gui.map.omen.UsedOmen;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -21,21 +31,24 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.sys.Threading;
-import org.java_websocket.util.NamedThreadFactory;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 @ScanMe
 public class MapDataController {
@@ -47,6 +60,7 @@ public class MapDataController {
 	private final StatusEffectRepository realStatuses;
 	private final SequenceIdTracker sqid;
 	private final ExecutorService exs = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("MapDataController"));
+	private static final Duration MAX_OMEN_HISTORY = Duration.ofSeconds(5);
 	private static final Snapshot initialEmptySnapshot = new Snapshot(
 			Instant.EPOCH,
 			XivMap.UNKNOWN,
@@ -54,14 +68,18 @@ public class MapDataController {
 			Collections.emptyList(),
 			Collections.emptyMap(),
 			Collections.emptyMap(),
+			Collections.emptyMap(),
+			Collections.emptyMap(),
 			Collections.emptyMap()
 	);
 	private final BooleanSetting enableCapture;
+	private final FloorMarkerRepository floorMarkers;
 	private final IntSetting maxCaptures;
 	private final IntSetting msBetweenCaptures;
 	// TODO: is timeBasis still needed with this?
 	private final CurrentTimeSource timeSource;
 	private List<Snapshot> snapshots = new ArrayList<>();
+	private final Map<Long, List<OmenInfo>> omenTracker = new HashMap<>();
 
 	{
 		snapshots.add(initialEmptySnapshot);
@@ -80,13 +98,16 @@ public class MapDataController {
 	                         SequenceIdTracker sqid,
 	                         PersistenceProvider pers,
 	                         PicoContainer container,
-	                         RightClickOptionRepo rc) {
+	                         RightClickOptionRepo rc,
+	                         FloorMarkerRepository floorMarkers
+	) {
 		realState = state;
 		realAcr = acr;
 		// TODO: statuses need the same treatment as cast bars - we need to fake the time
 		realStatuses = statuses;
 		this.sqid = sqid;
 		this.enableCapture = new BooleanSetting(pers, "map-replay.record-data", false);
+		this.floorMarkers = floorMarkers;
 		CurrentTimeSource timeSource = container.getComponent(CurrentTimeSource.class);
 		this.timeSource = timeSource == null ? Instant::now : timeSource;
 		enableCapture.addAndRunListener(() -> {
@@ -124,8 +145,47 @@ public class MapDataController {
 			List<XivCombatant> combatants,
 			Map<Long, List<BuffApplied>> statuses,
 			Map<Long, CastTracker> casts,
-			Map<Long, Long> pendingDamage
+			Map<Long, Long> pendingDamage,
+			Map<FloorMarker, Position> floorMarkers,
+			Map<Long, List<OmenInfo>> omens
 	) {
+	}
+
+	private void updateOmensFor(long id, Consumer<List<OmenInfo>> updater) {
+		List<OmenInfo> oldList = omenTracker.computeIfAbsent(id, unused -> Collections.emptyList());
+		List<OmenInfo> newList = new ArrayList<>(oldList);
+		newList.removeIf(info -> info.happensAt().isBefore(timeSource.now().minus(MAX_OMEN_HISTORY)));
+		updater.accept(newList);
+		if (!Objects.equals(oldList, newList)) {
+			omenTracker.put(id, Collections.unmodifiableList(newList));
+		}
+	}
+
+	@HandleEvents
+	public void recordAbilityUsedOmen(EventContext context, AbilityUsedEvent event) {
+		if (!event.isFirstTarget()) {
+			return;
+		}
+		updateOmensFor(event.getSource().getId(), infos -> {
+			Iterator<OmenInfo> iter = infos.iterator();
+			while (iter.hasNext()) {
+				OmenInfo next = iter.next();
+				if (next instanceof CastOmen co && co.getAbility().equals(event.getAbility())) {
+					iter.remove();
+					infos.add(new UsedOmen(event, co.event()));
+					return;
+				}
+			}
+			infos.add(new UsedOmen(event, null));
+		});
+	}
+
+	@HandleEvents
+	public void recordAbilityCastOmen(EventContext context, AbilityCastStart event) {
+		updateOmensFor(event.getSource().getId(), infos -> {
+			// Prune old and anything that just finished casting
+			infos.add(new CastOmen(event));
+		});
 	}
 
 	private Snapshot getLast() {
@@ -249,11 +309,14 @@ public class MapDataController {
 			}
 		}
 		List<CastTracker> rawCasts = realAcr.getAll();
+		Map<Long, List<OmenInfo>> omens = new HashMap<>(omenTracker);
 		exs.submit(() -> {
 			List<XivCombatant> newEffectiveCombatantsList;
+			// Dedup combatants list if possible
 			if (newCombatantsList.size() == oldCombatantsList.size()) {
 				newEffectiveCombatantsList = oldCombatantsList;
 				for (int i = 0; i < newCombatantsList.size(); i++) {
+					// TODO: dedup individual entries
 					if (!combatantEquals(oldCombatantsList.get(i), newCombatantsList.get(i))) {
 						newEffectiveCombatantsList = newCombatantsList;
 						break;
@@ -280,6 +343,7 @@ public class MapDataController {
 			List<BuffApplied> rawBuffs = realStatuses.getBuffs();
 			Map<Long, List<BuffApplied>> oldBuffs = snap.statuses;
 			Map<Long, List<BuffApplied>> buffs = new HashMap<>(rawBuffs.size());
+			Map<FloorMarker, Position> floorMarkers = this.floorMarkers.getMarkers();
 			for (BuffApplied rawBuff : rawBuffs) {
 				buffs.computeIfAbsent(rawBuff.getTarget().getId(), unused -> new ArrayList<>()).add(rawBuff);
 			}
@@ -292,7 +356,9 @@ public class MapDataController {
 //				dedup(combatantsListCopy, snap.combatants),
 					dedup(buffs, oldBuffs),
 					dedup(casts, snap.casts),
-					pendingDamage.isEmpty() ? Collections.emptyMap() : dedup(pendingDamage, snap.pendingDamage)
+					pendingDamage.isEmpty() ? Collections.emptyMap() : dedup(pendingDamage, snap.pendingDamage),
+					dedup(floorMarkers, snap.floorMarkers),
+					dedup(omens, snap.omens)
 			));
 			checkLength();
 		});
@@ -325,10 +391,10 @@ public class MapDataController {
 
 	private static boolean combatantEquals(XivCombatant newCbt, XivCombatant oldCbt) {
 		return Objects.equals(newCbt.getId(), oldCbt.getId())
-				&& Objects.equals(newCbt.getPos(), oldCbt.getPos())
-				&& Objects.equals(newCbt.getHp(), oldCbt.getHp())
-				&& Objects.equals(newCbt.getMp(), oldCbt.getMp())
-				&& Objects.equals(newCbt.getShieldAmount(), oldCbt.getShieldAmount());
+		       && Objects.equals(newCbt.getPos(), oldCbt.getPos())
+		       && Objects.equals(newCbt.getHp(), oldCbt.getHp())
+		       && Objects.equals(newCbt.getMp(), oldCbt.getMp())
+		       && Objects.equals(newCbt.getShieldAmount(), oldCbt.getShieldAmount());
 	}
 
 
@@ -343,12 +409,16 @@ public class MapDataController {
 		if (live) {
 			return realStatuses.statusesOnTarget(cbt);
 		}
+		Instant time = getCurrent().time;
 		List<BuffApplied> buffs = getCurrent().statuses.get(cbt.getId());
 		if (buffs == null || buffs.isEmpty()) {
 			return Collections.emptyList();
 		}
 		else {
-			return Collections.unmodifiableList(buffs);
+			if (time == null) {
+				return Collections.unmodifiableList(buffs);
+			}
+			return buffs.stream().map(ba -> ba.withNewCurrentTime(time)).toList();
 		}
 //		return realStatuses.statusesOnTarget(cbt);
 	}
@@ -361,20 +431,27 @@ public class MapDataController {
 //		return realState.getMap();
 	}
 
+	public List<OmenInfo> getOmens(long id) {
+		if (live) {
+			return omenTracker.getOrDefault(id, Collections.emptyList());
+		}
+		return getCurrent().omens.getOrDefault(id, Collections.emptyList());
+	}
+
 	public @Nullable CastTracker getCastFor(XivCombatant cbt) {
 		if (live) {
 			return realAcr.getCastFor(cbt);
 		}
-		Instant timeBasis = getCurrent().time;
+		Instant time = getCurrent().time;
 		CastTracker tracker = getCurrent().casts.get(cbt.getId());
 		if (tracker == null) {
 			return null;
 		}
-		else if (timeBasis == null) {
+		else if (time == null) {
 			return tracker;
 		}
 		else {
-			return tracker.withNewCurrentTime(timeBasis);
+			return tracker.withNewCurrentTime(time);
 		}
 //		return realAcr.getCastFor(cbt);
 	}
@@ -393,6 +470,19 @@ public class MapDataController {
 		}
 		else {
 			return getCurrent().pendingDamage.getOrDefault(xivCombatant.getId(), 0L);
+		}
+	}
+
+	public Map<FloorMarker, Position> getFloorMarkers() {
+		if (live) {
+			return floorMarkers.getMarkers();
+		}
+		else {
+			Map<FloorMarker, Position> markers = getCurrent().floorMarkers;
+			if (markers.isEmpty()) {
+				return Collections.emptyMap();
+			}
+			return new EnumMap<>(markers);
 		}
 	}
 

@@ -152,6 +152,10 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 		return failures;
 	}
 
+	public void deleteFailedItems() {
+		pers.delete(failuresKey);
+	}
+
 	public void tryRecoverFailures() {
 		List<String> failed = getFailedItems();
 		if (failed.isEmpty()) {

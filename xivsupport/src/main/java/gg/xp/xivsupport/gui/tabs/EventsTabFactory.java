@@ -117,7 +117,6 @@ public class EventsTabFactory {
 				.addFilter(EventEntityFilter::eventTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
 //				.addFilter(FreeformEventFilter::new)
-				.addFilter(GroovyFilter.forClass(Event.class, container.getComponent(GroovyManager.class)))
 				.addFilter(r -> {
 					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);
 					if (container.getComponent(PullNumberFilter.class) == null) {
@@ -125,6 +124,7 @@ public class EventsTabFactory {
 					}
 					return pullNumberFilter;
 				})
+				.addFilter(GroovyFilter.forClass(Event.class, container.getComponent(GroovyManager.class)))
 				.addWidget(unused -> new BooleanSettingGui(displayIdsSetting, "Show IDs", true).getComponent())
 				.addWidget(replayNextPseudoFilter(Event.class))
 				.addWidget(tdc::configureWidget)

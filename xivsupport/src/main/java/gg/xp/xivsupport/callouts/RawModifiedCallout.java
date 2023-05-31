@@ -121,12 +121,20 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 		this.colorOverride = colorOverride;
 	}
 
-	@Override
-	public boolean shouldSave() {
-		return false;
-	}
-
 	public String getDescription() {
 		return description;
+	}
+
+	@Override
+	public String toString() {
+		return "RawModifiedCallout{" +
+		       "description='" + description + '\'' +
+		       ", tts='" + tts + '\'' +
+		       ", text='" + text + '\'' +
+		       ", sound='" + sound + '\'' +
+		       ", event=" + event +
+		       ", arguments=" + arguments +
+		       ", key=" + key +
+		       '}';
 	}
 }

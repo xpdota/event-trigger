@@ -88,9 +88,10 @@ public class ActWsHandlers {
 						for (int i = 0; i < 3; i++) {
 							Thread.sleep(2_000);
 							Set<Long> fastRefreshEntities = state.getPartyList().stream().map(XivEntity::getId).collect(Collectors.toSet());
+							boolean refreshNonCombatant = ws.getFastRefreshNonCombatant().get();
 							if (pulls.getCurrentStatus() == PullStatus.COMBAT) {
 								state.getCombatantsListCopy().stream()
-										.filter(XivCombatant::isCombative)
+										.filter(xivCombatant -> refreshNonCombatant || xivCombatant.isCombative())
 										.map(XivCombatant::getId)
 										.forEach(fastRefreshEntities::add);
 							}
@@ -102,7 +103,6 @@ public class ActWsHandlers {
 					}
 				}
 			});
-			// TODO: should this be turned back on?
 			combatantsLoopThread.start();
 		}
 
@@ -245,11 +245,37 @@ public class ActWsHandlers {
 		}
 	}
 
+	private boolean prevActInCombat;
+	private boolean prevOpInCombat;
+
 	@HandleEvents(order = -100)
-	public static void inCombatChange(EventContext context, ActWsJsonMsg jsonMsg) {
+	public void inCombatChange(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("InCombat".equals(jsonMsg.getType())) {
-			boolean inCombat = jsonMsg.getJson().get("inGameCombat").booleanValue();
-			context.accept(new InCombatChangeEvent(inCombat));
+			boolean prevInCombat = state.inCombat();
+			boolean inOpCombat = jsonMsg.getJson().get("inGameCombat").booleanValue();
+			boolean inActCombat = jsonMsg.getJson().get("inACTCombat").booleanValue();
+			// Either ACT or OP can start combat, but only OP can end it since ACT ending combat
+			// depends on user settings.
+			boolean inCombat;
+			if (inActCombat && !prevActInCombat) {
+				inCombat = true;
+			}
+			else if (inOpCombat && !prevOpInCombat) {
+				inCombat = true;
+			}
+			else if (!inOpCombat && prevOpInCombat) {
+				inCombat = false;
+			}
+			else {
+				inCombat = prevInCombat;
+			}
+			log.info("inCombatChange: {} {} {} -> {} {} {}", prevInCombat, prevOpInCombat, prevActInCombat, inCombat, inOpCombat, inActCombat);
+			prevActInCombat = inActCombat;
+			prevOpInCombat = inOpCombat;
+			if (inCombat != prevInCombat) {
+				log.info("inCombatChange: {} -> {}", prevInCombat, inCombat);
+				context.accept(new InCombatChangeEvent(inCombat));
+			}
 		}
 	}
 
@@ -312,6 +338,4 @@ public class ActWsHandlers {
 			}
 		}
 	}
-//	@HandleEvents
-//	public st
 }

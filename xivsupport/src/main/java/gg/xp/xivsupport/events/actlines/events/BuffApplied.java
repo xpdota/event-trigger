@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.time.TimeUtils;
 import gg.xp.xivdata.data.StatusEffectInfo;
 import gg.xp.xivdata.data.StatusEffectLibrary;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
@@ -162,5 +163,12 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 			return null;
 		}
 		return preAppAbility.getEffectiveHappenedAt();
+	}
+
+	public BuffApplied withNewCurrentTime(Instant time) {
+		BuffApplied cloned = new BuffApplied(buff, TimeUtils.durationToDouble(duration), source, target, rawStacks, isPreApp);
+		cloned.setHappenedAt(getEffectiveHappenedAt());
+		cloned.setTimeSource(() -> time);
+		return cloned;
 	}
 }

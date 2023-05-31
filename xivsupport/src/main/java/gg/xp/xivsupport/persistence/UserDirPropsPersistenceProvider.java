@@ -16,11 +16,11 @@ public final class UserDirPropsPersistenceProvider {
 	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName) {
 		return inUserDataFolder(baseName, false);
 	}
-	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName, boolean readOnly) {
+	public static PropertiesFilePersistenceProvider inUserDataFolder(String baseName, boolean canBeReadOnly) {
 		String userDataDir = Platform.getTriggeventDir().toString();
 		log.info("Data dir: {}", userDataDir);
 		File file = Paths.get(userDataDir, baseName + ".properties").toFile();
 		log.info("Using file: {}", file);
-		return new PropertiesFilePersistenceProvider(file, readOnly);
+		return new PropertiesFilePersistenceProvider(file, canBeReadOnly);
 	}
 }

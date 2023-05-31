@@ -284,8 +284,28 @@ public class StatusEffectRepository {
 		return findStatusOnTarget(entity, ba -> ba.buffIdMatches(buffId));
 	}
 
+	public boolean isStatusOnTarget(XivEntity entity, long buffId) {
+		return findStatusOnTarget(entity, ba -> ba.buffIdMatches(buffId)) != null;
+	}
+
 	public @Nullable BuffApplied findStatusOnTarget(XivEntity entity, Predicate<BuffApplied> filter) {
 		return statusesOnTarget(entity).stream().filter(filter).findAny().orElse(null);
+	}
+
+	public @Nullable BuffApplied findBuff(Predicate<BuffApplied> filter) {
+		return getBuffs().stream().filter(filter).findFirst().orElse(null);
+	}
+
+	public @Nullable BuffApplied findBuffById(long id) {
+		return findBuff(ba -> ba.buffIdMatches(id));
+	}
+
+	public @Nullable List<BuffApplied> findBuffsById(long id) {
+		return findBuffs(ba -> ba.buffIdMatches(id));
+	}
+
+	public @Nullable List<BuffApplied> findBuffs(Predicate<BuffApplied> filter) {
+		return getBuffs().stream().filter(filter).toList();
 	}
 
 	/**
@@ -327,7 +347,7 @@ public class StatusEffectRepository {
 		return list;
 	}
 
-	public static Comparator<BuffApplied> standardPartyFrameSort = Comparator.comparing(ba -> {
+	public static final Comparator<BuffApplied> standardPartyFrameSort = Comparator.comparing(ba -> {
 		StatusEffectInfo statusEffectInfo = ba.getBuff().getInfo();
 		if (statusEffectInfo == null) {
 			return 0;

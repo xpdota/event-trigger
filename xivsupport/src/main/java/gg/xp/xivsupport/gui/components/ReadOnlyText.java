@@ -10,15 +10,21 @@ public class ReadOnlyText extends JTextArea {
 	// 1. Lock the preferred size
 	// 2. Report minimum size as the greater of true minimum vs original preferred. Otherwise, if you expand the window
 	// a bit horizontally, it won't fill the new space.
-	public ReadOnlyText(String text) {
+	public ReadOnlyText(String text, boolean setPrefSize) {
 		super(text);
-		super.setPreferredSize(super.getPreferredSize());
+		if (setPrefSize) {
+			super.setPreferredSize(super.getPreferredSize());
+		}
 		setEditable(false);
 		setBorder(null);
 		setOpaque(false);
 		setWrapStyleWord(true);
 		setLineWrap(true);
 		setFocusable(false);
+	}
+
+	public ReadOnlyText(String text) {
+		this(text, true);
 	}
 
 	@Override

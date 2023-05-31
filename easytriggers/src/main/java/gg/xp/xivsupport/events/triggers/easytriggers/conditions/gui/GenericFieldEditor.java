@@ -1,15 +1,20 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui;
 
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovySubScriptHelper;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.GroovySubScriptEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.Description;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EditorIgnore;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdPickerFactory;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.IdType;
+import gg.xp.xivsupport.events.triggers.easytriggers.gui.WideTextField;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.AcceptsSaveCallback;
+import gg.xp.xivsupport.gui.ColorPickerGui;
 import gg.xp.xivsupport.gui.ResettableField;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
@@ -34,6 +39,16 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 		idPickerFactory = pico.getComponent(IdPickerFactory.class);
 		this.object = object;
 		Field[] fields = object.getClass().getFields();
+		Arrays.stream(fields)
+				.filter(field -> !Modifier.isStatic(field.getModifiers()))
+				.filter(field -> !field.isAnnotationPresent(EditorIgnore.class))
+				.forEach(this::addField);
+	}
+
+	public GenericFieldEditor(Object object, PicoContainer pico, Field[] fields) {
+		setLayout(new WrapLayout(0, 10, 0));
+		idPickerFactory = pico.getComponent(IdPickerFactory.class);
+		this.object = object;
 		Arrays.stream(fields)
 				.filter(field -> !Modifier.isStatic(field.getModifiers()))
 				.filter(field -> !field.isAnnotationPresent(EditorIgnore.class))
@@ -81,14 +96,27 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 		else if (type.equals(int.class) || type.equals(Integer.class)) {
 			editorComponent = new TextFieldWithValidation<>(Integer::parseInt, l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
 		}
+		else if (type.equals(float.class) || type.equals(Float.class)) {
+			editorComponent = new TextFieldWithValidation<>(Float::parseFloat, l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
+		}
+		else if (type.equals(double.class) || type.equals(Double.class)) {
+			editorComponent = new TextFieldWithValidation<>(Double::parseDouble, l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
+		}
 		else if (String.class.isAssignableFrom(type)) {
-			editorComponent = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
+			TextFieldWithValidation<String> textField = new TextFieldWithValidation<>(Function.identity(), l -> setField(field, l), () -> valueToString(String.valueOf(getField(field))));
+			if (field.isAnnotationPresent(WideTextField.class)) {
+				textField.setColumns(50);
+			}
+			editorComponent = textField;
 		}
 		else if (type.equals(Pattern.class)) {
 			TextFieldWithValidation<Pattern> textField = new TextFieldWithValidation<>(Pattern::compile, l -> setField(field, l), () -> valueToString(getField(field).toString()));
 			textField.setColumns(30);
 			editorComponent = textField;
 //			editorComponent.setPreferredSize(new Dimension(2500, editorComponent.getPreferredSize().height));
+		}
+		else if (type.equals(GroovySubScriptHelper.class)) {
+			editorComponent = new GroovySubScriptEditor((GroovySubScriptHelper) getField(field));
 		}
 		else if (type.isEnum()) {
 			JComboBox<?> comboBox = new JComboBox<>(type.getEnumConstants());
@@ -111,6 +139,11 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 			cb.setSelected((boolean) fieldValue);
 			cb.addActionListener(l -> setField(field, cb.isSelected()));
 			editorComponent = cb;
+			useLabel = false;
+		}
+		else if (Color.class.equals(type)) {
+			ColorPickerGui picker = new ColorPickerGui(() -> (Color) getField(field), color -> setField(field, color), name, () -> true);
+			editorComponent = picker.getComponent();
 			useLabel = false;
 		}
 		else {
@@ -154,6 +187,6 @@ public class GenericFieldEditor extends JPanel implements AcceptsSaveCallback {
 
 	@Override
 	public void setSaveCallback(Runnable saveCallback) {
-		saveCallback = saveCallback;
+		this.saveCallback = saveCallback;
 	}
 }

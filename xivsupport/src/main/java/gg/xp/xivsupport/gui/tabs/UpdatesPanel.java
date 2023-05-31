@@ -6,7 +6,6 @@ import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
-import gg.xp.xivsupport.persistence.SimplifiedPropertiesFilePersistenceProvider;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.StringSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
@@ -18,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -27,7 +25,8 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 	private static final Logger log = LoggerFactory.getLogger(UpdatesPanel.class);
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("UpdateCheck"));
 	private final PersistenceProvider pers;
-	private JButton button;
+	private JButton applyUpdatesButton;
+	private JButton checkUpdatesButton;
 	private volatile UpdateCheckStatus updateCheckStatus = UpdateCheckStatus.NOT_STARTED;
 	private JLabel checkingLabel;
 	private File installDir;
@@ -64,8 +63,10 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 //			doUpdateCheckInBackground();
 			add(checkingLabel, c);
 		}
-		button = new JButton("Check for Updates and Restart");
-		button.addActionListener(l -> updateNow());
+		checkUpdatesButton = new JButton("Check Again");
+		checkUpdatesButton.addActionListener(l -> doUpdateCheckInBackground());
+		applyUpdatesButton = new JButton("Check for Updates and Restart");
+		applyUpdatesButton.addActionListener(l -> updateNow());
 		c.gridy++;
 		//noinspection InstanceVariableUsedBeforeInitialized
 		add(new JLabel("Install Dir: " + installDir), c);
@@ -74,7 +75,8 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		StringSetting branchSetting = updateConfig.getBranchSetting();
 		content.add(new StringSettingGui(branchSetting, "Branch").getComponent());
 		branchSetting.addListener(this::doUpdateCheckInBackground);
-		content.add(button);
+		content.add(checkUpdatesButton);
+		content.add(applyUpdatesButton);
 		add(content, c);
 		c.gridy++;
 		StringSetting urlTemplateSetting = updateConfig.getUrlTemplateSetting();
@@ -129,14 +131,14 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 			}
 			catch (Throwable e) {
 				log.error("Error updating the updater - you may not have a recent enough version (or are running in an IDE).", e);
-				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error updating the updater. This may fix itself after updates. ");
+				JOptionPane.showMessageDialog(SwingUtilities.getRoot(applyUpdatesButton), "There was an error updating the updater. This may fix itself after updates. ");
 			}
 			try {
 				Platform.executeUpdater();
 			}
 			catch (Throwable e) {
 				log.error("Error launching updater", e);
-				JOptionPane.showMessageDialog(SwingUtilities.getRoot(button), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe, or reinstall if that doesn't work.");
+				JOptionPane.showMessageDialog(SwingUtilities.getRoot(applyUpdatesButton), "There was an error launching the updater. You can try running the updater manually by running triggevent-upd.exe, or reinstall if that doesn't work.");
 				return;
 			}
 			System.exit(0);

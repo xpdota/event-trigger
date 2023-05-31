@@ -50,11 +50,16 @@ public class CooldownHelper {
 		return cds.entrySet()
 				.stream().map(e -> {
 					CdTrackingKey key = e.getKey();
+					// The ability
 					AbilityUsedEvent abilityUsed = e.getValue();
+					// The timer
 					Instant replenishedAt = cdTracker.getReplenishedAt(key);
+					// The cooldown definition
 					ExtendedCooldownDescriptor cd = key.getCooldown();
+					// Establish a filter for what buffs to look at
 					Predicate<BuffApplied> buffFilter;
 					if (cd.autoBuffs()) {
+						// For auto buffs - look at what buffs the ability actually applied
 						Set<Long> buffIds = abilityUsed.getEffects().stream().map(effect -> {
 							if (effect instanceof StatusAppliedEffect sae) {
 								return sae.getStatus().getId();
@@ -64,12 +69,29 @@ public class CooldownHelper {
 						buffFilter = b -> buffIds.contains(b.getBuff().getId());
 					}
 					else {
+						// For manual buffs - check against the cooldown defs
 						buffFilter = b -> cd.buffIdMatches(b.getBuff().getId());
 					}
+					// Logic for showing buffs that missed you
+					/*
+						There are several kinds of abilities:
+						1. Normal raid buffs - hits everyone (ideally)
+							For these, we want to consider missing the player as a "miss"
+						2. BRD-style buffs - the buff on BRD itself is NOT the same as on another player
+						3. Statuses that go on an enemy (reprisal, chain, etc)
+
+						Unfortunately, #2 will be a PITA for the time being and will probably require some rework.
+						However, #1 can be semi-supported now by simply sorting the player's own buff in front.
+					 */
+					// Further filter buffs
 					@Nullable BuffApplied buffApplied = buffs.stream()
 							.filter(buffFilter)
 							.filter(b -> b.getSource().walkParentChain().equals(abilityUsed.getSource().walkParentChain()))
-							.max(Comparator.comparing(BuffApplied::getEffectiveHappenedAt))
+							// Prioritize whatever is on the player
+							.max(Comparator.<BuffApplied, Integer>comparing(ba -> {
+										return ba.getTarget().isThePlayer() ? 1 : 0;
+									})
+									.thenComparing(BuffApplied::getEffectiveHappenedAt))
 							.orElse(null);
 					return new CooldownStatus(key, abilityUsed, buffApplied, replenishedAt);
 				}).toList();

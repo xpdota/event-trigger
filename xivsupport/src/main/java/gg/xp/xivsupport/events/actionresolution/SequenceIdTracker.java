@@ -50,6 +50,7 @@ public class SequenceIdTracker {
 
 	// TODO: make a unit dying clear unresolved actions from/to it
 
+	// THIS COMMENT IS OUTDATED
 	// TODO: current main problem with the idea of being able to use ActionEffects to get predicted data faster than
 	// waiting for sync: we have to basically redo the entire way we get combatant data, since it looks something like
 	// this:

@@ -14,6 +14,7 @@ import gg.xp.xivsupport.models.XivZone;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -56,6 +57,12 @@ public interface XivState extends SubState {
 	// TODO: does this still need to be a copy?
 	List<XivCombatant> getCombatantsListCopy();
 
+	/**
+	 * Returns the party slot of the given entity
+	 *
+	 * @param entity The entity
+	 * @return 0-7 based on their party slot, or -1 if they are not in the party
+	 */
 	int getPartySlotOf(XivEntity entity);
 
 	void provideCombatantHP(XivCombatant target, @NotNull HitPoints hitPoints);
@@ -89,4 +96,22 @@ public interface XivState extends SubState {
 	boolean inCombat();
 
 	void provideCombatantShieldPct(XivCombatant cbt, long shieldPct);
+
+	default @Nullable XivCombatant npcById(long id) {
+		return getCombatantsListCopy()
+				.stream()
+				.filter(cbt -> cbt.npcIdMatches(id))
+				.min(Comparator.comparing(XivCombatant::getId))
+				.orElse(null);
+	}
+
+	default List<XivCombatant> npcsById(long id) {
+		return getCombatantsListCopy()
+				.stream()
+				.filter(cbt -> cbt.npcIdMatches(id))
+				.sorted(Comparator.comparing(XivCombatant::getId))
+				.toList();
+	}
+
+	void provideTransformation(long entityId, short transformationId);
 }

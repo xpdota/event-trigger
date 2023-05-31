@@ -6,6 +6,7 @@ import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
+import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
@@ -83,7 +84,10 @@ public class EasyTriggersTab implements PluginTab {
 		model = CustomTableModel.builder(backend::getTriggers)
 				.addColumn(new CustomColumn<>("En", EasyTrigger::isEnabled, col -> {
 					col.setCellRenderer(StandardColumns.checkboxRenderer);
-					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<EasyTrigger<?>>(EasyTrigger::setEnabled));
+					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<EasyTrigger<?>>((easyTrigger, enabled) -> {
+						easyTrigger.setEnabled(enabled);
+						requestSave();
+					}));
 					col.setMinWidth(22);
 					col.setMaxWidth(22);
 				}))
@@ -322,7 +326,7 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private volatile long saveAt;
-	private static final int saveDelay = 1000;
+	private static final int saveDelay = 500;
 
 	private void requestSave() {
 		boolean submitTask = saveAt <= 0;
@@ -353,6 +357,7 @@ public class EasyTriggersTab implements PluginTab {
 
 		private final EasyTrigger<?> trigger;
 
+		@SuppressWarnings("unchecked")
 		TriggerConfigPanel(EasyTrigger<?> trigger) {
 			setLayout(new GridBagLayout());
 			GridBagConstraints c = GuiUtil.defaultGbc();
@@ -398,6 +403,18 @@ public class EasyTriggersTab implements PluginTab {
 			c.gridx = 0;
 			c.gridy++;
 			c.gridwidth = GridBagConstraints.REMAINDER;
+			if (trigger.getEventType().equals(EasyTriggersInitEvent.class)) {
+				JButton button = new JButton("Re-Run");
+				button.addActionListener(l -> backend.initSpecificTrigger((EasyTrigger<EasyTriggersInitEvent>) trigger));
+				int fillBefore = c.fill;
+				int anchorBefore = c.anchor;
+				c.fill = GridBagConstraints.NONE;
+				c.anchor = GridBagConstraints.NORTHWEST;
+				add(button, c);
+				c.gridy++;
+				c.fill = fillBefore;
+				c.anchor = anchorBefore;
+			}
 			add(conditionsPanel, c);
 			c.gridy++;
 			add(actionsPanel, c);

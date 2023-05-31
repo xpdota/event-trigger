@@ -147,6 +147,10 @@ final class SandboxInterceptor extends GroovyInterceptor {
                 return super.onMethodCall(invoker, receiver, method, args);
             }
 
+            // TODO: revisit this later
+//            if (whitelist.permitsUnknownMethod(method, receiver, args)) {
+//                return super.onMethodCall(invoker, receiver, method, args);
+//            }
             // no such method exists
             throw new MissingMethodException(method, receiver.getClass(), args);
         } else if (StaticWhitelist.isPermanentlyBlacklistedMethod(m)) {
@@ -154,7 +158,7 @@ final class SandboxInterceptor extends GroovyInterceptor {
         } else if (whitelist.permitsMethod(m, receiver, args)) {
             return super.onMethodCall(invoker, receiver, method, args);
         } else if (method.equals("invokeMethod") && args.length == 2 && args[0] instanceof String && args[1] instanceof Object[]) {
-            throw StaticWhitelist.rejectMethod(m, EnumeratingWhitelist.getName(receiver.getClass()) + " " + args[0] + printArgumentTypes((Object[]) args[1]));
+            throw StaticWhitelist.rejectMethod(m, EnumeratingWhitelist.getName(receiver.getClass()) + ' ' + args[0] + printArgumentTypes((Object[]) args[1]));
         } else {
             throw StaticWhitelist.rejectMethod(m);
         }
@@ -346,6 +350,8 @@ final class SandboxInterceptor extends GroovyInterceptor {
         if (mpe != null) {
             throw mpe;
         }
+        // TODO: this rejection is overzealous. You can have various lookup stratgies on closures (ResolveStrategy)
+        // and this doesn't play well with those.
         throw rejector != null ? rejector.reject() : unclassifiedField(receiver, property);
     }
 

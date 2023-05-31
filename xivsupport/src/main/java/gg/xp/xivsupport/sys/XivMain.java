@@ -10,6 +10,7 @@ import gg.xp.reevent.scan.AutoHandlerScan;
 import gg.xp.reevent.topology.TopoInfoImpl;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivsupport.events.state.PartySortOrder;
 import gg.xp.xivsupport.events.state.PicoStateStore;
 import gg.xp.xivsupport.events.state.XivStateImpl;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
@@ -109,6 +110,7 @@ public final class XivMain {
 		pico.addComponent(BasicEventQueue.class);
 		pico.addComponent(PicoStateStore.class);
 		pico.addComponent(XivStateImpl.class);
+		pico.addComponent(PartySortOrder.class);
 		pico.addComponent(PicoBasedInstanceProvider.class);
 		pico.addComponent(AutoHandlerConfig.class);
 		pico.addComponent(InMemoryMapPersistenceProvider.class);

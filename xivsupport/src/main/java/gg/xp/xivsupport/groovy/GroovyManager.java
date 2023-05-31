@@ -7,13 +7,24 @@ import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.models.HitPoints;
+import gg.xp.xivsupport.models.ManaPoints;
+import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.models.XivAbility;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.XivWorld;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import groovy.transform.CompileStatic;
 import groovy.transform.TypeChecked;
 import org.apache.commons.lang3.StringUtils;
@@ -22,8 +33,9 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.NoOpGroovySandbox;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.StandardGroovySandbox;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.RejectASTTransformsCustomizer;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.StandardGroovySandbox;
 import org.jetbrains.annotations.Nullable;
 import org.kohsuke.groovy.sandbox.SandboxTransformer;
 import org.picocontainer.PicoContainer;
@@ -43,11 +55,13 @@ import static org.reflections.scanners.Scanners.SubTypes;
 public class GroovyManager {
 
 	private static final Logger log = LoggerFactory.getLogger(GroovyManager.class);
+	private static final Logger scriptLogger = LoggerFactory.getLogger("gg.xp.xivsupport.groovy.Scripts");
 	private final PicoContainer container;
 	private final GroovySandbox sandbox;
 	private final BooleanSetting sandboxSetting;
 	private final AutoHandlerConfig ahc;
 	private final boolean useSandbox;
+	private Binding binding;
 
 	public GroovyManager(PicoContainer container, Whitelist whitelist, PersistenceProvider pers, AutoHandlerConfig ahc) {
 		this.container = container;
@@ -130,6 +144,7 @@ public class GroovyManager {
 				"gg.xp.xivsupport.events.actlines.events",
 				"java.util",
 				"java.util.function",
+				"java.time",
 				"javax.swing",
 				"java.awt",
 				"gg.xp.xivdata.data",
@@ -137,7 +152,9 @@ public class GroovyManager {
 				"gg.xp.xivsupport.events.actlines.events.abilityeffect",
 				"gg.xp.xivsupport.events.actlines.events.actorcontrol",
 				"gg.xp.xivsupport.models",
-				"gg.xp.xivsupport.gui.tables"
+				"gg.xp.xivsupport.gui.tables",
+				"gg.xp.xivsupport.events.triggers.marks",
+				"gg.xp.xivsupport.events.triggers.marks.adv"
 		);
 		Reflections reflections = new Reflections(
 				new ConfigurationBuilder()
@@ -149,6 +166,16 @@ public class GroovyManager {
 //				.map(Class::getCanonicalName)
 				.filter(s -> s != null && !s.isBlank())
 				.forEach(importCustomizer::addImports);
+		// TODO revisit later
+//		for (Class<?> s : reflections.get(SubTypes.of(Object.class).asClass(Thread.currentThread().getContextClassLoader()))) {
+//			InvokerHelper.getMetaClass(s);
+//			try {
+//				Introspector.getBeanInfo(s);
+//			}
+//			catch (IntrospectionException e) {
+//				log.error("Bean fail", e);
+//			}
+//		}
 		return importCustomizer;
 	}
 
@@ -210,15 +237,83 @@ public class GroovyManager {
 			binding.setProperty(simpleName, item);
 		});
 		// TODO: find a way to systematically do these exceptions
+		// TODO: can't these be in makeGlobalBinding?
 		binding.setVariable("pico", container);
 		binding.setVariable("container", container);
 		binding.setVariable("picoContainer", container);
 		binding.setVariable("xivState", container.getComponent(XivState.class));
 		binding.setVariable("state", container.getComponent(XivState.class));
 		binding.setVariable("master", container.getComponent(EventMaster.class));
-
+		binding.setVariable("buffs", container.getComponent(StatusEffectRepository.class));
+		binding.setVariable("casts", container.getComponent(ActiveCastRepository.class));
+		binding.setVariable("log", scriptLogger);
+		// Precache some common calls
+		new Thread("GroovyStartupHelper") {
+			@Override
+			public void run() {
+				precacheCommonStuff();
+			}
+		}.start();
 	}
 
+	public void precacheCommonStuff() {
+		// TODO revisit later - is there a way to force invokedynamic lookups early?
+//		List<? extends Class<? extends BaseEvent>> classes = List.of(AbilityUsedEvent.class, AbilityCastStart.class);
+		// This didn't help much
+//		for (Class<? extends BaseEvent> cls : classes) {
+//			Method[] methods = cls.getMethods();
+//			MethodHandles.Lookup l = MethodHandles.lookup();
+//			try {
+//				for (Method method : methods) {
+//					MethodHandle handle = l.unreflect(method);
+//					log.info("Handle: {}", handle);
+////					MethodHandle handle = l.findVirtual(cls, method.getName(), MethodType.methodType(method.getReturnType()));
+//				}
+//			}
+////			catch (NoSuchMethodException | IllegalAccessException e) {
+//			catch (IllegalAccessException e) {
+//				throw new RuntimeException(e);
+//			}
+//		}
+		// This didn't help much
+//		ArrayUtil.createArray(1, 2, 3);
+		// This helped maybe a tiny bit
+//		getGlobalBinding().getVariables().values().forEach(object -> {
+//			InvokerHelper.getMetaClass(object).getMethods();
+//			try {
+//				Introspector.getBeanInfo(object.getClass());
+//			}
+//			catch (IntrospectionException e) {
+//				throw new RuntimeException(e);
+//			}
+//
+//		});
+		XivAbility ability = new XivAbility(123, "Foo Ability");
+		XivPlayerCharacter player = new XivPlayerCharacter(0x10000001, "Me, The Player", Job.GNB, XivWorld.of(), true, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
+		XivPlayerCharacter otherCharInParty = new XivPlayerCharacter(0x10000002, "Someone Else In My Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
+		AbilityCastStart acs = new AbilityCastStart(ability, player, otherCharInParty, 6.0);
+		GroovyShell shell = makeShell();
+		shell.parse("\"Dummy script\"").run();
+		// Run some dummy scripts to force Groovy to cache stuff *before* it's performance-critical
+		Script script = shell.parse("""
+				"${acs.ability}; ${acs.abilityIdMatches(0x5EF8)}; ${acs.source.name}; ${acs.target.name}"
+				new SpecificAutoMarkRequest(acs.target, MarkerSign.CROSS)
+								""");
+		script.getBinding().setVariable("acs", acs);
+		// Uncomment and drop breakpoint on the log.info line to get a stack trace halfway through the script
+//		new Thread(() -> {
+//			try {
+//				Thread.sleep(40);
+//			}
+//			catch (InterruptedException e) {
+//				throw new RuntimeException(e);
+//			}
+//			log.info("Slept");
+//		}).start();
+		try (SandboxScope ignored = getSandbox().enter()) {
+			script.run();
+		}
+	}
 
 	public GroovySandbox getSandbox() {
 		return sandbox;

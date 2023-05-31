@@ -4,7 +4,9 @@ import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class XivEntity implements Serializable, NameIdPair {
 
@@ -55,7 +57,16 @@ public class XivEntity implements Serializable, NameIdPair {
 		return String.format("XivEntity(0x%X:%s)", id, name);
 	}
 
+	public String toShortString() {
+		return String.format("(%X:%s)", getId(), getName());
+	}
+
+
 	public boolean isEnvironment() {
 		return id == 0xE0000000L;
+	}
+
+	public static String fmtShortList(Collection<? extends XivEntity> items) {
+		return items.stream().map(XivEntity::toShortString).collect(Collectors.joining(", "));
 	}
 }

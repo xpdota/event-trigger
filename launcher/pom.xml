@@ -347,7 +347,19 @@
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
-            <artifactId>telesto-support</artifactId>
+            <artifactId>telesto-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>telesto-gui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>telesto-easy-triggers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>telesto-right-clicks</artifactId>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>
@@ -366,6 +378,22 @@
             <groupId>gg.xp</groupId>
             <artifactId>skill-hit-overlay</artifactId>
         </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>postnamazu-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>postnamazu-gui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>postnamazu-easy-triggers</artifactId>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>gg.xp</groupId>-->
+<!--            <artifactId>telesto-subscriber</artifactId>-->
+<!--        </dependency>-->
     </dependencies>
 
 </project>

@@ -4,7 +4,6 @@ import ch.qos.logback.classic.Level;
 import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.util.Utils;
 import gg.xp.xivdata.data.*;
@@ -23,6 +22,7 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.groovy.GroovyScriptManager;
+import gg.xp.xivsupport.gui.components.ReadOnlyHtml;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.map.MapTab;
@@ -31,6 +31,7 @@ import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
 import gg.xp.xivsupport.gui.overlay.OverlayMain;
 import gg.xp.xivsupport.gui.overlay.OverlaysInitEvent;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
@@ -58,13 +59,16 @@ import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
 import gg.xp.xivsupport.gui.tabs.UpdaterConfig;
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
+import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
@@ -76,6 +80,8 @@ import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
+import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
@@ -92,7 +98,11 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -174,16 +184,41 @@ public class GuiMain {
 //			frame.setLocationByPlatform(true);
 			mainFrame.setSize(1280, 960);
 			mainFrame.setLocationRelativeTo(null);
+			mainFrame.addWindowStateListener(new WindowAdapter() {
+				@Override
+				public void windowStateChanged(WindowEvent e) {
+					if (wc.getMinimizeToTray().get()) {
+						if ((e.getNewState() & JFrame.ICONIFIED) != 0) {
+							setUpTrayIcon();
+							mainFrame.setVisible(false);
+						}
+						else {
+							mainFrame.setVisible(true);
+							removeTrayIcon();
+						}
+					}
+				}
+			});
 			if (wc.getStartMinimized().get() && replay == null) {
 				mainFrame.setState(JFrame.ICONIFIED);
+				if (wc.getMinimizeToTray().get()) {
+					setUpTrayIcon();
+					mainFrame.setVisible(false);
+				}
+				else {
+					mainFrame.setVisible(true);
+				}
 			}
-			mainFrame.setVisible(true);
+			else {
+				mainFrame.setVisible(true);
+			}
 			mainFrame.add(tabPane);
 			if (replay != null) {
 				mainFrame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
 			}
 		});
-		addTab("General", new SystemTabPanel());
+		addTab("Welcome", new WelcomeTabPanel());
+		addTab("Summary", new SummaryTabPanel());
 		addTab("Plugin Settings", new PluginSettingsPanel());
 		addTab("Combatants", getCombatantsPanel());
 		addTab("Buffs", getStatusEffectsPanel());
@@ -235,6 +270,33 @@ public class GuiMain {
 		});
 	}
 
+	private @Nullable TrayIcon icon;
+
+	private void removeTrayIcon() {
+		if (icon != null) {
+			SystemTray.getSystemTray().remove(icon);
+		}
+	}
+
+	private void setUpTrayIcon() {
+		if (icon == null) {
+			Dimension size = SystemTray.getSystemTray().getTrayIconSize();
+			icon = new TrayIcon(new ImageIcon(GeneralIcons.DAMAGE_MAGIC.getIconUrl()).getImage().getScaledInstance(size.width, size.height, Image.SCALE_SMOOTH));
+			icon.addActionListener(l -> {
+				mainFrame.setVisible(true);
+				mainFrame.setState(mainFrame.getState() & ~JFrame.ICONIFIED);
+				mainFrame.requestFocus();
+				removeTrayIcon();
+			});
+		}
+		try {
+			SystemTray.getSystemTray().add(icon);
+		}
+		catch (AWTException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private void addTab(String name, Component component) {
 		SwingUtilities.invokeLater(() -> {
 			tabPane.addTab(name, component);
@@ -243,26 +305,89 @@ public class GuiMain {
 	}
 
 	private Component newsPanel() {
-		JPanel panel = new TitleBorderFullsizePanel("News and Tips");
+		JPanel panel = new TitleBorderPanel("News and Tips");
 //		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
 		panel.setLayout(new GridBagLayout());
+//		panel.setLayout(new BorderLayout());
 		GridBagConstraints c = GuiUtil.defaultGbc();
 		c.fill = GridBagConstraints.VERTICAL;
 		c.weightx = 1;
 		c.weighty = 1;
-		// TODO: move this external somewhere
+		String rawText;
+		try {
+			rawText = IOUtils.toString(GuiMain.class.getResource("/te_news.txt"), StandardCharsets.UTF_8);
+		}
+		catch (Throwable t) {
+			log.error("Error loading news", t);
+			rawText = "Error loading news";
+		}
 		// TODO: figure out why this text is reporting its minimum height as 5000-something and messing up the layout
-		ReadOnlyText text = new ReadOnlyText("""
-				New: On the Events tab, you can choose between "Local Time" and "Relative to Selection". The latter will display timestamps relative to the selected event. 
-				You can drag-and-drop to rearrange easy trigger actions. There is also a "Wait" action if you need something to be delayed. 
-				Press Ctrl-G, then type the name of a tab, plugin, or duty to navigate directly to it."""
-		);
+		ReadOnlyText text = new ReadOnlyText(rawText, true);
 		panel.add(text, c);
+//		panel.add(text, BorderLayout.CENTER);
 		return panel;
 	}
 
-	private class SystemTabPanel extends JPanel {
-		SystemTabPanel() {
+	private class WelcomeTabPanel extends JPanel {
+
+		WelcomeTabPanel() {
+
+			setLayout(new GridBagLayout());
+			GridBagConstraints c = new GridBagConstraints();
+			c.fill = GridBagConstraints.BOTH;
+			c.anchor = GridBagConstraints.CENTER;
+			c.weighty = 0;
+			c.gridx = 0;
+			c.gridy = 0;
+			c.weightx = 1;
+			c.gridwidth = GridBagConstraints.REMAINDER;
+
+			{
+				JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+				topPanel.add(new EnumSettingGui<>(WindowConfig.getThemeSettingStatic(), "Theme", () -> true).getComboBoxOnly());
+				topPanel.add(new EasyAction("Github", () -> GuiUtil.openUrl("https://github.com/xpdota/event-trigger"), () -> true, null).asButton());
+				topPanel.add(new EasyAction("Website", () -> GuiUtil.openUrl("https://triggevent.io"), () -> true, null).asButton());
+				topPanel.add(new EasyAction("Discord", () -> GuiUtil.openUrl("https://discord.gg/jxk24jC66r"), () -> true, null).asButton());
+				add(topPanel, c);
+				c.gridy++;
+			}
+
+			if (replay == null) {
+				ActWsConnectionStatus connectionStatusPanel = new ActWsConnectionStatus();
+				connectionStatusPanel.setPreferredSize(new Dimension(100, 80));
+				add(connectionStatusPanel, c);
+				master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
+			}
+
+			c.gridy++;
+			add(newsPanel(), c);
+			c.weighty = 1;
+			c.gridy++;
+			add(changelogPanel(), c);
+		}
+	}
+
+	private Component changelogPanel() {
+		TitleBorderPanel changelog = new TitleBorderPanel("Changelog");
+		changelog.setLayout(new BorderLayout());
+		String text;
+		try {
+			text = IOUtils.toString(GuiMain.class.getResource("/te_changelog.html"), StandardCharsets.UTF_8);
+		}
+		catch (Throwable e) {
+			log.error("Error loading changelog", e);
+			text = "Error loading changelog";
+		}
+		Component rot = new ReadOnlyHtml(text);
+		changelog.add(new JScrollPane(rot));
+		return changelog;
+	}
+
+	private class SummaryTabPanel extends JPanel {
+
+		private final RefreshLoop<Class<SummaryTabPanel>> generalTabRefresh;
+
+		SummaryTabPanel() {
 
 			setLayout(new GridBagLayout());
 			GridBagConstraints c = new GridBagConstraints();
@@ -280,9 +405,6 @@ public class GuiMain {
 				add(connectionStatusPanel, c);
 				master.getDistributor().registerHandler(ActWsConnectionStatusChangedEvent.class, connectionStatusPanel::connectionStatusChange);
 			}
-
-			c.gridy++;
-			add(newsPanel(), c);
 
 			c.weightx = 0;
 			c.gridwidth = 1;
@@ -305,17 +427,28 @@ public class GuiMain {
 			c.gridy++;
 			c.weighty = 1;
 			add(combatantsPanel, c);
-			// TODO: these don't always work right because we aren't guaranteed to be the last event handler
-			EventHandler<Event> update = (ctx, e) -> {
+			// TODO: this is good enough for now, but really should have a separate "welcome" page as the default
+			generalTabRefresh = new RefreshLoop<>("GeneralTabRefresh", SummaryTabPanel.class, stp -> {
 				xivStateStatus.refresh();
 				xivPartyPanel.refresh();
 				combatantsPanel.refresh();
-			};
-			master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, update);
-			master.getDistributor().registerHandler(AbilityUsedEvent.class, update);
-			master.getDistributor().registerHandler(BuffApplied.class, update);
-			master.getDistributor().registerHandler(BuffRemoved.class, update);
+			}, unused -> {
+				if (isVisible()) {
+					return 100L;
+				}
+				else {
+					return 1000L;
+				}
+			});
+			generalTabRefresh.start();
+		}
 
+		@Override
+		public void setVisible(boolean aFlag) {
+			super.setVisible(aFlag);
+			if (aFlag) {
+				generalTabRefresh.refreshNow();
+			}
 		}
 	}
 
@@ -453,7 +586,7 @@ public class GuiMain {
 
 			partyMembersTable.setModel(partyTableModel);
 			partyTableModel.configureColumns(partyMembersTable);
-			RightClickOptionRepo.of(
+			rightClicks.withMore(
 					CustomRightClickOption.forRow(
 							"Set As Primary Player",
 							XivPlayerCharacter.class,
@@ -496,6 +629,7 @@ public class GuiMain {
 					.setItemEquivalence((a, b) -> a.getId() == b.getId())
 					.build();
 			JTable table = new JTable(combatantsTableModel);
+			rightClicks.configureTable(table, combatantsTableModel);
 			combatantsTableModel.configureColumns(table);
 			JScrollPane scrollPane = new JScrollPane(table);
 			scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -608,6 +742,7 @@ public class GuiMain {
 				.setDetailsSelectionEquivalence((a, b) -> a.getKey().equals(b.getKey()))
 				.addFilter(EventEntityFilter::selfFilter)
 				.addFilter(NonCombatEntityFilter::new)
+				.withRightClickRepo(rightClicks)
 				.build();
 		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivStateRecalculatedEvent.class, (ctx, e) -> table.signalNewData());
@@ -656,6 +791,7 @@ public class GuiMain {
 				.addFilter(EventEntityFilter::buffSourceFilter)
 				.addFilter(EventEntityFilter::buffTargetFilter)
 				.addFilter(EventAbilityOrBuffFilter::new)
+				.withRightClickRepo(rightClicks)
 				.build();
 		table.setBottomScroll(false);
 		master.getDistributor().registerHandler(XivBuffsUpdatedEvent.class, (ctx, e) -> table.signalNewData());
@@ -709,7 +845,7 @@ public class GuiMain {
 		LogCollector instance = LogCollector.getInstance();
 		if (instance == null) {
 			JPanel panel = new TitleBorderFullsizePanel("Logs");
-			panel.add(new JLabel("Error: no LogCollector instance"));
+			panel.add(new JLabel("Error: no LogCollector instance. If you aren't using a custom logback.xml, this is a bug."));
 			return panel;
 		}
 		else {
@@ -762,7 +898,7 @@ public class GuiMain {
 						String className = callerDataTop.getClassName();
 						String[] split = className.split("\\.");
 						String simpleClassName = split[split.length - 1];
-						return simpleClassName + ":" + callerDataTop.getLineNumber();
+						return simpleClassName + ':' + callerDataTop.getLineNumber();
 //						return e.getEvent().getLoggerName() + ":";
 					}, col -> {
 						col.setPreferredWidth(200);
@@ -780,12 +916,26 @@ public class GuiMain {
 					.addFilter(SystemLogThreadFilter::new)
 					.addFilter(SystemLogLoggerNameFilter::new)
 					.addFilter(SystemLogTextFilter::new)
+					.addWidget(ignored -> {
+						JButton button = new JButton("Show Log File");
+						button.addActionListener(l -> {
+							Platform.showFileInExplorer(Platform.getTriggeventDir().resolve("triggevent.log").toFile());
+						});
+						return button;
+					})
 					.setAppendOrPruneOnly(true)
 					.build();
 			instance.addCallback(table::signalNewData);
 			return table;
 		}
 	}
+
+	private final DateTimeFormatter format = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+
+	private String formatLocalTime(@NotNull Instant t) {
+		return t.atZone(ZoneId.systemDefault()).format(format);
+	}
+
 
 	private JPanel getPullsTab() {
 		PullTracker pulls = state.get(PullTracker.class);
@@ -818,10 +968,26 @@ public class GuiMain {
 					col.setMaxWidth(100);
 					col.setResizable(false);
 				}))
-				.addMainColumn(new CustomColumn<>("Start", Pull::startTime, col -> {
+				.addMainColumn(new CustomColumn<>("Start", pull -> {
+					return formatLocalTime(pull.startTime());
+				}, col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addMainColumn(new CustomColumn<>("Duration", Pull::getCombatDuration, col -> {
+				.addMainColumn(new CustomColumn<>("Combat Duration", pull -> {
+					Duration cdur = pull.getCombatDuration();
+					if (cdur == null) {
+						return "";
+					}
+					else {
+						if (cdur.toHours() > 0) {
+							return String.format("%d:%02d:%02d.%03d", cdur.toHours(), cdur.toMinutesPart(), cdur.toSecondsPart(), cdur.toMillisPart());
+						}
+						else {
+							return String.format("%d:%02d.%03d", cdur.toMinutes(), cdur.toSecondsPart(), cdur.toMillisPart());
+
+						}
+					}
+				}, col -> {
 					col.setPreferredWidth(200);
 				}))
 				.addDetailsColumn(StandardColumns.fieldName)
@@ -829,7 +995,7 @@ public class GuiMain {
 				.addDetailsColumn(StandardColumns.identity)
 				.addDetailsColumn(StandardColumns.fieldType)
 				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
-				.withRightClickRepo(RightClickOptionRepo.of(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
+				.withRightClickRepo(rightClicks.withMore(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
 					PullNumberFilter pnf = container.getComponent(PullNumberFilter.class);
 					pnf.setPullNumberExternally(pull.getPullNum());
 					// TODO: messy
@@ -906,6 +1072,7 @@ public class GuiMain {
 					.addColumn(StandardColumns.doubleSettingSliderColumn("Opacity", XivOverlay::opacity, 200, 0.05))
 					.build();
 			table.setModel(tableModel);
+			rightClicks.configureTable(table, tableModel);
 			table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			visibleSetting.addListener(() -> {
 				TableCellEditor cellEditor = table.getCellEditor();

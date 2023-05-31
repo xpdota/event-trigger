@@ -13,6 +13,10 @@ public class EasyAction {
 	private final Supplier<Boolean> enabled;
 	private final KeyStroke key;
 
+	public EasyAction(String name, Runnable runAction) {
+		this(name, runAction, () -> true, null);
+	}
+
 	public EasyAction(String name, Runnable runAction, Supplier<Boolean> enabled, KeyStroke key) {
 		this.name = name;
 		this.runAction = runAction;
@@ -24,6 +28,12 @@ public class EasyAction {
 		if (key != null) {
 			component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(key, this);
 			component.getActionMap().put(this, asAction());
+		}
+	}
+
+	public void run() {
+		if (enabled.get()) {
+			runAction.run();
 		}
 	}
 

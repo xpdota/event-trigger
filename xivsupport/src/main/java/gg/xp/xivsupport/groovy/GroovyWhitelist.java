@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.groovy;
 
 import gg.xp.reevent.scan.ScanMe;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovyShell;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
@@ -8,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -28,7 +31,8 @@ public class GroovyWhitelist extends Whitelist {
 			"java.lang.Thread",
 			"org.slf4j",
 			"org.apache.commons.io",
-			"java.lang.Process"
+			"java.lang.Process",
+			"sun.misc.Unsafe"
 	);
 	private final List<Class<?>> classBlacklist = List.of(
 			Thread.class,
@@ -36,8 +40,21 @@ public class GroovyWhitelist extends Whitelist {
 			ProcessBuilder.class,
 			File.class,
 			FileUtils.class,
-			IOUtils.class
+			IOUtils.class,
+			getUnsafeClass(),
+			Desktop.class,
+			GroovyShell.class,
+			GroovyClassLoader.class
 	);
+
+	private static Class<?> getUnsafeClass() {
+		try {
+			return Class.forName("sun.misc.Unsafe");
+		}
+		catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	private boolean nameAllowed(String thing) {
 		if (thing == null) {

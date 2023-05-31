@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
@@ -34,12 +36,16 @@ import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullEndedEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.AutoMarkTargetAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.ClearAllMarksAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.ConditionalAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.DebugAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
@@ -82,6 +88,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.CompoundCond
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
+import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
@@ -120,14 +127,16 @@ public final class EasyTriggers {
 	private final PersistenceProvider pers;
 	private final PicoContainer pico;
 	private final XivState state;
+	private final EventMaster master;
 	private final CustomJsonListSetting<EasyTrigger<?>> setting;
 
 	private ArrayList<EasyTrigger<?>> triggers;
 
-	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state) {
+	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state, EventMaster master) {
 		this.pers = pers;
 		this.pico = pico;
 		this.state = state;
+		this.master = master;
 		mapper.setInjectableValues(new InjectableValues() {
 			@Override
 			public Object findInjectableValue(Object o, DeserializationContext deserializationContext, BeanProperty beanProperty, Object o1) {
@@ -215,7 +224,23 @@ public final class EasyTriggers {
 	}
 
 	@HandleEvents
+	public void initAll(EventContext context, InitEvent init) {
+		context.accept(new EasyTriggersInitEvent());
+	}
+
+	public void initSpecificTrigger(EasyTrigger<EasyTriggersInitEvent> trigger) {
+		master.pushEvent(new EasyTriggersInitEvent(trigger));
+	}
+
+	@HandleEvents
 	public void runEasyTriggers(EventContext context, Event event) {
+		if (event instanceof EasyTriggersInitEvent etie) {
+			EasyTrigger<EasyTriggersInitEvent> triggerToInit = etie.getTriggerToInit();
+			if (triggerToInit != null) {
+				triggerToInit.handleEvent(context, event);
+				return;
+			}
+		}
 		triggers.forEach(trig -> {
 			try {
 				trig.handleEvent(context, event);
@@ -230,9 +255,13 @@ public final class EasyTriggers {
 		return Collections.unmodifiableList(triggers);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void addTrigger(EasyTrigger<?> trigger) {
 		triggers.add(trigger);
 		save();
+		if (trigger.getEventType().equals(EasyTriggersInitEvent.class)) {
+			initSpecificTrigger((EasyTrigger<EasyTriggersInitEvent>) trigger);
+		}
 	}
 
 	public void removeTrigger(EasyTrigger<?> trigger) {
@@ -243,6 +272,21 @@ public final class EasyTriggers {
 	// Be sure to add new types to EasyTriggersTest
 	// TODO: might be nice to wire some of the "single value replacement" logic from ModifiableCallout into here, to skip the need for .name on everything
 	private final List<EventDescription<?>> eventTypes = new ArrayList<>(List.of(
+			new EventDescriptionImpl<>(EasyTriggersInitEvent.class,
+					"Startup Trigger - will run when Triggevent starts (or when importing the trigger)",
+					"", "", List.of()) {
+				@Override
+				public EasyTrigger<EasyTriggersInitEvent> newEmptyInst(@Nullable String callText) {
+					return newDefaultInst();
+				}
+
+				@Override
+				public EasyTrigger<EasyTriggersInitEvent> newDefaultInst() {
+					EasyTrigger<EasyTriggersInitEvent> easy = new EasyTrigger<>();
+					easy.setEventType(EasyTriggersInitEvent.class);
+					return easy;
+				}
+			},
 			new EventDescriptionImpl<>(AbilityCastStart.class,
 					"An ability has started casting. Corresponds to ACT 20 lines.",
 					"{event.ability}",
@@ -328,7 +372,19 @@ public final class EasyTriggers {
 					"In-game chat lines. Use as a last resort, e.g. Nael quotes.",
 					"{event.name} says {event.line}",
 					"Chat Line {event.name}: {event.line}",
-					List.of(ChatLineRegexFilter::new))
+					List.of(ChatLineRegexFilter::new)),
+			new EventDescriptionImpl<>(DutyCommenceEvent.class,
+					"Duty (re)commencement (barrier dropping)",
+					"Commence",
+					List.of()),
+			new EventDescriptionImpl<>(PullStartedEvent.class,
+					"A new pull has started, though combat has not necessarily begun",
+					"Pull Started",
+					List.of()),
+			new EventDescriptionImpl<>(PullEndedEvent.class,
+					"A pull has ended",
+					"Pull Ended",
+					List.of())
 	));
 
 
@@ -379,7 +435,8 @@ public final class EasyTriggers {
 			new ActionDescription<>(WaitAction.class, BaseEvent.class, "Wait a fixed time", WaitAction::new, this::generic),
 			new ActionDescription<>(GroovyAction.class, Event.class, "Custom script action", () -> new GroovyAction(inject(GroovyManager.class)), (action, trigger) -> new GroovyActionEditor<>(action, trigger)),
 //			(ActionDescription<ConditionalAction<BaseEvent>, BaseEvent>) new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)),
-			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action))
+			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action)),
+			new ActionDescription<>(DebugAction.class, Event.class, "Generate a Debug Event", () -> new DebugAction(inject(GroovyManager.class)), this::generic)
 	));
 
 	{
@@ -409,7 +466,7 @@ public final class EasyTriggers {
 	}
 
 	public <X> List<ActionDescription<?, ?>> getActionsApplicableTo(HasMutableActions<X> trigger) {
-		return actions.stream().filter(adesc -> adesc.appliesTo(trigger.classForActions())).toList();
+		return actions.stream().filter(adesc -> adesc.isEnabled() && adesc.appliesTo(trigger.classForActions())).toList();
 	}
 
 	public void registerEventType(EventDescription<?> eventDescription) {
@@ -506,9 +563,10 @@ public final class EasyTriggers {
 				trigger.addCondition(filter);
 			}
 			return trigger;
-
 		}
-
+		else if (event instanceof InitEvent || event instanceof EasyTriggersInitEvent) {
+			return getEventDescription(EasyTriggersInitEvent.class).newEmptyInst(null);
+		}
 		return null;
 	}
 

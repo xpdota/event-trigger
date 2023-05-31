@@ -34,16 +34,16 @@ public class BooleanSettingGui {
 
 		FlatCheckBoxIcon icon = new FlatCheckBoxIcon() {
 			// flatlaf 1.x
-			@Override
-			protected Color getCheckmarkColor(Component c, boolean selected, boolean isFocused) {
-				return colorize(super.getCheckmarkColor(c, selected, isFocused));
-			}
+//			@Override
+//			protected Color getCheckmarkColor(Component c, boolean selected, boolean isFocused) {
+//				return colorize(super.getCheckmarkColor(c, selected, isFocused));
+//			}
 
 			// flatlaf 2.x and above
-//			@Override
-//			protected Color getCheckmarkColor(Component c) {
-//				return colorize(super.getCheckmarkColor(c));
-//			}
+			@Override
+			protected Color getCheckmarkColor(Component c) {
+				return colorize(super.getCheckmarkColor(c));
+			}
 
 			@Override
 			protected Color getBorderColor(Component c, boolean selected) {

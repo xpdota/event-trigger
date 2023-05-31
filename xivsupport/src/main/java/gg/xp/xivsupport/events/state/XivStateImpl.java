@@ -403,6 +403,24 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
+	public @Nullable XivCombatant npcById(long id) {
+		return combatantCache.values()
+				.stream()
+				.filter(cbt -> cbt.npcIdMatches(id))
+				.min(Comparator.comparing(XivCombatant::getId))
+				.orElse(null);
+	}
+
+	@Override
+	public List<XivCombatant> npcsById(long id) {
+		return combatantCache.values()
+				.stream()
+				.filter(cbt -> cbt.npcIdMatches(id))
+				.sorted(Comparator.comparing(XivCombatant::getId))
+				.toList();
+	}
+
+	@Override
 	public int getPartySlotOf(XivEntity entity) {
 		List<XivPlayerCharacter> partyList = getPartyList();
 		return IntStream.range(0, partyList.size())
@@ -449,6 +467,12 @@ public class XivStateImpl implements XivState {
 			dirtyOverrides = false;
 			recalcState();
 		}
+	}
+
+	@Override
+	public void provideTransformation(long entityId, short transformationId) {
+		getOrCreateData(entityId).setTransformationId(transformationId);
+		dirtyOverrides = true;
 	}
 
 	@Override
@@ -594,6 +618,7 @@ public class XivStateImpl implements XivState {
 		private boolean removed;
 		private XivCombatant owner;
 		private long shieldPercent;
+		private short tfId = -1;
 
 		private CombatantData(long id) {
 			this.id = id;
@@ -677,6 +702,11 @@ public class XivStateImpl implements XivState {
 			dirty = true;
 		}
 
+		public void setTransformationId(short tfId) {
+			this.tfId = tfId;
+			dirty = true;
+		}
+
 		public OnlineStatus getStatus() {
 			return status;
 		}
@@ -725,6 +755,8 @@ public class XivStateImpl implements XivState {
 			// TODO: changing primary player should dirty this
 			boolean isPlayer = rawType == 1;
 			long shieldAmount = hp != null ? shieldPercent * hp.max() / 100 : 0;
+			short transformationId = tfId != -1 ? tfId : (raw != null ? raw.getTransformationId() : -1);
+			short weaponId = (raw != null ? raw.getWeaponId() : -1);
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
 						id,
@@ -741,7 +773,9 @@ public class XivStateImpl implements XivState {
 						partyType,
 						level,
 						ownerId,
-						shieldAmount);
+						shieldAmount,
+						transformationId,
+						weaponId);
 			}
 			else {
 				computed = new XivCombatant(
@@ -758,7 +792,9 @@ public class XivStateImpl implements XivState {
 						partyType,
 						level,
 						ownerId,
-						shieldAmount);
+						shieldAmount,
+						transformationId,
+						weaponId);
 				if (bnpcId == 9020) {
 					fake = true;
 				}

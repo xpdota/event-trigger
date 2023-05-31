@@ -2,8 +2,8 @@ package gg.xp.xivsupport.persistence.gui;
 
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
-import gg.xp.xivsupport.persistence.settings.ResetMenuOption;
 import gg.xp.xivsupport.persistence.settings.HttpURISetting;
+import gg.xp.xivsupport.persistence.settings.ResetMenuOption;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,8 +17,13 @@ public class HttpURISettingGui {
 	private final String label;
 	private JLabel jLabel;
 	private volatile boolean resetInProgress;
+	private volatile boolean setInProgress;
 
 	public HttpURISettingGui(HttpURISetting setting, String label) {
+		this(setting, label, false);
+	}
+
+	public HttpURISettingGui(HttpURISetting setting, String label, boolean listen) {
 		this.setting = setting;
 		textBox = new TextFieldWithValidation<>(str -> {
 			URI uri = URI.create(str);
@@ -27,17 +32,26 @@ public class HttpURISettingGui {
 				return uri;
 			}
 			else {
-				throw new IllegalArgumentException("Protocol must be WS or WSS");
+				throw new IllegalArgumentException("Protocol must be HTTP or HTTPS");
 			}
-		}, this::setNewValue, setting.get().toString());
+		}, this::setNewValue, () -> setting.get().toString());
 		textBox.setColumns(20);
 		textBox.setComponentPopupMenu(ResetMenuOption.resetOnlyMenu(setting, this::reset));
+		if (listen) {
+			setting.addListener(() -> {
+				if (!setInProgress) {
+					textBox.resetText();
+				}
+			});
+		}
 		this.label = label;
 	}
 
 	private void setNewValue(URI newValue) {
 		if (!resetInProgress) {
+			setInProgress = true;
 			setting.set(newValue);
+			setInProgress = false;
 		}
 	}
 
@@ -66,6 +80,7 @@ public class HttpURISettingGui {
 
 	public Component getResetButton() {
 		JButton jButton = new JButton("Reset");
+		jButton.setMargin(new Insets(3, 8, 3, 8));
 		jButton.addActionListener(l -> {
 			// TODO: Kind of bad
 			textBox.setText(setting.getDefault().toString());

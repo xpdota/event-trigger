@@ -7,8 +7,10 @@ import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.persistence.gui.BasicAutomarkSettingGroupGui;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.JobSortGui;
+import gg.xp.xivsupport.persistence.settings.MultiSlotAutomarkSetting;
 
 import javax.swing.*;
 import java.awt.*;
@@ -53,48 +55,36 @@ public class DragonsongAmGui implements DutyPluginTab {
 		outer.add(topCheckboxes, BorderLayout.NORTH);
 		GridBagConstraints c = new GridBagConstraints(0, 0, 2, 1, 1, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
 
-		inner = new JPanel();
-		inner.setLayout(new GridBagLayout());
-		JCheckBox p6altMark = new BooleanSettingGui(ds.getP6_altMarkMode(), "Alt Mode").getComponent();
+		inner = new JPanel(new BorderLayout());
+		JPanel innerUpper = new JPanel(new GridBagLayout());
 		JCheckBox rotFirst = new BooleanSettingGui(ds.getP6_rotPrioHigh(), "Rot takes highest priority").getComponent();
 		JCheckBox reverseSort = new BooleanSettingGui(ds.getP6_reverseSort(), "Reverse sort (higher priority gets larger number)").getComponent();
 		ReadOnlyText helpText = new ReadOnlyText("""
-				The four players with the 'spread' debuffs will receive 'attack' markers.
-				In addition, if Telesto is in use:
-								
-				If "Alt Mode" is disabled:
-				The two players with 'stack' debuffs will receive 'bind1' and 'bind2' markers,
-				and the two players with nothing will receive 'ignore1 and ignore2' markers.
-				The intent is that the '1' players will stack together, and '2' players stack together.
-								
-				If "Alt Mode" is enabled:
-				The two players with 'stack' debuffs will receive 'bind1' and 'ignore1' markers,
-				and the two players with nothing will receive 'bind2' and 'ignore2' markers.
-				The intent is that the 'bind' players will stack together, and 'ignore' players stack together.
-								
-				In both cases, higher priority jobs will get lower number markers. To reverse this, check "Reverse Sort".
+				Configure your priority using the job list below. Jobs higher on the list receive a higher priority.
+				The "Reverse sort" setting configures whether "high priority" means they get a higher marker number,
+				or a lower number. The "Rot takes highest priority" checkbox will cause the current rot holder to
+				receive the lowest possible marker (or highest, if "Reverse sort" is enabled).
+
+				If you are using classic macros rather than Telesto, you MUST use the basic "Next Available Attack"
+				macros.
 				""");
 
 
-		inner.add(p6altMark, c);
+		innerUpper.add(helpText, c);
 		c.gridy++;
-		inner.add(helpText, c);
+		{
+			MultiSlotAutomarkSetting<DragonsongWrothAssignments> markSettings = ds.getP6_amAssignments();
+			BasicAutomarkSettingGroupGui<DragonsongWrothAssignments> mappingPanel = new BasicAutomarkSettingGroupGui<>("Wroth Marker Mapping", markSettings, 4, true);
+			innerUpper.add(mappingPanel, c);
+		}
 		c.gridy++;
-		inner.add(rotFirst, c);
+		innerUpper.add(rotFirst, c);
 		c.gridy++;
-		inner.add(reverseSort, c);
+		innerUpper.add(reverseSort, c);
 		c.gridy++;
-		c.fill = GridBagConstraints.NONE;
-		inner.add(jsg.getResetButton(), c);
+		inner.add(innerUpper, BorderLayout.NORTH);
 		c.fill = GridBagConstraints.BOTH;
-		c.gridy++;
-		c.weightx = 0;
-		c.gridwidth = 1;
-		c.weighty = 1;
-		inner.add(jsg.getJobListWithButtons(), c);
-		c.gridx++;
-		c.weightx = 1;
-		inner.add(jsg.getPartyPane(), c);
+		inner.add(jsg.getCombined(), BorderLayout.CENTER);
 
 		ds.getP6_useAutoMarks().addAndRunListener(this::checkVis);
 		outer.add(inner, BorderLayout.CENTER);
@@ -116,19 +106,4 @@ public class DragonsongAmGui implements DutyPluginTab {
 		return 101;
 	}
 
-//	// TODO: this should only happen on a party/job/etc update, not a normal state recalc, but it's difficult to
-//	// determine exactly what should trigger it. Maybe better to just stick it on a timer that only applies when the
-//	// tab is visible?
-//	@HandleEvents(order = 20_000)
-//	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-//		if (jsg != null) {
-//			jsg.externalRefresh();
-//		}
-//	}
-
-	public void tryBringToFront() {
-		if (inner != null) {
-			GuiUtil.bringToFront(inner);
-		}
-	}
 }

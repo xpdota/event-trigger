@@ -149,6 +149,10 @@ public class GroovyAction implements Action<Event> {
 
 	@Override
 	public void accept(EasyTriggerContext context, Event event) {
+		// TODO: replace this with Future<X> and have scripts automatically build in the background
+		// on startup.
+		// Then, replace the editor with the nice multi-line editor.
+		// This should alleviate the need to have separate trigger + script.
 		if (groovyCompiledScript == null) {
 			try {
 				groovyCompiledScript = compile(groovyScript);
@@ -165,7 +169,7 @@ public class GroovyAction implements Action<Event> {
 				((Consumer<Event>) groovyCompiledScript).accept(event);
 			}
 			catch (Throwable t) {
-				log.error("Easy trigger Groovy script encountered an error (returning false)", t);
+				log.error("Easy trigger Groovy script encountered an error", t);
 				lastError = t;
 			}
 			finally {

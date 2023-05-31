@@ -20,6 +20,7 @@ import gg.xp.xivsupport.lang.LanguageController;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.FileSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
@@ -27,8 +28,10 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +59,8 @@ public final class TimelineManager {
 			.guiProvider(e -> IconTextRenderer.getStretchyIcon(e.getIconUrl()));
 	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutPre = ModifiableCallout.<TimelineProcessor.UpcomingCall>durationBasedCall("Timeline Callout (Precall)", "{event.getEntry().name()}")
 			.guiProvider(e -> IconTextRenderer.getStretchyIcon(e.getIconUrl()));
+	private final FileSetting cactbotUserDirSetting;
+	private final IntSetting barTimeBasis;
 
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
@@ -68,6 +73,17 @@ public final class TimelineManager {
 		debugMode = new BooleanSetting(pers, "timeline-overlay.debug-mode", false);
 		prePullShow = new BooleanSetting(pers, "timeline-overlay.show-pre-pull", false);
 		resetOnMapChange = new BooleanSetting(pers, "timeline-overlay.reset-on-map-change", false);
+		barTimeBasis = new IntSetting(pers, "timeline-overlay.bar-time-basis-seconds", 60, 1, 3600);
+
+		File defaultUserDir;
+		try {
+			defaultUserDir = Path.of(System.getenv("APPDATA"), "Advanced Combat Tracker", "Plugins", "cactbot", "cactbot", "user").toFile();
+		}
+		catch (Throwable t) {
+			log.warn("Error initializing default cactbot user dir location");
+			defaultUserDir = new File(".");
+		}
+		cactbotUserDirSetting = new FileSetting(pers, "cactbot-integration.user-dir-location", defaultUserDir);
 		this.state = state;
 		this.lang = lang;
 		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutNow, pers, "timeline-support.trigger-call-now");
@@ -94,9 +110,22 @@ public final class TimelineManager {
 		}
 	}
 
-	public @Nullable TimelineProcessor getTimeline(long zoneId) {
+	public TimelineInfo getInfoForZone(long zoneId) {
 		ensureInit();
-		TimelineInfo info = zoneIdToTimelineFile.get(zoneId);
+		return zoneIdToTimelineFile.get(zoneId);
+	}
+
+	public @Nullable TimelineProcessor getTimelineIfEnabled(long zoneId) {
+		TimelineCustomizations cust = getCustomSettings(zoneId);
+		if (!cust.enabled) {
+			log.info("Timeline disabled for zone {}", zoneId);
+			return null;
+		}
+		return getTimeline(zoneId);
+	}
+
+	public @Nullable TimelineProcessor getTimeline(long zoneId) {
+		TimelineInfo info = getInfoForZone(zoneId);
 		if (info == null) {
 			log.info("No timeline info for zone {}", zoneId);
 			return null;
@@ -123,7 +152,7 @@ public final class TimelineManager {
 										TimelineReplacements tr = mapper.readValue(translationsStream, TimelineReplacements.class);
 										String lang = this.lang.getGameLanguage().getShortCode();
 										lr = tr.langs().getOrDefault(lang, LanguageReplacements.empty());
-										log.info("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
+										log.debug("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
 										return lr;
 									}
 									catch (IOException e) {
@@ -167,17 +196,25 @@ public final class TimelineManager {
 		else {
 			pers.save(propStubForZoneId(zoneId), cust);
 		}
-		if (this.zone != null && this.zone.getId() == zoneId && currentTimeline != null) {
+		if (this.zone != null && this.zone.getId() == zoneId) {
 			resetCurrentTimelineKeepSync();
 		}
 	}
 
 	private void resetCurrentTimelineKeepSync() {
-		if (this.zone != null && currentTimeline != null) {
-			// TODO: save/restore the timestamp so it is easier to live-edit
-			TimelineProcessor.TimelineSync lastSync = currentTimeline.getLastSync();
-			loadTimelineForCurrentZone();
-			currentTimeline.setLastSync(lastSync);
+		if (this.zone != null) {
+			if (currentTimeline != null) {
+				// Save/restore the timestamp so it is easier to live-edit
+				TimelineProcessor.TimelineSync lastSync = currentTimeline.getLastSync();
+				loadTimelineForCurrentZone();
+				if (currentTimeline != null) {
+					currentTimeline.setLastSync(lastSync);
+				}
+			}
+			else {
+				// This can happen if you have just enabled the timeline
+				loadTimelineForCurrentZone();
+			}
 		}
 	}
 
@@ -243,7 +280,7 @@ public final class TimelineManager {
 			return;
 		}
 		long zoneId = zone.getId();
-		currentTimeline = getTimeline(zoneId);
+		currentTimeline = getTimelineIfEnabled(zoneId);
 		if (currentTimeline == null) {
 			log.info("No timeline for zone '{}'", zoneId);
 		}
@@ -299,5 +336,13 @@ public final class TimelineManager {
 
 	public BooleanSetting getResetOnMapChangeSetting() {
 		return resetOnMapChange;
+	}
+
+	public FileSetting cactbotDirSetting() {
+		return cactbotUserDirSetting;
+	}
+
+	public IntSetting getBarTimeBasis() {
+		return barTimeBasis;
 	}
 }

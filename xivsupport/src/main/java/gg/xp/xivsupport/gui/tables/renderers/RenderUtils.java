@@ -24,7 +24,7 @@ public final class RenderUtils {
 	}
 
 	public static Color withAlpha(Color base, int alpha) {
-		return new Color(base.getRGB() & 0xffffff + (alpha << 24), true);
+		return new Color((base.getRGB() & 0xffffff) + (alpha << 24), true);
 	}
 
 	public static @Nullable HasIconURL guessIconFor(Object object) {

@@ -56,6 +56,12 @@ public class P1S implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> greenSafe = new ModifiableCallout<>("Green/Light Safe", "Light Safe");
 	private final ModifiableCallout<BuffApplied> redSafe = new ModifiableCallout<>("Red/Fire Safe", "Fire Safe");
 
+	private final XivState state;
+
+	public P1S(XivState state) {
+		this.state = state;
+	}
+
 	@HandleEvents
 	public void shackles(EventContext context, BuffApplied buff) {
 		if (!buff.getTarget().isThePlayer()) {
@@ -176,7 +182,7 @@ public class P1S implements FilteredEventHandler {
 
 	@Override
 	public boolean enabled(EventContext context) {
-		return context.getStateInfo().get(XivState.class).zoneIs(0x3EB);
+		return state.dutyIs(KnownDuty.P1S);
 	}
 
 }

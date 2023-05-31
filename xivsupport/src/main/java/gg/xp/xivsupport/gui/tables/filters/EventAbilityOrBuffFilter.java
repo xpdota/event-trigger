@@ -17,6 +17,12 @@ public class EventAbilityOrBuffFilter extends TextBasedFilter<Object> {
 		super(filterUpdatedCallback, "Ability/Buff", EventAbilityOrBuffFilter::getNameForItem);
 	}
 
+	@Override
+	protected String boxToolTip() {
+		return super.boxToolTip() + '\n' + """
+				Numeric IDs may be entered as base 10 (1234) or hex (0x15AB)""";
+	}
+
 	private static String getNameForItem(Object item) {
 		if (item instanceof HasAbility ha) {
 			return ha.getAbility().getName();

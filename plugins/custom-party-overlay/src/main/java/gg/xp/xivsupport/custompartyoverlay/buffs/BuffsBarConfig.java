@@ -5,6 +5,7 @@ import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.ObservableSetting;
+import gg.xp.xivsupport.persistence.settings.WeakRunnable;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class BuffsBarConfig extends ObservableSetting {
 	}
 
 	protected final void registerListener(ObservableSetting setting) {
-		setting.addListener(this::notifyListeners);
+		setting.addListener(WeakRunnable.of(this, BuffsBarConfig::notifyListeners));
 	}
 
 	public BooleanSetting getTimers() {

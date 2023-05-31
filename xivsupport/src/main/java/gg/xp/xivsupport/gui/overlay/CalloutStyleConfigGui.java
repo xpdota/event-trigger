@@ -4,6 +4,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.callouts.CalloutProcessor;
+import gg.xp.xivsupport.callouts.SingleValueReplacement;
 import gg.xp.xivsupport.callouts.conversions.GlobalArenaSectorConverter;
 import gg.xp.xivsupport.callouts.conversions.DefaultArenaSectorConversion;
 import gg.xp.xivsupport.callouts.conversions.GlobalCallReplacer;
@@ -36,17 +37,17 @@ import java.util.List;
 public class CalloutStyleConfigGui implements PluginTab {
 
 	private final FlyingTextOverlay overlay;
-	private final CalloutProcessor calloutProcessor;
 	private final EventMaster master;
 	private final GlobalArenaSectorConverter asc;
 	private final GlobalCallReplacer gcr;
+	private final SingleValueReplacement svr;
 
-	public CalloutStyleConfigGui(FlyingTextOverlay overlay, CalloutProcessor calloutProcessor, EventMaster master, GlobalArenaSectorConverter asc, GlobalCallReplacer gcr) {
+	public CalloutStyleConfigGui(FlyingTextOverlay overlay, EventMaster master, GlobalArenaSectorConverter asc, GlobalCallReplacer gcr, SingleValueReplacement svr) {
 		this.overlay = overlay;
-		this.calloutProcessor = calloutProcessor;
 		this.master = master;
 		this.asc = asc;
 		this.gcr = gcr;
+		this.svr = svr;
 	}
 
 
@@ -116,8 +117,8 @@ public class CalloutStyleConfigGui implements PluginTab {
 		}
 		{
 			JPanel panel = new TitleBorderFullsizePanel("Name Conversions");
-			JCheckBox replaceYou = new BooleanSettingGui(calloutProcessor.getReplaceYou(), "Replace your own name with 'YOU'").getComponent();
-			Component playerNameStylePanel = new EnumSettingGui<>(calloutProcessor.getPcNameStyle(), "Player Name Style", () -> true).getComponent();
+			JCheckBox replaceYou = new BooleanSettingGui(svr.getReplaceYou(), "Replace your own name with 'YOU'").getComponent();
+			Component playerNameStylePanel = new EnumSettingGui<>(svr.getPcNameStyle(), "Player Name Style", () -> true).getComponent();
 			GuiUtil.simpleTopDownLayout(panel, 400, replaceYou, playerNameStylePanel);
 			tpane.add("Player Names", panel);
 		}

@@ -47,6 +47,10 @@ public record Position(double x, double y, double z, double heading) implements 
 		return String.format("Pos(%.2f, %.2f, %.2f : %.2f)", x, y, z, heading);
 	}
 
+	public String toStringShort() {
+		return String.format("%.2f, %.2f, %.2f θ%.2f", x, y, z, heading);
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -77,7 +81,6 @@ public record Position(double x, double y, double z, double heading) implements 
 	 * @param forward How far forward (based on its facing angle) to move the position.
 	 * @return a new Position object that has been translated in the X-Y plane, with the same Z and heading.
 	 */
-	// TODO: unit tests for this
 	public Position translateRelative(double right, double forward) {
 		// Normalize heading to north = 0, + = clockwise to make math easier
 		double effectiveHeading = northUpClockwiseHeading();

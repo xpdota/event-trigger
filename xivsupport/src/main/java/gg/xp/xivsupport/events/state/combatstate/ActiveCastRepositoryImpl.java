@@ -8,6 +8,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,6 +33,8 @@ public class ActiveCastRepositoryImpl implements ActiveCastRepository {
 	@Override
 	public List<CastTracker> getAll() {
 		synchronized (lock) {
+			// Remove stale - TODO check performance impact before enabling
+//			cbtCasts.values().removeIf(ct -> ct.getResult() == CastResult.IN_PROGRESS && ct.getEstimatedTimeSinceExpiry().toSeconds() > 50);
 			return new ArrayList<>(cbtCasts.values());
 		}
 	}
@@ -53,6 +56,13 @@ public class ActiveCastRepositoryImpl implements ActiveCastRepository {
 	@HandleEvents(order = -50_000)
 	public void castInterrupted(EventContext ctx, AbilityCastCancel acc) {
 		doEnd(acc);
+	}
+
+	@HandleEvents(order = -50_000)
+	public void pullStartedEvent(EventContext ctx, PullStartedEvent event) {
+		synchronized (lock) {
+			cbtCasts.clear();
+		}
 	}
 
 	private <X extends Event & HasSourceEntity & HasAbility> void doEnd(X event) {

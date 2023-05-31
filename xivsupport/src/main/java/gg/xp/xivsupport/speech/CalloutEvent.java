@@ -44,11 +44,6 @@ public interface CalloutEvent extends Event, HasPrimaryValue, HasCalloutTracking
 
 	void setReplaces(HasCalloutTrackingKey replaces);
 
-	@Override
-	default boolean shouldSave() {
-		return false;
-	}
-
 	default @Nullable Component graphicalComponent() {
 		return null;
 //		return IconTextRenderer.getStretchyIcon(RenderUtils.guessIconFor(getParent()));

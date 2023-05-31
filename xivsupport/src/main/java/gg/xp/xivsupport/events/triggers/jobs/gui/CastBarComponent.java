@@ -4,6 +4,7 @@ import gg.xp.xivsupport.events.state.combatstate.CastResult;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.gui.tables.renderers.ResourceBar;
 import gg.xp.xivsupport.models.XivAbility;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -93,11 +94,18 @@ public class CastBarComponent extends ResourceBar {
 		}
 		XivAbility ability = tracker.getCast().getAbility();
 		String skillNameAndId = String.format("(%s - 0x%X)", ability.getName(), ability.getId());
-		return switch (tracker.getResult()) {
+		String full =  switch (tracker.getResult()) {
 			case IN_PROGRESS -> String.format("%.03fs / %.03fs %s", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0, skillNameAndId);
 			case SUCCESS -> String.format("Done, %.03fs %s", tracker.getCastDuration().toMillis() / 1000.0, skillNameAndId);
 			case INTERRUPTED -> String.format("Interrupted at %.03fs / %.03fs %s", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0, skillNameAndId);
 			case UNKNOWN -> String.format("??? %.03fs / %.03fs %s", tracker.getElapsedDuration().toMillis() / 1000.0, tracker.getCastDuration().toMillis() / 1000.0, skillNameAndId);
 		};
+		XivCombatant target = tracker.getCast().getTarget();
+		if (target.isEnvironment()) {
+			return full;
+		}
+		else {
+			return String.format("%s%nTarget: %s (%X)", full, target.getName(), target.getId());
+		}
 	}
 }

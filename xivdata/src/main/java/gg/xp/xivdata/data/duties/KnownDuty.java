@@ -25,7 +25,6 @@ public enum KnownDuty implements Duty {
 	Dragonsong("Dragonsong", 0x3C8, Expansion.EW, DutyType.ULTIMATE),
 	ASS_Criterion("Sil'dihn Subterrane (Criterion)", 0x433, Expansion.EW, DutyType.OTHER),
 	ASS_Savage("Sil'dihn Subterrane (Savage)", 0x434, Expansion.EW, DutyType.OTHER),
-//	OMEGA_PROTOCOL("Omega Protocol", 0x0, Expansion.EW, DutyType.ULTIMATE),
 	O1S("O1S", 752, Expansion.SB, DutyType.SAVAGE_RAID),
 	O2S("O2S", 753, Expansion.SB, DutyType.SAVAGE_RAID),
 	O3S("O3S", 754, Expansion.SB, DutyType.SAVAGE_RAID),
@@ -42,7 +41,16 @@ public enum KnownDuty implements Duty {
 	Aglaia("Aglaia", 0x41E, Expansion.EW, DutyType.ALLIANCE_RAID),
 	Euphrosyne("Euphrosyne", 0x45E, Expansion.EW, DutyType.ALLIANCE_RAID),
 	UCoB("Unending Coil of Bahamut", 0x2DD, Expansion.SB, DutyType.ULTIMATE),
-
+	OmegaProtocol("Omega Protocol", 0x462, Expansion.EW, DutyType.ULTIMATE),
+	P9N("P9N", 1147, Expansion.EW, DutyType.RAID),
+	P10N("P10N", 1149, Expansion.EW, DutyType.RAID),
+	P11N("P11N", 1151, Expansion.EW, DutyType.RAID),
+	P12N("P12N", 1153, Expansion.EW, DutyType.RAID),
+	P9S("P9S", 1148, Expansion.EW, DutyType.SAVAGE_RAID),
+	P10S("P10S", 1150, Expansion.EW, DutyType.SAVAGE_RAID),
+	P11S("P11S", 1152, Expansion.EW, DutyType.SAVAGE_RAID),
+	P12S("P12S", 1154, Expansion.EW, DutyType.SAVAGE_RAID),
+	GolbezEx("EX6", 1141, Expansion.EW, DutyType.TRIAL_EX),
 	;
 
 	private final String name;

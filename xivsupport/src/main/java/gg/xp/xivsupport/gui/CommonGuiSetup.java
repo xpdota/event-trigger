@@ -1,8 +1,9 @@
 package gg.xp.xivsupport.gui;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatLaf;
 import gg.xp.xivsupport.gui.overlay.Scaled;
-import gg.xp.xivsupport.persistence.Platform;
+import gg.xp.xivsupport.gui.themes.BuiltinTheme;
+import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,7 @@ public final class CommonGuiSetup {
 	}
 
 	private static final RenderMode mode = RenderMode.SOFTWARE;
-	private static final int GUI_WARN_MS = 100;
+	private static final int GUI_WARN_MS = 200;
 
 	private CommonGuiSetup() {
 	}
@@ -62,12 +63,8 @@ public final class CommonGuiSetup {
 				System.setProperty("sun.java2d.d3d", "false");
 			}
 		}
-		try {
-			UIManager.setLookAndFeel(new FlatDarculaLaf());
-		}
-		catch (Throwable t) {
-			log.error("Error setting up look and feel", t);
-		}
+		EnumSetting<BuiltinTheme> themeSetting = WindowConfig.getThemeSettingStatic();
+		themeSetting.addAndRunListener(() -> setTheme(themeSetting.get()));
 		SwingUtilities.invokeLater(() -> {
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		});
@@ -122,6 +119,11 @@ public final class CommonGuiSetup {
 						}
 
 					}
+//					if (event instanceof KeyEvent key) {
+//						String d = InputEvent.getModifiersExText(key.getModifiersEx()) + " + " + KeyEvent.getKeyText(key.getKeyCode());
+//
+//						log.info("Key event: {}", d);
+//					}
 					super.dispatchEvent(event);
 				}
 				finally {
@@ -142,6 +144,16 @@ public final class CommonGuiSetup {
 				}
 			}
 		});
+	}
+
+	private static void setTheme(BuiltinTheme builtinTheme) {
+		try {
+			UIManager.setLookAndFeel(builtinTheme.getLaf());
+			FlatLaf.updateUI();
+		}
+		catch (Throwable t) {
+			log.error("Error setting up look and feel", t);
+		}
 	}
 
 	private static class Monitor extends Thread {

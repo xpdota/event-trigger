@@ -1,10 +1,12 @@
 package gg.xp.xivsupport.persistence;
 
 import gg.xp.xivsupport.gui.tabs.UpdatesPanel;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -17,13 +19,38 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 public final class Platform {
+
+	private static final Logger log = LoggerFactory.getLogger(Platform.class);
+
 	private Platform() {
+	}
+
+	private static @Nullable String getProp(String prop) {
+		String fromSysProps = System.getProperty(prop);
+		if (fromSysProps != null && !fromSysProps.isBlank()) {
+			return fromSysProps;
+		}
+		String fromEnv = System.getenv(prop);
+		if (fromEnv != null && !fromEnv.isBlank()) {
+			return fromEnv;
+		}
+		return null;
 	}
 
 	/**
 	 * @return The settings dir
 	 */
 	public static Path getTriggeventDir() {
+		String override = getProp("triggevent_settings_dir");
+		if (override != null) {
+			File fileMaybe = new File(override);
+			if (fileMaybe.isDirectory()) {
+				return fileMaybe.toPath();
+			}
+			else {
+				log.info("Invalid override path: '{}'", override);
+			}
+		}
 		String appData = System.getenv("APPDATA");
 		Path userDataDir;
 		if (appData == null) {
@@ -123,6 +150,22 @@ public final class Platform {
 		}
 		else {
 			Runtime.getRuntime().exec(new String[]{"sh", "triggevent-upd.sh"});
+		}
+	}
+
+	public static void showFileInExplorer(File file) {
+		try {
+			if (isWindows() && !file.toString().contains("\"")) {
+				// Come on Oracle, why is Desktop.browseFileDirectory() "unsupported" on Windows when
+				// it's literally just this?
+				Runtime.getRuntime().exec(new String[]{"explorer.exe", "/select,\"" + file + '"'});
+			}
+			else {
+				Desktop.getDesktop().open(file.getParentFile());
+			}
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 }

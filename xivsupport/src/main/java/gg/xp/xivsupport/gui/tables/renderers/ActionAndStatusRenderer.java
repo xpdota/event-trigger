@@ -3,10 +3,15 @@ package gg.xp.xivsupport.gui.tables.renderers;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasDuration;
+import gg.xp.xivsupport.events.actlines.events.HasFloorMarker;
+import gg.xp.xivsupport.events.actlines.events.HasPlayerHeadMarker;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
+import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
+import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivStatusEffect;
 import org.jetbrains.annotations.Nullable;
@@ -17,6 +22,11 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.net.URL;
 
+/**
+ * Class might as well be renamed "AllTheStuffInThePrimaryValueColumnRenderer" at this point.
+ *
+ * Renderer for status effects, actions, and other stuff.
+ */
 public class ActionAndStatusRenderer implements TableCellRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
 	private final IconNameIdRenderer renderer = new IconNameIdRenderer();
@@ -76,8 +86,13 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		}
 		else if (value instanceof HasAbility hasAbility) {
 			XivAbility ability = hasAbility.getAbility();
-			text = ability.getName();
 			icon = ActionLibrary.iconForId(ability.getId());
+			if (value instanceof HasDuration hd && !hd.isIndefinite()) {
+				text = ability.getName() + String.format(" (%.02fs)", hd.getInitialDuration().toMillis() / 1_000.0);
+			}
+			else {
+				text = ability.getName();
+			}
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 			idText = String.format("%X", ability.getId());
 		}
@@ -92,12 +107,14 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 					preAppText = "\nValues from Pre-App: %s\nRaw: %X %X".formatted(preAppInfo.getPreAppFlagsFormatted(), preAppInfo.getFlags(), preAppInfo.getValue());
 				}
 			}
+			StringBuilder sb = new StringBuilder(status.getName());
 			if (stacks > 0) {
-				text = String.format("%s (%s)", status.getName(), stacks);
+				sb.append(" (").append(stacks).append(')');
 			}
-			else {
-				text = String.format("%s", status.getName());
+			if (value instanceof HasDuration hd && !hd.isIndefinite()) {
+				sb.append(" (").append(String.format("%.02f", hd.getInitialDuration().toMillis() / 1_000.0)).append(')');
 			}
+			text = sb.toString();
 			icon = StatusEffectLibrary.iconForId(status.getId(), stacks);
 			if (icon == null && status.getId() != 0) {
 				icon = StatusEffectLibrary.iconForId(760, 0);
@@ -105,6 +122,18 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 
 			tooltip = String.format("%s (0x%x, %s)%s", status.getName(), status.getId(), status.getId(), preAppText);
 			idText = String.format("%X", status.getId());
+		}
+		else if (value instanceof HasPlayerHeadMarker phm) {
+			MarkerSign marker = phm.getMarker();
+			icon = marker.getIconUrl();
+			text = phm.extraDescription();
+			idText = marker.getCommand();
+			tooltip = "";
+		}
+		else if (value instanceof HasFloorMarker hfm) {
+			icon = hfm.getMarker();
+			text = hfm.extraDescription();
+			tooltip = "";
 		}
 		else if (value instanceof NameIdPair pair) {
 			return fallback.getTableCellRendererComponent(table, pair.getName(), isSelected, hasFocus, row, column);

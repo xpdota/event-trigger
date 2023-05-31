@@ -5,6 +5,9 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.events.InitEvent;
+import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
@@ -12,7 +15,13 @@ import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.pulls.Pull;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
+import gg.xp.xivsupport.events.triggers.marks.AutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
+import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
+import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
 import gg.xp.xivsupport.eventstorage.EventReader;
+import gg.xp.xivsupport.gui.overlay.FlyingTextOverlay;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.sys.KnownLogSource;
@@ -26,6 +35,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public abstract class CalloutVerificationTest {
 
@@ -41,6 +51,17 @@ public abstract class CalloutVerificationTest {
 
 	protected CalloutInitialValues call(long when, String both) {
 		return new CalloutInitialValues(when, both, both, null);
+	}
+
+	protected AmVerificationValues mark(long when, MarkerSign marker, Job job) {
+		return new AmVerificationValues(when, marker, job, null);
+	}
+
+	protected AmVerificationValues clearAll(long when) {
+		return new AmVerificationValues(when, MarkerSign.CLEAR, Job.ADV, null);
+	}
+
+	protected void configure(MutablePicoContainer pico) {
 	}
 
 	@Test
@@ -62,6 +83,7 @@ public abstract class CalloutVerificationTest {
 
 
 		List<CalloutInitialValues> actualCalls = new ArrayList<>();
+		List<AmVerificationValues> actualMarks = new ArrayList<>();
 
 		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		dist.registerHandler(Event.class, new EventHandler<>() {
@@ -124,12 +146,6 @@ public abstract class CalloutVerificationTest {
 				}
 				else {
 					Instant happenedAt = timeSource.now();
-//					if (e instanceof XivStateRecalculatedEvent || e instanceof BaseDelayedEvent) {
-//						happenedAt = timeSource.now();
-//					}
-//					else {
-//						happenedAt = e.getEffectiveHappenedAt();
-//					}
 					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
 				}
 			}
@@ -142,23 +158,105 @@ public abstract class CalloutVerificationTest {
 			}
 			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText(), parent));
 		});
+		dist.registerHandler(SpecificAutoMarkRequest.class, (ctx, e) -> {
+			PullTracker pulls = pico.getComponent(PullTracker.class);
+			final long msDelta;
+			Pull currentPull = pulls.getCurrentPull();
+			if (currentPull == null) {
+				return;
+			}
+			else {
+				Event combatStart = currentPull.getCombatStart();
+				if (combatStart == null) {
+					return;
+				}
+				else {
+					Instant happenedAt = timeSource.now();
+					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
+				}
+			}
+			Event parent = e.getParent();
+			actualMarks.add(new AmVerificationValues(msDelta, e.getMarker(), ((XivPlayerCharacter) e.getTarget()).getJob(), parent));
+		});
+		dist.registerHandler(AutoMarkRequest.class, (ctx, e) -> {
+			PullTracker pulls = pico.getComponent(PullTracker.class);
+			final long msDelta;
+			Pull currentPull = pulls.getCurrentPull();
+			if (currentPull == null) {
+				return;
+			}
+			else {
+				Event combatStart = currentPull.getCombatStart();
+				if (combatStart == null) {
+					return;
+				}
+				else {
+					Instant happenedAt = timeSource.now();
+					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
+				}
+			}
+			Event parent = e.getParent();
+			actualMarks.add(new AmVerificationValues(msDelta, MarkerSign.ATTACK1, ((XivPlayerCharacter) e.getTarget()).getJob(), parent));
+		});
+		dist.registerHandler(ClearAutoMarkRequest.class, (ctx, e) -> {
+			PullTracker pulls = pico.getComponent(PullTracker.class);
+			final long msDelta;
+			Pull currentPull = pulls.getCurrentPull();
+			if (currentPull == null) {
+				return;
+			}
+			else {
+				Event combatStart = currentPull.getCombatStart();
+				if (combatStart == null) {
+					return;
+				}
+				else {
+					Instant happenedAt = timeSource.now();
+					msDelta = Duration.between(combatStart.getHappenedAt(), happenedAt).toMillis();
+				}
+			}
+			Event parent = e.getParent();
+			actualMarks.add(new AmVerificationValues(msDelta, MarkerSign.CLEAR, Job.ADV, parent));
+		});
 
+		// Make sure everything is initialized
+		dist.acceptEvent(new InitEvent());
+		// We have to "enable" the callout overlay or the callout processor won't bother with processing text calls
+		// to save CPU.
+		pico.getComponent(FlyingTextOverlay.class).getEnabled().set(true);
+		// Force every callout enabled. Later, this could be amended to only enable needed stuff.
+		pico.getComponent(ModifiedCalloutRepository.class)
+				.getAllCallouts()
+				.stream()
+				.flatMap(group -> group.getCallouts().stream())
+				.forEach(call -> call.getEnable().set(true));
 
-		// TODO: This causes issues with timing, since enqueued events don't have the proper timestamp
-//		replayController.advanceByAsyncWhile(() -> true).get();
+		replayController.advanceBy(1);
+		configure(pico);
 		replayController.advanceBy(Integer.MAX_VALUE);
 
 		pico.getComponent(EventMaster.class).getQueue().waitDrain();
 
 
-		compareLists(rawStorage, actualCalls, getExpectedCalls());
+		List<CalloutInitialValues> expectedCalls = getExpectedCalls();
+		if (expectedCalls.isEmpty()) {
+			dump(actualCalls);
+		}
 
-
+		compareLists(rawStorage, actualCalls, expectedCalls);
+		List<AmVerificationValues> expectedAMs = getExpectedAms();
+		if (!actualMarks.isEmpty() || !expectedAMs.isEmpty()) {
+			compareLists(rawStorage, actualMarks, expectedAMs);
+		}
 	}
 
 	protected abstract List<CalloutInitialValues> getExpectedCalls();
 
-	private static void compareLists(RawEventStorage rawStorage, List<CalloutInitialValues> actual, List<CalloutInitialValues> expected) {
+	protected List<AmVerificationValues> getExpectedAms() {
+		return List.of();
+	}
+
+	private static <X extends HasEvent> void compareLists(RawEventStorage rawStorage, List<X> actual, List<X> expected) {
 		if (actual.isEmpty()) {
 			throw new RuntimeException("Actual list was empty!");
 		}
@@ -183,7 +281,7 @@ public abstract class CalloutVerificationTest {
 			if (!equals) {
 				anyFailure = true;
 				firstFailureIndex = i;
-				CalloutInitialValues item = actual.get(i);
+				X item = actual.get(i);
 				failureAdjacentEvent = item.event();
 				break;
 			}
@@ -209,7 +307,7 @@ public abstract class CalloutVerificationTest {
 			sb.append("| ").append(expectedString).append(" | ").append(actualString).append(" |\n");
 		}
 		if (failureAdjacentEvent != null) {
-			sb.append("\n\n");
+			sb.append("\n\n").append("Events surrounding the failure (millisecond delta):\n\n");
 			List<Event> allEvents = rawStorage.getEvents();
 			Instant timeBasis = failureAdjacentEvent.getEffectiveHappenedAt();
 			int index = allEvents.indexOf(failureAdjacentEvent);
@@ -231,5 +329,12 @@ public abstract class CalloutVerificationTest {
 		if (anyFailure) {
 			throw new AssertionError(sb.toString());
 		}
+	}
+
+	private static void dump(List<CalloutInitialValues> actualCalls) {
+		throw new AssertionError("No expected calls were provided. Dumping actual calls instead.\n" + actualCalls.stream().map(Object::toString).map(s -> {
+			String[] split = s.split("//");
+			return split[0].trim();
+		}).collect(Collectors.joining(",\n")));
 	}
 }

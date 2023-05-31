@@ -34,9 +34,13 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 	private List<Condition<? super X>> conditions = Collections.emptyList();
 	private List<Action<? super X>> actions = Collections.emptyList();
 	private String name = "Give me a name";
-	private int timeoutMs = 60_000;
+	private int timeoutMs = 600_000;
 
-	private SequentialTrigger<BaseEvent> sq = SqtTemplates.nothing();
+	// To account for the fact that the SQ might be recalculated while running,
+	// sqCurrent holds whatever is running, while sqBase holds the template
+	// TODO: unit test for this
+	private SequentialTrigger<BaseEvent> sqBase = SqtTemplates.nothing();
+	private SequentialTrigger<BaseEvent> sqCurrent = sqBase;
 	private EasyTriggerContext ctx;
 
 	public EasyTrigger() {
@@ -47,8 +51,8 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 		if (!(event instanceof BaseEvent)) {
 			return;
 		}
-		if (sq.isActive()) {
-			sq.feed(context, (BaseEvent) event);
+		if (sqCurrent.isActive()) {
+			sqCurrent.feed(context, (BaseEvent) event);
 		}
 		if (!enabled || eventType == null || !eventType.isInstance(event)) {
 			return;
@@ -57,7 +61,8 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 		ctx = new EasyTriggerContext(context, this);
 		if (conditions.stream().allMatch(cond -> cond.test(ctx, typedEvent))) {
 			hits++;
-			sq.feed(context, (BaseEvent) event);
+			sqCurrent = sqBase;
+			sqCurrent.feed(context, (BaseEvent) event);
 		}
 		else {
 			misses++;
@@ -69,7 +74,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 		conditions.sort(Comparator.comparing(Condition::sortOrder));
 		conditions.forEach(Condition::recalc);
 		actions.forEach(Action::recalc);
-		sq = SqtTemplates.sq(timeoutMs,
+		sqBase = SqtTemplates.sq(timeoutMs,
 				eventType,
 				// The start condition is handled externally
 				se -> true,

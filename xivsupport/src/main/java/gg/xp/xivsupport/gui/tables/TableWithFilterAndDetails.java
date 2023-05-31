@@ -111,7 +111,13 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		});
 
 		// Top panel
-		JPanel topBasicPanel = new JPanel();
+		JPanel topBasicPanel = new JPanel() {
+			@Override
+			public void setBounds(int x, int y, int width, int height) {
+				super.setBounds(x, y, width, height);
+				SwingUtilities.invokeLater(this::revalidate);
+			}
+		};
 		List<Component> extraPanels = new ArrayList<>();
 		topBasicPanel.setLayout(new WrapLayout(WrapLayout.LEFT, 7, 7));
 
@@ -210,7 +216,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 				.collect(Collectors.toList());
 		long after = System.currentTimeMillis();
 		long delta = after - before;
-		if (delta >= 25) {
+		if (delta >= 100) {
 			log.warn("Slow filtering for table {}: took {}ms to filter {} items", title, delta, numberOfThings);
 		}
 		return out;

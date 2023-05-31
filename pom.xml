@@ -192,8 +192,8 @@
             <dependency>
                 <groupId>com.formdev</groupId>
                 <artifactId>flatlaf</artifactId>
-                <version>1.6.5</version>
-<!--                <version>2.6</version>-->
+<!--                <version>1.6.5</version>-->
+                <version>2.6</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.groovy</groupId>
@@ -356,7 +356,47 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
+                <artifactId>telesto-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>telesto-right-clicks</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>telesto-gui</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>telesto-easy-triggers</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
                 <artifactId>skill-hit-overlay</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>telesto-subscriber</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>postnamazu-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>postnamazu-gui</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>postnamazu-easy-triggers</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
@@ -394,5 +434,7 @@
         <module>groovy-sandboxing</module>
         <module>trigger-support</module>
         <module>persistence</module>
+        <module>postnamazu-support</module>
+        <module>postnamazu-support/postnamazu-gui</module>
     </modules>
 </project>
