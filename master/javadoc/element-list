@@ -22,6 +22,7 @@ gg.xp.util
 gg.xp.xivdata
 gg.xp.xivdata.data
 gg.xp.xivdata.data.duties
+gg.xp.xivdata.data.rsv
 gg.xp.xivdata.util
 gg.xp.xivsupport.callouts
 gg.xp.xivsupport.callouts.audio
@@ -116,6 +117,7 @@ gg.xp.xivsupport.persistence.gui
 gg.xp.xivsupport.persistence.settings
 gg.xp.xivsupport.replay
 gg.xp.xivsupport.replay.gui
+gg.xp.xivsupport.rsv
 gg.xp.xivsupport.skillhitoverlay
 gg.xp.xivsupport.slf4j
 gg.xp.xivsupport.speech
@@ -123,6 +125,7 @@ gg.xp.xivsupport.sys
 gg.xp.xivsupport.timelines
 gg.xp.xivsupport.timelines.gui
 gg.xp.xivsupport.timelines.intl
+gg.xp.xivsupport.util
 org.jenkinsci.plugins.scriptsecurity.sandbox
 org.jenkinsci.plugins.scriptsecurity.sandbox.groovy
 org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists
