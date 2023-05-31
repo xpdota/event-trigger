@@ -107,6 +107,8 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<HeadMarkerEvent> web1noWebOnMe = new ModifiableCallout<>("Entangling Web 1: No web on you", "No Web");
 	private final ModifiableCallout<AbilityCastStart> web1bury = ModifiableCallout.durationBasedCall("Entangling Web 1: Bury", "Soak Towers");
 
+	private final ModifiableCallout<AbilityCastStart> web2bury = ModifiableCallout.durationBasedCall("Entangling Web 2: Bury", "Soak Towers");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> entanglingWebSq = SqtTemplates.multiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8722),
@@ -122,13 +124,18 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				}
 				AbilityCastStart explosion = s.waitEvent(AbilityCastStart.class, event -> event.abilityIdMatches(0x8282));
 				s.updateCall(web1bury, explosion);
+			}, (e1, s) -> {
+				AbilityCastStart explosion = s.waitEvent(AbilityCastStart.class, event -> event.abilityIdMatches(0x8282));
+				s.updateCall(web2bury, explosion);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8287));
+				daemoniacBondsHelper(s);
 			});
 
-	private final ModifiableCallout<HeadMarkerEvent> bondsHasMarker = new ModifiableCallout<>("Daemoniac Bonds: Have Spread Marker", "Spread");
-	private final ModifiableCallout<AbilityCastStart> bondsNoMarker = ModifiableCallout.durationBasedCall("Daemoniac Bonds: No Spread Marker", "Stack");
+	private final ModifiableCallout<HeadMarkerEvent> meltdownHasMarker = new ModifiableCallout<>("Meltdown: Have Spread Marker", "Spread");
+	private final ModifiableCallout<AbilityCastStart> meltdownNoMarker = ModifiableCallout.durationBasedCall("Meltdown: No Spread Marker", "Stack");
 	private final ModifiableCallout<BuffApplied> bondsStackThenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Stack -> Spread", "Stack then Spread").autoIcon();
 	private final ModifiableCallout<BuffApplied> bondsBuddyThenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Buddy -> Spread", "Buddy then Spread").autoIcon();
-	private final ModifiableCallout<BuffApplied> bondsSpreadThenStack = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Spread -> Stack", "Spread then Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> bondsSpreadThenStack = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Spread -> Stack", "Spread then Stack").autoIcon();
 	private final ModifiableCallout<BuffApplied> bondsSpreadThenBuddy = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Spread -> Buddy", "Spread then Buddy").autoIcon();
 	private final ModifiableCallout<BuffApplied> bondsStack = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Stack", "Stack").autoIcon();
 	private final ModifiableCallout<BuffApplied> bondsSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Spread", "Spread").autoIcon();
@@ -178,7 +185,7 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 	}
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> deamoniacBonds1 = SqtTemplates.sq(90_000,
+	private final SequentialTrigger<BaseEvent> meltdown = SqtTemplates.multiInvocation(90_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82A1),
 			(e1, s) -> {
 				log.info("Daemoniac Bonds: Start");
@@ -188,33 +195,40 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				log.info("Daemoniac Bonds: Got Line Stack");
 				Optional<HeadMarkerEvent> myMarker = headMarks.stream().filter(hme -> hme.getTarget().isThePlayer()).findAny();
 				if (myMarker.isPresent()) {
-					s.updateCall(bondsHasMarker, myMarker.get());
+					s.updateCall(meltdownHasMarker, myMarker.get());
 				}
 				else {
-					s.updateCall(bondsNoMarker, linestack);
+					s.updateCall(meltdownNoMarker, linestack);
 				}
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(linestack.getAbility().getId()));
 				daemoniacBondsHelper(s);
+			},
+			(e1, s) -> { /* ignored, handled below */},
+			(e1, s) -> {
+
 			}
 	);
 
+	private final ModifiableCallout<AbilityCastStart> turretsSoak = ModifiableCallout.durationBasedCall("Turrets: Soak Towers", "Soak Towers");
+	private final ModifiableCallout<?> turretsBait1 = new ModifiableCallout<>("Turrets: Round 1", "First");
+	private final ModifiableCallout<?> turretsBait2 = new ModifiableCallout<>("Turrets: Round 2", "Second");
+	private final ModifiableCallout<?> turretsBait3 = new ModifiableCallout<>("Turrets: Round 3", "Third");
+	private final ModifiableCallout<?> turretsBait4 = new ModifiableCallout<>("Turrets: Round 4", "Fourth");
+
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> limitCutThing = SqtTemplates.sq(90_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(34735),
+	private final SequentialTrigger<BaseEvent> turrets = SqtTemplates.sq(90_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x87AF),
 			(e1, s) -> {
-				log.info("34735 Start");
-				List<HeadMarkerEvent> headMarks = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -444, Duration.ofMillis(100));
-				log.info("Daemoniac Bonds: Got HMs");
-				AbilityCastStart linestack = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x829D));
-				log.info("Daemoniac Bonds: Got Line Stack");
-				Optional<HeadMarkerEvent> myMarker = headMarks.stream().filter(hme -> hme.getTarget().isThePlayer()).findAny();
-				if (myMarker.isPresent()) {
-					s.updateCall(bondsHasMarker, myMarker.get());
+				log.info("Turrets Start");
+				AbilityCastStart soakCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8282));
+				s.updateCall(turretsSoak, soakCast);
+				s.waitMs(8_000);
+				List<ModifiableCallout<?>> baitCalls = List.of(turretsBait1, turretsBait2, turretsBait3, turretsBait4);
+				for (int i = 0; i < 4; i++) {
+					s.updateCall(baitCalls.get(i));
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8288));
+					s.waitMs(200);
 				}
-				else {
-					s.updateCall(bondsNoMarker, linestack);
-				}
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(linestack.getAbility().getId()));
 				daemoniacBondsHelper(s);
 			}
 	);

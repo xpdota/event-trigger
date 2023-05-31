@@ -46,6 +46,8 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 				for (int i = 0; i + 1 < kvFields.size(); i += 2) {
 					String key = kvFields.get(i);
 					String valueRaw = kvFields.get(i + 1);
+					// TEMP WORKAROUND - https://github.com/OverlayPlugin/OverlayPlugin/issues/221
+					valueRaw = valueRaw.replaceAll(",", ".");
 					switch (key) {
 						case "PosX" -> pos.put(PosKeys.PosX, Double.parseDouble(valueRaw));
 						case "PosY" -> pos.put(PosKeys.PosY, Double.parseDouble(valueRaw));
