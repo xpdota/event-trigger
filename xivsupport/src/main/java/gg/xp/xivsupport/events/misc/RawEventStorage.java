@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeOutEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.persistence.Compressible;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
@@ -61,7 +62,7 @@ public class RawEventStorage {
 	private ObjectOutputStream eventSaveStream;
 	// TODO: cap this or otherwise manage memory
 	private final Object eventsPruneLock = new Object();
-	private List<Event> events = new ArrayList<>();
+	private final BucketList<Event> events = new BucketList<>(1 << 13);
 	private final BooleanSetting saveToDisk;
 	private final BlockingQueue<Event> eventSaveQueue = new LinkedBlockingQueue<>();
 	private boolean allowSave = true;
@@ -107,20 +108,47 @@ public class RawEventStorage {
 			}
 		});
 		// TODO: make it so this can't be zero
+		int maxEvents = getMaxEvents();
+		if (events.size() > maxEvents) {
+			doPrune(-1);
+		}
+	}
+
+	private int getMaxEvents() {
 		int maxEvents = maxEventsStored.get();
 		if (maxEvents == 0) {
-			maxEvents = 50_000;
+			return 50_000;
 		}
-		if (events.size() > maxEvents) {
-			log.info("Pruning events");
-			synchronized (eventsPruneLock) {
-				int demarcation = events.size() / 3;
-				events = new ArrayList<>(events.subList(demarcation, events.size()));
+		return maxEvents;
+	}
+
+	private void doPrune(int eventsToKeep) {
+		if (events.bucketCount() <= 2) {
+			return;
+		}
+		if (eventsToKeep > 0 && events.size() < eventsToKeep) {
+			return;
+		}
+		log.info("Pruning events");
+		synchronized (eventsPruneLock) {
+			if (eventsToKeep == -1) {
+				events.prune();
 			}
-			eventSubTypeCache.clear();
-			// TODO: shutdown hook, or just stream events directly
-			exs.submit(System::gc);
+			else {
+				boolean pruneOk = true;
+				while (events.size() > eventsToKeep && pruneOk) {
+					pruneOk = events.prune();
+				}
+			}
 		}
+		eventSubTypeCache.clear();
+		// TODO: shutdown hook, or just stream events directly
+		exs.submit(System::gc);
+	}
+
+	@HandleEvents
+	public void pruneOnWipe(EventContext context, FadeOutEvent fadeOut) {
+		doPrune((int) (getMaxEvents() * 0.70));
 	}
 
 	@HandleEvents(order = Integer.MAX_VALUE)
@@ -147,14 +175,14 @@ public class RawEventStorage {
 	@HandleEvents
 	public void clear(EventContext context, DebugCommand event) {
 		if ("clear".equals(event.getCommand())) {
-			events = new ArrayList<>();
+			events.clear();
 			exs.submit(System::gc);
 		}
 	}
 
 	public List<Event> getEvents() {
 		// Trying new thing - this implementation is safe because we only append to the list
-		return new ProxyForAppendOnlyList<>(events);
+		return new ProxyForAppendOnlyList<>(events.appendOnlyCopy());
 	}
 
 	private final Map<Class<?>, List<Event>> eventSubTypeCache = new ConcurrentHashMap<>();
@@ -210,7 +238,7 @@ public class RawEventStorage {
 		if (event.shouldSave() && allowSave && saveToDisk.get()) {
 			try {
 				if (eventSaveStream == null) {
-					Path sessionsDir = Platform.getSessionsDir();
+					Path sessionsDir = Platform.getSessionsDir().resolve(dirName);
 					File sessionsDirFile = sessionsDir.toFile();
 					sessionsDirFile.mkdirs();
 					if (!sessionsDirFile.exists() && sessionsDirFile.isDirectory()) {

@@ -20,4 +20,13 @@ public enum GameLanguage {
 	public String getShortCode() {
 		return shortCode;
 	}
+
+	public static GameLanguage valueOfShort(String code) {
+		for (GameLanguage value : values()) {
+			if (value.shortCode.equalsIgnoreCase(code)) {
+				return value;
+			}
+		}
+		throw new IllegalArgumentException("No such language: " + code);
+	}
 }
