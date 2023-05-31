@@ -16,6 +16,7 @@ import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.models.ArenaPos;
@@ -79,7 +80,7 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				else {
 					s.updateCall(dividingWingsNoTether);
 				}
-				s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0x827F));
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x827F));
 				if (myTether.isPresent()) {
 					s.updateCall(dividingWingsBreakChains);
 				}
@@ -123,15 +124,61 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.updateCall(web1bury, explosion);
 			});
 
-	private final ModifiableCallout<HeadMarkerEvent> bondsHasMarker = new ModifiableCallout<>("Daemoniac Bonds: Have Head Marker", "Spread");
-	private final ModifiableCallout<AbilityCastStart> bondsNoMarker = ModifiableCallout.durationBasedCall("Daemoniac Bonds: Have Head Marker", "Spread");
-	private final ModifiableCallout<BuffApplied> bondsStackFirst = ModifiableCallout.durationBasedCall("Daemoniac Bonds: Stack First", "Stack then Spread");
-	private final ModifiableCallout<BuffApplied> bondsSpreadFirst = ModifiableCallout.durationBasedCall("Daemoniac Bonds: Spread First", "Spread then Stack");
-	private final ModifiableCallout<BuffApplied> bondsStack = ModifiableCallout.durationBasedCall("Daemoniac Bonds: Stack", "Stack");
-	private final ModifiableCallout<BuffApplied> bondsSpread = ModifiableCallout.durationBasedCall("Daemoniac Bonds: Spread", "Spread");
+	private final ModifiableCallout<HeadMarkerEvent> bondsHasMarker = new ModifiableCallout<>("Daemoniac Bonds: Have Spread Marker", "Spread");
+	private final ModifiableCallout<AbilityCastStart> bondsNoMarker = ModifiableCallout.durationBasedCall("Daemoniac Bonds: No Spread Marker", "Stack");
+	private final ModifiableCallout<BuffApplied> bondsStackThenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Stack -> Spread", "Stack then Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> bondsBuddyThenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Buddy -> Spread", "Buddy then Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> bondsSpreadThenStack = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Spread -> Stack", "Spread then Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> bondsSpreadThenBuddy = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Spread -> Buddy", "Spread then Buddy").autoIcon();
+	private final ModifiableCallout<BuffApplied> bondsStack = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Stack", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> bondsSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Spread", "Spread").autoIcon();
+	private final ModifiableCallout<BuffApplied> bondsBuddy = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Buddy", "Buddy").autoIcon();
+
+	// Call this when buffs are already out
+	private void daemoniacBondsHelper(SequentialTriggerController<?> s) {
+		BuffApplied spreadBuff = buffs.findBuffById(0xDDE);
+		BuffApplied buddyBuff = buffs.findBuffById(0xDDF);
+		BuffApplied stackBuff = buffs.findBuffById(0xE70);
+		if (spreadBuff == null) {
+			log.error("Daemoniac Bonds: Missing Spread Buff!");
+			return;
+		}
+		if (buddyBuff == null && stackBuff == null) {
+			log.error("Daemoniac Bonds: Missing stack/buddy buff!");
+			return;
+		}
+		if (buddyBuff != null && stackBuff != null) {
+			log.error("Daemoniac Bonds: Got both stack and buddy!");
+			return;
+		}
+		if (stackBuff != null) {
+			if (spreadBuff.getInitialDuration().compareTo(stackBuff.getInitialDuration()) > 0) {
+				s.updateCall(bondsStackThenSpread, stackBuff);
+				s.waitBuffRemoved(buffs, stackBuff);
+				s.updateCall(bondsSpread, spreadBuff);
+			}
+			else {
+				s.updateCall(bondsSpreadThenStack, spreadBuff);
+				s.waitBuffRemoved(buffs, spreadBuff);
+				s.updateCall(bondsStack, stackBuff);
+			}
+		}
+		else {
+			if (spreadBuff.getInitialDuration().compareTo(buddyBuff.getInitialDuration()) > 0) {
+				s.updateCall(bondsBuddyThenSpread, buddyBuff);
+				s.waitBuffRemoved(buffs, buddyBuff);
+				s.updateCall(bondsSpread, spreadBuff);
+			}
+			else {
+				s.updateCall(bondsSpreadThenBuddy, spreadBuff);
+				s.waitBuffRemoved(buffs, spreadBuff);
+				s.updateCall(bondsBuddy, buddyBuff);
+			}
+		}
+	}
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> deamoniacBonds = SqtTemplates.sq(90_000,
+	private final SequentialTrigger<BaseEvent> deamoniacBonds1 = SqtTemplates.sq(90_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82A1),
 			(e1, s) -> {
 				log.info("Daemoniac Bonds: Start");
@@ -147,24 +194,29 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 					s.updateCall(bondsNoMarker, linestack);
 				}
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(linestack.getAbility().getId()));
-				BuffApplied spreadBuff = buffs.findBuffById(0xDDE);
-				BuffApplied stackBuff = buffs.findBuffById(0xDDF);
-				log.info("Daemoniac Bonds: Got Buffs");
-				if (spreadBuff.getInitialDuration().compareTo(stackBuff.getInitialDuration()) > 0) {
-					s.updateCall(bondsStackFirst, stackBuff);
-					s.waitBuffRemoved(buffs, stackBuff);
-					s.updateCall(bondsSpread, spreadBuff);
+				daemoniacBondsHelper(s);
+			}
+	);
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> limitCutThing = SqtTemplates.sq(90_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(34735),
+			(e1, s) -> {
+				log.info("34735 Start");
+				List<HeadMarkerEvent> headMarks = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -444, Duration.ofMillis(100));
+				log.info("Daemoniac Bonds: Got HMs");
+				AbilityCastStart linestack = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x829D));
+				log.info("Daemoniac Bonds: Got Line Stack");
+				Optional<HeadMarkerEvent> myMarker = headMarks.stream().filter(hme -> hme.getTarget().isThePlayer()).findAny();
+				if (myMarker.isPresent()) {
+					s.updateCall(bondsHasMarker, myMarker.get());
 				}
 				else {
-					s.updateCall(bondsSpreadFirst, spreadBuff);
-					s.waitBuffRemoved(buffs, spreadBuff);
-					s.updateCall(bondsStack, stackBuff);
+					s.updateCall(bondsNoMarker, linestack);
 				}
-				log.info("Daemoniac Bonds: Done");
-
-
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(linestack.getAbility().getId()));
+				daemoniacBondsHelper(s);
 			}
-
 	);
 
 }

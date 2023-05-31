@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.List;
 
 @CalloutRepo(name = "P9S", duty = KnownDuty.P9S)
 public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -99,5 +100,21 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 	@PlayerHeadmarker(value = -138, offset = true)
 	private final ModifiableCallout<HeadMarkerEvent> blue = new ModifiableCallout<>("Limit Cut Blue", "Blue");
 
+//	private final ModifiableCallout<HeadMarkerEvent> limitCutTwonumber1 = new ModifiableCallout<>("Limit Cut 2: #1", "One");
+//	private final ModifiableCallout<HeadMarkerEvent> limitCutTwonumber2 = new ModifiableCallout<>("Limit Cut 2: #2", "Two");
+//	private final ModifiableCallout<HeadMarkerEvent> limitCutTwonumber3 = new ModifiableCallout<>("Limit Cut 2: #3", "Three");
+//	private final ModifiableCallout<HeadMarkerEvent> limitCutTwonumber4 = new ModifiableCallout<>("Limit Cut 2: #4", "Four");
+//
+//	private final SequentialTrigger<BaseEvent> limitCut2 = SqtTemplates.sq(30_000,
+//			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x81BB),
+//			(e1, s) -> {
+//				List<HeadMarkerEvent> markers = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> true, Duration.ofMillis(100));
+//				for (int i = 0; i < markers.size(); i++) {
+//					HeadMarkerEvent marker = markers.get(i);
+//					if (marker.getTarget().isThePlayer()) {
+//
+//					}
+//				}
+//			})
 
 }
