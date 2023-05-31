@@ -3,6 +3,7 @@ package gg.xp.xivsupport.lang;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivdata.data.GameLanguage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
