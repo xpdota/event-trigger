@@ -1,4 +1,6 @@
 gg.xp.logback
+gg.xp.postnamazu
+gg.xp.postnamazu.gui
 gg.xp.reevent
 gg.xp.reevent.context
 gg.xp.reevent.events
@@ -7,8 +9,15 @@ gg.xp.reevent.state
 gg.xp.reevent.time
 gg.xp.reevent.topology
 gg.xp.reevent.util
+gg.xp.services
 gg.xp.telestosupport
+gg.xp.telestosupport.doodle
+gg.xp.telestosupport.doodle.img
+gg.xp.telestosupport.easytriggers
+gg.xp.telestosupport.easytriggers.gui
 gg.xp.telestosupport.gui
+gg.xp.telestosupport.rightclicks
+gg.xp.telestosupport.subscriber
 gg.xp.util
 gg.xp.xivdata
 gg.xp.xivdata.data
@@ -45,8 +54,11 @@ gg.xp.xivsupport.events.misc.pulls
 gg.xp.xivsupport.events.state
 gg.xp.xivsupport.events.state.combatstate
 gg.xp.xivsupport.events.state.floormarkers
+gg.xp.xivsupport.events.state.playermarkers
 gg.xp.xivsupport.events.triggers.duties
 gg.xp.xivsupport.events.triggers.duties.ewex
+gg.xp.xivsupport.events.triggers.duties.ewult
+gg.xp.xivsupport.events.triggers.duties.ewult.omega
 gg.xp.xivsupport.events.triggers.duties.Pandamonium
 gg.xp.xivsupport.events.triggers.duties.Pandamonium.events
 gg.xp.xivsupport.events.triggers.duties.vc
@@ -56,6 +68,7 @@ gg.xp.xivsupport.events.triggers.easytriggers.actions.gui
 gg.xp.xivsupport.events.triggers.easytriggers.conditions
 gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui
 gg.xp.xivsupport.events.triggers.easytriggers.creators
+gg.xp.xivsupport.events.triggers.easytriggers.events
 gg.xp.xivsupport.events.triggers.easytriggers.gui
 gg.xp.xivsupport.events.triggers.easytriggers.model
 gg.xp.xivsupport.events.triggers.jails
@@ -73,6 +86,7 @@ gg.xp.xivsupport.events.ws
 gg.xp.xivsupport.eventstorage
 gg.xp.xivsupport.gameversion
 gg.xp.xivsupport.groovy
+gg.xp.xivsupport.groovy.helpers
 gg.xp.xivsupport.gui
 gg.xp.xivsupport.gui.addonmgr
 gg.xp.xivsupport.gui.components
@@ -83,6 +97,7 @@ gg.xp.xivsupport.gui.imprt
 gg.xp.xivsupport.gui.library
 gg.xp.xivsupport.gui.lists
 gg.xp.xivsupport.gui.map
+gg.xp.xivsupport.gui.map.omen
 gg.xp.xivsupport.gui.nav
 gg.xp.xivsupport.gui.overlay
 gg.xp.xivsupport.gui.tables
@@ -90,10 +105,12 @@ gg.xp.xivsupport.gui.tables.filters
 gg.xp.xivsupport.gui.tables.renderers
 gg.xp.xivsupport.gui.tables.timedisplay
 gg.xp.xivsupport.gui.tabs
+gg.xp.xivsupport.gui.themes
 gg.xp.xivsupport.gui.tree
 gg.xp.xivsupport.gui.util
 gg.xp.xivsupport.lang
 gg.xp.xivsupport.models
+gg.xp.xivsupport.models.groupmodels
 gg.xp.xivsupport.overlays.castbar
 gg.xp.xivsupport.persistence
 gg.xp.xivsupport.persistence.gui
