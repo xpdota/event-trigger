@@ -2,7 +2,7 @@ package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.ActImportOnly;
-import gg.xp.xivsupport.lang.GameLanguage;
+import gg.xp.xivdata.data.GameLanguage;
 import gg.xp.xivsupport.lang.GameLanguageInfoEvent;
 import org.picocontainer.PicoContainer;
 

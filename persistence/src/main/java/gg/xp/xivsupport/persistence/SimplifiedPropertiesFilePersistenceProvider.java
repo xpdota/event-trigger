@@ -11,7 +11,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 public class SimplifiedPropertiesFilePersistenceProvider extends BaseStringPersistenceProvider {
 
@@ -64,6 +66,11 @@ public class SimplifiedPropertiesFilePersistenceProvider extends BaseStringPersi
 		log.info("Setting deleted: {}", key);
 		properties.remove(key);
 		writeChangesToDisk();
+	}
+
+	@SuppressWarnings("unchecked")
+	public Set<Map.Entry<String, String>> entries() {
+		return (Set) properties.entrySet();
 	}
 
 	@Override

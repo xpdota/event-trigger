@@ -13,6 +13,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 
 	private static final Logger log = LoggerFactory.getLogger(Line261Parser.class);

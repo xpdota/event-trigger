@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.lang;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.xivdata.data.GameLanguage;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 
 import java.io.Serial;
