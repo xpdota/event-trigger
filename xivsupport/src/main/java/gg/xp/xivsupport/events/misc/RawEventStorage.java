@@ -142,8 +142,9 @@ public class RawEventStorage {
 			}
 		}
 		eventSubTypeCache.clear();
-		// TODO: shutdown hook, or just stream events directly
-		exs.submit(System::gc);
+		if (eventsToKeep >= 0) {
+			exs.submit(System::gc);
+		}
 	}
 
 	@HandleEvents
