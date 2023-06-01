@@ -358,6 +358,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	public <Y extends BaseEvent> List<Y> waitEventsQuickSuccession(int limit, Class<Y> eventClass, Predicate<Y> eventFilter) {
+		return waitEventsQuickSuccession(limit, eventClass, eventFilter, Duration.ofMillis(200));
+	}
+
 	public <Y extends BaseEvent> List<Y> waitEventsQuickSuccession(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Duration maxDelta) {
 		List<Y> out = new ArrayList<>();
 		Y last = waitEvent(eventClass, eventFilter);

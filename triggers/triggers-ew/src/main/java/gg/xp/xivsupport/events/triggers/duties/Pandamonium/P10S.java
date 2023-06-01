@@ -15,11 +15,13 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.models.ArenaPos;
+import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,18 +63,25 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(0x829F)
 	private final ModifiableCallout<AbilityCastStart> soulGrasp = ModifiableCallout.durationBasedCall("Soul Grasp", "Tank Stack, Multiple Hits");
 
+	@NpcCastCallout(0x827C)
+	private final ModifiableCallout<AbilityCastStart> silkSpit = ModifiableCallout.durationBasedCall("Silkspit", "Spread");
+
 	private final ModifiableCallout<AbilityCastStart> dividingWings = ModifiableCallout.durationBasedCall("Dividing Wings", "Groups and Cleaves");
+	private final ModifiableCallout<AbilityCastStart> dividingWings2 = ModifiableCallout.durationBasedCall("Dividing Wings", "Groups and Cleaves on Sides");
+	private final ModifiableCallout<AbilityCastStart> dividingWings3 = ModifiableCallout.durationBasedCall("Dividing Wings", "Stack and Build Web");
 
 	private final ModifiableCallout<TetherEvent> dividingWingsTether = new ModifiableCallout<>("Dividing Wings Tether", "Bait Cleave");
 	private final ModifiableCallout<?> dividingWingsNoTether = new ModifiableCallout<>("Dividing Wings No Tether", "Stack");
 	private final ModifiableCallout<?> dividingWingsBreakChains = new ModifiableCallout<>("Dividing Wings Chain Break", "Break Chains");
+	private final ModifiableCallout<?> dividingWingsRearWeb = new ModifiableCallout<>("Dividing Wings Make Web", "Make Web, South Edge");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> dividingWingsSq = SqtTemplates.sq(60_000,
+	private final SequentialTrigger<BaseEvent> dividingWingsSq = SqtTemplates.multiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8297),
 			(e1, s) -> {
 				s.updateCall(dividingWings, e1);
 				List<TetherEvent> tethers = s.waitEvents(2, TetherEvent.class, te -> te.tetherIdMatches(242));
+				// TODO: tether location
 				Optional<TetherEvent> myTether = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst();
 				if (myTether.isPresent()) {
 					s.updateCall(dividingWingsTether, myTether.get());
@@ -84,6 +93,55 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				if (myTether.isPresent()) {
 					s.updateCall(dividingWingsBreakChains);
 				}
+
+			}, (e1, s) -> {
+				s.updateCall(dividingWings2, e1);
+				List<TetherEvent> tethers = s.waitEvents(2, TetherEvent.class, te -> te.tetherIdMatches(242));
+				// TODO: tether location
+				Optional<TetherEvent> myTether = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst();
+				if (myTether.isPresent()) {
+					s.updateCall(dividingWingsTether, myTether.get());
+				}
+				else {
+					s.updateCall(dividingWingsNoTether);
+				}
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x827F));
+				if (myTether.isPresent()) {
+					s.updateCall(dividingWingsBreakChains);
+				}
+
+			}, (e1, s) -> {
+				s.updateCall(dividingWings3, e1);
+				{
+					List<TetherEvent> tethers = s.waitEvents(2, TetherEvent.class, te -> te.tetherIdMatches(242));
+					List<HeadMarkerEvent> hms = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hm -> true);
+					// TODO: tether location
+					Optional<TetherEvent> myTether = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst();
+					Optional<HeadMarkerEvent> myHm = hms.stream().filter(hm -> hm.getTarget().isThePlayer()).findFirst();
+					boolean callBreak = false;
+					if (myTether.isPresent()) {
+						s.updateCall(dividingWingsTether, myTether.get());
+					}
+					else if (myHm.isPresent() && myHm.get().getMarkerOffset() == -37) {
+						s.updateCall(dividingWingsRearWeb);
+						callBreak = true;
+					}
+					else {
+						s.updateCall(dividingWingsNoTether);
+					}
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8298));
+					if (callBreak) {
+						s.updateCall(dividingWingsBreakChains);
+					}
+				}
+				{
+					List<HeadMarkerEvent> hms = s.waitEventsQuickSuccession(3, HeadMarkerEvent.class, hm -> hm.getMarkerOffset() == -37);
+					Optional<HeadMarkerEvent> myHm = hms.stream().filter(hm -> hm.getTarget().isThePlayer()).findFirst();
+					if (myHm.isPresent()) {
+						s.updateCall(dividingWingsRearWeb);
+					}
+				}
+
 
 			});
 
@@ -188,11 +246,11 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final SequentialTrigger<BaseEvent> meltdown = SqtTemplates.multiInvocation(90_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82A1),
 			(e1, s) -> {
-				log.info("Daemoniac Bonds: Start");
+				log.info("Meltdown: Start");
 				List<HeadMarkerEvent> headMarks = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -444, Duration.ofMillis(100));
-				log.info("Daemoniac Bonds: Got HMs");
+				log.info("Meltdown: Got HMs");
 				AbilityCastStart linestack = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x829D));
-				log.info("Daemoniac Bonds: Got Line Stack");
+				log.info("Meltdown: Got Line Stack");
 				Optional<HeadMarkerEvent> myMarker = headMarks.stream().filter(hme -> hme.getTarget().isThePlayer()).findAny();
 				if (myMarker.isPresent()) {
 					s.updateCall(meltdownHasMarker, myMarker.get());
@@ -203,9 +261,20 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(linestack.getAbility().getId()));
 				daemoniacBondsHelper(s);
 			},
-			(e1, s) -> { /* ignored, handled below */},
 			(e1, s) -> {
-
+				log.info("Meltdown: Start");
+				List<HeadMarkerEvent> headMarks = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -444, Duration.ofMillis(100));
+				log.info("Meltdown: Got HMs");
+				AbilityCastStart linestack = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x829D));
+				log.info("Meltdown: Got Line Stack");
+				Optional<HeadMarkerEvent> myMarker = headMarks.stream().filter(hme -> hme.getTarget().isThePlayer()).findAny();
+				if (myMarker.isPresent()) {
+					s.updateCall(meltdownHasMarker, myMarker.get());
+				}
+				else {
+					s.updateCall(meltdownNoMarker, linestack);
+				}
+				// Bonds are handled below
 			}
 	);
 
@@ -232,5 +301,41 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				daemoniacBondsHelper(s);
 			}
 	);
+
+	private final ModifiableCallout<AbilityCastStart> pandaRay = ModifiableCallout.durationBasedCall("Panda Ray", "{safe} Safe");
+	private final ModifiableCallout<?> avoidLines = new ModifiableCallout<>("Avoid Lines");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> cleaveAndLasers = SqtTemplates.sq(15_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8289, 0x828B),
+			(e1, s) -> {
+				// Panda ray - 828B + 828A is west safe, ? is east safe
+				if (e1.abilityIdMatches(0x828B)) {
+					s.setParam("safe", ArenaSector.WEST);
+				}
+				else {
+					s.setParam("safe", ArenaSector.EAST);
+				}
+				s.updateCall(pandaRay, e1);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(e1.getAbility().getId()));
+				s.updateCall(avoidLines);
+			});
+
+	private final ModifiableCallout<AbilityCastStart> harrowingHell = ModifiableCallout.durationBasedCall("Harrowing Hell", "Heavy Raidwides, Tanks in Front");
+	private final ModifiableCallout<AbilityCastStart> harrowingHellKb = ModifiableCallout.durationBasedCall("Harrowing Hell KB", "Knockback");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> harrowingHellSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x828F),
+			(e1, s) -> {
+				s.updateCall(harrowingHell, e1);
+				AbilityCastStart kb = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8294));
+				s.updateCall(harrowingHellKb, kb);
+				s.waitMs(2_000);
+				daemoniacBondsHelper(s);
+			});
+
+	@NpcCastCallout(0x8295)
+	private final ModifiableCallout<AbilityCastStart> partedPlumes = ModifiableCallout.durationBasedCall("Parted Plumes", "Spin");
 
 }

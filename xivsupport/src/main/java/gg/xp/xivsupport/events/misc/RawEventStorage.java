@@ -149,7 +149,7 @@ public class RawEventStorage {
 
 	@HandleEvents
 	public void pruneOnWipe(EventContext context, FadeOutEvent fadeOut) {
-		doPrune((int) (getMaxEvents() * 0.70));
+		doPrune((int) (getMaxEvents() * 0.65));
 	}
 
 	@HandleEvents(order = Integer.MAX_VALUE)

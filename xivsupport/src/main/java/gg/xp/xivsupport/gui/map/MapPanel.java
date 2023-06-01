@@ -89,9 +89,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		setBackground(new Color(168, 153, 114));
 		refresher = new RefreshLoop<>("MapRefresh", this, map -> {
 			SwingUtilities.invokeLater(() -> {
-				// TODO: this can flood the EDT queue
 				if (map.isShowing()) {
-					refresh();
+					requestRefresh();
 				}
 			});
 		}, unused -> 100L);
@@ -165,10 +164,20 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	public void setCombatants(List<XivCombatant> combatants) {
 		this.combatants = new ArrayList<>(combatants);
+		requestRefresh();
+	}
+
+	private volatile boolean refreshPending;
+	private void requestRefresh() {
+		if (refreshPending) {
+			return;
+		}
+		refreshPending = true;
 		SwingUtilities.invokeLater(this::refresh);
 	}
 
 	private void refresh() {
+		refreshPending = false;
 //		log.info("Map refresh");
 		List<XivCombatant> combatants = this.combatants;
 		XivMap mapNow = mdc.getMap();
