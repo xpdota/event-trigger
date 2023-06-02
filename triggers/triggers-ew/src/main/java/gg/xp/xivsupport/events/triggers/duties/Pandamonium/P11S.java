@@ -63,6 +63,11 @@ public class P11S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(0x8217)
 	private final ModifiableCallout<AbilityCastStart> styx = ModifiableCallout.durationBasedCall("Styx", "Party Stack, Multiple Hits");
 
+	@NpcCastCallout({0x820D, 0x820F})
+	private final ModifiableCallout<AbilityCastStart> arcaneRevDarkSafe = ModifiableCallout.durationBasedCall("Arcane Revelation: Dark Safe", "Dark Safe");
+	@NpcCastCallout({0x820E, 0x8210})
+	private final ModifiableCallout<AbilityCastStart> arcaneRevLightSafe = ModifiableCallout.durationBasedCall("Arcane Revelation: Light Safe", "Light Safe");
+
 	@NpcCastCallout(0x81E6)
 	private final ModifiableCallout<AbilityCastStart> joTwistLp = ModifiableCallout.durationBasedCall("Jury Overruling: Twisters then Light Parties In", "Twisters then Light Parties");
 	@NpcCastCallout(0x81E7)
@@ -95,6 +100,16 @@ public class P11S extends AutoChildEventHandler implements FilteredEventHandler 
 		8219, 821B, 821E, 821F, 821C, 821A,821C,821D,87B4,87B8,87B5,87B7
 		Clockwise, rotate-rotate-in, buddies
 	 */
+
+	// Dismissal overruling:
+	/*
+		KB + in + buddies = 8787 and 8785
+		KB + out + lp = 8786 + 8784
+	 */
+	@NpcCastCallout(0x8784)
+	private final ModifiableCallout<AbilityCastStart> dismissalOutLp = ModifiableCallout.durationBasedCall("Dismissal Overruling: KB/Out/Light Parties", "Knockback, Out, Light Parties");
+	@NpcCastCallout(0x8785)
+	private final ModifiableCallout<AbilityCastStart> dismissalInBuddy = ModifiableCallout.durationBasedCall("Dismissal Overruling: KB/In/Buddies", "Knockback, In, Buddies");
 
 	private final ModifiableCallout<?> shadowedMessengerCW = new ModifiableCallout<>("Shadowed Messenger: Clockwise", "Clockwise");
 	private final ModifiableCallout<?> shadowedMessengerCCW = new ModifiableCallout<>("Shadowed Messenger: Counter-Clockwise", "Counter-Clockwise");
@@ -137,6 +152,11 @@ public class P11S extends AutoChildEventHandler implements FilteredEventHandler 
 									}
 								});
 			});
+
+	@NpcCastCallout(0x87B4)
+	private final ModifiableCallout<AbilityCastStart> divisiveOverrulingSidesInBuddies = ModifiableCallout.durationBasedCall("Divisive Ruling: Sides, In, Buddies (During Other Mechs)", "Sides then In and Buddies");
+	@NpcCastCallout(0x87B3)
+	private final ModifiableCallout<AbilityCastStart> divisiveOverrulingOutLightParties = ModifiableCallout.durationBasedCall("Divisive Ruling: Sides, In, Buddies (During Other Mechs)", "Sides and Light Parties");
 
 	private final ModifiableCallout<?> spinnySafeSpot = new ModifiableCallout<>("Spinners: Safe Spot", "{safe}");
 
@@ -278,4 +298,11 @@ public class P11S extends AutoChildEventHandler implements FilteredEventHandler 
 				}
 			});
 
+	@NpcCastCallout(0x8211)
+	private final ModifiableCallout<AbilityCastStart> twofoldRevelationDarkSafe = new ModifiableCallout<>("Twofold Revelation: Dark Safe", "Dark Safe");
+	@NpcCastCallout(0x8212)
+	private final ModifiableCallout<AbilityCastStart> twofoldRevelationLightSafe = new ModifiableCallout<>("Twofold Revelation: Light Safe", "Light Safe");
+
+	// TODO: rotating exaflares, light tether stack then go to tank tether mechs (on both clones and towers)
+	// TODO: KB + CW/CCW rotation for towers mechanic
 }
