@@ -56,4 +56,21 @@ public class HeadmarkerOffsetTracker {
 		firstId = null;
 	}
 
+	/**
+	 * Force a fake 'first ID'. May be used for fights where the first headmarker
+	 * ID is variable but still determinable based on other aspects of the fight.
+	 * <p>
+	 * Please note that this affects all downstream consumers! Generally, it is
+	 * preferable to have anything using this be part of the main repo, so that
+	 * different plugins don't try to force their own behavior on everything else.
+	 *
+	 * @param firstId the fake first ID
+	 */
+	public void setFakeFirstId(long firstId) {
+		this.firstId = firstId;
+	}
+
+	public boolean hasFirstId() {
+		return firstId != null;
+	}
 }
