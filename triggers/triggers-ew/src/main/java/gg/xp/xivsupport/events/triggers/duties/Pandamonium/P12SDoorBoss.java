@@ -73,7 +73,7 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> trinityOfSouls = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82E7, 0x82E8),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82E1, 0x82E2, 0x82E7, 0x82E8),
 			(e1, s) -> {
 					/*
 						Notes: Seems to be cast -> headmarkers during cast
@@ -85,9 +85,13 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 						82E7, 491 488 496 = left left right, flipping (7AC)
 						82E8, 490 489 496 = right right? right?, flipping (89C)
 						82E7, 491 489 496 = left right right, flipping (79C)
+						82E2, 486 488 499 = right right left, non flip (245)
+						82E1, 487 488 499 = left right left, non flip (145)
+						82E1, 487 488 498 = left right right, non flip (146)
 
-						82E7 = left safe first
-						82E8 = right safe first
+						82E2 = right safe first, not flipping
+						82E7 = left safe first, flipping
+						82E8 = right safe first, flipping
 						-1 = left safe (must consider flip)
 						-2 = right safe (must consider flip)
 						+7 = left safe
@@ -96,7 +100,7 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				List<ArenaSector> safeSpots = new ArrayList<>(3);
 				safeSpots.add(e1.abilityIdMatches(0x82E8) ? ArenaSector.EAST : ArenaSector.WEST);
 				List<HeadMarkerEvent> hms = s.waitEvents(3, HeadMarkerEvent.class, hm -> true);
-				boolean flipping = true;
+				boolean flipping = e1.abilityIdMatches(0x82E7, 0x82E8);
 				HeadMarkerEvent secondHm = hms.get(1);
 				ArenaSector secondSafe = switch (secondHm.getMarkerOffset()) {
 					case -1 -> ArenaSector.WEST;
@@ -109,8 +113,8 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				safeSpots.add(secondSafe);
 				HeadMarkerEvent thirdHm = hms.get(2);
 				ArenaSector thirdSafe = switch (thirdHm.getMarkerOffset()) {
-					case +7 -> ArenaSector.WEST;
-					case +6 -> ArenaSector.EAST;
+					case +7, +9 -> ArenaSector.WEST;
+					case +6, +8 -> ArenaSector.EAST;
 					default -> ArenaSector.UNKNOWN;
 				};
 				safeSpots.add(thirdSafe);
