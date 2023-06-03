@@ -69,11 +69,12 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				}
 			});
 
+	private final ModifiableCallout<?> trinityInitial = new ModifiableCallout<>("Trinity Safe Spots", "Start {safespots[0]}");
 	private final ModifiableCallout<?> trinitySafeSpots = new ModifiableCallout<>("Trinity Safe Spots", "{safespots[0]}, {safespots[1]}, {safespots[2]}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> trinityOfSouls = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82E7, 0x82E8),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82E1, 0x82E2, 0x82E7, 0x82E8),
 			(e1, s) -> {
 					/*
 						Notes: Seems to be cast -> headmarkers during cast
@@ -85,18 +86,25 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 						82E7, 491 488 496 = left left right, flipping (7AC)
 						82E8, 490 489 496 = right right? right?, flipping (89C)
 						82E7, 491 489 496 = left right right, flipping (79C)
+						82E2, 486 488 499 = right right left, non flip (245)
+						82E1, 487 488 499 = left right left, non flip (145)
+						82E1, 487 488 498 = left right right, non flip (146)
 
-						82E7 = left safe first
-						82E8 = right safe first
+						82E2 = right safe first, not flipping
+						82E7 = left safe first, flipping
+						82E8 = right safe first, flipping
 						-1 = left safe (must consider flip)
 						-2 = right safe (must consider flip)
 						+7 = left safe
 						+6 = right safe
 					 */
 				List<ArenaSector> safeSpots = new ArrayList<>(3);
-				safeSpots.add(e1.abilityIdMatches(0x82E8) ? ArenaSector.EAST : ArenaSector.WEST);
+				ArenaSector firstSafe = e1.abilityIdMatches(0x82E2, 0x82E8) ? ArenaSector.EAST : ArenaSector.WEST;
+				safeSpots.add(firstSafe);
+				s.setParam("safespots", safeSpots);
+				s.updateCall(trinityInitial);
 				List<HeadMarkerEvent> hms = s.waitEvents(3, HeadMarkerEvent.class, hm -> true);
-				boolean flipping = true;
+				boolean flipping = e1.abilityIdMatches(0x82E7, 0x82E8);
 				HeadMarkerEvent secondHm = hms.get(1);
 				ArenaSector secondSafe = switch (secondHm.getMarkerOffset()) {
 					case -1 -> ArenaSector.WEST;
@@ -109,8 +117,8 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				safeSpots.add(secondSafe);
 				HeadMarkerEvent thirdHm = hms.get(2);
 				ArenaSector thirdSafe = switch (thirdHm.getMarkerOffset()) {
-					case +7 -> ArenaSector.WEST;
-					case +6 -> ArenaSector.EAST;
+					case +7, +9 -> ArenaSector.WEST;
+					case +6, +8 -> ArenaSector.EAST;
 					default -> ArenaSector.UNKNOWN;
 				};
 				safeSpots.add(thirdSafe);
@@ -123,8 +131,8 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 	private final ModifiableCallout<TetherEvent> engravement1tetherDark = new ModifiableCallout<>("Engravement 1: Dark Tether", "Dark Tether");
 	private final ModifiableCallout<BuffApplied> engravement1soakLight = new ModifiableCallout<>("Engravement 1: Soak Light", "Soak Light");
 	private final ModifiableCallout<BuffApplied> engravement1soakDark = new ModifiableCallout<>("Engravement 1: Soak Dark", "Soak Dark");
-	private final ModifiableCallout<BuffApplied> engravement1noTetherLight = new ModifiableCallout<>("Engravement 1: No Tether, Light");
-	private final ModifiableCallout<BuffApplied> engravement1noTetherDark = new ModifiableCallout<>("Engravement 1: No Tether, Dark");
+	private final ModifiableCallout<BuffApplied> engravement1noTetherLight = new ModifiableCallout<>("Engravement 1: No Tether, Light", "No Tether, Light");
+	private final ModifiableCallout<BuffApplied> engravement1noTetherDark = new ModifiableCallout<>("Engravement 1: No Tether, Dark", "No Tether, Dark");
 	private final ModifiableCallout<?> engravement1dodgeLeft = new ModifiableCallout<>("Engravement 1: Dodge Inner Left (or Outer Right)", "Dodge Left");
 	private final ModifiableCallout<?> engravement1dodgeRight = new ModifiableCallout<>("Engravement 1: Dodge Inner Right (or Outer Left)", "Dodge Right");
 
@@ -137,8 +145,9 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				Optional<TetherEvent> myTether = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst();
 				myTether.ifPresentOrElse(mt -> {
 							switch ((int) mt.getId()) {
-								case 233 -> s.updateCall(engravement1tetherLight, mt);
-								case 234 -> s.updateCall(engravement1tetherDark, mt);
+								// IDs are unstretched and stretched
+								case 233, 250 -> s.updateCall(engravement1tetherLight, mt);
+								case 234, 251 -> s.updateCall(engravement1tetherDark, mt);
 								default -> log.error("Unknown tether: {}", mt.getId());
 							}
 							BuffApplied buff = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0xDF8, 0xDF9));
@@ -232,9 +241,13 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 		}
 	}
 
-	private final ModifiableCallout<?> superchain1start = new ModifiableCallout<>("Superchain 1: Start", "Start {startOrb}, {firstMechs[0]} and {firstMechs[1]}");
-	private final ModifiableCallout<?> superchain1second = new ModifiableCallout<>("Superchain 1: Second Orb", "Next: stack in {secondSafe}");
-	private final ModifiableCallout<?> superchain1final = new ModifiableCallout<>("Superchain 1: Final Orb", "{finalOrb}, {finalMechs[0]} then {finalMechs[1]}");
+	private final ModifiableCallout<?> superchain1start = new ModifiableCallout<>("Superchain 1: Start", "Start {startOrb}, {firstMechs[0]} and {firstMechs[1]}", 10_000);
+	private final ModifiableCallout<?> superchain1second = new ModifiableCallout<>("Superchain 1: Second Orb", "Next: stack in {secondSafe}", 10_000);
+	private final ModifiableCallout<BuffApplied> superchain1lightStack = new ModifiableCallout<>("Superchain 1: Light Stack Group", "Next: {secondSafe}, Light Stack");
+	private final ModifiableCallout<BuffApplied> superchain1darkStack = new ModifiableCallout<>("Superchain 1: Dark Stack Group", "Next: {secondSafe}, Dark Stack");
+	private final ModifiableCallout<BuffApplied> superchain1lightLaser = new ModifiableCallout<>("Superchain 1: Light Laser", "Next: {secondSafe}, Light Laser on You");
+	private final ModifiableCallout<BuffApplied> superchain1darkLaser = new ModifiableCallout<>("Superchain 1: Dark Laser", "Next: {secondSafe}, Dark Laser on You");
+	private final ModifiableCallout<?> superchain1final = new ModifiableCallout<>("Superchain 1: Final Orb", "Last: {finalOrb}, {finalMechs[0]} then {finalMechs[1]}", 10_000);
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> superchain1 = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82DA),
@@ -257,12 +270,13 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 
 				 */
 				s.waitEvent(AbilityCastStart.class, event -> event.abilityIdMatches(0x8305));
-				s.waitThenRefreshCombatants(500);
+				s.waitThenRefreshCombatants(300);
 				XivCombatant firstOrb = state.npcById(16176);
 				if (firstOrb == null) {
 					log.error("No first orb!");
 					return;
 				}
+				log.info("First orb");
 				ArenaSector start = ap.forCombatant(firstOrb);
 				s.setParam("startOrb", start);
 				List<OrbMechanic> firstMechs = getOrbChainActors(firstOrb).stream().map(OrbMechanic::forNpc).toList();
@@ -278,14 +292,34 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 						.filter(cbt -> getOrbChainActors(cbt).stream().anyMatch(mechOrb -> OrbMechanic.forNpc(mechOrb) == OrbMechanic.IN))
 						.findFirst()
 						.orElseThrow(() -> new RuntimeException("Couldn't find 'in' orb!"));
+				log.info("Second/third orb found");
 				s.setParam("secondSafe", ap.forCombatant(inOrb));
-				s.updateCall(superchain1second);
-				s.waitMs(2_000);
+				BuffApplied myBuff = buffs.findStatusOnTarget(state.getPlayer(), ba -> ba.buffIdMatches(0xdf8, 0xdf9, 0xdfb, 0xdfc, 0xdfd, 0xdfe));
+				ModifiableCallout<BuffApplied> secondMechBuffCall = null;
+				if (myBuff != null) {
+					secondMechBuffCall = switch ((int) myBuff.getBuff().getId()) {
+						case 0xdf8, 0xdfb -> superchain1lightStack;
+						case 0xdf9, 0xdfc -> superchain1darkStack;
+						case 0xdfd -> superchain1lightLaser;
+						case 0xdfe -> superchain1darkLaser;
+						default -> null;
+					};
+				}
+				s.waitMs(3_000);
+				if (secondMechBuffCall != null) {
+					s.call(secondMechBuffCall, myBuff);
+				}
+				else {
+					log.error("Unknown second mech buff");
+					s.call(superchain1second);
+				}
+				// TODO: remove when buff call is done, integrate location into buff call
 				do {
 					s.waitThenRefreshCombatants(100);
 					orbs = state.npcsById(16176);
 				} while (orbs.size() < 4);
 				XivCombatant finalOrb = orbs.get(3);
+				log.info("Final orb found");
 				List<XivCombatant> finalChainActors = getOrbChainActors(finalOrb)
 						.stream()
 						.sorted(Comparator.comparing(a -> a.getPos().distanceFrom2D(finalOrb.getPos())))
@@ -294,6 +328,59 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				OrbMechanic finalMech2 = OrbMechanic.forNpc(finalChainActors.get(1));
 				s.setParam("finalMechs", List.of(finalMech1, finalMech2));
 				s.setParam("finalOrb", ap.forCombatant(finalOrb));
-				s.updateCall(superchain1final);
+				s.waitMs(5_000);
+				s.call(superchain1final);
 			});
+
+	private final ModifiableCallout<TetherEvent> paradeigma3lightTether = new ModifiableCallout<>("Paradeigma 3: Light Tether", "Light Tether");
+	private final ModifiableCallout<TetherEvent> paradeigma3darkTether = new ModifiableCallout<>("Paradeigma 3: Dark Tether", "Dark Tether");
+
+	private final ModifiableCallout<BuffApplied> paradeigma3light = ModifiableCallout.<BuffApplied>durationBasedCall("Paradeigma 3: Light Buff", "Light Buff").autoIcon();
+	private final ModifiableCallout<BuffApplied> paradeigma3dark = ModifiableCallout.<BuffApplied>durationBasedCall("Paradeigma 3: Dark Buff", "Dark Buff").autoIcon();
+	private final ModifiableCallout<BuffApplied> paradeigma3plus = ModifiableCallout.<BuffApplied>durationBasedCall("Paradeigma 3: Plus", "Plus").autoIcon();
+	private final ModifiableCallout<BuffApplied> paradeigma3cross = ModifiableCallout.<BuffApplied>durationBasedCall("Paradeigma 3: Cross", "Cross").autoIcon();
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> paradeigma = SqtTemplates.multiInvocation(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82ED),
+			(e1, s) -> {
+				// not needed
+			},
+			(e1, s) -> {
+				// not needed
+			},
+			(e1, s) -> {
+				// arena break mech
+				List<TetherEvent> tethers = s.waitEvents(4, TetherEvent.class, te -> true);
+				Optional<TetherEvent> myTetherMaybe = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst();
+				if (myTetherMaybe.isPresent()) {
+					TetherEvent myTether = myTetherMaybe.get();
+					if (myTether.tetherIdMatches(233, 250)) {
+						s.updateCall(paradeigma3lightTether, myTether);
+					}
+					else {
+						s.updateCall(paradeigma3darkTether, myTether);
+					}
+				}
+				else {
+					// DFB - light
+					// DFC - dark
+					// DFF - plus
+					// E00 - X
+					BuffApplied buff = buffs.findBuff(ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0xDFB, 0xDFC, 0xDFF, 0xE00));
+					if (buff == null) {
+						log.error("PD3: No tether nor buff!");
+						return;
+					}
+					s.updateCall(switch ((int) buff.getBuff().getId()) {
+						case 0xDFB -> paradeigma3light;
+						case 0xDFC -> paradeigma3dark;
+						case 0xDFF -> paradeigma3plus;
+						case 0xE00 -> paradeigma3cross;
+						default -> throw new RuntimeException("Unknown Buff");
+					}, buff);
+				}
+			}
+
+	);
 }
