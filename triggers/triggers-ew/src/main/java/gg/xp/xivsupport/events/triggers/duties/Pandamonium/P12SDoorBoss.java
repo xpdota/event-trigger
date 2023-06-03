@@ -9,6 +9,7 @@ import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @CalloutRepo(name = "P12S Doorboss", duty = KnownDuty.P12S)
@@ -69,7 +71,13 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				}
 			});
 
-	private final ModifiableCallout<?> trinityInitial = new ModifiableCallout<>("Trinity Safe Spots", "Start {safespots[0]}");
+	private final ModifiableCallout<?> trinityInitial = new ModifiableCallout<>("Trinity Safe Spots", "Start {safespots[0]}")
+			.extendedDescription("""
+					There are multiple ways you can configure this callout.
+					{safespots[n]} will tell you the actual compass direction after considering the boss's facing angle.
+					e.g. if the boss is facing Southwest, "Left" is Southeast, and "Right" is Northwest.
+					{right[n]} is a boolean which tells you if you should be on the right-hand side relative to the boss's
+					original facing angle, e.g. {right[n] ? "Right" : "Left"}.""");
 	private final ModifiableCallout<?> trinitySafeSpots = new ModifiableCallout<>("Trinity Safe Spots", "{safespots[0]}, {safespots[1]}, {safespots[2]}");
 
 	@AutoFeed
@@ -99,30 +107,54 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 						+6 = right safe
 					 */
 				List<ArenaSector> safeSpots = new ArrayList<>(3);
-				ArenaSector firstSafe = e1.abilityIdMatches(0x82E2, 0x82E8) ? ArenaSector.EAST : ArenaSector.WEST;
+				List<Boolean> right = new ArrayList<>(3);
+				s.waitThenRefreshCombatants(100);
+				ArenaSector bossFacingInitial = ArenaPos.combatantFacing(state.getLatestCombatantData(e1.getSource()));
+				boolean firstRight = e1.abilityIdMatches(0x82E2, 0x82E8);
+				ArenaSector firstSafe = firstRight ? bossFacingInitial.plusQuads(1) : bossFacingInitial.plusQuads(-1);
+				right.add(firstRight);
 				safeSpots.add(firstSafe);
 				s.setParam("safespots", safeSpots);
+				s.setParam("right", right);
 				s.updateCall(trinityInitial);
 				List<HeadMarkerEvent> hms = s.waitEvents(3, HeadMarkerEvent.class, hm -> true);
 				boolean flipping = e1.abilityIdMatches(0x82E7, 0x82E8);
 				HeadMarkerEvent secondHm = hms.get(1);
-				ArenaSector secondSafe = switch (secondHm.getMarkerOffset()) {
-					case -1 -> ArenaSector.WEST;
-					case -2 -> ArenaSector.EAST;
-					default -> ArenaSector.UNKNOWN;
+				Boolean secondRight = switch (secondHm.getMarkerOffset()) {
+					// Left, unless flipping
+					case -1 -> flipping;
+					// Right, unless flipping
+					case -2 -> !flipping;
+					// Unknown
+					default -> null;
 				};
-				if (flipping) {
-					secondSafe = secondSafe.opposite();
+				right.add(secondRight);
+				if (secondRight == null) {
+					safeSpots.add(ArenaSector.UNKNOWN);
 				}
-				safeSpots.add(secondSafe);
+				else if (secondRight) {
+					safeSpots.add(bossFacingInitial.plusQuads(1));
+				}
+				else {
+					safeSpots.add(bossFacingInitial.plusQuads(-1));
+				}
 				HeadMarkerEvent thirdHm = hms.get(2);
-				ArenaSector thirdSafe = switch (thirdHm.getMarkerOffset()) {
-					case +7, +9 -> ArenaSector.WEST;
-					case +6, +8 -> ArenaSector.EAST;
-					default -> ArenaSector.UNKNOWN;
+				Boolean thirdRight = switch (thirdHm.getMarkerOffset()) {
+					case +7, +9 -> false;
+					case +6, +8 -> true;
+					default -> null;
 				};
-				safeSpots.add(thirdSafe);
-				// TODO: test
+				right.add(thirdRight);
+				if (thirdRight == null) {
+					safeSpots.add(ArenaSector.UNKNOWN);
+				}
+				else if (thirdRight) {
+					safeSpots.add(bossFacingInitial.plusQuads(1));
+				}
+				else {
+					safeSpots.add(bossFacingInitial.plusQuads(-1));
+				}
+				s.setParam("right", right);
 				s.setParam("safespots", safeSpots);
 				s.updateCall(trinitySafeSpots);
 			});
@@ -192,10 +224,10 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 	private final ModifiableCallout<AbilityCastStart> glaukopis = ModifiableCallout.durationBasedCall("Glaukopis", "Tank Buster");
 
 	// "Mechanics" orbs immediately precede their fixed orb in entity ID
-	private List<XivCombatant> getOrbChainActors(XivCombatant fixedOrb) {
+	private List<XivCombatant> getOrbChainActors(XivCombatant fixedOrb, int limit) {
 		long id = fixedOrb.getId();
 		List<XivCombatant> out = new ArrayList<>();
-		while (true) {
+		while (limit < 0 || limit-- > 0) {
 			id--;
 			XivCombatant maybeOrb = state.getCombatant(id);
 			OrbMechanic mech = OrbMechanic.forNpc(maybeOrb);
@@ -243,11 +275,18 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 
 	private final ModifiableCallout<?> superchain1start = new ModifiableCallout<>("Superchain 1: Start", "Start {startOrb}, {firstMechs[0]} and {firstMechs[1]}", 10_000);
 	private final ModifiableCallout<?> superchain1second = new ModifiableCallout<>("Superchain 1: Second Orb", "Next: stack in {secondSafe}", 10_000);
-	private final ModifiableCallout<BuffApplied> superchain1lightStack = new ModifiableCallout<>("Superchain 1: Light Stack Group", "Next: {secondSafe}, Light Stack");
-	private final ModifiableCallout<BuffApplied> superchain1darkStack = new ModifiableCallout<>("Superchain 1: Dark Stack Group", "Next: {secondSafe}, Dark Stack");
-	private final ModifiableCallout<BuffApplied> superchain1lightLaser = new ModifiableCallout<>("Superchain 1: Light Laser", "Next: {secondSafe}, Light Laser on You");
-	private final ModifiableCallout<BuffApplied> superchain1darkLaser = new ModifiableCallout<>("Superchain 1: Dark Laser", "Next: {secondSafe}, Dark Laser on You");
+	private final ModifiableCallout<BuffApplied> superchain1lightStack = new ModifiableCallout<BuffApplied>("Superchain 1: Light Stack Group", "Next: {secondSafe}, Light Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> superchain1darkStack = new ModifiableCallout<BuffApplied>("Superchain 1: Dark Stack Group", "Next: {secondSafe}, Dark Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> superchain1lightLaser = new ModifiableCallout<BuffApplied>("Superchain 1: Light Laser", "Next: {secondSafe}, Light Laser on You").autoIcon();
+	private final ModifiableCallout<BuffApplied> superchain1darkLaser = new ModifiableCallout<BuffApplied>("Superchain 1: Dark Laser", "Next: {secondSafe}, Dark Laser on You").autoIcon();
 	private final ModifiableCallout<?> superchain1final = new ModifiableCallout<>("Superchain 1: Final Orb", "Last: {finalOrb}, {finalMechs[0]} then {finalMechs[1]}", 10_000);
+
+	private final ModifiableCallout<BuffApplied> superchain1lightTowerEnd = new ModifiableCallout<BuffApplied>("Superchain 1 End: Light Tower", "Place Light Tower").statusIcon(0xDFB);
+	private final ModifiableCallout<BuffApplied> superchain1darkTowerEnd = new ModifiableCallout<BuffApplied>("Superchain 1: Dark Tower", "Place Dark Tower").statusIcon(0xDFC);
+	private final ModifiableCallout<BuffApplied> superchain1lightLaserEnd = new ModifiableCallout<BuffApplied>("Superchain 1 End: Was Light Laser", "Soak Dark Tower");
+	private final ModifiableCallout<BuffApplied> superchain1darkLaserEnd = new ModifiableCallout<BuffApplied>("Superchain 1 End: Was Dark Laser", "Soak Light Tower");
+	private final ModifiableCallout<BuffApplied> superchain1HolyEnd = new ModifiableCallout<BuffApplied>("Superchain 1: Holy", "Holy").statusIcon(0xDFA);
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> superchain1 = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82DA),
@@ -279,33 +318,31 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				log.info("First orb");
 				ArenaSector start = ap.forCombatant(firstOrb);
 				s.setParam("startOrb", start);
-				List<OrbMechanic> firstMechs = getOrbChainActors(firstOrb).stream().map(OrbMechanic::forNpc).toList();
+				List<OrbMechanic> firstMechs = getOrbChainActors(firstOrb, -1).stream().map(OrbMechanic::forNpc).toList();
 				s.setParam("firstMechs", firstMechs);
 				s.updateCall(superchain1start);
 				List<XivCombatant> orbs;
+				BuffApplied myBuff;
 				do {
 					s.waitThenRefreshCombatants(100);
 					orbs = state.npcsById(16176);
-				} while (orbs.size() < 3);
+					myBuff = buffs.findStatusOnTarget(state.getPlayer(), ba -> ba.buffIdMatches(0xdf8, 0xdf9, 0xdfb, 0xdfc, 0xdfd, 0xdfe));
+				} while (orbs.size() < 3 || myBuff == null);
 				XivCombatant inOrb = orbs.subList(1, orbs.size())
 						.stream()
-						.filter(cbt -> getOrbChainActors(cbt).stream().anyMatch(mechOrb -> OrbMechanic.forNpc(mechOrb) == OrbMechanic.IN))
+						.filter(cbt -> getOrbChainActors(cbt, -1).stream().anyMatch(mechOrb -> OrbMechanic.forNpc(mechOrb) == OrbMechanic.IN))
 						.findFirst()
 						.orElseThrow(() -> new RuntimeException("Couldn't find 'in' orb!"));
 				log.info("Second/third orb found");
 				s.setParam("secondSafe", ap.forCombatant(inOrb));
-				BuffApplied myBuff = buffs.findStatusOnTarget(state.getPlayer(), ba -> ba.buffIdMatches(0xdf8, 0xdf9, 0xdfb, 0xdfc, 0xdfd, 0xdfe));
-				ModifiableCallout<BuffApplied> secondMechBuffCall = null;
-				if (myBuff != null) {
-					secondMechBuffCall = switch ((int) myBuff.getBuff().getId()) {
-						case 0xdf8, 0xdfb -> superchain1lightStack;
-						case 0xdf9, 0xdfc -> superchain1darkStack;
-						case 0xdfd -> superchain1lightLaser;
-						case 0xdfe -> superchain1darkLaser;
-						default -> null;
-					};
-				}
-				s.waitMs(3_000);
+				log.info("Second buff: {}", myBuff);
+				ModifiableCallout<BuffApplied> secondMechBuffCall = switch ((int) myBuff.getBuff().getId()) {
+					case 0xdf8, 0xdfb -> superchain1lightStack;
+					case 0xdf9, 0xdfc -> superchain1darkStack;
+					case 0xdfd -> superchain1lightLaser;
+					case 0xdfe -> superchain1darkLaser;
+					default -> null;
+				};
 				if (secondMechBuffCall != null) {
 					s.call(secondMechBuffCall, myBuff);
 				}
@@ -320,7 +357,7 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				} while (orbs.size() < 4);
 				XivCombatant finalOrb = orbs.get(3);
 				log.info("Final orb found");
-				List<XivCombatant> finalChainActors = getOrbChainActors(finalOrb)
+				List<XivCombatant> finalChainActors = getOrbChainActors(finalOrb, -1)
 						.stream()
 						.sorted(Comparator.comparing(a -> a.getPos().distanceFrom2D(finalOrb.getPos())))
 						.toList();
@@ -328,9 +365,24 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				OrbMechanic finalMech2 = OrbMechanic.forNpc(finalChainActors.get(1));
 				s.setParam("finalMechs", List.of(finalMech1, finalMech2));
 				s.setParam("finalOrb", ap.forCombatant(finalOrb));
-				s.waitMs(5_000);
+				s.waitMs(6_500);
 				s.call(superchain1final);
+				s.waitMs(6_000);
+				ModifiableCallout<BuffApplied> finalMechBuffCall = switch ((int) myBuff.getBuff().getId()) {
+					case 0xdfb -> superchain1lightTowerEnd;
+					case 0xdfc -> superchain1darkTowerEnd;
+					case 0xdfd -> superchain1lightLaserEnd;
+					case 0xdfe -> superchain1darkLaserEnd;
+					default -> superchain1HolyEnd;
+				};
+				s.call(finalMechBuffCall);
 			});
+
+	@NpcCastCallout(0x82FE)
+	private final ModifiableCallout<AbilityCastStart> apodialogos = ModifiableCallout.durationBasedCall("Apodialogos", "Party In, Tanks Out");
+	@NpcCastCallout(0x82FF)
+	private final ModifiableCallout<AbilityCastStart> peridialogos = ModifiableCallout.durationBasedCall("Peridialogos", "Party Stack Out, Tanks In");
+
 
 	private final ModifiableCallout<TetherEvent> paradeigma3lightTether = new ModifiableCallout<>("Paradeigma 3: Light Tether", "Light Tether");
 	private final ModifiableCallout<TetherEvent> paradeigma3darkTether = new ModifiableCallout<>("Paradeigma 3: Dark Tether", "Dark Tether");
@@ -381,6 +433,132 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 					}, buff);
 				}
 			}
-
 	);
+
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave1 = new ModifiableCallout<>("Limit Cut: You Have #1", "One");
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave2 = new ModifiableCallout<>("Limit Cut: You Have #2", "Two");
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave3 = new ModifiableCallout<>("Limit Cut: You Have #3", "Three");
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave4 = new ModifiableCallout<>("Limit Cut: You Have #4", "Four");
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave5 = new ModifiableCallout<>("Limit Cut: You Have #5", "Five");
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave6 = new ModifiableCallout<>("Limit Cut: You Have #6", "Six");
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave7 = new ModifiableCallout<>("Limit Cut: You Have #7", "Seven");
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave8 = new ModifiableCallout<>("Limit Cut: You Have #8", "Eight");
+
+	private final ModifiableCallout<?> limitCut1 = new ModifiableCallout<>("Limit Cut: #1", "One");
+	private final ModifiableCallout<?> limitCut2 = new ModifiableCallout<>("Limit Cut: #2", "Two");
+	private final ModifiableCallout<?> limitCut3 = new ModifiableCallout<>("Limit Cut: #3", "Three");
+	private final ModifiableCallout<?> limitCut4 = new ModifiableCallout<>("Limit Cut: #4", "Four");
+	private final ModifiableCallout<?> limitCut5 = new ModifiableCallout<>("Limit Cut: #5", "Five");
+	private final ModifiableCallout<?> limitCut6 = new ModifiableCallout<>("Limit Cut: #6", "Six");
+	private final ModifiableCallout<?> limitCut7 = new ModifiableCallout<>("Limit Cut: #7", "Seven");
+	private final ModifiableCallout<?> limitCut8 = new ModifiableCallout<>("Limit Cut: #8", "Eight");
+
+	private final ModifiableCallout<?> postLimitCut = new ModifiableCallout<>("Post Limit Cut", "Avoid Center Platforms");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> limitCut = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82F3),
+			(e1, s) -> {
+				List<HeadMarkerEvent> headmarkers = s.waitEventsQuickSuccession(8, HeadMarkerEvent.class, hme -> true);
+				List<ModifiableCallout<?>> groupCalls = List.of(limitCut1, limitCut2, limitCut3, limitCut4, limitCut5, limitCut6, limitCut7, limitCut8);
+
+				List<ModifiableCallout<HeadMarkerEvent>> personalCalls = List.of(limitCutYouHave1, limitCutYouHave2, limitCutYouHave3, limitCutYouHave4, limitCutYouHave5, limitCutYouHave6, limitCutYouHave7, limitCutYouHave8);
+				for (int i = 0; i < headmarkers.size(); i++) {
+					HeadMarkerEvent thisHm = headmarkers.get(i);
+					if (thisHm.getTarget().isThePlayer()) {
+						s.call(personalCalls.get(i), thisHm);
+						break;
+					}
+				}
+				s.waitMs(2_000);
+				// Palladion = puddle
+				for (int i = 1; i <= 8; i++) {
+					s.updateCall(groupCalls.get(i));
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x82F6) && aue.isFirstTarget());
+				}
+				s.updateCall(postLimitCut);
+			});
+
+	@NpcCastCallout(0x82FA)
+	private final ModifiableCallout<AbilityCastStart> theosUltima = ModifiableCallout.durationBasedCall("Theos's Ultima", "Raidwide");
+
+	private final ModifiableCallout<?> sc2a_northProtean = new ModifiableCallout<>("Superchain 2A: North Protean", "North Protean");
+	private final ModifiableCallout<?> sc2a_northBuddies = new ModifiableCallout<>("Superchain 2A: North Buddies", "North Buddies");
+	private final ModifiableCallout<?> sc2a_southProtean = new ModifiableCallout<>("Superchain 2A: South Protean", "South Protean");
+	private final ModifiableCallout<?> sc2a_southBuddies = new ModifiableCallout<>("Superchain 2A: South Buddies", "South Buddies");
+	private final ModifiableCallout<?> sc2a_midDonut = new ModifiableCallout<>("Superchain 2A: Mid Donut", "In Middle");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> superchain2a = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x86FA),
+			(e1, s) -> {
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x86FA));
+				// This one seems different than SC1.
+				// North buddies, then mid donut, then south proteans
+				//
+				// North 3177 16176, with 3176 16180 (buddies)
+				// Mid 3175 16176, with 3174 16177 (out)
+				// South 3173 16176, with 3172 16177 (out)
+				// Next lowest ID is 3171 which is the mid "in" (16178)
+				// After that, we have 3170 and 316e, which are 16177 (out)
+				// But also 316f which is 16179 (protean) which is the final mechanic
+				// Also 0ce? is that related?
+
+				s.waitMs(300);
+				List<XivCombatant> fixedOrbs;
+				do {
+					s.waitThenRefreshCombatants(100);
+					fixedOrbs = state.npcsById(16176);
+				} while (fixedOrbs.size() != 3);
+
+				fixedOrbs = fixedOrbs.stream().sorted(Comparator.<XivCombatant, Double>comparing(orb -> orb.getPos().y())).toList();
+				XivCombatant northOrb = fixedOrbs.get(0);
+				XivCombatant southOrb = fixedOrbs.get(2);
+				OrbMechanic northMech = getOrbChainActors(northOrb, 1).stream().map(OrbMechanic::forNpc).filter(Objects::nonNull).findFirst().orElse(null);
+				OrbMechanic southMech = getOrbChainActors(southOrb, 1).stream().map(OrbMechanic::forNpc).filter(Objects::nonNull).findFirst().orElse(null);
+
+				if (northMech == OrbMechanic.PROTEAN) {
+					s.updateCall(sc2a_northProtean);
+				}
+				else if (northMech == OrbMechanic.BUDDIES) {
+					s.updateCall(sc2a_northBuddies);
+				}
+				else if (southMech == OrbMechanic.PROTEAN) {
+					s.updateCall(sc2a_southProtean);
+				}
+				else if (southMech == OrbMechanic.BUDDIES) {
+					s.updateCall(sc2a_southBuddies);
+				}
+				else {
+					log.error("Unexpected mech(s)! {} {}", northMech, southMech);
+
+				}
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x82DB));
+				s.updateCall(sc2a_midDonut);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x82DC));
+				Optional<XivCombatant> finalMechMaybe = state.getCombatantsListCopy().stream()
+						.filter(cbt -> cbt.npcIdMatches(16179, 16180))
+						// Range sanity check - might have stale combatants
+						.filter(cbt -> cbt.getId() > (northOrb.getId() - 16))
+						.min(Comparator.comparing(cbt -> cbt.getId()));
+				if (finalMechMaybe.isPresent()) {
+					XivCombatant finalOrb = finalMechMaybe.get();
+					OrbMechanic mech = OrbMechanic.forNpc(finalOrb);
+					Position translated = finalOrb.getPos().translateRelative(0, 100);
+					boolean north = translated.y() < 100;
+					if (mech == OrbMechanic.BUDDIES) {
+						s.updateCall(north ? sc2a_northBuddies : sc2a_southBuddies);
+					}
+					else if (mech == OrbMechanic.PROTEAN) {
+						s.updateCall(north ? sc2a_northProtean : sc2a_southProtean);
+					}
+					else {
+						log.error("Unexpected mech! {}", mech);
+					}
+
+				}
+
+			});
+
+
 }
