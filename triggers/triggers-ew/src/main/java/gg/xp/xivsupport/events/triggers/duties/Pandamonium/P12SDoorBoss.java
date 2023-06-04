@@ -11,6 +11,7 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
@@ -18,6 +19,7 @@ import gg.xp.xivsupport.events.state.combatstate.HeadmarkerOffsetTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
+import gg.xp.xivsupport.events.triggers.support.NpcAbilityUsedCallout;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import gg.xp.xivsupport.models.ArenaPos;
@@ -74,9 +76,13 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 	private final ModifiableCallout<?> trinityInitial = new ModifiableCallout<>("Trinity Safe Spots", "Start {safespots[0]}")
 			.extendedDescription("""
 					There are multiple ways you can configure this callout.
-					{safespots[n]} will tell you the actual compass direction after considering the boss's facing angle.
-					e.g. if the boss is facing Southwest, "Left" is Southeast, and "Right" is Northwest.
-					{right[n]} is a boolean which tells you if you should be on the right-hand side relative to the boss's
+					{safespots[n]} will tell you the actual compass direction
+					after considering the boss's facing angle.
+					e.g. if the boss is facing Southwest, "Left" is Southeast,
+					and "Right" is Northwest.
+					
+					Alternatively, {right[n]} is a boolean which tells you if you
+					should be on the right-hand side relative to the boss's
 					original facing angle, e.g. {right[n] ? "Right" : "Left"}.""");
 	private final ModifiableCallout<?> trinitySafeSpots = new ModifiableCallout<>("Trinity Safe Spots", "{safespots[0]}, {safespots[1]}, {safespots[2]}");
 
@@ -275,16 +281,16 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 
 	private final ModifiableCallout<?> superchain1start = new ModifiableCallout<>("Superchain 1: Start", "Start {startOrb}, {firstMechs[0]} and {firstMechs[1]}", 10_000);
 	private final ModifiableCallout<?> superchain1second = new ModifiableCallout<>("Superchain 1: Second Orb", "Next: stack in {secondSafe}", 10_000);
-	private final ModifiableCallout<BuffApplied> superchain1lightStack = new ModifiableCallout<BuffApplied>("Superchain 1: Light Stack Group", "Next: {secondSafe}, Light Stack").autoIcon();
-	private final ModifiableCallout<BuffApplied> superchain1darkStack = new ModifiableCallout<BuffApplied>("Superchain 1: Dark Stack Group", "Next: {secondSafe}, Dark Stack").autoIcon();
-	private final ModifiableCallout<BuffApplied> superchain1lightLaser = new ModifiableCallout<BuffApplied>("Superchain 1: Light Laser", "Next: {secondSafe}, Light Laser on You").autoIcon();
-	private final ModifiableCallout<BuffApplied> superchain1darkLaser = new ModifiableCallout<BuffApplied>("Superchain 1: Dark Laser", "Next: {secondSafe}, Dark Laser on You").autoIcon();
+	private final ModifiableCallout<BuffApplied> superchain1lightStack = new ModifiableCallout<BuffApplied>("Superchain 1: Light Stack Group", "Next: {secondSafe}, Light Stack", 10_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> superchain1darkStack = new ModifiableCallout<BuffApplied>("Superchain 1: Dark Stack Group", "Next: {secondSafe}, Dark Stack", 10_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> superchain1lightLaser = new ModifiableCallout<BuffApplied>("Superchain 1: Light Laser", "Next: {secondSafe}, Light Laser on You", 10_000).autoIcon();
+	private final ModifiableCallout<BuffApplied> superchain1darkLaser = new ModifiableCallout<BuffApplied>("Superchain 1: Dark Laser", "Next: {secondSafe}, Dark Laser on You", 10_000).autoIcon();
 	private final ModifiableCallout<?> superchain1final = new ModifiableCallout<>("Superchain 1: Final Orb", "Last: {finalOrb}, {finalMechs[0]} then {finalMechs[1]}", 10_000);
 
-	private final ModifiableCallout<BuffApplied> superchain1lightTowerEnd = new ModifiableCallout<BuffApplied>("Superchain 1 End: Light Tower", "Place Light Tower").statusIcon(0xDFB);
-	private final ModifiableCallout<BuffApplied> superchain1darkTowerEnd = new ModifiableCallout<BuffApplied>("Superchain 1: Dark Tower", "Place Dark Tower").statusIcon(0xDFC);
-	private final ModifiableCallout<BuffApplied> superchain1lightLaserEnd = new ModifiableCallout<BuffApplied>("Superchain 1 End: Was Light Laser", "Soak Dark Tower");
-	private final ModifiableCallout<BuffApplied> superchain1darkLaserEnd = new ModifiableCallout<BuffApplied>("Superchain 1 End: Was Dark Laser", "Soak Light Tower");
+	private final ModifiableCallout<BuffApplied> superchain1lightTowerEnd = new ModifiableCallout<BuffApplied>("Superchain 1 End: Light Tower", "Place Light Tower", 10_000).statusIcon(0xDFB);
+	private final ModifiableCallout<BuffApplied> superchain1darkTowerEnd = new ModifiableCallout<BuffApplied>("Superchain 1: Dark Tower", "Place Dark Tower", 10_000).statusIcon(0xDFC);
+	private final ModifiableCallout<BuffApplied> superchain1lightLaserEnd = new ModifiableCallout<BuffApplied>("Superchain 1 End: Was Light Laser", "Soak Dark Tower", 10_000);
+	private final ModifiableCallout<BuffApplied> superchain1darkLaserEnd = new ModifiableCallout<BuffApplied>("Superchain 1 End: Was Dark Laser", "Soak Light Tower", 10_000);
 	private final ModifiableCallout<BuffApplied> superchain1HolyEnd = new ModifiableCallout<BuffApplied>("Superchain 1: Holy", "Holy").statusIcon(0xDFA);
 
 	@AutoFeed
@@ -324,7 +330,7 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				List<XivCombatant> orbs;
 				BuffApplied myBuff;
 				do {
-					s.waitThenRefreshCombatants(100);
+					s.waitThenRefreshCombatants(200);
 					orbs = state.npcsById(16176);
 					myBuff = buffs.findStatusOnTarget(state.getPlayer(), ba -> ba.buffIdMatches(0xdf8, 0xdf9, 0xdfb, 0xdfc, 0xdfd, 0xdfe));
 				} while (orbs.size() < 3 || myBuff == null);
@@ -367,7 +373,7 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				s.setParam("finalOrb", ap.forCombatant(finalOrb));
 				s.waitMs(6_500);
 				s.call(superchain1final);
-				s.waitMs(6_000);
+				s.waitMs(7_500);
 				ModifiableCallout<BuffApplied> finalMechBuffCall = switch ((int) myBuff.getBuff().getId()) {
 					case 0xdfb -> superchain1lightTowerEnd;
 					case 0xdfc -> superchain1darkTowerEnd;
@@ -384,13 +390,21 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 	private final ModifiableCallout<AbilityCastStart> peridialogos = ModifiableCallout.durationBasedCall("Peridialogos", "Party Stack Out, Tanks In");
 
 
-	private final ModifiableCallout<TetherEvent> paradeigma3lightTether = new ModifiableCallout<>("Paradeigma 3: Light Tether", "Light Tether");
+	private final ModifiableCallout<TetherEvent> paradeigma3lightTether = new ModifiableCallout<TetherEvent>("Paradeigma 3: Light Tether", "Light Tether")
+			.extendedDescription("Intended for https://raidplan.io/plan/56FZFwTFz2e1xIq9");
 	private final ModifiableCallout<TetherEvent> paradeigma3darkTether = new ModifiableCallout<>("Paradeigma 3: Dark Tether", "Dark Tether");
 
 	private final ModifiableCallout<BuffApplied> paradeigma3light = ModifiableCallout.<BuffApplied>durationBasedCall("Paradeigma 3: Light Buff", "Light Buff").autoIcon();
 	private final ModifiableCallout<BuffApplied> paradeigma3dark = ModifiableCallout.<BuffApplied>durationBasedCall("Paradeigma 3: Dark Buff", "Dark Buff").autoIcon();
 	private final ModifiableCallout<BuffApplied> paradeigma3plus = ModifiableCallout.<BuffApplied>durationBasedCall("Paradeigma 3: Plus", "Plus").autoIcon();
 	private final ModifiableCallout<BuffApplied> paradeigma3cross = ModifiableCallout.<BuffApplied>durationBasedCall("Paradeigma 3: Cross", "Cross").autoIcon();
+
+	private final ModifiableCallout<?> paradeigma3plusPart2 = new ModifiableCallout<>("Paradeigma 3: Drop Plus", "Drop Plus");
+	private final ModifiableCallout<?> paradeigma3crossPart2 = new ModifiableCallout<>("Paradeigma 3: Drop Cross", "Drop Cross");
+
+	private final ModifiableCallout<?> paradeigma3baitLaser = new ModifiableCallout<>("Paradeigma 3: Bait Laser", "Bait Laser");
+	private final ModifiableCallout<?> paradeigma3placeTowerWherever = new ModifiableCallout<>("Paradeigma 3: Place Tower (Normal)", "Tower");
+	private final ModifiableCallout<?> paradeigma3placeTowerMiddle = new ModifiableCallout<>("Paradeigma 3: Place Tower (Middle)", "Tower Middle");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> paradeigma = SqtTemplates.multiInvocation(60_000,
@@ -424,25 +438,73 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 						log.error("PD3: No tether nor buff!");
 						return;
 					}
-					s.updateCall(switch ((int) buff.getBuff().getId()) {
-						case 0xDFB -> paradeigma3light;
-						case 0xDFC -> paradeigma3dark;
-						case 0xDFF -> paradeigma3plus;
-						case 0xE00 -> paradeigma3cross;
+					Pd3SupportMech mech = switch ((int) buff.getBuff().getId()) {
+						case 0xDFB -> Pd3SupportMech.LIGHT_TOWER;
+						case 0xDFC -> Pd3SupportMech.DARK_TOWER;
+						case 0xDFF -> Pd3SupportMech.PLUS;
+						case 0xE00 -> Pd3SupportMech.CROSS;
 						default -> throw new RuntimeException("Unknown Buff");
+					};
+					s.updateCall(switch (mech) {
+						case LIGHT_TOWER -> paradeigma3light;
+						case DARK_TOWER -> paradeigma3dark;
+						case PLUS -> paradeigma3plus;
+						case CROSS -> paradeigma3cross;
 					}, buff);
+					// Shock - tower drop
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8312));
+					if (mech == Pd3SupportMech.PLUS || mech == Pd3SupportMech.CROSS) {
+						ModifiableCallout<?> call = switch (mech) {
+							case PLUS -> paradeigma3plusPart2;
+							case CROSS -> paradeigma3crossPart2;
+							default -> null;
+						};
+						if (call != null) {
+							s.updateCall(call);
+						}
+						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(0xDFF, 0xE00));
+						s.updateCall(paradeigma3baitLaser);
+					}
+					else {
+						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(0xDFF, 0xE00));
+						boolean playerEast = state.getPlayer().getPos().x() > 100;
+						boolean playerLight = mech == Pd3SupportMech.LIGHT_TOWER;
+						boolean lightTetherEast = tethers.stream().filter(te -> te.tetherIdMatches(233, 250))
+								.map(te -> te.getTargetMatching(XivCombatant::isPc))
+								.map(state::getLatestCombatantData)
+								.anyMatch(player -> player.getPos().x() > 100);
+						boolean placeTowerMiddle = (playerEast == playerLight) == lightTetherEast;
+						log.info("Player East: {}; Player Light: {}; Light Tether East: {}, Place Tower Middle: {}", playerEast, playerLight, lightTetherEast, placeTowerMiddle);
+						if (placeTowerMiddle) {
+							s.updateCall(paradeigma3placeTowerMiddle);
+						}
+						else {
+							s.updateCall(paradeigma3placeTowerWherever);
+						}
+					}
+
 				}
 			}
 	);
 
-	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave1 = new ModifiableCallout<>("Limit Cut: You Have #1", "One");
-	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave2 = new ModifiableCallout<>("Limit Cut: You Have #2", "Two");
-	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave3 = new ModifiableCallout<>("Limit Cut: You Have #3", "Three");
-	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave4 = new ModifiableCallout<>("Limit Cut: You Have #4", "Four");
-	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave5 = new ModifiableCallout<>("Limit Cut: You Have #5", "Five");
-	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave6 = new ModifiableCallout<>("Limit Cut: You Have #6", "Six");
-	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave7 = new ModifiableCallout<>("Limit Cut: You Have #7", "Seven");
-	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave8 = new ModifiableCallout<>("Limit Cut: You Have #8", "Eight");
+	private enum Pd3SupportMech {
+		LIGHT_TOWER,
+		DARK_TOWER,
+		PLUS,
+		CROSS
+	}
+
+	@NpcAbilityUsedCallout(0x82F3)
+	private final ModifiableCallout<AbilityUsedEvent> ultimaBlade = new ModifiableCallout<>("Ultima Blade", "Big Raidwide");
+
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave1 = new ModifiableCallout<>("Limit Cut: You Have #1", "One", 30_000);
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave2 = new ModifiableCallout<>("Limit Cut: You Have #2", "Two", 30_000);
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave3 = new ModifiableCallout<>("Limit Cut: You Have #3", "Three", 30_000);
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave4 = new ModifiableCallout<>("Limit Cut: You Have #4", "Four", 30_000);
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave5 = new ModifiableCallout<>("Limit Cut: You Have #5", "Five", 30_000);
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave6 = new ModifiableCallout<>("Limit Cut: You Have #6", "Six", 30_000);
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave7 = new ModifiableCallout<>("Limit Cut: You Have #7", "Seven", 30_000);
+	private final ModifiableCallout<HeadMarkerEvent> limitCutYouHave8 = new ModifiableCallout<>("Limit Cut: You Have #8", "Eight", 30_000);
 
 	private final ModifiableCallout<?> limitCut1 = new ModifiableCallout<>("Limit Cut: #1", "One");
 	private final ModifiableCallout<?> limitCut2 = new ModifiableCallout<>("Limit Cut: #2", "Two");
@@ -452,12 +514,12 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 	private final ModifiableCallout<?> limitCut6 = new ModifiableCallout<>("Limit Cut: #6", "Six");
 	private final ModifiableCallout<?> limitCut7 = new ModifiableCallout<>("Limit Cut: #7", "Seven");
 	private final ModifiableCallout<?> limitCut8 = new ModifiableCallout<>("Limit Cut: #8", "Eight");
+	private final ModifiableCallout<?> limitCutPost = new ModifiableCallout<>("Limit Cut: After", "Avoid Center Platforms");
 
-	private final ModifiableCallout<?> postLimitCut = new ModifiableCallout<>("Post Limit Cut", "Avoid Center Platforms");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> limitCut = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82F3),
+			AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x82F3),
 			(e1, s) -> {
 				List<HeadMarkerEvent> headmarkers = s.waitEventsQuickSuccession(8, HeadMarkerEvent.class, hme -> true);
 				List<ModifiableCallout<?>> groupCalls = List.of(limitCut1, limitCut2, limitCut3, limitCut4, limitCut5, limitCut6, limitCut7, limitCut8);
@@ -473,14 +535,17 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				s.waitMs(2_000);
 				// Palladion = puddle
 				for (int i = 1; i <= 8; i++) {
-					s.updateCall(groupCalls.get(i));
+					log.info("Limit Cut: {}", i);
+					s.waitMs(300);
+					s.updateCall(groupCalls.get(i - 1));
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x82F6) && aue.isFirstTarget());
 				}
-				s.updateCall(postLimitCut);
+				s.waitMs(6_000);
+				s.updateCall(limitCutPost);
 			});
 
 	@NpcCastCallout(0x82FA)
-	private final ModifiableCallout<AbilityCastStart> theosUltima = ModifiableCallout.durationBasedCall("Theos's Ultima", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> theosUltima = ModifiableCallout.durationBasedCall("Theos's Ultima", "Big Raidwide");
 
 	private final ModifiableCallout<?> sc2a_northProtean = new ModifiableCallout<>("Superchain 2A: North Protean", "North Protean");
 	private final ModifiableCallout<?> sc2a_northBuddies = new ModifiableCallout<>("Superchain 2A: North Buddies", "North Buddies");
