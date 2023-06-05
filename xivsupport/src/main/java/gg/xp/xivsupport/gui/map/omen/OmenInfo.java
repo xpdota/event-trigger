@@ -24,6 +24,9 @@ public interface OmenInfo extends HasAbility {
 
 	@Nullable Position position();
 
+	// TODO: refactor this into a tri-state enum - caster pos, fixed target pos, live target pos
+	boolean useLivePosition();
+
 	@Nullable XivCombatant target();
 
 	OmenEventType type();

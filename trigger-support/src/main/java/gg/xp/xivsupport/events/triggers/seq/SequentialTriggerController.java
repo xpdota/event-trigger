@@ -40,6 +40,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	private final Thread thread;
 	private final Object lock = new Object();
 	private final X initialEvent;
+	private final int timeout;
 	private volatile X currentEvent;
 	private volatile EventContext context;
 	private volatile boolean done;
@@ -52,6 +53,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	// To be called from external thread
 	public SequentialTriggerController(EventContext initialEventContext, X initialEvent, BiConsumer<X, SequentialTriggerController<X>> triggerCode, int timeout) {
 		expired = () -> initialEvent.getEffectiveTimeSince().toMillis() > timeout;
+		this.timeout = timeout;
 //		expiresAt = initialEvent.getHappenedAt().plusMillis(timeout);
 		context = initialEventContext;
 		thread = new Thread(() -> {
@@ -156,6 +158,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param call The new callout
 	 */
 	public void updateCall(CalloutEvent call) {
+		if (call == null) {
+			return;
+		}
 		if (lastCall != null) {
 			call.setReplaces(lastCall);
 		}
@@ -205,6 +210,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param call The callout
 	 */
 	public void updateCall(ModifiableCallout<?> call) {
+		if (call == null) {
+			return;
+		}
 		updateCall(call.getModified(getParams()));
 	}
 
@@ -218,6 +226,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param call The callout
 	 */
 	public <C> void updateCall(ModifiableCallout<C> call, C event) {
+		if (call == null) {
+			return;
+		}
 		updateCall(call.getModified(event, getParams()));
 	}
 
@@ -232,6 +243,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param call The callout
 	 */
 	public void call(ModifiableCallout<?> call) {
+		if (call == null) {
+			return;
+		}
 		accept(call.getModified(getParams()));
 	}
 
@@ -246,6 +260,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param call The callout
 	 */
 	public <C> void call(ModifiableCallout<C> call, C event) {
+		if (call == null) {
+			return;
+		}
 		accept(call.getModified(event, getParams()));
 	}
 
@@ -412,6 +429,16 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		return out;
 	}
 
+	public <Y, Z> @Nullable Y waitEventUntil(Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {
+		List<Y> events = waitEventsUntil(1, eventClass, eventFilter, stopOnType, stopOn);
+		if (events.isEmpty()) {
+			return null;
+		}
+		else {
+			return events.get(0);
+		}
+	}
+
 	public <Y, Z> List<Y> waitEventsUntil(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {
 		List<Y> out = new ArrayList<>();
 		while (true) {
@@ -476,7 +503,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			// Also make it configurable as to whether or not a wipe ends the trigger
 			if (expired.getAsBoolean()) {
 //			if (event.getHappenedAt().isAfter(expiresAt)) {
-				log.warn("Sequential trigger expired by event: {}", event);
+				log.warn("Sequential trigger expired by event after {}/{}ms: {}", initialEvent.getEffectiveTimeSince().toMillis(), timeout, event);
 				die = true;
 				lock.notifyAll();
 				return;

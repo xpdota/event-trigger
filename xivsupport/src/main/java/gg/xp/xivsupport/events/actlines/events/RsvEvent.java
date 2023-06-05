@@ -1,11 +1,14 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivdata.data.GameLanguage;
+import gg.xp.xivsupport.gui.util.HasFriendlyName;
 
 import java.io.Serial;
 
-public class RsvEvent extends BaseEvent {
+@SystemEvent
+public class RsvEvent extends BaseEvent implements HasPrimaryValue {
 
 	@Serial
 	private static final long serialVersionUID = -1410580304908803623L;
@@ -29,5 +32,10 @@ public class RsvEvent extends BaseEvent {
 
 	public String getRsvValue() {
 		return rsvValue;
+	}
+
+	@Override
+	public String getPrimaryValue() {
+		return String.format("%s: %s", rsvKey, rsvValue);
 	}
 }

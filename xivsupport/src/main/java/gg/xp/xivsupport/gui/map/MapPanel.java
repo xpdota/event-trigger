@@ -7,6 +7,7 @@ import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
 import gg.xp.xivsupport.gui.map.omen.OmenDisplayMode;
 import gg.xp.xivsupport.gui.map.omen.OmenInfo;
 import gg.xp.xivsupport.gui.map.omen.OmenType;
+import gg.xp.xivsupport.gui.map.omen.UsedOmen;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -827,7 +828,25 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					}
 				}
 				else {
-					castPos = MapPanel.this.combatants.stream().filter(cbt -> cbt.getId() == tgt.getId()).findFirst().orElse(tgt).getPos();
+					Position effectiveTargetPos;
+					if (omen.useLivePosition()) {
+						effectiveTargetPos = MapPanel.this.combatants.stream().filter(cbt -> cbt.getId() == tgt.getId()).findFirst().orElse(tgt).getPos();
+					}
+					else if (omen instanceof UsedOmen uo && uo.target() != null && !uo.event().getTarget().isEnvironment()) {
+						effectiveTargetPos = uo.event().getTarget().getPos();
+					}
+					else {
+						effectiveTargetPos = omen.target().getPos();
+					}
+					if (effectiveTargetPos == null) {
+						return;
+					}
+					if (type == OmenType.CONE || type == OmenType.RECTANGLE || type == OmenType.RECTANGLE_CENTERED) {
+						castPos = pos.facing(effectiveTargetPos);
+					}
+					else {
+						castPos = effectiveTargetPos;
+					}
 				}
 				Duration td = omen.timeDeltaFrom(mdc.getTime());
 				if (td.isNegative()) {

@@ -278,7 +278,7 @@ public class CdTracker {
 		if (aux.isEmpty()) {
 			return;
 		}
-		log.info("aux: {}", aux);
+		log.trace("aux: {}", aux);
 		for (CdAuxUsage cdAuxUsage : aux) {
 			ExtendedCooldownDescriptor cd = cdAuxUsage.cd;
 			Instant newReplenishedAt;
@@ -312,7 +312,7 @@ public class CdTracker {
 				keyAbility = event;
 			}
 			Duration delta = Duration.between(event.effectiveTimeNow(), newReplenishedAt);
-			log.info("Delta: {}", delta);
+			log.trace("Delta: {}", delta);
 			// TODO: there's some duplicate whitelist logic
 			boolean isSelf = event.getSource().isThePlayer();
 			if (enableTtsPersonal.get() && isEnabledForPersonalTts(cd) && isSelf) {

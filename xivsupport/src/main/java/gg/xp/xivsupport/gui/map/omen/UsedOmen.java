@@ -47,7 +47,21 @@ public class UsedOmen implements OmenInfo {
 
 	@Override
 	public @Nullable XivCombatant target() {
-		return null;
+		if (preCast != null) {
+			XivCombatant tgt = preCast.getTarget();
+			if (tgt.equals(preCast.getSource())) {
+				return null;
+			}
+			return tgt;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public boolean useLivePosition() {
+		return false;
 	}
 
 	@Override

@@ -37,6 +37,11 @@ public class CastOmen implements OmenInfo {
 	}
 
 	@Override
+	public boolean useLivePosition() {
+		return true;
+	}
+
+	@Override
 	public @Nullable XivCombatant target() {
 		XivCombatant tgt = acs.getTarget();
 		if (tgt.isEnvironment()) {

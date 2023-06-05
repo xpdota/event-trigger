@@ -332,6 +332,10 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					settingsPanel2.add(pastSetting);
 				}
 				{
+					JPanel barWidthSetting = new IntSettingSpinner(backend.getBarWidth(), "Bar Width").getComponent();
+					settingsPanel2.add(barWidthSetting);
+				}
+				{
 					JPanel barTimeBasisSetting = new IntSettingSpinner(backend.getBarTimeBasis(), "Bar Fill Seconds").getComponent();
 					settingsPanel2.add(barTimeBasisSetting);
 				}
