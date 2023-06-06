@@ -187,7 +187,7 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 				}
 			});
 
-	private final ModifiableCallout<?> pangNothing = new ModifiableCallout<>("Pangenesis: Nothing", "Nothing");
+	private final ModifiableCallout<?> pangNothing = new ModifiableCallout<>("Pangenesis: Nothing", "Nothing", 20_000);
 	private final ModifiableCallout<BuffApplied> pangOneStack = ModifiableCallout.<BuffApplied>durationBasedCall("Pangenesis: One Stack", "One Stack").autoIcon();
 	private final ModifiableCallout<BuffApplied> pangShortDark = ModifiableCallout.<BuffApplied>durationBasedCall("Pangenesis: Short Dark", "Short Dark").autoIcon();
 	private final ModifiableCallout<BuffApplied> pangLongDark = ModifiableCallout.<BuffApplied>durationBasedCall("Pangenesis: Long Dark", "Long Dark").autoIcon();

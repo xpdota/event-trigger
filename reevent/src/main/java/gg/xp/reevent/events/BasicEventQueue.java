@@ -133,7 +133,7 @@ public class BasicEventQueue implements EventQueue {
 
 	private void queueDelayedEvent(Event event) {
 		long delta = event.delayedEnqueueAt() - System.currentTimeMillis();
-		log.info("Queueing delayed event for execution in {}ms: {}", delta, event);
+		log.trace("Queueing delayed event for execution in {}ms: {}", delta, event);
 		if (delayedEventProcessor.getState() == Thread.State.NEW) {
 			delayedEventProcessor.start();
 		}

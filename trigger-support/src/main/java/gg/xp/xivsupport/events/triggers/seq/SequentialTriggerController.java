@@ -88,7 +88,12 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	}
 
 	public void enqueue(Event event) {
-		log.info("Enqueueing: {}", event);
+		if (event instanceof DelayedSqtEvent) {
+			log.trace("Enqueueing: {}", event);
+		}
+		else {
+			log.info("Enqueueing: {}", event);
+		}
 		context.enqueue(event);
 	}
 

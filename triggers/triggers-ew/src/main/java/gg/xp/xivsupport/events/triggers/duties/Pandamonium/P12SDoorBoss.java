@@ -648,8 +648,14 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 						.filter(cbt -> cbt.getId() > (northOrb.getId() - 16))
 						.min(Comparator.comparing(cbt -> cbt.getId()));
 				ModifiableCallout<?> finalCall = null;
+				// TODO: this is checking too quickly - orb isn't positioned yet
+				// Possible solution: ignore if it hasn't turned yet (i.e. heading == 0 => retry)
 				if (finalMechMaybe.isPresent()) {
 					XivCombatant finalOrb = finalMechMaybe.get();
+					while (Math.abs(finalOrb.getPos().heading()) < 0.01) {
+						finalOrb = state.getLatestCombatantData(finalOrb);
+						s.waitMs(100);
+					}
 					OrbMechanic mech = OrbMechanic.forNpc(finalOrb);
 					Position translated = finalOrb.getPos().translateRelative(0, 100);
 					boolean north = translated.y() < 100;
