@@ -17,9 +17,11 @@ import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
 import gg.xp.xivsupport.events.state.floormarkers.FloorMarkerRepository;
+import gg.xp.xivsupport.gui.map.omen.ActionOmenInfo;
+import gg.xp.xivsupport.gui.map.omen.CastFinishedOmen;
 import gg.xp.xivsupport.gui.map.omen.CastOmen;
-import gg.xp.xivsupport.gui.map.omen.OmenInfo;
-import gg.xp.xivsupport.gui.map.omen.UsedOmen;
+import gg.xp.xivsupport.gui.map.omen.InstantOmen;
+import gg.xp.xivsupport.gui.map.omen.OmenInstance;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.util.GuiUtil;
@@ -79,7 +81,7 @@ public class MapDataController {
 	// TODO: is timeBasis still needed with this?
 	private final CurrentTimeSource timeSource;
 	private List<Snapshot> snapshots = new ArrayList<>();
-	private final Map<Long, List<OmenInfo>> omenTracker = new HashMap<>();
+	private final Map<Long, List<OmenInstance>> omenTracker = new HashMap<>();
 
 	{
 		snapshots.add(initialEmptySnapshot);
@@ -147,13 +149,13 @@ public class MapDataController {
 			Map<Long, CastTracker> casts,
 			Map<Long, Long> pendingDamage,
 			Map<FloorMarker, Position> floorMarkers,
-			Map<Long, List<OmenInfo>> omens
+			Map<Long, List<OmenInstance>> omens
 	) {
 	}
 
-	private void updateOmensFor(long id, Consumer<List<OmenInfo>> updater) {
-		List<OmenInfo> oldList = omenTracker.computeIfAbsent(id, unused -> Collections.emptyList());
-		List<OmenInfo> newList = new ArrayList<>(oldList);
+	private void updateOmensFor(long id, Consumer<List<OmenInstance>> updater) {
+		List<OmenInstance> oldList = omenTracker.computeIfAbsent(id, unused -> Collections.emptyList());
+		List<OmenInstance> newList = new ArrayList<>(oldList);
 		newList.removeIf(info -> info.happensAt().isBefore(timeSource.now().minus(MAX_OMEN_HISTORY)));
 		updater.accept(newList);
 		if (!Objects.equals(oldList, newList)) {
@@ -163,28 +165,37 @@ public class MapDataController {
 
 	@HandleEvents
 	public void recordAbilityUsedOmen(EventContext context, AbilityUsedEvent event) {
+		// Discard multiple hits of an AoE, they're the same cast
 		if (!event.isFirstTarget()) {
 			return;
 		}
+		ActionOmenInfo info = ActionOmenInfo.fromAction(event.getAbility().getId());
+		if (info == null) {
+			return;
+		}
 		updateOmensFor(event.getSource().getId(), infos -> {
-			Iterator<OmenInfo> iter = infos.iterator();
+			Iterator<OmenInstance> iter = infos.iterator();
 			while (iter.hasNext()) {
-				OmenInfo next = iter.next();
+				OmenInstance next = iter.next();
 				if (next instanceof CastOmen co && co.getAbility().equals(event.getAbility())) {
 					iter.remove();
-					infos.add(new UsedOmen(event, co.event()));
+					infos.add(new CastFinishedOmen(event, co.getEvent(), info));
 					return;
 				}
 			}
-			infos.add(new UsedOmen(event, null));
+			infos.add(new InstantOmen(event, info));
 		});
 	}
 
 	@HandleEvents
 	public void recordAbilityCastOmen(EventContext context, AbilityCastStart event) {
+		ActionOmenInfo info = ActionOmenInfo.fromAction(event.getAbility().getId());
+		if (info == null) {
+			return;
+		}
 		updateOmensFor(event.getSource().getId(), infos -> {
 			// Prune old and anything that just finished casting
-			infos.add(new CastOmen(event));
+			infos.add(new CastOmen(event, info));
 		});
 	}
 
@@ -309,7 +320,7 @@ public class MapDataController {
 			}
 		}
 		List<CastTracker> rawCasts = realAcr.getAll();
-		Map<Long, List<OmenInfo>> omens = new HashMap<>(omenTracker);
+		Map<Long, List<OmenInstance>> omens = new HashMap<>(omenTracker);
 		exs.submit(() -> {
 			List<XivCombatant> newEffectiveCombatantsList;
 			// Dedup combatants list if possible
@@ -431,7 +442,7 @@ public class MapDataController {
 //		return realState.getMap();
 	}
 
-	public List<OmenInfo> getOmens(long id) {
+	public List<OmenInstance> getOmens(long id) {
 		if (live) {
 			return omenTracker.getOrDefault(id, Collections.emptyList());
 		}

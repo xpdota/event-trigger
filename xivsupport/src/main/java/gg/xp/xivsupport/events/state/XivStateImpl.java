@@ -757,6 +757,7 @@ public class XivStateImpl implements XivState {
 			long shieldAmount = hp != null ? shieldPercent * hp.max() / 100 : 0;
 			short transformationId = tfId != -1 ? tfId : (raw != null ? raw.getTransformationId() : -1);
 			short weaponId = (raw != null ? raw.getWeaponId() : -1);
+			float radius = (raw != null) ? raw.getRadius() : 0;
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
 						id,
@@ -775,7 +776,8 @@ public class XivStateImpl implements XivState {
 						ownerId,
 						shieldAmount,
 						transformationId,
-						weaponId);
+						weaponId,
+						radius);
 			}
 			else {
 				computed = new XivCombatant(
@@ -794,7 +796,8 @@ public class XivStateImpl implements XivState {
 						ownerId,
 						shieldAmount,
 						transformationId,
-						weaponId);
+						weaponId,
+						radius);
 				if (bnpcId == 9020) {
 					fake = true;
 				}

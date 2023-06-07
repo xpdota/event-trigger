@@ -4,10 +4,11 @@ import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
+import gg.xp.xivsupport.gui.map.omen.ActionOmenInfo;
 import gg.xp.xivsupport.gui.map.omen.OmenDisplayMode;
-import gg.xp.xivsupport.gui.map.omen.OmenInfo;
-import gg.xp.xivsupport.gui.map.omen.OmenType;
-import gg.xp.xivsupport.gui.map.omen.UsedOmen;
+import gg.xp.xivsupport.gui.map.omen.OmenInstance;
+import gg.xp.xivsupport.gui.map.omen.OmenLocationType;
+import gg.xp.xivsupport.gui.map.omen.OmenShape;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -80,6 +81,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private static final Color otherPlayerColor = new Color(82, 204, 82);
 	private static final Color partyMemberColor = new Color(104, 120, 222);
 	private static final Color localPcColor = new Color(150, 199, 255);
+	private static final Color playerHitboxColor = new Color(150, 150, 255, 120);
+	private static final Color npcHitboxColor = new Color(250, 30, 30, 90);
 
 	public MapPanel(MapDataController mdc, MapDisplayConfig mapDisplayConfig) {
 		this.mdc = mdc;
@@ -513,13 +516,13 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 		@Override
 		public int getX() {
-			return translateX(this.x) - (getSize().width / 2);
+			return translateX(this.x) - getSize().width / 2;
 		}
 
 
 		@Override
 		public int getY() {
-			return translateY(this.y) - (getSize().height / 2);
+			return translateY(this.y) - getSize().height / 2;
 		}
 
 		@Override
@@ -577,7 +580,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			setSize(outerSize, outerSize);
 			int innerW = inner.getPreferredSize().width;
 			int innerH = inner.getPreferredSize().height;
-			inner.setBounds(new Rectangle(center - (innerW * 2), center - (innerH / 2), innerW, innerH));
+			inner.setBounds(new Rectangle(center - innerW * 2, center - innerH / 2, innerW, innerH));
 			this.castBar = new CastBarComponent() {
 				@Override
 				public void paint(Graphics g) {
@@ -747,13 +750,13 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 		@Override
 		public int getX() {
-			return translateX(this.x) - (getSize().width / 2);
+			return translateX(this.x) - getSize().width / 2;
 		}
 
 
 		@Override
 		public int getY() {
-			return translateY(this.y) - (getSize().height / 2);
+			return translateY(this.y) - getSize().height / 2;
 		}
 
 		@Override
@@ -797,57 +800,45 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				}
 			}
 			drawOmens(g);
+			if (cbt.getRadius() > 0 && !cbt.isFake()) {
+				drawHitbox((Graphics2D) g);
+			}
+		}
+
+		private void drawHitbox(Graphics2D g2d) {
+			g2d = (Graphics2D) g2d.create();
+			try {
+				double radius = translateDist(cbt.getRadius());
+				double xCenter = translateX(x);
+				double yCenter = translateY(y);
+				g2d.setColor(cbt.isPc() ? playerHitboxColor : npcHitboxColor);
+				g2d.setStroke(new BasicStroke(3));
+				g2d.drawOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2), (int) (radius * 2));
+			}
+			finally {
+				g2d.dispose();
+			}
 		}
 
 		private void drawOmens(Graphics g) {
-			mdc.getOmens(cbtId).forEach(omen -> drawOmen(((Graphics2D) g), omen));
+			mdc.getOmens(cbtId).forEach(omen -> drawOmen((Graphics2D) g, omen));
 		}
 
-		private void drawOmen(Graphics2D g2d, OmenInfo omen) {
+		private void drawOmen(Graphics2D g2d, OmenInstance omen) {
 			g2d = (Graphics2D) g2d.create();
 			try {
-				ActionInfo ai = ActionLibrary.forId(omen.getAbility().getId());
 				// Cast type 0 and 1 are uninteresting
 				// "100" effect range is just a raidwide, don't bother drawing if it's a circle
-				if (ai == null) {
+				ActionOmenInfo oi = omen.info();
+				if (oi.isRaidwide()) {
+					// Don't need to draw these
+					// Maybe add a setting, I can see these having niche use cases
 					return;
 				}
-				OmenType type = OmenType.fromActionInfo(ai);
-				if (type == OmenType.UNKNOWN) {
-					return;
-				}
-				Position castPos;
+//				Position castPos;
 				Color fillColor;
 				Color outlineColor;
 				int alpha;
-				XivCombatant tgt = omen.target();
-				if (tgt == null) {
-					castPos = omen.position();
-					if (castPos == null) {
-						castPos = pos;
-					}
-				}
-				else {
-					Position effectiveTargetPos;
-					if (omen.useLivePosition()) {
-						effectiveTargetPos = MapPanel.this.combatants.stream().filter(cbt -> cbt.getId() == tgt.getId()).findFirst().orElse(tgt).getPos();
-					}
-					else if (omen instanceof UsedOmen uo && uo.target() != null && !uo.event().getTarget().isEnvironment()) {
-						effectiveTargetPos = uo.event().getTarget().getPos();
-					}
-					else {
-						effectiveTargetPos = omen.target().getPos();
-					}
-					if (effectiveTargetPos == null) {
-						return;
-					}
-					if (type == OmenType.CONE || type == OmenType.RECTANGLE || type == OmenType.RECTANGLE_CENTERED) {
-						castPos = pos.facing(effectiveTargetPos);
-					}
-					else {
-						castPos = effectiveTargetPos;
-					}
-				}
 				Duration td = omen.timeDeltaFrom(mdc.getTime());
 				if (td.isNegative()) {
 					// casts - start semi transparent
@@ -855,25 +846,33 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				}
 				else {
 					// highlight then gradually fade
-					alpha = (int) (200.0 - (td.toMillis() / 10.0));
+					alpha = (int) (200.0 - td.toMillis() / 50.0);
+//					alpha = (int) (200.0 - td.toMillis() / 10.0);
 //					log.info("Since: {}, Alpha: {}", cd.getEstimatedTimeSinceExpiry().toMillis(), alpha);
 				}
 				// Don't draw ancient stuff
 				if (alpha <= 0) {
 					return;
 				}
+				Position omenPos = omen.omenPosition(omenCbt -> MapPanel.this.combatants
+						.stream()
+						.filter(cbt -> cbt.getId() == omenCbt.getId()).findFirst().orElse(cbt).getPos());
+				if (omenPos == null) {
+					return;
+				}
+
 				if (cbt instanceof XivPlayerCharacter || cbt.walkParentChain() instanceof XivPlayerCharacter) {
-					outlineColor = (new Color(80, 200, 255, alpha));
+					outlineColor = new Color(80, 200, 255, alpha);
 				}
 				else {
-					outlineColor = (new Color(255, 110, 0, alpha));
+					outlineColor = new Color(255, 110, 0, alpha);
 				}
 				fillColor = RenderUtils.withAlpha(outlineColor, alpha / 2);
 //				log.info("Outline: {}, Fill: {}", outlineColor.getAlpha(), fillColor.getAlpha());
-				double xCenter = translateX(castPos.x());
-				double yCenter = translateY(castPos.y());
-				double radius = translateDist(ai.effectRange());
-				double xModif = translateDist(ai.xAxisModifier());
+				double xCenter = translateX(omenPos.x());
+				double yCenter = translateY(omenPos.y());
+				double radius = translateDist(omen.radius());
+				double xModif = translateDist(oi.xAxisModifier());
 				/*
 				From Valarnin:
 				2 - Circle AoE, range directly based on `EffectRange` column
@@ -902,7 +901,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				 */
 				// TODO: some of these are wrong due to lack of hitbox size info
 				AffineTransform transform = g2d.getTransform();
-				switch (type) {
+				switch (oi.type().shape()) {
 					case CIRCLE -> {
 						g2d.setStroke(new BasicStroke(3));
 						g2d.setColor(fillColor);
@@ -920,44 +919,44 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					case RECTANGLE -> {
 						g2d.setStroke(new BasicStroke(3));
 						transform.translate(xCenter, yCenter);
-						transform.rotate(-castPos.getHeading());
+						transform.rotate(-omenPos.getHeading());
 						g2d.setTransform(transform);
 						g2d.setColor(fillColor);
-						g2d.fillRect((int) -(xModif / 2.0), 0, (int) (xModif), (int) radius);
+						g2d.fillRect((int) -(xModif / 2.0), 0, (int) xModif, (int) radius);
 						g2d.setColor(outlineColor);
-						g2d.drawRect((int) -(xModif / 2.0), 0, (int) (xModif), (int) radius);
+						g2d.drawRect((int) -(xModif / 2.0), 0, (int) xModif, (int) radius);
 					}
 					case RECTANGLE_CENTERED -> {
 						g2d.setStroke(new BasicStroke(3));
 						transform.translate(xCenter, yCenter);
-						transform.rotate(-castPos.getHeading());
+						transform.rotate(-omenPos.getHeading());
 						g2d.setTransform(transform);
 						g2d.setColor(fillColor);
-						g2d.fillRect((int) -(xModif / 2.0), (int) -radius, (int) (xModif), (int) (2 * radius));
+						g2d.fillRect((int) -(xModif / 2.0), (int) -radius, (int) xModif, (int) (2 * radius));
 						g2d.setColor(outlineColor);
-						g2d.drawRect((int) -(xModif / 2.0), (int) -radius, (int) (xModif), (int) (2 * radius));
+						g2d.drawRect((int) -(xModif / 2.0), (int) -radius, (int) xModif, (int) (2 * radius));
 					}
 					case CROSS -> {
 						g2d.setStroke(new BasicStroke(3));
 						transform.translate(xCenter, yCenter);
-						transform.rotate(-castPos.getHeading());
+						transform.rotate(-omenPos.getHeading());
 						g2d.setTransform(transform);
 						g2d.setColor(fillColor);
-						g2d.fillRect((int) -(xModif / 2.0), (int) -radius, (int) (xModif), (int) (2 * radius));
-						g2d.fillRect((int) -radius, (int) -(xModif / 2.0), (int) (2 * radius), (int) (xModif));
+						g2d.fillRect((int) -(xModif / 2.0), (int) -radius, (int) xModif, (int) (2 * radius));
+						g2d.fillRect((int) -radius, (int) -(xModif / 2.0), (int) (2 * radius), (int) xModif);
 						g2d.setColor(outlineColor);
-						g2d.drawRect((int) -(xModif / 2.0), (int) -radius, (int) (xModif), (int) (2 * radius));
-						g2d.drawRect((int) -radius, (int) -(xModif / 2.0), (int) (2 * radius), (int) (xModif));
+						g2d.drawRect((int) -(xModif / 2.0), (int) -radius, (int) xModif, (int) (2 * radius));
+						g2d.drawRect((int) -radius, (int) -(xModif / 2.0), (int) (2 * radius), (int) xModif);
 					}
 					case CONE -> {
 						g2d.setStroke(new BasicStroke(3));
 						transform.translate(xCenter, yCenter);
-						transform.rotate(-castPos.getHeading() + Math.PI);
+						transform.rotate(-omenPos.getHeading() + Math.PI);
 						g2d.setTransform(transform);
 						g2d.setColor(fillColor);
-						int angleDegrees = ai.coneAngle();
+						int angleDegrees = oi.coneAngle();
 						// Arc2D uses the east side as "zero" and counts CCW
-						Arc2D.Double arc = new Arc2D.Double(-radius, -radius, 2 * radius, 2 * radius, 90 - (angleDegrees / 2.0f), angleDegrees, Arc2D.PIE);
+						Arc2D.Double arc = new Arc2D.Double(-radius, -radius, 2 * radius, 2 * radius, 90 - angleDegrees / 2.0f, angleDegrees, Arc2D.PIE);
 						g2d.setColor(fillColor);
 						g2d.fill(arc);
 						g2d.setColor(outlineColor);
