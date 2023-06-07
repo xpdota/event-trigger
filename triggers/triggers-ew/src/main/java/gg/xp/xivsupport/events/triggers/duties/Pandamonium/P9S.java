@@ -62,15 +62,22 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x8151)
 	private final ModifiableCallout<AbilityCastStart> duality = new ModifiableCallout<>("Duality of Death", "Tankbuster");
 
-	private final ModifiableCallout<?> dualSpellEarly = new ModifiableCallout<>("Dualspell (Early)", "{buddies ? \"Buddies\" : \"Proteans\"}");
-	private final ModifiableCallout<?> dualSpellFull = new ModifiableCallout<>("Dualspell (Full)", "{buddies ? \"Buddies\" : \"Proteans\"} and {out ? \"Out\" : \"In\"}");
+	@NpcCastCallout(0x8186)
+	private final ModifiableCallout<AbilityCastStart> beastlyFury = ModifiableCallout.durationBasedCall("Beatly Fury", "Raidwide");
+
+	private final ModifiableCallout<?> dualSpellEarly = new ModifiableCallout<>("Dualspell/Two Minds (Early)", "{buddies ? \"Buddies\" : \"Proteans\"}");
+	private final ModifiableCallout<?> dualSpellFull = new ModifiableCallout<>("Dualspell/Two Minds (Full)", "{buddies ? \"Buddies\" : \"Proteans\"} and {out ? \"Out\" : \"In\"}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> dualSpell = SqtTemplates.sq(10_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8154, 0x8155),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8154, 0x8155, 0x8184, 0x8185),
 			(e1, s) -> {
+				// Two minds:
+				// in buddies: 8144 8184 (cast) 8123
+				// out buddies: 8144 8184 (cast) 8122
+				// out prot: 8144 8185 (cast) 8123
 				log.info("Dualspell: Initial {}", String.format("%X", e1.getAbility().getId()));
-				boolean buddies = e1.abilityIdMatches(0x8154);
+				boolean buddies = e1.abilityIdMatches(0x8154, 0x8184);
 				s.setParam("buddies", buddies);
 				s.updateCall(dualSpellEarly);
 				AbilityUsedEvent inOut = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8122, 0x8123, 0x815C));
@@ -84,15 +91,15 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker = new ModifiableCallout<>("Archaic Rockbreaker", "Knockback");
 
 	@NpcCastCallout(33127)
-	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33127 = new ModifiableCallout<>("Archaic Rockbreaker: Rear+Out then In", "Rear, Out, then In");
+	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33127 = new ModifiableCallout<>("Archaic Rockbreaker: Rear+Out then In", "Out, Rear, then In");
 	@NpcCastCallout(33128)
-	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33128 = new ModifiableCallout<>("Archaic Rockbreaker: Rear+In then Out", "Rear, In, then Out");
+	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33128 = new ModifiableCallout<>("Archaic Rockbreaker: Rear+In then Out", "In, Rear, then Out");
 	@NpcCastCallout(33129)
-	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33129 = new ModifiableCallout<>("Archaic Rockbreaker: Front+Out then In", "Front, Out, then In");
+	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33129 = new ModifiableCallout<>("Archaic Rockbreaker: Front+Out then In", "Out, Front, then In");
 	@NpcCastCallout(33130)
-	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33130 = new ModifiableCallout<>("Archaic Rockbreaker: Front+Out then In", "Front, In, then Out");
-	@NpcCastCallout(0x816E)
-	private final ModifiableCallout<AbilityCastStart> archaicDemolish = ModifiableCallout.durationBasedCall("Archaic Demolish", "Light Parties");
+	private final ModifiableCallout<AbilityCastStart> archaicRockbreaker33130 = new ModifiableCallout<>("Archaic Rockbreaker: Front+Out then In", "In, Front, then Out");
+	@NpcCastCallout(0x816D)
+	private final ModifiableCallout<AbilityCastStart> archaicDemolish = ModifiableCallout.durationBasedCallWithOffset("Archaic Demolish", "Light Parties", Duration.ofMillis(1100));
 
 	private final ModifiableCallout<HeadMarkerEvent> two = new ModifiableCallout<>("Limit Cut: #2", "Two");
 	private final ModifiableCallout<HeadMarkerEvent> four = new ModifiableCallout<>("Limit Cut: #4", "Four");
@@ -169,6 +176,7 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> charybdisFirstSet = new ModifiableCallout<>("Charybdis: First Set", "First Set");
 	private final ModifiableCallout<?> charybdisSecondSet = new ModifiableCallout<>("Charybdis: Second Set", "Second Set");
 	private final ModifiableCallout<?> charybdisHide = new ModifiableCallout<>("Charybdis: Hide Behind Meteor", "Hide Behind Meteor");
+	private final ModifiableCallout<AbilityCastStart> charybdisFinalMeteorBurst = ModifiableCallout.durationBasedCall("Charybdis: Burst", "Away from Meteor");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> charybdis = SqtTemplates.sq(60_000,
@@ -183,8 +191,9 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8178));
 				// TODO: bursts
 				s.updateCall(charybdisHide);
-			}
-			);
+				AbilityCastStart burst = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8174));
+				s.updateCall(charybdisFinalMeteorBurst, burst);
+			});
 
 	private final ModifiableCallout<HeadMarkerEvent> chimericNumber1 = new ModifiableCallout<>("Chimeric Succession: #1", "One");
 	private final ModifiableCallout<HeadMarkerEvent> chimericNumber2 = new ModifiableCallout<>("Chimeric Succession: #2", "Two");

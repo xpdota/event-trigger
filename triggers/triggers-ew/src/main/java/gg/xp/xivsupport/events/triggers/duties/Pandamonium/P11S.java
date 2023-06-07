@@ -156,7 +156,7 @@ public class P11S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(0x87B4)
 	private final ModifiableCallout<AbilityCastStart> divisiveOverrulingSidesInBuddies = ModifiableCallout.durationBasedCall("Divisive Ruling: Sides, In, Buddies (During Other Mechs)", "Sides then In and Buddies");
 	@NpcCastCallout(0x87B3)
-	private final ModifiableCallout<AbilityCastStart> divisiveOverrulingOutLightParties = ModifiableCallout.durationBasedCall("Divisive Ruling: Sides, In, Buddies (During Other Mechs)", "Sides and Light Parties");
+	private final ModifiableCallout<AbilityCastStart> divisiveOverrulingOutLightParties = ModifiableCallout.durationBasedCall("Divisive Ruling: Sides, Out, Light Parties (During Other Mechs)", "Sides and Light Parties");
 
 	private final ModifiableCallout<?> spinnySafeSpot = new ModifiableCallout<>("Spinners: Safe Spot", "{safe}");
 
