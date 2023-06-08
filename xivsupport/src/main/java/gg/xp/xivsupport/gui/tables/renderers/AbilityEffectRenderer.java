@@ -87,7 +87,7 @@ public class AbilityEffectRenderer {
 		}
 		else if (value instanceof StatusRemovedEffect statusRemoved) {
 			text = "-";
-			icon = StatusEffectLibrary.iconForId(statusRemoved.getStatus().getId(), 0);
+			icon = StatusEffectLibrary.iconForId(statusRemoved.getStatus().getId(), statusRemoved.getStacks());
 			if (icon == null) {
 				icon = StatusEffectLibrary.iconForId(760, 0);
 			}
@@ -96,7 +96,7 @@ public class AbilityEffectRenderer {
 		else if (value instanceof StatusNoEffect sne) {
 			// TODO: does this also have a 'stacks' value?
 			text = "X";
-			icon = StatusEffectLibrary.iconForId(sne.getStatus().getId(), 1);
+			icon = StatusEffectLibrary.iconForId(sne.getStatus().getId(), sne.getStacks());
 			reverseLayout = true;
 		}
 		else if (value instanceof AggroIncrease ai) {

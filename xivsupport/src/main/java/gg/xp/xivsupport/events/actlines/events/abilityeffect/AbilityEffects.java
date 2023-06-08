@@ -54,7 +54,8 @@ public final class AbilityEffects {
 					return new InvulnBlockedDamageEffect(flags, 0, 0, calcSeverity(severityByte));
 				}
 				else {
-					return new StatusNoEffect(flags, value, value >> 16);
+					// TODO: verify this is the correct flag placement for stacks
+					return new StatusNoEffect(flags, value, value >> 16, (int) (flags >> 8) & 0xff);
 				}
 
 			case 8:
@@ -101,13 +102,15 @@ public final class AbilityEffects {
 				return new StatusAppliedEffect(flags, value, value >> 16, unknownByte, false);
 
 			case 16:
-				return new StatusRemovedEffect(flags, value, value >> 16);
+				// TODO: verify this is the correct flag placement for stacks
+				return new StatusRemovedEffect(flags, value, value >> 16, (int) (flags >> 8) & 0xff);
 
 			// TODO: 0x11 (17) is also status removed? Is it the same distinction as applying a status where
 			// there's remove-from-target and remove-from-caster?
 
 			case 20: //14
-				return new StatusNoEffect(flags, value, value >> 16);
+				// TODO: verify this is the correct flag placement for stacks
+				return new StatusNoEffect(flags, value, value >> 16, (int) (flags >> 8) & 0xff);
 
 			case 24:
 				return new AggroIncrease(flags, value, calcDamage(value));

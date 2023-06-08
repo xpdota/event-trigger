@@ -189,8 +189,10 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(charybdisSecondSet);
 				s.waitMs(1_000);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8178));
-				// TODO: bursts
 				s.updateCall(charybdisHide);
+				// Wait for ecliptic meteor to start casting
+				s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8175));
+				// Then call the next Burst cast
 				AbilityCastStart burst = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8174));
 				s.updateCall(charybdisFinalMeteorBurst, burst);
 			});

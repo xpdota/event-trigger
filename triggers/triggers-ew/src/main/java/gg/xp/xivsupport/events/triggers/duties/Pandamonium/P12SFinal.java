@@ -235,6 +235,7 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 				}
 				s.waitMs(5_000);
 				while (true) {
+					// TODO: this needs to not call at the very end after the third towers
 					BuffApplied newTilt = s.waitEventUntil(
 							BuffApplied.class, ba -> ba.buffIdMatches(0xDF8, 0xDF9) && ba.getTarget().isThePlayer(),
 							TetherEvent.class, tether -> tether.tetherIdMatches(0x54));

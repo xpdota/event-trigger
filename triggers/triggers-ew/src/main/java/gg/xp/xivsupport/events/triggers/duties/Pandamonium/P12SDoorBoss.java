@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @CalloutRepo(name = "P12S Doorboss", duty = KnownDuty.P12S)
@@ -92,7 +91,11 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 										
 					Alternatively, {right[n]} is a boolean which tells you if you
 					should be on the right-hand side relative to the boss's
-					original facing angle, e.g. {right[n] ? "Right" : "Left"}.""");
+					original facing angle, e.g. {right[n] ? "Right" : "Left"}.
+										
+					Also note that this call is NOT used during Superchain IIA.
+					Instead, this information is part of the calls specifically
+					for that mechanic.""");
 	private final ModifiableCallout<?> trinitySafeSpots = new ModifiableCallout<>("Trinity Safe Spots", "{safespots[0]}, {safespots[1]}, {safespots[2]}");
 
 	private volatile boolean trinitySuppress;
@@ -489,14 +492,14 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 							case CROSS -> paradeigma3crossPart2;
 							default -> null;
 						};
-						if (call != null) {
-							s.updateCall(call);
-						}
+						s.updateCall(call);
 						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(0xDFF, 0xE00));
 						s.updateCall(paradeigma3baitLaser);
 					}
 					else {
 //						s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(0xDFF, 0xE00));
+						// wait a little bit so that an early call doesn't bait someone into eating a tether
+						s.waitMs(1_000);
 						boolean playerEast = state.getPlayer().getPos().x() > 100;
 						boolean playerLight = mech == Pd3SupportMech.LIGHT_TOWER;
 						boolean lightTetherEast = tethers.stream().filter(te -> te.tetherIdMatches(233, 250))
@@ -577,11 +580,21 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 	@NpcCastCallout(0x82FA)
 	private final ModifiableCallout<AbilityCastStart> theosUltima = ModifiableCallout.durationBasedCall("Theos's Ultima", "Big Raidwide");
 
-	private final ModifiableCallout<?> sc2a_northProtean = new ModifiableCallout<>("Superchain 2A: Start North Protean", "North Protean, {trinitySafe[0]}");
+	private final ModifiableCallout<?> sc2a_northProtean = new ModifiableCallout<>("Superchain 2A: Start North Protean", "North Protean, {trinitySafe[0]}")
+			.extendedDescription("""
+					This callout happens at the same time as the Trinity initial
+					call would happen, so this call is used instead. You can use
+					{trinitySafe[0]} or {trinityRight[0]} in this call and they
+					will behave as they would in the standalone Trinity initial
+					call.""");
 	private final ModifiableCallout<?> sc2a_northBuddies = new ModifiableCallout<>("Superchain 2A: Start North Buddies", "North Buddies, {trinitySafe[0]}");
 	private final ModifiableCallout<?> sc2a_southProtean = new ModifiableCallout<>("Superchain 2A: Start South Protean", "South Protean, {trinitySafe[0]}");
 	private final ModifiableCallout<?> sc2a_southBuddies = new ModifiableCallout<>("Superchain 2A: Start South Buddies", "South Buddies, {trinitySafe[0]}");
-	private final ModifiableCallout<?> sc2a_midDonut = new ModifiableCallout<>("Superchain 2A: Mid Donut", "Next: {(trinitySafe[1] == trinitySafe[0]) ? 'Same Side' : 'Cross'} Middle, {(firstMechAt == secondMechAt) ? 'Back' : 'Through'}");
+	private final ModifiableCallout<?> sc2a_midDonut = new ModifiableCallout<>("Superchain 2A: Mid Donut", "Next: {(trinitySafe[1] == trinitySafe[0]) ? 'Same Side' : 'Cross'} Middle, {(firstMechAt == secondMechAt) ? 'Back' : 'Through'}")
+			.extendedDescription("""
+					As with the initial call, you can use Trinity variables here:
+					{trinitySafe[0]} {trinitySafe[1]} {trinitySafe[2]}
+					{trinityRight[0]} {trinityRight[1]} {trinityRight[2]}""");
 	private final ModifiableCallout<?> sc2a_northProteanFinal = new ModifiableCallout<>("Superchain 2A: Final North Protean", "{(trinitySafe[2] == trinitySafe[1]) ? 'Same Side' : 'Cross'} then North Protean");
 	private final ModifiableCallout<?> sc2a_northBuddiesFinal = new ModifiableCallout<>("Superchain 2A: Final North Buddies", "{(trinitySafe[2] == trinitySafe[1]) ? 'Same Side' : 'Cross'} then North Buddies");
 	private final ModifiableCallout<?> sc2a_southProteanFinal = new ModifiableCallout<>("Superchain 2A: Final South Protean", "{(trinitySafe[2] == trinitySafe[1]) ? 'Same Side' : 'Cross'} then South Protean");
