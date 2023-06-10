@@ -37,6 +37,9 @@ import java.util.stream.Collectors;
 @CalloutRepo(name = "P11S", duty = KnownDuty.P11S)
 public class P11S extends AutoChildEventHandler implements FilteredEventHandler {
 
+	// TODO: tower mech
+	// TODO: rotating exaflares, light tether stack then go to tank tether mechs (on both clones and towers)
+
 	private static final Logger log = LoggerFactory.getLogger(P11S.class);
 
 	private XivState state;
@@ -303,6 +306,4 @@ public class P11S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(0x8212)
 	private final ModifiableCallout<AbilityCastStart> twofoldRevelationLightSafe = new ModifiableCallout<>("Twofold Revelation: Light Safe", "Light Safe");
 
-	// TODO: rotating exaflares, light tether stack then go to tank tether mechs (on both clones and towers)
-	// TODO: KB + CW/CCW rotation for towers mechanic
 }

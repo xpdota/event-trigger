@@ -789,7 +789,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					return;
 				}
 				case ENEMIES_ONLY -> {
-					if (cbt instanceof XivPlayerCharacter) {
+					if (cbt.walkParentChain() instanceof XivPlayerCharacter) {
 						return;
 					}
 				}
@@ -861,7 +861,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					return;
 				}
 
-				if (cbt instanceof XivPlayerCharacter || cbt.walkParentChain() instanceof XivPlayerCharacter) {
+				if (cbt.walkParentChain() instanceof XivPlayerCharacter) {
 					outlineColor = new Color(80, 200, 255, alpha);
 				}
 				else {

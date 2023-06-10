@@ -53,6 +53,7 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 						case "PosY" -> pos.put(PosKeys.PosY, Double.parseDouble(valueRaw));
 						case "PosZ" -> pos.put(PosKeys.PosZ, Double.parseDouble(valueRaw));
 						case "Heading" -> pos.put(PosKeys.Heading, Double.parseDouble(valueRaw));
+						case "Radius" -> state.provideCombatantRadius(existing, Float.parseFloat(valueRaw));
 					}
 				}
 				if (pos.isEmpty()) {

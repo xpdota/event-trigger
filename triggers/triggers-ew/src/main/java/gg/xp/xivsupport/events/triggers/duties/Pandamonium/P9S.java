@@ -46,14 +46,6 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 		return state.dutyIs(KnownDuty.P9S);
 	}
 
-	private XivState getState() {
-		return state;
-	}
-
-	private StatusEffectRepository getBuffs() {
-		return buffs;
-	}
-
 	@NpcAbilityUsedCallout({0x8118, 0x8119, 0x811a, 0x817b})
 	private final ModifiableCallout<AbilityCastStart> ravening = new ModifiableCallout<>("Ravening", "Raidwide");
 	@NpcCastCallout(0x814C)
@@ -235,7 +227,6 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 						s.updateCall(chimericSwap);
 					}
 				}
-//				s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8795, /*TODO*/))
 				AbilityCastStart followup = s.waitEvent(AbilityCastStart.class, acs -> acs.getSource().npcIdMatches(16087));
 				if (followup.abilityIdMatches(0x8795)) {
 					s.updateCall(chimericBehind, followup);
@@ -245,18 +236,5 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			}
 	);
-
-//
-//	private final SequentialTrigger<BaseEvent> limitCut2 = SqtTemplates.sq(30_000,
-//			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x81BB),
-//			(e1, s) -> {
-//				List<HeadMarkerEvent> markers = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> true, Duration.ofMillis(100));
-//				for (int i = 0; i < markers.size(); i++) {
-//					HeadMarkerEvent marker = markers.get(i);
-//					if (marker.getTarget().isThePlayer()) {
-//
-//					}
-//				}
-//			})
 
 }

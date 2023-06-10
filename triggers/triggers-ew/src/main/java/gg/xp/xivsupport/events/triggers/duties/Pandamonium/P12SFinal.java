@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
@@ -10,6 +11,7 @@ import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
@@ -20,16 +22,23 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
+import gg.xp.xivsupport.models.ArenaPos;
+import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @CalloutRepo(name = "P12S Final Boss", duty = KnownDuty.P12S)
 public class P12SFinal extends AutoChildEventHandler implements FilteredEventHandler {
 
+	// TODO: full CC solver
 
 	private XivState state;
 	private StatusEffectRepository buffs;
+	private final ArenaPos uavPos = new ArenaPos(100, 90, 5, 5);
 	private final HeadmarkerOffsetTracker hmot;
 
 	public P12SFinal(XivState state, StatusEffectRepository buffs, HeadmarkerOffsetTracker hmot) {
@@ -55,17 +64,99 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 	@NpcCastCallout(0x8326)
 	private final ModifiableCallout<AbilityCastStart> gaiaochos = ModifiableCallout.durationBasedCall("Gaiaochos", "Get In, Raidwide");
 
-	@NpcCastCallout(0x832B)
-	private final ModifiableCallout<AbilityCastStart> geoHoriz = ModifiableCallout.durationBasedCall("Geocentrism: Horizontal", "Horizontal");
-	@NpcCastCallout(0x8329)
-	private final ModifiableCallout<AbilityCastStart> geoVert = ModifiableCallout.durationBasedCall("Geocentrism: Vertical", "Vertical");
-	@NpcCastCallout(0x832A)
-	private final ModifiableCallout<AbilityCastStart> geoIn = ModifiableCallout.durationBasedCall("Geocentrism: Inside", "Inside");
+	private final ModifiableCallout<?> uav1WaitMiddle = new ModifiableCallout<>("Gaiaochos 1: Wait Middle", "Wait Middle");
+	private final ModifiableCallout<?> uav1SafeSpots = new ModifiableCallout<>("Gaiaochos 1: Safe Spots", "Wait then {safe[0]}, {safe[1]}");
+	private final ModifiableCallout<BuffApplied> uav1BreakChain = new ModifiableCallout<BuffApplied>("Gaiaochos 1: Break Chain", "Break Chain").autoIcon();
+
+	private final ModifiableCallout<AbilityCastStart> geoHoriz = ModifiableCallout.durationBasedCall("Geocentrism 1: Horizontal", "Horizontal Spread");
+	private final ModifiableCallout<AbilityCastStart> geoVert = ModifiableCallout.durationBasedCall("Geocentrism 1: Vertical", "Vertical Spread");
+	private final ModifiableCallout<AbilityCastStart> geoIn = ModifiableCallout.durationBasedCall("Geocentrism 1: Inside", "Inside Spread");
+
+	private final ModifiableCallout<?> uav2WaitMiddle = new ModifiableCallout<>("Gaiaochos 2: Wait Middle", "Wait Middle");
+	private final ModifiableCallout<AbilityCastStart> uav2VerticalSafeSpots = ModifiableCallout.durationBasedCall("Gaiaochos 2: Vertical Safe Spots", "{safe[0]}, {safe[1]}, Vertical");
+	private final ModifiableCallout<AbilityCastStart> uav2HorizontalSafeSpots = ModifiableCallout.durationBasedCall("Gaiaochos 2: Horizontal Safe Spots", "{safe[0]}, {safe[1]}, Horizontal");
+	private final ModifiableCallout<?> uav2SpreadVertical = new ModifiableCallout<>("Gaiaochos 2: Spread Vertical", "Vertical Spread");
+	private final ModifiableCallout<?> uav2SpreadHorizontal = new ModifiableCallout<>("Gaiaochos 2: Spread Horizontal", "Horizontal Spread");
+	// This doesn't seem useful - not enough time after the previous call to warrant this
+//	private final ModifiableCallout<BuffApplied> uav2BreakChain = new ModifiableCallout<BuffApplied>("Gaiaochos 2: Break Chain", "Break Chain").autoIcon();
+
+	private final ModifiableCallout<TetherEvent> uav2tether = new ModifiableCallout<>("Gaiaochos 2: Tether from Add", "Tether, go {tetherFrom.opposite()}");
+	private final ModifiableCallout<?> uav2noTether = new ModifiableCallout<>("Gaiaochos 2: No Tether", "Intercept Tether");
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> uavSq = SqtTemplates.multiInvocation(120_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8326),
+			(e1, s) -> {
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8326));
+				s.updateCall(uav1WaitMiddle);
+				s.waitEvent(HeadMarkerEvent.class);
+				s.waitThenRefreshCombatants(200);
+				List<AbilityCastStart> casts = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8330));
+				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.all);
+				casts.forEach(cast -> {
+					ArenaSector castPos = uavPos.forCombatant(cast.getSource());
+					safe.remove(castPos);
+					safe.remove(castPos.opposite());
+				});
+				s.setParam("safe", safe.stream().toList());
+				s.updateCall(uav1SafeSpots);
+				BuffApplied chain = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xE03));
+				s.updateCall(uav1BreakChain, chain);
+				// Everything past this is handled by other triggers
+				AbilityCastStart geoCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8329, 0x832A, 0x832B));
+				s.updateCall(switch ((int) geoCast.getAbility().getId()) {
+					case 0x8329 -> geoVert;
+					case 0x832A -> geoIn;
+					case 0x832B -> geoHoriz;
+					default -> null;
+				}, geoCast);
+			}, (e1, s) -> {
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8326));
+				s.updateCall(uav2WaitMiddle);
+				AbilityCastStart geoCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8329, 0x832A, 0x832B));
+				s.waitThenRefreshCombatants(100);
+				AbilityCastStart rayCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8330));
+				ArenaSector rayOrigin = uavPos.forCombatant(rayCast.getSource());
+				List<ArenaSector> safe = List.of(rayOrigin.plusQuads(-1), rayOrigin.plusQuads(1));
+				s.setParam("safe", safe);
+				s.updateCall(switch ((int) geoCast.getAbility().getId()) {
+					case 0x8329 -> uav2VerticalSafeSpots;
+					case 0x832B -> uav2HorizontalSafeSpots;
+					default -> null;
+				}, rayCast);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8330));
+				s.updateCall(switch ((int) geoCast.getAbility().getId()) {
+					case 0x8329 -> uav2SpreadVertical;
+					case 0x832B -> uav2SpreadHorizontal;
+					default -> null;
+				});
+				{
+					List<TetherEvent> tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.tetherIdMatches(0x1));
+					Optional<TetherEvent> myTether = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst();
+					myTether.ifPresentOrElse(
+							te -> {
+								s.setParam("tetherFrom", uavPos.forCombatant(te.getTargetMatching(cbt -> !cbt.isPc())));
+								s.updateCall(uav2tether, te);
+							},
+							() -> s.updateCall(uav2noTether));
+				}
+				s.waitMs(3_000);
+				{
+					List<TetherEvent> tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.tetherIdMatches(0x1));
+					Optional<TetherEvent> myTether = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst();
+					myTether.ifPresentOrElse(
+							te -> {
+								s.setParam("tetherFrom", uavPos.forCombatant(te.getTargetMatching(cbt -> !cbt.isPc())));
+								s.updateCall(uav2tether, te);
+							},
+							() -> s.updateCall(uav2noTether));
+				}
+			});
+
 
 	@NpcCastCallout(0x831A)
 	private final ModifiableCallout<AbilityCastStart> palladianGrasp = ModifiableCallout.durationBasedCall("Palladian Grasp", "Tankbuster");
 
-	private final ModifiableCallout<BuffApplied> cc1 = new ModifiableCallout<BuffApplied>("Classical Concepts 1", "Raidwide").autoIcon();
+	private final ModifiableCallout<AbilityCastStart> cc1 = ModifiableCallout.durationBasedCall("Classical Concepts 1", "Raidwide");
 	private final ModifiableCallout<BuffApplied> circleAlpha = new ModifiableCallout<BuffApplied>("CC1: Circle Alpha", "Circle Alpha").autoIcon();
 	private final ModifiableCallout<BuffApplied> circleBeta = new ModifiableCallout<BuffApplied>("CC1: Circle Beta", "Circle Beta").autoIcon();
 	private final ModifiableCallout<BuffApplied> squareAlpha = new ModifiableCallout<BuffApplied>("CC1: Square Alpha", "Square Alpha").autoIcon();
@@ -75,8 +166,9 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 	private final ModifiableCallout<BuffApplied> crossAlpha = new ModifiableCallout<BuffApplied>("CC1: Cross Alpha", "Cross Alpha").autoIcon();
 	private final ModifiableCallout<BuffApplied> crossBeta = new ModifiableCallout<BuffApplied>("CC1: Cross Beta", "Cross Beta").autoIcon();
 	private final ModifiableCallout<?> afterClassical1 = new ModifiableCallout<>("CC1: After", "Dodge Orbs, Then Bait Cleaves");
+	private final ModifiableCallout<AbilityUsedEvent> cc1dodge = new ModifiableCallout<>("CC1: Dodge Cleaves", "Move");
 
-	private final ModifiableCallout<BuffApplied> cc2 = new ModifiableCallout<BuffApplied>("Classical Concepts 2", "Raidwide").autoIcon();
+	private final ModifiableCallout<AbilityCastStart> cc2 = ModifiableCallout.durationBasedCall("Classical Concepts 2", "Raidwide");
 	private final ModifiableCallout<BuffApplied> cc2circleAlpha = new ModifiableCallout<BuffApplied>("CC2: Circle Alpha", "Circle Alpha").autoIcon();
 	private final ModifiableCallout<BuffApplied> cc2circleBeta = new ModifiableCallout<BuffApplied>("CC2: Circle Beta", "Circle Beta").autoIcon();
 	private final ModifiableCallout<BuffApplied> cc2squareAlpha = new ModifiableCallout<BuffApplied>("CC2: Square Alpha", "Square Alpha").autoIcon();
@@ -85,13 +177,15 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 	private final ModifiableCallout<BuffApplied> cc2triangleBeta = new ModifiableCallout<BuffApplied>("CC2: Triangle Beta", "Triangle Beta").autoIcon();
 	private final ModifiableCallout<BuffApplied> cc2crossAlpha = new ModifiableCallout<BuffApplied>("CC2: Cross Alpha", "Cross Alpha").autoIcon();
 	private final ModifiableCallout<BuffApplied> cc2crossBeta = new ModifiableCallout<BuffApplied>("CC2: Cross Beta", "Cross Beta").autoIcon();
-	private final ModifiableCallout<?> afterClassical2 = new ModifiableCallout<>("CC2: After", "Dodge Orbs, Then Bait Cleaves");
+	private final ModifiableCallout<AbilityCastStart> cc2rotate = ModifiableCallout.durationBasedCall("CC2: Rotating", "Rotating");
+	private final ModifiableCallout<?> afterClassical2 = new ModifiableCallout<>("CC2: After", "Bait Cleaves and Dodge Orbs");
+	private final ModifiableCallout<AbilityUsedEvent> cc2dodge = new ModifiableCallout<>("CC2: Dodge Cleaves", "Move");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> classicalConcepts = SqtTemplates.multiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8331),
 			(e1, s) -> {
-				s.updateCall(cc1);
+				s.updateCall(cc1, e1);
 				HeadMarkerEvent myHm = s.waitEvent(HeadMarkerEvent.class, hm -> hm.getTarget().isThePlayer());
 				BuffApplied alphaBeta = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xDE8, 0xDE9) && ba.getTarget().isThePlayer());
 				boolean beta = alphaBeta.buffIdMatches(0xDE9);
@@ -104,8 +198,11 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 				}, alphaBeta);
 				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(0xE04));
 				s.updateCall(afterClassical1);
+				AbilityUsedEvent dodge = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8323));
+				s.waitMs(300);
+				s.updateCall(cc1dodge, dodge);
 			}, (e1, s) -> {
-				s.updateCall(cc2);
+				s.updateCall(cc2, e1);
 				HeadMarkerEvent myHm = s.waitEvent(HeadMarkerEvent.class, hm -> hm.getTarget().isThePlayer());
 				BuffApplied alphaBeta = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xDE8, 0xDE9) && ba.getTarget().isThePlayer());
 				boolean beta = alphaBeta.buffIdMatches(0xDE9);
@@ -116,9 +213,12 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 					case -98 -> beta ? cc2crossBeta : cc2crossAlpha;
 					default -> null;
 				}, alphaBeta);
+				AbilityCastStart rotateCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8336));
+				s.updateCall(cc2rotate, rotateCast);
 				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(0xE04));
 				s.updateCall(afterClassical2);
-
+				AbilityUsedEvent dodge = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8323));
+				s.updateCall(cc2dodge, dodge);
 			});
 
 	@NpcCastCallout(0x8317)
@@ -132,6 +232,11 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 	private final ModifiableCallout<BuffApplied> caloricWindBuff2lowStack = ModifiableCallout.<BuffApplied>durationBasedCall("Caloric Theory Part 2: Wind Debuff, <=3 Stacks", "Spread").autoIcon();
 	private final ModifiableCallout<BuffApplied> caloricWindBuff2highStack = ModifiableCallout.<BuffApplied>durationBasedCall("Caloric Theory Part 2: Wind Debuff, 4 Stacks", "Plant").autoIcon();
 	private final ModifiableCallout<?> caloricNothing2 = new ModifiableCallout<>("Caloric Theory Part 2: Nothing", "Stack on {fires}").autoIcon();
+
+	private final ModifiableCallout<AbilityCastStart> caloric2Raidwide = ModifiableCallout.durationBasedCall("Caloric Theory 2: Raidwide", "Raidwide, Fire on {event.target}");
+	private final ModifiableCallout<BuffApplied> caloric2fireInitial = new ModifiableCallout<BuffApplied>("Fire on {event.target}").autoIcon();
+	private final ModifiableCallout<BuffApplied> caloric2fireOnYou = new ModifiableCallout<BuffApplied>("Fire on You").autoIcon();
+	private final ModifiableCallout<BuffApplied> caloric2doneWithFire = new ModifiableCallout<>("Spread");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> caloricTheory = SqtTemplates.multiInvocation(60_000,
@@ -185,8 +290,39 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 						s.updateCall(caloricFireBuff2, newFire);
 					}
 				}
+			}, (e1, s) -> {
+				AbilityCastStart fireCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x833E));
+				s.updateCall(caloric2Raidwide, fireCast);
+				BuffApplied fireBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xE08));
+				s.updateCall(caloric2fireInitial, fireBuff);
+				// If the player is the initial fire holder, just use the initial call, don't give them their own specific call
+				// If not, wait for us to get the fire buff
+				if (!fireBuff.getTarget().isThePlayer()) {
+					BuffApplied newBuff = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0xE08));
+					s.updateCall(caloric2fireOnYou, newBuff);
+				}
+				s.waitEvent(BuffRemoved.class, br -> br.getTarget().isThePlayer() && br.buffIdMatches(0xE08));
+				s.updateCall(caloric2doneWithFire);
 			});
 
+	private final ModifiableCallout<AbilityCastStart> ekpyrosis = ModifiableCallout.durationBasedCall("Ekpyrosis Start", "Exaflares");
+	private final ModifiableCallout<?> ekpyrosisSpread = new ModifiableCallout<>("Ekpyrosis Spread", "Spread");
+	private final ModifiableCallout<?> ekpyrosisDodge = new ModifiableCallout<>("Ekpyrosis Dodge Exa", "Dodge");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> exaflaresSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x831E),
+			(e1, s) -> {
+				s.updateCall(ekpyrosis, e1);
+				// Wait for first exa to explode
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8321, 0x8683));
+				s.updateCall(ekpyrosisSpread);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8322));
+				s.updateCall(ekpyrosisDodge);
+			}
+	);
+
+	private final ModifiableCallout<AbilityCastStart> pangRaidwide = ModifiableCallout.durationBasedCall("Pangenesis: Raidwide", "Raidwide");
 	private final ModifiableCallout<?> pangNothing = new ModifiableCallout<>("Pangenesis: Nothing", "Nothing", 20_000);
 	private final ModifiableCallout<BuffApplied> pangOneStack = ModifiableCallout.<BuffApplied>durationBasedCall("Pangenesis: One Stack", "One Stack").autoIcon();
 	private final ModifiableCallout<BuffApplied> pangShortDark = ModifiableCallout.<BuffApplied>durationBasedCall("Pangenesis: Short Dark", "Short Dark").autoIcon();
@@ -202,6 +338,7 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 	private final SequentialTrigger<BaseEvent> pangenesis = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x833F),
 			(e1, s) -> {
+				s.updateCall(pangRaidwide, e1);
 				s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xE22));
 				s.waitMs(300);
 				BuffApplied unstable = buffs.findBuff(ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0xE09));
@@ -235,10 +372,10 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 				}
 				s.waitMs(5_000);
 				while (true) {
-					// TODO: this needs to not call at the very end after the third towers
+					// TODO: re-check
 					BuffApplied newTilt = s.waitEventUntil(
 							BuffApplied.class, ba -> ba.buffIdMatches(0xDF8, 0xDF9) && ba.getTarget().isThePlayer(),
-							TetherEvent.class, tether -> tether.tetherIdMatches(0x54));
+							BaseEvent.class, unused -> e1.getEffectiveTimeSince().toMillis() > 29_000);
 					if (newTilt == null) {
 						break;
 					}
@@ -250,6 +387,7 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 						s.updateCall(pangNewDark, newTilt);
 					}
 				}
+				s.waitMs(3_000);
 				if (unstable == null) {
 					s.updateCall(pangPickUpTethers);
 				}
@@ -257,5 +395,8 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 					s.updateCall(pangAvoidTethers);
 				}
 			});
+
+	@NpcCastCallout(0x8349)
+	private final ModifiableCallout<AbilityCastStart> enrage = ModifiableCallout.durationBasedCall("Ignorabimus", "Enrage");
 
 }
