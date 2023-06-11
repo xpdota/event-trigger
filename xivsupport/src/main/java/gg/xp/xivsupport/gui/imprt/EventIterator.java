@@ -16,6 +16,9 @@ public interface EventIterator<X extends Event> {
 
 	boolean hasMore();
 
+	/**
+	 * @return Next event, or null if no further events exist
+	 */
 	@Nullable X getNext();
 
 	default @Nullable Integer totalEvents() {

@@ -123,8 +123,8 @@ public final class EventReader {
 	public static EventIterator<ACTLogLineEvent> readActLogFile(File file) {
 		Stream<String> lines;
 		try {
-//			lines = Files.lines(file.toPath());
-			lines = Files.readAllLines(file.toPath()).stream();
+			lines = Files.lines(file.toPath());
+//			lines = Files.readAllLines(file.toPath()).stream();
 		}
 		catch (Throwable t) {
 			throw new RuntimeException(t);
@@ -152,7 +152,6 @@ public final class EventReader {
 				.iterator();
 		return new EventIterator<ACTLogLineEvent>() {
 			private volatile boolean hasNext = iterator.hasNext();
-			private final Object lock = new Object();
 			private volatile Event prev;
 
 			@Override
@@ -162,16 +161,15 @@ public final class EventReader {
 
 			@Override
 			public @Nullable ACTLogLineEvent getNext() {
-//				synchronized (lock) {
-					ACTLogLineEvent next = iterator.next();
-					if (prev instanceof ACTLogLineEvent prevAct) {
-						if (next.getLineNum() != prevAct.getLineNum() + 1) {
-							log.error("Bad line num!");
-						}
+				ACTLogLineEvent next = iterator.next();
+				if (prev instanceof ACTLogLineEvent prevAct) {
+					if (next.getLineNum() != prevAct.getLineNum() + 1) {
+						log.error("Bad line num!");
 					}
-					prev = next;
-					return next;
-//				}
+				}
+				prev = next;
+				hasNext = iterator.hasNext();
+				return next;
 			}
 		};
 	}
