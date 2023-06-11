@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.eventstorage.EventReader;
 import gg.xp.xivsupport.gui.LaunchImportedSession;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 
 public class SessionImportSpec implements ImportSpec<Event>  {
@@ -39,12 +41,19 @@ public class SessionImportSpec implements ImportSpec<Event>  {
 	}
 
 	@Override
-	public List<Event> readEvents() {
-		return EventReader.readEventsFromFile(file);
+	public EventIterator<Event> eventIter() {
+		// TODO
+		List<Event> list = readEvents();
+		return new ListEventIterator<>(list);
 	}
 
 	@Override
-	public void launch(List<Event> events) {
+	public void launch(EventIterator<Event> events) {
 		LaunchImportedSession.fromEvents(events, decompress);
+
+	}
+
+	public List<Event> readEvents() {
+		return EventReader.readEventsFromFile(file);
 	}
 }

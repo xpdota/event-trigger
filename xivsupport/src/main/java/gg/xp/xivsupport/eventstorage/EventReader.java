@@ -4,16 +4,19 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.Event;
-import gg.xp.xivdata.data.XivMap;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.parsers.ActLineParseException;
 import gg.xp.xivsupport.events.fflogs.FflogsMasterDataEvent;
 import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
+import gg.xp.xivsupport.gui.imprt.EventIterator;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.Compressible;
 import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,16 +27,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 public final class EventReader {
@@ -61,7 +64,7 @@ public final class EventReader {
 		List<Event> events;
 		try (GZIPInputStream gzip = new GZIPInputStream(stream);
 		     ObjectInputStream ois = new ObjectInputStream(gzip)) {
-			// TODO: security
+			// Security - only allow event subtypes
 			ObjectInputFilter filter = filterInfo -> {
 				if (filterInfo.serialClass() == null) {
 					return ObjectInputFilter.Status.ALLOWED;
@@ -101,7 +104,7 @@ public final class EventReader {
 		return events;
 	}
 
-	public static List<ACTLogLineEvent> readActLogResource(String resourcePath) {
+	public static EventIterator<ACTLogLineEvent> readActLogResource(String resourcePath) {
 		List<String> lines;
 		try {
 			InputStream resource = EventReader.class.getResourceAsStream(resourcePath);
@@ -113,25 +116,31 @@ public final class EventReader {
 		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		return lines.stream()
-				.filter(s -> !s.isEmpty())
-				.map(ACTLogLineEvent::new)
-				.collect(Collectors.toList());
+		// TODO: this uses the old tech but the builtin files are small
+		return makeIteratorFromRawLines(lines.stream());
 	}
 
-	public static List<ACTLogLineEvent> readActLogFile(File file) {
-		List<String> lines;
+	public static EventIterator<ACTLogLineEvent> readActLogFile(File file) {
+		Stream<String> lines;
 		try {
-			lines = Files.readAllLines(file.toPath());
+//			lines = Files.lines(file.toPath());
+			lines = Files.readAllLines(file.toPath()).stream();
 		}
 		catch (Throwable t) {
 			throw new RuntimeException(t);
 		}
-		return lines.stream()
+		return makeIteratorFromRawLines(lines);
+	}
+
+	@NotNull
+	private static EventIterator<ACTLogLineEvent> makeIteratorFromRawLines(Stream<String> lines) {
+		AtomicInteger ai = new AtomicInteger(1);
+		Iterator<ACTLogLineEvent> iterator = lines
+				.sequential()
 				.filter(s -> !s.isEmpty())
 				.map(logLine -> {
 					try {
-						return new ACTLogLineEvent(logLine);
+						return new ACTLogLineEvent(logLine, ai.getAndIncrement());
 					}
 					catch (Throwable t) {
 						ActLineParseException exc = new ActLineParseException(logLine, t);
@@ -140,7 +149,31 @@ public final class EventReader {
 					}
 				})
 				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
+				.iterator();
+		return new EventIterator<ACTLogLineEvent>() {
+			private volatile boolean hasNext = iterator.hasNext();
+			private final Object lock = new Object();
+			private volatile Event prev;
+
+			@Override
+			public boolean hasMore() {
+				return hasNext;
+			}
+
+			@Override
+			public @Nullable ACTLogLineEvent getNext() {
+//				synchronized (lock) {
+					ACTLogLineEvent next = iterator.next();
+					if (prev instanceof ACTLogLineEvent prevAct) {
+						if (next.getLineNum() != prevAct.getLineNum() + 1) {
+							log.error("Bad line num!");
+						}
+					}
+					prev = next;
+					return next;
+//				}
+			}
+		};
 	}
 
 	public static List<Event> readFflogsJson(List<JsonNode> rootNodes) {
@@ -174,7 +207,7 @@ public final class EventReader {
 					JsonNode mapIdNode = rootNode.at("/reportData/report/fights/0/maps/0/id");
 					Long mapId = mapper.convertValue(mapIdNode, Long.class);
 					if (mapId != null) {
-						MapChangeEvent mce = new MapChangeEvent(XivMap.forId(mapId));
+						MapChangeEvent mce = new MapChangeEvent(MapLibrary.forId(mapId));
 						out.add(mce);
 					}
 				}

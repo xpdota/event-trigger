@@ -10,6 +10,7 @@ import gg.xp.xivsupport.events.fflogs.FflogsController;
 import gg.xp.xivsupport.events.fflogs.FflogsFight;
 import gg.xp.xivsupport.events.fflogs.FflogsReportLocator;
 import gg.xp.xivsupport.eventstorage.EventReader;
+import gg.xp.xivsupport.gui.imprt.ListEventIterator;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -37,7 +38,7 @@ public final class LaunchImportedFflogs {
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		pico.addComponent(FakeFflogsTimeSource.class);
-		ReplayController replayController = new ReplayController(master, events, false);
+		ReplayController replayController = new ReplayController(master, new ListEventIterator<>(events), false);
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.FFLOGS);
 		dist.acceptEvent(new InitEvent());
 		pico.addComponent(replayController);
@@ -78,7 +79,7 @@ public final class LaunchImportedFflogs {
 
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
-		ReplayController replayController = new ReplayController(master, events, false);
+		ReplayController replayController = new ReplayController(master, new ListEventIterator<>(events), false);
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.FFLOGS);
 		pico.addComponent(FakeFflogsTimeSource.class);
 		dist.acceptEvent(new InitEvent());
