@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @CalloutRepo(name = "P12S Doorboss", duty = KnownDuty.P12S)
@@ -643,30 +644,31 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 					fixedOrbs = state.npcsById(16176);
 				} while (fixedOrbs.size() != 3);
 
-				fixedOrbs = fixedOrbs.stream().sorted(Comparator.<XivCombatant, Double>comparing(orb -> orb.getPos().y())).toList();
+				fixedOrbs = fixedOrbs.stream().sorted(Comparator.comparing(orb -> orb.getPos().y())).toList();
 				XivCombatant northOrb = fixedOrbs.get(0);
 				XivCombatant southOrb = fixedOrbs.get(2);
 				OrbMechanic northMech = getOrbChainActors(northOrb, 1).stream().map(OrbMechanic::forNpc).filter(Objects::nonNull).findFirst().orElse(null);
 				OrbMechanic southMech = getOrbChainActors(southOrb, 1).stream().map(OrbMechanic::forNpc).filter(Objects::nonNull).findFirst().orElse(null);
+				log.info("SC2A: Orbs: {}", fixedOrbs.stream().map(orb -> String.format("0x%X", orb.getId())).toList());
 
 				TrinityInitialEvent trinStart = s.waitEvent(TrinityInitialEvent.class);
 				s.setParam("trinitySafe", List.of(trinStart.getSafeSpot()));
 				s.setParam("trinityRight", List.of(trinStart.isRightSafe()));
 				if (northMech == OrbMechanic.PROTEAN) {
-					s.updateCall(sc2a_northProtean);
 					s.setParam("firstMechAt", ArenaSector.NORTH);
+					s.updateCall(sc2a_northProtean);
 				}
 				else if (northMech == OrbMechanic.BUDDIES) {
-					s.updateCall(sc2a_northBuddies);
 					s.setParam("firstMechAt", ArenaSector.NORTH);
+					s.updateCall(sc2a_northBuddies);
 				}
 				else if (southMech == OrbMechanic.PROTEAN) {
-					s.updateCall(sc2a_southProtean);
 					s.setParam("firstMechAt", ArenaSector.SOUTH);
+					s.updateCall(sc2a_southProtean);
 				}
 				else if (southMech == OrbMechanic.BUDDIES) {
-					s.updateCall(sc2a_southBuddies);
 					s.setParam("firstMechAt", ArenaSector.SOUTH);
+					s.updateCall(sc2a_southBuddies);
 				}
 				else {
 					log.error("Unexpected mech(s)! {} {}", northMech, southMech);
@@ -680,23 +682,23 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 						.filter(cbt -> cbt.getId() > (northOrb.getId() - 16))
 						.min(Comparator.comparing(cbt -> cbt.getId()));
 				ModifiableCallout<?> finalCall = null;
-				// TODO: this is checking too quickly - orb isn't positioned yet
-				// Possible solution: ignore if it hasn't turned yet (i.e. heading == 0 => retry)
 				if (finalMechMaybe.isPresent()) {
 					XivCombatant finalOrb = finalMechMaybe.get();
-					while (Math.abs(finalOrb.getPos().heading()) < 0.01) {
-						finalOrb = state.getLatestCombatantData(finalOrb);
-						s.waitMs(100);
-					}
+					log.info("SC2A: Final Mech: 0x{} ({})", Long.toString(finalOrb.getId(), 16), finalOrb.getbNpcId());
+					s.waitThenRefreshCombatants(100);
+					finalOrb = state.getLatestCombatantData(finalOrb);
 					OrbMechanic mech = OrbMechanic.forNpc(finalOrb);
-					Position translated = finalOrb.getPos().translateRelative(0, 100);
-					boolean north = translated.y() < 100;
-					s.setParam("secondMechAt", north ? ArenaSector.NORTH : ArenaSector.SOUTH);
+					// Easier logic than worrying about translation - it always starts opposite the orb it is tethered to, so that makes it easy
+					// Translation didn't work right because sometimes the orb was turned but not fully
+					log.info("SC2A: Final Mech Details: {} {}", mech, finalOrb);
+					boolean isNorth = finalOrb.getPos().y() < 100;
+					boolean headingNorth = !isNorth;
+					s.setParam("secondMechAt", headingNorth ? ArenaSector.NORTH : ArenaSector.SOUTH);
 					if (mech == OrbMechanic.BUDDIES) {
-						finalCall = (north ? sc2a_northBuddiesFinal : sc2a_southBuddiesFinal);
+						finalCall = (headingNorth ? sc2a_northBuddiesFinal : sc2a_southBuddiesFinal);
 					}
 					else if (mech == OrbMechanic.PROTEAN) {
-						finalCall = (north ? sc2a_northProteanFinal : sc2a_southProteanFinal);
+						finalCall = (headingNorth ? sc2a_northProteanFinal : sc2a_southProteanFinal);
 					}
 					else {
 						log.error("Unexpected mech! {}", mech);
