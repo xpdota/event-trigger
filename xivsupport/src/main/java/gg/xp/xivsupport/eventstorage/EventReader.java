@@ -124,7 +124,6 @@ public final class EventReader {
 		Stream<String> lines;
 		try {
 			lines = Files.lines(file.toPath());
-//			lines = Files.readAllLines(file.toPath()).stream();
 		}
 		catch (Throwable t) {
 			throw new RuntimeException(t);
