@@ -349,6 +349,7 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				 */
 				s.waitEvent(AbilityCastStart.class, event -> event.abilityIdMatches(0x8305));
 				s.waitThenRefreshCombatants(300);
+				// TODO: rare bug in replays where this doesn't get properly cleaned
 				XivCombatant firstOrb = state.npcById(16176);
 				if (firstOrb == null) {
 					log.error("No first orb!");
@@ -424,7 +425,11 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 
 
 	private final ModifiableCallout<TetherEvent> paradeigma3lightTether = new ModifiableCallout<TetherEvent>("Paradeigma 3: Light Tether", "Light Tether")
-			.extendedDescription("Intended for https://raidplan.io/plan/56FZFwTFz2e1xIq9");
+			.extendedDescription("""
+					Intended for https://raidplan.io/plan/56FZFwTFz2e1xIq9.
+					The boolean {lightSupport} tells you whether supports have
+					the light debuff, e.g.:
+					Supports have {lightSupport ? 'Light' : 'Dark'}""");
 	private final ModifiableCallout<TetherEvent> paradeigma3darkTether = new ModifiableCallout<>("Paradeigma 3: Dark Tether", "Dark Tether");
 
 	private final ModifiableCallout<BuffApplied> paradeigma3light = ModifiableCallout.<BuffApplied>durationBasedCall("Paradeigma 3: Light Buff", "Light Buff").autoIcon();
@@ -435,10 +440,12 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 	private final ModifiableCallout<?> paradeigma3plusPart2 = new ModifiableCallout<>("Paradeigma 3: Drop Plus", "Drop Plus");
 	private final ModifiableCallout<?> paradeigma3crossPart2 = new ModifiableCallout<>("Paradeigma 3: Drop Cross", "Drop Cross");
 
-	private final ModifiableCallout<?> paradeigma3baitLaser = new ModifiableCallout<>("Paradeigma 3: Bait Laser", "Bait Laser");
+	private final ModifiableCallout<?> paradeigma3baitLaser = new ModifiableCallout<>("Paradeigma 3: Bait Laser (Supports)", "Bait Laser");
 	private final ModifiableCallout<?> paradeigma3placeTowerWherever = new ModifiableCallout<>("Paradeigma 3: Place Tower (Normal)", "Tower");
 	private final ModifiableCallout<?> paradeigma3placeTowerMiddle = new ModifiableCallout<>("Paradeigma 3: Place Tower (Middle)", "Tower Middle");
 
+	private final ModifiableCallout<?> paradeigma3dpsBaitLaser = new ModifiableCallout<>("Paradeigma 3: Bait Laser (DPS)", "Bait Laser");
+	private final ModifiableCallout<?> paradeigma3dpsSoakTower = new ModifiableCallout<>("Paradeigma 3: Soak Tower (DPS)", "Soak Tower");
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> paradeigma = SqtTemplates.multiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82ED),
@@ -451,14 +458,26 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 			(e1, s) -> {
 				// arena break mech
 				List<TetherEvent> tethers = s.waitEvents(4, TetherEvent.class, te -> true);
+				boolean lightSupport = buffs.findBuff(ba -> ba.buffIdMatches(0xDFB, 0xDFC)).buffIdMatches(0xDFB);
+				s.setParam("lightSupport", lightSupport);
 				Optional<TetherEvent> myTetherMaybe = tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst();
 				if (myTetherMaybe.isPresent()) {
 					TetherEvent myTether = myTetherMaybe.get();
-					if (myTether.tetherIdMatches(233, 250)) {
+					boolean lightTether = myTether.tetherIdMatches(233, 250);
+					s.setParam("lightTether", lightTether);
+					if (lightTether) {
 						s.updateCall(paradeigma3lightTether, myTether);
 					}
 					else {
 						s.updateCall(paradeigma3darkTether, myTether);
+					}
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x82F1, 0x82F2));
+					if (lightTether == lightSupport) {
+						s.updateCall(paradeigma3dpsBaitLaser);
+					}
+					else {
+						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x830A, 0x830B));
+						s.updateCall(paradeigma3dpsSoakTower);
 					}
 				}
 				else {

@@ -36,6 +36,10 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		String updateType = fields.getString(Fields.updateType);
 		switch (updateType) {
+			case "Remove" -> {
+				long entityId = fields.getHex(Fields.entityId);
+				state.removeSpecificCombatant(entityId);
+			}
 			case "Add", "Change" -> {
 				Map<PosKeys, Double> pos = new EnumMap<>(PosKeys.class);
 				XivCombatant existing = fields.getEntity(Fields.entityId);
