@@ -201,6 +201,7 @@ public class MapDataController {
 		});
 	}
 
+	// TODO: pull ended might be better
 	@HandleEvents
 	public void clearOmens(EventContext context, FadeInEvent event) {
 		omenTracker.clear();
