@@ -32,12 +32,12 @@ public class ACTLogImportSpec implements ImportSpec<ACTLogLineEvent>  {
 	}
 
 	@Override
-	public List<ACTLogLineEvent> readEvents() {
+	public EventIterator<ACTLogLineEvent> eventIter() {
 		return EventReader.readActLogFile(file);
 	}
 
 	@Override
-	public void launch(List<ACTLogLineEvent> events) {
+	public void launch(EventIterator<ACTLogLineEvent> events) {
 		LaunchImportedActLog.fromEvents(events);
 	}
 }

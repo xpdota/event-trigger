@@ -150,6 +150,7 @@ public class RawEventStorage {
 	@HandleEvents
 	public void pruneOnWipe(EventContext context, FadeOutEvent fadeOut) {
 		doPrune((int) (getMaxEvents() * 0.65));
+
 	}
 
 	@HandleEvents(order = Integer.MAX_VALUE)
@@ -176,9 +177,18 @@ public class RawEventStorage {
 	@HandleEvents
 	public void clear(EventContext context, DebugCommand event) {
 		if ("clear".equals(event.getCommand())) {
-			events.clear();
-			exs.submit(System::gc);
+			clearAndGc();
 		}
+	}
+
+	public void clear() {
+		events.clear();
+		eventSubTypeCache.clear();
+	}
+
+	public void clearAndGc() {
+		clear();
+		exs.submit(System::gc);
 	}
 
 	public List<Event> getEvents() {

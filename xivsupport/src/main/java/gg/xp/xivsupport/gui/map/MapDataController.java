@@ -11,6 +11,8 @@ import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeInEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeOutEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
@@ -199,6 +201,12 @@ public class MapDataController {
 		});
 	}
 
+	// TODO: pull ended might be better
+	@HandleEvents
+	public void clearOmens(EventContext context, FadeInEvent event) {
+		omenTracker.clear();
+	}
+
 	private Snapshot getLast() {
 		return snapshots.get(snapshots.size() - 1);
 	}
@@ -376,6 +384,7 @@ public class MapDataController {
 	}
 
 	// This is implicitly thread-safe (at least from a write standpoint) because it runs in a single thread executor
+	// TODO: have it fix up index when possible
 	private void checkLength() {
 		int oldSize = snapshots.size();
 		if (oldSize > maxCaptures.get()) {

@@ -56,6 +56,7 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X get(@NotNull String key, @NotNull TypeReference<X> type, @Nullable X dflt) {
 		// If Type is wrapping a non-generic class, just use the normal class logic

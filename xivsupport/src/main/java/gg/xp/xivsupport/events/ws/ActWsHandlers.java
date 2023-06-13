@@ -222,7 +222,7 @@ public class ActWsHandlers {
 	public static void actWsMapChange(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("ChangeMap".equals(jsonMsg.getType())) {
 			long id = jsonMsg.getJson().get("mapID").intValue();
-			context.accept(new MapChangeEvent(XivMap.forId(id)));
+			context.accept(new MapChangeEvent(MapLibrary.forId(id)));
 		}
 	}
 

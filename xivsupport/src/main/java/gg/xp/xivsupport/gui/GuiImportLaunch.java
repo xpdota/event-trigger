@@ -6,6 +6,7 @@ import gg.xp.xivsupport.events.fflogs.FflogsFight;
 import gg.xp.xivsupport.events.fflogs.FflogsReportLocator;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.imprt.ACTLogImportSpec;
+import gg.xp.xivsupport.gui.imprt.EventIterator;
 import gg.xp.xivsupport.gui.imprt.FflogsImportSpec;
 import gg.xp.xivsupport.gui.imprt.ImportSpec;
 import gg.xp.xivsupport.gui.imprt.MainImportController;
@@ -360,7 +361,7 @@ public final class GuiImportLaunch {
 		});
 		gp.setVisible(true);
 		exs.submit(() -> CatchFatalError.run(() -> {
-			List<X> events = importController.readEvents(importSpec, saveToRecents);
+			EventIterator<X> events = importController.readEvents(importSpec, saveToRecents);
 			SwingUtilities.invokeLater(() -> statusLabel.setText("Read Events, Launching GUI."));
 			importSpec.launch(events);
 			hideFrame();

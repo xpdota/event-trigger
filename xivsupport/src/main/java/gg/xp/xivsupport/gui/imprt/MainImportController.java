@@ -29,8 +29,8 @@ public class MainImportController {
 		return recents.getItems();
 	}
 
-	public <X extends Event> List<X> readEvents(ImportSpec<X> importSpec, boolean saveToRecents) {
-		List<X> events = importSpec.readEvents();
+	public <X extends Event> EventIterator<X> readEvents(ImportSpec<X> importSpec, boolean saveToRecents) {
+		EventIterator<X> iter = importSpec.eventIter();
 		if (saveToRecents) {
 			// Only add once we know we can successfully import
 			List<ImportSpec<?>> items = recents.getItems();
@@ -40,7 +40,7 @@ public class MainImportController {
 			}
 			recents.setItems(items);
 		}
-		return events;
+		return iter;
 	}
 
 }

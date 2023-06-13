@@ -8,6 +8,7 @@ import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
 import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.eventstorage.EventReader;
+import gg.xp.xivsupport.gui.imprt.EventIterator;
 import gg.xp.xivsupport.gui.util.CatchFatalError;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.KnownLogSource;
@@ -29,22 +30,12 @@ public final class LaunchImportedActLog {
 	private LaunchImportedActLog() {
 	}
 
-	public static void fromEvents(List<? extends Event> events) {
+	public static void fromEvents(EventIterator<? extends Event> events) {
 		fromEvents(events, false);
 	}
 
-	// Does not need to be called from EDT thread, but can be
-	public static void fromFile(File file, boolean decompress, Runnable after) {
-		exs.submit(() -> {
-			List<ACTLogLineEvent> events = EventReader.readActLogFile(file);
-			CatchFatalError.run(() -> {
-				fromEvents(events, decompress);
-			});
-			after.run();
-		});
-	}
 
-	public static void fromEvents(List<? extends Event> events, boolean decompress) {
+	public static void fromEvents(EventIterator<? extends Event> events, boolean decompress) {
 		CommonGuiSetup.setup();
 		MutablePicoContainer pico = XivMain.importInit();
 		pico.addComponent(FakeACTTimeSource.class);

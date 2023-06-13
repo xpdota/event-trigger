@@ -59,15 +59,16 @@ public class FflogsImportSpec implements ImportSpec<Event> {
 	}
 
 	@Override
-	public List<Event> readEvents() {
+	public EventIterator<Event> eventIter() {
 		pico = XivMain.importInit();
 		FflogsController fflogs = pico.addComponent(FflogsController.class).getComponent(FflogsController.class);
 		List<JsonNode> jsonNode = fflogs.downloadReport(new FflogsReportLocator(report, fight));
-		return EventReader.readFflogsJson(jsonNode);
+		List<Event> events = EventReader.readFflogsJson(jsonNode);
+		return new ListEventIterator<>(events);
 	}
 
 	@Override
-	public void launch(List<Event> events) {
+	public void launch(EventIterator<Event> events) {
 		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		ReplayController replayController = new ReplayController(master, events, false);
