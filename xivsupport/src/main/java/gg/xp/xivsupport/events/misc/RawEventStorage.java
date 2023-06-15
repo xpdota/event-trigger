@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeOutEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.persistence.Compressible;
@@ -150,7 +151,11 @@ public class RawEventStorage {
 	@HandleEvents
 	public void pruneOnWipe(EventContext context, FadeOutEvent fadeOut) {
 		doPrune((int) (getMaxEvents() * 0.65));
+	}
 
+	@HandleEvents
+	public void pruneOnZoneChange(EventContext context, ZoneChangeEvent event) {
+		doPrune((int) (getMaxEvents() * 0.65));
 	}
 
 	@HandleEvents(order = Integer.MAX_VALUE)
