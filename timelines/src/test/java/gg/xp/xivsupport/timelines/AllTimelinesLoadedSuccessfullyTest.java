@@ -2,7 +2,7 @@ package gg.xp.xivsupport.timelines;
 
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.InitEvent;
-import gg.xp.xivsupport.lang.GameLanguage;
+import gg.xp.xivdata.data.GameLanguage;
 import gg.xp.xivsupport.lang.GameLanguageInfoEvent;
 import gg.xp.xivsupport.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;

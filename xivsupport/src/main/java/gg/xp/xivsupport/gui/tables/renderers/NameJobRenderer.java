@@ -29,13 +29,15 @@ public class NameJobRenderer implements TableCellRenderer {
 		final String tooltip;
 		if (value instanceof XivEntity entity) {
 			String name = entity.getName();
-			if (name == null) {
-				name = String.format("Unknown 0x%X", entity.getId());
-			}
-			text = name;
 			idText = String.format("%X", entity.getId());
 			Job job;
 			if (value instanceof XivCombatant cbt) {
+				if (name == null || name.isBlank()) {
+					text = String.format("No Name (%s:%s)", cbt.getbNpcId(), cbt.getbNpcNameId());
+				}
+				else {
+					text = name;
+				}
 				HitPoints hp = cbt.getHp();
 				String hpStr = hp == null ? "null" : hp.getShortString();
 				long shieldAmount = cbt.getShieldAmount();
@@ -50,6 +52,10 @@ public class NameJobRenderer implements TableCellRenderer {
 				}
 			}
 			else {
+				if (name == null) {
+					name = String.format("Unknown 0x%X", entity.getId());
+				}
+				text = name;
 				tooltip = String.format("%s (0x%x, %s)", entity.getName(), entity.getId(), entity.getId());
 				icon = null;
 			}

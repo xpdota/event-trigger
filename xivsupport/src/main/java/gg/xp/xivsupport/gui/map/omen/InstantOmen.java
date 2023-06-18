@@ -5,18 +5,25 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
+import java.util.function.Function;
 
-public class UsedOmen implements OmenInfo {
+public class InstantOmen implements OmenInstance {
 
 	private final AbilityUsedEvent aue;
-	private final AbilityCastStart preCast;
+	private final ActionOmenInfo info;
 
-	public UsedOmen(AbilityUsedEvent aue, @Nullable AbilityCastStart preCast) {
+	public InstantOmen(AbilityUsedEvent aue, ActionOmenInfo info) {
 		this.aue = aue;
-		this.preCast = preCast;
+		this.info = info;
+	}
+
+	@Override
+	public ActionOmenInfo info() {
+		return info;
 	}
 
 	@Override
@@ -30,28 +37,17 @@ public class UsedOmen implements OmenInfo {
 	}
 
 	@Override
-	public AbilityUsedEvent event() {
-		return aue;
+	public @NotNull XivCombatant source() {
+		return aue.getSource();
 	}
 
 	@Override
-	public @Nullable Position position() {
-		if (preCast != null) {
-			XivCombatant tgt = preCast.getTarget();
-			if (!tgt.isEnvironment()) {
-				return tgt.getPos();
-			}
-		}
+	public @Nullable Position omenPosition(Function<XivCombatant, Position> freshPosLookup) {
 		return aue.getSource().getPos();
 	}
 
 	@Override
-	public @Nullable XivCombatant target() {
-		return null;
-	}
-
-	@Override
 	public OmenEventType type() {
-		return preCast != null ? OmenEventType.CAST_FINISHED : OmenEventType.INSTANT;
+		return OmenEventType.INSTANT;
 	}
 }

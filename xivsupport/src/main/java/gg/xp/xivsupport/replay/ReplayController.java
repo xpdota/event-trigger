@@ -1,15 +1,22 @@
 package gg.xp.xivsupport.replay;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
+import gg.xp.xivsupport.gui.imprt.EventIterator;
+import gg.xp.xivsupport.gui.imprt.EventsCount;
+import gg.xp.xivsupport.gui.imprt.MoreEventsType;
 import gg.xp.xivsupport.persistence.Compressible;
+import gg.xp.xivsupport.sys.Threading;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -27,26 +34,29 @@ public class ReplayController {
 	);
 
 	private final EventMaster master;
-	private final List<? extends Event> events;
 	private final List<Runnable> callbacks = new ArrayList<>();
 	private final boolean decompress;
+	private final EventIterator<? extends Event> eventIter;
+	private static final int MIN_CHUNK = 8192;
+	private static final int MAX_CHUNK = 65536;
+	private final BlockingQueue<Event> evQueue = new ArrayBlockingQueue<>(MAX_CHUNK * 2);
+	private static final ExecutorService feeder = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("ReplayFeed"));
+	private final Object queueLock = new Object();
 	private int currentIndex;
+	private int currentFeed;
 	private volatile boolean stop;
 
 
-	public ReplayController(EventMaster master, List<? extends Event> events, boolean decompress) {
+	public ReplayController(EventMaster master, EventIterator<? extends Event> events, boolean decompress) {
 //		master.setUseLoopLock(true);
 		this.master = master;
-		this.events = events instanceof ArrayList ? events : new ArrayList<>(events);
+		this.eventIter = events;
 		this.decompress = decompress;
+		feeder.submit(this::feedLoop);
 	}
 
-	public int getCount() {
-		return events.size();
-	}
-
-	public int getCurrentPosition() {
-		return currentIndex;
+	public EventsCount getCounts() {
+		return new EventsCount(currentIndex, currentFeed, interatorHasMore() ? MoreEventsType.AT_LEAST : MoreEventsType.EXACTLY);
 	}
 
 	public void addCallback(Runnable r) {
@@ -74,9 +84,11 @@ public class ReplayController {
 	 */
 	public int advanceBy(int count) {
 		int advancedBy = 0;
-		for (; count-- > 0 && hasMoreEvents(); currentIndex++) {
-			Event event = events.get(currentIndex);
-			events.set(currentIndex, null);
+		while (count-- > 0 && hasMoreEvents()) {
+			Event event = getNext();
+			if (event == null) {
+				break;
+			}
 			if (decompress && event instanceof Compressible compressedEvent) {
 				compressedEvent.decompress();
 			}
@@ -104,9 +116,11 @@ public class ReplayController {
 		stop = true;
 		return exs.submit(() -> {
 			stop = false;
-			for (; !stop && advWhile.get() && hasMoreEvents(); currentIndex++) {
-				Event event = events.get(currentIndex);
-				events.set(currentIndex, null);
+			while (!stop && advWhile.get() && hasMoreEvents()) {
+				Event event = getNext();
+				if (event == null) {
+					return;
+				}
 				if (decompress && event instanceof Compressible compressedEvent) {
 					compressedEvent.decompress();
 				}
@@ -117,7 +131,86 @@ public class ReplayController {
 		});
 	}
 
-	public boolean hasMoreEvents() {
-		return currentIndex < events.size();
+	private volatile boolean isDone;
+	private volatile Event prevGet;
+
+	private Event getNext() {
+		Event next;
+		try {
+			next = evQueue.poll();
+			if (next == null) {
+				if (isDone) {
+					return null;
+				}
+				else {
+					next = evQueue.take();
+				}
+			}
+		}
+		catch (InterruptedException e) {
+			log.error("Interrupted", e);
+			return null;
+		}
+		if (next == dummyReplayFinishedEvent) {
+			isDone = true;
+			return null;
+		}
+		currentIndex++;
+		if (prevGet instanceof ACTLogLineEvent prevAct && next instanceof ACTLogLineEvent curAct) {
+			if (curAct.getLineNum() != prevAct.getLineNum() + 1) {
+				log.error("Bad line num!");
+			}
+		}
+		prevGet = next;
+		return next;
 	}
+
+
+	private static final Event dummyReplayFinishedEvent = new BaseEvent() {
+
+	};
+
+	private void feedLoop() {
+		try {
+			while (eventIter.hasMore()) {
+				feedOne();
+			}
+			evQueue.put(dummyReplayFinishedEvent);
+			log.info("Finished feeding events");
+		}
+		catch (Throwable t) {
+			log.error("Event replay feed thread crashed!", t);
+		}
+	}
+
+	private volatile Event prevFeed;
+
+	private void feedOne() {
+		Event next = eventIter.getNext();
+		if (next == null) {
+			return;
+		}
+		currentFeed++;
+		try {
+			evQueue.put(next);
+		}
+		catch (InterruptedException e) {
+			log.error("Replay feed interrupted! Event likely lost.", e);
+		}
+		if (prevFeed instanceof ACTLogLineEvent prevAct && next instanceof ACTLogLineEvent curAct) {
+			if (curAct.getLineNum() != prevAct.getLineNum() + 1) {
+				log.error("Bad line num!");
+			}
+		}
+		prevFeed = next;
+	}
+
+	private boolean interatorHasMore() {
+		return eventIter.hasMore();
+	}
+
+	public boolean hasMoreEvents() {
+		return !isDone;
+	}
+
 }

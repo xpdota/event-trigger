@@ -13,6 +13,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 
 	private static final Logger log = LoggerFactory.getLogger(Line261Parser.class);
@@ -35,6 +36,10 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		String updateType = fields.getString(Fields.updateType);
 		switch (updateType) {
+			case "Remove" -> {
+				long entityId = fields.getHex(Fields.entityId);
+				state.removeSpecificCombatant(entityId);
+			}
 			case "Add", "Change" -> {
 				Map<PosKeys, Double> pos = new EnumMap<>(PosKeys.class);
 				XivCombatant existing = fields.getEntity(Fields.entityId);
@@ -45,11 +50,14 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 				for (int i = 0; i + 1 < kvFields.size(); i += 2) {
 					String key = kvFields.get(i);
 					String valueRaw = kvFields.get(i + 1);
+					// TEMP WORKAROUND - https://github.com/OverlayPlugin/OverlayPlugin/issues/221
+					valueRaw = valueRaw.replaceAll(",", ".");
 					switch (key) {
 						case "PosX" -> pos.put(PosKeys.PosX, Double.parseDouble(valueRaw));
 						case "PosY" -> pos.put(PosKeys.PosY, Double.parseDouble(valueRaw));
 						case "PosZ" -> pos.put(PosKeys.PosZ, Double.parseDouble(valueRaw));
 						case "Heading" -> pos.put(PosKeys.Heading, Double.parseDouble(valueRaw));
+						case "Radius" -> state.provideCombatantRadius(existing, Float.parseFloat(valueRaw));
 					}
 				}
 				if (pos.isEmpty()) {

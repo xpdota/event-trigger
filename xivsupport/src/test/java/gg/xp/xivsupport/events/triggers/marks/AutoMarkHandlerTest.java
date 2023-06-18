@@ -2,7 +2,7 @@ package gg.xp.xivsupport.events.triggers.marks;
 
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.InitEvent;
-import gg.xp.xivsupport.lang.GameLanguage;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.lang.GameLanguageInfoEvent;
 import gg.xp.xivsupport.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;

@@ -2,7 +2,6 @@ package gg.xp.xivsupport.events.triggers.seq;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.TypedEventHandler;
 import org.jetbrains.annotations.Nullable;
 

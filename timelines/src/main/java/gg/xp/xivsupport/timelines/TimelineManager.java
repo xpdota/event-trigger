@@ -61,6 +61,7 @@ public final class TimelineManager {
 			.guiProvider(e -> IconTextRenderer.getStretchyIcon(e.getIconUrl()));
 	private final FileSetting cactbotUserDirSetting;
 	private final IntSetting barTimeBasis;
+	private final IntSetting barWidth;
 
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
@@ -73,6 +74,7 @@ public final class TimelineManager {
 		debugMode = new BooleanSetting(pers, "timeline-overlay.debug-mode", false);
 		prePullShow = new BooleanSetting(pers, "timeline-overlay.show-pre-pull", false);
 		resetOnMapChange = new BooleanSetting(pers, "timeline-overlay.reset-on-map-change", false);
+		barWidth = new IntSetting(pers, "timeline-bar-width", 150, 50, 1000);
 		barTimeBasis = new IntSetting(pers, "timeline-overlay.bar-time-basis-seconds", 60, 1, 3600);
 
 		File defaultUserDir;
@@ -344,5 +346,9 @@ public final class TimelineManager {
 
 	public IntSetting getBarTimeBasis() {
 		return barTimeBasis;
+	}
+
+	public IntSetting getBarWidth() {
+		return barWidth;
 	}
 }

@@ -456,6 +456,12 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
+	public void provideCombatantRadius(XivCombatant target, float radius) {
+		getOrCreateData(target.getId()).setRadius(radius);
+		dirtyOverrides = true;
+	}
+
+	@Override
 	public void provideActFallbackCombatant(XivCombatant cbt) {
 		getOrCreateData(cbt.getId()).setFromOtherActLine(cbt);
 		dirtyOverrides = true;
@@ -611,6 +617,7 @@ public class XivStateImpl implements XivState {
 		private @Nullable ManaPoints mpOverride;
 		private @Nullable XivCombatant fromOtherActLine;
 		private @Nullable RawXivPartyInfo fromPartyInfo;
+		private float radius = -1;
 		private OnlineStatus status = OnlineStatus.UNKNOWN;
 		private XivCombatant computed;
 		private boolean fake;
@@ -707,6 +714,10 @@ public class XivStateImpl implements XivState {
 			dirty = true;
 		}
 
+		public void setRadius(float radius) {
+			this.radius = radius;
+		}
+
 		public OnlineStatus getStatus() {
 			return status;
 		}
@@ -757,6 +768,7 @@ public class XivStateImpl implements XivState {
 			long shieldAmount = hp != null ? shieldPercent * hp.max() / 100 : 0;
 			short transformationId = tfId != -1 ? tfId : (raw != null ? raw.getTransformationId() : -1);
 			short weaponId = (raw != null ? raw.getWeaponId() : -1);
+			float radius = this.radius >= 0 ? this.radius : ((raw != null) ? raw.getRadius() : 0);
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
 						id,
@@ -775,7 +787,8 @@ public class XivStateImpl implements XivState {
 						ownerId,
 						shieldAmount,
 						transformationId,
-						weaponId);
+						weaponId,
+						radius);
 			}
 			else {
 				computed = new XivCombatant(
@@ -794,7 +807,8 @@ public class XivStateImpl implements XivState {
 						ownerId,
 						shieldAmount,
 						transformationId,
-						weaponId);
+						weaponId,
+						radius);
 				if (bnpcId == 9020) {
 					fake = true;
 				}

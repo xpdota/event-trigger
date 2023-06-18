@@ -304,7 +304,8 @@ public final class TimelineProcessor {
 	}
 
 	private boolean isLastSync(TimelineEntry entry) {
-		return lastSync != null && lastSync.original == entry;
+		TimelineSync sync = lastSync;
+		return sync != null && sync.original == entry;
 	}
 
 	public void reset() {

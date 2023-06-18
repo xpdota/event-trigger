@@ -27,7 +27,7 @@ public enum CustomPartyOverlayComponentType implements HasFriendlyName {
 		}
 	},
 	NAME("Name", NameComponent.class, NameComponentGui.class),
-	JOB("Job", JobComponent.class),
+	JOB("Job", JobPartyComponent.class),
 	HP("HP/Shield Bar", HpBarComponent.class, HpBarComponentGui.class),
 	BUFFS_WITH_TIMERS("Buffs", NormalBuffsBarPartyComponent.class, NormalBuffsBarComponentGui.class),
 	CAST_BAR("Cast Bar", CastBarPartyComponent.class, CastBarComponentGui.class),

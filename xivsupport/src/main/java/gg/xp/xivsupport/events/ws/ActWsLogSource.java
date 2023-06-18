@@ -392,7 +392,8 @@ public class ActWsLogSource implements EventSource {
 					"ModelStatus",
 					"IsTargetable",
 					"TransformationId",
-					"WeaponId"
+					"WeaponId",
+					"Radius"
 			};
 			allCbtRequest = mapper.writeValueAsString(
 					Map.ofEntries(

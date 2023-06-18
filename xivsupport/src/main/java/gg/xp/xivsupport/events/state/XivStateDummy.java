@@ -142,6 +142,11 @@ public class XivStateDummy implements XivState {
 	}
 
 	@Override
+	public void provideCombatantRadius(XivCombatant cbt, float radius) {
+		throw new UnsupportedOperationException("not supported");
+	}
+
+	@Override
 	public void provideTransformation(long entityId, short transformationId) {
 		throw new UnsupportedOperationException("not supported");
 	}

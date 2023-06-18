@@ -1,5 +1,6 @@
 package gg.xp.xivdata.data;
 
+import gg.xp.xivdata.data.rsv.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
@@ -33,7 +34,11 @@ public record ActionInfo(
 		catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		}
+	}
 
+	@Override
+	public String name() {
+		return DefaultRsvLibrary.tryResolve(name);
 	}
 
 	public double getCd() {

@@ -37,6 +37,9 @@ public final class Platform {
 		return null;
 	}
 
+	/**
+	 * @return The settings dir
+	 */
 	public static Path getTriggeventDir() {
 		String override = getProp("triggevent_settings_dir");
 		if (override != null) {

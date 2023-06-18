@@ -6,6 +6,7 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.conversions.GlobalCallReplacer;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.ModifiableCalloutTraceInfo;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -111,6 +112,7 @@ public class CalloutProcessor {
 				raw.getColorOverride(),
 				raw.getSound());
 		out.setReplaces(raw.getReplaces());
+		out.setTrace(new ModifiableCalloutTraceInfo(raw));
 		log.info("Callout: TTS='{}' from '{}' caused by '{}'", tts, raw.getDescription(), raw.getParent());
 		return out;
 	}

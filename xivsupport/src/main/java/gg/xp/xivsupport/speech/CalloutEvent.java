@@ -51,4 +51,5 @@ public interface CalloutEvent extends Event, HasPrimaryValue, HasCalloutTracking
 
 	@Nullable Color getColorOverride();
 
+	@Nullable CalloutTraceInfo getTrace();
 }

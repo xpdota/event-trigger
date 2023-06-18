@@ -67,7 +67,7 @@ public class ModifiedCalloutRepository {
 				catch (IllegalAccessException e) {
 					throw new RuntimeException(e);
 				}
-				ModifiedCalloutHandle modified = ModifiedCalloutHandle.installHandle(original, persistence, fullPropStub, enableTts, enableOverlay, globalDefaults.getGlobalDefaults());
+				ModifiedCalloutHandle modified = ModifiedCalloutHandle.installHandle(f, original, persistence, fullPropStub, enableTts, enableOverlay, globalDefaults.getGlobalDefaults());
 				callouts.add(modified);
 			});
 			CalloutGroup cg;

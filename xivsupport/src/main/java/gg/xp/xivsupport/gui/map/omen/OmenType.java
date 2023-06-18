@@ -1,99 +1,78 @@
 package gg.xp.xivsupport.gui.map.omen;
 
-import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Represents the properties we can infer from the "CastType" column
+ */
 public enum OmenType implements HasFriendlyName {
-	UNKNOWN("Unknown"),
-	RAIDWIDE("Raidwide"),
-	CIRCLE("Circle"),
-	DONUT("Donut"),
-	RECTANGLE("Rectangle"),
-	RECTANGLE_CENTERED("Rectangle, Centered"),
-	CONE("Cone"),
-	CROSS("Cross");
+
+	CIRCLE("Circle", OmenShape.CIRCLE, false, OmenLocationType.TARGET_IF_AVAILABLE),
+	CIRCLE_HB("Circle+Hitbox", OmenShape.CIRCLE, true, OmenLocationType.TARGET_IF_AVAILABLE),
+	DONUT("Donut", OmenShape.DONUT, false, OmenLocationType.CASTER),
+	DONUT_HB("Donut+Hitbox", OmenShape.DONUT, true, OmenLocationType.CASTER),
+	RECTANGLE("Rectangle", OmenShape.RECTANGLE, false, OmenLocationType.CASTER_FACE_TARGET),
+	RECTANGLE_HB("Rectangle+Hitbox", OmenShape.RECTANGLE, true, OmenLocationType.CASTER_FACE_TARGET),
+	CONE("Cone", OmenShape.CONE, false, OmenLocationType.CASTER_FACE_TARGET),
+	CONE_HB("Cone+Hitbox", OmenShape.CONE, true, OmenLocationType.CASTER_FACE_TARGET),
+	CROSS("Cross", OmenShape.CROSS, false, OmenLocationType.CASTER),
+	RECTANGLE_FRONT_BACK("Front/Back Rectangle", OmenShape.RECTANGLE_CENTERED, false, OmenLocationType.CASTER),
+	;
 
 	private final String friendlyName;
+	private final OmenShape type;
+	private final boolean addHitbox;
+	private final OmenLocationType locationType;
 
-	OmenType(String friendlyName) {
+	OmenType(String friendlyName, OmenShape type, boolean addHitbox, OmenLocationType locationType) {
 		this.friendlyName = friendlyName;
+		this.type = type;
+		this.addHitbox = addHitbox;
+		this.locationType = locationType;
 	}
 
-	@Override
 	public String getFriendlyName() {
 		return friendlyName;
 	}
 
-	public static OmenType fromActionInfo(@Nullable ActionInfo info) {
-		if (info == null) {
-			return UNKNOWN;
-		}
-		switch (info.castType()) {
-			case 2, 5, 6, 7 -> {
-				if (info.effectRange() >= 100) {
-					return RAIDWIDE;
-				}
-				return CIRCLE;
-			}
-			case 3, 13 -> {
-				return CONE;
-			}
-			case 10 -> {
-				return DONUT;
-			}
-			case 11 -> {
-				return CROSS;
-			}
-			case 4, 8 -> {
-				return RECTANGLE;
-			}
-			case 12 -> {
-				// TODO: is this correct? Lots of things have this but are not centered.
-				// Perhaps we'll know more when we get cast direction/location?
-//				return RECTANGLE_CENTERED;
-				return RECTANGLE;
-			}
-			default -> {
-				return UNKNOWN;
-			}
-		}
+	public static @Nullable OmenType fromCastType(int castType) {
+		return switch (castType) {
+			case 2 -> CIRCLE;
+			case 3 -> CONE_HB;
+			case 4 -> RECTANGLE_HB;
+			case 5 -> CIRCLE_HB;
+			// HB or not?
+			case 6 -> CIRCLE;
+			// HB or not?
+			case 8 -> RECTANGLE;
+			case 10 -> DONUT;
+			case 11 -> CROSS;
+			case 12 -> RECTANGLE;
+			case 13 -> CONE;
+			default -> null;
+		};
 	}
 
-	public static String describe(@Nullable ActionInfo ai) {
-		if (ai == null) {
-			return "";
-		}
-		int range = ai.effectRange();
-		if (range == 0) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		sb.append(range).append('y');
-		OmenType omenType = fromActionInfo(ai);
-		switch (omenType) {
-			case CIRCLE -> {
-				sb.append(" Circle");
-			}
-			case DONUT -> {
-				sb.append(" Donut");
-			}
-			case RECTANGLE -> {
-				sb.append('×').append(ai.xAxisModifier()).append("y Rectangle");
-			}
-			case RECTANGLE_CENTERED -> {
-				sb.append('×').append(ai.xAxisModifier()).append("y Rectangle, Front/Back");
-			}
-			case CONE -> {
-				sb.append(" Cone (").append(ai.coneAngle() > 0 ? ai.coneAngle() : "?").append("°)");
-			}
-			case RAIDWIDE -> {
-				sb.append(" Raidwide");
-			}
-			case UNKNOWN -> {
-				sb.append(" Unknown (").append(ai.castType()).append(", ").append(ai.xAxisModifier()).append(')');
-			}
-		}
-		return sb.toString();
+	public OmenShape shape() {
+		return type;
 	}
+
+	public boolean addHitbox() {
+		return addHitbox;
+	}
+
+	public OmenLocationType locationType() {
+		return locationType;
+	}
+
+	@Override
+	public String toString() {
+		return "AbilityOmenInfo[" +
+		       "type=" + type + ", " +
+		       "addHitbox=" + addHitbox + ", " +
+		       "locationType=" + locationType + ']';
+	}
+
+
 }

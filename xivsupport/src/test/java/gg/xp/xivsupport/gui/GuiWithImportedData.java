@@ -7,6 +7,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.eventstorage.EventReader;
+import gg.xp.xivsupport.gui.imprt.ListEventIterator;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.XivMain;
 import org.picocontainer.MutablePicoContainer;
@@ -35,7 +36,7 @@ public final class GuiWithImportedData {
 		long start = System.currentTimeMillis();
 		List<Event> events = EventReader.readEventsFromResource("/testsession5.oos.gz");
 		long read = System.currentTimeMillis();
-		ReplayController replayController = new ReplayController(master, events, false);
+		ReplayController replayController = new ReplayController(master, new ListEventIterator<>(events), false);
 		pico.addComponent(replayController);
 		dist.acceptEvent(new InitEvent());
 		RawEventStorage raw = pico.getComponent(RawEventStorage.class);

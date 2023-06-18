@@ -7,7 +7,7 @@ import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
-import gg.xp.xivsupport.gui.map.omen.OmenType;
+import gg.xp.xivsupport.gui.map.omen.OmenShape;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
@@ -94,7 +94,7 @@ public final class ActionTableFactory {
 						@Override
 						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 							if (value instanceof ActionInfo ai) {
-								Component comp = super.getTableCellRendererComponent(table, OmenType.describe(ai), isSelected, hasFocus, row, column);
+								Component comp = super.getTableCellRendererComponent(table, OmenShape.describe(ai), isSelected, hasFocus, row, column);
 								RenderUtils.setTooltip(comp, "Raw: ct:%s, er:%sy, x:%sy".formatted(ai.castType(), ai.effectRange(), ai.xAxisModifier()));
 								return comp;
 							}

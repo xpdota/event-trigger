@@ -97,6 +97,8 @@ public interface XivState extends SubState {
 
 	void provideCombatantShieldPct(XivCombatant cbt, long shieldPct);
 
+	void provideCombatantRadius(XivCombatant cbt, float radius);
+
 	default @Nullable XivCombatant npcById(long id) {
 		return getCombatantsListCopy()
 				.stream()
