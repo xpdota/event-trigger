@@ -40,6 +40,7 @@ public class P9S extends AutoChildEventHandler implements FilteredEventHandler {
 		this.state = state;
 		this.buffs = buffs;
 	}
+
 	@Override
 	public boolean enabled(EventContext context) {
 		return state.dutyIs(KnownDuty.P9S);
