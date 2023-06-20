@@ -199,7 +199,7 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(0xE04));
 				s.updateCall(afterClassical1);
 				AbilityUsedEvent dodge = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8323));
-				s.waitMs(300);
+				s.waitMs(2_800);
 				s.updateCall(cc1dodge, dodge);
 			}, (e1, s) -> {
 				s.updateCall(cc2, e1);
