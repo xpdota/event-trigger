@@ -21,6 +21,7 @@ import gg.xp.xivsupport.events.state.combatstate.HeadmarkerOffsetTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.duties.Pandamonium.events.TrinityFullEvent;
 import gg.xp.xivsupport.events.triggers.duties.Pandamonium.events.TrinityInitialEvent;
+import gg.xp.xivsupport.events.triggers.duties.Pandamonium.events.TrinitySecondEvent;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcAbilityUsedCallout;
@@ -97,6 +98,7 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 					Also note that this call is NOT used during Superchain IIA.
 					Instead, this information is part of the calls specifically
 					for that mechanic.""");
+	private final ModifiableCallout<?> trinitySecond = new ModifiableCallout<>("Trinity Second Spot", "Then {safespots[1]}", "{safespots[0]} then {safespots[1]}");
 	private final ModifiableCallout<?> trinitySafeSpots = new ModifiableCallout<>("Trinity Safe Spots", "{safespots[0]}, {safespots[1]}, {safespots[2]}");
 
 	private volatile boolean trinitySuppress;
@@ -118,6 +120,10 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				s.setParam("right", List.of(e1.isRightSafe()));
 				s.setParam("safespots", List.of(e1.getSafeSpot()));
 				s.updateCall(trinityInitial);
+				TrinitySecondEvent second = s.waitEvent(TrinitySecondEvent.class);
+				s.setParam("right", second.getRightSafe());
+				s.setParam("safespots", second.getSafeSpots());
+				s.updateCall(trinitySecond);
 				TrinityFullEvent full = s.waitEvent(TrinityFullEvent.class);
 				s.setParam("right", full.getRightSafe());
 				s.setParam("safespots", full.getSafeSpots());
@@ -159,7 +165,7 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				right.add(firstRight);
 				safeSpots.add(firstSafe);
 				s.accept(new TrinityInitialEvent(firstRight, firstSafe));
-				List<HeadMarkerEvent> hms = s.waitEvents(3, HeadMarkerEvent.class, hm -> true);
+				List<HeadMarkerEvent> hms = new ArrayList<>(s.waitEvents(2, HeadMarkerEvent.class, hm -> true));
 				boolean flipping = e1.abilityIdMatches(0x82E7, 0x82E8);
 				HeadMarkerEvent secondHm = hms.get(1);
 				Boolean secondRight = switch (secondHm.getMarkerOffset()) {
@@ -180,7 +186,9 @@ public class P12SDoorBoss extends AutoChildEventHandler implements FilteredEvent
 				else {
 					safeSpots.add(bossFacingInitial.plusQuads(-1));
 				}
-				HeadMarkerEvent thirdHm = hms.get(2);
+				s.accept(new TrinitySecondEvent(right, safeSpots));
+				HeadMarkerEvent thirdHm = s.waitEvent(HeadMarkerEvent.class, hm -> true);
+				hms.add(thirdHm);
 				Boolean thirdRight = switch (thirdHm.getMarkerOffset()) {
 					case +7, +9 -> false;
 					case +6, +8 -> true;

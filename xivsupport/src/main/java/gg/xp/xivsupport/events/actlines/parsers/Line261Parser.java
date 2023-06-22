@@ -65,7 +65,7 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 				}
 				if (existingPos == null) {
 					if (pos.size() < 4) {
-						log.info("Incomplete position info for 0x{}", Long.toString(existing.getId(), 16));
+						log.trace("Incomplete position info for 0x{}", Long.toString(existing.getId(), 16));
 						return null;
 					}
 					else {

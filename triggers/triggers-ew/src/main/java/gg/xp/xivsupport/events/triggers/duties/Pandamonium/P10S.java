@@ -75,10 +75,14 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> dividingWingsBreakChains = new ModifiableCallout<>("Dividing Wings Chain Break", "Break Chains");
 	private final ModifiableCallout<?> dividingWingsRearWeb = new ModifiableCallout<>("Dividing Wings Make Web", "Make Web, South Edge");
 
+	private final ModifiableCallout<HeadMarkerEvent> meltdownHasMarker = new ModifiableCallout<>("Meltdown: Have Spread Marker", "Spread");
+	private final ModifiableCallout<AbilityCastStart> meltdownNoMarker = ModifiableCallout.durationBasedCall("Meltdown: No Spread Marker", "Stack");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> dividingWingsSq = SqtTemplates.multiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8297),
 			(e1, s) -> {
+		log.info("Dividing Wings 1: Start");
 				s.updateCall(dividingWings, e1);
 				List<TetherEvent> tethers = s.waitEvents(2, TetherEvent.class, te -> te.tetherIdMatches(242));
 				// TODO: tether location
@@ -93,8 +97,8 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				if (myTether.isPresent()) {
 					s.updateCall(dividingWingsBreakChains);
 				}
-
 			}, (e1, s) -> {
+				log.info("Dividing Wings 2: Start");
 				s.updateCall(dividingWings2, e1);
 				List<TetherEvent> tethers = s.waitEvents(2, TetherEvent.class, te -> te.tetherIdMatches(242));
 				// TODO: tether location
@@ -109,8 +113,21 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				if (myTether.isPresent()) {
 					s.updateCall(dividingWingsBreakChains);
 				}
-
+				log.info("Meltdown: Start");
+				List<HeadMarkerEvent> headMarks = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -444, Duration.ofMillis(100));
+				log.info("Meltdown: Got HMs");
+				AbilityCastStart linestack = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x829D));
+				log.info("Meltdown: Got Line Stack");
+				Optional<HeadMarkerEvent> myMarker = headMarks.stream().filter(hme -> hme.getTarget().isThePlayer()).findAny();
+				if (myMarker.isPresent()) {
+					s.updateCall(meltdownHasMarker, myMarker.get());
+				}
+				else {
+					s.updateCall(meltdownNoMarker, linestack);
+				}
+				// Bonds are handled elsewhere
 			}, (e1, s) -> {
+				log.info("Dividing Wings 3: Start");
 				s.updateCall(dividingWings3, e1);
 				{
 					List<TetherEvent> tethers = s.waitEvents(2, TetherEvent.class, te -> te.tetherIdMatches(242));
@@ -189,8 +206,6 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				daemoniacBondsHelper(s);
 			});
 
-	private final ModifiableCallout<HeadMarkerEvent> meltdownHasMarker = new ModifiableCallout<>("Meltdown: Have Spread Marker", "Spread");
-	private final ModifiableCallout<AbilityCastStart> meltdownNoMarker = ModifiableCallout.durationBasedCall("Meltdown: No Spread Marker", "Stack");
 	private final ModifiableCallout<BuffApplied> bondsStackThenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Stack -> Spread", "Stack then Spread").autoIcon();
 	private final ModifiableCallout<BuffApplied> bondsBuddyThenSpread = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Buddy -> Spread", "Buddy then Spread").autoIcon();
 	private final ModifiableCallout<BuffApplied> bondsSpreadThenStack = ModifiableCallout.<BuffApplied>durationBasedCall("Daemoniac Bonds: Spread -> Stack", "Spread then Stack").autoIcon();
@@ -244,6 +259,7 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> meltdown = SqtTemplates.multiInvocation(90_000,
+			// This actually starts on Bonds since it needs to capture headmarkers earlier
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x82A1),
 			(e1, s) -> {
 				log.info("Meltdown: Start");
@@ -262,19 +278,6 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				daemoniacBondsHelper(s);
 			},
 			(e1, s) -> {
-				log.info("Meltdown: Start");
-				List<HeadMarkerEvent> headMarks = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -444, Duration.ofMillis(100));
-				log.info("Meltdown: Got HMs");
-				AbilityCastStart linestack = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x829D));
-				log.info("Meltdown: Got Line Stack");
-				Optional<HeadMarkerEvent> myMarker = headMarks.stream().filter(hme -> hme.getTarget().isThePlayer()).findAny();
-				if (myMarker.isPresent()) {
-					s.updateCall(meltdownHasMarker, myMarker.get());
-				}
-				else {
-					s.updateCall(meltdownNoMarker, linestack);
-				}
-				// Bonds are handled below
 			}
 	);
 
