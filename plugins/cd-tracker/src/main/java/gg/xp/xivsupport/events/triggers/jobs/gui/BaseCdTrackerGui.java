@@ -29,6 +29,7 @@ import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +91,10 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 		return sortedCds;
 	}
 
+	protected List<Component> extraSettings() {
+		return Collections.emptyList();
+	}
+
 	@Override
 	public Component getTabContents() {
 		TitleBorderFullsizePanel outerPanel = new TitleBorderFullsizePanel(getTabName());
@@ -111,6 +116,12 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 
 		settingsPanel.add(new BooleanSettingGui(overlay.getOnlyActive(), "Only Display Active Buffs", enableOverlaySetting::get).getComponent());
 		// TODO: bug here - doesn't cancel editing, so current cell enabled/disabled is stuck
+
+		List<Component> extras = extraSettings();
+		if (!extras.isEmpty()) {
+			settingsPanel.add(Box.createHorizontalStrut(32_000));
+			extras.forEach(settingsPanel::add);
+		}
 
 		settingsPanel.add(Box.createHorizontalStrut(32_000));
 		SettingsCdTrackerColorProvider colors = overlay.getColors();
