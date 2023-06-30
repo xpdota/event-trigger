@@ -1,16 +1,16 @@
 package gg.xp.xivsupport.events.triggers.jobs.gui;
 
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.Cooldown;
 import gg.xp.xivdata.data.ExtendedCooldownDescriptor;
 import gg.xp.xivsupport.events.state.combatstate.CdTracker;
-import gg.xp.xivsupport.events.triggers.jobs.gui.BaseCdTrackerGui;
-import gg.xp.xivsupport.events.triggers.jobs.gui.PartyCdTrackerOverlay;
+import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.CooldownSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 
+import java.awt.*;
+import java.util.List;
 import java.util.Map;
 
 @ScanMe
@@ -60,4 +60,8 @@ public class PartyCdTrackerGui extends BaseCdTrackerGui {
 		return backend.getPartyCdSettings();
 	}
 
+	@Override
+	protected List<Component> extraSettings() {
+		return List.of(new EnumSettingGui<>(backend.getEnemyTargetSourceFilter(), "Filter for Enemy-Targeted Abilities (Mug, Chain, etc)", () -> true).getComponent());
+	}
 }
