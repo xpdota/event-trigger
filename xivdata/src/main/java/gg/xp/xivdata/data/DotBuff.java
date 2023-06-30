@@ -11,7 +11,7 @@ public enum DotBuff {
 	BLM_Thunder(BLM, "Thunder/II/III/IV", 0xa1L, 0xa2L, 0xa3L, 0x4baL),
 	BLU_Bleeding(BLU, "Bleeding", 0x6b2L),
 	BRD_CombinedDots(BRD, "Bard DoTs", 0x4b0L, 0x4b1L, 0x7cL, 0x81L),
-	DRG_ChaosThrust(DRG, "Chaos Thrust", 0x76L),
+	DRG_ChaosThrust(DRG, "Chaos Thrust/Chaotic Spring", 0x76L, 0xa9FL),
 	MNK_Demolish(MNK, "Demolish", 0xf6L),
 	MNK_Twinsnakes(MNK, "Twin Snakes", 0xbb9L),
 	NIN_ShadowFang(NIN, "Shadow Fang", 0x1fcL),
