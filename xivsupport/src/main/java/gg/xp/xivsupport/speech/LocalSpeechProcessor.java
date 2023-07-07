@@ -3,12 +3,14 @@ package gg.xp.xivsupport.speech;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.util.ArgParser;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -58,11 +60,8 @@ public class LocalSpeechProcessor implements FilteredEventHandler {
 			Process process;
 			if (overrideExecutable.get()) {
 				String customExe = customExecutable.get();
-				StringTokenizer st = new StringTokenizer(customExe);
-				String[] cmdarray = new String[st.countTokens()];
-				for (int i = 0; st.hasMoreTokens(); i++) {
-					cmdarray[i] = st.nextToken();
-				}
+				List<String> cmdList = ArgParser.tokenize(customExe, false);
+				String[] cmdarray = cmdList.toArray(new String[0]);
 				for (int i = 0; i < cmdarray.length; i++) {
 					cmdarray[i] = cmdarray[i].replaceAll("\\$TEXT", text);
 				}
