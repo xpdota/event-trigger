@@ -15,11 +15,11 @@ import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
-import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
+import gg.xp.xivsupport.events.triggers.support.PlayerHeadmarker;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -64,7 +64,9 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<AbilityCastStart> soulGrasp = ModifiableCallout.durationBasedCall("Soul Grasp", "Tank Stack, Multiple Hits");
 
 	@NpcCastCallout(0x827C)
-	private final ModifiableCallout<AbilityCastStart> silkSpit = ModifiableCallout.durationBasedCall("Silkspit", "Spread");
+	private final ModifiableCallout<AbilityCastStart> silkSpit = ModifiableCallout.durationBasedCall("Silkspit: Cast", "Spread Soon");
+	@PlayerHeadmarker(value = -40, offset = true)
+	private final ModifiableCallout<HeadMarkerEvent> silkspitHm = new ModifiableCallout<>("Silkspit: Marker", "Spread");
 
 	private final ModifiableCallout<AbilityCastStart> dividingWings = ModifiableCallout.durationBasedCall("Dividing Wings", "Groups and Cleaves");
 	private final ModifiableCallout<AbilityCastStart> dividingWings2 = ModifiableCallout.durationBasedCall("Dividing Wings", "Groups and Cleaves on Sides");
@@ -82,7 +84,7 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final SequentialTrigger<BaseEvent> dividingWingsSq = SqtTemplates.multiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8297),
 			(e1, s) -> {
-		log.info("Dividing Wings 1: Start");
+				log.info("Dividing Wings 1: Start");
 				s.updateCall(dividingWings, e1);
 				List<TetherEvent> tethers = s.waitEvents(2, TetherEvent.class, te -> te.tetherIdMatches(242));
 				// TODO: tether location
@@ -179,9 +181,11 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 //		}
 //	}
 	private final ModifiableCallout<HeadMarkerEvent> web1webOnMe = new ModifiableCallout<>("Entangling Web 1: Web on You", "Make Bridge");
-	private final ModifiableCallout<HeadMarkerEvent> web1noWebOnMe = new ModifiableCallout<>("Entangling Web 1: No web on you", "No Web");
+	private final ModifiableCallout<HeadMarkerEvent> web1noWebOnMe = new ModifiableCallout<>("Entangling Web 1: No Web on You", "No Web");
 	private final ModifiableCallout<AbilityCastStart> web1bury = ModifiableCallout.durationBasedCall("Entangling Web 1: Bury", "Soak Towers");
 
+	private final ModifiableCallout<HeadMarkerEvent> web2webOnMe = new ModifiableCallout<>("Entangling Web 2: Web on You", "Make Bridge");
+	private final ModifiableCallout<HeadMarkerEvent> web2noWebOnMe = new ModifiableCallout<>("Entangling Web 2: No Web on You", "No Web");
 	private final ModifiableCallout<AbilityCastStart> web2bury = ModifiableCallout.durationBasedCall("Entangling Web 2: Bury", "Soak Towers");
 
 	@AutoFeed
@@ -200,6 +204,15 @@ public class P10S extends AutoChildEventHandler implements FilteredEventHandler 
 				AbilityCastStart explosion = s.waitEvent(AbilityCastStart.class, event -> event.abilityIdMatches(0x8282));
 				s.updateCall(web1bury, explosion);
 			}, (e1, s) -> {
+				log.info("Entangling Web 2: Start");
+				List<HeadMarkerEvent> webs = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -37, Duration.ofMillis(100));
+				Optional<HeadMarkerEvent> webOnMe = webs.stream().filter(hme -> hme.getTarget().isThePlayer()).findFirst();
+				if (webOnMe.isPresent()) {
+					s.updateCall(web2webOnMe, webOnMe.get());
+				}
+				else {
+					s.updateCall(web2noWebOnMe);
+				}
 				AbilityCastStart explosion = s.waitEvent(AbilityCastStart.class, event -> event.abilityIdMatches(0x8282));
 				s.updateCall(web2bury, explosion);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8287));
