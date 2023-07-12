@@ -12,7 +12,7 @@ public interface ImportSpec<X extends Event> {
 
 	String extendedLabel();
 
-	List<X> readEvents();
+	EventIterator<X> eventIter();
 
-	void launch(List<X> events);
+	void launch(EventIterator<X> events);
 }

@@ -7,12 +7,14 @@ import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.HasIconURL;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.gui.map.omen.OmenShape;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
+import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,6 +28,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public final class ActionTableFactory {
 
@@ -85,6 +88,19 @@ public final class ActionTableFactory {
 						return String.format("%s (%d charges)", cd, maxCharges);
 					}
 					return cd > 0 ? cd : "";
+				}))
+				.addMainColumn(new CustomColumn<>("Range/Shape", Function.identity(),c -> {
+					c.setCellRenderer(new DefaultTableCellRenderer() {
+						@Override
+						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+							if (value instanceof ActionInfo ai) {
+								Component comp = super.getTableCellRendererComponent(table, OmenShape.describe(ai), isSelected, hasFocus, row, column);
+								RenderUtils.setTooltip(comp, "Raw: ct:%s, er:%sy, x:%sy".formatted(ai.castType(), ai.effectRange(), ai.xAxisModifier()));
+								return comp;
+							}
+							return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+						}
+					});
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
 				.addWidget(InGameAbilityPickerButton::new)

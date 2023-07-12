@@ -378,6 +378,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 				component = new JLabel("Error making component");
 			}
 			add(component, c);
+			propSaveCallback(component);
 			if (component instanceof AcceptsSaveCallback asc) {
 				asc.setSaveCallback(saveCallback);
 			}
@@ -387,6 +388,17 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 
 		private void delete() {
 			inner.remove(action);
+		}
+
+		private void propSaveCallback(Component component) {
+			if (component instanceof AcceptsSaveCallback asc) {
+				asc.setSaveCallback(saveCallback);
+			}
+			if (component instanceof Container cont) {
+				for (Component child : cont.getComponents()) {
+					propSaveCallback(child);
+				}
+			}
 		}
 	}
 

@@ -1,11 +1,11 @@
 package gg.xp.xivdata.data;
 
+import gg.xp.xivdata.data.rsv.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 
-// TODO: cooldown and stuff? What else would we want here?
 public record ActionInfo(
 		long actionid,
 		String name,
@@ -14,7 +14,12 @@ public record ActionInfo(
 		int maxCharges,
 		String categoryRaw,
 		boolean isPlayerAbility,
-		long castTimeRaw) {
+		long castTimeRaw,
+		int castType,
+		int effectRange,
+		int xAxisModifier,
+		int coneAngle
+		) {
 	public @Nullable ActionIcon getIcon() {
 		return ActionLibrary.iconForInfo(this);
 	}
@@ -29,7 +34,11 @@ public record ActionInfo(
 		catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		}
+	}
 
+	@Override
+	public String name() {
+		return DefaultRsvLibrary.tryResolve(name);
 	}
 
 	public double getCd() {

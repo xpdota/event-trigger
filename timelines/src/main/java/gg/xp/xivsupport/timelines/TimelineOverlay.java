@@ -29,6 +29,7 @@ public class TimelineOverlay extends XivOverlay {
 	private final TimelineManager timeline;
 	private volatile List<VisualTimelineEntry> current = Collections.emptyList();
 	private final IntSetting numberOfRows;
+	private final IntSetting barWidth;
 	private final CustomTableModel<VisualTimelineEntry> tableModel;
 	private static final int BAR_WIDTH = 150;
 	private final JTable table;
@@ -44,16 +45,17 @@ public class TimelineOverlay extends XivOverlay {
 				.addColumn(new CustomColumn<>("Bar", Function.identity(),
 						c -> {
 							c.setCellRenderer(new TimelineBarRenderer(tbcp));
-							c.setMaxWidth(BAR_WIDTH);
-							c.setMinWidth(BAR_WIDTH);
+//							c.setMaxWidth(BAR_WIDTH);
+//							c.setMinWidth(BAR_WIDTH);
 						}))
 				.build();
 		table = new JTable(tableModel);
 		table.setOpaque(false);
 		tableModel.configureColumns(table);
 		table.setCellSelectionEnabled(false);
+		barWidth = timeline.getBarWidth();
+		barWidth.addListener(this::repackSize);
 		getPanel().add(table);
-
 	}
 
 	@Override
@@ -66,7 +68,7 @@ public class TimelineOverlay extends XivOverlay {
 
 	@Override
 	protected void repackSize() {
-		table.setPreferredSize(new Dimension(table.getPreferredSize().width, table.getRowHeight() * numberOfRows.get()));
+		table.setPreferredSize(new Dimension(barWidth.get(), table.getRowHeight() * numberOfRows.get()));
 		super.repackSize();
 	}
 

@@ -5,6 +5,7 @@ import gg.xp.xivsupport.callouts.audio.SoundPlayer;
 import gg.xp.xivsupport.events.misc.Management;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.Stats;
+import gg.xp.xivsupport.events.triggers.duties.ewult.omega.BooleanSettingHidingPanel;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.xivsupport.gui.KeyValueDisplaySet;
 import gg.xp.xivsupport.gui.KeyValuePairDisplay;
@@ -21,9 +22,10 @@ import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
+import gg.xp.xivsupport.persistence.gui.StringSettingGui;
 import gg.xp.xivsupport.persistence.gui.WsURISettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
-import gg.xp.xivsupport.speech.PowerShellSpeechProcessor;
+import gg.xp.xivsupport.speech.LocalSpeechProcessor;
 import gg.xp.xivsupport.sys.Threading;
 import org.picocontainer.PicoContainer;
 import org.swingexplorer.Launcher;
@@ -295,14 +297,28 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			addTab("Websocket", wsPanel);
 		}
 		{
+			LocalSpeechProcessor localSpeech = container.getComponent(LocalSpeechProcessor.class);
+
 			TitleBorderFullsizePanel soundPanel = new TitleBorderFullsizePanel("TTS and Sound");
 			soundPanel.setPreferredSize(new Dimension(300, 150));
 			soundPanel.setLayout(new WrapLayout());
 			soundPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Use OP WebSocket for TTS").getComponent());
-			soundPanel.add(new BooleanSettingGui(container.getComponent(PowerShellSpeechProcessor.class).getEnabledSetting(), "Local TTS as Fallback").getComponent());
+			soundPanel.add(new BooleanSettingGui(localSpeech.getEnabledSetting(), "Local TTS as Fallback").getComponent());
+			BooleanSetting override = localSpeech.getOverrideExecutable();
+			soundPanel.add(new BooleanSettingGui(override, "Override TTS Program").getComponent());
 			soundPanel.add(Box.createHorizontalGlue());
 			soundPanel.add(new BooleanSettingGui(actWs.getAllowSound(), "Use OP WebSocket for Sound").getComponent());
 			soundPanel.add(new BooleanSettingGui(container.getComponent(SoundPlayer.class).getLocalSoundEnabled(), "Local Sound as Fallback").getComponent());
+
+			JPanel overridesPanel = new TitleBorderPanel("TTS Overrides");
+			StringSettingGui exeString = new StringSettingGui(localSpeech.getCustomExecutable(), "Executable (use $TEXT as placeholder)");
+			overridesPanel.add(exeString.getComponent());
+			exeString.getTextBoxOnly().setColumns(30);
+
+			soundPanel.add(Box.createHorizontalStrut(10_000));
+			soundPanel.add(overridesPanel);
+			override.addAndRunListener(() -> overridesPanel.setVisible(override.get()));
+
 			addTab("TTS and Sound", soundPanel);
 		}
 		{

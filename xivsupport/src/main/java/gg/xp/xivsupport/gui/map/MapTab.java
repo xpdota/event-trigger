@@ -39,13 +39,13 @@ public class MapTab extends JPanel {
 	private final JSplitPane split;
 	private volatile boolean selectionRefreshPending;
 
-	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config) {
+	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config, MapDisplayConfig mapDisplayConfig) {
 //		super("Map");
 		super(new BorderLayout());
 		split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		split.setOneTouchExpandable(true);
 		this.mapDataController = mdc;
-		this.mapPanel = new MapPanel(mdc);
+		this.mapPanel = new MapPanel(mdc, mapDisplayConfig);
 //		setPreferredSize(getMaximumSize());
 //		setLayout(new BorderLayout());
 		split.setRightComponent(mapPanel);

@@ -42,7 +42,15 @@ public enum KnownDuty implements Duty {
 	Euphrosyne("Euphrosyne", 0x45E, Expansion.EW, DutyType.ALLIANCE_RAID),
 	UCoB("Unending Coil of Bahamut", 0x2DD, Expansion.SB, DutyType.ULTIMATE),
 	OmegaProtocol("Omega Protocol", 0x462, Expansion.EW, DutyType.ULTIMATE),
-
+	P9N("P9N", 1147, Expansion.EW, DutyType.RAID),
+	P10N("P10N", 1149, Expansion.EW, DutyType.RAID),
+	P11N("P11N", 1151, Expansion.EW, DutyType.RAID),
+	P12N("P12N", 1153, Expansion.EW, DutyType.RAID),
+	P9S("P9S", 1148, Expansion.EW, DutyType.SAVAGE_RAID),
+	P10S("P10S", 1150, Expansion.EW, DutyType.SAVAGE_RAID),
+	P11S("P11S", 1152, Expansion.EW, DutyType.SAVAGE_RAID),
+	P12S("P12S", 1154, Expansion.EW, DutyType.SAVAGE_RAID),
+	GolbezEx("EX6", 1141, Expansion.EW, DutyType.TRIAL_EX),
 	;
 
 	private final String name;

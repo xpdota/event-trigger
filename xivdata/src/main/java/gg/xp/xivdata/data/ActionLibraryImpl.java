@@ -15,9 +15,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ActionLibraryImpl {
-	private static final Logger log = LoggerFactory.getLogger(ActionLibraryImpl.class);
+//	private static final Logger log = LoggerFactory.getLogger(ActionLibraryImpl.class);
 
 	private static final Pattern texFilePattern = Pattern.compile("(\\d+)\\.tex");
+//	private static final Pattern omenConePattern = Pattern.compile("_fan(\\d+)_");
 
 	private final Map<Long, ActionIcon> iconCache = new ConcurrentHashMap<>();
 	private final CsvMapLoader<Integer, ActionInfo> loader;
@@ -126,6 +127,49 @@ public class ActionLibraryImpl {
 			return null;
 		}
 		String categoryRaw = row.getRaw(50);
-		return new ActionInfo(id, name, imageId, cd, maxCharges, categoryRaw.intern(), isPlayerAbility, recast);
+		int castType = row.getIntOrDefault(28, 0);
+		int effectRange = row.getIntOrDefault(29, 0);
+		int xAxisModifier = row.getIntOrDefault(30, 0);
+		int omenId = row.getIntOrDefault(54, -1);
+		int coneAngle = switch (omenId) {
+			// TODO: Yucky awk script made this, pull the actual Omen EXD later
+			case 3 -> 60;
+			case 4, 184, 163 -> 90;
+			case 5, 379, 185, 164, 101, 60 -> 120;
+			case 15, 459, 349, 297, 213, 17, 16 -> 270;
+			case 28, 456, 283 -> 150;
+			case 61, 194, 107, 279, 481, 457 -> 180;
+			case 91 -> 240;
+			case 98 -> 60;
+			case 99 -> 30;
+			case 100 -> 60;
+			case 105 -> 30;
+			case 128 -> 210;
+			case 146 -> 20;
+			case 159 -> 60;
+			case 183 -> 60;
+			case 206 -> 45;
+			case 207 -> 45;
+			case 221 -> 1;
+			case 235 -> 100;
+			case 236 -> 100;
+			case 258 -> 60;
+			case 306 -> 130;
+			case 346 -> 145;
+			case 378 -> 15;
+			case 407 -> 225;
+			case 431 -> 360;
+			case 437 -> 1;
+			case 438 -> 2;
+			case 452 -> 30;
+			case 455 -> 60;
+			case 458 -> 210;
+			case 462 -> 240;
+			case 465 -> 45;
+
+
+			default -> -1;
+		};
+		return new ActionInfo(id, name, imageId, cd, maxCharges, categoryRaw.intern(), isPlayerAbility, recast, castType, effectRange, xAxisModifier, coneAngle);
 	}
 }

@@ -1,8 +1,9 @@
 package gg.xp.xivsupport.models;
 
-import gg.xp.xivdata.data.StatusEffectInfo;
-import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.*;
+import gg.xp.xivdata.data.rsv.*;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
+import gg.xp.xivsupport.util.RsvLookupUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
@@ -18,18 +19,16 @@ public class XivStatusEffect implements Serializable, NameIdPair {
 	// TODO: worth caching these?
 	public XivStatusEffect(long id) {
 		this.id = id;
-		StatusEffectInfo statusInfo = StatusEffectLibrary.forId(id);
-		if (statusInfo == null) {
-			name = String.format("Unknown_%x", id);
-		}
-		else {
-			name = statusInfo.name();
-		}
+		this.name = findName(id, null);
 	}
 
 	public XivStatusEffect(long id, String name) {
 		this.id = id;
-		this.name = name == null ? null : name.intern();
+		this.name = findName(id, name);
+	}
+
+	private static String findName(long id, @Nullable String givenName) {
+		return RsvLookupUtil.lookup(id, givenName, StatusEffectLibrary::forId, StatusEffectInfo::name);
 	}
 
 	public @Nullable StatusEffectInfo getInfo() {

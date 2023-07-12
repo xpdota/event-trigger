@@ -56,6 +56,7 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X get(@NotNull String key, @NotNull TypeReference<X> type, @Nullable X dflt) {
 		// If Type is wrapping a non-generic class, just use the normal class logic
@@ -72,6 +73,14 @@ public abstract class BaseStringPersistenceProvider implements PersistenceProvid
 		else {
 			return mapper.convertValue(raw, type);
 		}
+	}
+
+	public @Nullable String getRaw(@NotNull String key) {
+		return getValue(key);
+	}
+
+	public void saveRaw(String key, String value) {
+		setValue(key, value);
 	}
 
 	@Override

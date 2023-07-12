@@ -84,7 +84,10 @@ public class EasyTriggersTab implements PluginTab {
 		model = CustomTableModel.builder(backend::getTriggers)
 				.addColumn(new CustomColumn<>("En", EasyTrigger::isEnabled, col -> {
 					col.setCellRenderer(StandardColumns.checkboxRenderer);
-					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<EasyTrigger<?>>(EasyTrigger::setEnabled));
+					col.setCellEditor(new StandardColumns.CustomCheckboxEditor<EasyTrigger<?>>((easyTrigger, enabled) -> {
+						easyTrigger.setEnabled(enabled);
+						requestSave();
+					}));
 					col.setMinWidth(22);
 					col.setMaxWidth(22);
 				}))
@@ -323,7 +326,7 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private volatile long saveAt;
-	private static final int saveDelay = 1000;
+	private static final int saveDelay = 500;
 
 	private void requestSave() {
 		boolean submitTask = saveAt <= 0;

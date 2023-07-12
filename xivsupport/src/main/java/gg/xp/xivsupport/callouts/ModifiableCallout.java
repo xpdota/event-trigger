@@ -301,7 +301,7 @@ public class ModifiableCallout<X> {
 			sound = handle.getSoundFileIdentifier();
 			colorOverride = handle.getTextColorOverride().get();
 		}
-		return new RawModifiedCallout<>(description, callText, visualText, sound, event, rawArguments, guiProvider, expiry, colorOverride);
+		return new RawModifiedCallout<>(description, callText, visualText, sound, event, rawArguments, guiProvider, expiry, colorOverride, handle);
 	}
 
 	/**
@@ -329,7 +329,7 @@ public class ModifiableCallout<X> {
 			sound = handle.getSoundFileIdentifier();
 			colorOverride = handle.getTextColorOverride().get();
 		}
-		return new RawModifiedCallout<>(description, callText, visualText, sound, null, rawArguments, guiProvider, expiry, colorOverride);
+		return new RawModifiedCallout<>(description, callText, visualText, sound, null, rawArguments, guiProvider, expiry, colorOverride, handle);
 	}
 
 

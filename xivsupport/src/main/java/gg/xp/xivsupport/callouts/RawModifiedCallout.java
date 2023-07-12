@@ -32,11 +32,12 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private final Predicate<RawModifiedCallout<X>> expiry;
 	private @Nullable HasCalloutTrackingKey replaces;
 	private @Nullable Color colorOverride;
+	private final ModifiedCalloutHandle handle;
 	private final CalloutTrackingKey key = new CalloutTrackingKey();
 	private static final int maxErrors = 10;
 	private int errorCount;
 
-	public RawModifiedCallout(String description, String tts, String text, @Nullable String sound, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride) {
+	public RawModifiedCallout(String description, String tts, String text, @Nullable String sound, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride, @Nullable ModifiedCalloutHandle handle) {
 		this.description = description;
 		this.tts = tts;
 		this.text = text;
@@ -46,6 +47,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 		this.guiProvider = guiProvider;
 		this.expiry = expiry;
 		this.colorOverride = colorOverride;
+		this.handle = handle;
 	}
 
 	public String getTts() {
@@ -82,6 +84,10 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 
 	public @Nullable String getSound() {
 		return sound;
+	}
+
+	public @Nullable ModifiedCalloutHandle getHandle() {
+		return handle;
 	}
 
 	public void setReplaces(@Nullable HasCalloutTrackingKey replaces) {

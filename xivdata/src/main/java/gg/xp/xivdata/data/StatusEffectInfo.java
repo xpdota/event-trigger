@@ -1,5 +1,6 @@
 package gg.xp.xivdata.data;
 
+import gg.xp.xivdata.data.rsv.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -19,6 +20,17 @@ public record StatusEffectInfo(
 		int partyListPriority,
 		boolean isFcBuff
 ) {
+
+	@Override
+	public String name() {
+		return DefaultRsvLibrary.tryResolve(name);
+	}
+
+	@Override
+	public String description() {
+		return DefaultRsvLibrary.tryResolve(description);
+	}
+
 
 	// TODO: column 19 == 1 means it's FC buff, food, etc and so should be hidden
 	// Column 20 == HoT/DoT (as well as psuedos like Horoscope)

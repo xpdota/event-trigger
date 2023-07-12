@@ -81,7 +81,6 @@ public record Position(double x, double y, double z, double heading) implements 
 	 * @param forward How far forward (based on its facing angle) to move the position.
 	 * @return a new Position object that has been translated in the X-Y plane, with the same Z and heading.
 	 */
-	// TODO: unit tests for this
 	public Position translateRelative(double right, double forward) {
 		// Normalize heading to north = 0, + = clockwise to make math easier
 		double effectiveHeading = northUpClockwiseHeading();
@@ -108,5 +107,22 @@ public record Position(double x, double y, double z, double heading) implements 
 			newAngle -= 2 * Math.PI;
 		}
 		return new Position(newX, newY, z - basis.z, newAngle);
+	}
+
+	/**
+	 * Returns this position, but with the heading modified to face towards the given position.
+	 *
+	 * @param faceTowards The position to face.
+	 * @return A new position with the same x/y/z as 'this', but a new heading. If the given position's x and y
+	 * components are the same as those of this position, return this position unmodified.
+	 */
+	public Position facing(Position faceTowards) {
+		double dx = faceTowards.x - this.x;
+		double dy = faceTowards.y - this.y;
+		if (dx == 0 && dy == 0) {
+			return this;
+		}
+		double angle = Math.atan2(-dy, dx) + (Math.PI / 2);
+		return new Position(this.x, this.y, this.x, angle);
 	}
 }

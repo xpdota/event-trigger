@@ -114,7 +114,7 @@ public class CustomPartyConfig implements PluginTab {
 			@Override
 			public @Nullable CastTracker getCastFor(XivCombatant cbt) {
 				return new CastTracker(new AbilityCastStart(
-						new XivAbility(0x4095), dummyCharacter, enemy, 2.5)
+						new XivAbility(0x4095), dummyCharacter, dummyCharacter, 2.5)
 				) {
 					@Override
 					public Duration getElapsedDuration() {

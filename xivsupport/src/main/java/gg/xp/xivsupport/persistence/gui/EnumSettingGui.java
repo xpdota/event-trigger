@@ -73,4 +73,7 @@ public class EnumSettingGui<X extends Enum<X>> {
 		return comboBox;
 	}
 
+	public JLabel getLabel() {
+		return label;
+	}
 }

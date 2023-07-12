@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.groovy;
 
 import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 import groovy.lang.MissingPropertyException;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
@@ -47,7 +48,7 @@ public class DisplayControl {
 		return Collections.emptyList();
 	}
 
-	public void table(Closure<?> closure) {
+	public void table(@DelegatesTo(TableDSL.class) Closure<?> closure) {
 		TableDSL delegate = new TableDSL();
 		closure.setDelegate(delegate);
 		closure.run();

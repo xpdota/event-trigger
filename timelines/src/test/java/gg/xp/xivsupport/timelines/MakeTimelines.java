@@ -1,13 +1,11 @@
 package gg.xp.xivsupport.timelines;
 
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
@@ -18,12 +16,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("NewClassNamingConvention")
@@ -45,6 +43,34 @@ public final class MakeTimelines {
 		return input.substring(0, splitPoint + 1);
 	}
 
+	// TODO: automate - this is from common_replacements.ts
+	private static final Map<String, Map<String, String>> commonReplacementsRaw = Map.of(
+			"(?<=00:0839::|00\\|[^|]*\\|0839\\|\\||\\\\\\|0839\\\\\\|\\[\\^\\|\\]\\*\\\\\\||^)([^|:]*) will be sealed off(?: in (?:[0-9]+ seconds)?)?", Map.of(
+					"en", "$1 will be sealed off",
+					"de", "Noch 15 Sekunden, bis sich (?:(?:der|die|das) )?(?:Zugang zu(?:[rm]| den)? )?$1 schließt",
+					"fr", "Fermeture d(?:e|u|es) (?:l'|la |les? )?$1 dans",
+					"ja", "$1の封鎖まであと",
+					"cn", "距$1被封锁还有",
+					"ko", "15초 후에 $1[이가] 봉쇄됩니다"
+			),
+			"is no longer sealed", Map.of(
+					"en", "is no longer sealed",
+					"de", "öffnet sich (?:wieder|erneut)",
+					"fr", "Ouverture ",
+					"ja", "の封鎖が解かれた",
+					"cn", "的封锁解除了",
+					"ko", "의 봉쇄가 해제되었습니다"
+			),
+			"Engage!", Map.of(
+					"en", "Engage!",
+					"de", "Start!",
+					"fr", "À l'attaque",
+					"ja", "戦闘開始！",
+					"cn", "战斗开始！",
+					"ko", "전투 시작!"
+			)
+	);
+
 	@Test
 	void makeTimelines() {
 		main(new String[]{});
@@ -62,6 +88,7 @@ public final class MakeTimelines {
 		ChromeOptions opts = new ChromeOptions();
 		opts.setHeadless(true);
 		opts.addArguments("--remote-allow-origins=*");
+		opts.addArguments("--disable-dev-shm-usage");
 		ChromeDriver driver = new ChromeDriver(opts);
 		Map<Long, String> zoneToFile = new HashMap<>();
 		String timelineBaseDir = System.getProperty("timelinedir", "timelines/src/main/resources");
@@ -89,17 +116,17 @@ public final class MakeTimelines {
 					boolean isGeneral = false;
 					if (timelineFileRaw == null) {
 						if (contentMap.containsKey("timelineReplace") && contentMap.get("zoneId") == null) {
-							if (foundGeneral) {
-								// TODO: does this need to be supported?
-								throw new RuntimeException("Found more than one general timeline replacement set!");
-							}
 							foundGeneral = true;
-							isGeneral = true;
-							timelineFileRaw = "global_timeline_replacements.txt";
+//							// TODO: "General" is not what it seems - global replacements are in common_replacements.ts
+//							if (foundGeneral) {
+//								// TODO: does this need to be supported?
+//								throw new RuntimeException("Found more than one general timeline replacement set!");
+//							}
+//							foundGeneral = true;
+//							isGeneral = true;
+//							timelineFileRaw = "global_timeline_replacements.txt";
 						}
-						else {
-							return;
-						}
+						return;
 					}
 					String timelineFileName = timelineFileRaw.toString();
 					Object zoneIdRaw = contentMap.get("zoneId");
@@ -151,6 +178,27 @@ public final class MakeTimelines {
 					}
 				}
 			});
+			{
+				Map<String, LanguageReplacements> commonReplacements = new LinkedHashMap<>();
+				Collection<String> langs = commonReplacementsRaw.values().stream().flatMap(m -> m.keySet().stream()).distinct().collect(Collectors.toList());
+				langs.forEach(lang -> {
+					Map<String, String> replacementsForThisLang = new LinkedHashMap<>();
+					commonReplacementsRaw.forEach((syncKey, replacementsMap) -> {
+						String replacementForLang = replacementsMap.get(lang);
+						if (replacementForLang != null) {
+							replacementsForThisLang.put(syncKey, replacementForLang);
+						}
+					});
+					commonReplacements.put(lang, LanguageReplacements.fromRaw(replacementsForThisLang, Map.of()));
+				});
+				TimelineReplacements globalReplacements = new TimelineReplacements(commonReplacements);
+				try {
+					mapper.writeValue(translationsDir.resolve("global_timeline_replacements.txt.json").toFile(), globalReplacements);
+				}
+				catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
 			String inCsvFormat = zoneToFile.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(e -> e.getKey() + ",\"" + e.getValue() + '"').collect(Collectors.joining("\n"));
 			Files.writeString(timelineBasePath.resolve("timelines.csv"), inCsvFormat, StandardCharsets.UTF_8);
 		}

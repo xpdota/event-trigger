@@ -23,6 +23,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.BuffTrackingKey;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -303,11 +304,11 @@ public class StatusEffectRepository {
 		return findBuff(ba -> ba.buffIdMatches(id));
 	}
 
-	public @Nullable List<BuffApplied> findBuffsById(long id) {
+	public @NotNull List<BuffApplied> findBuffsById(long id) {
 		return findBuffs(ba -> ba.buffIdMatches(id));
 	}
 
-	public @Nullable List<BuffApplied> findBuffs(Predicate<BuffApplied> filter) {
+	public @NotNull List<BuffApplied> findBuffs(Predicate<BuffApplied> filter) {
 		return getBuffs().stream().filter(filter).toList();
 	}
 

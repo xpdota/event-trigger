@@ -48,7 +48,7 @@ public class PnGui implements PluginTab {
 	@Override
 	public Component getTabContents() {
 		TitleBorderFullsizePanel outer = new TitleBorderFullsizePanel("PostNamazu");
-		JPanel uriControl = new HttpURISettingGui(backend.getUriSetting(), "Base URI").getComponent();
+		JPanel uriControl = new HttpURISettingGui(backend.getUriSetting(), "Base URI", false).getComponent();
 		JPanel testPanel;
 		JScrollPane scroll;
 		{

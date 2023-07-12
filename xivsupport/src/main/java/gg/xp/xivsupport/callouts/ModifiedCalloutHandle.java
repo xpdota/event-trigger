@@ -8,6 +8,8 @@ import gg.xp.xivsupport.persistence.settings.ParentedBooleanSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
+
 public final class ModifiedCalloutHandle {
 
 	private final BooleanSetting enable;
@@ -22,15 +24,17 @@ public final class ModifiedCalloutHandle {
 	private final @Nullable BooleanSetting allTts;
 	private final @Nullable BooleanSetting allText;
 	private final ColorSetting textColorOverride;
+	private final @Nullable Field field;
 	private final ModifiableCallout<?> originalCallout;
 	private boolean isEnabledByParent = true;
 
 	// Only used for testing
 	ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText) {
-		this(persistenceProvider, propStub, original, allTts, allText, CalloutDefaults.dummy());
+		this(null, persistenceProvider, propStub, original, allTts, allText, CalloutDefaults.dummy());
 	}
 
-	public ModifiedCalloutHandle(PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText, CalloutDefaults defaults) {
+	public ModifiedCalloutHandle(@Nullable Field field, PersistenceProvider persistenceProvider, String propStub, ModifiableCallout<?> original, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText, CalloutDefaults defaults) {
+		this.field = field;
 		this.originalCallout = original;
 		this.allTts = allTts;
 		this.allText = allText;
@@ -69,11 +73,11 @@ public final class ModifiedCalloutHandle {
 	@SuppressWarnings("UnusedReturnValue")
 	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub) {
 		// TODO
-		return installHandle(original, pers, propStub, null, null, CalloutDefaults.dummy());
+		return installHandle(null, original, pers, propStub, null, null, CalloutDefaults.dummy());
 	}
 
-	public static ModifiedCalloutHandle installHandle(ModifiableCallout<?> original, PersistenceProvider pers, String propStub, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText, CalloutDefaults parent) {
-		ModifiedCalloutHandle modified = new ModifiedCalloutHandle(pers, propStub, original, allTts, allText, parent);
+	public static ModifiedCalloutHandle installHandle(Field field, ModifiableCallout<?> original, PersistenceProvider pers, String propStub, @Nullable BooleanSetting allTts, @Nullable BooleanSetting allText, CalloutDefaults parent) {
+		ModifiedCalloutHandle modified = new ModifiedCalloutHandle(field, pers, propStub, original, allTts, allText, parent);
 		original.attachHandle(modified);
 		return modified;
 	}
@@ -176,6 +180,10 @@ public final class ModifiedCalloutHandle {
 
 	public ModifiableCallout<?> getOriginal() {
 		return original;
+	}
+
+	public @Nullable Field getField() {
+		return field;
 	}
 
 	public void resetAllBooleans() {

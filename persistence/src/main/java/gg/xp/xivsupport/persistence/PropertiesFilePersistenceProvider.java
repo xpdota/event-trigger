@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.persistence;
 
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -3,18 +3,22 @@ package gg.xp.xivsupport.speech;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.util.ArgParser;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.persistence.settings.StringSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.StringTokenizer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class PowerShellSpeechProcessor implements FilteredEventHandler {
+public class LocalSpeechProcessor implements FilteredEventHandler {
 
-	private static final Logger log = LoggerFactory.getLogger(PowerShellSpeechProcessor.class);
+	private static final Logger log = LoggerFactory.getLogger(LocalSpeechProcessor.class);
 
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor(r -> {
 		Thread thread = new Thread(r);
@@ -28,23 +32,23 @@ public class PowerShellSpeechProcessor implements FilteredEventHandler {
 //
 //	 Quick test util
 
-	public static void main(String[] args) throws ExecutionException, InterruptedException {
-		// Test sanitization
-		sayAsync("Foo '); Bar; ('");
+//	public static void main(String[] args) throws ExecutionException, InterruptedException {
+//		// Test sanitization
+//		sayAsync("Foo '); Bar; ('");
+//
+//		sayAsync("The quick brown fox");
+//		sayAsync("jumped over the lazy dog");
+//		// These are daemon threads, so it would exit before the speech is able to finish
+//		// Instead, submit a dummy task to wait for the rest to finish.
+//		exs.submit(() -> {
+//		}).get();
+//	}
 
-		sayAsync("The quick brown fox");
-		sayAsync("jumped over the lazy dog");
-		// These are daemon threads, so it would exit before the speech is able to finish
-		// Instead, submit a dummy task to wait for the rest to finish.
-		exs.submit(() -> {
-		}).get();
-	}
-
-	public static void sayAsync(String text) {
+	public void sayAsync(String text) {
 		exs.submit(() -> saySync(text));
 	}
 
-	public static void saySync(String textUnsanitized) {
+	public void saySync(String textUnsanitized) {
 		// TODO: make sure this is enough sanitization.
 		String text = textUnsanitized.replaceAll("['\";\0]", "");
 		if (!text.equals(textUnsanitized)) {
@@ -53,11 +57,23 @@ public class PowerShellSpeechProcessor implements FilteredEventHandler {
 		}
 		log.info("Saying text: {}", text);
 		try {
-			// TODO: replace this with something that's not terrible. Even just holding the PS open and communicating
-			// with pipes would probably make it a little more responsive.
-			Process process = Runtime.getRuntime().exec("powershell.exe Add-Type -AssemblyName System.speech; " +
-					"$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
-					"$speak.Speak('" + text + "')");
+			Process process;
+			if (overrideExecutable.get()) {
+				String customExe = customExecutable.get();
+				List<String> cmdList = ArgParser.tokenize(customExe, false);
+				String[] cmdarray = cmdList.toArray(new String[0]);
+				for (int i = 0; i < cmdarray.length; i++) {
+					cmdarray[i] = cmdarray[i].replaceAll("\\$TEXT", text);
+				}
+				process = Runtime.getRuntime().exec(cmdarray);
+			}
+			else {
+				// TODO: replace this with something that's not terrible. Even just holding the PS open and communicating
+				// with pipes would probably make it a little more responsive.
+				process = Runtime.getRuntime().exec("powershell.exe Add-Type -AssemblyName System.speech; " +
+					                                    "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
+					                                    "$speak.Speak('" + text + "')");
+			}
 			int exit = process.waitFor();
 			if (exit == 0) {
 				return;
@@ -72,8 +88,13 @@ public class PowerShellSpeechProcessor implements FilteredEventHandler {
 	}
 
 	private final BooleanSetting enable;
-	public PowerShellSpeechProcessor(PersistenceProvider pers) {
+	private final BooleanSetting overrideExecutable;
+	private final StringSetting customExecutable;
+
+	public LocalSpeechProcessor(PersistenceProvider pers) {
 		this.enable = new BooleanSetting(pers, "fallback-local-tts.enable-tts", false);
+		this.overrideExecutable = new BooleanSetting(pers, "fallback-local-tts.override-executable", false);
+		this.customExecutable = new StringSetting(pers, "fallback-local-tts.custom-executable", "/usr/local/bin/mimic -voice ap -t $TEXT");
 	}
 
 	// This is a fallback option
@@ -95,5 +116,13 @@ public class PowerShellSpeechProcessor implements FilteredEventHandler {
 
 	public BooleanSetting getEnabledSetting() {
 		return enable;
+	}
+
+	public BooleanSetting getOverrideExecutable() {
+		return overrideExecutable;
+	}
+
+	public StringSetting getCustomExecutable() {
+		return customExecutable;
 	}
 }

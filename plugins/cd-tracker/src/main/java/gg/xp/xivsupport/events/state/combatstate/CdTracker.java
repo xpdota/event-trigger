@@ -10,16 +10,21 @@ import gg.xp.xivsupport.cdsupport.CustomCooldown;
 import gg.xp.xivsupport.cdsupport.CustomCooldownManager;
 import gg.xp.xivsupport.cdsupport.CustomCooldownsUpdated;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
+import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.state.PlayerChangedJobEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.CdTrackingKey;
+import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivAbility;
+import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.CooldownSetting;
+import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
 import gg.xp.xivsupport.speech.BasicCalloutEvent;
@@ -30,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import java.io.Serial;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,6 +55,7 @@ public class CdTracker {
 	private final BooleanSetting enableTtsPersonal;
 	private final BooleanSetting enableTtsParty;
 	private final BooleanSetting enableFlyingText;
+	private final EnumSetting<PartyRestriction> enemyTargetSouceFilter;
 	private final LongSetting cdTriggerAdvancePersonal;
 	private final LongSetting cdTriggerAdvanceParty;
 	private final IntSetting overlayMaxPersonal;
@@ -84,6 +89,7 @@ public class CdTracker {
 		cdTriggerAdvanceParty = new LongSetting(persistence, "cd-tracker.pre-call-ms.party", 5000L);
 		overlayMaxPersonal = new IntSetting(persistence, "cd-tracker.overlay-max", 8, 1, 32);
 		overlayMaxParty = new IntSetting(persistence, "cd-tracker.overlay-max.party", 8, 1, 32);
+		enemyTargetSouceFilter = new EnumSetting<>(persistence, "cd-tracker.enemy-targeted-source-filter", PartyRestriction.class, PartyRestriction.PARTY);
 	}
 
 	private static String getKey(ExtendedCooldownDescriptor buff) {
@@ -189,10 +195,10 @@ public class CdTracker {
 		@Override
 		public String toString() {
 			return "DelayedCdCallout{" +
-					"key=" + key +
-					", originalEvent=" + originalEvent +
-					", originalResetKey=" + originalResetKey +
-					'}';
+			       "key=" + key +
+			       ", originalEvent=" + originalEvent +
+			       ", originalResetKey=" + originalResetKey +
+			       '}';
 		}
 	}
 
@@ -214,6 +220,21 @@ public class CdTracker {
 	private boolean isEnabledForPartyTtsOnUse(ExtendedCooldownDescriptor cd) {
 		CooldownSetting partyCdSetting = partyCds.get(cd);
 		return partyCdSetting != null && partyCdSetting.getTtsOnUse().get();
+	}
+
+	@SuppressWarnings("SuspiciousMethodCalls")
+	private <X extends HasSourceEntity & HasTargetEntity> boolean countsAsPartyUsage(X event) {
+		XivCombatant source = event.getSource();
+		if (event.getTarget().getType() == CombatantType.NPC) {
+			PartyRestriction restriction = enemyTargetSouceFilter.get();
+			return switch (restriction) {
+				case PARTY -> state.getPartyList().contains(source);
+				default -> source.isPc();
+			};
+		}
+		else {
+			return state.getPartyList().contains(source);
+		}
 	}
 
 	@SuppressWarnings({"SuspiciousMethodCalls"})
@@ -261,7 +282,7 @@ public class CdTracker {
 					log.trace("Personal CD delayed: {}", event);
 					context.enqueue(new DelayedCdCallout(event, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvancePersonal.get()).toMillis()));
 				}
-				else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
+				else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && countsAsPartyUsage(event)) {
 					log.trace("Party CD delayed: {}", event);
 					context.enqueue(new DelayedCdCallout(event, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvanceParty.get()).toMillis()));
 				}
@@ -269,7 +290,7 @@ public class CdTracker {
 					log.trace("Personal CD immediate: {}", event);
 					context.accept(makeCallout(event.getAbility()));
 				}
-				else if (enableTtsParty.get() && isEnabledForPartyTtsOnUse(cd) && state.getPartyList().contains(event.getSource())) {
+				else if (enableTtsParty.get() && isEnabledForPartyTtsOnUse(cd) && countsAsPartyUsage(event)) {
 					log.trace("Party CD immediate: {}", event);
 					context.accept(makeCallout(event.getAbility()));
 				}
@@ -278,7 +299,7 @@ public class CdTracker {
 		if (aux.isEmpty()) {
 			return;
 		}
-		log.info("aux: {}", aux);
+		log.trace("aux: {}", aux);
 		for (CdAuxUsage cdAuxUsage : aux) {
 			ExtendedCooldownDescriptor cd = cdAuxUsage.cd;
 			Instant newReplenishedAt;
@@ -312,7 +333,7 @@ public class CdTracker {
 				keyAbility = event;
 			}
 			Duration delta = Duration.between(event.effectiveTimeNow(), newReplenishedAt);
-			log.info("Delta: {}", delta);
+			log.trace("Delta: {}", delta);
 			// TODO: there's some duplicate whitelist logic
 			boolean isSelf = event.getSource().isThePlayer();
 			if (enableTtsPersonal.get() && isEnabledForPersonalTts(cd) && isSelf) {
@@ -448,6 +469,10 @@ public class CdTracker {
 
 	public Map<ExtendedCooldownDescriptor, CooldownSetting> getPartyCdSettings() {
 		return Collections.unmodifiableMap(partyCds);
+	}
+
+	public EnumSetting<PartyRestriction> getEnemyTargetSourceFilter() {
+		return enemyTargetSouceFilter;
 	}
 
 	@HandleEvents(order = -100)

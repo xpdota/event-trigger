@@ -4,6 +4,7 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.ColorSetting;
+import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import gg.xp.xivsupport.persistence.settings.ObservableSetting;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class CastBarComponentConfig extends ObservableSetting {
 	private final ColorSetting unknownColor;
 	private final ColorSetting backgroundColor;
 	private final ColorSetting textColor;
+	private final EnumSetting<JobIconPlacement> jobIconSetting;
 
 //	private final IntSetting fgTransparency;
 //	private final IntSetting bgTransparency;
@@ -31,11 +33,12 @@ public class CastBarComponentConfig extends ObservableSetting {
 		unknownColor = new ColorSetting(pers, settingKeyBase + "unknown", CastBarComponent.defaultUnknownColor);
 		backgroundColor = new ColorSetting(pers, settingKeyBase + "bg", CastBarComponent.defaultBackgroundColor);
 		textColor = new ColorSetting(pers, settingKeyBase + "textcolor", CastBarComponent.defaultTextColor);
+		jobIconSetting = new EnumSetting<>(pers, settingKeyBase + "job-icon-placement", JobIconPlacement.class, JobIconPlacement.RIGHT);
 
 //		fgTransparency = new IntSetting(pers, settingKeyBase + "fgtrans", 255, 0, 255);
 //		bgTransparency = new IntSetting(pers, settingKeyBase + "bgtrans", 128, 0, 255);
 //		fractionDisplayMode = new EnumSetting<>(pers, settingKeyBase + "fractionmode", BarFractionDisplayOption.class, BarFractionDisplayOption.AUTO);
-		List.of(backgroundColor, inProgressColor, successColor, interruptedColor, unknownColor, textColor)
+		List.of(backgroundColor, inProgressColor, successColor, interruptedColor, unknownColor, textColor, jobIconSetting)
 				.forEach(setting -> setting.addListener(this::notifyListeners));
 	}
 
@@ -61,5 +64,9 @@ public class CastBarComponentConfig extends ObservableSetting {
 
 	public ColorSetting getTextColor() {
 		return textColor;
+	}
+
+	public EnumSetting<JobIconPlacement> getJobIconPlacementSetting() {
+		return jobIconSetting;
 	}
 }

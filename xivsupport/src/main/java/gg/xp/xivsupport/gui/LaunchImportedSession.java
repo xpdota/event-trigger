@@ -7,8 +7,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeImportTimeSource;
 import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
-import gg.xp.xivsupport.eventstorage.EventReader;
-import gg.xp.xivsupport.gui.util.CatchFatalError;
+import gg.xp.xivsupport.gui.imprt.EventIterator;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
@@ -17,9 +16,7 @@ import org.picocontainer.MutablePicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.time.Instant;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -30,22 +27,11 @@ public final class LaunchImportedSession {
 	private LaunchImportedSession() {
 	}
 
-	public static void fromEvents(List<? extends Event> events) {
+	public static void fromEvents(EventIterator<? extends Event> events) {
 		fromEvents(events, false);
 	}
 
-	public static void fromFile(File file, boolean decompress, Runnable after) {
-		exs.submit(() -> {
-			List<Event> events = EventReader.readEventsFromFile(file);
-			CatchFatalError.run(() -> {
-				fromEvents(events, decompress);
-			});
-			after.run();
-		});
-
-	}
-
-	public static void fromEvents(List<? extends Event> events, boolean decompress) {
+	public static void fromEvents(EventIterator<? extends Event> events, boolean decompress) {
 		// TODO: this needs a fake time source
 		CommonGuiSetup.setup();
 		MutablePicoContainer pico = XivMain.importInit();

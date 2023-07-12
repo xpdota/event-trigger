@@ -847,15 +847,23 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 				s.waitMs(1000);
 				if (normalized.values().stream().allMatch(p -> p.x() < 0)
 				    || normalized.values().stream().allMatch(p -> p.x() > 0)) {
-					normalized.entrySet().stream().max(Comparator.comparing(e -> e.getValue().distanceFrom2D(eyePos)))
-							.ifPresent(furthest -> {
-								XivPlayerCharacter swapper = furthest.getKey();
-								XivPlayerCharacter swapee = e1.getPlayerForAssignment(e1.forPlayer(swapper).getCounterpart());
-								s.setParam("swapper", swapper);
-								s.setParam("swapee", swapee);
-								s.setParam("mid", mid);
-								s.updateCall(furthestFromEyeSwap, stackMarkers.get(0));
-							});
+					List<XivPlayerCharacter> sorted = normalized.entrySet().stream().sorted(Comparator.comparing(e -> e.getValue().distanceFrom2D(eyePos))).map(e -> e.getKey()).toList();
+					if (sorted.size() != 2) {
+						log.error("Error! Expected 2 players, but list was {}", sorted);
+						return;
+					}
+					XivPlayerCharacter nearSwapper = sorted.get(0);
+					XivPlayerCharacter nearSwapee = e1.getPlayerForAssignment(e1.forPlayer(nearSwapper).getCounterpart());
+					XivPlayerCharacter swapper = sorted.get(1);
+					XivPlayerCharacter swapee = e1.getPlayerForAssignment(e1.forPlayer(swapper).getCounterpart());
+					s.setParam("swapper", swapper);
+					s.setParam("swapee", swapee);
+
+					s.setParam("nearSwapper", nearSwapper);
+					s.setParam("nearSwapee", nearSwapee);
+					s.setParam("mid", mid);
+					s.updateCall(furthestFromEyeSwap, stackMarkers.get(0));
+
 				}
 				else {
 					s.updateCall(furthestFromEyeNoSwap, stackMarkers.get(0));
@@ -878,7 +886,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					omegaF = getState().npcById(15715);
 					// TODO: is it more reliable to use the ID ordering, or positions?
 					omegaM = getState().npcById(15714);
-					// Validate date
+					// Validate state
 				} while (omegaF == null || omegaM == null
 				         || omegaF.getPos() == null || omegaM.getPos() == null
 				         || (omegaF.getPos().distanceFrom2D(center) < 9) || omegaM.getPos().distanceFrom2D(center) < 9

@@ -10,10 +10,11 @@ import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
-import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivStatusEffect;
+import gg.xp.xivsupport.speech.CalloutEvent;
+import gg.xp.xivsupport.speech.CalloutTraceInfo;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -21,10 +22,11 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.net.URL;
+import java.util.Map;
 
 /**
  * Class might as well be renamed "AllTheStuffInThePrimaryValueColumnRenderer" at this point.
- *
+ * <p>
  * Renderer for status effects, actions, and other stuff.
  */
 public class ActionAndStatusRenderer implements TableCellRenderer {
@@ -86,8 +88,13 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		}
 		else if (value instanceof HasAbility hasAbility) {
 			XivAbility ability = hasAbility.getAbility();
-			text = ability.getName();
 			icon = ActionLibrary.iconForId(ability.getId());
+			if (value instanceof HasDuration hd && !hd.isIndefinite()) {
+				text = ability.getName() + String.format(" (%.02fs)", hd.getInitialDuration().toMillis() / 1_000.0);
+			}
+			else {
+				text = ability.getName();
+			}
 			tooltip = String.format("%s (0x%x, %s)", ability.getName(), ability.getId(), ability.getId());
 			idText = String.format("%X", ability.getId());
 		}
@@ -132,6 +139,34 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 		}
 		else if (value instanceof NameIdPair pair) {
 			return fallback.getTableCellRendererComponent(table, pair.getName(), isSelected, hasFocus, row, column);
+		}
+		else if (value instanceof CalloutEvent ce) {
+			String call = ce.getCallText();
+			text = call == null ? "No TTS" : call;
+			CalloutTraceInfo trace = ce.getTrace();
+			if (trace == null) {
+				tooltip = "";
+			}
+			else {
+				// TODO: work parent event into here
+				StringBuilder sb = new StringBuilder();
+				sb.append("TTS: '").append(call).append("'\n")
+						.append("Raw TTS: ").append(trace.getRawTts()).append('\n')
+						.append("Raw Text: ").append(trace.getRawText()).append("\n\n")
+						.append("Origin: ").append(trace.getOriginDescription()).append('\n');
+				Map<String, Object> args = trace.getArgs();
+				if (args.isEmpty()) {
+					sb.append("Args: none");
+				}
+				else {
+					sb.append("Args: \n");
+					args.forEach((k, v) -> {
+						sb.append("  ").append(k).append(": ").append(v).append('\n');
+					});
+				}
+				tooltip = sb.toString();
+			}
+			icon = null;
 		}
 		// Ehhh, really not the place for this, but it can move later
 		else if (value instanceof HasPrimaryValue hasPrimaryValue) {

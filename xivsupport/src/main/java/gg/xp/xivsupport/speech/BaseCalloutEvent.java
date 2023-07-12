@@ -6,12 +6,16 @@ import gg.xp.xivsupport.callouts.CalloutTrackingKey;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
+import java.io.Serial;
 import java.time.Duration;
 
 public abstract class BaseCalloutEvent extends BaseEvent implements CalloutEvent {
 
+	@Serial
+	private static final long serialVersionUID = -3290945522062716450L;
 	private @Nullable Color colorOverride;
 	private @Nullable HasCalloutTrackingKey replaces;
+	private @Nullable CalloutTraceInfo trace;
 
 	private final CalloutTrackingKey key;
 
@@ -56,5 +60,16 @@ public abstract class BaseCalloutEvent extends BaseEvent implements CalloutEvent
 	@Override
 	public CalloutTrackingKey trackingKey() {
 		return key;
+	}
+
+
+	@Nullable
+	@Override
+	public CalloutTraceInfo getTrace() {
+		return trace;
+	}
+
+	public void setTrace(CalloutTraceInfo trace) {
+		this.trace = trace;
 	}
 }

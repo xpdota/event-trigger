@@ -61,6 +61,7 @@ public final class TimelineManager {
 			.guiProvider(e -> IconTextRenderer.getStretchyIcon(e.getIconUrl()));
 	private final FileSetting cactbotUserDirSetting;
 	private final IntSetting barTimeBasis;
+	private final IntSetting barWidth;
 
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
@@ -73,6 +74,7 @@ public final class TimelineManager {
 		debugMode = new BooleanSetting(pers, "timeline-overlay.debug-mode", false);
 		prePullShow = new BooleanSetting(pers, "timeline-overlay.show-pre-pull", false);
 		resetOnMapChange = new BooleanSetting(pers, "timeline-overlay.reset-on-map-change", false);
+		barWidth = new IntSetting(pers, "timeline-bar-width", 150, 50, 1000);
 		barTimeBasis = new IntSetting(pers, "timeline-overlay.bar-time-basis-seconds", 60, 1, 3600);
 
 		File defaultUserDir;
@@ -115,6 +117,15 @@ public final class TimelineManager {
 		return zoneIdToTimelineFile.get(zoneId);
 	}
 
+	public @Nullable TimelineProcessor getTimelineIfEnabled(long zoneId) {
+		TimelineCustomizations cust = getCustomSettings(zoneId);
+		if (!cust.enabled) {
+			log.info("Timeline disabled for zone {}", zoneId);
+			return null;
+		}
+		return getTimeline(zoneId);
+	}
+
 	public @Nullable TimelineProcessor getTimeline(long zoneId) {
 		TimelineInfo info = getInfoForZone(zoneId);
 		if (info == null) {
@@ -143,7 +154,7 @@ public final class TimelineManager {
 										TimelineReplacements tr = mapper.readValue(translationsStream, TimelineReplacements.class);
 										String lang = this.lang.getGameLanguage().getShortCode();
 										lr = tr.langs().getOrDefault(lang, LanguageReplacements.empty());
-										log.info("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
+										log.debug("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
 										return lr;
 									}
 									catch (IOException e) {
@@ -187,17 +198,25 @@ public final class TimelineManager {
 		else {
 			pers.save(propStubForZoneId(zoneId), cust);
 		}
-		if (this.zone != null && this.zone.getId() == zoneId && currentTimeline != null) {
+		if (this.zone != null && this.zone.getId() == zoneId) {
 			resetCurrentTimelineKeepSync();
 		}
 	}
 
 	private void resetCurrentTimelineKeepSync() {
-		if (this.zone != null && currentTimeline != null) {
-			// TODO: save/restore the timestamp so it is easier to live-edit
-			TimelineProcessor.TimelineSync lastSync = currentTimeline.getLastSync();
-			loadTimelineForCurrentZone();
-			currentTimeline.setLastSync(lastSync);
+		if (this.zone != null) {
+			if (currentTimeline != null) {
+				// Save/restore the timestamp so it is easier to live-edit
+				TimelineProcessor.TimelineSync lastSync = currentTimeline.getLastSync();
+				loadTimelineForCurrentZone();
+				if (currentTimeline != null) {
+					currentTimeline.setLastSync(lastSync);
+				}
+			}
+			else {
+				// This can happen if you have just enabled the timeline
+				loadTimelineForCurrentZone();
+			}
 		}
 	}
 
@@ -263,7 +282,7 @@ public final class TimelineManager {
 			return;
 		}
 		long zoneId = zone.getId();
-		currentTimeline = getTimeline(zoneId);
+		currentTimeline = getTimelineIfEnabled(zoneId);
 		if (currentTimeline == null) {
 			log.info("No timeline for zone '{}'", zoneId);
 		}
@@ -327,5 +346,9 @@ public final class TimelineManager {
 
 	public IntSetting getBarTimeBasis() {
 		return barTimeBasis;
+	}
+
+	public IntSetting getBarWidth() {
+		return barWidth;
 	}
 }

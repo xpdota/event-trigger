@@ -147,7 +147,9 @@ public class CalloutSettingGui {
 		if (edesc == null) {
 			return null;
 		}
-		return new ReadOnlyText(edesc);
+		ReadOnlyText text = new ReadOnlyText(edesc);
+		text.setFocusable(true);
+		return text;
 	}
 
 	public JPanel getTtsPanel() {

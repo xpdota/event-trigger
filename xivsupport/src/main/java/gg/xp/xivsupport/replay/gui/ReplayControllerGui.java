@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.replay.gui;
 
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.imprt.EventsCount;
+import gg.xp.xivsupport.gui.imprt.MoreEventsType;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
@@ -75,7 +77,12 @@ public final class ReplayControllerGui {
 	}
 
 	private void updateAll() {
-		progressLabel.setText(String.format("Replay: %s / %s", controller.getCurrentPosition(), controller.getCount()));
+		EventsCount counts = controller.getCounts();
+		StringBuilder sb = new StringBuilder("Replay: ").append(counts.current()).append(" / ").append(counts.total());
+		if (counts.totalType() == MoreEventsType.AT_LEAST) {
+			sb.append('+');
+		}
+		progressLabel.setText(sb.toString());
 		if (controller.hasMoreEvents()) {
 			if (playing) {
 				playPauseButton.setText("Pause");

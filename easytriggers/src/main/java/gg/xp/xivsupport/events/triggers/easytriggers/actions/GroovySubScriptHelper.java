@@ -85,6 +85,7 @@ public class GroovySubScriptHelper implements HasMutableEventType {
 			Binding originalBinding = parsedScript.getBinding();
 			// TODO: does getVariables() also need to be overridden?
 			// TODO: make this more official
+			// TODO: verify that this reflects changes in the parent binding
 			Binding mergedBinding = new Binding(originalBinding.getVariables()) {
 				@Override
 				public Object getVariable(String name) {

@@ -15,12 +15,17 @@ public class ACTLogLineEvent extends BaseEvent implements Compressible, HasPrima
 	private static final long serialVersionUID = -5255204546093791693L;
 	private final String logLine;
 	private final String[] rawFields;
+	private final int lineNum;
 	private final ZonedDateTime timestamp;
 	private final int lineNumber;
 
 	public ACTLogLineEvent(String logLine) {
+		this(logLine, 0);
+	}
+	public ACTLogLineEvent(String logLine, int lineNum) {
 		this.logLine = logLine;
 		rawFields = logLine.split("\\|");
+		this.lineNum = lineNum;
 		this.timestamp = ZonedDateTime.parse(rawFields[1]);
 		lineNumber = Integer.parseInt(rawFields[0]);
 		setHappenedAt(timestamp.toInstant());
@@ -36,6 +41,10 @@ public class ACTLogLineEvent extends BaseEvent implements Compressible, HasPrima
 
 	public ZonedDateTime getTimestamp() {
 		return timestamp;
+	}
+
+	public int getLineNum() {
+		return lineNum;
 	}
 
 	public String getEmulatedActLogLine() {

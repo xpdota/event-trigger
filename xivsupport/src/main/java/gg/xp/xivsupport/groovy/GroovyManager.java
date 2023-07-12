@@ -149,6 +149,7 @@ public class GroovyManager {
 				"gg.xp.xivsupport.events.actlines.events",
 				"java.util",
 				"java.util.function",
+				"java.time",
 				"javax.swing",
 				"java.awt",
 				"gg.xp.xivdata.data",
