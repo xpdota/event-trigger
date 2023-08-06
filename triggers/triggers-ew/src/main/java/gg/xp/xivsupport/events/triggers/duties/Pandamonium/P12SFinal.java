@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.events.triggers.duties.Pandamonium;
 
 import gg.xp.reevent.events.BaseEvent;
-import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
@@ -89,14 +88,25 @@ public class P12SFinal extends AutoChildEventHandler implements FilteredEventHan
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x8326));
 				s.updateCall(uav1WaitMiddle);
 				s.waitEvent(HeadMarkerEvent.class);
-				s.waitThenRefreshCombatants(200);
-				List<AbilityCastStart> casts = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8330));
+				// Fast path - check NPC positions. If not populated yet, wait for casts.
+				List<XivCombatant> uavNpcs = state.npcsById(16182).stream().filter(npc -> uavPos.distanceFromCenter(npc) > 5).toList();
 				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.all);
-				casts.forEach(cast -> {
-					ArenaSector castPos = uavPos.forCombatant(cast.getSource());
-					safe.remove(castPos);
-					safe.remove(castPos.opposite());
-				});
+				if (uavNpcs.size() == 3) {
+					uavNpcs.stream()
+							.map(uavPos::forCombatant)
+							.forEach(npcPos -> {
+								safe.remove(npcPos);
+								safe.remove(npcPos.opposite());
+							});
+				}
+				else {
+					List<AbilityCastStart> casts = s.waitEvents(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8330));
+					casts.forEach(cast -> {
+						ArenaSector castPos = uavPos.forCombatant(cast.getSource());
+						safe.remove(castPos);
+						safe.remove(castPos.opposite());
+					});
+				}
 				s.setParam("safe", safe.stream().toList());
 				s.updateCall(uav1SafeSpots);
 				BuffApplied chain = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xE03));
