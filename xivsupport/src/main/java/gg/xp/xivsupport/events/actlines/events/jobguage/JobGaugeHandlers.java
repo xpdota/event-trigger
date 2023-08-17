@@ -36,6 +36,9 @@ public class JobGaugeHandlers {
 			case GNB -> {
 				out = doGnbGauge(event);
 			}
+			case RPR -> {
+				out = doRprGauge(event);
+			}
 			default -> {
 				return;
 			}
@@ -116,6 +119,18 @@ public class JobGaugeHandlers {
 		int powderGauge = data[1];
 
 		return new GnbGaugeEvent(powderGauge);
+	}
+
+	private Event doRprGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+
+		int soulGauge = data[1];
+		int shroudGauge = data[2];
+		double enshroudDuration = bytesToInt(data[4], data[3]);
+		int blueShroudOrbs = data[5];
+		int pinkShroudOrbs = data[6];
+
+		return new RprGaugeEvent(soulGauge, shroudGauge, enshroudDuration, blueShroudOrbs, pinkShroudOrbs);
 	}
 
 	private static long bytesToLong(byte... bytes) {
