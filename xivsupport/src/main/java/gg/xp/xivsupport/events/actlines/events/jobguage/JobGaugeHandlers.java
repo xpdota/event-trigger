@@ -12,17 +12,68 @@ public class JobGaugeHandlers {
 	public void handleEvents(EventContext context, RawJobGaugeEvent event) {
 		Event out;
 		switch (event.getJob()) {
+			case WHM -> {
+				out = doWhmGauge(event);
+			}
+			case SCH -> {
+				out = doSchGauge(event);
+			}
+			case AST -> {
+				out = doAstGauge(event);
+			}
 			case SGE -> {
 				out = doSgeGauge(event);
 			}
+			case PLD -> {
+				out = doPldGauge(event);
+			}
+			case WAR -> {
+				out = doWarGauge(event);
+			}
 			case DRK -> {
 				out = doDrkGauge(event);
+			}
+			case GNB -> {
+				out = doGnbGauge(event);
 			}
 			default -> {
 				return;
 			}
 		}
 		context.accept(out);
+	}
+
+	private Event doWhmGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+
+		long lilyDuration = bytesToInt(data[4], data[3]);
+		int lilyCount = data[5];
+		int bloodLily = data[6];
+
+		return new WhmGaugeEvent(lilyDuration, lilyCount, bloodLily);
+	}
+
+	private Event doSchGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+
+		int aetherflow = data[1];
+		int faerieGauge = data[2];
+		long seraphDuration = bytesToInt(data[4], data[3]);
+		int unknown5 = data[5];
+
+		return new SchGaugeEvent(aetherflow, faerieGauge, seraphDuration, unknown5);
+	}
+
+	private Event doAstGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+
+		int cardHeld = data[6] & 0xf;
+		int minorHeld = (data[6] >> 8) & 0xf;
+		int slot1 = data[7] & 3;
+		int slot2 = (data[7] >> 2) & 3;
+		int slot3 = (data[7] >> 4) & 3;
+
+		return new AstGaugeEvent(cardHeld, minorHeld, slot1, slot2, slot3);
 	}
 
 	private Event doSgeGauge(RawJobGaugeEvent event) {
@@ -37,6 +88,20 @@ public class JobGaugeHandlers {
 		return new SgeGaugeEvent(addersGallOverall, adderSting, eukrasiaActive);
 	}
 
+	private Event doPldGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+		int oathGauge = data[1];
+
+		return new PldGaugeEvent(oathGauge);
+	}
+
+	private Event doWarGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+		int beastGauge = data[1];
+
+		return new WarGaugeEvent(beastGauge);
+	}
+
 	private Event doDrkGauge(RawJobGaugeEvent event) {
 		byte[] data = event.getRawData();
 		int bloodGauge = data[1];
@@ -44,6 +109,13 @@ public class JobGaugeHandlers {
 		long esteemDuration = bytesToInt(data[8], data[7]);
 
 		return new DrkGaugeEvent(bloodGauge, darkSideDuration, esteemDuration);
+	}
+
+	private Event doGnbGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+		int powderGauge = data[1];
+
+		return new GnbGaugeEvent(powderGauge);
 	}
 
 	private static long bytesToLong(byte... bytes) {
