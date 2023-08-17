@@ -15,11 +15,14 @@ public class JobGaugeHandlers {
 			case SGE -> {
 				out = doSgeGauge(event);
 			}
-			case DRK -> {
-				out = doDrkGauge(event);
-			}
 			case PLD -> {
 				out = doPldGauge(event);
+			}
+			case WAR -> {
+				out = doWarGauge(event);
+			}
+			case DRK -> {
+				out = doDrkGauge(event);
 			}
 			default -> {
 				return;
@@ -40,6 +43,20 @@ public class JobGaugeHandlers {
 		return new SgeGaugeEvent(addersGallOverall, adderSting, eukrasiaActive);
 	}
 
+	private Event doPldGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+		int oathGauge = data[1];
+
+		return new PldGaugeEvent(oathGauge);
+	}
+
+	private Event doWarGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+		int beastGauge = data[1];
+
+		return new WarGaugeEvent(beastGauge);
+	}
+
 	private Event doDrkGauge(RawJobGaugeEvent event) {
 		byte[] data = event.getRawData();
 		int bloodGauge = data[1];
@@ -47,13 +64,6 @@ public class JobGaugeHandlers {
 		long esteemDuration = bytesToInt(data[8], data[7]);
 
 		return new DrkGaugeEvent(bloodGauge, darkSideDuration, esteemDuration);
-	}
-
-	private Event doPldGauge(RawJobGaugeEvent event) {
-		byte[] data = event.getRawData();
-		int oathGauge = data[1];
-
-		return new PldGaugeEvent(oathGauge);
 	}
 
 	private static long bytesToLong(byte... bytes) {
