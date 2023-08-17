@@ -12,6 +12,9 @@ public class JobGaugeHandlers {
 	public void handleEvents(EventContext context, RawJobGaugeEvent event) {
 		Event out;
 		switch (event.getJob()) {
+			case WHM -> {
+				out = doWhmGauge(event);
+			}
 			case SGE -> {
 				out = doSgeGauge(event);
 			}
@@ -32,6 +35,16 @@ public class JobGaugeHandlers {
 			}
 		}
 		context.accept(out);
+	}
+
+	private Event doWhmGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+
+		long lilyDuration = bytesToInt(data[4], data[3]);
+		int lilyCount = data[5];
+		int bloodLily = data[6];
+
+		return new WhmGaugeEvent(lilyDuration, lilyCount, bloodLily);
 	}
 
 	private Event doSgeGauge(RawJobGaugeEvent event) {
