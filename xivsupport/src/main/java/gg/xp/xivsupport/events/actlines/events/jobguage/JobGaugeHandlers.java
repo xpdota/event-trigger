@@ -24,6 +24,9 @@ public class JobGaugeHandlers {
 			case DRK -> {
 				out = doDrkGauge(event);
 			}
+			case GNB -> {
+				out = doGnbGauge(event);
+			}
 			default -> {
 				return;
 			}
@@ -64,6 +67,13 @@ public class JobGaugeHandlers {
 		long esteemDuration = bytesToInt(data[8], data[7]);
 
 		return new DrkGaugeEvent(bloodGauge, darkSideDuration, esteemDuration);
+	}
+
+	private Event doGnbGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+		int powderGauge = data[1];
+
+		return new GnbGaugeEvent(powderGauge);
 	}
 
 	private static long bytesToLong(byte... bytes) {
