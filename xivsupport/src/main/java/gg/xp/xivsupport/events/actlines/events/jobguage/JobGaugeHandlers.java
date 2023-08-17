@@ -18,6 +18,9 @@ public class JobGaugeHandlers {
 			case SCH -> {
 				out = doSchGauge(event);
 			}
+			case AST -> {
+				out = doAstGauge(event);
+			}
 			case SGE -> {
 				out = doSgeGauge(event);
 			}
@@ -59,6 +62,18 @@ public class JobGaugeHandlers {
 		int unknown5 = data[5];
 
 		return new SchGaugeEvent(aetherflow, faerieGauge, seraphDuration, unknown5);
+	}
+
+	private Event doAstGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+
+		int cardHeld = data[6] & 0xf;
+		int minorHeld = (data[6] >> 8) & 0xf;
+		int slot1 = data[7] & 3;
+		int slot2 = (data[7] >> 2) & 3;
+		int slot3 = (data[7] >> 4) & 3;
+
+		return new AstGaugeEvent(cardHeld, minorHeld, slot1, slot2, slot3);
 	}
 
 	private Event doSgeGauge(RawJobGaugeEvent event) {
