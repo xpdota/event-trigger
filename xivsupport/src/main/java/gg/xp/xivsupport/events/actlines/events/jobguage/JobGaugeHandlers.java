@@ -15,6 +15,9 @@ public class JobGaugeHandlers {
 			case WHM -> {
 				out = doWhmGauge(event);
 			}
+			case SCH -> {
+				out = doSchGauge(event);
+			}
 			case SGE -> {
 				out = doSgeGauge(event);
 			}
@@ -45,6 +48,17 @@ public class JobGaugeHandlers {
 		int bloodLily = data[6];
 
 		return new WhmGaugeEvent(lilyDuration, lilyCount, bloodLily);
+	}
+
+	private Event doSchGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+
+		int aetherflow = data[1];
+		int faerieGauge = data[2];
+		long seraphDuration = bytesToInt(data[4], data[3]);
+		int unknown5 = data[5];
+
+		return new SchGaugeEvent(aetherflow, faerieGauge, seraphDuration, unknown5);
 	}
 
 	private Event doSgeGauge(RawJobGaugeEvent event) {
