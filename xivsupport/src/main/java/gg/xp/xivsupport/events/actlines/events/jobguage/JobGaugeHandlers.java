@@ -39,6 +39,9 @@ public class JobGaugeHandlers {
 			case RPR -> {
 				out = doRprGauge(event);
 			}
+			case MCH -> {
+				out = doMchGauge(event);
+			}
 			default -> {
 				return;
 			}
@@ -131,6 +134,17 @@ public class JobGaugeHandlers {
 		int pinkShroudOrbs = data[6];
 
 		return new RprGaugeEvent(soulGauge, shroudGauge, enshroudDuration, blueShroudOrbs, pinkShroudOrbs);
+	}
+
+	private Event doMchGauge(RawJobGaugeEvent event) {
+		byte[] data = event.getRawData();
+
+		double hyperchargeDuration = bytesToInt(data[2], data[1]);
+		double queenDuration = bytesToInt(data[4], data[3]);
+		int heatGauge = data[5];
+		int batteryGauge = data[6];
+
+		return new MchGaugeEvent(hyperchargeDuration, queenDuration, heatGauge, batteryGauge);
 	}
 
 	private static long bytesToLong(byte... bytes) {
