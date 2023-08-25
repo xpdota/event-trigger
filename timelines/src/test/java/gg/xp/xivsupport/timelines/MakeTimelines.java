@@ -89,6 +89,7 @@ public final class MakeTimelines {
 		opts.setHeadless(true);
 		opts.addArguments("--remote-allow-origins=*");
 		opts.addArguments("--disable-dev-shm-usage");
+		opts.addArguments("--disable-gpu");
 		opts.addArguments("--remote-debugging-port=60922");
 		ChromeDriver driver = new ChromeDriver(opts);
 		Map<Long, String> zoneToFile = new HashMap<>();
