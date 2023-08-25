@@ -83,7 +83,9 @@ public final class MakeTimelines {
 		log.info("Beginning timeline extraction");
 		log.info("Working directory: {}", Path.of(".").toAbsolutePath());
 		if (System.getProperty("make-timelines.use-driver-helper", "true").equals("true")) {
-			WebDriverManager.chromedriver().setup();
+			log.info("Setting up ChromeDriver");
+			WebDriverManager.chromiumdriver().setup();
+			log.info("Set up ChromeDriver");
 		}
 		ChromeOptions opts = new ChromeOptions();
 		opts.setHeadless(true);
@@ -91,7 +93,9 @@ public final class MakeTimelines {
 		opts.addArguments("--disable-dev-shm-usage");
 		opts.addArguments("--disable-gpu");
 		opts.addArguments("--remote-debugging-port=60922");
+		log.info("Starting ChromeDriver");
 		ChromeDriver driver = new ChromeDriver(opts);
+		log.info("Started ChromeDriver");
 		Map<Long, String> zoneToFile = new HashMap<>();
 		String timelineBaseDir = System.getProperty("timelinedir", "timelines/src/main/resources");
 		Path timelineBasePath = Path.of(timelineBaseDir);
