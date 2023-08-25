@@ -89,10 +89,10 @@ public final class MakeTimelines {
 		}
 		ChromeOptions opts = new ChromeOptions();
 		opts.setHeadless(true);
-		opts.addArguments("--remote-allow-origins=*");
-		opts.addArguments("--disable-dev-shm-usage");
-		opts.addArguments("--disable-gpu");
-		opts.addArguments("--remote-debugging-port=60922");
+		opts.addArguments("remote-allow-origins=*");
+		opts.addArguments("disable-dev-shm-usage");
+		opts.addArguments("disable-gpu");
+		opts.addArguments("remote-debugging-port=60922");
 		log.info("Starting ChromeDriver");
 		ChromeDriver driver = new ChromeDriver(opts);
 		log.info("Started ChromeDriver");
