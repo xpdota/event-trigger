@@ -7,24 +7,18 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
-import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
-import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
-import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @CalloutRepo(name = "The Unending Coil of Bahamut", duty = KnownDuty.UCoB)
 public class UCoB extends AutoChildEventHandler implements FilteredEventHandler {
 
-	public UCoB (XivState state) {this.state = state; }
+	public UCoB(XivState state) {this.state = state; }
 
 	public XivState getState() {return state;}
 
