@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.XivStateImpl;
+import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +28,9 @@ public class UCoB extends AutoChildEventHandler implements FilteredEventHandler 
 
 	//Twintania
 	private final ModifiableCallout<AbilityCastStart> twister = ModifiableCallout.durationBasedCall("Twister", "Twister");
-	private final ModifiableCallout<AbilityCastStart> plummet = ModifiableCallout.durationBasedCall("Plummet", "Frontal");
+	private final ModifiableCallout<AbilityCastStart> plummet = ModifiableCallout.durationBasedCall("Plummet", "Frontal on {event.target}");
 	private final ModifiableCallout<HeadMarkerEvent> fireballOnYou = new ModifiableCallout<>("Fireball (headmark)", "Stack");
-	private final ModifiableCallout<AbilityCastStart> deathSentece = ModifiableCallout.durationBasedCall("Death Sentence");
-	private final ModifiableCallout<AbilityCastStart> deathSenteceOnYou =  ModifiableCallout.durationBasedCall("Death Sentence","Death Sentence on you!");
-
+	private final ModifiableCallout<AbilityCastStart> deathSentece = ModifiableCallout.durationBasedCall("Death Sentence","Death Sentence on {event.target}!");
 	private final ModifiableCallout<AbilityCastStart> liquidHell = ModifiableCallout.durationBasedCall("Liquid Hell", "Move");
 
 	//Nael quotes
@@ -47,8 +46,8 @@ public class UCoB extends AutoChildEventHandler implements FilteredEventHandler 
 
 	//Bahamut
 	// Consider adding specific triggers for trios
-	private final ModifiableCallout<ChatLineEvent> flatten = new ModifiableCallout<>("Flatten", "Flatten on you");
-	private final ModifiableCallout<AbilityCastStart> flattenOnYou = ModifiableCallout.durationBasedCall("Flatten", "flatten on you");
+	@NpcCastCallout(0x26D5)
+	private final ModifiableCallout<AbilityCastStart> flatten = new ModifiableCallout<>("Flatten", "Flatten on {event.Target}");
 
 	private final ModifiableCallout<ChatLineEvent> InSpreadNeuroLinkSpread = new ModifiableCallout<>("From hallowed moon I descend, a rain of stars to bring!", "In Spread neuro Spread");
 	private final ModifiableCallout<ChatLineEvent> SpreadInNeuroLinkSpread = new ModifiableCallout<>("From on high I descend, the moon and stars to bring","Spread In neuro Spread");
@@ -75,8 +74,6 @@ public class UCoB extends AutoChildEventHandler implements FilteredEventHandler 
 			case 0x26A8 -> call = plummet;
 			case 0x26A9 -> call = deathSentece;
 			case 0x26AD -> call = liquidHell;
-
-
 			default -> {return;}
 		}
 		context.accept(call.getModified(event));
@@ -95,7 +92,6 @@ public class UCoB extends AutoChildEventHandler implements FilteredEventHandler 
 			case "from on high i descend, the hallowed moon to call!" -> call = spreadIn;
 			case "fleeting light! 'neath the red moon, scorch you the earth!" -> call = tankBusterStack;
 			case "fleeting light! amid a rain of stars, exalt you the red moon!" -> call = spreadTankBuster;
-			case "bahamut prime readies flatten." -> call = flatten;
 			case "from hallowed moon i descend, a rain of stars to bring" -> call = InSpreadNeuroLinkSpread;
 			case "from on high i descend, the moon and stars to bring" -> call = SpreadInNeuroLinkSpread;
 			case "from hallowed moon i bare iron, in my descent to wield" -> call = inOutSpread;
