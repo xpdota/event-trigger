@@ -39,9 +39,6 @@ public class EasyAction {
 
 	public Action asAction() {
 		return new AbstractAction(name) {
-//			{
-//				putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-//			}
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -78,13 +75,48 @@ public class EasyAction {
 	}
 
 	public JButton asButtonWithKeyLabel() {
-		JButton button = new JButton(asAction());
+		JButton button = new JButton(new AbstractAction(name) {
+			{
+				putValue(Action.ACCELERATOR_KEY, key);
+			}
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				runAction.run();
+			}
+
+			@Override
+			public boolean isEnabled() {
+				return true;
+			}
+		}) {
+			@Override
+			public boolean isEnabled() {
+				return enabled.get();
+			}
+		};
 		button.setText(button.getText() + " (" + getHotkeyAsString() + ')');
 		return button;
 	}
 
 	public JButton asButton() {
-		JButton button = new JButton(asAction());
+		JButton button = new JButton(new AbstractAction(name) {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				runAction.run();
+			}
+
+			@Override
+			public boolean isEnabled() {
+				return true;
+			}
+		}) {
+			@Override
+			public boolean isEnabled() {
+				return enabled.get();
+			}
+		};
 		if (key != null) {
 			button.setToolTipText(button.getText() + " (" + getHotkeyAsString() + ')');
 		}

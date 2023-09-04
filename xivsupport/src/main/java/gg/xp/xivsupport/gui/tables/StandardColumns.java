@@ -532,14 +532,17 @@ public final class StandardColumns {
 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-			CustomTableModel<X> model = (CustomTableModel<X>) table.getModel();
-			JCheckBox box = new JCheckBox();
-			box.setSelected((boolean) value);
-			box.addActionListener(l -> {
-				writer.accept(model.getValueForRow(row), box.isSelected());
-			});
-			box.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, true, true, row, column).getBackground());
-			return box;
+			if (value == null) {
+				CustomTableModel<X> model = (CustomTableModel<X>) table.getModel();
+				JCheckBox box = new JCheckBox();
+				box.setSelected((boolean) value);
+				box.addActionListener(l -> {
+					writer.accept(model.getValueForRow(row), box.isSelected());
+				});
+				box.setBackground(defaultRenderer.getTableCellRendererComponent(table, value, true, true, row, column).getBackground());
+				return box;
+			}
+			return defaultRenderer.getTableCellRendererComponent(table, value, true, true, row, column);
 		}
 
 		@Override
@@ -561,7 +564,7 @@ public final class StandardColumns {
 				return cb;
 			}
 			else {
-				return null;
+				return defaultRenderer.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
 			}
 		}
 	};

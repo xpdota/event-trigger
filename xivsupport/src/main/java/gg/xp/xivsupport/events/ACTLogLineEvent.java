@@ -98,6 +98,7 @@ public class ACTLogLineEvent extends BaseEvent implements Compressible, HasPrima
 			String rawField = rawFields[i];
 			lineBuilder.append(':').append(rawField);
 		}
+		lineBuilder.append(':');
 		return lineBuilder.toString();
 	}
 

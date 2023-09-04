@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import gg.xp.xivdata.data.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +18,8 @@ import java.util.regex.Pattern;
 // Just going to use jackson for now
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CustomTimelineEntry implements TimelineEntry, Serializable {
+@JsonDeserialize(as = CustomTimelineEntry.class)
+public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 
 	@Serial
 	private static final long serialVersionUID = 8590938155631598982L;
@@ -29,6 +31,8 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 	public @Nullable Double windowStart;
 	public @Nullable Double windowEnd;
 	public @Nullable Double jump;
+	public @Nullable String jumpLabel;
+	public boolean forceJump;
 	// TODO: this uses the absolute path to the JAR, which means icons will break if the user moves their install location.
 	// Best solution is to probably make our own little class that lets you specify an ability/status ID in addition to
 	// plain URLs.
@@ -51,6 +55,8 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 			@Nullable Double duration,
 			@NotNull TimelineWindow timelineWindow,
 			@Nullable Double jump,
+			@Nullable String jumpLabel,
+			@Nullable Boolean forceJump,
 			@Nullable URL icon,
 			@Nullable TimelineReference replaces,
 			 boolean disabled,
@@ -68,6 +74,8 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 		this.windowStart = timelineWindow.start();
 		this.windowEnd = timelineWindow.end();
 		this.jump = jump;
+		this.jumpLabel = jumpLabel;
+		this.forceJump = forceJump != null && forceJump;
 		this.icon = icon;
 		this.replaces = replaces;
 		this.enabled = !disabled;
@@ -81,6 +89,8 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 			@JsonProperty("duration") @Nullable Double duration,
 			@JsonProperty("timelineWindow") @NotNull TimelineWindow timelineWindow,
 			@JsonProperty("jump") @Nullable Double jump,
+			@JsonProperty("jumplabel") @Nullable String jumpLabel,
+			@JsonProperty("forcejump") @Nullable Boolean forceJump,
 			@JsonProperty("icon") @Nullable URL icon,
 			@JsonProperty("replaces") @Nullable TimelineReference replaces,
 			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled,
@@ -99,6 +109,8 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 		this.windowStart = timelineWindow.start();
 		this.windowEnd = timelineWindow.end();
 		this.jump = jump;
+		this.jumpLabel = jumpLabel;
+		this.forceJump = forceJump != null && forceJump;
 		this.icon = icon;
 		this.replaces = replaces;
 		this.enabled = !disabled;
@@ -151,6 +163,20 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 
 	@Override
 	@JsonProperty
+	public @Nullable String jumpLabel() {
+		return jumpLabel;
+	}
+
+	@Override
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+//	@JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = IncludeTrue.class)
+	public boolean forceJump() {
+		return forceJump;
+	}
+
+	@Override
+	@JsonProperty
 	public URL icon() {
 		return icon;
 	}
@@ -160,20 +186,34 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		CustomTimelineEntry that = (CustomTimelineEntry) o;
-		Pattern thisSync = sync();
-		Pattern thatSync = that.sync();
-		return Objects.equals(time(), that.time())
-				&& Objects.equals(name(), that.name())
-				&& Objects.equals(thisSync == null ? null : thisSync.pattern(), thatSync == null ? null : thatSync.pattern())
-				&& Objects.equals(jump(), that.jump())
-				&& Objects.equals(duration(), that.duration())
-				&& Objects.equals(icon(), that.icon())
-				&& Objects.equals(timelineWindow(), that.timelineWindow());
+		boolean syncEquals = Objects.equals(sync == null ? null : sync.pattern(), that.sync == null ? that.sync : that.sync.pattern());
+		return Double.compare(that.time, time) == 0 && forceJump == that.forceJump && enabled == that.enabled && callout == that.callout && Double.compare(that.calloutPreTime, calloutPreTime) == 0 && Objects.equals(name, that.name) && syncEquals && Objects.equals(duration, that.duration) && Objects.equals(windowStart, that.windowStart) && Objects.equals(windowEnd, that.windowEnd) && Objects.equals(jump, that.jump) && Objects.equals(jumpLabel, that.jumpLabel) && Objects.equals(icon, that.icon) && Objects.equals(replaces, that.replaces) && Objects.equals(getEnabledJobs(), that.getEnabledJobs());
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(time, name, sync, duration, windowStart, windowEnd, jump, icon, replaces, enabled);
+		return Objects.hash(time, name, sync, duration, windowStart, windowEnd, jump, jumpLabel, forceJump, icon, replaces, enabled, callout, calloutPreTime, getEnabledJobs());
+	}
+
+	@Override
+	public String toString() {
+		return "CustomTimelineEntry{" +
+		       "time=" + time +
+		       ", name='" + name + '\'' +
+		       ", sync=" + sync +
+		       ", duration=" + duration +
+		       ", windowStart=" + windowStart +
+		       ", windowEnd=" + windowEnd +
+		       ", jump=" + jump +
+		       ", jumpLabel='" + jumpLabel + '\'' +
+		       ", forceJump=" + forceJump +
+		       ", icon=" + icon +
+		       ", replaces=" + replaces +
+		       ", enabled=" + enabled +
+		       ", callout=" + callout +
+		       ", calloutPreTime=" + calloutPreTime +
+		       ", enabledJobs=" + enabledJobs +
+		       '}';
 	}
 
 	@JsonProperty
@@ -193,7 +233,16 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 		return !enabled;
 	}
 
+	@Override
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+	public boolean isLabel() {
+		return false;
+	}
+
 	public static CustomTimelineEntry overrideFor(TimelineEntry other) {
+		if (other.isLabel()) {
+			throw new IllegalArgumentException("Cannot override a label with a real entry");
+		}
 		CustomTimelineEntry newCte = new CustomTimelineEntry(
 				other.time(),
 				other.name(),
@@ -201,6 +250,8 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 				other.duration(),
 				other.timelineWindow(),
 				other.jump(),
+				other.jumpLabel(),
+				other.forceJump(),
 				other.icon(),
 				TimelineReference.of(other),
 				false,
@@ -219,6 +270,8 @@ public class CustomTimelineEntry implements TimelineEntry, Serializable {
 				other.duration(),
 				other.timelineWindow(),
 				other.jump(),
+				other.jumpLabel(),
+				other.forceJump(),
 				other.icon(),
 				null,
 				false,
