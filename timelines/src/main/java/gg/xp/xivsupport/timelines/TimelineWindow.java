@@ -6,4 +6,5 @@ import java.io.Serializable;
 
 public record TimelineWindow(@JsonProperty double start, @JsonProperty double end) implements Serializable {
 	public static final TimelineWindow DEFAULT = new TimelineWindow(2.5d, 2.5d);
+	public static final TimelineWindow NONE = new TimelineWindow(0, 0);
 }

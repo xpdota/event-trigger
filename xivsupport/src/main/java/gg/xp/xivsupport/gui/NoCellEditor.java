@@ -10,7 +10,8 @@ public class NoCellEditor implements TableCellEditor {
 	public static final NoCellEditor INSTANCE = new NoCellEditor();
 	@Override
 	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-		return null;
+		SwingUtilities.invokeLater(() -> table.getCellEditor().stopCellEditing());
+		return table.getCellRenderer(row, column).getTableCellRendererComponent(table, value, isSelected, true, row, column);
 	}
 
 	@Override

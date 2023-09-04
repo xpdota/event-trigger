@@ -5,6 +5,8 @@ import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeACTTimeSource;
+import gg.xp.xivsupport.events.actlines.parsers.FakeTestingTimeSource;
+import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivdata.data.GameLanguage;
 import gg.xp.xivsupport.lang.GameLanguageInfoEvent;
@@ -18,6 +20,7 @@ import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
 import java.util.List;
 
 public class TimelineProcessorTest {
@@ -73,4 +76,41 @@ public class TimelineProcessorTest {
 			MatcherAssert.assertThat(firstEntry.getLabel(), Matchers.equalTo("Sengender Strahl"));
 		}
 	}
+
+	@Test
+	void labelJumpTest() throws InterruptedException {
+		MutablePicoContainer pico = XivMain.testingMasterInit();
+		FakeACTTimeSource timeSource = new FakeACTTimeSource();
+		pico.addComponent(timeSource);
+
+		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.ACT_LOG_FILE);
+
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
+		dist.acceptEvent(new InitEvent());
+
+		TimelineManager tm = pico.getComponent(TimelineManager.class);
+		XivState state = pico.getComponent(XivState.class);
+		dist.acceptEvent(new ACTLogLineEvent("01|2022-04-19T17:33:36.9650000-07:00|86|Test Zone|b66c88c402200f35"));
+
+		Assert.assertEquals(state.getZone().getId(), 134);
+		MatcherAssert.assertThat(tm.getCurrentDisplayEntries(), Matchers.empty());
+		TimelineProcessor current = tm.getCurrentProcessor();
+
+		dist.acceptEvent(new ACTLogLineEvent("00|2022-04-19T17:00:00.1000000-07:00|0839||test sync2|a5fb68c9fda6fe87"));
+		Thread.sleep(1_000);
+		MatcherAssert.assertThat(current.getEffectiveTime(), Matchers.closeTo(100, 0.11));
+
+		// Lines past here are ONLY for the purposes of timing
+		dist.acceptEvent(new ACTLogLineEvent("00|2022-04-19T17:00:01.1000000-07:00|0839||foo|a5fb68c9fda6fe87"));
+		Thread.sleep(1_000);
+		MatcherAssert.assertThat(current.getEffectiveTime(), Matchers.closeTo(101, 0.11));
+
+		dist.acceptEvent(new ACTLogLineEvent("00|2022-04-19T17:00:18.1000000-07:00|0839||foo|a5fb68c9fda6fe87"));
+		Thread.sleep(1_000);
+		MatcherAssert.assertThat(current.getEffectiveTime(), Matchers.closeTo(103, 0.11));
+
+
+
+	}
+
 }

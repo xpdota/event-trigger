@@ -6,28 +6,41 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Serializable;
 import java.util.regex.Pattern;
 
-public record TextFileTimelineEntry(
+public record TextFileLabelEntry(
 		double time,
-		@Nullable String name,
-		@Nullable Pattern sync,
-		@Nullable Double duration,
-		@NotNull TimelineWindow timelineWindow,
-		@Nullable Double jump,
-		@Nullable String jumpLabel,
-		boolean forceJump
+		String name
 ) implements TimelineEntry, Serializable {
 	@Override
 	public String toString() {
-		return "TextFileTimelineEntry{" +
+		return "TextFileLabelEntry{" +
 		       "time=" + time +
 		       ", name='" + name + '\'' +
-		       ", sync=" + sync +
-		       ", duration=" + duration +
-		       ", timelineWindow=" + timelineWindow +
-		       ", jump=" + jump +
-		       ", jumpLabel='" + jumpLabel + '\'' +
-		       ", forceJump=" + forceJump +
 		       '}';
+	}
+
+	@Override
+	public @Nullable Pattern sync() {
+		return null;
+	}
+
+	@Override
+	public @Nullable Double duration() {
+		return null;
+	}
+
+	@Override
+	public @NotNull TimelineWindow timelineWindow() {
+		return TimelineWindow.NONE;
+	}
+
+	@Override
+	public @Nullable Double jump() {
+		return null;
+	}
+
+	@Override
+	public @Nullable String jumpLabel() {
+		return null;
 	}
 
 	@Override
@@ -43,5 +56,10 @@ public record TextFileTimelineEntry(
 	@Override
 	public double calloutPreTime() {
 		return 0;
+	}
+
+	@Override
+	public boolean isLabel() {
+		return true;
 	}
 }

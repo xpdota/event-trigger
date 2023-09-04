@@ -9,7 +9,7 @@ public class TimelineParserTest {
 
 	@Test
 	void timelineMinimal() {
-		TextFileTimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("458.7 \"Firebomb\"");
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("458.7 \"Firebomb\"");
 		Assert.assertNotNull(textFileTimelineEntry);
 		Assert.assertEquals(textFileTimelineEntry.time(), 458.7);
 		Assert.assertEquals(textFileTimelineEntry.name(), "Firebomb");
@@ -21,7 +21,7 @@ public class TimelineParserTest {
 
 	@Test
 	void timelineWithSync() {
-		TextFileTimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("2.0 \"Shield Skewer\" sync / 1[56]:[^:]*:Rhitahtyn sas Arvina:471:/");
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("2.0 \"Shield Skewer\" sync / 1[56]:[^:]*:Rhitahtyn sas Arvina:471:/");
 		Assert.assertNotNull(textFileTimelineEntry);
 		Assert.assertEquals(textFileTimelineEntry.time(), 2.0d);
 		Assert.assertEquals(textFileTimelineEntry.name(), "Shield Skewer");
@@ -33,7 +33,7 @@ public class TimelineParserTest {
 
 	@Test
 	void timelineWithSyncAndWindow() {
-		TextFileTimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("413.2 \"Shrapnel Shell\" sync / 1[56]:[^:]*:Rhitahtyn sas Arvina:474:/ window 20,20");
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("413.2 \"Shrapnel Shell\" sync / 1[56]:[^:]*:Rhitahtyn sas Arvina:474:/ window 20,20");
 		Assert.assertNotNull(textFileTimelineEntry);
 		Assert.assertEquals(textFileTimelineEntry.time(), 413.2d);
 		Assert.assertEquals(textFileTimelineEntry.name(), "Shrapnel Shell");
@@ -47,7 +47,7 @@ public class TimelineParserTest {
 
 	@Test
 	void timelineWithSyncWindowAndJump() {
-		TextFileTimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("449.5 \"Shrapnel Shell\" sync / 1[56]:[^:]*:Rhitahtyn sas Arvina:474:/ window 20,100 jump 413.2");
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("449.5 \"Shrapnel Shell\" sync / 1[56]:[^:]*:Rhitahtyn sas Arvina:474:/ window 20,100 jump 413.2");
 		Assert.assertNotNull(textFileTimelineEntry);
 		Assert.assertEquals(textFileTimelineEntry.time(), 449.5d);
 		Assert.assertEquals(textFileTimelineEntry.name(), "Shrapnel Shell");
@@ -61,7 +61,7 @@ public class TimelineParserTest {
 
 	@Test
 	void timelineWithSyncAndDuration() {
-		TextFileTimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("705.7 \"J Storm + Waves x16\" sync / 1[56]:[^:]*:Brute Justice:4876:/ duration 50");
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("705.7 \"J Storm + Waves x16\" sync / 1[56]:[^:]*:Brute Justice:4876:/ duration 50");
 		Assert.assertNotNull(textFileTimelineEntry);
 		Assert.assertEquals(textFileTimelineEntry.time(), 705.7d);
 		Assert.assertEquals(textFileTimelineEntry.name(), "J Storm + Waves x16");
@@ -73,7 +73,7 @@ public class TimelineParserTest {
 
 	@Test
 	void timelineSyncOnly() {
-		TextFileTimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("584.3 \"--sync--\" sync / 00:0044:[^:]*:Your defeat will bring/ window 600,0");
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("584.3 \"--sync--\" sync / 00:0044:[^:]*:Your defeat will bring/ window 600,0");
 		Assert.assertNotNull(textFileTimelineEntry);
 		Assert.assertEquals(textFileTimelineEntry.time(), 584.3d);
 		Assert.assertNull(textFileTimelineEntry.name());
@@ -87,7 +87,7 @@ public class TimelineParserTest {
 
 	@Test
 	void testDifferentOrder() {
-		TextFileTimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("674.7 \"Holy Comet x7\" duration 12.7 sync / 1[56]:[^:]*:Ser Noudenet:63E8:/");
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("674.7 \"Holy Comet x7\" duration 12.7 sync / 1[56]:[^:]*:Ser Noudenet:63E8:/");
 		Assert.assertNotNull(textFileTimelineEntry);
 		Assert.assertEquals(textFileTimelineEntry.time(), 674.7d);
 		Assert.assertEquals(textFileTimelineEntry.name(), "Holy Comet x7");
@@ -97,10 +97,33 @@ public class TimelineParserTest {
 		Assert.assertEquals(textFileTimelineEntry.timelineWindow().start(), 2.5);
 		Assert.assertEquals(textFileTimelineEntry.timelineWindow().end(), 2.5);
 		Assert.assertNull(textFileTimelineEntry.jump());
-
 	}
 
-	private void assertDefaultTimelineWindow(TextFileTimelineEntry entry) {
+	@Test
+	void timelineLabel() {
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("458.7 label \"Firebomb\"");
+		Assert.assertNotNull(textFileTimelineEntry);
+		Assert.assertEquals(textFileTimelineEntry.time(), 458.7);
+		Assert.assertEquals(textFileTimelineEntry.name(), "Firebomb");
+		Assert.assertTrue(textFileTimelineEntry.isLabel());
+		Assert.assertSame(textFileTimelineEntry.timelineWindow(), TimelineWindow.NONE);
+	}
+
+	@Test
+	void timelineForceJumpToLabel() {
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("458.7 \"Firebomb\" forcejump \"foo\"");
+		Assert.assertNotNull(textFileTimelineEntry);
+		Assert.assertEquals(textFileTimelineEntry.time(), 458.7);
+		Assert.assertEquals(textFileTimelineEntry.name(), "Firebomb");
+		Assert.assertNull(textFileTimelineEntry.sync());
+		Assert.assertNull(textFileTimelineEntry.duration());
+		assertDefaultTimelineWindow(textFileTimelineEntry);
+		Assert.assertNull(textFileTimelineEntry.jump());
+		Assert.assertEquals(textFileTimelineEntry.jumpLabel(), "foo");
+		Assert.assertTrue(textFileTimelineEntry.forceJump());
+	}
+
+	private void assertDefaultTimelineWindow(TimelineEntry entry) {
 		Assert.assertNotNull(entry.timelineWindow());
 		Assert.assertEquals(entry.timelineWindow().start(), 2.5d);
 		Assert.assertEquals(entry.timelineWindow().end(), 2.5d);

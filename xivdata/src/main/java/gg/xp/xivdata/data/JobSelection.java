@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -151,5 +152,18 @@ public class JobSelection {
 	@JsonIgnore
 	public boolean isEmpty() {
 		return !enabledForAll && enabledTypes.isEmpty() && enabledJobs.isEmpty();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		JobSelection that = (JobSelection) o;
+		return isEnabledForAll() == that.isEnabledForAll() && Objects.equals(getEnabledTypes(), that.getEnabledTypes()) && Objects.equals(getEnabledJobs(), that.getEnabledJobs());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(isEnabledForAll(), getEnabledTypes(), getEnabledJobs());
 	}
 }

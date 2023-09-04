@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.timelines;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gg.xp.reevent.events.CurrentTimeSource;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
@@ -25,6 +26,7 @@ import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +48,7 @@ public final class TimelineManager {
 	private static final Logger log = LoggerFactory.getLogger(TimelineManager.class);
 	private static final Map<Long, TimelineInfo> zoneIdToTimelineFile = new HashMap<>();
 	private static final ObjectMapper mapper = new ObjectMapper();
+	private final CurrentTimeSource timeSource;
 	private final BooleanSetting debugMode;
 	private final BooleanSetting prePullShow;
 	private final BooleanSetting resetOnMapChange;
@@ -55,9 +59,9 @@ public final class TimelineManager {
 	private final IntSetting rowsToDisplay;
 	private final IntSetting secondsPast;
 	private final IntSetting secondsFuture;
-	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutNow = ModifiableCallout.<TimelineProcessor.UpcomingCall>durationBasedCallWithoutDurationText("Timeline Callout (Immediate)", "{event.getEntry().name()}")
+	private final ModifiableCallout<TimelineProcessor.UpcomingTrigger> timelineTriggerCalloutNow = ModifiableCallout.<TimelineProcessor.UpcomingTrigger>durationBasedCallWithoutDurationText("Timeline Callout (Immediate)", "{event.getEntry().name()}")
 			.guiProvider(e -> IconTextRenderer.getStretchyIcon(e.getIconUrl()));
-	private final ModifiableCallout<TimelineProcessor.UpcomingCall> timelineTriggerCalloutPre = ModifiableCallout.<TimelineProcessor.UpcomingCall>durationBasedCall("Timeline Callout (Precall)", "{event.getEntry().name()}")
+	private final ModifiableCallout<TimelineProcessor.UpcomingTrigger> timelineTriggerCalloutPre = ModifiableCallout.<TimelineProcessor.UpcomingTrigger>durationBasedCall("Timeline Callout (Precall)", "{event.getEntry().name()}")
 			.guiProvider(e -> IconTextRenderer.getStretchyIcon(e.getIconUrl()));
 	private final FileSetting cactbotUserDirSetting;
 	private final IntSetting barTimeBasis;
@@ -66,7 +70,9 @@ public final class TimelineManager {
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
 
-	public TimelineManager(EventMaster master, PersistenceProvider pers, XivState state, LanguageController lang) {
+	public TimelineManager(PicoContainer pico, EventMaster master, PersistenceProvider pers, XivState state, LanguageController lang) {
+		CurrentTimeSource ts = pico.getComponent(CurrentTimeSource.class);
+		this.timeSource = ts == null ? Instant::now : ts;
 		this.master = master;
 		rowsToDisplay = new IntSetting(pers, "timeline-overlay.max-displayed", 6, 1, 32);
 		secondsPast = new IntSetting(pers, "timeline-overlay.seconds-past", 0, 0, null);
@@ -304,8 +310,8 @@ public final class TimelineManager {
 		return currentTimeline.getCurrentTimelineEntries();
 	}
 
-	void doTriggerCall(TimelineProcessor.UpcomingCall upc) {
-		RawModifiedCallout<TimelineProcessor.UpcomingCall> event;
+	void doTriggerCall(TimelineProcessor.UpcomingTrigger upc) {
+		RawModifiedCallout<TimelineProcessor.UpcomingTrigger> event;
 		if (upc.isPreCall()) {
 			event = timelineTriggerCalloutPre.getModified(upc);
 		}
@@ -350,5 +356,13 @@ public final class TimelineManager {
 
 	public IntSetting getBarWidth() {
 		return barWidth;
+	}
+
+	public TimelineProcessor getCurrentProcessor() {
+		return this.currentTimeline;
+	}
+
+	public CurrentTimeSource getTimeSource() {
+		return this.timeSource;
 	}
 }
