@@ -532,7 +532,7 @@ public final class StandardColumns {
 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-			if (value == null) {
+			if (value != null) {
 				CustomTableModel<X> model = (CustomTableModel<X>) table.getModel();
 				JCheckBox box = new JCheckBox();
 				box.setSelected((boolean) value);
