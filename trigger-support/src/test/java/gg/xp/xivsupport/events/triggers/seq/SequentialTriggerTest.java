@@ -228,12 +228,12 @@ public class SequentialTriggerTest {
 	}
 
 	@Test
-	void testDelay() {
-		SequentialTrigger<BaseEvent> trigger = SqtTemplates.sq(30_000, EchoEvent.class, e -> e.getLine().startsWith("Foo"),
+	void testConcurrencyBlock() {
+		SequentialTrigger<BaseEvent> trigger = SqtTemplates.sq(30_000, EchoEvent.class, e -> true,
 				(e1, s) -> {
-					s.accept(new DebugCommand("Bar1"));
+					s.accept(new DebugCommand(e1.getLine() + '1'));
 					s.waitMs(500);
-					s.accept(new DebugCommand("Bar2"));
+					s.accept(new DebugCommand(e1.getLine() + '2'));
 				});
 
 		EchoEvent initial = new EchoEvent("Foo");
@@ -255,7 +255,7 @@ public class SequentialTriggerTest {
 		{
 			time = Instant.EPOCH.plusMillis(499);
 			fts.setNewTime(time);
-			EchoEvent echo2 = new EchoEvent("Foo");
+			EchoEvent echo2 = new EchoEvent("Bar");
 			echo2.setHappenedAt(time);
 			echo2.setTimeSource(fts);
 			master.pushEventAndWait(echo2);
@@ -264,17 +264,150 @@ public class SequentialTriggerTest {
 			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
 			MatcherAssert.assertThat(debugs, Matchers.hasSize(1));
 		}
+		// Push a dummy event for timing purposes
 		{
 			time = Instant.EPOCH.plusMillis(501);
 			fts.setNewTime(time);
-			EchoEvent echo2 = new EchoEvent("Foo");
+			master.pushEventAndWait(new TtsRequest("Stuff"));
+			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
+			MatcherAssert.assertThat(debugs, Matchers.hasSize(2));
+		}
+		{
+			EchoEvent echo2 = new EchoEvent("Baz");
 			echo2.setTimeSource(fts);
 			echo2.setHappenedAt(time);
 			master.pushEventAndWait(echo2);
 		}
 		{
 			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
+			MatcherAssert.assertThat(debugs, Matchers.hasSize(3));
+			Assert.assertEquals(debugs.get(0).getCommand(), "Foo1");
+			Assert.assertEquals(debugs.get(1).getCommand(), "Foo2");
+			Assert.assertEquals(debugs.get(2).getCommand(), "Baz1");
+		}
+	}
+
+	@Test
+	void testConcurrencyReplace() {
+		SequentialTrigger<BaseEvent> trigger = SqtTemplates.sq(30_000, EchoEvent.class, e -> true,
+				(e1, s) -> {
+					s.accept(new DebugCommand(e1.getLine() + '1'));
+					s.waitMs(500);
+					s.accept(new DebugCommand(e1.getLine() + '2'));
+				});
+		trigger.setConcurrency(SequentialTriggerConcurrencyMode.REPLACE_OLD);
+
+
+		EchoEvent initial = new EchoEvent("Foo");
+		FakeTimeSource fts = new FakeTimeSource();
+		Instant time = Instant.EPOCH;
+		fts.setNewTime(time);
+		initial.setTimeSource(fts);
+		initial.setHappenedAt(time);
+
+		MutablePicoContainer pico = XivMain.testingMinimalInit();
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
+		dist.registerHandler(BaseEvent.class, trigger::feed);
+		TestEventCollector tec = new TestEventCollector();
+		dist.registerHandler(tec);
+
+		EventMaster master = pico.getComponent(EventMaster.class);
+		master.pushEventAndWait(initial);
+
+		{
+			time = Instant.EPOCH.plusMillis(499);
+			fts.setNewTime(time);
+			EchoEvent echo2 = new EchoEvent("Bar");
+			echo2.setHappenedAt(time);
+			echo2.setTimeSource(fts);
+			master.pushEventAndWait(echo2);
+		}
+		{
+			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
 			MatcherAssert.assertThat(debugs, Matchers.hasSize(2));
+		}
+		// Push a dummy event for timing purposes
+		{
+			time = Instant.EPOCH.plusMillis(501);
+			fts.setNewTime(time);
+			master.pushEventAndWait(new TtsRequest("Stuff"));
+			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
+			MatcherAssert.assertThat(debugs, Matchers.hasSize(2));
+		}
+		{
+			EchoEvent echo2 = new EchoEvent("Baz");
+			echo2.setTimeSource(fts);
+			echo2.setHappenedAt(time);
+			master.pushEventAndWait(echo2);
+		}
+		{
+			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
+			MatcherAssert.assertThat(debugs, Matchers.hasSize(3));
+			Assert.assertEquals(debugs.get(0).getCommand(), "Foo1");
+			Assert.assertEquals(debugs.get(1).getCommand(), "Bar1");
+			Assert.assertEquals(debugs.get(2).getCommand(), "Baz1");
+		}
+	}
+
+	@Test
+	void testConcurrencyConcurrent() {
+		SequentialTrigger<BaseEvent> trigger = SqtTemplates.sq(30_000, EchoEvent.class, e -> true,
+				(e1, s) -> {
+					s.accept(new DebugCommand(e1.getLine() + '1'));
+					s.waitMs(500);
+					s.accept(new DebugCommand(e1.getLine() + '2'));
+				});
+		trigger.setConcurrency(SequentialTriggerConcurrencyMode.CONCURRENT);
+
+		EchoEvent initial = new EchoEvent("Foo");
+		FakeTimeSource fts = new FakeTimeSource();
+		Instant time = Instant.EPOCH;
+		fts.setNewTime(time);
+		initial.setTimeSource(fts);
+		initial.setHappenedAt(time);
+
+		MutablePicoContainer pico = XivMain.testingMinimalInit();
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
+		dist.registerHandler(BaseEvent.class, trigger::feed);
+		TestEventCollector tec = new TestEventCollector();
+		dist.registerHandler(tec);
+
+		EventMaster master = pico.getComponent(EventMaster.class);
+		master.pushEventAndWait(initial);
+
+		{
+			time = Instant.EPOCH.plusMillis(499);
+			fts.setNewTime(time);
+			EchoEvent echo2 = new EchoEvent("Bar");
+			echo2.setHappenedAt(time);
+			echo2.setTimeSource(fts);
+			master.pushEventAndWait(echo2);
+		}
+		{
+			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
+			MatcherAssert.assertThat(debugs, Matchers.hasSize(2));
+		}
+		// Push a dummy event for timing purposes
+		{
+			time = Instant.EPOCH.plusMillis(501);
+			fts.setNewTime(time);
+			master.pushEventAndWait(new TtsRequest("Stuff"));
+			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
+			MatcherAssert.assertThat(debugs, Matchers.hasSize(3));
+		}
+		{
+			EchoEvent echo2 = new EchoEvent("Baz");
+			echo2.setTimeSource(fts);
+			echo2.setHappenedAt(time);
+			master.pushEventAndWait(echo2);
+		}
+		{
+			List<DebugCommand> debugs = tec.getEventsOf(DebugCommand.class);
+			MatcherAssert.assertThat(debugs, Matchers.hasSize(4));
+			Assert.assertEquals(debugs.get(0).getCommand(), "Foo1");
+			Assert.assertEquals(debugs.get(1).getCommand(), "Bar1");
+			Assert.assertEquals(debugs.get(2).getCommand(), "Foo2");
+			Assert.assertEquals(debugs.get(3).getCommand(), "Baz1");
 		}
 	}
 
