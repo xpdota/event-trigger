@@ -275,6 +275,7 @@ public class EasyTriggersPersistenceTest2 {
 			[
 			  {
 			    "enabled": true,
+			    "concurrency": "BLOCK_NEW",
 			    "eventType": "gg.xp.xivsupport.events.actlines.events.AbilityCastStart",
 			    "conditions": [
 			      {
@@ -303,6 +304,7 @@ public class EasyTriggersPersistenceTest2 {
 			  },
 			  {
 			    "enabled": true,
+			    "concurrency": "BLOCK_NEW",
 			    "eventType": "gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent",
 			    "conditions": [
 			      {
