@@ -34,8 +34,19 @@ public class TranslatedTextFileEntry implements TimelineEntry {
 
 	@Override
 	@JsonIgnore
-	public double getSyncToTime() {
-		return untranslated.getSyncToTime();
+	public Double getSyncToTime(LabelResolver resolver) {
+		return untranslated.getSyncToTime(resolver);
+	}
+
+	@Override
+	@Nullable
+	public String jumpLabel() {
+		return untranslated.jumpLabel();
+	}
+
+	@Override
+	public boolean forceJump() {
+		return untranslated.forceJump();
 	}
 
 	@Override

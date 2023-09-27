@@ -29,4 +29,9 @@ public class CombatJobSelection extends JobSelection {
 		cjs.enabledTypes.addAll(this.enabledTypes);
 		return cjs;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		return super.equals(o) && (o.getClass() == getClass());
+	}
 }

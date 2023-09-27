@@ -16,21 +16,34 @@ public class TimelineParser {
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineParser.class);
 	// TODO: there are also windows that do not have a start + end, only a single number
-	private static final Pattern timelinePatternLong = Pattern.compile("^(?<time>\\d+\\.?\\d*) (?:\"(?<title>.*)\"| sync /(?<sync>.*)/| window (?:(?<windowStart>\\d*\\.?\\d*),)?(?<windowEnd>\\d*\\.?\\d*)| jump (?<jump>\\d*\\.?\\d*)| duration (?<duration>\\d*\\.?\\d*))*(?:$|\\s*#.*$)");
+	private static final Pattern timelinePatternLong = Pattern.compile("^(?<time>\\d+\\.?\\d*) (?:\"(?<title>[^\"]*)\"| sync /(?<sync>.*)/| window (?:(?<windowStart>\\d*\\.?\\d*),)?(?<windowEnd>\\d*\\.?\\d*)| (?<forcejump>force)?jump (?:\"(?<jumplabel>[^\"]*)\"|(?<jump>\\d*\\.?\\d*))| duration (?<duration>\\d*\\.?\\d*))*(?:$|\\s*#.*$)");
+	private static final Pattern timelineLabelPattern = Pattern.compile("^(?<time>\\d+\\.?\\d*) label \"(?<label>[^\"]*)\"");
 
-	public static List<TextFileTimelineEntry> parseMultiple(Collection<String> line) {
+	public static List<TimelineEntry> parseMultiple(Collection<String> line) {
 		return line.stream().map(TimelineParser::parseRaw).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
-	public static @Nullable TextFileTimelineEntry parseRaw(String line) {
+	public static @Nullable TimelineEntry parseRaw(String line) {
 		// Skip these for now
 		if (line.trim().isEmpty() || line.startsWith("hideall")) {
 			return null;
 		}
 
+		Matcher labelMatcher = timelineLabelPattern.matcher(line);
+		if (labelMatcher.matches()) {
+			String timeRaw = labelMatcher.group("time");
+			double time;
+			try {
+				time = Double.parseDouble(timeRaw);
+			}
+			catch (NumberFormatException nfe) {
+				throw new IllegalArgumentException("Not a valid time: %s (entire line: %s)".formatted(timeRaw, line));
+			}
+			return new TextFileLabelEntry(time, labelMatcher.group("label"));
+		}
 		Matcher matcher = timelinePatternLong.matcher(line);
-		Pattern sync;
 		if (matcher.matches()) {
+			Pattern sync;
 			log.trace("Matching line: {}", line);
 			String timeRaw = matcher.group("time");
 			String title = matcher.group("title");
@@ -38,6 +51,8 @@ public class TimelineParser {
 			String windowStartRaw = matcher.group("windowStart");
 			String windowEndRaw = matcher.group("windowEnd");
 			String jumpRaw = matcher.group("jump");
+			String jumpLabel = matcher.group("jumplabel");
+			String forceJumpRaw = matcher.group("forcejump");
 			String durationRaw = matcher.group("duration");
 
 			if ("--sync--".equals(title)) {
@@ -70,12 +85,11 @@ public class TimelineParser {
 			catch (NumberFormatException nfe) {
 				throw new IllegalArgumentException("Not a valid time: %s (entire line: %s)".formatted(timeRaw, line));
 			}
-			return new TextFileTimelineEntry(time, title, sync, doubleOrNull(durationRaw), window, doubleOrNull(jumpRaw));
+			boolean forceJump = forceJumpRaw != null;
+			return new TextFileTimelineEntry(time, title, sync, doubleOrNull(durationRaw), window, doubleOrNull(jumpRaw), jumpLabel, forceJump);
 		}
-		else {
-			log.trace("Line did not match: {}", line);
-			return null;
-		}
+		log.trace("Line did not match: {}", line);
+		return null;
 	}
 
 	@Contract("null -> null")

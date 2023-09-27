@@ -13,13 +13,13 @@ public class TimelineCustomizations {
 	@JsonProperty
 	public boolean enabled = true;
 	@JsonProperty
-	private List<CustomTimelineEntry> entries = Collections.emptyList();
+	private List<CustomTimelineItem> entries = Collections.emptyList();
 
-	public List<CustomTimelineEntry> getEntries() {
+	public List<CustomTimelineItem> getEntries() {
 		return Collections.unmodifiableList(entries);
 	}
 
-	public void setEntries(List<CustomTimelineEntry> entries) {
+	public void setEntries(List<CustomTimelineItem> entries) {
 		this.entries = new ArrayList<>(entries);
 		this.entries.sort(Comparator.naturalOrder());
 	}

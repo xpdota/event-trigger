@@ -12,18 +12,22 @@ public record TextFileTimelineEntry(
 		@Nullable Pattern sync,
 		@Nullable Double duration,
 		@NotNull TimelineWindow timelineWindow,
-		@Nullable Double jump
+		@Nullable Double jump,
+		@Nullable String jumpLabel,
+		boolean forceJump
 ) implements TimelineEntry, Serializable {
 	@Override
 	public String toString() {
 		return "TextFileTimelineEntry{" +
-				"time=" + time +
-				", name='" + name + '\'' +
-				", sync=" + sync +
-				", duration=" + duration +
-				", timelineWindow=" + timelineWindow +
-				", jump=" + jump +
-				'}';
+		       "time=" + time +
+		       ", name='" + name + '\'' +
+		       ", sync=" + sync +
+		       ", duration=" + duration +
+		       ", timelineWindow=" + timelineWindow +
+		       ", jump=" + jump +
+		       ", jumpLabel='" + jumpLabel + '\'' +
+		       ", forceJump=" + forceJump +
+		       '}';
 	}
 
 	@Override
