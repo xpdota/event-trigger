@@ -11,6 +11,7 @@ import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.persistence.gui.BoundCheckbox;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class GroovyPanel extends JPanel {
@@ -61,6 +63,8 @@ public class GroovyPanel extends JPanel {
 	private final GroovyTab tab;
 	private final GroovyScriptHolder script;
 	private final GroovySandbox sbx;
+	private final BoundCheckbox startupCb;
+	private boolean suppressStartupRequest;
 
 	public String getName() {
 		return script.getScriptName();
@@ -197,7 +201,7 @@ public class GroovyPanel extends JPanel {
 				JButton runButton = run.asButtonWithKeyLabel();
 				JPanel buttonHolder = new JPanel(new WrapLayout(WrapLayout.LEFT));
 				buttonHolder.add(runButton);
-				BoundCheckbox startupCb = new BoundCheckbox("Run on Startup", script::isStartup, startup -> {
+				startupCb = new BoundCheckbox("Run on Startup", script::isStartup, startup -> {
 					script.setStartup(startup);
 					script.save();
 				});
@@ -357,8 +361,41 @@ public class GroovyPanel extends JPanel {
 			script.save();
 		}
 		evaluator.submit(() -> {
-			GroovyScriptResult result = script.run();
+			AtomicBoolean scriptActive = new AtomicBoolean(true);
+			ScriptSettingsControl ssc = new ScriptSettingsControl() {
+				@Override
+				public void requestRunOnStartup() {
+					// Only ask for startup permissions if all of the following are true:
+					// 1. Script is not already set to run on startup
+					// 2. User has not already opted out of having the script run on startup (TODO make this persistent)
+					// 3. Script is still running, e.g. don't allow the script to request startup as an asynchronous action
+					if (script.isSaveable() && !script.isStartup() && !suppressStartupRequest && scriptActive.get()) {
+						startupRequest();
+					}
+				}
+			};
+			GroovyScriptResult result = script.run(ssc);
+			scriptActive.set(false);
 			setResult(result);
+		});
+	}
+
+	private void startupRequest() {
+		SwingUtilities.invokeLater(() -> {
+			Component dialogParent = tab;
+			if (!dialogParent.isVisible()) {
+				dialogParent = tab.getRootPane();
+			}
+			// TODO: allow this message to be suppressed persistently
+			int result = JOptionPane.showConfirmDialog(dialogParent, "This script has requested to be run on startup. Allow?", "Run on Startup?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if (result == JOptionPane.YES_OPTION) {
+				script.setStartup(true);
+			}
+			else {
+				suppressStartupRequest = true;
+			}
+			startupCb.repaint();
+			save();
 		});
 	}
 
