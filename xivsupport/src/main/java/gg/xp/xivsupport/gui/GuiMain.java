@@ -383,6 +383,7 @@ public class GuiMain {
 			text = "Error loading changelog";
 		}
 		ReadOnlyHtml rot = new ReadOnlyHtml(text);
+		rot.setFocusable(true);
 		rot.addHyperlinkListener(l -> {
 			if (l.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
 				try {
