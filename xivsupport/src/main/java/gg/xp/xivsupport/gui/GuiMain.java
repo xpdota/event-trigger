@@ -81,6 +81,7 @@ import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
 import org.apache.commons.io.IOUtils;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
@@ -92,6 +93,7 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.HyperlinkEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
@@ -100,7 +102,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -370,7 +374,7 @@ public class GuiMain {
 	private Component changelogPanel() {
 		TitleBorderPanel changelog = new TitleBorderPanel("Changelog");
 		changelog.setLayout(new BorderLayout());
-		String text;
+		@Language("html") String text;
 		try {
 			text = IOUtils.toString(GuiMain.class.getResource("/te_changelog.html"), StandardCharsets.UTF_8);
 		}
@@ -378,7 +382,17 @@ public class GuiMain {
 			log.error("Error loading changelog", e);
 			text = "Error loading changelog";
 		}
-		Component rot = new ReadOnlyHtml(text);
+		ReadOnlyHtml rot = new ReadOnlyHtml(text);
+		rot.addHyperlinkListener(l -> {
+			if (l.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+				try {
+					Desktop.getDesktop().browse(l.getURL().toURI());
+				}
+				catch (IOException | URISyntaxException e) {
+					log.error("Hyperlink error", e);
+				}
+			}
+		});
 		changelog.add(new JScrollPane(rot));
 		return changelog;
 	}
