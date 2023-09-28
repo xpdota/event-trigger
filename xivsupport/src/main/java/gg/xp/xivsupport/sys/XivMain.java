@@ -1,12 +1,16 @@
 package gg.xp.xivsupport.sys;
 
+import gg.xp.compmonitor.CompMonitor;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.BasicEventDistributor;
 import gg.xp.reevent.events.BasicEventQueue;
+import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
+import gg.xp.reevent.events.MonitoringEventDistributor;
 import gg.xp.reevent.scan.AutoHandlerConfig;
 import gg.xp.reevent.scan.AutoHandlerScan;
+import gg.xp.reevent.scan.AutoScan;
 import gg.xp.reevent.topology.TopoInfoImpl;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivdata.data.StatusEffectLibrary;
@@ -17,7 +21,6 @@ import gg.xp.xivsupport.events.ws.ActWsLogSource;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
-import gg.xp.xivsupport.persistence.PropertiesFilePersistenceProvider;
 import gg.xp.xivsupport.persistence.UserDirPropsPersistenceProvider;
 import groovy.lang.GroovyShell;
 import org.picocontainer.MutablePicoContainer;
@@ -46,14 +49,19 @@ public final class XivMain {
 	// Just the required stuff, doesn't start anything
 	private static MutablePicoContainer requiredComponents() {
 		log.info("Assembling required components");
+		CompMonitor cm = new CompMonitor();
 		MutablePicoContainer pico = new PicoBuilder()
 				.withCaching()
 				.withLifecycle()
 				.withAutomatic()
+				.withMonitor(cm)
 				.build();
-		pico.addComponent(AutoEventDistributor.class);
+		pico.addComponent(cm);
+		pico.addComponent(MonitoringEventDistributor.class);
+		pico.addComponent(AutoScan.class);
+//		pico.addComponent(AutoEventDistributor.class);
+//		pico.addComponent(AutoHandlerScan.class);
 		pico.addComponent(AutoHandlerConfig.class);
-		pico.addComponent(AutoHandlerScan.class);
 		pico.addComponent(EventMaster.class);
 		pico.addComponent(BasicEventQueue.class);
 		pico.addComponent(PicoStateStore.class);
@@ -150,7 +158,8 @@ public final class XivMain {
 		}, "StartupHelper").start();
 
 		// TODO: use "Startable" interface?
-		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+//		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		log.info("Init start");
 		dist.acceptEvent(new InitEvent());
 		pico.getComponent(EventMaster.class).start();

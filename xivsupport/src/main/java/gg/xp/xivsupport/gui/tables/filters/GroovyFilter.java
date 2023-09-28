@@ -110,7 +110,7 @@ public class GroovyFilter<X> implements SplitVisualFilter<X> {
 		if (filterScript == null) {
 			return true;
 		}
-//		shell.setVariable(varName, item);
+//		shell.setVariable(varName, instance);
 		boolean result;
 		try {
 			result = filterScript.test(item);

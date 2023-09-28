@@ -137,14 +137,14 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		}
 	}
 
-	//	public void refreshItem(X item) {
+	//	public void refreshItem(X instance) {
 //		JTable table = getTable();
 //		if (table == null) {
 //			data = dataGetter.get();
 //			fireTableDataChanged();
 //		}
 //		else {
-//			int oldIndex = data.indexOf(item);
+//			int oldIndex = data.indexOf(instance);
 //			ListSelectionModel selectionModel = table.getSelectionModel();
 //			int[] oldSelectionIndices = selectionModel.getSelectedIndices();
 //			List<X> oldSelections = Arrays.stream(oldSelectionIndices)
@@ -161,7 +161,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 //					log.warn("Slow Data Getter performance: took {}ms to refresh", delta);
 //				}
 //			}
-//			int newIndex = data.indexOf(item);
+//			int newIndex = data.indexOf(instance);
 //			// TODO: more optimizations could be done in XivState to only report changed combatants
 //			if (oldIndex == newIndex && oldIndex >= 0) {
 //				fireTableRowsUpdated(oldIndex, newIndex);

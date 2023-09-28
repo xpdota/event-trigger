@@ -25,7 +25,7 @@ public class RefreshLoop<X> {
 				try {
 					X actualItem = this.item.get();
 					if (actualItem == null) {
-						log.info("Stopping refresh loop because refreshable item no longer exists");
+						log.info("Stopping refresh loop because refreshable instance no longer exists");
 						return;
 					}
 					periodicTask.accept(actualItem);

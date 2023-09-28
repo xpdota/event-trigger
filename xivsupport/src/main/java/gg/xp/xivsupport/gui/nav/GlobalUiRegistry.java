@@ -78,7 +78,7 @@ public class GlobalUiRegistry {
 	public boolean activateItem(Object key) {
 		GuiRef guiRef = mapping.get(key);
 		if (guiRef == null) {
-			log.warn("Did not find registered item for ({})!", key);
+			log.warn("Did not find registered instance for ({})!", key);
 			return false;
 		}
 		else {

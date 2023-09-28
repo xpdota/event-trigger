@@ -111,16 +111,16 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 
 	/**
 	 * Meant to be overridden. Pre-filter items in a smart way. Basically, allow this
-	 * filter to specify whether it actually cares about a particular item. If there is
-	 * a filter set, then any item that returns false when passed into this will fail
+	 * filter to specify whether it actually cares about a particular instance. If there is
+	 * a filter set, then any instance that returns false when passed into this will fail
 	 * automatically. If there is no filter set, everything will pass.
 	 * <p>
 	 * If there is no filter whatsoever, let everything pass.
 	 * <p>
 	 * If there is any filter, then apply this pre-filter.
 	 *
-	 * @param item The item to filter
-	 * @return whether to let the item proceed to the main filter
+	 * @param item The instance to filter
+	 * @return whether to let the instance proceed to the main filter
 	 */
 	protected boolean preFilter(X item) {
 		return true;

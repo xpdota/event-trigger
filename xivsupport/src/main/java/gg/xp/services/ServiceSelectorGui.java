@@ -52,7 +52,7 @@ public class ServiceSelectorGui {
 					handle.setEnabled();
 				}
 				else {
-					log.warn("Unknown item: {}", item);
+					log.warn("Unknown instance: {}", item);
 				}
 			}
 

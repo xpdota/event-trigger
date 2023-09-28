@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.gui.tabs;
 
-import gg.xp.reevent.events.AutoEventDistributor;
+import gg.xp.reevent.topology.TopologyProvider;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.tree.TopologyTreeEditor;
@@ -16,7 +16,7 @@ public class PluginTopologyPanel extends TitleBorderFullsizePanel {
 	public PluginTopologyPanel(PicoContainer container) {
 		super("Topology");
 		setLayout(new BorderLayout());
-		JTree tree = new JTree(new TopologyTreeModel(container.getComponent(AutoEventDistributor.class)));
+		JTree tree = new JTree(new TopologyTreeModel(container.getComponent(TopologyProvider.class).getTopology()));
 		TopologyTreeRenderer renderer = new TopologyTreeRenderer();
 		tree.setCellRenderer(renderer);
 		tree.setCellEditor(new TopologyTreeEditor(tree));
