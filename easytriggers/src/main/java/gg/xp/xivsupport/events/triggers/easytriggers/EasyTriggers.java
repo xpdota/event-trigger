@@ -50,6 +50,8 @@ import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCallou
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitBuffDurationAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitCastDurationAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.ConditionalActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.GroovyActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.SoundActionEditor;
@@ -427,12 +429,15 @@ public final class EasyTriggers {
 			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic)
 	));
 
+	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
 	private final List<ActionDescription<?, ?>> actions = new ArrayList<>(List.of(
 			new ActionDescription<>(CalloutAction.class, Event.class, "Basic TTS/Text Callout", CalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
 			new ActionDescription<>(DurationBasedCalloutAction.class, HasDuration.class, "Duration-Based TTS/Text Callout", DurationBasedCalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
 			new ActionDescription<>(AutoMarkTargetAction.class, HasTargetEntity.class, "Mark The Target", () -> new AutoMarkTargetAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(ClearAllMarksAction.class, Event.class, "Clear All Marks", () -> new ClearAllMarksAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(WaitAction.class, BaseEvent.class, "Wait a fixed time", WaitAction::new, this::generic),
+			new ActionDescription<>(WaitBuffDurationAction.class, BuffApplied.class, "Wait until buff duration falls below a specified amount", () -> new WaitBuffDurationAction(inject(StatusEffectRepository.class)), this::generic),
+			new ActionDescription<>(WaitCastDurationAction.class, AbilityCastStart.class, "Wait until cast duration falls below a specified amount", WaitCastDurationAction::new, this::generic),
 			new ActionDescription<>(GroovyAction.class, Event.class, "Custom script action", () -> new GroovyAction(inject(GroovyManager.class)), (action, trigger) -> new GroovyActionEditor<>(action, trigger)),
 //			(ActionDescription<ConditionalAction<BaseEvent>, BaseEvent>) new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)),
 			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action)),
