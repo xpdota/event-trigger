@@ -5,6 +5,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.TestEventCollector;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.ExampleSetup;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
@@ -19,8 +20,11 @@ import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeTimeSource;
 import gg.xp.xivsupport.events.misc.EchoEvent;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitBuffDurationAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitCastDurationAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
@@ -87,6 +91,7 @@ public class EasyTriggersTest {
 
 	// TODO: why doesn't parallel work here? Everything should have its own instances, so thread safety should be
 	// completely irrelevant.
+	// Probably because they share instances of the example events...
 	@DataProvider(parallel = false)
 	private Object[] testCases() {
 		return new TestCase[]{
@@ -218,61 +223,56 @@ public class EasyTriggersTest {
 
 	@Test
 	void extraVarsTest() {
-		PersistenceProvider pers;
+		MutablePicoContainer pico = ExampleSetup.setup();
+		TestEventCollector coll = new TestEventCollector();
+		EventMaster master = pico.getComponent(EventMaster.class);
 		{
-			MutablePicoContainer pico = ExampleSetup.setup();
-			pers = pico.getComponent(PersistenceProvider.class);
-			TestEventCollector coll = new TestEventCollector();
-			EventMaster master = pico.getComponent(EventMaster.class);
-			{
-				EventDistributor dist = pico.getComponent(EventDistributor.class);
-				dist.registerHandler(coll);
-			}
-			EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
-			EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
-			AbilityIdFilter cond = new AbilityIdFilter();
-			cond.operator = NumericOperator.EQ;
-			cond.expected = 123;
-			trig1.setEventType(AbilityUsedEvent.class);
-			trig1.addCondition(cond);
-			GroovyManager groovy = pico.getComponent(GroovyManager.class);
-			GroovyAction action = new GroovyAction(groovy);
-			action.setGroovyScript("s.waitMs(400); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
-			trig1.addAction(action);
-			ez1.addTrigger(trig1);
+			EventDistributor dist = pico.getComponent(EventDistributor.class);
+			dist.registerHandler(coll);
+		}
+		EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+		EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
+		AbilityIdFilter cond = new AbilityIdFilter();
+		cond.operator = NumericOperator.EQ;
+		cond.expected = 123;
+		trig1.setEventType(AbilityUsedEvent.class);
+		trig1.addCondition(cond);
+		GroovyManager groovy = pico.getComponent(GroovyManager.class);
+		GroovyAction action = new GroovyAction(groovy);
+		action.setGroovyScript("s.waitMs(400); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
+		trig1.addAction(action);
+		ez1.addTrigger(trig1);
 
-			// TODO: make another version of this test with a fake time source
-			master.pushEventAndWait(abilityUsed1);
-			{
-				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
-				Assert.assertEquals(calls.size(), 0);
-			}
-			try {
-				Thread.sleep(500);
-				master.pushEventAndWait(new AbilityUsedEvent(otherAbility, caster, target, Collections.emptyList(), 123, 0, 1));
-				Thread.sleep(100);
-				// Workaround due to slowness...
-				for (int i = 0; i < 10; i++) {
-					Thread.sleep(2000);
-					if (!coll.getEventsOf(TtsRequest.class).isEmpty()) {
-						break;
-					}
-					master.pushEventAndWait(new BaseEvent() {
-					});
+		master.pushEventAndWait(abilityUsed1);
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		try {
+			Thread.sleep(500);
+			master.pushEventAndWait(new AbilityUsedEvent(otherAbility, caster, target, Collections.emptyList(), 123, 0, 1));
+			Thread.sleep(100);
+			// Workaround due to slowness...
+			for (int i = 0; i < 10; i++) {
+				Thread.sleep(2000);
+				if (!coll.getEventsOf(TtsRequest.class).isEmpty()) {
+					break;
 				}
+				master.pushEventAndWait(new BaseEvent() {
+				});
 			}
-			catch (InterruptedException e) {
-				throw new RuntimeException(e);
-			}
+		}
+		catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 
-			{
-				log.info("Done");
-				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
-				Assert.assertEquals(calls.size(), 1);
-				TtsRequest theCall = calls.get(0);
-				Assert.assertEquals(theCall.getTtsString(), "true");
-				Assert.assertEquals(groovy.makeBinding().getVariable("foo"), "bar");
-			}
+		{
+			log.info("Done");
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 1);
+			TtsRequest theCall = calls.get(0);
+			Assert.assertEquals(theCall.getTtsString(), "true");
+			Assert.assertEquals(groovy.makeBinding().getVariable("foo"), "bar");
 		}
 		// Now load the serialized version and make sure it all still works
 
@@ -280,57 +280,51 @@ public class EasyTriggersTest {
 
 	@Test
 	void extraVarsTestFakeTimeSource() {
-		PersistenceProvider pers;
+		MutablePicoContainer pico = ExampleSetup.setup();
+		pico.getComponent(FakeTimeSource.class);
+		TestEventCollector coll = new TestEventCollector();
+		EventMaster master = pico.getComponent(EventMaster.class);
 		{
-			MutablePicoContainer pico = ExampleSetup.setup();
-			pico.getComponent(FakeTimeSource.class);
-			pers = pico.getComponent(PersistenceProvider.class);
-			TestEventCollector coll = new TestEventCollector();
-			EventMaster master = pico.getComponent(EventMaster.class);
-			{
-				EventDistributor dist = pico.getComponent(EventDistributor.class);
-				dist.registerHandler(coll);
-			}
-			EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
-			EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
-			AbilityIdFilter cond = new AbilityIdFilter();
-			cond.operator = NumericOperator.EQ;
-			cond.expected = 123;
-			trig1.setEventType(AbilityUsedEvent.class);
-			trig1.addCondition(cond);
-			GroovyManager groovy = pico.getComponent(GroovyManager.class);
-			GroovyAction action = new GroovyAction(groovy);
-			action.setGroovyScript("s.waitMs(400); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
-			trig1.addAction(action);
-			ez1.addTrigger(trig1);
-
-			FakeTimeSource fts = new FakeTimeSource();
-			Instant now = Instant.now();
-			fts.setNewTime(now);
-			// TODO: make another version of this test with a fake time source
-			AbilityUsedEvent abilityUsed1 = new AbilityUsedEvent(matchingAbility, caster, target, Collections.emptyList(), 123, 0, 1);
-			abilityUsed1.setTimeSource(fts);
-			abilityUsed1.setHappenedAt(fts.now());
-			master.pushEventAndWait(abilityUsed1);
-			{
-				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
-				Assert.assertEquals(calls.size(), 0);
-			}
-			AbilityUsedEvent abilityUsed2 = new AbilityUsedEvent(otherAbility, caster, target, Collections.emptyList(), 123, 0, 1);
-			fts.setNewTime(now.plusMillis(500));
-			abilityUsed2.setHappenedAt(fts.now());
-			abilityUsed2.setTimeSource(fts);
-			master.pushEventAndWait(abilityUsed2);
-
-			{
-				List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
-				Assert.assertEquals(calls.size(), 1);
-				TtsRequest theCall = calls.get(0);
-				Assert.assertEquals(theCall.getTtsString(), "true");
-				Assert.assertEquals(groovy.makeBinding().getVariable("foo"), "bar");
-			}
+			EventDistributor dist = pico.getComponent(EventDistributor.class);
+			dist.registerHandler(coll);
 		}
-		// Now load the serialized version and make sure it all still works
+		EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+		EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
+		AbilityIdFilter cond = new AbilityIdFilter();
+		cond.operator = NumericOperator.EQ;
+		cond.expected = 123;
+		trig1.setEventType(AbilityUsedEvent.class);
+		trig1.addCondition(cond);
+		GroovyManager groovy = pico.getComponent(GroovyManager.class);
+		GroovyAction action = new GroovyAction(groovy);
+		action.setGroovyScript("s.waitMs(400); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
+		trig1.addAction(action);
+		ez1.addTrigger(trig1);
+
+		FakeTimeSource fts = new FakeTimeSource();
+		Instant now = Instant.now();
+		fts.setNewTime(now);
+		AbilityUsedEvent abilityUsed1 = new AbilityUsedEvent(matchingAbility, caster, target, Collections.emptyList(), 123, 0, 1);
+		abilityUsed1.setTimeSource(fts);
+		abilityUsed1.setHappenedAt(fts.now());
+		master.pushEventAndWait(abilityUsed1);
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		AbilityUsedEvent abilityUsed2 = new AbilityUsedEvent(otherAbility, caster, target, Collections.emptyList(), 123, 0, 1);
+		fts.setNewTime(now.plusMillis(500));
+		abilityUsed2.setHappenedAt(fts.now());
+		abilityUsed2.setTimeSource(fts);
+		master.pushEventAndWait(abilityUsed2);
+
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 1);
+			TtsRequest theCall = calls.get(0);
+			Assert.assertEquals(theCall.getTtsString(), "true");
+			Assert.assertEquals(groovy.makeBinding().getVariable("foo"), "bar");
+		}
 
 	}
 
@@ -487,58 +481,234 @@ public class EasyTriggersTest {
 		Assert.assertTrue(gef.test(etc, new EchoEvent("foobar")));
 	}
 
-	// This test is obsolete, see EasyTriggersPersistenceTest2
-//	@Test
-//	void testLegacyMigration() {
-//		PersistenceProvider pers;
-//		{
-//			MutablePicoContainer pico = ExampleSetup.setup();
-//			pers = pico.getComponent(PersistenceProvider.class);
-//			TestEventCollector coll = new TestEventCollector();
-//			EventDistributor dist = pico.getComponent(EventDistributor.class);
-//			dist.registerHandler(coll);
-//			EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
-//			EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
-//			AbilityIdFilter cond = new AbilityIdFilter();
-//			cond.operator = NumericOperator.EQ;
-//			cond.expected = 123;
-//			trig1.setEventType(AbilityUsedEvent.class);
-//			trig1.addCondition(cond);
-//			reflectionSetField(trig1, "text", "{event.getAbility().getId()}");
-//			reflectionSetField(trig1, "tts", "{event.getAbility().getId()}");
-//			ez1.addTrigger(trig1);
-//
-//			dist.acceptEvent(abilityUsed2);
-//			dist.acceptEvent(zoneChange);
-//			dist.acceptEvent(abilityUsed1);
-//
-//			{
-//				List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
-//				Assert.assertEquals(calls.size(), 1);
-//				CalloutEvent theCall = calls.get(0);
-//				Assert.assertEquals(theCall.getVisualText(), "123");
-//				Assert.assertEquals(theCall.getCallText(), "123");
-//			}
-//		}
-//		// Now load the serialized version and make sure it all still works
-//
-//		{
-//			MutablePicoContainer pico = ExampleSetup.setup(pers);
-//			TestEventCollector coll = new TestEventCollector();
-//			EventDistributor dist = pico.getComponent(EventDistributor.class);
-//			dist.registerHandler(coll);
-//
-//			dist.acceptEvent(abilityUsed2);
-//			dist.acceptEvent(zoneChange);
-//			dist.acceptEvent(abilityUsed1);
-//
-//			{
-//				List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
-//				Assert.assertEquals(calls.size(), 1);
-//				CalloutEvent theCall = calls.get(0);
-//				Assert.assertEquals(theCall.getVisualText(), "123");
-//				Assert.assertEquals(theCall.getCallText(), "123");
-//			}
-//		}
-//	}
+	@Test
+	void testCastDurationAction() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		pico.getComponent(FakeTimeSource.class);
+		TestEventCollector coll = new TestEventCollector();
+		EventMaster master = pico.getComponent(EventMaster.class);
+		{
+			EventDistributor dist = pico.getComponent(EventDistributor.class);
+			dist.registerHandler(coll);
+		}
+		EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+		EasyTrigger<AbilityCastStart> trig1 = new EasyTrigger<>();
+		trig1.setEventType(AbilityCastStart.class);
+		WaitCastDurationAction action1 = new WaitCastDurationAction();
+		action1.remainingDurationMs = 15_000;
+		CalloutAction action2 = new CalloutAction();
+		action2.setText("Foo");
+		action2.setTts("Bar");
+
+		trig1.addAction(action1);
+		trig1.addAction(action2);
+		ez1.addTrigger(trig1);
+
+		FakeTimeSource fts = new FakeTimeSource();
+		Instant startTime = Instant.now();
+		fts.setNewTime(startTime);
+
+		XivCombatant theCbt = new XivCombatant(0x1000_0001, "Foo");
+		AbilityCastStart acs = new AbilityCastStart(new XivAbility(125), theCbt, theCbt, 18.0);
+		acs.setTimeSource(fts);
+		acs.setHappenedAt(fts.now());
+		master.pushEventAndWait(acs);
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(2_999));
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(3_001));
+		// Need to push a dummy event due to fake time source
+		master.pushEventAndWait(new BaseEvent() {
+		});
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 1);
+			TtsRequest theCall = calls.get(0);
+			Assert.assertEquals(theCall.getTtsString(), "Bar");
+		}
+	}
+	@Test
+	void testBuffDurationWaitAction() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		pico.getComponent(FakeTimeSource.class);
+		TestEventCollector coll = new TestEventCollector();
+		EventMaster master = pico.getComponent(EventMaster.class);
+		{
+			EventDistributor dist = pico.getComponent(EventDistributor.class);
+			dist.registerHandler(coll);
+		}
+		EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+		EasyTrigger<BuffApplied> trig1 = new EasyTrigger<>();
+		trig1.setEventType(BuffApplied.class);
+		WaitBuffDurationAction action1 = new WaitBuffDurationAction(pico.getComponent(StatusEffectRepository.class));
+		action1.remainingDurationMs = 15_000;
+		CalloutAction action2 = new CalloutAction();
+		action2.setText("Foo");
+		action2.setTts("Bar");
+
+		trig1.addAction(action1);
+		trig1.addAction(action2);
+		ez1.addTrigger(trig1);
+
+		FakeTimeSource fts = new FakeTimeSource();
+		Instant startTime = Instant.now();
+		fts.setNewTime(startTime);
+		XivCombatant theCbt = new XivCombatant(0x1000_0001, "Foo");
+		BuffApplied ba = new BuffApplied(new XivStatusEffect(0x9E), 18.0, theCbt, theCbt, 0);
+		ba.setTimeSource(fts);
+		ba.setHappenedAt(fts.now());
+		master.pushEventAndWait(ba);
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(2_999));
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(3_001));
+		// Need to push a dummy event due to fake time source
+		master.pushEventAndWait(new BaseEvent() {
+		});
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 1);
+			TtsRequest theCall = calls.get(0);
+			Assert.assertEquals(theCall.getTtsString(), "Bar");
+		}
+	}
+
+	@Test
+	void testBuffDurationWaitActionRefresh() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		pico.getComponent(FakeTimeSource.class);
+		TestEventCollector coll = new TestEventCollector();
+		EventMaster master = pico.getComponent(EventMaster.class);
+		{
+			EventDistributor dist = pico.getComponent(EventDistributor.class);
+			dist.registerHandler(coll);
+		}
+		EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+		EasyTrigger<BuffApplied> trig1 = new EasyTrigger<>();
+		trig1.setEventType(BuffApplied.class);
+		WaitBuffDurationAction action1 = new WaitBuffDurationAction(pico.getComponent(StatusEffectRepository.class));
+		action1.remainingDurationMs = 15_000;
+		CalloutAction action2 = new CalloutAction();
+		action2.setText("Foo");
+		action2.setTts("Bar");
+
+		trig1.addAction(action1);
+		trig1.addAction(action2);
+		ez1.addTrigger(trig1);
+
+		FakeTimeSource fts = new FakeTimeSource();
+		Instant startTime = Instant.now();
+		fts.setNewTime(startTime);
+		XivCombatant theCbt = new XivCombatant(0x1000_0001, "Foo");
+		BuffApplied ba = new BuffApplied(new XivStatusEffect(0x9E), 18.0, theCbt, theCbt, 0);
+		ba.setTimeSource(fts);
+		ba.setHappenedAt(fts.now());
+		master.pushEventAndWait(ba);
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(2_999));
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		BuffApplied ba2 = new BuffApplied(new XivStatusEffect(0x9E), 18.0, theCbt, theCbt, 0);
+		ba2.setTimeSource(fts);
+		ba2.setHappenedAt(fts.now());
+		master.pushEventAndWait(ba2);
+		fts.setNewTime(startTime.plusMillis(3_001));
+		// Need to push a dummy event due to fake time source
+		master.pushEventAndWait(new BaseEvent() {
+		});
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(6_002));
+		// Need to push a dummy event due to fake time source
+		master.pushEventAndWait(new BaseEvent() {
+		});
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 1);
+			TtsRequest theCall = calls.get(0);
+			Assert.assertEquals(theCall.getTtsString(), "Bar");
+		}
+	}
+
+	@Test
+	void testBuffDurationWaitActionCancel() {
+		MutablePicoContainer pico = ExampleSetup.setup();
+		pico.getComponent(FakeTimeSource.class);
+		TestEventCollector coll = new TestEventCollector();
+		EventMaster master = pico.getComponent(EventMaster.class);
+		{
+			EventDistributor dist = pico.getComponent(EventDistributor.class);
+			dist.registerHandler(coll);
+		}
+		EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
+		EasyTrigger<BuffApplied> trig1 = new EasyTrigger<>();
+		trig1.setEventType(BuffApplied.class);
+		WaitBuffDurationAction action1 = new WaitBuffDurationAction(pico.getComponent(StatusEffectRepository.class));
+		action1.remainingDurationMs = 15_000;
+		action1.stopIfGone = true;
+		CalloutAction action2 = new CalloutAction();
+		action2.setText("Foo");
+		action2.setTts("Bar");
+
+		trig1.addAction(action1);
+		trig1.addAction(action2);
+		ez1.addTrigger(trig1);
+
+		FakeTimeSource fts = new FakeTimeSource();
+		Instant startTime = Instant.now();
+		fts.setNewTime(startTime);
+		XivCombatant theCbt = new XivCombatant(0x1000_0001, "Foo");
+		BuffApplied ba = new BuffApplied(new XivStatusEffect(0x9E), 18.0, theCbt, theCbt, 0);
+		ba.setTimeSource(fts);
+		ba.setHappenedAt(fts.now());
+		master.pushEventAndWait(ba);
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(2_999));
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		BuffRemoved br = new BuffRemoved(new XivStatusEffect(0x9E), 18.0, theCbt, theCbt, 0);
+		br.setTimeSource(fts);
+		br.setHappenedAt(fts.now());
+		master.pushEventAndWait(br);
+		fts.setNewTime(startTime.plusMillis(3_001));
+		// Need to push a dummy event due to fake time source
+		master.pushEventAndWait(new BaseEvent() {
+		});
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+		fts.setNewTime(startTime.plusMillis(6_002));
+		// Need to push a dummy event due to fake time source
+		master.pushEventAndWait(new BaseEvent() {
+		});
+		{
+			List<TtsRequest> calls = coll.getEventsOf(TtsRequest.class);
+			Assert.assertEquals(calls.size(), 0);
+		}
+	}
 }
