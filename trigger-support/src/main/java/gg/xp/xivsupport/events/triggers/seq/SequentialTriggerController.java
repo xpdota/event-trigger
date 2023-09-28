@@ -46,6 +46,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	private volatile boolean done;
 	private volatile boolean processing = true;
 	private volatile boolean die;
+	private volatile boolean dieSilently;
 	private volatile boolean cycleProcessingTimeExceeded;
 	private volatile @Nullable Predicate<X> filter;
 	private final Map<String, Object> params = new LinkedHashMap<>();
@@ -59,6 +60,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		thread = new Thread(() -> {
 			try {
 				triggerCode.accept(initialEvent, this);
+			}
+			catch (SequentialTriggerPleaseDie e) {
+				log.info("Sequential Trigger Requested to End");
 			}
 			catch (Throwable t) {
 				log.error("Error in sequential trigger", t);
@@ -117,7 +121,15 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			die = true;
 			lock.notifyAll();
 		}
+	}
 
+	public void stopSilently() {
+		synchronized (lock) {
+			log.info("Sequential trigger stopping by request");
+			dieSilently = true;
+			die = true;
+			lock.notifyAll();
+		}
 	}
 
 	@SystemEvent
@@ -470,11 +482,15 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		synchronized (lock) {
 			processing = false;
 			currentEvent = null;
+			log.error("Clear");
 			context = null;
 			this.filter = filter;
 			lock.notifyAll();
 			while (true) {
 				if (die) {
+					if (dieSilently) {
+						throw new SequentialTriggerPleaseDie("Sequential trigger stopping by request");
+					}
 					// Deprecated, but.......?
 					// Seems better than leaving threads hanging around doing nothing.
 //					thread.stop();
@@ -507,6 +523,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			// TODO: expire on wipe?
 			// Also make it configurable as to whether or not a wipe ends the trigger
 			if (expired.getAsBoolean()) {
+				log.error("End");
 //			if (event.getHappenedAt().isAfter(expiresAt)) {
 				log.warn("Sequential trigger expired by event after {}/{}ms: {}", initialEvent.getEffectiveTimeSince().toMillis(), timeout, event);
 				die = true;
@@ -515,9 +532,11 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			}
 			Predicate<X> filt = filter;
 			if (filt != null && !filt.test(event)) {
+//				log.error("Filtered");
 				return;
 			}
 			// First, set fields
+			log.error("Set ctx: {}", ctx);
 			context = ctx;
 			currentEvent = event;
 			// Indicate that we are currently processing

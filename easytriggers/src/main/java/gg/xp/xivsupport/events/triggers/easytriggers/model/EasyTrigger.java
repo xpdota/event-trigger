@@ -7,6 +7,7 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,43 +31,54 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 	@JsonProperty(defaultValue = "true")
 	private boolean enabled = true;
 
+	@JsonProperty
+	private SequentialTriggerConcurrencyMode concurrency = SequentialTriggerConcurrencyMode.BLOCK_NEW;
+
 	private Class<X> eventType = (Class<X>) Event.class;
 	private List<Condition<? super X>> conditions = Collections.emptyList();
 	private List<Action<? super X>> actions = Collections.emptyList();
 	private String name = "Give me a name";
 	private int timeoutMs = 600_000;
 
-	// To account for the fact that the SQ might be recalculated while running,
-	// sqCurrent holds whatever is running, while sqBase holds the template
-	// TODO: unit test for this
 	private SequentialTrigger<BaseEvent> sqBase = SqtTemplates.nothing();
-	private SequentialTrigger<BaseEvent> sqCurrent = sqBase;
 	private EasyTriggerContext ctx;
 
 	public EasyTrigger() {
-		recalc();
+		// TODO: unit test for updating trigger while running
+		recalcFully();
 	}
 
 	public void handleEvent(EventContext context, Event event) {
-		if (!(event instanceof BaseEvent)) {
+		if (!(event instanceof BaseEvent) || !enabled || eventType == null) {
 			return;
 		}
-		if (sqCurrent.isActive()) {
-			sqCurrent.feed(context, (BaseEvent) event);
-		}
-		if (!enabled || eventType == null || !eventType.isInstance(event)) {
-			return;
-		}
-		X typedEvent = eventType.cast(event);
 		ctx = new EasyTriggerContext(context, this);
-		if (conditions.stream().allMatch(cond -> cond.test(ctx, typedEvent))) {
-			hits++;
-			sqCurrent = sqBase;
-			sqCurrent.feed(context, (BaseEvent) event);
-		}
-		else {
-			misses++;
-		}
+		sqBase.feed(context, (BaseEvent) event);
+	}
+
+	private boolean matchesStartCondition(X event) {
+		return conditions.stream().allMatch(cond -> cond.test(ctx, event));
+	}
+
+	private void recalcFully() {
+		sqBase = SqtTemplates.sq(timeoutMs,
+				eventType,
+				// The start condition is handled externally
+				event -> {
+					X typedEvent = eventType.cast(event);
+					if (matchesStartCondition(typedEvent)) {
+						hits++;
+						return true;
+					}
+					else {
+						misses++;
+						return false;
+					}
+				},
+				(e1, s) -> {
+					ctx.runActions((List) actions, s, (BaseEvent) e1);
+				});
+		recalc();
 	}
 
 	public void recalc() {
@@ -74,13 +86,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 		conditions.sort(Comparator.comparing(Condition::sortOrder));
 		conditions.forEach(Condition::recalc);
 		actions.forEach(Action::recalc);
-		sqBase = SqtTemplates.sq(timeoutMs,
-				eventType,
-				// The start condition is handled externally
-				se -> true,
-				(e1, s) -> {
-					ctx.runActions((List) actions, s, (BaseEvent) e1);
-				});
+		sqBase.setConcurrency(concurrency);
 		Stream.concat(conditions.stream(), actions.stream()).forEach(item -> {
 			if (item instanceof HasMutableEventType het) {
 				het.setEventType(getEventType());
@@ -95,7 +101,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 
 	public void setEventType(Class<X> eventType) {
 		this.eventType = eventType;
-		recalc();
+		recalcFully();
 	}
 
 	@Override
@@ -139,6 +145,15 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 	public void removeCondition(Condition<? super X> condition) {
 		makeWritable();
 		conditions.remove(condition);
+		recalc();
+	}
+
+	public SequentialTriggerConcurrencyMode getConcurrency() {
+		return concurrency;
+	}
+
+	public void setConcurrency(SequentialTriggerConcurrencyMode concurrency) {
+		this.concurrency = concurrency;
 		recalc();
 	}
 
@@ -210,5 +225,71 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 //		newTrigger.setText(text);
 //		newTrigger.setConditions(new ArrayList<>(conditions));
 //		return newTrigger;
+//	}
+//	public void handleEventOld(EventContext context, Event event) {
+//		if (!(event instanceof BaseEvent)) {
+//			return;
+//		}
+//		switch (concurrency) {
+//			// Mirrors standard sequential trigger logic
+//			case BLOCK_NEW -> {
+//				// Block new - if currently active, feed.
+//				if (sqCurrent.isActive()) {
+//					sqCurrent.feed(context, (BaseEvent) event);
+//					// TODO: shouldn't there be a 'return' right here?
+//					return;
+//				}
+//				if (!enabled || eventType == null || !eventType.isInstance(event)) {
+//					return;
+//				}
+//				X typedEvent = eventType.cast(event);
+//				ctx = new EasyTriggerContext(context, this);
+//				if (matchesStartCondition(typedEvent)) {
+//					hits++;
+//					sqCurrent = sqBase;
+//					sqCurrent.feed(context, (BaseEvent) event);
+//				}
+//				else {
+//					misses++;
+//				}
+//			}
+//			case REPLACE_OLD -> {
+//				if (!enabled || eventType == null || !eventType.isInstance(event)) {
+//					return;
+//				}
+//				X typedEvent = eventType.cast(event);
+//				ctx = new EasyTriggerContext(context, this);
+//				if (matchesStartCondition(typedEvent)) {
+//					hits++;
+//					if (sqCurrent != null && sqCurrent.isActive()) {
+//						sqCurrent.stopSilently();
+//					}
+//					sqCurrent = sqBase;
+//					sqCurrent.feed(context, (BaseEvent) event);
+//				}
+//				else {
+//					if (sqCurrent.isActive()) {
+//						sqCurrent.feed(context, (BaseEvent) event);
+//					}
+//					misses++;
+//				}
+//			}
+//			case CONCURRENT -> {
+//				X typedEvent = eventType.cast(event);
+//				ctx = new EasyTriggerContext(context, this);
+//				var iter = sqMultiCurrent.iterator();
+//				while (iter.hasNext()) {
+//					SequentialTrigger<BaseEvent> next = iter.next();
+//					next.feed(context, (BaseEvent) event);
+//					if (!next.isActive()) {
+//						iter.remove();
+//					}
+//				}
+//				if (matchesStartCondition(typedEvent)) {
+//					hits++;
+//					sqMultiCurrent.add()
+//				}
+//			}
+//		}
 //	}
 }
