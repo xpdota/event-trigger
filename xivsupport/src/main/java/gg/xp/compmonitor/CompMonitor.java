@@ -18,6 +18,7 @@ public class CompMonitor extends NullComponentMonitor {
 	private static final Logger log = LoggerFactory.getLogger(CompMonitor.class);
 	private final List<InstantiatedItem<?>> all = new ArrayList<>();
 	private final List<CompListener> listeners = new ArrayList<>();
+	private final Object lock = new Object();
 	private PicoContainer container;
 
 	@Override
@@ -26,9 +27,15 @@ public class CompMonitor extends NullComponentMonitor {
 		if (!checkContainer(container)) {
 			return;
 		}
+		if (instantiated == null) {
+			log.error("Failed to instantiate {} {} {} {}", componentAdapter, constructor, constructor.getDeclaringClass(), instantiated);
+			return;
+		}
 		InstantiatedItem<T> inst = new InstantiatedItem<>(constructor.getDeclaringClass(), (T) instantiated);
-		all.add(inst);
-		listeners.forEach(listener -> listener.added(inst));
+		synchronized (lock) {
+			all.add(inst);
+			listeners.forEach(listener -> listener.added(inst));
+		}
 		if (duration >= 100) {
 			log.warn("CompMonitor: {}ms to instantiate {}", duration, instantiated);
 		}
@@ -45,11 +52,15 @@ public class CompMonitor extends NullComponentMonitor {
 	}
 
 	public void addListener(CompListener listener) {
-		listeners.add(listener);
+//		synchronized (lock) {
+			listeners.add(listener);
+//		}
 	}
 
 	public void addAndRunListener(CompListener listener) {
-		addListener(listener);
-		all.forEach(listener::added);
+//		synchronized (lock) {
+			addListener(listener);
+			all.forEach(listener::added);
+//		}
 	}
 }

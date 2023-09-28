@@ -9,12 +9,12 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.topology.Topology;
 import gg.xp.reevent.topology.TopologyInfo;
 import gg.xp.reevent.topology.TopologyProvider;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -27,9 +27,9 @@ public class MonitoringEventDistributor extends BasicEventDistributor implements
 	private final TopologyInfo topoInfo;
 	private final Object loadLock = new Object();
 	private final Map<Class<? extends Event>, List<EventHandler<Event>>> eventClassMap = new HashMap<>();
-	private final List<EventHandler<Event>> autoHandlers = new ArrayList<>();
-	private final List<EventHandler<Event>> manualHandlers = new ArrayList<>();
-	private volatile boolean dirty = true;
+	private final List<@NotNull EventHandler<Event>> autoHandlers = new ArrayList<>();
+	private final List<@NotNull EventHandler<Event>> manualHandlers = new ArrayList<>();
+	private volatile boolean dirty;
 	private Topology topology;
 
 	public MonitoringEventDistributor(StateStore state, AutoScan scanner, TopologyInfo topoInfo, CompMonitor mon, AutoHandlerConfig config) {
@@ -38,16 +38,20 @@ public class MonitoringEventDistributor extends BasicEventDistributor implements
 			boolean dirty = false;
 			Object inst = item.instance();
 			if (inst instanceof EventHandler<?> eh) {
+//				synchronized (loadLock) {
 				autoHandlers.add((EventHandler<Event>) eh);
 				dirty = true;
+//				}
 			}
 			Class<?> clazz = inst.getClass();
 			Method[] methods = clazz.getMethods();
 			for (Method method : methods) {
 				if (method.isAnnotationPresent(HandleEvents.class)) {
 					AutoHandler rawEvh = new AutoHandler(clazz, method, inst, config);
+//					synchronized (loadLock) {
 					autoHandlers.add(rawEvh);
 					dirty = true;
+//					}
 				}
 			}
 			if (dirty) {
@@ -61,21 +65,25 @@ public class MonitoringEventDistributor extends BasicEventDistributor implements
 
 	@Override
 	public synchronized void registerHandler(EventHandler<Event> handler) {
+		if (handler == null) {
+			throw new IllegalArgumentException("Handler was null!");
+		}
 		manualHandlers.add(handler);
 		dirty = true;
 	}
 
-	// TODO: this just doesn't work well until event sources are also auto-ified
-	// We get double events after reloading
 	public void reloadIfNeeded() {
+		scanner.doScanIfNeeded();
 		if (!dirty) {
 			return;
 		}
-		scanner.doScanIfNeeded();
+		log.info("Reloading", new RuntimeException());
+//		synchronized (loadLock) {
 		handlers.clear();
 		handlers.addAll(manualHandlers);
 		handlers.addAll(autoHandlers);
 		sortHandlers();
+//		}
 		topology = Topology.fromHandlers(new ArrayList<>(this.handlers), topoInfo);
 		dirty = false;
 	}
@@ -104,7 +112,6 @@ public class MonitoringEventDistributor extends BasicEventDistributor implements
 		return topology;
 	}
 
-	// TODO: is there a better place to put this?
 	@Override
 	public void acceptEvent(Event event) {
 		reloadIfNeeded();

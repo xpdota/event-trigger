@@ -38,6 +38,9 @@ public class BasicEventDistributor implements EventDistributor {
 	// todo: sync object doesn't cover direct access as seen in subclass
 	@Override
 	public synchronized void registerHandler(EventHandler<Event> handler) {
+		if (handler == null) {
+			throw new IllegalArgumentException("Handler was null!");
+		}
 		if (!(handler instanceof AutoHandler)) {
 			log.info("Added manual handler: {}", handler);
 		}

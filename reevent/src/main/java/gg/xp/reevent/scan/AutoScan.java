@@ -15,7 +15,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,8 @@ public class AutoScan {
 			"sfl4j",
 			"xivdata"
 	);
-	private boolean scanned;
+	private volatile boolean scanned;
+	private final Object scanLock = new Object();
 
 	public AutoScan(AutoHandlerInstanceProvider instanceProvider, AutoHandlerConfig config) {
 		this.instanceProvider = instanceProvider;
@@ -69,16 +69,16 @@ public class AutoScan {
 
 	public void doScanIfNeeded() {
 		if (!scanned) {
-			doScan();
+			synchronized (scanLock) {
+				if (!scanned) {
+					doScan();
+				}
+			}
 		}
 	}
 
-	public void doScan() {
+	private void doScan() {
 		log.info("Scanning packages");
-		List<AutoHandler> out = new ArrayList<>();
-//		ClassLoader loader = new ForceReloadClassLoader();
-//		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
-		//noinspection EmptyFinallyBlock
 		// TODO: Reload of existing classes is broken because reloading basic classes such as 'Event'
 		// in a new classloader causes the JVM to no longer see it as the same class, causing signature
 		// mismatches.
@@ -176,7 +176,6 @@ public class AutoScan {
 		log.info("Loaded instances");
 		scanned = true;
 	}
-
 
 	// Filter out interfaces, abstract classes, and other junk
 	private static boolean isClassInstantiable(Class<?> clazz) {
