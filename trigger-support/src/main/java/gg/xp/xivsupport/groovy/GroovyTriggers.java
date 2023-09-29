@@ -258,6 +258,13 @@ public class GroovyTriggers {
 		builder.finish();
 	}
 
+	private BooleanSupplier wrapBooleanSupplier(BooleanSupplier supplier) {
+		return () -> {
+			try (SandboxScope ignored = sandbox.enter()) {
+				return supplier.getAsBoolean();
+			}
+		};
+	}
 	private <X> Supplier<X> wrapSupplier(Supplier<X> supplier) {
 		return () -> {
 			try (SandboxScope ignored = sandbox.enter()) {
@@ -288,7 +295,7 @@ public class GroovyTriggers {
 			Supplier<String> text = gcb.text;
 			Duration timeBasis = controller.timeSinceStart();
 			Duration expiresAt = timeBasis.plusMillis(gcb.duration);
-			BooleanSupplier expired = gcb.expiry == null ? () -> controller.timeSinceStart().compareTo(expiresAt) > 0 : gcb.expiry;
+			BooleanSupplier expired = gcb.expired == null ? () -> controller.timeSinceStart().compareTo(expiresAt) > 0 : wrapBooleanSupplier(gcb.expired);
 			ProcessedCalloutEvent callout = new ProcessedCalloutEvent(
 					new CalloutTrackingKey(),
 					gcb.tts,
@@ -327,7 +334,7 @@ public class GroovyTriggers {
 		@NotNull Supplier<@Nullable String> text = () -> null;
 		int duration = 5000;
 		@Nullable HasCalloutTrackingKey replaces;
-		@Nullable BooleanSupplier expiry;
+		@Nullable BooleanSupplier expired;
 		@Nullable Color color;
 		@Nullable String soundFile;
 		@NotNull Supplier<@Nullable Component> guiProvider = () -> null;
@@ -387,6 +394,11 @@ public class GroovyTriggers {
 
 		public GroovyCalloutBuilder duration(int duration) {
 			this.duration = duration;
+			return this;
+		}
+
+		public GroovyCalloutBuilder displayWhile(BooleanSupplier displayWhile) {
+			this.expired = () -> !displayWhile.getAsBoolean();
 			return this;
 		}
 
