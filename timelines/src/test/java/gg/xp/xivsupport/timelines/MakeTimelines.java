@@ -88,7 +88,7 @@ public final class MakeTimelines {
 			log.info("Set up ChromeDriver");
 		}
 		ChromeOptions opts = new ChromeOptions();
-		opts.setHeadless(true);
+		opts.addArguments("headless=new");
 		opts.addArguments("remote-allow-origins=*");
 		opts.addArguments("disable-dev-shm-usage");
 		opts.addArguments("disable-gpu");
