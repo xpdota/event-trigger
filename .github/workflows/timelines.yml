@@ -25,7 +25,8 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - name: Build with Maven
-        run: mvn test -Pmaketimelines -Dmake-timelines.use-driver-helper=false
+#        run: mvn test -Pmaketimelines -Dmake-timelines.use-driver-helper=false
+        run: mvn test -Pmaketimelines -Dmake-timelines.use-driver-helper=true
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4.2.0
