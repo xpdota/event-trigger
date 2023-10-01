@@ -16,7 +16,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-// TODO: make a toString for this
 @SystemEvent
 public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTrackingKey, HasPrimaryValue {
 	private static final Logger log = LoggerFactory.getLogger(RawModifiedCallout.class);
