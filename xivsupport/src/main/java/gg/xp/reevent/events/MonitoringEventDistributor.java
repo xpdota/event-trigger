@@ -27,6 +27,7 @@ import java.util.Map;
 public class MonitoringEventDistributor extends BasicEventDistributor implements TopologyProvider {
 	private static final Logger log = LoggerFactory.getLogger(MonitoringEventDistributor.class);
 	private final AutoScan scanner;
+	private final Object loadLock = new Object();
 	private final TopologyInfo topoInfo;
 	private final Map<Class<? extends Event>, List<EventHandler<Event>>> eventClassMap = new HashMap<>();
 	private final List<@NotNull EventHandler<Event>> autoHandlers = new ArrayList<>();
