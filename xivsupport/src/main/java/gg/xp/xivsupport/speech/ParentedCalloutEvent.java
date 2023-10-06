@@ -39,7 +39,7 @@ public class ParentedCalloutEvent<X> extends BaseCalloutEvent {
 	}
 
 	@Override
-	public boolean isExpired() {
+	public boolean isNaturallyExpired() {
 		return expiryCheck.test(event);
 	}
 

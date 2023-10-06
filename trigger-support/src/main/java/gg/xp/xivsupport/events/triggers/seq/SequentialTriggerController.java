@@ -482,7 +482,6 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		synchronized (lock) {
 			processing = false;
 			currentEvent = null;
-			log.error("Clear");
 			context = null;
 			this.filter = filter;
 			lock.notifyAll();
@@ -523,7 +522,6 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			// TODO: expire on wipe?
 			// Also make it configurable as to whether or not a wipe ends the trigger
 			if (expired.getAsBoolean()) {
-				log.error("End");
 //			if (event.getHappenedAt().isAfter(expiresAt)) {
 				log.warn("Sequential trigger expired by event after {}/{}ms: {}", initialEvent.getEffectiveTimeSince().toMillis(), timeout, event);
 				die = true;
@@ -532,11 +530,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			}
 			Predicate<X> filt = filter;
 			if (filt != null && !filt.test(event)) {
-//				log.error("Filtered");
 				return;
 			}
 			// First, set fields
-			log.error("Set ctx: {}", ctx);
 			context = ctx;
 			currentEvent = event;
 			// Indicate that we are currently processing

@@ -70,18 +70,21 @@ public class MonitoringEventDistributor extends BasicEventDistributor implements
 		dirty = true;
 	}
 
-	public void reloadIfNeeded() {
+	public void reloadIfNeeded(Event event) {
 		scanner.doScanIfNeeded();
-		if (!dirty) {
-			return;
+		if (dirty) {
+			synchronized (loadLock) {
+				if (dirty) {
+					log.info("Reloading due to {}", event);
+					handlers.clear();
+					handlers.addAll(manualHandlers);
+					handlers.addAll(autoHandlers);
+					sortHandlers();
+					topology = Topology.fromHandlers(new ArrayList<>(this.handlers), topoInfo);
+					dirty = false;
+				}
+			}
 		}
-		log.info("Reloading");
-		handlers.clear();
-		handlers.addAll(manualHandlers);
-		handlers.addAll(autoHandlers);
-		sortHandlers();
-		topology = Topology.fromHandlers(new ArrayList<>(this.handlers), topoInfo);
-		dirty = false;
 	}
 
 	@Override
@@ -110,7 +113,7 @@ public class MonitoringEventDistributor extends BasicEventDistributor implements
 
 	@Override
 	public void acceptEvent(Event event) {
-		reloadIfNeeded();
+		reloadIfNeeded(event);
 		super.acceptEvent(event);
 	}
 

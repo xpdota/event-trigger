@@ -16,6 +16,7 @@ public abstract class BaseCalloutEvent extends BaseEvent implements CalloutEvent
 	private @Nullable Color colorOverride;
 	private @Nullable HasCalloutTrackingKey replaces;
 	private @Nullable CalloutTraceInfo trace;
+	private boolean forceExpire;
 
 	private final CalloutTrackingKey key;
 
@@ -71,5 +72,16 @@ public abstract class BaseCalloutEvent extends BaseEvent implements CalloutEvent
 
 	public void setTrace(CalloutTraceInfo trace) {
 		this.trace = trace;
+	}
+
+	@Override
+	public final boolean isExpired() {
+		return forceExpire || isNaturallyExpired();
+	}
+
+	public abstract boolean isNaturallyExpired();
+
+	public void forceExpire() {
+		this.forceExpire = true;
 	}
 }
