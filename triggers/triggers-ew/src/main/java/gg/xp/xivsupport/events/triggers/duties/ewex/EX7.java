@@ -325,14 +325,10 @@ public class EX7 extends AutoChildEventHandler implements FilteredEventHandler {
 			MapEffectEvent.class, mee -> mee.getFlags() == 0x20001,
 			(e1, s) -> {
 				var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8B82));
-				if (e1.getIndex() == 2) {
-					s.updateCall(dimensionalCleaveNorth, cast);
-				}
-				else if (e1.getIndex() == 3){
-					s.updateCall(dimensionalCleaveMiddle, cast);
-				}
-				else {
-					s.updateCall(dimensionalCleaveSouth, cast);
+				switch ((int) e1.getIndex()) {
+					case 2 -> s.updateCall(dimensionalCleaveNorth, cast);
+					case 3 -> s.updateCall(dimensionalCleaveMiddle, cast);
+					case 4 -> s.updateCall(dimensionalCleaveSouth, cast);
 				}
 			});
 }
