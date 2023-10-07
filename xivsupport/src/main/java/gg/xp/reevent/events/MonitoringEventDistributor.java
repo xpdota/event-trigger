@@ -21,11 +21,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Event distributor that uses a component monitor to add handlers as they are loaded in.
+ */
 public class MonitoringEventDistributor extends BasicEventDistributor implements TopologyProvider {
 	private static final Logger log = LoggerFactory.getLogger(MonitoringEventDistributor.class);
 	private final AutoScan scanner;
-	private final TopologyInfo topoInfo;
 	private final Object loadLock = new Object();
+	private final TopologyInfo topoInfo;
 	private final Map<Class<? extends Event>, List<EventHandler<Event>>> eventClassMap = new HashMap<>();
 	private final List<@NotNull EventHandler<Event>> autoHandlers = new ArrayList<>();
 	private final List<@NotNull EventHandler<Event>> manualHandlers = new ArrayList<>();
@@ -38,20 +41,16 @@ public class MonitoringEventDistributor extends BasicEventDistributor implements
 			boolean dirty = false;
 			Object inst = item.instance();
 			if (inst instanceof EventHandler<?> eh) {
-//				synchronized (loadLock) {
 				autoHandlers.add((EventHandler<Event>) eh);
 				dirty = true;
-//				}
 			}
 			Class<?> clazz = inst.getClass();
 			Method[] methods = clazz.getMethods();
 			for (Method method : methods) {
 				if (method.isAnnotationPresent(HandleEvents.class)) {
 					AutoHandler rawEvh = new AutoHandler(clazz, method, inst, config);
-//					synchronized (loadLock) {
 					autoHandlers.add(rawEvh);
 					dirty = true;
-//					}
 				}
 			}
 			if (dirty) {
