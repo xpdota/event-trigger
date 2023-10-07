@@ -12,6 +12,14 @@ public interface ActiveCastRepository {
 
 	List<CastTracker> getAll();
 
+	default List<CastTracker> getActiveCastsById(long... ids) {
+		return getAll()
+				.stream()
+				.filter(ct -> ct.getResult() == CastResult.IN_PROGRESS)
+				.filter(ct -> ct.getCast().abilityIdMatches(ids))
+				.toList();
+	}
+
 	default Optional<CastTracker> getActiveCastById(long... ids) {
 		return getAll()
 				.stream()

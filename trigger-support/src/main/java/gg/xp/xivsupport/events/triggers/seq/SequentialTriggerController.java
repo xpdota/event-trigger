@@ -136,6 +136,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	public void waitDuration(Duration duration) {
+		waitMs(duration.toMillis());
+	}
+
 	public void waitMs(long ms) {
 		log.trace("in waitMs");
 		if (ms <= 0) {

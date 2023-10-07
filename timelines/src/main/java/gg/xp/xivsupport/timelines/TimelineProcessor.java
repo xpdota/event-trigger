@@ -208,7 +208,9 @@ public final class TimelineProcessor {
 
 		double delta = effectiveTimeAfter - effectiveTimeBefore;
 		log.info("New Sync: {}", sync);
-		log.info("Timeline jumped by {} ({} -> {})", delta, effectiveTimeBefore, effectiveTimeAfter);
+		if (Math.abs(delta) > 0.6) {
+			log.info("Timeline jumped by {} ({} -> {})", delta, effectiveTimeBefore, effectiveTimeAfter);
+		}
 		// Only reprocess timeline triggers if the sync changed our timing by more than a couple seconds (i.e.
 		// we want to know whether the sync was actually a jump/phase change/whatever, not just time skew).
 		if (firstSync || Math.abs(delta) > 1.0) {
