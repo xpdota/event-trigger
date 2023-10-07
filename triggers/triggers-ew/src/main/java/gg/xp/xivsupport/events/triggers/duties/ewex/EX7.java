@@ -331,5 +331,8 @@ public class EX7 extends AutoChildEventHandler implements FilteredEventHandler {
 				else if (e1.getIndex() == 3){
 					s.updateCall(dimensionalCleaveMiddle, cast);
 				}
+				else {
+					s.updateCall(dimensionalCleaveSouth, cast);
+				}
 			});
 }
