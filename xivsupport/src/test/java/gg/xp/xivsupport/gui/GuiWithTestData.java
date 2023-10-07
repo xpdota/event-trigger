@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.reevent.events.AutoEventDistributor;
+import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.sys.XivMain;
@@ -23,7 +24,7 @@ public final class GuiWithTestData {
 		}
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		pico.addComponent(GuiMain.class);
-		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		dist.acceptEvent(new InitEvent());
 		pico.getComponent(GuiMain.class);
 
