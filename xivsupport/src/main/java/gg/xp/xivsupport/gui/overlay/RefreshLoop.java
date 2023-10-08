@@ -20,7 +20,7 @@ public class RefreshLoop<X> {
 
 	public RefreshLoop(String threadNameStub, X item, Consumer<X> periodicTask, Function<X, Long> interval) {
 		this.item = new WeakReference<>(item);
-		thread = new Thread(() -> {
+		thread = Thread.ofVirtual().unstarted(() -> {
 			while (!stop) {
 				try {
 					X actualItem = this.item.get();

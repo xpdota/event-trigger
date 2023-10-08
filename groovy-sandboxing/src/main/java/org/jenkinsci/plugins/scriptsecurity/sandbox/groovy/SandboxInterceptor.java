@@ -42,7 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
-import org.codehaus.groovy.runtime.DateGroovyMethods;
+//import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.EncodingGroovyMethods;
 import org.codehaus.groovy.runtime.InvokerHelper;
@@ -78,7 +78,7 @@ final class SandboxInterceptor extends GroovyInterceptor {
 //        SwingGroovyMethods.class,
 //        XmlGroovyMethods.class,
         EncodingGroovyMethods.class,
-        DateGroovyMethods.class,
+//        DateGroovyMethods.class,
         ProcessGroovyMethods.class,
     };
 

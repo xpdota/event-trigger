@@ -269,13 +269,13 @@
                     <errTitle>Triggevent</errTitle>
                     <dontWrapJar>true</dontWrapJar>
                     <chdir>.</chdir>
-                    <downloadUrl>https://www.oracle.com/java/technologies/downloads/#jdk17-windows</downloadUrl>
+                    <downloadUrl>https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.exe</downloadUrl>
                     <!-- This info is really only filled in because AVs complain less.-->
                     <versionInfo>
                         <fileVersion>1.3.2.1</fileVersion>
                         <txtFileVersion>1.3.2.1</txtFileVersion>
                         <fileDescription>Triggevent</fileDescription>
-                        <copyright>2022</copyright>
+                        <copyright>2023</copyright>
                         <productVersion>1.3.2.1</productVersion>
                         <txtProductVersion>1.3.2.1</txtProductVersion>
                         <productName>Triggevent</productName>
@@ -283,10 +283,10 @@
                         <originalFilename>triggevent.exe</originalFilename>
                     </versionInfo>
                     <messages>
-                        <bundledJreErr>You need to download Java version 17 or higher, or download the version
+                        <bundledJreErr>You need to download Java version ${java.version} or higher, or (re)-download the version
                             of Triggevent with bundled Java.
                         </bundledJreErr>
-                        <jreVersionErr>You need to download Java version 17 or higher, or download the version
+                        <jreVersionErr>You need to download Java version ${java.version} or higher, or (re)-download the version
                             of Triggevent with bundled Java.
                         </jreVersionErr>
                     </messages>

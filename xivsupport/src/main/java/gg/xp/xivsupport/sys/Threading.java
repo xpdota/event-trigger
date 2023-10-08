@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadFactory;
 public class Threading {
 	public static ThreadFactory namedDaemonThreadFactory(String nameStub) {
 		return new BasicThreadFactory.Builder()
+				.wrappedFactory(Thread.ofVirtual().factory())
 				.namingPattern(nameStub + "-%d")
 				.daemon(true)
 				.build();

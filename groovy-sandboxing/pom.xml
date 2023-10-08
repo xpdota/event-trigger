@@ -73,7 +73,7 @@
         <!--            <version>4.6.0</version>-->
         <!--        </dependency>-->
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
+            <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
         </dependency>
         <dependency>
