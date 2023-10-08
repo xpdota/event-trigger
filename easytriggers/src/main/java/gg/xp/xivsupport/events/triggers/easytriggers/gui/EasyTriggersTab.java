@@ -11,10 +11,12 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.gui.GuiMain;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
+import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -398,7 +400,17 @@ public class EasyTriggersTab implements PluginTab {
 			add(GuiUtil.labelFor("Event", eventTypeField), c);
 			c.gridx++;
 			add(eventTypeField, c);
-
+			c.gridy++;
+			c.gridx = 0;
+			JComboBox<SequentialTriggerConcurrencyMode> concModeSelector = new JComboBox<>(SequentialTriggerConcurrencyMode.values());
+			concModeSelector.setRenderer(new FriendlyNameListCellRenderer());
+			concModeSelector.setSelectedItem(trigger.getConcurrency());
+			concModeSelector.addItemListener(l -> {
+				trigger.setConcurrency((SequentialTriggerConcurrencyMode) concModeSelector.getSelectedItem());
+			});
+			add(GuiUtil.labelFor("Concurrency", concModeSelector), c);
+			c.gridx++;
+			add(concModeSelector, c);
 
 			c.gridx = 0;
 			c.gridy++;

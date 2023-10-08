@@ -13,8 +13,8 @@ public class TopologyTreeModel implements TreeModel {
 
 	private final Topology topology;
 
-	public TopologyTreeModel(AutoEventDistributor auto) {
-		topology = auto.getTopology();
+	public TopologyTreeModel(Topology topology) {
+		this.topology = topology;
 	}
 
 	@Override

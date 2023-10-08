@@ -7,12 +7,12 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IdType {
 	/**
-	 * @return The class of item that the ID corresponds to.
+	 * @return The class of instance that the ID corresponds to.
 	 */
 	Class<?> value();
 
 	/**
-	 * @return True if a mapping from the given ID to a concrete item is required. False if you
+	 * @return True if a mapping from the given ID to a concrete instance is required. False if you
 	 * want to accept non-matched items.
 	 */
 	boolean matchRequired() default true;

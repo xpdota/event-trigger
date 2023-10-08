@@ -12,7 +12,7 @@ public interface VisualFilter<X> {
 	/**
 	 * Whether it passes the filter
 	 *
-	 * @param item The item to filter
+	 * @param item The instance to filter
 	 * @return Whether it passed
 	 */
 	boolean passesFilter(X item);

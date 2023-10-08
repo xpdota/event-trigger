@@ -231,7 +231,8 @@ public class GroovyScriptManager {
 			if (matcher.matches()) {
 				rawProps.put(matcher.group(1), matcher.group(2));
 			}
-			else {
+			// Trim off the empty lines
+			else if (!line.trim().isEmpty()) {
 				lines.add(line);
 				iter.forEachRemaining(lines::add);
 			}
@@ -255,6 +256,8 @@ public class GroovyScriptManager {
 		Map<String, String> props = mapper.convertValue(script, new TypeReference<>() {
 		});
 		props.forEach((k, v) -> fileOut.append(propFormat.formatted(k, v)).append('\n'));
+		// Insert a newline so that properties can't be pasted in
+		fileOut.append('\n');
 		fileOut.append(script.getScriptContent());
 		try {
 			outFile.getParentFile().mkdirs();

@@ -3,6 +3,7 @@ package gg.xp.xivsupport.gui;
 import com.fasterxml.jackson.databind.JsonNode;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeFflogsTimeSource;
@@ -35,7 +36,7 @@ public final class LaunchImportedFflogs {
 		CommonGuiSetup.setup();
 		// TODO: this needs a fake time source
 		MutablePicoContainer pico = XivMain.importInit();
-		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		pico.addComponent(FakeFflogsTimeSource.class);
 		ReplayController replayController = new ReplayController(master, new ListEventIterator<>(events), false);
@@ -77,7 +78,7 @@ public final class LaunchImportedFflogs {
 
 		List<Event> events = EventReader.readFflogsJson(jsonNode);
 
-		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		ReplayController replayController = new ReplayController(master, new ListEventIterator<>(events), false);
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.FFLOGS);

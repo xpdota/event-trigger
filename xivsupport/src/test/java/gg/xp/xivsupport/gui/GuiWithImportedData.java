@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import gg.xp.reevent.events.AutoEventDistributor;
+import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventMaster;
@@ -31,7 +32,7 @@ public final class GuiWithImportedData {
 			throw new RuntimeException(t);
 		}
 		MutablePicoContainer pico = XivMain.testingMasterInit();
-		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		long start = System.currentTimeMillis();
 		List<Event> events = EventReader.readEventsFromResource("/testsession5.oos.gz");

@@ -142,6 +142,7 @@ public final class AbilityEffects {
 				// Don't know - saw it on Superbolide
 				// Okay, not HP set - saw it on Machinist Hypercharge + other MCH abilities
 //					return (new CurrentHpSetEffect(calcDamage(value)));
+				// Also saw it on EW EX7's set-hp-to-one mechanic, so it could be?
 
 			default:
 				return new OtherEffect(flags, value);

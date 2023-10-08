@@ -21,7 +21,7 @@ public class CustomColumn<X> {
 	 * Custom table column
 	 *
 	 * @param columnName       Name of the column
-	 * @param getter           Function to convert an item in the table to whatever this column cares about. Note that this
+	 * @param getter           Function to convert an instance in the table to whatever this column cares about. Note that this
 	 *                         is executed **in the table rendering code** so it should under no circumstances involve
 	 *                         non-trivial computation or access.
 	 * @param columnConfigurer Lets you configure the column, e.g. to override the renderer.

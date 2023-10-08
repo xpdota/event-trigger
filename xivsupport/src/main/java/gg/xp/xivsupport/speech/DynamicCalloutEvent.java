@@ -36,7 +36,7 @@ public class DynamicCalloutEvent extends BaseCalloutEvent {
 	}
 
 	@Override
-	public boolean isExpired() {
+	public boolean isNaturallyExpired() {
 		return getTimeSinceCall().compareTo(hangTime) > 0;
 	}
 

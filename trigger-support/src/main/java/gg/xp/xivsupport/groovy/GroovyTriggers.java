@@ -11,6 +11,7 @@ import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.callouts.CalloutTrackingKey;
 import gg.xp.xivsupport.callouts.SingleValueReplacement;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.groovy.helpers.CustomGString;
@@ -132,6 +133,7 @@ public class GroovyTriggers {
 		BiConsumer<X, SequentialTriggerController<BaseEvent>> sq;
 		int timeout = 120_000;
 		Closure<?> rawSqHandler;
+		SequentialTriggerConcurrencyMode concurrencyMode = SequentialTriggerConcurrencyMode.BLOCK_NEW;
 
 		public Builder<X> named(String name) {
 			this.name = name;
@@ -167,6 +169,23 @@ public class GroovyTriggers {
 			return this;
 		}
 
+		public Builder<X> concurrency(SequentialTriggerConcurrencyMode concurrencyMode) {
+			this.concurrencyMode = concurrencyMode;
+			return this;
+		}
+
+		public SequentialTriggerConcurrencyMode getBlock() {
+			return SequentialTriggerConcurrencyMode.BLOCK_NEW;
+		}
+
+		public SequentialTriggerConcurrencyMode getReplace() {
+			return SequentialTriggerConcurrencyMode.REPLACE_OLD;
+		}
+
+		public SequentialTriggerConcurrencyMode getConcurrent() {
+			return SequentialTriggerConcurrencyMode.CONCURRENT;
+		}
+
 		public Builder<X> sequence(@DelegatesTo(GroovySqHelper.class) Closure<?> sequentialTriggerBody) {
 			if (sequentialTriggerBody.getMaximumNumberOfParameters() != 2) {
 				throw new IllegalArgumentException("Sequence must have two arguments (event and sequential trigger controller)");
@@ -196,10 +215,19 @@ public class GroovyTriggers {
 				else {
 					SequentialTrigger<BaseEvent> sqFinalized = SqtTemplates.sq(timeout, type, condition, (e1, s) -> {
 						try (SandboxScope ignored = sandbox.enter()) {
-							rawSqHandler.setDelegate(new GroovySqHelper<>(s));
-							sq.accept(e1, s);
+							// This doesn't work right unless we clone
+							if (concurrencyMode == SequentialTriggerConcurrencyMode.CONCURRENT) {
+								Closure<?> clonedSqHandler = (Closure<?>) rawSqHandler.clone();
+								clonedSqHandler.setDelegate(new GroovySqHelper<>(s));
+								clonedSqHandler.call(e1, s);
+							}
+							else {
+								rawSqHandler.setDelegate(new GroovySqHelper<>(s));
+								sq.accept(e1, s);
+							}
 						}
 					});
+					sqFinalized.setConcurrency(this.concurrencyMode);
 					addHandler(name, BaseEvent.class, (event, context) -> {
 						try (SandboxScope ignored = sandbox.enter()) {
 							sqFinalized.feed(context, event);
@@ -225,10 +253,18 @@ public class GroovyTriggers {
 	public void add(@DelegatesTo(Builder.class) Closure<?> closure) {
 		Builder<BaseEvent> builder = new Builder<>();
 		closure.setDelegate(builder);
+		closure.setResolveStrategy(Closure.DELEGATE_FIRST);
 		closure.run();
 		builder.finish();
 	}
 
+	private BooleanSupplier wrapBooleanSupplier(BooleanSupplier supplier) {
+		return () -> {
+			try (SandboxScope ignored = sandbox.enter()) {
+				return supplier.getAsBoolean();
+			}
+		};
+	}
 	private <X> Supplier<X> wrapSupplier(Supplier<X> supplier) {
 		return () -> {
 			try (SandboxScope ignored = sandbox.enter()) {
@@ -259,7 +295,7 @@ public class GroovyTriggers {
 			Supplier<String> text = gcb.text;
 			Duration timeBasis = controller.timeSinceStart();
 			Duration expiresAt = timeBasis.plusMillis(gcb.duration);
-			BooleanSupplier expired = gcb.expiry == null ? () -> controller.timeSinceStart().compareTo(expiresAt) > 0 : gcb.expiry;
+			BooleanSupplier expired = gcb.expired == null ? () -> controller.timeSinceStart().compareTo(expiresAt) > 0 : wrapBooleanSupplier(gcb.expired);
 			ProcessedCalloutEvent callout = new ProcessedCalloutEvent(
 					new CalloutTrackingKey(),
 					gcb.tts,
@@ -298,7 +334,7 @@ public class GroovyTriggers {
 		@NotNull Supplier<@Nullable String> text = () -> null;
 		int duration = 5000;
 		@Nullable HasCalloutTrackingKey replaces;
-		@Nullable BooleanSupplier expiry;
+		@Nullable BooleanSupplier expired;
 		@Nullable Color color;
 		@Nullable String soundFile;
 		@NotNull Supplier<@Nullable Component> guiProvider = () -> null;
@@ -358,6 +394,11 @@ public class GroovyTriggers {
 
 		public GroovyCalloutBuilder duration(int duration) {
 			this.duration = duration;
+			return this;
+		}
+
+		public GroovyCalloutBuilder displayWhile(BooleanSupplier displayWhile) {
+			this.expired = () -> !displayWhile.getAsBoolean();
 			return this;
 		}
 

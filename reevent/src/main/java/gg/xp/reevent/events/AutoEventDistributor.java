@@ -5,6 +5,7 @@ import gg.xp.reevent.scan.AutoHandler;
 import gg.xp.reevent.scan.AutoHandlerScan;
 import gg.xp.reevent.topology.Topology;
 import gg.xp.reevent.topology.TopologyInfo;
+import gg.xp.reevent.topology.TopologyProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class AutoEventDistributor extends BasicEventDistributor {
+public class AutoEventDistributor extends BasicEventDistributor implements TopologyProvider {
 	private static final Logger log = LoggerFactory.getLogger(AutoEventDistributor.class);
 	private final AutoHandlerScan scanner;
 	private final TopologyInfo topoInfo;
@@ -65,6 +66,7 @@ public class AutoEventDistributor extends BasicEventDistributor {
 		}).sorted(Comparator.comparing(EventHandler::getOrder)).toList());
 	}
 
+	@Override
 	public Topology getTopology() {
 		return topology;
 	}

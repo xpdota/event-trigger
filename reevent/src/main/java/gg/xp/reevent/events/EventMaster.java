@@ -1,5 +1,6 @@
 package gg.xp.reevent.events;
 
+import gg.xp.reevent.scan.Alias;
 import gg.xp.reevent.state.QueueState;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadFactory;
 
+@Alias("master")
 public class EventMaster {
 
 	private static final Logger log = LoggerFactory.getLogger(EventMaster.class);
