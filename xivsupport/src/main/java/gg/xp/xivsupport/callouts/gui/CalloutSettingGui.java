@@ -4,6 +4,8 @@ import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
+import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.StringSettingGui;
@@ -13,8 +15,13 @@ import gg.xp.xivsupport.persistence.settings.StringSetting;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
 
 public class CalloutSettingGui {
 
@@ -30,12 +37,12 @@ public class CalloutSettingGui {
 	private final JTextField textTextBox;
 	private final BooleanSetting allText;
 	private final BooleanSetting allTts;
-	private final JPanel colorPickerPanel;
+	private final JPanel colorPickerAndActionsPanel;
 	private final JButton colorPicker;
 	private final @Nullable Component extendedDescription;
 	private boolean enabledByParent = true;
 
-	public CalloutSettingGui(ModifiedCalloutHandle call, SoundFilesManager soundMgr, SoundFileTab sft) {
+	public CalloutSettingGui(ModifiedCalloutHandle call, SoundFilesManager soundMgr, SoundFileTab sft, List<ExtraCalloutAction> extras) {
 		callCheckbox = new BooleanSettingGui(call.getEnable(), call.getDescription(), () -> enabledByParent).getComponent();
 		this.extendedDescription = makeExtendedDescription(call.getOriginal().getExtendedDescription());
 		this.sft = sft;
@@ -96,13 +103,49 @@ public class CalloutSettingGui {
 			colorPicker.setPreferredSize(new Dimension(20, 20));
 			colorPicker.setMinimumSize(new Dimension(20, 20));
 			colorPicker.setMaximumSize(new Dimension(50, 256));
-			colorPickerPanel = new JPanel();
-			colorPickerPanel.setLayout(new BoxLayout(colorPickerPanel, BoxLayout.LINE_AXIS));
+			colorPickerAndActionsPanel = new JPanel();
+			colorPickerAndActionsPanel.setLayout(new BoxLayout(colorPickerAndActionsPanel, BoxLayout.LINE_AXIS));
 
-			colorPickerPanel.add(new JLabel("Override Text Color: "));
-			colorPickerPanel.add(colorPicker);
+			colorPickerAndActionsPanel.add(new JLabel("Override Text Color: "));
+			colorPickerAndActionsPanel.add(colorPicker);
 
-//			colorPickerPanel.setPreferredSize(new Dimension(20, 10));
+			if (!extras.isEmpty()) {
+				colorPickerAndActionsPanel.add(Box.createHorizontalGlue());
+				JButton extraActionsButton = new JButton("More Actions...");
+				colorPickerAndActionsPanel.add(extraActionsButton);
+				extraActionsButton.addActionListener(l -> {
+					JPopupMenu popupMenu = new JPopupMenu();
+					popupMenu.addPopupMenuListener(new PopupMenuListener() {
+						@Override
+						public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+							popupMenu.removeAll();
+							for (ExtraCalloutAction extra : extras) {
+								ExtraCalloutActionInstance inst = extra.getInstance(call.getOriginal(), call);
+								if (inst == null || !inst.isVisible()) {
+									continue;
+								}
+								JMenuItem menuItem = new JMenuItem(inst.getLabel());
+								menuItem.setEnabled(inst.isEnabled());
+								menuItem.addActionListener(l -> inst.doAction());
+								popupMenu.add(menuItem);
+							}
+							popupMenu.revalidate();
+
+						}
+
+						@Override
+						public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+
+						}
+
+						@Override
+						public void popupMenuCanceled(PopupMenuEvent e) {
+
+						}
+					});
+					popupMenu.show(extraActionsButton, 0, extraActionsButton.getHeight());
+				});
+			}
 		}
 		recalcEnabledDisabledStatus();
 		ActionListener l = e -> recalcEnabledDisabledStatus();
@@ -168,8 +211,8 @@ public class CalloutSettingGui {
 		return colorPicker;
 	}
 
-	public JPanel getColorPickerPanel() {
-		return colorPickerPanel;
+	public JPanel getColorPickerAndActionsPanel() {
+		return colorPickerAndActionsPanel;
 	}
 
 	public void setVisible(boolean visible) {
@@ -184,7 +227,7 @@ public class CalloutSettingGui {
 		callCheckbox.setVisible(visible);
 		ttsPanel.setVisible(visible);
 		textPanel.setVisible(visible);
-		colorPickerPanel.setVisible(visible);
+		colorPickerAndActionsPanel.setVisible(visible);
 		soundPanel.setVisible(visible);
 		if (extendedDescription != null) {
 			extendedDescription.setVisible(visible);
