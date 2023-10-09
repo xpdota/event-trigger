@@ -13,7 +13,7 @@ f54a8510f834a1a57166970bfc982e94  commons-collections-3.2.2.jar
 4afc9bfa2d31dbf7330c98fcc954b892  commons-text-1.10.0.jar
 0a47ad3e00ee3cb0d14abced4da57224  custom-party-overlay-1.0-SNAPSHOT.jar
 61fa812186056df5b39f35178dab54a1  dot-tracker-1.0-SNAPSHOT.jar
-3a947461575bb168390abf9441ca52e4  easytriggers-1.0-SNAPSHOT.jar
+d82a10977a2b8f7fb4c0651240efbfd0  easytriggers-1.0-SNAPSHOT.jar
 8c4f71bf62708fa7881b82c62579824f  flatlaf-2.6.jar
 4fbc34bbf1ec28670693ee90ba5948fc  groovy-3.0.14.jar
 d42b8855e3b7e4f3506ffc0b5b85d149  groovy-sandbox-1.27.jar
@@ -57,4 +57,4 @@ a79006557cc3031a9dc2aedddfed0969  triggers-general-1.0-SNAPSHOT.jar
 62dc57815ca3b6a69f1ba327b6f49b0f  triggers-sb-1.0-SNAPSHOT.jar
 4adbd6269e358d496319e820798c14c4  trigger-support-1.0-SNAPSHOT.jar
 ae68b30cab135cb6fa86fb7f53ef72a0  xivdata-1.0-SNAPSHOT.jar
-f21067a9b28294b8bb611f8fa76e218a  xivsupport-1.0-SNAPSHOT.jar
+dd344ec066637845b6dbd070c1927e3d  xivsupport-1.0-SNAPSHOT.jar
