@@ -304,6 +304,7 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 			soundPanel.setLayout(new WrapLayout());
 			soundPanel.add(new BooleanSettingGui(actWs.getAllowTts(), "Use OP WebSocket for TTS").getComponent());
 			soundPanel.add(new BooleanSettingGui(localSpeech.getEnabledSetting(), "Local TTS as Fallback").getComponent());
+			soundPanel.add(new BooleanSettingGui(localSpeech.getBlocking(), "Local TTS Blocking Mode").getComponent());
 			BooleanSetting override = localSpeech.getOverrideExecutable();
 			soundPanel.add(new BooleanSettingGui(override, "Override TTS Program").getComponent());
 			soundPanel.add(Box.createHorizontalGlue());
