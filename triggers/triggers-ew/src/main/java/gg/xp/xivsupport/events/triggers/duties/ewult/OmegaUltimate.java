@@ -237,6 +237,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	private final BooleanSetting deltaAmEnable;
 	private final BooleanSetting sigmaAmEnable;
 	private final BooleanSetting omegaAmEnable;
+	private final BooleanSetting omegaAmFirstSetEnable;
+	private final BooleanSetting omegaAmSecondSetEnable;
 	private final IntSetting sigmaAmDelay;
 	private final IntSetting omegaFirstSetDelay;
 	private final IntSetting omegaSecondSetDelay;
@@ -338,6 +340,8 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 		deltaAmEnable = new BooleanSetting(pers, settingKeyBase + "delta-am.enabled", false);
 		sigmaAmEnable = new BooleanSetting(pers, settingKeyBase + "sigma-am.enabled", false);
 		omegaAmEnable = new BooleanSetting(pers, settingKeyBase + "omega-am.enabled", false);
+		omegaAmFirstSetEnable = new BooleanSetting(pers, settingKeyBase + "omega-am.first-set-enabled", true);
+		omegaAmSecondSetEnable = new BooleanSetting(pers, settingKeyBase + "omega-am.second-set-enabled", true);
 		p1prio = new JobSortOverrideSetting(pers, settingKeyBase + "p1-prio-override", state, groupPrioJobSort);
 		psPrio = new JobSortOverrideSetting(pers, settingKeyBase + "ps-prio-override", state, groupPrioJobSort);
 		sniperPrio = new JobSortOverrideSetting(pers, settingKeyBase + "sniper-prio-override", state, groupPrioJobSort);
@@ -1971,7 +1975,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> omegaFirstSetAm = SqtTemplates.sq(60_000, OmegaFirstSetAssignments.class, sa -> true,
 			(e1, s) -> {
-				if (getOmegaAmEnable().get()) {
+				if (getOmegaAmEnable().get() && getOmegaAmFirstSetEnable().get()) {
 					MultiSlotAutoMarkHandler<DynamisOmegaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getOmegaAmSettings());
 
 					int delay = getOmegaFirstSetDelay().get() * 1_000;
@@ -1991,7 +1995,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> omegaSecondSetAm = SqtTemplates.sq(60_000, OmegaSecondSetAssignments.class, sa -> true,
 			(e1, s) -> {
-				if (getOmegaAmEnable().get()) {
+				if (getOmegaAmEnable().get() && getOmegaAmSecondSetEnable().get()) {
 					MultiSlotAutoMarkHandler<DynamisOmegaAssignment> handler = new MultiSlotAutoMarkHandler<>(s::accept, getOmegaAmSettings());
 
 					int delay = getOmegaSecondSetDelay().get() * 1_000;
@@ -2286,5 +2290,13 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 
 	private ActiveCastRepository getCasts() {
 		return casts;
+	}
+
+	public BooleanSetting getOmegaAmFirstSetEnable() {
+		return omegaAmFirstSetEnable;
+	}
+
+	public BooleanSetting getOmegaAmSecondSetEnable() {
+		return omegaAmSecondSetEnable;
 	}
 }
