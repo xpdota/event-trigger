@@ -12,6 +12,8 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.PlayerStats;
+import gg.xp.xivsupport.events.actlines.events.PlayerStatsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.RawJobGaugeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
@@ -202,6 +204,31 @@ public class FflogsEventProcessor {
 					if (source instanceof XivPlayerCharacter pc) {
 						if (rawEvent.getTypedField("mind", Long.class, null) != null) {
 							context.accept(new RawPlayerChangeEvent(source));
+							try {
+								context.accept(new PlayerStatsUpdatedEvent(
+										new PlayerStats(
+												((XivPlayerCharacter) source).getJob(),
+												rawEvent.getTypedField("strength", Integer.class, 0),
+												rawEvent.getTypedField("dexterity", Integer.class, 0),
+												rawEvent.getTypedField("vitality", Integer.class, 0),
+												rawEvent.getTypedField("intelligence", Integer.class, 0),
+												rawEvent.getTypedField("mind", Integer.class, 0),
+												rawEvent.getTypedField("piety", Integer.class, 0),
+												rawEvent.getTypedField("attack", Integer.class, 0),
+												rawEvent.getTypedField("directHit", Integer.class, 0),
+												rawEvent.getTypedField("criticalHit", Integer.class, 0),
+												rawEvent.getTypedField("attackMagicPotency", Integer.class, 0),
+												rawEvent.getTypedField("healMagicPotency", Integer.class, 0),
+												rawEvent.getTypedField("determination", Integer.class, 0),
+												rawEvent.getTypedField("skillSpeed", Integer.class, 0),
+												rawEvent.getTypedField("spellSpeed", Integer.class, 0),
+												rawEvent.getTypedField("tenacity", Integer.class, 0)
+										)
+								));
+							}
+							catch (Throwable t) {
+								log.error("Error loading player stats", t);
+							}
 						}
 						partyList.add(pc);
 						state.setPartyList(partyList.stream().map(pm -> new RawXivPartyInfo(pm.getId(), pm.getName(), 0, pm.getJob().getId(), (int) pm.getLevel(), true)).toList());
