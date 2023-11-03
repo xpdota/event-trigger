@@ -200,6 +200,9 @@ public class MapDataController {
 			infos.add(new CastOmen(event, info));
 		});
 	}
+//
+//	@HandleEvents
+//	public void record
 
 	// TODO: pull ended might be better
 	@HandleEvents

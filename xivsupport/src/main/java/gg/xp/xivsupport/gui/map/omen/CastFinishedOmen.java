@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.map.omen;
 
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -48,6 +49,20 @@ public class CastFinishedOmen implements OmenInstance {
 		// TODO: this logic still misses some extreme edge cases, where a cast is targeted but
 		// still whiffs the target.
 		Position sourcePosSnapshot = source().getPos();
+		DescribesCastLocation<?> locInfo = aue.getLocationInfo();
+		if (locInfo == null) {
+			locInfo = preCast.getLocationInfo();
+		}
+		if (locInfo != null) {
+			Position pos = locInfo.getPos();
+			if (pos != null) {
+				return pos;
+			}
+			Double heading = locInfo.getHeadingOnly();
+			if (heading != null && sourcePosSnapshot != null) {
+				return sourcePosSnapshot.facing(heading);
+			}
+		}
 		if (info.type().locationType() == OmenLocationType.CASTER) {
 			return sourcePosSnapshot;
 		}
