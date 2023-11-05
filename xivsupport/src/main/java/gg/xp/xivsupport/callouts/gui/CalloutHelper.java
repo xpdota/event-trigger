@@ -5,6 +5,7 @@ import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
+import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +19,13 @@ public class CalloutHelper extends JPanel implements Scrollable {
 	private final List<CalloutGroup> groups;
 
 	public CalloutHelper(List<CalloutGroup> groups, SoundFilesManager soundMgr, SoundFileTab sft) {
+		this(groups, soundMgr, sft, List.of());
+	}
+
+	public CalloutHelper(List<CalloutGroup> groups, SoundFilesManager soundMgr, SoundFileTab sft, PicoContainer container) {
+		this(groups, soundMgr, sft, container.getComponents(ExtraCalloutAction.class));
+	}
+	public CalloutHelper(List<CalloutGroup> groups, SoundFilesManager soundMgr, SoundFileTab sft, List<ExtraCalloutAction> extras) {
 //		enableTts.addActionListener(l -> this.repaint());
 //		enableOverlay.addActionListener(l -> this.repaint());
 		this.setLayout(new GridBagLayout());
@@ -91,7 +99,7 @@ public class CalloutHelper extends JPanel implements Scrollable {
 				c.gridx = 1;
 				this.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
-				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr, sft);
+				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr, sft, extras);
 				showHide.getModel().addChangeListener(l -> {
 					csg.setVisible(showHide.isSelected());
 				});
@@ -130,7 +138,7 @@ public class CalloutHelper extends JPanel implements Scrollable {
 				c.gridx = 4;
 				this.add(csg.getSoundPanel(), c);
 				c.gridx += 2;
-				this.add(csg.getColorPickerPanel(), c);
+				this.add(csg.getColorPickerAndActionsPanel(), c);
 
 			});
 			csgs.forEach(csg -> csg.setEnabledByParent(topLevelCheckbox.isSelected()));

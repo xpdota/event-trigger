@@ -115,7 +115,7 @@ public class CalloutsConfigTab implements PluginTab {
 				c.gridx = 1;
 				innerPanel.add(Box.createHorizontalStrut(10), c);
 				c.gridx++;
-				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr, sft);
+				CalloutSettingGui csg = new CalloutSettingGui(call, soundMgr, sft, List.of());
 				showHide.getModel().addChangeListener(l -> {
 					csg.setVisible(showHide.isSelected());
 					innerPanel.revalidate();

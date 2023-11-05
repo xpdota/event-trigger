@@ -282,11 +282,17 @@ public class EasyTriggersTab implements PluginTab {
 
 	private void addExisting(EasyTrigger<?> trigger) {
 		backend.addTrigger(trigger);
+		selectTrigger(trigger);
+	}
+
+	public void selectTrigger(EasyTrigger<?> trigger) {
 		SwingUtilities.invokeLater(() -> {
 			if (model != null) {
 				refresh();
-				model.setSelectedValue(trigger);
-				model.scrollToSelectedValue();
+				SwingUtilities.invokeLater(() -> {
+					model.setSelectedValue(trigger);
+					model.scrollToSelectedValue();
+				});
 			}
 		});
 	}
@@ -495,12 +501,10 @@ public class EasyTriggersTab implements PluginTab {
 		}
 		else {
 			addExisting(newTrigger);
-			log.info("Bar");
 		}
 	}
 
 	public void bringToFront() {
-		log.info("Foo");
 		tabReg.activateItem(this);
 	}
 }

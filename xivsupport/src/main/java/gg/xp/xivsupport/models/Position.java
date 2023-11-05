@@ -110,6 +110,16 @@ public record Position(double x, double y, double z, double heading) implements 
 	}
 
 	/**
+	 * Returns this position, but with a new heading.
+	 *
+	 * @param angle The new heading
+	 * @return The new position.
+	 */
+	public Position facing(double angle) {
+		return new Position(this.x, this.y, this.z, angle);
+	}
+
+	/**
 	 * Returns this position, but with the heading modified to face towards the given position.
 	 *
 	 * @param faceTowards The position to face.
@@ -123,6 +133,6 @@ public record Position(double x, double y, double z, double heading) implements 
 			return this;
 		}
 		double angle = Math.atan2(-dy, dx) + (Math.PI / 2);
-		return new Position(this.x, this.y, this.x, angle);
+		return facing(angle);
 	}
 }

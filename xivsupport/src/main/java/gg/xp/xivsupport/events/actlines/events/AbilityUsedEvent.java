@@ -4,6 +4,8 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.util.Collections;
@@ -23,6 +25,7 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	private final long sequenceId;
 	private final long targetIndex;
 	private final long numberOfTargets;
+	private @Nullable DescribesCastLocation<AbilityUsedEvent> locationInfo;
 
 	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId, long targetIndex, long numberOfTargets) {
 		this.ability = ability;
@@ -77,6 +80,15 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	public boolean isLastTarget() {
 		return targetIndex >= numberOfTargets - 1;
 	}
+
+	public @Nullable DescribesCastLocation<AbilityUsedEvent> getLocationInfo() {
+		return locationInfo;
+	}
+
+	public void setLocationInfo(@NotNull DescribesCastLocation<AbilityUsedEvent> locationInfo) {
+		this.locationInfo = locationInfo;
+	}
+
 
 	@Override
 	public String toString() {

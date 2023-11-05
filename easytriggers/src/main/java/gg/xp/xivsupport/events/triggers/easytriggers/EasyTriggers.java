@@ -14,6 +14,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
@@ -60,6 +61,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityNameFilte
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineTypeFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DurationFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DutyCalloutFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EntityType;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerAbsoluteIdFilter;
@@ -109,6 +111,7 @@ import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
+import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -397,6 +400,7 @@ public final class EasyTriggers {
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
 	private final List<ConditionDescription<?, ?>> conditions = new ArrayList<>(List.of(
+			new ConditionDescription<>(DutyCalloutFilter.class, ProcessedCalloutEvent.class, "Trigger from Existing Callout", DutyCalloutFilter::new, this::generic),
 			new ConditionDescription<>(RefireFilter.class, Event.class, "Refire Suppression", RefireFilter::new, this::generic),
 			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, this::generic),
 			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, this::generic),
