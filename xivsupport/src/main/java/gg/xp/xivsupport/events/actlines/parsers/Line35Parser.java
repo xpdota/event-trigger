@@ -10,7 +10,7 @@ import java.time.ZonedDateTime;
 public class Line35Parser extends AbstractACTLineParser<Line35Parser.Fields> {
 
 	public Line35Parser(PicoContainer container) {
-		super(container,  35, Fields.class);
+		super(container, 35, Fields.class);
 	}
 
 	enum Fields {
