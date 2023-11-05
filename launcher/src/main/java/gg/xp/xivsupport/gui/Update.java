@@ -531,7 +531,6 @@ public class Update {
 					.map(s -> new ExpectedFile(manifest, Path.of(manifest.dir.toString(), s[1]).toString(), s[0]))
 					.collect(Collectors.toMap(ExpectedFile::filePath, Function.identity()));
 		}
-		// TODO: parallelize multiple manifests
 
 		if (!noop) {
 			URI javaVersionUri = manifest.getJavaVersionUri();
@@ -708,6 +707,7 @@ public class Update {
 		Runtime.Version currentVersion = Runtime.version();
 		int comp = currentVersion.compareTo(requiredVersion);
 		if (comp < 0) {
+			logging.accept("Java update required (%s -> %s)".formatted(currentVersion, requiredVersion));
 			boolean result = questioner.askYesNo("""
 					You are currently using Java %s.
 					This version of Triggevent requires at least %s.
@@ -717,6 +717,7 @@ public class Update {
 			}
 			return result;
 		}
+		logging.accept("Java update not required (%s -> %s)".formatted(currentVersion, requiredVersion));
 		return true;
 	}
 

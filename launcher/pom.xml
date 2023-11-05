@@ -235,10 +235,12 @@
                         <originalFilename>triggevent.exe</originalFilename>
                     </versionInfo>
                     <messages>
-                        <bundledJreErr>You need to download Java version ${java.version} or higher, or (re)-download the version
+                        <bundledJreErr>You need to download Java version ${java.version} or higher, or (re)-download the
+                            version
                             of Triggevent with bundled Java.
                         </bundledJreErr>
-                        <jreVersionErr>You need to download Java version ${java.version} or higher, or (re)-download the version
+                        <jreVersionErr>You need to download Java version ${java.version} or higher, or (re)-download the
+                            version
                             of Triggevent with bundled Java.
                         </jreVersionErr>
                     </messages>
@@ -292,6 +294,56 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--            <plugin>-->
+            <!--                <groupId>com.github.akman</groupId>-->
+            <!--                <artifactId>jlink-maven-plugin</artifactId>-->
+            <!--                <version>0.1.11</version>-->
+            <!--                <configuration>-->
+            <!--                    <noheaderfiles>true</noheaderfiles>-->
+            <!--                    <nomanpages>true</nomanpages>-->
+            <!--                    <modulepath>-->
+            <!--                        <dirsets>-->
+            <!--                            <dirset>-->
+            <!--                                <directory>windows/deps</directory>-->
+            <!--                                <includes>-->
+            <!--                                    <include>**/*</include>-->
+            <!--                                </includes>-->
+            <!--                            </dirset>-->
+            <!--                        </dirsets>-->
+            <!--                    </modulepath>-->
+            <!--                    <addmodules>-->
+            <!--                        <addmodule>java.base</addmodule>-->
+            <!--                        <addmodule>java.base</addmodule>-->
+            <!--                    </addmodules>-->
+            <!--&lt;!&ndash;                    <excludejmodsection>MAN</excludejmodsection>&ndash;&gt;-->
+            <!--&lt;!&ndash;                    <excludejmodsection>HEADERS</excludejmodsection>&ndash;&gt;-->
+            <!--&lt;!&ndash;                    <launcher>&ndash;&gt;-->
+            <!--&lt;!&ndash;                        <command></command>&ndash;&gt;-->
+            <!--&lt;!&ndash;                    </launcher>&ndash;&gt;-->
+
+            <!--                </configuration>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <id>linker</id>-->
+            <!--                        <phase>package</phase>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--            </plugin>-->
+<!--            <plugin>-->
+<!--                <groupId>com.github.akman</groupId>-->
+<!--                <artifactId>jpackage-maven-plugin</artifactId>-->
+<!--                <version>0.1.5</version>-->
+<!--                <configuration>-->
+
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>packager</id>-->
+<!--                        <phase>package</phase>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+
+<!--            </plugin>-->
         </plugins>
     </build>
     <dependencies>
@@ -390,10 +442,10 @@
             <groupId>gg.xp</groupId>
             <artifactId>postnamazu-easy-triggers</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>gg.xp</groupId>-->
-<!--            <artifactId>telesto-subscriber</artifactId>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>gg.xp</groupId>-->
+        <!--            <artifactId>telesto-subscriber</artifactId>-->
+        <!--        </dependency>-->
     </dependencies>
 
 </project>
