@@ -51,8 +51,10 @@ public class Update {
 	private final Consumer<String> logging;
 	private final boolean updateTheUpdaterItself;
 	private final boolean noop;
+	private final QuestionAsker questioner;
 	private UpdaterLocation updateLocation;
 	private static final String manifestFile = "manifest";
+	private static final String jdkVersionFile = "javaversion";
 	private static final String propsOverrideFileName = "update.properties";
 	private static final String updaterFilename = "triggevent-upd.exe";
 	private static final String updaterFilenameBackup = "triggevent-upd.bak";
@@ -60,6 +62,44 @@ public class Update {
 	private final File depsDir;
 	private final File propsOverride;
 	private String rawAddonTemplates;
+	private final HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+
+	private Update(Consumer<String> logging, boolean updateTheUpdaterItself, boolean onlyCheck, QuestionAsker questioner) {
+		this.logging = logging;
+		this.updateTheUpdaterItself = updateTheUpdaterItself;
+		this.noop = onlyCheck;
+		this.questioner = questioner;
+		String override = System.getProperty("triggevent-update-override-dir");
+		if (override == null) {
+			override = System.getenv("triggevent-update-override-dir");
+		}
+		if (override == null) {
+			try {
+				File jarLocation = new File(Update.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+				if (jarLocation.isFile()) {
+					jarLocation = jarLocation.getParentFile();
+				}
+				// Special case for updating the updater itself
+				if (jarLocation.getName().equals("deps") && updateTheUpdaterItself) {
+					jarLocation = jarLocation.getParentFile();
+				}
+				this.installDir = jarLocation;
+			}
+			catch (URISyntaxException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		else {
+			this.installDir = new File(override);
+			if (!installDir.isDirectory()) {
+				throw new RuntimeException("Not a directory: " + installDir);
+			}
+		}
+		depsDir = Paths.get(installDir.toString(), "deps").toFile();
+		propsOverride = Paths.get(installDir.toString(), propsOverrideFileName).toFile();
+		appendText("Install dir: " + installDir);
+		appendText("Starting update check...");
+	}
 
 	private URI makeUrl(String filename) {
 		try {
@@ -190,45 +230,8 @@ public class Update {
 		return Paths.get(installDir.toString(), name);
 	}
 
-	private final HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
 
-	private Update(Consumer<String> logging, boolean updateTheUpdaterItself, boolean onlyCheck) {
-		this.logging = logging;
-		this.updateTheUpdaterItself = updateTheUpdaterItself;
-		this.noop = onlyCheck;
-		String override = System.getProperty("triggevent-update-override-dir");
-		if (override == null) {
-			override = System.getenv("triggevent-update-override-dir");
-		}
-		if (override == null) {
-			try {
-				File jarLocation = new File(Update.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-				if (jarLocation.isFile()) {
-					jarLocation = jarLocation.getParentFile();
-				}
-				// Special case for updating the updater itself
-				if (jarLocation.getName().equals("deps") && updateTheUpdaterItself) {
-					jarLocation = jarLocation.getParentFile();
-				}
-				this.installDir = jarLocation;
-			}
-			catch (URISyntaxException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		else {
-			this.installDir = new File(override);
-			if (!installDir.isDirectory()) {
-				throw new RuntimeException("Not a directory: " + installDir);
-			}
-		}
-		depsDir = Paths.get(installDir.toString(), "deps").toFile();
-		propsOverride = Paths.get(installDir.toString(), propsOverrideFileName).toFile();
-		appendText("Install dir: " + installDir);
-		appendText("Starting update check...");
-	}
-
-	private static class GraphicalUpdater {
+	private static class GraphicalUpdater implements QuestionAsker {
 		private final JFrame frame;
 		private final JPanel content;
 		private final JButton button;
@@ -271,7 +274,7 @@ public class Update {
 			frame.setVisible(true);
 			frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 			button.setEnabled(false);
-			updater = new Update(this::logText, updateTheUpdater, false);
+			updater = new Update(this::logText, updateTheUpdater, false, this);
 		}
 
 		public void run() {
@@ -284,6 +287,20 @@ public class Update {
 			logText.append(text).append('\n');
 			textArea.setText(logText.toString());
 			textArea.setCaretPosition(textArea.getDocument().getLength());
+		}
+
+		@Override
+		public boolean askYesNo(String question) {
+			int result = JOptionPane.showOptionDialog(frame,
+					question,
+					"Question",
+					JOptionPane.YES_NO_OPTION,
+					JOptionPane.PLAIN_MESSAGE,
+					null,
+					new Object[]{"Install Java Update", "Cancel Update"},
+					JOptionPane.YES_OPTION
+			);
+			return (result == JOptionPane.YES_OPTION);
 		}
 	}
 
@@ -307,6 +324,10 @@ public class Update {
 			return getUriForFile(manifestFile);
 		}
 
+		URI getJavaVersionUri() {
+			return getUriForFile(jdkVersionFile);
+		}
+
 		URI getUriForFile(String file) {
 			return urlTemplate.apply(file);
 		}
@@ -314,16 +335,15 @@ public class Update {
 		@Override
 		public String toString() {
 			return "Manifest{" +
-					"name='" + name + '\'' +
-					", dir=" + dir +
-					", urlTemplate=" + urlTemplate +
-					'}';
+			       "name='" + name + '\'' +
+			       ", dir=" + dir +
+			       ", urlTemplate=" + urlTemplate +
+			       '}';
 		}
 
 		boolean isMainManifest() {
 			return false;
 		}
-
 	}
 
 	// Need forward slashes regardless of platform since we need forward slashes in HTTP URLs
@@ -375,8 +395,8 @@ public class Update {
 			if (obj == null || obj.getClass() != this.getClass()) return false;
 			var that = (ExpectedFile) obj;
 			return Objects.equals(this.mft, that.mft) &&
-					Objects.equals(this.filePath, that.filePath) &&
-					Objects.equals(this.hash, that.hash);
+			       Objects.equals(this.filePath, that.filePath) &&
+			       Objects.equals(this.hash, that.hash);
 		}
 
 		@Override
@@ -387,9 +407,9 @@ public class Update {
 		@Override
 		public String toString() {
 			return "ExpectedFile[" +
-					"mft=" + mft + ", " +
-					"filePath=" + filePath + ", " +
-					"hash=" + hash + ']';
+			       "mft=" + mft + ", " +
+			       "filePath=" + filePath + ", " +
+			       "hash=" + hash + ']';
 		}
 
 	}
@@ -423,7 +443,7 @@ public class Update {
 			if (obj == null || obj.getClass() != this.getClass()) return false;
 			var that = (ActualFile) obj;
 			return Objects.equals(this.filePath, that.filePath) &&
-					Objects.equals(this.hash, that.hash);
+			       Objects.equals(this.hash, that.hash);
 		}
 
 		@Override
@@ -434,8 +454,8 @@ public class Update {
 		@Override
 		public String toString() {
 			return "ActualFile[" +
-					"filePath=" + filePath + ", " +
-					"hash=" + hash + ']';
+			       "filePath=" + filePath + ", " +
+			       "hash=" + hash + ']';
 		}
 
 	}
@@ -503,12 +523,36 @@ public class Update {
 		if (manifestResponse.statusCode() != 200) {
 			throw new RuntimeException("Bad response: %s: %s".formatted(manifestResponse.statusCode(), manifestResponse));
 		}
-		String body = manifestResponse.body();
-		Map<String, ExpectedFile> expectedFilesForThisManifest = body.lines()
-				.map(line -> line.split("\s+"))
-				.map(s -> new ExpectedFile(manifest, Path.of(manifest.dir.toString(), s[1]).toString(), s[0]))
-				.collect(Collectors.toMap(ExpectedFile::filePath, Function.identity()));
+		Map<String, ExpectedFile> expectedFilesForThisManifest;
+		{
+			String body = manifestResponse.body();
+			expectedFilesForThisManifest = body.lines()
+					.map(line -> line.split("\s+"))
+					.map(s -> new ExpectedFile(manifest, Path.of(manifest.dir.toString(), s[1]).toString(), s[0]))
+					.collect(Collectors.toMap(ExpectedFile::filePath, Function.identity()));
+		}
 		// TODO: parallelize multiple manifests
+
+		if (!noop) {
+			URI javaVersionUri = manifest.getJavaVersionUri();
+			HttpResponse<String> response = client.send(HttpRequest.newBuilder().GET().uri(javaVersionUri).build(), HttpResponse.BodyHandlers.ofString());
+			switch (response.statusCode()) {
+				// 404: no specific version required
+				case 404 -> {
+
+				}
+				case 200 -> {
+					String body = response.body();
+					Runtime.Version requiredVersion = body.lines().findFirst().map(Runtime.Version::parse).orElseThrow(() -> new RuntimeException("Bad response: {}"));
+					boolean result = ensureJavaVersion(requiredVersion);
+					if (!result) {
+						return false;
+					}
+				}
+				default -> throw new RuntimeException("Bad response: %s".formatted(response));
+			}
+		}
+
 		Map<String, ExpectedFile> expectedFiles = new HashMap<>();
 		expectedFilesForThisManifest.forEach(expectedFiles::putIfAbsent);
 		Map<String, ActualFile> actualFiles = new HashMap<>();
@@ -660,6 +704,31 @@ public class Update {
 		}
 	}
 
+	private boolean ensureJavaVersion(Runtime.Version requiredVersion) {
+		Runtime.Version currentVersion = Runtime.version();
+		int comp = currentVersion.compareTo(requiredVersion);
+		if (comp < 0) {
+			boolean result = questioner.askYesNo("""
+					You are currently using Java %s.
+					This version of Triggevent requires at least %s.
+					Would you like to update?""".formatted(currentVersion, requiredVersion));
+			if (result) {
+				installJava(requiredVersion.feature());
+			}
+			return result;
+		}
+		return true;
+	}
+
+	private void installJava(int feature) {
+		try {
+			JavaUpdateUtils.installVersion(feature, installDir.toPath().resolve("jdk" + feature).toFile());
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private boolean doUpdateCheck() {
 		boolean anythingChanged = false;
 		if (!noop) {
@@ -719,7 +788,7 @@ public class Update {
 
 	@SuppressWarnings("unused")
 	public static boolean justCheck(Consumer<String> logging) {
-		return new Update(logging, true, true).doUpdateCheck();
+		return new Update(logging, true, true, (unused) -> false).doUpdateCheck();
 	}
 
 	private static String md5sum(File file) {
@@ -749,6 +818,10 @@ public class Update {
 
 	private static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
+	}
+
+	private interface QuestionAsker {
+		boolean askYesNo(String question);
 	}
 
 }

@@ -9,6 +9,9 @@ on:
   push:
   workflow_dispatch:
 
+env:
+  JAVA_VERSION: '21'
+
 
 jobs:
   build:
@@ -21,7 +24,7 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v3.13.0
         with:
-          java-version: '21'
+          java-version: JAVA_VERSION
           distribution: 'oracle'
           cache: maven
       - name: Build with Maven
@@ -31,6 +34,7 @@ jobs:
           pushd launcher/target/windows/
           mkdir -p publish_data/v2
           md5sum *.exe *.dll deps/*.jar > publish_data/v2/manifest
+          echo ${{ JAVA_VERSION }} > publish_data_v2/javaversion
           cp -r *.exe *.dll deps/ publish_data/v2/
           # Legacy updater
           cd deps
