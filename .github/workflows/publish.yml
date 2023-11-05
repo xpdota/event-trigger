@@ -34,7 +34,7 @@ jobs:
           pushd launcher/target/windows/
           mkdir -p publish_data/v2
           md5sum *.exe *.dll deps/*.jar > publish_data/v2/manifest
-          echo ${{ env.JAVA_VERSION }} > publish_data_v2/javaversion
+          echo ${{ env.JAVA_VERSION }} > publish_data/v2/javaversion
           cp -r *.exe *.dll deps/ publish_data/v2/
           # Legacy updater
           cd deps
