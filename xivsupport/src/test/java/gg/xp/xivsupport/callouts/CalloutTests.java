@@ -198,6 +198,64 @@ public class CalloutTests {
 	}
 
 	@Test
+	void testReplacementsDoubleBracket() {
+		ModifiableCallout mc = new ModifiableCallout("Foo", "Tankbuster on {{ {target.name + \"Bar\"}() }}");
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+		mc.attachHandle(mch);
+		{
+//			CalloutEvent scratch = proc.processCallout(mc.getModified(Map.of("target", "Foo")));
+
+			CalloutEvent modified = proc.processCallout(mc.getModified());
+			Assert.assertEquals(modified.getCallText(), "Tankbuster on Error");
+			Assert.assertEquals(modified.getVisualText(), "Tankbuster on Error");
+
+
+//			CalloutEvent modifiedWithArgs = proc.processCallout(mc.getModified(modified, Map.of("target", "Foo")));
+//			Assert.assertEquals(modifiedWithArgs.getCallText(), "Tankbuster on FooBar");
+//			Assert.assertEquals(modifiedWithArgs.getVisualText(), "Tankbuster on FooBar");
+
+			CalloutEvent modifiedWithOtherPlayer = proc.processCallout(mc.getModified(Map.of("target", new XivCombatant(0x123, "Foo"))));
+			Assert.assertEquals(modifiedWithOtherPlayer.getCallText(), "Tankbuster on FooBar");
+			Assert.assertEquals(modifiedWithOtherPlayer.getVisualText(), "Tankbuster on FooBar");
+
+			CalloutEvent modifiedWithThePlayer = proc.processCallout(mc.getModified(Map.of("target", new XivCombatant(0x123, "Bar", true, true, 1, null, null, null, 0, 0, 0, 0, 0, 0))));
+			Assert.assertEquals(modifiedWithThePlayer.getCallText(), "Tankbuster on BarBar");
+			Assert.assertEquals(modifiedWithThePlayer.getVisualText(), "Tankbuster on BarBar");
+		}
+	}
+
+	@Test
+	void testReplacementsDoubleBracketUnbalancedLeft() {
+		ModifiableCallout mc = new ModifiableCallout("Foo", "Tankbuster on {{ { }} { target }");
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		BooleanSetting enableAll = new BooleanSetting(pers, "foo", true);
+		ModifiedCalloutHandle mch = new ModifiedCalloutHandle(pers, "fooCallout", mc, enableAll, enableAll);
+		mc.attachHandle(mch);
+		{
+//			CalloutEvent scratch = proc.processCallout(mc.getModified(Map.of("target", "Foo")));
+
+			CalloutEvent modified = proc.processCallout(mc.getModified());
+			Assert.assertEquals(modified.getCallText(), "Tankbuster on Error Error");
+			Assert.assertEquals(modified.getVisualText(), "Tankbuster on Error Error");
+
+
+			CalloutEvent modifiedWithArgs = proc.processCallout(mc.getModified(modified, Map.of("target", "Foo")));
+			Assert.assertEquals(modifiedWithArgs.getCallText(), "Tankbuster on Error Foo");
+			Assert.assertEquals(modifiedWithArgs.getVisualText(), "Tankbuster on Error Foo");
+
+			CalloutEvent modifiedWithOtherPlayer = proc.processCallout(mc.getModified(Map.of("target", new XivCombatant(0x123, "Foo"))));
+			Assert.assertEquals(modifiedWithOtherPlayer.getCallText(), "Tankbuster on Error Foo");
+			Assert.assertEquals(modifiedWithOtherPlayer.getVisualText(), "Tankbuster on Error Foo");
+
+			CalloutEvent modifiedWithThePlayer = proc.processCallout(mc.getModified(Map.of("target", new XivCombatant(0x123, "Bar", true, true, 1, null, null, null, 0, 0, 0, 0, 0, 0))));
+			Assert.assertEquals(modifiedWithThePlayer.getCallText(), "Tankbuster on Error YOU");
+			Assert.assertEquals(modifiedWithThePlayer.getVisualText(), "Tankbuster on Error YOU");
+		}
+	}
+
+	@Test
 	public void testReplacementsAdvanced() {
 		ModifiableCallout mc = new ModifiableCallout("Foo", "{event.getBuff().getId()}:{event.getBuff().getName().toUpperCase()} {event.getInitialDuration()} {event.getStacks()} {event.isRefresh()} {event.getSource().getId()}:{event.getSource().getName()} {event.getTarget().getId()}:{event.getTarget().getName()}");
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
