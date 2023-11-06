@@ -32,7 +32,9 @@ public class CalloutProcessor {
 	private volatile GroovyShell interpreter;
 	// TODO: this *shouldn't* need to be static, but something is up with it
 	private static final Object interpLock = new Object();
-	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
+	// WIP: ((\{\{\{(?=.*\}}})|\{\{(?=.*\}})|\{(?=.*\})))(.*?)}
+	// (?:\{\{(.+?)}}|\{(.+?)})
+	private static final Pattern replacer = Pattern.compile("\\{\\{(.+?)}}|\\{(.+?)}");
 
 	private final GlobalCallReplacer gcr;
 	private final SingleValueReplacement svr;
@@ -134,16 +136,14 @@ public class CalloutProcessor {
 		String resolved;
 		synchronized (interpLock) {
 			resolved = replacer.matcher(input).replaceAll(m -> {
+				String firstGroup = m.group(1);
+				String scriptText = firstGroup == null ? m.group(2) : firstGroup;
 				try {
 					Object rawEval;
 					try (SandboxScope ignored = groovyMgr.getSandbox().enter()) {
-						Script script = scriptCache.computeIfAbsent(m.group(1), this::compile);
+						Script script = scriptCache.computeIfAbsent(scriptText, this::compile);
 						script.setBinding(binding);
 						rawEval = script.run();
-					}
-					if (rawEval == null) {
-						return "null";
-//						return m.group(0);
 					}
 					return svr.singleReplacement(rawEval);
 				}
