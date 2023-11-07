@@ -27,7 +27,7 @@ import java.util.concurrent.TimeoutException;
 public class PropertiesFilePersistenceProvider extends BaseStringPersistenceProvider {
 
 	private static final Logger log = LoggerFactory.getLogger(PropertiesFilePersistenceProvider.class);
-	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
+	private final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private final Properties properties;
 	private final File file;
 	private final File backupFile;
