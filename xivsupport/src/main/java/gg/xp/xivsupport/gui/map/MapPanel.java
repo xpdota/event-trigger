@@ -712,7 +712,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				hpBar.setVisible(false);
 			}
 
-			idLabel.setText((displayIds.get() ? String.format("0x%X", cbt.getId()) : ""));
+			idLabel.setVisible(displayIds.get());
 		}
 
 		private void formatComponent(XivCombatant cbt) {
