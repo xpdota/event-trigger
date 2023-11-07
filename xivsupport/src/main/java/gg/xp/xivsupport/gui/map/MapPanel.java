@@ -7,8 +7,6 @@ import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
 import gg.xp.xivsupport.gui.map.omen.ActionOmenInfo;
 import gg.xp.xivsupport.gui.map.omen.OmenDisplayMode;
 import gg.xp.xivsupport.gui.map.omen.OmenInstance;
-import gg.xp.xivsupport.gui.map.omen.OmenLocationType;
-import gg.xp.xivsupport.gui.map.omen.OmenShape;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -65,6 +63,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private final EnumSetting<OmenDisplayMode> omenDisp;
 	private final BooleanSetting displayHpBars;
 	private final BooleanSetting displayCastBars;
+	private final BooleanSetting displayIds;
 	private double zoomFactor = 1;
 	private volatile int curXpan;
 	private volatile int curYpan;
@@ -93,6 +92,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		nameDisp = mapDisplayConfig.getNameDisplayMode();
 		displayHpBars = mapDisplayConfig.getHpBars();
 		displayCastBars = mapDisplayConfig.getCastBars();
+		displayIds = mapDisplayConfig.getIds();
 
 		setLayout(null);
 		setBackground(new Color(168, 153, 114));
@@ -684,6 +684,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				castBar.setData(castData);
 			}
 
+			idLabel.setVisible(displayIds.get());
+			
 			if (displayHpBars.get()) {
 				HitPoints hp = cbt.getHp();
 				long hpCurrent = hp == null ? -1 : hp.current();
