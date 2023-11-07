@@ -684,6 +684,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				castBar.setData(castData);
 			}
 
+			idLabel.setVisible(displayIds.get());
+			
 			if (displayHpBars.get()) {
 				HitPoints hp = cbt.getHp();
 				long hpCurrent = hp == null ? -1 : hp.current();
@@ -711,8 +713,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			else {
 				hpBar.setVisible(false);
 			}
-
-			idLabel.setVisible(displayIds.get());
 		}
 
 		private void formatComponent(XivCombatant cbt) {
