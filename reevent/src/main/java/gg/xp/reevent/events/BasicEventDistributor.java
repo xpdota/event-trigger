@@ -102,58 +102,63 @@ public class BasicEventDistributor implements EventDistributor {
 				AtomicBoolean isDone = new AtomicBoolean();
 				long timeBefore = enableProfiling ? System.nanoTime() : 0;
 				try {
-					handler.handle(
-							new EventContext() {
-								@Override
-								public void accept(Event e) {
-									if (isDone.get()) {
-										throw new IllegalStateException("You must submit new events at the time when the event handler is called. If you need async behavior, submit a new event for later processing.");
-									}
-									if (e == current) {
-										log.error("Event {} was re-submitted by {}!", e, handler);
-									}
-									else {
-										if (e.delayedEnqueueAt() > 0) {
-											log.error("You called 'accept' on an event ({}) with a delayed enqueue - you probably meant to 'queue' it instead.", e.getClass().getSimpleName(), new RuntimeException("Dummy Exception to Generate Stack Trace"));
+					if (handler.requiresContext()) {
+						handler.handle(
+								new EventContext() {
+									@Override
+									public void accept(Event e) {
+										if (isDone.get()) {
+											throw new IllegalStateException("You must submit new events at the time when the event handler is called. If you need async behavior, submit a new event for later processing.");
 										}
-										e.setParent(current);
-										e.setEnqueuedAt(TimeUtils.now());
-										e.setSourceEventHandler(handler);
-										e.setHappenedAt(current.getHappenedAt());
-										log.trace("Event {} triggered new event {}", current, e);
-										eventsForImmediateProcessing.add(e);
-									}
-								}
-
-								@Override
-								public void enqueue(Event e) {
-									if (isDone.get()) {
-										// TODO: should this be the case? There should be no harm in enqueuing an event later.
-										throw new IllegalStateException("You must submit new events at the time when the event handler is called. If you need async behavior, submit a new event for later processing.");
-									}
-									if (queue != null) {
 										if (e == current) {
 											log.error("Event {} was re-submitted by {}!", e, handler);
 										}
 										else {
+											if (e.delayedEnqueueAt() > 0) {
+												log.error("You called 'accept' on an event ({}) with a delayed enqueue - you probably meant to 'queue' it instead.", e.getClass().getSimpleName(), new RuntimeException("Dummy Exception to Generate Stack Trace"));
+											}
 											e.setParent(current);
+											e.setEnqueuedAt(TimeUtils.now());
 											e.setSourceEventHandler(handler);
-											queue.push(e);
+											e.setHappenedAt(current.getHappenedAt());
+											log.trace("Event {} triggered new event {}", current, e);
+											eventsForImmediateProcessing.add(e);
 										}
 									}
-									else {
-										throw new IllegalStateException("Cannot push to queue if there is no queue attached to this distributor");
-									}
-								}
 
-								@Override
-								public StateStore getStateInfo() {
-									if (isDone.get()) {
-										throw new IllegalStateException("You must get state info at the time when the event handler is called. If you need async behavior, either immediately submit a new event for later processing, or snapshot the needed data timeBefore exiting your handler method.");
+									@Override
+									public void enqueue(Event e) {
+										if (isDone.get()) {
+											// TODO: should this be the case? There should be no harm in enqueuing an event later.
+											throw new IllegalStateException("You must submit new events at the time when the event handler is called. If you need async behavior, submit a new event for later processing.");
+										}
+										if (queue != null) {
+											if (e == current) {
+												log.error("Event {} was re-submitted by {}!", e, handler);
+											}
+											else {
+												e.setParent(current);
+												e.setSourceEventHandler(handler);
+												queue.push(e);
+											}
+										}
+										else {
+											throw new IllegalStateException("Cannot push to queue if there is no queue attached to this distributor");
+										}
 									}
-									return state;
-								}
-							}, current);
+
+									@Override
+									public StateStore getStateInfo() {
+										if (isDone.get()) {
+											throw new IllegalStateException("You must get state info at the time when the event handler is called. If you need async behavior, either immediately submit a new event for later processing, or snapshot the needed data timeBefore exiting your handler method.");
+										}
+										return state;
+									}
+								}, current);
+					}
+					else {
+						handler.handle(null, current);
+					}
 					isDone.set(true);
 					log.trace("Sent event {} to handler {}, now with {} immediate events", current, handler, eventsForImmediateProcessing.size());
 				}

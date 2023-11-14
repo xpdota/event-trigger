@@ -6,7 +6,10 @@ import gg.xp.reevent.events.TypedEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -15,6 +18,7 @@ public class AutoHandler implements TypedEventHandler<Event> {
 	private static final Logger log = LoggerFactory.getLogger(AutoHandler.class);
 
 	private final Method method;
+	private final AutoHandlerInvoker invoker;
 	private final String methodLabel;
 	private final String extraLabel;
 	private final Object clazzInstance;
@@ -81,6 +85,7 @@ public class AutoHandler implements TypedEventHandler<Event> {
 			throw new IllegalStateException("Error setting up method %s: wrong number of parameters (should be 1 or 2, but was %d)".formatted(tmpMethodLabel, paramTypes.length));
 		}
 		this.method = method;
+		this.invoker = compact ? new AutoHandlerInvokerCompact(method, clazzInstance) : new AutoHandlerInvokerWide(method, clazzInstance);
 		if (actualCls.equals(declaring)) {
 			this.methodLabel = "%s.%s:%s".formatted(declaring.getSimpleName(), method.getName(), eventClass.getSimpleName());
 		}
@@ -173,16 +178,43 @@ public class AutoHandler implements TypedEventHandler<Event> {
 			return;
 		}
 		try {
-			if (compact) {
-				method.invoke(clazzInstance, event);
-			}
-			else {
-				method.invoke(clazzInstance, context, event);
-			}
+//			if (compact) {
+//				method.invoke(clazzInstance, event);
+//			}
+//			else {
+//				method.invoke(clazzInstance, context, event);
+//			}
+			// Quick math on this implementation:
+			/*
+				Used a DSR log
+				Skipped first 1000, then enabled profiling
+				~780k total events
+				~44,220,000 total handler invocations
+				Old #1:
+					Time sum: 32.212s
+					Do-nothing handler: .231us mean, 333.4us max, 180.27ms sum
+				Old #2:
+					Time sum: 31.966s
+					Do-nothing handler: .299us mean, 436.3us max, 232.67ms sum
+				New #1:
+					Time sum: 31.999s
+					Do-nothing handler: .217us mean, 244.6us max, 168.75ms sum
+
+				seems to save about 50ns per invocation
+				257 total handlers
+				= 12.8ns per event? not worth?
+			 */
+			invoker.handle(context, event);
 		}
 		catch (Throwable e) {
 			log.error("Error invoking trigger method {}", methodLabel, e);
 		}
+	}
+
+	@Override
+	public boolean requiresContext() {
+//		return true;
+		return invoker.requiresContext();
 	}
 
 	@Override

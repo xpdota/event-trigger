@@ -119,4 +119,9 @@ public class MonitoringEventDistributor extends BasicEventDistributor implements
 	}
 
 
+	@HandleEvents
+	public void doNothing(Event event) {
+
+	}
+
 }

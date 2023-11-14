@@ -6,4 +6,8 @@ public interface EventHandler<X extends Event> {
 	default int getOrder() {
 		return 0;
 	}
+
+	default boolean requiresContext() {
+		return true;
+	}
 }
