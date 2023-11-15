@@ -1,12 +1,16 @@
 package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.models.XivAbility;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 
-public class CastLocationDataEvent extends BaseEvent implements DescribesCastLocation<AbilityCastStart> {
+@SystemEvent
+public class CastLocationDataEvent extends BaseEvent implements DescribesCastLocation<AbilityCastStart>, HasSourceEntity, HasAbility {
 
 	@Serial
 	private static final long serialVersionUID = -1353534122836715832L;
@@ -41,5 +45,15 @@ public class CastLocationDataEvent extends BaseEvent implements DescribesCastLoc
 	@Override
 	public Double getHeadingOnly() {
 		return heading;
+	}
+
+	@Override
+	public XivAbility getAbility() {
+		return event.getAbility();
+	}
+
+	@Override
+	public XivCombatant getSource() {
+		return event.getSource();
 	}
 }

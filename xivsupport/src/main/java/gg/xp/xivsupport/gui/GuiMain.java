@@ -850,6 +850,7 @@ public class GuiMain {
 				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
 				.build();
+		table.getMainTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		master.getDistributor().registerHandler(ACTLogLineEvent.class, (ctx, e) -> {
 			table.signalNewData();
 		});

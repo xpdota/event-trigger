@@ -1,8 +1,6 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
-import gg.xp.xivdata.data.*;
-import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.SystemLogMessageEvent;
 import org.picocontainer.PicoContainer;
 

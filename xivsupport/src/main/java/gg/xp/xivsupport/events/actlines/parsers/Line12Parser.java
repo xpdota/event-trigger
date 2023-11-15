@@ -4,7 +4,6 @@ import gg.xp.reevent.events.Event;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.PlayerStats;
 import gg.xp.xivsupport.events.actlines.events.PlayerStatsUpdatedEvent;
-import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;

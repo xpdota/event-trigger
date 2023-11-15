@@ -265,6 +265,7 @@ public class GroovyTriggers {
 			}
 		};
 	}
+
 	private <X> Supplier<X> wrapSupplier(Supplier<X> supplier) {
 		return () -> {
 			try (SandboxScope ignored = sandbox.enter()) {

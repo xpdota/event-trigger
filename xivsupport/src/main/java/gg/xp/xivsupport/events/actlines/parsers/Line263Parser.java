@@ -4,6 +4,7 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
+import gg.xp.xivsupport.events.misc.OverwritingRingBuffer;
 import gg.xp.xivsupport.models.Position;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
@@ -22,42 +23,43 @@ public class Line263Parser extends AbstractACTLineParser<Line263Parser.Fields> {
 		entityId, abilityId, x, y, z, rotation
 	}
 
-	private @Nullable AbilityCastStart last;
+	private final OverwritingRingBuffer<AbilityCastStart> buffer = new OverwritingRingBuffer<>(32);
 
 	@HandleEvents
 	public void consumeAbilityCast(AbilityCastStart acs) {
-		this.last = acs;
+		buffer.write(acs);
 	}
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		long entity = fields.getHex(Fields.entityId);
 		long ability = fields.getHex(Fields.abilityId);
-		if (last != null
-		    // Skip if the ability has a real target (i.e. not environment and not itself)
-		    && (last.getTarget().isEnvironment()
-		        || last.getTarget().equals(last.getSource()))
-		    && last.getSource().getId() == entity
-		    && last.getAbility().getId() == ability) {
-			double x = fields.getDouble(Fields.x);
-			double y = fields.getDouble(Fields.y);
-			double z = fields.getDouble(Fields.z);
-			double h = fields.getDouble(Fields.rotation);
-			CastLocationDataEvent out;
-			if (x == 0.0 && y == 0.0 && z == 0.0) {
-				if (h == 0.0) {
-					return null;
+		AbilityCastStart last;
+		while ((last = buffer.read()) != null) {
+			if ((last.getTarget().isEnvironment()
+			     || last.getTarget().equals(last.getSource()))
+			    && last.getSource().getId() == entity
+			    && last.getAbility().getId() == ability) {
+				double x = fields.getDouble(Fields.x);
+				double y = fields.getDouble(Fields.y);
+				double z = fields.getDouble(Fields.z);
+				double h = fields.getDouble(Fields.rotation);
+				CastLocationDataEvent out;
+				if (x == 0.0 && y == 0.0 && z == 0.0) {
+					if (h == 0.0) {
+						return null;
+					}
+					else {
+						out = new CastLocationDataEvent(last, h);
+					}
 				}
 				else {
-					out = new CastLocationDataEvent(last, h);
+					Position pos = new Position(x, y, z, h);
+					out = new CastLocationDataEvent(last, pos);
 				}
+				last.setLocationInfo(out);
+				return out;
 			}
-			else {
-				Position pos = new Position(x, y, z, h);
-				out = new CastLocationDataEvent(last, pos);
-			}
-			last.setLocationInfo(out);
-			return out;
 		}
 		return null;
 	}

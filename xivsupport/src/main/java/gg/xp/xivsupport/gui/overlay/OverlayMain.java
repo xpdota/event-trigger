@@ -69,7 +69,8 @@ public final class OverlayMain {
 
 	@HandleEvents
 	public void handlePlayerStatusChanged(EventContext context, PrimaryPlayerOnlineStatusChangedEvent event) {
-		this.cutscene = event.getPlayerOnlineStatus() == OnlineStatus.CUTSCENE;
+		OnlineStatus status = event.getPlayerOnlineStatus();
+		this.cutscene = status == OnlineStatus.CUTSCENE || status == OnlineStatus.GPOSE;
 		recalc();
 	}
 

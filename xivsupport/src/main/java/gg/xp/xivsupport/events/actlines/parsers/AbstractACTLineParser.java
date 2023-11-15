@@ -99,7 +99,8 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 //					outgoingEvent.setHappenedAt(zdt.toInstant());
 				context.accept(outgoingEvent);
 			}
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			throw new ActLineParseException(event.getLogLine(), t);
 		}
 	}

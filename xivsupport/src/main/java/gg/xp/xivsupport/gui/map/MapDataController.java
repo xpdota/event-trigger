@@ -127,6 +127,7 @@ public class MapDataController {
 		rc.addOption(CustomRightClickOption.forRow("Seek Map Tab", Event.class, event -> {
 			Instant effectiveHappenedAt = event.getEffectiveHappenedAt();
 			// TODO: replace this with binary search
+			// TODO: this fails to bring map to front if the event is at the current time, because there's no map snapshot
 			for (int i = 0; i < snapshots.size(); i++) {
 				Snapshot snap = snapshots.get(i);
 				if (snap.time != null && snap.time.isAfter(effectiveHappenedAt)) {

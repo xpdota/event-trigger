@@ -4,8 +4,8 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.SnapshotLocationDataEvent;
+import gg.xp.xivsupport.events.misc.OverwritingRingBuffer;
 import gg.xp.xivsupport.models.Position;
-import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;
@@ -22,12 +22,12 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 		entityId, abilityId, sequence, hasData, x, y, z, rotation
 	}
 
-	private @Nullable AbilityUsedEvent last;
+	private final OverwritingRingBuffer<AbilityUsedEvent> buffer = new OverwritingRingBuffer<>(32);
 
 	@HandleEvents
 	public void consumeAbilityCast(AbilityUsedEvent aue) {
 		if (aue.isFirstTarget()) {
-			this.last = aue;
+			buffer.write(aue);
 		}
 	}
 
@@ -40,29 +40,31 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 		long entity = fields.getHex(Fields.entityId);
 		long ability = fields.getHex(Fields.abilityId);
 		long sequenceId = fields.getHex(Fields.sequence);
-		if (last != null
-		    && last.getSource().getId() == entity
-		    && last.getAbility().getId() == ability
-		    && last.getSequenceId() == sequenceId) {
-			double x = fields.getDouble(Fields.x);
-			double y = fields.getDouble(Fields.y);
-			double z = fields.getDouble(Fields.z);
-			double h = fields.getDouble(Fields.rotation);
-			SnapshotLocationDataEvent out;
-			if (x == 0.0 && y == 0.0 && z == 0.0) {
-				if (h == 0.0) {
-					return null;
+		AbilityUsedEvent last;
+		while ((last = buffer.read()) != null) {
+			if (last.getSource().getId() == entity
+			    && last.getAbility().getId() == ability
+			    && last.getSequenceId() == sequenceId) {
+				double x = fields.getDouble(Fields.x);
+				double y = fields.getDouble(Fields.y);
+				double z = fields.getDouble(Fields.z);
+				double h = fields.getDouble(Fields.rotation);
+				SnapshotLocationDataEvent out;
+				if (x == 0.0 && y == 0.0 && z == 0.0) {
+					if (h == 0.0) {
+						return null;
+					}
+					else {
+						out = new SnapshotLocationDataEvent(last, h);
+					}
 				}
 				else {
-					out = new SnapshotLocationDataEvent(last, h);
+					Position pos = new Position(x, y, z, h);
+					out = new SnapshotLocationDataEvent(last, pos);
 				}
+				last.setLocationInfo(out);
+				return out;
 			}
-			else {
-				Position pos = new Position(x, y, z, h);
-				out = new SnapshotLocationDataEvent(last, pos);
-			}
-			last.setLocationInfo(out);
-			return out;
 		}
 		return null;
 	}
