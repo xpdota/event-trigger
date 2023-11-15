@@ -728,13 +728,12 @@ public class Update {
 				return true;
 			}
 			else {
-
 				int result = questioner.askTert("""
 								You are currently using Java %s.
 								This version of Triggevent requires at least %s.
 								Would you like have the updater download a newer version?
-								It will be installed into the Triggevent directory, and will
-								not affect other programs.""".formatted(currentVersion, requiredVersion),
+								It will be installed into the Triggevent directory, and will not affect other programs."""
+								.formatted(currentVersion, requiredVersion),
 						"Yes (Don't Ask Again)", "Yes", "Cancel Update");
 				// Confusing constant names. These just correspond to JOptionPane things
 				switch (result) {
@@ -868,7 +867,7 @@ public class Update {
 		return sw.getBuffer().toString();
 	}
 
-	private static boolean isWindows() {
+	public static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
 	}
 

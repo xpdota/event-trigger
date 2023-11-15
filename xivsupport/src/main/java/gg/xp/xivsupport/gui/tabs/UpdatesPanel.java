@@ -101,7 +101,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 				this,
 				i -> {
 					try {
-						Thread.sleep(10_000);
+						Thread.sleep(6_000);
 					}
 					catch (InterruptedException e) {
 						//

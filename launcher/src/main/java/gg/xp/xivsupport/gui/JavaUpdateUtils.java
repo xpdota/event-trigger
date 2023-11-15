@@ -12,7 +12,10 @@ public class JavaUpdateUtils {
 
 	public static void installVersion(int version, File destDir) throws IOException {
 		// adapted from https://www.baeldung.com/java-compress-and-uncompress
-		String url = "https://download.oracle.com/java/%s/latest/jdk-%s-x64_bin.zip".formatted(version, version);
+		String os = Update.isWindows() ? "windows" : "linux";
+		// I don't think the game runs on ARM...
+		String arch = "x64";
+		String url = "https://download.oracle.com/java/%s/latest/jdk-%s-%s-%s_bin.zip".formatted(version, version, os, arch);
 		InputStream stream = new URL(url).openStream();
 		ZipInputStream zis = new ZipInputStream(stream);
 

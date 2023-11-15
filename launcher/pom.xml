@@ -221,13 +221,13 @@
                             </classPath>
                             <jar>${launcherJarRelativeToPom}</jar>
                             <dontWrapJar>false</dontWrapJar>
-                        <jre>
-                            <path>jre</path>
-                            <minVersion>${launcher.java.version}</minVersion>
-                            <opts>
-                                <opt>@args.txt</opt>
-                            </opts>
-                        </jre>
+                            <jre>
+                                <path>jre</path>
+                                <minVersion>${launcher.java.version}</minVersion>
+                                <opts>
+                                    <opt>@args.txt</opt>
+                                </opts>
+                            </jre>
                         </configuration>
                     </execution>
 
@@ -253,12 +253,10 @@
                     </versionInfo>
                     <messages>
                         <bundledJreErr>You need to download Java version ${java.version} or higher, or (re)-download the
-                            version
-                            of Triggevent with bundled Java.
+                            version of Triggevent with bundled Java.
                         </bundledJreErr>
                         <jreVersionErr>You need to download Java version ${java.version} or higher, or (re)-download the
-                            version
-                            of Triggevent with bundled Java.
+                            version of Triggevent with bundled Java.
                         </jreVersionErr>
                     </messages>
                 </configuration>
@@ -346,21 +344,21 @@
             <!--                    </execution>-->
             <!--                </executions>-->
             <!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>com.github.akman</groupId>-->
-<!--                <artifactId>jpackage-maven-plugin</artifactId>-->
-<!--                <version>0.1.5</version>-->
-<!--                <configuration>-->
+            <!--            <plugin>-->
+            <!--                <groupId>com.github.akman</groupId>-->
+            <!--                <artifactId>jpackage-maven-plugin</artifactId>-->
+            <!--                <version>0.1.5</version>-->
+            <!--                <configuration>-->
 
-<!--                </configuration>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>packager</id>-->
-<!--                        <phase>package</phase>-->
-<!--                    </execution>-->
-<!--                </executions>-->
+            <!--                </configuration>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <id>packager</id>-->
+            <!--                        <phase>package</phase>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
 
-<!--            </plugin>-->
+            <!--            </plugin>-->
         </plugins>
     </build>
     <dependencies>
