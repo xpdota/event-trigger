@@ -172,7 +172,7 @@
                             </classPath>
                             <jar>./nonexistent.jar</jar>
                             <jre>
-                                <path>jre${java.version}</path>
+                                <path>jdk${java.version}</path>
                                 <minVersion>${java.version}</minVersion>
                                 <opts>
                                     <opt>@args.txt</opt>
@@ -199,7 +199,7 @@
                             </classPath>
                             <jar>./nonexistent.jar</jar>
                             <jre>
-                                <path>jre${java.version}</path>
+                                <path>jdk${java.version}</path>
                                 <minVersion>${java.version}</minVersion>
                                 <opts>
                                     <opt>@args.txt</opt>
