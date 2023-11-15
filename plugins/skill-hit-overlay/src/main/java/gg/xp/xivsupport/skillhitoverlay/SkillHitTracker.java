@@ -69,7 +69,15 @@ public class SkillHitTracker extends XivOverlay implements FilteredEventHandler 
 				.addColumn(new CustomColumn<>("Max", i -> i.maxHit, 50))
 				.addColumn(new CustomColumn<>("Total", i -> i.total, 60))
 				.build();
-		table = model.makeTable();
+		table = new JTable(model) {
+			@Override
+			public void paint(Graphics g) {
+				((Graphics2D) g).setBackground(getBackground());
+				g.clearRect(0, 0, getWidth(), getHeight());
+				super.paint(g);
+			}
+		};
+		model.configureColumns(table);
 		table.setCellSelectionEnabled(false);
 		table.setOpaque(false);
 		table.setBackground(new Color(0, 0, 0, 0));
