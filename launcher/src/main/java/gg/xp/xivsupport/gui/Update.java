@@ -61,6 +61,7 @@ public class Update {
 	private final File installDir;
 	private final File depsDir;
 	private final File propsOverride;
+	private final Properties props = new Properties();
 	private String rawAddonTemplates;
 	private final HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
 
@@ -129,7 +130,6 @@ public class Update {
 		if (updateLocation != null) {
 			return updateLocation;
 		}
-		Properties props = new Properties();
 		String updateUrlTemplate;
 		String branch;
 		if (propsOverride.exists()) {
@@ -290,7 +290,7 @@ public class Update {
 		}
 
 		@Override
-		public boolean askYesNo(String question) {
+		public boolean askYesNo(String question, String yes, String no) {
 			int result = JOptionPane.showOptionDialog(frame,
 					question,
 					"Question",
@@ -301,6 +301,20 @@ public class Update {
 					JOptionPane.YES_OPTION
 			);
 			return (result == JOptionPane.YES_OPTION);
+		}
+
+		@Override
+		public int askTert(String question, String yes, String no, String cancel) {
+			return JOptionPane.showOptionDialog(
+					frame,
+					question,
+					"Question",
+					JOptionPane.YES_NO_CANCEL_OPTION,
+					JOptionPane.PLAIN_MESSAGE,
+					null,
+					new Object[]{yes, no, cancel},
+					JOptionPane.YES_NO_CANCEL_OPTION
+			);
 		}
 	}
 
@@ -708,17 +722,44 @@ public class Update {
 		int comp = currentVersion.compareTo(requiredVersion);
 		if (comp < 0) {
 			logging.accept("Java update required (%s -> %s)".formatted(currentVersion, requiredVersion));
-			boolean result = questioner.askYesNo("""
-					You are currently using Java %s.
-					This version of Triggevent requires at least %s.
-					Would you like to update?""".formatted(currentVersion, requiredVersion));
-			if (result) {
+			String prop = "install-java-update-without-asking";
+			if ("true".equals(props.getProperty(prop))) {
 				installJava(requiredVersion.feature());
+				return true;
 			}
-			return result;
+			else {
+
+				int result = questioner.askTert("""
+								You are currently using Java %s.
+								This version of Triggevent requires at least %s.
+								Would you like have the updater download a newer version?
+								It will be installed into the Triggevent directory, and will
+								not affect other programs.""".formatted(currentVersion, requiredVersion),
+						"Yes (Don't Ask Again)", "Yes", "Cancel Update");
+				// Confusing constant names. These just correspond to JOptionPane things
+				switch (result) {
+					case JOptionPane.YES_OPTION:
+						setProp(prop, "true");
+					case JOptionPane.NO_OPTION:
+						installJava(requiredVersion.feature());
+						return true;
+					case JOptionPane.CANCEL_OPTION:
+						return false;
+				}
+			}
 		}
 		logging.accept("Java update not required (%s -> %s)".formatted(currentVersion, requiredVersion));
 		return true;
+	}
+
+	private void setProp(String prop, String value) {
+		props.setProperty(prop, value);
+		try {
+			props.store(new FileOutputStream(propsOverride), "Created by updater");
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void installJava(int feature) {
@@ -789,7 +830,17 @@ public class Update {
 
 	@SuppressWarnings("unused")
 	public static boolean justCheck(Consumer<String> logging) {
-		return new Update(logging, true, true, (unused) -> false).doUpdateCheck();
+		return new Update(logging, true, true, new QuestionAsker() {
+			@Override
+			public boolean askYesNo(String question, String yes, String no) {
+				return false;
+			}
+
+			@Override
+			public int askTert(String question, String yes, String no, String cancel) {
+				return 1;
+			}
+		}).doUpdateCheck();
 	}
 
 	private static String md5sum(File file) {
@@ -822,7 +873,9 @@ public class Update {
 	}
 
 	private interface QuestionAsker {
-		boolean askYesNo(String question);
+		boolean askYesNo(String question, String yes, String no);
+
+		int askTert(String question, String yes, String no, String cancel);
 	}
 
 }

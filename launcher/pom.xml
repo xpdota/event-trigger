@@ -18,6 +18,9 @@
         <launcherJar>./launcher-${project.version}.jar</launcherJar>
         <launcherJarRelativeToPom>./target/windows/launcher-${project.version}.jar</launcherJarRelativeToPom>
         <preCp>./userdata;./preload/*.jar;./deps/*.jar;./user/*.jar;${launcherJar}</preCp>
+        <launcher.java.version>17</launcher.java.version>
+        <maven.compiler.source>${launcher.java.version}</maven.compiler.source>
+        <maven.compiler.target>${launcher.java.version}</maven.compiler.target>
     </properties>
     <build>
         <plugins>
@@ -168,6 +171,13 @@
                                 <preCp>${preCp}</preCp>
                             </classPath>
                             <jar>./nonexistent.jar</jar>
+                            <jre>
+                                <path>jre${java.version}</path>
+                                <minVersion>${java.version}</minVersion>
+                                <opts>
+                                    <opt>@args.txt</opt>
+                                </opts>
+                            </jre>
                         </configuration>
                     </execution>
                     <execution>
@@ -188,6 +198,13 @@
                                 <preCp>${preCp}</preCp>
                             </classPath>
                             <jar>./nonexistent.jar</jar>
+                            <jre>
+                                <path>jre${java.version}</path>
+                                <minVersion>${java.version}</minVersion>
+                                <opts>
+                                    <opt>@args.txt</opt>
+                                </opts>
+                            </jre>
                         </configuration>
                     </execution>
                     <execution>
@@ -204,19 +221,19 @@
                             </classPath>
                             <jar>${launcherJarRelativeToPom}</jar>
                             <dontWrapJar>false</dontWrapJar>
+                        <jre>
+                            <path>jre</path>
+                            <minVersion>${launcher.java.version}</minVersion>
+                            <opts>
+                                <opt>@args.txt</opt>
+                            </opts>
+                        </jre>
                         </configuration>
                     </execution>
 
                 </executions>
                 <configuration>
                     <!-- Common config-->
-                    <jre>
-                        <path>jre${java.version}</path>
-                        <minVersion>${java.version}</minVersion>
-                        <opts>
-                            <opt>@args.txt</opt>
-                        </opts>
-                    </jre>
                     <headerType>gui</headerType>
                     <errTitle>Triggevent</errTitle>
                     <dontWrapJar>true</dontWrapJar>
