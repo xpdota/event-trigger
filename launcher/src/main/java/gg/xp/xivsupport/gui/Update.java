@@ -557,7 +557,7 @@ public class Update {
 				case 200 -> {
 					String body = response.body();
 					Runtime.Version requiredVersion = body.lines().findFirst().map(Runtime.Version::parse).orElseThrow(() -> new RuntimeException("Bad response: {}"));
-					boolean result = ensureJavaVersion(requiredVersion);
+					boolean result = ensureJavaVersion(requiredVersion.feature());
 					if (!result) {
 						return false;
 					}
@@ -717,37 +717,35 @@ public class Update {
 		}
 	}
 
-	private boolean ensureJavaVersion(Runtime.Version requiredVersion) {
-		Runtime.Version currentVersion = Runtime.version();
-		int comp = currentVersion.compareTo(requiredVersion);
-		if (comp < 0) {
-			logging.accept("Java update required (%s -> %s)".formatted(currentVersion, requiredVersion));
+	private boolean ensureJavaVersion(int majorVersion) {
+		boolean versionExists = javaVersionExists(majorVersion);
+		if (!versionExists) {
+			logging.accept("Java update required (-> %s)".formatted(majorVersion));
 			String prop = "install-java-update-without-asking";
 			if ("true".equals(props.getProperty(prop))) {
-				installJava(requiredVersion.feature());
+				installJava(majorVersion);
 				return true;
 			}
 			else {
 				int result = questioner.askTert("""
-								You are currently using Java %s.
-								This version of Triggevent requires at least %s.
+								This version of Triggevent requires Java %s.
 								Would you like have the updater download a newer version?
 								It will be installed into the Triggevent directory, and will not affect other programs."""
-								.formatted(currentVersion, requiredVersion),
+								.formatted(majorVersion),
 						"Yes (Don't Ask Again)", "Yes", "Cancel Update");
 				// Confusing constant names. These just correspond to JOptionPane things
 				switch (result) {
 					case JOptionPane.YES_OPTION:
 						setProp(prop, "true");
 					case JOptionPane.NO_OPTION:
-						installJava(requiredVersion.feature());
+						installJava(majorVersion);
 						return true;
 					case JOptionPane.CANCEL_OPTION:
 						return false;
 				}
 			}
 		}
-		logging.accept("Java update not required (%s -> %s)".formatted(currentVersion, requiredVersion));
+		logging.accept("Java update not required (-> %s)".formatted(majorVersion));
 		return true;
 	}
 
@@ -761,9 +759,21 @@ public class Update {
 		}
 	}
 
-	private void installJava(int feature) {
+	private Path getJdkPath(int majorVersion) {
+		return installDir.toPath().resolve("jdk" + majorVersion);
+	}
+
+	private boolean javaVersionExists(int majorVersion) {
+		File file = getJdkPath(majorVersion).toFile();
+		return file.exists() && file.isDirectory();
+
+	}
+
+	private void installJava(int majorVersion) {
 		try {
-			JavaUpdateUtils.installVersion(feature, installDir.toPath().resolve("jdk" + feature).toFile());
+			logging.accept("Installing Java " + majorVersion);
+			JavaUpdateUtils.installVersion(majorVersion, getJdkPath(majorVersion).toFile());
+			logging.accept("Finished Installing " + majorVersion);
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);

@@ -10,6 +10,11 @@ import java.util.zip.ZipInputStream;
 
 public class JavaUpdateUtils {
 
+	public static void main(String[] args) throws IOException {
+		// simple test
+		installVersion(21, new File("launcher/target/jdk21"));
+	}
+
 	public static void installVersion(int version, File destDir) throws IOException {
 		// adapted from https://www.baeldung.com/java-compress-and-uncompress
 		String os = Update.isWindows() ? "windows" : "linux";
@@ -20,9 +25,14 @@ public class JavaUpdateUtils {
 		ZipInputStream zis = new ZipInputStream(stream);
 
 		byte[] buffer = new byte[1024];
+		ZipEntry rootEntry = zis.getNextEntry();
 		ZipEntry zipEntry = zis.getNextEntry();
 		while (zipEntry != null) {
 			File newFile = newFile(destDir, zipEntry);
+			if ("src.zip".equalsIgnoreCase(newFile.getName())) {
+				// We don't need to install java source
+				continue;
+			}
 			if (zipEntry.isDirectory()) {
 				if (!newFile.isDirectory() && !newFile.mkdirs()) {
 					throw new IOException("Failed to create directory " + newFile);
@@ -51,8 +61,9 @@ public class JavaUpdateUtils {
 	}
 
 	private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
-		File destFile = new File(destinationDir, zipEntry.getName());
-
+		// Kind of messy but should be fine for what it needs to do
+		// The zip comes with a root directory, but we don't want that
+		File destFile = new File(destinationDir, zipEntry.getName().split("/", 2)[1]);
 		if (destFile.toPath().startsWith(destinationDir.toPath())) {
 			return destFile;
 		}
