@@ -772,7 +772,8 @@ public class Update {
 	private void installJava(int majorVersion) {
 		try {
 			logging.accept("Installing Java " + majorVersion);
-			JavaUpdateUtils.installVersion(majorVersion, getJdkPath(majorVersion).toFile());
+			new JavaUpdateUtils(logging)
+					.installVersion(majorVersion, getJdkPath(majorVersion).toFile());
 			logging.accept("Finished Installing " + majorVersion);
 		}
 		catch (IOException e) {
