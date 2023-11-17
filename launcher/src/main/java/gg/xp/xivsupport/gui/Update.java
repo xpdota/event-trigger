@@ -772,6 +772,7 @@ public class Update {
 	private void installJava(int majorVersion) {
 		try {
 			logging.accept("Installing Java " + majorVersion);
+			logging.accept("This is a ~300MB download - it may take some time");
 			new JavaUpdateUtils(logging)
 					.installVersion(majorVersion, getJdkPath(majorVersion).toFile());
 			logging.accept("Finished Installing " + majorVersion);

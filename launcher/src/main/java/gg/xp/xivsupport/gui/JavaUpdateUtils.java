@@ -15,7 +15,7 @@ public class JavaUpdateUtils {
 
 	public static void main(String[] args) throws IOException {
 		// simple test
-		new JavaUpdateUtils(s -> {})
+		new JavaUpdateUtils(System.out::println)
 				.installVersion(21, new File("launcher/target/jdk21"));
 	}
 
@@ -27,9 +27,6 @@ public class JavaUpdateUtils {
 		logging.accept(text);
 	}
 
-	// TODO: to avoid issues of a half-completed failed install looking like a normal install,
-	// this should download to a temp folder, *then* rename to the actual folder
-	// TODO: logging, just make this non-static
 	public void installVersion(int version, File realDestDir) throws IOException {
 		File destDir = realDestDir.toPath().getParent().resolve(realDestDir.getName() + "_tmp").toFile();
 		log("Downloading to " + destDir);
@@ -38,25 +35,28 @@ public class JavaUpdateUtils {
 		// I don't think the game runs on ARM...
 		String arch = "x64";
 		String url = "https://download.oracle.com/java/%s/latest/jdk-%s_%s-%s_bin.zip".formatted(version, version, os, arch);
+		log("Downloading " + url);
 		try (InputStream stream = new URL(url).openStream()) {
 
 			ZipInputStream zis = new ZipInputStream(stream);
 
 			byte[] buffer = new byte[1024];
 			ZipEntry rootEntry = zis.getNextEntry();
-			ZipEntry zipEntry = zis.getNextEntry();
-			while (zipEntry != null) {
+			ZipEntry zipEntry;
+			while ((zipEntry = zis.getNextEntry()) != null) {
 				File newFile = newFile(destDir, zipEntry);
 				if ("src.zip".equalsIgnoreCase(newFile.getName())) {
 					// We don't need to install java source
 					continue;
 				}
 				if (zipEntry.isDirectory()) {
+					log("Directory: " + newFile);
 					if (!newFile.isDirectory() && !newFile.mkdirs()) {
 						throw new IOException("Failed to create directory " + newFile);
 					}
 				}
 				else {
+					log("File: " + newFile);
 					// fix for Windows-created archives
 					File parent = newFile.getParentFile();
 					if (!parent.isDirectory() && !parent.mkdirs()) {
@@ -67,18 +67,18 @@ public class JavaUpdateUtils {
 					FileOutputStream fos = new FileOutputStream(newFile);
 					int len;
 					while ((len = zis.read(buffer)) > 0) {
-						log("Writing file " + newFile);
 						fos.write(buffer, 0, len);
 					}
 					fos.close();
 				}
-				zipEntry = zis.getNextEntry();
 			}
 
 			zis.closeEntry();
 			zis.close();
 		}
+		log("Moving into place");
 		destDir.renameTo(realDestDir);
+		log("JDK " + version + " successfully downloaded and extracted");
 	}
 
 	private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
