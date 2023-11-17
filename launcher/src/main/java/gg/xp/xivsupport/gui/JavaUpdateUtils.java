@@ -77,7 +77,10 @@ public class JavaUpdateUtils {
 			zis.close();
 		}
 		log("Moving into place");
-		destDir.renameTo(realDestDir);
+		boolean moveResult = destDir.renameTo(realDestDir);
+		if (!moveResult) {
+			throw new RuntimeException("Could not rename %s -> %s".formatted(destDir, realDestDir));
+		}
 		log("JDK " + version + " successfully downloaded and extracted");
 	}
 
