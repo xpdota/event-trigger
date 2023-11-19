@@ -49,6 +49,8 @@ public class CalloutExpiryTest {
 
 		// Sync is purely for thread-safety
 		synchronized List<?> getCurrentVisualCalls() throws Throwable {
+			// TODO: sleep kind of sucks, should actually verify a refresh loop
+			Thread.sleep(100);
 			return (List<?>) ccField.get(fto);
 		}
 	}

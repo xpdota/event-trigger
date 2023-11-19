@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.ws;
 
+import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.module.blackbird.BlackbirdModule;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
@@ -50,6 +52,7 @@ public class ActWsHandlers {
 	private static final Logger log = LoggerFactory.getLogger(ActWsHandlers.class);
 	private static final ObjectMapper mapper = JsonMapper.builder()
 			.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+			.addModule(new BlackbirdModule())
 			.build();
 	private final EventMaster master;
 	private final XivState state;
@@ -129,14 +132,13 @@ public class ActWsHandlers {
 		// Subscribed messages have a 'type' field that lets us know what it is.
 		// Responses instead have an 'rseq' field that lets us match up the response to the request.
 		JsonNode rseqNode = jsonNode.path("rseq");
-		Object rseqObj = mapper.convertValue(rseqNode, Object.class);
+		// Null response - TODO try to match it up with the rseq
 		if (!rseqNode.isMissingNode()) {
-			// Null response - TODO try to match it up with the rseq
+			Object rseqObj = mapper.convertValue(rseqNode, Object.class);
 			if (!jsonNode.path("$isNull").isMissingNode()) {
 				log.trace("Got null ActWS response for rseq {}", rseqNode.intValue());
 				return;
 			}
-			JsonNode combatantsNode = jsonNode.path("combatants");
 			if ("getVersion".equals(rseqObj)) {
 				context.accept(new ActWsJsonMsg("getVersion", rseqObj, jsonNode));
 				return;
@@ -145,7 +147,9 @@ public class ActWsHandlers {
 				context.accept(new ActWsJsonMsg("getLanguage", rseqObj, jsonNode));
 				return;
 			}
+			JsonNode combatantsNode = jsonNode.path("combatants");
 			if (combatantsNode.isMissingNode()) {
+				// TODO: this is where user-added calls could be
 				log.warn("I don't know how to handle response message: {}", rawMsg);
 			}
 			else {
@@ -172,14 +176,16 @@ public class ActWsHandlers {
 		else {
 			type = null;
 		}
-		ActWsJsonMsg actWsJsonMsg = new ActWsJsonMsg(type, rseqObj, jsonNode);
+		ActWsJsonMsg actWsJsonMsg = new ActWsJsonMsg(type, null, jsonNode);
 		context.accept(actWsJsonMsg);
 	}
+
+	private static final JsonPointer logRawLine = JsonPointer.compile("/rawLine");
 
 	@HandleEvents(order = -100)
 	public static void actWsLogLine(EventContext context, ActWsJsonMsg jsonMsg) {
 		if ("LogLine".equals(jsonMsg.getType())) {
-			String rawLine = jsonMsg.getJson().get("rawLine").textValue();
+			String rawLine = jsonMsg.getJson().at(logRawLine).textValue();
 			context.accept(new ACTLogLineEvent(rawLine));
 		}
 	}
@@ -317,7 +323,7 @@ public class ActWsHandlers {
 			MutableBoolean hasUpdate = new MutableBoolean();
 			List<RawXivCombatantInfo> optimizedCombatantMaps = combatantMaps.stream().map(combatant -> {
 				long id = combatant.getId();
-				if (id == 0xE0000000) {
+				if (id == 0xE0000000L) {
 					// Don't bother with these. Since we map by ID anyway, they'd end up overwriting each other. Waste of memory.
 					return null;
 				}

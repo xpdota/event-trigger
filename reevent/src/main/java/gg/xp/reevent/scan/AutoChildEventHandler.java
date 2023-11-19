@@ -135,7 +135,7 @@ public abstract class AutoChildEventHandler {
 						else {
 							eventCls = Event.class;
 						}
-						ChildEventHandler ceh = new ChildEventHandler(handler, eventCls, field.getName());
+						ChildEventHandler<?> ceh = new ChildEventHandler(handler, eventCls, field.getName());
 						handlers.add(ceh);
 					}
 				}

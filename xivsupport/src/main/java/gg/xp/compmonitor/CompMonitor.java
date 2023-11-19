@@ -52,15 +52,15 @@ public class CompMonitor extends NullComponentMonitor {
 	}
 
 	public void addListener(CompListener listener) {
-//		synchronized (lock) {
+		synchronized (lock) {
 			listeners.add(listener);
-//		}
+		}
 	}
 
 	public void addAndRunListener(CompListener listener) {
-//		synchronized (lock) {
+		synchronized (lock) {
 			addListener(listener);
 			all.forEach(listener::added);
-//		}
+		}
 	}
 }

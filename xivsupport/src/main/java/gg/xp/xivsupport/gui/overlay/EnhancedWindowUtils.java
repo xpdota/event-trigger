@@ -1583,6 +1583,8 @@ public class EnhancedWindowUtils {
 			x11.XFillRectangle(dpy, pm, gc, 0, 0, width, height);
 			final List<Rectangle> rlist = new ArrayList<Rectangle>();
 			try {
+				// TODO: is *this* what causes the bug where you have to work around it by setting
+				// your clickable area to a 1x1 rectangle?
 				RasterRangesUtils.outputOccupiedRanges(raster, new RasterRangesUtils.RangesOutput() {
 					@Override
 					public boolean outputRange(int x, int y, int w, int h) {

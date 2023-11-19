@@ -134,7 +134,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			autoRefresh.setSelected(true);
 
 			stayAtBottom = new JCheckBox("Scroll to Bottom");
-			this.scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
+			this.scroller = new AutoBottomScrollHelper(table, stayAtBottom::setSelected);
 			scroller = this.scroller;
 			stayAtBottom.addItemListener(e -> ((AutoBottomScrollHelper) scroller).setAutoScrollEnabled(stayAtBottom.isSelected()));
 			stayAtBottom.setSelected(true);

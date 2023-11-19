@@ -25,7 +25,6 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 	}
 
 	/**
-	 *
 	 * @return The latest possible sync time
 	 */
 	@JsonIgnore
@@ -39,14 +38,25 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 	 *
 	 * @param currentTime The time at which the timeline currently sits
 	 * @param line        The incoming log line
-	 * @return            Whether the timeline should sync
+	 * @return Whether the timeline should sync
 	 */
 	default boolean shouldSync(double currentTime, String line) {
 		Pattern sync = sync();
 		if (sync == null) {
 			return false;
 		}
-		return currentTime >= getMinTime() && currentTime <= getMaxTime() && sync.matcher(line).find();
+		boolean timesMatch = (currentTime >= getMinTime() && currentTime <= getMaxTime());
+		if (!timesMatch) {
+			return false;
+		}
+		return sync.matcher(line).find();
+	}
+
+	/**
+	 * @return true if this timeline entry would ever cause a sync
+	 */
+	default boolean canSync() {
+		return sync() != null;
 	}
 
 	/**
@@ -82,7 +92,7 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 
 	/**
 	 * The name of this timeline entry.
-	 *
+	 * <p>
 	 * For most entries, this is the displayed name. For labels, it is the label name.
 	 * For triggers, it is the text that will be displayed on-screen.
 	 *
