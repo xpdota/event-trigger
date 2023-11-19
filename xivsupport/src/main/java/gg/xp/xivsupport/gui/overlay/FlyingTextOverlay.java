@@ -28,12 +28,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class FlyingTextOverlay extends XivOverlay {
 
 	private static final Logger log = LoggerFactory.getLogger(FlyingTextOverlay.class);
 
 	private final List<VisualCalloutItem> currentCallouts = new ArrayList<>();
+	private final Queue<CalloutEvent> newCallouts = new ConcurrentLinkedQueue<>();
 	private final SimpleAttributeSet attribs;
 	private volatile List<VisualCalloutItem> currentCalloutsTmp = Collections.emptyList();
 	private final Object lock = new Object();
@@ -243,21 +246,30 @@ public class FlyingTextOverlay extends XivOverlay {
 		}
 	}
 
-
-	private void addCallout(CalloutEvent callout) {
-		synchronized (lock) {
-			for (int i = 0; i < currentCallouts.size(); i++) {
-				if (callout.shouldReplace(currentCallouts.get(i).event)) {
-					currentCallouts.set(i, new VisualCalloutItem(callout));
-					return;
-				}
-			}
-			currentCallouts.add(new VisualCalloutItem(callout));
-		}
+	private void addCallout(CalloutEvent event) {
+		newCallouts.add(event);
 	}
 
 	private void refreshCallouts() {
+		List<CalloutEvent> toAdd = new ArrayList<>();
+		CalloutEvent event;
+		while ((event = newCallouts.poll()) != null) {
+			String text = event.getVisualText();
+			if (text != null && !text.isBlank()) {
+				log.info("Added call: {}", text);
+				toAdd.add(event);
+			}
+		}
 		synchronized (lock) {
+			for (CalloutEvent callout : toAdd) {
+				for (int i = 0; i < currentCallouts.size(); i++) {
+					if (callout.shouldReplace(currentCallouts.get(i).event)) {
+						currentCallouts.set(i, new VisualCalloutItem(callout));
+						return;
+					}
+				}
+				currentCallouts.add(new VisualCalloutItem(callout));
+			}
 			currentCallouts.removeIf(visualCalloutItem -> {
 				boolean expired = visualCalloutItem.isExpired();
 				if (expired) {
@@ -271,10 +283,7 @@ public class FlyingTextOverlay extends XivOverlay {
 
 	@HandleEvents
 	public void handleEvent(EventContext context, CalloutEvent event) {
-		if (event.getVisualText() != null && !event.getVisualText().isBlank()) {
-			log.info("Added call: {}", event.getVisualText());
-			addCallout(event);
-		}
+		addCallout(event);
 	}
 
 	@HandleEvents

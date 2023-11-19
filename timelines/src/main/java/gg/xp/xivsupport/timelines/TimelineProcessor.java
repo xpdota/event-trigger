@@ -2,6 +2,7 @@ package gg.xp.xivsupport.timelines;
 
 import gg.xp.reevent.events.CurrentTimeSource;
 import gg.xp.xivdata.data.*;
+import gg.xp.xivdata.util.ArrayBackedMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
@@ -23,19 +24,32 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public final class TimelineProcessor {
 
 	// TODO: we can use in/out of combat now
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineProcessor.class);
+	// For better performance, the timeline processor pre-computes a list of possible syncs within a window
+	// of CHUNK_SIZE millis. e.g. for CHUNK_SIZE = 50,
+	// chunk 5 would be any lines which have a sync window that overaps with [250, 300]
+	// So then if our current time is 269 and we need to sync, we know we can just look at that specific window.
+	// Timeline syncs are actually fairly slow, so this performance optimization has a big impact (timelines used to
+	// be the single slowest event handler other than WS-related things). They're still not fast, but this removes
+	// about ~40% of the overhead.
+	private static final int CHUNK_SIZE = 50;
 	private final List<TimelineEntry> entries;
 	private final TimelineManager manager;
 	private final List<TimelineEntry> rawEntries;
@@ -47,6 +61,7 @@ public final class TimelineProcessor {
 	private final RefreshLoop<TimelineProcessor> refresher;
 	private final LabelResolver resolver;
 	private final CurrentTimeSource timeSource;
+	private final Map<Integer, List<TimelineEntry>> subSyncChunks;
 	private @Nullable TimelineSync lastSync;
 
 
@@ -70,6 +85,24 @@ public final class TimelineProcessor {
 		};
 		refresher = new RefreshLoop<>("TimelineRefresher", this, TimelineProcessor::handleTriggers, i -> 200L);
 		refresher.start();
+
+		List<TimelineEntry> syncEntries = this.entries.stream().filter(entry -> entry.sync() != null).toList();
+		OptionalDouble maxTime = syncEntries.stream().mapToDouble(TimelineEntry::getMaxTime).max();
+		if (maxTime.isPresent()) {
+
+			Map<Integer, Set<TimelineEntry>> syncChunks = new HashMap<>();
+			syncEntries.forEach(entry -> {
+				int beginChunk = Math.max(0, (int) (entry.getMinTime() / CHUNK_SIZE));
+				int endChunk = Math.max(0, (int) (entry.getMaxTime() / CHUNK_SIZE));
+				IntStream.rangeClosed(beginChunk, endChunk)
+						.forEach(val -> syncChunks.computeIfAbsent(val, k -> new HashSet<>()).add(entry));
+			});
+			this.subSyncChunks = new ArrayBackedMap<>(syncChunks.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new ArrayList<>(e.getValue()))));
+		}
+		else {
+			this.subSyncChunks = Collections.emptyMap();
+		}
+
 	}
 
 	public static TimelineProcessor of(TimelineManager manager, InputStream file, List<? extends TimelineEntry> extra, Job playerJob, LanguageReplacements replacements) {
@@ -184,13 +217,25 @@ public final class TimelineProcessor {
 			37. Action resolved (probably can ignore)
 			38. Status effect list
 			39. HP Update
-			200 and up. Only used by the ACT plugin itself for debug messages and such.
+			200 and up. Only used by the ACT plugin itself for debug messages and such, and some custom OP lines that
+				aren't relevant here, EXCEPT InCombat (260).
 		 */
-		if (num == 1 || num == 2 || num == 11 || num == 12 || num == 24 || num == 28 || num == 29 || num == 31 || num == 37 || num == 38 || num == 39 || num > 200) {
+		if (num == 1 || num == 2 || num == 11 || num == 12 || num == 24 || num == 28 || num == 29 || num == 31 || num == 37 || num == 38 || num == 39 || (num > 200 && num != 260)) {
+			return;
+		}
+		// Ignore abilities that originate from players
+		if (num == 14 || num == 15 || num == 16) {
+			if (event.getRawFields()[2].startsWith("1")) {
+				return;
+			}
+		}
+		double timeNow = getEffectiveTime();
+		int chunk = (int) (timeNow / CHUNK_SIZE);
+		List<TimelineEntry> entries = subSyncChunks.get(chunk);
+		if (entries == null) {
 			return;
 		}
 		String emulatedActLogLine = event.getEmulatedActLogLine();
-		double timeNow = getEffectiveTime();
 		Optional<TimelineEntry> newSync = entries.stream().filter(entry -> entry.shouldSync(timeNow, emulatedActLogLine)).findFirst();
 		newSync.ifPresent(rawTimelineEntry -> {
 			double timeToSyncTo = rawTimelineEntry.getSyncToTime(resolver);

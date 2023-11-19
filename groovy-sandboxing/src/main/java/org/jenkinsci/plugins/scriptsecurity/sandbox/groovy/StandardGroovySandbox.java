@@ -78,22 +78,10 @@ public class StandardGroovySandbox implements GroovySandbox {
 	 *
 	 * @return a scope object, useful for putting this into a {@code try}-with-resources block
 	 */
-	@SuppressWarnings("deprecation") // internal use of accessRejected still valid
+	@Override
 	public SandboxScope enter() {
 		GroovyInterceptor sandbox = new SandboxInterceptor(whitelist());
 		sandbox.register();
-//        ScriptApproval.pushRegistrationCallback(x -> {
-//            if (ExtensionList.lookup(RootAction.class).get(ScriptApproval.class) == null) {
-//                return; // running in unit test, ignore
-//            }
-//            String signature = x.getSignature();
-//            if (!StaticWhitelist.isPermanentlyBlacklisted(signature)) {
-//                ScriptApproval.get().accessRejected(x, _context);
-//            }
-//            if (listener != null) {
-//                ScriptApprovalNote.print(listener, x);
-//            }
-//        });
 		return sandbox::unregister;
 	}
 
@@ -154,96 +142,5 @@ public class StandardGroovySandbox implements GroovySandbox {
 	public static @NotNull ClassLoader createSecureClassLoader(ClassLoader base) {
 		return new SandboxResolvingClassLoader(base);
 	}
-
-	/**
-	 * Runs a block in the sandbox.
-	 * You must have used {@link #createSecureCompilerConfiguration} to prepare the Groovy shell.
-	 * Use {@link #run} instead whenever possible.
-	 *
-	 * @param r         a block of code during whose execution all calls are intercepted
-	 * @param whitelist the whitelist to use, such as {@link Whitelist#all()}
-	 * @throws RejectedAccessException in case an attempted call was not whitelisted
-	 * @deprecated use {@link #enter}
-	 */
-	@Deprecated
-	public static void runInSandbox(@NotNull Runnable r, @NotNull Whitelist whitelist) throws RejectedAccessException {
-		try (SandboxScope scope = new StandardGroovySandbox().withWhitelist(whitelist).enter()) {
-			r.run();
-		}
-	}
-
-	/**
-	 * Runs a function in the sandbox.
-	 * You must have used {@link #createSecureCompilerConfiguration} to prepare the Groovy shell.
-	 * Use {@link #run} instead whenever possible.
-	 *
-	 * @param c         a block of code during whose execution all calls are intercepted
-	 * @param whitelist the whitelist to use, such as {@link Whitelist#all()}
-	 * @return the return value of the block
-	 * @throws RejectedAccessException in case an attempted call was not whitelisted
-	 * @throws Exception               in case the block threw some other exception
-	 * @deprecated use {@link #enter}
-	 */
-	@Deprecated
-	public static <V> V runInSandbox(@NotNull Callable<V> c, @NotNull Whitelist whitelist) throws Exception {
-		try (SandboxScope scope = new StandardGroovySandbox().withWhitelist(whitelist).enter()) {
-			return c.call();
-		}
-	}
-
-	// TODO: Delete after 2020-01-01 because the method is insecure in most scenarios. Known callers have already
-	// migrated to safer methods, but we want to give users time to update plugins to avoid unnecessary breakage.
-
-	/**
-	 * @deprecated insecure; use {@link #run(GroovyShell, String, Whitelist)} or {@link #runScript}
-	 */
-	@Deprecated
-	public static Object run(@NotNull Script script, @NotNull final Whitelist whitelist) throws RejectedAccessException {
-//        LOGGER.log(Level.WARNING, null, new IllegalStateException(Messages.GroovySandbox_useOfInsecureRunOverload()));
-		Whitelist wrapperWhitelist = new ProxyWhitelist(
-				new ClassLoaderWhitelist(script.getClass().getClassLoader()),
-				whitelist);
-		try (SandboxScope scope = new StandardGroovySandbox().withWhitelist(wrapperWhitelist).enter()) {
-			return script.run();
-		}
-	}
-
-	/**
-	 * Runs a script in the sandbox.
-	 * You must have used {@link #createSecureCompilerConfiguration} to prepare the Groovy shell.
-	 *
-	 * @param shell     a shell ready for {@link GroovyShell#parse(String)}
-	 * @param script    a script
-	 * @param whitelist the whitelist to use, such as {@link Whitelist#all()}
-	 * @return the value produced by the script, if any
-	 * @throws RejectedAccessException in case an attempted call was not whitelisted
-	 * @deprecated use {@link #runScript}
-	 */
-	@Deprecated
-	public static Object run(@NotNull final GroovyShell shell, @NotNull final String script, @NotNull final Whitelist whitelist) throws RejectedAccessException {
-		return new StandardGroovySandbox().withWhitelist(whitelist).runScript(shell, script);
-	}
-
-//    /**
-//     * Checks a script for compilation errors in a sandboxed environment, without going all the way to actual class
-//     * creation or initialization.
-//     * @param script The script to check
-//     * @param classLoader The {@link GroovyClassLoader} to use during compilation.
-//     * @return The {@link FormValidation} for the compilation check.
-//     */
-//    public static @NotNull FormValidation checkScriptForCompilationErrors(String script, GroovyClassLoader classLoader) {
-//        try {
-//            CompilationUnit cu = new CompilationUnit(
-//                    createSecureCompilerConfiguration(),
-//                    new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
-//                    classLoader);
-//            cu.addSource("Script1", script);
-//            cu.compile(Phases.CANONICALIZATION);
-//        } catch (MalformedURLException | CompilationFailedException e) {
-//            return FormValidation.error(e.getLocalizedMessage());
-//        }
-//
-//        return FormValidation.ok();
-//    }
 
 }

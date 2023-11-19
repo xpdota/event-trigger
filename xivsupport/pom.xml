@@ -80,7 +80,11 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.picocontainer/picocontainer -->
+        <dependency>
+            <groupId>org.jdbi.jackson-contrib</groupId> <!-- Temporary group ID, this will change! -->
+            <artifactId>jackson-module-blackbird</artifactId>
+            <version>0.0.1</version>
+        </dependency>        <!-- https://mvnrepository.com/artifact/org.picocontainer/picocontainer -->
         <dependency>
             <groupId>org.picocontainer</groupId>
             <artifactId>picocontainer</artifactId>

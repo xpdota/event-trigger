@@ -4,63 +4,69 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.util.function.Consumer;
 
 public class AutoBottomScrollHelper extends JScrollPane {
 
 	private static final Logger log = LoggerFactory.getLogger(AutoBottomScrollHelper.class);
+	private static final boolean oldBehavior = "true".equals(System.getProperty("bottom-scroll.old-behavior"));
+	private final Consumer<Boolean> stateCallback;
 	private boolean autoScrollEnabled;
+	private boolean atBottom;
 	private volatile int oldMax;
 	private volatile int oldValue;
 	private volatile int oldExtent;
 
 	// TODO: technically, this no longer needs a table
-	public AutoBottomScrollHelper(JTable table, Runnable forceOffCallback) {
+	public AutoBottomScrollHelper(JTable table, Consumer<Boolean> stateCallback) {
 		super(table);
 		// I think the best, but most-work solution would be to have the table update event turn on a scrollbar event listener,
 		// and then have the event scroll down then remove itself.
 		// This isn't perfect, but it's good enough for now
 		setPreferredSize(getMaximumSize());
-		JScrollBar bar = getVerticalScrollBar();
 		setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-//		addComponentListener(new ComponentAdapter() {
-//			@Override
-//			public void componentResized(ComponentEvent e) {
-//				super.componentResized(e);
-//			}
-//
-//			@Override
-//			public void componentMoved(ComponentEvent e) {
-//				super.componentMoved(e);
-//			}
-//
-//			@Override
-//			public void componentShown(ComponentEvent e) {
-//				super.componentShown(e);
-//			}
-//
-//			@Override
-//			public void componentHidden(ComponentEvent e) {
-//				super.componentHidden(e);
-//			}
-//		});
-		bar.addAdjustmentListener(event -> SwingUtilities.invokeLater(() -> {
-			int newMax = bar.getMaximum();
-			int newExtent = bar.getModel().getExtent();
-			int newValue = bar.getValue() + newExtent;
-			if (newMax != oldMax || newExtent != oldExtent) {
-				doScrollIfEnabled();
-			}
-			else {
-				if (newValue < oldValue) {
-					forceOffCallback.run();
-				}
-			}
-			log.trace("Value: {} -> {} ; Max: {} -> {}", oldValue, newValue, oldMax, newMax);
-			oldMax = newMax;
-			oldValue = newValue;
-			oldExtent = newExtent;
-		}));
+		atBottom = true;
+		this.stateCallback = val -> {
+			boolean old = autoScrollEnabled;
+			stateCallback.accept(val);
+			autoScrollEnabled = old;
+		};
 
+	}
+
+	@Override
+	public JScrollBar createVerticalScrollBar() {
+		return new JScrollPane.ScrollBar(JScrollBar.VERTICAL) {
+			@Override
+			public void setValues(int newValue, int newExtent, int newMin, int newMax) {
+//				log.info("Value: {} -> {} ; Max: {} -> {}", oldValue, newValue, oldMax, newMax);
+				// This branch means more data has been added to the table
+				if (newMax != oldMax || newExtent != oldExtent) {
+					if (atBottom && autoScrollEnabled) {
+						newValue = newMax - newExtent;
+					}
+				}
+				// This branch means that the user has scrolled
+				else {
+					// User scrolled to bottom
+					if (newValue + newExtent >= newMax) {
+						if (!oldBehavior && autoScrollEnabled) {
+							stateCallback.accept(true);
+							atBottom = true;
+						}
+					}
+					// User scrolled up
+					else if (newValue < oldValue) {
+						atBottom = false;
+						stateCallback.accept(false);
+					}
+				}
+				oldMax = newMax;
+				oldValue = newValue;
+				oldExtent = newExtent;
+				super.setValues(newValue, newExtent, newMin, newMax);
+			}
+		};
 	}
 
 	public boolean isAutoScrollEnabled() {
@@ -80,6 +86,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		int max = scrollBar.getMaximum();
 		log.trace("Max: {}", max);
 		scrollBar.setValue(Integer.MAX_VALUE);
+		atBottom = true;
 	}
 
 	public void setAutoScrollEnabled(boolean autoScrollEnabled) {
