@@ -6,14 +6,14 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
-import gg.xp.xivsupport.models.XivAbility;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class BaseCdTrackerTable {
 	private final CustomTableModel<VisualCdInfo> tableModel;
@@ -59,7 +59,38 @@ public class BaseCdTrackerTable {
 							c.setMinWidth(BAR_WIDTH);
 						}))
 				.build();
-		table = new JTable(tableModel);
+		table = new JTable(tableModel) {
+			@Override
+			public int convertColumnIndexToView(int modelColumnIndex) {
+				return super.convertColumnIndexToView(modelColumnIndex);
+			}
+
+			@Override
+			public int rowAtPoint(@NotNull Point point) {
+				int y = getHeight() - point.y;
+				int result = y / getRowHeight();
+				if (result < 0) {
+					return -1;
+				}
+				else if (result >= getRowCount()) {
+					return -1;
+				}
+				else {
+					return result;
+				}
+			}
+
+			@NotNull
+			@Override
+			public Rectangle getCellRect(int row, int column, boolean includeSpacing) {
+				Rectangle result = super.getCellRect(row, column, includeSpacing);
+				result.translate(
+						0,
+						getHeight() - result.y - getRowHeight()
+				);
+				return result;
+			}
+		};
 		table.setOpaque(false);
 		table.setFocusable(false);
 		table.setRowSelectionAllowed(false);
