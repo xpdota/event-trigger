@@ -128,7 +128,7 @@
         <!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy -->
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
+            <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
         </dependency>
         <dependency>
@@ -160,7 +160,7 @@
         <dependency>
             <groupId>com.fifesoft</groupId>
             <artifactId>rsyntaxtextarea</artifactId>
-            <version>3.3.2</version>
+            <version>3.3.4</version>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.fifesoft</groupId>-->

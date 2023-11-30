@@ -14,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +34,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public final class TimelineProcessor {
 
@@ -106,13 +104,7 @@ public final class TimelineProcessor {
 	}
 
 	public static TimelineProcessor of(TimelineManager manager, InputStream file, List<? extends TimelineEntry> extra, Job playerJob, LanguageReplacements replacements) {
-		List<TimelineEntry> timelineEntries;
-		try {
-			timelineEntries = TimelineParser.parseMultiple(IOUtils.readLines(file, StandardCharsets.UTF_8));
-		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		List<TimelineEntry> timelineEntries = TimelineParser.parseMultiple(IOUtils.readLines(file, StandardCharsets.UTF_8));
 		List<TimelineEntry> all = new ArrayList<>(timelineEntries);
 		for (int i = 0; i < all.size(); i++) {
 			TimelineEntry currentItem = all.get(i);

@@ -106,16 +106,11 @@ public final class EventReader {
 
 	public static EventIterator<ACTLogLineEvent> readActLogResource(String resourcePath) {
 		List<String> lines;
-		try {
-			InputStream resource = EventReader.class.getResourceAsStream(resourcePath);
-			if (resource == null) {
-				throw new IllegalArgumentException("The resource '%s' does not exist".formatted(resourcePath));
-			}
-			lines = IOUtils.readLines(resource, StandardCharsets.UTF_8);
+		InputStream resource = EventReader.class.getResourceAsStream(resourcePath);
+		if (resource == null) {
+			throw new IllegalArgumentException("The resource '%s' does not exist".formatted(resourcePath));
 		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		lines = IOUtils.readLines(resource, StandardCharsets.UTF_8);
 		// TODO: this uses the old tech but the builtin files are small
 		return makeIteratorFromRawLines(lines.stream());
 	}
