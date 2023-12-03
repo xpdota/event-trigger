@@ -319,7 +319,7 @@ public final class TimelineProcessor {
 		newSync.ifPresent(rawTimelineEntry -> {
 			double timeToSyncTo = rawTimelineEntry.getSyncToTime(resolver);
 			TimelineSync newTsync = new LogLineSync(event, timeToSyncTo, rawTimelineEntry);
-			log.trace("New Sync: {} -> {} ({})", rawTimelineEntry, timeToSyncTo, event);
+			log.info("New Sync: {} -> {} ({})", rawTimelineEntry, timeToSyncTo, event);
 			setNewSync(newTsync);
 		});
 	}
