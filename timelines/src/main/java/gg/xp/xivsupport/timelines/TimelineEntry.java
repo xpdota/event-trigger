@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.timelines;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import gg.xp.reevent.events.Event;
 import gg.xp.xivdata.data.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,11 +53,34 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		return sync.matcher(line).find();
 	}
 
+	@Nullable EventSyncController eventSyncController();
+
+	default boolean hasEventSync() {
+		return eventSyncController() != null;
+	};
+
+	default @Nullable Class<? extends Event> eventSyncType() {
+		EventSyncController esc = eventSyncController();
+		return esc == null ? null : esc.eventType();
+	}
+
+	default boolean shouldSync(double currentTime, Event event) {
+		EventSyncController syncControl = eventSyncController();
+		if (syncControl == null) {
+			return false;
+		}
+		boolean timesMatch = (currentTime >= getMinTime() && currentTime <= getMaxTime());
+		if (!timesMatch) {
+			return false;
+		}
+		return syncControl.shouldSync(event);
+	}
+
 	/**
 	 * @return true if this timeline entry would ever cause a sync
 	 */
 	default boolean canSync() {
-		return sync() != null;
+		return sync() != null || hasEventSync();
 	}
 
 	/**
@@ -320,7 +344,7 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		}
 		String uniqueName = makeUniqueName();
 		String hideAllLine = "hideall \"%s\"".formatted(uniqueName);
-		String actualTimelineLine = new TextFileTimelineEntry(time(), uniqueName, null, null, TimelineWindow.DEFAULT, null, null, false).toTextFormat();
+		String actualTimelineLine = new TextFileTimelineEntry(time(), uniqueName, null, null, TimelineWindow.DEFAULT, null, null, false, null).toTextFormat();
 		return Stream.of(hideAllLine, actualTimelineLine);
 	}
 

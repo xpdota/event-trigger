@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.timelines;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.CurrentTimeSource;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
@@ -238,10 +239,10 @@ public final class TimelineManager {
 	}
 
 	@HandleEvents(order = 40_000)
-	public void actLine(EventContext context, ACTLogLineEvent event) {
+	public void actLine(EventContext context, BaseEvent event) {
 		TimelineProcessor currentTimeline = this.currentTimeline;
 		if (currentTimeline != null) {
-			currentTimeline.processActLine(event);
+			currentTimeline.processEvent(event);
 		}
 	}
 

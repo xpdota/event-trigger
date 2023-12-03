@@ -33,6 +33,11 @@ public class TranslatedTextFileEntry implements TimelineEntry {
 	}
 
 	@Override
+	public @Nullable EventSyncController eventSyncController() {
+		return untranslated().eventSyncController();
+	}
+
+	@Override
 	@JsonIgnore
 	public Double getSyncToTime(LabelResolver resolver) {
 		return untranslated.getSyncToTime(resolver);

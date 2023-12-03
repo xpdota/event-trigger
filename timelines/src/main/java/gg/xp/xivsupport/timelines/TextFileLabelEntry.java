@@ -10,6 +10,7 @@ public record TextFileLabelEntry(
 		double time,
 		String name
 ) implements TimelineEntry, Serializable {
+
 	@Override
 	public String toString() {
 		return "TextFileLabelEntry{" +
@@ -61,5 +62,10 @@ public record TextFileLabelEntry(
 	@Override
 	public boolean isLabel() {
 		return true;
+	}
+
+	@Override
+	public @Nullable EventSyncController eventSyncController() {
+		return null;
 	}
 }

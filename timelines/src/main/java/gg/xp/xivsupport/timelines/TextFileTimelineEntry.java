@@ -1,9 +1,11 @@
 package gg.xp.xivsupport.timelines;
 
+import gg.xp.reevent.events.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public record TextFileTimelineEntry(
@@ -14,8 +16,9 @@ public record TextFileTimelineEntry(
 		@NotNull TimelineWindow timelineWindow,
 		@Nullable Double jump,
 		@Nullable String jumpLabel,
-		boolean forceJump
-) implements TimelineEntry, Serializable {
+		boolean forceJump,
+		EventSyncController eventSyncController) implements TimelineEntry, Serializable {
+
 	@Override
 	public String toString() {
 		return "TextFileTimelineEntry{" +
@@ -27,6 +30,7 @@ public record TextFileTimelineEntry(
 		       ", jump=" + jump +
 		       ", jumpLabel='" + jumpLabel + '\'' +
 		       ", forceJump=" + forceJump +
+		       ", syncCtrl=" + eventSyncController +
 		       '}';
 	}
 

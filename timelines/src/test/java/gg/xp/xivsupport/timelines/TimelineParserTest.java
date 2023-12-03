@@ -1,9 +1,13 @@
 package gg.xp.xivsupport.timelines;
 
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.models.XivAbility;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.time.Duration;
+import java.util.List;
 
 public class TimelineParserTest {
 
@@ -29,6 +33,66 @@ public class TimelineParserTest {
 		Assert.assertNull(textFileTimelineEntry.duration());
 		assertDefaultTimelineWindow(textFileTimelineEntry);
 		Assert.assertNull(textFileTimelineEntry.jump());
+	}
+
+	@Test
+	void timelineWithEventSync() {
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("2.0 \"Shield Skewer\" Ability { source: \"Rhitahtyn sas Arvina\", id: \"471\" }");
+		Assert.assertNotNull(textFileTimelineEntry);
+		Assert.assertEquals(textFileTimelineEntry.time(), 2.0d);
+		Assert.assertEquals(textFileTimelineEntry.name(), "Shield Skewer");
+		Assert.assertNull(textFileTimelineEntry.sync());
+		Assert.assertNull(textFileTimelineEntry.duration());
+		assertDefaultTimelineWindow(textFileTimelineEntry);
+		Assert.assertNull(textFileTimelineEntry.jump());
+		Assert.assertTrue(textFileTimelineEntry.shouldSync(2.0,
+				new AbilityUsedEvent(
+						new XivAbility(0x471),
+						new XivCombatant(123, "Rhitahtyn sas Arvina"),
+						new XivCombatant(456, "Foo"),
+						List.of(), 999, 0, 1)));
+		Assert.assertFalse(textFileTimelineEntry.shouldSync(2.0,
+				new AbilityUsedEvent(
+						new XivAbility(0x472),
+						new XivCombatant(123, "Rhitahtyn sas Arvina"),
+						new XivCombatant(456, "Foo"),
+						List.of(), 999, 0, 1)));
+		Assert.assertFalse(textFileTimelineEntry.shouldSync(2.0,
+				new AbilityUsedEvent(
+						new XivAbility(0x471),
+						new XivCombatant(123, "Rhitahtyn sas Arvino"),
+						new XivCombatant(456, "Foo"),
+						List.of(), 999, 0, 1)));
+	}
+
+	@Test
+	void timelineWithEventSyncRegex() {
+		TimelineEntry textFileTimelineEntry = TimelineParser.parseRaw("2.0 \"Shield Skewer\" Ability { source: \"Rhitahtyn sas Arvina\", id: \"47[1-3]\" }");
+		Assert.assertNotNull(textFileTimelineEntry);
+		Assert.assertEquals(textFileTimelineEntry.time(), 2.0d);
+		Assert.assertEquals(textFileTimelineEntry.name(), "Shield Skewer");
+		Assert.assertNull(textFileTimelineEntry.sync());
+		Assert.assertNull(textFileTimelineEntry.duration());
+		assertDefaultTimelineWindow(textFileTimelineEntry);
+		Assert.assertNull(textFileTimelineEntry.jump());
+		Assert.assertTrue(textFileTimelineEntry.shouldSync(2.0,
+				new AbilityUsedEvent(
+						new XivAbility(0x471),
+						new XivCombatant(123, "Rhitahtyn sas Arvina"),
+						new XivCombatant(456, "Foo"),
+						List.of(), 999, 0, 1)));
+		Assert.assertTrue(textFileTimelineEntry.shouldSync(2.0,
+				new AbilityUsedEvent(
+						new XivAbility(0x472),
+						new XivCombatant(123, "Rhitahtyn sas Arvina"),
+						new XivCombatant(456, "Foo"),
+						List.of(), 999, 0, 1)));
+		Assert.assertFalse(textFileTimelineEntry.shouldSync(2.0,
+				new AbilityUsedEvent(
+						new XivAbility(0x471),
+						new XivCombatant(123, "Rhitahtyn sas Arvino"),
+						new XivCombatant(456, "Foo"),
+						List.of(), 999, 0, 1)));
 	}
 
 	@Test
