@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.timelines.cbevents.CbEventTypes;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -95,7 +96,7 @@ public final class TimelineParser {
 			if (syncRaw == null) {
 				sync = null;
 				if (eventTypeRaw != null) {
-					CactbotEventTypes eventDef = CactbotEventTypes.valueOf(eventTypeRaw);
+					CbEventTypes eventDef = CbEventTypes.valueOf(eventTypeRaw);
 					String eventCondRaw = matcher.group("eventCond");
 					// TODO: support translation for this
 					Map<String, String> conditions;
