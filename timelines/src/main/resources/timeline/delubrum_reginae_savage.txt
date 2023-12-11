@@ -122,8 +122,10 @@ hideall "--sync--"
 ### Trinity Seeker
 # -p 5AD3:4011.4 5A98:4079.5 5A99:4171.7 5A97:4265.8
 # -ii 1961 1963 5B33 5AB8 5AB9 5ABA 5ABB 5ABC 5AD1 5B2A 5B2B 5AC1 5AC2 5AC3 5AC4 5AC5 5AC6 5ACB 5BBC 5ACD
-4000.0 "--sync--" sync / 00:0839::The Theater of One will be sealed off/ window 20000,0
-4000.0 "--Reset--" sync / 00:0839::.*is no longer sealed/ window 0,2000 jump 0
+# The Theater of One will be sealed off
+4000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1B:/ window 20000,0
+# .*is no longer sealed
+4000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
 
 # Note: it is likely that there are additional hp pushes on later Verdant Paths.
 # It is known that the first one is 80%, but I have seen 0-10 second variations
@@ -160,7 +162,7 @@ hideall "--sync--"
 4105.5 "Baleful Onslaught" sync / 1[56]:[^:]*:Trinity Seeker:5AD6:/
 4115.6 "Phantom Edge?" sync / 1[56]:[^:]*:Trinity Seeker:5ABD:/
 4117.8 "--middle--" sync / 1[56]:[^:]*:Trinity Seeker:5A9A:/
-4118.4 "--chains--" duration 3.1 # sync / 00:0000:0080:/
+4118.4 "--chains--" duration 3.1
 4126.9 "Baleful Blade" sync / 1[56]:[^:]*:Trinity Seeker:5AB[EF]:/
 4132.1 "Manifest Avatar" sync / 1[56]:[^:]*:Trinity Seeker:5ADA:/
 4138.8 "Baleful Comet 1" #sync / 1[56]:[^:]*:Seeker Avatar:5AD7:/
@@ -224,7 +226,7 @@ hideall "--sync--"
 4315.8 "Merciful Moon" sync / 1[56]:[^:]*:Aetherial Orb:5AC9:/
 4318.4 "Merciful Breeze" sync / 1[56]:[^:]*:Trinity Seeker:5AC8:/
 4321.8 "Merciful Blooms" sync / 1[56]:[^:]*:Trinity Seeker:5ACA:/
-4325.1 "--chains--" duration 3.1 # sync / 23:0000:0000:0080:/
+4325.1 "--chains--" duration 3.1
 4335.2 "Verdant Tempest" sync / 1[56]:[^:]*:Trinity Seeker:5AD3:/
 4346.5 "Merciful Arc" sync / 1[56]:[^:]*:Trinity Seeker:5AD4:/
 4349.7 "--middle--" sync / 1[56]:[^:]*:Trinity Seeker:5A9A:/
@@ -267,7 +269,7 @@ hideall "--sync--"
 4465.0 "Mercy Fourfold 2" #sync / 1[56]:[^:]*:Trinity Seeker:5B94:/
 4466.9 "Mercy Fourfold 3" #sync / 1[56]:[^:]*:Trinity Seeker:5B94:/
 4468.8 "Mercy Fourfold 4" #sync / 1[56]:[^:]*:Trinity Seeker:5B94:/
-4472.2 "--chains--" duration 3.1 # sync / 00:0000:0080:/
+4472.2 "--chains--" duration 3.1
 4482.4 "Verdant Tempest" sync / 1[56]:[^:]*:Trinity Seeker:5AD3:/
 4484.6 "--middle--" sync / 1[56]:[^:]*:Trinity Seeker:5A9A:/
 4488.8 "Manifest Avatar" sync / 1[56]:[^:]*:Trinity Seeker:5ADA:/
@@ -279,7 +281,7 @@ hideall "--sync--"
 4518.7 "Manifest Avatar" sync / 1[56]:[^:]*:Trinity Seeker:5ADA:/
 4530.9 "First Mercy" sync / 1[56]:[^:]*:Seeker Avatar:5B61:/
 4534.1 "Second Mercy" sync / 1[56]:[^:]*:Seeker Avatar:5B62:/
-4534.7 "--chains--" duration 3.1 # sync / 00:0000:0080:/
+4534.7 "--chains--" duration 3.1
 4537.3 "Third Mercy" sync / 1[56]:[^:]*:Seeker Avatar:5B63:/
 4540.5 "Fourth Mercy" sync / 1[56]:[^:]*:Seeker Avatar:5B64:/
 4541.8 "Phantom Edge?" sync / 1[56]:[^:]*:Trinity Seeker:5ABD:/
@@ -308,7 +310,8 @@ hideall "--sync--"
 # Dahu will only start if you are not in the Duel, and if Dahu starts first, the Duel will
 # override it.  Dahu will only end when Dahu is killed, which can only be seen if you
 # are in the Dahu fight.
-6000.0 "--sync--" sync / 00:0839::The Hall of Supplication will be sealed off/ window 6000,0
+# The Hall of Supplication will be sealed off
+6000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1D:/ window 6000,0
 6000.0 "--Reset--" sync / 19:[^:]*:Dahu:/ window 0,2000 jump 0
 6008.4 "Reverberating Roar" sync / 1[56]:[^:]*:Dahu:576D:/ window 10,2.5
 6014.5 "Reverberating Roar" sync / 1[56]:[^:]*:Dahu:576D:/
@@ -407,7 +410,8 @@ hideall "--sync--"
 # https://www.youtube.com/watch?v=5Q0m1F0MKQQ
 
 # This is the zone, but can't use this sync as it can be seen by Dahu.  Sync to autos instead.
-#8000.0 "--sync--" sync / 00:0839::Pride of the Lioness will be sealed off/ window 20000,0
+# Pride of the Lioness will be sealed off
+#8000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1C:/ window 20000,0
 8000.0 "--Reset--" sync / 00:0044:Stygimoloch Warrior:Why\.\.\.won't\.\.\.you\.\.\./ window 0,2000 jump 0
 # TODO: is there a reset dialog line for losing?
 # Alternatively, we could always insert " 19:${data.me} was defeated by" from script.
@@ -500,8 +504,10 @@ hideall "--sync--"
 # - 5820 (581F)
 # - 5823 (59BE)
 
-10000.0 "--sync--" sync / 00:0839::The Hall of Hieromancy will be sealed off/ window 20000,0
-10000.0 "--Reset--" sync / 00:0839::.*is no longer sealed/ window 0,2000 jump 0
+# The Hall of Hieromancy will be sealed off
+10000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1E:/ window 20000,0
+# .*is no longer sealed
+10000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
 # ranged auto should be reasonably timed
 10002.5 "--sync--" sync / 1[56]:[^:]*:Queen's Gunner:5858:/ window 3,1
 
@@ -590,7 +596,7 @@ hideall "--sync--"
 10322.2 "Blood and Bone Enrage" sync / 1[56]:[^:]*:Queen's Knight:5B9D:/
 
 # Phase 3: Soldier + Gunner section
-10600.0 "--sync--" sync / 22:........:Queen's Gunner::........::Queen's Gunner:01/ window 600,0
+10600.0 "--sync--" sync / 22:........:Queen's Gunner:........:Queen's Gunner:01/ window 600,0
 10612.0 "--sync--" sync / 14:[^:]*:Queen's Gunner:5844:/ window 600,0
 10617.0 "Relentless Battery" sync / 1[56]:[^:]*:Queen's Gunner:5844:/
 10623.2 "Great Ball Of Fire" sync / 1[56]:[^:]*:Queen's Soldier:583B:/
@@ -675,8 +681,10 @@ hideall "--sync--"
 # Phases:
 # Manipulate -> Invert -> Adds -> then loop Manipulate+Buster OR Invert+Buster
 
-12000.0 "--sync--" sync / 00:0839::Pride of the Lion will be sealed off/ window 20000,0
-12000.0 "--Reset--" sync / 00:0839::.*is no longer sealed/ window 0,2000 jump 0
+# Pride of the Lion will be sealed off
+12000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1F:/ window 20000,0
+# .*is no longer sealed
+12000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
 12007.1 "--sync--" sync / 14:[^:]*:Bozjan Phantom:57BD:/ window 20000,0
 12011.1 "Malediction of Agony" sync / 1[56]:[^:]*:Bozjan Phantom:57BD:/
 12019.2 "Weave Miasma" sync / 1[56]:[^:]*:Bozjan Phantom:57B2:/
@@ -841,8 +849,10 @@ hideall "--sync--"
 
 # Note: Blade of Entropy is `sync / 1[56]:[^:]*:(Trinity Avowed|Avowed Avatar):594[23456789]|595[6789ABCD]:/``
 
-14000.0 "--sync--" sync / 00:0839::The Vault of Singing Crystal will be sealed off/ window 20000,0
-14000.0 "--Reset--" sync / 00:0839::.*is no longer sealed/ window 0,2000 jump 0
+# The Vault of Singing Crystal will be sealed off
+14000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E20:/ window 20000,0
+# .*is no longer sealed
+14000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
 14006.7 "--sync--" sync / 14:[^:]*:Trinity Avowed:594E:/ window 10,10
 14011.8 "Wrath Of Bozja" sync / 1[56]:[^:]*:Trinity Avowed:594E:/
 14019.9 "Glory Of Bozja" sync / 1[56]:[^:]*:Trinity Avowed:594F:/
@@ -1245,8 +1255,10 @@ hideall "--sync--"
 # -p 57D7:18015.3 57C3:18204.5 57D2:19013.2
 # -ii 1961 55A6 57D0 57CE 57DD 57DC 57C8 57CA 57C6 57CC 5B38 57D3 57D6 57E2 501B 57DF 501A
 # -it "Stygimoloch Lord"
-18000.0 "--sync--" sync / 00:0839::The Path of Divine Clarity will be sealed off/ window 20000,0
-18000.0 "--Reset--" sync / 00:0839::.*is no longer sealed/ window 0,2000 jump 0
+# The Path of Divine Clarity will be sealed off
+18000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E22:/ window 20000,0
+# .*is no longer sealed
+18000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
 
 # Note: 57CF is the cast for Whack but 57D1 is the instant damage.
 # Similarly, 57C4 is the cast for Devastating Bolt, but 57C5/57C6 is the delayed damage.
@@ -1339,7 +1351,7 @@ hideall "--sync--"
 
 
 # Phase 3: Victory Lap (once adds are dead)
-19000.0 "--targetable--" sync / 22:........:Stygimoloch Lord:........:Stygimoloch Lord/ window 800,0
+19000.0 "--targetable--" sync / 22:........:Stygimoloch Lord:........:Stygimoloch Lord:01/ window 800,0
 19008.2 "--sync--" sync / 14:[^:]*:Stygimoloch Lord:57D2:/ window 1010,0
 19013.2 "Thunderous Discharge" sync / 1[56]:[^:]*:Stygimoloch Lord:57D2:/
 19028.4 "Rapid Bolts 1" sync / 1[56]:[^:]*:Stygimoloch Lord:57CD:/ duration 12.8
@@ -1372,8 +1384,10 @@ hideall "--sync--"
 # -it "The Queen"
 # TODO: what is 5BCB? (--middle--?)
 # TODO: what is 55A8?
-20000.0 "--sync--" sync / 00:0839::Queensheart will be sealed off/ window 20000,0
-20000.0 "--Reset--" sync / 00:0839::.*is no longer sealed/ window 0,2000 jump 0
+# Queensheart will be sealed off
+20000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E23:/ window 20000,0
+# .*is no longer sealed
+20000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
 20010.3 "--sync--" sync / 14:[^:]*:The Queen:59F9:/ window 20,20
 20015.3 "Empyrean Iniquity" sync / 1[56]:[^:]*:The Queen:59F9:/
 20025.5 "--sync--" sync / 1[56]:[^:]*:The Queen:5BCB:/
@@ -1481,7 +1495,8 @@ hideall "--sync--"
 20515.5 "Above Board" sync / 1[56]:[^:]*:Queen's Warrior:5A0B:/
 20515.5 "--sync--" sync / 1[56]:[^:]*:Queen's Warrior:5B8E:/
 20516.5 "--stunned--" # 3 or 7 second stun
-20518.5 "Lots Cast" sync / 1[56]:[^:]*:(Aetherial Burst:5B89|Aetherial Bolt:5A0D):/
+# Aetherial Burst does 5B89 and Aetherial Bolt does 5A0D
+20518.5 "Lots Cast" sync / 1[56]:[^:]*:(Aetherial Burst|Aetherial Bolt):(5B89|5A0D):/
 20521.5 "Lots Cast" #sync / 1[56]:[^:]*:Aetherial Bolt:5B88:/
 20522.7 "Lots Cast" #sync / 1[56]:[^:]*:Aetherial Bolt:5BB6:/
 20523.5 "--unstunned--"
