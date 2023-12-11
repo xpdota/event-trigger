@@ -43,6 +43,10 @@ public class SystemLogMessageEvent extends BaseEvent implements HasPrimaryValue 
 		return param2;
 	}
 
+	public long getInstance() {
+		return unknown;
+	}
+
 	@Override
 	public String toString() {
 		return "SystemLogMessage{" +

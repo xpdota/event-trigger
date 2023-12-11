@@ -39,6 +39,11 @@ public class CustomTimelineLabel implements CustomTimelineItem {
 	}
 
 	@Override
+	public @Nullable EventSyncController eventSyncController() {
+		return null;
+	}
+
+	@Override
 	public double time() {
 		return time;
 	}

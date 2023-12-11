@@ -97,8 +97,9 @@ public final class MakeTimelines {
 		ChromeDriver driver = new ChromeDriver(opts);
 		log.info("Started ChromeDriver");
 		Map<Long, String> zoneToFile = new HashMap<>();
-		String timelineBaseDir = System.getProperty("timelinedir", "timelines/src/main/resources");
+		String timelineBaseDir = System.getProperty("timelinedir", "./src/main/resources");
 		Path timelineBasePath = Path.of(timelineBaseDir);
+		log.info("Writing timelines to {}", timelineBasePath.toAbsolutePath());
 		Path translationsDir = timelineBasePath.resolve("timeline").resolve("translations");
 		translationsDir.toFile().mkdirs();
 		try {

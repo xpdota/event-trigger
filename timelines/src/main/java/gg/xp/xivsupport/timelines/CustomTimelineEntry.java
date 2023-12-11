@@ -196,6 +196,12 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	}
 
 	@Override
+	public @Nullable EventSyncController eventSyncController() {
+		// TODO
+		return null;
+	}
+
+	@Override
 	public String toString() {
 		return "CustomTimelineEntry{" +
 		       "time=" + time +
