@@ -11,13 +11,15 @@ import java.util.regex.Pattern;
 public class TranslatedTextFileEntry implements TimelineEntry {
 
 	private final TimelineEntry untranslated;
-	private final String nameOverride;
-	private final Pattern syncOverride;
+	private final @Nullable String nameOverride;
+	private final @Nullable Pattern syncOverride;
+	private final @Nullable EventSyncController esc;
 
-	public TranslatedTextFileEntry(TimelineEntry untranslated, @Nullable String nameOverride, @Nullable Pattern syncOverride) {
+	public TranslatedTextFileEntry(TimelineEntry untranslated, @Nullable String nameOverride, @Nullable Pattern syncOverride, @Nullable EventSyncController esc) {
 		this.untranslated = untranslated;
 		this.nameOverride = nameOverride;
 		this.syncOverride = syncOverride;
+		this.esc = esc;
 	}
 
 	@Override
@@ -34,7 +36,7 @@ public class TranslatedTextFileEntry implements TimelineEntry {
 
 	@Override
 	public @Nullable EventSyncController eventSyncController() {
-		return untranslated().eventSyncController();
+		return esc ;
 	}
 
 	@Override
@@ -57,10 +59,11 @@ public class TranslatedTextFileEntry implements TimelineEntry {
 	@Override
 	public String toString() {
 		return "TranslatedTextFileEntry{" +
-				"nameOverride='" + nameOverride +
-				"', syncOverride='" + syncOverride +
-				"', untranslated='" + untranslated +
-				"'}";
+		       "nameOverride='" + nameOverride +
+		       "', syncOverride='" + syncOverride +
+		       "', untranslated='" + untranslated +
+		       "', syncControl='" + esc +
+		       "'}";
 	}
 
 	@Override

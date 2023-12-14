@@ -176,21 +176,16 @@ public final class TimelineProcessor {
 			TimelineEntry currentItem = all.get(i);
 			final String originalName = currentItem.name();
 			final String originalSync = currentItem.sync() == null ? null : currentItem.sync().pattern();
-			String newName = originalName;
-			String newSync = originalSync;
-			if (originalName != null) {
-				for (var textReplacement : replacements.replaceText().entrySet()) {
-					newName = textReplacement.getKey().matcher(newName).replaceAll(textReplacement.getValue());
-				}
+			final EventSyncController originalEsc = currentItem.eventSyncController();
+			final String newName = originalName == null ? null : replacements.doNameReplacement(originalName);
+			final String newSync = originalSync == null ? null : replacements.doSyncReplacement(originalSync);
+			EventSyncController newEsc = originalEsc;
+			if (originalEsc != null) {
+				newEsc = originalEsc.translateWith(replacements);
 			}
-			if (originalSync != null) {
-				for (var syncReplacement : replacements.replaceSync().entrySet()) {
-					newSync = syncReplacement.getKey().matcher(newSync).replaceAll(syncReplacement.getValue());
-				}
-			}
-			if (!Objects.equals(originalName, newName) || !Objects.equals(originalSync, newSync)) {
+			if (!Objects.equals(originalName, newName) || !Objects.equals(originalSync, newSync) || !Objects.equals(originalEsc, newEsc)) {
 				Pattern newSyncFinal = newSync == null ? null : Pattern.compile(newSync);
-				all.set(i, new TranslatedTextFileEntry(currentItem, newName, newSyncFinal));
+				all.set(i, new TranslatedTextFileEntry(currentItem, newName, newSyncFinal, newEsc));
 			}
 		}
 

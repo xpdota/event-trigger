@@ -79,10 +79,6 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private TimelineProcessor currentTimeline;
 	private TimelineCustomizations currentCust;
 
-	private TableCellEditor noLabelEdit(TableCellEditor wrapped) {
-		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel());
-	}
-
 	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state, ActionTableFactory actionTableFactory, TimelineBarColorProviderImpl tbcp) {
 		super("Timelines");
 		// TODO: searching
@@ -162,8 +158,16 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				.addColumn(new CustomColumn<>("Text/Name", TimelineEntry::name, col -> {
 					col.setCellEditor(StandardColumns.stringEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.name = value, (item, value) -> item.name = value)));
 				}))
-				.addColumn(new CustomColumn<>("Pattern", TimelineEntry::sync, col -> {
-					col.setCellEditor(noLabelEdit(StandardColumns.regexEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.sync = value), Pattern.CASE_INSENSITIVE)));
+				.addColumn(new CustomColumn<>("Sync", e -> {
+					if (e.sync() != null) {
+						return e.sync();
+					}
+					if (e.eventSyncController() != null) {
+						return e.eventSyncController().toString();
+					}
+					return null;
+				}, col -> {
+					col.setCellEditor(noLabelNoNewSyncEdit(StandardColumns.regexEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.sync = value), Pattern.CASE_INSENSITIVE)));
 				}))
 				.addColumn(new CustomColumn<>("Duration", TimelineEntry::duration, col -> {
 					col.setCellEditor(noLabelEdit(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.duration = value))));
@@ -972,4 +976,13 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		}
 
 	}
+
+	private TableCellEditor noLabelNoNewSyncEdit(TableCellEditor wrapped) {
+		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel() && !item.hasEventSync());
+	}
+
+	private TableCellEditor noLabelEdit(TableCellEditor wrapped) {
+		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel());
+	}
+
 }

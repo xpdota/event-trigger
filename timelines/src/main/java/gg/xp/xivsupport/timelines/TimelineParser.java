@@ -1,12 +1,6 @@
 package gg.xp.xivsupport.timelines;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.json.JsonReadFeature;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import gg.xp.reevent.events.Event;
-import gg.xp.xivsupport.timelines.cbevents.CbEventTypes;
+import gg.xp.xivsupport.timelines.cbevents.CbEventFmt;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -14,9 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -38,16 +30,6 @@ public final class TimelineParser {
 	);
 
 	private static final Pattern timelineLabelPattern = Pattern.compile("^(?<time>\\d+\\.?\\d*) label \"(?<label>[^\"]*)\"");
-	private static final ObjectMapper mapper = JsonMapper.builder()
-			// get as close as possible to json5
-			.configure(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES, true)
-			.configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
-			.configure(JsonReadFeature.ALLOW_SINGLE_QUOTES, true)
-			.configure(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true)
-			.configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
-			.configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
-			.configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
-			.build();
 
 	private TimelineParser() {
 	}
@@ -96,19 +78,7 @@ public final class TimelineParser {
 			if (syncRaw == null) {
 				sync = null;
 				if (eventTypeRaw != null) {
-					CbEventTypes eventDef = CbEventTypes.valueOf(eventTypeRaw);
-					String eventCondRaw = matcher.group("eventCond");
-					// TODO: support translation for this
-					Map<String, String> conditions;
-					try {
-						conditions = mapper.readValue(eventCondRaw, new TypeReference<>() {
-						});
-					}
-					catch (JsonProcessingException e) {
-						throw new RuntimeException("Error reading JSON: " + eventCondRaw, e);
-					}
-					Predicate<Event> condition = eventDef.make(conditions);
-					esc = new FileEventSyncController(eventDef.eventType(), condition, conditions);
+					esc = CbEventFmt.parseRaw(eventTypeRaw, matcher.group("eventCond"));
 				}
 			}
 			else {

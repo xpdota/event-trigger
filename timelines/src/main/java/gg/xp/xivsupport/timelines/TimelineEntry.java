@@ -313,6 +313,9 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 			if (sync() != null) {
 				sb.append("sync /").append(sync().pattern()).append('/').append(' ');
 			}
+			if (eventSyncController() != null) {
+				sb.append(eventSyncController().toTextFormat()).append(' ');
+			}
 			TimelineWindow window = timelineWindow();
 			if (!TimelineWindow.DEFAULT.equals(window)) {
 				sb.append("window ").append(fmtDouble(window.start())).append(',').append(fmtDouble(window.end())).append(' ');

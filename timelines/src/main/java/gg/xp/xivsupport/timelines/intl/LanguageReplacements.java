@@ -2,6 +2,7 @@ package gg.xp.xivsupport.timelines.intl;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +35,20 @@ public record LanguageReplacements(
 	@JsonProperty("replaceText")
 	public Map<String, String> sortedReplaceText() {
 		return replaceText.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().pattern(), e -> e.getValue()));
+	}
+
+	public @NotNull String doNameReplacement(@NotNull String input) {
+		for (var nameReplacement : replaceText().entrySet()) {
+			input = nameReplacement.getKey().matcher(input).replaceAll(nameReplacement.getValue());
+		}
+		return input;
+	}
+
+	public @NotNull String doSyncReplacement(@NotNull String input) {
+		for (var syncReplacement : replaceSync().entrySet()) {
+			input = syncReplacement.getKey().matcher(input).replaceAll(syncReplacement.getValue());
+		}
+		return input;
 	}
 
 	public static LanguageReplacements empty() {
