@@ -3,7 +3,9 @@ package gg.xp.xivsupport.timelines.cbevents;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
+import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.SystemLogMessageEvent;
+import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +22,7 @@ import static gg.xp.xivsupport.timelines.cbevents.CbConversions.intConv;
 import static gg.xp.xivsupport.timelines.cbevents.CbConversions.named;
 import static gg.xp.xivsupport.timelines.cbevents.CbConversions.strConv;
 
-public enum CbEventTypes {
+public enum CbEventType {
 	/*
 		Further design notes:
 
@@ -67,6 +69,11 @@ public enum CbEventTypes {
 			new CbfMap<>("param0", "event.param0", intConv(SystemLogMessageEvent::getParam0, 16)),
 			new CbfMap<>("param1", "event.param1", intConv(SystemLogMessageEvent::getParam1, 16)),
 			new CbfMap<>("param2", "event.param2", intConv(SystemLogMessageEvent::getParam2, 16))
+	)),
+	// TODO: finally do more work on XivStateImpl to have it emit added/removed events
+	// In the meantime, the raw ACT versions should work fine.
+	AddedCombatant(RawAddCombatantEvent.class, List.of(
+			new CbfMap<>("name", "event.entity.name", named(RawAddCombatantEvent::getEntity))
 	))
 
 
@@ -76,7 +83,7 @@ public enum CbEventTypes {
 
 	private final Holder<?> data;
 
-	<X extends Event> CbEventTypes(Class<X> eventType, List<CbfMap<? super X>> fieldMappings) {
+	<X extends Event> CbEventType(Class<X> eventType, List<CbfMap<? super X>> fieldMappings) {
 		this.data = new Holder<X>(eventType, fieldMappings);
 	}
 
@@ -94,9 +101,13 @@ public enum CbEventTypes {
 		return this.data.make(values);
 	}
 
+	public String displayName() {
+		return eventType().getSimpleName();
+	}
+
 
 	private static class Holder<X extends Event> implements CbEventDesc<X> {
-		private static final Logger log = LoggerFactory.getLogger(CbEventTypes.class);
+		private static final Logger log = LoggerFactory.getLogger(CbEventType.class);
 		private final Class<X> eventType;
 		private final Map<String, CbConversion<? super X>> condMap;
 		private final List<CbfMap<? super X>> fieldMap;

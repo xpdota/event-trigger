@@ -31,7 +31,7 @@ public final class CbEventFmt {
 	}
 
 	public static EventSyncController parseRaw(String type, String conditionsRaw) {
-		CbEventTypes eventDef = CbEventTypes.valueOf(type);
+		CbEventType eventDef = CbEventType.valueOf(type);
 		Map<String, String> conditions;
 		try {
 			conditions = mapper.readValue(conditionsRaw, new TypeReference<>() {
@@ -41,13 +41,12 @@ public final class CbEventFmt {
 			throw new RuntimeException("Error reading JSON: " + conditionsRaw, e);
 		}
 		Predicate<Event> condition = eventDef.make(conditions);
-		return new FileEventSyncController(eventDef.eventType(), condition, type, conditions);
+		return new FileEventSyncController(eventDef.eventType(), condition, eventDef, type, conditions);
 	}
 
-	public static EventSyncController parse(String type, Map<String, String> conditions) {
-		CbEventTypes eventDef = CbEventTypes.valueOf(type);
+	public static EventSyncController parse(CbEventType eventDef, Map<String, String> conditions) {
 		Predicate<Event> condition = eventDef.make(conditions);
-		return new FileEventSyncController(eventDef.eventType(), condition, type, conditions);
+		return new FileEventSyncController(eventDef.eventType(), condition, eventDef, eventDef.name(), conditions);
 	}
 
 	public static String format(String originalType, Map<String, String> originalValues) {
