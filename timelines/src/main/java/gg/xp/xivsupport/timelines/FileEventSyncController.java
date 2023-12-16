@@ -6,6 +6,7 @@ import gg.xp.xivsupport.timelines.cbevents.CbEventType;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -15,9 +16,9 @@ public class FileEventSyncController implements EventSyncController {
 	private final Predicate<Event> predicate;
 	private final CbEventType type;
 	private final String originalType;
-	private final Map<String, String> original;
+	private final Map<String, List<String>> original;
 
-	public FileEventSyncController(Class<? extends Event> eventType, Predicate<Event> predicate, CbEventType type, String originalType, Map<String, String> original) {
+	public FileEventSyncController(Class<? extends Event> eventType, Predicate<Event> predicate, CbEventType type, String originalType, Map<String, List<String>> original) {
 		this.eventType = eventType;
 		this.predicate = predicate;
 		this.type = type;
@@ -37,13 +38,14 @@ public class FileEventSyncController implements EventSyncController {
 
 	@Override
 	public EventSyncController translateWith(LanguageReplacements replacements) {
-		Map<String, String> modified = new HashMap<>(original);
-		modified.replaceAll((key, val) -> {
+		Map<String, List<String>> modified = new HashMap<>(original);
+		modified.replaceAll((key, values) -> values.stream().map(val -> {
 			for (var syncReplacement : replacements.replaceSync().entrySet()) {
+				//noinspection ReassignedVariable
 				val = syncReplacement.getKey().matcher(val).replaceAll(syncReplacement.getValue());
 			}
 			return val;
-		});
+		}).toList());
 		if (modified.equals(original)) {
 			return this;
 		}
@@ -57,6 +59,6 @@ public class FileEventSyncController implements EventSyncController {
 
 	@Override
 	public String toString() {
-		return type.displayName() + original;
+		return type.displayName() + CbEventFmt.flattenListMap(original);
 	}
 }

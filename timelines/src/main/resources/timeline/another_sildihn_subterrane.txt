@@ -4,7 +4,7 @@ hideall "--Reset--"
 hideall "--sync--"
 
 # .*is no longer sealed
-0.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 100000 jump 0
+0.0 "--Reset--" SystemLogMessage { id: "7DE" } window 100000 jump 0
 
 #~~~~~~~~#
 # SILKIE #
@@ -13,7 +13,7 @@ hideall "--sync--"
 # -ii 7760 7761 7762 7768 7769 776A 77ED 77EE
 
 # Trial of Knowledge is sealed off
-0.0 "--sync--" sync / 29:[^:]*:7DD:[^:]*:1087:/ window 0,1
+0.0 "--sync--" SystemLogMessage { id: "7DD", param1: "1087" } window 0,1
 12.2 "--sync--" StartsUsing { id: "7759", source: "Silkie" } window 15,15
 14.9 "Fizzling Suds" Ability { id: "7759", source: "Silkie" }
 21.0 "Soap's Up" Ability { id: "775A", source: "Silkie" }
@@ -23,21 +23,21 @@ hideall "--sync--"
 
 38.4 "Fresh Puff 1" Ability { id: "7766", source: "Silkie" }
 43.5 "Bracing Suds" Ability { id: "7757", source: "Silkie" }
-50.1 "--sync--" Ability { id: "(7751|7752)", source: "Silkie" }
+50.1 "--sync--" Ability { id: ["7751", "7752"], source: "Silkie" }
 51.6 "Squeaky Clean" Ability { id: "7753", source: "Silkie" } duration 3.2
 53.3 "--sync--" Ability { id: "7754", source: "Silkie" }
-54.8 "--sync--" Ability { id: "(7755|7756)", source: "Silkie" }
+54.8 "--sync--" Ability { id: ["7755", "7756"], source: "Silkie" }
 61.9 "Chilling Suds" Ability { id: "7758", source: "Silkie" }
 64.0 "--sync--" Ability { id: "79FB", source: "Silkie" }
 69.0 "Slippery Soap" Ability { id: "775E", source: "Silkie" }
 73.0 "Chilling Duster" Ability { id: "7763", source: "Silkie" }
 80.6 "Carpet Beater" Ability { id: "774F", source: "Silkie" }
 89.7 "Soaping Spree" Ability { id: "7767", source: "Silkie" }
-89.7 "Chilling Duster / Fizzling Duster" #Ability { id: "(7768|776A)", source: "Silken Puff" }
+89.7 "Chilling Duster / Fizzling Duster" #Ability { id: ["7768", "776A"], source: "Silken Puff" }
 89.7 "Bracing Duster" #Ability { id: "7769", source: "Silken Puff" }
 89.7 "Chilling Duster" #Ability { id: "7768", source: "Silken Puff" }
 100.9 "Total Wash 1" Ability { id: "7750", source: "Silkie" }
-106.0 "Bracing Suds / Chilling Suds" Ability { id: "(7757|7758)", source: "Silkie" }
+106.0 "Bracing Suds / Chilling Suds" Ability { id: ["7757", "7758"], source: "Silkie" }
 
 112.1 "Fresh Puff 2" Ability { id: "7766", source: "Silkie" }
 116.3 "--middle--"
@@ -45,18 +45,18 @@ hideall "--sync--"
 129.5 "Soaping Spree" Ability { id: "7767", source: "Silkie" }
 129.5 "Fizzling Duster x2" #Ability { id: "776A", source: "Silken Puff" }
 129.5 "Chilling Duster x2" #Ability { id: "7768", source: "Silken Puff" }
-129.5 "Bracing Duster / Chilling Duster" #Ability { id: "(7769|7768)", source: "Silkie" }
-134.6 "Bracing Suds / Fizzling Suds" Ability { id: "(7757|7759)", source: "Silkie" }
+129.5 "Bracing Duster / Chilling Duster" #Ability { id: ["7769", "7768"], source: "Silkie" }
+134.6 "Bracing Suds / Fizzling Suds" Ability { id: ["7757", "7759"], source: "Silkie" }
 136.7 "--sync--" Ability { id: "79FB", source: "Silkie" }
 141.7 "Slippery Soap" Ability { id: "775E", source: "Silkie" }
-145.7 "Bracing Duster / Fizzling Duster" Ability { id: "(7764|7765)", source: "Silkie" }
+145.7 "Bracing Duster / Fizzling Duster" Ability { id: ["7764", "7765"], source: "Silkie" }
 160.1 "Total Wash 2" Ability { id: "7750", source: "Silkie" }
 
 166.2 "Fresh Puff 3" Ability { id: "7766", source: "Silkie" }
 172.3 "Eastern Ewers" Ability { id: "776D", source: "Silkie" }
 178.6 "Rinse" Ability { id: "776F", source: "Eastern Ewer" } duration 7.3
 188.1 "Soaping Spree" Ability { id: "7767", source: "Silkie" }
-188.1 "Bracing Duster / Chilling Duster / Fizzling Duster" #Ability { id: "(7769|7768|776A)", source: "Silken Puff" }
+188.1 "Bracing Duster / Chilling Duster / Fizzling Duster" #Ability { id: ["7769", "7768", "776A"], source: "Silken Puff" }
 188.1 "Fizzling Duster" #Ability { id: "776A", source: "Silken Puff" }
 195.2 "Chilling Suds" Ability { id: "7758", source: "Silkie" }
 202.3 "Carpet Beater" Ability { id: "774F", source: "Silkie" }
@@ -72,23 +72,23 @@ hideall "--sync--"
 249.6 "Bracing Suds" Ability { id: "7757", source: "Silkie" }
 
 255.7 "Fresh Puff 4" Ability { id: "7766", source: "Silkie" }
-262.3 "--sync--" Ability { id: "(7751|7752)", source: "Silkie" }
+262.3 "--sync--" Ability { id: ["7751", "7752"], source: "Silkie" }
 263.8 "Squeaky Clean" Ability { id: "7753", source: "Silkie" } duration 3.2
 265.5 "--sync--" Ability { id: "7754", source: "Silkie" }
 266.9 "Puff and Tumble x4" duration 0.7 #Ability { id: "7771", source: "Silken Puff" }
-266.9 "--sync--" Ability { id: "(7755|7756)", source: "Silkie" }
+266.9 "--sync--" Ability { id: ["7755", "7756"], source: "Silkie" }
 276.0 "Soaping Spree" Ability { id: "7767", source: "Silkie" }
 276.0 "Chilling Duster x4" #Ability { id: "7768", source: "Silken Puff" }
 276.0 "Bracing Duster" #Ability { id: "7769", source: "Silkie" }
 283.1 "Total Wash 3" Ability { id: "7750", source: "Silkie" }
-292.3 "Bracing Suds / Chilling Suds / Fizzling Suds" Ability { id: "(7757|7758|7759)", source: "Silkie" }
+292.3 "Bracing Suds / Chilling Suds / Fizzling Suds" Ability { id: ["7757", "7758", "7759"], source: "Silkie" }
 294.4 "--sync--" Ability { id: "79FB", source: "Silkie" }
 299.4 "Slippery Soap" Ability { id: "775E", source: "Silkie" }
-303.5 "Bracing Duster / Chilling Duster / Fizzling Duster" Ability { id: "(7764|7763|7765)", source: "Silkie" }
-309.0 "Bracing Suds / Chilling Suds / Fizzling Suds" Ability { id: "(7757|7758|7759)", source: "Silkie" }
+303.5 "Bracing Duster / Chilling Duster / Fizzling Duster" Ability { id: ["7764", "7763", "7765"], source: "Silkie" }
+309.0 "Bracing Suds / Chilling Suds / Fizzling Suds" Ability { id: ["7757", "7758", "7759"], source: "Silkie" }
 311.1 "--sync--" Ability { id: "79FB", source: "Silkie" }
 316.1 "Slippery Soap" Ability { id: "775E", source: "Silkie" }
-320.0 "Bracing Duster / Chilling Duster / Fizzling Duster" Ability { id: "(7764|7763|7765)", source: "Silkie" }
+320.0 "Bracing Duster / Chilling Duster / Fizzling Duster" Ability { id: ["7764", "7763", "7765"], source: "Silkie" }
 
 322.9 "--sync--" StartsUsing { id: "79E0", source: "Silkie" } window 15,5
 332.9 "Total Wash (enrage)" Ability { id: "79E0", source: "Silkie" }
@@ -102,7 +102,7 @@ hideall "--sync--"
 # -ii 766F 7670 7676 7677 77BF 7660 79F3
 
 # Trial of Might will be sealed off
-1000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:1088:/ window 1000,1
+1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1088" } window 1000,1
 1006.8 "--sync--" StartsUsing { id: "7671", source: "Gladiator of Sil'dih" } window 1007.3,5
 1011.5 "Flash of Steel" Ability { id: "7671", source: "Gladiator of Sil'dih" }
 1023.6 "Specter of Might" Ability { id: "7673", source: "Gladiator of Sil'dih" }
@@ -126,13 +126,13 @@ hideall "--sync--"
 1141.7 "Wrath of Ruin" Ability { id: "7663", source: "Gladiator of Sil'dih" }
 1150.7 "Gold Flame x4" Ability { id: "766F", source: "Hateful Visage" }
 1150.7 "Silver Flame x4" #Ability { id: "7670", source: "Hateful Visage" }
-1152.3 "Nothing beside Remains" Ability { id: "(768B|768C)", source: "Gladiator of Sil'dih" }
+1152.3 "Nothing beside Remains" Ability { id: ["768B", "768C"], source: "Gladiator of Sil'dih" }
 1161.4 "Flash of Steel" Ability { id: "7671", source: "Gladiator of Sil'dih" }
 1171.6 "Accursed Visage" Ability { id: "768D", source: "Gladiator of Sil'dih" }
 1176.7 "Wrath of Ruin" Ability { id: "7663", source: "Gladiator of Sil'dih" }
 1185.7 "Gold Flame x4" Ability { id: "766F", source: "Hateful Visage" }
 1185.7 "Silver Flame x4" #Ability { id: "7670", source: "Hateful Visage" }
-1187.3 "Nothing beside Remains" Ability { id: "(768B|768C)", source: "Gladiator of Sil'dih" }
+1187.3 "Nothing beside Remains" Ability { id: ["768B", "768C"], source: "Gladiator of Sil'dih" }
 1196.4 "Flash of Steel" Ability { id: "7671", source: "Gladiator of Sil'dih" }
 
 1206.6 "--middle--" Ability { id: "7639", source: "Gladiator of Sil'dih" }
@@ -173,7 +173,7 @@ hideall "--sync--"
 # -ii 74B7 74B8
 
 # Trial of Balance will be sealed off
-2000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:1089:/ window 2000,1
+2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1089" } window 2000,1
 2006.8 "--sync--" StartsUsing { id: "74AF", source: "Shadowcaster Zeless Gah" } window 2007.3,5
 2011.5 "Show of Strength" Ability { id: "74AF", source: "Shadowcaster Zeless Gah" }
 2023.7 "Infern Brand" Ability { id: "7491", source: "Shadowcaster Zeless Gah" }

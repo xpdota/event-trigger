@@ -18,9 +18,9 @@ hideall "--sync--"
 # (cont.) --+                                         +-> Sunforge v2 -+
 #           +-> Gorgon v2 -> Vent v2 -> Quadruped v2 -+                +-> Gorgon v2 -> etc
 
-0.0 "--Reset--" sync / 21:........:4000000F:/ window 100000 jump 0
+0.0 "--Reset--" ActorControl { command: "4000000F" } window 100000 jump 0
 
-0.0 "--sync--" sync / 104:[^:]*:1($|:)/ window 0,1
+0.0 "--sync--" InCombat { inGameCombat: "1" } window 0,1
 7.0 "--sync--" StartsUsing { id: "7905", source: "Hephaistos" } window 10,10
 12.0 "Genesis of Flame" Ability { id: "7905", source: "Hephaistos" }
 
@@ -30,8 +30,8 @@ hideall "--sync--"
 27.4 "Scorching Fang" Ability { id: "78EE", source: "Hephaistos" }
 36.6 "Sunforge" Ability { id: "78ED", source: "Hephaistos" }
 37.6 "Sun's Pinion" Ability { id: "78EF", source: "Hephaistos" }
-46.8 "Sunforge" Ability { id: "(78EC|78ED)", source: "Hephaistos" }
-47.8 "Scorching Fang/Sun's Pinion" Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+46.8 "Sunforge" Ability { id: ["78EC", "78ED"], source: "Hephaistos" }
+47.8 "Scorching Fang/Sun's Pinion" Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 56.1 "Flameviper" Ability { id: "7908", source: "Hephaistos" }
 # jump to Quadruped v1 or Gorgon v1
 
@@ -48,7 +48,7 @@ hideall "--sync--"
 68.5 "--sync--" Ability { id: "794C", source: "Hephaistos" } window 50,50 jump 468.5
 80.8 "Into the Shadows?" #Ability { id: "78FB", source: "Hephaistos" }
 88.8 "--sync--" #Ability { id: "78FC", source: "Gorgon" }
-89.9 "Petrifaction?" #sync / 1[56]:[^:]*:[^:]*:6723:/
+89.9 "Petrifaction?" #Ability { id: "6723" }
 
 
 # Quadruped v1 (Quadruped branch)
@@ -72,8 +72,8 @@ hideall "--sync--"
 241.8 "Cthonic Vent 1" Ability { id: "78F5", source: "Suneater" }
 249.8 "Cthonic Vent 2" Ability { id: "794D", source: "Suneater" }
 257.8 "Cthonic Vent 3" Ability { id: "78F6", source: "Suneater" }
-264.2 "Sunforge" Ability { id: "(78EC|78ED)", source: "Hephaistos" }
-265.2 "Scorching Fang/Sun's Pinion" Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+264.2 "Sunforge" Ability { id: ["78EC", "78ED"], source: "Hephaistos" }
+265.2 "Scorching Fang/Sun's Pinion" Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 272.3 "Genesis of Flame" Ability { id: "7905", source: "Hephaistos" }
 
 # Gorgon v1 (Quadruped branch)
@@ -81,7 +81,7 @@ hideall "--sync--"
 284.7 "Reforged Reflection" Ability { id: "794C", source: "Hephaistos" }
 297.0 "Into the Shadows" Ability { id: "78FB", source: "Hephaistos" }
 305.0 "--sync--" Ability { id: "78FC", source: "Gorgon" }
-306.1 "Petrifaction" sync / 1[56]:[^:]*:[^:]*:6723:/
+306.1 "Petrifaction" Ability { id: "6723" }
 306.1 "--targetable--"
 312.3 "Gorgospit" Ability { id: "78FF", source: "Hephaistos" }
 319.6 "Gorgospit" Ability { id: "78FF", source: "Hephaistos" }
@@ -96,8 +96,8 @@ hideall "--sync--"
 374.9 "Hemitheos's Flare" #Ability { id: "7906", source: "Hephaistos" }
 380.8 "Torch Flame" #Ability { id: "78F8", source: "Hephaistos" }
 380.9 "Hemitheos's Flare" #Ability { id: "7907", source: "Hephaistos" }
-388.1 "Sunforge" #Ability { id: "(78EC|78ED)", source: "Hephaistos" }
-389.1 "Scorching Fang/Sun's Pinion" #Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+388.1 "Sunforge" #Ability { id: ["78EC", "78ED"], source: "Hephaistos" }
+389.1 "Scorching Fang/Sun's Pinion" #Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 396.2 "Genesis of Flame" #Ability { id: "7905", source: "Hephaistos" }
 404.4 "Flameviper" #Ability { id: "7908", source: "Hephaistos" }
 
@@ -106,7 +106,7 @@ hideall "--sync--"
 468.5 "Reforged Reflection" Ability { id: "794C", source: "Hephaistos" }
 480.8 "Into the Shadows" Ability { id: "78FB", source: "Hephaistos" }
 488.8 "--sync--" Ability { id: "78FC", source: "Gorgon" }
-489.9 "Petrifaction" sync / 1[56]:[^:]*:[^:]*:6723:/
+489.9 "Petrifaction" Ability { id: "6723" }
 489.9 "--targetable--"
 496.1 "Gorgospit" Ability { id: "78FF", source: "Hephaistos" }
 503.4 "Gorgospit" Ability { id: "78FF", source: "Hephaistos" }
@@ -120,8 +120,8 @@ hideall "--sync--"
 542.2 "Cthonic Vent 1" Ability { id: "78F5", source: "Suneater" }
 550.2 "Cthonic Vent 2" Ability { id: "794D", source: "Suneater" }
 558.2 "Cthonic Vent 3" Ability { id: "78F6", source: "Suneater" }
-564.6 "Sunforge" Ability { id: "(78EC|78ED)", source: "Hephaistos" }
-565.6 "Scorching Fang/Sun's Pinion" Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+564.6 "Sunforge" Ability { id: ["78EC", "78ED"], source: "Hephaistos" }
+565.6 "Scorching Fang/Sun's Pinion" Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 572.7 "Genesis of Flame" Ability { id: "7905", source: "Hephaistos" }
 
 # Quadruped v1 (Gorgon branch)
@@ -146,8 +146,8 @@ hideall "--sync--"
 669.9 "Hemitheos's Flare" Ability { id: "7906", source: "Hephaistos" }
 675.8 "Torch Flame" Ability { id: "78F8", source: "Hephaistos" }
 675.9 "Hemitheos's Flare" Ability { id: "7907", source: "Hephaistos" }
-683.1 "Sunforge" Ability { id: "(78EC|78ED)", source: "Hephaistos" }
-684.1 "Scorching Fang/Sun's Pinion" Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+683.1 "Sunforge" Ability { id: ["78EC", "78ED"], source: "Hephaistos" }
+684.1 "Scorching Fang/Sun's Pinion" Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 691.2 "Genesis of Flame" Ability { id: "7905", source: "Hephaistos" }
 699.4 "Flameviper" Ability { id: "7908", source: "Hephaistos" }
 # jump to Quadruped v2 or Gorgon v2
@@ -195,8 +195,8 @@ hideall "--sync--"
 909.5 "--sync--" Ability { id: "7906", source: "Hephaistos" }
 910.4 "Torch Flame" Ability { id: "78F8", source: "Hephaistos" }
 915.5 "Hemitheos's Flare" Ability { id: "7907", source: "Hephaistos" }
-919.7 "Sunforge" Ability { id: "(78EC|78ED)", source: "Hephaistos" }
-920.7 "Scorching Fang/Sun's Pinion" Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+919.7 "Sunforge" Ability { id: ["78EC", "78ED"], source: "Hephaistos" }
+920.7 "Scorching Fang/Sun's Pinion" Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 927.8 "Genesis of Flame" Ability { id: "7905", source: "Hephaistos" }
 935.9 "Genesis of Flame" Ability { id: "7905", source: "Hephaistos" }
 944.1 "Flameviper" Ability { id: "7908", source: "Hephaistos" }
@@ -208,7 +208,7 @@ hideall "--sync--"
 977.7 "--sync--" Ability { id: "78FC", source: "Gorgon" }
 977.7 "Gorgospit" Ability { id: "6FD7", source: "Illusory Hephaistos" }
 977.7 "Volcanic Torches" Ability { id: "71DE", source: "Hephaistos" }
-978.7 "Petrifaction" sync / 1[56]:[^:]*:[^:]*:6723:/
+978.7 "Petrifaction" Ability { id: "6723" }
 978.7 "--targetable--"
 983.9 "Gorgospit" Ability { id: "78FF", source: "Hephaistos" }
 990.1 "Gorgospit" Ability { id: "78FF", source: "Hephaistos" }
@@ -217,12 +217,12 @@ hideall "--sync--"
 
 # -> Sunforge v2 (both branches)
 1008.7 "--sync--" Ability { id: "7108", source: "Hephaistos" }
-1017.9 "Sunforge" Ability { id: "(78EC|78ED)", source: "Hephaistos" } window 50,50 jump 1317.9
-1018.9 "Scorching Fang/Sun\'s Pinion" #Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+1017.9 "Sunforge" Ability { id: ["78EC", "78ED"], source: "Hephaistos" } window 50,50 jump 1317.9
+1018.9 "Scorching Fang/Sun\'s Pinion" #Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 1029.1 "Genesis of Flame" #Ability { id: "7905", source: "Hephaistos" }
 1037.4 "Flameviper" #Ability { id: "7908", source: "Hephaistos" }
 1052.6 "Sunforge" #Ability { id: "78EC", source: "Hephaistos" }
-1053.6 "Scorching Fang/Sun\'s Pinion" #Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+1053.6 "Scorching Fang/Sun\'s Pinion" #Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 
 
 
@@ -233,7 +233,7 @@ hideall "--sync--"
 1132.0 "--sync--" Ability { id: "78FC", source: "Gorgon" }
 1132.0 "Gorgospit" Ability { id: "6FD7", source: "Illusory Hephaistos" }
 1132.0 "Volcanic Torches" Ability { id: "71DE", source: "Hephaistos" }
-1133.0 "Petrifaction" sync / 1[56]:[^:]*:[^:]*:6723:/
+1133.0 "Petrifaction" Ability { id: "6723" }
 1133.0 "--targetable--"
 1138.2 "Gorgospit" Ability { id: "78FF", source: "Hephaistos" }
 1144.4 "Gorgospit" Ability { id: "78FF", source: "Hephaistos" }
@@ -252,8 +252,8 @@ hideall "--sync--"
 1201.4 "--sync--" Ability { id: "7906", source: "Hephaistos" }
 1202.3 "Torch Flame" Ability { id: "78F8", source: "Hephaistos" }
 1207.4 "Hemitheos's Flare" Ability { id: "7907", source: "Hephaistos" }
-1211.6 "Sunforge" Ability { id: "(78EC|78ED)", source: "Hephaistos" }
-1212.6 "Scorching Fang/Sun's Pinion" Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+1211.6 "Sunforge" Ability { id: ["78EC", "78ED"], source: "Hephaistos" }
+1212.6 "Scorching Fang/Sun's Pinion" Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 1219.7 "Genesis of Flame" Ability { id: "7905", source: "Hephaistos" }
 1227.8 "Genesis of Flame" Ability { id: "7905", source: "Hephaistos" }
 1236.0 "Flameviper" Ability { id: "7908", source: "Hephaistos" }
@@ -274,12 +274,12 @@ hideall "--sync--"
 
 # Sunforge v2 (both branches)
 1308.7 "--sync--" Ability { id: "7108", source: "Hephaistos" }
-1317.9 "Sunforge" Ability { id: "(78EC|78ED)", source: "Hephaistos" }
-1318.9 "Scorching Fang/Sun\'s Pinion" Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+1317.9 "Sunforge" Ability { id: ["78EC", "78ED"], source: "Hephaistos" }
+1318.9 "Scorching Fang/Sun\'s Pinion" Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 1329.1 "Genesis of Flame" Ability { id: "7905", source: "Hephaistos" }
 1337.4 "Flameviper" Ability { id: "7908", source: "Hephaistos" }
 1352.6 "Sunforge" Ability { id: "78EC", source: "Hephaistos" }
-1353.6 "Scorching Fang/Sun\'s Pinion" Ability { id: "(78EE|78EF)", source: "Hephaistos" }
+1353.6 "Scorching Fang/Sun\'s Pinion" Ability { id: ["78EE", "78EF"], source: "Hephaistos" }
 # jump to Quadruped v2 or Gorgon v2
 
 # -> Quadruped v2 branch

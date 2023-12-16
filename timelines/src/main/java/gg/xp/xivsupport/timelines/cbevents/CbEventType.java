@@ -1,11 +1,18 @@
 package gg.xp.xivsupport.timelines.cbevents;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
+import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
+import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.MapEffectEvent;
 import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
+import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.SystemLogMessageEvent;
-import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
+import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,19 +30,13 @@ import static gg.xp.xivsupport.timelines.cbevents.CbConversions.named;
 import static gg.xp.xivsupport.timelines.cbevents.CbConversions.strConv;
 
 public enum CbEventType {
-	/*
-		Further design notes:
+	// TODO: when it comes to editing, try to do input validation
 
-		Instead of building a map directly, just make a new class to hold all the relevant data:
-		1. Key
-		2. Conversion
-		3. Display
-		4. Input validation
-
-	 */
-
+	// Each enum constant is the name of the Cactbot type in netlog_defs.ts
+	//
 	GameLog(ChatLineEvent.class, List.of(
 			new CbfMap<>("code", "event.code", intConv(ChatLineEvent::getCode, 16)),
+			new CbfMap<>("name", "event.name", strConv(ChatLineEvent::getName)),
 			new CbfMap<>("line", "event.line", strConv(ChatLineEvent::getLine)),
 			// TODO - extra conditions
 			new CbfMap<>("message", "event.line (msg)", strConv(ChatLineEvent::getLine)),
@@ -74,6 +75,58 @@ public enum CbEventType {
 	// In the meantime, the raw ACT versions should work fine.
 	AddedCombatant(RawAddCombatantEvent.class, List.of(
 			new CbfMap<>("name", "event.entity.name", named(RawAddCombatantEvent::getEntity))
+	)),
+	RemovedCombatant(RawRemoveCombatantEvent.class, List.of(
+			new CbfMap<>("name", "event.entity.name", named(RawRemoveCombatantEvent::getEntity))
+	)),
+	NameToggle(TargetabilityUpdate.class, List.of(
+			new CbfMap<>("id", "event.source.id", id(TargetabilityUpdate::getSource)),
+			new CbfMap<>("name", "event.source.name", named(TargetabilityUpdate::getSource)),
+			new CbfMap<>("targetId", "event.target.id", id(TargetabilityUpdate::getSource)),
+			new CbfMap<>("targetName", "event.target.name", named(TargetabilityUpdate::getSource)),
+			new CbfMap<>("toggle", "event.targetable", boolToInt(TargetabilityUpdate::isTargetable))
+	)),
+	ActorControl(ActorControlEvent.class, List.of(
+			new CbfMap<>("instance", "event.instance", intConv(ActorControlEvent::getInstance, 16)),
+			new CbfMap<>("command", "event.command", intConv(ActorControlEvent::getCommand, 16)),
+			new CbfMap<>("data0", "event.data0", intConv(ActorControlEvent::getData0, 16)),
+			new CbfMap<>("data1", "event.data1", intConv(ActorControlEvent::getData1, 16)),
+			new CbfMap<>("data2", "event.data2", intConv(ActorControlEvent::getData2, 16)),
+			new CbfMap<>("data3", "event.data3", intConv(ActorControlEvent::getData3, 16))
+	)),
+	GainsEffect(BuffApplied.class, List.of(
+			new CbfMap<>("sourceId", "event.source.id", id(BuffApplied::getSource)),
+			new CbfMap<>("source", "event.source.name", named(BuffApplied::getSource)),
+			new CbfMap<>("targetId", "event.target.id", id(BuffApplied::getTarget)),
+			new CbfMap<>("target", "event.target.name", named(BuffApplied::getTarget)),
+			new CbfMap<>("effectId", "event.buff.id", id(BuffApplied::getBuff)),
+			new CbfMap<>("effect", "event.buff.name", named(BuffApplied::getBuff)),
+			new CbfMap<>("count", "event.rawStacks", intConv(BuffApplied::getRawStacks, 16))
+	)),
+	MapEffect(MapEffectEvent.class, List.of(
+			new CbfMap<>("instance", "event.instanceContentId", intConv(MapEffectEvent::getInstanceContentId, 16)),
+			new CbfMap<>("flags", "event.flags", intConv(MapEffectEvent::getFlags, 16)),
+			new CbfMap<>("location", "event.location", intConv(MapEffectEvent::getLocation, 16)),
+			new CbfMap<>("data0", "event.data1", intConv(MapEffectEvent::getUnknown1, 16)),
+			new CbfMap<>("data1", "event.data2", intConv(MapEffectEvent::getUnknown2, 16))
+	)),
+	NetworkCancelAbility(AbilityCastCancel.class, List.of(
+			new CbfMap<>("sourceId", "event.source.id", id(AbilityCastCancel::getSource)),
+			new CbfMap<>("source", "event.source.name", named(AbilityCastCancel::getSource)),
+			new CbfMap<>("id", "event.ability.id", id(AbilityCastCancel::getAbility)),
+			new CbfMap<>("name", "event.ability.name", named(AbilityCastCancel::getAbility)),
+			new CbfMap<>("reason", "event.reason", strConv(AbilityCastCancel::getReason))
+	)),
+	HeadMarker(HeadMarkerEvent.class, List.of(
+			new CbfMap<>("targetId", "event.target.id", id(HeadMarkerEvent::getTarget)),
+			new CbfMap<>("target", "event.target.name", named(HeadMarkerEvent::getTarget)),
+			new CbfMap<>("id", "event.markerId", intConv(HeadMarkerEvent::getMarkerId, 16))
+	)),
+	WasDefeated(EntityKilledEvent.class, List.of(
+			new CbfMap<>("sourceId", "event.source.id", id(EntityKilledEvent::getSource)),
+			new CbfMap<>("source", "event.source.name", named(EntityKilledEvent::getSource)),
+			new CbfMap<>("targetId", "event.target.id", id(EntityKilledEvent::getTarget)),
+			new CbfMap<>("target", "event.target.name", named(EntityKilledEvent::getTarget))
 	))
 
 
@@ -97,7 +150,7 @@ public enum CbEventType {
 	 * @param values The values
 	 * @return The combined predicate
 	 */
-	public Predicate<Event> make(Map<String, String> values) {
+	public Predicate<Event> make(Map<String, List<String>> values) {
 		return this.data.make(values);
 	}
 
@@ -119,14 +172,18 @@ public enum CbEventType {
 		}
 
 
-		public Predicate<Event> make(Map<String, String> values) {
+		public Predicate<Event> make(Map<String, List<String>> values) {
 			Predicate<X> combined = eventType::isInstance;
 			for (var entry : values.entrySet()) {
 				CbConversion<? super X> convToCondition = this.condMap.get(entry.getKey());
 				if (convToCondition == null) {
 					throw new IllegalArgumentException("Unknown condition: " + entry);
 				}
-				Predicate<? super X> converted = convToCondition.convert(entry.getValue());
+				List<String> valueOptions = entry.getValue();
+				Predicate<X> converted = (ignored) -> false;
+				for (String value : valueOptions) {
+					converted = converted.or(convToCondition.convert(value));
+				}
 				combined = combined.and(converted);
 			}
 			//noinspection unchecked - the first check is the type check

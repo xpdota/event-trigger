@@ -7,9 +7,9 @@ hideall "--sync--"
 # Use zone-unseal and 0x21 Reset lines
 # Trigger set contains 'resetWhenOutOfCombat: false'
 
-0.0 "--Reset--" sync / 21:........:80000014:00:/ window 100000 jump 0
+0.0 "--Reset--" ActorControl { command: "80000014", data0: "00" } window 100000 jump 0
 # .*is no longer sealed
-0.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 100000 jump 0
+0.0 "--Reset--" SystemLogMessage { id: "7DE" } window 100000 jump 0
 
 # TODO: fill in CEs
 # The idea with each of them is that you have at most two minutes of standing
@@ -18,58 +18,58 @@ hideall "--sync--"
 # abilities from there.
 
 ### Kill It with Fire
-1000.0 "--sync--" sync / 21:........:80000014:1D4:/ window 100000,0
+1000.0 "--sync--" ActorControl { command: "80000014", data0: "1D4" } window 100000,0
 
 ### The Baying of the Hound(s)
-2000.0 "--sync--" sync / 21:........:80000014:1CC:/ window 100000,0
+2000.0 "--sync--" ActorControl { command: "80000014", data0: "1CC" } window 100000,0
 
 ### Vigil for the Lost
-3000.0 "--sync--" sync / 21:........:80000014:1D0:/ window 100000,0
+3000.0 "--sync--" ActorControl { command: "80000014", data0: "1D0" } window 100000,0
 
 ### Aces High
-4000.0 "--sync--" sync / 21:........:80000014:1D2:/ window 100000,0
+4000.0 "--sync--" ActorControl { command: "80000014", data0: "1D2" } window 100000,0
 
 ### The Shadow of Death's Hand
-5000.0 "--sync--" sync / 21:........:80000014:1CD:/ window 100000,0
+5000.0 "--sync--" ActorControl { command: "80000014", data0: "1CD" } window 100000,0
 
 ### The Final Furlong
-6000.0 "--sync--" sync / 21:........:80000014:1D5:/ window 100000,0
+6000.0 "--sync--" ActorControl { command: "80000014", data0: "1D5" } window 100000,0
 
 ### The Hunt for Red Choctober
-7000.0 "--sync--" sync / 21:........:80000014:1CA:/ window 100000,0
+7000.0 "--sync--" ActorControl { command: "80000014", data0: "1CA" } window 100000,0
 
 ### Beast of Man
-8000.0 "--sync--" sync / 21:........:80000014:1DB:/ window 100000,0
+8000.0 "--sync--" ActorControl { command: "80000014", data0: "1DB" } window 100000,0
 
 ### Fires of War
-9000.0 "--sync--" sync / 21:........:80000014:1D6:/ window 100000,0
+9000.0 "--sync--" ActorControl { command: "80000014", data0: "1D6" } window 100000,0
 
 ### Patriot Games
-10000.0 "--sync--" sync / 21:........:80000014:1D1:/ window 100000,0
+10000.0 "--sync--" ActorControl { command: "80000014", data0: "1D1" } window 100000,0
 
 ### Trampled under Hoof
-11000.0 "--sync--" sync / 21:........:80000014:1CE:/ window 100000,0
+11000.0 "--sync--" ActorControl { command: "80000014", data0: "1CE" } window 100000,0
 
 ### And the Flames Went Higher
-12000.0 "--sync--" sync / 21:........:80000014:1D3:/ window 100000,0
+12000.0 "--sync--" ActorControl { command: "80000014", data0: "1D3" } window 100000,0
 
 ### Metal Fox Chaos
-13000.0 "--sync--" sync / 21:........:80000014:1CB:/ window 100000,0
+13000.0 "--sync--" ActorControl { command: "80000014", data0: "1CB" } window 100000,0
 
 ### Rise of the Robots
-14000.0 "--sync--" sync / 21:........:80000014:1DF:/ window 100000,0
+14000.0 "--sync--" ActorControl { command: "80000014", data0: "1DF" } window 100000,0
 
 ### Where Strode the Behemoth
-15000.0 "--sync--" sync / 21:........:80000014:1DC:/ window 100000,0
+15000.0 "--sync--" ActorControl { command: "80000014", data0: "1DC" } window 100000,0
 
 ### The Battle of Castrum Lacus Litore
-#16000.0 "--sync--" sync / 21:........:80000014:1D7:/ window 100000,0
+#16000.0 "--sync--" ActorControl { command: "80000014", data0: "1D7" } window 100000,0
 
 ### Brionac / 4th Legion Helldiver
 # The Grand Gates will be sealed off
-20000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DD9:/ window 100000,0
+20000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DD9" } window 100000,0
 # Eaglesight will be sealed off
-20000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DD8:/ window 100000,0
+20000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DD8" } window 100000,0
 # JavaScript will insert a sync to jump to 4th Legion Helldiver if you are on the bottom.
 # Unfortunately, there is nothing in the log to differentiate otherwise.
 
@@ -143,7 +143,7 @@ hideall "--sync--"
 
 # Uncomment this to more easily test this timeline.
 # Eaglesight will be sealed off
-# 30000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DD8:/ window 100000,0
+# 30000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DD8" } window 100000,0
 
 # Fake intro, where you don't know if you're on the top or the bottom.
 # Don't sync because sometimes these bosses are +/- 3 seconds @_@
@@ -198,7 +198,7 @@ hideall "--sync--"
 
 ### Albeleo the Maleficent
 # Bladesmeet will be sealed off
-40000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DD5:/ window 100000,0
+40000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DD5" } window 100000,0
 
 
 ### Adrammelech
@@ -207,7 +207,7 @@ hideall "--sync--"
 # note: accursed becoming IV casts have different ability ids the first time through.
 
 # The airship landing will be sealed off
-50000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DDA:/ window 100000,0
+50000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DDA" } window 100000,0
 50014.3 "Holy IV" Ability { id: "4F96", source: "Adrammelech" }
 
 50021.8 "Curse Of The Fiend" Ability { id: "4F7A", source: "Adrammelech" }
@@ -228,8 +228,8 @@ hideall "--sync--"
 
 50116.0 "Curse Of The Fiend" Ability { id: "4F7A", source: "Adrammelech" }
 50123.1 "Accursed Becoming" Ability { id: "4F7B", source: "Adrammelech" }
-50130.3 "Orb 1" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
-50132.1 "Orb 2" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
+50130.3 "Orb 1" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
+50132.1 "Orb 2" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
 
 50144.3 "Tornado" Ability { id: "4F8F", source: "Adrammelech" }
 50151.4 "Flare" Ability { id: "4F95", source: "Adrammelech" }
@@ -240,11 +240,11 @@ hideall "--sync--"
 50194.3 "--sync--" StartsUsing { id: "4F7A", source: "Adrammelech" } window 70,20
 50197.3 "Curse Of The Fiend" Ability { id: "4F7A", source: "Adrammelech" }
 50204.4 "Accursed Becoming" Ability { id: "4F7B", source: "Adrammelech" }
-50211.6 "Orb 1" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
-50213.4 "Orb 2" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
+50211.6 "Orb 1" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
+50213.4 "Orb 2" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
 50213.5 "Accursed Becoming" Ability { id: "4F7B", source: "Adrammelech" }
-50220.7 "Orb 3" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
-50222.5 "Orb 4" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
+50220.7 "Orb 3" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
+50222.5 "Orb 4" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
 
 50230.7 "Flare" Ability { id: "4F95", source: "Adrammelech" }
 50237.8 "Tornado" Ability { id: "4F8F", source: "Adrammelech" }
@@ -258,11 +258,11 @@ hideall "--sync--"
 
 50316.7 "Curse Of The Fiend" Ability { id: "4F7A", source: "Adrammelech" }
 50323.8 "Accursed Becoming" Ability { id: "4F7B", source: "Adrammelech" }
-50331.0 "Orb 1" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
-50332.8 "Orb 2" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
+50331.0 "Orb 1" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
+50332.8 "Orb 2" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
 50332.9 "Accursed Becoming" Ability { id: "4F7B", source: "Adrammelech" }
-50340.1 "Orb 3" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
-50341.9 "Orb 4" #Ability { id: "(504D|504A|4F7D|4F8[5-7])", source: "Adrammelech" }
+50340.1 "Orb 3" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
+50341.9 "Orb 4" #Ability { id: ["504D", "504A", "4F7D", "4F8[5-7]"], source: "Adrammelech" }
 
 # Loop
 # TODO: if anybody ever finds the enrage, we can unroll this.
@@ -285,7 +285,7 @@ hideall "--sync--"
 
 # Phase 1
 # Majesty's Auspice will be sealed off
-60000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DDB:/ window 100000,0
+60000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DDB" } window 100000,0
 60014.3 "Molting Plumage" Ability { id: "517A", source: "Dawon" }
 60025.9 "Explosion" Ability { id: "5182", source: "Verdant Plume" }
 60033.5 "Scratch" Ability { id: "517B", source: "Dawon" }

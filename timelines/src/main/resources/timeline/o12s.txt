@@ -9,7 +9,7 @@ hideall "--sync--"
 # Use autos/chatlog instead of InCombat lines to start timelines for door & final boss
 # as timeline resets out of combat.
 
-0.0 "Start" sync / 00:0044:[^:]*:I am the Omega/ window 1,0
+0.0 "Start" GameLog { code: "0044", line: "I am the Omega.*?" } window 1,0
 2.4 "--sync--" Ability { id: "337D", source: "Omega-M" } window 2.4,0.5 # first auto
 11.7 "Synthetic Shield" Ability { id: "32FD", source: "Omega-M" } window 12,5
 19.7 "Suppression" Ability { id: "3345", source: "Omega-M" }
@@ -161,7 +161,7 @@ hideall "--sync--"
 # Final Omega - Alphascape V4.0 (Savage) - O12S+
 # -r ch1gtabdwN7QYDR6 -p 336C:3016 -ii 3380 3369 3366 335F 3377 336B 33B5
 
-0.0 "--Reset--" sync / 21:........:4000000F:/ window 100000 jump 0
+0.0 "--Reset--" ActorControl { command: "4000000F" } window 100000 jump 0
 
 3000.0 "Start"
 3002.5 "--sync--" Ability { id: "3380", source: "Omega" } window 3003,0

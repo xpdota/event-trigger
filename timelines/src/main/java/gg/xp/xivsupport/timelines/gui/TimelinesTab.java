@@ -578,6 +578,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		}
 
 		// TODO: find a better home for this code
+		// Also write tests
 		String exportedTxt = timelineEntries.stream()
 				.flatMap(TimelineEntry::getAllTextEntries)
 				.collect(Collectors.joining("\n", """

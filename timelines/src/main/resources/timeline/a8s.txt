@@ -10,7 +10,7 @@ hideall "Magicked Mark"
 hideall "Brute Force"
 
 ### Phase 1: Onslaughter: Execution and Legislation
-0.0 "--sync--" sync / 104:[^:]*:1($|:)/ window 0,1
+0.0 "--sync--" InCombat { inGameCombat: "1" } window 0,1
 6.7 "Hydrothermal Missile" Ability { id: "162A", source: "Onslaughter" } window 7,5
 15.9 "Seed Of The Sky" Ability { id: "162D", source: "Onslaughter" }
 17.9 "Mega Beam" Ability { id: "162E", source: "Onslaughter" }
@@ -61,7 +61,7 @@ hideall "Brute Force"
 
 
 ### Phase 2: Robots
-300.0 "--sync--" sync / 22:........:Onslaughter:........:Onslaughter:00/ window 300,0
+300.0 "--sync--" NameToggle { name: "Onslaughter", toggle: "00" } window 300,0
 303.0 "--sync--" AddedCombatant { name: "Blaster" }  window 303,30
 304.0 "Blaster (north)"
 304.0 "Brawler (middle)"
@@ -74,9 +74,9 @@ hideall "Brute Force"
 322.4 "Mind Blast?" #Ability { id: "1639", source: "Blaster" } # 3 second cast, interruptible
 324.5 "Brute Force" #Ability { id: "1638", source: "Blaster Mirage" }
 325.6 "Brute Force" Ability { id: "1638", source: "Blaster" }
-326.0 "Brawler Mechanic" Ability { id: "(163D|163E|163F|1640)", source: "Brawler" }
+326.0 "Brawler Mechanic" Ability { id: ["163D", "163E", "163F", "1640"], source: "Brawler" }
 
-329.4 "Swindler (east)" #sync / 22:........:Swindler:........:Swindler:01/
+329.4 "Swindler (east)" #NameToggle { name: "Swindler", toggle: "01" }
 330.1 "Auxiliary Power" Ability { id: "164B", source: "Brawler" }
 333.7 "Brute Force" Ability { id: "1638", source: "Blaster" }
 334.2 "Magicked Mark" Ability { id: "163B", source: "Brawler" }
@@ -88,9 +88,9 @@ hideall "Brute Force"
 348.5 "Height" Ability { id: "1647", source: "Swindler" }
 349.4 "Attachment" Ability { id: "163C", source: "Brawler" }
 
-352.4 "Vortexer (south)" #sync / 22:........:Vortexer:........:Vortexer:01/
+352.4 "Vortexer (south)" #NameToggle { name: "Vortexer", toggle: "01" }
 354.6 "Magicked Mark" Ability { id: "1646", source: "Swindler" }
-355.5 "Brawler Mechanic" Ability { id: "(163D|163E|163F|1640)", source: "Brawler" }
+355.5 "Brawler Mechanic" Ability { id: ["163D", "163E", "163F", "1640"], source: "Brawler" }
 359.6 "Auxiliary Power" Ability { id: "164B", source: "Brawler" }
 360.4 "Brute Force" Ability { id: "164D", source: "Vortexer" }
 363.7 "Magicked Mark" Ability { id: "163B", source: "Brawler" }
@@ -99,11 +99,11 @@ hideall "Brute Force"
 375.9 "Auxiliary Power" Ability { id: "164B", source: "Brawler" }
 379.0 "Attachment" Ability { id: "163C", source: "Brawler" }
 380.5 "Brute Force" Ability { id: "164D", source: "Vortexer" }
-385.0 "Brawler Mechanic" Ability { id: "(163D|163E|163F|1640)", source: "Brawler" }
+385.0 "Brawler Mechanic" Ability { id: ["163D", "163E", "163F", "1640"], source: "Brawler" }
 390.2 "Auxiliary Power" Ability { id: "164B", source: "Brawler" }
 390.6 "Brute Force" Ability { id: "164D", source: "Vortexer" }
 393.4 "Attachment" Ability { id: "163C", source: "Brawler" }
-399.5 "Brawler Mechanic" Ability { id: "(163D|163E|163F|1640)", source: "Brawler" }
+399.5 "Brawler Mechanic" Ability { id: ["163D", "163E", "163F", "1640"], source: "Brawler" }
 400.7 "Brute Force" Ability { id: "164D", source: "Vortexer" }
 403.6 "Auxiliary Power" Ability { id: "164B", source: "Brawler" }
 407.7 "Magicked Mark" Ability { id: "163B", source: "Brawler" }

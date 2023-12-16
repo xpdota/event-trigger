@@ -4,7 +4,7 @@ hideall "--Reset--"
 hideall "--sync--"
 
 # .*is no longer sealed
-0.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 100000 jump 0
+0.0 "--Reset--" SystemLogMessage { id: "7DE" } window 100000 jump 0
 
 #~~~~~~~~~~~~~~~~~#
 # EVIL DREAMER(s) #
@@ -17,7 +17,7 @@ hideall "--sync--"
 # Hard to tell if there's a time based push, but have seen it push when some adds still alive?
 
 # Penitence will be sealed off
-1000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:1058:/ window 10000,0
+1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1058" } window 10000,0
 
 1200.0 "--sync--" StartsUsing { id: "73B8", source: "Evil Dreamer" } window 200,0
 1208.0 "Dark Vision" Ability { id: "73B8", source: "Evil Dreamer" }
@@ -50,7 +50,7 @@ hideall "--sync--"
 # TODO: Beatific Scorn is 747 + 5/8/4/7, or 3/8/6/7, are these directions??
 
 # Seat of the Foremost will be sealed off
-2000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:1059:/ window 10000,0
+2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1059" } window 10000,0
 2011.3 "--middle--" Ability { id: "747C", source: "Beatrice" }
 2016.5 "Eye of Troia" Ability { id: "747A", source: "Beatrice" }
 2022.5 "Death Foreseen" Ability { id: "747D", source: "Beatrice" }
@@ -107,7 +107,7 @@ hideall "--sync--"
 # -it "Scarmiglione"
 
 # The Garden of Epopts will be sealed off
-3000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:105A:/ window 10000,0
+3000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "105A" } window 10000,0
 3005.1 "--sync--" Ability { id: "7631", source: "Scarmiglione" } window 10,10
 3009.1 "Cursed Echo" Ability { id: "7631", source: "Scarmiglione" }
 3016.3 "--sync--" Ability { id: "761D", source: "Scarmiglione" }
@@ -126,9 +126,9 @@ hideall "--sync--"
 3098.4 "--untargetable--"
 3115.5 "Nox" Ability { id: "7621", source: "Scarmiglione" }
 # These seem to be adjusted slightly in time based on which order they come in.
-3118.5 "Void Gravity/Void Vortex" #Ability { id: "(7622|7623)", source: "Scarmiglione" }
+3118.5 "Void Gravity/Void Vortex" #Ability { id: ["7622", "7623"], source: "Scarmiglione" }
 3142.1 "Nox" Ability { id: "7621", source: "Scarmiglione" }
-3148.1 "Void Vortex/Void Gravity" #Ability { id: "(7623|7622)", source: "Scarmiglione" }
+3148.1 "Void Vortex/Void Gravity" #Ability { id: ["7623", "7622"], source: "Scarmiglione" }
 
 # natural enrage, if add phase is failed
 3191.8 "Corruptor's Pitch" Ability { id: "7625", source: "Scarmiglione" } duration 8 window 200,50

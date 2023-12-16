@@ -12,7 +12,7 @@ hideall "--sync--"
 # -ii 838A 8391 8382
 
 # Last Glimpse will be sealed off
-1000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:10DC:/ window 10000,0
+1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "10DC" } window 10000,0
 1011.6 "Glory Neverlasting" Ability { id: "83A9", source: "Yozakura the Fleeting" }
 1021.6 "Art of the Windblossom" Ability { id: "8369", source: "Yozakura the Fleeting" }
 1030.7 "Oka Ranman" Ability { id: "836E", source: "Yozakura the Fleeting" }
@@ -170,7 +170,7 @@ hideall "--sync--"
 # -ii 8597 86D2 878A 85A0 859A 859E 871C 85A4 85A7
 
 # Hall of the Unseen will be sealed off
-2000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:10DF:/ window 10000,0
+2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "10DF" } window 10000,0
 2011.9 "Kenki Release" Ability { id: "85AD", source: "Moko the Restless" }
 2022.1 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 2028.5 "Iai-kasumi-giri" Ability { id: "8587", source: "Moko the Restless" }
@@ -187,9 +187,9 @@ hideall "--sync--"
 2124.2 "Kenki Release" Ability { id: "85AD", source: "Moko the Restless" }
 2131.4 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 2143.5 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2147.1 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2147.1 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 2160.2 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2163.8 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2163.8 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 
 # => path 01
 2169.0 "--sync--" StartsUsing { id: "85A8", source: "Moko the Restless" } window 50,50 jump 2269.0
@@ -211,9 +211,9 @@ hideall "--sync--"
 # path 01
 2231.4 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 2243.5 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2247.1 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2247.1 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 2260.2 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2263.8 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2263.8 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 
 2269.0 "--sync--" StartsUsing { id: "85A8", source: "Moko the Restless" }
 2272.0 "Untempered Sword" Ability { id: "85A8", source: "Moko the Restless" }
@@ -238,7 +238,7 @@ hideall "--sync--"
 2356.3 "Upwell 3" Ability { id: "859F", source: "Moko the Restless" } duration 10
 2366.7 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 2378.8 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2382.4 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2382.4 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 2389.5 "Kenki Release" Ability { id: "85AD", source: "Moko the Restless" }
 2398.6 "Soldiers of Death" Ability { id: "8593", source: "Moko the Restless" }
 2407.3 "Spearman's Orders" Ability { id: "8595", source: "Moko the Restless" }
@@ -253,9 +253,9 @@ hideall "--sync--"
 # path 02
 2531.4 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 2543.5 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2547.1 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2547.1 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 2560.2 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2563.8 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2563.8 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 
 2569.1 "--sync--" Ability { id: "85AF", source: "Moko the Restless" }
 2570.5 "--sync--" StartsUsing { id: "85AB", source: "Moko the Restless" }
@@ -275,7 +275,7 @@ hideall "--sync--"
 2651.9 "Explosion 3" Ability { id: "859B", source: "Moko the Restless" }
 2652.3 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 2664.5 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2668.1 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2668.1 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 2675.2 "Kenki Release" Ability { id: "85AD", source: "Moko the Restless" }
 2684.3 "Soldiers of Death" Ability { id: "8593", source: "Moko the Restless" }
 2693.0 "Spearman's Orders" Ability { id: "8595", source: "Moko the Restless" }
@@ -290,9 +290,9 @@ hideall "--sync--"
 # path 03
 2831.4 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 2843.5 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2847.1 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2847.1 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 2860.2 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2863.8 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2863.8 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 
 2869.0 "--sync--" StartsUsing { id: "85A1", source: "Moko the Restless" }
 2872.0 "Tengu-yobi" Ability { id: "85A1", source: "Moko the Restless" }
@@ -313,7 +313,7 @@ hideall "--sync--"
 
 2973.8 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 2985.9 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-2989.5 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+2989.5 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 2996.6 "Kenki Release" Ability { id: "85AD", source: "Moko the Restless" }
 
 3005.7 "Soldiers of Death" Ability { id: "8593", source: "Moko the Restless" }
@@ -329,9 +329,9 @@ hideall "--sync--"
 # path 04
 3131.4 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 3143.5 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-3147.1 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+3147.1 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 3160.2 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-3163.8 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+3163.8 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 
 3169.0 "--sync--" StartsUsing { id: "85A5", source: "Moko the Restless" }
 3172.0 "Spiritspark" Ability { id: "85A5", source: "Moko the Restless" }
@@ -353,7 +353,7 @@ hideall "--sync--"
 
 3261.7 "--middle--" Ability { id: "85AF", source: "Moko the Restless" }
 3273.9 "Double Kasumi-giri 1" Ability { id: "858[BCDE]", source: "Moko the Restless" }
-3277.5 "Double Kasumi-giri 2" Ability { id: "(858F|859[012])", source: "Moko the Restless" }
+3277.5 "Double Kasumi-giri 2" Ability { id: ["858F", "859[012]"], source: "Moko the Restless" }
 3284.6 "Kenki Release" Ability { id: "85AD", source: "Moko the Restless" }
 3293.7 "Soldiers of Death" Ability { id: "8593", source: "Moko the Restless" }
 3302.4 "Spearman's Orders" Ability { id: "8595", source: "Moko the Restless" }
@@ -421,7 +421,7 @@ hideall "--sync--"
 # -ii 8396 8399 839A 839D 839F
 
 # Hall of Temptation will be sealed off
-4000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:10DD:/ window 10000,0
+4000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "10DD" } window 10000,0
 4011.6 "Glory Neverlasting" Ability { id: "83A9", source: "Yozakura the Fleeting" }
 
 # -> door
@@ -540,7 +540,7 @@ hideall "--sync--"
 # -ii 84D4 8501 84EE 84E6 84E5 84E9 84E0 84FF 84F9 84F7 84F4 84F5
 
 # Hall of Becoming will be sealed off
-5000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:10E0:/ window 10000,0
+5000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "10E0" } window 10000,0
 5012.6 "--sync--" StartsUsing { id: "8500", source: "Gorai the Uncaged" }
 5017.6 "Unenlightenment" Ability { id: "8500", source: "Gorai the Uncaged" }
 
@@ -642,13 +642,13 @@ hideall "--sync--"
 
 5610.9 "Unenlightenment" Ability { id: "8500", source: "Gorai the Uncaged" }
 5620.2 "Flame and Sulphur" Ability { id: "84D7", source: "Gorai the Uncaged" }
-5630.5 "Plectrum of Power/Morphic Melody" Ability { id: "(84D8|84D9)", source: "Gorai the Uncaged" }
-5633.2 "Falling Rock" Ability { id: "(84DD|84DE)", source: "Gorai the Uncaged" }
-5633.2 "Fire Spread" Ability { id: "(84DA|84DB)", source: "Gorai the Uncaged" }
+5630.5 "Plectrum of Power/Morphic Melody" Ability { id: ["84D8", "84D9"], source: "Gorai the Uncaged" }
+5633.2 "Falling Rock" Ability { id: ["84DD", "84DE"], source: "Gorai the Uncaged" }
+5633.2 "Fire Spread" Ability { id: ["84DA", "84DB"], source: "Gorai the Uncaged" }
 5641.4 "Flame and Sulphur" Ability { id: "84D7", source: "Gorai the Uncaged" }
-5651.7 "Morphic Melody/Plectrum of Power" Ability { id: "(84D9|84D8)", source: "Gorai the Uncaged" }
-5654.4 "Falling Rock" Ability { id: "(84DD|84DE)", source: "Gorai the Uncaged" }
-5654.4 "Fire Spread" Ability { id: "(84DA|84DB)", source: "Gorai the Uncaged" }
+5651.7 "Morphic Melody/Plectrum of Power" Ability { id: ["84D9", "84D8"], source: "Gorai the Uncaged" }
+5654.4 "Falling Rock" Ability { id: ["84DD", "84DE"], source: "Gorai the Uncaged" }
+5654.4 "Fire Spread" Ability { id: ["84DA", "84DB"], source: "Gorai the Uncaged" }
 
 5664.5 "Torching Torment" Ability { id: "84FE", source: "Gorai the Uncaged" }
 5676.8 "Unenlightenment" Ability { id: "8500", source: "Gorai the Uncaged" }
@@ -720,7 +720,7 @@ hideall "--sync--"
 # -ii 83A2 83A3 83A8 8382 838A
 
 # Autumn Rivers' End will be sealed off
-6000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:10DE:/ window 10000,0
+6000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "10DE" } window 10000,0
 6012.0 "Glory Neverlasting" Ability { id: "83A9", source: "Yozakura the Fleeting" }
 
 # -> no dogu
@@ -844,7 +844,7 @@ hideall "--sync--"
 # -ii 86DE 83DA 83DE 83DF 83E0 83E3 83E4 83E5 83E2 87F9 87FB 83DB 87A3 87A4 87A6 87AB 83ED 872B 83F2
 
 # Stone's Silence will be sealed off
-7000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:10E1:/ window 10000,0
+7000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "10E1" } window 10000,0
 7015.7 "Enkyo" Ability { id: "83F5", source: "Shishio" }
 7017.8 "--middle--" Ability { id: "83F7", source: "Shishio" }
 7022.0 "Stormcloud Summons" Ability { id: "83D7", source: "Shishio" }
@@ -954,7 +954,7 @@ hideall "--sync--"
 7768.4 "Smokeater 2?" #Ability { id: "83D9", source: "Shishio" }
 7770.4 "Smokeater 3?" #Ability { id: "83D9", source: "Shishio" }
 # Note: this is +/- 2 seconds depending on how many Smokeaters, so no sync
-7773.4 "Thunder Onefold/Thunder Twofold/Thunder Threefold" #Ability { id: "(83E1|87AD|87FA)", source: "Shishio" }
+7773.4 "Thunder Onefold/Thunder Twofold/Thunder Threefold" #Ability { id: ["83E1", "87AD", "87FA"], source: "Shishio" }
 7798.8 "Splitting Cry" Ability { id: "83F6", source: "Shishio" }
 
 7804.9 "--jump--" Ability { id: "83F7", source: "Shishio" }
@@ -1027,7 +1027,7 @@ hideall "--sync--"
 # -ii 8058 8049 804A 804B 8047
 
 # Pond of Spring Rain will be sealed off
-8000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:10E2:/ window 10000,0
+8000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "10E2" } window 10000,0
 8013.0 "Flagrant Combustion" Ability { id: "8042", source: "Enenra" }
 8016.1 "--jump--" Ability { id: "84C2", source: "Enenra" }
 8029.9 "Out of the Smoke" Ability { id: "804C", source: "Enenra" }
@@ -1051,8 +1051,8 @@ hideall "--sync--"
 8103.7 "--sync--" Ability { id: "804E", source: "Enenra" }
 8107.6 "Into the Fire x2" #Ability { id: "804D", source: "Enenra" }
 8111.8 "--sync--" Ability { id: "84C2", source: "Enenra" }
-8121.6 "--sync--" Ability { id: "(8062|8063)", source: "Enenra" }
-8125.0 "Clearing Smoke/Smoke Rings" Ability { id: "(8052|8053)", source: "Enenra" }
+8121.6 "--sync--" Ability { id: ["8062", "8063"], source: "Enenra" }
+8125.0 "Clearing Smoke/Smoke Rings" Ability { id: ["8052", "8053"], source: "Enenra" }
 8130.8 "Smoke Stack" Ability { id: "8046", source: "Enenra" }
 
 8136.3 "--sync--" Ability { id: "84C2", source: "Enenra" }
@@ -1074,9 +1074,9 @@ hideall "--sync--"
 8195.3 "--sync--" Ability { id: "84C2", source: "Enenra" }
 8201.3 "Smoldering 1" #Ability { id: "8050", source: "Enenra" }
 8203.9 "Smoldering 2" #Ability { id: "8050", source: "Enenra" }
-8205.1 "--sync--" Ability { id: "(8062|8063)", source: "Enenra" }
+8205.1 "--sync--" Ability { id: ["8062", "8063"], source: "Enenra" }
 8206.3 "Smoldering 3" #Ability { id: "8050", source: "Enenra" }
-8208.5 "Clearing Smoke/Smoke Rings" Ability { id: "(8052|8053)", source: "Enenra" }
+8208.5 "Clearing Smoke/Smoke Rings" Ability { id: ["8052", "8053"], source: "Enenra" }
 8214.3 "Smoke Stack" Ability { id: "8046", source: "Enenra" }
 
 8222.7 "Flagrant Combustion" Ability { id: "8042", source: "Enenra" }

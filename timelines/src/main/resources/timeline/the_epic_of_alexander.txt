@@ -7,7 +7,7 @@ hideall "--sync--"
 
 ### Phase 1: Living Liquid
 0 "Start"
-0.0 "--sync--" sync / 104:[^:]*:1($|:)/ window 0,1
+0.0 "--sync--" InCombat { inGameCombat: "1" } window 0,1
 11.4 "Fluid Swing" Ability { id: "49B0", source: "Living Liquid" } window 10,2.5
 19.5 "Cascade" Ability { id: "4826", source: "Living Liquid" }
 35.8 "Hand of Prayer/Parting" Ability { id: "482[BC]", source: "Liquid Hand" }
@@ -46,7 +46,7 @@ hideall "--sync--"
 142.1 "Cascade Enrage" Ability { id: "49B3", source: "Living Liquid" }
 
 ### Transition 1: Cruise Chaser
-196.0 "--sync--" sync / 04:........:Liquid Hand:/ window 50,0
+196.0 "--sync--" RemovedCombatant { name: "Liquid Hand" } window 50,0
 200.0 "Hawk Blaster 1" Ability { id: "4830", source: "Cruise Chaser" } window 200,0
 202.2 "Hawk Blaster 2"
 204.4 "Hawk Blaster 3"

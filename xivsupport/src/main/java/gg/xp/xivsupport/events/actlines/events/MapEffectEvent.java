@@ -34,6 +34,10 @@ public class MapEffectEvent extends BaseEvent implements HasPrimaryValue {
 		return index;
 	}
 
+	public long getLocation() {
+		return index;
+	}
+
 	public long getUnknown1() {
 		return unknown1;
 	}

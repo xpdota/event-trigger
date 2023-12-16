@@ -7,9 +7,9 @@ hideall "--sync--"
 # Use zone-unseal and 0x21 Reset lines
 # Trigger set contains 'resetWhenOutOfCombat: false'
 
-0.0 "--Reset--" sync / 21:........:80000014:00:/ window 100000 jump 0
+0.0 "--Reset--" ActorControl { command: "80000014", data0: "00" } window 100000 jump 0
 # .*is no longer sealed
-0.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 100000 jump 0
+0.0 "--Reset--" SystemLogMessage { id: "7DE" } window 100000 jump 0
 
 # TODO: fill in CEs
 # The idea with each of them is that you have at most two minutes of standing
@@ -18,52 +18,52 @@ hideall "--sync--"
 # abilities from there.
 
 ### On Serpents' Wings
-1000.0 "--sync--" sync / 21:........:80000014:211:/ window 100000,0
+1000.0 "--sync--" ActorControl { command: "80000014", data0: "211" } window 100000,0
 
 ### Feeling the Burn
-2000.0 "--sync--" sync / 21:........:80000014:20E:/ window 100000,0
+2000.0 "--sync--" ActorControl { command: "80000014", data0: "20E" } window 100000,0
 
 ### The Broken Blade
-3000.0 "--sync--" sync / 21:........:80000014:21F:/ window 100000,0
+3000.0 "--sync--" ActorControl { command: "80000014", data0: "21F" } window 100000,0
 
 ### From Beyond the Grave
-4000.0 "--sync--" sync / 21:........:80000014:21B:/ window 100000,0
+4000.0 "--sync--" ActorControl { command: "80000014", data0: "21B" } window 100000,0
 
 ### With Diremite and Main
-5000.0 "--sync--" sync / 21:........:80000014:221:/ window 100000,0
+5000.0 "--sync--" ActorControl { command: "80000014", data0: "221" } window 100000,0
 
 ### Here Comes the Cavalry
-6000.0 "--sync--" sync / 21:........:80000014:21C:/ window 100000,0
+6000.0 "--sync--" ActorControl { command: "80000014", data0: "21C" } window 100000,0
 
 ### Head of the Snake
-7000.0 "--sync--" sync / 21:........:80000014:21E:/ window 100000,0
+7000.0 "--sync--" ActorControl { command: "80000014", data0: "21E" } window 100000,0
 
 ### There Would Be Blood
-8000.0 "--sync--" sync / 21:........:80000014:210:/ window 100000,0
+8000.0 "--sync--" ActorControl { command: "80000014", data0: "210" } window 100000,0
 
 ### Never Cry Wolf
-9000.0 "--sync--" sync / 21:........:80000014:20F:/ window 100000,0
+9000.0 "--sync--" ActorControl { command: "80000014", data0: "20F" } window 100000,0
 
 ### Time To Burn
-10000.0 "--sync--" sync / 21:........:80000014:21D:/ window 100000,0
+10000.0 "--sync--" ActorControl { command: "80000014", data0: "21D" } window 100000,0
 
 ### Lean, Mean, Magitek Machines
-11000.0 "--sync--" sync / 21:........:80000014:218:/ window 100000,0
+11000.0 "--sync--" ActorControl { command: "80000014", data0: "218" } window 100000,0
 
 ### Worn to a Shadow
-12000.0 "--sync--" sync / 21:........:80000014:222:/ window 100000,0
+12000.0 "--sync--" ActorControl { command: "80000014", data0: "222" } window 100000,0
 
 ### A Familiar Face
-13000.0 "--sync--" sync / 21:........:80000014:212:/ window 100000,0
+13000.0 "--sync--" ActorControl { command: "80000014", data0: "212" } window 100000,0
 
 ### Looks to Die For
-14000.0 "--sync--" sync / 21:........:80000014:207:/ window 100000,0
+14000.0 "--sync--" ActorControl { command: "80000014", data0: "207" } window 100000,0
 
 ### Taking the Lyon's Share
-15000.0 "--sync--" sync / 21:........:80000014:220:/ window 100000,0
+15000.0 "--sync--" ActorControl { command: "80000014", data0: "220" } window 100000,0
 
 ### The Dalriada
-#20000.0 "--sync--" sync / 21:........:80000014:213:/ window 100000,0
+#20000.0 "--sync--" ActorControl { command: "80000014", data0: "213" } window 100000,0
 
 ### Sartauvoir (up)
 # Note: can't sync to the zone closing here, as you (of course) can see the
@@ -75,7 +75,7 @@ hideall "--sync--"
 # -p 5E7C:21016 5E7E:21300
 # -ii 61BE 5E7D 5E75 5E88 5E8A 5E79 5E7B
 # Loading Dock will be sealed off
-#21000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E5C:/ window 100000,0
+#21000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E5C" } window 100000,0
 21016.0 "Pyrokinesis" Ability { id: "5E7C", source: "Sartauvoir The Inferno" } window 100000,0
 21028.2 "--sync--" Ability { id: "5E6C", source: "Sartauvoir The Inferno" }
 21034.3 "Time Eruption 1" Ability { id: "5E6E", source: "Sartauvoir The Inferno" }
@@ -113,8 +113,8 @@ hideall "--sync--"
 21398.3 "Phenex" Ability { id: "5E85", source: "Sartauvoir The Inferno" }
 21408.6 "Time Eruption/Reverse Time Eruption" Ability { id: "5E8[34]", source: "Sartauvoir The Inferno" }
 21411.6 "Flamedive" Ability { id: "5E73", source: "Huma" }
-21415.9 "Time Eruption 1" Ability { id: "(5E6E|5E71)", source: "Sartauvoir The Inferno" }
-21417.9 "Time Eruption 2" Ability { id: "(5E6F|5E70)", source: "Sartauvoir The Inferno" }
+21415.9 "Time Eruption 1" Ability { id: ["5E6E", "5E71"], source: "Sartauvoir The Inferno" }
+21417.9 "Time Eruption 2" Ability { id: ["5E6F", "5E70"], source: "Sartauvoir The Inferno" }
 21425.9 "Pyrokinesis" Ability { id: "5E82", source: "Sartauvoir The Inferno" }
 21437.3 "Hyperpyroplexy" Ability { id: "5E86", source: "Sartauvoir The Inferno" }
 # ???
@@ -126,7 +126,7 @@ hideall "--sync--"
 # -ii 6226 6227 6228 6229 5F13 5F1D 5F20 5F15 5F1C 5F29 5F31
 
 # Flagship Landing will be sealed off
-#22000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E5B:/ window 100000,0
+#22000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E5B" } window 100000,0
 
 # Blackburn
 22011.0 "--sync--" StartsUsing { id: "5F12", source: "4Th Legion Blackburn" } window 100000,0
@@ -189,7 +189,7 @@ hideall "--sync--"
 # -p 5C8F:23013.3
 # -ii 5C89 5C90 5C83 5C84 5C85 6179 614E 5C8C 5C87
 # Magitek Development will be sealed off
-23000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E5E:/ window 100000,0
+23000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E5E" } window 100000,0
 23013.3 "Putrified Soul" Ability { id: "5C8F", source: "4Th-Make Cuchulainn" }
 23022.4 "Burgeoning Dread" Ability { id: "5C88", source: "4Th-Make Cuchulainn" }
 23043.7 "Putrified Soul" Ability { id: "5C8F", source: "4Th-Make Cuchulainn" }
@@ -236,18 +236,18 @@ hideall "--sync--"
 # -it "Saunion"
 # -ii 5DB6 5DB8 6150 5DC7 60C4 5DCF 5DB3 5DD2 61E4 61E5
 # The Greater Hold will be sealed off
-24000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E60:/ window 100000,0
+24000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E60" } window 100000,0
 24011.7 "Magitek Halo/Magitek Crossray" Ability { id: "5DB[57]", source: "Saunion" }
 24022.9 "High-Powered Magitek Ray" Ability { id: "5DC5", source: "Saunion" }
 24034.1 "Magitek Crossray/Magitek Halo" Ability { id: "5DB[57]", source: "Saunion" }
 24040.3 "--sync--" Ability { id: "5DD7", source: "Saunion" }
-24050.5 "Mobile Halo/Mobile Crossray" Ability { id: "(5DB[9ABCDEF]|5DC0)", source: "Saunion" }
+24050.5 "Mobile Halo/Mobile Crossray" Ability { id: ["5DB[9ABCDEF]", "5DC0"], source: "Saunion" }
 24063.7 "Missile Command" Ability { id: "5DC1", source: "Saunion" }
 24069.9 "Surface Missile" Ability { id: "5DC4", source: "Saunion" }
 24069.9 "Anti-Personnel Missile" Ability { id: "5DC2", source: "Saunion" }
 24074.9 "Missile Salvo" Ability { id: "5DC3", source: "Saunion" }
 24078.9 "--sync--" Ability { id: "5DD7", source: "Saunion" }
-24089.0 "Mobile Crossray/Mobile Halo" Ability { id: "(5DB[9ABCDEF]|5DC0)", source: "Saunion" }
+24089.0 "Mobile Crossray/Mobile Halo" Ability { id: ["5DB[9ABCDEF]", "5DC0"], source: "Saunion" }
 24099.8 "--sync--" Ability { id: "5DD7", source: "Saunion" }
 # ?
 
@@ -256,7 +256,7 @@ hideall "--sync--"
 24323.3 "--targetable--"
 24342.5 "--sync--" Ability { id: "5DD7", source: "Saunion" }
 24348.5 "Wildfire Winds" Ability { id: "5DCD", source: "Dawon The Younger" }
-24352.5 "Mobile Halo/Mobile Crossray" Ability { id: "(5DB[9ABCDEF]|5DC0)", source: "Saunion" }
+24352.5 "Mobile Halo/Mobile Crossray" Ability { id: ["5DB[9ABCDEF]", "5DC0"], source: "Saunion" }
 24361.2 "Raw Heat" Ability { id: "5DCE", source: "Vermilion Flame" }
 24362.7 "Missile Command" Ability { id: "5DC1", source: "Saunion" }
 24368.9 "Surface Missile" Ability { id: "5DC4", source: "Saunion" }
@@ -299,7 +299,7 @@ hideall "--sync--"
 24530.1 "--targetable--"
 24549.9 "--sync--" Ability { id: "5DD7", source: "Saunion" }
 24555.8 "Wildfire Winds" Ability { id: "5DCD", source: "Dawon The Younger" }
-24559.9 "Mobile Crossray/Mobile Halo" Ability { id: "(5DB[9ABCDEF]|5DC0)", source: "Saunion" }
+24559.9 "Mobile Crossray/Mobile Halo" Ability { id: ["5DB[9ABCDEF]", "5DC0"], source: "Saunion" }
 24568.6 "Raw Heat" Ability { id: "5DCE", source: "Vermilion Flame" }
 24570.1 "Missile Command" Ability { id: "5DC1", source: "Saunion" }
 24576.3 "Surface Missile" Ability { id: "5DC4", source: "Saunion" }
@@ -330,7 +330,7 @@ hideall "--sync--"
 # -p 5CC6:25013 5CB7:25805
 # -ii 6143 61A2 5CC7 61C4 5CB2 5CB8 5CC5 6092 6091 6093 5CC3 5CB4 5CB5 5CC1 5CAD 5CA1 5CA2
 # The Fallen Ring will be sealed off
-25000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E61:/ window 100000,0
+25000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E61" } window 100000,0
 25013.0 "Aetheric Explosion" Ability { id: "5CC6", source: "The Diablo Armament" }
 25023.4 "Aetherochemical Laser 1" Ability { id: "5CA[45]", source: "The Diablo Armament" }
 25027.5 "Aetherochemical Laser 2" Ability { id: "5CA[45]", source: "The Diablo Armament" }

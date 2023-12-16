@@ -39,77 +39,82 @@ public final class TimelineParser {
 	}
 
 	public static @Nullable TimelineEntry parseRaw(String line) {
-		// Skip these for now
-		if (line.trim().isEmpty() || line.startsWith("hideall")) {
-			return null;
-		}
+		try {
+			// Skip these for now
+			if (line.trim().isEmpty() || line.startsWith("hideall")) {
+				return null;
+			}
 
-		Matcher labelMatcher = timelineLabelPattern.matcher(line);
-		if (labelMatcher.matches()) {
-			String timeRaw = labelMatcher.group("time");
-			double time;
-			try {
-				time = Double.parseDouble(timeRaw);
-			}
-			catch (NumberFormatException nfe) {
-				throw new IllegalArgumentException("Not a valid time: %s (entire line: %s)".formatted(timeRaw, line));
-			}
-			return new TextFileLabelEntry(time, labelMatcher.group("label"));
-		}
-		Matcher matcher = timelinePatternLong.matcher(line);
-		if (matcher.matches()) {
-			Pattern sync;
-			log.trace("Matching line: {}", line);
-			String timeRaw = matcher.group("time");
-			String title = matcher.group("title");
-			String syncRaw = matcher.group("sync");
-			String windowStartRaw = matcher.group("windowStart");
-			String windowEndRaw = matcher.group("windowEnd");
-			String jumpRaw = matcher.group("jump");
-			String jumpLabel = matcher.group("jumplabel");
-			String forceJumpRaw = matcher.group("forcejump");
-			String durationRaw = matcher.group("duration");
-			String eventTypeRaw = matcher.group("eventType");
-			EventSyncController esc = null;
-
-			if ("--sync--".equals(title)) {
-				title = null;
-			}
-			if (syncRaw == null) {
-				sync = null;
-				if (eventTypeRaw != null) {
-					esc = CbEventFmt.parseRaw(eventTypeRaw, matcher.group("eventCond"));
+			Matcher labelMatcher = timelineLabelPattern.matcher(line);
+			if (labelMatcher.matches()) {
+				String timeRaw = labelMatcher.group("time");
+				double time;
+				try {
+					time = Double.parseDouble(timeRaw);
 				}
+				catch (NumberFormatException nfe) {
+					throw new IllegalArgumentException("Not a valid time: %s (entire line: %s)".formatted(timeRaw, line));
+				}
+				return new TextFileLabelEntry(time, labelMatcher.group("label"));
 			}
-			else {
-				sync = Pattern.compile(syncRaw, Pattern.CASE_INSENSITIVE);
-			}
-			TimelineWindow window;
-			if (windowEndRaw != null) {
-				double windowStart;
-				if (windowStartRaw == null) {
-					windowStart = 0;
+			Matcher matcher = timelinePatternLong.matcher(line);
+			if (matcher.matches()) {
+				Pattern sync;
+				log.trace("Matching line: {}", line);
+				String timeRaw = matcher.group("time");
+				String title = matcher.group("title");
+				String syncRaw = matcher.group("sync");
+				String windowStartRaw = matcher.group("windowStart");
+				String windowEndRaw = matcher.group("windowEnd");
+				String jumpRaw = matcher.group("jump");
+				String jumpLabel = matcher.group("jumplabel");
+				String forceJumpRaw = matcher.group("forcejump");
+				String durationRaw = matcher.group("duration");
+				String eventTypeRaw = matcher.group("eventType");
+				EventSyncController esc = null;
+
+				if ("--sync--".equals(title)) {
+					title = null;
+				}
+				if (syncRaw == null) {
+					sync = null;
+					if (eventTypeRaw != null) {
+						esc = CbEventFmt.parseRaw(eventTypeRaw, matcher.group("eventCond"));
+					}
 				}
 				else {
-					windowStart = Double.parseDouble(windowStartRaw);
+					sync = Pattern.compile(syncRaw, Pattern.CASE_INSENSITIVE);
 				}
-				window = new TimelineWindow(windowStart, Double.parseDouble(windowEndRaw));
+				TimelineWindow window;
+				if (windowEndRaw != null) {
+					double windowStart;
+					if (windowStartRaw == null) {
+						windowStart = 0;
+					}
+					else {
+						windowStart = Double.parseDouble(windowStartRaw);
+					}
+					window = new TimelineWindow(windowStart, Double.parseDouble(windowEndRaw));
+				}
+				else {
+					window = TimelineWindow.DEFAULT;
+				}
+				double time;
+				try {
+					time = Double.parseDouble(timeRaw);
+				}
+				catch (NumberFormatException nfe) {
+					throw new IllegalArgumentException("Not a valid time: %s (entire line: %s)".formatted(timeRaw, line));
+				}
+				boolean forceJump = forceJumpRaw != null;
+				return new TextFileTimelineEntry(time, title, sync, doubleOrNull(durationRaw), window, doubleOrNull(jumpRaw), jumpLabel, forceJump, esc);
 			}
-			else {
-				window = TimelineWindow.DEFAULT;
-			}
-			double time;
-			try {
-				time = Double.parseDouble(timeRaw);
-			}
-			catch (NumberFormatException nfe) {
-				throw new IllegalArgumentException("Not a valid time: %s (entire line: %s)".formatted(timeRaw, line));
-			}
-			boolean forceJump = forceJumpRaw != null;
-			return new TextFileTimelineEntry(time, title, sync, doubleOrNull(durationRaw), window, doubleOrNull(jumpRaw), jumpLabel, forceJump, esc);
+			log.trace("Line did not match: {}", line);
+			return null;
 		}
-		log.trace("Line did not match: {}", line);
-		return null;
+		catch (Throwable t) {
+			throw new IllegalArgumentException("Error parsing timeline entry '%s'".formatted(line), t);
+		}
 	}
 
 	@Contract("null -> null")

@@ -76,8 +76,8 @@ class CbConversions {
 
 	static <X> CbConversion<X> boolToInt(Function<X, Boolean> getter) {
 		return str -> switch (str) {
-			case "0" -> (item -> !getter.apply(item));
-			case "1" -> (getter::apply);
+			case "0", "00", "000", "0000" -> (item -> !getter.apply(item));
+			case "1", "01", "001", "0001" -> (getter::apply);
 			default -> throw new IllegalArgumentException("Expected 0 or 1, got '%s'".formatted(str));
 		};
 	}
