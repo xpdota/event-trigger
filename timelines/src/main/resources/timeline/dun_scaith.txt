@@ -10,7 +10,7 @@ hideall "--sync--"
 # -ii 1C90 1ABC -ic "Fierce Wind" "Void Sprite"
 
 # Main Deck will be sealed off
-0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:755:/ window 0,5
+0 "--sync--" SystemLogMessage { id: "7DC", param1: "755" } window 0,5
 6.7 "Spike Of Darkness" Ability { id: "1E51", source: "Deathgaze Hollow" }
 11.8 "--sync--" Ability { id: "1C91", source: "Deathgaze Hollow" }
 16.6 "--sync--" Ability { id: "1C92", source: "Deathgaze Hollow" }
@@ -117,22 +117,22 @@ hideall "--sync--"
 # -ic "Ferdiad's Fool"
 
 # The Rostrum will be sealed off
-1000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:758:/ window 1000,5
+1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "758" } window 1000,5
 1014.2 "Black Wind x3" # Ability { id: "1CAC", source: "Ferdiad Hollow" }
 1020.3 "Sleight" Ability { id: "1C99", source: "Ferdiad Hollow" }
 1028.0 "Wormhole" Ability { id: "1C9A", source: "Ferdiad Hollow" }
-1028.3 "--sync--" Ability { id: "1C49", source: "(Cursing Atomos|Wailing Atomos)" }
-1028.5 "Juggling Sphere" Ability { id: "1C(9F|A0)", source: "(Aether|Aetherial Chakram)" }
-1030.0 "--sync--" Ability { id: "1C9[CD]", source: "(Cursing Atomos|Wailing Atomos)" }
-1033.2 "Explosion" Ability { id: "1CA[12]", source: "(Aether|Aetherial Chakram)" }
+1028.3 "--sync--" Ability { id: "1C49", source: ["Cursing Atomos", "Wailing Atomos"] }
+1028.5 "Juggling Sphere" Ability { id: "1C(9F|A0)", source: ["Aether", "Aetherial Chakram"] }
+1030.0 "--sync--" Ability { id: "1C9[CD]", source: ["Cursing Atomos", "Wailing Atomos"] }
+1033.2 "Explosion" Ability { id: "1CA[12]", source: ["Aether", "Aetherial Chakram"] }
 1039.2 "Jester's Reap" Ability { id: "1E41", source: "Ferdiad Hollow" }
 1047.2 "Jongleur's X" Ability { id: "1C98", source: "Ferdiad Hollow" }
 1052.2 "Sleight" Ability { id: "1C99", source: "Ferdiad Hollow" }
 1060.5 "Wormhole" Ability { id: "1C9A", source: "Ferdiad Hollow" }
-1060.8 "--sync--" Ability { id: "1C49", source: "(Cursing Atomos|Wailing Atomos)" }
-1061.0 "Juggling Sphere" Ability { id: "1C(9F|A0)", source: "(Aether|Aetherial Chakram)" }
-1062.5 "--sync--" Ability { id: "1C9[CD]", source: "(Cursing Atomos|Wailing Atomos)" }
-1065.7 "Explosion" Ability { id: "1CA[12]", source: "(Aether|Aetherial Chakram)" }
+1060.8 "--sync--" Ability { id: "1C49", source: ["Cursing Atomos", "Wailing Atomos"] }
+1061.0 "Juggling Sphere" Ability { id: "1C(9F|A0)", source: ["Aether", "Aetherial Chakram"] }
+1062.5 "--sync--" Ability { id: "1C9[CD]", source: ["Cursing Atomos", "Wailing Atomos"] }
+1065.7 "Explosion" Ability { id: "1CA[12]", source: ["Aether", "Aetherial Chakram"] }
 1069.7 "Debilitator" Ability { id: "1CA6", source: "Ferdiad Hollow" }
 1079.9 "Jongleur's X" Ability { id: "1C98", source: "Ferdiad Hollow" }
 1087.4 "Flameflow" Ability { id: "1CA7", source: "Ferdiad Hollow" }
@@ -155,10 +155,10 @@ hideall "--sync--"
 
 1319.0 "Sleight" Ability { id: "1C99", source: "Ferdiad Hollow" }
 1327.5 "Wormhole" Ability { id: "1C9A", source: "Ferdiad Hollow" }
-1327.8 "--sync--" Ability { id: "1C49", source: "(Cursing Atomos|Wailing Atomos)" }
-1328.0 "Juggling Sphere" Ability { id: "1C(9F|A0)", source: "(Aether|Aetherial Chakram)" }
-1329.6 "--sync--" Ability { id: "1C9[CD]", source: "(Cursing Atomos|Wailing Atomos)" }
-1333.0 "Explosion" Ability { id: "1CA[12]", source: "(Aether|Aetherial Chakram)" } window 15,15
+1327.8 "--sync--" Ability { id: "1C49", source: ["Cursing Atomos", "Wailing Atomos"] }
+1328.0 "Juggling Sphere" Ability { id: "1C(9F|A0)", source: ["Aether", "Aetherial Chakram"] }
+1329.6 "--sync--" Ability { id: "1C9[CD]", source: ["Cursing Atomos", "Wailing Atomos"] }
+1333.0 "Explosion" Ability { id: "1CA[12]", source: ["Aether", "Aetherial Chakram"] } window 15,15
 1338.1 "Jester's Reap" Ability { id: "1E41", source: "Ferdiad Hollow" }
 1348.8 "Black Wind" # Ability { id: "1CAC", source: "Ferdiad Hollow" }
 1362.4 "Blackfire" Ability { id: "1CAA", source: "Ferdiad Hollow" }
@@ -189,7 +189,7 @@ hideall "--sync--"
 # -ic "Allagan Dreadnaught" "Proto Bit"
 
 # The Queen's Pride will be sealed off
-2000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:759:/ window 2000,5
+2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "759" } window 2000,5
 
 2007.8 "Aether Bend" Ability { id: "1D99", source: "Proto Ultima" }
 2018.4 "Aetherochemical Laser 1" Ability { id: "1D96", source: "Proto Ultima" }
@@ -249,11 +249,11 @@ hideall "--sync--"
 # -ic Shadowcourt Jester" "Chimera Poppet"
 
 # The Queen's Graces will be sealed off
-3000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:75A:/ window 3000,5
+3000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "75A" } window 3000,5
 3013.1 "Thirty Thorns" Ability { id: "1D2B", source: "Scathach" }
 3030.2 "Thirty Arrows" Ability { id: "1D2F", source: "Scathach" } window 30,5
 3037.4 "Manos" Ability { id: "1CD3", source: "Scathach" } window 30,5
-3047.7 "--sync--" Ability { id: "(1D1[EF])", source: "Scathach" }
+3047.7 "--sync--" Ability { id: ["1D1[EF]"], source: "Scathach" }
 3049.0 "Shadespin" Ability { id: "1D20", source: "Scathach" }
 3052.8 "Thirty Sickles" Ability { id: "1D31", source: "Scathach" }
 3056.0 "Soar" Ability { id: "1D1B", source: "Scathach" }
@@ -290,7 +290,7 @@ hideall "--sync--"
 
 
 # Intermission at 45% HP. Might be a time push too? but it's uncertain.
-3300.0 "--untargetable--" sync / 22:........:Scathach:........:Scathach:00/ window 300,5
+3300.0 "--untargetable--" NameToggle { name: "Scathach", toggle: "00" } window 300,5
 3302.2 "--sync--" AddedCombatant { name: "Shadowcourt Jester" }  window 300,5
 3323.6 "--towers appear--"
 3333.6 "Particle Beam" Ability { id: "1D2[78]", source: "Scathach" }
@@ -402,7 +402,7 @@ hideall "--sync--"
 # This section leads directly into Diabolos Hollow the first time after Diabolos is defeated.
 # This is the dueling-lasers part where the party kills the big deathgate and two small ones.
 
-4274.0 "--sync--" sync / 22:........:Diabolos:........:Diabolos:00/ window 100,5
+4274.0 "--sync--" NameToggle { name: "Diabolos", toggle: "00" } window 100,5
 4286.2 "--lifegate spawn--" AddedCombatant { name: "Lifegate" }  window 300,5
 4300.0 "--sync--" Ability { id: "1C16", source: "Diabolos" } window 300,5
 4320.0 "--deathgate spawn--" AddedCombatant { name: "Deathgate" }  window 50,5

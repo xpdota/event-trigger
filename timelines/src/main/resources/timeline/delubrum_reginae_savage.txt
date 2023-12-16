@@ -9,7 +9,7 @@ hideall "--sync--"
 # boss, as the Stygimoloch Warrior and Dahu areas can be seen from one
 # another, and so a generic "is no longer sealed" from one would stop
 # any timeline running for those in the other.
-0.0 "--Reset--" sync / 21:........:4000000F:/ window 100000 jump 0
+0.0 "--Reset--" ActorControl { command: "4000000F" } window 100000 jump 0
 
 
 ### Slimes (The Barracks, left side)
@@ -76,7 +76,7 @@ hideall "--sync--"
 
 
 ### Golems (The Granary, right side)
-2000.0 "--sync--" sync / 22:........:Bicolor Golem:........:Bicolor Golem:01/ window 2000,0
+2000.0 "--sync--" NameToggle { name: "Bicolor Golem", toggle: "01" } window 2000,0
 2000.0 "--Reset--" AddedCombatant { name: "Trinity Seeker" }  window 0,1000 jump 0
 2025.2 "Core Combustion" Ability { id: "5745", source: "Bicolor Golem" } window 2030,10
 2026.1 "--bleed--" # from blue golem
@@ -123,9 +123,9 @@ hideall "--sync--"
 # -p 5AD3:4011.4 5A98:4079.5 5A99:4171.7 5A97:4265.8
 # -ii 1961 1963 5B33 5AB8 5AB9 5ABA 5ABB 5ABC 5AD1 5B2A 5B2B 5AC1 5AC2 5AC3 5AC4 5AC5 5AC6 5ACB 5BBC 5ACD
 # The Theater of One will be sealed off
-4000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1B:/ window 20000,0
+4000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E1B" } window 20000,0
 # .*is no longer sealed
-4000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
+4000.0 "--Reset--" SystemLogMessage { id: "7DE" } window 0,2000 jump 0
 
 # Note: it is likely that there are additional hp pushes on later Verdant Paths.
 # It is known that the first one is 80%, but I have seen 0-10 second variations
@@ -311,8 +311,8 @@ hideall "--sync--"
 # override it.  Dahu will only end when Dahu is killed, which can only be seen if you
 # are in the Dahu fight.
 # The Hall of Supplication will be sealed off
-6000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1D:/ window 6000,0
-6000.0 "--Reset--" sync / 19:[^:]*:Dahu:/ window 0,2000 jump 0
+6000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E1D" } window 6000,0
+6000.0 "--Reset--" WasDefeated { target: "Dahu" } window 0,2000 jump 0
 6008.4 "Reverberating Roar" Ability { id: "576D", source: "Dahu" } window 10,2.5
 6014.5 "Reverberating Roar" Ability { id: "576D", source: "Dahu" }
 6022.7 "Hot Charge 1" Ability { id: "5773", source: "Dahu" }
@@ -411,8 +411,8 @@ hideall "--sync--"
 
 # This is the zone, but can't use this sync as it can be seen by Dahu.  Sync to autos instead.
 # Pride of the Lioness will be sealed off
-#8000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1C:/ window 20000,0
-8000.0 "--Reset--" sync / 00:0044:Stygimoloch Warrior:Why\.\.\.won't\.\.\.you\.\.\./ window 0,2000 jump 0
+#8000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E1C" } window 20000,0
+8000.0 "--Reset--" GameLog { code: "0044", name: "Stygimoloch Warrior", line: "Why\.\.\.won't\.\.\.you\.\.\..*?" } window 0,2000 jump 0
 # TODO: is there a reset dialog line for losing?
 # Alternatively, we could always insert " 19:${data.me} was defeated by" from script.
 
@@ -505,9 +505,9 @@ hideall "--sync--"
 # - 5823 (59BE)
 
 # The Hall of Hieromancy will be sealed off
-10000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1E:/ window 20000,0
+10000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E1E" } window 20000,0
 # .*is no longer sealed
-10000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
+10000.0 "--Reset--" SystemLogMessage { id: "7DE" } window 0,2000 jump 0
 # ranged auto should be reasonably timed
 10002.5 "--sync--" Ability { id: "5858", source: "Queen's Gunner" } window 3,1
 
@@ -519,7 +519,7 @@ hideall "--sync--"
 
 
 # Phase 2: Warrior + Knight section
-10033.9 "--targetable--" sync / 22:........:Queen's Knight:........:Queen's Knight:01/ window 25,0
+10033.9 "--targetable--" NameToggle { name: "Queen's Knight", toggle: "01" } window 25,0
 10051.1 "--sync--" StartsUsing { id: "5825", source: "Queen's Warrior" } window 60,20
 10056.1 "Relentless Battery" Ability { id: "5825", source: "Queen's Warrior" }
 10062.2 "Shield Omen/Sword Omen" Ability { id: "581[45]", source: "Queen's Knight" }
@@ -596,7 +596,7 @@ hideall "--sync--"
 10322.2 "Blood and Bone Enrage" Ability { id: "5B9D", source: "Queen's Knight" }
 
 # Phase 3: Soldier + Gunner section
-10600.0 "--sync--" sync / 22:........:Queen's Gunner:........:Queen's Gunner:01/ window 600,0
+10600.0 "--sync--" NameToggle { name: "Queen's Gunner", toggle: "01" } window 600,0
 10612.0 "--sync--" StartsUsing { id: "5844", source: "Queen's Gunner" } window 600,0
 10617.0 "Relentless Battery" Ability { id: "5844", source: "Queen's Gunner" }
 10623.2 "Great Ball Of Fire" Ability { id: "583B", source: "Queen's Soldier" }
@@ -616,7 +616,7 @@ hideall "--sync--"
 10710.1 "Sniper Shot" Ability { id: "5850", source: "Gun Turret" }
 10715.0 "Blood And Bone" Ability { id: "5841", source: "Queen's Soldier" }
 10728.4 "--gun turret enrage--"
-10732.2 "Icy Portent/Fiery Portent" Ability { id: "(583F|5840)", source: "Queen's Soldier" }
+10732.2 "Icy Portent/Fiery Portent" Ability { id: ["583F", "5840"], source: "Queen's Soldier" }
 10747.4 "Relentless Battery" Ability { id: "5844", source: "Queen's Gunner" }
 10753.5 "Double Gambit" Ability { id: "5837", source: "Queen's Soldier" }
 10761.5 "Automatic Turret" Ability { id: "584A", source: "Queen's Gunner" }
@@ -632,7 +632,7 @@ hideall "--sync--"
 10822.6 "Automatic Turret" Ability { id: "5845", source: "Queen's Gunner" }
 10830.8 "Turret's Tour 1" Ability { id: "5846", source: "Queen's Gunner" }
 10831.4 "Turret's Tour 2" Ability { id: "5848", source: "Automatic Turret" }
-10837.6 "Fiery Portent/Icy Portent" Ability { id: "(583F|5840)", source: "Queen's Soldier" }
+10837.6 "Fiery Portent/Icy Portent" Ability { id: ["583F", "5840"], source: "Queen's Soldier" }
 10847.8 "Blood And Bone" Ability { id: "5841", source: "Queen's Soldier" }
 10856.9 "Rapid Sever" Ability { id: "5842", source: "Queen's Soldier" }
 10856.9 "Shot In The Dark" Ability { id: "5855", source: "Queen's Gunner" }
@@ -682,9 +682,9 @@ hideall "--sync--"
 # Manipulate -> Invert -> Adds -> then loop Manipulate+Buster OR Invert+Buster
 
 # Pride of the Lion will be sealed off
-12000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E1F:/ window 20000,0
+12000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E1F" } window 20000,0
 # .*is no longer sealed
-12000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
+12000.0 "--Reset--" SystemLogMessage { id: "7DE" } window 0,2000 jump 0
 12007.1 "--sync--" StartsUsing { id: "57BD", source: "Bozjan Phantom" } window 20000,0
 12011.1 "Malediction of Agony" Ability { id: "57BD", source: "Bozjan Phantom" }
 12019.2 "Weave Miasma" Ability { id: "57B2", source: "Bozjan Phantom" }
@@ -847,22 +847,22 @@ hideall "--sync--"
 # Note: various "Blast" are renamed "Elemental Blast" and various "Arrow" are renamed
 # to be "Elemental Arrow" to avoid having too many skills on the timeline.
 
-# Note: Blade of Entropy is `Ability { id: "594[23456789]|595[6789ABCD]", source: "(Trinity Avowed|Avowed Avatar)" }``
+# Note: Blade of Entropy is `Ability { id: "594[23456789]|595[6789ABCD]", source: ["Trinity Avowed", "Avowed Avatar"] }``
 
 # The Vault of Singing Crystal will be sealed off
-14000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E20:/ window 20000,0
+14000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E20" } window 20000,0
 # .*is no longer sealed
-14000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
+14000.0 "--Reset--" SystemLogMessage { id: "7DE" } window 0,2000 jump 0
 14006.7 "--sync--" StartsUsing { id: "594E", source: "Trinity Avowed" } window 10,10
 14011.8 "Wrath Of Bozja" Ability { id: "594E", source: "Trinity Avowed" }
 14019.9 "Glory Of Bozja" Ability { id: "594F", source: "Trinity Avowed" }
 
 # Initial Phase
 14029.2 "Allegiant Arsenal" Ability { id: "598[567]", source: "Trinity Avowed" }
-14034.4 "Flashvane/Fury Of Bozja/Infernal Slash" Ability { id: "(594B|594C|594A)", source: "Trinity Avowed" }
+14034.4 "Flashvane/Fury Of Bozja/Infernal Slash" Ability { id: ["594B", "594C", "594A"], source: "Trinity Avowed" }
 14037.5 "--sync--" Ability { id: "5983", source: "Trinity Avowed" }
 14042.6 "Allegiant Arsenal" Ability { id: "598[567]", source: "Trinity Avowed" }
-14047.8 "Flashvane/Fury Of Bozja/Infernal Slash" Ability { id: "(594B|594C|594A)", source: "Trinity Avowed" }
+14047.8 "Flashvane/Fury Of Bozja/Infernal Slash" Ability { id: ["594B", "594C", "594A"], source: "Trinity Avowed" }
 14050.9 "--sync--" Ability { id: "5984", source: "Trinity Avowed" }
 14056.0 "Allegiant Arsenal" # -> random jump to initial weapon phase
 
@@ -1256,9 +1256,9 @@ hideall "--sync--"
 # -ii 1961 55A6 57D0 57CE 57DD 57DC 57C8 57CA 57C6 57CC 5B38 57D3 57D6 57E2 501B 57DF 501A
 # -it "Stygimoloch Lord"
 # The Path of Divine Clarity will be sealed off
-18000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E22:/ window 20000,0
+18000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E22" } window 20000,0
 # .*is no longer sealed
-18000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
+18000.0 "--Reset--" SystemLogMessage { id: "7DE" } window 0,2000 jump 0
 
 # Note: 57CF is the cast for Whack but 57D1 is the instant damage.
 # Similarly, 57C4 is the cast for Devastating Bolt, but 57C5/57C6 is the delayed damage.
@@ -1351,7 +1351,7 @@ hideall "--sync--"
 
 
 # Phase 3: Victory Lap (once adds are dead)
-19000.0 "--targetable--" sync / 22:........:Stygimoloch Lord:........:Stygimoloch Lord:01/ window 800,0
+19000.0 "--targetable--" NameToggle { name: "Stygimoloch Lord", toggle: "01" } window 800,0
 19008.2 "--sync--" StartsUsing { id: "57D2", source: "Stygimoloch Lord" } window 1010,0
 19013.2 "Thunderous Discharge" Ability { id: "57D2", source: "Stygimoloch Lord" }
 19028.4 "Rapid Bolts 1" Ability { id: "57CD", source: "Stygimoloch Lord" } duration 12.8
@@ -1385,9 +1385,9 @@ hideall "--sync--"
 # TODO: what is 5BCB? (--middle--?)
 # TODO: what is 55A8?
 # Queensheart will be sealed off
-20000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:E23:/ window 20000,0
+20000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "E23" } window 20000,0
 # .*is no longer sealed
-20000.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 0,2000 jump 0
+20000.0 "--Reset--" SystemLogMessage { id: "7DE" } window 0,2000 jump 0
 20010.3 "--sync--" StartsUsing { id: "59F9", source: "The Queen" } window 20,20
 20015.3 "Empyrean Iniquity" Ability { id: "59F9", source: "The Queen" }
 20025.5 "--sync--" Ability { id: "5BCB", source: "The Queen" }
@@ -1474,7 +1474,7 @@ hideall "--sync--"
 20422.5 "Relentless Play 3" Ability { id: "59FC", source: "The Queen" } window 20,20
 20428.6 "Sword Omen/Shield Omen" Ability { id: "59F[DE]", source: "Queen's Knight" }
 20437.9 "Automatic Turret" Ability { id: "5A26", source: "Queen's Gunner" }
-20440.0 "Optimal Play" Ability { id: "(5A00|59FF)", source: "Queen's Knight" }
+20440.0 "Optimal Play" Ability { id: ["5A00", "59FF"], source: "Queen's Knight" }
 20446.0 "Turret's Tour" Ability { id: "5A27", source: "Queen's Gunner" }
 20446.6 "--sync--" Ability { id: "5BCB", source: "The Queen" }
 20446.6 "Turret's Tour" #Ability { id: "5A29", source: "Automatic Turret" }
@@ -1496,7 +1496,7 @@ hideall "--sync--"
 20515.5 "--sync--" Ability { id: "5B8E", source: "Queen's Warrior" }
 20516.5 "--stunned--" # 3 or 7 second stun
 # Aetherial Burst does 5B89 and Aetherial Bolt does 5A0D
-20518.5 "Lots Cast" Ability { id: "(5B89|5A0D)", source: "(Aetherial Burst|Aetherial Bolt)" }
+20518.5 "Lots Cast" Ability { id: ["5B89", "5A0D"], source: ["Aetherial Burst", "Aetherial Bolt"] }
 20521.5 "Lots Cast" #Ability { id: "5B88", source: "Aetherial Bolt" }
 20522.7 "Lots Cast" #Ability { id: "5BB6", source: "Aetherial Bolt" }
 20523.5 "--unstunned--"

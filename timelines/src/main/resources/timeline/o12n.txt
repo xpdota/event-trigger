@@ -6,7 +6,7 @@ hideall "--sync--"
 
 ### Phase 1 (loops until low%)
 0.0 "Start"
-0.0 "--sync--" sync / 104:[^:]*:1($|:)/ window 0,1
+0.0 "--sync--" InCombat { inGameCombat: "1" } window 0,1
 15.3 "Solar Ray" Ability { id: "330F", source: "Omega-M" } window 16,3
 20.4 "Program Alpha" Ability { id: "3308", source: "Omega-M" }
 23.5 "Floodlight" Ability { id: "3309", source: "Omega-M" }
@@ -51,7 +51,7 @@ hideall "--sync--"
 
 
 ### Phase 2: Passage of Arms
-500.0 "--sync--" sync / 00:0044:Omega-M:\<blip\> Limits of single combatant/ window 500,0
+500.0 "--sync--" GameLog { code: "0044", name: "Omega-M", line: "\<blip\> Limits of single combatant.*?" } window 500,0
 514.0 "Ground Zero" Ability { id: "3313", source: "Omega-M" } # drift 0.045001
 514.0 "Electric Slide" Ability { id: "3314", source: "Omega" }
 522.0 "Efficient Bladework" Ability { id: "32F3", source: "Omega-M" } # drift -0.045
@@ -181,7 +181,7 @@ hideall "--sync--"
 
 
 ### Phase 4: Laser Show Forever
-1800.0 "Enrage" sync / 00:0044:[^:]*:\<blip\> Warning\. Calculations indicate/ window 1800,0
+1800.0 "Enrage" GameLog { code: "0044", line: "\<blip\> Warning\. Calculations indicate.*?" } window 1800,0
 
 1806.0 "Laser Shower Enrage" Ability { id: "3311", source: "Omega-M" } window 20,20
 1806.0 "Laser Shower Enrage" Ability { id: "3312", source: "Omega" } window 20,20

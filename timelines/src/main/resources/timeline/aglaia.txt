@@ -5,7 +5,7 @@ hideall "--sync--"
 hideall "Fan Flames"
 
 # .*is no longer sealed
-0.0 "--Reset--" sync / 29:[^:]*:7DE:/ window 100000 jump 0
+0.0 "--Reset--" SystemLogMessage { id: "7DE" } window 100000 jump 0
 
 #~~~~~~~~~#
 # BYREGOT #
@@ -20,7 +20,7 @@ hideall "Fan Flames"
 # Note: "--hammer--" lines are done visually, as there seem to be no log line for them.
 
 # Ingenuity's Foothold will be sealed off
-1000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:104D:/ window 10000,0
+1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "104D" } window 10000,0
 1005.5 "--sync--" StartsUsing { id: "7176", source: "Byregot" } window 10,10
 1010.5 "Ordeal of Thunder" Ability { id: "7176", source: "Byregot" }
 1022.4 "Byregot's Strike" Ability { id: "725A", source: "Byregot" }
@@ -49,8 +49,8 @@ hideall "Fan Flames"
 1153.4 "The Builder's Forge" Ability { id: "716A", source: "Byregot" }
 1168.0 "--sync--" StartsUsing { id: "72F9", source: "Byregot" } window 10,10
 1171.0 "Builder's Build?" Ability { id: "72F9", source: "Byregot" }
-1173.7 "--sync--" StartsUsing { id: "(725A|7167)", source: "Byregot" } window 10,10
-1179.7 "Byregot's Strike" Ability { id: "(725A|7167)", source: "Byregot" }
+1173.7 "--sync--" StartsUsing { id: ["725A", "7167"], source: "Byregot" } window 10,10
+1179.7 "Byregot's Strike" Ability { id: ["725A", "7167"], source: "Byregot" }
 1187.8 "Ordeal of Thunder" Ability { id: "7176", source: "Byregot" }
 1196.9 "Reproduce" Ability { id: "716B", source: "Byregot" }
 1199.8 "Builder's Build" Ability { id: "72FA", source: "Byregot's Avatar" }
@@ -77,8 +77,8 @@ hideall "Fan Flames"
 1319.9 "The Builder's Forge" Ability { id: "716A", source: "Byregot" }
 1334.5 "--sync--" StartsUsing { id: "72F9", source: "Byregot" } window 10,10
 1337.5 "Builder's Build?" Ability { id: "72F9", source: "Byregot" }
-1340.2 "--sync--" StartsUsing { id: "(725A|7167)", source: "Byregot" } window 10,10
-1346.2 "Byregot's Strike" Ability { id: "(725A|7167)", source: "Byregot" }
+1340.2 "--sync--" StartsUsing { id: ["725A", "7167"], source: "Byregot" } window 10,10
+1346.2 "Byregot's Strike" Ability { id: ["725A", "7167"], source: "Byregot" }
 1354.3 "Ordeal of Thunder" Ability { id: "7176", source: "Byregot" }
 1366.5 "Byregot's Ward" Ability { id: "7175", source: "Byregot" }
 1374.6 "Reproduce" Ability { id: "716B", source: "Byregot" }
@@ -111,7 +111,7 @@ hideall "Fan Flames"
 # -ii 70D8 70E2 70E4 70DC
 
 # The Path will be sealed off
-2000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:104E:/ window 10000,0
+2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "104E" } window 10000,0
 2004.8 "--sync--" StartsUsing { id: "70E0", source: "Rhalgr's Emissary" } window 10,10
 2012.8 "Destructive Static" Ability { id: "70E0", source: "Rhalgr's Emissary" }
 2019.8 "Destructive Charge" Ability { id: "70DA", source: "Rhalgr's Emissary" } duration 17
@@ -142,7 +142,7 @@ hideall "Fan Flames"
 # TODO: is the ordering of fake vs real Broken World correct? Every log has been this.
 
 # Monument to Destruction will be sealed off
-3000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:104F:/ window 10000,0
+3000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "104F" } window 10000,0
 3007.5 "--sync--" StartsUsing { id: "70A5", source: "Rhalgr" } window 10,10
 3012.5 "Lightning Reign" Ability { id: "70A5", source: "Rhalgr" }
 3023.6 "Advent of the Eighth" Ability { id: "70A7", source: "Rhalgr" }
@@ -213,22 +213,22 @@ hideall "Fan Flames"
 # TODO: These do "Rejuvenating Spark" (71D9) to rebalance health.  Does that adjust timings?
 
 # Endless City will be sealed off
-4000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:1050:/ window 10000,0
+4000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1050" } window 10000,0
 4007.0 "--sync--" StartsUsing { id: "71D7", source: "Lioness of Aglaia" } window 10,10
 4012.0 "Double Immolation" Ability { id: "71D7", source: "Lioness of Aglaia" }
 4019.8 "--sync--" Ability { id: "71CD", source: "Lioness of Aglaia" } window 10,10
-4028.1 "Slash and Burn" Ability { id: "(71D0|71D2)", source: "(Lion of Aglaia|Lioness of Aglaia)" }
-4031.3 "Slash and Burn" Ability { id: "(71D6|71D5)", source: "(Lioness of Aglaia|Lion of Aglaia)" }
+4028.1 "Slash and Burn" Ability { id: ["71D0", "71D2"], source: ["Lion of Aglaia", "Lioness of Aglaia"] }
+4031.3 "Slash and Burn" Ability { id: ["71D6", "71D5"], source: ["Lioness of Aglaia", "Lion of Aglaia"] }
 4036.1 "--sync--" Ability { id: "71CD", source: "Lioness of Aglaia" } window 10,10
-4044.7 "Slash and Burn" Ability { id: "(71D0|71D2)", source: "(Lion of Aglaia|Lioness of Aglaia)" }
-4047.9 "Slash and Burn" Ability { id: "(71D6|71D5)", source: "(Lioness of Aglaia|Lion of Aglaia)" }
+4044.7 "Slash and Burn" Ability { id: ["71D0", "71D2"], source: ["Lion of Aglaia", "Lioness of Aglaia"] }
+4047.9 "Slash and Burn" Ability { id: ["71D6", "71D5"], source: ["Lioness of Aglaia", "Lion of Aglaia"] }
 4056.7 "--sync--" Ability { id: "71CD", source: "Lioness of Aglaia" } window 10,10
 4063.8 "Roaring Blaze" Ability { id: "71CE", source: "Lioness of Aglaia" }
 4066.8 "Roaring Blaze" Ability { id: "71CF", source: "Lion of Aglaia" }
 4072.4 "--sync--" Ability { id: "71CD", source: "Lioness of Aglaia" } window 10,10
 4079.5 "Roaring Blaze" Ability { id: "71CE", source: "Lion of Aglaia" }
 4082.5 "Roaring Blaze" Ability { id: "71CF", source: "Lioness of Aglaia" }
-4085.1 "Rejuvenating Spark" Ability { id: "71D9", source: "(Lion of Aglaia|Lioness of Aglaia)" }
+4085.1 "Rejuvenating Spark" Ability { id: "71D9", source: ["Lion of Aglaia", "Lioness of Aglaia"] }
 4093.4 "--sync--" Ability { id: "71CD", source: "Lioness of Aglaia" } window 10,10
 4101.7 "Slash and Burn" Ability { id: "71D2", source: "Lioness of Aglaia" }
 # ??? (is this a loop?)
@@ -267,7 +267,7 @@ hideall "Fan Flames"
 # -ii 70A1 7082 7083 709F 708E 72BE 7093 7094 71EE 7089 731C 708C 7092 7087
 
 # Circle of Inquiry will be sealed off
-5000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:1051:/ window 10000,0
+5000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1051" } window 10000,0
 5006.2 "--sync--" StartsUsing { id: "70A0", source: "Azeyma" } window 10,10
 5012.2 "Warden's Prominence" Ability { id: "70A0", source: "Azeyma" }
 
@@ -394,11 +394,11 @@ hideall "Fan Flames"
 # TODO: Is Fired Up I/II always knockback -> out and I/II/III is out -> knockback -> knockback or out?
 
 # The Twin Halls will be sealed off
-6000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:1052:/ window 10000,0
+6000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1052" } window 10000,0
 6008.2 "--sync--" StartsUsing { id: "70E9", source: "Nald'thal" } window 10,10
-6013.2 "As Above, So Below" Ability { id: "(70E8|70E9)", source: "Nald'thal" }
+6013.2 "As Above, So Below" Ability { id: ["70E8", "70E9"], source: "Nald'thal" }
 6027.4 "Heat Above, Flames Below" Ability { id: "73A5", source: "Nald'thal" }
-6036.5 "As Above, So Below" Ability { id: "(70E8|70E9)", source: "Nald'thal" }
+6036.5 "As Above, So Below" Ability { id: ["70E8", "70E9"], source: "Nald'thal" }
 6049.7 "Heat Above, Flames Below" Ability { id: "73A4", source: "Nald'thal" }
 6056.8 "--sync--" Ability { id: "73CD", source: "Nald'thal" }
 6061.8 "Heavens' Trial" Ability { id: "711E", source: "Nald'thal" }
@@ -413,7 +413,7 @@ hideall "Fan Flames"
 # Possible ~1s delay here
 6102.0 "--sync--" StartsUsing { id: "70E[89]", source: "Nald'thal" } window 10,10
 6107.0 "As Above, So Below" Ability { id: "70E[89]", source: "Nald'thal" }
-6121.2 "Once Above, Ever Below" Ability { id: "(73BF|73C0|741C|741D)", source: "Nald'thal" }
+6121.2 "Once Above, Ever Below" Ability { id: ["73BF", "73C0", "741C", "741D"], source: "Nald'thal" }
 
 # Possible ~5s delay here
 6132.6 "--sync--" StartsUsing { id: "72B[79]", source: "Nald'thal" } window 10,10
@@ -429,7 +429,7 @@ hideall "Fan Flames"
 6230.2 "Fired Up II" Ability { id: "738A", source: "Nald'thal" }
 6240.3 "Fortune's Flux" Ability { id: "7113", source: "Nald'thal" }
 6242.8 "--sync--" Ability { id: "7430", source: "Thal" }
-6242.8 "Seventh Passage" Ability { id: "73AF", source: "(Thal|Nald'thal)" }
+6242.8 "Seventh Passage" Ability { id: "73AF", source: ["Thal", "Nald'thal"] }
 6244.5 "Seventh Passage" Ability { id: "7118", source: "Nald'thal" }
 6244.8 "--sync--" Ability { id: "7431", source: "Thal" }
 6250.9 "Fired Up I" Ability { id: "7112", source: "Nald'thal" }
@@ -438,7 +438,7 @@ hideall "Fan Flames"
 6273.2 "Fortune's Flux" Ability { id: "7113", source: "Nald'thal" }
 6275.1 "Seventh Passage 1" Ability { id: "7119", source: "Nald'thal" }
 6277.8 "Seventh Passage 2" #Ability { id: "73AF", source: "Thal" }
-6279.2 "Seventh Passage 3" #Ability { id: "(73AF|7118)", source: "Thal" }
+6279.2 "Seventh Passage 3" #Ability { id: ["73AF", "7118"], source: "Thal" }
 6289.7 "Soul's Measure" Ability { id: "7122", source: "Nald'thal" }
 6290.8 "--untargetable--"
 
@@ -457,19 +457,19 @@ hideall "Fan Flames"
 7014.6 "Tipped Scales" Ability { id: "7388", source: "Nald'thal" }
 7058.7 "--targetable--"
 
-7070.2 "As Above, So Below" Ability { id: "(70E8|70E9)", source: "Nald'thal" }
-7084.4 "Once Above, Ever Below" Ability { id: "(73BF|73C0|741C|741D)", source: "Nald'thal" }
+7070.2 "As Above, So Below" Ability { id: ["70E8", "70E9"], source: "Nald'thal" }
+7084.4 "Once Above, Ever Below" Ability { id: ["73BF", "73C0", "741C", "741D"], source: "Nald'thal" }
 
 7091.6 "--sync--" Ability { id: "73CD", source: "Nald'thal" }
 7095.5 "Stygian Tenet?" Ability { id: "711C", source: "Nald'thal" }
 7096.6 "Heavens' Trial?" Ability { id: "711E", source: "Nald'thal" }
 7097.5 "Smelting?" Ability { id: "7120", source: "Nald" }
 
-7105.7 "As Above, So Below" Ability { id: "(70E8|70E9)", source: "Nald'thal" }
-7119.9 "Hearth Above, Flight Below" Ability { id: "(741B|73CA|73CB|73CC)", source: "Nald'thal" }
+7105.7 "As Above, So Below" Ability { id: ["70E8", "70E9"], source: "Nald'thal" }
+7119.9 "Hearth Above, Flight Below" Ability { id: ["741B", "73CA", "73CB", "73CC"], source: "Nald'thal" }
 7121.1 "Far-flung Fire?" Ability { id: "73AD", source: "Nald" }
 7125.7 "Deepest Pit?" Ability { id: "73C7", source: "Thal" } duration 4
-7131.1 "Golden Tenet/Hells' Trial" Ability { id: "(7121|711A)", source: "Nald'thal" }
+7131.1 "Golden Tenet/Hells' Trial" Ability { id: ["7121", "711A"], source: "Nald'thal" }
 7147.6 "Hell of Fire" Ability { id: "72B[79]", source: "Nald'thal" }
 
 # Branch to Wayward Soul / Fired Up.
@@ -502,19 +502,19 @@ hideall "Fan Flames"
 
 
 # Main loop, repeating the loop block intro, but with no more branching
-8070.2 "As Above, So Below" Ability { id: "(70E8|70E9)", source: "Nald'thal" }
-8084.4 "Once Above, Ever Below" Ability { id: "(73BF|73C0|741C|741D)", source: "Nald'thal" }
+8070.2 "As Above, So Below" Ability { id: ["70E8", "70E9"], source: "Nald'thal" }
+8084.4 "Once Above, Ever Below" Ability { id: ["73BF", "73C0", "741C", "741D"], source: "Nald'thal" }
 
 8091.6 "--sync--" Ability { id: "73CD", source: "Nald'thal" }
 8095.5 "Stygian Tenet?" Ability { id: "711C", source: "Nald'thal" }
 8096.6 "Heavens' Trial?" Ability { id: "711E", source: "Nald'thal" }
 8097.5 "Smelting?" Ability { id: "7120", source: "Nald" }
 
-8105.7 "As Above, So Below" Ability { id: "(70E8|70E9)", source: "Nald'thal" }
-8119.9 "Hearth Above, Flight Below" Ability { id: "(741B|73CA|73CB|73CC)", source: "Nald'thal" }
+8105.7 "As Above, So Below" Ability { id: ["70E8", "70E9"], source: "Nald'thal" }
+8119.9 "Hearth Above, Flight Below" Ability { id: ["741B", "73CA", "73CB", "73CC"], source: "Nald'thal" }
 8121.1 "Far-flung Fire?" Ability { id: "73AD", source: "Nald" }
 8125.7 "Deepest Pit?" Ability { id: "73C7", source: "Thal" } duration 4
-8131.1 "Golden Tenet/Hells' Trial" Ability { id: "(7121|711A)", source: "Nald'thal" }
+8131.1 "Golden Tenet/Hells' Trial" Ability { id: ["7121", "711A"], source: "Nald'thal" }
 8147.6 "Hell of Fire" Ability { id: "72B[79]", source: "Nald'thal" }
 
 8159.5 "--sync--" StartsUsing { id: "7112", source: "Nald'thal" } window 20,20
@@ -524,7 +524,7 @@ hideall "Fan Flames"
 8185.8 "Fortune's Flux" Ability { id: "7113", source: "Nald'thal" }
 8187.7 "Seventh Passage 1" Ability { id: "7119", source: "Nald'thal" }
 8190.4 "Seventh Passage 2" #Ability { id: "73AF", source: "Thal" }
-8191.7 "Seventh Passage 3" #Ability { id: "(73AF|7118)", source: "Thal" }
+8191.7 "Seventh Passage 3" #Ability { id: ["73AF", "7118"], source: "Thal" }
 
 8197.1 "--sync--" Ability { id: "73CD", source: "Nald'thal" }
 8202.1 "Heavens' Trial" Ability { id: "711E", source: "Nald'thal" }
@@ -532,17 +532,17 @@ hideall "Fan Flames"
 8212.3 "Golden Tenet" Ability { id: "711A", source: "Nald'thal" }
 8227.5 "Hells' Trial" Ability { id: "7121", source: "Nald'thal" }
 
-8238.5 "As Above, So Below" Ability { id: "(70E8|70E9)", source: "Nald'thal" }
+8238.5 "As Above, So Below" Ability { id: ["70E8", "70E9"], source: "Nald'thal" }
 8252.7 "Once Above, Ever Below" Ability { id: "73C0", source: "Nald'thal" }
 8263.8 "Stygian Tenet?" Ability { id: "711C", source: "Nald'thal" }
 8264.9 "Heavens' Trial?" Ability { id: "711E", source: "Nald'thal" }
 8265.8 "Smelting?" Ability { id: "7120", source: "Nald" }
 
-8274.0 "As Above, So Below" Ability { id: "(70E8|70E9)", source: "Nald'thal" }
-8288.2 "Hearth Above, Flight Below" Ability { id: "(741B|73CA|73CB|73CC)", source: "Nald'thal" }
+8274.0 "As Above, So Below" Ability { id: ["70E8", "70E9"], source: "Nald'thal" }
+8288.2 "Hearth Above, Flight Below" Ability { id: ["741B", "73CA", "73CB", "73CC"], source: "Nald'thal" }
 8289.4 "Far-flung Fire?" Ability { id: "73AD", source: "Nald" }
 8294.0 "Deepest Pit?" Ability { id: "73C7", source: "Thal" } duration 4
-8299.4 "Golden Tenet/Hells' Trial" Ability { id: "(7121|711A)", source: "Nald'thal" }
+8299.4 "Golden Tenet/Hells' Trial" Ability { id: ["7121", "711A"], source: "Nald'thal" }
 8315.9 "Hell of Fire" Ability { id: "72B[79]", source: "Nald'thal" }
 
 8324.1 "--sync--" Ability { id: "710D", source: "Nald'thal" } window 20,20
@@ -556,8 +556,8 @@ hideall "Fan Flames"
 8390.5 "Hells' Trial" Ability { id: "7121", source: "Nald'thal" }
 
 # Loop back to beginning of loop block
-8401.1 "As Above, So Below" Ability { id: "(70E8|70E9)", source: "Nald'thal" } window 50,50 jump 8070.2
-8415.3 "Once Above, Ever Below" #Ability { id: "(73BF|73C0|741C|741D)", source: "Nald'thal" }
+8401.1 "As Above, So Below" Ability { id: ["70E8", "70E9"], source: "Nald'thal" } window 50,50 jump 8070.2
+8415.3 "Once Above, Ever Below" #Ability { id: ["73BF", "73C0", "741C", "741D"], source: "Nald'thal" }
 
 8422.5 "--sync--" #Ability { id: "73CD", source: "Nald'thal" }
 8426.4 "Stygian Tenet?" #Ability { id: "711C", source: "Nald'thal" }
@@ -565,4 +565,4 @@ hideall "Fan Flames"
 8428.4 "Smelting?" #Ability { id: "7120", source: "Nald" }
 
 8436.6 "As Above, So Below" #Ability { id: "70E9", source: "Nald'thal" }
-8450.8 "Hearth Above, Flight Below" #Ability { id: "(741B|73CA|73CB|73CC)", source: "Nald'thal" }
+8450.8 "Hearth Above, Flight Below" #Ability { id: ["741B", "73CA", "73CB", "73CC"], source: "Nald'thal" }

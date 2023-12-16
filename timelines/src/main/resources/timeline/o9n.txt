@@ -1,14 +1,14 @@
 # Omega - Alphascape V1.0 - O9N
 # -r v7g6rkfjhNGDzLn8 -rf 2 -ii 314E 3202 3161 3164 3157 316E 315F  3162 3163 3204 3160 3203 3158 3164 3205 3148 3153
 
-0.0 "--Reset--" sync / 21:........:4000000F:/ window 100000 jump 0
+0.0 "--Reset--" ActorControl { command: "4000000F" } window 100000 jump 0
 
 hideall "--Reset--"
 hideall "--sync--"
 
 # Start branch
 0.0 "Start"
-0.0 "--sync--" sync / 104:[^:]*:1($|:)/ window 0,1
+0.0 "--sync--" InCombat { inGameCombat: "1" } window 0,1
 # This buster at slightly different times depending on the window.
 15.0 "Chaotic Dispersion" Ability { id: "314F", source: "Chaos" } window 15,10
 25.7 "Long/Lat Implosion?" Ability { id: "315[12]", source: "Chaos" } window 30,10 jump 1025.7
@@ -43,7 +43,7 @@ hideall "--sync--"
 1211.6 "--sync--" Ability { id: "3215", source: "Chaos" }
 1218.3 "Stray Flames" Ability { id: "316B", source: "Chaos" }
 1224.2 "Stray Spray" Ability { id: "316C", source: "Chaos" }
-1500.0 "--sync--" sync / 00:0044:Chaos:The crystal\.\.\.destroyed\!\?/ window 500,10
+1500.0 "--sync--" GameLog { code: "0044", name: "Chaos", line: "The crystal\.\.\.destroyed\!\?.*?" } window 500,10
 1503.0 "Soul of Chaos" Ability { id: "316A", source: "Chaos" } window 500,10
 1513.1 "--targetable--"
 # fake window into Water->Earth loop
@@ -77,7 +77,7 @@ hideall "--sync--"
 2212.8 "--sync--" Ability { id: "3215", source: "Chaos" }
 2219.5 "Stray Flames" Ability { id: "316B", source: "Chaos" }
 2225.4 "Stray Spray" Ability { id: "316C", source: "Chaos" }
-2500.0 "--sync--" sync / 00:0044:Chaos:The crystal\.\.\.destroyed\!\?/ window 500,10
+2500.0 "--sync--" GameLog { code: "0044", name: "Chaos", line: "The crystal\.\.\.destroyed\!\?.*?" } window 500,10
 2503.0 "Soul of Chaos" Ability { id: "316A", source: "Chaos" } window 500,10
 # fake window into Fire->Air loop
 2529.5 "Chaotic Dispersion" Ability { id: "314F", source: "Chaos" } window 50,50 jump 3212.6

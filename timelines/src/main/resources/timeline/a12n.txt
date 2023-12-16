@@ -6,7 +6,7 @@ hideall "--sync--"
 
 # -ii 1AE2 1AE6 1AF1
 
-0.0 "--sync--" sync / 104:[^:]*:1($|:)/ window 0,1
+0.0 "--sync--" InCombat { inGameCombat: "1" } window 0,1
 6.4 "Divine Spear" Ability { id: "1AE3", source: "Alexander Prime" } window 6.4,5
 14.5 "Mega Holy" Ability { id: "1AE7", source: "Alexander Prime" }
 22.6 "Punishing Heat" Ability { id: "1AE4", source: "Alexander Prime" }
@@ -18,7 +18,7 @@ hideall "--sync--"
 56.4 "Divine Spear" Ability { id: "1AE3", source: "Alexander Prime" }
 
 # The intermission can be pushed early at ~75% HP.
-61.4 "--untargetable--" sync / 22:........:Alexander Prime:........:Alexander Prime:00/ window 61.4,5
+61.4 "--untargetable--" NameToggle { name: "Alexander Prime", toggle: "00" } window 61.4,5
 161.9 "--sync--" Ability { id: "1A18", source: "Alexander" } window 161.9,5
 171.6 "Divine Judgment" Ability { id: "1AEF", source: "Alexander" }
 

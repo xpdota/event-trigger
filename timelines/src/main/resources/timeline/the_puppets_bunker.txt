@@ -7,7 +7,7 @@ hideall "--sync--"
 # -p 508D:112.8 -ii 5074 5075 5076 5091 5092 5081 5099 507E 5090 51BC
 
 # Elevated Detritus will be sealed off
-100.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DB0:/ window 100,0
+100.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DB0" } window 100,0
 112.8 "Firing Order: Anti-Personnel Laser" Ability { id: "508D", source: "813P-Operated Aegis Unit" } window 112.8,20
 125.1 "--sync--" Ability { id: "507[789A]", source: "813P-Operated Aegis Unit" }
 140.1 "Maneuver: Beam Cannons" Ability { id: "5073", source: "813P-Operated Aegis Unit" }
@@ -15,7 +15,7 @@ hideall "--sync--"
 170.6 "Firing Order: Surface Laser" Ability { id: "508E", source: "813P-Operated Aegis Unit" }
 177.7 "Aerial Support: Swoop" Ability { id: "50D2", source: "813P-Operated Aegis Unit" }
 187.8 "Flight Path" Ability { id: "508C", source: "Flight Unit" }
-197.9 "Maneuver: Refraction Cannons" Ability { id: "(507F|5080)", source: "813P-Operated Aegis Unit" }
+197.9 "Maneuver: Refraction Cannons" Ability { id: ["507F", "5080"], source: "813P-Operated Aegis Unit" }
 206.2 "--sync--" Ability { id: "507[789A]", source: "813P-Operated Aegis Unit" }
 220.2 "Maneuver: Beam Cannons" Ability { id: "5073", source: "813P-Operated Aegis Unit" }
 239.6 "Aerial Support: Bombardment" Ability { id: "50D3", source: "813P-Operated Aegis Unit" }
@@ -33,7 +33,7 @@ hideall "--sync--"
 296.3 "--sync--" Ability { id: "53B2", source: "813P-Operated Aegis Unit" }
 303.8 "Life's Last Song" Ability { id: "53B3", source: "813P-Operated Aegis Unit" }
 309.3 "Aerial Support: Swoop" Ability { id: "50D2", source: "813P-Operated Aegis Unit" }
-317.4 "Maneuver: Refraction Cannons" Ability { id: "(507F|5080)", source: "813P-Operated Aegis Unit" }
+317.4 "Maneuver: Refraction Cannons" Ability { id: ["507F", "5080"], source: "813P-Operated Aegis Unit" }
 319.4 "Flight Path" Ability { id: "508C", source: "Flight Unit" }
 328.5 "Firing Order: Surface Laser" Ability { id: "508E", source: "813P-Operated Aegis Unit" }
 330.7 "--sync--" Ability { id: "507[789A]", source: "813P-Operated Aegis Unit" }
@@ -71,7 +71,7 @@ hideall "--sync--"
 485.2 "Life's Last Song" Ability { id: "53B3", source: "813P-Operated Aegis Unit" }
 490.2 "Life's Last Song" Ability { id: "53B3", source: "813P-Operated Aegis Unit" }
 495.7 "Aerial Support: Swoop" Ability { id: "50D2", source: "813P-Operated Aegis Unit" }
-503.8 "Maneuver: Refraction Cannons" Ability { id: "(507F|5080)", source: "813P-Operated Aegis Unit" }
+503.8 "Maneuver: Refraction Cannons" Ability { id: ["507F", "5080"], source: "813P-Operated Aegis Unit" }
 505.8 "Flight Path" Ability { id: "508C", source: "Flight Unit" }
 521.1 "Firing Order: Anti-Personnel Laser" Ability { id: "508D", source: "813P-Operated Aegis Unit" }
 531.1 "Maneuver: Collider Cannons" Ability { id: "507[BCD]", source: "813P-Operated Aegis Unit" }
@@ -91,7 +91,7 @@ hideall "--sync--"
 593.1 "Life's Last Song" Ability { id: "53B3", source: "813P-Operated Aegis Unit" }
 598.1 "Life's Last Song" Ability { id: "53B3", source: "813P-Operated Aegis Unit" }
 603.6 "Aerial Support: Swoop" Ability { id: "50D2", source: "813P-Operated Aegis Unit" } window 100,100 jump 495.7
-611.7 "Maneuver: Refraction Cannons" #Ability { id: "(507F|5080)", source: "813P-Operated Aegis Unit" }
+611.7 "Maneuver: Refraction Cannons" #Ability { id: ["507F", "5080"], source: "813P-Operated Aegis Unit" }
 613.7 "Flight Path" #Ability { id: "508C", source: "Flight Unit" }
 629.0 "Firing Order: Anti-Personnel Laser" #Ability { id: "508D", source: "813P-Operated Aegis Unit" }
 639.0 "Maneuver: Collider Cannons" #Ability { id: "507[BCD]", source: "813P-Operated Aegis Unit" }
@@ -105,7 +105,7 @@ hideall "--sync--"
 # -ic "Yorha Close-Combat Unit: Spear" "Yorha Close-Combat Unit: Blade" "Yorha Close-Combat Unit: Martial"
 # -p 5212:1013.9 -ii 5214
 # Sunken Detritus will be sealed off
-1000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DB1:/ window 1000,0
+1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DB1" } window 1000,0
 1013.9 "Maneuver: Long-Barreled Laser" Ability { id: "5212", source: "Light Artillery Unit" } window 1013.9,20
 1025.7 "Maneuver: Volt Array" Ability { id: "5211", source: "Light Artillery Unit" }
 1036.0 "Authorization: No Restrictions" Ability { id: "520E", source: "Light Artillery Unit" }
@@ -139,7 +139,7 @@ hideall "--sync--"
 # * however, syncing against multiple planes simultaneously might cause timeline jitter
 
 # Launch Deck will be sealed off
-2000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DB2:/ window 2000,0
+2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DB2" } window 2000,0
 2005.1 "Apply Shield Protocol" Ability { id: "4FA6", source: "724P-Operated Superior Flight Unit \\(A-Lpha\\)" } window 2005.1,20
 2018.3 "Maneuver: Missile Command" Ability { id: "4FBD", source: "724P-Operated Superior Flight Unit \\(A-Lpha\\)" }
 2031.5 "Maneuver: Incendiary Bombing" Ability { id: "4FC3", source: "724P-Operated Superior Flight Unit \\(A-Lpha\\)" }
@@ -158,7 +158,7 @@ hideall "--sync--"
 2153.5 "Incendiary Barrage" Ability { id: "4FAF", source: "724P-Operated Superior Flight Unit \\(A-Lpha\\)" }
 2155.0 "Sliding Swipe 1" Ability { id: "4FA[CD]", source: "724P-Operated Superior Flight Unit \\(A-Lpha\\)" }
 2157.0 "Sliding Swipe 2" Ability { id: "550[DE]", source: "767P-Operated Superior Flight Unit \\(B-Eta\\)" }
-2159.0 "Sliding Swipe 3" Ability { id: "(550F|5510)", source: "772P-Operated Superior Flight Unit \\(C-Hi\\)" }
+2159.0 "Sliding Swipe 3" Ability { id: ["550F", "5510"], source: "772P-Operated Superior Flight Unit \\(C-Hi\\)" }
 2161.3 "--targetable--"
 
 2172.7 "--sync--" StartsUsing { id: "4FC4", source: "724P-Operated Superior Flight Unit \\(A-Lpha\\)" } window 70,20
@@ -190,7 +190,7 @@ hideall "--sync--"
 2403.1 "Incendiary Barrage" Ability { id: "4FAF", source: "724P-Operated Superior Flight Unit \\(A-Lpha\\)" }
 2404.6 "Sliding Swipe 1" Ability { id: "4FA[CD]", source: "724P-Operated Superior Flight Unit \\(A-Lpha\\)" }
 2406.6 "Sliding Swipe 2" Ability { id: "550[DE]", source: "767P-Operated Superior Flight Unit \\(B-Eta\\)" }
-2408.6 "Sliding Swipe 3" Ability { id: "(550F|5510)", source: "772P-Operated Superior Flight Unit \\(C-Hi\\)" }
+2408.6 "Sliding Swipe 3" Ability { id: ["550F", "5510"], source: "772P-Operated Superior Flight Unit \\(C-Hi\\)" }
 2410.9 "--targetable--"
 
 2427.2 "--sync--" StartsUsing { id: "4FBD", source: "724P-Operated Superior Flight Unit \\(A-Lpha\\)" } window 70,20
@@ -224,7 +224,7 @@ hideall "--sync--"
 # -p 5006:3012.1 -ii 4FF6 4FF7 4FF8 4FF9 4FFC 5004 4FFA 4FFF 4FFE 5002
 
 # Core Command will be sealed off
-3000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DB3:/ window 3000,0
+3000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DB3" } window 3000,0
 3012.1 "Maneuver: Volt Array" Ability { id: "5006", source: "905P-Operated Heavy Artillery Unit" } window 3012.1,20
 3024.5 "Operation: Activate Laser Turret" Ability { id: "4FED", source: "905P-Operated Heavy Artillery Unit" }
 3028.2 "Lower Laser" Ability { id: "5086", source: "905P-Operated Heavy Artillery Unit" } duration 3.5
@@ -300,7 +300,7 @@ hideall "--sync--"
 
 ### Heavy Artillery Unit: caster-friendly hallway section
 # Passage will be sealed off
-4000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DB4:/ window 4000,0
+4000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DB4" } window 4000,0
 
 
 ### The Compound
@@ -310,7 +310,7 @@ hideall "--sync--"
 # * Can't use "The Bridge" area sync due to checkpoint with Compound 2P.
 
 # The bridge will be sealed off
-#5000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:DB5:/ window 5000,0
+#5000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "DB5" } window 5000,0
 5002.0 "--sync--" Ability { id: "53CA", source: "The Compound" } window 5002,0
 5013.2 "Mechanical Laceration" Ability { id: "51B8", source: "The Compound" } window 6000,20
 5024.4 "Mechanical Decapitation/Dissection" Ability { id: "51B[34]", source: "The Compound" }
@@ -392,9 +392,9 @@ hideall "--sync--"
 # beginning of loop
 6350.2 "--sync--" Ability { id: "51A3", source: "Compound 2P" }
 6356.3 "Reproduce" Ability { id: "51A1", source: "Compound 2P" }
-6366.0 "Prime Blade (In/Out)" Ability { id: "(541F|5421)", source: "Compound 2P" }
+6366.0 "Prime Blade (In/Out)" Ability { id: ["541F", "5421"], source: "Compound 2P" }
 6375.9 "Forced Transfer" Ability { id: "51A2", source: "Compound 2P" }
-6379.4 "Prime Blade (In/Out)" Ability { id: "(5198|519A)", source: "Puppet 2P" }
+6379.4 "Prime Blade (In/Out)" Ability { id: ["5198", "519A"], source: "Puppet 2P" }
 
 
 # Random Three Parts/ Four Parts
@@ -423,10 +423,10 @@ hideall "--sync--"
 
 6523.7 "--sync--" Ability { id: "51A3", source: "Compound 2P" }
 6532.5 "Forced Transfer" Ability { id: "53D[01]", source: "Compound 2P" }
-6535.8 "Prime Blade (In/Out)" Ability { id: "(5198|519A)", source: "Compound 2P" }
+6535.8 "Prime Blade (In/Out)" Ability { id: ["5198", "519A"], source: "Compound 2P" }
 
 6541.3 "--sync--" Ability { id: "51A3", source: "Compound 2P" }
 6547.4 "Reproduce" Ability { id: "51A1", source: "Compound 2P" } window 100,100 jump 6356.3
-6557.2 "Prime Blade (In/Out)" Ability { id: "(541F|5421)", source: "Compound 2P" }
+6557.2 "Prime Blade (In/Out)" Ability { id: ["541F", "5421"], source: "Compound 2P" }
 6567.1 "Forced Transfer" Ability { id: "51A2", source: "Compound 2P" }
-6570.6 "Prime Blade (In/Out)" Ability { id: "(5198|519A)", source: "Puppet 2P" }
+6570.6 "Prime Blade (In/Out)" Ability { id: ["5198", "519A"], source: "Puppet 2P" }

@@ -9,7 +9,7 @@ hideall "--sync--"
 hideall "--Reset--"
 
 # Timings get slightly off if there's lead or steel first, so do a split.
-0.0 "--sync--" sync / 104:[^:]*:1($|:)/ window 0,1
+0.0 "--sync--" InCombat { inGameCombat: "1" } window 0,1
 10.8 "--sync--" StartsUsing { id: "2BBA", source: "Tsukuyomi" } window 30,30
 14.8 "Reprimand" Ability { id: "2BBA", source: "Tsukuyomi" }
 25.0 "Nightfall (gun/spear)" Ability { id: "2BB[CD]", source: "Tsukuyomi" }
@@ -81,7 +81,7 @@ hideall "--Reset--"
 1196.8 "Lunar Halo" Ability { id: "2BD6", source: "Moonlight" }
 1197.2 "Crater" Ability { id: "2CD7", source: "Moondust" }
 1197.2 "Moonbeam" Ability { id: "2BD4", source: "Moondust" }
-1208.3 "Antitwilight/Perilune" Ability { id: "(2BD7|2BD8)", source: "Tsukuyomi" }
+1208.3 "Antitwilight/Perilune" Ability { id: ["2BD7", "2BD8"], source: "Tsukuyomi" }
 
 1223.4 "Reprimand" Ability { id: "2BBA", source: "Tsukuyomi" }
 1230.6 "Zashiki-Asobi" Ability { id: "2BC5", source: "Tsukuyomi" }
@@ -108,7 +108,7 @@ hideall "--Reset--"
 1334.9 "Moonbeam" Ability { id: "2BD4", source: "Moondust" }
 1334.9 "Crater" Ability { id: "2CD7", source: "Moondust" }
 1335.9 "Lunar Halo" Ability { id: "2BD6", source: "Moonlight" }
-1346.0 "Antitwilight/Perilune" Ability { id: "(2BD7|2BD8)", source: "Tsukuyomi" }
+1346.0 "Antitwilight/Perilune" Ability { id: ["2BD7", "2BD8"], source: "Tsukuyomi" }
 
 # 35% push
 1361.3 "Dance Of The Dead" Ability { id: "2CD0", source: "Tsukuyomi" } window 1400,20
