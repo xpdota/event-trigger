@@ -3,7 +3,9 @@ package gg.xp.xivsupport.timelines.cbevents;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 class CbConversions {
@@ -59,8 +61,13 @@ class CbConversions {
 		};
 	}
 
+	private static final Pattern simpleString = Pattern.compile("[A-Za-z0-9-='\",~`!@#%&]*");
+
 	static <X> CbConversion<X> strConv(Function<X, String> getter) {
 		return str -> {
+			if (simpleString.matcher(str).matches()) {
+				return item -> Objects.equals(getter.apply(item), str);
+			}
 			Pattern pattern = Pattern.compile(str);
 			return item -> pattern.matcher(getter.apply(item)).matches();
 		};

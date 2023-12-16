@@ -42,7 +42,7 @@ public class TimelineProcessorTest {
 		MatcherAssert.assertThat(tm.getCurrentDisplayEntries(), Matchers.empty());
 
 		// 1000.0 "--sync--" sync / 29:[^:]*:7DC:[^:]*:1008:/ window 10000,0
-		dist.acceptEvent(new ACTLogLineEvent("41|2022-04-19T17:36:39.0000000-07:00|0|7DC|0|1008|a5fb68c9fda6fe87"));
+		dist.acceptEvent(new ACTLogLineEvent("41|2022-04-19T17:36:39.0000000-07:00|0|7DC|0|1008|1234|a5fb68c9fda6fe87"));
 //		dist.acceptEvent(new ACTLogLineEvent("00|2022-04-19T17:36:39.0000000-07:00|0839||The shell mound will be sealed off in 15 seconds!|a5fb68c9fda6fe87"));
 		{
 			List<VisualTimelineEntry> currentEntries = tm.getCurrentDisplayEntries();

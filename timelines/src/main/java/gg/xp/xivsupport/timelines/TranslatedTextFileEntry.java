@@ -61,8 +61,8 @@ public class TranslatedTextFileEntry implements TimelineEntry {
 		return "TranslatedTextFileEntry{" +
 		       "nameOverride='" + nameOverride +
 		       "', syncOverride='" + syncOverride +
-		       "', untranslated='" + untranslated +
 		       "', syncControl='" + esc +
+		       "', untranslated='" + untranslated +
 		       "'}";
 	}
 

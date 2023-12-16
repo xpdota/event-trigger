@@ -158,6 +158,9 @@ public final class TimelineProcessor {
 					.filter(Objects::nonNull)
 					.collect(Collectors.toUnmodifiableSet());
 			this.useClassicSync = syncEntries.stream().anyMatch(entry -> entry.sync() != null);
+			if (this.useClassicSync) {
+				log.info("This timeline still uses classic regex syncs!");
+			}
 		}
 		else {
 			this.subSyncChunks = Collections.emptyMap();
