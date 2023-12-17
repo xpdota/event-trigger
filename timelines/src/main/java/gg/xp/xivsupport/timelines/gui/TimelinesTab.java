@@ -23,9 +23,11 @@ import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.gui.JobMultiSelectionGui;
 import gg.xp.xivsupport.sys.Threading;
+import gg.xp.xivsupport.timelines.CustomEventSyncController;
 import gg.xp.xivsupport.timelines.CustomTimelineEntry;
 import gg.xp.xivsupport.timelines.CustomTimelineItem;
 import gg.xp.xivsupport.timelines.CustomTimelineLabel;
+import gg.xp.xivsupport.timelines.EventSyncController;
 import gg.xp.xivsupport.timelines.TimelineCustomizations;
 import gg.xp.xivsupport.timelines.TimelineEntry;
 import gg.xp.xivsupport.timelines.TimelineInfo;
@@ -160,14 +162,28 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				}))
 				.addColumn(new CustomColumn<>("Sync", e -> {
 					if (e.sync() != null) {
-						return e.sync();
+						return e.sync().pattern();
 					}
 					if (e.eventSyncController() != null) {
-						return e.eventSyncController().toString();
+						return e.eventSyncController();
 					}
 					return null;
 				}, col -> {
-					col.setCellEditor(noLabelNoNewSyncEdit(StandardColumns.regexEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.sync = value), Pattern.CASE_INSENSITIVE)));
+					DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
+						@Override
+						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+							String displayValue;
+							if (isSelected) {
+								displayValue = value == null ? "Double Click to Add" : ("Double Click to Edit: " + value);
+							}
+							else {
+								displayValue = value == null ? "" : value.toString();
+							}
+							return super.getTableCellRendererComponent(table, displayValue, isSelected, hasFocus, row, column);
+						}
+					};
+					col.setCellRenderer(cellRenderer);
+					col.setCellEditor(new SyncCellEditor(cellRenderer));
 				}))
 				.addColumn(new CustomColumn<>("Duration", TimelineEntry::duration, col -> {
 					col.setCellEditor(noLabelEdit(StandardColumns.doubleEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.duration = value))));
@@ -188,7 +204,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setPreferredWidth(numColPrefWidth);
 				}))
 				.addColumn(new CustomColumn<>("Win Effective", e -> {
-					if (e.timelineWindow() == TimelineWindow.NONE || e.sync() == null) {
+					if (e.timelineWindow() == TimelineWindow.NONE || !e.canSync()) {
 						return "";
 					}
 					return String.format("%.01f - %.01f", e.getMinTime(), e.getMaxTime());
@@ -958,6 +974,62 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 //							frame.getContentPane().add(gui);
 //							frame.pack();
 //							frame.setVisible(true);
+			return out;
+		}
+
+		@Override
+		public Object getCellEditorValue() {
+			return sel;
+		}
+
+		@Override
+		public boolean isCellEditable(EventObject anEvent) {
+			if (anEvent instanceof MouseEvent me) {
+				if (me.getClickCount() == 2) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+	}
+
+	private class SyncCellEditor extends AbstractCellEditor implements TableCellEditor {
+
+		@Serial
+		private static final long serialVersionUID = 188397433845199843L;
+		private final DefaultTableCellRenderer cellRenderer;
+
+		private EventSyncController sel;
+
+		public SyncCellEditor(DefaultTableCellRenderer cellRenderer) {
+			this.cellRenderer = cellRenderer;
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			TimelineEntry entry = ((CustomTableModel<TimelineEntry>) table.getModel()).getValueForRow(row);
+			if (value instanceof EventSyncController esc) {
+				sel = CustomEventSyncController.from(esc);
+			}
+			else {
+				sel = null;
+			}
+			EventSyncController selTmp = sel;
+			Component out = cellRenderer.getTableCellRendererComponent(table, selTmp == null ? "" : selTmp.toString(), true, true, row, column);
+			SwingUtilities.invokeLater(() -> {
+				SyncEditorGui.Result result = SyncEditorGui.edit(TimelinesTab.this, selTmp);
+				if (result.submitted) {
+					safeEditTimelineEntry(false, (cte, unused) -> {
+						CustomEventSyncController val = result.value;
+						cte.esc = val;
+						if (val != null) {
+							cte.sync = null;
+						}
+					}).accept(entry, result.value);
+				}
+				SwingUtilities.invokeLater(TimelinesTab.this::stopEditing);
+			});
 			return out;
 		}
 
