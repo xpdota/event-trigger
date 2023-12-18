@@ -194,7 +194,12 @@ public final class TimelineManager {
 	private final Map<Long, TimelineCustomizations> customizations = new ConcurrentHashMap<>();
 
 	public TimelineCustomizations getCustomSettings(long zoneId) {
-		return customizations.computeIfAbsent(zoneId, (k) -> pers.get(propStubForZoneId(k), TimelineCustomizations.class, new TimelineCustomizations()));
+		try {
+			return customizations.computeIfAbsent(zoneId, (k) -> pers.get(propStubForZoneId(k), TimelineCustomizations.class, new TimelineCustomizations()));
+		}
+		catch (Throwable t) {
+			throw new RuntimeException("Error loading timeline customizations for zone " + zoneId, t);
+		}
 	}
 
 	public void commitCustomSettings(long zoneId) {

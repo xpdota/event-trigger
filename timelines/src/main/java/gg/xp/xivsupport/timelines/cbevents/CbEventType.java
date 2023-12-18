@@ -200,4 +200,8 @@ public enum CbEventType {
 			return Collections.unmodifiableList(fieldMap);
 		}
 	}
+
+	public List<CbfMap<?>> getFieldMappings() {
+		return (List<CbfMap<?>>) this.data.getFieldMappings();
+	}
 }

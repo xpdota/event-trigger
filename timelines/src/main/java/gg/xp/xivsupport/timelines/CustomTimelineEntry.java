@@ -27,6 +27,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	public double time;
 	public @Nullable String name;
 	public @Nullable Pattern sync;
+	public @Nullable CustomEventSyncController esc;
 	public @Nullable Double duration;
 	public @Nullable Double windowStart;
 	public @Nullable Double windowEnd;
@@ -52,6 +53,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			double time,
 			@Nullable String name,
 			@Nullable Pattern sync,
+			@Nullable CustomEventSyncController esc,
 			@Nullable Double duration,
 			@NotNull TimelineWindow timelineWindow,
 			@Nullable Double jump,
@@ -68,6 +70,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		this.time = time;
 		this.name = name;
 		this.sync = sync;
+		this.esc = esc;
 		this.callout = callout;
 		this.calloutPreTime = calloutPreTime;
 		this.duration = duration;
@@ -86,6 +89,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			@JsonProperty("time") double time,
 			@JsonProperty("name") @Nullable String name,
 			@JsonProperty("sync") @Nullable String sync,
+			@JsonProperty("esc") @Nullable CustomEventSyncController esc,
 			@JsonProperty("duration") @Nullable Double duration,
 			@JsonProperty("timelineWindow") @NotNull TimelineWindow timelineWindow,
 			@JsonProperty("jump") @Nullable Double jump,
@@ -96,7 +100,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled,
 			@JsonProperty(value = "callout", defaultValue = "false") boolean callout,
 			@JsonProperty(value = "calloutPreTime", defaultValue = "0") double calloutPreTime,
-			@JsonProperty(value = "jobs") @Nullable CombatJobSelection jobs
+			@JsonProperty("jobs") @Nullable CombatJobSelection jobs
 	) {
 		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
 		// but it works.
@@ -115,6 +119,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		this.replaces = replaces;
 		this.enabled = !disabled;
 		this.enabledJobs = jobs == null ? CombatJobSelection.all() : jobs;
+		this.esc = esc;
 	}
 
 	@Override
@@ -196,9 +201,9 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	}
 
 	@Override
+	@JsonProperty("esc")
 	public @Nullable EventSyncController eventSyncController() {
-		// TODO
-		return null;
+		return esc;
 	}
 
 	@Override
@@ -207,6 +212,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		       "time=" + time +
 		       ", name='" + name + '\'' +
 		       ", sync=" + sync +
+		       ", esc=" + esc +
 		       ", duration=" + duration +
 		       ", windowStart=" + windowStart +
 		       ", windowEnd=" + windowEnd +
@@ -249,10 +255,12 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		if (other.isLabel()) {
 			throw new IllegalArgumentException("Cannot override a label with a real entry");
 		}
+		EventSyncController otherEsc = other.eventSyncController();
 		CustomTimelineEntry newCte = new CustomTimelineEntry(
 				other.time(),
 				other.name(),
 				other.sync(),
+				otherEsc == null ? null : CustomEventSyncController.from(otherEsc),
 				other.duration(),
 				other.timelineWindow(),
 				other.jump(),
@@ -269,10 +277,12 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	}
 
 	public static CustomTimelineEntry cloneFor(TimelineEntry other) {
+		EventSyncController otherEsc = other.eventSyncController();
 		CustomTimelineEntry newCte = new CustomTimelineEntry(
 				other.time(),
 				other.name() + " copy",
 				other.sync(),
+				otherEsc == null ? null : CustomEventSyncController.from(otherEsc),
 				other.duration(),
 				other.timelineWindow(),
 				other.jump(),

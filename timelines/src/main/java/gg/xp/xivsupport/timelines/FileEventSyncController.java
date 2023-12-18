@@ -61,4 +61,14 @@ public class FileEventSyncController implements EventSyncController {
 	public String toString() {
 		return type.displayName() + CbEventFmt.flattenListMap(original);
 	}
+
+	@Override
+	public CbEventType getType() {
+		return type;
+	}
+
+	@Override
+	public Map<String, List<String>> getRawConditions() {
+		return TimelineUtils.cloneConditions(original);
+	}
 }
