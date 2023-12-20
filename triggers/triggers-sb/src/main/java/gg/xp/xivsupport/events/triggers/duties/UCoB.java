@@ -92,9 +92,9 @@ public class UCoB extends AutoChildEventHandler implements FilteredEventHandler 
 			case "from on high i descend, the hallowed moon to call!" -> call = spreadIn;
 			case "fleeting light! 'neath the red moon, scorch you the earth!" -> call = tankBusterStack;
 			case "fleeting light! amid a rain of stars, exalt you the red moon!" -> call = spreadTankBuster;
-			case "from hallowed moon i descend, a rain of stars to bring" -> call = InSpreadNeuroLinkSpread;
-			case "from on high i descend, the moon and stars to bring" -> call = SpreadInNeuroLinkSpread;
-			case "from hallowed moon i bare iron, in my descent to wield" -> call = inOutSpread;
+			case "from hallowed moon i descend, a rain of stars to bring!" -> call = InSpreadNeuroLinkSpread;
+			case "from on high i descend, the moon and stars to bring!" -> call = SpreadInNeuroLinkSpread;
+			case "from hallowed moon i bare iron, in my descent to wield!" -> call = inOutSpread;
 			case "unbending iron, descend with fiery edge!" -> call = outBusterStack;
 			case "from hallowed moon i descend, upon burning earth to tread!" -> call = inBusterStack;
 			case "unbending iron, take fire and descend!" -> call = outStackBuster;
