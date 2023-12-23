@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.timelines;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 /**
  * Base interface for a timeline entry
  */
+@JsonIgnoreProperties("imported")
 public interface TimelineEntry extends Comparable<TimelineEntry> {
 
 	/**

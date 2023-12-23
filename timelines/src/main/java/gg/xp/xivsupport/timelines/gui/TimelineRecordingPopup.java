@@ -10,6 +10,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullEndedEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.replay.ReplayController;
@@ -62,7 +63,7 @@ public class TimelineRecordingPopup extends JDialog {
 		this.replay = replay;
 		this.state = state;
 		this.cdm = cdm;
-		this.statusLabel = new JLabel("...");
+		this.statusLabel = new JLabel("...", SwingConstants.CENTER);
 		processZoneChange();
 		processCdChange();
 		setupGui();
@@ -76,7 +77,7 @@ public class TimelineRecordingPopup extends JDialog {
 		content.add(statusLabel, BorderLayout.CENTER);
 
 		JPanel buttons = new JPanel();
-		buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
+		buttons.setLayout(new WrapLayout());
 
 		acceptButton = new JButton("Accept");
 		acceptButton.addActionListener(l -> this.finish());
@@ -85,11 +86,11 @@ public class TimelineRecordingPopup extends JDialog {
 		runButton = new JButton("Run");
 		runButton.addActionListener(l -> exs.submit(this::start));
 		buttons.add(runButton);
-		closeButton = new EasyAction("Close", () -> setVisible(false)).asButton();
+		closeButton = new EasyAction("Cancel", () -> setVisible(false)).asButton();
 		buttons.add(closeButton);
 
 		content.add(buttons, BorderLayout.SOUTH);
-		content.setPreferredSize(new Dimension(400, 200));
+		content.setPreferredSize(new Dimension(400, 75));
 		setContentPane(content);
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 		pack();
@@ -193,11 +194,10 @@ public class TimelineRecordingPopup extends JDialog {
 	}
 
 	private void reset() {
-		setStatusLabel("Click 'Run'");
+		setStatusLabel("Click 'Run' to start...");
 		entries = new ArrayList<>();
 		acceptButton.setEnabled(false);
 		runButton.setEnabled(true);
-		closeButton.setText("Close");
 		closeButton.setEnabled(true);
 		setDefaultCloseOperation(HIDE_ON_CLOSE);
 	}
@@ -246,7 +246,6 @@ public class TimelineRecordingPopup extends JDialog {
 			acceptButton.setEnabled(true);
 			closeButton.setEnabled(true);
 			setDefaultCloseOperation(HIDE_ON_CLOSE);
-			closeButton.setText("Cancel");
 		}
 		catch (Throwable t) {
 			log.error("Error when replaying: ", t);
