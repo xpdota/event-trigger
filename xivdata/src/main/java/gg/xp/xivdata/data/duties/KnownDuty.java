@@ -1,5 +1,6 @@
 package gg.xp.xivdata.data.duties;
 
+import gg.xp.xivdata.data.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;

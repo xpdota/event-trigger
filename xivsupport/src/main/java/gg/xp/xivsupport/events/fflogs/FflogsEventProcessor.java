@@ -22,6 +22,7 @@ import gg.xp.xivsupport.events.actlines.events.TickType;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeFflogsTimeSource;
+import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.RawXivCombatantInfo;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import gg.xp.xivsupport.events.state.XivStateImpl;
@@ -253,6 +254,9 @@ public class FflogsEventProcessor {
 					}
 					else {
 						context.accept(new GenericDamageEvent(source, target, new XivAbility(rawEvent.abilityId()), amount, rawEvent.severity()));
+					}
+					if (amount > 0 && !state.inCombat()) {
+						context.accept(new InCombatChangeEvent(true));
 					}
 				}
 				case "heal", "calculatedheal" -> {

@@ -1,6 +1,8 @@
 package gg.xp.xivsupport.timelines;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivdata.data.*;
 import org.jetbrains.annotations.NotNull;
@@ -398,5 +400,16 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 							alertText: "%s",
 						},
 				""", uniqueName, uniqueName, calloutPreTime(), callTextForExport());
+	}
+
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+	default @Nullable String getImportSource() {
+		return null;
+	};
+
+	@JsonIgnore
+	default boolean isImported() {
+		return getImportSource() != null;
 	}
 }

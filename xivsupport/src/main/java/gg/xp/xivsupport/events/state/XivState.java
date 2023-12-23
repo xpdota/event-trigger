@@ -27,9 +27,9 @@ public interface XivState extends SubState {
 	XivPlayerCharacter getPlayer();
 
 	// Note: can be null until we've seen a 01-line
-	XivZone getZone();
+	@Nullable XivZone getZone();
 
-	XivMap getMap();
+	@Nullable XivMap getMap();
 
 	List<XivPlayerCharacter> getPartyList();
 
