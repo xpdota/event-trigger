@@ -137,7 +137,7 @@ public class AutoScan {
 
 		Map<Class<?>, List<Method>> classMethodMap = new LinkedHashMap<>();
 		for (Class<?> annotatedClass : annotatedClasses) {
-			if (isClassInstantiable(annotatedClass)) {
+			if (isClassInstantiable(annotatedClass) && !annotatedClass.isAnnotationPresent(NoAutoScan.class)) {
 				classMethodMap.computeIfAbsent(annotatedClass, unused -> new ArrayList<>());
 			}
 			else {
@@ -164,6 +164,7 @@ public class AutoScan {
 			//noinspection SimplifyForEach
 			Stream.concat(Stream.of(clazz), implementingClasses.stream())
 					.filter(AutoScan::isClassInstantiable)
+					.filter(c -> !c.isAnnotationPresent(NoAutoScan.class))
 					.forEach(cls -> classMethodMap.computeIfAbsent(cls, unused -> new ArrayList<>()).add(method));
 		}
 		log.info("Methods: {}", methodCount);

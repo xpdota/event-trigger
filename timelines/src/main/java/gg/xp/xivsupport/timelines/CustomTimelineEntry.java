@@ -33,6 +33,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	public @Nullable Double windowEnd;
 	public @Nullable Double jump;
 	public @Nullable String jumpLabel;
+	public @Nullable String importSource;
 	public boolean forceJump;
 	// TODO: this uses the absolute path to the JAR, which means icons will break if the user moves their install location.
 	// Best solution is to probably make our own little class that lets you specify an ability/status ID in addition to
@@ -61,9 +62,10 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			@Nullable Boolean forceJump,
 			@Nullable URL icon,
 			@Nullable TimelineReference replaces,
-			 boolean disabled,
-			 boolean callout,
-			 double calloutPreTime
+			boolean disabled,
+			boolean callout,
+			double calloutPreTime,
+			@Nullable String importSource
 	) {
 		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
 		// but it works.
@@ -82,6 +84,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		this.icon = icon;
 		this.replaces = replaces;
 		this.enabled = !disabled;
+		this.importSource = importSource;
 	}
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -98,6 +101,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			@JsonProperty("icon") @Nullable URL icon,
 			@JsonProperty("replaces") @Nullable TimelineReference replaces,
 			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled,
+			@JsonProperty(value = "importSource") String importSource,
 			@JsonProperty(value = "callout", defaultValue = "false") boolean callout,
 			@JsonProperty(value = "calloutPreTime", defaultValue = "0") double calloutPreTime,
 			@JsonProperty("jobs") @Nullable CombatJobSelection jobs
@@ -120,6 +124,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		this.enabled = !disabled;
 		this.enabledJobs = jobs == null ? CombatJobSelection.all() : jobs;
 		this.esc = esc;
+		this.importSource = importSource;
 	}
 
 	@Override
@@ -270,7 +275,8 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 				TimelineReference.of(other),
 				false,
 				false,
-				0
+				0,
+				null
 		);
 		newCte.enabledJobs = jobSelFor(other);
 		return newCte;
@@ -292,7 +298,8 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 				null,
 				false,
 				other.callout(),
-				other.calloutPreTime()
+				other.calloutPreTime(),
+				null
 		);
 		newCte.enabledJobs = jobSelFor(other);
 		return newCte;
@@ -330,5 +337,10 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	public @Nullable CombatJobSelection getEnabledJobs() {
 		// Don't bother serializing if every job is selected
 		return enabledJobs.isEnabledForAll() ? null : enabledJobs;
+	}
+
+	@Override
+	public @Nullable String getImportSource() {
+		return importSource;
 	}
 }
