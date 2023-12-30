@@ -2,6 +2,7 @@ package gg.xp.xivsupport.timelines.cbevents;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -43,13 +44,13 @@ public enum CbEventType {
 			new CbfMap<>("echo", "event.line (echo)", strConv(ChatLineEvent::getLine)),
 			new CbfMap<>("dialog", "event.line (dialog)", strConv(ChatLineEvent::getLine))
 	)),
-	StartsUsing(AbilityUsedEvent.class, List.of(
-			new CbfMap<>("sourceId", "event.source.id", id(AbilityUsedEvent::getSource)),
-			new CbfMap<>("source", "event.source.name", named(AbilityUsedEvent::getSource)),
-			new CbfMap<>("targetId", "event.target.id", id(AbilityUsedEvent::getTarget)),
-			new CbfMap<>("target", "event.target.name", named(AbilityUsedEvent::getTarget)),
-			new CbfMap<>("id", "event.ability.id", id(AbilityUsedEvent::getAbility)),
-			new CbfMap<>("ability", "event.ability.name", named(AbilityUsedEvent::getAbility))
+	StartsUsing(AbilityCastStart.class, List.of(
+			new CbfMap<>("sourceId", "event.source.id", id(AbilityCastStart::getSource)),
+			new CbfMap<>("source", "event.source.name", named(AbilityCastStart::getSource)),
+			new CbfMap<>("targetId", "event.target.id", id(AbilityCastStart::getTarget)),
+			new CbfMap<>("target", "event.target.name", named(AbilityCastStart::getTarget)),
+			new CbfMap<>("id", "event.ability.id", id(AbilityCastStart::getAbility)),
+			new CbfMap<>("ability", "event.ability.name", named(AbilityCastStart::getAbility))
 	)),
 	Ability(AbilityUsedEvent.class, List.of(
 			new CbfMap<>("sourceId", "event.source.id", id(AbilityUsedEvent::getSource)),
