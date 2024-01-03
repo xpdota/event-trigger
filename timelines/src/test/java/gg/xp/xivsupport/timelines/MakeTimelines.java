@@ -104,7 +104,7 @@ public final class MakeTimelines {
 		translationsDir.toFile().mkdirs();
 		try {
 			// Go to hosted Cactbot
-			driver.get("https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=wss://127.0.0.1:10501");
+			driver.get("https://overlayplugin.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=wss://127.0.0.1:10501");
 
 			// Dump the contents of the webpack
 			Map<?, ?> out = (Map<?, ?>) driver.executeScript("""
@@ -154,9 +154,9 @@ public final class MakeTimelines {
 					// Get the timeline translations
 					Object timelineReplace = contentMap.get("timelineReplace");
 					Map<String, LanguageReplacements> allLangs = new LinkedHashMap<>();
-					if (timelineReplace instanceof List timelineReplaceList) {
+					if (timelineReplace instanceof List<?> timelineReplaceList) {
 						for (Object o : timelineReplaceList) {
-							if (o instanceof Map timelineReplaceMap) {
+							if (o instanceof Map<?, ?> timelineReplaceMap) {
 								// This works - just need to figure out how to work it in
 								Object locale = timelineReplaceMap.get("locale");
 								Object replaceSync = timelineReplaceMap.get("replaceSync");
