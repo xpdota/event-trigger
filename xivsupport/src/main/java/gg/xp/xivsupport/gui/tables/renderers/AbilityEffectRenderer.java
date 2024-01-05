@@ -3,7 +3,9 @@ package gg.xp.xivsupport.gui.tables.renderers;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AggroIncrease;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.BaseDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.BlockedDamageEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageTakenEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.DamageType;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.HealEffect;
@@ -11,6 +13,7 @@ import gg.xp.xivsupport.events.actlines.events.abilityeffect.InvulnBlockedDamage
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpGain;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.MpLoss;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.ParriedDamageEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.ReflectedDamageEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusNoEffect;
 import gg.xp.xivsupport.events.actlines.parsers.StatusRemovedEffect;
@@ -25,6 +28,7 @@ import java.util.List;
 
 public class AbilityEffectRenderer {
 	private final TableCellRenderer fallback = new DefaultTableCellRenderer();
+	private final TableCellRenderer fallbackSecondary = new DefaultTableCellRenderer();
 	private final boolean iconOnly;
 
 	public AbilityEffectRenderer(boolean iconOnly) {
@@ -37,9 +41,13 @@ public class AbilityEffectRenderer {
 		if (!(value instanceof AbilityEffect)) {
 			return Collections.singletonList(fallback.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column));
 		}
+		if (!((AbilityEffect) value).isDisplayed()) {
+			return Collections.emptyList();
+		}
 		String text;
 		HasIconURL icon;
 		boolean reverseLayout = false;
+		List<Component> components = new ArrayList<>();
 		if (value instanceof DamageTakenEffect dte) {
 			text = dte.getSeverity().getSymbol() + dte.getAmount();
 			DamageType type = dte.getDamageType();
@@ -48,7 +56,16 @@ public class AbilityEffectRenderer {
 				case Magic -> GeneralIcons.DAMAGE_MAGIC;
 				default -> GeneralIcons.DAMAGE_OTHER;
 			};
-//			icon = ActionLibrary.iconForId(9);
+		}
+		else if (value instanceof ReflectedDamageEffect rde) {
+			BaseDamageEffect dte = rde.getReflectedEffect();
+			text = dte.getSeverity().getSymbol() + dte.getAmount() + '↶';
+			DamageType type = dte.getDamageType();
+			icon = switch (type) {
+				case Piercing, Slashing, Blunt, Shot -> GeneralIcons.DAMAGE_PHYS;
+				case Magic -> GeneralIcons.DAMAGE_MAGIC;
+				default -> GeneralIcons.DAMAGE_OTHER;
+			};
 		}
 		else if (value instanceof HealEffect heal) {
 			text = heal.getSeverity().getSymbol() + heal.getAmount();
@@ -110,7 +127,6 @@ public class AbilityEffectRenderer {
 		if (iconOnly) {
 			return Collections.singletonList(IconTextRenderer.getComponent(icon, defaultLabel, true, reverseLayout, true, null));
 		}
-		List<Component> components = new ArrayList<>();
 		if (reverseLayout) {
 			components.add(fallback.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column));
 			components.add(IconTextRenderer.getComponent(icon, defaultLabel, true, false, true, null));

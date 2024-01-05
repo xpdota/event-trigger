@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.actlines.events.abilityeffect;
 
+@SuppressWarnings("AbstractClassWithoutAbstractMethods")
 public abstract class AbilityEffect {
 
 	protected final long flags;
@@ -39,5 +40,9 @@ public abstract class AbilityEffect {
 			return getBaseDescription();
 		}
 		return String.format("%s (raw: %08x %08x)", getBaseDescription(), flags, value);
+	}
+
+	public boolean isDisplayed() {
+		return true;
 	}
 }
