@@ -59,7 +59,7 @@ public class AbilityEffectRenderer {
 		}
 		else if (value instanceof ReflectedDamageEffect rde) {
 			BaseDamageEffect dte = rde.getReflectedEffect();
-			text = dte.getSeverity().getSymbol() + dte.getAmount() + '↶';
+			text = dte.getSeverity().getSymbol() + dte.getAmount() + '↩';
 			DamageType type = dte.getDamageType();
 			icon = switch (type) {
 				case Piercing, Slashing, Blunt, Shot -> GeneralIcons.DAMAGE_PHYS;
