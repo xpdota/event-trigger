@@ -12,7 +12,7 @@ public class ReflectFlagEffect extends AbilityEffect {
 
 	@Override
 	protected String getBaseDescription() {
-		return "Next damage effect represents reflected damage.";
+		return "Next damage effect represents reflected damage";
 	}
 
 	@Override
