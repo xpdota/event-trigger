@@ -168,4 +168,16 @@ public final class Platform {
 			throw new RuntimeException(e);
 		}
 	}
+
+	public static File getFileSaveDir() {
+		File homeDir = new File(System.getProperty("user.home"));
+		if (homeDir.isDirectory()) {
+			File docDir = homeDir.toPath().resolve("Documents").toFile();
+			if (docDir.isDirectory()) {
+				return docDir;
+			}
+			return homeDir;
+		}
+		return getTriggeventDir().toFile();
+	}
 }

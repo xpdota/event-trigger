@@ -19,6 +19,7 @@ import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.models.XivZone;
+import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.gui.ColorSettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
@@ -30,6 +31,7 @@ import gg.xp.xivsupport.timelines.CustomTimelineEntry;
 import gg.xp.xivsupport.timelines.CustomTimelineItem;
 import gg.xp.xivsupport.timelines.CustomTimelineLabel;
 import gg.xp.xivsupport.timelines.EventSyncController;
+import gg.xp.xivsupport.timelines.TimelineCustomizationExport;
 import gg.xp.xivsupport.timelines.TimelineCustomizations;
 import gg.xp.xivsupport.timelines.TimelineEntry;
 import gg.xp.xivsupport.timelines.TimelineInfo;
@@ -46,11 +48,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serial;
 import java.nio.charset.StandardCharsets;
@@ -61,6 +65,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EventObject;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -541,7 +547,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			c.weightx = 0.3;
 			c.fill = GridBagConstraints.HORIZONTAL;
 
-			JButton newButton = new EasyAction("Add Timeline Entry",
+			JButton newButton = new EasyAction("New Entry",
 					() -> {
 						@Nullable TimelineEntry selectedValue = timelineModel.getSelectedValue();
 						CustomTimelineEntry newEntry = new CustomTimelineEntry();
@@ -551,7 +557,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 						addNewEntry(newEntry);
 					},
 					() -> currentCust != null, null).asButton();
-			JButton newLabelButton = new EasyAction("Add Label",
+			JButton newLabelButton = new EasyAction("New Label",
 					() -> {
 						@Nullable TimelineEntry selectedValue = timelineModel.getSelectedValue();
 						CustomTimelineLabel newEntry = new CustomTimelineLabel();
@@ -578,11 +584,19 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					resetAll();
 				}
 			});
-			JButton exportButton = new JButton("Export Timeline File");
-			exportButton.addActionListener(l -> {
+			JButton exportCustBtn = new JButton("Export");
+			exportCustBtn.addActionListener(l -> {
+				exportCusts();
+			});
+			JButton importCustBtn = new JButton("Import");
+			importCustBtn.addActionListener(l -> {
+				importCusts();
+			});
+			JButton cbExportButton = new JButton("Export To Cactbot");
+			cbExportButton.addActionListener(l -> {
 				exportCurrent();
 			});
-			JButton chooseDirButton = new JButton("Change Cactbot User Dir");
+			JButton chooseDirButton = new JButton("Set Cactbot Dir");
 			chooseDirButton.addActionListener(l -> {
 				chooseCactbotUserDir();
 			});
@@ -590,7 +604,9 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			buttonPanel.add(newButton);
 			buttonPanel.add(newLabelButton);
 			buttonPanel.add(resetButton);
-			buttonPanel.add(exportButton);
+			buttonPanel.add(exportCustBtn);
+			buttonPanel.add(importCustBtn);
+			buttonPanel.add(cbExportButton);
 			buttonPanel.add(chooseDirButton);
 			if (isReplay) {
 				JButton recordingButton = new JButton("Record");
@@ -601,6 +617,139 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			}
 			this.add(buttonPanel, c);
 		});
+	}
+
+	private static final FileFilter jsonFileFilter = new FileFilter() {
+		@Override
+		public boolean accept(File f) {
+			return f.getName().toUpperCase(Locale.ROOT).endsWith(".JSON");
+		}
+
+		@Override
+		public String getDescription() {
+			return "JSON files";
+		}
+	};
+
+	public void exportCusts() {
+		TimelineCustomizations curCust = currentCust;
+		if (curCust.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "You do not have any customizations for this timeline to export.", "No Customizations", JOptionPane.INFORMATION_MESSAGE);
+			return;
+		}
+		File fileSaveDir = Platform.getFileSaveDir();
+		Long curZone = currentZone;
+		TimelineInfo timelineInfo = TimelineManager.getTimelines().get(curZone);
+		String filenamePartial;
+		if (timelineInfo != null) {
+			String fn = timelineInfo.filename();
+			if (fn.toUpperCase(Locale.ROOT).endsWith(".TXT")) {
+				filenamePartial = fn.substring(0, fn.length() - 4);
+			}
+			else {
+				filenamePartial = fn;
+			}
+		}
+		else {
+			filenamePartial = "zone_" + curZone;
+		}
+		File initialFile = fileSaveDir.toPath().resolve(filenamePartial + ".json").toFile();
+		JFileChooser fc = new JFileChooser(fileSaveDir);
+		fc.setSelectedFile(initialFile);
+		fc.setDialogType(JFileChooser.SAVE_DIALOG);
+		fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		fc.setFileFilter(jsonFileFilter);
+		int result = fc.showSaveDialog(this);
+		if (result == JFileChooser.APPROVE_OPTION) {
+			File out = fc.getSelectedFile();
+			if (out.exists()) {
+				int overwriteConfirm = JOptionPane.showConfirmDialog(this, "File '%s' already exists. Overwrite?".formatted(out.getName()), "Overwrite?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+				if (overwriteConfirm != JOptionPane.OK_OPTION) {
+					return;
+				}
+			}
+			try (FileWriter fw = new FileWriter(out)) {
+				String serialized = backend.serializeCurrentCustomizations(Collections.singleton(curZone));
+				fw.write(serialized);
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	public void importCusts() {
+		File fileSaveDir = Platform.getFileSaveDir();
+		File initialFile = fileSaveDir.toPath().toFile();
+		JFileChooser fc = new JFileChooser(initialFile);
+		fc.setDialogType(JFileChooser.SAVE_DIALOG);
+		fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		fc.setFileFilter(jsonFileFilter);
+		int result = fc.showOpenDialog(this);
+		if (result == JFileChooser.APPROVE_OPTION) {
+			File in = fc.getSelectedFile();
+			String input;
+			if (in.exists()) {
+				try {
+					input = FileUtils.readFileToString(in, StandardCharsets.UTF_8);
+				}
+				catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				TimelineCustomizationExport serializations = backend.deserializeCustomizations(input);
+				Map<Long, TimelineCustomizations> custMap = serializations.timelineCustomizations;
+				boolean anyEntries = false;
+				for (var entry : custMap.entrySet()) {
+					long zoneId = entry.getKey();
+					TimelineCustomizations newCustomizations = entry.getValue();
+					if (newCustomizations.isEmpty()) {
+						continue;
+					}
+					anyEntries = true;
+					List<CustomTimelineItem> newEntries = newCustomizations.getEntries();
+					newEntries.forEach(ne -> ne.setImportSource(TimelineManager.CUSTOMIZATION_EXPORT_SOURCE));
+					TimelineCustomizations existingCustomizations = backend.getCustomSettings(zoneId);
+					List<CustomTimelineItem> existingEntries = existingCustomizations.getEntries().stream()
+							.filter(e -> TimelineManager.CUSTOMIZATION_EXPORT_SOURCE.equals(e.getImportSource()))
+							.toList();
+					String zoneDesc = backend.describeZone(zoneId).getDescription();
+					this.selectZone(zoneId);
+					if (existingEntries.isEmpty()) {
+						int res = JOptionPane.showConfirmDialog(this, "Import %s entries onto %s?".formatted(newEntries.size(), zoneDesc), "Import?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+						if (res == JOptionPane.YES_OPTION) {
+							finishImport(zoneId, existingCustomizations, newEntries, false);
+						}
+					}
+					else {
+						int res = JOptionPane.showOptionDialog(this,
+								("You have already imported %s entries for timeline %s.\n"
+								 + "Would you like to replace them with the %s new entries, or keep them in place?").formatted(existingEntries.size(), zoneDesc, newEntries.size()),
+								"Replace?", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null,
+								new Object[]{"Replace", "Keep Both", "Cancel"}, "Keep Both");
+						if (res == JOptionPane.YES_OPTION) {
+							finishImport(zoneId, existingCustomizations, newEntries, true);
+						}
+						else if (res == JOptionPane.NO_OPTION) {
+							finishImport(zoneId, existingCustomizations, newEntries, false);
+						}
+					}
+				}
+				if (!anyEntries) {
+					JOptionPane.showMessageDialog(this, "This customization file is empty!", "Empty File", JOptionPane.INFORMATION_MESSAGE);
+				}
+			}
+		}
+	}
+
+	private void finishImport(long zoneId, TimelineCustomizations cust, List<CustomTimelineItem> newItems, boolean replace) {
+		List<CustomTimelineItem> entries = new ArrayList<>(cust.getEntries());
+		if (replace) {
+			entries.removeIf(e -> TimelineManager.CUSTOMIZATION_EXPORT_SOURCE.equals(e.getImportSource()));
+		}
+		entries.addAll(newItems);
+		cust.setEntries(entries);
+		backend.commitCustomSettings(zoneId);
+		refresh();
 	}
 
 	public void selectZone(long zoneId) {
@@ -885,17 +1034,17 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			String text;
 			String tooltip;
 			if (value instanceof CustomTimelineItem custom) {
-				if (custom.isImported()) {
-					text = "I";
-					tooltip = "Imported from %s".formatted(custom.getImportSource());
-				}
-				else if (custom.replaces() == null) {
+				if (custom.replaces() == null) {
 					text = "C";
 					tooltip = "Custom user-added %s";
 				}
 				else {
 					text = "O";
 					tooltip = "Override of builtin timeline %s";
+				}
+				if (custom.isImported()) {
+					text = 'I' + text;
+					tooltip += "\nImported from %s".formatted(custom.getImportSource());
 				}
 			}
 			else if (value instanceof TranslatedTextFileEntry) {

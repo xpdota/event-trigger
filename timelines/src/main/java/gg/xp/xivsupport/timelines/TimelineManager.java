@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.timelines;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.CurrentTimeSource;
@@ -9,7 +10,6 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
-import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
@@ -36,11 +36,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -49,6 +51,7 @@ public final class TimelineManager {
 	private static final Logger log = LoggerFactory.getLogger(TimelineManager.class);
 	private static final Map<Long, TimelineInfo> zoneIdToTimelineFile = new HashMap<>();
 	private static final ObjectMapper mapper = new ObjectMapper();
+	public static final String CUSTOMIZATION_EXPORT_SOURCE = "Exported Customization";
 	private final CurrentTimeSource timeSource;
 	private final BooleanSetting debugMode;
 	private final BooleanSetting prePullShow;
@@ -119,7 +122,7 @@ public final class TimelineManager {
 		}
 	}
 
-	public TimelineInfo getInfoForZone(long zoneId) {
+	public @Nullable TimelineInfo getInfoForZone(long zoneId) {
 		ensureInit();
 		return zoneIdToTimelineFile.get(zoneId);
 	}
@@ -371,4 +374,42 @@ public final class TimelineManager {
 	public CurrentTimeSource getTimeSource() {
 		return this.timeSource;
 	}
+
+	public TimelineCustomizationExport exportCustomizations(Collection<Long> zones) {
+		if (zones.isEmpty()) {
+			throw new IllegalArgumentException("Must specify at least one zone");
+		}
+		TimelineCustomizationExport out = TimelineCustomizationExport.empty();
+		zones.forEach(z -> out.timelineCustomizations.put(z, getCustomSettings(z)));
+		return out;
+	}
+
+	public String serializeCurrentCustomizations(Set<Long> zones) {
+		try {
+			return mapper.writeValueAsString(exportCustomizations(zones));
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public TimelineCustomizationExport deserializeCustomizations(String serialized) {
+		try {
+			return mapper.readValue(serialized, TimelineCustomizationExport.class);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public ZoneTimelineDescription describeZone(long zoneId) {
+		TimelineInfo info = getInfoForZone(zoneId);
+		if (info == null) {
+			return new ZoneTimelineDescription(zoneId, null);
+		}
+		else {
+			return new ZoneTimelineDescription(zoneId, info.filename());
+		}
+	}
+
 }

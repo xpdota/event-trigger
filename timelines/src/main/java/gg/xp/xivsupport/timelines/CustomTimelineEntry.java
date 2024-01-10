@@ -343,4 +343,9 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	public @Nullable String getImportSource() {
 		return importSource;
 	}
+
+	@Override
+	public void setImportSource(@Nullable String importSource) {
+		this.importSource = importSource;
+	}
 }
