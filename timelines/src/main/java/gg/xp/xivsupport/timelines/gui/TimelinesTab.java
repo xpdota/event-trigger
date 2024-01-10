@@ -72,6 +72,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @ScanMe
@@ -143,9 +144,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				})
 				.addColumn(new CustomColumn<>("En", TimelineEntry::enabled, col -> {
 					col.setCellRenderer(StandardColumns.checkboxRenderer);
-					col.setCellEditor(noLabelEdit(new StandardColumns.CustomCheckboxEditor<>(safeEditTimelineEntry(true, (entry, value) -> {
-						entry.enabled = value;
-					}))));
+					col.setCellEditor(noLabelEdit(new StandardColumns.CustomCheckboxEditor<>(safeEditTimelineEntry(true,
+							(entry, value) -> entry.enabled = value))));
 					col.setMinWidth(22);
 					col.setMaxWidth(22);
 				}))
@@ -157,7 +157,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				}))
 				.addColumn(new CustomColumn<>("Time", TimelineEntry::time, col -> {
 					col.setCellRenderer(new DoubleTimeRenderer());
-					col.setCellEditor(StandardColumns.doubleEditorNonNull(safeEditTimelineEntry(false, (item, value) -> item.time = value, (item, value) -> item.time = value)));
+					col.setCellEditor(StandardColumns.doubleEditorNonNull(safeEditTimelineEntry(false,
+							(item, value) -> item.time = value, (item, value) -> item.time = value)));
 					col.setMinWidth(timeColMinWidth);
 					col.setMaxWidth(timeColMaxWidth);
 					col.setPreferredWidth(timeColPrefWidth);
@@ -169,16 +170,18 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setMaxWidth(32);
 					col.setPreferredWidth(32);
 				}))
-				.addColumn(new CustomColumn<>("Text/Name", TimelineEntry::name, col -> {
-					col.setCellEditor(StandardColumns.stringEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.name = value, (item, value) -> item.name = value)));
-				}))
+				.addColumn(new CustomColumn<>("Text/Name", TimelineEntry::name,
+						col -> col.setCellEditor(StandardColumns.stringEditorEmptyToNull(safeEditTimelineEntry(false,
+								(item, value) -> item.name = value, (item, value) -> item.name = value)))))
 				.addColumn(new CustomColumn<>("Sync", e -> {
-					if (e.sync() != null) {
-						return e.sync().pattern();
+					Pattern sync = e.sync();
+					if (sync != null) {
+						return sync.pattern();
 					}
 					if (e.eventSyncController() != null) {
 						return e.eventSyncController();
 					}
+					//noinspection ReturnOfNull
 					return null;
 				}, col -> {
 					DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
@@ -261,6 +264,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					if (te.jump() != null || te.jumpLabel() != null) {
 						return te.forceJump();
 					}
+					//noinspection ReturnOfNull
 					return null;
 				}, col -> {
 					col.setCellRenderer(StandardColumns.checkboxRenderer);
@@ -523,17 +527,13 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			});
 			selectCurrentButton.setMargin(new Insets(2, 4, 2, 4));
 			JButton disableAllButton = new EasyAction("Disable All", () -> {
-				TimelineManager.getTimelines().keySet().forEach(zone -> {
-					backend.getCustomSettings(zone).enabled = false;
-				});
+				TimelineManager.getTimelines().keySet().forEach(zone -> backend.getCustomSettings(zone).enabled = false);
 				stopChooserEditing();
 				commitAll();
 			}).asButton();
 			disableAllButton.setMargin(new Insets(2, 4, 2, 4));
 			JButton enableAllButton = new EasyAction("Enable All", () -> {
-				TimelineManager.getTimelines().keySet().forEach(zone -> {
-					backend.getCustomSettings(zone).enabled = true;
-				});
+				TimelineManager.getTimelines().keySet().forEach(zone -> backend.getCustomSettings(zone).enabled = true);
 				stopChooserEditing();
 				commitAll();
 			}).asButton();
@@ -577,7 +577,6 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					return currentCust != null && !currentCust.getEntries().isEmpty();
 				}
 			};
-			// TODO: confirmation
 			resetButton.addActionListener(l -> {
 				int confirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete all customizations for the currently selected timeline?", "Confirm", JOptionPane.YES_NO_OPTION);
 				if (confirmation == 0) {
@@ -585,21 +584,13 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				}
 			});
 			JButton exportCustBtn = new JButton("Export");
-			exportCustBtn.addActionListener(l -> {
-				exportCusts();
-			});
+			exportCustBtn.addActionListener(l -> exportCusts());
 			JButton importCustBtn = new JButton("Import");
-			importCustBtn.addActionListener(l -> {
-				importCusts();
-			});
+			importCustBtn.addActionListener(l -> importCusts());
 			JButton cbExportButton = new JButton("Export To Cactbot");
-			cbExportButton.addActionListener(l -> {
-				exportCurrent();
-			});
+			cbExportButton.addActionListener(l -> exportCurrent());
 			JButton chooseDirButton = new JButton("Set Cactbot Dir");
-			chooseDirButton.addActionListener(l -> {
-				chooseCactbotUserDir();
-			});
+			chooseDirButton.addActionListener(l -> chooseCactbotUserDir());
 			JPanel buttonPanel = new JPanel(new WrapLayout());
 			buttonPanel.add(newButton);
 			buttonPanel.add(newLabelButton);
@@ -610,9 +601,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			buttonPanel.add(chooseDirButton);
 			if (isReplay) {
 				JButton recordingButton = new JButton("Record");
-				recordingButton.addActionListener(l -> {
-					showRecordPanel();
-				});
+				recordingButton.addActionListener(l -> showRecordPanel());
 				buttonPanel.add(recordingButton);
 			}
 			this.add(buttonPanel, c);
@@ -798,6 +787,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			return;
 		}
 		Path rbDir = cbDir.toPath().resolve("raidboss");
+		//noinspection ResultOfMethodCallIgnored
 		rbDir.toFile().mkdirs();
 		File tlFile = rbDir.resolve(info.filename()).toFile();
 		File jsFile = rbDir.resolve(info.filename() + ".js").toFile();
@@ -1112,9 +1102,11 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private static String formatTimeDouble(double time) {
 		int minutes = (int) (time / 60);
 		double seconds = (time % 60);
+		//noinspection AccessToNonThreadSafeStaticField - only accessed on UI thread
 		return String.format("%s (%s:%s)", time, minutes, truncateTrailingZeroes.format(seconds));
 	}
 
+	@SuppressWarnings("NonSerializableFieldInSerializableClass")
 	private class JobCellEditor extends AbstractCellEditor implements TableCellEditor {
 
 		@Serial
@@ -1129,6 +1121,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			@SuppressWarnings("unchecked")
 			TimelineEntry entry = ((CustomTableModel<TimelineEntry>) table.getModel()).getValueForRow(row);
 			if (value instanceof CombatJobSelection js && !js.isEnabledForAll()) {
 				sel = js.copy();
@@ -1166,12 +1159,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 		@Override
 		public boolean isCellEditable(EventObject anEvent) {
-			if (anEvent instanceof MouseEvent me) {
-				if (me.getClickCount() == 2) {
-					return true;
-				}
-			}
-			return false;
+			return anEvent instanceof MouseEvent me && me.getClickCount() == 2;
 		}
 
 	}
@@ -1190,6 +1178,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+			@SuppressWarnings("unchecked")
 			TimelineEntry entry = ((CustomTableModel<TimelineEntry>) table.getModel()).getValueForRow(row);
 			if (value instanceof EventSyncController esc) {
 				sel = CustomEventSyncController.from(esc);
@@ -1222,21 +1211,16 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 		@Override
 		public boolean isCellEditable(EventObject anEvent) {
-			if (anEvent instanceof MouseEvent me) {
-				if (me.getClickCount() == 2) {
-					return true;
-				}
-			}
-			return false;
+			return anEvent instanceof MouseEvent me && me.getClickCount() == 2;
 		}
 
 	}
 
-	private TableCellEditor noLabelNoNewSyncEdit(TableCellEditor wrapped) {
-		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel() && !item.hasEventSync());
-	}
+//	private TableCellEditor noLabelNoNewSyncEdit(TableCellEditor wrapped) {
+//		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel() && !item.hasEventSync());
+//	}
 
-	private TableCellEditor noLabelEdit(TableCellEditor wrapped) {
+	private static TableCellEditor noLabelEdit(TableCellEditor wrapped) {
 		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel());
 	}
 

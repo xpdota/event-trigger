@@ -112,9 +112,7 @@ public final class TimelineManager {
 			synchronized (initLock) {
 				if (!init) {
 					log.info("Timeline init start");
-					TimelineCsvReader.readCsv().forEach(entry -> {
-						zoneIdToTimelineFile.put(entry.zoneId(), entry);
-					});
+					TimelineCsvReader.readCsv().forEach(entry -> zoneIdToTimelineFile.put(entry.zoneId(), entry));
 					init = true;
 					log.info("Timeline init done");
 				}
