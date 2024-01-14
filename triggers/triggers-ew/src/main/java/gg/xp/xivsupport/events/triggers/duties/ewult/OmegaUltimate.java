@@ -180,7 +180,7 @@ public class OmegaUltimate extends AutoChildEventHandler implements FilteredEven
 					""");
 	private final ModifiableCallout<HeadMarkerEvent> furthestFromEyeSwap = new ModifiableCallout<HeadMarkerEvent>("Glitch Stack Swap", "{swapper} and {swapee} Swap", 7_000)
 			.disabledByDefault()
-			.extendedDescription("This call will call out the players who need to swap using the 'furthest stack marker from eye' strategy.");
+			.extendedDescription("This call will call out the players who need to swap using the 'furthest stack marker from eye' strategy.\nTo use 'closest to eye swap' instead, use {nearSwapper} and {nearSwapee} instead.");
 	private final ModifiableCallout<HeadMarkerEvent> furthestFromEyeNoSwap = new ModifiableCallout<HeadMarkerEvent>("Glitch Stack No Swap", "No Swap", 7_000)
 			.disabledByDefault()
 			.extendedDescription("See above.");
