@@ -31,7 +31,8 @@ public class StatusNoEffect extends AbilityEffect {
 
 	@Override
 	public String getBaseDescription() {
-		String formatted = String.format("Status %x has no effect", status.getId());
+		StatusEffectInfo sei = StatusEffectLibrary.forId(status.getId());
+		String formatted = String.format("Status 0x%x (%s) has no effect", status.getId(), sei == null ? "Unknown" : sei.name());
 		if (stacks > 0) {
 			formatted += String.format(" (%s stacks)", stacks);
 		}
