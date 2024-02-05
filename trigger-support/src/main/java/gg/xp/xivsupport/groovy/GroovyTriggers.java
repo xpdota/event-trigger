@@ -20,6 +20,7 @@ import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
+import groovy.lang.Binding;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.GString;
@@ -218,11 +219,13 @@ public class GroovyTriggers {
 							// This doesn't work right unless we clone
 							if (concurrencyMode == SequentialTriggerConcurrencyMode.CONCURRENT) {
 								Closure<?> clonedSqHandler = (Closure<?>) rawSqHandler.clone();
+								clonedSqHandler.setResolveStrategy(Closure.DELEGATE_FIRST);
 								clonedSqHandler.setDelegate(new GroovySqHelper<>(s));
 								clonedSqHandler.call(e1, s);
 							}
 							else {
 								rawSqHandler.setDelegate(new GroovySqHelper<>(s));
+								rawSqHandler.setResolveStrategy(Closure.DELEGATE_FIRST);
 								sq.accept(e1, s);
 							}
 						}
@@ -282,10 +285,12 @@ public class GroovyTriggers {
 	 */
 	public class GroovySqHelper<X extends BaseEvent> extends GroovyObjectSupport {
 		private final SequentialTriggerController<X> controller;
+		private final Binding binding;
 		private HasCalloutTrackingKey last;
 
 		public GroovySqHelper(SequentialTriggerController<X> controller) {
 			this.controller = controller;
+			this.binding = new Binding();
 		}
 
 		public CalloutEvent callout(@DelegatesTo(GroovyCalloutBuilder.class) Closure<?> closure) {
@@ -326,6 +331,19 @@ public class GroovyTriggers {
 		@Override
 		public Object invokeMethod(String name, Object args) {
 			return super.invokeMethod(name, args);
+		}
+
+		@Override
+		public Object getProperty(String propertyName) {
+			if (binding.hasVariable(propertyName)) {
+				return binding.getVariable(propertyName);
+			}
+			return super.getProperty(propertyName);
+		}
+
+		@Override
+		public void setProperty(String propertyName, Object newValue) {
+			binding.setVariable(propertyName, newValue);
 		}
 	}
 

@@ -212,7 +212,7 @@ final class SandboxInterceptor extends GroovyInterceptor {
             if (whitelist.permitsMethod(setPropertyMethod, receiver, propertyValueArgs)) {
                 return super.onSetProperty(invoker, receiver, property, value);
             } else if (rejector == null) {
-                rejector = () -> StaticWhitelist.rejectMethod(setPropertyMethod, receiver.getClass().getName() + "." + property);
+                rejector = () -> StaticWhitelist.rejectMethod(setPropertyMethod, receiver.getClass().getName() + '.' + property);
             }
         }
         final Field instanceField = GroovyCallSiteSelector.field(receiver, property);
