@@ -25,6 +25,9 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.GString;
 import groovy.lang.GroovyObjectSupport;
+import groovy.lang.GroovyRuntimeException;
+import groovy.lang.Script;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.NotNull;
@@ -126,7 +129,8 @@ public class GroovyTriggers {
 		}
 	}
 
-	public class Builder<X extends BaseEvent> {
+	public class Builder<X extends BaseEvent> extends GroovyObjectSupport {
+		private final Closure<?> bindingClosure;
 		String name;
 		Class<X> type;
 		Predicate<X> condition = event -> true;
@@ -135,6 +139,24 @@ public class GroovyTriggers {
 		int timeout = 120_000;
 		Closure<?> rawSqHandler;
 		SequentialTriggerConcurrencyMode concurrencyMode = SequentialTriggerConcurrencyMode.BLOCK_NEW;
+
+		public Builder(Closure<?> closure) {
+			this.bindingClosure = closure;
+		}
+//
+//		@Override
+//		public Object invokeMethod(String name, Object args) {
+//			return super.invokeMethod(name, args);
+//		}
+
+		@Override
+		public Object getProperty(String propertyName) {
+			try {
+				return super.getProperty(propertyName);
+			} catch (GroovyRuntimeException gre) {
+				return DefaultGroovyMethods.getAt(this.bindingClosure.getOwner(), propertyName);
+			}
+		}
 
 		public Builder<X> named(String name) {
 			this.name = name;
@@ -220,11 +242,11 @@ public class GroovyTriggers {
 							if (concurrencyMode == SequentialTriggerConcurrencyMode.CONCURRENT) {
 								Closure<?> clonedSqHandler = (Closure<?>) rawSqHandler.clone();
 								clonedSqHandler.setResolveStrategy(Closure.DELEGATE_FIRST);
-								clonedSqHandler.setDelegate(new GroovySqHelper<>(s));
+								clonedSqHandler.setDelegate(new GroovySqHelper<>(s, clonedSqHandler));
 								clonedSqHandler.call(e1, s);
 							}
 							else {
-								rawSqHandler.setDelegate(new GroovySqHelper<>(s));
+								rawSqHandler.setDelegate(new GroovySqHelper<>(s, rawSqHandler));
 								rawSqHandler.setResolveStrategy(Closure.DELEGATE_FIRST);
 								sq.accept(e1, s);
 							}
@@ -254,7 +276,7 @@ public class GroovyTriggers {
 	}
 
 	public void add(@DelegatesTo(Builder.class) Closure<?> closure) {
-		Builder<BaseEvent> builder = new Builder<>();
+		Builder<BaseEvent> builder = new Builder<>(closure);
 		closure.setDelegate(builder);
 		closure.setResolveStrategy(Closure.DELEGATE_FIRST);
 		closure.run();
@@ -285,11 +307,13 @@ public class GroovyTriggers {
 	 */
 	public class GroovySqHelper<X extends BaseEvent> extends GroovyObjectSupport {
 		private final SequentialTriggerController<X> controller;
+		private final Closure<?> sqClosure;
 		private final Binding binding;
 		private HasCalloutTrackingKey last;
 
-		public GroovySqHelper(SequentialTriggerController<X> controller) {
+		public GroovySqHelper(SequentialTriggerController<X> controller, Closure<?> sqClosure) {
 			this.controller = controller;
+			this.sqClosure = sqClosure;
 			this.binding = new Binding();
 		}
 
@@ -335,10 +359,24 @@ public class GroovyTriggers {
 
 		@Override
 		public Object getProperty(String propertyName) {
+			// 'binding' will contain anything declared locally (but not via def keyword)
 			if (binding.hasVariable(propertyName)) {
 				return binding.getVariable(propertyName);
 			}
-			return super.getProperty(propertyName);
+			Object thisObject = sqClosure.getThisObject();
+			if (thisObject instanceof Script script) {
+				// 'scriptBinding' will contain things defined at the script level
+				Binding scriptBinding = script.getBinding();
+				if (scriptBinding.hasVariable(propertyName)) {
+					return scriptBinding.getVariable(propertyName);
+				}
+			}
+			try {
+				// Seems to be similar to scriptBinding
+				return DefaultGroovyMethods.getAt(sqClosure.getOwner(), propertyName);
+			} catch (GroovyRuntimeException gre) {
+				return super.getProperty(propertyName);
+			}
 		}
 
 		@Override

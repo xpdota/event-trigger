@@ -9,6 +9,7 @@ import gg.xp.xivsupport.groovy.GroovyScriptResult;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -132,7 +133,7 @@ public class GroovyScriptHolder {
 		return scriptContent;
 	}
 
-	public void setScriptContent(String scriptContent) {
+	public void setScriptContent(@Language("groovy") String scriptContent) {
 		if (this.scriptContent != null) {
 			// Don't dirty on initial set
 			dirty = true;
