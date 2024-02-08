@@ -13,7 +13,7 @@ f54a8510f834a1a57166970bfc982e94  commons-collections-3.2.2.jar
 ebfec4f77cc595c518d655f7e68346be  commons-text-1.11.0.jar
 10fade937b4fe4c1a95909ed80ffe708  custom-party-overlay-1.0-SNAPSHOT.jar
 a3e1b2a203006918e3c9281b16f5bc74  dot-tracker-1.0-SNAPSHOT.jar
-4e503244c64bc44c30070f79be892b4d  easytriggers-1.0-SNAPSHOT.jar
+a2f4b72a387c740e22fcf9507fa4bb44  easytriggers-1.0-SNAPSHOT.jar
 0a7c3e99d822a8834727f72d7dcfc9ec  flatlaf-3.2.5.jar
 134d338eab82f8cf0e4fe22f0bd6a350  groovy-5.0.0-alpha-2.jar
 d42b8855e3b7e4f3506ffc0b5b85d149  groovy-sandbox-1.27.jar
@@ -56,6 +56,6 @@ e71fcaee9202a2bcf4e798612177ab3f  titan-jails-1.0-SNAPSHOT.jar
 4ed2797234532af0835bc567e3828d84  triggers-ew-1.0-SNAPSHOT.jar
 7be2c605fa5f9756e8989fdb0ff665c7  triggers-general-1.0-SNAPSHOT.jar
 ea1c99f48fe57af11d933ac69b3606b0  triggers-sb-1.0-SNAPSHOT.jar
-29bfdb6069fa20d4e4e0d399d58687cc  trigger-support-1.0-SNAPSHOT.jar
+ec95cd459059b0ef8daf7aaa073be6f3  trigger-support-1.0-SNAPSHOT.jar
 686c5b97ea16f4396aa5246927657e2e  xivdata-1.0-SNAPSHOT.jar
-89b4373e11f8fdc32c7e50f12fbe38cd  xivsupport-1.0-SNAPSHOT.jar
+66ebfd53bbb413a283fed3bddeaf37b8  xivsupport-1.0-SNAPSHOT.jar
