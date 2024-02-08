@@ -100,6 +100,26 @@ public class GroovyTriggersTest {
 	}
 
 	@Test
+	void testGlobalVarOther() {
+		@Language("groovy") String script = """
+				groovyTriggers.add {
+					named foo
+					concurrency concurrent
+					when { DebugEvent dbg -> state.player == null }
+					sequence { e1, s ->
+						log.info foo
+						output.set foo
+						callout { tts foo }
+					}
+				}
+				""";
+		doTest(script, pico -> {
+			GroovyManager mgr = pico.getComponent(GroovyManager.class);
+			mgr.getGlobalBinding().setVariable("foo", TEST_VAL);
+		});
+	}
+
+	@Test
 	void testGlobalVarQualified() {
 		@Language("groovy") String script = """
 				groovyTriggers.add {

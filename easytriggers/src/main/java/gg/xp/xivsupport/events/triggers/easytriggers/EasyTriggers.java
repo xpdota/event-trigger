@@ -37,7 +37,9 @@ import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullEndedEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
@@ -389,6 +391,14 @@ public final class EasyTriggers {
 			new EventDescriptionImpl<>(PullEndedEvent.class,
 					"A pull has ended",
 					"Pull Ended",
+					List.of()),
+			new EventDescriptionImpl<>(VictoryEvent.class,
+					"The duty was successfully completed",
+					"Victory!",
+					List.of()),
+			new EventDescriptionImpl<>(WipeEvent.class,
+					"Party wipe",
+					"Wipe",
 					List.of())
 	));
 
