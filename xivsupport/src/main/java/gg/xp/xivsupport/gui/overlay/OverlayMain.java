@@ -1,7 +1,5 @@
 package gg.xp.xivsupport.gui.overlay;
 
-import com.sun.jna.platform.win32.User32;
-import com.sun.jna.platform.win32.WinDef;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
@@ -9,9 +7,9 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.OnlineStatus;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.PrimaryPlayerOnlineStatusChangedEvent;
-import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,43 +29,6 @@ public final class OverlayMain {
 
 
 	@HandleEvents
-	public void commands(EventContext context, DebugCommand dbg) {
-		String command = dbg.getCommand();
-		switch (command) {
-			case "overlay:lock":
-				setEditing(false);
-				break;
-			case "overlay:edit":
-				setEditing(true);
-				break;
-			case "overlay:hide":
-				show.set(false);
-				break;
-			case "overlay:show":
-				show.set(true);
-				break;
-			case "overlay:windowinfo":
-				doWindowInfo();
-				break;
-			case "overlay:resetall":
-				// TODO:
-				break;
-			case "overlay:setallopacity":
-				if (dbg.getArgs().size() != 2) {
-					log.error("Wrong number of arguments, expected 2 ({})", dbg.getArgs());
-				}
-				setOpacity(Float.parseFloat(dbg.getArgs().get(1)));
-				break;
-			case "overlay:setallscale":
-				if (dbg.getArgs().size() != 2) {
-					log.error("Wrong number of arguments, expected 2 ({})", dbg.getArgs());
-				}
-				setScale(Float.parseFloat(dbg.getArgs().get(1)));
-				break;
-		}
-	}
-
-	@HandleEvents
 	public void handlePlayerStatusChanged(EventContext context, PrimaryPlayerOnlineStatusChangedEvent event) {
 		OnlineStatus status = event.getPlayerOnlineStatus();
 		this.cutscene = status == OnlineStatus.CUTSCENE || status == OnlineStatus.GPOSE;
@@ -78,16 +39,25 @@ public final class OverlayMain {
 	private boolean editing;
 	private boolean cutscene;
 	// TODO: Linux support
-	private final boolean isNonWindows;
+	private final ActiveWindowTitleGetter winUtil;
 
-	public OverlayMain(PicoContainer container, OverlayConfig config, EventMaster master) {
+	public OverlayMain(MutablePicoContainer container, OverlayConfig config, EventMaster master) {
 		this.master = master;
 		if (!Platform.isWindows()) {
 			log.warn("Not running on Windows - disabling overlay support");
-			isNonWindows = true;
+			winUtil = new DummyWindowGetter();
 		}
 		else {
-			isNonWindows = false;
+			ActiveWindowTitleGetter winUtil;
+			try {
+				winUtil = new WindowsUtils();
+			}
+			catch (Throwable t) {
+				log.error("Error initializing WindowsUtils", t);
+				winUtil = new DummyWindowGetter();
+			}
+			container.addComponent(winUtil);
+			this.winUtil = winUtil;
 		}
 		show = config.getShow();
 		forceShow = config.getForceShow();
@@ -113,7 +83,8 @@ public final class OverlayMain {
 				}
 			}, om -> 200L).start();
 			try {
-				SwingUtilities.invokeAndWait(() -> {});
+				SwingUtilities.invokeAndWait(() -> {
+				});
 			}
 			catch (InterruptedException | InvocationTargetException e) {
 				//
@@ -124,11 +95,7 @@ public final class OverlayMain {
 	}
 
 	private boolean isGameWindowActive() {
-		if (isNonWindows) {
-			return true;
-		}
-		String window = getActiveWindowText();
-		return window.equalsIgnoreCase("FINAL FANTASY XIV") || this.overlays.stream().anyMatch(o -> o.getTitle().equals(window));
+		return winUtil.isFfxivActive();
 	}
 
 	public void addOverlay(XivOverlay overlay) {
@@ -182,20 +149,57 @@ public final class OverlayMain {
 		return new ArrayList<>(overlays);
 	}
 
-	private static void doWindowInfo() {
-		log.info("Active window: {}", getActiveWindowText());
+	private void doWindowInfo() {
+		log.info("Active window: {}", winUtil.getActiveWindowTitle());
 	}
 
-	public static String getActiveWindowText() {
-		User32 u32 = User32.INSTANCE;
-		WinDef.HWND hwnd = u32.GetForegroundWindow();
-		int length = u32.GetWindowTextLength(hwnd);
-		if (length == 0) return "";
-		/* Use the character encoding for the default locale */
-		char[] chars = new char[length + 1];
-		u32.GetWindowText(hwnd, chars, length + 1);
-		String window = new String(chars).substring(0, length);
-//		log.info("Window title: [{}]", window);
-		return window;
+
+	@HandleEvents
+	public void commands(EventContext context, DebugCommand dbg) {
+		String command = dbg.getCommand();
+		switch (command) {
+			case "overlay:lock":
+				setEditing(false);
+				break;
+			case "overlay:edit":
+				setEditing(true);
+				break;
+			case "overlay:hide":
+				show.set(false);
+				break;
+			case "overlay:show":
+				show.set(true);
+				break;
+			case "overlay:windowinfo":
+				doWindowInfo();
+				break;
+			case "overlay:resetall":
+				// TODO:
+				break;
+			case "overlay:setallopacity":
+				if (dbg.getArgs().size() != 2) {
+					log.error("Wrong number of arguments, expected 2 ({})", dbg.getArgs());
+				}
+				setOpacity(Float.parseFloat(dbg.getArgs().get(1)));
+				break;
+			case "overlay:setallscale":
+				if (dbg.getArgs().size() != 2) {
+					log.error("Wrong number of arguments, expected 2 ({})", dbg.getArgs());
+				}
+				setScale(Float.parseFloat(dbg.getArgs().get(1)));
+				break;
+		}
+	}
+
+	private static class DummyWindowGetter implements ActiveWindowTitleGetter {
+		@Override
+		public String getActiveWindowTitle() {
+			return "Unknown";
+		}
+
+		@Override
+		public boolean isFfxivActive() {
+			return true;
+		}
 	}
 }
