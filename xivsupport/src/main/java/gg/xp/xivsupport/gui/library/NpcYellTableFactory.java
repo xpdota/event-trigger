@@ -6,7 +6,9 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
+import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,6 +43,10 @@ public final class NpcYellTableFactory {
 				.withRightClickRepo(rightClicks)
 				.setFixedData(true)
 				.build();
+	}
+
+	public @Nullable NpcYellInfo pickItem(Window owner) {
+		return ChooserDialog.chooserReturnItem(owner, table());
 	}
 
 }

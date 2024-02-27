@@ -40,9 +40,12 @@ import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
+import gg.xp.xivsupport.events.misc.NpcYellEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullEndedEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.CountdownCanceledEvent;
+import gg.xp.xivsupport.events.state.combatstate.CountdownStartedEvent;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.AutoMarkTargetAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
@@ -71,6 +74,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerRelati
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HitSeverityFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineNumberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.NpcYellIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.OrFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.PlayerHasStatusFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.RefireFilter;
@@ -106,6 +110,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
@@ -399,6 +404,18 @@ public final class EasyTriggers {
 			new EventDescriptionImpl<>(WipeEvent.class,
 					"Party wipe",
 					"Wipe",
+					List.of()),
+			new EventDescriptionImpl<>(NpcYellEvent.class,
+					"NPC Yell (Nael Quotes, etc)",
+					"{event.yell.text()}",
+					List.of(NpcYellIdFilter::new)),
+			new EventDescriptionImpl<>(CountdownStartedEvent.class,
+					"Countdown Started",
+					"{event.duration.toSeconds()}",
+					List.of()),
+			new EventDescriptionImpl<>(CountdownCanceledEvent.class,
+					"Countdown Canceled",
+					"Canceled",
 					List.of())
 	));
 
@@ -439,6 +456,7 @@ public final class EasyTriggers {
 			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, this::generic),
 			new ConditionDescription<>(HitSeverityFilter.class, HasEffects.class, "Hit Severity (Crit/Direct Hit)", HitSeverityFilter::new, this::generic),
 			new ConditionDescription<>(TargetabilityChangeFilter.class, TargetabilityUpdate.class, "Combatant becomes (un)targetable", TargetabilityChangeFilter::new, this::generic),
+			new ConditionDescription<>(NpcYellIdFilter.class, NpcYellEvent.class, "NPC Yell ID", NpcYellIdFilter::new, this::generic),
 			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, b)),
 			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic)
 	));
@@ -585,6 +603,20 @@ public final class EasyTriggers {
 		}
 		else if (event instanceof InitEvent || event instanceof EasyTriggersInitEvent) {
 			return getEventDescription(EasyTriggersInitEvent.class).newEmptyInst(null);
+		}
+		else if (event instanceof NpcYellEvent yellEvent) {
+			EasyTrigger<NpcYellEvent> trigger = getEventDescription(NpcYellEvent.class).newEmptyInst(null);
+			NpcYellIdFilter filter = new NpcYellIdFilter();
+			filter.operator = NumericOperator.EQ;
+			filter.expected = yellEvent.getYell().id();
+			trigger.addCondition(filter);
+			return trigger;
+		}
+		else if (event instanceof CountdownStartedEvent) {
+			return getEventDescription(CountdownStartedEvent.class).newDefaultInst();
+		}
+		else if (event instanceof CountdownCanceledEvent) {
+			return getEventDescription(CountdownCanceledEvent.class).newDefaultInst();
 		}
 		return null;
 	}

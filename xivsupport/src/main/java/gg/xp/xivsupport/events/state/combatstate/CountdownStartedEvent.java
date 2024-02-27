@@ -3,7 +3,7 @@ package gg.xp.xivsupport.events.state.combatstate;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
-import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.models.XivCombatant;
 
 import java.io.Serial;
 import java.time.Duration;
@@ -16,10 +16,10 @@ public class CountdownStartedEvent extends BaseEvent implements HasDuration, Has
 	@Serial
 	private static final long serialVersionUID = 4243145380243772257L;
 	private final Duration initialDuration;
-	private final XivPlayerCharacter source;
+	private final XivCombatant source;
 	private boolean isCanceled;
 
-	public CountdownStartedEvent(Duration initialDuration, XivPlayerCharacter source) {
+	public CountdownStartedEvent(Duration initialDuration, XivCombatant source) {
 		this.initialDuration = initialDuration;
 		this.source = source;
 	}
@@ -50,7 +50,7 @@ public class CountdownStartedEvent extends BaseEvent implements HasDuration, Has
 	 * @return The player who started the countdown.
 	 */
 	@Override
-	public XivPlayerCharacter getSource() {
+	public XivCombatant getSource() {
 		return source;
 	}
 }

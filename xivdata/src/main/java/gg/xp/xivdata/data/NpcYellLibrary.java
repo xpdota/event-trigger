@@ -32,7 +32,18 @@ public class NpcYellLibrary {
 	}
 
 	public @Nullable NpcYellInfo forId(int id) {
-		return getAll().get(id);
+		NpcYellInfo npcYellInfo = getAll().get(id);
+		if (npcYellInfo != null) {
+
+		return npcYellInfo;
+		}
+		else {
+			return new NpcYellInfo(id, "Unknown %s (0x%X)".formatted(id, id));
+		}
+	}
+
+	public @Nullable NpcYellInfo forId(long id) {
+		return forId((int) id);
 	}
 
 }
