@@ -162,6 +162,7 @@ public class GroovyPanel extends JPanel {
 			// TODO: this is adding some heavy deps
 			entryArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
 			entryArea.setCodeFoldingEnabled(true);
+			entryArea.setTabSize(4);
 //			AutoCompletion ac = new AutoCompletion(new LanguageAwareCompletionProvider(new DefaultCompletionProvider()));
 //			ac.install(entryArea);
 //			DefaultCompletionProvider dcp = new DefaultCompletionProvider();
