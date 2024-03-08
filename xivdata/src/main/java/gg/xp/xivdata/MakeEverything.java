@@ -229,11 +229,12 @@ public class MakeEverything {
 
 		// CSV FILES
 		{
-			Process command = maker.runScCmd("rawexd Action Map Status");
+			Process command = maker.runScCmd("rawexd Action Map Status NpcYell");
 			waitForCommand(command);
 			maker.copyFileToDir(List.of("rawexd", "Action.csv"), List.of("xiv", "actions"));
 			maker.copyFileToDir(List.of("rawexd", "Map.csv"), List.of("xiv", "maps"));
 			maker.copyFileToDir(List.of("rawexd", "Status.csv"), List.of("xiv", "statuseffect"));
+			maker.copyFileToDir(List.of("rawexd", "NpcYell.csv"), List.of("xiv", "npcyell"));
 		}
 		{
 			// We don't want the raw for this one

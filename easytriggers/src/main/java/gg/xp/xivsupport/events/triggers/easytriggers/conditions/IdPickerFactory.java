@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.library.ActionTableFactory;
+import gg.xp.xivsupport.gui.library.NpcYellTableFactory;
 import gg.xp.xivsupport.gui.library.StatusTable;
 import gg.xp.xivsupport.gui.library.ZonesTable;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
@@ -18,9 +19,11 @@ public class IdPickerFactory {
 	private static final Logger log = LoggerFactory.getLogger(IdPickerFactory.class);
 
 	private final ActionTableFactory actionTableFactory;
+	private final NpcYellTableFactory npcYellTableFactory;
 
-	public IdPickerFactory(ActionTableFactory actionTableFactory) {
+	public IdPickerFactory(ActionTableFactory actionTableFactory, NpcYellTableFactory npcYellTableFactory) {
 		this.actionTableFactory = actionTableFactory;
+		this.npcYellTableFactory = npcYellTableFactory;
 	}
 
 	public <X> Component pickerFor(Class<X> clazz, boolean required, Supplier<Long> getter, Consumer<Long> setter) {
@@ -32,6 +35,9 @@ public class IdPickerFactory {
 		}
 		else if (clazz.equals(ZoneInfo.class)) {
 			return new IdPicker<>(required, getter, setter, id -> ZoneLibrary.infoForZoneOrUnknown(id.intValue()), zi -> (long) zi.id(), ZoneInfo::getCapitalizedName, ZonesTable::pickItem, zone -> null);
+		}
+		else if (clazz.equals(NpcYellInfo.class)) {
+			return new IdPicker<>(required, getter, setter, NpcYellLibrary.INSTANCE::forId, yi -> (long) yi.id(), NpcYellInfo::text, npcYellTableFactory::pickItem, item -> null);
 		}
 		else {
 			log.error("No picker for {}, falling back to basic text field with validation", clazz);
