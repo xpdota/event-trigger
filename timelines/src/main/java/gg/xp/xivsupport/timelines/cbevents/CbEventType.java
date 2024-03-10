@@ -14,6 +14,8 @@ import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.SystemLogMessageEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
+import gg.xp.xivsupport.events.misc.BattleTalkEvent;
+import gg.xp.xivsupport.events.misc.NpcYellEvent;
 import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,6 +130,16 @@ public enum CbEventType {
 			new CbfMap<>("source", "event.source.name", named(EntityKilledEvent::getSource)),
 			new CbfMap<>("targetId", "event.target.id", id(EntityKilledEvent::getTarget)),
 			new CbfMap<>("target", "event.target.name", named(EntityKilledEvent::getTarget))
+	)),
+	NpcYell(NpcYellEvent.class, List.of(
+			new CbfMap<>("sourceId", "event.source.id", id(NpcYellEvent::getSource)),
+			new CbfMap<>("npcNameId", "event.source.bNpcNameId", intConv((NpcYellEvent event) -> event.getSource().getbNpcNameId(), 16)),
+			new CbfMap<>("instanceContentTextId", "event.instanceContentTextId", intConv(event -> (long) event.getYell().id(), 16))
+	)),
+	BattleTalk2(BattleTalkEvent.class, List.of(
+			new CbfMap<>("sourceId", "event.source.id", id(BattleTalkEvent::getSource)),
+			new CbfMap<>("npcNameId", "event.source.bNpcNameId", intConv(event -> event.getSource().getbNpcNameId(), 16)),
+			new CbfMap<>("instanceContentTextId", "event.instanceContentTextId", intConv(BattleTalkEvent::getInstanceContentTextId, 16))
 	))
 
 
@@ -138,7 +150,7 @@ public enum CbEventType {
 	private final Holder<?> data;
 
 	<X extends Event> CbEventType(Class<X> eventType, List<CbfMap<? super X>> fieldMappings) {
-		this.data = new Holder<X>(eventType, fieldMappings);
+		this.data = new Holder<>(eventType, fieldMappings);
 	}
 
 	public Class<? extends Event> eventType() {
