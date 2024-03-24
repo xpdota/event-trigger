@@ -58,6 +58,7 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 						case "PosZ" -> pos.put(PosKeys.PosZ, Double.parseDouble(valueRaw));
 						case "Heading" -> pos.put(PosKeys.Heading, Double.parseDouble(valueRaw));
 						case "Radius" -> state.provideCombatantRadius(existing, Float.parseFloat(valueRaw));
+						case "PCTargetID" -> state.provideCombatantTargetId(existing.getId(), Long.parseLong(valueRaw, 16));
 					}
 				}
 				if (pos.isEmpty()) {

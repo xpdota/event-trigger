@@ -74,7 +74,26 @@ public interface XivState extends SubState {
 
 	void provideCombatantPos(XivCombatant target, Position newPos);
 
+	void provideCombatantTargetId(long entityId, long targetId);
+
+	/**
+	 * Get the entity (combative or otherwise) of the given combatant
+	 *
+	 * @param source The combatant
+	 * @return The target if it has one, otherwise null.
+	 */
+	@Nullable XivEntity getTarget(XivCombatant source);
+
+	/**
+	 * Get the combative entity of the given combatant
+	 *
+	 * @param source The combatant
+	 * @return The target if it has one, otherwise null.
+	 */
+	@Nullable XivCombatant getCombatantTarget(XivCombatant source);
+
 	void provideActFallbackCombatant(XivCombatant cbt);
+
 
 	void flushProvidedValues();
 

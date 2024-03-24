@@ -482,6 +482,12 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
+	public void provideCombatantTargetId(long entityId, long targetId) {
+		getOrCreateData(entityId).setTargetId(targetId);
+		dirtyOverrides = true;
+	}
+
+	@Override
 	public @Nullable XivCombatant getCombatant(long id) {
 		CombatantData cbt = combatantData.get(id);
 		if (cbt == null) {
@@ -496,6 +502,24 @@ public class XivStateImpl implements XivState {
 		else {
 			return cbt.getComputed();
 		}
+	}
+
+	@Override
+	public @Nullable XivCombatant getCombatantTarget(XivCombatant source) {
+		CombatantData latest = getData(source.getId());
+		if (latest == null) {
+			return null;
+		}
+		long id = latest.targetId;
+		if (id == -1 || id == 0 || id == 0xE000_0000L) {
+			return null;
+		}
+		return getCombatant(id);
+	}
+
+	@Override
+	public @Nullable XivEntity getTarget(XivCombatant source) {
+		return getCombatantTarget(source);
 	}
 
 	private volatile boolean inCombat;
@@ -594,8 +618,7 @@ public class XivStateImpl implements XivState {
 	private Map<Long, XivCombatant> combatantCache = Collections.emptyMap();
 	private final Map<Long, WeakReference<XivCombatant>> graveyard = new HashMap<>();
 
-	private CombatantData getData(long cbtId) {
-		// TODO: make something like
+	private @Nullable CombatantData getData(long cbtId) {
 		try (LockAdapter ignored = lock.read()) {
 			return combatantData.get(cbtId);
 		}
@@ -626,6 +649,7 @@ public class XivStateImpl implements XivState {
 		private XivCombatant owner;
 		private long shieldPercent;
 		private short tfId = -1;
+		private long targetId;
 
 		private CombatantData(long id) {
 			this.id = id;
@@ -718,6 +742,11 @@ public class XivStateImpl implements XivState {
 			this.radius = radius;
 		}
 
+		public void setTargetId(long targetId) {
+			this.targetId = targetId;
+			dirty = true;
+		}
+
 		public OnlineStatus getStatus() {
 			return status;
 		}
@@ -769,6 +798,7 @@ public class XivStateImpl implements XivState {
 			short transformationId = tfId != -1 ? tfId : (raw != null ? raw.getTransformationId() : -1);
 			short weaponId = (raw != null ? raw.getWeaponId() : -1);
 			float radius = this.radius >= 0 ? this.radius : ((raw != null) ? raw.getRadius() : 0);
+			long targetId = this.targetId != -1 ? this.targetId : this.raw.getTargetId();
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
 						id,
@@ -788,7 +818,8 @@ public class XivStateImpl implements XivState {
 						shieldAmount,
 						transformationId,
 						weaponId,
-						radius);
+						radius,
+						targetId);
 			}
 			else {
 				computed = new XivCombatant(
@@ -808,7 +839,8 @@ public class XivStateImpl implements XivState {
 						shieldAmount,
 						transformationId,
 						weaponId,
-						radius);
+						radius,
+						targetId);
 				if (bnpcId == 9020) {
 					fake = true;
 				}

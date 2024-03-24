@@ -8,4 +8,8 @@ import java.awt.*;
 public interface RefreshablePartyListComponent {
 	Component getComponent();
 	void refresh(@Nullable XivPlayerCharacter xpc);
+
+	default int getZOrder() {
+		return 100;
+	}
 }

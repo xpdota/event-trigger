@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
+import gg.xp.reevent.events.EventContext;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffectContext;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffects;
@@ -30,13 +31,15 @@ public class FieldMapper<K extends Enum<K>> {
 	private final EntityLookupMissBehavior entityLookupMissBehavior;
 	private final String[] rawLineSplit;
 	private final List<Long> combatantsToUpdate = new ArrayList<>();
+	private final EventContext ctx;
 	private boolean recalcNeeded;
 
-	public FieldMapper(Map<K, String> raw, XivState state, EntityLookupMissBehavior entityLookupMissBehavior, String[] rawLineSplit) {
+	public FieldMapper(Map<K, String> raw, XivState state, EntityLookupMissBehavior entityLookupMissBehavior, String[] rawLineSplit, EventContext ctx) {
 		this.raw = new EnumMap<>(raw);
 		this.state = state;
 		this.entityLookupMissBehavior = entityLookupMissBehavior;
 		this.rawLineSplit = rawLineSplit;
+		this.ctx = ctx;
 	}
 
 	public String getString(K key) {
@@ -301,5 +304,9 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public void flushStateOverrides() {
 		state.flushProvidedValues();
+	}
+
+	public EventContext getEventContext() {
+		return ctx;
 	}
 }

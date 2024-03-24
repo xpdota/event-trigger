@@ -32,6 +32,7 @@ public final class RawXivCombatantInfo implements Serializable {
 	private final short transformationId;
 	private final short weaponId;
 	private final float radius;
+	private final long targetId;
 
 	public RawXivCombatantInfo(
 			long id,
@@ -54,7 +55,7 @@ public final class RawXivCombatantInfo implements Serializable {
 			long partyType,
 			long ownerId
 	) {
-		this(id, name, jobId, type, curHp, maxHp, curMp, maxMp, level, posX, posY, posZ, heading, worldId, worldName, bnpcId, bnpcNameId, partyType, ownerId, (short) -1, (short) -1, 0.0f);
+		this(id, name, jobId, type, curHp, maxHp, curMp, maxMp, level, posX, posY, posZ, heading, worldId, worldName, bnpcId, bnpcNameId, partyType, ownerId, (short) -1, (short) -1, 0.0f, 0);
 	}
 
 	public RawXivCombatantInfo(
@@ -79,7 +80,8 @@ public final class RawXivCombatantInfo implements Serializable {
 			@JsonProperty("OwnerID") long ownerId,
 			@JsonProperty("TransformationId") Short transformationId,
 			@JsonProperty("WeaponId") Short weaponId,
-			@JsonProperty("Radius") float radius
+			@JsonProperty("Radius") float radius,
+			@JsonProperty("TargetID") long targetId
 
 	) {
 		this.id = id;
@@ -106,6 +108,7 @@ public final class RawXivCombatantInfo implements Serializable {
 		this.transformationId = transformationId == null ? -1 : transformationId;
 		this.weaponId = weaponId == null ? -1 : weaponId;
 		this.radius = radius;
+		this.targetId = targetId;
 	}
 
 	public long getId() {
@@ -184,6 +187,10 @@ public final class RawXivCombatantInfo implements Serializable {
 		return radius;
 	}
 
+	public long getTargetId() {
+		return targetId;
+	}
+
 	@Override
 	public String toString() {
 		return "RawXivCombatantInfo{" +
@@ -203,6 +210,7 @@ public final class RawXivCombatantInfo implements Serializable {
 		       ", tfId=" + transformationId +
 		       ", wepId=" + weaponId +
 		       ", radius=" + radius +
+		       ", targetId=" + targetId +
 		       '}';
 	}
 
@@ -227,11 +235,12 @@ public final class RawXivCombatantInfo implements Serializable {
 		       && Objects.equals(worldName, that.worldName)
 		       && Objects.equals(transformationId, that.transformationId)
 		       && Objects.equals(weaponId, that.weaponId)
+		       && Objects.equals(targetId, that.targetId)
 		       && Objects.equals(radius, that.radius);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, jobId, type, hp, mp, level, pos, worldId, worldName, bnpcId, bnpcNameId, partyType, ownerId, transformationId, weaponId, radius);
+		return Objects.hash(id, name, jobId, type, hp, mp, level, pos, worldId, worldName, bnpcId, bnpcNameId, partyType, ownerId, transformationId, weaponId, radius, targetId);
 	}
 }

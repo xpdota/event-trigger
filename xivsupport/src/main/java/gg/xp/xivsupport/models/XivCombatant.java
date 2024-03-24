@@ -28,6 +28,7 @@ public class XivCombatant extends XivEntity {
 	private @Nullable XivCombatant parent;
 	private final int shieldAmount;
 	private final short transformationId;
+	private final long targetId;
 
 	public XivCombatant(
 			long id,
@@ -46,7 +47,7 @@ public class XivCombatant extends XivEntity {
 			long shieldAmount,
 			short transformationId,
 			short weaponId,
-			float radius) {
+			float radius, long targetId) {
 		super(id, name);
 		this.isPc = isPc;
 		this.isThePlayer = isThePlayer;
@@ -63,6 +64,7 @@ public class XivCombatant extends XivEntity {
 		this.transformationId = transformationId;
 		this.weaponId = weaponId;
 		this.radius = radius;
+		this.targetId = targetId;
 	}
 
 	public XivCombatant(
@@ -80,7 +82,7 @@ public class XivCombatant extends XivEntity {
 			long level,
 			long ownerId,
 			long shieldAmount) {
-		this(id, name, isPc, isThePlayer, rawType, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount, (short) -1, (short) -1, (short) 0);
+		this(id, name, isPc, isThePlayer, rawType, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount, (short) -1, (short) -1, (short) 0, 0);
 	}
 
 	/**
@@ -259,6 +261,10 @@ public class XivCombatant extends XivEntity {
 		return weaponId;
 	}
 
+	public long getTargetId() {
+		return targetId;
+	}
+
 	public RawXivCombatantInfo toRaw() {
 		HitPoints hp = getHp();
 		if (hp == null) {
@@ -272,7 +278,7 @@ public class XivCombatant extends XivEntity {
 		if (mp == null) {
 			mp = new ManaPoints(10_000, 10_000);
 		}
-		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.current(), hp.max(), mp.current(), mp.max(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId(), getTransformationId(), getWeaponId(), getRadius());
+		return new RawXivCombatantInfo(getId(), getName(), 0, getRawType(), hp.current(), hp.max(), mp.current(), mp.max(), getLevel(), pos.x(), pos.y(), pos.z(), pos.heading(), 0, "TODO", getbNpcId(), getbNpcNameId(), getPartyType(), getOwnerId(), getTransformationId(), getWeaponId(), getRadius(), getTargetId());
 	}
 
 }

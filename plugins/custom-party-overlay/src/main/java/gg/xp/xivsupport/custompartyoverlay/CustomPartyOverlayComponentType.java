@@ -14,6 +14,8 @@ import gg.xp.xivsupport.custompartyoverlay.mpbar.MpBarComponent;
 import gg.xp.xivsupport.custompartyoverlay.mpbar.MpBarComponentGui;
 import gg.xp.xivsupport.custompartyoverlay.name.NameComponent;
 import gg.xp.xivsupport.custompartyoverlay.name.NameComponentGui;
+import gg.xp.xivsupport.custompartyoverlay.selection.SelectionComponent;
+import gg.xp.xivsupport.custompartyoverlay.selection.SelectionComponentGui;
 import gg.xp.xivsupport.gui.util.HasFriendlyName;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +35,8 @@ public enum CustomPartyOverlayComponentType implements HasFriendlyName {
 	CAST_BAR("Cast Bar", CastBarPartyComponent.class, CastBarComponentGui.class),
 	MP_BAR("MP Bar", MpBarComponent.class, MpBarComponentGui.class),
 	CUSTOM_BUFFS("Custom Buffs", CustomBuffsBarPartyComponent.class, CustomBuffsBarComponentGui.class),
-	COOLDOWNS("Cooldown Icons", CustomPartyCdTrackerComponent.class, CustomPartyCdTrackerGui.class);
+	COOLDOWNS("Cooldown Icons", CustomPartyCdTrackerComponent.class, CustomPartyCdTrackerGui.class),
+	SELECTION_RECTANGLE("Target Border", SelectionComponent.class, SelectionComponentGui.class);
 
 	private final String friendlyName;
 	private final Class<? extends RefreshablePartyListComponent> componentClass;

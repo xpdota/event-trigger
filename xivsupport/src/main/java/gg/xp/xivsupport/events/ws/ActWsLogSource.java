@@ -437,4 +437,9 @@ public class ActWsLogSource implements EventSource {
 	public boolean isConnected() {
 		return state.isConnected();
 	}
+
+	@SuppressWarnings("unused")
+	public void subscribeEvent(String eventType) {
+		this.client.subscribeEvent(eventType);
+	}
 }

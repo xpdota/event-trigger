@@ -69,7 +69,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				out.put(groups.get(i), splits[i + 2]);
 			}
 			ZonedDateTime zdt = event.getTimestamp();
-			FieldMapper<F> mapper = new FieldMapper<>(out, state, entityLookupMissBehavior(), splits);
+			FieldMapper<F> mapper = new FieldMapper<>(out, state, entityLookupMissBehavior(), splits, context);
 			Event outgoingEvent;
 			try {
 				outgoingEvent = convert(mapper, lineNumber, zdt);

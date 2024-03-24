@@ -18,6 +18,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @ScanMe
@@ -77,6 +78,8 @@ public class CustomPartyOverlay extends XivOverlay {
 		placeComponents();
 	}
 
+
+
 	public void periodicRefresh() {
 		for (int i = 0; i < refreshables.size(); i++) {
 			XivPlayerCharacter partySlot = getPartySlot(i);
@@ -121,6 +124,16 @@ public class CustomPartyOverlay extends XivOverlay {
 					component.setBounds(spec.x, spec.y + offset, spec.width, spec.height);
 					maxX = Math.max(maxX, spec.x + spec.width);
 					maxY = Math.max(maxY, spec.y + offset + spec.height);
+					// TODO: this doesn't work right.
+					/*
+						Need to address all of the following:
+						setComponentZOrder is based on the order of actual components. i.e. if there are 5 components,
+						then valid values are 0-4. We can't just use arbitrary numbers.
+						We also need to make sure that components that specifically want to render behind everything
+						else go behind not only behind their own party slot's components, but those of every party
+						slot.
+					 */
+//					panel.setComponentZOrder(component, ref.getZOrder());
 					list.add(ref);
 					log.trace("Added: {} -> {} -> {}", i, spec.componentType, component);
 				}
@@ -213,6 +226,15 @@ public class CustomPartyOverlay extends XivOverlay {
 			comp.height = 40;
 			comp.enabled = false;
 			comp.componentType = CustomPartyOverlayComponentType.COOLDOWNS;
+			specs.add(comp);
+		}
+		{
+			CustomOverlayComponentSpec comp = new CustomOverlayComponentSpec();
+			comp.x = 0;
+			comp.y = 0;
+			comp.width = 300;
+			comp.height = 40;
+			comp.componentType = CustomPartyOverlayComponentType.SELECTION_RECTANGLE;
 			specs.add(comp);
 		}
 		return specs;

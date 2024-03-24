@@ -26,7 +26,7 @@ public class XivPlayerCharacter extends XivCombatant {
 	                          long level,
 	                          long ownerId,
 	                          long shieldAmount) {
-		this(id, name, job, world, isLocalPlayerCharacter, typeRaw, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount, (short) -1, (short) -1, 0.5f);
+		this(id, name, job, world, isLocalPlayerCharacter, typeRaw, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount, (short) -1, (short) -1, 0.5f, 0);
 	}
 
 	public XivPlayerCharacter(long id,
@@ -46,8 +46,9 @@ public class XivPlayerCharacter extends XivCombatant {
 	                          long shieldAmount,
 	                          short transformationId,
 	                          short weaponId,
-	                          float radius) {
-		super(id, name, true, isLocalPlayerCharacter, typeRaw, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount, transformationId, weaponId, radius);
+	                          float radius,
+	                          long targetId) {
+		super(id, name, true, isLocalPlayerCharacter, typeRaw, hp, mp, pos, bNpcId, bNpcNameId, partyType, level, ownerId, shieldAmount, transformationId, weaponId, radius, targetId);
 		this.job = job;
 		this.world = world;
 	}

@@ -68,8 +68,8 @@ public class EasyTriggerDutyCalloutExtraAction implements ExtraCalloutAction {
 				dcf.calloutField = fieldName;
 
 				CalloutAction ca = new CalloutAction();
-				ca.setText("{originalText}");
-				ca.setTts("{originalTts}");
+				ca.setText("{originalText} {originalParams}");
+				ca.setTts("{originalTts} {originalParams}");
 
 				EasyTrigger<ProcessedCalloutEvent> easyTrigger = new EasyTrigger();
 				easyTrigger.setEventType(ProcessedCalloutEvent.class);

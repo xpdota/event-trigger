@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.state;
 
-import gg.xp.xivdata.data.XivMap;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
@@ -27,6 +27,7 @@ public class XivStateDummy implements XivState {
 	private XivMap map;
 	private List<XivPlayerCharacter> partyList = Collections.emptyList();
 	private Map<Long, XivCombatant> combatants = new HashMap<>();
+	private Map<Long, Long> targets = new HashMap<>();
 
 	private final PrimaryLogSource pls;
 
@@ -118,6 +119,30 @@ public class XivStateDummy implements XivState {
 	@Override
 	public void provideCombatantPos(XivCombatant target, Position newPos) {
 		throw new UnsupportedOperationException("not supported");
+	}
+
+	@Override
+	public void provideCombatantTargetId(long entityId, long targetId) {
+		if (targetId == 0 || targetId == 0xE0000000L) {
+			targets.remove(entityId);
+		}
+		else {
+			targets.put(entityId, targetId);
+		}
+	}
+
+	@Override
+	public @Nullable XivEntity getTarget(XivCombatant source) {
+		return getCombatantTarget(source);
+	}
+
+	@Override
+	public @Nullable XivCombatant getCombatantTarget(XivCombatant source) {
+		Long tgt = targets.get(source.getId());
+		if (tgt == null) {
+			return null;
+		}
+		return getCombatant(tgt);
 	}
 
 	@Override
