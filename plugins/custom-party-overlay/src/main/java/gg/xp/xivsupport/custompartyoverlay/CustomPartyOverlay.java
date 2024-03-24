@@ -62,7 +62,14 @@ public class CustomPartyOverlay extends XivOverlay {
 		this.elements.addListener(this::placeComponents);
 		this.state = state;
 		this.factory = factory;
-		this.panel = new JPanel(null);
+		this.panel = new JPanel(null) {
+			@Override
+			public void paint(Graphics g) {
+				Rectangle bounds = getBounds();
+				g.setClip(-bounds.x, -bounds.y, bounds.width + 2 * bounds.x, bounds.height + 2 * bounds.y);
+				super.paint(g);
+			}
+		};
 		panel.setOpaque(false);
 		getPanel().add(panel);
 		new RefreshLoop<>("CustomPartyRefresh", this, customPartyOverlay -> {
@@ -102,6 +109,14 @@ public class CustomPartyOverlay extends XivOverlay {
 		placeComponents();
 	}
 
+	private record NewComponent(
+			CustomOverlayComponentSpec spec,
+			Component component,
+			int zOrder
+	) {
+	}
+
+
 	private void placeComponents() {
 		SwingUtilities.invokeLater(() -> {
 
@@ -110,6 +125,7 @@ public class CustomPartyOverlay extends XivOverlay {
 			int maxY = 10;
 			List<List<RefreshablePartyListComponent>> refreshables = new ArrayList<>(8);
 			List<CustomOverlayComponentSpec> componentSpecs = elements.getItems();
+			List<NewComponent> toAdd = new ArrayList<>();
 			for (int i = 0; i < 8; i++) {
 				List<RefreshablePartyListComponent> list = new ArrayList<>();
 				refreshables.add(list);
@@ -120,11 +136,11 @@ public class CustomPartyOverlay extends XivOverlay {
 						continue;
 					}
 					Component component = ref.getComponent();
-					panel.add(component);
+					toAdd.add(new NewComponent(spec, component, ref.getZOrder()));
+//					panel.add(component);
 					component.setBounds(spec.x, spec.y + offset, spec.width, spec.height);
 					maxX = Math.max(maxX, spec.x + spec.width);
 					maxY = Math.max(maxY, spec.y + offset + spec.height);
-					// TODO: this doesn't work right.
 					/*
 						Need to address all of the following:
 						setComponentZOrder is based on the order of actual components. i.e. if there are 5 components,
@@ -133,12 +149,13 @@ public class CustomPartyOverlay extends XivOverlay {
 						else go behind not only behind their own party slot's components, but those of every party
 						slot.
 					 */
-//					panel.setComponentZOrder(component, ref.getZOrder());
 					list.add(ref);
 					log.trace("Added: {} -> {} -> {}", i, spec.componentType, component);
 				}
 			}
 			panel.setPreferredSize(new Dimension(maxX + 10, maxY + 10));
+			toAdd.sort(Comparator.comparing(NewComponent::zOrder));
+			toAdd.forEach(nc -> panel.add(nc.component));
 			this.refreshables = refreshables;
 			try {
 				panel.validate();

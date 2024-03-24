@@ -63,8 +63,8 @@ public class CustomPartyConfig implements PluginTab {
 	public final CustomPartyOverlay overlay;
 	private final CustomJsonListSetting<CustomOverlayComponentSpec> elementsSetting;
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
-	private final XivPlayerCharacter dummyCharacter = new XivPlayerCharacter(
-			0x12345678,
+	public static final XivPlayerCharacter dummyCharacter = new XivPlayerCharacter(
+			0x12345678L,
 			"Player Name",
 			Job.SGE,
 			XivWorld.of(),
@@ -77,7 +77,11 @@ public class CustomPartyConfig implements PluginTab {
 			1,
 			90,
 			0,
-			8000
+			8000,
+			(short) -1,
+			(short) -1,
+			0.5f,
+			0x12345678L
 	);
 	private final Map<CustomPartyOverlayComponentType, RefreshablePartyListComponent> componentCache = new ConcurrentHashMap<>();
 	private final Map<Component, CustomOverlayComponentSpec> componentToSpecMapping = new ConcurrentHashMap<>();
