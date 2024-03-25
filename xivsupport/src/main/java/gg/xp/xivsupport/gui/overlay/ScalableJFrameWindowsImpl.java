@@ -104,6 +104,7 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 	private static final long WS_EX_NOACTIVATE = 0x08000000L;
 
 	private static void setClickThrough(JFrame w, boolean clickThrough) {
+		// TODO: clean this up
 		log.trace("Click-through: {}", clickThrough);
 		w.setFocusableWindowState(!clickThrough);
 		if (!Platform.isWindows()) {
