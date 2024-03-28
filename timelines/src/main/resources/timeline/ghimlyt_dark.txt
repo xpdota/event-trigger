@@ -168,7 +168,7 @@ hideall "--sync--"
 2386.1 "Order To Bombard" Ability { id: "3710", source: "Annia Quo Soranus" }
 2388.5 "--sync--" Ability { id: "370F", source: "Annia Quo Soranus" }
 
-2390.5 "The Order" Ability { id: "3714", source: "Julia Quo Soranus" } jump 2329.5 window 30,30
+2390.5 "The Order" Ability { id: "3714", source: "Julia Quo Soranus" } window 30,30 jump 2329.5
 2390.7 "Crossbones"
 2392.6 "Angry Salamander"
 2393.4 "Bombardment"
@@ -223,4 +223,4 @@ hideall "--sync--"
 2600.0 "Artificial Boost" Ability { id: "3730", source: "Annia Quo Soranus" } window 600,5
 # 2603.2 "--sync--" StartsUsing { id: "3731", source: "Julia Quo Soranus" }
 2603.2 "Imperial Authority" StartsUsing { id: "3732", source: "Annia Quo Soranus" } duration 39.7
-2642.9 "Imperial Authority Enrage" Ability { id: "3732", source: "Annia Quo Soranus" } 
+2642.9 "Imperial Authority Enrage" Ability { id: "3732", source: "Annia Quo Soranus" }
