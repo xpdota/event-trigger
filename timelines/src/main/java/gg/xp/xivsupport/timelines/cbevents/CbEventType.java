@@ -5,6 +5,8 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
+import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
+import gg.xp.xivsupport.events.actlines.events.ActorControlSelfExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
@@ -140,7 +142,25 @@ public enum CbEventType {
 			new CbfMap<>("sourceId", "event.source.id", id(BattleTalkEvent::getSource)),
 			new CbfMap<>("npcNameId", "event.source.bNpcNameId", intConv(event -> event.getSource().getbNpcNameId(), 16)),
 			new CbfMap<>("instanceContentTextId", "event.instanceContentTextId", intConv(BattleTalkEvent::getInstanceContentTextId, 16))
-	))
+	)),
+	ActorControlExtra(ActorControlExtraEvent.class, List.of(
+			new CbfMap<>("id", "event.instance", id(ActorControlExtraEvent::getTarget)),
+			new CbfMap<>("category", "event.command", intConv(e -> (long) e.getCategory(), 16)),
+			new CbfMap<>("param1", "event.data0", intConv(ActorControlExtraEvent::getData0, 16)),
+			new CbfMap<>("param2", "event.data1", intConv(ActorControlExtraEvent::getData1, 16)),
+			new CbfMap<>("param3", "event.data2", intConv(ActorControlExtraEvent::getData2, 16)),
+			new CbfMap<>("param4", "event.data3", intConv(ActorControlExtraEvent::getData3, 16))
+	)),
+	ActorControlSelfExtra(ActorControlSelfExtraEvent.class, List.of(
+			new CbfMap<>("id", "event.instance", id(ActorControlSelfExtraEvent::getTarget)),
+			new CbfMap<>("category", "event.command", intConv(e -> (long) e.getCategory(), 16)),
+			new CbfMap<>("param1", "event.data0", intConv(ActorControlSelfExtraEvent::getData0, 16)),
+			new CbfMap<>("param2", "event.data1", intConv(ActorControlSelfExtraEvent::getData1, 16)),
+			new CbfMap<>("param3", "event.data2", intConv(ActorControlSelfExtraEvent::getData2, 16)),
+			new CbfMap<>("param4", "event.data3", intConv(ActorControlSelfExtraEvent::getData3, 16)),
+			new CbfMap<>("param5", "event.data4", intConv(ActorControlSelfExtraEvent::getData4, 16)),
+			new CbfMap<>("param6", "event.data5", intConv(ActorControlSelfExtraEvent::getData5, 16))
+	)),
 
 
 	// TODO: the rest of the events

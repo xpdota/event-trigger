@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SelfCompletingFuture<V> implements Future<V> {
 
-	private final Callable<V> producer;
+	private Callable<V> producer;
 	private final Object lock = new Object();
 	private volatile boolean done;
 	private volatile V value;
@@ -52,6 +52,8 @@ public class SelfCompletingFuture<V> implements Future<V> {
 			failure = e;
 		}
 		done = true;
+		// Null out the underlying function such as to not hold onto references unnecessarily
+		producer = null;
 	}
 
 	private V getValueInternal() throws ExecutionException {
