@@ -51,7 +51,7 @@ hideall "--sync--"
 234.2 "Bastardbluss" Ability { id: "10DA", source: "Regula van Hydrus" }
 237.5 "Bastardbluss" Ability { id: "10DA", source: "Regula van Hydrus" }
 244.7 "Judgment" Ability { id: "10DD", source: "Regula van Hydrus" }
-249.9 "Judgment" Ability { id: "10DE", source: "Regula van Hydrus" } jump 215.0
+249.9 "Judgment" Ability { id: "10DE", source: "Regula van Hydrus" } jump 215
 
 256.8 "Bastardbluss"
 269.1 "Bastardbluss"
@@ -132,7 +132,7 @@ hideall "--sync--"
 1056.0 "Chthonic Hush" Ability { id: "10E7", source: "Harmachis" }
 1064.7 "Riddle of The Sphinx" Ability { id: "10E4", source: "Harmachis" }
 1071.7 "Chthonic Hush" Ability { id: "10E7", source: "Harmachis" }
-1080.4 "Riddle of The Sphinx" Ability { id: "10E4", source: "Harmachis" } jump 1049.0
+1080.4 "Riddle of The Sphinx" Ability { id: "10E4", source: "Harmachis" } jump 1049
 
 1087.4 "Chthonic Hush"
 1096.1 "Riddle of The Sphinx"
@@ -173,9 +173,9 @@ hideall "--sync--"
 1283.8 "Riddle of The Sphinx" Ability { id: "10E4", source: "Harmachis" }
 1293.1 "Ka" Ability { id: "10E6", source: "Harmachis" }
 1300.4 "Weighing of the Heart"
-1300.4 "--sync--" Ability { id: "ED0", source: "Harmachis" } jump 1250.0 # Machina
-1300.4 "--sync--" Ability { id: "10E8", source: "Harmachis" } jump 1350.0 # Cobra
-1300.4 "--sync--" Ability { id: "ECE", source: "Harmachis" } jump 1400.0 # Naga
+1300.4 "--sync--" Ability { id: "ED0", source: "Harmachis" } jump 1250 # Machina
+1300.4 "--sync--" Ability { id: "10E8", source: "Harmachis" } jump 1350 # Cobra
+1300.4 "--sync--" Ability { id: "ECE", source: "Harmachis" } jump 1400 # Naga
 1303.5 "Steel Scales?"
 1303.6 "Inertia Stream?"
 1306.5 "Petrifaction?"
@@ -415,7 +415,7 @@ hideall "--sync--"
 3092.6 "Height Of Chaos"
 
 # Intermission 1 at HP < 80%
-3100.0 "--sync--" AddedCombatant { name: "Firesphere" }  window 100,5
+3100.0 "--sync--" AddedCombatant { name: "Firesphere" } window 100,5
 
 3110.0 "Ancient Circle Appears"
 3115.1 "Ancient Circle" Ability { id: "1102", source: "Ascian Prime" }
@@ -442,7 +442,7 @@ hideall "--sync--"
 3260.0 "Shadow Flare"
 
 # Intermission 2 at HP < 40%
-3300.0 "--sync--" AddedCombatant { name: "Firesphere" }  window 200,5
+3300.0 "--sync--" AddedCombatant { name: "Firesphere" } window 200,5
 
 3304.6 "Ancient Circle Appears"
 3309.7 "Ancient Circle" Ability { id: "1102", source: "Ascian Prime" }

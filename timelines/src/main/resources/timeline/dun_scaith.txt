@@ -169,7 +169,7 @@ hideall "--sync--"
 1405.2 "Flameflow" Ability { id: "1CA7", source: "Ferdiad Hollow" }
 1411.4 "Jester's Reap" Ability { id: "1E41", source: "Ferdiad Hollow" }
 
-1420.4 "Sleight" Ability { id: "1C99", source: "Ferdiad Hollow" } window 15,15 jump 1319.0
+1420.4 "Sleight" Ability { id: "1C99", source: "Ferdiad Hollow" } window 15,15 jump 1319
 1428.9 "Wormhole"
 1429.4 "Juggling Sphere"
 1434.4 "Explosion"
@@ -205,7 +205,7 @@ hideall "--sync--"
 # Timing might be a little different?
 2060.0 "Aether Bend" Ability { id: "1D99", source: "Proto Ultima" } window 30,15 jump 2007.8
 2070.6 "Aetherochemical Laser 1"
-2074.6 "Aetherochemical Laser 2" 
+2074.6 "Aetherochemical Laser 2"
 2078.6 "Aetherochemical Laser 3"
 2079.8 "Diffractive Laser"
 2085.8 "Light Pillar x8"
@@ -278,7 +278,7 @@ hideall "--sync--"
 3199.4 "--shadows gather--"
 3203.6 "Soar" Ability { id: "1D1B", source: "Scathach" }
 3207.8 "--sync--" Ability { id: "1D1C", source: "Scathach" }
-3208.7 "Shadesmite" Ability { id: "1D1D", source: "Scathach" } window 30,30 jump 3061.0
+3208.7 "Shadesmite" Ability { id: "1D1D", source: "Scathach" } window 30,30 jump 3061
 
 # We don't know 100% that this is the correct rotation,
 # but based on the available logs and video, it seems likely.
@@ -291,7 +291,7 @@ hideall "--sync--"
 
 # Intermission at 45% HP. Might be a time push too? but it's uncertain.
 3300.0 "--untargetable--" NameToggle { name: "Scathach", toggle: "00" } window 300,5
-3302.2 "--sync--" AddedCombatant { name: "Shadowcourt Jester" }  window 300,5
+3302.2 "--sync--" AddedCombatant { name: "Shadowcourt Jester" } window 300,5
 3323.6 "--towers appear--"
 3333.6 "Particle Beam" Ability { id: "1D2[78]", source: "Scathach" }
 
@@ -403,9 +403,9 @@ hideall "--sync--"
 # This is the dueling-lasers part where the party kills the big deathgate and two small ones.
 
 4274.0 "--sync--" NameToggle { name: "Diabolos", toggle: "00" } window 100,5
-4286.2 "--lifegate spawn--" AddedCombatant { name: "Lifegate" }  window 300,5
+4286.2 "--lifegate spawn--" AddedCombatant { name: "Lifegate" } window 300,5
 4300.0 "--sync--" Ability { id: "1C16", source: "Diabolos" } window 300,5
-4320.0 "--deathgate spawn--" AddedCombatant { name: "Deathgate" }  window 50,5
+4320.0 "--deathgate spawn--" AddedCombatant { name: "Deathgate" } window 50,5
 4477.1 "--sync--" Ability { id: "1AFB", source: "Diabolos" } window 177,5
 4488.5 "--sync--" Ability { id: "1AFD", source: "Diabolos" }
 4494.6 "Dream Shroud" Ability { id: "1DB1", source: "Diabolos Hollow" } window 194,5
@@ -452,7 +452,7 @@ hideall "--sync--"
 4613.6 "Shadethrust" Ability { id: "1C1A", source: "Diabolos Hollow" }
 4620.4 "Particle Beam" Ability { id: "1C2[456]", source: "Diabolos Hollow" }
 4620.8 "Hollow Camisado" Ability { id: "1C19", source: "Diabolos Hollow" }
-4624.1 "--deathgate spawn--" AddedCombatant { name: "Deathgate" }  window 25,5
+4624.1 "--deathgate spawn--" AddedCombatant { name: "Deathgate" } window 25,5
 4627.1 "Hollowshield" Ability { id: "1C1E", source: "Diabolos Hollow" } window 27.1,5
 4637.5 "Hollow Camisado" Ability { id: "1C19", source: "Diabolos Hollow" }
 4646.8 "Shadethrust" Ability { id: "1C1A", source: "Diabolos Hollow" } window 20,10
