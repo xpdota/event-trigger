@@ -54,6 +54,7 @@ public class StatusEffectRepository {
 	private final Map<BuffTrackingKey, BuffApplied> buffs = new LinkedHashMap<>();
 	private final Map<BuffTrackingKey, BuffApplied> preApps = new LinkedHashMap<>();
 	private final Map<XivEntity, Map<BuffTrackingKey, BuffApplied>> onTargetCache = new HashMap<>();
+	private final Map<XivEntity, Map<BuffTrackingKey, BuffApplied>> preappsOnTargetCache = new HashMap<>();
 	private final Object lock = new Object();
 	private final XivState state;
 	private final SequenceIdTracker sqid;
@@ -69,10 +70,12 @@ public class StatusEffectRepository {
 				.filter(StatusAppliedEffect.class::isInstance).map(StatusAppliedEffect.class::cast).toList();
 		synchronized (lock) {
 			for (StatusAppliedEffect preApp : newPreApps) {
-				BuffApplied fakeValue = new BuffApplied(event, preApp);
-				fakeValue.setParent(event);
-				fakeValue.setHappenedAt(event.getEffectiveHappenedAt());
-				this.preApps.put(new BuffTrackingKey(event.getSource(), preApp.isOnTarget() ? event.getTarget() : event.getSource(), preApp.getStatus()), fakeValue);
+				BuffApplied fakeEvent = new BuffApplied(event, preApp);
+				fakeEvent.setParent(event);
+				fakeEvent.setHappenedAt(event.getEffectiveHappenedAt());
+				this.preApps.put(new BuffTrackingKey(event.getSource(), preApp.isOnTarget() ? event.getTarget() : event.getSource(), preApp.getStatus()), fakeEvent);
+				var key = BuffTrackingKey.of(fakeEvent);
+				this.preappsOnTargetCache.computeIfAbsent(event.getTarget(), k -> new LinkedHashMap<>()).put(key, fakeEvent);
 			}
 		}
 	}
@@ -92,6 +95,10 @@ public class StatusEffectRepository {
 					event
 			);
 			BuffApplied preapp = preApps.remove(key);
+			preappsOnTargetCache.computeIfPresent(target, (k, v) -> {
+				v.remove(key);
+				return v;
+			});
 			if (preapp != null) {
 				event.setPreAppInfo(preapp.getPreAppAbility(), preapp.getPreAppInfo());
 			}
@@ -141,6 +148,10 @@ public class StatusEffectRepository {
 //						event
 //				);
 				BuffApplied preapp = preApps.remove(key);
+				preappsOnTargetCache.computeIfPresent(target, (k, v) -> {
+					v.remove(key);
+					return v;
+				});
 				if (preapp != null) {
 					event.setPreAppInfo(preapp.getPreAppAbility(), preapp.getPreAppInfo());
 				}
@@ -244,35 +255,66 @@ public class StatusEffectRepository {
 		}
 	}
 
+	private boolean shouldRemovePreapp(BuffApplied preapp) {
+		// Cap to 5 seconds - assume ghost otherwise
+		if (preapp.getEstimatedElapsedDuration().toMillis() > 5000) {
+			return true;
+		}
+		Event parent = preapp.getParent();
+		if (parent instanceof AbilityUsedEvent originalAbility) {
+			return !sqid.isEventStillPending(originalAbility);
+		}
+		return false;
+
+	}
+
 	private void prunePreApps() {
 		synchronized (lock) {
-			preApps.values().removeIf(v -> {
-				// Cap to 5 seconds - assume ghost otherwise
-				if (v.getEstimatedElapsedDuration().toMillis() > 5000) {
-					return true;
+			preApps.values().removeIf(preapp -> {
+				boolean shouldRemove = shouldRemovePreapp(preapp);
+				if (shouldRemove) {
+					preappsOnTargetCache.computeIfPresent(preapp.getTarget(), (k, preapps) -> {
+						var trackingKey = BuffTrackingKey.of(preapp);
+						preapps.remove(trackingKey);
+						return preapps;
+					});
 				}
-				Event parent = v.getParent();
-				if (parent instanceof AbilityUsedEvent originalAbility) {
-					return !sqid.isEventStillPending(originalAbility);
-				}
-				return false;
+				return shouldRemove;
 			});
 		}
 	}
 
-
 	public List<BuffApplied> statusesOnTarget(XivEntity entity) {
+		return statusesOnTarget(entity, false);
+	}
+
+	public List<BuffApplied> statusesOnTarget(XivEntity entity, boolean includePreapps) {
 		if (entity == null) {
 			return Collections.emptyList();
 		}
 		synchronized (lock) {
 			Map<BuffTrackingKey, BuffApplied> cached = onTargetCache.get(entity);
-			if (cached == null) {
+			if (includePreapps) {
+				Map<BuffTrackingKey, BuffApplied> cachedPreapps = preappsOnTargetCache.get(entity);
+				if (cachedPreapps != null && !cachedPreapps.isEmpty()) {
+					if (cached == null || cached.isEmpty()) {
+						return new ArrayList<>(cachedPreapps.values());
+					}
+					else {
+						var out = new ArrayList<>(cached.values());
+						out.addAll(cachedPreapps.values());
+						return out;
+					}
+				}
+				// Else, fall through to non-preapp case
+			}
+			if (cached == null || cached.isEmpty()) {
 				return Collections.emptyList();
 			}
 			return new ArrayList<>(cached.values());
 		}
 	}
+
 
 	public boolean targetHasAnyStatus(XivEntity entity) {
 		if (entity == null) {
@@ -360,7 +402,11 @@ public class StatusEffectRepository {
 	});
 
 	public List<BuffApplied> filteredSortedStatusesOnTarget(XivEntity entity, Predicate<BuffApplied> filter) {
-		return statusesOnTarget(entity)
+		return filteredSortedStatusesOnTarget(entity, filter, false);
+	}
+
+	public List<BuffApplied> filteredSortedStatusesOnTarget(XivEntity entity, Predicate<BuffApplied> filter, boolean includePreapps) {
+		return statusesOnTarget(entity, includePreapps)
 				.stream()
 				.filter(filter)
 				.sorted(standardPartyFrameSort)

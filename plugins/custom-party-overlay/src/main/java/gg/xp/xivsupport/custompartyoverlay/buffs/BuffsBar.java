@@ -45,6 +45,7 @@ public class BuffsBar extends Component {
 	private boolean enableTimers = true;
 	private boolean enableShadows = true;
 	private boolean rtl;
+	private float preappOpacity = 0.5f;
 
 	private record FontShapeKey(String string, Font font) {
 
@@ -129,8 +130,16 @@ public class BuffsBar extends Component {
 				if (curX < 0) {
 					break;
 				}
-				Image textImage = tracker.image;
-				component.paint(g, buffHeight);
+				Image textImage = tracker.textImage;
+				if (tracker.buff.isPreApp()) {
+					Graphics2D g2 = (Graphics2D) g.create();
+					g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, preappOpacity));
+					component.paint(g2, buffHeight);
+					g2.dispose();
+				}
+				else {
+					component.paint(g, buffHeight);
+				}
 				if (textImage != null) {
 //						g.drawString(text, 0, 0);
 					AffineTransform shapeTrans = new AffineTransform(transform);
@@ -163,8 +172,16 @@ public class BuffsBar extends Component {
 				if (buffWidth > remainingX) {
 					break;
 				}
-				Image textImage = tracker.image;
-				component.paint(g, buffHeight);
+				Image textImage = tracker.textImage;
+				if (tracker.buff.isPreApp()) {
+					Graphics2D g2 = (Graphics2D) g.create();
+					g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, preappOpacity));
+					component.paint(g2, buffHeight);
+					g2.dispose();
+				}
+				else {
+					component.paint(g, buffHeight);
+				}
 				if (textImage != null) {
 //						g.drawString(text, 0, 0);
 					AffineTransform shapeTrans = new AffineTransform(transform);
@@ -207,10 +224,10 @@ public class BuffsBar extends Component {
 		String text = enableTimers ? formatText(buff) : null;
 		boolean canDispel = info != null && info.canDispel();
 		boolean isMine = buff.getSource().walkParentChain().isThePlayer();
-		Image img;
+		Image textImage;
 		if (text != null) {
 			if (fontBigMetrics == null) {
-				img = null;
+				textImage = null;
 			}
 			else {
 				Color color;
@@ -226,7 +243,7 @@ public class BuffsBar extends Component {
 				int maxWidth = buffWidth + xPadding - 1;
 				int cellHeight = getHeight();
 				TextRenderKey key = new TextRenderKey(text, color, maxWidth, cellHeight, scale, enableShadows);
-				img = imageCache.computeIfAbsent(key, t -> {
+				textImage = imageCache.computeIfAbsent(key, t -> {
 					int textWidth;
 					textWidth = fontBigMetrics.stringWidth(text);
 					int yPad = 0;
@@ -270,7 +287,7 @@ public class BuffsBar extends Component {
 			}
 		}
 		else {
-			img = null;
+			textImage = null;
 		}
 		return new Tracker(buff,
 				scaled,
@@ -278,11 +295,14 @@ public class BuffsBar extends Component {
 				isMine,
 				canDispel,
 				text,
-				img
+				textImage
 		);
 	}
 
 	private @Nullable String formatText(BuffApplied buff) {
+		if (buff.isPreApp()) {
+			return "…";
+		}
 		if (!buff.shouldDisplayDuration()) {
 			return null;
 		}
@@ -314,7 +334,7 @@ public class BuffsBar extends Component {
 			boolean isSelfApplied,
 			boolean isDispellable,
 			String formattedText,
-			Image image) {
+			Image textImage) {
 	}
 
 	private void recalc() {
@@ -362,5 +382,9 @@ public class BuffsBar extends Component {
 
 	public void setRtl(boolean rtl) {
 		this.rtl = rtl;
+	}
+
+	public void setPreappOpacity(float preappOpacity) {
+		this.preappOpacity = preappOpacity;
 	}
 }
