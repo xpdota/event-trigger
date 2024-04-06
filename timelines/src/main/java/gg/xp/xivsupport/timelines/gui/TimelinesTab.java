@@ -68,6 +68,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
@@ -519,7 +520,10 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				XivZone zone = state.getZone();
 				if (zone != null) {
 					long zoneId = zone.getId();
-					selectZone(zoneId);
+					boolean selected = trySelectZone(zoneId);
+					if (!selected) {
+						JOptionPane.showMessageDialog(this, "The current zone does not have a timeline.", "No Timeline", JOptionPane.INFORMATION_MESSAGE);
+					}
 				}
 				else {
 					JOptionPane.showMessageDialog(this, "You are not currently in a zone.", "No Zone", JOptionPane.INFORMATION_MESSAGE);
@@ -741,11 +745,17 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		refresh();
 	}
 
-	public void selectZone(long zoneId) {
-		timelineChooserModel.getData().stream().filter(e -> e.zoneId() == zoneId).findFirst().ifPresent(value -> {
+	public boolean trySelectZone(long zoneId) {
+		Optional<TimelineInfo> zoneOpt = timelineChooserModel.getData().stream().filter(e -> e.zoneId() == zoneId).findFirst();
+		zoneOpt.ifPresent(value -> {
 			timelineChooserModel.setSelectedValue(value);
 			timelineChooserModel.scrollToSelectedValue();
 		});
+		return zoneOpt.isPresent();
+	}
+
+	public void selectZone(long zoneId) {
+		trySelectZone(zoneId);
 	}
 
 	private void exportCurrent() {

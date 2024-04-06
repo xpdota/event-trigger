@@ -182,7 +182,7 @@ public class TimelineRecordingPopup extends JDialog {
 
 	@HandleEvents
 	public void abilityUsed(AbilityUsedEvent event) {
-		if (!recording) {
+		if (!recording || !event.isFirstTarget()) {
 			return;
 		}
 		ExtendedCooldownDescriptor cd = cdMap.get(event.getAbility().getId());
@@ -194,7 +194,7 @@ public class TimelineRecordingPopup extends JDialog {
 	}
 
 	private void reset() {
-		setStatusLabel("Click 'Run' to start...");
+		setStatusLabel("FIRST, play the until the beginning of the desired pull. Then, click 'Run'.");
 		entries = new ArrayList<>();
 		acceptButton.setEnabled(false);
 		runButton.setEnabled(true);
