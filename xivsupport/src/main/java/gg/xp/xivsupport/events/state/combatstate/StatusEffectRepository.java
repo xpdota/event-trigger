@@ -68,14 +68,16 @@ public class StatusEffectRepository {
 	public void buffPreApplication(EventContext context, AbilityUsedEvent event) {
 		List<StatusAppliedEffect> newPreApps = event.getEffects().stream()
 				.filter(StatusAppliedEffect.class::isInstance).map(StatusAppliedEffect.class::cast).toList();
-		synchronized (lock) {
-			for (StatusAppliedEffect preApp : newPreApps) {
-				BuffApplied fakeEvent = new BuffApplied(event, preApp);
-				fakeEvent.setParent(event);
-				fakeEvent.setHappenedAt(event.getEffectiveHappenedAt());
-				this.preApps.put(new BuffTrackingKey(event.getSource(), preApp.isOnTarget() ? event.getTarget() : event.getSource(), preApp.getStatus()), fakeEvent);
-				var key = BuffTrackingKey.of(fakeEvent);
-				this.preappsOnTargetCache.computeIfAbsent(event.getTarget(), k -> new LinkedHashMap<>()).put(key, fakeEvent);
+		if (!newPreApps.isEmpty()) {
+			synchronized (lock) {
+				for (StatusAppliedEffect preApp : newPreApps) {
+					BuffApplied fakeEvent = new BuffApplied(event, preApp);
+					fakeEvent.setParent(event);
+					fakeEvent.setHappenedAt(event.getEffectiveHappenedAt());
+					this.preApps.put(new BuffTrackingKey(event.getSource(), fakeEvent.getTarget(), preApp.getStatus()), fakeEvent);
+					var key = BuffTrackingKey.of(fakeEvent);
+					this.preappsOnTargetCache.computeIfAbsent(fakeEvent.getTarget(), k -> new LinkedHashMap<>()).put(key, fakeEvent);
+				}
 			}
 		}
 	}
@@ -171,6 +173,8 @@ public class StatusEffectRepository {
 		synchronized (lock) {
 			buffs.clear();
 			onTargetCache.clear();
+			preApps.clear();
+			preappsOnTargetCache.clear();
 		}
 		context.accept(new XivBuffsUpdatedEvent());
 	}
@@ -181,6 +185,8 @@ public class StatusEffectRepository {
 		synchronized (lock) {
 			buffs.clear();
 			onTargetCache.clear();
+			preApps.clear();
+			preappsOnTargetCache.clear();
 		}
 		context.accept(new XivBuffsUpdatedEvent());
 	}
@@ -200,6 +206,7 @@ public class StatusEffectRepository {
 					iterator.remove();
 					anyRemoved = true;
 					onTargetCache.remove(key.getTarget());
+					preappsOnTargetCache.remove(key.getTarget());
 				}
 			}
 		}
@@ -216,6 +223,7 @@ public class StatusEffectRepository {
 		if (!combatantsThatExist.isEmpty()) {
 			synchronized (lock) {
 				buffs.keySet().removeIf(key -> !combatantsThatExist.contains(key.getTarget().getId()));
+				preApps.keySet().removeIf(key -> !combatantsThatExist.contains(key.getTarget().getId()));
 			}
 		}
 	}
@@ -275,7 +283,10 @@ public class StatusEffectRepository {
 				if (shouldRemove) {
 					preappsOnTargetCache.computeIfPresent(preapp.getTarget(), (k, preapps) -> {
 						var trackingKey = BuffTrackingKey.of(preapp);
-						preapps.remove(trackingKey);
+						var removed = preapps.remove(trackingKey);
+						if (removed == null) {
+							log.warn("Did not remove preapp for {}", trackingKey);
+						}
 						return preapps;
 					});
 				}

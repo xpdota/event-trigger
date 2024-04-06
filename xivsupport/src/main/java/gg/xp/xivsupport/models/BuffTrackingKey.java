@@ -57,4 +57,9 @@ public class BuffTrackingKey {
 	public XivStatusEffect getBuff() {
 		return buff;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("BuffTrackingKey(%s on %s from %s)", buff, target, source);
+	}
 }

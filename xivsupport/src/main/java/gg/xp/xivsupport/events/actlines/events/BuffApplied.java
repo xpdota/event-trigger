@@ -2,8 +2,7 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.time.TimeUtils;
-import gg.xp.xivdata.data.StatusEffectInfo;
-import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivStatusEffect;
@@ -33,7 +32,7 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 
 	// Only for pre-apps
 	public BuffApplied(AbilityUsedEvent event, StatusAppliedEffect effect) {
-		this(effect.getStatus(), 9999, event.getSource(), event.getTarget(), effect.getRawStacks(), true);
+		this(effect.getStatus(), 9999, event.getSource(), effect.isOnTarget() ? event.getTarget() : event.getSource(), effect.getRawStacks(), true);
 		preAppAbility = event;
 		preAppInfo = effect;
 	}
@@ -148,13 +147,13 @@ public class BuffApplied extends BaseEvent implements HasSourceEntity, HasTarget
 	@Override
 	public String toString() {
 		return "BuffApplied{" +
-				"buff=" + buff +
-				", duration=" + (duration.getSeconds() > 9_990 ? "indef" : duration) +
-				", source=" + source +
-				", target=" + target +
-				", stacks=" + rawStacks +
-				", isRefresh=" + isRefresh +
-				'}';
+		       "buff=" + buff +
+		       ", duration=" + (duration.getSeconds() > 9_990 ? "indef" : duration) +
+		       ", source=" + source +
+		       ", target=" + target +
+		       ", stacks=" + rawStacks +
+		       ", isRefresh=" + isRefresh +
+		       '}';
 	}
 
 	@Override
