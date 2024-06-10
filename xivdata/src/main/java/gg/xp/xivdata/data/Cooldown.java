@@ -212,8 +212,9 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	// It looks like if you fail to complete all the steps, it's still the same buff ID.
 	TechnicalStep(builder(CooldownType.PARTY_BUFF, true, 0x3e7e).buffIds(0x71e)),
 	Devilment(true, CooldownType.PARTY_BUFF, 0x3e8b),
-	ShieldSamba(true, CooldownType.PARTY_MIT, 0x3e8c),
-	Troubadour(true, CooldownType.PARTY_MIT, 0x1ced),
+	ShieldSamba(builder(CooldownType.PARTY_MIT, true, 0x3e8c).cooldown(90)),
+
+	Troubadour(builder(CooldownType.PARTY_MIT, true, 0x1ced).cooldown(90)),
 	MagesBallad(builder(CooldownType.PARTY_BUFF, true, 0x72).buffIds(0x8a9).duration(45.0)),
 	ArmysPaeon(builder(CooldownType.PARTY_BUFF, true, 0x74).buffIds(0x8aa).duration(45.0)),
 	WanderersMinuet(builder(CooldownType.PARTY_BUFF, true, 0xde7).buffIds(0x8a8).duration(45.0)),
@@ -223,8 +224,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 //	WanderersMinuet(BRD, true, 120.0, 45.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
 	BattleVoice(true, CooldownType.PARTY_BUFF, 0x76),
 	RadiantFinale(true, CooldownType.PARTY_BUFF, 0x64B9),
-	Tactician(true, CooldownType.PARTY_MIT, 0x41f9);
-
+	Tactician(builder(CooldownType.PARTY_MIT, true, 0x41f9).cooldown(90));
 
 	private final ExtendedCooldownDescriptor delegate;
 

@@ -28,7 +28,6 @@ public class IdOrNameFilter<X> extends TextBasedFilter<X> {
 	protected @Nullable Predicate<X> getFilterForInput(@NotNull String input) {
 		if (input.startsWith("0x")) {
 			validationError = false;
-			// TODO: this is also inefficient because we should just be parsing the input text
 			long wantedId;
 			try {
 				wantedId = Long.parseLong(input.substring(2).trim(), 16);

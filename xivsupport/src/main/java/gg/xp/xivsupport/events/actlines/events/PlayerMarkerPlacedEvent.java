@@ -21,6 +21,7 @@ public class PlayerMarkerPlacedEvent extends BaseEvent implements HasSourceEntit
 		this.target = target;
 	}
 
+	@Override
 	public MarkerSign getMarker() {
 		return marker;
 	}
