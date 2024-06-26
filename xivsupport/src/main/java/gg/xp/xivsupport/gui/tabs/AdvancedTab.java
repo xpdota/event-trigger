@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.tabs;
 
 import gg.xp.reevent.events.BasicEventDistributor;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.reevent.scan.NoAutoScan;
 import gg.xp.xivsupport.callouts.audio.SoundPlayer;
 import gg.xp.xivsupport.events.misc.Management;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@NoAutoScan
 public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("AdvancedTab"));
