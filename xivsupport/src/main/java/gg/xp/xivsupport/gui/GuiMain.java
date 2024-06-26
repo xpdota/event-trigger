@@ -235,7 +235,7 @@ public class GuiMain {
 		addTab("Library", container.getComponent(LibraryTab.class));
 		addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class)));
 		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class), container.getComponent(UpdaterConfig.class)));
-		addTab("Advanced", new AdvancedTab(container));
+		addTab("Advanced", container.getComponent(AdvancedTab.class));
 		GlobalNavPanel nav = new GlobalNavPanel(guiReg);
 		SwingUtilities.invokeLater(() -> {
 			JPanel gp = ((JPanel) mainFrame.getGlassPane());

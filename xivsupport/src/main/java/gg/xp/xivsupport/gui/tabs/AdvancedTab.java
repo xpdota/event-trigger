@@ -1,12 +1,15 @@
 package gg.xp.xivsupport.gui.tabs;
 
 import gg.xp.reevent.events.BasicEventDistributor;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.callouts.audio.SoundPlayer;
 import gg.xp.xivsupport.events.misc.Management;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.Stats;
 import gg.xp.xivsupport.events.triggers.duties.ewult.omega.BooleanSettingHidingPanel;
+import gg.xp.xivsupport.events.ws.ActWsConnectionStatusChangedEvent;
 import gg.xp.xivsupport.events.ws.ActWsLogSource;
+import gg.xp.xivsupport.events.ws.WsState;
 import gg.xp.xivsupport.gui.KeyValueDisplaySet;
 import gg.xp.xivsupport.gui.KeyValuePairDisplay;
 import gg.xp.xivsupport.gui.Refreshable;
@@ -31,7 +34,11 @@ import org.picocontainer.PicoContainer;
 import org.swingexplorer.Launcher;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.List;
@@ -43,6 +50,7 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("AdvancedTab"));
 	private final KeyValueDisplaySet displayed;
 	private final KeyValueDisplaySet mem;
+	private final KeyValueDisplaySet connectedDisp;
 
 	public AdvancedTab(PicoContainer container) {
 		super(LEFT);
@@ -270,6 +278,32 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 				gbc.fill = GridBagConstraints.BOTH;
 				JPanel connPanel = new TitleBorderPanel("Connection");
 				connPanel.setLayout(new FlowLayout());
+				JCheckBox box = new JCheckBox() {
+					@Override
+					protected void processMouseEvent(MouseEvent e) {
+						// Ignore - lets us preserve the "enabled" look while being unclickable
+					}
+				};
+				box.setFocusable(false);
+				WsState wsState = container.getComponent(WsState.class);
+				Border defaultBorder = connPanel.getBorder();
+				Border badBorder = new TitledBorder(new LineBorder(Color.RED), "Connection");
+				this.connectedDisp = new KeyValueDisplaySet(List.of(new KeyValuePairDisplay<>(
+						"Connected?",
+						box,
+						wsState::isConnected,
+						(cb, connected) -> {
+							cb.setSelected(connected);
+							if (connected) {
+								connPanel.setBorder(defaultBorder);
+							}
+							else {
+								connPanel.setBorder(badBorder);
+							}
+						}
+				)));
+				connPanel.add(connectedDisp);
+				connPanel.add(Box.createHorizontalStrut(16384));
 				connPanel.add(new WsURISettingGui(actWs.getUriSetting(), "OverlayPlugin WS URI").getComponent());
 				connPanel.add(new BooleanSettingGui(actWs.getAllowBadCert(), "Allow Bad Certs").getComponent());
 				connPanel.add(Box.createHorizontalStrut(16384));
@@ -349,5 +383,10 @@ public class AdvancedTab extends SmartTabbedPane implements Refreshable {
 	public void refresh() {
 		displayed.refresh();
 		mem.refresh();
+	}
+
+	@HandleEvents
+	public void actConnectionStatusChange(ActWsConnectionStatusChangedEvent e) {
+		SwingUtilities.invokeLater(connectedDisp::refresh);
 	}
 }
