@@ -619,7 +619,7 @@ public class JailExampleTest {
 
 		PersistenceProvider persistence = container.getComponent(PersistenceProvider.class);
 		String sortString = persistence.get("jail-solver.job-order", String.class, null);
-		Assert.assertEquals(sortString, "SGE,AST,SCH,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,RPR,SAM,NIN,ROG,DRG,MNK,LNC,PGL");
+		Assert.assertEquals(sortString, "SGE,AST,SCH,WHM,CNJ,DNC,MCH,BRD,ARC,PCT,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,VPR,RPR,SAM,NIN,ROG,DRG,MNK,LNC,PGL");
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 0);
 		Thread.sleep(jailClearWait);
 		Assert.assertEquals(collector.getEventsOf(ClearAutoMarkRequest.class).size(), 1);
@@ -751,7 +751,7 @@ public class JailExampleTest {
 
 	@Test
 	public void testLoadOrder() throws InterruptedException {
-		String customSort = "AST,SCH,SGE,WHM,CNJ,DNC,MCH,BRD,ARC,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,SAM,NIN,ROG,DRG,MNK,LNC,PGL,RPR";
+		String customSort = "AST,SCH,SGE,WHM,CNJ,DNC,MCH,BRD,ARC,PCT,BLU,RDM,SMN,ACN,BLM,THM,GNB,DRK,WAR,PLD,MRD,GLA,VPR,SAM,NIN,ROG,DRG,MNK,LNC,PGL,RPR";
 		MutablePicoContainer container = XivMain.testingMasterInit();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
 		TestEventCollector collector = new TestEventCollector(true);
