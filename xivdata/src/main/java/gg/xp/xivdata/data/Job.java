@@ -55,7 +55,9 @@ public enum Job implements HasIconURL {
 	DNC(38, false, JobType.PRANGED, "Dancer"),
 	RPR(39, false, JobType.MELEE_DPS, "Reaper"),
 	//	SAG(40, false, JobType.HEALER, "The Cooler SCH");
-	SGE(40, false, JobType.HEALER, "Sage");
+	SGE(40, false, JobType.HEALER, "Sage"),
+	VPR(40, false, JobType.MELEE_DPS, "Viper"),
+	PCT(40, false, JobType.CASTER, "Pictomancer");
 
 	private static final Logger log = LoggerFactory.getLogger(Job.class);
 
