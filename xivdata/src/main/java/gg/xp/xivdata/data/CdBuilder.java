@@ -203,6 +203,8 @@ public class CdBuilder {
 				case 150 -> DNC;
 				case 180 -> RPR;
 				case 181 -> SGE;
+				case 196 -> VPR;
+				case 197 -> PCT;
 				default -> null;
 			};
 		}

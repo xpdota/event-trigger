@@ -174,7 +174,8 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	BattleLitany(true, CooldownType.PARTY_BUFF, 0xde5),
 	Brotherhood(true, CooldownType.PARTY_BUFF, 0x1ce4),
 	RiddleOfWind(true, CooldownType.PERSONAL_BURST, 0x64A6),
-	DragonSight(true, CooldownType.PARTY_BUFF, 0x1ce6),
+	// Deleted
+//	DragonSight(true, CooldownType.PARTY_BUFF, 0x1ce6),
 	ArcaneCircle(true, CooldownType.PARTY_BUFF, 0x5F55),
 	ArcaneCrest(true, CooldownType.PERSONAL_MIT, 0x5F54),
 
@@ -224,7 +225,9 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 //	WanderersMinuet(BRD, true, 120.0, 45.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
 	BattleVoice(true, CooldownType.PARTY_BUFF, 0x76),
 	RadiantFinale(true, CooldownType.PARTY_BUFF, 0x64B9),
-	Tactician(builder(CooldownType.PARTY_MIT, true, 0x41f9).cooldown(90));
+	Tactician(builder(CooldownType.PARTY_MIT, true, 0x41f9).cooldown(90)),
+	StarryMuse(builder(CooldownType.PARTY_BUFF, true, 34675)),
+	;
 
 	private final ExtendedCooldownDescriptor delegate;
 
