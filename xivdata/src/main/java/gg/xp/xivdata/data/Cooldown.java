@@ -140,6 +140,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	Physis(true, CooldownType.HEAL, 0x5EEE),
 	Holos(true, CooldownType.PARTY_MIT, 0x5EF6),
 	Pneuma(true, CooldownType.HEAL, 0x5EFE),
+	Psyche(true, CooldownType.PERSONAL_BURST, 0x90A9),
 
 	Divination(true, CooldownType.PARTY_BUFF, 0x40a8),
 	Draw(builder(CooldownType.PARTY_BUFF, true, 0xE06).maxCharges(2).noAutoBuffs()),
@@ -227,7 +228,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	RadiantFinale(true, CooldownType.PARTY_BUFF, 0x64B9),
 	Tactician(builder(CooldownType.PARTY_MIT, true, 0x41f9).cooldown(90)),
 	StarryMuse(builder(CooldownType.PARTY_BUFF, true, 34675)),
-	SteelMuse(builder(CooldownType.PERSONAL_MIT, false, 34685, 34675).name("Steel/Striking Muse").maxCharges(2)),
+	SteelMuse(builder(CooldownType.PERSONAL_BURST, false, 34685, 34675).name("Steel/Striking Muse").maxCharges(2)),
 	LivingMuse(builder(CooldownType.PERSONAL_BURST, false, 35347, 34670, 34671, 34672, 34673).name("Living Muse").maxCharges(3)),
 
 	;

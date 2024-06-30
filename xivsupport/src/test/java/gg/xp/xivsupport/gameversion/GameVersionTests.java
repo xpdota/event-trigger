@@ -4,6 +4,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class GameVersionTests {
+	// TODO: update this. This technically works but the values don't make sense. Game versions
+	// are along the lines of "2024.06.18.0000.0000", not the user-friendly game version.
 	@Test
 	void testVersion1() {
 		var controller = new GameVersionController();

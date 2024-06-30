@@ -16,7 +16,7 @@ import java.time.ZonedDateTime;
 public class Line12Parser extends AbstractACTLineParser<Line12Parser.Fields> implements FilteredEventHandler {
 
 	private final GameVersionController versionController;
-	public static final GameVersion NEW_STATS_LINE_FORMAT_VERSION = GameVersion.fromString("7.0");
+	public static final GameVersion NEW_STATS_LINE_FORMAT_VERSION = GameVersion.fromString("2024.06.18.0000.0000");
 
 	public Line12Parser(PicoContainer container) {
 		super(container, 12, Fields.class);
