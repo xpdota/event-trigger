@@ -188,7 +188,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 
 	// CASTER
 	Addle(true, CooldownType.PARTY_MIT, 0x1d88),
-	Swiftcast(true, CooldownType.PERSONAL_UTILITY, 0x1d89),
+	Swiftcast(builder(CooldownType.PERSONAL_UTILITY, true, 0x1d89).cooldown(40.0)),
 	Embolden(true, CooldownType.PARTY_BUFF, 0x1d60),
 	Manafication(builder(CooldownType.PERSONAL_BURST, true, 0x1D61).cooldown(110.0)),
 	//	Manafication(RDM, true, 110.0, "Manafication", CooldownType.PERSONAL_BURST, 0x1D61, 0x7b3),
