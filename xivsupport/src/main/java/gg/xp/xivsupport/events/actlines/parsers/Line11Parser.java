@@ -1,7 +1,10 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
-import gg.xp.xivsupport.events.ActImportOnly;
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.FilteredEventHandler;
+import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.state.PartyChangeEvent;
 import gg.xp.xivsupport.events.state.RawXivPartyInfo;
 import org.picocontainer.PicoContainer;
@@ -12,14 +15,29 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @SuppressWarnings("unused")
-public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> implements ActImportOnly {
+public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> implements FilteredEventHandler {
+
+	private boolean enabled = true;
 
 	public Line11Parser(PicoContainer container) {
 		super(container, 11, Fields.class);
 	}
 
+	@Override
+	public boolean enabled(EventContext context) {
+		return enabled;
+	}
+
 	enum Fields {
 		count
+	}
+
+	// Disable self if OP or other source provides party info
+	@HandleEvents
+	public void watchForOtherPartyInfo(PartyChangeEvent pce) {
+		if (!(pce.getParent() instanceof ACTLogLineEvent) && pce.getMembers().size() > 1) {
+			enabled = false;
+		}
 	}
 
 	@Override
