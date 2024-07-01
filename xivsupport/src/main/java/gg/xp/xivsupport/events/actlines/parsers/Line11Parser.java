@@ -35,7 +35,7 @@ public class Line11Parser extends AbstractACTLineParser<Line11Parser.Fields> imp
 	// Disable self if OP or other source provides party info
 	@HandleEvents
 	public void watchForOtherPartyInfo(PartyChangeEvent pce) {
-		if (!(pce.getParent() instanceof ACTLogLineEvent) && pce.getMembers().size() > 1) {
+		if (enabled && !(pce.getParent() instanceof ACTLogLineEvent) && pce.getMembers().size() > 1) {
 			enabled = false;
 		}
 	}
