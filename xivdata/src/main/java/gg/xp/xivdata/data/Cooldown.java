@@ -168,10 +168,8 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	// MELEE
 	Feint(true, CooldownType.PARTY_MIT, 0x1d7d),
 	//	TrickAttack(NIN, true, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
-	// TODO
-	TrickAttackNew(true, CooldownType.PERSONAL_BURST, 0x8d2),
-	// TODO
-	Mug(true, CooldownType.PARTY_BUFF, 0x8C8),
+	TrickAttackNew(builder(CooldownType.PERSONAL_BURST, true, 0x905E, 0x8d2).name("Kunai's Bane")),
+	Mug(builder(CooldownType.PARTY_BUFF, true, 0x905D, 0x8C8).name("Dokumori")),
 	BattleLitany(true, CooldownType.PARTY_BUFF, 0xde5),
 	Brotherhood(true, CooldownType.PARTY_BUFF, 0x1ce4),
 	RiddleOfWind(true, CooldownType.PERSONAL_BURST, 0x64A6),
