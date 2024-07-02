@@ -17,7 +17,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.awt.geom.AffineTransform;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 // TODO: also have a method for getting a config panel, much like PluginTab
@@ -50,6 +50,7 @@ public class XivOverlay {
 	private final DoubleSetting scaleFactor;
 	private final BooleanSetting enabled;
 	private final String title;
+	private final BooleanSetting hideInCombat;
 
 	private volatile int x;
 	private volatile int y;
@@ -79,6 +80,7 @@ public class XivOverlay {
 			frame = ScalableJFrameLinuxRealImpl.construct(title, scaleFactor.get());
 		}
 		enabled = new BooleanSetting(persistence, String.format("xiv-overlay.enable.%s.enabled", settingKeyBase), false);
+		hideInCombat = new BooleanSetting(persistence, String.format("xiv-overlay.hide-in-combat.%s.enabled", settingKeyBase), false);
 		enabled.addListener(this::recalc);
 		frame.setIgnoreRepaint(oc.getIgnoreRepaint().get());
 		opacity.addListener(() -> frame.setOpacity((float) opacity.get()));
@@ -286,4 +288,7 @@ public class XivOverlay {
 		return Math.min(Math.max(basis, maxFrameTime), minFrameTime);
 	}
 
+	public BooleanSetting getHideInCombatSetting() {
+		return hideInCombat;
+	}
 }
