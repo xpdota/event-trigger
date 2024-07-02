@@ -27,7 +27,6 @@ public final class OverlayMain {
 	private final BooleanSetting forceShow;
 	private final PicoContainer container;
 	private final EventMaster master;
-	private volatile boolean inCombat;
 
 	@HandleEvents
 	public void commands(DebugCommand dbg) {
@@ -76,6 +75,7 @@ public final class OverlayMain {
 	private boolean windowActive;
 	private boolean editing;
 	private boolean cutscene;
+	private boolean inCombat;
 	private final boolean isWindows;
 
 	public OverlayMain(PicoContainer container, OverlayConfig config, EventMaster master) {
