@@ -1083,6 +1083,7 @@ public class GuiMain {
 			};
 			CustomTableModel<XivOverlay> tableModel = CustomTableModel.builder(overlayMain::getOverlays)
 					.addColumn(StandardColumns.booleanSettingColumn("On", XivOverlay::getEnabled, 50, visibleSetting))
+					.addColumn(StandardColumns.booleanSettingColumn("Combat", XivOverlay::getHideInCombatSetting, 70, visibleSetting))
 					.addColumn(new CustomColumn<>("Name", XivOverlay::getTitle, col -> col.setCellEditor(new NoCellEditor())))
 					.addColumn(StandardColumns.longSettingBoxColumn("X", XivOverlay::getXSetting, 100))
 					.addColumn(StandardColumns.longSettingBoxColumn("Y", XivOverlay::getYSetting, 100))
