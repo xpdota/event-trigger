@@ -2,14 +2,13 @@ package gg.xp.xivsupport.gui.overlay;
 
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
-import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.OnlineStatus;
 import gg.xp.xivsupport.events.debug.DebugCommand;
+import gg.xp.xivsupport.events.state.InCombatChangeEvent;
 import gg.xp.xivsupport.events.state.PrimaryPlayerOnlineStatusChangedEvent;
-import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import org.picocontainer.PicoContainer;
@@ -28,10 +27,10 @@ public final class OverlayMain {
 	private final BooleanSetting forceShow;
 	private final PicoContainer container;
 	private final EventMaster master;
-
+	private volatile boolean inCombat;
 
 	@HandleEvents
-	public void commands(EventContext context, DebugCommand dbg) {
+	public void commands(DebugCommand dbg) {
 		String command = dbg.getCommand();
 		switch (command) {
 			case "overlay:lock":
@@ -68,7 +67,7 @@ public final class OverlayMain {
 	}
 
 	@HandleEvents
-	public void handlePlayerStatusChanged(EventContext context, PrimaryPlayerOnlineStatusChangedEvent event) {
+	public void handlePlayerStatusChanged(PrimaryPlayerOnlineStatusChangedEvent event) {
 		OnlineStatus status = event.getPlayerOnlineStatus();
 		this.cutscene = status == OnlineStatus.CUTSCENE || status == OnlineStatus.GPOSE;
 		recalc();
@@ -77,25 +76,18 @@ public final class OverlayMain {
 	private boolean windowActive;
 	private boolean editing;
 	private boolean cutscene;
-	// TODO: Linux support
-	private final boolean isNonWindows;
+	private final boolean isWindows;
 
 	public OverlayMain(PicoContainer container, OverlayConfig config, EventMaster master) {
 		this.master = master;
-		if (!Platform.isWindows()) {
-			log.warn("Not running on Windows - disabling overlay support");
-			isNonWindows = true;
-		}
-		else {
-			isNonWindows = false;
-		}
+		isWindows = Platform.isWindows();
 		show = config.getShow();
 		forceShow = config.getForceShow();
 		this.container = container;
 	}
 
 	@HandleEvents
-	public void init(EventContext context, InitEvent init) {
+	public void init(InitEvent init) {
 		new Thread(() -> {
 
 			show.addListener(this::recalc);
@@ -120,11 +112,16 @@ public final class OverlayMain {
 			}
 			master.pushEvent(new OverlaysInitEvent());
 		}, "OverlayStartupHelper").start();
+	}
 
+	@HandleEvents
+	public void inCombatChange(InCombatChangeEvent event) {
+		this.inCombat = event.isInCombat();
+		recalc();
 	}
 
 	private boolean isGameWindowActive() {
-		if (isNonWindows) {
+		if (!isWindows) {
 			return true;
 		}
 		String window = getActiveWindowText();
@@ -163,11 +160,20 @@ public final class OverlayMain {
 		windowActive = isGameWindowActive();
 		// Always show if editing
 		// If not editing, show if the user has turned overlay on, and ffxiv is the active window
-		boolean shouldShow = editing || (show.get() && (windowActive || forceShow.get()) && !cutscene);
-		log.debug("New Overlay State: WindowActive {}; Visible {}; Editing {}", windowActive, shouldShow, editing);
+		boolean cutScene = cutscene;
+		boolean shouldShow = editing || (show.get() && (windowActive || forceShow.get()) && !cutScene);
+		boolean inCombat = this.inCombat;
+		log.debug("New Overlay State: WindowActive {}; Visible {}; Editing {}; inCombat {}; cutScene {}", windowActive, shouldShow, editing, inCombat, cutScene);
 		SwingUtilities.invokeLater(() -> {
 			if (shouldShow) {
-				overlays.forEach(o -> o.setVisible(true));
+				overlays.forEach(o -> {
+					if (!inCombat && o.getHideInCombatSetting().get()) {
+						o.setVisible(false);
+					}
+					else {
+						o.setVisible(true);
+					}
+				});
 				overlays.forEach(o -> o.setEditMode(editing));
 			}
 			else {
