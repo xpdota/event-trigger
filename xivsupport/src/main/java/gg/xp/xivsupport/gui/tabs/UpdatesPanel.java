@@ -154,6 +154,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 	}
 
 	private void setUpdateCheckStatus(UpdateCheckStatus updateCheckStatus) {
+		log.info("Update tab status: status {} -> {}, already checked {}, nag enabled {}", this.updateCheckStatus, updateCheckStatus, updateCheckedThisRun, updateCheckNag.get());
 		this.updateCheckStatus = updateCheckStatus;
 		checkingLabel.setText(
 				switch (updateCheckStatus) {
