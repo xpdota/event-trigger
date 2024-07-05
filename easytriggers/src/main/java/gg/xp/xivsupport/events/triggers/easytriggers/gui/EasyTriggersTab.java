@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
@@ -42,6 +43,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext.SOURCE_EASY_TRIGGER_KEY;
+
 @ScanMe
 public class EasyTriggersTab implements PluginTab {
 
@@ -66,6 +69,12 @@ public class EasyTriggersTab implements PluginTab {
 				"Make Easy Trigger",
 				Event.class,
 				this::makeTriggerFromEvent));
+		rightClicks.addOption(CustomRightClickOption.forRow(
+				"Go To Easy Trigger",
+				Event.class,
+				this::trySelectTriggerFromCallout,
+				EasyTriggersTab::canSelectTriggerFromCallout
+		));
 		// TODO: good candidate for sub-menus
 //				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Make Easy Trigger", Event.class, Function.identity(), e -> {
 //					container.getComponent(EasyTrig)
@@ -506,5 +515,32 @@ public class EasyTriggersTab implements PluginTab {
 
 	public void bringToFront() {
 		tabReg.activateItem(this);
+	}
+
+	private static boolean canSelectTriggerFromCallout(Event event) {
+		return getEasyTriggerFromCallout(event) != null;
+	}
+
+	private void trySelectTriggerFromCallout(Event event) {
+		EasyTrigger<?> et = getEasyTriggerFromCallout(event);
+		if (et != null) {
+			bringToFront();
+			this.selectTrigger(et);
+		}
+	}
+
+	private static @Nullable EasyTrigger<?> getEasyTriggerFromCallout(Event event) {
+		RawModifiedCallout<?> rawModified = event.getThisOrParentOfType(RawModifiedCallout.class);
+		if (rawModified == null) {
+			return null;
+		}
+		Object source = rawModified.getArguments().get(SOURCE_EASY_TRIGGER_KEY);
+		if (source instanceof EasyTrigger<?> et) {
+			return et;
+		}
+		else {
+			return null;
+		}
+
 	}
 }

@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 public class EasyTriggerContext {
 
 	private static final Logger log = LoggerFactory.getLogger(EasyTriggerContext.class);
+	public static final String SOURCE_EASY_TRIGGER_KEY = "sourceEasyTrigger";
 
 	private final EventContext context;
 	// for logging
@@ -47,6 +48,7 @@ public class EasyTriggerContext {
 
 	public EasyTriggerContext(EventContext context, EasyTrigger<?> trigger) {
 		this(context, trigger.getName());
+		addVariable(SOURCE_EASY_TRIGGER_KEY, trigger);
 	}
 
 	public <X extends BaseEvent> void runActions(List<Action<? super X>> actions, SequentialTriggerController<X> s, X e1) {
