@@ -22,6 +22,7 @@ import gg.xp.xivsupport.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
+import gg.xp.xivsupport.gui.tables.filters.QuickFilters;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
@@ -124,6 +125,7 @@ public class EventsTabFactory {
 					}
 					return pullNumberFilter;
 				})
+				.addFilter((run) -> container.getComponent(QuickFilters.class).makeWidget(Event.class, run))
 				.addFilter(GroovyFilter.forClass(Event.class, container.getComponent(GroovyManager.class)))
 				.addWidget(unused -> new BooleanSettingGui(displayIdsSetting, "Show IDs", true).getComponent())
 				.addWidget(replayNextPseudoFilter(Event.class))
