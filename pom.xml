@@ -234,6 +234,11 @@
             </dependency>
             <dependency>
                 <groupId>gg.xp</groupId>
+                <artifactId>triggers-dt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
                 <artifactId>triggers-ew</artifactId>
                 <version>${project.version}</version>
             </dependency>
