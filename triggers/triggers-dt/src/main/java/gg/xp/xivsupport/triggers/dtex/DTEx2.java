@@ -50,4 +50,6 @@ public class DTEx2 extends AutoChildEventHandler implements FilteredEventHandler
 
 	@NpcCastCallout(0x9a88)
 	private final ModifiableCallout<AbilityCastStart> projectionOfTurmoil = ModifiableCallout.durationBasedCall("Projection of Turmoil", "Take Stacks Sequentially");
+
+
 }

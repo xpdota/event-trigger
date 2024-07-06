@@ -384,7 +384,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param limit      Number of events
 	 * @param timeoutMs  Timeout in ms to wait for events
 	 * @param eventClass Class of event
-	 * @param exclusive  false if you would like an event to be allowed to match multiple filters, rather than movingn
+	 * @param exclusive  false if you would like an event to be allowed to match multiple filters, rather than moving
 	 *                   on to the next event after a single match.
 	 * @param collectors The list of collectors.
 	 * @param <Y>        The type of event.
