@@ -56,4 +56,13 @@ public class CastLocationDataEvent extends BaseEvent implements DescribesCastLoc
 	public XivCombatant getSource() {
 		return event.getSource();
 	}
+
+	@Override
+	public String toString() {
+		return "CastLocationDataEvent{" +
+		       "id=" + event.getAbility().getId() +
+		       ", pos=" + pos +
+		       ", heading=" + heading +
+		       '}';
+	}
 }

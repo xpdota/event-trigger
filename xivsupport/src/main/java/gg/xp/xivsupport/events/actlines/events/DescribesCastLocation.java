@@ -31,4 +31,13 @@ public interface DescribesCastLocation<X extends Event & HasSourceEntity & HasAb
 	@Nullable
 	Double getHeadingOnly();
 
+	default double getBestHeading() {
+		Double heading = getHeadingOnly();
+		if (heading != null) {
+			return heading;
+		}
+		//noinspection DataFlowIssue - should not happen
+		return getPos().getHeading();
+	}
+
 }
