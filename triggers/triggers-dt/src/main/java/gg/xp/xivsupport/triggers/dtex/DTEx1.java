@@ -70,14 +70,16 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 	@NpcCastCallout(0x8FD1)
 	private final ModifiableCallout<AbilityCastStart> skyruinIce = ModifiableCallout.durationBasedCallWithOffset("Skyruin Ice", "Raidwide with Bleed", Duration.ofSeconds(6));
 
-//	@NpcCastCallout(0x8FC7)
-//	private final ModifiableCallout<AbilityCastStart> coneAndBuddies = ModifiableCallout.durationBasedCall("Cone+Buddies", "Front Corners and Partners");
+	private static final Duration buddiesOffset = Duration.ofMillis(800);
 
-//	@NpcCastCallout(0x8FCB)
-//	private final ModifiableCallout<AbilityCastStart> outAndBuddies = ModifiableCallout.durationBasedCall("Out+Buddies", "Out and Partners");
+	@NpcCastCallout(0x8FC7)
+	private final ModifiableCallout<AbilityCastStart> coneAndBuddies = ModifiableCallout.durationBasedCallWithOffset("Cone+Buddies", "Front Corners and Partners", buddiesOffset);
 
-//	@NpcCastCallout(0x8FCF)
-//	private final ModifiableCallout<AbilityCastStart> middleAndBuddies = ModifiableCallout.durationBasedCall("In Middle+Buddies", "Middle and Partners");
+	@NpcCastCallout(0x8FCB)
+	private final ModifiableCallout<AbilityCastStart> outAndBuddies = ModifiableCallout.durationBasedCallWithOffset("Out+Buddies", "Out and Partners", buddiesOffset);
+
+	@NpcCastCallout(0x8FCF)
+	private final ModifiableCallout<AbilityCastStart> middleAndBuddies = ModifiableCallout.durationBasedCallWithOffset("In Middle+Buddies", "Middle and Partners", buddiesOffset);
 
 	@NpcCastCallout(0x8FC5)
 	private final ModifiableCallout<AbilityCastStart> coneAndEruption = ModifiableCallout.durationBasedCall("Cone+Twister", "Front Corners and Bait Twister");
@@ -125,7 +127,7 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 	private final SequentialTrigger<BaseEvent> mountainFireSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x900C),
 			(e1, s) -> {
-				s.updateCall(mountainFireInitial);
+				s.updateCall(mountainFireInitial, e1);
 				var e2 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x900C));
 				s.setParam("safe", ArenaSector.CENTER);
 				s.updateCall(mountainFireCleave, e2);

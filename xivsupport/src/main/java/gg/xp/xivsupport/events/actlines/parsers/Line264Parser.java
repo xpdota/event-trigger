@@ -20,7 +20,7 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 	}
 
 	enum Fields {
-		entityId, abilityId, sequence, hasData, x, y, z, rotation, animationLock
+		entityId, abilityId, sequence, hasData, x, y, z, rotation
 	}
 
 	private final OverwritingRingBuffer<AbilityUsedEvent> buffer = new OverwritingRingBuffer<>(32);
@@ -72,14 +72,14 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 						out.add(slde);
 					}
 				}
-				if (fields.hasField(Fields.animationLock)) {
-					double animLock = fields.getDouble(Fields.animationLock);
-					if (animLock > 0) {
-						AnimationLockEvent lock = new AnimationLockEvent(last, animLock);
-						last.setAnimationLock(lock.getInitialDuration());
-						out.add(lock);
-					}
-				}
+//				if (fields.hasField(Fields.animationLock)) {
+//					double animLock = fields.getDouble(Fields.animationLock);
+//					if (animLock > 0) {
+//						AnimationLockEvent lock = new AnimationLockEvent(last, animLock);
+//						last.setAnimationLock(lock.getInitialDuration());
+//						out.add(lock);
+//					}
+//				}
 				return out;
 			}
 		}
