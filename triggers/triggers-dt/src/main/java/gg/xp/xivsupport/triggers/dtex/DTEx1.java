@@ -13,8 +13,10 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
 import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.actlines.events.MapEffectEvent;
+import gg.xp.xivsupport.events.actlines.events.SnapshotLocationDataEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
@@ -131,8 +133,8 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 				var e2 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x900C));
 				s.setParam("safe", ArenaSector.CENTER);
 				s.updateCall(mountainFireCleave, e2);
-				// TODO: end condition
-				while (true) {
+				for (int i = 0; i < 5; i++) {
+					// Old, slow - look at the cast IDs of the actual boss
 					var nextEvent = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x900D, 0x900E, 0x900F, 0x9010, 0x9011, 0x9012));
 					var safe = switch ((int) nextEvent.getAbility().getId()) {
 						case 0x900E, 0x9010 -> ArenaSector.WEST;
@@ -140,6 +142,26 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 						case 0x900D, 0x9012 -> ArenaSector.EAST;
 						default -> ArenaSector.UNKNOWN;
 					};
+					// Faster - look at angle of fake cast
+//					double heading;
+////					var nextevent = s.waitevent(abilitycaststart.class, acs -> acs.abilityidmatches(0x9019));
+////					var locationdata = s.waiteventuntil(castlocationdataevent.class, clde -> clde.originalevent() == nextevent, baseevent.class, unused -> nextevent.geteffectivetimesince().tomillis() > 100);
+//					var nextevent = s.waitevent(abilityusedevent.class, acs -> acs.abilityidmatches(0x901a));
+//					var locationdata = s.waiteventuntil(snapshotlocationdataevent.class, clde -> clde.originalevent() == nextevent, baseevent.class, unused -> nextevent.geteffectivetimesince().tomillis() > 100);
+//					if (locationdata != null) {
+//						heading = locationdata.getbestheading();
+//					}
+//					else {
+//						s.waitthenrefreshcombatants(100);
+//						heading = state.getlatestcombatantdata(nextevent.getsource()).getpos().heading();
+//					}
+//					arenasector rawfacing = arenapos.combatantfacing(heading).opposite();
+//					var safe = switch (rawfacing) {
+//						case south -> arenasector.center;
+//						case southwest -> arenasector.west;
+//						case southeast -> arenasector.east;
+//						default -> rawfacing;
+//					};
 					s.setParam("safe", safe);
 					s.updateCall(mountainFireCleave, nextEvent);
 				}
@@ -172,6 +194,16 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 	private final SequentialTrigger<BaseEvent> stormLightningSq = SqtTemplates.callWhenDurationIs(
 			BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0xEF0),
 			stormLightningCall, Duration.ofSeconds(8));
+
+	private double bestHeadingFor(AbilityCastStart event) {
+		DescribesCastLocation<AbilityCastStart> li = event.getLocationInfo();
+		if (li != null) {
+			return li.getBestHeading();
+		}
+		else {
+			return state.getLatestCombatantData(event.getSource()).getPos().heading();
+		}
+	}
 
 	private Position bestLocationFor(AbilityCastStart event) {
 		DescribesCastLocation<AbilityCastStart> li = event.getLocationInfo();

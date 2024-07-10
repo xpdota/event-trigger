@@ -56,4 +56,13 @@ public class SnapshotLocationDataEvent extends BaseEvent implements DescribesCas
 	public XivCombatant getSource() {
 		return event.getSource();
 	}
+
+	@Override
+	public String toString() {
+		return "SnapshotLocationDataEvent{" +
+		       "id=" + event.getAbility().getId() +
+		       ", pos=" + pos +
+		       ", heading=" + heading +
+		       '}';
+	}
 }
