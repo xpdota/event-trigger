@@ -41,7 +41,7 @@ public class CdTrackerTest {
 
 	private static final int acceptableErrorMs = 200;
 	private static final Cooldown reprisal = Cooldown.Reprisal;
-	private static final Cooldown draw = Cooldown.Draw;
+	private static final Cooldown draw = Cooldown.SacredSoil;
 	private final XivPlayerCharacter player = new XivPlayerCharacter(0x10000001, "Me, The Player", Job.GNB, XivWorld.of(), true, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
 	private final XivPlayerCharacter otherCharInParty = new XivPlayerCharacter(0x10000002, "Someone Else In My Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
 	private final XivPlayerCharacter otherCharNotInParty = new XivPlayerCharacter(0x10000003, "Someone Else Not In Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 0, 80, 0, 0);
