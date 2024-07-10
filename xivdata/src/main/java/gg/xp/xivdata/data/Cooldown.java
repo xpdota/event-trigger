@@ -129,7 +129,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	Pepsis(true, CooldownType.HEAL, 0x5EED),
 	Rhizomata(true, CooldownType.PERSONAL_UTILITY, 0x5EF5),
 	Kerachole(true, CooldownType.PARTY_MIT, 0x5EEA),
-	Soteria(true, CooldownType.HEAL, 0x5EE6),
+	Soteria(builder(CooldownType.HEAL, true, 0x5EE6).cooldown(60)),
 	Zoe(true, CooldownType.HEAL, 0x5EEC),
 	Ixochole(true, CooldownType.HEAL, 0x5EEB),
 	Icarus(true, CooldownType.PERSONAL_UTILITY, 0x5EE7),
