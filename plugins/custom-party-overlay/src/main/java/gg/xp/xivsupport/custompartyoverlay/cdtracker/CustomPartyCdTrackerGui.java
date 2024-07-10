@@ -150,7 +150,7 @@ public class CustomPartyCdTrackerGui extends JPanel {
 		// Alternatively, have a table with a bunch of checkbox columns
 
 		List<CdInfo> sortedCds = new ArrayList<>(cooldowns.entrySet().stream().map(entry -> new CdInfo(entry.getKey(), entry.getValue())).toList());
-		sortedCds.sort(Comparator.comparing(cdi -> {
+		sortedCds.sort(Comparator.<CdInfo, Integer>comparing(cdi -> {
 			ExtendedCooldownDescriptor cd = cdi.cd;
 			Job job = cd.getJob();
 			// Sort job categories first
@@ -165,7 +165,7 @@ public class CustomPartyCdTrackerGui extends JPanel {
 			}
 			// Then jobs
 			return job.defaultPartySortOrder() + 10000;
-		}));
+		}).thenComparing(cdi -> cdi.cd().getLabel()));
 		return sortedCds;
 	}
 

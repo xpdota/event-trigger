@@ -74,7 +74,8 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	TheBlackestNight(true, CooldownType.PERSONAL_MIT, 0x1ce1),
 	BloodWeapon(builder(CooldownType.PERSONAL_BURST, true, 0xE29).buffIds(0x2e6)),
 	SaltedEarth(builder(CooldownType.PERSONAL_BURST, true, 0xE37).buffIds(0x2ed)),
-	Plunge(builder(CooldownType.PERSONAL_BURST, true, 0xE38).maxCharges(2)),
+	// Removed
+//	Plunge(builder(CooldownType.PERSONAL_BURST, true, 0xE38).maxCharges(2)),
 	// Also carve and spit
 	AbyssalDrain(builder(CooldownType.PERSONAL_BURST, true, 0xE39, 0xE3B)),
 	// TODO: maybe abilities like delirium and blood weapon should display remaining stacks rather than remaining duration?
@@ -143,9 +144,10 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	Psyche(true, CooldownType.PERSONAL_BURST, 0x90A9),
 
 	Divination(true, CooldownType.PARTY_BUFF, 0x40a8),
-	Draw(builder(CooldownType.PARTY_BUFF, true, 0xE06).maxCharges(2).noAutoBuffs()),
+	// Removed
+//	Draw(builder(CooldownType.PARTY_BUFF, true, 0xE06).maxCharges(2).noAutoBuffs()),
 	//	Draw(AST, true, 30.0, 2, "Draw", CooldownType.PARTY_BUFF, 0xE06),
-	MinorArcana(true, CooldownType.PARTY_BUFF, 0x1D13),
+//	MinorArcana(true, CooldownType.PARTY_BUFF, 0x1D13),
 	//	MinorArcana(AST, true, 60.0, "Minor Arcana", CooldownType.PARTY_BUFF, 0x1D13),
 	// TODO: active status on charge-based abilities?
 	CelInt(builder(CooldownType.HEAL, true, 0x40AC).maxCharges(2)),
