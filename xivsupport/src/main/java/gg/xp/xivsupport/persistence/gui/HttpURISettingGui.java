@@ -90,10 +90,19 @@ public class HttpURISettingGui {
 	}
 
 	public JPanel getComponent() {
-		JPanel box = new JPanel();
+		Component textBox = getTextBoxOnly();
+		Component resetButton = getResetButton();
+		JPanel box = new JPanel() {
+			@Override
+			public void setEnabled(boolean enabled) {
+				super.setEnabled(enabled);
+				textBox.setEnabled(enabled);
+				resetButton.setEnabled(enabled);
+			}
+		};
 		box.setLayout(new WrapLayout());
-		box.add(getTextBoxOnly());
-		box.add(getResetButton());
+		box.add(textBox);
+		box.add(resetButton);
 		box.add(getLabelOnly());
 		box.setMaximumSize(box.getPreferredSize());
 		return box;
