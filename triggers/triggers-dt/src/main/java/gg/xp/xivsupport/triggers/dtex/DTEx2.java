@@ -53,7 +53,7 @@ public class DTEx2 extends AutoChildEventHandler implements FilteredEventHandler
 	private final ModifiableCallout<HeadMarkerEvent> yellowMarker = new ModifiableCallout<>("Yellow Marker", "Spread on Tiles");
 
 	@NpcCastCallout(0x9374)
-	private final ModifiableCallout<AbilityCastStart> dutysEdge = ModifiableCallout.durationBasedCall("Duty's Edge", "Knockback - Multiple Hits");
+	private final ModifiableCallout<AbilityCastStart> dutysEdge = ModifiableCallout.durationBasedCall("Duty's Edge", "Stack - Multiple Hits");
 
 	@NpcCastCallout(0x9397)
 	private final ModifiableCallout<AbilityCastStart> dawnOfAnAge = ModifiableCallout.durationBasedCall("Dawn of an Age", "Raidwide");
