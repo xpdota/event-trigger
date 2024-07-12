@@ -153,9 +153,10 @@ public abstract class CalloutVerificationTest {
 			if (parent instanceof RawModifiedCallout<?>) {
 				parent = parent.getParent();
 			}
-			if (msDelta > 1_000_000_000) {
-				int foo = 5 + 1;
-			}
+			// Place where you can throw a breakpoint
+//			if (msDelta > 1_000_000_000) {
+//				int foo = 5 + 1;
+//			}
 			actualCalls.add(new CalloutInitialValues(msDelta, e.getCallText(), e.getVisualText(), parent));
 		});
 		dist.registerHandler(SpecificAutoMarkRequest.class, (ctx, e) -> {
@@ -244,10 +245,36 @@ public abstract class CalloutVerificationTest {
 		}
 
 		compareLists(rawStorage, actualCalls, expectedCalls);
+
+
 		List<AmVerificationValues> expectedAMs = getExpectedAms();
 		if (!actualMarks.isEmpty() || !expectedAMs.isEmpty()) {
 			compareLists(rawStorage, actualMarks, expectedAMs);
 		}
+
+		List<String> tooCloseFailures = new ArrayList<>();
+		CalloutInitialValues last = null;
+		long minDelta = minimumMsBetweenCalls();
+		if (minDelta > 0) {
+
+			for (CalloutInitialValues actualCall : actualCalls) {
+				if (last != null) {
+					long delta = actualCall.ms() - last.ms();
+					// Negative delta happens for logs with multiple pulls, since the time resets to zero
+					if (delta >= 0 && delta < minDelta) {
+						tooCloseFailures.add("Call [%s] was too close (%dms) to call [%s]".formatted(actualCall.toStringShort(), delta, last.toStringShort()));
+					}
+				}
+				last = actualCall;
+			}
+			if (!tooCloseFailures.isEmpty()) {
+				throw new AssertionError("Issues with callouts which were too close to one another:\n" + String.join("\n", tooCloseFailures));
+			}
+		}
+	}
+
+	protected long minimumMsBetweenCalls() {
+		return 1000;
 	}
 
 	protected abstract List<CalloutInitialValues> getExpectedCalls();

@@ -12,6 +12,12 @@ public class DsrTest extends CalloutVerificationTest {
 	}
 
 	@Override
+	protected long minimumMsBetweenCalls() {
+		// TODO: look into these
+		return 0;
+	}
+
+	@Override
 	protected List<CalloutInitialValues> getExpectedCalls() {
 		return List.of(
 				// Doorboss

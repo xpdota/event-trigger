@@ -17,7 +17,6 @@ import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.events.triggers.support.PlayerHeadmarker;
-import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -26,7 +25,8 @@ import java.time.Duration;
 
 @CalloutRepo(name = "EX2", duty = KnownDuty.DtEx2)
 public class DTEx2 extends AutoChildEventHandler implements FilteredEventHandler {
-	private final XivState state;
+
+	private XivState state;
 
 	public DTEx2(XivState state) {
 		this.state = state;
@@ -70,6 +70,9 @@ public class DTEx2 extends AutoChildEventHandler implements FilteredEventHandler
 	@NpcCastCallout(0x9359)
 	private final ModifiableCallout<AbilityCastStart> sync = ModifiableCallout.durationBasedCall("Sync", "Swords Mirroring");
 
+	@NpcCastCallout(0x9381)
+	private final ModifiableCallout<AbilityCastStart> greaterGateway = ModifiableCallout.durationBasedCall("Greater Gateway", "Watch Tracks");
+
 	@NpcCastCallout(value = 0x939C, suppressMs = 5000)
 	private final ModifiableCallout<AbilityCastStart> forgedTrack = ModifiableCallout.durationBasedCall("Forged Track", "Watch Swords and Tracks");
 
@@ -111,7 +114,7 @@ public class DTEx2 extends AutoChildEventHandler implements FilteredEventHandler
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> bossCleaves = SqtTemplates.sq(10_000,
-			AbilityCastStart.class, acs  -> {
+			AbilityCastStart.class, acs -> {
 				long id = acs.getAbility().getId();
 				return id == 0x9368 || id == 0x9369
 				       || (id >= 0x937B && id <= 0x937E)
@@ -161,6 +164,60 @@ public class DTEx2 extends AutoChildEventHandler implements FilteredEventHandler
 				}
 			});
 
+	/*
+	Half Circuit is a half (west or east) cleave with either an in or out
+	Cast location info from the rectangle cast is unreliable. Use the boss's cast heading.
+	936B (real) + 93A0 (donut)  + 939F (rectangle) = left in
+	936B (real) + 93A1 (circle) + 939F (rectangle) = left out
+	936C (real) + 93A1 (circle) + 939F (rectangle) = right out
+	 */
+
+	private final ModifiableCallout<AbilityCastStart> halfCircuitLeftOut = ModifiableCallout.durationBasedCall("Half Circuit: Left+Out", "Left/{safe} and Out");
+	private final ModifiableCallout<AbilityCastStart> halfCircuitLeftIn = ModifiableCallout.durationBasedCall("Half Circuit: Left+In", "Left/{safe} and In");
+	private final ModifiableCallout<AbilityCastStart> halfCircuitRightOut = ModifiableCallout.durationBasedCall("Half Circuit: Right+Out", "Right/{safe} and Out");
+	private final ModifiableCallout<AbilityCastStart> halfCircuitRightIn = ModifiableCallout.durationBasedCall("Half Circuit: Right+In", "Right/{safe} and In");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> halfCircuit = SqtTemplates.sq(10_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x936B, 0x936C),
+			(e1, s) -> {
+				boolean rightSafe = e1.abilityIdMatches(0x936C);
+				var inOut = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x93A0, 0x93A1));
+				boolean out = inOut.abilityIdMatches(0x93A1);
+				ArenaSector heading;
+				var locationInfo = e1.getLocationInfo();
+				if (locationInfo == null) {
+					s.waitThenRefreshCombatants(100);
+					XivCombatant source = state.getLatestCombatantData(e1.getSource());
+					heading = ArenaPos.combatantFacing(source);
+				}
+				else {
+					heading = ArenaPos.combatantFacing(locationInfo.getBestHeading());
+				}
+				if (rightSafe) {
+					s.setParam("safe", heading.plusQuads(1));
+				}
+				else {
+					s.setParam("safe", heading.plusQuads(-1));
+				}
+				if (rightSafe) {
+					if (out) {
+						s.updateCall(halfCircuitRightOut);
+					}
+					else {
+						s.updateCall(halfCircuitRightIn);
+					}
+				}
+				else {
+					if (out) {
+						s.updateCall(halfCircuitLeftOut);
+					}
+					else {
+						s.updateCall(halfCircuitLeftIn);
+					}
+				}
+			});
+
 	private final ModifiableCallout<AbilityCastStart> bumpOnYou = ModifiableCallout.durationBasedCall("Drum of Vollok: Knockback on You", "Knock Buddy Back");
 	private final ModifiableCallout<AbilityCastStart> getBumped = ModifiableCallout.durationBasedCall("Drum of Vollok: Knockback not on You", "Get Knocked Back");
 
@@ -179,7 +236,7 @@ public class DTEx2 extends AutoChildEventHandler implements FilteredEventHandler
 			});
 
 	private final ModifiableCallout<AbilityCastStart> burningChainsInitial = new ModifiableCallout<>("Burning Chains Initial", "Stack");
-	@PlayerStatusCallout(0x301)
+
 	private final ModifiableCallout<BuffApplied> burningChains = ModifiableCallout.<BuffApplied>durationBasedCall("Burning Chains", "Break Chains (with {buddy})")
 			.statusIcon(0x301);
 

@@ -6,6 +6,13 @@ import gg.xp.xivsupport.events.triggers.util.CalloutVerificationTest;
 import java.util.List;
 
 public class UWUTest extends CalloutVerificationTest {
+
+	@Override
+	protected long minimumMsBetweenCalls() {
+		// TODO: issues with mistrals
+		return 60;
+	}
+
 	@Override
 	protected String getFileName() {
 		return "/uwu.log";

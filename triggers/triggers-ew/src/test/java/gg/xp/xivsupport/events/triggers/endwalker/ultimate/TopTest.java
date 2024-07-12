@@ -30,6 +30,12 @@ public class TopTest extends CalloutVerificationTest {
 	}
 
 	@Override
+	protected long minimumMsBetweenCalls() {
+		// TODO: investigate
+		return 0;
+	}
+
+	@Override
 	protected void configure(MutablePicoContainer pico) {
 		OmegaUltimate omega = pico.getComponent(OmegaUltimate.class);
 		omega.getLooperAM().set(true);

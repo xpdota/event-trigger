@@ -19,10 +19,14 @@ public record CalloutInitialValues(long ms, String tts, String text, @Nullable E
 		return Objects.hash(ms, tts, text);
 	}
 
+	public String toStringShort() {
+		return String.format("call(%s, \"%s\", \"%s\")", ms, tts, text);
+	}
+
 	@Override
 	public String toString() {
 		if (event == null) {
-			return String.format("call(%s, \"%s\", \"%s\")", ms, tts, text);
+			return toStringShort();
 		}
 		else {
 			return String.format("call(%s, \"%s\", \"%s\") // from %s", ms, tts, text, event);
