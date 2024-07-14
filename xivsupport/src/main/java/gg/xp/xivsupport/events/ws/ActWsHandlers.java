@@ -54,6 +54,7 @@ public class ActWsHandlers {
 			.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
 			.addModule(new BlackbirdModule())
 			.build();
+	public static final String OTHER_MESSAGE_TYPE = "other";
 	private final EventMaster master;
 	private final XivState state;
 	private final PullTracker pulls;
@@ -136,7 +137,7 @@ public class ActWsHandlers {
 		if (!rseqNode.isMissingNode()) {
 			Object rseqObj = mapper.convertValue(rseqNode, Object.class);
 			if (!jsonNode.path("$isNull").isMissingNode()) {
-				log.trace("Got null ActWS response for rseq {}", rseqNode.intValue());
+				log.trace("Got null ActWS response for rseq {}", rseqNode);
 				return;
 			}
 			if ("getVersion".equals(rseqObj)) {
@@ -149,8 +150,7 @@ public class ActWsHandlers {
 			}
 			JsonNode combatantsNode = jsonNode.path("combatants");
 			if (combatantsNode.isMissingNode()) {
-				// TODO: this is where user-added calls could be
-				log.warn("I don't know how to handle response message: {}", rawMsg);
+				context.accept(new ActWsJsonMsg(OTHER_MESSAGE_TYPE, rseqObj, jsonNode));
 			}
 			else {
 				if (rseqObj instanceof String str) {
