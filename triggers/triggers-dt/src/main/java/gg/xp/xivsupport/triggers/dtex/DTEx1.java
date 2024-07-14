@@ -13,10 +13,8 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
-import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
 import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.actlines.events.MapEffectEvent;
-import gg.xp.xivsupport.events.actlines.events.SnapshotLocationDataEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
@@ -66,11 +64,14 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 	@NpcCastCallout(0x9008)
 	private final ModifiableCallout<AbilityCastStart> tulidisaster = ModifiableCallout.durationBasedCall("Tulidisaster", "Multiple Raidwides");
 
+	@NpcCastCallout(0x95C3)
+	private final ModifiableCallout<AbilityCastStart> skyruinLightning = ModifiableCallout.durationBasedCallWithOffset("Skyruin (Lightning)", "Raidwide with Bleed", Duration.ofMillis(5_300));
+
 	@NpcCastCallout(0x95C4)
-	private final ModifiableCallout<AbilityCastStart> skyruinFire = ModifiableCallout.durationBasedCall("Skyruin Fire", "Raidwide with Bleed");
+	private final ModifiableCallout<AbilityCastStart> skyruinFire = ModifiableCallout.durationBasedCallWithOffset("Skyruin (Fire)", "Raidwide with Bleed", Duration.ofMillis(5_300));
 
 	@NpcCastCallout(0x8FD1)
-	private final ModifiableCallout<AbilityCastStart> skyruinIce = ModifiableCallout.durationBasedCallWithOffset("Skyruin Ice", "Raidwide with Bleed", Duration.ofSeconds(6));
+	private final ModifiableCallout<AbilityCastStart> skyruinIce = ModifiableCallout.durationBasedCallWithOffset("Skyruin (Ice)", "Raidwide with Bleed", Duration.ofMillis(5_300));
 
 	private static final Duration buddiesOffset = Duration.ofMillis(800);
 
@@ -92,6 +93,9 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 	@NpcCastCallout(0x8FCD)
 	private final ModifiableCallout<AbilityCastStart> middleAndEruption = ModifiableCallout.durationBasedCall("In Middle+Twister", "Middle and Bait Twister");
 
+	@NpcCastCallout(0x8FE7)
+	private final ModifiableCallout<AbilityCastStart> trisource = ModifiableCallout.durationBasedCall("Triscourge", "Raidwide");
+
 	@NpcAbilityUsedCallout(value = 0x8FEF, suppressMs = 200)
 	private final ModifiableCallout<AbilityUsedEvent> eruptionMove = new ModifiableCallout<>("Eruption: Move", "Move");
 
@@ -99,19 +103,24 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> lightningDebuffHandler = SqtTemplates.callWhenDurationIs(
-			BuffApplied.class, ba -> ba.buffIdMatches(0xEEF), lightning, Duration.ofSeconds(8));
+			BuffApplied.class, ba -> ba.buffIdMatches(0xEEF) && ba.getTarget().isThePlayer(), lightning, Duration.ofSeconds(8));
 
 	private final ModifiableCallout<BuffApplied> freezingSoon = ModifiableCallout.<BuffApplied>durationBasedCall("Freeze Soon", "Move Soon").autoIcon();
 	private final ModifiableCallout<BuffApplied> freezingVerySoon = ModifiableCallout.<BuffApplied>durationBasedCall("Freeze Very Soon", "Move!").autoIcon();
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> freezingHandler = SqtTemplates.sq(30_000,
-			BuffApplied.class, ba -> ba.buffIdMatches(0xEEE),
+	private final SequentialTrigger<BaseEvent> freezingHandler = SqtTemplates.sq(130_000,
+			BuffApplied.class, ba -> ba.buffIdMatches(0xEEE) && ba.getTarget().isThePlayer(),
 			(e1, s) -> {
-				s.waitDuration(e1.remainingDurationPlus(Duration.ofSeconds(-10)));
+				log.info("freezingHandler 1");
+				s.waitDuration(e1.remainingDurationPlus(Duration.ofSeconds(-5)));
+				log.info("freezingHandler 2");
 				s.updateCall(freezingSoon, e1);
+				log.info("freezingHandler 3");
 				s.waitDuration(e1.remainingDurationPlus(Duration.ofSeconds(-2)));
+				log.info("freezingHandler 4");
 				s.updateCall(freezingVerySoon, e1);
+				log.info("freezingHandler 5");
 			}
 	);
 
@@ -344,9 +353,13 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 
 			});
 
+
+	// 8FC6
 	private final ModifiableCallout<AbilityCastStart> iceCone = ModifiableCallout.durationBasedCall("Cone", "Cone, North Corners");
-	private final ModifiableCallout<AbilityCastStart> iceIn = ModifiableCallout.durationBasedCall("In", "In");
+	// 8FCA
 	private final ModifiableCallout<AbilityCastStart> iceOut = ModifiableCallout.durationBasedCall("Out", "Out");
+	// 8FCE
+	private final ModifiableCallout<AbilityCastStart> iceIn = ModifiableCallout.durationBasedCall("In", "In");
 	private final ModifiableCallout<AbilityCastStart> avalancheWithCone = ModifiableCallout.durationBasedCall("Avalanche + Cone", "Cone, {safe}");
 	private final ModifiableCallout<AbilityCastStart> avalancheWithIn = ModifiableCallout.durationBasedCall("Avalanche + In", "In, {safe}");
 	private final ModifiableCallout<AbilityCastStart> avalancheWithOut = ModifiableCallout.durationBasedCall("Avalanche + Out", "Out, {safe}");
@@ -382,27 +395,6 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 
 	private static final BiConsumer<AbilityCastStart, SequentialTriggerController<BaseEvent>> noop = (a, b) -> {
 	};
-
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> iceAoeIntoChillingCataclysm = SqtTemplates.multiInvocation(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8FC8, 0x8FCC, 0x8FD0),
-			noop,
-			noop,
-			noop,
-			noop,
-			noop,
-			(cast, s) -> {
-				if (calamitysEmbersSafeSpots.isActive()) {
-					return;
-				}
-				// This is for only one specific instance of the fight
-				switch ((int) cast.getAbility().getId()) {
-					case 0x8FC8 -> s.updateCall(iceCone, cast);
-					case 0x8FCC -> s.updateCall(iceOut, cast);
-					case 0x8FD0 -> s.updateCall(iceIn, cast);
-				}
-				chillingCataclysmHandler(s);
-			});
 
 	@NpcCastCallout(0x8FF0)
 	private final ModifiableCallout<AbilityCastStart> freezingDust = ModifiableCallout.durationBasedCall("Freezing Dust", "Move");
@@ -447,5 +439,47 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 			}
 		}
 	}
+
+	/*
+	Susurrant, Slithering, Strangling
+	These all seem to come in a pair of real + fake cast
+
+	8FC6 - Cone, paired with ice octagonal things
+	8FC7 - Cone+Buddies, boss cast
+	8FC8 - Cone+Buddies, actual aoe, used with both 8FC6 and 8FC7
+
+	8FCA - Out, paired with ice?
+	8FCB - Out+Buddies, boss cast
+	8FCC - Out+Buddies, actual aoe
+
+	8FCE - Cone, paired with ice?
+	8FCF - Cone+Buddies, boss cast
+	8FD0 - Cone+Buddies, actual aoe
+
+
+
+	 */
+
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> outMiddleConeMechStandalone = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x8FC6, 0x8FCA, 0x8FCE),
+			(e1, s) -> {
+				// no need if that trigger is already active
+				if (calamitysEmbersSafeSpots.isActive()) {
+					return;
+				}
+				var initialCall = switch ((int) e1.getAbility().getId()) {
+					case 0x8FC6 -> iceCone;
+					case 0x8FCA -> iceOut;
+					case 0x8FCE -> iceIn;
+					default -> null;
+				};
+				if (initialCall != null) {
+					s.updateCall(initialCall, e1);
+				}
+				chillingCataclysmHandler(s);
+
+			});
 
 }

@@ -11,24 +11,19 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	// DO NOT change enum member names - they are used as settings keys
 
 	// List of ALL buffs to track - WL/BL will be done by user settings
+
 	// TANKS
 	Rampart(builder(CooldownType.PERSONAL_MIT, true, 0x1d6b)),
 	Reprisal(builder(CooldownType.PERSONAL_MIT, true, 0x1d6f)),
 	ArmsLength(builder(CooldownType.PERSONAL_UTILITY, true, 0x1d7c)),
-//	ArmsLength(TANK, true, 120.0, "Arm's Length", CooldownType.PERSONAL_UTILITY, 0x1d7c, 1209),
 
-	//	HallowedGround(PLD, true, 420.0, "Hallowed Ground", CooldownType.INVULN, 0x1e, 82),
+	// PLD
 	HallowedGround(builder(CooldownType.INVULN, true, 0x1e)),
 	Sentinel(builder(CooldownType.PERSONAL_MIT, true, 0x11)),
-	//	Sentinel(PLD, true, 120.0, "Sentinel", CooldownType.PERSONAL_MIT, 0x11, 74),
-//	Sentinel(builder(CooldownType.PERSONAL_MIT, true, 120.0, "Sentinel", CooldownType.PERSONAL_MIT, 0x11, 74),
 	Cover(builder(CooldownType.PERSONAL_MIT, true, 0x1b)),
-	//Cover(PLD, true, 120.0, "Cover", CooldownType.PERSONAL_MIT, 0x1b, 80),
 	// TODO: sheltron/holy sheltron
 	FightOrFlight(builder(CooldownType.PERSONAL_BURST, true, 0x14)),
-	//	FightOrFlight(PLD, true, 60.0, "Fight or Flight", CooldownType.PERSONAL_BURST, 0x14, 0x4c),
 	Requiescat(builder(CooldownType.PERSONAL_BURST, true, 0x1CD7)),
-	//	Requiescat(PLD, true, 60.0, "Requiescat", CooldownType.PERSONAL_BURST, 0x1CD7, 0x558),
 	// TODO: check auto with this
 	DivineVeil(builder(CooldownType.PARTY_MIT, true, 0xdd4).buffIds(726, 727)),
 	//	DivineVeil(PLD, true, 90.0, "Divine Veil", CooldownType.PARTY_MIT, 0xdd4, 726, 727),
@@ -37,13 +32,17 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	CircleOfScorn(true, CooldownType.PERSONAL_BURST, 0x17),
 	Intervene(true, CooldownType.PERSONAL_BURST, 0x404D),
 	Expiacion(true, CooldownType.PERSONAL_BURST, 0x6493),
-	Nebula(true, CooldownType.PERSONAL_MIT, 0x3f14),
+
+	// GNB
+	Nebula(builder(CooldownType.PERSONAL_MIT, true, 0x3f14, 0x9047)),
 	Aurora(true, CooldownType.HEAL, 0x3f17),
 	Superbolide(true, CooldownType.INVULN, 0x3f18),
 	HeartofLight(true, CooldownType.PARTY_MIT, 0x3f20),
 	HeartofStone(true, CooldownType.PARTY_MIT, 0x3f21),
 	HeartofCorundum(true, CooldownType.PARTY_MIT, 25758),
 	Camouflage(true, CooldownType.PERSONAL_MIT, 0x3f0c),
+
+	// WAR
 	//	NascentFlash(WAR, true, 25.0, "Nascent Flash", CooldownType.HEAL, 0x4050, 1857, 1858),
 	InnerRelease(true, CooldownType.PERSONAL_BURST, 0x1CDD),
 	ThrillofBattle(true, CooldownType.PERSONAL_MIT, 0x28),
@@ -67,35 +66,41 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	Onslaught(builder(CooldownType.PERSONAL_UTILITY, true, 0x1CDA).maxCharges(3)),
 //	Onslaught(WAR, true, 30.0, 3, "Onslaught", CooldownType.PERSONAL_UTILITY, 0x1CDA),
 
+	// DRK
 	DarkMissionary(true, CooldownType.PARTY_MIT, 0x4057),
 	DarkMind(true, CooldownType.PERSONAL_MIT, 0xe32),
-	ShadowWall(true, CooldownType.PERSONAL_MIT, 0xe34),
+	ShadowWall(builder(CooldownType.PERSONAL_MIT, true, 0xe34, 0x903f)),
 	LivingDead(true, CooldownType.INVULN, 0xe36),
 	TheBlackestNight(true, CooldownType.PERSONAL_MIT, 0x1ce1),
-	BloodWeapon(builder(CooldownType.PERSONAL_BURST, true, 0xE29).buffIds(0x2e6)),
-	SaltedEarth(builder(CooldownType.PERSONAL_BURST, true, 0xE37).buffIds(0x2ed)),
-	// Removed
-//	Plunge(builder(CooldownType.PERSONAL_BURST, true, 0xE38).maxCharges(2)),
-	// Also carve and spit
+	SaltedEarth(builder(CooldownType.PERSONAL_BURST, true, 0xE37)),
 	AbyssalDrain(builder(CooldownType.PERSONAL_BURST, true, 0xE39, 0xE3B)),
 	// TODO: maybe abilities like delirium and blood weapon should display remaining stacks rather than remaining duration?
-	Delirium(builder(CooldownType.PERSONAL_BURST, true, 0x1CDE).buffIds(0x7b4)),
+	Delirium(builder(CooldownType.PERSONAL_BURST, true, 0xE29, 0x1CDE)),
 	LivingShadow(builder(CooldownType.PERSONAL_BURST, true, 0x4058).noAutoBuffs().duration(24)),
 	Oblation(builder(CooldownType.PARTY_MIT, false, 0x649A)),
 	Shadowbringer(builder(CooldownType.PERSONAL_BURST, true, 0x649D)),
+	Shadowstride(builder(CooldownType.PERSONAL_UTILITY, false, 0x903E)
+			// Unmend
+			.auxAbility(0xE28, -5)),
 
 	// HEALERS
 	LucidDreaming(false, CooldownType.PERSONAL_UTILITY, 0x1D8A),
-	// TODO - check ability ID
+
+	// WHM
 	Benediction(true, CooldownType.HEAL, 0x8c),
 	Temperance(true, CooldownType.PARTY_MIT, 0x4098),
 	Pom(true, CooldownType.PERSONAL_BURST, 0x88),
-	// TODO: check auto buffs
 	Asylum(builder(CooldownType.HEAL, true, 0xDF1)),
-	//	Asylum(WHM, true, 45.0, "Asylum", CooldownType.HEAL, 0xDF1, 0x777),
 	Aquaveil(true, CooldownType.PERSONAL_MIT, 0x6505),
 	Bell(true, CooldownType.HEAL, 0x6506),
 	Assize(true, CooldownType.PERSONAL_BURST, 0xdf3),
+	AetherialShift(builder(CooldownType.PERSONAL_UTILITY, false, 0x9090)),
+	Plenary(builder(CooldownType.HEAL, false, 0x1D09)),
+	Tetra(builder(CooldownType.HEAL, false, 0xDF2).maxCharges(2)),
+	ThinAir(builder(CooldownType.PERSONAL_UTILITY, false, 0xDF2)),
+	DivineBenison(builder(CooldownType.HEAL, false, 0x1D08)),
+
+	// SCH
 	SacredSoil(true, CooldownType.PARTY_MIT, 0xbc),
 	// Summon order buffs:
 	/*
@@ -121,8 +126,12 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	//	DeploymentTactics(SCH, false, 90.0, "Deployment Tactics", CooldownType.PARTY_MIT, 0xE01),
 	DeploymentTactics(builder(CooldownType.PARTY_MIT, false, 0xE01).cooldown(90)),
 	EmergencyTactics(false, CooldownType.PARTY_MIT, 0xE02),
-	// Sage stuff
-//	Phlegma(SGE, true, 45.0, 2, "Phlegma", CooldownType.PERSONAL_BURST, 0x5EF9),
+	Seraphism(builder(CooldownType.HEAL, false, 0x9096)),
+	Seraph(builder(CooldownType.HEAL, false, 0x40A1)),
+	Excogitation(builder(CooldownType.HEAL, false, 0x1D0A)),
+	Indomitability(builder(CooldownType.HEAL, false, 0xDFF)),
+
+	// SGE
 	// TODO: revisit the automatic naming stuff
 	Phlegma(builder(CooldownType.PERSONAL_BURST, true, 24313, 24307, 24289).name("Phlegma")),
 	Krasis(true, CooldownType.HEAL, 0x5EFD),
@@ -142,22 +151,18 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	Holos(true, CooldownType.PARTY_MIT, 0x5EF6),
 	Pneuma(true, CooldownType.HEAL, 0x5EFE),
 	Psyche(true, CooldownType.PERSONAL_BURST, 0x90A9),
+	Philosophia(builder(CooldownType.HEAL, false, 0x90AB)),
 
+	// AST
 	Divination(true, CooldownType.PARTY_BUFF, 0x40a8),
-	// Removed
-//	Draw(builder(CooldownType.PARTY_BUFF, true, 0xE06).maxCharges(2).noAutoBuffs()),
-	//	Draw(AST, true, 30.0, 2, "Draw", CooldownType.PARTY_BUFF, 0xE06),
-//	MinorArcana(true, CooldownType.PARTY_BUFF, 0x1D13),
-	//	MinorArcana(AST, true, 60.0, "Minor Arcana", CooldownType.PARTY_BUFF, 0x1D13),
+	AstralUmbralDraw(builder(CooldownType.PARTY_BUFF, true, 0x9099, 0x909A)),
 	// TODO: active status on charge-based abilities?
 	CelInt(builder(CooldownType.HEAL, true, 0x40AC).maxCharges(2)),
-	//	CelInt(AST, true, 30.0, 2, "Celestial Intersection", CooldownType.HEAL, 0x40AC),
 	// Star is an interesting one due to having two stages - perhaps this would be a good use of making a 4th bar color (maybe purple)?
 	Copp(true, CooldownType.HEAL, 0x40A9),
 	Lightspeed(false, CooldownType.PERSONAL_UTILITY, 0xE16),
-	// TODO: synastry
-	Edig(builder(CooldownType.HEAL, false, 0xE1E).maxCharges(2)),
-	//	Edig(AST, false, 40.0, 2, "Essential Dignity", CooldownType.HEAL, 0xE1E),
+	Edig(builder(CooldownType.HEAL, false, 0xE1E).maxCharges(3)),
+	Synastry(builder(CooldownType.HEAL, false, 0xE1C)),
 	Horoscope(builder(CooldownType.HEAL, false, 0x40AD).buffIds(0x762, 0x763)),
 	Star(builder(CooldownType.HEAL, true, 0x1D0F).buffIds(0x4C8, 0x4E0)),
 	// Not sure if I should actually put a buff in for this one, since there's three, and they all mean something slightly different
@@ -169,42 +174,88 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 
 	// MELEE
 	Feint(true, CooldownType.PARTY_MIT, 0x1d7d),
-	//	TrickAttack(NIN, true, 60.0, "Trick Attack", CooldownType.PARTY_BUFF, 0x8d2, 638),
+
+	// NIN
 	TrickAttackNew(builder(CooldownType.PERSONAL_BURST, true, 0x905E, 0x8d2).name("Kunai's Bane")),
 	Mug(builder(CooldownType.PARTY_BUFF, true, 0x905D, 0x8C8).name("Dokumori")),
+	Bunshin(builder(CooldownType.PERSONAL_BURST, true, 0x406D)),
+	DreamAssassinate(builder(CooldownType.PERSONAL_BURST, true, 0x8C6, 0xDEE)),
+	Kassatsu(builder(CooldownType.PERSONAL_BURST, true, 0x8D8)),
+	Meisui(builder(CooldownType.PERSONAL_BURST, true, 0x4069)),
+	Shadeshift(builder(CooldownType.PERSONAL_BURST, true, 0x8C1)),
+	Shukuchi(builder(CooldownType.PERSONAL_BURST, true, 0x8D6)),
+	TCJ(builder(CooldownType.PERSONAL_BURST, true, 0x1CEB)),
+
+	// DRG
 	BattleLitany(true, CooldownType.PARTY_BUFF, 0xde5),
+	DragonfireDive(builder(CooldownType.PERSONAL_BURST, true, 0x60)),
+	Jump(builder(CooldownType.PERSONAL_BURST, true, 0x5C, 0x405E)),
+	LanceCharge(builder(CooldownType.PERSONAL_BURST, true, 0x55)),
+	LifeSurge(builder(CooldownType.HEAL, false, 0x53).maxCharges(2)),
+	WingedGlide(builder(CooldownType.PERSONAL_UTILITY, false, 0x9057).maxCharges(2)),
+
+
+	// MNK
 	Brotherhood(true, CooldownType.PARTY_BUFF, 0x1ce4),
 	RiddleOfWind(true, CooldownType.PERSONAL_BURST, 0x64A6),
-	// Deleted
-//	DragonSight(true, CooldownType.PARTY_BUFF, 0x1ce6),
+	Mantra(builder(CooldownType.HEAL, false, 0x41)),
+	PerfectBalance(builder(CooldownType.PERSONAL_BURST, true, 0x45)),
+	RiddleOfEarth(builder(CooldownType.PERSONAL_BURST, false, 0x1CE2)),
+	RiddleOfFire(builder(CooldownType.PERSONAL_BURST, false, 0x1CE3)),
+	Thunderclap(builder(CooldownType.PERSONAL_BURST, false, 0x64A2).maxCharges(3)),
+
+	// RPR
 	ArcaneCircle(true, CooldownType.PARTY_BUFF, 0x5F55),
 	ArcaneCrest(true, CooldownType.PERSONAL_MIT, 0x5F54),
+	Gluttony(builder(CooldownType.PERSONAL_BURST, true, 0x5F49)),
+	SoulSliceScythe(builder(CooldownType.PERSONAL_BURST, true, 0x5F3C, 0x5F3D).maxCharges(2)),
+	IngressEgress(builder(CooldownType.PERSONAL_UTILITY, true, 0x5F51, 0x5F52)),
 
 	// SAM
 	MeikyoShisui(false, CooldownType.PERSONAL_BURST, 7499),
 	Ikishoten(false, CooldownType.PERSONAL_BURST, 16482),
-	ThirdEye(false, CooldownType.PERSONAL_MIT, 7498),
+	ThirdEye(builder(CooldownType.PERSONAL_MIT, false, 7498, 0x9062)),
 	HissatsuGurenSenei(builder(CooldownType.PERSONAL_BURST, false, 0x1D48, 0x4061).name("Hissatsu: Guren/Senei")),
 
 	// CASTER
 	Addle(true, CooldownType.PARTY_MIT, 0x1d88),
 	Swiftcast(builder(CooldownType.PERSONAL_UTILITY, true, 0x1d89).cooldown(40.0)),
+
+	// RDM
 	Embolden(true, CooldownType.PARTY_BUFF, 0x1d60),
 	Manafication(builder(CooldownType.PERSONAL_BURST, true, 0x1D61).cooldown(110.0)),
-	//	Manafication(RDM, true, 110.0, "Manafication", CooldownType.PERSONAL_BURST, 0x1D61, 0x7b3),
 	MagicBarrier(true, CooldownType.PARTY_MIT, 0x6501),
 	Acceleration(builder(CooldownType.PERSONAL_BURST, true, 0x1D5E).maxCharges(2)),
 	//	Acceleration(RDM, true, 55.0, 2, "Acceleration", CooldownType.PERSONAL_BURST, 0x1D5E, 0x4D6),
 	Fleche(true, CooldownType.PERSONAL_BURST, 0x1D5D),
 	ContreSixte(builder(CooldownType.PERSONAL_BURST, true, 0x1D5F).cooldown(35.0)),
 	//	ContreSixte(RDM, true, 35.0, "Contre Sixte", CooldownType.PERSONAL_BURST, 0x1D5F),
-	// TODO: can't add these yet because they are charges
-//	CorpsACorps(RDM, true, 35.0, "Corps-a-Corps", CooldownType.PERSONAL_BURST, 0x1D52),
+	CorpsACorps(builder(CooldownType.PERSONAL_BURST, true, 0x1D52)),
+	DisplacementEngagement(builder(CooldownType.PERSONAL_BURST, true, 0x1D5B, 0x408F)),
 //	Displacement(RDM, true, 35.0, "Displace/Engage", CooldownType.PERSONAL_BURST, new long[]{0x1D5B, 0x408F}, new long[]{}),
-	SearingLight(true, CooldownType.PARTY_BUFF, 25801),
 
+	// SMN
+	SearingLight(true, CooldownType.PARTY_BUFF, 25801),
+	EnergyDrainSiphon(builder(CooldownType.PERSONAL_BURST, true, 0x407C, 0x407D)),
+
+	// BLM
+	Amplifier(builder(CooldownType.PERSONAL_BURST, true, 0x64C4)),
+	LeyLines(builder(CooldownType.PERSONAL_BURST, true, 0xDF5)),
+	Manafont(builder(CooldownType.PERSONAL_BURST, true, 0x9E).cooldown(100)),
+	Manaward(builder(CooldownType.PERSONAL_MIT, false, 0x9D)),
+	Retrace(builder(CooldownType.PERSONAL_BURST, true, 0x907C)),
+	Triplecast(builder(CooldownType.PERSONAL_BURST, true, 0x1CFD)),
+
+	// PCT
+	StarryMuse(builder(CooldownType.PARTY_BUFF, true, 34675)),
+	SteelMuse(builder(CooldownType.PERSONAL_BURST, false, 34685, 34675).name("Steel/Striking Muse").maxCharges(2)),
+	LivingMuse(builder(CooldownType.PERSONAL_BURST, false, 35347, 34670, 34671, 34672, 34673).name("Living Muse").maxCharges(3)),
+	Smudge(builder(CooldownType.PERSONAL_UTILITY, false, 0x877C)),
+	// TODO: Cannot do Tempera Coat (yet) because of the CD reduction mechanic
 
 	// PHYS RANGED
+
+	// DNC
 	// Specifically NOT providing buff IDs for standard step, since you'd want to use it off CD for damage, and
 	// the duration is longer than the CD, so you'd never actually see when you need to use it.
 	StandardStep(builder(CooldownType.PARTY_BUFF, true, 0x3e7d).noAutoBuffs()),
@@ -215,21 +266,36 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	TechnicalStep(builder(CooldownType.PARTY_BUFF, true, 0x3e7e).buffIds(0x71e)),
 	Devilment(true, CooldownType.PARTY_BUFF, 0x3e8b),
 	ShieldSamba(builder(CooldownType.PARTY_MIT, true, 0x3e8c).cooldown(90)),
+	CuringWaltz(builder(CooldownType.HEAL, false, 0x3E8F)),
+	EnAvant(builder(CooldownType.PERSONAL_UTILITY, false, 0x3E8A).maxCharges(3)),
+	Flourish(builder(CooldownType.PERSONAL_BURST, true, 0x3E8D)),
 
+	// BRD
 	Troubadour(builder(CooldownType.PARTY_MIT, true, 0x1ced).cooldown(90)),
 	MagesBallad(builder(CooldownType.PARTY_BUFF, true, 0x72).buffIds(0x8a9).duration(45.0)),
 	ArmysPaeon(builder(CooldownType.PARTY_BUFF, true, 0x74).buffIds(0x8aa).duration(45.0)),
 	WanderersMinuet(builder(CooldownType.PARTY_BUFF, true, 0xde7).buffIds(0x8a8).duration(45.0)),
+	Barrage(builder(CooldownType.PERSONAL_BURST, true, 0x6B)),
+	Minne(builder(CooldownType.HEAL, false, 0x1CF0)),
+	RagingStrikes(builder(CooldownType.PERSONAL_BURST, true, 0x65)),
+	Sidewinder(builder(CooldownType.PERSONAL_BURST, true, 0xDEA)),
+	Empyreal(builder(CooldownType.PERSONAL_BURST, true, 0xDE6)),
 
 	//	MagesBallad(BRD, true, 120.0, 45.0, "Mage's Ballad", CooldownType.PARTY_BUFF, 0x72, 0x8a9),
 //	ArmysPaeon(BRD, true, 120.0, 45.0, "Army's Paeon", CooldownType.PARTY_BUFF, 0x74, 0x8aa),
 //	WanderersMinuet(BRD, true, 120.0, 45.0, "Wanderer's Minuet", CooldownType.PARTY_BUFF, 0xde7, 0x8a8),
 	BattleVoice(true, CooldownType.PARTY_BUFF, 0x76),
 	RadiantFinale(true, CooldownType.PARTY_BUFF, 0x64B9),
+
+	// MCH
 	Tactician(builder(CooldownType.PARTY_MIT, true, 0x41f9).cooldown(90)),
-	StarryMuse(builder(CooldownType.PARTY_BUFF, true, 34675)),
-	SteelMuse(builder(CooldownType.PERSONAL_BURST, false, 34685, 34675).name("Steel/Striking Muse").maxCharges(2)),
-	LivingMuse(builder(CooldownType.PERSONAL_BURST, false, 35347, 34670, 34671, 34672, 34673).name("Living Muse").maxCharges(3)),
+	BarrelStabilizer(builder(CooldownType.PERSONAL_BURST, true, 0x1CF6)),
+	Chainsaw(builder(CooldownType.PERSONAL_BURST, true, 0x64BC)),
+	DrillBio(builder(CooldownType.PERSONAL_BURST, true, 0x4072, 0x4073).maxCharges(2)),
+	Flamethrower(builder(CooldownType.PERSONAL_BURST, false, 0x1CFA)),
+	HotShotAirAnchor(builder(CooldownType.PERSONAL_BURST, true, 0xB38, 0x4074)),
+	Reassemble(builder(CooldownType.PERSONAL_BURST, true, 0xB3C)),
+	Wildfire(builder(CooldownType.PERSONAL_BURST, true, 0xB3E)),
 
 	;
 

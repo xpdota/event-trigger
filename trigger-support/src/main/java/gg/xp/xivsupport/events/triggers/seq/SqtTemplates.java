@@ -39,7 +39,7 @@ public final class SqtTemplates {
 			Duration targetDuration
 	) {
 		return sq(
-				120_000,
+				180_000,
 				eventType,
 				eventFilter,
 				(e1, s) -> {

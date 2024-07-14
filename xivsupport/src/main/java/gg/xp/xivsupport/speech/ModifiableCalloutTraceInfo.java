@@ -68,4 +68,9 @@ public class ModifiableCalloutTraceInfo implements CalloutTraceInfo {
 	public Field getCalloutField() {
 		return calloutField;
 	}
+
+	@Override
+	public String toString() {
+		return "ModifiableCalloutTraceInfo(%s)".formatted(this.getOriginDescription());
+	}
 }
