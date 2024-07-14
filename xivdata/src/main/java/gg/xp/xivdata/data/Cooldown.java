@@ -7,10 +7,22 @@ import java.util.Collection;
 import java.util.List;
 
 public enum Cooldown implements ExtendedCooldownDescriptor {
-
-	// DO NOT change enum member names - they are used as settings keys
-
 	// List of ALL buffs to track - WL/BL will be done by user settings
+	// DO NOT change enum member names - they are used as settings keys!
+
+	/*
+
+	Most properties (cooldown, name, charges, etc) do not need to be set here. They are determined automatically
+	from game files. At a minimum, you need the category for the cooldown, whether or not it should be in the
+	personal CDs overlay by default, or not, and the ability ID(s). You only need to override parts if:
+
+	1. Traits change the cooldown/charges of the skill. The game files contain the traitless data, and there is no
+		currently known way of deciphering the trait data into concrete cd/charge changes.
+
+	2. The cooldown is affected by some other skill. For example, with enhanced unmend, you need to list it as an
+		"auxAbility" on Shadowstride.
+
+	*/
 
 	// TANKS
 	Rampart(builder(CooldownType.PERSONAL_MIT, true, 0x1d6b)),
@@ -19,11 +31,11 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 
 	// PLD
 	HallowedGround(builder(CooldownType.INVULN, true, 0x1e)),
-	Sentinel(builder(CooldownType.PERSONAL_MIT, true, 0x11)),
+	Sentinel(builder(CooldownType.PERSONAL_MIT, true, 0x11, 0x9038)),
 	Cover(builder(CooldownType.PERSONAL_MIT, true, 0x1b)),
 	// TODO: sheltron/holy sheltron
 	FightOrFlight(builder(CooldownType.PERSONAL_BURST, true, 0x14)),
-	Requiescat(builder(CooldownType.PERSONAL_BURST, true, 0x1CD7)),
+	Requiescat(builder(CooldownType.PERSONAL_BURST, true, 0x1CD7, 0x9039)),
 	// TODO: check auto with this
 	DivineVeil(builder(CooldownType.PARTY_MIT, true, 0xdd4).buffIds(726, 727)),
 	//	DivineVeil(PLD, true, 90.0, "Divine Veil", CooldownType.PARTY_MIT, 0xdd4, 726, 727),
@@ -41,13 +53,20 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	HeartofStone(true, CooldownType.PARTY_MIT, 0x3f21),
 	HeartofCorundum(true, CooldownType.PARTY_MIT, 25758),
 	Camouflage(true, CooldownType.PERSONAL_MIT, 0x3f0c),
+	Bloodfest(builder(CooldownType.PERSONAL_BURST, true, 0x3F24)),
+	BowShock(builder(CooldownType.PERSONAL_BURST, true, 0x3F1F)),
+	// Also blasting zone
+	DangerZone(builder(CooldownType.PERSONAL_BURST, true, 0x3F10, 0x3F25)),
+	DoubleDown(builder(CooldownType.PERSONAL_BURST, true, 0x64A0)),
+	NoMercy(builder(CooldownType.PERSONAL_BURST, true, 0x3F0A)),
+	Trajectory(builder(CooldownType.PERSONAL_BURST, true, 0x9046)),
 
 	// WAR
 	//	NascentFlash(WAR, true, 25.0, "Nascent Flash", CooldownType.HEAL, 0x4050, 1857, 1858),
 	InnerRelease(true, CooldownType.PERSONAL_BURST, 0x1CDD),
 	ThrillofBattle(true, CooldownType.PERSONAL_MIT, 0x28),
 	Holmgang(true, CooldownType.INVULN, 0x2b),
-	Vengeance(true, CooldownType.PERSONAL_MIT, 0x2c),
+	Vengeance(builder(CooldownType.PERSONAL_MIT, true, 0x2c, 0x903B)),
 	RawIntuition(builder(CooldownType.PERSONAL_MIT, true, 0xddfL, 0x4050, 0x6497).buffIds(735L, 1857, 1858, 0xA76L)),
 	Upheaval(builder(CooldownType.PERSONAL_BURST, true, 0x1CDB, 0x6498)),
 	ShakeItOff(true, CooldownType.PARTY_MIT, 0x1cdc),
