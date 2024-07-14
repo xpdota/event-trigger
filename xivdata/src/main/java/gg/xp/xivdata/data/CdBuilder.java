@@ -147,11 +147,11 @@ public class CdBuilder {
 			return switch (Integer.parseInt(ai.categoryRaw())) {
 				case 66, 105, 123, 171 -> PRANGED;
 				case 67, 76, 84, 114, 148 -> MELEE_DPS;
-				case 89, 116, 175 -> CASTER;
+				case 89, 116, 175, 198 -> CASTER;
 				case 113, 121, 166 -> TANK;
 				case 117, 125, 128, 165 -> HEALER;
 				// It's actually not but I don't have a category for DoW/DoM yet
-				case 120 -> CASTER;
+				case 120, 199 -> CASTER;
 				// This is actually DoM, but no category for that yet
 				case 161 -> TANK;
 				default -> UNKNOWN;
@@ -172,7 +172,7 @@ public class CdBuilder {
 			int rawJobCategory = Integer.parseInt(ai.categoryRaw());
 			return switch (rawJobCategory) {
 				case 2, 20, 38 -> PLD;
-				case 3, 21 -> MNK;
+				case 3, 21, 41 -> MNK;
 				case 4, 22, 44 -> WAR;
 				case 5, 23, 47 -> DRG;
 				case 6, 24, 50 -> BRD;

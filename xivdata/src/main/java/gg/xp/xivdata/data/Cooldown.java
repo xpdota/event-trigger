@@ -116,8 +116,8 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	AetherialShift(builder(CooldownType.PERSONAL_UTILITY, false, 0x9090)),
 	Plenary(builder(CooldownType.HEAL, false, 0x1D09)),
 	Tetra(builder(CooldownType.HEAL, false, 0xDF2).maxCharges(2)),
-	ThinAir(builder(CooldownType.PERSONAL_UTILITY, false, 0xDF2)),
-	DivineBenison(builder(CooldownType.HEAL, false, 0x1D08)),
+	ThinAir(builder(CooldownType.PERSONAL_UTILITY, false, 0x1D06)),
+	DivineBenison(builder(CooldownType.HEAL, false, 0x1D08).maxCharges(2)),
 
 	// SCH
 	SacredSoil(true, CooldownType.PARTY_MIT, 0xbc),
@@ -146,7 +146,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	DeploymentTactics(builder(CooldownType.PARTY_MIT, false, 0xE01).cooldown(90)),
 	EmergencyTactics(false, CooldownType.PARTY_MIT, 0xE02),
 	Seraphism(builder(CooldownType.HEAL, false, 0x9096)),
-	Seraph(builder(CooldownType.HEAL, false, 0x40A1)),
+	Seraph(builder(CooldownType.HEAL, false, 0x40A1).duration(22)),
 	Excogitation(builder(CooldownType.HEAL, false, 0x1D0A)),
 	Indomitability(builder(CooldownType.HEAL, false, 0xDFF)),
 
@@ -202,7 +202,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	Kassatsu(builder(CooldownType.PERSONAL_BURST, true, 0x8D8)),
 	Meisui(builder(CooldownType.PERSONAL_BURST, true, 0x4069)),
 	Shadeshift(builder(CooldownType.PERSONAL_BURST, true, 0x8C1)),
-	Shukuchi(builder(CooldownType.PERSONAL_BURST, true, 0x8D6)),
+	Shukuchi(builder(CooldownType.PERSONAL_BURST, true, 0x8D6).maxCharges(2)),
 	TCJ(builder(CooldownType.PERSONAL_BURST, true, 0x1CEB)),
 
 	// DRG
@@ -236,6 +236,12 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	ThirdEye(builder(CooldownType.PERSONAL_MIT, false, 7498, 0x9062)),
 	HissatsuGurenSenei(builder(CooldownType.PERSONAL_BURST, false, 0x1D48, 0x4061).name("Hissatsu: Guren/Senei")),
 
+	// VPR
+	// Also pit of dread
+	Dreadwinder(builder(CooldownType.PERSONAL_BURST, true, 0x873C, 0x873F).maxCharges(3)),
+	SerpentsIre(builder(CooldownType.PERSONAL_BURST, true, 0x8757)),
+	Slither(builder(CooldownType.PERSONAL_UTILITY, false, 0x8756)),
+
 	// CASTER
 	Addle(true, CooldownType.PARTY_MIT, 0x1d88),
 	Swiftcast(builder(CooldownType.PERSONAL_UTILITY, true, 0x1d89).cooldown(40.0)),
@@ -255,7 +261,8 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 
 	// SMN
 	SearingLight(true, CooldownType.PARTY_BUFF, 25801),
-	EnergyDrainSiphon(builder(CooldownType.PERSONAL_BURST, true, 0x407C, 0x407D)),
+	EnergyDrainSiphon(builder(CooldownType.PERSONAL_BURST, true, 0x407C, 0x407E)),
+	RadiantAegis(builder(CooldownType.PERSONAL_MIT, true, 0x64C7).maxCharges(2)),
 
 	// BLM
 	Amplifier(builder(CooldownType.PERSONAL_BURST, true, 0x64C4)),
