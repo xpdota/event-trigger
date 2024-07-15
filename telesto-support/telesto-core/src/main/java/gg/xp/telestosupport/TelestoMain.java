@@ -62,8 +62,6 @@ public class TelestoMain implements FilteredEventHandler {
 		this.pls = pls;
 		try {
 			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://localhost:45678/"));
-			// TODO: Telesto bug....
-//			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://127.0.0.1:51323/"));
 			enablePartyList = new BooleanSetting(pers, "telesto-support.pull-party-list", true);
 			commandDelayBase = new IntSetting(pers, "telesto-support.base-cmd-delay", 100, 0, 5000);
 			commandDelayPlus = new IntSetting(pers, "telesto-support.plus-cmd-delay", 100, 0, 5000);
@@ -74,7 +72,7 @@ public class TelestoMain implements FilteredEventHandler {
 		refresher = new RefreshLoop<>("TelestoPartyRefresh", this, TelestoMain::refreshPartyIfEnabled, tm -> getStatus() == TelestoStatus.GOOD ? 10_000L : 60_000L);
 	}
 
-	private void refreshPartyIfEnabled() {
+	public void refreshPartyIfEnabled() {
 		if (enablePartyList.get()) {
 			master.pushEvent(makePartyMemberMsg());
 		}

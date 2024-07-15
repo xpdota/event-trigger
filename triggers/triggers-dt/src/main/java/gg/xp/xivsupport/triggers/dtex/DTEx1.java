@@ -62,7 +62,7 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 	private final ModifiableCallout<AbilityCastStart> disasterZone = ModifiableCallout.durationBasedCall("Disaster Zone", "Raidwide");
 
 	@NpcCastCallout(0x9008)
-	private final ModifiableCallout<AbilityCastStart> tulidisaster = ModifiableCallout.durationBasedCall("Tulidisaster", "Multiple Raidwides");
+	private final ModifiableCallout<AbilityCastStart> tulidisaster = ModifiableCallout.durationBasedCallWithOffset("Tulidisaster", "Multiple Raidwides", Duration.ofMillis(3_000));
 
 	@NpcCastCallout(0x95C3)
 	private final ModifiableCallout<AbilityCastStart> skyruinLightning = ModifiableCallout.durationBasedCallWithOffset("Skyruin (Lightning)", "Raidwide with Bleed", Duration.ofMillis(5_300));
@@ -112,19 +112,15 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 	private final SequentialTrigger<BaseEvent> freezingHandler = SqtTemplates.sq(130_000,
 			BuffApplied.class, ba -> ba.buffIdMatches(0xEEE) && ba.getTarget().isThePlayer(),
 			(e1, s) -> {
-				log.info("freezingHandler 1");
 				s.waitDuration(e1.remainingDurationPlus(Duration.ofSeconds(-5)));
-				log.info("freezingHandler 2");
 				s.updateCall(freezingSoon, e1);
-				log.info("freezingHandler 3");
 				s.waitDuration(e1.remainingDurationPlus(Duration.ofSeconds(-2)));
-				log.info("freezingHandler 4");
 				s.updateCall(freezingVerySoon, e1);
-				log.info("freezingHandler 5");
 			}
 	);
 
-	private final ModifiableCallout<BuffApplied> inferno = ModifiableCallout.durationBasedCall("Inferno Soon", "Light Party Stacks then Eruptions");
+	private final ModifiableCallout<BuffApplied> inferno = ModifiableCallout.<BuffApplied>durationBasedCall("Inferno Soon", "Light Party Stacks then Eruptions").autoIcon();
+	private final ModifiableCallout<BuffApplied> calamitysFlames = ModifiableCallout.<BuffApplied>durationBasedCall("Calamity's Flames", "Light Party Stacks").autoIcon();
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> infernoHandler = SqtTemplates.callWhenDurationIs(
@@ -176,11 +172,14 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 				}
 			});
 
+	@NpcCastCallout(0x9692)
+	private final ModifiableCallout<AbilityCastStart> ruinForetold = ModifiableCallout.durationBasedCall("Ruin Foretold", "Raidwide");
+
 	private final ModifiableCallout<AbilityCastStart> calamitousInitialTank = new ModifiableCallout<>("Calamitous Cry: Tank", "Line Stacks, In Front of Party");
 	private final ModifiableCallout<AbilityCastStart> calamitousInitialNonTank = new ModifiableCallout<>("Calamitous Cry: Non-Tank", "Line Stacks, Behind Tank");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> calamitousCry = SqtTemplates.sq(60_000,
+	private final SequentialTrigger<BaseEvent> calamitousCrySq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9002),
 			(e1, s) -> {
 				if (state.playerJobMatches(Job::isTank)) {
@@ -391,6 +390,9 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 					case 0x8FCC -> s.updateCall(avalancheWithOut, cast);
 					case 0x8FD0 -> s.updateCall(avalancheWithIn, cast);
 				}
+				// outMiddleConeMechStandalone queries whether this is active, so stay active for a bit longer to make
+				// that work correctly.
+				s.waitMs(1_000);
 			});
 
 	private static final BiConsumer<AbilityCastStart, SequentialTriggerController<BaseEvent>> noop = (a, b) -> {
@@ -481,5 +483,11 @@ public class DTEx1 extends AutoChildEventHandler implements FilteredEventHandler
 				chillingCataclysmHandler(s);
 
 			});
+
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> calamityFlamesSq = SqtTemplates.callWhenDurationIs(
+			BuffApplied.class, ba -> ba.buffIdMatches(0xEE9), calamitysFlames, Duration.ofSeconds(8)
+	);
 
 }
