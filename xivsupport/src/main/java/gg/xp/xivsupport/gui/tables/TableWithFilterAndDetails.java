@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -182,7 +183,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		});
 		c.weighty = 1;
 
-		JTable detailsTable = new JTable(detailsModel);
+		JTable detailsTable = detailsModel.makeTable();
 		JScrollPane detailsScroller = new JScrollPane(detailsTable);
 		detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
 
@@ -435,6 +436,15 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			setAppendOrPruneOnly(true);
 			this.fixedData = fixedData;
 			return this;
+		}
+
+		public TableWithFilterAndDetailsBuilder<X, D> apply(Consumer<? super TableWithFilterAndDetailsBuilder<X, D>> func) {
+			func.accept(this);
+			return this;
+		}
+
+		public TableWithFilterAndDetailsBuilder<X, D> transform(Function<? super TableWithFilterAndDetailsBuilder<X, D>, TableWithFilterAndDetailsBuilder<X, D>> func) {
+			return func.apply(this);
 		}
 	}
 

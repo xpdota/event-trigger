@@ -7,6 +7,7 @@ import gg.xp.xivsupport.gui.components.LateAdjustJSplitPane;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.persistence.gui.BoundCheckbox;
@@ -314,7 +315,7 @@ public class GroovyPanel extends JPanel {
 
 	private JTable simpleListDisplay(Collection<?> values) {
 		return CustomTableModel.builder(() -> new ArrayList<>(values))
-				.addColumn(new CustomColumn<>("Value", GroovyPanel::singleValueConversion))
+				.addColumn(new CustomColumn<>("Value", GroovyColumns::singleValueConversion))
 				.build()
 				.makeTable();
 	}
@@ -323,37 +324,19 @@ public class GroovyPanel extends JPanel {
 		return dc.getListDisplay().makeTable(sbx, values);
 	}
 
-	private JTable simpleMapDisplay(Map<?, ?> map) {
-		return CustomTableModel.builder(() -> new ArrayList<>(map.entrySet()))
-				.addColumn(new CustomColumn<>("Key", e -> singleValueConversion(e.getKey())))
-				.addColumn(new CustomColumn<>("Value", e -> singleValueConversion(e.getValue())))
+	private JTable simplePropsDisplay(Object object) {
+		return CustomTableModel.builder(() -> GroovyColumns.getValues(object))
+				.apply(GroovyColumns::addColumns)
 				.build()
 				.makeTable();
 	}
 
-	// TODO: move this
-	@SuppressWarnings("MalformedFormatString")
-	public static String singleValueConversion(Object obj) {
-		if (obj == null) {
-			return "(null)";
-		}
-		if (obj instanceof Byte || obj instanceof Integer || obj instanceof Long || obj instanceof Short) {
-			return String.format("%d (0x%x)", obj, obj);
-		}
-		// TODO: arrays
-//		if (obj instanceof Array arr) {
-//			arr.getClass().arrayType()
-//		}
-		if (obj.getClass().isArray()) {
-			int length = Array.getLength(obj);
-			List<Object> converted = new ArrayList<>();
-			for (int i = 0; i < length; i++) {
-				converted.add(Array.get(obj, i));
-			}
-			return converted.stream().map(GroovyPanel::singleValueConversion).collect(Collectors.joining(", ", "[", "]"));
-		}
-		return obj.toString();
-
+	private JTable simpleMapDisplay(Map<?, ?> map) {
+		return CustomTableModel.builder(() -> new ArrayList<>(map.entrySet()))
+				.addColumn(new CustomColumn<>("Key", e -> GroovyColumns.singleValueConversion(e.getKey())))
+				.addColumn(new CustomColumn<>("Value", e -> GroovyColumns.singleValueConversion(e.getValue())))
+				.build()
+				.makeTable();
 	}
 
 	private void submit() {
@@ -457,19 +440,7 @@ public class GroovyPanel extends JPanel {
 	}
 
 	private void setResultDisplay(@Nullable Object obj, Component display) {
-		Map<?, ?> props;
-		if (obj == null) {
-			props = Collections.emptyMap();
-		}
-		else {
-			try {
-				props = DefaultGroovyMethods.getProperties(obj);
-			}
-			catch (Throwable t) {
-				props = Collections.emptyMap();
-			}
-		}
-		JTable md = simpleMapDisplay(props);
+		JTable md = simplePropsDisplay(obj);
 		SwingUtilities.invokeLater(() -> {
 			resultPropertiesScroll.setViewportView(md);
 			resultScroll.setViewportView(display);

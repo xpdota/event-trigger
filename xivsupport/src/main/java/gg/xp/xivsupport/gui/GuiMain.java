@@ -49,6 +49,7 @@ import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemLogLoggerNameFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemLogTextFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemLogThreadFilter;
+import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
@@ -80,6 +81,7 @@ import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
+import groovy.lang.PropertyValue;
 import org.apache.commons.io.IOUtils;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
@@ -728,20 +730,9 @@ public class GuiMain {
 	private JPanel getCombatantsPanel() {
 		// Main table
 		XivState state = container.getComponent(XivStateImpl.class);
-		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Combatants",
+		TableWithFilterAndDetails<XivCombatant, PropertyValue> table = TableWithFilterAndDetails.builder("Combatants",
 						() -> state.getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
-						combatant -> {
-							if (combatant == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return Utils.dumpAllFields(combatant)
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+						GroovyColumns::getValues)
 				.addMainColumn(StandardColumns.entityIdColumn)
 				.addMainColumn(StandardColumns.nameJobColumn)
 				.addMainColumn(columns.statusEffectsColumn())
@@ -750,13 +741,8 @@ public class GuiMain {
 				.addMainColumn(columns.hpColumnWithUnresolved())
 				.addMainColumn(StandardColumns.mpColumn)
 				.addMainColumn(StandardColumns.posColumn)
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
-				.setDetailsSelectionEquivalence((a, b) -> a.getKey().equals(b.getKey()))
 				.addFilter(EventEntityFilter::selfFilter)
 				.addFilter(NonCombatEntityFilter::new)
 				.withRightClickRepo(rightClicks)
@@ -773,19 +759,8 @@ public class GuiMain {
 	private JPanel getStatusEffectsPanel() {
 		// Main table
 		StatusEffectRepository repo = container.getComponent(StatusEffectRepository.class);
-		TableWithFilterAndDetails<BuffApplied, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Status Effects", repo::getBuffs,
-						combatant -> {
-							if (combatant == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return Utils.dumpAllFields(combatant)
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+		TableWithFilterAndDetails<BuffApplied, PropertyValue> table = TableWithFilterAndDetails.builder("Status Effects", repo::getBuffs,
+						GroovyColumns::getValues)
 				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Buff/Ability", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer())))
@@ -799,11 +774,7 @@ public class GuiMain {
 					c.setMinWidth(100);
 					c.setMaxWidth(100);
 				}))
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.setSelectionEquivalence(Object::equals)
 				.addFilter(EventEntityFilter::buffSourceFilter)
 				.addFilter(EventEntityFilter::buffTargetFilter)
@@ -827,26 +798,11 @@ public class GuiMain {
 		// The second way was to stream and filter the raw event storage, but that is inefficient because it scales
 		// very poorly and causes higher CPU usage.
 		// The third, not-hacky way is to just have RawEventStorage track events of a particular type for us
-		TableWithFilterAndDetails<ACTLogLineEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("ACT Log",
+		TableWithFilterAndDetails<ACTLogLineEvent, PropertyValue> table = TableWithFilterAndDetails.builder("ACT Log",
 						() -> rawStorage.getEventsOfType(ACTLogLineEvent.class),
-						currentEvent -> {
-							if (currentEvent == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return currentEvent.dumpFields()
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+						GroovyColumns::getValues)
 				.addMainColumn(new CustomColumn<>("Line", ACTLogLineEvent::getLogLine))
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
 				.addFilter(ActLineFilter::new)
 				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
@@ -867,17 +823,9 @@ public class GuiMain {
 			return panel;
 		}
 		else {
-			TableWithFilterAndDetails<LogEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("System Log",
+			TableWithFilterAndDetails<LogEvent, PropertyValue> table = TableWithFilterAndDetails.builder("System Log",
 							instance::getEvents,
-							e -> {
-								if (e == null) {
-									return Collections.emptyList();
-								}
-								return Stream.concat(
-										Utils.dumpAllFields(e).entrySet().stream(),
-										Utils.dumpAllFields(e.getEvent()).entrySet().stream()
-								).collect(Collectors.toList());
-							})
+							GroovyColumns::getValues)
 					.addMainColumn(new CustomColumn<>("Time",
 							e -> Instant.ofEpochMilli(e.getEvent().getTimeStamp())
 									.atZone(ZoneId.systemDefault())
@@ -925,11 +873,7 @@ public class GuiMain {
 						col.setPreferredWidth(900);
 					}))
 					.withRightClickRepo(rightClicks)
-					.addDetailsColumn(StandardColumns.fieldName)
-					.addDetailsColumn(StandardColumns.fieldValue)
-					.addDetailsColumn(StandardColumns.identity)
-					.addDetailsColumn(StandardColumns.fieldType)
-					.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+					.apply(GroovyColumns::addDetailColumns)
 					.addFilter(LogLevelVisualFilter::new)
 					.addFilter(SystemLogThreadFilter::new)
 					.addFilter(SystemLogLoggerNameFilter::new)
@@ -957,20 +901,9 @@ public class GuiMain {
 
 	private JPanel getPullsTab() {
 		PullTracker pulls = state.get(PullTracker.class);
-		TableWithFilterAndDetails<Pull, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Pulls",
+		TableWithFilterAndDetails<Pull, PropertyValue> table = TableWithFilterAndDetails.builder("Pulls",
 						pulls::getPulls,
-						currentPull -> {
-							if (currentPull == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return Utils.dumpAllFields(currentPull)
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+						GroovyColumns::getValues)
 				.addMainColumn(new CustomColumn<>("Number", Pull::getPullNum, col -> {
 					col.setMinWidth(50);
 					col.setMaxWidth(50);
@@ -1008,11 +941,7 @@ public class GuiMain {
 				}, col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks.withMore(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
 					PullNumberFilter pnf = container.getComponent(PullNumberFilter.class);
 					pnf.setPullNumberExternally(pull.getPullNum());
