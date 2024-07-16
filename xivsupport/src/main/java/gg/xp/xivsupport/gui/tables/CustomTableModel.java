@@ -19,6 +19,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -39,6 +41,15 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		public CustomTableModelBuilder<B> addColumn(CustomColumn<? super B> colDef) {
 			columns.add(colDef);
 			return this;
+		}
+
+		public CustomTableModelBuilder<B> apply(Consumer<? super CustomTableModelBuilder<B>> func) {
+			func.accept(this);
+			return this;
+		}
+
+		public CustomTableModelBuilder<B> transform(Function<? super CustomTableModelBuilder<B>, CustomTableModelBuilder<B>> func) {
+			return func.apply(this);
 		}
 
 		public CustomTableModel<B> build() {
