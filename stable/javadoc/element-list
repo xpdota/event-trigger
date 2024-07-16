@@ -103,6 +103,7 @@ gg.xp.xivsupport.gui.nav
 gg.xp.xivsupport.gui.overlay
 gg.xp.xivsupport.gui.tables
 gg.xp.xivsupport.gui.tables.filters
+gg.xp.xivsupport.gui.tables.groovy
 gg.xp.xivsupport.gui.tables.renderers
 gg.xp.xivsupport.gui.tables.timedisplay
 gg.xp.xivsupport.gui.tabs
