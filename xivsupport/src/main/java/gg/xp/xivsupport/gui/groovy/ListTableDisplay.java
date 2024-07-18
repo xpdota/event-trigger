@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.groovy;
 
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static gg.xp.xivsupport.gui.groovy.GroovyPanel.singleValueConversion;
 
 public class ListTableDisplay {
 	private final List<TableColumn> cols;
@@ -123,7 +123,7 @@ public class ListTableDisplay {
 				.filter(td -> td.applicableTo(value))
 				.findFirst()
 				.map(td -> td.func().apply(value))
-				.orElseGet(() -> singleValueConversion(value));
+				.orElseGet(() -> GroovyColumns.singleValueConversion(value));
 	}
 
 	public static ListTableDisplay autoPropTable() {

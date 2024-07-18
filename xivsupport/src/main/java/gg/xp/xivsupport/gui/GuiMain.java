@@ -49,6 +49,7 @@ import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemLogLoggerNameFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemLogTextFilter;
 import gg.xp.xivsupport.gui.tables.filters.SystemLogThreadFilter;
+import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tabs.AdvancedTab;
@@ -80,7 +81,9 @@ import gg.xp.xivsupport.slf4j.LogEvent;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.Threading;
 import gg.xp.xivsupport.sys.XivMain;
+import groovy.lang.PropertyValue;
 import org.apache.commons.io.IOUtils;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
@@ -92,6 +95,7 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.HyperlinkEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
@@ -100,7 +104,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -231,7 +237,9 @@ public class GuiMain {
 		addTab("Library", container.getComponent(LibraryTab.class));
 		addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class)));
 		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class), container.getComponent(UpdaterConfig.class)));
-		addTab("Advanced", new AdvancedTab(container));
+		// This is instantiated here because we don't want it getting auto scanned in tests
+		container.addComponent(AdvancedTab.class);
+		addTab("Advanced", container.getComponent(AdvancedTab.class));
 		GlobalNavPanel nav = new GlobalNavPanel(guiReg);
 		SwingUtilities.invokeLater(() -> {
 			JPanel gp = ((JPanel) mainFrame.getGlassPane());
@@ -370,7 +378,7 @@ public class GuiMain {
 	private Component changelogPanel() {
 		TitleBorderPanel changelog = new TitleBorderPanel("Changelog");
 		changelog.setLayout(new BorderLayout());
-		String text;
+		@Language("html") String text;
 		try {
 			text = IOUtils.toString(GuiMain.class.getResource("/te_changelog.html"), StandardCharsets.UTF_8);
 		}
@@ -378,7 +386,18 @@ public class GuiMain {
 			log.error("Error loading changelog", e);
 			text = "Error loading changelog";
 		}
-		Component rot = new ReadOnlyHtml(text);
+		ReadOnlyHtml rot = new ReadOnlyHtml(text);
+		rot.setFocusable(true);
+		rot.addHyperlinkListener(l -> {
+			if (l.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+				try {
+					Desktop.getDesktop().browse(l.getURL().toURI());
+				}
+				catch (IOException | URISyntaxException e) {
+					log.error("Hyperlink error", e);
+				}
+			}
+		});
 		changelog.add(new JScrollPane(rot));
 		return changelog;
 	}
@@ -711,20 +730,9 @@ public class GuiMain {
 	private JPanel getCombatantsPanel() {
 		// Main table
 		XivState state = container.getComponent(XivStateImpl.class);
-		TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Combatants",
+		TableWithFilterAndDetails<XivCombatant, PropertyValue> table = TableWithFilterAndDetails.builder("Combatants",
 						() -> state.getCombatantsListCopy().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
-						combatant -> {
-							if (combatant == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return Utils.dumpAllFields(combatant)
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+						GroovyColumns::getValues)
 				.addMainColumn(StandardColumns.entityIdColumn)
 				.addMainColumn(StandardColumns.nameJobColumn)
 				.addMainColumn(columns.statusEffectsColumn())
@@ -733,13 +741,8 @@ public class GuiMain {
 				.addMainColumn(columns.hpColumnWithUnresolved())
 				.addMainColumn(StandardColumns.mpColumn)
 				.addMainColumn(StandardColumns.posColumn)
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
-				.setDetailsSelectionEquivalence((a, b) -> a.getKey().equals(b.getKey()))
 				.addFilter(EventEntityFilter::selfFilter)
 				.addFilter(NonCombatEntityFilter::new)
 				.withRightClickRepo(rightClicks)
@@ -756,19 +759,8 @@ public class GuiMain {
 	private JPanel getStatusEffectsPanel() {
 		// Main table
 		StatusEffectRepository repo = container.getComponent(StatusEffectRepository.class);
-		TableWithFilterAndDetails<BuffApplied, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Status Effects", repo::getBuffs,
-						combatant -> {
-							if (combatant == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return Utils.dumpAllFields(combatant)
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+		TableWithFilterAndDetails<BuffApplied, PropertyValue> table = TableWithFilterAndDetails.builder("Status Effects", repo::getBuffs,
+						GroovyColumns::getValues)
 				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Buff/Ability", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer())))
@@ -782,11 +774,7 @@ public class GuiMain {
 					c.setMinWidth(100);
 					c.setMaxWidth(100);
 				}))
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.setSelectionEquivalence(Object::equals)
 				.addFilter(EventEntityFilter::buffSourceFilter)
 				.addFilter(EventEntityFilter::buffTargetFilter)
@@ -810,31 +798,17 @@ public class GuiMain {
 		// The second way was to stream and filter the raw event storage, but that is inefficient because it scales
 		// very poorly and causes higher CPU usage.
 		// The third, not-hacky way is to just have RawEventStorage track events of a particular type for us
-		TableWithFilterAndDetails<ACTLogLineEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("ACT Log",
+		TableWithFilterAndDetails<ACTLogLineEvent, PropertyValue> table = TableWithFilterAndDetails.builder("ACT Log",
 						() -> rawStorage.getEventsOfType(ACTLogLineEvent.class),
-						currentEvent -> {
-							if (currentEvent == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return currentEvent.dumpFields()
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+						GroovyColumns::getValues)
 				.addMainColumn(new CustomColumn<>("Line", ACTLogLineEvent::getLogLine))
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
 				.addFilter(ActLineFilter::new)
 				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
 				.build();
+		table.getMainTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		master.getDistributor().registerHandler(ACTLogLineEvent.class, (ctx, e) -> {
 			table.signalNewData();
 		});
@@ -849,17 +823,9 @@ public class GuiMain {
 			return panel;
 		}
 		else {
-			TableWithFilterAndDetails<LogEvent, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("System Log",
+			TableWithFilterAndDetails<LogEvent, PropertyValue> table = TableWithFilterAndDetails.builder("System Log",
 							instance::getEvents,
-							e -> {
-								if (e == null) {
-									return Collections.emptyList();
-								}
-								return Stream.concat(
-										Utils.dumpAllFields(e).entrySet().stream(),
-										Utils.dumpAllFields(e.getEvent()).entrySet().stream()
-								).collect(Collectors.toList());
-							})
+							GroovyColumns::getValues)
 					.addMainColumn(new CustomColumn<>("Time",
 							e -> Instant.ofEpochMilli(e.getEvent().getTimeStamp())
 									.atZone(ZoneId.systemDefault())
@@ -907,11 +873,7 @@ public class GuiMain {
 						col.setPreferredWidth(900);
 					}))
 					.withRightClickRepo(rightClicks)
-					.addDetailsColumn(StandardColumns.fieldName)
-					.addDetailsColumn(StandardColumns.fieldValue)
-					.addDetailsColumn(StandardColumns.identity)
-					.addDetailsColumn(StandardColumns.fieldType)
-					.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+					.apply(GroovyColumns::addDetailColumns)
 					.addFilter(LogLevelVisualFilter::new)
 					.addFilter(SystemLogThreadFilter::new)
 					.addFilter(SystemLogLoggerNameFilter::new)
@@ -939,20 +901,9 @@ public class GuiMain {
 
 	private JPanel getPullsTab() {
 		PullTracker pulls = state.get(PullTracker.class);
-		TableWithFilterAndDetails<Pull, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Pulls",
+		TableWithFilterAndDetails<Pull, PropertyValue> table = TableWithFilterAndDetails.builder("Pulls",
 						pulls::getPulls,
-						currentPull -> {
-							if (currentPull == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return Utils.dumpAllFields(currentPull)
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+						GroovyColumns::getValues)
 				.addMainColumn(new CustomColumn<>("Number", Pull::getPullNum, col -> {
 					col.setMinWidth(50);
 					col.setMaxWidth(50);
@@ -990,11 +941,7 @@ public class GuiMain {
 				}, col -> {
 					col.setPreferredWidth(200);
 				}))
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks.withMore(CustomRightClickOption.forRow("Filter Events Tab to This", Pull.class, pull -> {
 					PullNumberFilter pnf = container.getComponent(PullNumberFilter.class);
 					pnf.setPullNumberExternally(pull.getPullNum());
@@ -1065,6 +1012,7 @@ public class GuiMain {
 			};
 			CustomTableModel<XivOverlay> tableModel = CustomTableModel.builder(overlayMain::getOverlays)
 					.addColumn(StandardColumns.booleanSettingColumn("On", XivOverlay::getEnabled, 50, visibleSetting))
+					.addColumn(StandardColumns.booleanSettingColumn("Combat", XivOverlay::getHideInCombatSetting, 70, visibleSetting))
 					.addColumn(new CustomColumn<>("Name", XivOverlay::getTitle, col -> col.setCellEditor(new NoCellEditor())))
 					.addColumn(StandardColumns.longSettingBoxColumn("X", XivOverlay::getXSetting, 100))
 					.addColumn(StandardColumns.longSettingBoxColumn("Y", XivOverlay::getYSetting, 100))

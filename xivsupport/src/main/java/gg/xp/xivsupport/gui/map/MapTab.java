@@ -14,8 +14,10 @@ import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.NonCombatEntityFilter;
+import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
+import groovy.lang.PropertyValue;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,10 +27,12 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// TODO: introduce another layer here so that the tab can load async
+// This tab takes about 1/4 second to load
 @ScanMe
 public class MapTab extends JPanel {
 
-	private final TableWithFilterAndDetails<XivCombatant, Map.Entry<Field, Object>> table;
+	private final TableWithFilterAndDetails<XivCombatant, PropertyValue> table;
 	private final RefreshLoop<MapTab> mapRefresh;
 	private final MapPanel mapPanel;
 	private final MapDataController mapDataController;
@@ -52,18 +56,7 @@ public class MapTab extends JPanel {
 
 		table = TableWithFilterAndDetails.builder("Combatants",
 						() -> mdc.getCombatants().stream().sorted(Comparator.comparing(XivEntity::getId)).collect(Collectors.toList()),
-						combatant -> {
-							if (combatant == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return Utils.dumpAllFields(combatant)
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+						GroovyColumns::getValues)
 				.addMainColumn(StandardColumns.entityIdColumn)
 				.addMainColumn(StandardColumns.nameJobColumn)
 				.addMainColumn(StandardColumns.sortedStatusEffectsColumn(mdc::buffsOnCombatant))
@@ -73,13 +66,8 @@ public class MapTab extends JPanel {
 				.addMainColumn(StandardColumns.hpColumnWithUnresolved(mdc::unresolvedDamage))
 //				.addMainColumn(StandardColumns.mpColumn)
 //				.addMainColumn(StandardColumns.posColumn)
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
-				.setDetailsSelectionEquivalence((a, b) -> a.getKey().equals(b.getKey()))
 				.addFilter(EventEntityFilter::selfFilter)
 				.addFilter(NonCombatEntityFilter::new)
 				.addFilter(GroovyFilter.forClass(XivCombatant.class, mgr, "it"))

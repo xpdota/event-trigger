@@ -88,7 +88,7 @@ public final class MakeTimelines {
 			log.info("Set up ChromeDriver");
 		}
 		ChromeOptions opts = new ChromeOptions();
-		opts.setHeadless(true);
+		opts.addArguments("--headless=new");
 		opts.addArguments("remote-allow-origins=*");
 		opts.addArguments("disable-dev-shm-usage");
 		opts.addArguments("disable-gpu");
@@ -97,13 +97,14 @@ public final class MakeTimelines {
 		ChromeDriver driver = new ChromeDriver(opts);
 		log.info("Started ChromeDriver");
 		Map<Long, String> zoneToFile = new HashMap<>();
-		String timelineBaseDir = System.getProperty("timelinedir", "timelines/src/main/resources");
+		String timelineBaseDir = System.getProperty("timelinedir", "./src/main/resources");
 		Path timelineBasePath = Path.of(timelineBaseDir);
+		log.info("Writing timelines to {}", timelineBasePath.toAbsolutePath());
 		Path translationsDir = timelineBasePath.resolve("timeline").resolve("translations");
 		translationsDir.toFile().mkdirs();
 		try {
 			// Go to hosted Cactbot
-			driver.get("https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=wss://127.0.0.1:10501");
+			driver.get("https://overlayplugin.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=wss://127.0.0.1:10501");
 
 			// Dump the contents of the webpack
 			Map<?, ?> out = (Map<?, ?>) driver.executeScript("""
@@ -153,9 +154,9 @@ public final class MakeTimelines {
 					// Get the timeline translations
 					Object timelineReplace = contentMap.get("timelineReplace");
 					Map<String, LanguageReplacements> allLangs = new LinkedHashMap<>();
-					if (timelineReplace instanceof List timelineReplaceList) {
+					if (timelineReplace instanceof List<?> timelineReplaceList) {
 						for (Object o : timelineReplaceList) {
-							if (o instanceof Map timelineReplaceMap) {
+							if (o instanceof Map<?, ?> timelineReplaceMap) {
 								// This works - just need to figure out how to work it in
 								Object locale = timelineReplaceMap.get("locale");
 								Object replaceSync = timelineReplaceMap.get("replaceSync");
@@ -214,6 +215,7 @@ public final class MakeTimelines {
 		finally {
 			driver.quit();
 		}
+		log.info("Done making timelines");
 	}
 
 	private static <K extends Comparable<K>, V> Map<K, V> ordered(Map<K, V> map) {

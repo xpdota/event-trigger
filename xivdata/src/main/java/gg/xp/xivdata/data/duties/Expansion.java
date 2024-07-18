@@ -6,8 +6,8 @@ public enum Expansion {
 	HW("Heavensward"),
 	SB("Stormblood"),
 	ShB("Shadowbringers"),
-	EW("Endwalker");
-
+	EW("Endwalker"),
+	DT("Dawntrail");
 
 	private final String name;
 

@@ -27,7 +27,7 @@ public enum DotBuff {
 	//	SMN_Bio(SMN, "Bio/II/III", 0xb3L, 0xbdL, 0x4beL),
 //	SMN_Miasma(SMN, "Miasma/II/III", 0xb4L, 0xbcL, 0x4bfL),
 	WHM_Aero(WHM, "Aero/II/III/Dia", 0x8fL, 0x90L, 0x31eL, 0x74fL),
-	SGE_Dosis(SGE, "Dosis", 2614L, 2615L, 2616L),
+	SGE_Dosis(SGE, "Dosis", 2614L, 2615L, 2616L, 3897L),
 	RPR_Death(RPR, "Death's Design", 2586L),
 	// Using ADV instead of null is kind of a hack but works
 	ASS_DotAction(ADV, "Spirit Dart", 0xD1FL);

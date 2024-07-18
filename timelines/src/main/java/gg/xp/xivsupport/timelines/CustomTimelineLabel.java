@@ -21,6 +21,8 @@ public class CustomTimelineLabel implements CustomTimelineItem {
 	public double time;
 	@JsonProperty("name")
 	public @Nullable String name;
+	@JsonProperty("importSource")
+	public @Nullable String importSource;
 
 	public static CustomTimelineLabel overrideFor(TimelineEntry item) {
 		if (!item.isLabel()) {
@@ -36,6 +38,11 @@ public class CustomTimelineLabel implements CustomTimelineItem {
 	@Override
 	public boolean isLabel() {
 		return true;
+	}
+
+	@Override
+	public @Nullable EventSyncController eventSyncController() {
+		return null;
 	}
 
 	@Override
@@ -106,5 +113,16 @@ public class CustomTimelineLabel implements CustomTimelineItem {
 		out.name = other.name() == null ? "New Label" : (other.name() + " copy");
 		out.time = other.time();
 		return out;
+	}
+
+	@Override
+	public void setImportSource(@Nullable String importSource) {
+		this.importSource = importSource;
+	}
+
+	@Nullable
+	@Override
+	public String getImportSource() {
+		return importSource;
 	}
 }

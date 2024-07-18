@@ -477,6 +477,10 @@ public final class StandardColumns {
 		return new CustomEditor<>(writer, s -> s.isEmpty() ? null : makeUrl(s));
 	}
 
+	public static <X, Y> TableCellEditor customStringEditor(BiConsumer<X, Y> writer, Function<Y, String> formatter, Function<String, Y> parser) {
+		return new CustomEditor<>(writer, parser, formatter);
+	}
+
 	private static URL makeUrl(String url) {
 		try {
 			return new URL(url);
@@ -501,16 +505,24 @@ public final class StandardColumns {
 		private static final long serialVersionUID = -3743763426515940614L;
 		private final BiConsumer<X, Y> writer;
 		private final Function<String, Y> parser;
+		private final Function<Y, String> formatter;
 
 		public CustomEditor(BiConsumer<X, Y> writer, Function<String, Y> parser) {
 			this.writer = writer;
 			this.parser = parser;
+			formatter = String::valueOf;
+		}
+
+		public CustomEditor(BiConsumer<X, Y> writer, Function<String, Y> parser, Function<Y, String> formatter) {
+			this.writer = writer;
+			this.parser = parser;
+			this.formatter = formatter;
 		}
 
 		@Override
 		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
 			CustomTableModel<X> model = (CustomTableModel<X>) table.getModel();
-			return new TextFieldWithValidation<>(parser, s -> writer.accept(model.getValueForRow(row), s), value == null ? "" : String.valueOf(value));
+			return new TextFieldWithValidation<>(parser, s -> writer.accept(model.getValueForRow(row), s), value == null ? "" : formatter.apply((Y) value));
 		}
 
 		@Override

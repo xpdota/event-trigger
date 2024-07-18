@@ -1,0 +1,241 @@
+### THE LUNAR SUBTERRANE
+# ZoneId: 1164
+
+hideall "--Reset--"
+hideall "--sync--"
+
+# .*is no longer sealed
+0.0 "--Reset--" SystemLogMessage { id: "7DE" } window 0,100000 jump 0
+
+#~~~~~~~~~~#
+# DARK ELF #
+#~~~~~~~~~~#
+
+# -p 87D9:1009
+# -ii  87E5 89B6 87DF
+
+# Cloven Crystal Square will be sealed off
+1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1153" } window 10000,0
+1006.0 "--sync--" StartsUsing { id: "87D9", source: "Dark Elf" } window 10,10
+1009.0 "Hexing Staves" Ability { id: "87D9", source: "Dark Elf" }
+1017.1 "Ruinous Confluence" Ability { id: "8985", source: "Dark Elf" }
+1027.1 "Shadowy Sigil" Ability { id: "87D[BC]", source: "Dark Elf" }
+1027.5 "Explosion" Ability { id: "87E3", source: "Dark Elf" }
+1034.2 "Hexing Staves" Ability { id: "87D9", source: "Dark Elf" }
+1044.3 "Sorcerous Shroud" Ability { id: "87DA", source: "Dark Elf" }
+1051.0 "Void Dark II (cast)" Ability { id: "87DD", source: "Dark Elf" }
+1056.6 "Void Dark II (spread)" Ability { id: "87E4", source: "Dark Elf" }
+1060.3 "Ruinous Confluence" Ability { id: "8985", source: "Dark Elf" }
+
+1067.2 "Hexing Staves" Ability { id: "87D9", source: "Dark Elf" }
+1077.3 "Sorcerous Shroud" Ability { id: "87DA", source: "Dark Elf" }
+1084.0 "Void Dark II (cast)" Ability { id: "87DD", source: "Dark Elf" }
+1091.6 "Void Dark II (spread)" Ability { id: "87E4", source: "Dark Elf" }
+1092.2 "Shadowy Sigil" Ability { id: "87D[BC]", source: "Dark Elf" }
+1092.8 "Explosion" Ability { id: "87E3", source: "Dark Elf" }
+1099.4 "Ruinous Confluence" Ability { id: "8985", source: "Dark Elf" }
+1109.6 "Staff Smite" Ability { id: "8984", source: "Dark Elf" }
+1120.6 "Abyssal Outburst" Ability { id: "87DE", source: "Dark Elf" }
+1129.7 "Abyssal Outburst" Ability { id: "87DE", source: "Dark Elf" }
+
+1140.4 "Hexing Staves" Ability { id: "87D9", source: "Dark Elf" } window 50,50 forcejump 1067.2
+
+# ALL ENCOUNTER ABILITIES
+# 368 Attack ye olde auto
+# 87D9 Hexing Staves cast to summon staves for Ruinous Hex
+# 87DA Sorcerous Shroud cast to hide staves
+# 87DB Shadowy Sigil pink triangle sigil cast
+# 87DC Shadowy Sigil blue/purple square sigil cast
+# 87DD Void Dark II self-targeted cast that gives people headmarkers for 87E4
+# 87DE Abyssal Outburst aoe
+# 87DF Ruinous Hex self-targeted ability from staves before 87E5
+# 87E3 Explosion casted damage for sigil explosions (either color)
+# 87E4 Void Dark II spread damage
+# 87E5 Ruinous Hex damage from hidden staves
+# 8984 Staff Smite non-cleaving tankbuster cast
+# 8985 Ruinous Confluence self-targeted cast at the same time as 89B6/87E5
+# 89B6 Ruinous Hex damage from first staves
+
+
+#~~~~~~~~~~~~~~~~~#
+# Damcyan Antlion #
+#~~~~~~~~~~~~~~~~~#
+
+# -p 87FD:2014.5
+# -ii 8C36 8803 8C1F 8801 8806
+
+# Note: Antlion March 8800 is into 5x Antlion March (8801) segments
+# Note: timing is the same, even once all towers have fallen
+
+# Bloodied Barbican will be sealed off
+2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1154" } window 10000,0
+2009.5 "--sync--" StartsUsing { id: "87FD", source: "Damcyan Antlion" } window 10,10
+2014.5 "Sandblast" Ability { id: "87FD", source: "Damcyan Antlion" }
+2023.6 "Landslip" Ability { id: "8802", source: "Damcyan Antlion" }
+
+2028.8 "--north--" Ability { id: "8808", source: "Damcyan Antlion" }
+2037.0 "Antlion March" Ability { id: "8800", source: "Damcyan Antlion" } duration 4.1
+2049.6 "Landslip" Ability { id: "8802", source: "Damcyan Antlion" }
+2052.9 "Towerfall 1" Ability { id: "8804", source: "Stone Pillar" }
+
+2056.7 "--middle--" Ability { id: "8808", source: "Damcyan Antlion" }
+2062.8 "Earthen Geyser" Ability { id: "8805", source: "Damcyan Antlion" }
+2073.9 "Pound Sand" Ability { id: "868B", source: "Damcyan Antlion" }
+2083.0 "Sandblast" Ability { id: "87FD", source: "Damcyan Antlion" }
+
+# note: we cooould just loop here
+2089.1 "--north--" Ability { id: "8808", source: "Damcyan Antlion" }
+2097.3 "Antlion March" Ability { id: "8800", source: "Damcyan Antlion" } duration 4.1
+2109.9 "Landslip" Ability { id: "8802", source: "Damcyan Antlion" }
+2113.2 "Towerfall 2" Ability { id: "8804", source: "Stone Pillar" }
+
+2117.0 "--middle--" Ability { id: "8808", source: "Damcyan Antlion" }
+2123.1 "Earthen Geyser" Ability { id: "8805", source: "Damcyan Antlion" }
+2134.2 "Pound Sand" Ability { id: "868B", source: "Damcyan Antlion" }
+2143.3 "Sandblast" Ability { id: "87FD", source: "Damcyan Antlion" }
+
+2149.4 "--north--" Ability { id: "8808", source: "Damcyan Antlion" }
+2157.6 "Antlion March" Ability { id: "8800", source: "Damcyan Antlion" } duration 4.1
+2170.2 "Landslip" Ability { id: "8802", source: "Damcyan Antlion" }
+2173.5 "Towerfall 3" Ability { id: "8804", source: "Stone Pillar" }
+
+2177.3 "--middle--" Ability { id: "8808", source: "Damcyan Antlion" }
+2183.4 "Earthen Geyser" Ability { id: "8805", source: "Damcyan Antlion" }
+2194.5 "Pound Sand" Ability { id: "868B", source: "Damcyan Antlion" }
+2203.6 "Sandblast" Ability { id: "87FD", source: "Damcyan Antlion" }
+
+2209.7 "--north--" Ability { id: "8808", source: "Damcyan Antlion" }
+2217.9 "Antlion March" Ability { id: "8800", source: "Damcyan Antlion" } duration 4.1
+2230.5 "Landslip" Ability { id: "8802", source: "Damcyan Antlion" }
+2233.8 "Towerfall 4" Ability { id: "8804", source: "Stone Pillar" }
+
+2237.6 "--middle--" Ability { id: "8808", source: "Damcyan Antlion" }
+2243.7 "Earthen Geyser" Ability { id: "8805", source: "Damcyan Antlion" }
+2254.8 "Pound Sand" Ability { id: "868B", source: "Damcyan Antlion" }
+2263.9 "Sandblast" Ability { id: "87FD", source: "Damcyan Antlion" }
+
+2270.0 "--north--" Ability { id: "8808", source: "Damcyan Antlion" }
+2278.2 "Antlion March" Ability { id: "8800", source: "Damcyan Antlion" } duration 4.1
+2290.8 "Landslip" Ability { id: "8802", source: "Damcyan Antlion" }
+
+2297.9 "--middle--" Ability { id: "8808", source: "Damcyan Antlion" }
+2304.0 "Earthen Geyser" Ability { id: "8805", source: "Damcyan Antlion" }
+2315.1 "Pound Sand" Ability { id: "868B", source: "Damcyan Antlion" }
+2324.2 "Sandblast" Ability { id: "87FD", source: "Damcyan Antlion" }
+
+2330.3 "--north--" Ability { id: "8808", source: "Damcyan Antlion" } window 50,50 forcejump 2270
+
+
+# ALL ENCOUNTER ABILITIES
+# 366 attack various background mobs doing autos
+# 367 attack various background mobs doing autos
+# 368 attack Antlion auto, but also various mobs in the background doing autos
+# 868B Pound Sand large targeted(?) circle after Earthen Geyser
+# 87FD Sandblast raidwide cast
+# 8800 Antlion March self-targeted cast
+# 8801 Antlion March damage for individual march segments
+# 8802 Landslip self-targeted cast for moving lines
+# 8803 Landslip cast and movement ability for each landslip line
+# 8804 Towerfall cast and damage for falling towers
+# 8805 Earthen Geyser self-targeted ability for stack
+# 8806 Earthen Geyser cast and damage for stack marker
+# 8808 --sync-- repositioning
+# 8C1F --sync-- Antlion March preview
+# 8C36 Aqua Vitae there's a Baron Knight-captain casting this in the background
+
+
+#~~~~~~~~~#
+# Durante #
+#~~~~~~~~~#
+
+# -p 88C3:3012.3
+# -ii 8CDA 88B2 88B6 8CD8 88C0 88B9 8C20 88B4
+
+# Carnelian Courtyard will be sealed off
+3000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1155" } window 10000,0
+3007.3 "--sync--" StartsUsing { id: "88C3", source: "Durante" } window 10,10
+3012.3 "Old Magic" Ability { id: "88C3", source: "Durante" }
+3014.4 "--middle--" Ability { id: "88AF", source: "Durante" }
+3022.7 "Duplicitous Battery" Ability { id: "8CD9", source: "Durante" } duration 2.5
+3035.5 "Forsaken Fount" Ability { id: "88BB", source: "Durante" }
+3044.3 "Explosion" Ability { id: "88BE", source: "Aetheric Charge" }
+
+3048.6 "--middle--" Ability { id: "88AF", source: "Durante" }
+3058.0 "Duplicitous Battery" Ability { id: "8CD9", source: "Durante" } duration 2.5
+3064.6 "Fallen Grace" Ability { id: "8C2A", source: "Durante" }
+
+3070.7 "--north--" Ability { id: "88AF", source: "Durante" }
+3076.1 "Forsaken Fount" Ability { id: "88BB", source: "Durante" }
+3081.2 "Contrapasso" Ability { id: "8C41", source: "Durante" }
+3082.1 "Splinter" Ability { id: "88BC", source: "Aetheric Charge" }
+3094.1 "Explosion" Ability { id: "88BD", source: "Durante" }
+
+3094.5 "--north--" Ability { id: "88AF", source: "Durante" }
+3099.8 "Forsaken Fount" Ability { id: "88BB", source: "Durante" }
+3104.9 "Contrapasso" Ability { id: "8C41", source: "Durante" }
+3105.8 "Splinter" Ability { id: "88BC", source: "Aetheric Charge" }
+3117.8 "Explosion" Ability { id: "88BD", source: "Durante" }
+3123.2 "Old Magic" Ability { id: "88C3", source: "Durante" }
+
+3128.4 "--middle--" Ability { id: "88AF", source: "Durante" }
+3130.4 "--sync--" Ability { id: "38FC", source: "Durante" }
+3135.4 "Antipodal Assault" Ability { id: "88BF", source: "Durante" }
+3142.9 "Hard Slash" Ability { id: "88C1", source: "Durante" }
+
+3145.2 "--middle--" Ability { id: "88AF", source: "Durante" }
+3154.4 "Twilight Phase" Ability { id: "8CD7", source: "Durante" }
+3165.6 "Dark Impact" Ability { id: "88BA", source: "Durante" }
+
+3172.3 "--middle--" Ability { id: "88AF", source: "Durante" }
+3180.6 "Death's Journey" Ability { id: "88B3", source: "Durante" }
+
+3185.7 "--north--" Ability { id: "88AF", source: "Durante" }
+3191.0 "Forsaken Fount" Ability { id: "88BB", source: "Durante" }
+3196.1 "Contrapasso" Ability { id: "8C41", source: "Durante" }
+3197.0 "Splinter" Ability { id: "88BC", source: "Aetheric Charge" }
+3209.0 "Explosion" Ability { id: "88BD", source: "Durante" }
+3212.3 "Old Magic" Ability { id: "88C3", source: "Durante" }
+
+3217.4 "--middle--" Ability { id: "88AF", source: "Durante" }
+3226.8 "Duplicitous Battery" Ability { id: "8CD9", source: "Durante" }
+3233.2 "Fallen Grace" Ability { id: "8C2A", source: "Durante" }
+
+3241.3 "--middle--" Ability { id: "88AF", source: "Durante" }
+3243.4 "--sync--" Ability { id: "38FC", source: "Durante" }
+3248.4 "Antipodal Assault" Ability { id: "88BF", source: "Durante" }
+3255.8 "Hard Slash" Ability { id: "88C1", source: "Durante" }
+
+3257.9 "--middle--" Ability { id: "88AF", source: "Durante" }
+3267.1 "Twilight Phase" Ability { id: "8CD7", source: "Durante" }
+3278.3 "Dark Impact" Ability { id: "88BA", source: "Durante" }
+3287.2 "Arcane Edge" Ability { id: "88C2", source: "Durante" }
+
+3295.4 "--middle--" Ability { id: "88AF", source: "Durante" }
+3303.7 "Death's Journey" Ability { id: "88B3", source: "Durante" } window 100,100 forcejump 3180.6
+
+# ALL ENCOUNTER ABILITIES
+# 366 attack
+# 38FC --sync-- ability on line stack target for Antipodal Assault
+# 88AF --sync-- repositioning
+# 88B2 Duplicitous Battery damage
+# 88B3 Death's Journey cast and damage for center circle during purple line pinwheel
+# 88B4 Death's Journey cast and damage for lines during purple line pinwheel
+# 88B6 Twilight Phase self-targeted ability
+# 88B9 Dark Impact cast and untargeted no damage(?) ability before shooting an orb at the ground
+# 88BA Dark Impact cast and damage for large circle
+# 88BB Forsaken Fount self-targeted cast to summon Aetheric Charge orbs
+# 88BC Splinter splitting ability from Aetheric Orb after Contrapasso
+# 88BD Explosion split Aetheric Orb circle cast and damage
+# 88BE Explosion unsplit Aetheric Orb circle cast and damage
+# 88BF Antipodal Assault self-targeted cast for line stack
+# 88C0 Antipodal Assault line stack damage (no cast)
+# 88C1 Hard Slash large cleave from wall after Antipodal Assault charge
+# 88C2 Arcane Edge cast and non-cleaving tankbuster
+# 88C3 Old Magic raidwide aoe
+# 8C20 --sync-- unnamed ability tied to Death's Journey 88B4
+# 8C2A Fallen Grace cast and spread damage
+# 8C41 Contrapasso cast and minor raidwide damage that causes Splinter
+# 8CD7 Twilight Phase self-targeted cast
+# 8CD8 Twilight Phase cast and damage for large purple ribs (go sides)
+# 8CD9 Duplicitous Battery self-targeted cast (8CDA happens during cast, then 88B2 damage)
+# 8CDA --sync-- Duplicitous Battery telegraph

@@ -96,15 +96,19 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 				event.setTimeSource(fakeTimeSource);
 			}
 			if (outgoingEvent != null) {
-//					outgoingEvent.setHappenedAt(zdt.toInstant());
-				context.accept(outgoingEvent);
+				if (outgoingEvent instanceof MultipleEvent me) {
+					me.events.forEach(context::accept);
+				}
+				else {
+					context.accept(outgoingEvent);
+				}
 			}
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			throw new ActLineParseException(event.getLogLine(), t);
 		}
 	}
 
-	// TODO: consider other ways of handling line number + timestamp
 	protected abstract @Nullable Event convert(FieldMapper<F> fields, int lineNumber, ZonedDateTime time);
 
 	protected EntityLookupMissBehavior entityLookupMissBehavior() {

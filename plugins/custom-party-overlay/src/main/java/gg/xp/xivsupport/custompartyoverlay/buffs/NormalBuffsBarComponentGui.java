@@ -22,7 +22,9 @@ public class NormalBuffsBarComponentGui extends JPanel {
 				new BooleanSettingGui(backend.getRtl(), "Right Align").getComponent(),
 				new IntSettingSpinner(backend.getxPadding(), "Spacing between buffs").getComponent(),
 				new BooleanSettingGui(backend.getShowFcBuffs(), "Show FC Buffs").getComponent(),
-				new BooleanSettingGui(backend.getShowFoodBuff(), "Show Food Buffs").getComponent()
+				new BooleanSettingGui(backend.getShowFoodBuff(), "Show Food Buffs").getComponent(),
+				new BooleanSettingGui(backend.getShowPreapps(), "Show Snapshotted Buffs (Beta)").getComponent(),
+				new IntSettingSpinner(backend.getPreappOpacity(), "Opacity for Snapshotted Buffs").getComponent()
 		);
 		timers.addAndRunListener(this::repaint);
 	}

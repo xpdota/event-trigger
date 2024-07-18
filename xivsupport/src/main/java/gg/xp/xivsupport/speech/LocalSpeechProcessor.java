@@ -7,12 +7,11 @@ import gg.xp.util.ArgParser;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
+import gg.xp.xivsupport.sys.Threading;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.StringTokenizer;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,12 +19,15 @@ public class LocalSpeechProcessor implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(LocalSpeechProcessor.class);
 
-	private static final ExecutorService exs = Executors.newSingleThreadExecutor(r -> {
+	private static final ExecutorService singleThreadSpeechProcessor = Executors.newSingleThreadExecutor(r -> {
 		Thread thread = new Thread(r);
 		thread.setName("SpeechThread");
 		thread.setDaemon(true);
 		return thread;
 	});
+	private static final ExecutorService multiThreadSpeechProcessor = Executors.newCachedThreadPool(
+			Threading.namedDaemonThreadFactory("SpeechThread"));
+
 //	 There's no way this is the best option, but the projects I found for Java -> MS Speech are all either
 //	 ancient, or are using the Azure API (not the local one) which requires API keys and all that.
 //	 Never mind, can probably just use ACT websocket for TTS.
@@ -45,7 +47,13 @@ public class LocalSpeechProcessor implements FilteredEventHandler {
 //	}
 
 	public void sayAsync(String text) {
-		exs.submit(() -> saySync(text));
+		if (blocking.get()) {
+			singleThreadSpeechProcessor.submit(() -> saySync(text));
+		}
+		else {
+			multiThreadSpeechProcessor.submit(() -> saySync(text));
+
+		}
 	}
 
 	public void saySync(String textUnsanitized) {
@@ -71,8 +79,8 @@ public class LocalSpeechProcessor implements FilteredEventHandler {
 				// TODO: replace this with something that's not terrible. Even just holding the PS open and communicating
 				// with pipes would probably make it a little more responsive.
 				process = Runtime.getRuntime().exec("powershell.exe Add-Type -AssemblyName System.speech; " +
-					                                    "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
-					                                    "$speak.Speak('" + text + "')");
+				                                    "$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
+				                                    "$speak.Speak('" + text + "')");
 			}
 			int exit = process.waitFor();
 			if (exit == 0) {
@@ -90,11 +98,13 @@ public class LocalSpeechProcessor implements FilteredEventHandler {
 	private final BooleanSetting enable;
 	private final BooleanSetting overrideExecutable;
 	private final StringSetting customExecutable;
+	private final BooleanSetting blocking;
 
 	public LocalSpeechProcessor(PersistenceProvider pers) {
-		this.enable = new BooleanSetting(pers, "fallback-local-tts.enable-tts", false);
-		this.overrideExecutable = new BooleanSetting(pers, "fallback-local-tts.override-executable", false);
-		this.customExecutable = new StringSetting(pers, "fallback-local-tts.custom-executable", "/usr/local/bin/mimic -voice ap -t $TEXT");
+		enable = new BooleanSetting(pers, "fallback-local-tts.enable-tts", false);
+		overrideExecutable = new BooleanSetting(pers, "fallback-local-tts.override-executable", false);
+		customExecutable = new StringSetting(pers, "fallback-local-tts.custom-executable", "/usr/local/bin/mimic -voice ap -t $TEXT");
+		blocking = new BooleanSetting(pers, "fallback-local-tts.blocking-mode", false);
 	}
 
 	// This is a fallback option
@@ -124,5 +134,9 @@ public class LocalSpeechProcessor implements FilteredEventHandler {
 
 	public StringSetting getCustomExecutable() {
 		return customExecutable;
+	}
+
+	public BooleanSetting getBlocking() {
+		return blocking;
 	}
 }

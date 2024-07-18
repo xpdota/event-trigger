@@ -29,7 +29,6 @@ public class PlayerStatusAdapter implements FeedHelperAdapter<PlayerStatusCallou
 			public void handle(EventContext context, BuffApplied event) {
 				if (event.getTarget().isThePlayer() && event.buffIdMatches(castIds)) {
 					context.accept(info.getHandlerFieldValue().getModified(event));
-					return;
 				}
 			}
 		};

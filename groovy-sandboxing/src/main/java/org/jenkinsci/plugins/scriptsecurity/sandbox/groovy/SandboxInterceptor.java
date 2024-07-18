@@ -42,7 +42,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
-import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.EncodingGroovyMethods;
 import org.codehaus.groovy.runtime.InvokerHelper;
@@ -78,7 +77,6 @@ final class SandboxInterceptor extends GroovyInterceptor {
 //        SwingGroovyMethods.class,
 //        XmlGroovyMethods.class,
         EncodingGroovyMethods.class,
-        DateGroovyMethods.class,
         ProcessGroovyMethods.class,
     };
 
@@ -214,7 +212,7 @@ final class SandboxInterceptor extends GroovyInterceptor {
             if (whitelist.permitsMethod(setPropertyMethod, receiver, propertyValueArgs)) {
                 return super.onSetProperty(invoker, receiver, property, value);
             } else if (rejector == null) {
-                rejector = () -> StaticWhitelist.rejectMethod(setPropertyMethod, receiver.getClass().getName() + "." + property);
+                rejector = () -> StaticWhitelist.rejectMethod(setPropertyMethod, receiver.getClass().getName() + '.' + property);
             }
         }
         final Field instanceField = GroovyCallSiteSelector.field(receiver, property);

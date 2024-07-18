@@ -75,7 +75,7 @@ public enum ArenaSector implements HasFriendlyName {
 	 * r e.g. NE, NW == north; NE, SE == south; NE, SW == null
 	 * <p>
 	 * null will also be returned if the input is invalid, e.g. if the list size was not 2,
-	 * or if one or more item was not an intercard.
+	 * or if one or more instance was not an intercard.
 	 *
 	 * @param quadrants The two quadrants
 	 * @return The adjacent cardinal, or null they are opposites, or if the input is invalid.
@@ -113,7 +113,7 @@ public enum ArenaSector implements HasFriendlyName {
 	 * r e.g. W, N == NW; S, E == SE; W, E == null
 	 * <p>
 	 * null will also be returned if the input is invalid, e.g. if the list size was not 2,
-	 * or if one or more item was not a cardinal.
+	 * or if one or more instance was not a cardinal.
 	 *
 	 * @param cardinals The two cardinals
 	 * @return The adjacent intercardinal, or null they are opposites, or if the input is invalid.
@@ -147,7 +147,7 @@ public enum ArenaSector implements HasFriendlyName {
 
 	/**
 	 * Like {@link #tryCombineTwoQuadrants(List)} (List)}, but returns a list. If they were combined, the list will
-	 * contain the single combined item. Otherwise, returns the original input.
+	 * contain the single combined instance. Otherwise, returns the original input.
 	 * @param quadrants The quadrants to combine.
 	 * @return          The original input if no combination possible, otherwise the combination.
 	 */

@@ -1,8 +1,7 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
-import gg.xp.xivdata.data.Job;
-import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.RawJobGaugeEvent;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.picocontainer.PicoContainer;
@@ -13,7 +12,7 @@ import java.time.ZonedDateTime;
 public class Line31Parser extends AbstractACTLineParser<Line31Parser.Fields> {
 
 	public Line31Parser(PicoContainer container) {
-		super(container,  31, Fields.class);
+		super(container, 31, Fields.class);
 	}
 
 	enum Fields {

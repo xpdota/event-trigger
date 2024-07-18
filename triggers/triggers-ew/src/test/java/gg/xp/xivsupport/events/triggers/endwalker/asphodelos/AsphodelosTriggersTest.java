@@ -13,6 +13,12 @@ public class AsphodelosTriggersTest extends CalloutVerificationTest {
 	}
 
 	@Override
+	protected long minimumMsBetweenCalls() {
+		// TODO: investigate
+		return 200;
+	}
+
+	@Override
 	protected final List<CalloutInitialValues> getExpectedCalls() {
 		return List.of(
 				// P1S

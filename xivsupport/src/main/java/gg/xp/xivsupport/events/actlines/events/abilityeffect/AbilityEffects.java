@@ -7,8 +7,18 @@ public final class AbilityEffects {
 	private AbilityEffects() {
 	}
 
-	// TODO: remove all null returns
-	public static @Nullable AbilityEffect of(long flags, long value) {
+	public static @Nullable AbilityEffect of(long flags, long value, AbilityEffectContext ctx) {
+		AbilityEffect ae = ofInner(flags, value);
+		if (ae instanceof ReflectFlagEffect) {
+			ctx.isReflect = true;
+		}
+		else if (ctx.isReflect && ae instanceof BaseDamageEffect de) {
+			return new ReflectedDamageEffect(flags, value, de);
+		}
+		return ae;
+	}
+
+	private static @Nullable AbilityEffect ofInner(long flags, long value) {
 		byte effectTypeByte;
 		byte severityByte;
 		byte healSeverityByte;
@@ -22,6 +32,13 @@ public final class AbilityEffects {
 		// TODO: it's unclear which of these need the "lots of damage" calculation applied - IDs that point to an
 		// ability or status will probably be safe for the forseeable future, since there's nowhere close to
 		// 65536 statuses.
+		// TODO: reflected/punishment damage (vengeance, etc).
+		// It appears to be the case that you get something like this (not necessarily adjacent, but always in this relative order):
+		// 1. Original damage
+		// 2. 1D|70000 (or 50000, not sure what the value actually means)
+		// 3. Reflected damage
+		// e.g.:
+		// 21|2023-08-07T18:41:02.2330000-07:00|1024ABCD|Name Here|4784|Sonic Boom|40011BC8|Electric Aether|356003|D0E0000|1D|50000|1B|4D560000|550003|AAAA000|1B|47848000|0|0|0|0|0|0|
 		switch (effectTypeByte) {
 			case 0:
 				// nothing
@@ -115,11 +132,19 @@ public final class AbilityEffects {
 			case 24:
 				return new AggroIncrease(flags, value, calcDamage(value));
 
+			case 29: //1D
+				// reflect
+				return new ReflectFlagEffect(flags, value);
+
 			// 1d,0x60000 = reflect?
 			case 27: //1B
 				// This seems to be on a lot of things that aren't involved in combos
 				// It's almost always either "1b" or "11b" for flags, and the value is ((abilityId << 16) + 0x8000)
 				// Not sure - seems to do "combo" as well as certain boss mechanics like "Subtract" from the math boss
+				// This is probably animation related. If the flags are just the ability ID, it's probably animation
+				// on the caster, while if there is a bit flipped just to the right of that (e.g. 4784 -> 47848000),
+				// then it's on the target?
+
 
 			case 32:
 				// Super cyclone did it
@@ -142,6 +167,7 @@ public final class AbilityEffects {
 				// Don't know - saw it on Superbolide
 				// Okay, not HP set - saw it on Machinist Hypercharge + other MCH abilities
 //					return (new CurrentHpSetEffect(calcDamage(value)));
+				// Also saw it on EW EX7's set-hp-to-one mechanic, so it could be?
 
 			default:
 				return new OtherEffect(flags, value);

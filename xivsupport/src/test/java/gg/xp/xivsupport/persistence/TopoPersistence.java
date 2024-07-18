@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+// TODO: delete test? these aren't intended to be persistent anymore
 public class TopoPersistence {
 
 	private static final Logger log = LoggerFactory.getLogger(TopoPersistence.class);
@@ -21,6 +22,7 @@ public class TopoPersistence {
 	void testTopoTogglePersistence() {
 		MutablePicoContainer pico = XivMain.testingMasterInit();
 		pico.getComponent(EventDistributor.class).acceptEvent(new InitEvent());
+		// TODO: change this
 		AutoEventDistributor auto = pico.getComponent(AutoEventDistributor.class);
 		Topology topTopo = auto.getTopology();
 		PersistenceProvider persistence = pico.getComponent(PersistenceProvider.class);

@@ -9,6 +9,7 @@ import gg.xp.xivsupport.groovy.GroovyScriptResult;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,6 +40,10 @@ public class GroovyScriptHolder {
 	private GroovyShell shell;
 
 	public GroovyScriptResult run() {
+		return run(ScriptSettingsControl.noop);
+	}
+
+	public GroovyScriptResult run(ScriptSettingsControl ssc) {
 		DisplayControl dc = new DisplayControl();
 		try {
 			if (shell == null) {
@@ -49,6 +54,9 @@ public class GroovyScriptHolder {
 				Script parsed = shell.parse(getScriptContent());
 				Binding binding = parsed.getBinding();
 				binding.setVariable("displayControl", dc);
+				if (ssc != null) {
+					binding.setVariable("scriptSettings", ssc);
+				}
 				result = parsed.run();
 			}
 			return lastResult = GroovyScriptResult.success(dc, result);
@@ -125,7 +133,7 @@ public class GroovyScriptHolder {
 		return scriptContent;
 	}
 
-	public void setScriptContent(String scriptContent) {
+	public void setScriptContent(@Language("groovy") String scriptContent) {
 		if (this.scriptContent != null) {
 			// Don't dirty on initial set
 			dirty = true;
@@ -154,7 +162,6 @@ public class GroovyScriptHolder {
 		this.startup = startup;
 		dirty = true;
 	}
-
 
 
 	public @Nullable File getFile() {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.actlines.parsers.FakeFflogsTimeSource;
@@ -69,7 +70,7 @@ public class FflogsImportSpec implements ImportSpec<Event> {
 
 	@Override
 	public void launch(EventIterator<Event> events) {
-		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		ReplayController replayController = new ReplayController(master, events, false);
 		pico.getComponent(PrimaryLogSource.class).setLogSource(KnownLogSource.FFLOGS);

@@ -18,7 +18,21 @@
         <launcherJar>./launcher-${project.version}.jar</launcherJar>
         <launcherJarRelativeToPom>./target/windows/launcher-${project.version}.jar</launcherJarRelativeToPom>
         <preCp>./userdata;./preload/*.jar;./deps/*.jar;./user/*.jar;${launcherJar}</preCp>
+        <skipWindowsPackaging>false</skipWindowsPackaging>
     </properties>
+    <profiles>
+        <profile>
+            <id>skipwin</id>
+            <activation>
+                <os>
+                    <family>!windows</family>
+                </os>
+            </activation>
+            <properties>
+                <skipWindowsPackaging>true</skipWindowsPackaging>
+            </properties>
+        </profile>
+    </profiles>
     <build>
         <plugins>
 
@@ -43,6 +57,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <attach>false</attach>
+                </configuration>
                 <executions>
                     <execution>
                         <id>zip-file-no-jre</id>
@@ -56,6 +73,7 @@
                             </descriptors>
                             <finalName>triggevent-win</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
+                            <skipAssembly>${skipWindowsPackaging}</skipAssembly>
                         </configuration>
                     </execution>
                     <execution>
@@ -139,6 +157,7 @@
                                     <directory>${java.home}</directory>
                                 </resource>
                             </resources>
+                            <skip>${skipWindowsPackaging}</skip>
 
                         </configuration>
                     </execution>
@@ -331,6 +350,10 @@
         <dependency>
             <groupId>gg.xp</groupId>
             <artifactId>triggers-ew</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>gg.xp</groupId>
+            <artifactId>triggers-dt</artifactId>
         </dependency>
         <dependency>
             <groupId>gg.xp</groupId>

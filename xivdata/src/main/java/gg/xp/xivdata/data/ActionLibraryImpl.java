@@ -168,7 +168,8 @@ public class ActionLibraryImpl {
 			case 465 -> 45;
 
 
-			default -> -1;
+			// Just assume some kind of default
+			default -> 30;
 		};
 		return new ActionInfo(id, name, imageId, cd, maxCharges, categoryRaw.intern(), isPlayerAbility, recast, castType, effectRange, xAxisModifier, coneAngle);
 	}

@@ -12,6 +12,7 @@ import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.DutyPluginTab;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tabs.SmartTabbedPane;
+import gg.xp.xivsupport.gui.util.GridBagHelper;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.models.groupmodels.PsMarkerGroup;
 import gg.xp.xivsupport.models.groupmodels.TwoGroupsOfFour;
@@ -145,12 +146,28 @@ public class OmegaUltimateGroupPrioGui implements DutyPluginTab {
 			panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 			omegaSettings.setAlignmentX(0);
 			panel.add(omegaSettings);
-			JPanel firstSetDelay = new IntSettingSpinner(backend.getOmegaFirstSetDelay(), "First Set Delay").getComponent();
-			firstSetDelay.setAlignmentX(0);
-			panel.add(firstSetDelay);
-			JPanel secondSetDelay = new IntSettingSpinner(backend.getOmegaSecondSetDelay(), "Second Set Delay").getComponent();
-			secondSetDelay.setAlignmentX(0);
-			panel.add(secondSetDelay);
+			JPanel moreSettingsPanel = new JPanel(new GridBagLayout());
+			GridBagConstraints gbc = new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 5, 0);
+			GridBagHelper gbh = new GridBagHelper(moreSettingsPanel, gbc);
+			{
+				JCheckBox firstSetEnabled = new BooleanSettingGui(backend.getOmegaAmFirstSetEnable(), "First Set Automarker").getComponent();
+				firstSetEnabled.setAlignmentX(0);
+				moreSettingsPanel.add(firstSetEnabled);
+				JPanel firstSetDelay = new IntSettingSpinner(backend.getOmegaFirstSetDelay(), "First Set Delay").getComponent();
+				firstSetDelay.setAlignmentX(0);
+				gbh.addRowWithRightPadding(firstSetEnabled, firstSetDelay, Box.createHorizontalGlue());
+			}
+			{
+				JCheckBox secondSetEnabled = new BooleanSettingGui(backend.getOmegaAmSecondSetEnable(), "Second Set Automarker").getComponent();
+				secondSetEnabled.setAlignmentX(0);
+				moreSettingsPanel.add(secondSetEnabled);
+				JPanel secondSetDelay = new IntSettingSpinner(backend.getOmegaSecondSetDelay(), "Second Set Delay").getComponent();
+				secondSetDelay.setAlignmentX(0);
+				moreSettingsPanel.add(secondSetDelay);
+				gbh.addRowWithRightPadding(secondSetEnabled, secondSetDelay, Box.createHorizontalGlue());
+			}
+			moreSettingsPanel.setAlignmentX(0);
+			panel.add(moreSettingsPanel);
 			tabs.addTab("Omega", makeAmPanel(new BooleanSettingHidingPanel(backend.getOmegaAmEnable(), "Omega Automark", panel, true), backend.getOmegaPsPrio()));
 		}
 		outer.add(tabs, BorderLayout.CENTER);

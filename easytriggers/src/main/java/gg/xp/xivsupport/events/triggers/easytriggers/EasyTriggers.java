@@ -14,6 +14,7 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
@@ -36,10 +37,15 @@ import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
+import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
+import gg.xp.xivsupport.events.misc.NpcYellEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullEndedEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.CountdownCanceledEvent;
+import gg.xp.xivsupport.events.state.combatstate.CountdownStartedEvent;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.AutoMarkTargetAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
@@ -50,6 +56,8 @@ import gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCallou
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.GroovyAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.SoundAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitBuffDurationAction;
+import gg.xp.xivsupport.events.triggers.easytriggers.actions.WaitCastDurationAction;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.ConditionalActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.GroovyActionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.gui.SoundActionEditor;
@@ -58,6 +66,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityNameFilte
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineRegexFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ChatLineTypeFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DurationFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DutyCalloutFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EntityType;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerAbsoluteIdFilter;
@@ -65,6 +74,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerRelati
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HitSeverityFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineNumberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.NpcYellIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.OrFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.PlayerHasStatusFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.RefireFilter;
@@ -100,6 +110,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
@@ -107,6 +118,7 @@ import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
+import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -384,6 +396,26 @@ public final class EasyTriggers {
 			new EventDescriptionImpl<>(PullEndedEvent.class,
 					"A pull has ended",
 					"Pull Ended",
+					List.of()),
+			new EventDescriptionImpl<>(VictoryEvent.class,
+					"The duty was successfully completed",
+					"Victory!",
+					List.of()),
+			new EventDescriptionImpl<>(WipeEvent.class,
+					"Party wipe",
+					"Wipe",
+					List.of()),
+			new EventDescriptionImpl<>(NpcYellEvent.class,
+					"NPC Yell (Nael Quotes, etc)",
+					"{event.yell.text()}",
+					List.of(NpcYellIdFilter::new)),
+			new EventDescriptionImpl<>(CountdownStartedEvent.class,
+					"Countdown Started",
+					"{event.duration.toSeconds()}",
+					List.of()),
+			new EventDescriptionImpl<>(CountdownCanceledEvent.class,
+					"Countdown Canceled",
+					"Canceled",
 					List.of())
 	));
 
@@ -395,6 +427,7 @@ public final class EasyTriggers {
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
 	private final List<ConditionDescription<?, ?>> conditions = new ArrayList<>(List.of(
+			new ConditionDescription<>(DutyCalloutFilter.class, ProcessedCalloutEvent.class, "Trigger from Existing Callout", DutyCalloutFilter::new, this::generic),
 			new ConditionDescription<>(RefireFilter.class, Event.class, "Refire Suppression", RefireFilter::new, this::generic),
 			new ConditionDescription<>(AbilityIdFilter.class, HasAbility.class, "Ability ID", AbilityIdFilter::new, this::generic),
 			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, this::generic),
@@ -423,16 +456,20 @@ public final class EasyTriggers {
 			new ConditionDescription<>(ChatLineTypeFilter.class, ChatLineEvent.class, "Chat Line Number", ChatLineTypeFilter::new, this::generic),
 			new ConditionDescription<>(HitSeverityFilter.class, HasEffects.class, "Hit Severity (Crit/Direct Hit)", HitSeverityFilter::new, this::generic),
 			new ConditionDescription<>(TargetabilityChangeFilter.class, TargetabilityUpdate.class, "Combatant becomes (un)targetable", TargetabilityChangeFilter::new, this::generic),
+			new ConditionDescription<>(NpcYellIdFilter.class, NpcYellEvent.class, "NPC Yell ID", NpcYellIdFilter::new, this::generic),
 			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, b)),
 			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic)
 	));
 
+	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
 	private final List<ActionDescription<?, ?>> actions = new ArrayList<>(List.of(
 			new ActionDescription<>(CalloutAction.class, Event.class, "Basic TTS/Text Callout", CalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
 			new ActionDescription<>(DurationBasedCalloutAction.class, HasDuration.class, "Duration-Based TTS/Text Callout", DurationBasedCalloutAction::new, (callout, trigger) -> new CalloutActionPanel(callout)),
 			new ActionDescription<>(AutoMarkTargetAction.class, HasTargetEntity.class, "Mark The Target", () -> new AutoMarkTargetAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(ClearAllMarksAction.class, Event.class, "Clear All Marks", () -> new ClearAllMarksAction(inject(GlobalUiRegistry.class)), this::generic),
 			new ActionDescription<>(WaitAction.class, BaseEvent.class, "Wait a fixed time", WaitAction::new, this::generic),
+			new ActionDescription<>(WaitBuffDurationAction.class, BuffApplied.class, "Wait until buff duration falls below a specified amount", () -> new WaitBuffDurationAction(inject(StatusEffectRepository.class)), this::generic),
+			new ActionDescription<>(WaitCastDurationAction.class, AbilityCastStart.class, "Wait until cast duration falls below a specified amount", WaitCastDurationAction::new, this::generic),
 			new ActionDescription<>(GroovyAction.class, Event.class, "Custom script action", () -> new GroovyAction(inject(GroovyManager.class)), (action, trigger) -> new GroovyActionEditor<>(action, trigger)),
 //			(ActionDescription<ConditionalAction<BaseEvent>, BaseEvent>) new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)),
 			new ActionDescription<>(SoundAction.class, Event.class, "Play Sound", SoundAction::new, (action, trigger) -> new SoundActionEditor(inject(SoundFilesManager.class), inject(SoundFileTab.class), action)),
@@ -566,6 +603,20 @@ public final class EasyTriggers {
 		}
 		else if (event instanceof InitEvent || event instanceof EasyTriggersInitEvent) {
 			return getEventDescription(EasyTriggersInitEvent.class).newEmptyInst(null);
+		}
+		else if (event instanceof NpcYellEvent yellEvent) {
+			EasyTrigger<NpcYellEvent> trigger = getEventDescription(NpcYellEvent.class).newEmptyInst(null);
+			NpcYellIdFilter filter = new NpcYellIdFilter();
+			filter.operator = NumericOperator.EQ;
+			filter.expected = yellEvent.getYell().id();
+			trigger.addCondition(filter);
+			return trigger;
+		}
+		else if (event instanceof CountdownStartedEvent) {
+			return getEventDescription(CountdownStartedEvent.class).newDefaultInst();
+		}
+		else if (event instanceof CountdownCanceledEvent) {
+			return getEventDescription(CountdownCanceledEvent.class).newDefaultInst();
 		}
 		return null;
 	}

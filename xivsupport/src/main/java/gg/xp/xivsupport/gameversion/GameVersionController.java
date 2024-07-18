@@ -9,7 +9,11 @@ public class GameVersionController {
 
 	@HandleEvents(order = -1000)
 	public void setVersion(EventContext context, GameVersionEvent event) {
-		version = event.getVersion();
+		setVersion(event.getVersion());
+	}
+
+	void setVersion(GameVersion version) {
+		this.version = version;
 	}
 
 	public GameVersion getVersion() {

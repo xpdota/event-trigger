@@ -5,6 +5,8 @@ import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivdata.data.ActionLibrary;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
+import javassist.runtime.Desc;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
@@ -15,12 +17,13 @@ import java.time.Duration;
  */
 public class AbilityCastStart extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasDuration {
 	@Serial
-	private static final long serialVersionUID = -8156458501097189982L;
+	private static final long serialVersionUID = -8156458501097189980L;
 	private final XivAbility ability;
 	private final XivCombatant source;
 	private final XivCombatant target;
 	private final Duration duration;
 	private final Duration unmodifiedCastDuration;
+	private @Nullable DescribesCastLocation<AbilityCastStart> locationInfo;
 
 	public AbilityCastStart(XivAbility ability, XivCombatant source, XivCombatant target, double duration) {
 		this.ability = ability;
@@ -58,6 +61,14 @@ public class AbilityCastStart extends BaseEvent implements HasSourceEntity, HasT
 
 	public @Nullable Duration getUnmodifiedCastDuration() {
 		return unmodifiedCastDuration;
+	}
+
+	public @Nullable DescribesCastLocation<AbilityCastStart> getLocationInfo() {
+		return locationInfo;
+	}
+
+	public void setLocationInfo(@NotNull DescribesCastLocation<AbilityCastStart> locationInfo) {
+		this.locationInfo = locationInfo;
 	}
 
 	@Override

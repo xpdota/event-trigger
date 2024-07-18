@@ -1,7 +1,10 @@
 package gg.xp.xivsupport.timelines;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.CurrentTimeSource;
+import gg.xp.reevent.events.Event;
 import gg.xp.xivdata.data.*;
+import gg.xp.xivdata.util.ArrayBackedMap;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
@@ -13,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -23,30 +25,99 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public final class TimelineProcessor {
 
 	// TODO: we can use in/out of combat now
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineProcessor.class);
+	/**
+	 * For better performance, the timeline processor pre-computes a list of possible syncs within a window
+	 * of CHUNK_SIZE millis. e.g. for CHUNK_SIZE = 50,
+	 * chunk 5 would be any lines which have a sync window that overaps with [250, 300]
+	 * So then if our current time is 269 and we need to sync, we know we can just look at that specific window.
+	 * Timeline syncs are actually fairly slow, so this performance optimization has a big impact (timelines used to
+	 * be the single slowest event handler other than WS-related things). They're still not fast, but this removes
+	 * about ~40% of the overhead.
+	 */
+	private static final int CHUNK_SIZE = 50;
+	/**
+	 * Timeline entries which are enabled and not filtered out due to job restrictions and such
+	 */
 	private final List<TimelineEntry> entries;
+	/**
+	 * The timeline manager
+	 */
 	private final TimelineManager manager;
+	/**
+	 * All timeline entries
+	 */
 	private final List<TimelineEntry> rawEntries;
+	/**
+	 * Mapping of timeline labels to their times
+	 */
 	private final Map<String, Double> labels = new HashMap<>();
+	/**
+	 * Setting for how far in the future to display entries
+	 */
 	private final IntSetting secondsFuture;
+	/**
+	 * Setting for how far in the past to display entries
+	 */
 	private final IntSetting secondsPast;
+	/**
+	 * Debug mode - always shows current sync, shows hidden entries
+	 */
 	private final BooleanSetting debugMode;
+	/**
+	 * Show overlay pre-pull
+	 */
 	private final BooleanSetting showPrePull;
+	/**
+	 * Refresh loop for processing timeline
+	 */
 	private final RefreshLoop<TimelineProcessor> refresher;
+	/**
+	 * Function for resolving labels to a time (or null, if nothing matches)
+	 */
 	private final LabelResolver resolver;
+	/**
+	 * Time source
+	 */
 	private final CurrentTimeSource timeSource;
+	/**
+	 * See CHUNK_SIZE
+	 */
+	private final Map<Integer, List<TimelineEntry>> subSyncChunks;
+	/**
+	 * Event types that event-based syncs have chosen. This is only the directly chosen base classes, not subclasses
+	 * of such.
+	 */
+	private final Set<Class<? extends Event>> directlyChosenEvents;
+	/**
+	 * When we encounter an event, we query directlyChosenEvents to see if it is one of those, or a subclass of such.
+	 * This acts as our cache.
+	 */
+	private final Map<Class<? extends Event>, Boolean> effectiveChosenEvents;
+	/**
+	 * True if any entries in this timeline require a classic regex sync. Otherwise, we can save time by skipping that.
+	 */
+	private final boolean useClassicSync;
+
+	/**
+	 * The most recent sync (if any)
+	 */
 	private @Nullable TimelineSync lastSync;
 
 
@@ -70,36 +141,54 @@ public final class TimelineProcessor {
 		};
 		refresher = new RefreshLoop<>("TimelineRefresher", this, TimelineProcessor::handleTriggers, i -> 200L);
 		refresher.start();
+
+		List<TimelineEntry> syncEntries = this.entries.stream().filter(TimelineEntry::canSync).toList();
+		OptionalDouble maxTime = syncEntries.stream().mapToDouble(TimelineEntry::getMaxTime).max();
+		if (maxTime.isPresent()) {
+
+			Map<Integer, Set<TimelineEntry>> syncChunks = new HashMap<>();
+			syncEntries.forEach(entry -> {
+				int beginChunk = Math.max(0, (int) (entry.getMinTime() / CHUNK_SIZE));
+				int endChunk = Math.max(0, (int) (entry.getMaxTime() / CHUNK_SIZE));
+				IntStream.rangeClosed(beginChunk, endChunk)
+						.forEach(val -> syncChunks.computeIfAbsent(val, k -> new HashSet<>()).add(entry));
+			});
+			this.subSyncChunks = new ArrayBackedMap<>(syncChunks.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> new ArrayList<>(e.getValue()))));
+			this.directlyChosenEvents = syncEntries.stream().map(TimelineEntry::eventSyncType)
+					.filter(Objects::nonNull)
+					.collect(Collectors.toUnmodifiableSet());
+			this.useClassicSync = syncEntries.stream().anyMatch(entry -> entry.sync() != null);
+			if (this.useClassicSync) {
+				log.info("This timeline still uses classic regex syncs!");
+			}
+		}
+		else {
+			this.subSyncChunks = Collections.emptyMap();
+			this.directlyChosenEvents = Collections.emptySet();
+			this.useClassicSync = false;
+		}
+		this.effectiveChosenEvents = new HashMap<>();
+		this.directlyChosenEvents.forEach(evtype -> effectiveChosenEvents.put(evtype, true));
+
 	}
 
 	public static TimelineProcessor of(TimelineManager manager, InputStream file, List<? extends TimelineEntry> extra, Job playerJob, LanguageReplacements replacements) {
-		List<TimelineEntry> timelineEntries;
-		try {
-			timelineEntries = TimelineParser.parseMultiple(IOUtils.readLines(file, StandardCharsets.UTF_8));
-		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		List<TimelineEntry> timelineEntries = TimelineParser.parseMultiple(IOUtils.readLines(file, StandardCharsets.UTF_8));
 		List<TimelineEntry> all = new ArrayList<>(timelineEntries);
 		for (int i = 0; i < all.size(); i++) {
 			TimelineEntry currentItem = all.get(i);
 			final String originalName = currentItem.name();
 			final String originalSync = currentItem.sync() == null ? null : currentItem.sync().pattern();
-			String newName = originalName;
-			String newSync = originalSync;
-			if (originalName != null) {
-				for (var textReplacement : replacements.replaceText().entrySet()) {
-					newName = textReplacement.getKey().matcher(newName).replaceAll(textReplacement.getValue());
-				}
+			final EventSyncController originalEsc = currentItem.eventSyncController();
+			final String newName = originalName == null ? null : replacements.doNameReplacement(originalName);
+			final String newSync = originalSync == null ? null : replacements.doSyncReplacement(originalSync);
+			EventSyncController newEsc = originalEsc;
+			if (originalEsc != null) {
+				newEsc = originalEsc.translateWith(replacements);
 			}
-			if (originalSync != null) {
-				for (var syncReplacement : replacements.replaceSync().entrySet()) {
-					newSync = syncReplacement.getKey().matcher(newSync).replaceAll(syncReplacement.getValue());
-				}
-			}
-			if (!Objects.equals(originalName, newName) || !Objects.equals(originalSync, newSync)) {
+			if (!Objects.equals(originalName, newName) || !Objects.equals(originalSync, newSync) || !Objects.equals(originalEsc, newEsc)) {
 				Pattern newSyncFinal = newSync == null ? null : Pattern.compile(newSync);
-				all.set(i, new TranslatedTextFileEntry(currentItem, newName, newSyncFinal));
+				all.set(i, new TranslatedTextFileEntry(currentItem, newName, newSyncFinal, newEsc));
 			}
 		}
 
@@ -125,7 +214,7 @@ public final class TimelineProcessor {
 	}
 
 	record LogLineSync(
-			ACTLogLineEvent line,
+			BaseEvent line,
 			double syncTo,
 			TimelineEntry timelineEntry
 	) implements TimelineSync {
@@ -164,14 +253,21 @@ public final class TimelineProcessor {
 		this.lastSync = lastSync;
 	}
 
-	public void processActLine(ACTLogLineEvent event) {
+
+	public void processEvent(BaseEvent event) {
 		// Skip spammy syncs
 		if (lastSync != null && lastSync.msSince() < 10) {
 			return;
 		}
-		// To save on processing time, ignore some events that will never be found in a timeline
-		int num = event.getLineNumber();
-		// Things that can be ignored:
+		Optional<TimelineEntry> newSync;
+		if (event instanceof ACTLogLineEvent actLine) {
+			if (!useClassicSync) {
+				return;
+			}
+
+			// To save on processing time, ignore some events that will never be found in a timeline
+			int num = actLine.getLineNumber();
+			// Things that can be ignored:
 		/*
 			1. Change Zone
 			2. Change Primary Player
@@ -184,20 +280,51 @@ public final class TimelineProcessor {
 			37. Action resolved (probably can ignore)
 			38. Status effect list
 			39. HP Update
-			200 and up. Only used by the ACT plugin itself for debug messages and such.
+			200 and up. Only used by the ACT plugin itself for debug messages and such, and some custom OP lines that
+				aren't relevant here, EXCEPT InCombat (260).
 		 */
-		if (num == 1 || num == 2 || num == 11 || num == 12 || num == 24 || num == 28 || num == 29 || num == 31 || num == 37 || num == 38 || num == 39 || num > 200) {
-			return;
+			if (num == 1 || num == 2 || num == 11 || num == 12 || num == 24 || num == 28 || num == 29 || num == 31 || num == 37 || num == 38 || num == 39 || (num > 200 && num != 260)) {
+				return;
+			}
+			// Ignore abilities that originate from players
+			if (num == 14 || num == 15 || num == 16) {
+				if (actLine.getRawFields()[2].startsWith("1")) {
+					return;
+				}
+			}
+			double timeNow = getEffectiveTime();
+			int chunk = (int) (timeNow / CHUNK_SIZE);
+			List<TimelineEntry> entries = subSyncChunks.get(chunk);
+			if (entries == null) {
+				return;
+			}
+			String emulatedActLogLine = actLine.getEmulatedActLogLine();
+			newSync = entries.stream().filter(entry -> entry.shouldSync(timeNow, emulatedActLogLine)).findFirst();
 		}
-		String emulatedActLogLine = event.getEmulatedActLogLine();
-		double timeNow = getEffectiveTime();
-		Optional<TimelineEntry> newSync = entries.stream().filter(entry -> entry.shouldSync(timeNow, emulatedActLogLine)).findFirst();
+		else {
+			if (!caresAboutEvent(event)) {
+				return;
+			}
+			double timeNow = getEffectiveTime();
+			int chunk = (int) (timeNow / CHUNK_SIZE);
+			List<TimelineEntry> entries = subSyncChunks.get(chunk);
+			if (entries == null) {
+				return;
+			}
+			newSync = entries.stream().filter(entry -> entry.shouldSync(timeNow, event)).findFirst();
+
+		}
 		newSync.ifPresent(rawTimelineEntry -> {
 			double timeToSyncTo = rawTimelineEntry.getSyncToTime(resolver);
 			TimelineSync newTsync = new LogLineSync(event, timeToSyncTo, rawTimelineEntry);
-			log.trace("New Sync: {} -> {} ({})", rawTimelineEntry, timeToSyncTo, emulatedActLogLine);
+			log.info("New Sync: {} -> {} ({})", rawTimelineEntry, timeToSyncTo, event);
 			setNewSync(newTsync);
 		});
+	}
+
+	private boolean caresAboutEvent(Event event) {
+		return effectiveChosenEvents.computeIfAbsent(event.getClass(),
+				t -> (directlyChosenEvents.stream().anyMatch(dce -> dce.isAssignableFrom(t))));
 	}
 
 	private void setNewSync(TimelineSync sync) {
@@ -208,7 +335,9 @@ public final class TimelineProcessor {
 
 		double delta = effectiveTimeAfter - effectiveTimeBefore;
 		log.info("New Sync: {}", sync);
-		log.info("Timeline jumped by {} ({} -> {})", delta, effectiveTimeBefore, effectiveTimeAfter);
+		if (Math.abs(delta) > 0.6) {
+			log.info("Timeline jumped by {} ({} -> {})", delta, effectiveTimeBefore, effectiveTimeAfter);
+		}
 		// Only reprocess timeline triggers if the sync changed our timing by more than a couple seconds (i.e.
 		// we want to know whether the sync was actually a jump/phase change/whatever, not just time skew).
 		if (firstSync || Math.abs(delta) > 1.0) {

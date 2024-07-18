@@ -2,6 +2,7 @@ package gg.xp.postnamazu.gui;
 
 import gg.xp.postnamazu.PnGameCommand;
 import gg.xp.postnamazu.PnMain;
+import gg.xp.postnamazu.PnMode;
 import gg.xp.postnamazu.PnStatusUpdatedEvent;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
@@ -12,8 +13,10 @@ import gg.xp.xivsupport.gui.TitleBorderPanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.persistence.gui.EnumSettingGui;
 import gg.xp.xivsupport.persistence.gui.HttpURISettingGui;
 import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
+import gg.xp.xivsupport.persistence.settings.EnumSetting;
 
 import javax.swing.*;
 import java.awt.*;
@@ -48,7 +51,10 @@ public class PnGui implements PluginTab {
 	@Override
 	public Component getTabContents() {
 		TitleBorderFullsizePanel outer = new TitleBorderFullsizePanel("PostNamazu");
+		EnumSetting<PnMode> modeSetting = backend.getModeSetting();
+		var modeSettingGui = new EnumSettingGui<>(modeSetting, "Mode", () -> true, true);
 		JPanel uriControl = new HttpURISettingGui(backend.getUriSetting(), "Base URI", false).getComponent();
+		modeSetting.addAndRunListener(() -> uriControl.setEnabled(modeSetting.get() == PnMode.HTTP));
 		JPanel testPanel;
 		JScrollPane scroll;
 		{
@@ -92,7 +98,7 @@ public class PnGui implements PluginTab {
 		}
 
 
-		GuiUtil.simpleTopDownLayout(outer, 400, uriControl, Box.createRigidArea(new Dimension(390, 5)), scroll, testPanel, amDelayPanel, cmdDelayPanel);
+		GuiUtil.simpleTopDownLayout(outer, 400, modeSettingGui.getComponent(), uriControl, Box.createRigidArea(new Dimension(390, 5)), scroll, testPanel, amDelayPanel, cmdDelayPanel);
 		outer.invalidate();
 
 		return outer;

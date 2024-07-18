@@ -7,8 +7,6 @@ import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
 import gg.xp.xivsupport.gui.map.omen.ActionOmenInfo;
 import gg.xp.xivsupport.gui.map.omen.OmenDisplayMode;
 import gg.xp.xivsupport.gui.map.omen.OmenInstance;
-import gg.xp.xivsupport.gui.map.omen.OmenLocationType;
-import gg.xp.xivsupport.gui.map.omen.OmenShape;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.renderers.HpBar;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
@@ -20,6 +18,7 @@ import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -62,6 +61,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private final MapDataController mdc;
 	private final EnumSetting<NameDisplayMode> nameDisp;
 	private final EnumSetting<OmenDisplayMode> omenDisp;
+	private final BooleanSetting displayHpBars;
+	private final BooleanSetting displayCastBars;
+	private final BooleanSetting displayIds;
 	private double zoomFactor = 1;
 	private volatile int curXpan;
 	private volatile int curYpan;
@@ -88,6 +90,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		this.mdc = mdc;
 		omenDisp = mapDisplayConfig.getOmenDisplayMode();
 		nameDisp = mapDisplayConfig.getNameDisplayMode();
+		displayHpBars = mapDisplayConfig.getHpBars();
+		displayCastBars = mapDisplayConfig.getCastBars();
+		displayIds = mapDisplayConfig.getIds();
 
 		setLayout(null);
 		setBackground(new Color(168, 153, 114));
@@ -664,40 +669,50 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					case HIDE -> {
 						nameLabel.setText("");
 					}
+//					case HIDE_MORE -> {
+//						nameLabel.setText("");
+//					}
 				}
 			}
 			else {
 				nameLabel.setText(cbt.getName());
 			}
-			if (castData == null || castData.getEstimatedTimeSinceExpiry().toMillis() > 5000) {
+			if (!displayCastBars.get() || castData == null || castData.getEstimatedTimeSinceExpiry().toMillis() > 5000) {
 				castBar.setData(null);
 			}
 			else {
 				castBar.setData(castData);
 			}
 
-			HitPoints hp = cbt.getHp();
-			long hpCurrent = hp == null ? -1 : hp.current();
-			long hpMax = hp == null ? -1 : hp.max();
-			long unresolved = mdc.unresolvedDamage(cbt);
-			// Ignore updates where nothing changed
-			if (hpCurrent == oldHpCurrent && hpMax == oldHpMax && unresolved == oldUnresolved) {
-				return;
-			}
-			oldHpCurrent = hpCurrent;
-			oldHpMax = hpMax;
-			oldUnresolved = unresolved;
-			if (hp == null) {
-				hpBar.setVisible(false);
-			}
-			else if (cbt.getType() == CombatantType.FAKE || hp.max() == 1 || hp.current() < 0) {
-				hpBar.setVisible(false);
+			idLabel.setVisible(displayIds.get());
+			
+			if (displayHpBars.get()) {
+				HitPoints hp = cbt.getHp();
+				long hpCurrent = hp == null ? -1 : hp.current();
+				long hpMax = hp == null ? -1 : hp.max();
+				long unresolved = mdc.unresolvedDamage(cbt);
+				// Ignore updates where nothing changed
+				if (hpCurrent == oldHpCurrent && hpMax == oldHpMax && unresolved == oldUnresolved && hpBar.isVisible()) {
+					return;
+				}
+				oldHpCurrent = hpCurrent;
+				oldHpMax = hpMax;
+				oldUnresolved = unresolved;
+				if (hp == null) {
+					hpBar.setVisible(false);
+				}
+				else if (cbt.getType() == CombatantType.FAKE || hp.max() == 1 || hp.current() < 0) {
+					hpBar.setVisible(false);
+				}
+				else {
+					hpBar.setVisible(true);
+					hpBar.setData(cbt, -1 * unresolved);
+				}
+				hpBar.revalidate();
 			}
 			else {
-				hpBar.setVisible(true);
-				hpBar.setData(cbt, -1 * unresolved);
+				hpBar.setVisible(false);
 			}
-			hpBar.revalidate();
 		}
 
 		private void formatComponent(XivCombatant cbt) {

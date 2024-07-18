@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.map.omen;
 
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
@@ -36,7 +37,18 @@ public class CastOmen implements OmenInstance {
 
 	@Override
 	public @Nullable Position omenPosition(Function<XivCombatant, Position> freshPosLookup) {
+		DescribesCastLocation<AbilityCastStart> locInfo = acs.getLocationInfo();
 		Position sourcePosSnapshot = source().getPos();
+		if (locInfo != null) {
+			Position pos = locInfo.getPos();
+			if (pos != null) {
+				return pos;
+			}
+			Double heading = locInfo.getHeadingOnly();
+			if (heading != null) {
+				return sourcePosSnapshot.facing(heading);
+			}
+		}
 		if (info.type().locationType() == OmenLocationType.CASTER) {
 			return sourcePosSnapshot;
 		}

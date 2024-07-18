@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
-import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
@@ -31,7 +30,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -64,8 +62,6 @@ public class TelestoMain implements FilteredEventHandler {
 		this.pls = pls;
 		try {
 			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://localhost:45678/"));
-			// TODO: Telesto bug....
-//			uriSetting = new HttpURISetting(pers, "telesto-support.uri", new URI("http://127.0.0.1:51323/"));
 			enablePartyList = new BooleanSetting(pers, "telesto-support.pull-party-list", true);
 			commandDelayBase = new IntSetting(pers, "telesto-support.base-cmd-delay", 100, 0, 5000);
 			commandDelayPlus = new IntSetting(pers, "telesto-support.plus-cmd-delay", 100, 0, 5000);
@@ -73,10 +69,10 @@ public class TelestoMain implements FilteredEventHandler {
 		catch (URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
-		refresher = new RefreshLoop<>("TelestoPartyRefresh", this, TelestoMain::refreshPartyList, tm -> getStatus() == TelestoStatus.GOOD ? 10_000L : 60_000L);
+		refresher = new RefreshLoop<>("TelestoPartyRefresh", this, TelestoMain::refreshPartyIfEnabled, tm -> getStatus() == TelestoStatus.GOOD ? 10_000L : 60_000L);
 	}
 
-	private void refreshPartyList() {
+	public void refreshPartyIfEnabled() {
 		if (enablePartyList.get()) {
 			master.pushEvent(makePartyMemberMsg());
 		}
@@ -110,9 +106,7 @@ public class TelestoMain implements FilteredEventHandler {
 
 	@HandleEvents
 	public void handlePartyChange(EventContext context, PartyChangeEvent pce) {
-		if (enablePartyList.get()) {
-			context.accept(makePartyMemberMsg());
-		}
+		refreshPartyIfEnabled();
 	}
 
 	private volatile ActorControlEvent lastAce;
@@ -128,17 +122,13 @@ public class TelestoMain implements FilteredEventHandler {
 	}
 
 	@HandleEvents
-	public void handlePartyChange(EventContext context, ZoneChangeEvent zce) {
-		if (enablePartyList.get()) {
-			context.accept(makePartyMemberMsg());
-		}
+	public void handleZoneChange(EventContext context, ZoneChangeEvent zce) {
+		refreshPartyIfEnabled();
 	}
 
 	@HandleEvents
-	public void handlePartyChange(EventContext context, MapChangeEvent mce) {
-		if (enablePartyList.get()) {
-			context.accept(makePartyMemberMsg());
-		}
+	public void handleMapChange(EventContext context, MapChangeEvent mce) {
+		refreshPartyIfEnabled();
 	}
 
 	private TelestoOutgoingMessage makePartyMemberMsg() {

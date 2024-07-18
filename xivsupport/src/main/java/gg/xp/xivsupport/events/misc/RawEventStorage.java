@@ -3,8 +3,6 @@ package gg.xp.xivsupport.events.misc;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.reevent.scan.LiveOnly;
-import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeOutEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
@@ -29,17 +27,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
@@ -65,7 +59,7 @@ public class RawEventStorage {
 	private final Object eventsPruneLock = new Object();
 	private final BucketList<Event> events = new BucketList<>(1 << 13);
 	private final BooleanSetting saveToDisk;
-	private final BlockingQueue<Event> eventSaveQueue = new LinkedBlockingQueue<>();
+	private final Queue<Event> eventSaveQueue = new ConcurrentLinkedQueue<>();
 	private boolean allowSave = true;
 
 	public RawEventStorage(PicoContainer container, PersistenceProvider persist, PrimaryLogSource pls) {
@@ -208,8 +202,8 @@ public class RawEventStorage {
 		// TODO: concurrency issues may cause a few events to be missed when creating one of these
 		return (List<X>) new ProxyForAppendOnlyList<>(eventSubTypeCache.computeIfAbsent(eventClass,
 				(cls) -> (List<Event>) getEvents().stream().filter(eventClass::isInstance)
-				.map(eventClass::cast)
-				.collect(Collectors.toList())));
+						.map(eventClass::cast)
+						.collect(Collectors.toList())));
 
 	}
 
@@ -220,7 +214,10 @@ public class RawEventStorage {
 	private void eventProcessingLoop() {
 		while (true) {
 			try {
-				processNextEvent();
+				boolean result = processNextEvent();
+				if (!result) {
+					Thread.sleep(500);
+				}
 			}
 			catch (Throwable t) {
 				log.error("Error processing event", t);
@@ -228,15 +225,15 @@ public class RawEventStorage {
 		}
 	}
 
-	private void processNextEvent() {
-		Event e = null;
-		try {
-			e = eventSaveQueue.take();
+	private boolean processNextEvent() {
+		Event e = eventSaveQueue.poll();
+		if (e == null) {
+			return false;
 		}
-		catch (InterruptedException ex) {
-			log.error("Interrupted", ex);
+		else {
+			processEvent(e);
+			return true;
 		}
-		processEvent(e);
 	}
 
 	private void processEvent(Event e) {

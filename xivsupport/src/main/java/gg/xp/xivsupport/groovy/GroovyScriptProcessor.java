@@ -19,7 +19,9 @@ import java.util.regex.Pattern;
 public class GroovyScriptProcessor {
 
 	private static final Logger log = LoggerFactory.getLogger(GroovyScriptProcessor.class);
+	// TODO: this *shouldn't* need to be static, but something is up with it
 	private static final Object interpLock = new Object();
+	// TODO: this should have {{ }} support like in CalloutProcessor
 	private static final Pattern replacer = Pattern.compile("\\{(.+?)}");
 	private final Map<String, Script> scriptCache = new ConcurrentHashMap<>();
 	private final GroovyManager groovyMgr;
@@ -27,7 +29,6 @@ public class GroovyScriptProcessor {
 	private final SingleValueReplacement svr;
 
 	private volatile GroovyShell interpreter;
-	// TODO: this *shouldn't* need to be static, but something is up with it
 
 	public GroovyScriptProcessor(GroovyManager groovyMgr,
 	                             GlobalCallReplacer gcr,

@@ -20,7 +20,7 @@ public class Line38Parser extends AbstractACTLineParser<Line38Parser.Fields> {
 	private final StatusEffectRepository buffs;
 
 	public Line38Parser(PicoContainer container, StatusEffectRepository buffs) {
-		super(container,  38, Fields.class);
+		super(container, 38, Fields.class);
 		this.buffs = buffs;
 	}
 

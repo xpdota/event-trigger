@@ -19,6 +19,17 @@ enum NetworkAbilityFields {
 	sequenceId,
 	targetIndex,
 	numberOfTargets;
+	// New fields (not currently used are):
+	/*
+	source.owner.id
+	source.owner.name
+	? (animation related?)
+	? (seems to == ability id?)
+	? (seems to == ability id?)
+	animation lock
+	orientation
+	?
+	 */
 
 	public static Event convert(FieldMapper<NetworkAbilityFields> fields) {
 		XivCombatant caster = fields.getEntity(casterId, casterName, casterCurHp, casterMaxHp, casterCurMp, casterMaxMp, casterX, casterY, casterZ, casterHeading);

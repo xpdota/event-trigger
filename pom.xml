@@ -17,7 +17,7 @@
         <!--        Reproducible builds - allows updater to not download stuff that didn't actually change-->
         <project.build.outputTimestamp>10</project.build.outputTimestamp>
         <surefire.threadcount>2</surefire.threadcount>
-        <jackson.version>2.14.1</jackson.version>
+        <jackson.version>2.16.0</jackson.version>
         <apache-http.version>4.5.14</apache-http.version>
     </properties>
     <packaging>pom</packaging>
@@ -28,7 +28,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.11.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -48,12 +48,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.6</version>
+                    <version>3.3.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.0.0-M7</version>
+                    <version>3.2.2</version>
                     <configuration>
                         <parallel>methods</parallel>
                         <threadCount>${surefire.threadcount}</threadCount>
@@ -126,22 +126,23 @@
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>7.7.1</version>
+                <!-- TODO Don't update - has issues -->
+                <version>7.8.0</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
-                <version>1.4.5</version>
+                <version>1.4.13</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>2.0.6</version>
+                <version>2.0.9</version>
             </dependency>
             <dependency>
                 <groupId>org.jetbrains</groupId>
                 <artifactId>annotations</artifactId>
-                <version>24.0.0</version>
+                <version>24.1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.reflections</groupId>
@@ -151,7 +152,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.12.0</version>
+                <version>3.14.0</version>
                 <scope>compile</scope>
             </dependency>
             <dependency>
@@ -167,7 +168,7 @@
             <dependency>
                 <groupId>org.java-websocket</groupId>
                 <artifactId>Java-WebSocket</artifactId>
-                <version>1.5.3</version>
+                <version>1.5.4</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -192,13 +193,13 @@
             <dependency>
                 <groupId>com.formdev</groupId>
                 <artifactId>flatlaf</artifactId>
-<!--                <version>1.6.5</version>-->
-                <version>2.6</version>
+                <!--                <version>1.6.5</version>-->
+                <version>3.2.5</version>
             </dependency>
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
+                <groupId>org.apache.groovy</groupId>
                 <artifactId>groovy</artifactId>
-                <version>3.0.14</version>
+                <version>5.0.0-alpha-2</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
@@ -213,12 +214,12 @@
             <dependency>
                 <groupId>com.opencsv</groupId>
                 <artifactId>opencsv</artifactId>
-                <version>5.7.1</version>
+                <version>5.9</version>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.11.0</version>
+                <version>2.15.1</version>
             </dependency>
             <!-- Internal deps -->
             <dependency>
@@ -229,6 +230,11 @@
             <dependency>
                 <groupId>gg.xp</groupId>
                 <artifactId>trigger-support</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>gg.xp</groupId>
+                <artifactId>triggers-dt</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

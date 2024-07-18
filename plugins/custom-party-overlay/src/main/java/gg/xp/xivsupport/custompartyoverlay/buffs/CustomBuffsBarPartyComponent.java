@@ -18,6 +18,7 @@ public class CustomBuffsBarPartyComponent extends BaseBuffsBarPartyComponent {
 
 	@Override
 	protected List<BuffApplied> getBuffsToDisplay(XivPlayerCharacter xpc) {
-		return buffRepo.filteredSortedStatusesOnTarget(xpc, ba -> config.isBuffAllowed(ba.getBuff().getId()));
+		return buffRepo.filteredSortedStatusesOnTarget(xpc, ba -> config.isBuffAllowed(ba.getBuff().getId()),
+				config.getShowPreapps().get());
 	}
 }

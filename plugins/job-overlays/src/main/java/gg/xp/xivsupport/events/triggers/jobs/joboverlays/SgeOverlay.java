@@ -49,13 +49,13 @@ public class SgeOverlay extends BaseJobOverlay {
 		this.cooldowns = cooldowns;
 		this.cdh = cdh;
 		this.gaugeState = gaugeState;
-		setPreferredSize(new Dimension(250, 100));
+		setPreferredSize(new Dimension(250, 120));
 		add(listRenderer);
 		listRenderer.setBounds(0, 5, 250, 50);
 		BaseCdTrackerTable tableHolder = new BaseCdTrackerTable(() -> croppedCds);
 		tableModel = tableHolder.getTableModel();
 		JTable table = tableHolder.getTable();
-		table.setBounds(0, 60, 250, 40);
+		table.setBounds(0, 60, 250, 60);
 		add(table);
 	}
 
@@ -160,14 +160,22 @@ public class SgeOverlay extends BaseJobOverlay {
 		else {
 			phlegmaVci = new VisualCdInfoMain(personalCd);
 		}
+		CooldownStatus psyche = cdh.getPersonalCd(Cooldown.Psyche);
+		VisualCdInfo psycheVci;
+		if (psyche == null) {
+			psycheVci = new VisualCdInfoMain(Cooldown.Psyche);
+		}
+		else {
+			psycheVci = new VisualCdInfoMain(psyche);
+		}
 		VisualCdInfo addersgallVci;
 		SgeGaugeEvent gauge = gaugeState.getLastUpdateOf(SgeGaugeEvent.class);
 		if (gauge != null) {
 			addersgallVci = new VisualCdInfoMain(cdesc, gauge, null, gauge.replenishedAt());
-			croppedCds = List.of(phlegmaVci, addersgallVci);
+			croppedCds = List.of(phlegmaVci, psycheVci, addersgallVci);
 		}
 		else {
-			croppedCds = Collections.singletonList(phlegmaVci);
+			croppedCds = List.of(phlegmaVci, psycheVci);
 		}
 
 	}

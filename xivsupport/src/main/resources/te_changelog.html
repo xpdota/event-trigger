@@ -1,5 +1,161 @@
 <html lang="en">
     <body style="margin: 5px 20px 5px 20px">
+        <h2>July 16, 2024</h2>
+        <ul>
+            <li>Game updates for 7.01.</li>
+        </ul>
+        <h2>July 15, 2024</h2>
+        <ul>
+            <li>Cleaned up events tab.</li>
+            <li>Revamped table details to better show which properties can be used in scripts.</li>
+        </ul>
+        <h2>July 13, 2024</h2>
+        <ul>
+            <li>More Ex1</li>
+            <li>More DT cooldown adjustments</li>
+        </ul>
+        <h2>July 11, 2024</h2>
+        <ul>
+            <li>Ex2 fixes</li>
+        </ul>
+        <h2>July 9, 2024</h2>
+        <ul>
+            <li>Add option to use PostNamazu's OverlayPlugin integration rather than a separate connection.</li>
+            <li>Improvements to Ex1.</li>
+            <li>Level 100 cooldown fixes.</li>
+        </ul>
+        <h2>July 5, 2024</h2>
+        <ul>
+            <li>Add 'Quick Filters' and custom quick filter support to events tab.</li>
+            <li>Add a couple quick filters.</li>
+            <li>Add ability to right click a callout from an easy trigger and jump to the trigger that caused it.</li>
+            <li>EX1 and EX2 triggers mostly complete.</li>
+        </ul>
+        <h2>July 2, 2024</h2>
+        <ul>
+            <li>Fix NIN cooldowns</li>
+            <li>Add PCT cooldowns</li>
+            <li>Add Eukrasian Dyskrasia DoT</li>
+            <li>Add toggle for overlays to hide when out of combat.</li>
+        </ul>
+        <h2>June 26, 2024</h2>
+        <ul>
+            <li>Game data updates for 7.0</li>
+            <li>No longer requires a restart when changing WebSocket URL</li>
+        </ul>
+        <h2>June 17, 2024</h2>
+        <ul>
+            <li>AnimationLockEvent implemented. Requires an appropriately new OverlayPlugin version.</li>
+            <li>Note: this is temporarily removed, as this data has moved from OverlayPlugin to the base ACT plugin.</li>
+        </ul>
+        <h2>Apr 5, 2024</h2>
+        <ul>
+            <li>Custom party overlay's buff bar and custom buff bar can now optionally display buffs that have
+                snapshotted on you/the party member but not yet applied. You can control how transparent you would
+                like them to be, and the timer will display as '...'.
+            </li>
+        </ul>
+        <h2>Mar 23, 2024</h2>
+        <ul>
+            <li>Game data updates for 6.58.</li>
+        </ul>
+        <h2>Mar 10, 2024</h2>
+        <ul>
+            <li>Support for OverlayPlugin's BattleTalk2 lines.</li>
+            <li>Add timeline support for BattleTalk2 and NpcYell.</li>
+        </ul>
+        <h2>Mar 7, 2024</h2>
+        <ul>
+            <li>Support for OverlayPlugin's NpcYell (Nael quotes, etc) and Countdown log lines.</li>
+        </ul>
+        <h2>Jan 16, 2024</h2>
+        <ul>
+            <li>Game data updates for 6.55.</li>
+        </ul>
+        <h2>Jan 12, 2024</h2>
+        <ul>
+            <li>Damage reflected back to an attacker is now differentiated with a '↩' symbol after the damage number.
+            </li>
+            <li>For addon module developers: fixed build issues when running on GitHub-supplied non-Windows runners.
+            </li>
+            <li>Ability to import/export full timeline customizations.</li>
+        </ul>
+        <h2>Dec 29, 2023</h2>
+        <ul>
+            <li>Added ability to add cooldowns to your timeline by importing a log and recording CD usages (<a
+                    href="https://github.com/xpdota/event-trigger/pull/471">see here</a>).
+            </li>
+            <li>Fixed AbilityCastStart timeline syncs not working right.</li>
+        </ul>
+        <h2>Dec 19, 2023</h2>
+        <ul>
+            <li>Edit for new timeline syncs.</li>
+            <li>Fixed a few UCoB quote triggers.</li>
+        </ul>
+        <h2>Dec 14, 2023</h2>
+        <ul>
+            <li>Support improved timeline syncs (<a href="https://github.com/quisquous/cactbot/pull/5939">details
+                here</a>).
+            </li>
+        </ul>
+        <h2>Dec 3, 2023</h2>
+        <ul>
+            <li>Upgrade from Groovy 3 to 5.</li>
+            <li>Removed deprecated legacy callouts view.</li>
+            <li>Backend updates.</li>
+        </ul>
+        <h2>Nov 27, 2023</h2>
+        <ul>
+            <li>Performance improvements.</li>
+            <li>Improved 'scroll to bottom' on tables.</li>
+        </ul>
+        <h2>Nov 6, 2023</h2>
+        <ul>
+            <li>When configuring callouts, in addition to the existing {expression} syntax, you can use double
+                braces, like {{ expression }}. This allows you to use braces within the expression.
+            </li>
+        </ul>
+        <h2>Nov 5, 2023</h2>
+        <ul>
+            <li>You can hide HP, cast bars, and IDs in the map tab settings.</li>
+        </ul>
+        <h2>Nov 3, 2023</h2>
+        <ul>
+            <li>Map tab can now show proper cast locations/angles (requires latest OverlayPlugin version).</li>
+        </ul>
+        <h2>Nov 1, 2023</h2>
+        <ul>
+            <li>The stats of the uploading player are read when importing a log from FFlogs.</li>
+            <li>6.51 game data updates.</li>
+            <li>Map tab will now work correctly if the game data has not been updated with new maps.</li>
+        </ul>
+        <h2>Oct 17, 2023</h2>
+        <ul>
+            <li>You can put
+                <pre style="display: inline">scriptSettings.requestRunOnStartup()</pre>
+                in a script to have it automatically request to be run on startup the first time it is run. This should
+                make it easier to share scripts that are intended to run on startup.
+            </li>
+            <li>Better options for managing callouts in Groovy scripted triggers: See <a
+                    href="https://triggevent.io/pages/groovy/Groovy-Introduction/#sequential-triggers">documentation
+                here</a>.
+            </li>
+            <li>Concurrency control for Sequential Triggers. See the <a
+                    href="https://triggevent.io/pages/docs/Sequential-Triggers/#concurrency-mode">the website</a> for
+                more info.
+            </li>
+            <li>Easy Triggers: New actions to wait for a buff/cast remaining duration to be below a certain time. Useful
+                for having a reminder of when a buff is about to expire.
+            </li>
+            <li>Easy Triggers: You can make an easy trigger that triggers off of an existing duty callout. Navigate
+                to the desired callout in the duties tab, and then click the new "More Actions" button.
+            </li>
+            <li>Some internal refactoring.</li>
+        </ul>
+        <h2>Oct 7, 2023</h2>
+        <ul>
+            <li>Initial EX7 triggers.</li>
+        </ul>
         <h2>Oct 2, 2023</h2>
         <ul>
             <li>Game data updates for 6.5.</li>
@@ -10,12 +166,14 @@
         </ul>
         <h2>July 7, 2023</h2>
         <ul>
-            <li>Improved custom TTS program support, now supports quotes to allow spaces in arguments.</li>
+            <li>Improved custom TTS program support, now supports quotes to allow spaces in arguments".</li>
             <li>Minor additions to P10S.</li>
         </ul>
         <h2>June 29, 2023</h2>
         <ul>
-            <li>Added option the party CD tracker to track enemy-targeted CDs (such as Chain or Mug) from out-of-party players.</li>
+            <li>Added option the party CD tracker to track enemy-targeted CDs (such as Chain or Mug) from out-of-party
+                players.
+            </li>
             <li>Added Chaotic Spring to DoT tracker.</li>
         </ul>
         <h2>June 22, 2023</h2>
@@ -30,7 +188,9 @@
         <h2>June 9, 2023</h2>
         <ul>
             <li>More Anabaseios triggers.</li>
-            <li>You can hover over the text of a Callout event to see more information, including variables and, for built-in triggers, where it originated.</li>
+            <li>You can hover over the text of a Callout event to see more information, including variables and, for
+                built-in triggers, where it originated.
+            </li>
         </ul>
         <h2>June 4, 2023</h2>
         <ul>
@@ -47,7 +207,9 @@
         </ul>
         <h2>May 31, 2023</h2>
         <ul>
-            <li>Added support for RSV lines - after zoning in or replaying a log, _rsv actions/buffs for that fight will show their true names instead.</li>
+            <li>Added support for RSV lines - after zoning in or replaying a log, _rsv actions/buffs for that fight will
+                show their true names instead.
+            </li>
             <li>Performance improvements under heavy load.</li>
             <li>More P9S and P10S triggers.</li>
         </ul>
@@ -99,7 +261,9 @@
         </ul>
         <h2>Apr 10, 2023</h2>
         <ul>
-            <li>Added a 'Conga' button to job prio (AM) GUIs - line up in a west-east conga line and click the button to set priority.</li>
+            <li>Added a 'Conga' button to job prio (AM) GUIs - line up in a west-east conga line and click the button to
+                set priority.
+            </li>
             <li>Added a 'check only' button on the updates tab.</li>
             <li>Minor improvements to how certain events are displayed in the events table.</li>
         </ul>
@@ -119,7 +283,9 @@
         <h2>Mar 30, 2023</h2>
         <ul>
             <li>Redesigned the front page, moved some things onto the new "Summary" tab.</li>
-            <li>Added theme switcher. There are still <i>a few</i> unintended interactions with overlays, but it works apart from that.</li>
+            <li>Added theme switcher. There are still <i>a few</i> unintended interactions with overlays, but it works
+                apart from that.
+            </li>
             <li>Made a discord server. Click the button in the top-right.</li>
         </ul>
         <h2>Mar 29, 2023</h2>

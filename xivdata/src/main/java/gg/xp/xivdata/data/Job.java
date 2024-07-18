@@ -55,7 +55,9 @@ public enum Job implements HasIconURL {
 	DNC(38, false, JobType.PRANGED, "Dancer"),
 	RPR(39, false, JobType.MELEE_DPS, "Reaper"),
 	//	SAG(40, false, JobType.HEALER, "The Cooler SCH");
-	SGE(40, false, JobType.HEALER, "Sage");
+	SGE(40, false, JobType.HEALER, "Sage"),
+	VPR(41, false, JobType.MELEE_DPS, "Viper"),
+	PCT(42, false, JobType.CASTER, "Pictomancer");
 
 	private static final Logger log = LoggerFactory.getLogger(Job.class);
 
@@ -78,9 +80,9 @@ public enum Job implements HasIconURL {
 	private static final Job[] sortOrderArray = {
 			PLD, GLA, WAR, MRD, DRK, GNB,
 			WHM, CNJ, SCH, AST, SGE,
-			MNK, PGL, DRG, LNC, NIN, ROG, SAM, RPR,
+			MNK, PGL, DRG, LNC, NIN, ROG, SAM, RPR, VPR,
 			BRD, ARC, MCH, DNC,
-			BLM, THM, SMN, ACN, RDM, BLU
+			BLM, THM, SMN, ACN, RDM, PCT, BLU,
 	};
 
 	static {

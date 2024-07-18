@@ -80,7 +80,11 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.picocontainer/picocontainer -->
+        <dependency>
+            <groupId>org.jdbi.jackson-contrib</groupId> <!-- Temporary group ID, this will change! -->
+            <artifactId>jackson-module-blackbird</artifactId>
+            <version>0.0.1</version>
+        </dependency>        <!-- https://mvnrepository.com/artifact/org.picocontainer/picocontainer -->
         <dependency>
             <groupId>org.picocontainer</groupId>
             <artifactId>picocontainer</artifactId>
@@ -124,7 +128,7 @@
         <!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.codehaus.groovy/groovy -->
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
+            <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
         </dependency>
         <dependency>
@@ -156,7 +160,7 @@
         <dependency>
             <groupId>com.fifesoft</groupId>
             <artifactId>rsyntaxtextarea</artifactId>
-            <version>3.3.2</version>
+            <version>3.3.4</version>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.fifesoft</groupId>-->

@@ -91,6 +91,9 @@ public enum OmenShape implements HasFriendlyName {
 			case RAIDWIDE -> {
 				sb.append(" Raidwide");
 			}
+			case CROSS -> {
+				sb.append(" Cross");
+			}
 			case UNKNOWN -> {
 				sb.append(" Unknown (").append(ai.castType()).append(", ").append(ai.xAxisModifier()).append(')');
 			}

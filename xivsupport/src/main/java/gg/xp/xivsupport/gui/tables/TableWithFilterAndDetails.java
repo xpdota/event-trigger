@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -134,7 +135,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			autoRefresh.setSelected(true);
 
 			stayAtBottom = new JCheckBox("Scroll to Bottom");
-			this.scroller = new AutoBottomScrollHelper(table, () -> stayAtBottom.setSelected(false));
+			this.scroller = new AutoBottomScrollHelper(table, stayAtBottom::setSelected);
 			scroller = this.scroller;
 			stayAtBottom.addItemListener(e -> ((AutoBottomScrollHelper) scroller).setAutoScrollEnabled(stayAtBottom.isSelected()));
 			stayAtBottom.setSelected(true);
@@ -182,7 +183,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		});
 		c.weighty = 1;
 
-		JTable detailsTable = new JTable(detailsModel);
+		JTable detailsTable = detailsModel.makeTable();
 		JScrollPane detailsScroller = new JScrollPane(detailsTable);
 		detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
 
@@ -342,7 +343,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			Integer offset = mainModel.getSelectedItemViewportOffsetIfVisible();
 			filterFully();
 			updateModel();
-			// Only scroll back to selected item if auto scroll is disabled
+			// Only scroll back to selected instance if auto scroll is disabled
 			if (scroller != null && !scroller.isAutoScrollEnabled() && offset != null) {
 				mainModel.setVisibleItemScrollOffset(offset);
 				log.info("Offset: {}", offset);
@@ -435,6 +436,15 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			setAppendOrPruneOnly(true);
 			this.fixedData = fixedData;
 			return this;
+		}
+
+		public TableWithFilterAndDetailsBuilder<X, D> apply(Consumer<? super TableWithFilterAndDetailsBuilder<X, D>> func) {
+			func.accept(this);
+			return this;
+		}
+
+		public TableWithFilterAndDetailsBuilder<X, D> transform(Function<? super TableWithFilterAndDetailsBuilder<X, D>, TableWithFilterAndDetailsBuilder<X, D>> func) {
+			return func.apply(this);
 		}
 	}
 

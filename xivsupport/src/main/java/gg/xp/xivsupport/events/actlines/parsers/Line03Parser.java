@@ -15,7 +15,7 @@ public class Line03Parser extends AbstractACTLineParser<Line03Parser.Fields> {
 	private static final Logger log = LoggerFactory.getLogger(Line03Parser.class);
 
 	public Line03Parser(PicoContainer container) {
-		super(container,  3, Fields.class);
+		super(container, 3, Fields.class);
 	}
 
 	enum Fields {
@@ -62,8 +62,9 @@ public class Line03Parser extends AbstractACTLineParser<Line03Parser.Fields> {
 							fields.getLong(Fields.bNpcNameId),
 							0,
 							fields.getHex(Fields.ownerId))
-					);
-		} catch (Throwable t) {
+			);
+		}
+		catch (Throwable t) {
 			log.warn("Error parsing full data from 03-line, falling back to barebones", t);
 			return new RawAddCombatantEvent(fields.getEntity(Fields.id, Fields.name));
 		}

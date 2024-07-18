@@ -33,6 +33,7 @@ public interface Event extends Serializable {
 		return false;
 	}
 
+	@Deprecated // Use Groovy methods instead
 	default Map<Field, Object> dumpFields() {
 		return Utils.dumpAllFields(this);
 	}

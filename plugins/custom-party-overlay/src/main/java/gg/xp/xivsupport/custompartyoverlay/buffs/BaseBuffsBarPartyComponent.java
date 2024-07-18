@@ -25,6 +25,7 @@ public abstract class BaseBuffsBarPartyComponent extends BasePartyListComponent 
 		bar.setEnableShadows(config.getShadows().get());
 		bar.setEnableTimers(config.getTimers().get());
 		bar.setRtl(config.getRtl().get());
+		bar.setPreappOpacity(config.getPreappOpacity().get() / 100.0f);
 		bar.reformat();
 	}
 

@@ -11,6 +11,7 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.components.RearrangeableEnumListSetting;
 import gg.xp.xivsupport.gui.components.RearrangeableList;
+import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.renderers.JobRenderer;
@@ -28,6 +29,7 @@ import java.util.List;
 public class PartyConfigTab extends TitleBorderFullsizePanel {
 	private static final Logger log = LoggerFactory.getLogger(PartyConfigTab.class);
 	private final CustomTableModel<XivPlayerCharacter> partyTableModel;
+	private final RefreshLoop<PartyConfigTab> refresh;
 
 	public PartyConfigTab(PicoContainer container) {
 		super("Party Sort");
@@ -119,14 +121,11 @@ public class PartyConfigTab extends TitleBorderFullsizePanel {
 			// TODO: this really shouldn't require a restart, I'm just being lazy
 //		resetButton.addActionListener(l -> JOptionPane.showMessageDialog(this, "Party Order Reset, Please Restart"));
 		});
+		refresh = new RefreshLoop<>("PartyTableRefresh", this, pct -> pct.partyTableModel.fullRefresh(), (item) -> 20_000L);
 	}
 
 	@HandleEvents(order = 20_000)
 	public void updatePartyList(EventContext context, XivStateRecalculatedEvent event) {
-		SwingUtilities.invokeLater(() -> {
-			if (partyTableModel != null) {
-				partyTableModel.fullRefresh();
-			}
-		});
+		refresh.refreshNow();
 	}
 }

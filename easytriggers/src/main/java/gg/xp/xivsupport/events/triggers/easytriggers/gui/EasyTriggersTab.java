@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.gui;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
@@ -11,10 +12,12 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.gui.GuiMain;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
+import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -40,6 +43,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext.SOURCE_EASY_TRIGGER_KEY;
+
 @ScanMe
 public class EasyTriggersTab implements PluginTab {
 
@@ -64,6 +69,12 @@ public class EasyTriggersTab implements PluginTab {
 				"Make Easy Trigger",
 				Event.class,
 				this::makeTriggerFromEvent));
+		rightClicks.addOption(CustomRightClickOption.forRow(
+				"Go To Easy Trigger",
+				Event.class,
+				this::trySelectTriggerFromCallout,
+				EasyTriggersTab::canSelectTriggerFromCallout
+		));
 		// TODO: good candidate for sub-menus
 //				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Make Easy Trigger", Event.class, Function.identity(), e -> {
 //					container.getComponent(EasyTrig)
@@ -280,11 +291,17 @@ public class EasyTriggersTab implements PluginTab {
 
 	private void addExisting(EasyTrigger<?> trigger) {
 		backend.addTrigger(trigger);
+		selectTrigger(trigger);
+	}
+
+	public void selectTrigger(EasyTrigger<?> trigger) {
 		SwingUtilities.invokeLater(() -> {
 			if (model != null) {
 				refresh();
-				model.setSelectedValue(trigger);
-				model.scrollToSelectedValue();
+				SwingUtilities.invokeLater(() -> {
+					model.setSelectedValue(trigger);
+					model.scrollToSelectedValue();
+				});
 			}
 		});
 	}
@@ -398,7 +415,17 @@ public class EasyTriggersTab implements PluginTab {
 			add(GuiUtil.labelFor("Event", eventTypeField), c);
 			c.gridx++;
 			add(eventTypeField, c);
-
+			c.gridy++;
+			c.gridx = 0;
+			JComboBox<SequentialTriggerConcurrencyMode> concModeSelector = new JComboBox<>(SequentialTriggerConcurrencyMode.values());
+			concModeSelector.setRenderer(new FriendlyNameListCellRenderer());
+			concModeSelector.setSelectedItem(trigger.getConcurrency());
+			concModeSelector.addItemListener(l -> {
+				trigger.setConcurrency((SequentialTriggerConcurrencyMode) concModeSelector.getSelectedItem());
+			});
+			add(GuiUtil.labelFor("Concurrency", concModeSelector), c);
+			c.gridx++;
+			add(concModeSelector, c);
 
 			c.gridx = 0;
 			c.gridy++;
@@ -483,12 +510,37 @@ public class EasyTriggersTab implements PluginTab {
 		}
 		else {
 			addExisting(newTrigger);
-			log.info("Bar");
 		}
 	}
 
 	public void bringToFront() {
-		log.info("Foo");
 		tabReg.activateItem(this);
+	}
+
+	private static boolean canSelectTriggerFromCallout(Event event) {
+		return getEasyTriggerFromCallout(event) != null;
+	}
+
+	private void trySelectTriggerFromCallout(Event event) {
+		EasyTrigger<?> et = getEasyTriggerFromCallout(event);
+		if (et != null) {
+			bringToFront();
+			this.selectTrigger(et);
+		}
+	}
+
+	private static @Nullable EasyTrigger<?> getEasyTriggerFromCallout(Event event) {
+		RawModifiedCallout<?> rawModified = event.getThisOrParentOfType(RawModifiedCallout.class);
+		if (rawModified == null) {
+			return null;
+		}
+		Object source = rawModified.getArguments().get(SOURCE_EASY_TRIGGER_KEY);
+		if (source instanceof EasyTrigger<?> et) {
+			return et;
+		}
+		else {
+			return null;
+		}
+
 	}
 }

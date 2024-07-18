@@ -1,19 +1,19 @@
 package gg.xp.xivsupport.cdsupport;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 @ScanMe
 public class CustomCooldownManager {
@@ -34,6 +34,10 @@ public class CustomCooldownManager {
 
 	public List<CustomCooldown> getCooldowns() {
 		return Collections.unmodifiableList(cds);
+	}
+
+	public List<ExtendedCooldownDescriptor> getAllCds() {
+		return Stream.concat(Arrays.stream(Cooldown.values()), getCooldowns().stream().map(CustomCooldown::buildCd)).toList();
 	}
 
 	public void addCooldown(CustomCooldown cooldown) {

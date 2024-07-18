@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffectContext;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffects;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.models.HitPoints;
@@ -279,11 +280,12 @@ public class FieldMapper<K extends Enum<K>> {
 			[12:26 PM] xp: that makes more sense, thanks
 			[12:29 PM] Ravahn: yea, exactly, there's spots for 8 effects on the source and target.  historically the first 4 were on target, last 4 on source, but SE changed that for status effects and added an 0x80 flag in byte 7 to indicate the effect is on the source.
 		 */
+		AbilityEffectContext ctx = new AbilityEffectContext();
 		ArrayList<AbilityEffect> out = new ArrayList<>(count);
 		for (int i = startIndex; i < startIndex + 2 * count; i += 2) {
 			long flags = getRawHex(i);
 			long value = getRawHex(i + 1);
-			AbilityEffect effect = AbilityEffects.of(flags, value);
+			AbilityEffect effect = AbilityEffects.of(flags, value, ctx);
 			if (effect != null) {
 				out.add(effect);
 			}

@@ -2,7 +2,6 @@ package gg.xp.reevent.scan;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.TypedEventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class AutoHandler implements TypedEventHandler<Event> {
 
 	private static final Logger log = LoggerFactory.getLogger(AutoHandler.class);
@@ -24,6 +24,7 @@ public class AutoHandler implements TypedEventHandler<Event> {
 	private final Class<?> clazz;
 	private final AutoHandlerConfig config;
 	private final boolean onlyInLive;
+	private final boolean compact;
 
 	private volatile boolean enabled = true;
 
@@ -43,23 +44,43 @@ public class AutoHandler implements TypedEventHandler<Event> {
 		Class<?> actualCls = clazzInstance.getClass();
 		String tmpMethodLabel = declaring.getSimpleName() + '.' + method.getName();
 		log.trace("Setting up method {}", tmpMethodLabel);
-		if (paramTypes.length != 2) {
-			throw new IllegalStateException("Error setting up method %s: wrong number of parameters (should be 2, but was %d)".formatted(tmpMethodLabel, paramTypes.length));
+		if (paramTypes.length == 1) {
+			if (!Event.class.isAssignableFrom(paramTypes[0])) {
+				throw new IllegalStateException("Error setting up method %s: method signature must be (EventContext, Event), but was (%s)".formatted(
+						tmpMethodLabel,
+						Arrays.stream(paramTypes).map(cls -> {
+							String cn = cls.getCanonicalName();
+							if (cn != null) {
+								return cn;
+							}
+							else {
+								return cls.toString();
+							}
+						}).collect(Collectors.joining(", "))));
+			}
+			this.eventClass = (Class<? extends Event>) paramTypes[0];
+			compact = true;
 		}
-		if (!EventContext.class.isAssignableFrom(paramTypes[0]) || !Event.class.isAssignableFrom(paramTypes[1])) {
-			throw new IllegalStateException("Error setting up method %s: method signature must be (EventContext, Event), but was (%s)".formatted(
-					tmpMethodLabel,
-					Arrays.stream(paramTypes).map(cls -> {
-						String cn = cls.getCanonicalName();
-						if (cn != null) {
-							return cn;
-						}
-						else {
-							return cls.toString();
-						}
-					}).collect(Collectors.joining(", "))));
+		else if (paramTypes.length == 2) {
+			if (!EventContext.class.isAssignableFrom(paramTypes[0]) || !Event.class.isAssignableFrom(paramTypes[1])) {
+				throw new IllegalStateException("Error setting up method %s: method signature must be (EventContext, Event), but was (%s)".formatted(
+						tmpMethodLabel,
+						Arrays.stream(paramTypes).map(cls -> {
+							String cn = cls.getCanonicalName();
+							if (cn != null) {
+								return cn;
+							}
+							else {
+								return cls.toString();
+							}
+						}).collect(Collectors.joining(", "))));
+			}
+			this.eventClass = (Class<? extends Event>) paramTypes[1];
+			compact = false;
 		}
-		this.eventClass = (Class<? extends Event>) paramTypes[1];
+		else {
+			throw new IllegalStateException("Error setting up method %s: wrong number of parameters (should be 1 or 2, but was %d)".formatted(tmpMethodLabel, paramTypes.length));
+		}
 		this.method = method;
 		if (actualCls.equals(declaring)) {
 			this.methodLabel = "%s.%s:%s".formatted(declaring.getSimpleName(), method.getName(), eventClass.getSimpleName());
@@ -153,7 +174,12 @@ public class AutoHandler implements TypedEventHandler<Event> {
 			return;
 		}
 		try {
-			method.invoke(clazzInstance, context, event);
+			if (compact) {
+				method.invoke(clazzInstance, event);
+			}
+			else {
+				method.invoke(clazzInstance, context, event);
+			}
 		}
 		catch (Throwable e) {
 			log.error("Error invoking trigger method {}", methodLabel, e);

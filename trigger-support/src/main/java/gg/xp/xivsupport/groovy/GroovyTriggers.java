@@ -11,6 +11,7 @@ import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.callouts.CalloutTrackingKey;
 import gg.xp.xivsupport.callouts.SingleValueReplacement;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.groovy.helpers.CustomGString;
@@ -19,10 +20,14 @@ import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
+import groovy.lang.Binding;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.GString;
 import groovy.lang.GroovyObjectSupport;
+import groovy.lang.GroovyRuntimeException;
+import groovy.lang.Script;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.NotNull;
@@ -124,7 +129,8 @@ public class GroovyTriggers {
 		}
 	}
 
-	public class Builder<X extends BaseEvent> {
+	public class Builder<X extends BaseEvent> extends GroovyObjectSupport {
+		private final Closure<?> bindingClosure;
 		String name;
 		Class<X> type;
 		Predicate<X> condition = event -> true;
@@ -132,6 +138,25 @@ public class GroovyTriggers {
 		BiConsumer<X, SequentialTriggerController<BaseEvent>> sq;
 		int timeout = 120_000;
 		Closure<?> rawSqHandler;
+		SequentialTriggerConcurrencyMode concurrencyMode = SequentialTriggerConcurrencyMode.BLOCK_NEW;
+
+		public Builder(Closure<?> closure) {
+			this.bindingClosure = closure;
+		}
+//
+//		@Override
+//		public Object invokeMethod(String name, Object args) {
+//			return super.invokeMethod(name, args);
+//		}
+
+		@Override
+		public Object getProperty(String propertyName) {
+			try {
+				return super.getProperty(propertyName);
+			} catch (GroovyRuntimeException gre) {
+				return DefaultGroovyMethods.getAt(this.bindingClosure.getOwner(), propertyName);
+			}
+		}
 
 		public Builder<X> named(String name) {
 			this.name = name;
@@ -167,6 +192,23 @@ public class GroovyTriggers {
 			return this;
 		}
 
+		public Builder<X> concurrency(SequentialTriggerConcurrencyMode concurrencyMode) {
+			this.concurrencyMode = concurrencyMode;
+			return this;
+		}
+
+		public SequentialTriggerConcurrencyMode getBlock() {
+			return SequentialTriggerConcurrencyMode.BLOCK_NEW;
+		}
+
+		public SequentialTriggerConcurrencyMode getReplace() {
+			return SequentialTriggerConcurrencyMode.REPLACE_OLD;
+		}
+
+		public SequentialTriggerConcurrencyMode getConcurrent() {
+			return SequentialTriggerConcurrencyMode.CONCURRENT;
+		}
+
 		public Builder<X> sequence(@DelegatesTo(GroovySqHelper.class) Closure<?> sequentialTriggerBody) {
 			if (sequentialTriggerBody.getMaximumNumberOfParameters() != 2) {
 				throw new IllegalArgumentException("Sequence must have two arguments (event and sequential trigger controller)");
@@ -196,10 +238,21 @@ public class GroovyTriggers {
 				else {
 					SequentialTrigger<BaseEvent> sqFinalized = SqtTemplates.sq(timeout, type, condition, (e1, s) -> {
 						try (SandboxScope ignored = sandbox.enter()) {
-							rawSqHandler.setDelegate(new GroovySqHelper<>(s));
-							sq.accept(e1, s);
+							// This doesn't work right unless we clone
+							if (concurrencyMode == SequentialTriggerConcurrencyMode.CONCURRENT) {
+								Closure<?> clonedSqHandler = (Closure<?>) rawSqHandler.clone();
+								clonedSqHandler.setResolveStrategy(Closure.DELEGATE_FIRST);
+								clonedSqHandler.setDelegate(new GroovySqHelper<>(s, clonedSqHandler));
+								clonedSqHandler.call(e1, s);
+							}
+							else {
+								rawSqHandler.setDelegate(new GroovySqHelper<>(s, rawSqHandler));
+								rawSqHandler.setResolveStrategy(Closure.DELEGATE_FIRST);
+								sq.accept(e1, s);
+							}
 						}
 					});
+					sqFinalized.setConcurrency(this.concurrencyMode);
 					addHandler(name, BaseEvent.class, (event, context) -> {
 						try (SandboxScope ignored = sandbox.enter()) {
 							sqFinalized.feed(context, event);
@@ -223,10 +276,19 @@ public class GroovyTriggers {
 	}
 
 	public void add(@DelegatesTo(Builder.class) Closure<?> closure) {
-		Builder<BaseEvent> builder = new Builder<>();
+		Builder<BaseEvent> builder = new Builder<>(closure);
 		closure.setDelegate(builder);
+		closure.setResolveStrategy(Closure.DELEGATE_FIRST);
 		closure.run();
 		builder.finish();
+	}
+
+	private BooleanSupplier wrapBooleanSupplier(BooleanSupplier supplier) {
+		return () -> {
+			try (SandboxScope ignored = sandbox.enter()) {
+				return supplier.getAsBoolean();
+			}
+		};
 	}
 
 	private <X> Supplier<X> wrapSupplier(Supplier<X> supplier) {
@@ -245,10 +307,14 @@ public class GroovyTriggers {
 	 */
 	public class GroovySqHelper<X extends BaseEvent> extends GroovyObjectSupport {
 		private final SequentialTriggerController<X> controller;
+		private final Closure<?> sqClosure;
+		private final Binding binding;
 		private HasCalloutTrackingKey last;
 
-		public GroovySqHelper(SequentialTriggerController<X> controller) {
+		public GroovySqHelper(SequentialTriggerController<X> controller, Closure<?> sqClosure) {
 			this.controller = controller;
+			this.sqClosure = sqClosure;
+			this.binding = new Binding();
 		}
 
 		public CalloutEvent callout(@DelegatesTo(GroovyCalloutBuilder.class) Closure<?> closure) {
@@ -259,7 +325,7 @@ public class GroovyTriggers {
 			Supplier<String> text = gcb.text;
 			Duration timeBasis = controller.timeSinceStart();
 			Duration expiresAt = timeBasis.plusMillis(gcb.duration);
-			BooleanSupplier expired = gcb.expiry == null ? () -> controller.timeSinceStart().compareTo(expiresAt) > 0 : gcb.expiry;
+			BooleanSupplier expired = gcb.expired == null ? () -> controller.timeSinceStart().compareTo(expiresAt) > 0 : wrapBooleanSupplier(gcb.expired);
 			ProcessedCalloutEvent callout = new ProcessedCalloutEvent(
 					new CalloutTrackingKey(),
 					gcb.tts,
@@ -290,6 +356,33 @@ public class GroovyTriggers {
 		public Object invokeMethod(String name, Object args) {
 			return super.invokeMethod(name, args);
 		}
+
+		@Override
+		public Object getProperty(String propertyName) {
+			// 'binding' will contain anything declared locally (but not via def keyword)
+			if (binding.hasVariable(propertyName)) {
+				return binding.getVariable(propertyName);
+			}
+			Object thisObject = sqClosure.getThisObject();
+			if (thisObject instanceof Script script) {
+				// 'scriptBinding' will contain things defined at the script level
+				Binding scriptBinding = script.getBinding();
+				if (scriptBinding.hasVariable(propertyName)) {
+					return scriptBinding.getVariable(propertyName);
+				}
+			}
+			try {
+				// Seems to be similar to scriptBinding
+				return DefaultGroovyMethods.getAt(sqClosure.getOwner(), propertyName);
+			} catch (GroovyRuntimeException gre) {
+				return super.getProperty(propertyName);
+			}
+		}
+
+		@Override
+		public void setProperty(String propertyName, Object newValue) {
+			binding.setVariable(propertyName, newValue);
+		}
 	}
 
 	public class GroovyCalloutBuilder extends GroovyObjectSupport {
@@ -298,7 +391,7 @@ public class GroovyTriggers {
 		@NotNull Supplier<@Nullable String> text = () -> null;
 		int duration = 5000;
 		@Nullable HasCalloutTrackingKey replaces;
-		@Nullable BooleanSupplier expiry;
+		@Nullable BooleanSupplier expired;
 		@Nullable Color color;
 		@Nullable String soundFile;
 		@NotNull Supplier<@Nullable Component> guiProvider = () -> null;
@@ -358,6 +451,11 @@ public class GroovyTriggers {
 
 		public GroovyCalloutBuilder duration(int duration) {
 			this.duration = duration;
+			return this;
+		}
+
+		public GroovyCalloutBuilder displayWhile(BooleanSupplier displayWhile) {
+			this.expired = () -> !displayWhile.getAsBoolean();
 			return this;
 		}
 

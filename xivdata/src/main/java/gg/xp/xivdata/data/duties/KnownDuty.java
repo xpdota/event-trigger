@@ -1,5 +1,6 @@
 package gg.xp.xivdata.data.duties;
 
+import gg.xp.xivdata.data.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -51,7 +52,12 @@ public enum KnownDuty implements Duty {
 	P11S("P11S", 1152, Expansion.EW, DutyType.SAVAGE_RAID),
 	P12S("P12S", 1154, Expansion.EW, DutyType.SAVAGE_RAID),
 	GolbezEx("EX6", 1141, Expansion.EW, DutyType.TRIAL_EX),
-	TEA("TEA", 887, Expansion.ShB, DutyType.ULTIMATE);
+	ZeromusEx("EX7", 1169, Expansion.EW, DutyType.TRIAL_EX),
+
+	DtEx1("EX1", 1196, Expansion.DT, DutyType.TRIAL_EX),
+	DtEx2("EX2", 1201, Expansion.DT, DutyType.TRIAL_EX),
+
+	;
 
 	private final String name;
 	private final Expansion expac;

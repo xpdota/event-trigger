@@ -24,7 +24,8 @@ public class ACTLogLineEvent extends BaseEvent implements Compressible, HasPrima
 	}
 	public ACTLogLineEvent(String logLine, int lineNum) {
 		this.logLine = logLine;
-		rawFields = logLine.split("\\|");
+		// -1 fixes cactbot log splitter compatibility
+		rawFields = logLine.split("\\|", -1);
 		this.lineNum = lineNum;
 		this.timestamp = ZonedDateTime.parse(rawFields[1]);
 		lineNumber = Integer.parseInt(rawFields[0]);

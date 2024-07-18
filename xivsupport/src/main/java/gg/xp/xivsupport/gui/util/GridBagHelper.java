@@ -27,6 +27,21 @@ public class GridBagHelper {
 		gbc.gridy++;
 	}
 
+	public void addRowWithRightPadding(Component... components) {
+		gbc.gridx = 0;
+		for (Component component : components) {
+			if (component != null) {
+				panel.add(component, gbc);
+			}
+			gbc.gridx++;
+		}
+		double oldWeight = gbc.weightx;
+		gbc.weightx = 999;
+		panel.add(Box.createHorizontalGlue(), gbc);
+		gbc.weightx = oldWeight;
+		gbc.gridy++;
+	}
+
 	public void addVerticalPadding() {
 		double oldWeight = gbc.weighty;
 		gbc.weighty = 1;

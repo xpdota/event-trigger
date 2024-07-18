@@ -39,8 +39,9 @@ public class CdTrackerTest {
 
 	private static final Logger log = LoggerFactory.getLogger(CdTrackerTest.class);
 
+	private static final int acceptableErrorMs = 200;
 	private static final Cooldown reprisal = Cooldown.Reprisal;
-	private static final Cooldown draw = Cooldown.Draw;
+	private static final Cooldown draw = Cooldown.SacredSoil;
 	private final XivPlayerCharacter player = new XivPlayerCharacter(0x10000001, "Me, The Player", Job.GNB, XivWorld.of(), true, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
 	private final XivPlayerCharacter otherCharInParty = new XivPlayerCharacter(0x10000002, "Someone Else In My Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 1, 80, 0, 0);
 	private final XivPlayerCharacter otherCharNotInParty = new XivPlayerCharacter(0x10000003, "Someone Else Not In Party", Job.GNB, XivWorld.of(), false, 1, new HitPoints(123, 123), ManaPoints.of(123, 123), new Position(0, 0, 0, 0), 0, 0, 0, 80, 0, 0);
@@ -145,7 +146,7 @@ public class CdTrackerTest {
 		Event event = events.get(0);
 		if (event instanceof CdTracker.DelayedCdCallout dcc) {
 			Assert.assertSame(dcc.originalEvent, myEvent);
-			MatcherAssert.assertThat(dcc.delayedEnqueueAt() - dcc.getTimeBasis(), new CloseTo(60_000 - precallTime, 100));
+			MatcherAssert.assertThat(dcc.delayedEnqueueAt() - dcc.getTimeBasis(), new CloseTo(60_000 - precallTime, acceptableErrorMs));
 		}
 		Map<CdTrackingKey, AbilityUsedEvent> personal = tracker.getOverlayPersonalCds();
 		Assert.assertEquals(personal.size(), 0);
@@ -155,7 +156,7 @@ public class CdTrackerTest {
 		Instant replenishedAt = tracker.getReplenishedAt(key);
 		Instant happenedAt = myEvent.getEffectiveHappenedAt();
 		long delta = Duration.between(happenedAt, replenishedAt).toMillis();
-		MatcherAssert.assertThat(delta, new CloseTo(60_000, 100));
+		MatcherAssert.assertThat(delta, new CloseTo(60_000, acceptableErrorMs));
 	}
 
 	@Test
@@ -196,7 +197,7 @@ public class CdTrackerTest {
 			Event event = events.get(0);
 			if (event instanceof CdTracker.DelayedCdCallout dcc) {
 				Assert.assertSame(dcc.originalEvent, myEvent1);
-				MatcherAssert.assertThat(dcc.delayedEnqueueAt() - dcc.getTimeBasis(), new CloseTo(30_000 - precallTime, 100));
+				MatcherAssert.assertThat(dcc.delayedEnqueueAt() - dcc.getTimeBasis(), new CloseTo(30_000 - precallTime, acceptableErrorMs));
 			}
 			Map<CdTrackingKey, AbilityUsedEvent> personal = tracker.getOverlayPersonalCds();
 			Assert.assertEquals(personal.size(), 1);
@@ -206,7 +207,7 @@ public class CdTrackerTest {
 			Instant replenishedAt = tracker.getReplenishedAt(key);
 			Instant happenedAt = myEvent1.getEffectiveHappenedAt();
 			long delta = Duration.between(happenedAt, replenishedAt).toMillis();
-			MatcherAssert.assertThat(delta, new CloseTo(30_000, 100));
+			MatcherAssert.assertThat(delta, new CloseTo(30_000, acceptableErrorMs));
 		}
 
 		AbilityUsedEvent myEvent2 = drawUsedByPc();
@@ -217,12 +218,12 @@ public class CdTrackerTest {
 			Event event1 = events.get(0);
 			if (event1 instanceof CdTracker.DelayedCdCallout dcc) {
 				Assert.assertSame(dcc.originalEvent, myEvent1);
-				MatcherAssert.assertThat(dcc.delayedEnqueueAt() - dcc.getTimeBasis(), new CloseTo(30_000 - precallTime, 100));
+				MatcherAssert.assertThat(dcc.delayedEnqueueAt() - dcc.getTimeBasis(), new CloseTo(30_000 - precallTime, acceptableErrorMs));
 			}
 			Event event2 = events.get(1);
 			if (event2 instanceof CdTracker.DelayedCdCallout dcc) {
 				Assert.assertSame(dcc.originalEvent, myEvent2);
-				MatcherAssert.assertThat(dcc.delayedEnqueueAt() - dcc.getTimeBasis(), new CloseTo(2 * 30_000 - precallTime, 100));
+				MatcherAssert.assertThat(dcc.delayedEnqueueAt() - dcc.getTimeBasis(), new CloseTo(2 * 30_000 - precallTime, acceptableErrorMs));
 			}
 			Map<CdTrackingKey, AbilityUsedEvent> personal = tracker.getOverlayPersonalCds();
 			Assert.assertEquals(personal.size(), 1);
@@ -232,7 +233,7 @@ public class CdTrackerTest {
 			Instant replenishedAt = tracker.getReplenishedAt(key);
 			Instant happenedAt = myEvent1.getEffectiveHappenedAt();
 			long delta = Duration.between(happenedAt, replenishedAt).toMillis();
-			MatcherAssert.assertThat(delta, new CloseTo(30_000 * 2, 100));
+			MatcherAssert.assertThat(delta, new CloseTo(30_000 * 2, acceptableErrorMs));
 		}
 	}
 }

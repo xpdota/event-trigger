@@ -7,10 +7,12 @@ import gg.xp.xivsupport.gui.components.LateAdjustJSplitPane;
 import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
+import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.persistence.gui.BoundCheckbox;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -42,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class GroovyPanel extends JPanel {
@@ -61,6 +64,8 @@ public class GroovyPanel extends JPanel {
 	private final GroovyTab tab;
 	private final GroovyScriptHolder script;
 	private final GroovySandbox sbx;
+	private final BoundCheckbox startupCb;
+	private boolean suppressStartupRequest;
 
 	public String getName() {
 		return script.getScriptName();
@@ -158,6 +163,7 @@ public class GroovyPanel extends JPanel {
 			// TODO: this is adding some heavy deps
 			entryArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
 			entryArea.setCodeFoldingEnabled(true);
+			entryArea.setTabSize(4);
 //			AutoCompletion ac = new AutoCompletion(new LanguageAwareCompletionProvider(new DefaultCompletionProvider()));
 //			ac.install(entryArea);
 //			DefaultCompletionProvider dcp = new DefaultCompletionProvider();
@@ -197,7 +203,7 @@ public class GroovyPanel extends JPanel {
 				JButton runButton = run.asButtonWithKeyLabel();
 				JPanel buttonHolder = new JPanel(new WrapLayout(WrapLayout.LEFT));
 				buttonHolder.add(runButton);
-				BoundCheckbox startupCb = new BoundCheckbox("Run on Startup", script::isStartup, startup -> {
+				startupCb = new BoundCheckbox("Run on Startup", script::isStartup, startup -> {
 					script.setStartup(startup);
 					script.save();
 				});
@@ -309,7 +315,7 @@ public class GroovyPanel extends JPanel {
 
 	private JTable simpleListDisplay(Collection<?> values) {
 		return CustomTableModel.builder(() -> new ArrayList<>(values))
-				.addColumn(new CustomColumn<>("Value", GroovyPanel::singleValueConversion))
+				.addColumn(new CustomColumn<>("Value", GroovyColumns::singleValueConversion))
 				.build()
 				.makeTable();
 	}
@@ -318,37 +324,19 @@ public class GroovyPanel extends JPanel {
 		return dc.getListDisplay().makeTable(sbx, values);
 	}
 
-	private JTable simpleMapDisplay(Map<?, ?> map) {
-		return CustomTableModel.builder(() -> new ArrayList<>(map.entrySet()))
-				.addColumn(new CustomColumn<>("Key", e -> singleValueConversion(e.getKey())))
-				.addColumn(new CustomColumn<>("Value", e -> singleValueConversion(e.getValue())))
+	private JTable simplePropsDisplay(Object object) {
+		return CustomTableModel.builder(() -> GroovyColumns.getValues(object))
+				.apply(GroovyColumns::addColumns)
 				.build()
 				.makeTable();
 	}
 
-	// TODO: move this
-	@SuppressWarnings("MalformedFormatString")
-	public static String singleValueConversion(Object obj) {
-		if (obj == null) {
-			return "(null)";
-		}
-		if (obj instanceof Byte || obj instanceof Integer || obj instanceof Long || obj instanceof Short) {
-			return String.format("%d (0x%x)", obj, obj);
-		}
-		// TODO: arrays
-//		if (obj instanceof Array arr) {
-//			arr.getClass().arrayType()
-//		}
-		if (obj.getClass().isArray()) {
-			int length = Array.getLength(obj);
-			List<Object> converted = new ArrayList<>();
-			for (int i = 0; i < length; i++) {
-				converted.add(Array.get(obj, i));
-			}
-			return converted.stream().map(GroovyPanel::singleValueConversion).collect(Collectors.joining(", ", "[", "]"));
-		}
-		return obj.toString();
-
+	private JTable simpleMapDisplay(Map<?, ?> map) {
+		return CustomTableModel.builder(() -> new ArrayList<>(map.entrySet()))
+				.addColumn(new CustomColumn<>("Key", e -> GroovyColumns.singleValueConversion(e.getKey())))
+				.addColumn(new CustomColumn<>("Value", e -> GroovyColumns.singleValueConversion(e.getValue())))
+				.build()
+				.makeTable();
 	}
 
 	private void submit() {
@@ -357,8 +345,41 @@ public class GroovyPanel extends JPanel {
 			script.save();
 		}
 		evaluator.submit(() -> {
-			GroovyScriptResult result = script.run();
+			AtomicBoolean scriptActive = new AtomicBoolean(true);
+			ScriptSettingsControl ssc = new ScriptSettingsControl() {
+				@Override
+				public void requestRunOnStartup() {
+					// Only ask for startup permissions if all of the following are true:
+					// 1. Script is not already set to run on startup
+					// 2. User has not already opted out of having the script run on startup (TODO make this persistent)
+					// 3. Script is still running, e.g. don't allow the script to request startup as an asynchronous action
+					if (script.isSaveable() && !script.isStartup() && !suppressStartupRequest && scriptActive.get()) {
+						startupRequest();
+					}
+				}
+			};
+			GroovyScriptResult result = script.run(ssc);
+			scriptActive.set(false);
 			setResult(result);
+		});
+	}
+
+	private void startupRequest() {
+		SwingUtilities.invokeLater(() -> {
+			Component dialogParent = tab;
+			if (!dialogParent.isVisible()) {
+				dialogParent = tab.getRootPane();
+			}
+			// TODO: allow this message to be suppressed persistently
+			int result = JOptionPane.showConfirmDialog(dialogParent, "This script has requested to be run on startup. Allow?", "Run on Startup?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if (result == JOptionPane.YES_OPTION) {
+				script.setStartup(true);
+			}
+			else {
+				suppressStartupRequest = true;
+			}
+			startupCb.repaint();
+			save();
 		});
 	}
 
@@ -419,19 +440,7 @@ public class GroovyPanel extends JPanel {
 	}
 
 	private void setResultDisplay(@Nullable Object obj, Component display) {
-		Map<?, ?> props;
-		if (obj == null) {
-			props = Collections.emptyMap();
-		}
-		else {
-			try {
-				props = DefaultGroovyMethods.getProperties(obj);
-			}
-			catch (Throwable t) {
-				props = Collections.emptyMap();
-			}
-		}
-		JTable md = simpleMapDisplay(props);
+		JTable md = simplePropsDisplay(obj);
 		SwingUtilities.invokeLater(() -> {
 			resultPropertiesScroll.setViewportView(md);
 			resultScroll.setViewportView(display);

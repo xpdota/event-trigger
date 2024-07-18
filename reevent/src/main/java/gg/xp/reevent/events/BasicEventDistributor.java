@@ -38,6 +38,9 @@ public class BasicEventDistributor implements EventDistributor {
 	// todo: sync object doesn't cover direct access as seen in subclass
 	@Override
 	public synchronized void registerHandler(EventHandler<Event> handler) {
+		if (handler == null) {
+			throw new IllegalArgumentException("Handler was null!");
+		}
 		if (!(handler instanceof AutoHandler)) {
 			log.info("Added manual handler: {}", handler);
 		}
@@ -171,6 +174,7 @@ public class BasicEventDistributor implements EventDistributor {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public Map<EventHandler<?>, LongSummaryStatistics> getTimeStats() {
 		// Map.ofEntries((autoEventDistributor.getTimeStats().entrySet().stream().filter(e -> e.getValue().getSum() > 100_000_000).toArray(Map.Entry[]::new)))
 		return Collections.unmodifiableMap(executionTimes);

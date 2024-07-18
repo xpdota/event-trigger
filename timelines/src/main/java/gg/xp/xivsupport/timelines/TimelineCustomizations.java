@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.timelines;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.xivsupport.persistence.UseJsonSer;
 
@@ -22,5 +23,10 @@ public class TimelineCustomizations {
 	public void setEntries(List<CustomTimelineItem> entries) {
 		this.entries = new ArrayList<>(entries);
 		this.entries.sort(Comparator.naturalOrder());
+	}
+
+	@JsonIgnore
+	public boolean isEmpty() {
+		return entries.isEmpty();
 	}
 }

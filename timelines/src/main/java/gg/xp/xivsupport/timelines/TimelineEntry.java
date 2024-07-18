@@ -1,6 +1,10 @@
 package gg.xp.xivsupport.timelines;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import gg.xp.reevent.events.Event;
 import gg.xp.xivdata.data.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +18,7 @@ import java.util.stream.Stream;
 /**
  * Base interface for a timeline entry
  */
+@JsonIgnoreProperties("imported")
 public interface TimelineEntry extends Comparable<TimelineEntry> {
 
 	/**
@@ -25,7 +30,6 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 	}
 
 	/**
-	 *
 	 * @return The latest possible sync time
 	 */
 	@JsonIgnore
@@ -39,14 +43,48 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 	 *
 	 * @param currentTime The time at which the timeline currently sits
 	 * @param line        The incoming log line
-	 * @return            Whether the timeline should sync
+	 * @return Whether the timeline should sync
 	 */
 	default boolean shouldSync(double currentTime, String line) {
 		Pattern sync = sync();
 		if (sync == null) {
 			return false;
 		}
-		return currentTime >= getMinTime() && currentTime <= getMaxTime() && sync.matcher(line).find();
+		boolean timesMatch = (currentTime >= getMinTime() && currentTime <= getMaxTime());
+		if (!timesMatch) {
+			return false;
+		}
+		return sync.matcher(line).find();
+	}
+
+	@Nullable EventSyncController eventSyncController();
+
+	default boolean hasEventSync() {
+		return eventSyncController() != null;
+	};
+
+	default @Nullable Class<? extends Event> eventSyncType() {
+		EventSyncController esc = eventSyncController();
+		return esc == null ? null : esc.eventType();
+	}
+
+	default boolean shouldSync(double currentTime, Event event) {
+		EventSyncController syncControl = eventSyncController();
+		if (syncControl == null) {
+			return false;
+		}
+		boolean timesMatch = (currentTime >= getMinTime() && currentTime <= getMaxTime());
+		if (!timesMatch) {
+			return false;
+		}
+		return syncControl.shouldSync(event);
+	}
+
+	/**
+	 * @return true if this timeline entry would ever cause a sync
+	 */
+	default boolean canSync() {
+		return sync() != null || hasEventSync();
 	}
 
 	/**
@@ -82,7 +120,7 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 
 	/**
 	 * The name of this timeline entry.
-	 *
+	 * <p>
 	 * For most entries, this is the displayed name. For labels, it is the label name.
 	 * For triggers, it is the text that will be displayed on-screen.
 	 *
@@ -279,6 +317,9 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 			if (sync() != null) {
 				sb.append("sync /").append(sync().pattern()).append('/').append(' ');
 			}
+			if (eventSyncController() != null) {
+				sb.append(eventSyncController().toTextFormat()).append(' ');
+			}
 			TimelineWindow window = timelineWindow();
 			if (!TimelineWindow.DEFAULT.equals(window)) {
 				sb.append("window ").append(fmtDouble(window.start())).append(',').append(fmtDouble(window.end())).append(' ');
@@ -310,7 +351,7 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 		}
 		String uniqueName = makeUniqueName();
 		String hideAllLine = "hideall \"%s\"".formatted(uniqueName);
-		String actualTimelineLine = new TextFileTimelineEntry(time(), uniqueName, null, null, TimelineWindow.DEFAULT, null, null, false).toTextFormat();
+		String actualTimelineLine = new TextFileTimelineEntry(time(), uniqueName, null, null, TimelineWindow.DEFAULT, null, null, false, null).toTextFormat();
 		return Stream.of(hideAllLine, actualTimelineLine);
 	}
 
@@ -361,5 +402,16 @@ public interface TimelineEntry extends Comparable<TimelineEntry> {
 							alertText: "%s",
 						},
 				""", uniqueName, uniqueName, calloutPreTime(), callTextForExport());
+	}
+
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+	default @Nullable String getImportSource() {
+		return null;
+	};
+
+	@JsonIgnore
+	default boolean isImported() {
+		return getImportSource() != null;
 	}
 }

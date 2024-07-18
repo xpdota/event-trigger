@@ -4,8 +4,11 @@ import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.actlines.events.abilityeffect.AbilityEffect;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,6 +26,8 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	private final long sequenceId;
 	private final long targetIndex;
 	private final long numberOfTargets;
+	private @Nullable Duration animationLock;
+	private @Nullable DescribesCastLocation<AbilityUsedEvent> locationInfo;
 
 	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId, long targetIndex, long numberOfTargets) {
 		this.ability = ability;
@@ -76,6 +81,32 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	@Override
 	public boolean isLastTarget() {
 		return targetIndex >= numberOfTargets - 1;
+	}
+
+	public @Nullable DescribesCastLocation<AbilityUsedEvent> getLocationInfo() {
+		return locationInfo;
+	}
+
+	public void setLocationInfo(@NotNull DescribesCastLocation<AbilityUsedEvent> locationInfo) {
+		this.locationInfo = locationInfo;
+	}
+
+	/**
+	 * Get the animation lock.
+	 * <p>
+	 * Note that this is expected to be populated *after* this event is emitted, as this data
+	 * is not known at the time of the original event. In addition, it may never be present,
+	 * such as if you are importing a non-OP log, or an fflogs import.
+	 *
+	 * @see AnimationLockEvent
+	 * @return The animation lock, if one has been set.
+	 */
+	public @Nullable Duration getAnimationLock() {
+		return animationLock;
+	}
+
+	public void setAnimationLock(@Nullable Duration animationLock) {
+		this.animationLock = animationLock;
 	}
 
 	@Override

@@ -1,23 +1,35 @@
 package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventContext;
+import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.PlayerStats;
 import gg.xp.xivsupport.events.actlines.events.PlayerStatsUpdatedEvent;
-import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
+import gg.xp.xivsupport.gameversion.GameVersion;
+import gg.xp.xivsupport.gameversion.GameVersionController;
 import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
-public class Line12Parser extends AbstractACTLineParser<Line12Parser.Fields> {
+public class Line12Parser extends AbstractACTLineParser<Line12Parser.Fields> implements FilteredEventHandler {
+
+	private final GameVersionController versionController;
+	public static final GameVersion NEW_STATS_LINE_FORMAT_VERSION = GameVersion.fromString("2024.06.18.0000.0000");
 
 	public Line12Parser(PicoContainer container) {
 		super(container, 12, Fields.class);
+		this.versionController = container.getComponent(GameVersionController.class);
+	}
+
+	@Override
+	public boolean enabled(EventContext context) {
+		return versionController.isAtLeast(NEW_STATS_LINE_FORMAT_VERSION);
 	}
 
 	enum Fields {
-		jobId, strength, dexterity, vitality, intelligence, mind, piety, attackPower, directHit, criticalHit, attackMagicPotency, healMagicPotency, determination, skillSpeed, spellSpeed, unknown0, tenacity, localContentId
+		jobId, strength, dexterity, vitality, intelligence, mind, piety, attackPower, directHit, criticalHit, attackMagicPotency, healMagicPotency, determination, skillSpeed, spellSpeed, tenacity, localContentId
 	}
 
 	@Override

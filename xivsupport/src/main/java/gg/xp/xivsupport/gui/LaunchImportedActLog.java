@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui;
 
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
+import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
@@ -39,7 +40,7 @@ public final class LaunchImportedActLog {
 		CommonGuiSetup.setup();
 		MutablePicoContainer pico = XivMain.importInit();
 		pico.addComponent(FakeACTTimeSource.class);
-		AutoEventDistributor dist = pico.getComponent(AutoEventDistributor.class);
+		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		EventMaster master = pico.getComponent(EventMaster.class);
 		ReplayController replayController = new ReplayController(master, events, decompress);
 		pico.addComponent(replayController);

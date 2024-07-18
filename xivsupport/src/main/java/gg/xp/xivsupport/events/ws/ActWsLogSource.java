@@ -96,6 +96,11 @@ public class ActWsLogSource implements EventSource {
 			}
 		}
 
+		void recheckUri() {
+			this.uri = uriSetting.get();
+			this.reconnect();
+		}
+
 		@Override
 		public void onOpen(ServerHandshake serverHandshake) {
 			log.info("Open: {}", serverHandshake);
@@ -165,6 +170,7 @@ public class ActWsLogSource implements EventSource {
 		this.fastRefreshNonCombatant = new BooleanSetting(pers, "actws-fast-noncombatants-refresh", false);
 		this.pls = pls;
 		this.client = new ActWsClientInternal();
+		uriSetting.addListener(client::recheckUri);
 		// TODO: drop this
 		stateStore.putCustom(WsState.class, state);
 	}
@@ -337,6 +343,10 @@ public class ActWsLogSource implements EventSource {
 				}
 				try {
 					Thread.sleep(2500);
+					if (state.isConnected()) {
+						log.info("Ignoring request to open because we are already connected");
+						return;
+					}
 					log.info("Reconnecting");
 					boolean connected = client.reconnectBlocking();
 					if (connected) {

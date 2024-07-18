@@ -46,6 +46,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	private volatile boolean done;
 	private volatile boolean processing = true;
 	private volatile boolean die;
+	private volatile boolean dieSilently;
 	private volatile boolean cycleProcessingTimeExceeded;
 	private volatile @Nullable Predicate<X> filter;
 	private final Map<String, Object> params = new LinkedHashMap<>();
@@ -59,6 +60,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		thread = new Thread(() -> {
 			try {
 				triggerCode.accept(initialEvent, this);
+			}
+			catch (SequentialTriggerPleaseDie e) {
+				log.info("Sequential Trigger Requested to End");
 			}
 			catch (Throwable t) {
 				log.error("Error in sequential trigger", t);
@@ -117,7 +121,15 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			die = true;
 			lock.notifyAll();
 		}
+	}
 
+	public void stopSilently() {
+		synchronized (lock) {
+			log.info("Sequential trigger stopping by request");
+			dieSilently = true;
+			die = true;
+			lock.notifyAll();
+		}
 	}
 
 	@SystemEvent
@@ -134,6 +146,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		public String toString() {
 			return "DelayedSqtEvent(%s)".formatted(delayMs);
 		}
+	}
+
+	public void waitDuration(Duration duration) {
+		waitMs(duration.toMillis());
 	}
 
 	public void waitMs(long ms) {
@@ -368,7 +384,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param limit      Number of events
 	 * @param timeoutMs  Timeout in ms to wait for events
 	 * @param eventClass Class of event
-	 * @param exclusive  false if you would like an event to be allowed to match multiple filters, rather than movingn
+	 * @param exclusive  false if you would like an event to be allowed to match multiple filters, rather than moving
 	 *                   on to the next event after a single match.
 	 * @param collectors The list of collectors.
 	 * @param <Y>        The type of event.
@@ -475,6 +491,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			lock.notifyAll();
 			while (true) {
 				if (die) {
+					if (dieSilently) {
+						throw new SequentialTriggerPleaseDie("Sequential trigger stopping by request");
+					}
 					// Deprecated, but.......?
 					// Seems better than leaving threads hanging around doing nothing.
 //					thread.stop();

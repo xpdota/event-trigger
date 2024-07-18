@@ -24,6 +24,6 @@ public class NormalBuffsBarPartyComponent extends BaseBuffsBarPartyComponent {
 		boolean showFood = config.getShowFoodBuff().get();
 		return buffRepo.filteredSortedStatusesOnTarget(xpc, ba -> {
 			return (showFc || !BuffUtils.isFcBuff(ba)) && (showFood || !BuffUtils.isFoodBuff(ba));
-		});
+		}, config.getShowPreapps().get());
 	}
 }

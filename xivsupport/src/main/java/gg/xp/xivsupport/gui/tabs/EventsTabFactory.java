@@ -14,7 +14,6 @@ import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.GlobalGuiOptions;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
-import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.AbilityResolutionFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventAbilityOrBuffFilter;
@@ -22,7 +21,9 @@ import gg.xp.xivsupport.gui.tables.filters.EventClassFilterFilter;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
 import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
+import gg.xp.xivsupport.gui.tables.filters.QuickFilters;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
+import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
@@ -31,20 +32,17 @@ import gg.xp.xivsupport.persistence.gui.BooleanSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayAdvancePseudoFilter;
+import groovy.lang.PropertyValue;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.MutablePicoContainer;
 
 import javax.swing.*;
 import java.awt.*;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @ScanMe
 public class EventsTabFactory {
@@ -74,19 +72,9 @@ public class EventsTabFactory {
 		displayIdsSetting.addAndRunListener(() -> asRenderer.setShowId(displayIdsSetting.get()));
 		displayIdsSetting.addAndRunListener(() -> nameJobRenderer.setShowId(displayIdsSetting.get()));
 		TimeDisplayController tdc = new TimeDisplayController();
-		TableWithFilterAndDetails<Event, Map.Entry<Field, Object>> table = TableWithFilterAndDetails.builder("Events", rawStorage::getEvents,
-						currentEvent -> {
-							if (currentEvent == null) {
-								return Collections.emptyList();
-							}
-							else {
-								return currentEvent.dumpFields()
-										.entrySet()
-										.stream()
-										.filter(e -> !"serialVersionUID".equals(e.getKey().getName()))
-										.collect(Collectors.toList());
-							}
-						})
+		TableWithFilterAndDetails<Event, PropertyValue> table = TableWithFilterAndDetails.builder("Events",
+						rawStorage::getEvents,
+						GroovyColumns::getValues)
 				.addMainColumn(tdc.getColumnDef())
 				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
 				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(nameJobRenderer)))
@@ -100,15 +88,7 @@ public class EventsTabFactory {
 					}
 					return null;
 				}, c -> c.setCellRenderer(new AbilityEffectListRenderer())))
-				.addMainColumn(new CustomColumn<>("Parent", e -> {
-					Event parent = e.getParent();
-					return parent == null ? null : parent.getClass().getSimpleName();
-				}))
-				.addDetailsColumn(StandardColumns.fieldName)
-				.addDetailsColumn(StandardColumns.fieldValue)
-				.addDetailsColumn(StandardColumns.identity)
-				.addDetailsColumn(StandardColumns.fieldType)
-				.addDetailsColumn(StandardColumns.fieldDeclaredIn)
+				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
 				.addFilter(SystemEventFilter::new)
 				.addFilter(EventClassFilterFilter::new)
@@ -124,6 +104,7 @@ public class EventsTabFactory {
 					}
 					return pullNumberFilter;
 				})
+				.addFilter((run) -> container.getComponent(QuickFilters.class).makeWidget(Event.class, run))
 				.addFilter(GroovyFilter.forClass(Event.class, container.getComponent(GroovyManager.class)))
 				.addWidget(unused -> new BooleanSettingGui(displayIdsSetting, "Show IDs", true).getComponent())
 				.addWidget(replayNextPseudoFilter(Event.class))

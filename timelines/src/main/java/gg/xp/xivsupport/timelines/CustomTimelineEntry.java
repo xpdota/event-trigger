@@ -27,11 +27,13 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	public double time;
 	public @Nullable String name;
 	public @Nullable Pattern sync;
+	public @Nullable CustomEventSyncController esc;
 	public @Nullable Double duration;
 	public @Nullable Double windowStart;
 	public @Nullable Double windowEnd;
 	public @Nullable Double jump;
 	public @Nullable String jumpLabel;
+	public @Nullable String importSource;
 	public boolean forceJump;
 	// TODO: this uses the absolute path to the JAR, which means icons will break if the user moves their install location.
 	// Best solution is to probably make our own little class that lets you specify an ability/status ID in addition to
@@ -52,6 +54,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			double time,
 			@Nullable String name,
 			@Nullable Pattern sync,
+			@Nullable CustomEventSyncController esc,
 			@Nullable Double duration,
 			@NotNull TimelineWindow timelineWindow,
 			@Nullable Double jump,
@@ -59,15 +62,17 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			@Nullable Boolean forceJump,
 			@Nullable URL icon,
 			@Nullable TimelineReference replaces,
-			 boolean disabled,
-			 boolean callout,
-			 double calloutPreTime
+			boolean disabled,
+			boolean callout,
+			double calloutPreTime,
+			@Nullable String importSource
 	) {
 		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
 		// but it works.
 		this.time = time;
 		this.name = name;
 		this.sync = sync;
+		this.esc = esc;
 		this.callout = callout;
 		this.calloutPreTime = calloutPreTime;
 		this.duration = duration;
@@ -79,6 +84,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		this.icon = icon;
 		this.replaces = replaces;
 		this.enabled = !disabled;
+		this.importSource = importSource;
 	}
 
 	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -86,6 +92,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			@JsonProperty("time") double time,
 			@JsonProperty("name") @Nullable String name,
 			@JsonProperty("sync") @Nullable String sync,
+			@JsonProperty("esc") @Nullable CustomEventSyncController esc,
 			@JsonProperty("duration") @Nullable Double duration,
 			@JsonProperty("timelineWindow") @NotNull TimelineWindow timelineWindow,
 			@JsonProperty("jump") @Nullable Double jump,
@@ -94,9 +101,10 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			@JsonProperty("icon") @Nullable URL icon,
 			@JsonProperty("replaces") @Nullable TimelineReference replaces,
 			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled,
+			@JsonProperty(value = "importSource") String importSource,
 			@JsonProperty(value = "callout", defaultValue = "false") boolean callout,
 			@JsonProperty(value = "calloutPreTime", defaultValue = "0") double calloutPreTime,
-			@JsonProperty(value = "jobs") @Nullable CombatJobSelection jobs
+			@JsonProperty("jobs") @Nullable CombatJobSelection jobs
 	) {
 		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
 		// but it works.
@@ -115,6 +123,8 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		this.replaces = replaces;
 		this.enabled = !disabled;
 		this.enabledJobs = jobs == null ? CombatJobSelection.all() : jobs;
+		this.esc = esc;
+		this.importSource = importSource;
 	}
 
 	@Override
@@ -196,11 +206,18 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	}
 
 	@Override
+	@JsonProperty("esc")
+	public @Nullable EventSyncController eventSyncController() {
+		return esc;
+	}
+
+	@Override
 	public String toString() {
 		return "CustomTimelineEntry{" +
 		       "time=" + time +
 		       ", name='" + name + '\'' +
 		       ", sync=" + sync +
+		       ", esc=" + esc +
 		       ", duration=" + duration +
 		       ", windowStart=" + windowStart +
 		       ", windowEnd=" + windowEnd +
@@ -243,10 +260,12 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		if (other.isLabel()) {
 			throw new IllegalArgumentException("Cannot override a label with a real entry");
 		}
+		EventSyncController otherEsc = other.eventSyncController();
 		CustomTimelineEntry newCte = new CustomTimelineEntry(
 				other.time(),
 				other.name(),
 				other.sync(),
+				otherEsc == null ? null : CustomEventSyncController.from(otherEsc),
 				other.duration(),
 				other.timelineWindow(),
 				other.jump(),
@@ -256,17 +275,20 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 				TimelineReference.of(other),
 				false,
 				false,
-				0
+				0,
+				null
 		);
 		newCte.enabledJobs = jobSelFor(other);
 		return newCte;
 	}
 
 	public static CustomTimelineEntry cloneFor(TimelineEntry other) {
+		EventSyncController otherEsc = other.eventSyncController();
 		CustomTimelineEntry newCte = new CustomTimelineEntry(
 				other.time(),
 				other.name() + " copy",
 				other.sync(),
+				otherEsc == null ? null : CustomEventSyncController.from(otherEsc),
 				other.duration(),
 				other.timelineWindow(),
 				other.jump(),
@@ -276,7 +298,8 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 				null,
 				false,
 				other.callout(),
-				other.calloutPreTime()
+				other.calloutPreTime(),
+				null
 		);
 		newCte.enabledJobs = jobSelFor(other);
 		return newCte;
@@ -314,5 +337,15 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	public @Nullable CombatJobSelection getEnabledJobs() {
 		// Don't bother serializing if every job is selected
 		return enabledJobs.isEnabledForAll() ? null : enabledJobs;
+	}
+
+	@Override
+	public @Nullable String getImportSource() {
+		return importSource;
+	}
+
+	@Override
+	public void setImportSource(@Nullable String importSource) {
+		this.importSource = importSource;
 	}
 }

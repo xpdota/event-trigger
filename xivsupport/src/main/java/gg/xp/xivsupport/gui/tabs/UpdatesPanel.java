@@ -99,7 +99,15 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 		new RefreshLoop<>(
 				"UpdatePeriodicCheck",
 				this,
-				i -> doUpdateCheckInBackground(),
+				i -> {
+					try {
+						Thread.sleep(10_000);
+					}
+					catch (InterruptedException e) {
+						//
+					}
+					doUpdateCheckInBackground();
+				},
 				// 15 minutes * 60 seconds * 1000 ms
 				i -> 15 * 60 * 1000L
 		).start();
@@ -146,6 +154,7 @@ public class UpdatesPanel extends TitleBorderFullsizePanel implements TabAware {
 	}
 
 	private void setUpdateCheckStatus(UpdateCheckStatus updateCheckStatus) {
+		log.info("Update tab status: status {} -> {}, already checked {}, nag enabled {}", this.updateCheckStatus, updateCheckStatus, updateCheckedThisRun, updateCheckNag.get());
 		this.updateCheckStatus = updateCheckStatus;
 		checkingLabel.setText(
 				switch (updateCheckStatus) {

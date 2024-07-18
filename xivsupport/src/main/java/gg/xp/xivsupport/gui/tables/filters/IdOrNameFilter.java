@@ -19,10 +19,15 @@ public class IdOrNameFilter<X> extends TextBasedFilter<X> {
 	}
 
 	@Override
+	protected String boxToolTip() {
+		return super.boxToolTip() + '\n' + """
+				Numeric IDs may be entered as base 10 (1234) or hex (0x15AB)""";
+	}
+
+	@Override
 	protected @Nullable Predicate<X> getFilterForInput(@NotNull String input) {
 		if (input.startsWith("0x")) {
 			validationError = false;
-			// TODO: this is also inefficient because we should just be parsing the input text
 			long wantedId;
 			try {
 				wantedId = Long.parseLong(input.substring(2).trim(), 16);

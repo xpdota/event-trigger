@@ -1,0 +1,1018 @@
+### ALOALO ISLAND
+# ZoneId: 498
+
+hideall "--Reset--"
+hideall "--sync--"
+
+# .*is no longer sealed
+0.0 "--Reset--" SystemLogMessage { id: "7DE" } window 0,100000 jump 0
+
+#~~~~~~~~~~~~~~~~~~~~#
+# Quaqua (left path) #
+#~~~~~~~~~~~~~~~~~~~~#
+
+# -p 8B94:1012.4
+# -ii 8B89 8B98 8B9C 8B9D 8B93
+
+# Ketulu Cove will be sealed off
+#1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1128" } window 10000,0
+1000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1128" } window 10000,0
+1006.1 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1007.4 "--sync--" StartsUsing { id: "8B94", source: "Quaqua" } window 10,10
+1012.4 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+1022.5 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+1024.7 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1027.5 "Ravaging Axe" Ability { id: "8B8A", source: "Aetheric Charge" }
+
+1031.2 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+1041.3 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+1046.2 "Ringing Quoits" Ability { id: "8B8B", source: "Aetheric Charge" }
+
+1051.5 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1052.6 "--sync--" StartsUsing { id: "8B8C", source: "Quaqua" } window 40,40 jump "quaqua-left-sunny"
+1052.6 "--sync--" StartsUsing { id: "8B90", source: "Quaqua" } window 40,40 jump "quaqua-left-rainy"
+1057.6 "Arcane Armaments"
+
+1252.6 label "quaqua-left-sunny"
+1252.6 "--sync--" StartsUsing { id: "8B8C", source: "Quaqua" }
+1257.6 "Arcane Armaments" Ability { id: "8B8C", source: "Quaqua" }
+1267.7 "Hammer Landing 1" Ability { id: "8B8D", source: "Quaqua" }
+1269.7 "Hammer Landing 2" #Ability { id: "8B8E", source: "Quaqua" }
+1271.7 "Hammer Landing 3" #Ability { id: "8B8E", source: "Quaqua" }
+
+1279.8 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1286.5 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+1292.6 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1297.8 "Howl" Ability { id: "8B96", source: "Quaqua" }
+1308.7 "Scalding Waves" Ability { id: "8B97", source: "Anala Familiar" } duration 15
+
+1317.0 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1323.7 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+1330.9 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1337.1 label "quaqua-left-sunny-loop"
+1337.1 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+1347.2 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+1352.1 "Ravaging Axe" Ability { id: "8B8A", source: "Aetheric Charge" }
+1352.1 "Ringing Quoits" Ability { id: "8B8B", source: "Aetheric Charge" }
+
+1361.4 "Howl" Ability { id: "8B96", source: "Quaqua" }
+1372.3 "Scalding Waves" Ability { id: "8B97", source: "Anala Familiar" } duration 15
+
+1386.4 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1392.9 "Arcane Armaments" Ability { id: "8B8C", source: "Quaqua" }
+1403.0 "Hammer Landing 1" Ability { id: "8B8D", source: "Quaqua" }
+1405.0 "Hammer Landing 2" #Ability { id: "8B8E", source: "Quaqua" }
+1407.0 "Hammer Landing 3" #Ability { id: "8B8E", source: "Quaqua" }
+
+1416.1 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1422.9 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+1429.1 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1435.3 "Made Magic" Ability { id: "8B94", source: "Quaqua" } window 40,40 forcejump "quaqua-left-sunny-loop"
+
+
+1652.6 label "quaqua-left-rainy"
+1652.6 "--sync--" StartsUsing { id: "8B90", source: "Quaqua" }
+1657.6 "Arcane Armaments" Ability { id: "8B90", source: "Quaqua" }
+
+1659.7 "--jump--" Ability { id: "8B8F", source: "Quaqua" }
+1666.6 "Rout 1" Ability { id: "8B91", source: "Quaqua" }
+1668.4 "Rout 2" #Ability { id: "8B92", source: "Quaqua" }
+1670.0 "Rout 3" #Ability { id: "8B92", source: "Quaqua" }
+1671.6 "Rout 4" #Ability { id: "8B92", source: "Quaqua" }
+
+1678.7 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1685.5 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+1691.6 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1696.9 "Howl" Ability { id: "8B96", source: "Quaqua" }
+
+1706.8 "Cloud to Ground" Ability { id: "8B9B", source: "Drake Familiar" } duration 18.6
+#1110.8 "Cloud to Ground 2" Ability { id: "8B9B", source: "Drake Familiar" }
+
+1732.2 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1738.4 label "quaqua-left-rainy-loop"
+1738.4 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+1748.5 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+1753.4 "Ravaging Axe" Ability { id: "8B8A", source: "Aetheric Charge" }
+1753.4 "Ringing Quoits" Ability { id: "8B8B", source: "Aetheric Charge" }
+
+1762.7 "Howl" Ability { id: "8B96", source: "Quaqua" }
+1772.6 "Cloud to Ground" Ability { id: "8B9B", source: "Drake Familiar" } duration 18.6
+#1176.6 "Cloud to Ground" Ability { id: "8B9B", source: "Drake Familiar" }
+
+1787.9 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1794.1 "Arcane Armaments" Ability { id: "8B90", source: "Quaqua" }
+
+1796.1 "--jump--" Ability { id: "8B8F", source: "Quaqua" }
+1802.8 "Rout 1" Ability { id: "8B91", source: "Quaqua" }
+1804.5 "Rout 2" #Ability { id: "8B92", source: "Quaqua" }
+1806.1 "Rout 3" #Ability { id: "8B92", source: "Quaqua" }
+1807.9 "Rout 4" #Ability { id: "8B92", source: "Quaqua" }
+
+1814.0 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1820.8 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+1826.9 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+1833.1 "Made Magic" Ability { id: "8B94", source: "Quaqua" } forcejump "quaqua-left-rainy-loop"
+
+
+# ALL ENCOUNTER ABILITIES (all paths)
+# 1961 attack auto damage from Quaqua
+# 8B88 Arcane Armaments self-targeted cast before axe/ring Arcane Armaments
+# 8B89 --sync-- self-targeted ability for orb transforming into armament
+# 8B8A Ravaging Axe fast cast and circle damage from Arcane Armaments axe
+# 8B8B Ringing Quoits fast cast and donut damage from Arcane Armaments ring
+# 8B8C Arcane Armaments self-targeted cast before hammer Arcane Armaments
+# 8B8D Hammer Landing cast and light knockback damage from initial Arcane Armaments hammer jump
+# 8B8E Hammer Landing light knockback damage from followup Arcane Armaments hammer jumps
+# 8B8F --sync-- repositioning
+# 8B90 Arcane Armaments self-targeted cast before 4x Rout charge Arcane Armaments
+# 8B91 Rout cast and damage for initial charge
+# 8B92 Rout damage for followup 3 charges
+# 8B93 --sync-- self-targeted preview casts of Rout
+# 8B94 Made Magic cast and raidwide damage that summons orbs
+# 8B95 Violet Storm cast and damage for large late telegraph front conal
+
+# ALL ENCOUNTER ABILITIES (left path only)
+# 8B96 Howl self-targeted cast to summon Anala Familiar or Drake Familiar
+# 8B97 Scalding Waves cast and damage for initial fire lines
+# 8B98 Scalding Waves damage for bouncing fire lines
+# 8B9B Cloud to Ground self-targeted cast for Drake exaflares
+# 8B9C Cloud to Ground cast and damage for initial hit of Drake exaflares
+# 8B9D Cloud to Ground cast and damage for followup hits of Drake exaflares
+
+
+#~~~~~~~~~~#
+# Ketuduke #
+#~~~~~~~~~~#
+
+# -p 8AA5:2014
+# -ii 8A78 8AA6 8A7A 8A7B 8A81 8D1D 8AA4 8A89 8A8A 8A82 8A83 8A8C 8D10 8A94 8A98 8A99 8A96
+
+# Seasong's Rest will be sealed off
+#2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "112B" } window 10000,0
+2000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "112B" } window 10000,0
+2009.0 "--sync--" StartsUsing { id: "8AA5", source: "Ketuduke" }
+2014.0 "Tidal Roar" Ability { id: "8AA5", source: "Ketuduke" }
+
+2023.0 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" }
+2038.0 "Saturate" Ability { id: "8A7C", source: "Spring Crystal" }
+
+2044.2 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" }
+2059.2 "Saturate" Ability { id: "8A7E", source: "Spring Crystal" }
+
+2066.4 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" }
+2075.5 "Bubble Net" Ability { id: "8A80", source: "Ketuduke" }
+
+2087.6 "Fluke Typhoon (cast)" Ability { id: "8A84", source: "Ketuduke" }
+2093.6 "Fluke Typhoon" Ability { id: "8A85", source: "Ketuduke" }
+2096.7 "Saturate" Ability { id: "8A7F", source: "Spring Crystal" }
+
+2107.5 "Strewn Bubbles" Ability { id: "8A86", source: "Ketuduke" }
+2114.5 "Sphere Shatter" Ability { id: "8A87", source: "Ketuduke" }
+
+2123.5 "Receding Twintides/Encroaching Twintides" Ability { id: ["8A9D", "8A9F"], source: "Ketuduke" }
+2127.5 "Far Tide/Near Tide" Ability { id: ["8AA0", "8A9E"], source: "Ketuduke" }
+
+2134.2 "--middle--" Ability { id: "8A77", source: "Ketuduke" }
+2137.0 "--sync--" StartsUsing { id: "8D11", source: "Ketuduke" } jump "ketuduke-02"
+2137.0 "--sync--" StartsUsing { id: "8A92", source: "Ketuduke" } jump "ketuduke-0304"
+2146.4 "--sync--" StartsUsing { id: "8A79", source: "Ketuduke" } jump "ketuduke-01"
+
+# path 01
+2234.2 "--middle--" Ability { id: "8A77", source: "Ketuduke" }
+2246.4 label "ketuduke-01"
+2246.4 "--sync--" StartsUsing { id: "8A79", source: "Ketuduke" }
+2248.6 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" }
+2254.3 "Summon" Ability { id: "8A8E", source: "Zeal-blind Zozone" }
+2258.7 "Bubble Net" Ability { id: "8A80", source: "Ketuduke" }
+2264.7 "Fluke Typhoon (cast)" Ability { id: "8A84", source: "Ketuduke" }
+2270.7 "Fluke Typhoon" Ability { id: "8A85", source: "Ketuduke" }
+2273.4 "Water III" Ability { id: "8D14", source: "Summoned Apa" }
+2273.8 "Saturate" Ability { id: "8A7F", source: "Spring Crystal" }
+2291.0 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" } window 40,40 forcejump "ketuduke-loop"
+
+# path 02
+2334.2 "--sync--" Ability { id: "8A77", source: "Ketuduke" }
+2337.0 label "ketuduke-02"
+2337.0 "--sync--" StartsUsing { id: "8D11", source: "Ketuduke" }
+2339.2 "Tidal Wave (cast)" Ability { id: "8D11", source: "Ketuduke" }
+2346.2 "Tidal Wave" Ability { id: "8D12", source: "Ketuduke" }
+2347.3 "Hydrosurge" Ability { id: "8A8B", source: "Ketuduke" }
+2363.1 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" }
+2370.1 "Summon" Ability { id: "8A8E", source: "Zeal-blind Zozone" }
+2377.2 "Wavefoam" Ability { id: "8D13", source: "Summoned Apa" }
+2390.2 "Fluke Typhoon" Ability { id: "8A8F", source: "Summoned Anila" }
+2392.0 "Saturate" Ability { id: "8A7F", source: "Spring Crystal" }
+2408.2 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" } window 40,40 forcejump "ketuduke-loop"
+
+# path 03 / path 04
+2434.2 "--sync--" Ability { id: "8A77", source: "Ketuduke" }
+2437.0 label "ketuduke-0304"
+2437.0 "--sync--" StartsUsing { id: "8A92", source: "Ketuduke" }
+2442.0 "Roar" Ability { id: "8A92", source: "Ketuduke" }
+# 2142.7 "--sync--" AddedCombatant { name: "Aloalo Zaratan" } # path 03
+# 2142.7 "--sync--" AddedCombatant { name: "Aloalo Ogrebon" } # path 04
+2454.8 "Bubble Net" Ability { id: "8A93", source: "Ketuduke" }
+2465.4 "Updraft" Ability { id: "8D0F", source: "Ketuduke" }
+2467.6 "Hundred Lashings?" Ability { id: "8A97", source: "Aloalo Zaratan" } # path 03
+2470.5 "Shock?" Ability { id: "8A9A", source: "Aloalo Ogrebon" } # path 04
+# this cast is ~+1.5s in path04, but the paths are close enough that we'll just combine them
+2476.4 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" } window 40,40 forcejump "ketuduke-loop"
+
+# final loop (all paths)
+2800.0 label "ketuduke-loop"
+2800.0 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" }
+2810.0 "Bubble Net" Ability { id: "8A80", source: "Ketuduke" }
+2816.0 "Fluke Typhoon (cast)" Ability { id: "8A84", source: "Ketuduke" }
+2822.0 "Fluke Typhoon" Ability { id: "8A85", source: "Ketuduke" }
+2822.8 "Hydrobomb (cast)" Ability { id: "8AA1", source: "Ketuduke" }
+#2216.0 "Saturate" Ability { id: "8A7F", source: "Spring Crystal" }
+2825.0 "Saturate" Ability { id: "8A7D", source: "Spring Crystal" }
+2827.9 "Hydrobomb 1" #Ability { id: "8AA2", source: "Ketuduke" }
+2829.9 "Hydrobomb 2" #Ability { id: "8AAffff2", source: "Ketuduke" }
+2831.9 "Hydrobomb 3" #Ability { id: "8AA2", source: "Ketuduke" }
+
+2837.9 "Blowing Bubbles" Ability { id: "8A88", source: "Ketuduke" }
+2843.9 "--middle--" Ability { id: "8A77", source: "Ketuduke" }
+2851.8 "Receding Twintides/Encroaching Twintides" Ability { id: ["8A9D", "8A9F"], source: "Ketuduke" }
+2855.8 "Far Tide/Near Tide" Ability { id: ["8AA0", "8A9E"], source: "Ketuduke" }
+2867.5 "Tidal Roar" Ability { id: "8AA5", source: "Ketuduke" }
+
+2874.3 "--middle--" Ability { id: "8A77", source: "Ketuduke" }
+2879.4 "Strewn Bubbles" Ability { id: "8A86", source: "Ketuduke" }
+2886.4 "Sphere Shatter" Ability { id: "8A87", source: "Ketuduke" }
+2887.4 "Receding Twintides/Encroaching Twintides" Ability { id: ["8A9D", "8A9F"], source: "Ketuduke" }
+2891.4 "Far Tide/Near Tide" Ability { id: ["8AA0", "8A9E"], source: "Ketuduke" }
+2903.1 "Hydroblast" Ability { id: "8AA3", source: "Ketuduke" }
+2914.8 "Tidal Roar" Ability { id: "8AA5", source: "Ketuduke" }
+
+2923.8 "Spring Crystals" Ability { id: "8A79", source: "Ketuduke" } window 40,40 forcejump "ketuduke-loop"
+
+# ALL ENCOUNTER ABILITIES
+# 8A77 --sync-- repositioning
+# 8A78 --sync-- auto damage
+# 8A79 Spring Crystals self-targeted cast to summon Spring Crystals
+# 8A7A 衝撃 self-targeted ability from Spring Crystal orbs
+# 8A7B 衝撃 self-targeted ability from Spring Crystal rupees
+# 8A7C Saturate cast and damage from Spring Crystal orb circle (no bubbles)
+# 8A7D Saturate cast and damage from Spring Crystal orb circle (w/Bubble Net)
+# 8A7E Saturate cast and damage from Spring Crystal rupee line laser (no bubbles)
+# 8A7F Saturate cast and damage from Spring Crystal rupee line laser (w/Bubble Net)
+# 8A80 Bubble Net self-targeted cast before Bubbles along with 8A81
+# 8A81 Bubble Net cast and ability on players that adds Bubbles debuffs
+# 8A82 Riptide ability on players from Wavefoam/Updraft Airy Bubble when you step in one
+# 8A83 Fetters ability on players from Wavefoam/Updraft Airy Bubble when you step in one after 8A82 Riptide
+# 8A84 Fluke Typhoon self-targeted cast before 8A85 knockback
+# 8A85 Fluke Typhoon cast and knockback ability on Spring Crystal and players
+# 8A86 Strewn Bubbles self-targeted cast before 8A87 Sphere Shatter moving arches
+# 8A87 Sphere Shatter damage from moving arches
+# 8A88 Blowing Bubbles self-targeted cast that adds Airy Bubble Adds
+# 8A89 Riptide ability on players from Blowing Bubbles Airy Bubble when you step in one
+# 8A8A Fetters ability on players from Blowing Bubbles Airy Bubble when you step in one after 8A89 Riptide
+# 8A8B Hydrosurge self-targeted cast to make blue dividing line
+# 8A8C Hydrosurge self-targeted cast to make blue divindg line
+# 8A8E Summon self-targeted cast from Zeal-blind Zozone to summon Summoned Apa
+# 8A8F Fluke Typhoon self-targeted cast from Suummoned Anila to move bubbles across divide
+# 8A92 Roar self-targeted cast to summon Zaratan adds to do Hundred Lashings
+# 8A93 Bubble Net self-targeted cast before Updraft (either version)
+# 8A94 Bubble Net cast and raidwide damage paired with 8A93
+# 8A95 Updraft self-targeted cast during Ogrebon Shock
+# 8A96 Updraft ability on players during Ogrebon Shock to move them in air if in bubbles
+# 8A97 Hundred Lashings cast and damage for Zaratan 180 cleave
+# 8A98 Hundred Lashings self-targeted cast for Zaratan 180 cleave
+# 8A99 Hundred Lashings self-targeted cast for Zaratan 180 cleave
+# 8A9A Shock cast and damage from Ogrebon if not in bubble
+# 8A9D Receding Twintides cast and damage for initial out during out->in
+# 8A9E Near Tide fast cast and damage for second out during in->out with 8A9F Encroaching Twintides
+# 8A9F Encroaching Twintides cast and damage for initial in during in->out
+# 8AA0 Far Tide fast cast and damage for second in during out->in with 8A9D Receding Twintides
+# 8AA1 Hydrobomb self-targeted cast for 8AA2 puddles
+# 8AA2 Hydrobomb cast and damage for 3x puddles
+# 8AA3 Hydroblast cast and tankbuster on player (but no damage)
+# 8AA4 Hydroblast tankbuster damage
+# 8AA5 Tidal Roar self-targeted cast for 8AA6 raidwide
+# 8AA6 Tidal Roar raidwide damage
+# 8D0F Updraft self-targeted cast to move bubbled Zaratan add into the air (paired with 8D10)
+# 8D10 Updraft self-targeted cast to move bubbled Zaratan add into the air (paired with 8D0F)
+# 8D11 Tidal Wave self-targeted cast to summon knockback on (non-bubbled) player
+# 8D12 Tidal Wave cast and light damage to knockbac player before Hydrosurge
+# 8D13 Wavefoam self-targeted cast from Summoned Apa to create bubbles
+# 8D14 Water III self-targeted cast for tether from Summoned Apa along with 8D1D
+# 8D1D Water III damage from Summoned Apa tether
+
+
+#~~~~~~~~~~~~~~~~~~~~~~#
+# Quaqua (middle path) #
+#~~~~~~~~~~~~~~~~~~~~~~#
+
+# -p 8B94:3013.4
+# -ii 8B89 8BA2 8CD1 8B93
+
+# Elder Stump will be sealed off
+#3000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1129" } window 10000,0
+3000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "1129" } window 10000,0
+
+3007.0 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3008.4 "--sync--" StartsUsing { id: "8B94", source: "Quaqua" } window 10,10
+3013.4 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+3023.5 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+3025.6 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3028.4 "Ravaging Axe" Ability { id: "8B8A", source: "Aetheric Charge" }
+
+3032.0 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+3042.1 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+3047.0 "Ringing Quoits" Ability { id: "8B8B", source: "Aetheric Charge" }
+
+3052.3 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3058.4 "Arcane Armaments"
+
+#cactbot-timeline-lint-disable-sync-order
+3053.4 "--sync--" StartsUsing { id: "8B8C", source: "Quaqua" } window 40,40 jump "quaqua-middle-water"
+3053.4 "--sync--" StartsUsing { id: "8B90", source: "Quaqua" } window 40,40 jump "quaqua-middle-poison"
+#cactbot-timeline-lint-enable-sync-order
+
+3153.4 label "quaqua-middle-water"
+3153.4 "--sync--" StartsUsing { id: "8B8C", source: "Quaqua" }
+3158.4 "Arcane Armaments" Ability { id: "8B8C", source: "Quaqua" }
+3168.7 "Hammer Landing 1" Ability { id: "8B8D", source: "Quaqua" }
+3170.7 "Hammer Landing 2" #Ability { id: "8B8E", source: "Quaqua" }
+3172.7 "Hammer Landing 3" #Ability { id: "8B8E", source: "Quaqua" }
+
+3180.7 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3187.5 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+3193.6 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3203.0 "Arcane Armaments" Ability { id: "8B9F", source: "Quaqua" }
+3210.2 "Elemental Impact" Ability { id: "8BA0", source: "Quaqua" }
+3224.3 "Flowing Lance" Ability { id: "8BA1", source: "Quaqua" } duration 12
+
+3253.1 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3259.2 label "quaqua-middle-water-loop"
+3259.2 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+3269.2 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+3274.1 "Ringing Quoits" Ability { id: "8B8B", source: "Aetheric Charge" }
+3274.1 "Ravaging Axe" Ability { id: "8B8A", source: "Aetheric Charge" }
+
+3279.4 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3288.7 "Arcane Armaments" Ability { id: "8B9F", source: "Quaqua" }
+3295.9 "Elemental Impact" Ability { id: "8BA0", source: "Quaqua" }
+3310.0 "Flowing Lance" Ability { id: "8BA1", source: "Quaqua" } duration 12
+
+3329.8 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3336.1 "Arcane Armaments" Ability { id: "8B8C", source: "Quaqua" }
+3346.2 "Hammer Landing 1" Ability { id: "8B8D", source: "Quaqua" }
+3348.2 "Hammer Landing 2" #Ability { id: "8B8E", source: "Quaqua" }
+3350.2 "Hammer Landing 3" #Ability { id: "8B8E", source: "Quaqua" }
+
+3358.3 "--sync--" Ability { id: "8B8F", source: "Quaqua" }
+3365.1 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+3371.2 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3377.4 "Made Magic" Ability { id: "8B94", source: "Quaqua" } window 40,40 forcejump "quaqua-middle-water-loop"
+
+
+3453.4 label "quaqua-middle-poison"
+3453.4 "--sync--" StartsUsing { id: "8B90", source: "Quaqua" }
+3458.4 "Arcane Armaments" Ability { id: "8B90", source: "Quaqua" }
+3460.4 "--jump--" Ability { id: "8B8F", source: "Quaqua" }
+3467.3 "Rout 1" Ability { id: "8B91", source: "Quaqua" }
+3469.1 "Rout 2" #Ability { id: "8B92", source: "Quaqua" }
+3470.7 "Rout 3" #Ability { id: "8B92", source: "Quaqua" }
+3472.3 "Rout 4" #Ability { id: "8B92", source: "Quaqua" }
+
+3479.5 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3486.3 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+3492.4 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3501.5 "Arcane Armaments" Ability { id: "8BA3", source: "Quaqua" }
+
+3525.6 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3532.4 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+3538.6 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3544.7 label "quaqua-middle-poison-loop"
+3544.7 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+3554.8 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+3559.7 "Ringing Quoits" Ability { id: "8B8B", source: "Aetheric Charge" }
+3559.7 "Ravaging Axe" Ability { id: "8B8A", source: "Aetheric Charge" }
+
+3565.0 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+3574.2 "Arcane Armaments" Ability { id: "8BA3", source: "Quaqua" }
+
+3590.3 "--sync--" Ability { id: "8B8F", source: "Quaqua" }
+3596.6 "Arcane Armaments" Ability { id: "8B90", source: "Quaqua" }
+3598.6 "--jump--" Ability { id: "8B8F", source: "Quaqua" }
+3605.4 "Rout 1" Ability { id: "8B91", source: "Quaqua" }
+3607.2 "Rout 2" #Ability { id: "8B92", source: "Quaqua" }
+3608.8 "Rout 3" #Ability { id: "8B92", source: "Quaqua" }
+3610.5 "Rout 4" #Ability { id: "8B92", source: "Quaqua" }
+
+3617.7 "--sync--" Ability { id: "8B8F", source: "Quaqua" }
+3624.4 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+3630.6 "--sync--" Ability { id: "8B8F", source: "Quaqua" }
+3636.7 "Made Magic" Ability { id: "8B94", source: "Quaqua" } window 40,40 forcejump "quaqua-middle-poison-loop"
+
+# ALL ENCOUNTER ABILITIES (middle path only)
+# 8B9F Arcane Armaments self-targeted cast before water spear Arcane Armaments
+# 8BA0 Elemental Impact cast and damage for initial water spear circles
+# 8BA1 Flowing Lance cast and damage for initial water spear cross
+# 8BA2 Flowing Lance cast and damage for initial water spear cross
+# 8CD1 Flowing Lance short cast and damage for followup rotating water spear crosses
+# 8BA3 Arcane Armaments self-targeted cast before poison spear Arcane Armaments
+
+
+#~~~~~~#
+# Lala #
+#~~~~~~#
+
+# -p 887F:4016.2
+# -ii 8878 8879 8873 8CDD
+
+# The Origin Spring will be sealed off
+#4000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "112C" } window 10000,0
+4000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "112C" } window 10000,0
+4011.2 "--sync--" StartsUsing { id: "887F", source: "Lala" } window 10,10
+4016.2 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+
+4019.3 "--middle--" Ability { id: "8874", source: "Lala" }
+4027.4 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" }
+4040.5 "Arcane Plot" Ability { id: "8875", source: "Lala" }
+4062.6 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+
+4069.7 "--middle--" Ability { id: "8874", source: "Lala" }
+4077.8 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" }
+4088.9 "Analysis" Ability { id: "887B", source: "Lala" }
+4102.7 "Targeted Light" Ability { id: "8CDC", source: "Lala" }
+
+#cactbot-timeline-lint-disable-sync-order
+4111.0 "--sync--" StartsUsing { id: "8882", source: "Lala" } window 40,40 jump "lala-05"
+4114.0 "Faunal Figure?" #Ability { id: "8882", source: "Lala" }
+
+4111.0 "--sync--" StartsUsing { id: "8880", source: "Lala" } window 40,40 jump "lala-06"
+4114.0 "Floral Figure?" #Ability { id: "8880", source: "Lala" }
+
+4111.0 "--sync--" StartsUsing { id: "8884", source: "Lala" } window 40,40 jump "lala-07"
+4114.0 "Constructive Figure?" #Ability { id: "8884", source: "Lala" }
+
+4111.0 "--sync--" StartsUsing { id: "8D2C", source: "Lala" } window 40,40 jump "lala-08"
+4114.0 "Volcanic Coordinates (cast)?" #Ability { id: "8D2C", source: "Lala" }
+#cactbot-timeline-lint-enable-sync-order
+
+4211.0 label "lala-05"
+4211.0 "--sync--" StartsUsing { id: "8882", source: "Lala" }
+4214.0 "Faunal Figure" Ability { id: "8882", source: "Lala" }
+4227.3 "Flail Smash" Ability { id: "8883", source: "Rodiaki" }
+4235.2 "Strategic Strike" Ability { id: "887E", source: "Lala" }
+
+4243.4 "--middle--" Ability { id: "8874", source: "Lala" }
+4251.7 label "lala-05-loop"
+4251.7 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" }
+4260.8 "Analysis" Ability { id: "887B", source: "Lala" }
+4272.5 "Targeted Light" Ability { id: "8CDC", source: "Lala" }
+
+4283.6 "Arcane Plot" Ability { id: "8876", source: "Lala" }
+4299.7 "Calculated Trajectory" Ability { id: "887D", source: "Lala" }
+4314.8 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+4324.9 "Faunal Figure" Ability { id: "8882", source: "Lala" }
+4332.0 "Arcane Plot" Ability { id: "8875", source: "Lala" }
+4350.7 "Flail Smash" Ability { id: "8A6C", source: "Rodiaki" }
+4353.1 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+4363.2 "Strategic Strike" Ability { id: "887E", source: "Lala" }
+
+4371.4 "--middle--" Ability { id: "8874", source: "Lala" }
+4379.7 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" } window 40,40 forcejump "lala-05-loop"
+
+
+4411.0 label "lala-06"
+4411.0 "--sync--" StartsUsing { id: "8880", source: "Lala" }
+4414.0 "Floral Figure" Ability { id: "8880", source: "Lala" }
+4427.8 "Rolling Spout" Ability { id: "8881", source: "Kapokapo" }
+4435.2 "Strategic Strike" Ability { id: "887E", source: "Lala" }
+
+4443.4 "--middle--" Ability { id: "8874", source: "Lala" }
+4451.7 label "lala-06-loop"
+4451.7 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" }
+4460.8 "Analysis" Ability { id: "887B", source: "Lala" }
+4472.5 "Targeted Light" Ability { id: "8CDC", source: "Lala" }
+
+4483.6 "Arcane Plot" Ability { id: "8876", source: "Lala" }
+4499.7 "Calculated Trajectory" Ability { id: "887D", source: "Lala" }
+4514.8 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+4525.0 "Floral Figure" Ability { id: "8880", source: "Lala" }
+4532.1 "Arcane Plot" Ability { id: "8875", source: "Lala" }
+4553.8 "Rolling Spout" Ability { id: "8A6B", source: "Kapokapo" }
+4558.4 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+4568.5 "Strategic Strike" Ability { id: "887E", source: "Lala" }
+
+4576.7 "--middle--" Ability { id: "8874", source: "Lala" }
+4584.9 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" } window 40,40 forcejump "lala-06-loop"
+
+
+4611.0 label "lala-07"
+4611.0 "--sync--" StartsUsing { id: "8884", source: "Lala" }
+4614.0 "Constructive Figure" Ability { id: "8884", source: "Lala" }
+4629.1 "Aero II" Ability { id: "8885", source: "Aloalo Golem" }
+4634.9 "Strategic Strike" Ability { id: "887E", source: "Lala" }
+
+4643.1 "--middle--" Ability { id: "8874", source: "Lala" }
+4651.3 label "lala-07-loop"
+4651.3 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" }
+4660.4 "Analysis" Ability { id: "887B", source: "Lala" }
+4672.1 "Targeted Light" Ability { id: "8CDC", source: "Lala" }
+
+4683.2 "Arcane Plot" Ability { id: "8876", source: "Lala" }
+4699.3 "Calculated Trajectory" Ability { id: "887D", source: "Lala" }
+4714.4 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+4724.6 "Constructive Figure" Ability { id: "8884", source: "Lala" }
+4731.5 "Arcane Plot" Ability { id: "8875", source: "Lala" }
+4750.5 "Aero II" Ability { id: "8A6D", source: "Aloalo Golem" }
+4752.6 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+4762.7 "Strategic Strike" Ability { id: "887E", source: "Lala" }
+
+4770.9 "--middle--" Ability { id: "8874", source: "Lala" }
+4779.1 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" } window 40,40 forcejump "lala-07-loop"
+
+
+4811.0 label "lala-08"
+4811.0 "--sync--" StartsUsing { id: "8D2C", source: "Lala" }
+4814.0 "Volcanic Coordinates (cast)" Ability { id: "8D2C", source: "Lala" }
+4824.1 "Volcanic Coordinates 1" Ability { id: "8D2D", source: "Lala" }
+4831.1 "Volcanic Coordinates 2" Ability { id: "8D2D", source: "Lala" }
+4836.1 "Strategic Strike" Ability { id: "887E", source: "Lala" }
+
+4844.3 "--middle--" Ability { id: "8874", source: "Lala" }
+4852.4 label "lala-08-loop"
+4852.4 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" }
+4861.5 "Analysis" Ability { id: "887B", source: "Lala" }
+4873.2 "Targeted Light" Ability { id: "8CDC", source: "Lala" }
+
+4884.3 "Arcane Plot" Ability { id: "8876", source: "Lala" }
+4900.4 "Calculated Trajectory" Ability { id: "887D", source: "Lala" }
+4915.5 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+4925.6 "Volcanic Coordinates (cast)" Ability { id: "8D2C", source: "Lala" }
+4933.7 "Arcane Plot" Ability { id: "8875", source: "Lala" }
+4935.7 "Volcanic Coordinates 1" Ability { id: "8D2D", source: "Lala" }
+4942.7 "Volcanic Coordinates 2" Ability { id: "8D2D", source: "Lala" }
+4954.9 "Inferno Theorem" Ability { id: "887F", source: "Lala" }
+4967.0 "Strategic Strike" Ability { id: "887E", source: "Lala" }
+
+4975.2 "--middle--" Ability { id: "8874", source: "Lala" }
+4983.5 "Arcane Blight" Ability { id: ["886F", "8870", "8871", "8872"], source: "Lala" } window 40,40 forcejump "lala-08-loop"
+
+
+# ALL ENCOUNTER ABILITIES
+# 368 attack auto damage
+# 886F Arcane Blight self-targeted cast for right-safe 270 degree cleave
+# 8870 Arcane Blight self-targeted cast for left-safe 270 degree cleave
+# 8871 Arcane Blight self-targeted cast for back-safe 270 degree cleave
+# 8872 Arcane Blight self-targeted cast for front-safe 270 degree cleave
+# 8873 Arcane Blight cast and damage for 270 degree cleave
+# 8874 --sync-- repositioning
+# 8875 Arcane Plot self-targeted cast for "disconnected safe squares" blue squares
+# 8876 Arcane Plot self-targeted cast for "one row safe" blue squares
+# 8878 Bright Pulse initial blue square
+# 8879 Bright Pulse followup blue square
+# 887B Analysis self-targeted cast before giving players unseen debuffs
+# 887D Calculated Trajectory self-targeted cast to give players forced march
+# 887E Strategic Strike cast and tankbuster damage
+# 887F Inferno Theorem cast and raidwide damage
+# 8880 Floral Figure self-targeted cast to summon Kapokapo seeds to Rolling Spout
+# 8881 Rolling Spout cast and damage for initial Kapokapo donut
+# 8882 Faunal Figure self-targeted cast to summon Rodiaki armadillos to Flail Smash
+# 8883 Flail Smash cast and proximity damage for Rodiaki center attack
+# 8884 Constructive Figure self-targeted cast to summon Golems to cast Aero II
+# 8885 Aero II cast and damage for Golem line
+# 8A6B Rolling Spout cast and damage for Kapokapo donut during Arcane Plot
+# 8A6C Flail Smash cast and proximity damage for Rodiaki side attack during Arcane Plot
+# 8A6D Aero II cast and damage for Golem line during Arcane Plot
+# 8CDC Targeted Light self-targeted cast for weak spot boss tether
+# 8CDD Targeted Light cast and damage on players for 8CDC
+# 8D2C Volcanic Coordinates self-targeted cast before 2x 82D2 puddles
+# 8D2D Volcanic Coordinates cast and damage for targeted circle puddle
+
+
+#~~~~~~~~~~~~~~~~~~~~~#
+# Quaqua (right path) #
+#~~~~~~~~~~~~~~~~~~~~~#
+
+# -p 8B94:5014.1
+# -ii 8B89 8B93
+
+# Ancient Forum will be sealed off
+#5000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "112A" } window 10000,0
+5000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "112A" } window 10000,0
+5007.8 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5009.1 "--sync--" StartsUsing { id: "8B94", source: "Quaqua" } window 10,10
+5014.1 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+5024.2 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+5026.3 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5029.0 "Ravaging Axe" Ability { id: "8B8A", source: "Aetheric Charge" }
+
+5032.8 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+5042.9 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+5047.8 "Ringing Quoits" Ability { id: "8B8B", source: "Aetheric Charge" }
+
+5053.1 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5059.3 "Arcane Armaments"
+
+#cactbot-timeline-lint-disable-sync-order
+5054.3 "--sync--" StartsUsing { id: "8B8C", source: "Quaqua" } window 40,40 jump "quaqua-right-fixed"
+5054.3 "--sync--" StartsUsing { id: "8B90", source: "Quaqua" } window 40,40 jump "quaqua-right-untouched"
+#cactbot-timeline-lint-enable-sync-order
+
+5154.3 label "quaqua-right-fixed"
+5154.3 "--sync--" StartsUsing { id: "8B8C", source: "Quaqua" }
+5159.3 "Arcane Armaments" Ability { id: "8B8C", source: "Quaqua" }
+5169.4 "Hammer Landing 1" Ability { id: "8B8D", source: "Quaqua" }
+5171.4 "Hammer Landing 2" #Ability { id: "8B8E", source: "Quaqua" }
+5173.4 "Hammer Landing 3" #Ability { id: "8B8E", source: "Quaqua" }
+
+5181.5 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5188.3 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+5194.4 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5200.8 "Arcane Pursuit" Ability { id: "8BA4", source: "Quaqua" }
+5214.1 "--cleanse--" Ability { id: "8BAD" }
+5214.9 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5216.8 "--cleanse--" Ability { id: "8BAD" }
+
+5221.1 "Arcane Pursuit" Ability { id: "8BA4", source: "Quaqua" }
+5237.1 "--cleanse--" Ability { id: "8BA6" }
+5244.1 "--cleanse--" Ability { id: "8BA6" }
+
+5248.2 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5254.6 label "quaqua-right-fixed-loop"
+5254.6 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+5264.7 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+5269.6 "Ringing Quoits" Ability { id: "8B8B", source: "Aetheric Charge" }
+5269.6 "Ravaging Axe" Ability { id: "8B8A", source: "Aetheric Charge" }
+
+5274.9 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5281.1 "Arcane Pursuit" Ability { id: "8BA4", source: "Quaqua" }
+5297.1 "--cleanse--" Ability { id: "8BA6" }
+5297.2 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5303.3 "Arcane Armaments" Ability { id: "8B8C", source: "Quaqua" }
+5304.1 "--cleanse--" Ability { id: "8BA6" }
+
+5313.6 "Hammer Landing 1" Ability { id: "8B8D", source: "Quaqua" }
+5315.7 "Hammer Landing 2" #Ability { id: "8B8E", source: "Quaqua" }
+5317.7 "Hammer Landing 3" #Ability { id: "8B8E", source: "Quaqua" }
+
+5325.8 "--sync--" Ability { id: "8B8F", source: "Quaqua" }
+5332.6 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+5338.7 "--sync--" Ability { id: "8B8F", source: "Quaqua" }
+5345.0 "Made Magic" Ability { id: "8B94", source: "Quaqua" } window 40,40 forcejump "quaqua-right-fixed-loop"
+
+
+5454.3 label "quaqua-right-untouched"
+5454.3 "--sync--" StartsUsing { id: "8B90", source: "Quaqua" }
+5459.3 "Arcane Armaments" Ability { id: "8B90", source: "Quaqua" }
+5461.3 "--jump--" Ability { id: "8B8F", source: "Quaqua" }
+5468.0 "Rout 1" Ability { id: "8B91", source: "Quaqua" }
+5469.7 "Rout 2" #Ability { id: "8B92", source: "Quaqua" }
+5471.3 "Rout 3" #Ability { id: "8B92", source: "Quaqua" }
+5473.1 "Rout 4" #Ability { id: "8B92", source: "Quaqua" }
+
+5480.2 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5487.0 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+5504.2 "Arcane Intervention 1" Ability { id: "8BAE", source: "Quaqua" }
+5513.2 "Arcane Intervention 2" Ability { id: "8BAE", source: "Quaqua" }
+5522.2 "Arcane Intervention 3" Ability { id: "8BAE", source: "Quaqua" }
+5525.2 "Arcane Intervention 4" Ability { id: "8BAE", source: "Quaqua" }
+
+5529.2 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5535.9 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+5542.1 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5548.3 label "quaqua-right-untouched-loop"
+5548.3 "Made Magic" Ability { id: "8B94", source: "Quaqua" }
+5558.4 "Arcane Armaments" Ability { id: "8B88", source: "Quaqua" }
+5563.3 "Ringing Quoits" Ability { id: "8B8B", source: "Aetheric Charge" }
+5563.3 "Ravaging Axe" Ability { id: "8B8A", source: "Aetheric Charge" }
+
+5575.6 "Arcane Intervention 1" Ability { id: "8BAE", source: "Quaqua" }
+5584.6 "Arcane Intervention 2" Ability { id: "8BAE", source: "Quaqua" }
+5593.6 "Arcane Intervention 3" Ability { id: "8BAE", source: "Quaqua" }
+5596.6 "Arcane Intervention 4" Ability { id: "8BAE", source: "Quaqua" }
+
+5596.6 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5602.8 "Arcane Armaments" Ability { id: "8B90", source: "Quaqua" }
+5604.9 "--jump--" Ability { id: "8B8F", source: "Quaqua" }
+5611.7 "Rout 1" Ability { id: "8B91", source: "Quaqua" }
+5613.5 "Rout 2" #Ability { id: "8B92", source: "Quaqua" }
+5615.1 "Rout 3" #Ability { id: "8B92", source: "Quaqua" }
+5616.7 "Rout 4" #Ability { id: "8B92", source: "Quaqua" }
+
+5619.8 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5626.5 "Violet Storm" Ability { id: "8B95", source: "Quaqua" }
+
+5633.6 "--middle--" Ability { id: "8B8F", source: "Quaqua" }
+5639.7 "Made Magic" Ability { id: "8B94", source: "Quaqua" } window 40,40 forcejump "quaqua-right-untouched-loop"
+
+# ALL ENCOUNTER ABILITIES (right path only)
+# 8BA4 Arcane Pursuit self-targeted cast to summon Aetheric Charge purple orb(s)
+# 8BA5 Fell Forces damage from being too close to Aetheric Charge purple orb
+# 8BA6 --sync-- cast and ability on Aetheric Charge purple orbs for followup player tethered sets
+# 8BAD --sync-- cast and ability on Aetheric Charge purple orbs for initial untethered set
+# 8BAE Arcane Intervention cast and lookaway damage (non-zero if failed)
+# 8D17 Fell Confluence Aetheric Charge purple orb enrage damage from not cleansing it
+
+
+#~~~~~~~~~#
+# Statice #
+#~~~~~~~~~#
+
+# -p 892E:6026.6
+# -ii 8A04 8932 892C 8986 8925 8926 8981 8935 89F6 89F7 8CEB 89FB 8941 8942 8943
+
+# Slumbering Canopy will be sealed off
+#6000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "112D" } window 10000,0
+6000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "112D" } window 10000,0
+# Can be triggered by players earlier
+6004.0 "Hidden Mine" #Ability { id: "892D", source: "Mine" }
+
+6022.6 "--sync--" StartsUsing { id: "892E", source: "Statice" } window 30,30
+6026.6 "Surprise Balloon" Ability { id: "892E", source: "Statice" }
+6034.7 "Surprise Needle" Ability { id: "8930", source: "Needle" }
+6035.6 "Pop" Ability { id: "892F", source: "Statice" }
+6036.7 "4-tonze Weight" Ability { id: "8931", source: "Statice" }
+
+6043.9 "--middle--" Ability { id: "8927", source: "Statice" }
+6049.6 "Trick Reload" Ability { id: "892A", source: "Statice" }
+6063.5 "Trigger Happy" Ability { id: "892B", source: "Statice" }
+6072.6 "Trick Reload" Ability { id: "892A", source: "Statice" }
+6086.5 "Trigger Happy" Ability { id: "892B", source: "Statice" }
+
+6095.6 "Pinwheel" Ability { id: "8933", source: "Statice" }
+6107.3 "Fire Spread" Ability { id: "8934", source: "Statice" } duration 10
+6116.9 "Aero IV" Ability { id: "8929", source: "Statice" }
+
+#cactbot-timeline-lint-disable-sync-order
+6124.1 "--sync--" StartsUsing { id: "8945", source: "Statice" } window 40,40 jump "statice-09"
+6128.1 "Whoopee Cushion?" #Ability { id: "8945", source: "Statice" }
+
+6124.1 "--sync--" StartsUsing { id: "893E", source: "Statice" } window 40,40 jump "statice-10"
+6128.1 "Present Box?" #Ability { id: "893E", source: "Statice" }
+
+6124.1 "--sync--" StartsUsing { id: "8936", source: "Statice" } window 40,40 jump "statice-11"
+6128.1 "Jack-in-the-box?" #Ability { id: "8936", source: "Statice" }
+#cactbot-timeline-lint-enable-sync-order
+
+6224.1 label "statice-09"
+6224.1 "--sync--" StartsUsing { id: "8945", source: "Statice" }
+6228.1 "Whoopee Cushion" Ability { id: "8945", source: "Statice" }
+6246.2 "Fair Flight" Ability { id: "8946", source: "Statice" }
+
+6262.5 "--middle--" Ability { id: "8927", source: "Statice" }
+6267.1 "Dartboard" Ability { id: "8938", source: "Statice" }
+6275.2 "Thunderstorm 1" Ability { id: "8939", source: "Statice" }
+6279.2 "Thunderstorm 2" Ability { id: "8939", source: "Statice" }
+6283.2 "Thunderstorm 3" Ability { id: "8939", source: "Statice" }
+6300.4 "Meteor/Sledgemagic/Hunks of Junk/Happy Surprise" Ability { id: ["893A", "893B", "893C", "893D"], source: "Statice" }
+
+6310.5 label "statice-09-loop"
+6310.5 "Pinwheel" Ability { id: "8933", source: "Statice" }
+6313.6 "--middle--" Ability { id: "8927", source: "Statice" }
+6319.2 "Trick Reload" Ability { id: "892A", source: "Statice" }
+6330.1 "Fire Spread" Ability { id: "8934", source: "Statice" } duration 10
+6333.1 "Trigger Happy" Ability { id: "892B", source: "Statice" }
+6343.2 "Aero IV" Ability { id: "8929", source: "Statice" }
+
+6350.4 "--middle--" Ability { id: "8927", source: "Statice" }
+6355.8 "Surprise Balloon" Ability { id: "892E", source: "Statice" }
+6362.9 "Trick Reload" Ability { id: "892A", source: "Statice" }
+6374.5 "Surprise Needle" Ability { id: "8930", source: "Needle" }
+6375.4 "Pop" Ability { id: "892F", source: "Statice" }
+6377.0 "Trigger Happy" Ability { id: "892B", source: "Statice" }
+
+6388.2 "Whoopee Cushion" Ability { id: "8945", source: "Statice" }
+6395.2 "Shocking Abandon" Ability { id: "8928", source: "Statice" }
+6406.3 "Fair Flight" Ability { id: "8946", source: "Statice" }
+
+6419.6 "Pinwheel" Ability { id: "8933", source: "Statice" } window 40,40 forcejump "statice-09-loop"
+
+
+6424.1 label "statice-10"
+6424.1 "--sync--" StartsUsing { id: "893E", source: "Statice" }
+6428.1 "Present Box" Ability { id: "893E", source: "Statice" }
+6436.8 "Faerie Ring 1" Ability { id: "893F", source: "Surprising Staff" }
+6437.4 "Faerie Road 1" #Ability { id: "8940", source: "Surprising Staff" }
+6442.5 "Faerie Ring 2" Ability { id: "893F", source: "Surprising Staff" }
+6442.9 "Faerie Road 2" #Ability { id: "8940", source: "Surprising Staff" }
+6447.9 "Faerie Ring 3" Ability { id: "893F", source: "Surprising Staff" }
+6448.1 "Faerie Road 3" #Ability { id: "8940", source: "Surprising Staff" }
+
+6457.1 "--middle--" Ability { id: "8927", source: "Statice" }
+6461.7 "Dartboard" Ability { id: "8938", source: "Statice" }
+6469.8 "Thunderstorm 1" Ability { id: "8939", source: "Statice" }
+6473.8 "Thunderstorm 2" Ability { id: "8939", source: "Statice" }
+6477.8 "Thunderstorm 3" Ability { id: "8939", source: "Statice" }
+6495.0 "Meteor/Sledgemagic/Hunks of Junk/Happy Surprise" Ability { id: ["893A", "893B", "893C", "893D"], source: "Statice" }
+
+6508.1 label "statice-10-loop"
+6508.1 "Pinwheel" Ability { id: "8933", source: "Statice" }
+6511.2 "--middle--" Ability { id: "8927", source: "Statice" }
+6516.5 "Trick Reload" Ability { id: "892A", source: "Statice" }
+6527.5 "Fire Spread" Ability { id: "8934", source: "Statice" }
+6530.4 "Trigger Happy" Ability { id: "892B", source: "Statice" }
+6540.5 "Aero IV" Ability { id: "8929", source: "Statice" }
+
+6547.7 "--middle--" Ability { id: "8927", source: "Statice" }
+6553.4 "Surprise Balloon" Ability { id: "892E", source: "Statice" }
+6560.5 "Trick Reload" Ability { id: "892A", source: "Statice" }
+6572.1 "Surprise Needle" Ability { id: "8930", source: "Needle" }
+6573.0 "Pop" Ability { id: "892F", source: "Statice" }
+6574.4 "Trigger Happy" Ability { id: "892B", source: "Statice" }
+
+6585.5 "Present Box" Ability { id: "893E", source: "Statice" }
+6594.2 "Faerie Ring 1" Ability { id: "893F", source: "Surprising Staff" }
+6594.8 "Faerie Road 1" #Ability { id: "8940", source: "Surprising Staff" }
+6599.9 "Faerie Ring 2" Ability { id: "893F", source: "Surprising Staff" }
+6600.4 "Faerie Road 2" #Ability { id: "8940", source: "Surprising Staff" }
+6601.5 "Shocking Abandon" Ability { id: "8928", source: "Statice" }
+6605.5 "Faerie Ring 3" Ability { id: "893F", source: "Surprising Staff" }
+6606.0 "Faerie Road 3" #Ability { id: "8940", source: "Surprising Staff" }
+
+6613.7 "Pinwheel" Ability { id: "8933", source: "Statice" } window 40,40 forcejump "statice-10-loop"
+
+
+6624.1 label "statice-11"
+6624.1 "--sync--" StartsUsing { id: "8936", source: "Statice" }
+6628.1 "Jack-in-the-box" Ability { id: "8936", source: "Statice" }
+6647.2 "Burst" Ability { id: "8937", source: "Treasure Box" }
+
+6659.6 "--sync--" Ability { id: "8927", source: "Statice" }
+6664.0 "Dartboard" Ability { id: "8938", source: "Statice" }
+6672.1 "Thunderstorm 1" Ability { id: "8939", source: "Statice" }
+6676.1 "Thunderstorm 2" Ability { id: "8939", source: "Statice" }
+6680.1 "Thunderstorm 3" Ability { id: "8939", source: "Statice" }
+6697.2 "Meteor/Sledgemagic/Hunks of Junk/Happy Surprise" Ability { id: ["893A", "893B", "893C", "893D"], source: "Statice" }
+
+6707.3 label "statice-11-loop"
+6707.3 "Pinwheel" Ability { id: "8933", source: "Statice" }
+6710.4 "--middle--" Ability { id: "8927", source: "Statice" }
+6715.7 "Trick Reload" Ability { id: "892A", source: "Statice" }
+6726.7 "Fire Spread" Ability { id: "8934", source: "Statice" }
+6729.6 "Trigger Happy" Ability { id: "892B", source: "Statice" }
+6739.7 "Aero IV" Ability { id: "8929", source: "Statice" }
+
+6746.9 "--middle--" Ability { id: "8927", source: "Statice" }
+6752.3 "Surprise Balloon" Ability { id: "892E", source: "Statice" }
+6759.4 "Trick Reload" Ability { id: "892A", source: "Statice" }
+6771.0 "Surprise Needle" Ability { id: "8930", source: "Needle" }
+6771.9 "Pop" Ability { id: "892F", source: "Statice" }
+6773.5 "Trigger Happy" Ability { id: "892B", source: "Statice" }
+
+6784.6 "Jack-in-the-box" Ability { id: "8936", source: "Statice" }
+6793.7 "Shocking Abandon" Ability { id: "8928", source: "Statice" }
+6801.8 "Burst" Ability { id: "8937", source: "Treasure Box" }
+
+6817.1 "Pinwheel" Ability { id: "8933", source: "Statice" } window 40,40 forcejump "statice-11-loop"
+
+
+# ALL ENCOUNTER ABILITIES
+# 8925 Locked and Loaded ability during 892A Trick Reload when a bullet is in the gun
+# 8926 Misload ability during 892A Trick Reload when a bullet missed the gun oops
+# 8927 --sync-- reposition
+# 8928 Shocking Abandon cast and tankbuster damage
+# 8929 Aero IV cast and raidwide damage
+# 892A Trick Reload self-targeted cast to load gun with 8925/8926
+# 892B Trigger Happy self-targeted cast for limit cut dart board
+# 892C Trigger Happy cast and damage for limit cut dart board (filled pie slice)
+# 892D Hidden Mine damage from stepping on the hidden mine
+# 892E Surprise Balloon self-targeted cast to summon Balloon
+# 892F Pop knockback from Surprise Balloon being popped
+# 8930 Surprise Needle short cast and ability blue line aoe from needle adds that pop balloons
+# 8931 4-tonze Weight self-targeted cast for outside circles during Balloon knockback
+# 8932 4-tonze Weight cast and damage from Heavy Weight circles during Balloon knockback
+# 8933 Pinwheel self-targeted cast to summon Ball of Fire rotating fire bars
+# 8934 Fire Spread cast and damage for initial fire bars
+# 8935 Fire Spread cast and damage for initial fire bars
+# 8936 Jack-in-the-box self-targeted cast to generate 4x Treasure Box
+# 8937 Burst fake Treasure Box explosion
+# 8938 Dartboard self-targeted cast for colored dartboard
+# 8939 Thunderstorm cast and damage from circles during Pinwheel
+# 893A Meteor damage and knockback from red Pinwheel slice
+# 893B Sledgemagic damage from yellow Pinwheel slice
+# 893C Hunks of Junk damage from blue Pinwheel slice
+# 893D Happy Surprise full heal from green Pinwheel slice
+# 893E Present Box self-targeted cast to summon Surprising Weapon/Staff/Missile
+# 893F Faerie Ring cast and damage from Surprising Staff donut attack
+# 8940 Faerie Road cast and damage from Surprising Staff line attack
+# 8941 Burst damage on players from hitting Present Box's Surprising Missile
+# 8942 --sync-- knockback ability on players from Surprising Weapon golem
+# 8943 --sync-- knockback ability on players from Surprising Weapon mage
+# 8945 Whoopee Cushion self-targeted cast to summon cushions for Fair Flight
+# 8946 Fair Flight cast and non-zero damage on players to throw them in the air (89F5 is the damage)
+# 8981 Fire Spread self-targeted cast on Ball of Fire for initial fire bars
+# 8986 Trigger Happy cast and zero damage for limit cut dart board (empty pie slice)
+# 89F5 --sync-- damage from failing Fair Flight
+# 89F6 Fire Spread damage for rotating fire bars
+# 89F7 Fire Spread damage for rotating fire bars
+# 8A04 --sync-- auto damage
+# 8CEB Barbed Lightning unknown ability prior to Thunderstorm
+
+
+#~~~~~~~~~~~#
+# Loquloqui #
+#~~~~~~~~~~~#
+
+# -p 87BC:7011.8
+# -ii 87C1 87C3 8C34 8C35 8D38 8E47
+
+# Kairimai Loquloqai will be sealed off
+#7000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "112E" } window 10000,0
+7000.0 "--sync--" SystemLogMessage { id: "7DC", param1: "11DE" } window 10000,0
+7006.8 "--sync--" StartsUsing { id: "87BC", source: "Loquloqui" } window 10,10
+7011.8 "Long-lost Light" Ability { id: "87BC", source: "Loquloqui" }
+
+7018.0 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7025.4 "Summoning Rite" Ability { id: "87BF", source: "Loquloqui" }
+7033.5 "O Life, Flourish" Ability { id: "87C4", source: "Loquloqui" }
+7042.1 "Rush" Ability { id: "87C0", source: "Uolosapa Loqua" }
+
+7043.7 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7050.8 "Summoning Rite" Ability { id: "87BF", source: "Loquloqui" }
+7058.9 "O Life, Flourish" Ability { id: "87C4", source: "Loquloqui" }
+7067.6 "Turnabout" Ability { id: "87C2", source: "Repuruba Loqua" }
+7075.2 "Protective Will" Ability { id: "87BE", source: "Loquloqui" }
+
+7081.3 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7089.5 "O Petals, Unfurl" Ability { id: "87C5", source: "Loquloqui" }
+7108.8 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7109.9 "Pliant Petals" Ability { id: "87C6", source: "Loquloqui" }
+7118.3 "Land Wave" Ability { id: "87BD", source: "Loquloqui" }
+
+7124.5 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7132.6 "O Isle, Bloom" Ability { id: "87C7", source: "Loquloqui" }
+7144.0 "Brilliant Blossoms x12" duration 5 #Ability { id: "87C8", source: "Loquloqui" }
+7156.7 "Long-lost Light" Ability { id: "87BC", source: "Loquloqui" }
+
+7162.9 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7171.1 "O Sky, Be Mine" Ability { id: "87C9", source: "Loquloqui" }
+7181.2 "Sanctuary" Ability { id: "87CA", source: "Loquloqui" }
+
+7189.3 "Stirring of Spirits 1" Ability { id: "87CB", source: "Loquloqui" }
+7191.7 "Islebloom Light" Ability { id: "87CD", source: "Loquloqui" }
+7192.1 "Shockwave 2" Ability { id: "87CC", source: "Loquloqui" }
+7194.9 "Shockwave 3" Ability { id: "87CC", source: "Loquloqui" }
+7197.2 "Islebloom Light" Ability { id: "87CD", source: "Loquloqui" }
+7197.6 "Shockwave 4" Ability { id: "87CC", source: "Loquloqui" }
+7200.4 "Shockwave 5" Ability { id: "87CC", source: "Loquloqui" }
+7202.6 "Islebloom Light" Ability { id: "87CD", source: "Loquloqui" }
+
+7206.3 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7213.5 label "loquloqui-loop"
+7213.5 "Summoning Rite" Ability { id: "87BF", source: "Loquloqui" }
+7221.6 "O Life, Flourish" Ability { id: "87C4", source: "Loquloqui" }
+7230.2 "Turnabout" Ability { id: "87C2", source: "Repuruba Loqua" }
+7230.2 "Rush" Ability { id: "87C0", source: "Uolosapa Loqua" }
+7235.9 "Protective Will" Ability { id: "87BE", source: "Loquloqui" }
+
+7242.0 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7250.1 "O Petals, Unfurl" Ability { id: "87C5", source: "Loquloqui" }
+7264.5 "Pliant Petals 1" Ability { id: "87C6", source: "Loquloqui" }
+7270.4 "Pliant Petals 2" Ability { id: "87C6", source: "Loquloqui" }
+7276.3 "Long-lost Light" Ability { id: "87BC", source: "Loquloqui" }
+
+7282.5 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7290.8 "O Isle, Bloom" Ability { id: "87C7", source: "Loquloqui" }
+7302.2 "Brilliant Blossoms x12" duration 5 #Ability { id: "87C8", source: "Loquloqui" }
+7309.2 "Land Wave" Ability { id: "87BD", source: "Loquloqui" }
+
+7315.3 "--middle--" Ability { id: "87BB", source: "Loquloqui" }
+7322.4 "Summoning Rite" Ability { id: "87BF", source: "Loquloqui" } window 40,40 forcejump "loquloqui-loop"
+
+
+# ALL ENCOUNTER ABILITIES
+# 1963 attack auto damage
+# 87BB --sync-- repositioning
+# 87BC Long-lost Light cast and raidwide damage
+# 87BD Land Wave cast and 180 cleave damage
+# 87BE Protective Will cast and tankbuster damage
+# 87BF Summoning Rite self-targeted cast to summon Uolosapa Loqua / Repuruba Loqua
+# 87C0 Rush cast and damage from normal bird narrow line
+# 87C1 Rush cast and damage from glowing bird wide line
+# 87C2 Turnabout cast and damage from normal lizard small circle
+# 87C3 Turnabout cast and damage from glowing lizard large circle
+# 87C4 O Life, Flourish self-targeted cast to make summoned adds glow and do larger aoes
+# 87C5 O Petals, Unfurl self-targeted cast to summon plant tether timebombs
+# 87C6 Pliant Petals short cast and damage from 87C5 plant tethers
+# 87C7 O Isle, Bloom self-targeted cast to generate twelve flower squares
+# 87C8 Brilliant Blossoms damage from flower square exploding
+# 87C9 O Sky, Be Mine self-targeted cast to grow
+# 87CA Sanctuary unknown cast and zero damage for proximity attack along with 8D38
+# 87CB Stirring of Spirits cast and initial knockback damage
+# 87CC Shockwave followup 4x knockback damage to 87CB
+# 87CD Islebloom Light cast and damage for ground puddles during 87CB
+# 8C34 --sync-- unknown self-targeted cast for 87C5 plant tether
+# 8C35 --sync-- unknown self-targeted cast for 87C5 plant tether
+# 8D38 Sanctuary cast and proximity damage
+# 8E47 --sync-- unknown ability when fight ends

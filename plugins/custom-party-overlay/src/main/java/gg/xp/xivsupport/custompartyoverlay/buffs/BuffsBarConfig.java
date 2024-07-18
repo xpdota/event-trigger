@@ -19,6 +19,8 @@ public class BuffsBarConfig extends ObservableSetting {
 
 	private final BooleanSetting shadows;
 	private final BooleanSetting rtl;
+	private final BooleanSetting showPreapps;
+	private final IntSetting preappOpacity;
 
 	private final IntSetting xPadding;
 
@@ -31,9 +33,11 @@ public class BuffsBarConfig extends ObservableSetting {
 		removeableBuffColor = new ColorSetting(pers, settingKeyBase + "removeablebuff-color", BuffsBar.defaultRemovableBuffColor);
 		timers = new BooleanSetting(pers, settingKeyBase + "show-timers", true);
 		shadows = new BooleanSetting(pers, settingKeyBase + "text-shadows", true);
+		showPreapps = new BooleanSetting(pers, settingKeyBase + "show-preapps", false);
 		rtl = new BooleanSetting(pers, settingKeyBase + "rtl", false);
 		xPadding = new IntSetting(pers, settingKeyBase + "xpad", 0, -20, 1000);
-		List.of(normalTextColor, myBuffTextColor, removeableBuffColor, timers, shadows, xPadding)
+		preappOpacity = new IntSetting(pers, settingKeyBase + "preapp-opacity", 50, 0, 100);
+		List.of(normalTextColor, myBuffTextColor, removeableBuffColor, timers, shadows, xPadding, preappOpacity)
 				.forEach(this::registerListener);
 	}
 
@@ -67,5 +71,13 @@ public class BuffsBarConfig extends ObservableSetting {
 
 	public BooleanSetting getRtl() {
 		return rtl;
+	}
+
+	public BooleanSetting getShowPreapps() {
+		return showPreapps;
+	}
+
+	public IntSetting getPreappOpacity() {
+		return preappOpacity;
 	}
 }

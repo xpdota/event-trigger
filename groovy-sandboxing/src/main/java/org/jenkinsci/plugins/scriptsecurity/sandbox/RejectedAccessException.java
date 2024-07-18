@@ -30,7 +30,6 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.StaticWhitelist;
 
 /**
  * Thrown when access to a language element was not permitted.
- * @see StandardGroovySandbox#runInSandbox(Runnable, Whitelist)
  */
 public final class RejectedAccessException extends SecurityException {
 

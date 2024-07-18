@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.state;
 
 import gg.xp.reevent.context.SubState;
+import gg.xp.reevent.scan.Alias;
 import gg.xp.xivdata.data.Job;
 import gg.xp.xivdata.data.XivMap;
 import gg.xp.xivdata.data.duties.*;
@@ -19,14 +20,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+@Alias("xivState")
+@Alias("state")
 public interface XivState extends SubState {
 	// Note: can be null until we have all the required data, but this should only happen very early on in init
 	XivPlayerCharacter getPlayer();
 
 	// Note: can be null until we've seen a 01-line
-	XivZone getZone();
+	@Nullable XivZone getZone();
 
-	XivMap getMap();
+	@Nullable XivMap getMap();
 
 	List<XivPlayerCharacter> getPartyList();
 

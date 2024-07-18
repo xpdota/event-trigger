@@ -39,7 +39,7 @@ public class ProcessedCalloutEvent extends BaseCalloutEvent {
 	}
 
 	@Override
-	public boolean isExpired() {
+	public boolean isNaturallyExpired() {
 		return expired.getAsBoolean();
 	}
 
@@ -52,4 +52,5 @@ public class ProcessedCalloutEvent extends BaseCalloutEvent {
 	public @Nullable String getSound() {
 		return soundFile;
 	}
+
 }

@@ -41,7 +41,6 @@ public final class ExampleSetup {
 		BasicEventQueue queue = container.getComponent(BasicEventQueue.class);
 		queue.waitDrain();
 		EventDistributor dist = container.getComponent(EventDistributor.class);
-		dist.acceptEvent(new InitEvent());
 		XivState state = container.getComponent(XivStateImpl.class);
 		// TODO: find actual solution to race conditions in tests
 		try {
@@ -63,6 +62,7 @@ public final class ExampleSetup {
 
 	private static void doEvents(EventDistributor dist) {
 
+		dist.acceptEvent(new InitEvent());
 		dist.acceptEvent(new ActWsRawMsg("{\"type\":\"ChangePrimaryPlayer\",\"charID\":22,\"charName\":\"Foo Bar\"}"));
 		dist.acceptEvent(new ActWsRawMsg("{\"type\":\"ChangeZone\",\"zoneID\":777,\"zoneName\":\"the Weapon's Refrain (Ultimate)\"}"));
 		// This player should be sorted first because they are the actual player
