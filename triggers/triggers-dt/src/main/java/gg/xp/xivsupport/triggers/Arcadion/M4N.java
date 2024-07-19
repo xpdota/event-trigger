@@ -63,13 +63,13 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> gunBlast = SqtTemplates.sq(30_000, AbilityCastStart.class,
-			acs -> acs.abilityIdMatches(0x92B0, 0x9B4F, 0x9B56, 0x92AD),
+			acs -> acs.abilityIdMatches(0x92B0, 0x9B4F, 0x9B56, 0x92AD, 0x9B55, 0x9B57),
 			(e1, s) -> {
 				log.info("Gun Blasts: Start");
 				int iterations = switch((int)e1.getAbility().getId()) {
 					case 0x92B0, 0x92AD -> 2;
-					case 0x9B4F -> 3; //TODO: Maybe multiple IDs?
-					case 0x9B56 -> 4; //TODO: Maybe multiple IDs?
+					case 0x9B4F, 0x9B55 -> 3;
+					case 0x9B56, 0x9B57 -> 4;
 					default -> 0;
 				};
 
