@@ -57,6 +57,11 @@ public enum KnownDuty implements Duty {
 	DtEx1("EX1", 1196, Expansion.DT, DutyType.TRIAL_EX),
 	DtEx2("EX2", 1201, Expansion.DT, DutyType.TRIAL_EX),
 
+	M1N("M1N", 1225,Expansion.DT, DutyType.RAID),
+	M2N("M2N", 1227,Expansion.DT, DutyType.RAID),
+	M3N("M3N", 1229,Expansion.DT, DutyType.RAID),
+	M4N("M4N", 1231,Expansion.DT, DutyType.RAID),
+
 	;
 
 	private final String name;
