@@ -67,14 +67,15 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				log.info("Gun Blasts: Start");
 				int iterations = switch((int)e1.getAbility().getId()) {
-					case 0x92B0 -> 2;
-					case 0x9B4F -> 3;
-					case 0x9B56 -> 4;
+					case 0x92B0, 0x92AD -> 2;
+					case 0x9B4F -> 3; //TODO: Maybe multiple IDs?
+					case 0x9B56 -> 4; //TODO: Maybe multiple IDs?
 					default -> 0;
 				};
 
 				//Buff 0xB9A
 				ArenaSector buff1 = getSafeDirectionForBA(s.waitEvent(BuffApplied.class, ba -> validStacks.contains(ba.getRawStacks()) && ba.buffIdMatches(0xB9A)));
+				log.info("Gun Blasts Start: {}", buff1);
 				s.updateCall(gunStart.getModified(Map.of("dir", buff1)));
 
 				List<BuffApplied> furtherBuffs = s.waitEvents(iterations, BuffApplied.class, ba -> validStacks.contains(ba.getRawStacks()) && ba.buffIdMatches(0xB9A));
@@ -86,6 +87,7 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 					//0x4E40, 0x9BAC, 0x92AE, 0x9BBE, 0x92AF
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x4E40, 0x9BAC, 0x92AE, 0x9BBE, 0x92AF) && aue.isFirstTarget());
 					ArenaSector safeSide = getSafeDirectionForBA(furtherBuffs.get(i));
+					log.info("Gun Blasts {}: {}", i, safeSide);
 					if(wasNorth && safeSide == ArenaSector.SOUTH) {
 						s.updateCall(gunSafe.getModified(Map.of("dir", ArenaSector.SOUTH)));
 						wasNorth = false;
