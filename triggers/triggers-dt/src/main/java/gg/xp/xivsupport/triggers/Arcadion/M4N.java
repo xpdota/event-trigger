@@ -30,13 +30,13 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 	public static final Logger log = LoggerFactory.getLogger(M4N.class);
 
 	@NpcCastCallout({0x92BD, 0x92BF}) //second ID is while wings are active
-	private final ModifiableCallout<AbilityCastStart> sidewiseSparkWest = ModifiableCallout.durationBasedCall("Sidewise Spark: East safe", "East");
+	private final ModifiableCallout<AbilityCastStart> sidewiseSparkWest = ModifiableCallout.durationBasedCall("Sidewise Spark: East safe", "East safe");
 	@NpcCastCallout({0x92BC, 0x92BE})
-	private final ModifiableCallout<AbilityCastStart> sidewiseSparkEast = ModifiableCallout.durationBasedCall("Sidewise Spark: West safe", "West");
+	private final ModifiableCallout<AbilityCastStart> sidewiseSparkEast = ModifiableCallout.durationBasedCall("Sidewise Spark: West safe", "West safe");
 	@NpcAbilityUsedCallout(0x92AB)
-	private final ModifiableCallout<AbilityUsedEvent> stampedingThunderWest = new ModifiableCallout<>("Stampeding Thunder: Go East", "Go East");
+	private final ModifiableCallout<AbilityUsedEvent> stampedingThunderWest = new ModifiableCallout<>("Stampeding Thunder: Go East", "East safe");
 	@NpcAbilityUsedCallout(0x92AC)
-	private final ModifiableCallout<AbilityUsedEvent> stampedingThunderEast = new ModifiableCallout<>("Stampeding Thunder: Go West", "Go West");
+	private final ModifiableCallout<AbilityUsedEvent> stampedingThunderEast = new ModifiableCallout<>("Stampeding Thunder: Go West", "West safe");
 
 	public M4N(XivState state) {
 		this.state = state;
@@ -105,9 +105,10 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ArenaPos arenaPos = new ArenaPos(100, 100, 5, 5);
 
-	private final ModifiableCallout<?> shadowSafe = new ModifiableCallout<>("Shadow's Sabbath", "{dir}");
+	private final ModifiableCallout<?> shadowSafe = new ModifiableCallout<>("Shadow's Sabbath", "{safe} safe");
 
 	@AutoFeed
+	//TODO:these calls overlap slightly when it does four in a row, especially when she also does a cleave
 	private final SequentialTrigger<BaseEvent> shadowsSabbeth = SqtTemplates.sq(20_000, StatusLoopVfxApplied.class,
 			slva -> validIDs.contains(slva.getStatusLoopVfx().getId()),
 			(e1, s) -> {
@@ -123,6 +124,7 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 					default -> ArenaSector.UNKNOWN;
 				};
 
-				s.updateCall(shadowSafe.getModified(Map.of("dir", safeDir)));
+				s.setParam("safe", safeDir);
+				s.updateCall(shadowSafe);
 			});
 }
