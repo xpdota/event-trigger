@@ -68,7 +68,6 @@ public class M1N extends AutoChildEventHandler implements FilteredEventHandler {
 	}
 
 	@AutoFeed
-	//assumes both tiles are at least damaged and one breaks
 	private final SequentialTrigger<BaseEvent> mouser = SqtTemplates.sq(20_000, AbilityCastStart.class,
 			acs -> acs.abilityIdMatches(0x9313),
 			(e1, s) -> {
