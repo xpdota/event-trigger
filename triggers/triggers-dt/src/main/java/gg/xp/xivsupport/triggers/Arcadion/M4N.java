@@ -11,7 +11,6 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
-import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfx;
 import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
@@ -31,9 +30,9 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 	public static final Logger log = LoggerFactory.getLogger(M4N.class);
 
 	@NpcCastCallout({0x92BD, 0x92BF}) //second ID is while wings are active
-	private final ModifiableCallout<AbilityCastStart> sidewiseSparkWest = new ModifiableCallout<>("Sidewise Spark: East safe", "East");
+	private final ModifiableCallout<AbilityCastStart> sidewiseSparkWest = ModifiableCallout.durationBasedCall("Sidewise Spark: East safe", "East");
 	@NpcCastCallout({0x92BC, 0x92BE})
-	private final ModifiableCallout<AbilityCastStart> sidewiseSparkEast = new ModifiableCallout<>("Sidewise Spark: West safe", "West");
+	private final ModifiableCallout<AbilityCastStart> sidewiseSparkEast = ModifiableCallout.durationBasedCall("Sidewise Spark: West safe", "West");
 	@NpcAbilityUsedCallout(0x92AB)
 	private final ModifiableCallout<AbilityUsedEvent> stampedingThunderWest = new ModifiableCallout<>("Stampeding Thunder: Go East", "Go East");
 	@NpcAbilityUsedCallout(0x92AC)
