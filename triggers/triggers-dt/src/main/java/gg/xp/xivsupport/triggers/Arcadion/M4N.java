@@ -57,8 +57,8 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 		return stacks == 723 ? ArenaSector.SOUTH : ArenaSector.NORTH;
 	}
 
-	private final ModifiableCallout<?> gunStart = new ModifiableCallout<>("Gun Blasts: Start", "Start {dir}");
-	private final ModifiableCallout<?> gunSafe = new ModifiableCallout<>("Gun Blasts: Next Safe", "{dir}");
+	private final ModifiableCallout<?> gunStart = new ModifiableCallout<>("Gun Blasts: Start", "Start {safe}");
+	private final ModifiableCallout<?> gunSafe = new ModifiableCallout<>("Gun Blasts: Next Safe", "{safe}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> gunBlast = SqtTemplates.sq(30_000, AbilityCastStart.class,
@@ -75,7 +75,8 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 				//Buff 0xB9A
 				ArenaSector buff1 = getSafeDirectionForBA(s.waitEvent(BuffApplied.class, ba -> validStacks.contains(ba.getRawStacks()) && ba.buffIdMatches(0xB9A)));
 				log.info("Gun Blasts Start: {}", buff1);
-				s.updateCall(gunStart.getModified(Map.of("dir", buff1)));
+				s.setParam("safe", buff1);
+				s.updateCall(gunStart);
 
 				List<BuffApplied> furtherBuffs = s.waitEvents(iterations, BuffApplied.class, ba -> validStacks.contains(ba.getRawStacks()) && ba.buffIdMatches(0xB9A));
 
@@ -88,11 +89,13 @@ public class M4N extends AutoChildEventHandler implements FilteredEventHandler {
 					ArenaSector safeSide = getSafeDirectionForBA(furtherBuffs.get(i));
 					log.info("Gun Blasts {}: {}", i, safeSide);
 					if(wasNorth && safeSide == ArenaSector.SOUTH) {
-						s.updateCall(gunSafe.getModified(Map.of("dir", ArenaSector.SOUTH)));
+						s.setParam("safe", ArenaSector.SOUTH);
+						s.updateCall(gunSafe);
 						wasNorth = false;
 					}
 					else if(!wasNorth && safeSide == ArenaSector.NORTH) {
-						s.updateCall(gunSafe.getModified(Map.of("dir", ArenaSector.NORTH)));
+						s.setParam("safe", ArenaSector.NORTH);
+						s.updateCall(gunSafe);
 						wasNorth = true;
 					}
 				}
