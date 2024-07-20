@@ -2,8 +2,10 @@ package gg.xp.xivsupport.events.actlines.parsers;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.HandleEvents;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.AnimationLockEvent;
+import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.actlines.events.SnapshotLocationDataEvent;
 import gg.xp.xivsupport.events.misc.OverwritingRingBuffer;
 import gg.xp.xivsupport.models.Position;
@@ -56,7 +58,12 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 					double z = fields.getDouble(Fields.z);
 					double h = fields.getDouble(Fields.rotation);
 					if (x == 0.0 && y == 0.0 && z == 0.0) {
-						if (h == 0.0) {
+						AbilityCastStart precursor = last.getPrecursor();
+						DescribesCastLocation<AbilityCastStart> castLocation;
+						if (precursor != null && (castLocation = precursor.getLocationInfo()) != null) {
+							slde = new SnapshotLocationDataEvent(last, castLocation);
+						}
+						else if (h == 0.0) {
 							slde = null;
 						}
 						else {

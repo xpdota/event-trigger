@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Represents an ability snapshotting
  */
-public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects, HasTargetIndex {
+public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility, HasEffects, HasTargetIndex, HasCastPrecursor {
 
 	@Serial
 	private static final long serialVersionUID = -4539070760062288496L;
@@ -28,6 +28,7 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 	private final long numberOfTargets;
 	private @Nullable Duration animationLock;
 	private @Nullable DescribesCastLocation<AbilityUsedEvent> locationInfo;
+	private @Nullable AbilityCastStart precursor;
 
 	public AbilityUsedEvent(XivAbility ability, XivCombatant caster, XivCombatant target, List<AbilityEffect> effects, long sequenceId, long targetIndex, long numberOfTargets) {
 		this.ability = ability;
@@ -89,6 +90,16 @@ public class AbilityUsedEvent extends BaseEvent implements HasSourceEntity, HasT
 
 	public void setLocationInfo(@NotNull DescribesCastLocation<AbilityUsedEvent> locationInfo) {
 		this.locationInfo = locationInfo;
+	}
+
+	@Override
+	public @Nullable AbilityCastStart getPrecursor() {
+		return precursor;
+	}
+
+	@Override
+	public void setPrecursor(@NotNull AbilityCastStart precursor) {
+		this.precursor = precursor;
 	}
 
 	/**
