@@ -60,7 +60,7 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 					if (x == 0.0 && y == 0.0 && z == 0.0) {
 						AbilityCastStart precursor = last.getPrecursor();
 						DescribesCastLocation<AbilityCastStart> castLocation;
-						if (precursor != null && (castLocation = precursor.getLocationInfo()) != null) {
+						if (precursor != null && (castLocation = precursor.getLocationInfo()) != null && castLocation.getPos() != null) {
 							slde = new SnapshotLocationDataEvent(last, castLocation);
 						}
 						else if (h == 0.0) {
