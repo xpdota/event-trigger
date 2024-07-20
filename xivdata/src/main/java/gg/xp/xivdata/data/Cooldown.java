@@ -137,7 +137,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	FeyIllumination(builder(CooldownType.PARTY_MIT, true, 0x409A).buffIds(0x13d, 0x753)),
 	FeyBlessing(true, CooldownType.HEAL, 0x409F),
 	Expedient(true, CooldownType.PARTY_UTILITY, 0x650C),
-	ChainStratagem(true, CooldownType.PARTY_BUFF, 0x1d0c),
+	ChainStratagem(builder(CooldownType.PARTY_BUFF, true, 0x1d0c).buffIds(0x4c5)),
 	Protraction(true, CooldownType.HEAL, 0x650b),
 	Aetherflow(true, CooldownType.PERSONAL_UTILITY, 0xa6),
 	Dissipation(true, CooldownType.PERSONAL_UTILITY, 0xe03),
