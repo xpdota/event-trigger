@@ -37,7 +37,7 @@ public class M1N extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> leapingOneTwoPawEastWest = ModifiableCallout.durationBasedCall("Leaping One-Two Paw: West safe", "West then East");
 	@NpcCastCallout({0x9320, 0x9322}) //dont know what the difference is (maybe leap direction?)
 	private final ModifiableCallout<AbilityCastStart> leapingOneTwoPawWestEast = ModifiableCallout.durationBasedCall("Leaping One-Two Paw: East safe", "East then West");
-	@NpcCastCallout(0x0) //TODO: confirm these
+	@NpcCastCallout(0x9810)
 	private final ModifiableCallout<AbilityCastStart> leapingBlackCatCrossingCardInter = ModifiableCallout.durationBasedCall("Leaping Black Cat Crossing: Inter safe", "Inter then Cardinal");
 	@NpcCastCallout(0x9329)
 	private final ModifiableCallout<AbilityCastStart> leapingBlackCatCrossingInterCard = ModifiableCallout.durationBasedCall("Leaping Black Cat Crossing: Card safe", "Cardinal then inter");
