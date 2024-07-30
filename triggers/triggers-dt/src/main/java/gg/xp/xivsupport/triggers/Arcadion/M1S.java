@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
@@ -19,38 +20,50 @@ import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 @CalloutRepo(name = "M1S", duty = KnownDuty.M1S)
 public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
-	public M1S(XivState state) {
+	public M1S(XivState state, StatusEffectRepository buffs) {
 		this.state = state;
+		this.buffs = buffs;
 	}
 
-	private final XivState state;
+	private XivState state;
+	private StatusEffectRepository buffs;
 
 	@Override
 	public boolean enabled(EventContext context) {
 		return state.dutyIs(KnownDuty.M1S);
 	}
 
-//	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingInitial = ModifiableCallout.durationBasedCall("Quadruple Crossing - Initial", "Quadruple Crossing");
-//	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingCardFirst = ModifiableCallout.durationBasedCall("Quadruple Crossing - Card First", "Cardinals to Intercards");
-//	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingIntercardFirst = ModifiableCallout.durationBasedCall("Quadruple Crossing - Card First", "Intercards to Cards");
-//	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingCardFirstWithClone = ModifiableCallout.durationBasedCall("Quadruple Crossing - Card First + Clone", "Cardinals to Intercards (Clone)");
-//	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingIntercardFirstWithClone = ModifiableCallout.durationBasedCall("Quadruple Crossing - Card First + Clone", "Intercards to Cards (Clone)");
-//	private final ModifiableCallout<?> quadrupleCrossingCardinals = new ModifiableCallout<>("Quadruple Crossing - Cardinals After", "Cardinals");
-//	private final ModifiableCallout<?> quadrupleCrossingIntercards = new ModifiableCallout<>("Quadruple Crossing - Intercards After", "Intercards");
-//
-//	// TODO: this is not card/inter
-//	private final SequentialTrigger<BaseEvent> quadrupleCrossing = SqtTemplates.sq(30_000,
-//			AbilityCastStart.class, acs -> acs.abilityIdMatches(0, 1),
-//			(e1, s) -> {
-//		// sequence is:
-//				// one group baits
-//				// other four bait
-//				// dodge where first set went
-//				// dodge where second set went
-//			});
+	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingInitial = ModifiableCallout.durationBasedCall("Quadruple Crossing - Initial", "Quadruple Crossing");
+	private final ModifiableCallout<?> quadrupleCrossingBaitSecond = new ModifiableCallout<>("Quadruple Crossing - Bait Second Wave", "Cardinals to Intercards");
+	private final ModifiableCallout<?> quadrupleCrossingDontBaitSecond = new ModifiableCallout<>("Quadruple Crossing - Avoid Second Wave", "Cardinals to Intercards");
+	private final ModifiableCallout<?> quadrupleCrossingThird = new ModifiableCallout<>("Quadruple Crossing - Dodge First", "Dodge 1");
+	private final ModifiableCallout<?> quadrupleCrossingFourth = new ModifiableCallout<>("Quadruple Crossing - Dodge Second", "Dodge 2");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> quadrupleCrossing = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0, 1),
+			(e1, s) -> {
+				s.updateCall(quadrupleCrossingInitial, e1);
+				s.waitMs(50);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x943F, 0x9440));
+				if (buffs.isStatusOnTarget(state.getPlayer(), 0xC3A)) {
+					s.updateCall(quadrupleCrossingDontBaitSecond);
+				}
+				else {
+					s.updateCall(quadrupleCrossingBaitSecond);
+				}
+				s.waitMs(50);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x943F, 0x9440));
+				s.updateCall(quadrupleCrossingThird);
+				s.waitMs(50);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x943F, 0x9440));
+				s.updateCall(quadrupleCrossingFourth);
+			});
 
 	private final ModifiableCallout<AbilityCastStart> oneTwoLeftFirst = ModifiableCallout.durationBasedCall("One Two - Left First", "Left then Right");
 	private final ModifiableCallout<AbilityCastStart> oneTwoRightFirst = ModifiableCallout.durationBasedCall("One Two - Right First", "Right then Left");
+	private final ModifiableCallout<AbilityCastStart> oneTwoLeapingLeftFirst = ModifiableCallout.durationBasedCall("One Two (Leaping) - Left First", "Left then Right");
+	private final ModifiableCallout<AbilityCastStart> oneTwoLeapingRightFirst = ModifiableCallout.durationBasedCall("One Two (Leaping) - Right First", "Right then Left");
 	private final ModifiableCallout<AbilityUsedEvent> oneTwoLeft = new ModifiableCallout<>("One Two - Left Second", "Left");
 	private final ModifiableCallout<AbilityUsedEvent> oneTwoRight = new ModifiableCallout<>("One Two - Right Second", "Right");
 
@@ -121,19 +134,14 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> splintering = ModifiableCallout.durationBasedCall("Splintering Nails", "Role Groups");
 	private final ModifiableCallout<AbilityCastStart> stack = ModifiableCallout.durationBasedCall("Stack", "Stack");
 
+	// Extra trigger purely for stack/splintering on second mouser
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> mouserExtra = SqtTemplates.multiInvocation(120_000,
-			// Initial Mouser cast
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9441),
 			(e1, s) -> {
 			},
 			(e1, s) -> {
-				// first invocation:
-				// just call out whether it's on supports or dps
-				// Call out each kick
 				for (int i = 0; i < 4; i++) {
-					// 0x9499 = splintering (role groups)
-					// 0x9497 = stack
 					var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9497, 0x9499));
 					if (cast.abilityIdMatches(0x9499)) {
 						s.updateCall(splintering, e1);
@@ -159,4 +167,6 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 	// For leaping one-two
 	//Tempestuous tear 0x9483 is the light party stacks
 
+	@NpcCastCallout({0x9ABB, 0x9ABC})
+	private final ModifiableCallout<AbilityCastStart> rainingCats = ModifiableCallout.durationBasedCall("Raining Cats", "Tethers");
 }
