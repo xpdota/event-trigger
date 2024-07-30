@@ -61,6 +61,10 @@ public enum KnownDuty implements Duty {
 	M2N("M2N", 1227,Expansion.DT, DutyType.RAID),
 	M3N("M3N", 1229,Expansion.DT, DutyType.RAID),
 	M4N("M4N", 1231,Expansion.DT, DutyType.RAID),
+	M1S("M1S", 1226,Expansion.DT, DutyType.SAVAGE_RAID),
+	M2S("M2S", 1228,Expansion.DT, DutyType.SAVAGE_RAID),
+	M3S("M3S", 1230,Expansion.DT, DutyType.SAVAGE_RAID),
+	M4S("M4S", 1232,Expansion.DT, DutyType.SAVAGE_RAID),
 
 	;
 
