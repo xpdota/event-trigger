@@ -14,6 +14,7 @@ import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,9 +115,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 
 	public void forceExpire() {
 		synchronized (lock) {
-			// TODO: expire on wipe?
 			// Also make it configurable as to whether or not a wipe ends the trigger
-//			if (event.getHappenedAt().isAfter(expiresAt)) {
 			log.info("Sequential trigger force expired");
 			die = true;
 			lock.notifyAll();
@@ -245,12 +244,16 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * NOT supplying an event.
 	 *
 	 * @param call The callout
+	 * @return The modified call.
 	 */
-	public <C> void updateCall(ModifiableCallout<C> call, C event) {
+	@Contract("null, _ -> null; !null, _ -> !null")
+	public <C> @Nullable RawModifiedCallout<C> updateCall(ModifiableCallout<C> call, C event) {
 		if (call == null) {
-			return;
+			return null;
 		}
-		updateCall(call.getModified(event, getParams()));
+		RawModifiedCallout<C> out = call.getModified(event, getParams());
+		updateCall(out);
+		return out;
 	}
 
 	/**
@@ -262,12 +265,16 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * supplying an event.
 	 *
 	 * @param call The callout
+	 * @return The modified call
 	 */
-	public void call(ModifiableCallout<?> call) {
+	@Contract("null -> null; !null -> !null")
+	public @Nullable RawModifiedCallout<?> call(ModifiableCallout<?> call) {
 		if (call == null) {
-			return;
+			return null;
 		}
-		accept(call.getModified(getParams()));
+		RawModifiedCallout<?> out = call.getModified(getParams());
+		accept(out);
+		return out;
 	}
 
 	/**
@@ -279,12 +286,16 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * NOT supplying an event.
 	 *
 	 * @param call The callout
+	 * @return The modified call
 	 */
-	public <C> void call(ModifiableCallout<C> call, C event) {
+	@Contract("null, _ -> null; !null, _ -> !null")
+	public <C> @Nullable RawModifiedCallout<C> call(ModifiableCallout<C> call, C event) {
 		if (call == null) {
-			return;
+			return null;
 		}
-		accept(call.getModified(event, getParams()));
+		RawModifiedCallout<C> out = call.getModified(event, getParams());
+		accept(out);
+		return out;
 	}
 
 	/**

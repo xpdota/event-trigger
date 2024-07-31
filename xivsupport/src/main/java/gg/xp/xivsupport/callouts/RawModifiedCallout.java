@@ -35,6 +35,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private final CalloutTrackingKey key = new CalloutTrackingKey();
 	private static final int maxErrors = 10;
 	private int errorCount;
+	private volatile boolean forceExpired;
 
 	public RawModifiedCallout(String description, String tts, String text, @Nullable String sound, @Nullable X event, Map<String, Object> arguments, Function<? super X, ? extends @Nullable Component> guiProvider, Predicate<RawModifiedCallout<X>> expiry, @Nullable Color colorOverride, @Nullable ModifiedCalloutHandle handle) {
 		this.description = description;
@@ -70,7 +71,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	}
 
 	public BooleanSupplier getExpiry() {
-		return () -> expiry.test(this);
+		return () -> expiry.test(this) || this.forceExpired;
 	}
 
 	public @Nullable HasCalloutTrackingKey getReplaces() {
@@ -128,6 +129,10 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 
 	public String getDescription() {
 		return description;
+	}
+
+	public void forceExpire() {
+		this.forceExpired = true;
 	}
 
 	@Override

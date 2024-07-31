@@ -81,6 +81,7 @@ public abstract class BaseCalloutEvent extends BaseEvent implements CalloutEvent
 
 	public abstract boolean isNaturallyExpired();
 
+	@SuppressWarnings("unused") // used in scripts
 	public void forceExpire() {
 		this.forceExpire = true;
 	}
