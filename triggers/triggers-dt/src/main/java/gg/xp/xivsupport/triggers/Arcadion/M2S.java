@@ -11,6 +11,7 @@ import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -21,6 +22,9 @@ import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.List;
 
 @CalloutRepo(name = "M2S", duty = KnownDuty.M2S)
 public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -180,14 +184,15 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				// in + intercards
 			});
 
+	private static final Duration hblOffset = Duration.ofMillis(8200);
 	// TODO: these have extra cast time
-	private final ModifiableCallout<AbilityCastStart> hbl1Initial = ModifiableCallout.durationBasedCall("Honey B. Live: 1st Beat", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> hbl1Initial = ModifiableCallout.durationBasedCallWithOffset("Honey B. Live: 1st Beat", "Raidwide", hblOffset);
 	private final ModifiableCallout<?> hb1towers = new ModifiableCallout<>("Honey B. Live: 1st Beat: Take Towers", "Take {towers} Towers");
 	private final ModifiableCallout<?> hb1noTowers = new ModifiableCallout<>("Honey B. Live: 1st Beat: Avoid Towers", "Avoid Towers");
 	private final ModifiableCallout<?> hb1stack = new ModifiableCallout<>("Honey B. Live: 1st Beat: Take Stack", "Take Stack");
 	private final ModifiableCallout<AbilityCastStart> hb1noStack = new ModifiableCallout<>("Honey B. Live: 1st Beat: Don't Stack", "Don't Stack");
-	private final ModifiableCallout<AbilityCastStart> hbl2Initial = ModifiableCallout.durationBasedCall("Honey B. Live: 2nd Beat", "Raidwide");
-	private final ModifiableCallout<AbilityCastStart> hbl3Initial = ModifiableCallout.durationBasedCall("Honey B. Live: 3rd Beat", "Raidwide");
+	private final ModifiableCallout<AbilityCastStart> hbl2Initial = ModifiableCallout.durationBasedCallWithOffset("Honey B. Live: 2nd Beat", "Raidwide", hblOffset);
+	private final ModifiableCallout<AbilityCastStart> hbl3Initial = ModifiableCallout.durationBasedCallWithOffset("Honey B. Live: 3rd Beat", "Raidwide", hblOffset);
 	@NpcCastCallout(0x918F)
 	private final ModifiableCallout<AbilityCastStart> hbFinale = ModifiableCallout.durationBasedCall("Honey B. Finale", "Raidwide");
 
@@ -227,27 +232,188 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 					}
 				}
 			});
+
+	private final ModifiableCallout<HeadMarkerEvent> hbl2stackOnYou = new ModifiableCallout<>("HBL2: Stack on You", "Stacks on {stacks.target}");
+	private final ModifiableCallout<HeadMarkerEvent> hbl2noStackOnYouNoStar = new ModifiableCallout<>("HBL2: Not Stack, No Stars", "Stack with {stacks.target}");
+	private final ModifiableCallout<HeadMarkerEvent> hbl2noStackOnYouHaveStar = new ModifiableCallout<>("HBL2: Not Stack, 1+ Stars", "Avoid Stacks");
+	private final ModifiableCallout<HeadMarkerEvent> hbl2spreadOnYou = new ModifiableCallout<>("HBL2: Spread on You", "Spread");
+	private final ModifiableCallout<AbilityCastStart> hbl2takeTower = ModifiableCallout.durationBasedCall("HBL2: Take Tower", "Take Tower");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> hbl2 = SqtTemplates.sq(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9C25),
 			(e1, s) -> {
 				s.updateCall(hbl2Initial, e1);
 				// Puddles and stacks and towers
+				// Starts with 2 stacks
+				List<HeadMarkerEvent> stacks = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getTarget().isPc());
+				s.setParam("stacks", stacks);
+				var myStack = stacks.stream().filter(hm -> hm.getTarget().isThePlayer()).findFirst().orElse(null);
+				if (myStack != null) {
+					// If you have a stack marker, you have to stack
+					s.updateCall(hbl2stackOnYou, myStack);
+				}
+				else {
+					if (getPlayerHeartStacks() > 0) {
+						// If you have heart stacks, you should avoid getting hit by the stack marker
+						s.updateCall(hbl2noStackOnYouHaveStar, stacks.get(0));
+					}
+					else {
+						// If you have no heart stacks, you should stack with one of the two people with stack markers
+						s.updateCall(hbl2noStackOnYouNoStar, stacks.get(0));
+					}
+				}
+				// Shortly thereafter, there are also 2 spread
+				s.waitMs(100);
+				List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getTarget().isPc());
+				s.setParam("spreads", spreads);
+				HeadMarkerEvent mySpread = spreads.stream().filter(hm -> hm.getTarget().isThePlayer()).findFirst().orElse(null);
+				if (mySpread != null) {
+					s.updateCall(hbl2spreadOnYou, mySpread);
+				}
+				else {
+					var towerCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x91A3));
+					// Wait for the stacks to go off so we know who can take towers
+					s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x91A7));
+					// It is only safe to take the tower if you do not have more than one heart stack at this point
+					if (getPlayerHeartStacks() <= 1) {
+						s.updateCall(hbl2takeTower, towerCast);
+					}
+				}
+				// At this point, everyone should have two stacks
+				// Beeline/Twist handled by other triggers, and that gives you a 3rd stack
+				// Finale handled by other triggers
 			});
+
+	private final ModifiableCallout<BuffApplied> hbl3shortInitial = ModifiableCallout.<BuffApplied>durationBasedCall("HBL3: Short Defamation Initial", "Short Defamation").autoIcon();
+	private final ModifiableCallout<BuffApplied> hbl3longInitial = ModifiableCallout.<BuffApplied>durationBasedCall("HBL3: Long Defamation Initial", "Long Defamation").autoIcon();
+	private final ModifiableCallout<BuffApplied> hbl3defamationNow = ModifiableCallout.<BuffApplied>durationBasedCall("HBL3: Defamation Now", "Out").autoIcon();
+	private final ModifiableCallout<?> hbl3avoidDefa = new ModifiableCallout<>("HBL3: Avoid Defa", "Avoid Defamation");
+	private final ModifiableCallout<?> hbl3avoidTowers = new ModifiableCallout<>("HBL3: Avoid Towers", "Avoid Towers");
+	private final ModifiableCallout<?> hbl3soakTowers = new ModifiableCallout<>("HBL3: Soak Towers", "Soak Tower");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> hbl3 = SqtTemplates.sq(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9C26),
 			(e1, s) -> {
 				s.updateCall(hbl3Initial, e1);
 				// Given that there is a magic vuln, I do not see how there can be different strategies for this mech
+				// 4 people have short defa, 4 have long defa
+				int defa = 0xF5E;
+				List<BuffApplied> all = s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(defa));
+				BuffApplied playerBuff = buffs.findStatusOnTarget(state.getPlayer(), defa);
+//				List<BuffApplied> shorts = all.stream().filter(ba -> ba.getInitialDuration().toSeconds() < 30).toList();
+//				List<BuffApplied> longs = all.stream().filter(ba -> ba.getInitialDuration().toSeconds() > 30).toList();
+				boolean playerShort;
+				if (playerBuff == null) {
+					throw new RuntimeException("Player did not have defamation!");
+				}
+				else if (playerBuff.getInitialDuration().toSeconds() < 30) {
+					playerShort = true;
+					s.setParam("playerShort", true);
+					s.updateCall(hbl3shortInitial, playerBuff);
+				}
+				else {
+					playerShort = false;
+					s.setParam("playerShort", false);
+					s.updateCall(hbl3longInitial, playerBuff);
+				}
+				// Outer/center handled elsewhere
+				s.waitMs(21_000);
+				if (playerShort) {
+					s.updateCall(hbl3defamationNow, playerBuff);
+				}
+				else {
+					s.updateCall(hbl3avoidDefa);
+				}
+				// TODO: these are broken because they don't wait for the defamation to naturally go off. A player dying
+				// will also trigger these early.
+				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defa));
+				if (playerShort) {
+					s.updateCall(hbl3avoidTowers);
+				}
+				else {
+					s.updateCall(hbl3soakTowers);
+				}
+				// Another outer/center handled elsewhere
+				if (!playerShort) {
+					s.updateCall(hbl3defamationNow, playerBuff);
+				}
+				else {
+					s.updateCall(hbl3avoidDefa);
+				}
+				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defa));
+				if (!playerShort) {
+					s.updateCall(hbl3avoidTowers);
+				}
+				else {
+					s.updateCall(hbl3soakTowers);
+				}
 			});
+
+
+	private final ModifiableCallout<AbilityCastStart> rottenInitial = ModifiableCallout.durationBasedCallWithOffset("Rotten Heart: Initial", "Raidwide", Duration.ofMillis(3600));
+	private final ModifiableCallout<BuffApplied> rottenInitialPartner = ModifiableCallout.<BuffApplied>durationBasedCall("Rotten Heart: Upfront Partner Call", "Group {group} with {buddy}").autoIcon();
+	private final ModifiableCallout<BuffApplied> rottenPopNow = ModifiableCallout.<BuffApplied>durationBasedCall("Rotten Heart: Pop Now", "Pop with {buddy}").autoIcon();
+	private final ModifiableCallout<BuffApplied> rottenPopOther = ModifiableCallout.<BuffApplied>durationBasedCall("Rotten Heart: Other Groups", "Group {currentGroup}: {first} and {second}")
+			.disabledByDefault()
+			.extendedDescription("This is an optional callout which will call out every pair to pop.");
+
+	private int nisiBuffGroup(BuffApplied buff) {
+		return ((int) buff.getInitialDuration().toSeconds() + 4) / 16;
+	}
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> rotten = SqtTemplates.sq(120_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9C26),
+			// TODO: wrong ID
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x91AA),
 			(e1, s) -> {
-//				s.updateCall(hbl3Initial, e1);
+				s.updateCall(rottenInitial, e1);
 				// nisi debuff matching mechanic
+				List<BuffApplied> allNisiBuffs = s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(0xF5C, 0xF5D));
+				BuffApplied playerBuff = allNisiBuffs.stream()
+						.filter(ba -> ba.getTarget().isThePlayer())
+						.findFirst()
+						.orElseThrow(() -> new RuntimeException("Could not find player nisi!"));
+
+				// 1 through 4 inclusive, which group the player is in
+				int playerGroup = nisiBuffGroup(playerBuff);
+				s.setParam("group", playerGroup);
+
+				BuffApplied buddyBuff = allNisiBuffs.stream()
+						.filter(ba -> !ba.getTarget().isThePlayer()
+						              && ba.getInitialDuration().toSeconds() == playerBuff.getInitialDuration().toSeconds())
+						.findFirst()
+						.orElseThrow(() -> new RuntimeException("Could not find buddy nisi!"));
+				s.setParam("buddy", buddyBuff.getTarget());
+				// Initial partner callout
+				s.updateCall(rottenInitialPartner, playerBuff);
+				s.waitMs(2500);
+				for (int i = 1; i <= 4; i++) {
+					int currentGroup = i;
+					s.setParam("currentGroup", currentGroup);
+					// Iterate through groups
+					if (playerGroup == 1) {
+						s.updateCall(rottenPopNow, playerBuff);
+					}
+					else {
+						// This should not replace other calls
+						var thisGroupBuffs = buffs.findBuffs(ba -> ba.buffIdMatches(0xF5C, 0xF5D) && nisiBuffGroup(ba) == currentGroup);
+						if (thisGroupBuffs.size() == 2) {
+							s.setParam("first", thisGroupBuffs.get(0).getTarget());
+							s.setParam("second", thisGroupBuffs.get(1).getTarget());
+							s.call(rottenPopOther, thisGroupBuffs.get(0));
+						}
+						else {
+							log.error("thisGroupBuffs does not have a size of 2: {}", thisGroupBuffs);
+						}
+					}
+					// Wait for raidwide then continue to next group
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9183));
+					s.waitMs(200);
+
+
+				}
 			});
 
 	private final ModifiableCallout<AbilityCastStart> alarm1initial = ModifiableCallout.durationBasedCall("Alarm Pheremones 1: Initial", "Bait Lines");
@@ -258,13 +424,13 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> alarmPheremones = SqtTemplates.multiInvocation(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x917D),
 			(e1, s) -> {
-				s.updateCall(alarm1initial);
+				s.updateCall(alarm1initial, e1);
 				// First set seems yolo?
 			}, (e1, s) -> {
-				s.updateCall(alarm2initial);
+				s.updateCall(alarm2initial, e1);
 				// Second set seems to be the one with coordinated stuff
 				var hm = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getTarget().isThePlayer());
-				s.updateCall(alarm2puddle);
+				s.updateCall(alarm2puddle, hm);
 			});
 	// all 3 lives have initial raidwides
 	// they also end with a finale which is another raidwide
