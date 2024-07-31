@@ -96,8 +96,8 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 //	private final ModifiableCallout<?> temptingTwistAvoidBlobs = new ModifiableCallout<>("Tempting Twist: Initial", "Avoid Blobs");
 	private final ModifiableCallout<AbilityCastStart> beelineInitial = ModifiableCallout.durationBasedCall("Beeline: Initial", "Out of Middle");
 //	private final ModifiableCallout<?> beelineAvoidBlobs = new ModifiableCallout<>("Tempting Twist: Initial", "In - Avoid Blobs");
-	private final ModifiableCallout<?> spread = new ModifiableCallout<>("Poison: Spread", "Spread");
-	private final ModifiableCallout<?> buddies = new ModifiableCallout<>("Poison: Stack", "Buddy");
+	private final ModifiableCallout<?> spread = new ModifiableCallout<>("Poison: Spread", "Spread", 10_000);
+	private final ModifiableCallout<?> buddies = new ModifiableCallout<>("Poison: Stack", "Buddy", 10_000);
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> temptingTwist = SqtTemplates.sq(30_000,
@@ -180,7 +180,12 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				// in + intercards
 			});
 
+	// TODO: these have extra cast time
 	private final ModifiableCallout<AbilityCastStart> hbl1Initial = ModifiableCallout.durationBasedCall("Honey B. Live: 1st Beat", "Raidwide");
+	private final ModifiableCallout<?> hb1towers = new ModifiableCallout<>("Honey B. Live: 1st Beat: Take Towers", "Take {towers} Towers");
+	private final ModifiableCallout<?> hb1noTowers = new ModifiableCallout<>("Honey B. Live: 1st Beat: Avoid Towers", "Avoid Towers");
+	private final ModifiableCallout<?> hb1stack = new ModifiableCallout<>("Honey B. Live: 1st Beat: Take Stack", "Take Stack");
+	private final ModifiableCallout<AbilityCastStart> hb1noStack = new ModifiableCallout<>("Honey B. Live: 1st Beat: Don't Stack", "Don't Stack");
 	private final ModifiableCallout<AbilityCastStart> hbl2Initial = ModifiableCallout.durationBasedCall("Honey B. Live: 2nd Beat", "Raidwide");
 	private final ModifiableCallout<AbilityCastStart> hbl3Initial = ModifiableCallout.durationBasedCall("Honey B. Live: 3rd Beat", "Raidwide");
 	@NpcCastCallout(0x918F)
@@ -200,32 +205,54 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(hbl1Initial, e1);
 				// Starts with center/outer
 				s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x919F));
-				// Call out to take towers if stack count remains below 2
+				{
+					int stacks = getPlayerHeartStacks();
+					if (stacks < 2) {
+						s.setParam("towers", 2 - stacks);
+						s.updateCall(hb1towers);
+					}
+					else {
+						s.updateCall(hb1noTowers);
+					}
+				}
 				s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x919F));
 				// Call out to stack if stacks < 3
+				{
+					int stacks = getPlayerHeartStacks();
+					if (stacks < 3) {
+						s.updateCall(hb1stack);
+					}
+					else {
+						s.updateCall(hb1noStack);
+					}
+				}
 			});
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> hbl2 = SqtTemplates.sq(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9C25),
 			(e1, s) -> {
 				s.updateCall(hbl2Initial, e1);
+				// Puddles and stacks and towers
 			});
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> hbl3 = SqtTemplates.sq(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9C26),
 			(e1, s) -> {
 				s.updateCall(hbl3Initial, e1);
+				// Given that there is a magic vuln, I do not see how there can be different strategies for this mech
 			});
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> rotten = SqtTemplates.sq(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9C26),
 			(e1, s) -> {
 //				s.updateCall(hbl3Initial, e1);
+				// nisi debuff matching mechanic
 			});
 
 	private final ModifiableCallout<AbilityCastStart> alarm1initial = ModifiableCallout.durationBasedCall("Alarm Pheremones 1: Initial", "Bait Lines");
 	private final ModifiableCallout<AbilityCastStart> alarm2initial = ModifiableCallout.durationBasedCall("Alarm Pheremones 2: Initial", "Bait Lines and Puddles");
-	private final ModifiableCallout<HeadMarkerEvent> alarm2puddle = new ModifiableCallout<>("Alarm Pheremones 2: Puddle on you");
+	private final ModifiableCallout<HeadMarkerEvent> alarm2puddle = new ModifiableCallout<>("Alarm Pheremones 2: Puddle on You", "Drop Puddle");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> alarmPheremones = SqtTemplates.multiInvocation(120_000,
