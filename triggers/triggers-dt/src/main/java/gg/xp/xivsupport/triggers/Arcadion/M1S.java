@@ -16,9 +16,13 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
+import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.function.Predicate;
 
 @CalloutRepo(name = "M1S", duty = KnownDuty.M1S)
 public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -38,6 +42,7 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 		return state.dutyIs(KnownDuty.M1S);
 	}
 
+	private static final Predicate<AbilityUsedEvent> isQuadCrossingHit = aue -> aue.abilityIdMatches(0x943F, 0x9440, 0x945B, 0x945C, 0x947D, 0x947E);
 	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingInitial = ModifiableCallout.durationBasedCall("Quadruple Crossing - Initial", "Quadruple Crossing");
 	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingInitialLeaping = ModifiableCallout.durationBasedCall("Quadruple Crossing - Initial (Leaping)", "Quadruple Crossing on Clone");
 	private final ModifiableCallout<?> quadrupleCrossingBaitSecond = new ModifiableCallout<>("Quadruple Crossing - Bait Second Wave", "Bait - In");
@@ -51,7 +56,7 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				s.updateCall(e1.abilityIdMatches(0x943C) ? quadrupleCrossingInitial : quadrupleCrossingInitialLeaping, e1);
 				s.waitMs(50);
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x943F, 0x9440, 0x945B, 0x945C));
+				s.waitEvent(AbilityUsedEvent.class, isQuadCrossingHit);
 				if (buffs.isStatusOnTarget(state.getPlayer(), 0xC3A)) {
 					s.updateCall(quadrupleCrossingDontBaitSecond);
 				}
@@ -59,10 +64,10 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(quadrupleCrossingBaitSecond);
 				}
 				s.waitMs(50);
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x943F, 0x9440, 0x945B, 0x945C));
+				s.waitEvent(AbilityUsedEvent.class, isQuadCrossingHit);
 				s.updateCall(quadrupleCrossingThird);
 				s.waitMs(50);
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x943F, 0x9440, 0x945B, 0x945C));
+				s.waitEvent(AbilityUsedEvent.class, isQuadCrossingHit);
 				s.updateCall(quadrupleCrossingFourth);
 			});
 
@@ -76,7 +81,6 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> oneTwoPaw = SqtTemplates.sq(30_000,
-			// TODO: 944F missing, 9471 (with party stacks)
 			/*
 			Leaping
 			944D left right (west)
@@ -84,26 +88,26 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 			944F left right (east)
 			9450 right left (east)
 			 */
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9438, 0x9439, 0x944E, 0x9450),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9438, 0x9439, 0x944D, 0x944E, 0x944F, 0x9450),
 			(e1, s) -> {
 				boolean leftFirst = e1.abilityIdMatches(0x9438, 0x944D, 0x944F);
 				boolean leaping = e1.getAbility().getId() > 0x9440;
 				if (leaping) {
 					s.setParam("whereClone", e1.abilityIdMatches(0x944F, 0x9450) ? ArenaSector.EAST : ArenaSector.WEST);
 					if (leftFirst) {
-						s.updateCall(leaping ? oneTwoLeapingLeftFirst : oneTwoLeftFirst, e1);
+						s.updateCall(oneTwoLeapingLeftFirst, e1);
 					}
 					else {
-						s.updateCall(leaping ? oneTwoLeapingRightFirst : oneTwoRightFirst, e1);
+						s.updateCall(oneTwoLeapingRightFirst, e1);
 					}
 
 				}
 				else {
 					if (leftFirst) {
-						s.updateCall(leaping ? oneTwoLeapingLeftFirst : oneTwoLeftFirst, e1);
+						s.updateCall(oneTwoLeftFirst, e1);
 					}
 					else {
-						s.updateCall(leaping ? oneTwoLeapingRightFirst : oneTwoRightFirst, e1);
+						s.updateCall(oneTwoRightFirst, e1);
 					}
 
 				}
@@ -204,16 +208,136 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	// For leaping one-two
 	//Tempestuous tear 0x9483 is the light party stacks
-	@NpcCastCallout(0x9483)
-	private final ModifiableCallout<AbilityCastStart> lightParties = ModifiableCallout.durationBasedCall("Tempestuous Tear", "Light Parties");
+
+	private final ModifiableCallout<AbilityCastStart> tempestuousTearWestInFirst = ModifiableCallout.durationBasedCall("Tempestuous Tear: West, In First", "Party Stacks - West, In First");
+	private final ModifiableCallout<AbilityCastStart> tempestuousTearEastInFirst = ModifiableCallout.durationBasedCall("Tempestuous Tear: East, In First", "Party Stacks - East, In First");
+	private final ModifiableCallout<AbilityCastStart> tempestuousTearWestOutFirst = ModifiableCallout.durationBasedCall("Tempestuous Tear: West, Out First", "Party Stacks - West, Out First");
+	private final ModifiableCallout<AbilityCastStart> tempestuousTearEastOutFirst = ModifiableCallout.durationBasedCall("Tempestuous Tear: East, Out First", "Party Stacks - East, Out First");
+	private final ModifiableCallout<?> tempestuousTearOutSecond = new ModifiableCallout<>("Tempestuous Tear: Out Second", "Out");
+	private final ModifiableCallout<?> tempestuousTearInSecond = new ModifiableCallout<>("Tempestuous Tear: In Second", "In");
+
+	/*
+	946F - facing south, teleporting east, cleaving right (west) first
+	9470 - facing north, teleporting west, cleaving left (west) first
+	9471 - facing north, teleporting east, cleaving right (east) first
+	9472 - facing south, teleporting west, cleaving left (east) first
+	 */
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> tempestuousTearSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x946F, 0x9470, 0x9471, 0x9472),
+			(e1, s) -> {
+				switch ((int) e1.getAbility().getId()) {
+					case 0x946F -> s.updateCall(tempestuousTearEastOutFirst, e1);
+					case 0x9470 -> s.updateCall(tempestuousTearWestInFirst, e1);
+					case 0x9471 -> s.updateCall(tempestuousTearEastInFirst, e1);
+					case 0x9472 -> s.updateCall(tempestuousTearWestOutFirst, e1);
+				}
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == e1);
+				s.waitMs(1700);
+				s.updateCall(e1.abilityIdMatches(0x9470, 0x9471) ? tempestuousTearOutSecond : tempestuousTearInSecond);
+			});
 
 	@NpcCastCallout({0x9ABB, 0x9ABC})
 	private final ModifiableCallout<AbilityCastStart> rainingCats = ModifiableCallout.durationBasedCall("Raining Cats", "Tethers");
 
+	private final ModifiableCallout<AbilityCastStart> nailchipperBaitFirst = ModifiableCallout.durationBasedCall("Nailchipper - Bait First Wave", "Bait Protean");
+	private final ModifiableCallout<AbilityCastStart> nailchipperDontBaitFirst = ModifiableCallout.durationBasedCall("Nailchipper - Avoid First Wave", "Out");
+	private final ModifiableCallout<AbilityCastStart> nailchipperBaitSecond = ModifiableCallout.durationBasedCall("Nailchipper - Bait Second Wave", "Bait Protean");
+	private final ModifiableCallout<AbilityCastStart> nailchipperDontBaitSecond = ModifiableCallout.durationBasedCall("Nailchipper - Avoid Second Wave", "Out");
+	private final ModifiableCallout<?> nailchipperThird = new ModifiableCallout<>("Nailchipper - Dodge First", "Dodge 1");
+	private final ModifiableCallout<?> nailchipperFourth = new ModifiableCallout<>("Nailchipper - Dodge Second", "Dodge 2");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> nailchipper = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9485),
+			(e1, s) -> {
+				// Same as quadruple crossing (in fact, has a quad crossing cast in it),
+				// but first/second set is forced due to the nailchipper mechanic.
+				// These casts are 1:1 with the headmarkers
+				{
+					var headCasts = s.waitEventsQuickSuccession(4, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9486));
+					var mine = headCasts.stream().filter(acs -> acs.getTarget().isThePlayer()).findFirst().orElse(null);
+					if (mine == null) {
+						s.updateCall(nailchipperBaitFirst, headCasts.get(0));
+					}
+					else {
+						s.updateCall(nailchipperDontBaitFirst, mine);
+					}
+				}
+				// Repeat but 2nd wave
+				{
+					var headCasts = s.waitEventsQuickSuccession(4, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9486));
+					var mine = headCasts.stream().filter(acs -> acs.getTarget().isThePlayer()).findFirst().orElse(null);
+					if (mine == null) {
+						s.updateCall(nailchipperBaitSecond, headCasts.get(0));
+					}
+					else {
+						s.updateCall(nailchipperDontBaitSecond, mine);
+					}
+				}
+				s.waitMs(50);
+				s.waitEvent(AbilityUsedEvent.class, isQuadCrossingHit);
+				s.updateCall(nailchipperThird);
+				s.waitMs(50);
+				s.waitEvent(AbilityUsedEvent.class, isQuadCrossingHit);
+				s.updateCall(nailchipperFourth);
+
+
+			});
+
+	private static final ArenaPos ap = new ArenaPos(100, 100, 5, 5);
+
+	private static final ModifiableCallout<AbilityCastStart> soulshadeCardinalFirst = ModifiableCallout.durationBasedCallWithOffset("Soul Shade One-Two: Cardinal First", "Start {cardinal}-{intercard.opposite()}", Duration.ofSeconds(1));
+	private static final ModifiableCallout<AbilityCastStart> soulshadeIntercardFirst = ModifiableCallout.durationBasedCallWithOffset("Soul Shade One-Two: Cardinal First", "Start {intercard}-{cardinal.opposite()}", Duration.ofSeconds(1));
+	private static final ModifiableCallout<?> soulshadeMove = new ModifiableCallout<>("Soul Shade One-Two: Cross Over", "Move");
+
+	// 9464 = hitting right first
+	// 9467 = hitting left first
+	// can ignore the actual damaging casts
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> soulshadeOneTwo = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9464, 0x9467),
+			(e1, s) -> {
+				log.info("Soulshade one-two: start");
+				var e2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9464, 0x9467));
+				ArenaSector pos1 = ap.forCombatant(e1.getSource());
+				ArenaSector pos2 = ap.forCombatant(e2.getSource());
+				log.info("Soulshade one-two: sectors {} and {}", pos1, pos2);
+				ArenaSector cardinalPos;
+				ArenaSector intercardPos;
+				if (pos1.isCardinal()) {
+					cardinalPos = pos1;
+					intercardPos = pos2;
+				}
+				else if (pos2.isCardinal()) {
+					cardinalPos = pos2;
+					intercardPos = pos1;
+				}
+				else {
+					throw new RuntimeException("Could not determine positions! %s %s".formatted(e1.getSource().getPos(), e2.getSource().getPos()));
+				}
+				s.setParam("cardinal", cardinalPos);
+				s.setParam("intercard", intercardPos);
+				int delta = cardinalPos.eighthsTo(intercardPos);
+				if (delta == 3) {
+					// e.g. S + NW
+					// If hitting left first, start on cardinal side. S cleaves W, NW cleaves NE, so only S-SE is safe
+					s.updateCall(soulshadeCardinalFirst, e1);
+				}
+				else if (delta == -3) {
+					// e.g. S + NE
+					s.updateCall(soulshadeIntercardFirst, e1);
+				}
+				else {
+					throw new RuntimeException("Could not determine delta! %s %s".formatted(e1.getSource().getPos(), e2.getSource().getPos()));
+				}
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == e1);
+				s.waitMs(1000);
+				s.updateCall(soulshadeMove);
+			});
+
 	/*
 	TODO:
-	Nailchipper is the proteans + head markers
-	Soulshade one-two paw - like e9s cleaves
-	It also uses this during the light parties mechanic
-	 */
+	Trigger for boss destroying tiles?
+	*/
 }
