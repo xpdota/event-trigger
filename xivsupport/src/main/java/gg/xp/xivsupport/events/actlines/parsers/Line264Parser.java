@@ -29,6 +29,7 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 
 	@HandleEvents
 	public void consumeAbilityUse(AbilityUsedEvent aue) {
+		// TODO: this has an issue, where multiple hits of an aoe do not all receive the location info
 		if (aue.isFirstTarget()) {
 			buffer.write(aue);
 		}

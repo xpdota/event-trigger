@@ -97,9 +97,9 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 	}
 
 	private final ModifiableCallout<AbilityCastStart> temptingTwistInitial = ModifiableCallout.durationBasedCall("Tempting Twist: Initial", "In");
-//	private final ModifiableCallout<?> temptingTwistAvoidBlobs = new ModifiableCallout<>("Tempting Twist: Initial", "Avoid Blobs");
+	//	private final ModifiableCallout<?> temptingTwistAvoidBlobs = new ModifiableCallout<>("Tempting Twist: Initial", "Avoid Blobs");
 	private final ModifiableCallout<AbilityCastStart> beelineInitial = ModifiableCallout.durationBasedCall("Beeline: Initial", "Out of Middle");
-//	private final ModifiableCallout<?> beelineAvoidBlobs = new ModifiableCallout<>("Tempting Twist: Initial", "In - Avoid Blobs");
+	//	private final ModifiableCallout<?> beelineAvoidBlobs = new ModifiableCallout<>("Tempting Twist: Initial", "In - Avoid Blobs");
 	private final ModifiableCallout<?> spread = new ModifiableCallout<>("Poison: Spread", "Spread", 10_000);
 	private final ModifiableCallout<?> buddies = new ModifiableCallout<>("Poison: Stack", "Buddy", 10_000);
 
@@ -114,6 +114,7 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Wait
 				PoisonBuff pb = getPoisonBuff();
 //				s.waitMs(1000);
+				// TODO: reports of this being broken
 				if (pb == PoisonBuff.SPREAD) {
 					s.updateCall(spread);
 				}
@@ -147,7 +148,7 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> beeSting = ModifiableCallout.durationBasedCall("Bee Sting", "Light Parties");
 
 	private final ModifiableCallout<?> outCards = new ModifiableCallout<>("Center/Outer Stage: Out+Cardinals", "Out+Cardinals");
-//	private final ModifiableCallout<?> outInter = new ModifiableCallout<>("Center/Outer Stage: Out+Intercards", "Out+Intercards");
+	//	private final ModifiableCallout<?> outInter = new ModifiableCallout<>("Center/Outer Stage: Out+Intercards", "Out+Intercards");
 //	private final ModifiableCallout<?> inCards = new ModifiableCallout<>("Center/Outer Stage: In+Cardinals", "In+Cardinals");
 	private final ModifiableCallout<?> inInter = new ModifiableCallout<>("Center/Outer Stage: In+Intercards", "In+Intercards");
 	private final ModifiableCallout<?> cross = new ModifiableCallout<>("Center/Outer Stage: Cross", "Out+Intercards");
@@ -185,7 +186,6 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 	private static final Duration hblOffset = Duration.ofMillis(8200);
-	// TODO: these have extra cast time
 	private final ModifiableCallout<AbilityCastStart> hbl1Initial = ModifiableCallout.durationBasedCallWithOffset("Honey B. Live: 1st Beat", "Raidwide", hblOffset);
 	private final ModifiableCallout<?> hb1towers = new ModifiableCallout<>("Honey B. Live: 1st Beat: Take Towers", "Take {towers} Towers");
 	private final ModifiableCallout<?> hb1noTowers = new ModifiableCallout<>("Honey B. Live: 1st Beat: Avoid Towers", "Avoid Towers");
@@ -300,7 +300,7 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Given that there is a magic vuln, I do not see how there can be different strategies for this mech
 				// 4 people have short defa, 4 have long defa
 				int defa = 0xF5E;
-				List<BuffApplied> all = s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(defa));
+//				List<BuffApplied> all = s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(defa));
 				BuffApplied playerBuff = buffs.findStatusOnTarget(state.getPlayer(), defa);
 //				List<BuffApplied> shorts = all.stream().filter(ba -> ba.getInitialDuration().toSeconds() < 30).toList();
 //				List<BuffApplied> longs = all.stream().filter(ba -> ba.getInitialDuration().toSeconds() > 30).toList();
@@ -359,7 +359,7 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 			.disabledByDefault()
 			.extendedDescription("This is an optional callout which will call out every pair to pop.");
 
-	private int nisiBuffGroup(BuffApplied buff) {
+	private static int nisiBuffGroup(BuffApplied buff) {
 		return ((int) buff.getInitialDuration().toSeconds() + 4) / 16;
 	}
 
