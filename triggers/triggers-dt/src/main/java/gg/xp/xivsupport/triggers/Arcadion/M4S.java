@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
@@ -12,6 +13,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
+import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
@@ -25,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.channels.AsynchronousByteChannel;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -52,43 +55,115 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@NpcCastCallout(0x95EF)
 	private final ModifiableCallout<AbilityCastStart> wrathOfZeus = ModifiableCallout.durationBasedCall("Wrath of Zeus", "Raidwide");
-	// 95EF wrath of zeus raidwide
 
-	// TODO: more IDs?
-	// 9671 is "inside"
+	// TODO: there's another mechanic after this (electrifying witch hunt)
 	@NpcCastCallout({0x8DEF, 0x9671})
 	private final ModifiableCallout<AbilityCastStart> bewitchingFlight = ModifiableCallout.durationBasedCall("Betwitching Flight", "Avoid Lines");
+
 	@NpcCastCallout(0x92C2)
 	private final ModifiableCallout<AbilityCastStart> wickedBolt = ModifiableCallout.durationBasedCall("Wicked Bolt", "Stack, Multiple Hits");
-	// bewitching flight (0x8DEF): avoid lines
-	// stay in, then move out, avoid horizontal lines
-	// bait
 
-	// TODO: witch hunt
+	private static boolean baitOut(BuffApplied buff) {
+		long rawStacks = buff.getRawStacks();
+		if (rawStacks == 759) {
+			return true;
+		}
+		else if (rawStacks == 758) {
+			return false;
+		}
+		else {
+			throw new IllegalArgumentException("Unrecognized stack count %s".formatted(rawStacks));
+		}
+
+	}
+
+	/*
+	Buff b9a for witch hunt
+	These all apply at the start, so need to collect them
+	759 bait far?
+	758 bait close?
+	 */
 	// electrifying witch hunt 95e5: ?
 	// This puts stuff on 4 people
 	// other 4 have to bait
 	// bait near/far based on buff
+	private final ModifiableCallout<AbilityCastStart> witchHuntInsideNoBait = ModifiableCallout.durationBasedCall("Witch Hunt: Inside Safe, No Bait", "Inside, Stay { baitOut ? 'In' : 'Out'}");
+	private final ModifiableCallout<AbilityCastStart> witchHuntInsideBait = ModifiableCallout.durationBasedCall("Witch Hunt: Inside Safe, Bait", "Inside, Bait { baitOut ? 'Out' : 'In' }");
+	private final ModifiableCallout<AbilityCastStart> witchHuntOutsideNoBait = ModifiableCallout.durationBasedCall("Witch Hunt: Outside Safe, No Bait", "Outside, Stay { baitOut ? 'In' : 'Out'}");
+	private final ModifiableCallout<AbilityCastStart> witchHuntOutsideBait = ModifiableCallout.durationBasedCall("Witch Hunt: Outside Safe, Bait", "Outside, Bait { baitOut ? 'Out' : 'In' }");
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> witchHunt = SqtTemplates.sq(30_000,
+			// TODO: other ID?
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95DE),
+			(e1, s) -> {
+				// Whether the inside is safe, else outside is safe
+				boolean insideSafe = e1.abilityIdMatches(0x95DE);
+				// Whether player is baiting
+				// Player should bait if they do not have the lightning buff
+				boolean playerBaiting = !buffs.isStatusOnTarget(state.getPlayer(), 0x24B);
+				log.info("Player baiting");
+				BuffApplied bossBuff = s.findOrWaitForBuff(buffs, ba -> ba.getTarget().equals(e1.getSource()) && ba.buffIdMatches(0xB9A));
+
+				// true means bait is far, false means bait is close
+				boolean baitOut = baitOut(bossBuff);
+				s.setParam("baitOut", baitOut);
+				// TODO: got a wrong call. Called correct in/out, but bait position was wrong
+				// 3:16 PM
+				if (insideSafe) {
+					s.updateCall(playerBaiting ? witchHuntInsideBait : witchHuntInsideNoBait, e1);
+				}
+				else {
+					s.updateCall(playerBaiting ? witchHuntOutsideBait : witchHuntOutsideNoBait, e1);
+				}
+			});
 
 	// widening witch hunt: 95e0: out first
 	// alternates between close/far
 	// narrowing witch hunt: 95e1: in first
 	// alternates between close/far
-	private final ModifiableCallout<?> wideningOut = new ModifiableCallout<>("Widening/Narrowing Witch Hunt: Out", "Out");
-	private final ModifiableCallout<?> wideningIn = new ModifiableCallout<>("Widening/Narrowing Witch Hunt: In", "In");
+	private final ModifiableCallout<AbilityCastStart> widening = ModifiableCallout.durationBasedCall("Widening Initial", "Inside, Baiters { baitOut ? 'Out' : 'In'}");
+	private final ModifiableCallout<AbilityCastStart> narrowing = ModifiableCallout.durationBasedCall("Narrowing Initial", "Outside, Baiters { baitOut ? 'Out' : 'In'}");
+	private final ModifiableCallout<?> wideningF = new ModifiableCallout<>("Widening Followup", "Inside, Baiters { baitOut ? 'Out' : 'In'}");
+	private final ModifiableCallout<?> narrowingF = new ModifiableCallout<>("Narrowing Followup", "Outside, Baiters { baitOut ? 'Out' : 'In'}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> wideningNarrowing = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95e0, 0x95e1),
 			(e1, s) -> {
-				// TODO: read the buff
-				boolean widening = e1.abilityIdMatches(0x95e0);
-				if (widening) {
-					s.updateCall(wideningOut);
+				boolean isWidening = e1.abilityIdMatches(0x95e0);
+				var baitOuts = new boolean[4];
+				var firstBuff = s.findOrWaitForBuff(buffs, ba -> ba.getTarget().equals(e1.getSource()) && ba.buffIdMatches(0xB9A));
+				baitOuts[0] = baitOut(firstBuff);
+
+				s.setParam("baitOut", baitOuts[0]);
+				if (isWidening) {
+					s.updateCall(widening, e1);
 				}
 				else {
-					s.updateCall(wideningIn);
+					s.updateCall(narrowing, e1);
 				}
+
+				for (int i = 1; i <= 3; i++) {
+					var nextBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xB9A));
+					baitOuts[i] = baitOut(nextBuff);
+				}
+
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x4D11, 0x4D12));
+
+				for (int i = 1; i <= 3; i++) {
+					s.setParam("baitOut", baitOuts[i]);
+					// The widening/narrowing alternates each time
+					if (isWidening ^ (i % 2 == 0)) {
+						// We already called first one
+						s.updateCall(wideningF);
+					}
+					else {
+						s.updateCall(narrowingF);
+					}
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x4D11, 0x4D12));
+
+				}
+
 			});
 
 	@NpcCastCallout(0x95c6)
@@ -280,19 +355,36 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 				{
 					var lightningCageCasts = s.waitEventsQuickSuccession(12, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95CF));
-					s.waitThenRefreshCombatants(100);
-					// The safe spot is always between the unsafe corners
+					s.waitMs(50);
+					// try cast positions first
 					var unsafeCorners = lightningCageCasts.stream()
-							.map(AbilityCastStart::getSource)
-							.map(state::getLatestCombatantData)
-							.map(apOuterCorners::forCombatant)
+							.map(AbilityCastStart::getLocationInfo)
+							.filter(Objects::nonNull)
+							.map(DescribesCastLocation::getPos)
+							.filter(Objects::nonNull)
+							.map(apOuterCorners::forPosition)
 							.filter(ArenaSector::isIntercard)
 							.toList();
+					int limit = 5;
+					while (unsafeCorners.size() != 2) {
+						s.waitThenRefreshCombatants(100);
+						// The safe spot is always between the unsafe corners
+						unsafeCorners = lightningCageCasts.stream()
+								.map(AbilityCastStart::getSource)
+								.map(state::getLatestCombatantData)
+								.map(apOuterCorners::forCombatant)
+								.filter(ArenaSector::isIntercard)
+								.toList();
+						if (limit-- < 0) {
+							log.error("unsafeCorners fail!");
+							break;
+						}
+					}
 					if (unsafeCorners.size() == 2) {
 						ArenaSector safe = ArenaSector.tryCombineTwoQuadrants(unsafeCorners);
 						s.setParam("safe", safe);
-						s.setParam("sides", List.of(safe.plusQuads(-1), safe.plusQuads(1)));
-						s.setParam("corners", List.of(safe.plusQuads(-3), safe.plusQuads(3)));
+						s.setParam("sides", List.of(safe.plusEighths(-2), safe.plusEighths(2)));
+						s.setParam("corners", List.of(safe.plusEighths(-3), safe.plusEighths(3)));
 						if (!playerIsLong) {
 							// Call safe spot
 							s.updateCall(electropeSafeSpot);
@@ -306,6 +398,10 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 							}
 						}
 
+					}
+					else {
+						// This should be fixed now
+						log.error("unsafeCorners bad! {} {}", unsafeCorners, lightningCageCasts);
 					}
 				}
 
@@ -347,7 +443,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> electronStream = SqtTemplates.sq(120_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95D7),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95D6, 0x95D7),
 			(e1, s) -> {
 //				hits with positron stream (95d8) and negatron stream (95d9)
 //				get hit by opposite color
@@ -371,7 +467,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 				for (int i = 0; i < 3; i++) {
 					var posCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95D8));
-					s.waitMs(100);
+					// TODO: use positions if this continues to be flaky
+
+					s.waitThenRefreshCombatants(100);
 					ArenaSector positiveSide = ArenaPos.combatantFacing(state.getLatestCombatantData(posCast.getSource()));
 					s.setParam("positive", positiveSide);
 					s.setParam("negative", positiveSide.opposite());
@@ -382,43 +480,63 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					}
 					else if (playerBuff.buffIdMatches(pos)) {
 						// get hit by pos
-						s.updateCall(negatronStream, e1);
+						s.updateCall(negatronStream, posCast);
 					}
 					else {
 						// get hit by neg
-						s.updateCall(positronStream, e1);
+						s.updateCall(positronStream, posCast);
 					}
 				}
 			});
 
 	private final ModifiableCallout<AbilityCastStart> transplantCast = ModifiableCallout.durationBasedCall("Electrope Transplant: Casted", "Dodge Proteans");
 	private final ModifiableCallout<?> transplantMove = new ModifiableCallout<>("Electrope Transplant: Instant", "Move");
+	private final ModifiableCallout<?> transplantMoveFront = new ModifiableCallout<>("Electrope Transplant: Cover", "Cover");
+	private final ModifiableCallout<?> transplantMoveBack = new ModifiableCallout<>("Electrope Transplant: Get Covered", "Behind");
+	private final ModifiableCallout<?> transition = new ModifiableCallout<>("Transition", "Multiple Raidwides, Get Knocked South");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> electropeTransplant = SqtTemplates.sq(120_000,
 			(AbilityCastStart.class), acs -> acs.abilityIdMatches(0x98D3),
 			(e1, s) -> {
 				log.info("Electrope Transplant: Start");
-				AbilityCastStart cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x90FE));
-				s.updateCall(transplantCast, cast);
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x90FE));
-				s.updateCall(transplantMove);
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
-				s.updateCall(transplantMove);
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
-				s.updateCall(transplantMove);
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
-				s.updateCall(transplantMove);
-				List<XivCombatant> playersThatGotHit = s.waitEventsQuickSuccession(8, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CE))
-						.stream()
-						.map(AbilityUsedEvent::getTarget)
-						.toList();
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
-				s.updateCall(transplantMove);
+				for (int i = 0; i < 2; i++) {
+
+					log.info("Electrope Transplant: Start round {}", i);
+					AbilityCastStart cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x90FE));
+					s.updateCall(transplantCast, cast);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x90FE));
+					s.updateCall(transplantMove);
+					s.waitMs(50);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
+					s.updateCall(transplantMove);
+					s.waitMs(50);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
+					s.updateCall(transplantMove);
+					s.waitMs(50);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
+					s.updateCall(transplantMove);
+					s.waitMs(50);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
+					List<XivCombatant> playersThatGotHit = s.waitEventsQuickSuccession(8, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CE))
+							.stream()
+							.map(AbilityUsedEvent::getTarget)
+							.toList();
+					if (playersThatGotHit.contains(state.getPlayer())) {
+						s.updateCall(transplantMoveBack);
+					}
+					else {
+						s.updateCall(transplantMoveFront);
+					}
+					s.waitMs(50);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
+					s.updateCall(transplantMove);
+					s.waitMs(50);
+				}
+				s.waitMs(2000);
+				s.updateCall(transition);
 			});
 
-	//	@NpcCastCallout() // TODO there is no cast for this - need to implement the mechanic before this
-	private final ModifiableCallout<AbilityCastStart> transition = ModifiableCallout.durationBasedCall("Transition", "Multiple Raidwides");
 
 	//95c6 witchgleam
 
@@ -476,21 +594,169 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	cross trail switch 95F3 - multiple hits
 
 	 */
-	/*
-	Buff b9a for witch hunt
-	These all apply at the start, so need to collect them
-	759 bait far?
-	758 bait close?
-	 */
 
 	// POST TRANSITION
+
+	private static final ArenaPos finalAp = new ArenaPos(100, 165, 5, 5);
+
 	@NpcCastCallout(0x95F2)
 	private final ModifiableCallout<AbilityCastStart> crossTailSwitch = ModifiableCallout.durationBasedCall("Cross Tail Switch", "Multiple Raidwides");
 	// The two people that did nothing need to grab the tethers
-	@NpcCastCallout(0x961E)
-	private final ModifiableCallout<AbilityCastStart> mustardBomb = ModifiableCallout.durationBasedCall("Mustard Bombs", "Tethers");
+	private final ModifiableCallout<?> mustardBombInitialTetherNonTank = new ModifiableCallout<>("Mustard Bombs: Initial Tether, Not Tank", "Give Tethers to Tanks");
+	private final ModifiableCallout<?> mustardBombInitialTank = new ModifiableCallout<>("Mustard Bombs: Tank", "Grab Tethers");
+	private final ModifiableCallout<?> mustardBombAvoidTethers = new ModifiableCallout<>("Mustard Bombs: Avoid Tethers", "Avoid Tethers");
+	private final ModifiableCallout<?> mustardBombTankAfter = new ModifiableCallout<>("Mustard Bombs: Tank", "Give Tethers Away");
+	private final ModifiableCallout<?> mustardBombGrabTethersAfter = new ModifiableCallout<>("Mustard Bombs: Grab Tethers", "Grab Tethers from Tanks");
 
 	// azure thunmder 962f
 	@NpcCastCallout(0x962F)
 	private final ModifiableCallout<AbilityCastStart> azureThunder = ModifiableCallout.durationBasedCall("Azure Thunder", "Raidwide");
+
+	// TODO: identify safe spots
+	@NpcCastCallout(value = 0x95F5, suppressMs = 100)
+	private final ModifiableCallout<AbilityCastStart> saberTail = ModifiableCallout.durationBasedCall("Sabertail", "Exaflares");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> mustardBomb = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x961E),
+			(e1, s) -> {
+				if (state.playerJobMatches(Job::isTank)) {
+					s.updateCall(mustardBombInitialTank);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x961F));
+					s.updateCall(mustardBombTankAfter);
+				}
+				else {
+					s.updateCall(mustardBombInitialTetherNonTank);
+					// Kindling Cauldron hits
+					var kindlingCauldrons = s.waitEventsQuickSuccession(8, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9620));
+					if (kindlingCauldrons.stream().anyMatch(e -> e.getTarget().isThePlayer())) {
+						s.updateCall(mustardBombAvoidTethers);
+					}
+					else {
+						s.updateCall(mustardBombGrabTethersAfter);
+					}
+				}
+			});
+
+	// Wicked special: out of middle (9610, 9611)
+	// in middle 9612 + 2x 9613
+
+	// Hitting west, east safe
+	// 9602 Aetherial conversion
+	// Tail thrust
+	// 9606 boss
+	// 960E fake
+	// Have to move west, east gets hit next
+	// 960E fake again
+	// 9609 is water where you have to get knocked around, maybe buff tells you which side?
+	// seems it can be fire (out) or water (kb), starting left or right
+	// 9603 left water first
+	// 9605 water right first
+	// These lead to 9609?
+
+	private final ModifiableCallout<AbilityCastStart> wickedSpecialOutOfMiddle = ModifiableCallout.durationBasedCall("Wicked Special: Out of Middle", "Sides");
+	private final ModifiableCallout<AbilityCastStart> wickedSpecialInMiddle = ModifiableCallout.durationBasedCall("Wicked Special: In Middle", "Middle");
+
+	// The ones not run here are handled elsewhere
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> wickedSpecialStandalone = SqtTemplates.multiInvocation(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612),
+			(e1, s) -> {
+				if (e1.abilityIdMatches(0x9610)) {
+					s.updateCall(wickedSpecialOutOfMiddle, e1);
+				}
+				else {
+					s.updateCall(wickedSpecialInMiddle, e1);
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> aetherialConversion = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9603, 0x9605, 0x9602),
+			(e1, s) -> {
+				switch (((int) e1.getAbility().getId())) {
+					case 0x9602 -> {
+						// fire hitting west -> east ?
+					}
+					case 0x9603 -> {
+						// water hitting west -> east
+					}
+					case 0x9605 -> {
+						// water hitting east -> west
+					}
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> wickedFireInitial = ModifiableCallout.durationBasedCall("Wicked Fire: Initial", "Bait Middle");
+	private final ModifiableCallout<?> wickedFireSafeSpot = new ModifiableCallout<>("Wicked Fire: Safe Spot", "{safe} safe");
+	private final ModifiableCallout<?> wickedFireSafeSpotIn = new ModifiableCallout<>("Wicked Fire: Second Safe Spot, In", "{safe} safe, In");
+	private final ModifiableCallout<?> wickedFireSafeSpotOut = new ModifiableCallout<>("Wicked Fire: Second Safe Spot, Out", "{safe} safe, Out");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> wickedFire = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9630),
+			(e1, s) -> {
+				s.updateCall(wickedFireInitial, e1);
+				for (int i = 0; i < 2; i++) {
+
+					var fx = s.waitEvents(2, StatusLoopVfxApplied.class, e -> e.getTarget().npcIdMatches(17323));
+					Set<ArenaSector> safeSpots = EnumSet.of(ArenaSector.NORTHWEST, ArenaSector.NORTHEAST, ArenaSector.SOUTHWEST, ArenaSector.SOUTHEAST);
+					s.waitThenRefreshCombatants(50);
+					fx.forEach(f -> {
+						ArenaSector combatantLocation = finalAp.forCombatant(state.getLatestCombatantData(f.getTarget()));
+						ArenaSector unsafe;
+						// Cleaving right
+						if (f.vfxIdMatches(793)) {
+							// e.g. if add is S and cleaving right, E is unsafe
+							unsafe = combatantLocation.plusQuads(-1);
+						}
+						// Cleaving left
+						else if (f.vfxIdMatches(794)) {
+							unsafe = combatantLocation.plusQuads(1);
+						}
+						else {
+							log.error("Bad vfx id: {}", f.getStatusLoopVfx().getId());
+							return;
+						}
+						log.info("Unsafe: {} -> {}", combatantLocation, unsafe);
+						safeSpots.remove(unsafe.plusEighths(-1));
+						safeSpots.remove(unsafe.plusEighths(1));
+					});
+					fx.stream()
+							.map(StatusLoopVfxApplied::getTarget)
+							.map(state::getLatestCombatantData)
+							.map(finalAp::forCombatant)
+							.forEach(safeSpots::remove);
+
+					if (safeSpots.size() != 1) {
+						log.error("Bad safeSpots spots! {}", safeSpots);
+						continue;
+					}
+					ArenaSector safe = safeSpots.iterator().next();
+					s.setParam("safe", safe);
+					if (i == 0) {
+						s.updateCall(wickedFireSafeSpot);
+					}
+					else {
+						var wicked = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612));
+						if (wicked.abilityIdMatches(0x9610)) {
+							s.updateCall(wickedFireSafeSpotOut);
+						}
+						else {
+							s.updateCall(wickedFireSafeSpotIn);
+						}
+					}
+				}
+
+
+			});
+
+	// concentrated burst
+	// buddies into spread at 3:32PM
+
+
+	// Ion Cluster
+	/*
+	You get positron/negatron, and have to bait a cannon, while the other two do towers
+	 */
 }

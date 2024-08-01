@@ -28,15 +28,24 @@ public class QuickFilterBuiltins {
 	                                                || (event instanceof CalloutEvent));
 		qf.register("No Player Actions", Event.class,
 				event -> {
+					// Show player-placed markers for AM testing
 					if (event instanceof HasPlayerHeadMarker) {
 						return true;
 					}
+					// Filter out abilities and status effects which did not come form an NPC
 					if ((event instanceof HasAbility || event instanceof HasStatusEffect) && event instanceof HasSourceEntity hse) {
 						if (!isNpc(hse.getSource())) {
 							return false;
 						}
 					}
 					if (event instanceof StatusEffectList sel && !isNpc(sel.getTarget())) {
+						return false;
+					}
+					// Earthly star
+					if (event instanceof HasTargetEntity hte && hte.getTarget().npcIdMatches(7245)) {
+						return false;
+					}
+					if (event instanceof HasSourceEntity hse && hse.getSource().npcIdMatches(7245)) {
 						return false;
 					}
 					if (event instanceof TickEvent) {
