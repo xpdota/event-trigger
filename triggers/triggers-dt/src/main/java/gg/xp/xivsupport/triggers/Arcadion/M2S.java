@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
@@ -13,12 +14,12 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
-import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,38 +51,48 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> stingingSlash = ModifiableCallout.durationBasedCall("Stinging Slash", "Tank Cleaves");
 	@NpcCastCallout(0x919C)
 	private final ModifiableCallout<AbilityCastStart> killerSting = ModifiableCallout.durationBasedCall("Killer Sting", "Tank Stack");
-//
-//	private final SequentialTrigger<BaseEvent>
+	//
+	private final ModifiableCallout<?> spreadLater = new ModifiableCallout<>("Poison: Spread (Stocked)", "Spread Later");
+	private final ModifiableCallout<?> buddiesLater = new ModifiableCallout<>("Poison: Stack (Stocked)", "Buddy Later");
+	private final ModifiableCallout<?> spread = new ModifiableCallout<>("Poison: Spread", "Spread", 10_000);
+	private final ModifiableCallout<?> buddies = new ModifiableCallout<>("Poison: Stack", "Buddy", 10_000);
+
+	private @Nullable PoisonBuff lastPosionBuff;
 
 	private enum PoisonBuff {
 		SPREAD,
 		BUDDY
 	}
 
+	private void resetPoisonBuff() {
+		lastPosionBuff = null;
+	}
+
 	private @Nullable PoisonBuff getPoisonBuff() {
-		// TODO: this should also call out when you get the buff
-		XivCombatant boss = state.npcById(16941);
-		// TODO: This is bad! Both abilities place the same debuff ID, just capture the ability.
-		BuffApplied status = buffs.findStatusOnTarget(boss, ba -> ba.buffIdMatches(0xF4B, 0xF61));
-		if (status == null) {
-			log.warn("No debuff");
-			return null;
-		}
-		AbilityUsedEvent preapp = status.getPreAppAbility();
-		if (preapp == null) {
-			log.warn("Preapp null");
-			return null;
-		}
-		if (preapp.abilityIdMatches(0x9184, 0x9B0F)) {
-			return PoisonBuff.SPREAD;
-		}
-		else if (preapp.abilityIdMatches(0x9185, 0x9B09)) {
-			return PoisonBuff.BUDDY;
-		}
-		else {
-			log.warn("Preapp did not match");
-			return null;
-		}
+		return lastPosionBuff;
+//		// TODO: this should also call out when you get the buff
+//		XivCombatant boss = state.npcById(16941);
+//		// TODO: This is bad! Both abilities place the same debuff ID, just capture the ability.
+//		BuffApplied status = buffs.findStatusOnTarget(boss, ba -> ba.buffIdMatches(0xF4B, 0xF61));
+//		if (status == null) {
+//			log.warn("No debuff");
+//			return null;
+//		}
+//		AbilityUsedEvent preapp = status.getPreAppAbility();
+//		if (preapp == null) {
+//			log.warn("Preapp null");
+//			return null;
+//		}
+//		if (preapp.abilityIdMatches(0x9184, 0x9B0F)) {
+//			return PoisonBuff.SPREAD;
+//		}
+//		else if (preapp.abilityIdMatches(0x9185, 0x9B09)) {
+//			return PoisonBuff.BUDDY;
+//		}
+//		else {
+//			log.warn("Preapp did not match");
+//			return null;
+//		}
 	}
 
 	private int getPlayerHeartStacks() {
@@ -100,8 +111,25 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 	//	private final ModifiableCallout<?> temptingTwistAvoidBlobs = new ModifiableCallout<>("Tempting Twist: Initial", "Avoid Blobs");
 	private final ModifiableCallout<AbilityCastStart> beelineInitial = ModifiableCallout.durationBasedCall("Beeline: Initial", "Out of Middle");
 	//	private final ModifiableCallout<?> beelineAvoidBlobs = new ModifiableCallout<>("Tempting Twist: Initial", "In - Avoid Blobs");
-	private final ModifiableCallout<?> spread = new ModifiableCallout<>("Poison: Spread", "Spread", 10_000);
-	private final ModifiableCallout<?> buddies = new ModifiableCallout<>("Poison: Stack", "Buddy", 10_000);
+
+	@HandleEvents
+	public void poisonMechs(EventContext context, AbilityUsedEvent event) {
+		// Splash of venom/love
+		if (event.abilityIdMatches(0x9184)) {
+			context.accept(spreadLater.getModified());
+			lastPosionBuff = PoisonBuff.SPREAD;
+		}
+		// Drop of venom/love
+		else if (event.abilityIdMatches(0x9185, 0x9B09)) {
+			context.accept(buddiesLater.getModified());
+			lastPosionBuff = PoisonBuff.BUDDY;
+		}
+	}
+
+	@HandleEvents
+	public void reset(PullStartedEvent unused) {
+		resetPoisonBuff();
+	}
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> temptingTwist = SqtTemplates.sq(30_000,
@@ -118,10 +146,13 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				if (pb == PoisonBuff.SPREAD) {
 					s.updateCall(spread);
 				}
-				else {
+				else if (pb == PoisonBuff.BUDDY){
 					s.updateCall(buddies);
 				}
-
+				else {
+					log.error("No poison buff!");
+				}
+				resetPoisonBuff();
 			});
 
 	@AutoFeed
@@ -301,7 +332,8 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				// 4 people have short defa, 4 have long defa
 				int defa = 0xF5E;
 //				List<BuffApplied> all = s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(defa));
-				BuffApplied playerBuff = buffs.findStatusOnTarget(state.getPlayer(), defa);
+				BuffApplied playerBuff = s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(defa) && ba.getTarget().isThePlayer());
+//				BuffApplied playerBuff = buffs.findStatusOnTarget(state.getPlayer(), defa);
 //				List<BuffApplied> shorts = all.stream().filter(ba -> ba.getInitialDuration().toSeconds() < 30).toList();
 //				List<BuffApplied> longs = all.stream().filter(ba -> ba.getInitialDuration().toSeconds() > 30).toList();
 				boolean playerShort;
