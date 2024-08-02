@@ -12,6 +12,7 @@ import gg.xp.xivsupport.gui.tables.renderers.MpRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
+import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivEntity;
@@ -208,7 +209,11 @@ public final class StandardColumns {
 						text = "YOU";
 					}
 					else {
-						text = c.getType().name();
+						CombatantType type = c.getType();
+						text = type.name();
+						if (type == CombatantType.NPC) {
+							text += " (%s:%s)".formatted(c.getbNpcId(), c.getbNpcNameId());
+						}
 					}
 					tooltip = String.format("%s (%s)", text, c.getRawType());
 					Component label = defaultRenderer.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column);

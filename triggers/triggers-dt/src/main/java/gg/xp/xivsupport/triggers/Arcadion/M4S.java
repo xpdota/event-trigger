@@ -13,8 +13,11 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
+import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
@@ -23,14 +26,21 @@ import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.channels.AsynchronousByteChannel;
+import java.io.Serial;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 
 @CalloutRepo(name = "M4S", duty = KnownDuty.M4S)
@@ -38,13 +48,15 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(M4S.class);
 
-	public M4S(XivState state, StatusEffectRepository buffs) {
+	public M4S(XivState state, StatusEffectRepository buffs, ActiveCastRepository casts) {
 		this.state = state;
 		this.buffs = buffs;
+		this.casts = casts;
 	}
 
 	private XivState state;
 	private StatusEffectRepository buffs;
+	private ActiveCastRepository casts;
 	private static final ArenaPos ap = new ArenaPos(100, 100, 5, 5);
 	private static final ArenaPos apOuterCorners = new ArenaPos(100, 100, 12, 12);
 
@@ -57,6 +69,32 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> wrathOfZeus = ModifiableCallout.durationBasedCall("Wrath of Zeus", "Raidwide");
 
 	// TODO: there's another mechanic after this (electrifying witch hunt)
+	/*
+	Electrifying:
+	Outside safe:
+	3x 95EA burst then 95E5 electrifying
+	Inside safe:
+	2x95EA burst then 95E5 electrifying
+	 */
+
+	private final ModifiableCallout<AbilityCastStart> electrifyingInsideSafe = ModifiableCallout.durationBasedCall("Electrifying Witch Hunt: Inside Safe", "Inside");
+	private final ModifiableCallout<AbilityCastStart> electrifyingOutsideSafe = ModifiableCallout.durationBasedCall("Electrifying Witch Hunt: Outside Safe", "Outside");
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> electrifyingWitchHunt = SqtTemplates.sq(30_000,
+			(AbilityCastStart.class), acs -> acs.abilityIdMatches(0x95E5),
+			(e1, s) -> {
+				int count = casts.getActiveCastsById(0x95EA).size();
+				if (count == 2) {
+					s.updateCall(electrifyingInsideSafe, e1);
+				}
+				else if (count == 3) {
+					s.updateCall(electrifyingOutsideSafe, e1);
+				}
+				else {
+					log.error("Bad count: {}", count);
+				}
+			});
+
 	@NpcCastCallout({0x8DEF, 0x9671})
 	private final ModifiableCallout<AbilityCastStart> bewitchingFlight = ModifiableCallout.durationBasedCall("Betwitching Flight", "Avoid Lines");
 
@@ -96,8 +134,10 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 			// TODO: other ID?
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95DE),
 			(e1, s) -> {
+				int count = casts.getActiveCastsById(0x95EA).size();
 				// Whether the inside is safe, else outside is safe
-				boolean insideSafe = e1.abilityIdMatches(0x95DE);
+				// If there are two bursts, inside is safe. otherwise outside is safe.
+				boolean insideSafe = count == 2;
 				// Whether player is baiting
 				// Player should bait if they do not have the lightning buff
 				boolean playerBaiting = !buffs.isStatusOnTarget(state.getPlayer(), 0x24B);
@@ -121,10 +161,10 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	// alternates between close/far
 	// narrowing witch hunt: 95e1: in first
 	// alternates between close/far
-	private final ModifiableCallout<AbilityCastStart> widening = ModifiableCallout.durationBasedCall("Widening Initial", "Inside, Baiters { baitOut ? 'Out' : 'In'}");
-	private final ModifiableCallout<AbilityCastStart> narrowing = ModifiableCallout.durationBasedCall("Narrowing Initial", "Outside, Baiters { baitOut ? 'Out' : 'In'}");
-	private final ModifiableCallout<?> wideningF = new ModifiableCallout<>("Widening Followup", "Inside, Baiters { baitOut ? 'Out' : 'In'}");
-	private final ModifiableCallout<?> narrowingF = new ModifiableCallout<>("Narrowing Followup", "Outside, Baiters { baitOut ? 'Out' : 'In'}");
+	private final ModifiableCallout<AbilityCastStart> widening = ModifiableCallout.durationBasedCall("Widening Initial", "Outside, Baiters { baitOut ? 'Out' : 'In'}");
+	private final ModifiableCallout<AbilityCastStart> narrowing = ModifiableCallout.durationBasedCall("Narrowing Initial", "Inside, Baiters { baitOut ? 'Out' : 'In'}");
+	private final ModifiableCallout<?> wideNarrowOutF = new ModifiableCallout<>("Widening/Narrowing Outside Followup", "Outside, Baiters { baitOut ? 'Out' : 'In'}");
+	private final ModifiableCallout<?> wideNarrowInF = new ModifiableCallout<>("Widening/Narrowing Inside Followup", "Inside, Baiters { baitOut ? 'Out' : 'In'}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> wideningNarrowing = SqtTemplates.sq(60_000,
@@ -153,12 +193,12 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 				for (int i = 1; i <= 3; i++) {
 					s.setParam("baitOut", baitOuts[i]);
 					// The widening/narrowing alternates each time
-					if (isWidening ^ (i % 2 == 0)) {
+					if (isWidening ^ (i % 2 != 0)) {
 						// We already called first one
-						s.updateCall(wideningF);
+						s.updateCall(wideNarrowOutF);
 					}
 					else {
-						s.updateCall(narrowingF);
+						s.updateCall(wideNarrowInF);
 					}
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x4D11, 0x4D12));
 
@@ -602,7 +642,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x95F2)
 	private final ModifiableCallout<AbilityCastStart> crossTailSwitch = ModifiableCallout.durationBasedCall("Cross Tail Switch", "Multiple Raidwides");
 	// The two people that did nothing need to grab the tethers
-	private final ModifiableCallout<?> mustardBombInitialTetherNonTank = new ModifiableCallout<>("Mustard Bombs: Initial Tether, Not Tank", "Give Tethers to Tanks");
+	private final ModifiableCallout<?> mustardBombInitialTetherNonTank = new ModifiableCallout<>("Mustard Bombs: Initial Tether, Not Tank", "Tethers to Tanks then Spread");
 	private final ModifiableCallout<?> mustardBombInitialTank = new ModifiableCallout<>("Mustard Bombs: Tank", "Grab Tethers");
 	private final ModifiableCallout<?> mustardBombAvoidTethers = new ModifiableCallout<>("Mustard Bombs: Avoid Tethers", "Avoid Tethers");
 	private final ModifiableCallout<?> mustardBombTankAfter = new ModifiableCallout<>("Mustard Bombs: Tank", "Give Tethers Away");
@@ -674,18 +714,37 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> aetherialConversion = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9603, 0x9605, 0x9602),
 			(e1, s) -> {
+				// TODO: are these actually needed for anything?
 				switch (((int) e1.getAbility().getId())) {
 					case 0x9602 -> {
 						// fire hitting west -> east ?
+						// followed by 9606
 					}
 					case 0x9603 -> {
 						// water hitting west -> east
+						// followed by 9607
+					}
+					case 0x9604 -> {
+						// UNCONFIRMED: fire hitting east -> west?
+						// UNCONFIRMED: followed by 9608?
 					}
 					case 0x9605 -> {
 						// water hitting east -> west
+						// followed by 9609
 					}
 				}
+				// Tail thrust
+//				s.waitEvent(AbilityUsedEvent.class, acs -> acs.abilityIdMatches(0x9607));
 			});
+
+	@NpcCastCallout(0x9606)
+	private final ModifiableCallout<AbilityCastStart> aetherialConversionFireWE = ModifiableCallout.durationBasedCall("Aetherial Conversion Fire West->East", "East Safe then West");
+	@NpcCastCallout(0x9608)
+	private final ModifiableCallout<AbilityCastStart> aetherialConversionFireEW = ModifiableCallout.durationBasedCall("Aetherial Conversion Fire East->West", "West Safe then East");
+	@NpcCastCallout(0x9607)
+	private final ModifiableCallout<AbilityCastStart> aetherialConversionWaterWE = ModifiableCallout.durationBasedCall("Aetherial Conversion Water West->East", "Knockback West then East");
+	@NpcCastCallout(0x9609)
+	private final ModifiableCallout<AbilityCastStart> aetherialConversionWaterEW = ModifiableCallout.durationBasedCall("Aetherial Conversion Water East->West", "Knockback East then West");
 
 	private final ModifiableCallout<AbilityCastStart> wickedFireInitial = ModifiableCallout.durationBasedCall("Wicked Fire: Initial", "Bait Middle");
 	private final ModifiableCallout<?> wickedFireSafeSpot = new ModifiableCallout<>("Wicked Fire: Safe Spot", "{safe} safe");
@@ -693,7 +752,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> wickedFireSafeSpotOut = new ModifiableCallout<>("Wicked Fire: Second Safe Spot, Out", "{safe} safe, Out");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> wickedFire = SqtTemplates.sq(60_000,
+	private final SequentialTrigger<BaseEvent> twilightSabbath = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9630),
 			(e1, s) -> {
 				s.updateCall(wickedFireInitial, e1);
@@ -754,9 +813,162 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	// concentrated burst
 	// buddies into spread at 3:32PM
 
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> midnightSabbath = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9AB9),
+			(e1, s) -> {
+				// This is the one with eight adds around the arena, and you have to dodge in/out with either partners or spread
+				/*
+				Midnight Sabbath 2: Clones will spawn with either wings or guns.
+				If wings, go into the first active set ((all cardinals or all intercardinals first) on your quadrant.
+				If guns, start on the inactive set.
 
-	// Ion Cluster
+				gun vs wing is determined by weapon ID
+				gun = 7
+				wing = 31
+				gun fired = 6
+
+				Next question, how do we determine the first vs second set?
+
+				Concentrated burst 962B is partners then spread
+				Scattered burst 962C is spread then partners
+				 */
+
+			});
+
+	// Ion Cluster (two different IDs)
 	/*
 	You get positron/negatron, and have to bait a cannon, while the other two do towers
 	 */
+	@NpcCastCallout(0x9614)
+	private final ModifiableCallout<AbilityCastStart> flameSlash = ModifiableCallout.durationBasedCall("Flame Slash", "Out of Middle, Arena Splitting");
+
+	private final ModifiableCallout<?> rainingSwordNorthmost = new ModifiableCallout<>("Raining Swords: Northmost Safe", "North");
+	private final ModifiableCallout<?> rainingSwordNorthmiddle = new ModifiableCallout<>("Raining Swords: North-middle Safe", "North-Middle");
+	private final ModifiableCallout<?> rainingSwordSouthmiddle = new ModifiableCallout<>("Raining Swords: South-middle Safe", "South-Middle");
+	private final ModifiableCallout<?> rainingSwordSouthmost = new ModifiableCallout<>("Raining Swords: Southmost Safe", "South");
+
+	private final class RainingSwordSafeSpotEvent extends BaseEvent implements HasPrimaryValue {
+		@Serial
+		private static final long serialVersionUID = -1177380546147020596L;
+		final ArenaSector side;
+		// Indexed from 0, i.e. 0 = southmost, 3 = northmost
+		final int safeSpot;
+
+		private RainingSwordSafeSpotEvent(ArenaSector side, int safeSpot) {
+			this.side = side;
+			this.safeSpot = safeSpot;
+		}
+
+		ModifiableCallout<?> getCallout() {
+			return switch (safeSpot) {
+				case 3 -> rainingSwordNorthmost;
+				case 2 -> rainingSwordNorthmiddle;
+				case 1 -> rainingSwordSouthmiddle;
+				case 0 -> rainingSwordSouthmost;
+				default -> throw new IllegalArgumentException("Bad index: " + safeSpot);
+			};
+		}
+
+		@Override
+		public String toString() {
+			return "RainingSwordSafeSpotEvent{" +
+			       "side=" + side +
+			       ", safeSpot=" + safeSpot +
+			       '}';
+		}
+
+
+		@Override
+		public String getPrimaryValue() {
+			return "%s %s".formatted(safeSpot, side);
+		}
+	}
+
+	// This trigger is ONLY responsible for collecting - not callout out!
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> rainingSwordsColl = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9616),
+			(e1, s) -> {
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == e1);
+				// Swords should all be present at this point
+				// Normally I would do this by position, but the sword IDs seem to have stable positions
+				// Lowest ID is bottom left, then up, then over and up
+				// There's the initial tethers (279) then the follow up (280).
+				// There are 7 follow up sets, for 8 sets in total
+				int npcId = 17327;
+				// Find the 8 swords
+				List<XivCombatant> swords = new ArrayList<>(state.npcsById(npcId));
+				swords.sort(Comparator.comparing(XivCombatant::getId));
+				if (swords.size() != 8) {
+					throw new RuntimeException("Expected 8 swords, there were %s".formatted(swords.size()));
+				}
+				// Divide into left and right
+				List<XivCombatant> leftSwords = swords.subList(0, 4);
+				List<XivCombatant> rightSwords = swords.subList(4, 8);
+				// Get the lowest ID for each side
+				long leftBaseId = leftSwords.get(0).getId();
+				long rightBaseId = rightSwords.get(0).getId();
+				boolean startRight = false;
+				for (int i = 0; i < 8; i++) {
+					// These tethers all use the 'source' field as the sword that it is jumping TO
+					var tethers = s.waitEvents(3, TetherEvent.class, te -> te.eitherTargetMatches(cbt -> cbt.npcIdMatches(npcId)));
+					if (i == 0) {
+						// If this is the first iteration, we need to determine whether we are left or right
+						startRight = rightSwords.contains(tethers.get(0).getSource());
+						log.info("Starting {}", startRight ? "right" : "left");
+					}
+					// Alternate sides
+					boolean thisSideRight = startRight ^ (i % 2 != 0);
+					long baseId = thisSideRight ? rightBaseId : leftBaseId;
+					Set<Integer> safe = new HashSet<>(Set.of(0, 1, 2, 3));
+					tethers.forEach(tether -> {
+						int index = (int) (tether.getSource().getId() - baseId);
+						log.info("Tether index: {}", index);
+						safe.remove(index);
+					});
+					if (safe.size() != 1) {
+						throw new RuntimeException("Safe: " + safe);
+					}
+					s.accept(new RainingSwordSafeSpotEvent(thisSideRight ? ArenaSector.EAST : ArenaSector.WEST, safe.iterator().next()));
+
+				}
+			});
+	// This trigger does the actual callouts
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> rainingSwordsCall = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9616),
+			(e1, s) -> {
+				Queue<@NotNull Optional<ModifiableCallout<?>>> queue = new ArrayDeque<>();
+				// First collect everything
+				for (int i = 0; i < 8; i++) {
+					int wave = i / 2;
+					var event = s.waitEvent(RainingSwordSafeSpotEvent.class);
+					ArenaSector playerSide = state.getPlayer().getPos().x() > 100 ? ArenaSector.EAST : ArenaSector.WEST;
+					boolean isMySide = playerSide == event.side;
+					// The exception is that if this is the first wave, fire the callout immediately
+					if (wave == 0) {
+						if (isMySide) {
+							s.updateCall(event.getCallout());
+						}
+						// Nothing to do
+					}
+					else {
+						if (isMySide) {
+							queue.add(Optional.of(event.getCallout()));
+						}
+						else {
+							// If off-side, add null as a marker
+							queue.add(Optional.empty());
+						}
+					}
+				}
+				// Now burn through the queue, waiting for the chain lightning hits
+				for (Optional<ModifiableCallout<?>> item : queue) {
+					// Wait for another round of hits
+					s.waitEventsQuickSuccession(3, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x961A, 0x961B) && aue.isFirstTarget());
+					// If not a null marker, fire the call
+					item.ifPresent(s::updateCall);
+				}
+			});
 }
