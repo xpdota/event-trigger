@@ -59,6 +59,8 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	private ActiveCastRepository casts;
 	private static final ArenaPos ap = new ArenaPos(100, 100, 5, 5);
 	private static final ArenaPos apOuterCorners = new ArenaPos(100, 100, 12, 12);
+	private static final int positronBuff = 0xFA0;
+	private static final int negatronBuff = 0xFA1;
 
 	@Override
 	public boolean enabled(EventContext context) {
@@ -501,8 +503,6 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 //						? (FA5) - tiny chariot
 
 				// do it again 2 more times
-				int pos = 0xFA0;
-				int neg = 0xFA1;
 
 
 				for (int i = 0; i < 3; i++) {
@@ -514,11 +514,11 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.setParam("positive", positiveSide);
 					s.setParam("negative", positiveSide.opposite());
 
-					var playerBuff = buffs.findStatusOnTarget(state.getPlayer(), ba -> ba.buffIdMatches(pos, neg));
+					var playerBuff = buffs.findStatusOnTarget(state.getPlayer(), ba -> ba.buffIdMatches(positronBuff, negatronBuff));
 					if (playerBuff == null) {
 						log.error("Player has no buff!");
 					}
-					else if (playerBuff.buffIdMatches(pos)) {
+					else if (playerBuff.buffIdMatches(positronBuff)) {
 						// get hit by pos
 						s.updateCall(negatronStream, posCast);
 					}
@@ -641,20 +641,41 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@NpcCastCallout(0x95F2)
 	private final ModifiableCallout<AbilityCastStart> crossTailSwitch = ModifiableCallout.durationBasedCall("Cross Tail Switch", "Multiple Raidwides");
+
+	// TODO: identify safe spots
+	@NpcCastCallout(value = 0x95F5, suppressMs = 100)
+	private final ModifiableCallout<AbilityCastStart> saberTail = ModifiableCallout.durationBasedCall("Sabertail", "Exaflares");
+
+	// Wicked special: out of middle (9610, 9611)
+	// in middle 9612 + 2x 9613
+
+	private final ModifiableCallout<AbilityCastStart> wickedSpecialOutOfMiddle = ModifiableCallout.durationBasedCall("Wicked Special: Out of Middle", "Sides");
+	private final ModifiableCallout<AbilityCastStart> wickedSpecialInMiddle = ModifiableCallout.durationBasedCall("Wicked Special: In Middle", "Middle");
+
+	// The ones not run here are handled elsewhere
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> wickedSpecialStandalone = SqtTemplates.multiInvocation(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612),
+			(e1, s) -> {
+				if (e1.abilityIdMatches(0x9610)) {
+					s.updateCall(wickedSpecialOutOfMiddle, e1);
+				}
+				else {
+					s.updateCall(wickedSpecialInMiddle, e1);
+				}
+			});
+
 	// The two people that did nothing need to grab the tethers
 	private final ModifiableCallout<?> mustardBombInitialTetherNonTank = new ModifiableCallout<>("Mustard Bombs: Initial Tether, Not Tank", "Tethers to Tanks then Spread");
 	private final ModifiableCallout<?> mustardBombInitialTank = new ModifiableCallout<>("Mustard Bombs: Tank", "Grab Tethers");
 	private final ModifiableCallout<?> mustardBombAvoidTethers = new ModifiableCallout<>("Mustard Bombs: Avoid Tethers", "Avoid Tethers");
 	private final ModifiableCallout<?> mustardBombTankAfter = new ModifiableCallout<>("Mustard Bombs: Tank", "Give Tethers Away");
-	private final ModifiableCallout<?> mustardBombGrabTethersAfter = new ModifiableCallout<>("Mustard Bombs: Grab Tethers", "Grab Tethers from Tanks");
+	private final ModifiableCallout<?> mustardBombGrabTethersAfter = new ModifiableCallout<>("Mustard Bombs: Grab Tethers", "Grab Bombs from Tanks");
 
 	// azure thunmder 962f
 	@NpcCastCallout(0x962F)
 	private final ModifiableCallout<AbilityCastStart> azureThunder = ModifiableCallout.durationBasedCall("Azure Thunder", "Raidwide");
 
-	// TODO: identify safe spots
-	@NpcCastCallout(value = 0x95F5, suppressMs = 100)
-	private final ModifiableCallout<AbilityCastStart> saberTail = ModifiableCallout.durationBasedCall("Sabertail", "Exaflares");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> mustardBomb = SqtTemplates.sq(60_000,
@@ -678,78 +699,29 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
-	// Wicked special: out of middle (9610, 9611)
-	// in middle 9612 + 2x 9613
 
-	// Hitting west, east safe
-	// 9602 Aetherial conversion
-	// Tail thrust
-	// 9606 boss
-	// 960E fake
-	// Have to move west, east gets hit next
-	// 960E fake again
-	// 9609 is water where you have to get knocked around, maybe buff tells you which side?
-	// seems it can be fire (out) or water (kb), starting left or right
-	// 9603 left water first
-	// 9605 water right first
-	// These lead to 9609?
-
-	private final ModifiableCallout<AbilityCastStart> wickedSpecialOutOfMiddle = ModifiableCallout.durationBasedCall("Wicked Special: Out of Middle", "Sides");
-	private final ModifiableCallout<AbilityCastStart> wickedSpecialInMiddle = ModifiableCallout.durationBasedCall("Wicked Special: In Middle", "Middle");
-
-	// The ones not run here are handled elsewhere
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> wickedSpecialStandalone = SqtTemplates.multiInvocation(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612),
-			(e1, s) -> {
-				if (e1.abilityIdMatches(0x9610)) {
-					s.updateCall(wickedSpecialOutOfMiddle, e1);
-				}
-				else {
-					s.updateCall(wickedSpecialInMiddle, e1);
-				}
-			});
-
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> aetherialConversion = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9603, 0x9605, 0x9602),
-			(e1, s) -> {
-				// TODO: are these actually needed for anything?
-				switch (((int) e1.getAbility().getId())) {
-					case 0x9602 -> {
-						// fire hitting west -> east ?
-						// followed by 9606
-					}
-					case 0x9603 -> {
-						// water hitting west -> east
-						// followed by 9607
-					}
-					case 0x9604 -> {
-						// UNCONFIRMED: fire hitting east -> west?
-						// UNCONFIRMED: followed by 9608?
-					}
-					case 0x9605 -> {
-						// water hitting east -> west
-						// followed by 9609
-					}
-				}
-				// Tail thrust
-//				s.waitEvent(AbilityUsedEvent.class, acs -> acs.abilityIdMatches(0x9607));
-			});
+	@NpcCastCallout(0x9602)
+	private final ModifiableCallout<AbilityCastStart> aetherialConversionFireWE = ModifiableCallout.durationBasedCall("Aetherial Conversion Fire West->East", "Later: East Safe then West");
+	@NpcCastCallout(0x9604)
+	private final ModifiableCallout<AbilityCastStart> aetherialConversionFireEW = ModifiableCallout.durationBasedCall("Aetherial Conversion Fire East->West", "Later: West Safe then East");
+	@NpcCastCallout(0x9603)
+	private final ModifiableCallout<AbilityCastStart> aetherialConversionWaterWE = ModifiableCallout.durationBasedCall("Aetherial Conversion Water West->East", "Later: Knockback West then East");
+	@NpcCastCallout(0x9605)
+	private final ModifiableCallout<AbilityCastStart> aetherialConversionWaterEW = ModifiableCallout.durationBasedCall("Aetherial Conversion Water East->West", "Later: Knockback East then West");
 
 	@NpcCastCallout(0x9606)
-	private final ModifiableCallout<AbilityCastStart> aetherialConversionFireWE = ModifiableCallout.durationBasedCall("Aetherial Conversion Fire West->East", "East Safe then West");
+	private final ModifiableCallout<AbilityCastStart> tailThrustFireWE = ModifiableCallout.durationBasedCall("Tail Thrust: Fire West->East", "East Safe then West");
 	@NpcCastCallout(0x9608)
-	private final ModifiableCallout<AbilityCastStart> aetherialConversionFireEW = ModifiableCallout.durationBasedCall("Aetherial Conversion Fire East->West", "West Safe then East");
+	private final ModifiableCallout<AbilityCastStart> tailThrustFireEW = ModifiableCallout.durationBasedCall("Tail Thrust: Fire East->West", "West Safe then East");
 	@NpcCastCallout(0x9607)
-	private final ModifiableCallout<AbilityCastStart> aetherialConversionWaterWE = ModifiableCallout.durationBasedCall("Aetherial Conversion Water West->East", "Knockback West then East");
+	private final ModifiableCallout<AbilityCastStart> tailThrustWaterWE = ModifiableCallout.durationBasedCall("Tail Thrust: Water West->East", "Knockback West then East");
 	@NpcCastCallout(0x9609)
-	private final ModifiableCallout<AbilityCastStart> aetherialConversionWaterEW = ModifiableCallout.durationBasedCall("Aetherial Conversion Water East->West", "Knockback East then West");
+	private final ModifiableCallout<AbilityCastStart> tailThrustWaterEW = ModifiableCallout.durationBasedCall("Tail Thrust: Water East->West", "Knockback East then West");
 
 	private final ModifiableCallout<AbilityCastStart> wickedFireInitial = ModifiableCallout.durationBasedCall("Wicked Fire: Initial", "Bait Middle");
 	private final ModifiableCallout<?> wickedFireSafeSpot = new ModifiableCallout<>("Wicked Fire: Safe Spot", "{safe} safe");
-	private final ModifiableCallout<?> wickedFireSafeSpotIn = new ModifiableCallout<>("Wicked Fire: Second Safe Spot, In", "{safe} safe, In");
-	private final ModifiableCallout<?> wickedFireSafeSpotOut = new ModifiableCallout<>("Wicked Fire: Second Safe Spot, Out", "{safe} safe, Out");
+	private final ModifiableCallout<AbilityCastStart> wickedFireSafeSpotIn = ModifiableCallout.durationBasedCall("Wicked Fire: Second Safe Spot, In", "{safe} safe, In");
+	private final ModifiableCallout<AbilityCastStart> wickedFireSafeSpotOut = ModifiableCallout.durationBasedCall("Wicked Fire: Second Safe Spot, Out", "{safe} safe, Out");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> twilightSabbath = SqtTemplates.sq(60_000,
@@ -799,10 +771,10 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					else {
 						var wicked = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612));
 						if (wicked.abilityIdMatches(0x9610)) {
-							s.updateCall(wickedFireSafeSpotOut);
+							s.updateCall(wickedFireSafeSpotOut, wicked);
 						}
 						else {
-							s.updateCall(wickedFireSafeSpotIn);
+							s.updateCall(wickedFireSafeSpotIn, wicked);
 						}
 					}
 				}
@@ -836,7 +808,80 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 			});
 
-	// Ion Cluster (two different IDs)
+	@NpcCastCallout(0x949B)
+	private final ModifiableCallout<AbilityCastStart> wickedThunder = ModifiableCallout.durationBasedCall("Wicked Thunder", "Raidwide");
+
+	private final ModifiableCallout<BuffApplied> ionCluster2shortPos = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Short Positron", "Short Positron").autoIcon();
+	private final ModifiableCallout<BuffApplied> ionCluster2shortNeg = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Short Negatron", "Short Negatron").autoIcon();
+	private final ModifiableCallout<BuffApplied> ionCluster2longPos = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Long Positron", "Long Positron").autoIcon();
+	private final ModifiableCallout<BuffApplied> ionCluster2longNeg = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Long Negatron", "Long Negatron").autoIcon();
+
+	private final ModifiableCallout<BuffApplied> ionCluster2baitFirstSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Bait First Set", "Bait {baitLocations}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ionCluster2avoidFirstSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Take First Tower", "Soak Tower").autoIcon();
+	private final ModifiableCallout<BuffApplied> ionCluster2baitSecondSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Bait Second Set", "Bait {baitLocations}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ionCluster2avoidSecondSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Take Second Tower", "Soak Tower").autoIcon();
+
+	// Ion Cluster #2, aka Sunrise Sabbath
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> ionCluster2sq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9622),
+			(e1, s) -> {
+				var playerBuff = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(positronBuff, negatronBuff));
+				boolean playerPos = playerBuff.buffIdMatches(positronBuff);
+				// 23 short, 38 long
+				boolean playerLong = playerBuff.getInitialDuration().toSeconds() > 30;
+				if (playerLong) {
+					s.updateCall(playerPos ? ionCluster2longPos : ionCluster2longNeg, playerBuff);
+				}
+				else {
+					s.updateCall(playerPos ? ionCluster2shortPos : ionCluster2shortNeg, playerBuff);
+				}
+				// Now, wait for special buff to be placed on the guns
+				// Positron (FA0) needs to bait gun with B9A 757,
+				// Negatron (FA1) needs to bait gun with B9A 756.
+				int neededGun = playerPos ? 757 : 756;
+				{
+					// First round
+					var gunBuffs = s.waitEventsQuickSuccession(4, BuffApplied.class, ba -> ba.buffIdMatches(0xB9A));
+					if (playerLong) {
+						s.updateCall(ionCluster2avoidFirstSet, playerBuff);
+					}
+					else {
+						List<ArenaSector> acceptableGuns = gunBuffs.stream()
+								.filter(ba -> ba.getRawStacks() == neededGun)
+								.map(BuffApplied::getTarget)
+								.map(finalAp::forCombatant)
+								.toList();
+						s.setParam("baitLocations", acceptableGuns);
+						s.updateCall(ionCluster2baitFirstSet, playerBuff);
+					}
+				}
+				var wicked = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612));
+				if (wicked.abilityIdMatches(0x9610)) {
+					s.updateCall(wickedSpecialOutOfMiddle, wicked);
+				}
+				else {
+					s.updateCall(wickedSpecialInMiddle, wicked);
+				}
+				{
+					// First round
+					var gunBuffs = s.waitEventsQuickSuccession(4, BuffApplied.class, ba -> ba.buffIdMatches(0xB9A));
+					if (playerLong) {
+						List<ArenaSector> acceptableGuns = gunBuffs.stream()
+								.filter(ba -> ba.getRawStacks() == neededGun)
+								.map(BuffApplied::getTarget)
+								.map(finalAp::forCombatant)
+								.toList();
+						s.setParam("baitLocations", acceptableGuns);
+						s.updateCall(ionCluster2baitSecondSet, playerBuff);
+					}
+					else {
+						s.updateCall(ionCluster2avoidSecondSet, playerBuff);
+					}
+
+				}
+
+			});
 	/*
 	You get positron/negatron, and have to bait a cannon, while the other two do towers
 	 */
