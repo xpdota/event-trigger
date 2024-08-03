@@ -96,10 +96,14 @@ public class ArenaPos {
 	 */
 	public static ArenaSector combatantFacing(XivCombatant cbt) {
 		Position pos = cbt.getPos();
-		if (pos == null) {
+		return combatantFacing(pos);
+	}
+
+	public static ArenaSector combatantFacing(Position position) {
+		if (position == null) {
 			return ArenaSector.UNKNOWN;
 		}
-		return combatantFacing(pos.getHeading());
+		return combatantFacing(position.getHeading());
 	}
 
 	/**

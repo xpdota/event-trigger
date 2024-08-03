@@ -6,11 +6,15 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
+import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
+import gg.xp.xivsupport.events.state.combatstate.CastResult;
+import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
@@ -106,6 +110,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		waitMs(delay);
 		accept(new RefreshCombatantsRequest());
 		waitMs(delay);
+	}
+
+	public void refreshCombatants() {
+		accept(new RefreshCombatantsRequest());
 	}
 
 	public void refreshCombatants(long delay) {
@@ -450,6 +458,22 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			return waitEvent(BuffApplied.class, condition);
 		}
 	}
+
+	public AbilityCastStart findOrWaitForCast(ActiveCastRepository repo, Predicate<AbilityCastStart> condition, boolean includeExpired) {
+		var castMaybe = repo.getAll().stream().filter(ct -> {
+			if (!includeExpired && ct.getResult() != CastResult.IN_PROGRESS) {
+				return false;
+			}
+			return condition.test(ct.getCast());
+		}).findFirst().map(CastTracker::getCast).orElse(null);
+		if (castMaybe != null) {
+			return castMaybe;
+		}
+		else {
+			return waitEvent(AbilityCastStart.class, condition);
+		}
+	}
+
 
 	public List<AbilityUsedEvent> collectAoeHits(Predicate<AbilityUsedEvent> condition) {
 		List<AbilityUsedEvent> out = new ArrayList<>(8);

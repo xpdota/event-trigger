@@ -7,9 +7,9 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.io.Serial;
 
 /**
- * Represents various types of actor control events, e.g. wipes, barrier up/down, etc
+ * Represents entity-specific actor control extra data
  */
-@SystemEvent
+//@SystemEvent
 public class ActorControlExtraEvent extends BaseEvent implements HasPrimaryValue, HasTargetEntity {
 
 

@@ -57,7 +57,7 @@ public class M4sTest
 				call(365058, "Move", "Move"),
 				call(367148, "Multiple Raidwides, Get Knocked South", "Multiple Raidwides, Get Knocked South"),
 				call(406314, "Multiple Raidwides", "Multiple Raidwides (4.7)"),
-				call(421680, "Exaflares", "Exaflares (7.7)"),
+				call(422168, "Northwest Corner and Northeast Side", "Northwest Corner and Northeast Side (7.2)"),
 				call(434650, "Sides", "Sides (4.7)"),
 				call(447826, "Tethers to Tanks then Spread", "Tethers to Tanks then Spread"),
 				call(456869, "Grab Bombs from Tanks", "Grab Bombs from Tanks"),
@@ -66,7 +66,10 @@ public class M4sTest
 				call(499461, "Raidwide", "Raidwide (4.7)"),
 				call(514785, "Bait Middle", "Bait Middle (3.7)"),
 				call(517859, "Northeast safe", "Northeast safe"),
-				call(554445, "Southwest safe, In", "Southwest safe, In (4.7)"),
+				call(523920, "Southwest safe, In", "Southwest safe, In (4.7)"),
+				call(544283, "Spread in Cardinals", "Spread in Cardinals"),
+				call(551277, "Buddy in Intercards", "Buddy in Intercards"),
+				call(555337, "Middle", "Middle (3.8)"),
 				call(562598, "Raidwide", "Raidwide (4.7)"),
 				call(571821, "Later: Knockback West then East", "Later: Knockback West then East (6.7)"),
 				call(581982, "Out of Middle, Arena Splitting", "Out of Middle, Arena Splitting (5.7)"),
@@ -85,7 +88,7 @@ public class M4sTest
 				call(718147, "Bait Northwest, Southwest", "Bait Northwest, Southwest (9.8)"),
 				call(726613, "Knockback West then East", "Knockback West then East (4.7)"),
 				call(742871, "Raidwides", "Raidwides (4.7)"),
-//				call(752537, "Front/Middle", "Front/Middle"),
+				call(752537, "Front/Middle", "Front/Middle"),
 				call(760016, "Raidwides", "Raidwides (4.7)")
 		);
 	}

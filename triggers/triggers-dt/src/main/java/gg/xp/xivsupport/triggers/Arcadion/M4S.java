@@ -11,6 +11,7 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
@@ -22,6 +23,7 @@ import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerController;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
@@ -41,6 +43,7 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
@@ -582,63 +585,6 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 
-	//95c6 witchgleam
-
-	// There's a thing where you have to avoid cardinals
-
-
-	/*
-
-	// TODO: what is the tell for stack/spread here?
-	// Maybe buff B9A on the boss indicates pairs?
-	// Seems the raw stack count matters?
-	// 752 = pairs?
-	// 753 = spread?
-	// wicked bolt 92c2 = stack
-	from the stack/spread, you get an additional point,
-	do the pattern again
-	stack at end of mechanic
-
-	lightning cage (95CF) marks unsafe squares on the 5x5 grid
-	 */
-
-	/*
-	Sidewise spark: 95EC cleaving right
-	 */
-
-	//95c6 witchgleam blind hits intercards
-
-	//95c8 symphoniy fantastique
-	/*
-	Spark II 95CA casts in two corners. Those are completely unsafe.
-	Spark 95C9 casts in two other corners. Those are only unsafe in the spot where spark is casting.
-	The boss also does a sidewise spark 95ED (cleaving left) or 95EC (cleaving right)
-	 */
-	/*
-	electron stream = wild charge
-	95D7
-
-	 */
-
-	/*
-	Transitionproteans
-	alternate/spread
-	 */
-
-	/*
-	Electrope transplant 98D3
-	need to block for whoever got hit
-	transition:
-	multiple raidwides
-	get knocked south
-	 */
-
-	/*
-	p2
-	cross trail switch 95F3 - multiple hits
-
-	 */
-
 	// POST TRANSITION
 
 	private static final ArenaPos finalAp = new ArenaPos(100, 165, 5, 5);
@@ -646,9 +592,88 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x95F2)
 	private final ModifiableCallout<AbilityCastStart> crossTailSwitch = ModifiableCallout.durationBasedCall("Cross Tail Switch", "Multiple Raidwides");
 
-	// TODO: identify safe spots
-	@NpcCastCallout(value = 0x95F5, suppressMs = 100)
-	private final ModifiableCallout<AbilityCastStart> saberTail = ModifiableCallout.durationBasedCall("Sabertail", "Exaflares");
+	private final ModifiableCallout<AbilityCastStart> sabertailSafeSpots = ModifiableCallout.<AbilityCastStart>durationBasedCall("Sabertail Safe Spots", "{westSafeDirection} {westSafeEdge ? 'Side' : 'Corner'} and {eastSafeDirection} {eastSafeEdge ? 'Side' : 'Corner'}")
+			.extendedDescription("""
+					By default, this callout will call out both sides, in a form like 'Southwest Edge and Northeast Corner', indicating that the \
+					middle-south row is safe for the west group, and the northmost row is safe for the east group. You can also use the parameters \
+					{westSafeRow} and {eastSafeRow}, which are simple numbers where 1 is the northmost row, and 4 is the southmost row.
+					""");
+
+	private static final int exaflareCastId = 0x95F5;
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> saberTailSq = SqtTemplates.sq(10_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(exaflareCastId),
+			(e1, s) -> {
+				// Which row (1 = northmost, 4 = southmost) for the west side and right side
+				Integer westSafeRow = null;
+				Integer eastSafeRow = null;
+				List<AbilityCastStart> casts = new ArrayList<>(16);
+				casts.add(e1);
+				casts.addAll(s.waitEvents(15, AbilityCastStart.class, acs -> acs.abilityIdMatches(exaflareCastId)));
+
+				// Should have all 16 casts now
+
+				s.waitThenRefreshCombatants(200);
+
+				Map<Integer, List<Position>> exas = casts.stream()
+						.map(AbilityCastStart::getSource)
+						.map(state::getLatestCombatantData)
+						.map(XivCombatant::getPos)
+						.collect(Collectors.groupingBy(item -> {
+							double y = item.getY();
+							// Intentionally skipping any that seem to be in the middle
+							if (y < 155) {
+								return 1;
+							}
+							else if (y < 162) {
+								return 2;
+							}
+							else if (y > 178) {
+								return 4;
+							}
+							else if (y > 168) {
+								return 3;
+							}
+							// Invalid
+							else {
+								throw new IllegalArgumentException("Invalid y: " + y);
+							}
+						}));
+
+				for (var entry : exas.entrySet()) {
+					Integer row = entry.getKey();
+					List<Position> positions = entry.getValue();
+// If none are facing west, then that row is safe for west party
+					if (positions.stream().noneMatch(pos -> ArenaPos.combatantFacing(pos) == ArenaSector.WEST)) {
+						westSafeRow = row;
+					}
+					else if (positions.stream().noneMatch(pos -> ArenaPos.combatantFacing(pos) == ArenaSector.EAST)) {
+						eastSafeRow = row;
+					}
+					// else, not a safe row for either side
+				}
+
+				if (westSafeRow != null && eastSafeRow != null) {
+					s.setParam("westSafeRow", westSafeRow);
+					s.setParam("westSafeDirection", switch (westSafeRow) {
+						case 1, 2 -> ArenaSector.NORTHWEST;
+						case 3, 4 -> ArenaSector.SOUTHWEST;
+						default -> ArenaSector.UNKNOWN;
+					});
+					s.setParam("westSafeEdge", westSafeRow == 2 || westSafeRow == 3);
+
+					s.setParam("eastSafeRow", eastSafeRow);
+					s.setParam("eastSafeDirection", switch (eastSafeRow) {
+						case 1, 2 -> ArenaSector.NORTHEAST;
+						case 3, 4 -> ArenaSector.SOUTHEAST;
+						default -> ArenaSector.UNKNOWN;
+					});
+					s.setParam("eastSafeEdge", eastSafeRow == 2 || eastSafeRow == 3);
+					s.updateCall(sabertailSafeSpots, e1);
+				}
+
+			});
 
 	// Wicked special: out of middle (9610, 9611)
 	// in middle 9612 + 2x 9613
@@ -722,17 +747,20 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x9609)
 	private final ModifiableCallout<AbilityCastStart> tailThrustWaterEW = ModifiableCallout.durationBasedCall("Tail Thrust: Water East->West", "Knockback East then West");
 
-	private final ModifiableCallout<AbilityCastStart> wickedFireInitial = ModifiableCallout.durationBasedCall("Wicked Fire: Initial", "Bait Middle");
-	private final ModifiableCallout<?> wickedFireSafeSpot = new ModifiableCallout<>("Wicked Fire: Safe Spot", "{safe} safe");
-	private final ModifiableCallout<AbilityCastStart> wickedFireSafeSpotIn = ModifiableCallout.durationBasedCall("Wicked Fire: Second Safe Spot, In", "{safe} safe, In");
-	private final ModifiableCallout<AbilityCastStart> wickedFireSafeSpotOut = ModifiableCallout.durationBasedCall("Wicked Fire: Second Safe Spot, Out", "{safe} safe, Out");
+	private final ModifiableCallout<AbilityCastStart> wickedFireInitial = ModifiableCallout.durationBasedCall("Twilight Sabbath: Bait Puddle", "Bait Middle");
+	private final ModifiableCallout<?> wickedFireSafeSpot = new ModifiableCallout<>("Twilight Sabbath: First Safe Spot", "{safe} safe");
+	private final ModifiableCallout<AbilityCastStart> wickedFireSafeSpotIn = ModifiableCallout.durationBasedCall("Twilight Sabbath: Second Safe Spot, In", "{safe} safe, In");
+	private final ModifiableCallout<AbilityCastStart> wickedFireSafeSpotOut = ModifiableCallout.durationBasedCall("Twilight Sabbath: Second Safe Spot, Out", "{safe} safe, Out");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> twilightSabbath = SqtTemplates.sq(60_000,
+			// This is the "wicked fire" baited aoe. The original twilight sabbath cast is
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9630),
 			(e1, s) -> {
+				log.info("Twilight Sabbath: Start");
 				s.updateCall(wickedFireInitial, e1);
 				for (int i = 0; i < 2; i++) {
+					log.info("Twilight Sabbath: Loop {}", i);
 
 					var fx = s.waitEvents(2, StatusLoopVfxApplied.class, e -> e.getTarget().npcIdMatches(17323));
 					Set<ArenaSector> safeSpots = EnumSet.of(ArenaSector.NORTHWEST, ArenaSector.NORTHEAST, ArenaSector.SOUTHWEST, ArenaSector.SOUTHEAST);
@@ -773,7 +801,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 						s.updateCall(wickedFireSafeSpot);
 					}
 					else {
-						var wicked = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612));
+						var wicked = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9610, 0x9612), false);
 						if (wicked.abilityIdMatches(0x9610)) {
 							s.updateCall(wickedFireSafeSpotOut, wicked);
 						}
@@ -789,6 +817,19 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	// concentrated burst
 	// buddies into spread at 3:32PM
 
+	private final ModifiableCallout<?> midnightSabbathSpreadCardinal = new ModifiableCallout<>("Midnight Sabbath: Spread in Cardinals", "Spread in Cardinals");
+	private final ModifiableCallout<?> midnightSabbathSpreadIntercards = new ModifiableCallout<>("Midnight Sabbath: Spread in Intercards", "Spread in Intercards");
+	private final ModifiableCallout<?> midnightSabbathBuddyCardinal = new ModifiableCallout<>("Midnight Sabbath: Spread in Cardinals", "Buddy in Cardinals");
+	private final ModifiableCallout<?> midnightSabbathBuddyIntercards = new ModifiableCallout<>("Midnight Sabbath: Spread in Intercards", "Buddy in Intercards");
+
+	private record MidnightSabbathMechanic(boolean isDonut, boolean isCardinal, boolean spread) {
+		boolean cardinalSafe() {
+			// If donut, then cast location is safe
+			// if gun, then cast location is unsafe
+			return isDonut == isCardinal;
+		}
+	}
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> midnightSabbath = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9AB9),
@@ -803,13 +844,112 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 				gun = 7
 				wing = 31
 				gun fired = 6
-
-				Next question, how do we determine the first vs second set?
+				First vs second set appears to be ActorControlExtraEvent, where
+				first set is 31 F4:0:0:0 and second set is 31 F2:0:0:0
+				Weapon ID can also be read from ActorControlExtraEvent, it's 3F xx:0:0:0 where xx is the ID.
 
 				Concentrated burst 962B is partners then spread
 				Scattered burst 962C is spread then partners
 				 */
 
+//				Set<XivCombatant> donuts = new HashSet<>();
+//				Set<XivCombatant> lasers = new HashSet<>();
+//				Set<XivCombatant> firstSet = new HashSet<>(4);
+//				Set<XivCombatant> secondSet = new HashSet<>(4);
+
+				var mechanics = new MidnightSabbathMechanic[2];
+
+				int weaponCategory = 0x3F;
+				int orderCategory = 0x197;
+				List<ActorControlExtraEvent> events = s.waitEventsQuickSuccession(16, ActorControlExtraEvent.class,
+						acee -> acee.getTarget().npcIdMatches(17323)
+						        && (acee.getCategory() == orderCategory || acee.getCategory() == weaponCategory));
+				s.refreshCombatants();
+				Map<XivCombatant, List<ActorControlExtraEvent>> eventsByCombatant = events.stream().collect(Collectors.groupingBy(ActorControlExtraEvent::getTarget));
+
+				var buddySpread = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x962B, 0x962C));
+
+				boolean spreadFirst = (buddySpread.abilityIdMatches(0x962C));
+
+				eventsByCombatant.forEach((cbt, cbtEvents) -> {
+					ArenaSector location = finalAp.forCombatant(state.getLatestCombatantData(cbt));
+					// Not usable
+					if (!location.isOutside()) {
+						return;
+					}
+					// Which set it is in
+					Boolean firstSet = null;
+					// Which mechanic
+					Boolean isDonut = null;
+					for (ActorControlExtraEvent event : cbtEvents) {
+						if (event.getCategory() == orderCategory) {
+							// First/second set
+							switch ((int) event.getData0()) {
+								case 0x11D3 -> firstSet = true;
+								case 0x11D4 -> firstSet = false;
+								default -> log.error("Unrecognized: {}", event.getPrimaryValue());
+							}
+						}
+						else if (event.getCategory() == weaponCategory) {
+							// Weapon ID
+							switch ((int) event.getData0()) {
+								case 7 -> isDonut = false;
+								case 31 -> isDonut = true;
+								default -> log.error("Unrecognized: {}", event.getPrimaryValue());
+							}
+						}
+					}
+					log.info("Midnight Sabbath: firstSet {}, isDonut {}, {}", firstSet, isDonut, cbt);
+					if (firstSet != null && isDonut != null) {
+						// Stack/spread is inverted on the second
+						var out = new MidnightSabbathMechanic(isDonut, location.isCardinal(), firstSet == spreadFirst);
+						int index = firstSet ? 0 : 1;
+						MidnightSabbathMechanic existing = mechanics[index];
+						if (existing == null) {
+							mechanics[index] = out;
+						}
+						else {
+							if (!existing.equals(out)) {
+								log.warn("Mechanic disagreement at {}! new {} vs old {}", index, out, existing);
+							}
+						}
+					}
+				});
+
+				MidnightSabbathMechanic firstMech = mechanics[0];
+				if (firstMech != null) {
+					log.info("Midnight Sabbath: firstMech {}", firstMech);
+					// do the first call
+					if (firstMech.cardinalSafe()) {
+						s.updateCall(firstMech.spread ? midnightSabbathSpreadCardinal : midnightSabbathBuddyCardinal);
+					}
+					else {
+						s.updateCall(firstMech.spread ? midnightSabbathSpreadIntercards : midnightSabbathBuddyIntercards);
+					}
+				}
+				else {
+					log.error("Midnight Sabbath: firstMech null!");
+				}
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == buddySpread);
+				MidnightSabbathMechanic secondMech = mechanics[1];
+				if (secondMech != null) {
+					log.info("Midnight Sabbath: secondMech {}", secondMech);
+					// do the second call
+					if (secondMech.cardinalSafe()) {
+						s.updateCall(secondMech.spread ? midnightSabbathSpreadCardinal : midnightSabbathBuddyCardinal);
+					}
+					else {
+						s.updateCall(secondMech.spread ? midnightSabbathSpreadIntercards : midnightSabbathBuddyIntercards);
+					}
+				}
+				else {
+					log.error("Midnight Sabbath: secondMech null!");
+				}
+
+				Runnable wickedCall = delayedCallWickedThunder(s);
+				// Wait for 'thundering' cast to finish
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9627));
+				wickedCall.run();
 			});
 
 	@NpcCastCallout(0x949B)
@@ -958,6 +1098,33 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
+	/**
+	 * Wait for a wicked thunder cast, and return a runnable that triggers the correct callout.
+	 * <p>
+	 * It returns a runnable rather than directly running the call so that it can be delayed.
+	 *
+	 * @param s The Sequential Trigger Controller to use
+	 * @return The runnable as described above
+	 */
+	private Runnable delayedCallWickedThunder(SequentialTriggerController<?> s) {
+		var wicked = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612));
+		if (wicked.abilityIdMatches(0x9610)) {
+			return () -> s.updateCall(wickedSpecialOutOfMiddle, wicked);
+		}
+		else {
+			return () -> s.updateCall(wickedSpecialInMiddle, wicked);
+		}
+	}
+
+	/**
+	 * Wait for and call out a wicked thunder cast.
+	 *
+	 * @param s The sequential trigger controller
+	 */
+	private void callWickedThunder(SequentialTriggerController<?> s) {
+		delayedCallWickedThunder(s).run();
+	}
+
 	// Ion Cluster #2, aka Sunrise Sabbath
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> ionCluster2sq = SqtTemplates.sq(60_000,
@@ -1026,13 +1193,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 						s.updateCall(ionCluster2baitFirstSet, playerBuff);
 					}
 				}
-				var wicked = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612));
-				if (wicked.abilityIdMatches(0x9610)) {
-					s.updateCall(wickedSpecialOutOfMiddle, wicked);
-				}
-				else {
-					s.updateCall(wickedSpecialInMiddle, wicked);
-				}
+				callWickedThunder(s);
 				{
 					// First round
 					var gunBuffs = s.waitEventsQuickSuccession(4, BuffApplied.class, ba -> ba.buffIdMatches(0xB9A));
@@ -1081,9 +1242,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> swordQuiverRaidwide = ModifiableCallout.durationBasedCall("Sword Quiver: Raidwides", "Raidwides");
 	// Commented out for now so they don't show on the UI
-//	private final ModifiableCallout<MapEffectEvent> swordQuiverRearUnsafe = new ModifiableCallout<>("Sword Quiver: Rear Unsafe", "Front/Middle");
-//	private final ModifiableCallout<MapEffectEvent> swordQuiverMiddleUnsafe = new ModifiableCallout<>("Sword Quiver: Rear Unsafe", "Front/Back");
-//	private final ModifiableCallout<MapEffectEvent> swordQuiverFrontUnsafe = new ModifiableCallout<>("Sword Quiver: Rear Unsafe", "Middle/Back");
+	private final ModifiableCallout<MapEffectEvent> swordQuiverRearUnsafe = new ModifiableCallout<MapEffectEvent>("Sword Quiver: Rear Unsafe (Untested)", "Front/Middle").disabledByDefault();
+	private final ModifiableCallout<MapEffectEvent> swordQuiverMiddleUnsafe = new ModifiableCallout<MapEffectEvent>("Sword Quiver: Rear Unsafe (Untested)", "Front/Back").disabledByDefault();
+	private final ModifiableCallout<MapEffectEvent> swordQuiverFrontUnsafe = new ModifiableCallout<MapEffectEvent>("Sword Quiver: Rear Unsafe (Untested)", "Middle/Back").disabledByDefault();
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> swordQuiver = SqtTemplates.sq(60_000,
@@ -1107,12 +1268,12 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					return e.getFlags() == 0x20001
 					       && index == 0x17 || index == 0x18 || index == 0x19;
 				});
-//				s.updateCall(switch ((int) mee.getIndex()) {
-//					case 0x17 -> swordQuiverFrontUnsafe;
-//					case 0x18 -> swordQuiverMiddleUnsafe;
-//					case 0x19 -> swordQuiverRearUnsafe;
-//					default -> throw new RuntimeException("Bad index " + mee.getIndex());
-//				}, mee);
+				s.updateCall(switch ((int) mee.getIndex()) {
+					case 0x17 -> swordQuiverFrontUnsafe;
+					case 0x18 -> swordQuiverMiddleUnsafe;
+					case 0x19 -> swordQuiverRearUnsafe;
+					default -> throw new RuntimeException("Bad index " + mee.getIndex());
+				}, mee);
 			}).setConcurrency(SequentialTriggerConcurrencyMode.CONCURRENT);
 
 }
