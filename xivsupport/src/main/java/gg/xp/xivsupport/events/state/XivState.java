@@ -119,4 +119,6 @@ public interface XivState extends SubState {
 	}
 
 	void provideTransformation(long entityId, short transformationId);
+
+	void provideWeaponId(XivCombatant existing, short weaponId);
 }

@@ -25,6 +25,7 @@ import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
+import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,6 +43,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @CalloutRepo(name = "M4S", duty = KnownDuty.M4S)
 public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -817,9 +819,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ionCluster2longNeg = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Long Negatron", "Long Negatron").autoIcon();
 
 	private final ModifiableCallout<BuffApplied> ionCluster2baitFirstSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Bait First Set", "Bait {baitLocations}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ionCluster2avoidFirstSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Take First Tower", "Soak Tower").autoIcon();
+	private final ModifiableCallout<?> ionCluster2avoidFirstSet = new ModifiableCallout<>("Ion Cluster 2: Take First Tower", "Soak {towers} Towers");
 	private final ModifiableCallout<BuffApplied> ionCluster2baitSecondSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Bait Second Set", "Bait {baitLocations}").autoIcon();
-	private final ModifiableCallout<BuffApplied> ionCluster2avoidSecondSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Take Second Tower", "Soak Tower").autoIcon();
+	private final ModifiableCallout<?> ionCluster2avoidSecondSet = new ModifiableCallout<>("Ion Cluster 2: Take Second Tower", "Soak {towers} Tower");
 
 	// Ion Cluster #2, aka Sunrise Sabbath
 	@AutoFeed
@@ -844,7 +846,40 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					// First round
 					var gunBuffs = s.waitEventsQuickSuccession(4, BuffApplied.class, ba -> ba.buffIdMatches(0xB9A));
 					if (playerLong) {
-						s.updateCall(ionCluster2avoidFirstSet, playerBuff);
+						s.waitThenRefreshCombatants(100);
+						List<XivCombatant> towerNpcs = state.npcsById(17323)
+								.stream()
+								.filter(cbt -> cbt.getWeaponId() == 28)
+								.toList();
+						if (towerNpcs.size() != 2) {
+							log.error("Tower npc fail! {}", towerNpcs);
+						}
+						else {
+							// The logic here is to directly compute where the tower would end up based on the facing
+							// angle of the mob casting it. Adding 21.21 makes it a near-perfect match for diagonal
+							// jumps, and ends up with the correct answer for cardinal jumps even though they don't
+							// actually swap positions in game.
+							// Example E->S jump: (115, 165) -> (100, 180) for a distance of  21.21
+							Set<ArenaSector> towerLocations = towerNpcs.stream()
+									.map(npc -> {
+										Position approxHitLocation = npc.getPos().translateRelative(0, 21.21);
+										return finalAp.forPosition(approxHitLocation);
+									}).collect(Collectors.toSet());
+							// This is collected and compared as a set, but then manually written as a list so that it
+							// always appears in a consistent order.
+							if (towerLocations.equals(Set.of(ArenaSector.WEST, ArenaSector.EAST))) {
+								s.setParam("towers", List.of(ArenaSector.WEST, ArenaSector.EAST));
+							}
+							else if (towerLocations.equals(Set.of(ArenaSector.NORTH, ArenaSector.SOUTH))) {
+								s.setParam("towers", List.of(ArenaSector.NORTH, ArenaSector.SOUTH));
+							}
+							else {
+								log.error("Bad tower locations! {}", towerLocations);
+							}
+						}
+						// Even if we errored, this call is better than nothing
+						s.updateCall(ionCluster2avoidFirstSet);
+
 					}
 					else {
 						List<ArenaSector> acceptableGuns = gunBuffs.stream()
@@ -876,7 +911,35 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 						s.updateCall(ionCluster2baitSecondSet, playerBuff);
 					}
 					else {
-						s.updateCall(ionCluster2avoidSecondSet, playerBuff);
+						s.waitThenRefreshCombatants(100);
+						List<XivCombatant> towerNpcs = state.npcsById(17323)
+								.stream()
+								.filter(cbt -> cbt.getWeaponId() == 28)
+								.toList();
+						if (towerNpcs.size() != 2) {
+							log.error("Tower npc fail 2! {}", towerNpcs);
+						}
+						else {
+							// The logic here is to directly compute where the tower would end up based on the facing
+							// angle of the mob casting it. Adding 21.21 makes it a near-perfect match for diagonal
+							// jumps, and ends up with the correct answer for cardinal jumps even though they don't
+							// actually swap positions in game.
+							// Example E->S jump: (115, 165) -> (100, 180) for a distance of  21.21
+							Set<ArenaSector> towerLocations = towerNpcs.stream()
+									.map(npc -> {
+										Position approxHitLocation = npc.getPos().translateRelative(0, 21.21);
+										return finalAp.forPosition(approxHitLocation);
+									}).collect(Collectors.toSet());
+							if (towerLocations.equals(Set.of(ArenaSector.NORTH, ArenaSector.SOUTH))
+							    || towerLocations.equals(Set.of(ArenaSector.WEST, ArenaSector.EAST))) {
+								s.setParam("towers", towerLocations.stream().toList());
+							}
+							else {
+								log.error("Bad tower locations 2! {}", towerLocations);
+							}
+						}
+						// Even if we errored, this call is better than nothing
+						s.updateCall(ionCluster2avoidSecondSet);
 					}
 
 				}

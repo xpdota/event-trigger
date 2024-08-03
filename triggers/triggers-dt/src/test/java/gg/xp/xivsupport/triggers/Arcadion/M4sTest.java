@@ -5,7 +5,7 @@ import gg.xp.xivsupport.events.triggers.util.CalloutVerificationTest;
 
 import java.util.List;
 
-public class DTEx1SecondTest
+public class M4sTest
 		extends CalloutVerificationTest {
 	@Override
 	protected String getFileName() {
@@ -80,7 +80,7 @@ public class DTEx1SecondTest
 				call(667810, "Later: Knockback West then East", "Later: Knockback West then East (6.7)"),
 				call(677966, "Raidwide", "Raidwide (4.7)"),
 				call(689905, "Long Negatron", "Long Negatron (38.0)"),
-				call(701487, "Soak Tower", "Soak Tower (26.4)"),
+				call(701753, "Soak West, East Towers", "Soak West, East Towers"),
 				call(710441, "Middle", "Middle (4.7)"),
 				call(718147, "Bait Northwest, Southwest", "Bait Northwest, Southwest (9.8)"),
 				call(726613, "Knockback West then East", "Knockback West then East (4.7)")

@@ -150,4 +150,9 @@ public class XivStateDummy implements XivState {
 	public void provideTransformation(long entityId, short transformationId) {
 		throw new UnsupportedOperationException("not supported");
 	}
+
+	@Override
+	public void provideWeaponId(XivCombatant existing, short weaponId) {
+		throw new UnsupportedOperationException("not supported");
+	}
 }

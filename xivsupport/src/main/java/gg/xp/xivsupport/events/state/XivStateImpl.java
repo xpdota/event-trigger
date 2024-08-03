@@ -482,6 +482,12 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
+	public void provideWeaponId(XivCombatant existing, short weaponId) {
+		getOrCreateData(existing.getId()).setWeaponId(weaponId);
+		dirtyOverrides = true;
+	}
+
+	@Override
 	public @Nullable XivCombatant getCombatant(long id) {
 		CombatantData cbt = combatantData.get(id);
 		if (cbt == null) {
@@ -626,6 +632,7 @@ public class XivStateImpl implements XivState {
 		private XivCombatant owner;
 		private long shieldPercent;
 		private short tfId = -1;
+		private short weaponId = -1;
 
 		private CombatantData(long id) {
 			this.id = id;
@@ -714,6 +721,11 @@ public class XivStateImpl implements XivState {
 			dirty = true;
 		}
 
+		public void setWeaponId(short weaponId) {
+			this.weaponId = weaponId;
+			dirty = true;
+		}
+
 		public void setRadius(float radius) {
 			this.radius = radius;
 		}
@@ -767,7 +779,7 @@ public class XivStateImpl implements XivState {
 			boolean isPlayer = rawType == 1;
 			long shieldAmount = hp != null ? shieldPercent * hp.max() / 100 : 0;
 			short transformationId = tfId != -1 ? tfId : (raw != null ? raw.getTransformationId() : -1);
-			short weaponId = (raw != null ? raw.getWeaponId() : -1);
+			short weaponId = this.weaponId != -1 ? this.weaponId : (raw != null ? raw.getWeaponId() : -1);
 			float radius = this.radius >= 0 ? this.radius : ((raw != null) ? raw.getRadius() : 0);
 			if (isPlayer) {
 				computed = new XivPlayerCharacter(
