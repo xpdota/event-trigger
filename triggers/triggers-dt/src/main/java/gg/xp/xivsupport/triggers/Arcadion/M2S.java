@@ -20,12 +20,15 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @CalloutRepo(name = "M2S", duty = KnownDuty.M2S)
 public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -70,29 +73,6 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private @Nullable PoisonBuff getPoisonBuff() {
 		return lastPosionBuff;
-//		// TODO: this should also call out when you get the buff
-//		XivCombatant boss = state.npcById(16941);
-//		// TODO: This is bad! Both abilities place the same debuff ID, just capture the ability.
-//		BuffApplied status = buffs.findStatusOnTarget(boss, ba -> ba.buffIdMatches(0xF4B, 0xF61));
-//		if (status == null) {
-//			log.warn("No debuff");
-//			return null;
-//		}
-//		AbilityUsedEvent preapp = status.getPreAppAbility();
-//		if (preapp == null) {
-//			log.warn("Preapp null");
-//			return null;
-//		}
-//		if (preapp.abilityIdMatches(0x9184, 0x9B0F)) {
-//			return PoisonBuff.SPREAD;
-//		}
-//		else if (preapp.abilityIdMatches(0x9185, 0x9B09)) {
-//			return PoisonBuff.BUDDY;
-//		}
-//		else {
-//			log.warn("Preapp did not match");
-//			return null;
-//		}
 	}
 
 	private int getPlayerHeartStacks() {
@@ -133,7 +113,7 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> temptingTwist = SqtTemplates.sq(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9187, 0x9B11),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9187, 0x9B0D),
 			(e1, s) -> {
 				s.updateCall(temptingTwistInitial, e1);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == e1);
@@ -142,7 +122,6 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Wait
 				PoisonBuff pb = getPoisonBuff();
 //				s.waitMs(1000);
-				// TODO: reports of this being broken
 				if (pb == PoisonBuff.SPREAD) {
 					s.updateCall(spread);
 				}
@@ -157,7 +136,6 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> beeline = SqtTemplates.sq(30_000,
-			// TODO: 9B0C is unconfirmed
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9186, 0x9B0C),
 			(e1, s) -> {
 				s.updateCall(beelineInitial, e1);
@@ -194,7 +172,6 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitMs(1000);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x91B1, 0x91B2, 0x91B3, 0x91B4));
 				s.updateCall(outCards);
-				// TODO: are these always cards/inter?
 				// in + intercards
 				// out + intercards
 				// out + cards
@@ -210,7 +187,6 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitMs(1000);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x91B1, 0x91B2, 0x91B3, 0x91B4));
 				s.updateCall(inInter);
-				// TODO: are these always cards/inter?
 				// out + cards
 				// out + intercards
 				// in + intercards
@@ -331,11 +307,13 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Given that there is a magic vuln, I do not see how there can be different strategies for this mech
 				// 4 people have short defa, 4 have long defa
 				int defa = 0xF5E;
-//				List<BuffApplied> all = s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(defa));
-				BuffApplied playerBuff = s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(defa) && ba.getTarget().isThePlayer());
-//				BuffApplied playerBuff = buffs.findStatusOnTarget(state.getPlayer(), defa);
-//				List<BuffApplied> shorts = all.stream().filter(ba -> ba.getInitialDuration().toSeconds() < 30).toList();
-//				List<BuffApplied> longs = all.stream().filter(ba -> ba.getInitialDuration().toSeconds() > 30).toList();
+				List<BuffApplied> allBuffs = s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(defa));
+				Set<XivCombatant> shortPlayers = allBuffs.stream()
+						.filter(buff -> buff.getInitialDuration().toSeconds() < 30)
+						.map(BuffApplied::getTarget)
+						.collect(Collectors.toSet());
+				BuffApplied playerBuff = allBuffs.stream().filter(ba -> ba.getTarget().isThePlayer()).findFirst().orElseThrow(() -> new RuntimeException("Player did not have a buff"));
+
 				boolean playerShort;
 				if (playerBuff == null) {
 					throw new RuntimeException("Player did not have defamation!");
@@ -350,23 +328,29 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.setParam("playerShort", false);
 					s.updateCall(hbl3longInitial, playerBuff);
 				}
-				// Outer/center handled elsewhere
+				// Outer/centerstage handled elsewhere, so just wait the approximate time for it to be over
 				s.waitMs(21_000);
+				// Call initial
 				if (playerShort) {
 					s.updateCall(hbl3defamationNow, playerBuff);
 				}
 				else {
 					s.updateCall(hbl3avoidDefa);
 				}
-				// TODO: these are broken because they don't wait for the defamation to naturally go off. A player dying
-				// will also trigger these early.
-				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defa));
+				// Wait for first defamations to go off
+				// Check against this set, as this logic could be confused by long players dying
+				while (!buffs.findBuffs(ba -> ba.buffIdMatches(defa) && shortPlayers.contains(ba.getTarget())).isEmpty()) {
+					s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defa) && shortPlayers.contains(br.getTarget()));
+				}
+				// Tell player to take tower or avoid towers (if they had defa)
 				if (playerShort) {
 					s.updateCall(hbl3avoidTowers);
 				}
 				else {
 					s.updateCall(hbl3soakTowers);
 				}
+				// Wait for next set of towers to start
+				s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x91A3));
 				// Another outer/center handled elsewhere
 				if (!playerShort) {
 					s.updateCall(hbl3defamationNow, playerBuff);
@@ -374,7 +358,10 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				else {
 					s.updateCall(hbl3avoidDefa);
 				}
-				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defa));
+				// Wait for final defamations to go off
+				while (!buffs.findBuffs(ba -> ba.buffIdMatches(defa)).isEmpty()) {
+					s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(defa));
+				}
 				if (!playerShort) {
 					s.updateCall(hbl3avoidTowers);
 				}

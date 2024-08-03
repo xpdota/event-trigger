@@ -73,7 +73,6 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> oneTwoLeftFirst = ModifiableCallout.durationBasedCall("One Two - Left First", "Left then Right");
 	private final ModifiableCallout<AbilityCastStart> oneTwoRightFirst = ModifiableCallout.durationBasedCall("One Two - Right First", "Right then Left");
-	// TODO: these are not wired
 	private final ModifiableCallout<AbilityCastStart> oneTwoLeapingLeftFirst = ModifiableCallout.durationBasedCall("One Two (Leaping) - Left First", "Left then Right ({whereClone})");
 	private final ModifiableCallout<AbilityCastStart> oneTwoLeapingRightFirst = ModifiableCallout.durationBasedCall("One Two (Leaping) - Right First", "Right then Left ({whereClone})");
 	private final ModifiableCallout<AbilityUsedEvent> oneTwoLeft = new ModifiableCallout<>("One Two - Left Second", "Left");
@@ -157,7 +156,6 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 				for (int i = 0; i < 4; i++) {
 					log.info("mouser {}", i);
 //					var hm = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == 320);
-					// TODO: is offset even needed?
 					var hm = s.waitEvent(HeadMarkerEvent.class, hme -> true);
 					s.setParam("hm", hm);
 					var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9446, 0x9448));
