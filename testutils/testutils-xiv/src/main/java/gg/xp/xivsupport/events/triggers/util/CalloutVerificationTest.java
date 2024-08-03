@@ -308,8 +308,13 @@ public abstract class CalloutVerificationTest {
 			if (!equals) {
 				anyFailure = true;
 				firstFailureIndex = i;
-				X item = actual.get(i);
-				failureAdjacentEvent = item.event();
+				try {
+					X item = actual.get(i);
+					failureAdjacentEvent = item.event();
+				} catch (IndexOutOfBoundsException e) {
+					// ignored
+					firstFailureIndex = Math.min(actSize, expSize);
+				}
 				break;
 			}
 		}

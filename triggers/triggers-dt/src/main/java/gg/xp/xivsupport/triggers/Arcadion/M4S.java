@@ -14,12 +14,14 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
+import gg.xp.xivsupport.events.actlines.events.MapEffectEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.vfx.StatusLoopVfxApplied;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
+import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
@@ -823,131 +825,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ionCluster2baitSecondSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Bait Second Set", "Bait {baitLocations}").autoIcon();
 	private final ModifiableCallout<?> ionCluster2avoidSecondSet = new ModifiableCallout<>("Ion Cluster 2: Take Second Tower", "Soak {towers} Tower");
 
-	// Ion Cluster #2, aka Sunrise Sabbath
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> ionCluster2sq = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9622),
-			(e1, s) -> {
-				var playerBuff = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(positronBuff, negatronBuff));
-				boolean playerPos = playerBuff.buffIdMatches(positronBuff);
-				// 23 short, 38 long
-				boolean playerLong = playerBuff.getInitialDuration().toSeconds() > 30;
-				if (playerLong) {
-					s.updateCall(playerPos ? ionCluster2longPos : ionCluster2longNeg, playerBuff);
-				}
-				else {
-					s.updateCall(playerPos ? ionCluster2shortPos : ionCluster2shortNeg, playerBuff);
-				}
-				// Now, wait for special buff to be placed on the guns
-				// Positron (FA0) needs to bait gun with B9A 757,
-				// Negatron (FA1) needs to bait gun with B9A 756.
-				int neededGun = playerPos ? 757 : 756;
-				{
-					// First round
-					var gunBuffs = s.waitEventsQuickSuccession(4, BuffApplied.class, ba -> ba.buffIdMatches(0xB9A));
-					if (playerLong) {
-						s.waitThenRefreshCombatants(100);
-						List<XivCombatant> towerNpcs = state.npcsById(17323)
-								.stream()
-								.filter(cbt -> cbt.getWeaponId() == 28)
-								.toList();
-						if (towerNpcs.size() != 2) {
-							log.error("Tower npc fail! {}", towerNpcs);
-						}
-						else {
-							// The logic here is to directly compute where the tower would end up based on the facing
-							// angle of the mob casting it. Adding 21.21 makes it a near-perfect match for diagonal
-							// jumps, and ends up with the correct answer for cardinal jumps even though they don't
-							// actually swap positions in game.
-							// Example E->S jump: (115, 165) -> (100, 180) for a distance of  21.21
-							Set<ArenaSector> towerLocations = towerNpcs.stream()
-									.map(npc -> {
-										Position approxHitLocation = npc.getPos().translateRelative(0, 21.21);
-										return finalAp.forPosition(approxHitLocation);
-									}).collect(Collectors.toSet());
-							// This is collected and compared as a set, but then manually written as a list so that it
-							// always appears in a consistent order.
-							if (towerLocations.equals(Set.of(ArenaSector.WEST, ArenaSector.EAST))) {
-								s.setParam("towers", List.of(ArenaSector.WEST, ArenaSector.EAST));
-							}
-							else if (towerLocations.equals(Set.of(ArenaSector.NORTH, ArenaSector.SOUTH))) {
-								s.setParam("towers", List.of(ArenaSector.NORTH, ArenaSector.SOUTH));
-							}
-							else {
-								log.error("Bad tower locations! {}", towerLocations);
-							}
-						}
-						// Even if we errored, this call is better than nothing
-						s.updateCall(ionCluster2avoidFirstSet);
 
-					}
-					else {
-						List<ArenaSector> acceptableGuns = gunBuffs.stream()
-								.filter(ba -> ba.getRawStacks() == neededGun)
-								.map(BuffApplied::getTarget)
-								.map(finalAp::forCombatant)
-								.toList();
-						s.setParam("baitLocations", acceptableGuns);
-						s.updateCall(ionCluster2baitFirstSet, playerBuff);
-					}
-				}
-				var wicked = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612));
-				if (wicked.abilityIdMatches(0x9610)) {
-					s.updateCall(wickedSpecialOutOfMiddle, wicked);
-				}
-				else {
-					s.updateCall(wickedSpecialInMiddle, wicked);
-				}
-				{
-					// First round
-					var gunBuffs = s.waitEventsQuickSuccession(4, BuffApplied.class, ba -> ba.buffIdMatches(0xB9A));
-					if (playerLong) {
-						List<ArenaSector> acceptableGuns = gunBuffs.stream()
-								.filter(ba -> ba.getRawStacks() == neededGun)
-								.map(BuffApplied::getTarget)
-								.map(finalAp::forCombatant)
-								.toList();
-						s.setParam("baitLocations", acceptableGuns);
-						s.updateCall(ionCluster2baitSecondSet, playerBuff);
-					}
-					else {
-						s.waitThenRefreshCombatants(100);
-						List<XivCombatant> towerNpcs = state.npcsById(17323)
-								.stream()
-								.filter(cbt -> cbt.getWeaponId() == 28)
-								.toList();
-						if (towerNpcs.size() != 2) {
-							log.error("Tower npc fail 2! {}", towerNpcs);
-						}
-						else {
-							// The logic here is to directly compute where the tower would end up based on the facing
-							// angle of the mob casting it. Adding 21.21 makes it a near-perfect match for diagonal
-							// jumps, and ends up with the correct answer for cardinal jumps even though they don't
-							// actually swap positions in game.
-							// Example E->S jump: (115, 165) -> (100, 180) for a distance of  21.21
-							Set<ArenaSector> towerLocations = towerNpcs.stream()
-									.map(npc -> {
-										Position approxHitLocation = npc.getPos().translateRelative(0, 21.21);
-										return finalAp.forPosition(approxHitLocation);
-									}).collect(Collectors.toSet());
-							if (towerLocations.equals(Set.of(ArenaSector.NORTH, ArenaSector.SOUTH))
-							    || towerLocations.equals(Set.of(ArenaSector.WEST, ArenaSector.EAST))) {
-								s.setParam("towers", towerLocations.stream().toList());
-							}
-							else {
-								log.error("Bad tower locations 2! {}", towerLocations);
-							}
-						}
-						// Even if we errored, this call is better than nothing
-						s.updateCall(ionCluster2avoidSecondSet);
-					}
-
-				}
-
-			});
-	/*
-	You get positron/negatron, and have to bait a cannon, while the other two do towers
-	 */
 	@NpcCastCallout(0x9614)
 	private final ModifiableCallout<AbilityCastStart> flameSlash = ModifiableCallout.durationBasedCall("Flame Slash", "Out of Middle, Arena Splitting");
 
@@ -1079,4 +957,162 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					item.ifPresent(s::updateCall);
 				}
 			});
+
+	// Ion Cluster #2, aka Sunrise Sabbath
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> ionCluster2sq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9622),
+			(e1, s) -> {
+				var playerBuff = s.waitEvent(BuffApplied.class, ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(positronBuff, negatronBuff));
+				boolean playerPos = playerBuff.buffIdMatches(positronBuff);
+				// 23 short, 38 long
+				boolean playerLong = playerBuff.getInitialDuration().toSeconds() > 30;
+				if (playerLong) {
+					s.updateCall(playerPos ? ionCluster2longPos : ionCluster2longNeg, playerBuff);
+				}
+				else {
+					s.updateCall(playerPos ? ionCluster2shortPos : ionCluster2shortNeg, playerBuff);
+				}
+				// Now, wait for special buff to be placed on the guns
+				// Positron (FA0) needs to bait gun with B9A 757,
+				// Negatron (FA1) needs to bait gun with B9A 756.
+				int neededGun = playerPos ? 757 : 756;
+				{
+					// First round
+					var gunBuffs = s.waitEventsQuickSuccession(4, BuffApplied.class, ba -> ba.buffIdMatches(0xB9A));
+					if (playerLong) {
+						s.waitThenRefreshCombatants(100);
+						List<XivCombatant> towerNpcs = state.npcsById(17323)
+								.stream()
+								.filter(cbt -> cbt.getWeaponId() == 28)
+								.toList();
+						if (towerNpcs.size() != 2) {
+							log.error("Tower npc fail! {}", towerNpcs);
+						}
+						else {
+							// The logic here is to directly compute where the tower would end up based on the facing
+							// angle of the mob casting it. Adding 21.21 makes it a near-perfect match for diagonal
+							// jumps, and ends up with the correct answer for cardinal jumps even though they don't
+							// actually swap positions in game.
+							// Example E->S jump: (115, 165) -> (100, 180) for a distance of  21.21
+							Set<ArenaSector> towerLocations = towerNpcs.stream()
+									.map(npc -> {
+										Position approxHitLocation = npc.getPos().translateRelative(0, 21.21);
+										return finalAp.forPosition(approxHitLocation);
+									}).collect(Collectors.toSet());
+							// This is collected and compared as a set, but then manually written as a list so that it
+							// always appears in a consistent order.
+							if (towerLocations.equals(Set.of(ArenaSector.WEST, ArenaSector.EAST))) {
+								s.setParam("towers", List.of(ArenaSector.WEST, ArenaSector.EAST));
+							}
+							else if (towerLocations.equals(Set.of(ArenaSector.NORTH, ArenaSector.SOUTH))) {
+								s.setParam("towers", List.of(ArenaSector.NORTH, ArenaSector.SOUTH));
+							}
+							else {
+								log.error("Bad tower locations! {}", towerLocations);
+							}
+						}
+						// Even if we errored, this call is better than nothing
+						s.updateCall(ionCluster2avoidFirstSet);
+
+					}
+					else {
+						List<ArenaSector> acceptableGuns = gunBuffs.stream()
+								.filter(ba -> ba.getRawStacks() == neededGun)
+								.map(BuffApplied::getTarget)
+								.map(finalAp::forCombatant)
+								.toList();
+						s.setParam("baitLocations", acceptableGuns);
+						s.updateCall(ionCluster2baitFirstSet, playerBuff);
+					}
+				}
+				var wicked = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612));
+				if (wicked.abilityIdMatches(0x9610)) {
+					s.updateCall(wickedSpecialOutOfMiddle, wicked);
+				}
+				else {
+					s.updateCall(wickedSpecialInMiddle, wicked);
+				}
+				{
+					// First round
+					var gunBuffs = s.waitEventsQuickSuccession(4, BuffApplied.class, ba -> ba.buffIdMatches(0xB9A));
+					if (playerLong) {
+						List<ArenaSector> acceptableGuns = gunBuffs.stream()
+								.filter(ba -> ba.getRawStacks() == neededGun)
+								.map(BuffApplied::getTarget)
+								.map(finalAp::forCombatant)
+								.toList();
+						s.setParam("baitLocations", acceptableGuns);
+						s.updateCall(ionCluster2baitSecondSet, playerBuff);
+					}
+					else {
+						s.waitThenRefreshCombatants(100);
+						List<XivCombatant> towerNpcs = state.npcsById(17323)
+								.stream()
+								.filter(cbt -> cbt.getWeaponId() == 28)
+								.toList();
+						if (towerNpcs.size() != 2) {
+							log.error("Tower npc fail 2! {}", towerNpcs);
+						}
+						else {
+							// The logic here is to directly compute where the tower would end up based on the facing
+							// angle of the mob casting it. Adding 21.21 makes it a near-perfect match for diagonal
+							// jumps, and ends up with the correct answer for cardinal jumps even though they don't
+							// actually swap positions in game.
+							// Example E->S jump: (115, 165) -> (100, 180) for a distance of  21.21
+							Set<ArenaSector> towerLocations = towerNpcs.stream()
+									.map(npc -> {
+										Position approxHitLocation = npc.getPos().translateRelative(0, 21.21);
+										return finalAp.forPosition(approxHitLocation);
+									}).collect(Collectors.toSet());
+							if (towerLocations.equals(Set.of(ArenaSector.NORTH, ArenaSector.SOUTH))
+							    || towerLocations.equals(Set.of(ArenaSector.WEST, ArenaSector.EAST))) {
+								s.setParam("towers", towerLocations.stream().toList());
+							}
+							else {
+								log.error("Bad tower locations 2! {}", towerLocations);
+							}
+						}
+						// Even if we errored, this call is better than nothing
+						s.updateCall(ionCluster2avoidSecondSet);
+					}
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> swordQuiverRaidwide = ModifiableCallout.durationBasedCall("Sword Quiver: Raidwides", "Raidwides");
+	// Commented out for now so they don't show on the UI
+//	private final ModifiableCallout<MapEffectEvent> swordQuiverRearUnsafe = new ModifiableCallout<>("Sword Quiver: Rear Unsafe", "Front/Middle");
+//	private final ModifiableCallout<MapEffectEvent> swordQuiverMiddleUnsafe = new ModifiableCallout<>("Sword Quiver: Rear Unsafe", "Front/Back");
+//	private final ModifiableCallout<MapEffectEvent> swordQuiverFrontUnsafe = new ModifiableCallout<>("Sword Quiver: Rear Unsafe", "Middle/Back");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> swordQuiver = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95FB),
+			(e1, s) -> {
+				s.updateCall(swordQuiverRaidwide, e1);
+				// Rear unsafe:
+				// 95FB from boss
+				// Then 95FF, 95FE, 95FD, 95FE in descending cast times to hit the players
+				// So if anything, 95FF is the one we care about
+				// Map effects between waves:
+				// 800375BE:20001:16:0:0
+				// 800375BE:20001:15:0:0
+				// 800375BE:20001:14:0:0
+				// 800375BE:20001:19:0:0
+				// Guessing that either the 95FF is a different cast (like 96A0 and 96A1),
+				// or that the map effects would be 17 and 18
+
+				var mee = s.waitEvent(MapEffectEvent.class, e -> {
+					long index = e.getIndex();
+					return e.getFlags() == 0x20001
+					       && index == 0x17 || index == 0x18 || index == 0x19;
+				});
+//				s.updateCall(switch ((int) mee.getIndex()) {
+//					case 0x17 -> swordQuiverFrontUnsafe;
+//					case 0x18 -> swordQuiverMiddleUnsafe;
+//					case 0x19 -> swordQuiverRearUnsafe;
+//					default -> throw new RuntimeException("Bad index " + mee.getIndex());
+//				}, mee);
+			}).setConcurrency(SequentialTriggerConcurrencyMode.CONCURRENT);
+
 }

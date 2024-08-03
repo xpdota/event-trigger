@@ -83,7 +83,10 @@ public class M4sTest
 				call(701753, "Soak West, East Towers", "Soak West, East Towers"),
 				call(710441, "Middle", "Middle (4.7)"),
 				call(718147, "Bait Northwest, Southwest", "Bait Northwest, Southwest (9.8)"),
-				call(726613, "Knockback West then East", "Knockback West then East (4.7)")
+				call(726613, "Knockback West then East", "Knockback West then East (4.7)"),
+				call(742871, "Raidwides", "Raidwides (4.7)"),
+//				call(752537, "Front/Middle", "Front/Middle"),
+				call(760016, "Raidwides", "Raidwides (4.7)")
 		);
 	}
 }
