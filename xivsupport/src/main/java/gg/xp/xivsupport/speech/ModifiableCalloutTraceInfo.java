@@ -5,8 +5,10 @@ import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ModifiableCalloutTraceInfo implements CalloutTraceInfo {
@@ -32,22 +34,26 @@ public class ModifiableCalloutTraceInfo implements CalloutTraceInfo {
 		this.args = Collections.unmodifiableMap(new HashMap<>(raw.getArguments()));
 	}
 
-
-	@Override
-	public String getOriginDescription() {
+	private String getOriginDescriptionInt(boolean multiline) {
 		if (calloutDesc == null && calloutField == null) {
 			return "Unknown";
 		}
 		else {
-			StringBuilder out = new StringBuilder();
+			List<String> items = new ArrayList<>();
 			if (calloutField != null) {
-				out.append(calloutField.getDeclaringClass().getSimpleName()).append('.').append(calloutField.getName()).append('\n');
+				items.add("%s.%s".formatted(calloutField.getDeclaringClass().getSimpleName(), calloutField.getName()));
 			}
 			if (calloutDesc != null) {
-				out.append(calloutDesc).append('\n');
+				items.add(calloutDesc);
 			}
-			return out.toString();
+			return String.join(multiline ? "\n" : ": ", items);
 		}
+
+	}
+
+	@Override
+	public String getOriginDescription() {
+		return getOriginDescriptionInt(true);
 	}
 
 	@Override
@@ -71,6 +77,6 @@ public class ModifiableCalloutTraceInfo implements CalloutTraceInfo {
 
 	@Override
 	public String toString() {
-		return "ModifiableCalloutTraceInfo(%s)".formatted(this.getOriginDescription());
+		return "ModifiableCalloutTraceInfo(%s)".formatted(this.getOriginDescriptionInt(false));
 	}
 }

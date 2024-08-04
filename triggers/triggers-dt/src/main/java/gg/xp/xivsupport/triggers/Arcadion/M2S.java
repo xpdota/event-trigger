@@ -409,10 +409,10 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(rottenInitialPartner, playerBuff);
 				s.waitMs(2500);
 				for (int i = 1; i <= 4; i++) {
-					int currentGroup = i;
+					final int currentGroup = i;
 					s.setParam("currentGroup", currentGroup);
 					// Iterate through groups
-					if (playerGroup == 1) {
+					if (playerGroup == currentGroup) {
 						s.updateCall(rottenPopNow, playerBuff);
 					}
 					else {

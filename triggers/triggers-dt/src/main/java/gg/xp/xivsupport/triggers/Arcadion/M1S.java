@@ -320,11 +320,22 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 				if (delta == 3) {
 					// e.g. S + NW
 					// If hitting left first, start on cardinal side. S cleaves W, NW cleaves NE, so only S-SE is safe
-					s.updateCall(soulshadeCardinalFirst, e1);
+					if (e1.abilityIdMatches(0x9467)) {
+						s.updateCall(soulshadeCardinalFirst, e1);
+					}
+					else {
+						s.updateCall(soulshadeIntercardFirst, e1);
+					}
 				}
 				else if (delta == -3) {
 					// e.g. S + NE
-					s.updateCall(soulshadeIntercardFirst, e1);
+					// If hitting left first, start on intercardinal side. S cleaves W, NE cleaves SE, so only N-NW is afe.
+					if (e1.abilityIdMatches(0x9467)) {
+						s.updateCall(soulshadeIntercardFirst, e1);
+					}
+					else {
+						s.updateCall(soulshadeCardinalFirst, e1);
+					}
 				}
 				else {
 					throw new RuntimeException("Could not determine delta! %s %s".formatted(e1.getSource().getPos(), e2.getSource().getPos()));
