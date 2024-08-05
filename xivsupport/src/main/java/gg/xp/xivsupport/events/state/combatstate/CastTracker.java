@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.state.combatstate;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
@@ -13,7 +14,7 @@ import java.time.Instant;
 public class CastTracker implements HasDuration {
 	private final AbilityCastStart cast;
 	private @Nullable Instant currentTimeOverride;
-	private @Nullable Event end;
+	private @Nullable BaseEvent end;
 
 	public CastTracker(AbilityCastStart cast) {
 		this.cast = cast;
@@ -23,11 +24,11 @@ public class CastTracker implements HasDuration {
 		return cast;
 	}
 
-	public @Nullable Event getEnd() {
+	public @Nullable BaseEvent getEnd() {
 		return end;
 	}
 
-	void setEnd(@Nullable Event end) {
+	void setEnd(@Nullable BaseEvent end) {
 		this.end = end;
 	}
 

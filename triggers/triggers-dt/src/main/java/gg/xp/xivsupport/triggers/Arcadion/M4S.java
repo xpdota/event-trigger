@@ -31,6 +31,7 @@ import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -76,15 +77,6 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@NpcCastCallout(0x95EF)
 	private final ModifiableCallout<AbilityCastStart> wrathOfZeus = ModifiableCallout.durationBasedCall("Wrath of Zeus", "Raidwide");
-
-	// TODO: there's another mechanic after this (electrifying witch hunt)
-	/*
-	Electrifying:
-	Outside safe:
-	3x 95EA burst then 95E5 electrifying
-	Inside safe:
-	2x95EA burst then 95E5 electrifying
-	 */
 
 	private final ModifiableCallout<AbilityCastStart> electrifyingInsideSafe = ModifiableCallout.durationBasedCall("Electrifying Witch Hunt: Inside Safe", "Inside");
 	private final ModifiableCallout<AbilityCastStart> electrifyingOutsideSafe = ModifiableCallout.durationBasedCall("Electrifying Witch Hunt: Outside Safe", "Outside");
@@ -220,17 +212,6 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x95f0)
 	private final ModifiableCallout<AbilityCastStart> wickedJolt = ModifiableCallout.durationBasedCall("Wicked Jolt", "Tank Buster on {event.target}");
 
-	private final ModifiableCallout<AbilityCastStart> electropeEdgeInitial = ModifiableCallout.durationBasedCall("Electrope Edge", "Clock Positions");
-	private final ModifiableCallout<?> electropeEdgeFail = new ModifiableCallout<>("Electrope Edge: Fail/Invalid", "Fail");
-	private final ModifiableCallout<?> electropeEdge1long = new ModifiableCallout<>("Electrope Edge: 1 Long", "1 Long");
-	private final ModifiableCallout<?> electropeEdge2long = new ModifiableCallout<>("Electrope Edge: 2 Long", "2 Long");
-	private final ModifiableCallout<?> electropeEdge2short = new ModifiableCallout<>("Electrope Edge: 2 Short", "2 Short");
-	private final ModifiableCallout<?> electropeEdge3short = new ModifiableCallout<>("Electrope Edge: 3 Short", "3 Short");
-
-	private final ModifiableCallout<?> electropeSafeSpot = new ModifiableCallout<>("Electrope Edge: Nothing", "{safe} Safe");
-	private final ModifiableCallout<?> electropeSides = new ModifiableCallout<>("Electrope Edge: Spark II (Sides)", "Spark 2 - {sides}");
-	private final ModifiableCallout<?> electropeCorners = new ModifiableCallout<>("Electrope Edge: Spark III (Far Corners)", "Spark 3 - {corners}");
-
 	private final ModifiableCallout<AbilityCastStart> sparkBuddies = ModifiableCallout.durationBasedCall("Sidewise Spark + Buddies", "Buddies {safeSide}");
 	private final ModifiableCallout<AbilityCastStart> sparkSpread = ModifiableCallout.durationBasedCall("Sidewise Spark + Spread", "Spread {safeSide}");
 
@@ -297,6 +278,20 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 			});
 
+	private final ModifiableCallout<AbilityCastStart> electropeEdgeInitial = ModifiableCallout.durationBasedCall("Electrope Edge", "Clock Positions");
+	private final ModifiableCallout<?> electropeEdgeFail = new ModifiableCallout<>("Electrope Edge: Fail/Invalid", "Fail");
+	private final ModifiableCallout<?> electropeEdge1long = new ModifiableCallout<>("Electrope Edge: 1 Long", "1 Long");
+	private final ModifiableCallout<?> electropeEdge2long = new ModifiableCallout<>("Electrope Edge: 2 Long", "2 Long");
+	private final ModifiableCallout<?> electropeEdge2short = new ModifiableCallout<>("Electrope Edge: 2 Short", "2 Short");
+	private final ModifiableCallout<?> electropeEdge3short = new ModifiableCallout<>("Electrope Edge: 3 Short", "3 Short");
+
+	private final ModifiableCallout<?> electropeSafeSpot = new ModifiableCallout<>("Electrope Edge: Nothing", "{safe} Safe");
+	private final ModifiableCallout<?> electropeSides = new ModifiableCallout<>("Electrope Edge: Spark II (Sides)", "Spark 2 - {sides}");
+	private final ModifiableCallout<?> electropeCorners = new ModifiableCallout<>("Electrope Edge: Spark III (Far Corners)", "Spark 3 - {corners}");
+
+	private final ModifiableCallout<AbilityCastStart> electropeBuddies = ModifiableCallout.durationBasedCall("Sidewise Spark + Buddies", "Buddies {safeSide} with {buddies}");
+	private final ModifiableCallout<AbilityCastStart> electropeSpread = ModifiableCallout.durationBasedCall("Sidewise Spark + Spread", "Spread {safeSide}");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> electropeEdge = SqtTemplates.multiInvocation(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95c5),
@@ -306,7 +301,8 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 			},
 			(e1, s) -> {
 				s.updateCall(electropeEdgeInitial, e1);
-				var myBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xF9F) && ba.getTarget().isThePlayer());
+				int condenserBuffId = 0xF9F;
+				var myBuff = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(condenserBuffId) && ba.getTarget().isThePlayer());
 				// Collect hits, stop when we see lightning cage cast
 				List<AbilityUsedEvent> hits = s.waitEventsUntil(99, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9786),
 						AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95CE));
@@ -392,10 +388,35 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.setParam("safeSide", sidewiseSpark.abilityIdMatches(0x95EC) ? ArenaSector.WEST : ArenaSector.EAST);
 				SparkMech sparkMech = getSparkMech();
 				if (sparkMech == SparkMech.Buddies) {
-					s.updateCall(sparkBuddies, sidewiseSpark);
+					List<XivPlayerCharacter> buddies;
+					Job playerJob = state.getPlayerJob();
+					boolean playerIsDps = playerJob.isDps();
+					if (playerIsLong) {
+						// look for buddies with no debuff and same role
+						buddies = state.getPartyList()
+								.stream()
+								.filter(pc -> pc.getJob().isDps() == playerIsDps)
+								.filter(pc -> buffs.isStatusOnTarget(pc, condenserBuffId))
+								// Prioritize same role first
+								.sorted(Comparator.comparing(pc -> pc.getJob().getCategory() == playerJob.getCategory() ? 0 : 1))
+								.toList();
+					}
+					else {
+						// look for buddies with debuff and same role
+						buddies = buffs.findBuffs(ba -> ba.buffIdMatches(condenserBuffId))
+								.stream()
+								.map(BuffApplied::getTarget)
+								.map(XivPlayerCharacter.class::cast)
+								.filter(pc -> pc.getJob().isDps() == playerIsDps)
+								// Prioritize same role first
+								.sorted(Comparator.comparing(pc -> pc.getJob().getCategory() == playerJob.getCategory() ? 0 : 1))
+								.toList();
+					}
+					s.setParam("buddies", buddies);
+					s.updateCall(electropeBuddies, sidewiseSpark);
 				}
 				else if (sparkMech == SparkMech.Spread) {
-					s.updateCall(sparkSpread, sidewiseSpark);
+					s.updateCall(electropeSpread, sidewiseSpark);
 
 				}
 				else {
@@ -513,7 +534,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 
 				for (int i = 0; i < 3; i++) {
-					var posCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95D8));
+					var posCast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x95D8), false);
 					// TODO: use positions if this continues to be flaky
 
 					s.waitThenRefreshCombatants(100);
@@ -533,6 +554,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 						// get hit by neg
 						s.updateCall(positronStream, posCast);
 					}
+					// delay so we don't immediately re-capture the same event
+					s.waitCastFinished(casts, posCast);
+					s.waitMs(1_000);
 				}
 			});
 
@@ -546,6 +570,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> electropeTransplant = SqtTemplates.sq(120_000,
 			(AbilityCastStart.class), acs -> acs.abilityIdMatches(0x98D3),
 			(e1, s) -> {
+				int waitTime = 200;
 				log.info("Electrope Transplant: Start");
 				for (int i = 0; i < 2; i++) {
 
@@ -554,16 +579,16 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(transplantCast, cast);
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x90FE));
 					s.updateCall(transplantMove);
-					s.waitMs(50);
+					s.waitMs(waitTime);
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
 					s.updateCall(transplantMove);
-					s.waitMs(50);
+					s.waitMs(waitTime);
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
 					s.updateCall(transplantMove);
-					s.waitMs(50);
+					s.waitMs(waitTime);
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
 					s.updateCall(transplantMove);
-					s.waitMs(50);
+					s.waitMs(waitTime);
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
 					List<XivCombatant> playersThatGotHit = s.waitEventsQuickSuccession(8, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CE))
 							.stream()
@@ -575,12 +600,12 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					else {
 						s.updateCall(transplantMoveFront);
 					}
-					s.waitMs(50);
+					s.waitMs(waitTime);
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x98CD));
 					s.updateCall(transplantMove);
-					s.waitMs(50);
+					s.waitMs(waitTime);
 				}
-				s.waitMs(2000);
+				s.waitMs(1800);
 				s.updateCall(transition);
 			});
 
@@ -819,8 +844,8 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<?> midnightSabbathSpreadCardinal = new ModifiableCallout<>("Midnight Sabbath: Spread in Cardinals", "Spread in Cardinals");
 	private final ModifiableCallout<?> midnightSabbathSpreadIntercards = new ModifiableCallout<>("Midnight Sabbath: Spread in Intercards", "Spread in Intercards");
-	private final ModifiableCallout<?> midnightSabbathBuddyCardinal = new ModifiableCallout<>("Midnight Sabbath: Spread in Cardinals", "Buddy in Cardinals");
-	private final ModifiableCallout<?> midnightSabbathBuddyIntercards = new ModifiableCallout<>("Midnight Sabbath: Spread in Intercards", "Buddy in Intercards");
+	private final ModifiableCallout<?> midnightSabbathBuddyCardinal = new ModifiableCallout<>("Midnight Sabbath: Buddy in Cardinals", "Buddy in Cardinals");
+	private final ModifiableCallout<?> midnightSabbathBuddyIntercards = new ModifiableCallout<>("Midnight Sabbath: Buddy in Intercards", "Buddy in Intercards");
 
 	private record MidnightSabbathMechanic(boolean isDonut, boolean isCardinal, boolean spread) {
 		boolean cardinalSafe() {
@@ -885,8 +910,8 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 						if (event.getCategory() == orderCategory) {
 							// First/second set
 							switch ((int) event.getData0()) {
-								case 0x11D3 -> firstSet = true;
-								case 0x11D4 -> firstSet = false;
+								case 0x11D3, 0x11D1 -> firstSet = true;
+								case 0x11D4, 0x11D2 -> firstSet = false;
 								default -> log.error("Unrecognized: {}", event.getPrimaryValue());
 							}
 						}
@@ -948,7 +973,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 				Runnable wickedCall = delayedCallWickedThunder(s);
 				// Wait for 'thundering' cast to finish
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9627));
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9627, 0x962E));
 				wickedCall.run();
 			});
 
@@ -960,7 +985,8 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> ionCluster2longPos = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Long Positron", "Long Positron").autoIcon();
 	private final ModifiableCallout<BuffApplied> ionCluster2longNeg = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Long Negatron", "Long Negatron").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> ionCluster2baitFirstSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Bait First Set", "Bait {baitLocations}").autoIcon();
+	private final ModifiableCallout<BuffApplied> ionCluster2baitFirstSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Bait First Set", "Bait {baitLocations}").autoIcon()
+			.extendedDescription("These callouts sort the bait locations in clockwise order from north.");
 	private final ModifiableCallout<?> ionCluster2avoidFirstSet = new ModifiableCallout<>("Ion Cluster 2: Take First Tower", "Soak {towers} Towers");
 	private final ModifiableCallout<BuffApplied> ionCluster2baitSecondSet = ModifiableCallout.<BuffApplied>durationBasedCall("Ion Cluster 2: Bait Second Set", "Bait {baitLocations}").autoIcon();
 	private final ModifiableCallout<?> ionCluster2avoidSecondSet = new ModifiableCallout<>("Ion Cluster 2: Take Second Tower", "Soak {towers} Tower");
@@ -968,6 +994,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@NpcCastCallout(0x9614)
 	private final ModifiableCallout<AbilityCastStart> flameSlash = ModifiableCallout.durationBasedCall("Flame Slash", "Out of Middle, Arena Splitting");
+
+	@NpcCastCallout(value = 0x9617, suppressMs = 200)
+	private final ModifiableCallout<AbilityCastStart> rainingSwordSoakTower = ModifiableCallout.durationBasedCall("Raining Swords: Soak Tower", "Soak Tower");
 
 	private final ModifiableCallout<?> rainingSwordNorthmost = new ModifiableCallout<>("Raining Swords: Northmost Safe", "North");
 	private final ModifiableCallout<?> rainingSwordNorthmiddle = new ModifiableCallout<>("Raining Swords: North-middle Safe", "North-Middle");
@@ -1011,7 +1040,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 		}
 	}
 
-	// This trigger is ONLY responsible for collecting - not callout out!
+	// This trigger is ONLY responsible for collecting - not any callouts!
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> rainingSwordsColl = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9616),
@@ -1057,9 +1086,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 						throw new RuntimeException("Safe: " + safe);
 					}
 					s.accept(new RainingSwordSafeSpotEvent(thisSideRight ? ArenaSector.EAST : ArenaSector.WEST, safe.iterator().next()));
-
 				}
 			});
+
 	// This trigger does the actual callouts
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> rainingSwordsCall = SqtTemplates.sq(60_000,
@@ -1075,6 +1104,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					// The exception is that if this is the first wave, fire the callout immediately
 					if (wave == 0) {
 						if (isMySide) {
+							// TODO: this callout is a little bit early relative to the "soak tower" call, but the
+							// delay can't be directly implemented here, as it would interfere with collecting
+							// the events.
 							s.updateCall(event.getCallout());
 						}
 						// Nothing to do
@@ -1188,6 +1220,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 								.filter(ba -> ba.getRawStacks() == neededGun)
 								.map(BuffApplied::getTarget)
 								.map(finalAp::forCombatant)
+								// The arena sectors are defined north -> CW, so using the ordinal is an acceptable
+								// way to sort them in a north-first CW sort order.
+								.sorted(Comparator.comparing(Enum::ordinal))
 								.toList();
 						s.setParam("baitLocations", acceptableGuns);
 						s.updateCall(ionCluster2baitFirstSet, playerBuff);
@@ -1202,6 +1237,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 								.filter(ba -> ba.getRawStacks() == neededGun)
 								.map(BuffApplied::getTarget)
 								.map(finalAp::forCombatant)
+								.sorted(Comparator.comparing(Enum::ordinal))
 								.toList();
 						s.setParam("baitLocations", acceptableGuns);
 						s.updateCall(ionCluster2baitSecondSet, playerBuff);

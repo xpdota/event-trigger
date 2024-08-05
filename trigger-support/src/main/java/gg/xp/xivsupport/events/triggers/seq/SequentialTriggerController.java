@@ -6,6 +6,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
@@ -459,6 +460,15 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	/**
+	 * Find an active cast, or wait for the matching cast to start.
+	 *
+	 * @param repo           The ActiveCastRepository
+	 * @param condition      The condition for the cast, i.e. the same thing you would feed to {@link #waitEvent}
+	 *                       and similar methods
+	 * @param includeExpired Whether to allow already-completed casts.
+	 * @return The cast.
+	 */
 	public AbilityCastStart findOrWaitForCast(ActiveCastRepository repo, Predicate<AbilityCastStart> condition, boolean includeExpired) {
 		var castMaybe = repo.getAll().stream().filter(ct -> {
 			if (!includeExpired && ct.getResult() != CastResult.IN_PROGRESS) {
@@ -472,6 +482,27 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		else {
 			return waitEvent(AbilityCastStart.class, condition);
 		}
+	}
+
+	/**
+	 * Wait for a cast to finish, or return immediately if it already has finished.
+	 *
+	 * @param repo The ActiveCastRepository
+	 * @param cast The cast whose finish you wish to wait for.
+	 * @return The event that ended the cast. Will usually be an {@link AbilityUsedEvent}, but can also be other
+	 * event types such as {@link AbilityCastCancel} for when the cast is interrupted.
+	 */
+	public BaseEvent waitCastFinished(ActiveCastRepository repo, AbilityCastStart cast) {
+		var castMaybe = repo.getAll().stream().filter(ct -> ct.getCast() == cast).findFirst().orElse(null);
+		if (castMaybe != null) {
+			BaseEvent end = castMaybe.getEnd();
+			if (end != null) {
+				return end;
+			}
+		}
+		return waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == cast);
+
+
 	}
 
 

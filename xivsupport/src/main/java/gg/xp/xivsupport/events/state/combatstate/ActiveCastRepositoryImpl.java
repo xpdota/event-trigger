@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.state.combatstate;
 
+import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
@@ -66,7 +67,7 @@ public class ActiveCastRepositoryImpl implements ActiveCastRepository {
 		}
 	}
 
-	private <X extends Event & HasSourceEntity & HasAbility & HasCastPrecursor> void doEnd(X event) {
+	private <X extends BaseEvent & HasSourceEntity & HasAbility & HasCastPrecursor> void doEnd(X event) {
 		CastTracker tracker;
 		synchronized (lock) {
 			tracker = cbtCasts.get(event.getSource());
