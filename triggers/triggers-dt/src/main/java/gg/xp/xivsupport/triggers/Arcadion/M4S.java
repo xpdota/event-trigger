@@ -78,8 +78,8 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x95EF)
 	private final ModifiableCallout<AbilityCastStart> wrathOfZeus = ModifiableCallout.durationBasedCall("Wrath of Zeus", "Raidwide");
 
-	private final ModifiableCallout<AbilityCastStart> electrifyingInsideSafe = ModifiableCallout.durationBasedCall("Electrifying Witch Hunt: Inside Safe", "Inside");
-	private final ModifiableCallout<AbilityCastStart> electrifyingOutsideSafe = ModifiableCallout.durationBasedCall("Electrifying Witch Hunt: Outside Safe", "Outside");
+	private final ModifiableCallout<AbilityCastStart> electrifyingInsideSafe = ModifiableCallout.durationBasedCall("Electrifying Witch Hunt: Inside Safe", "Inside, Avoid Lines");
+	private final ModifiableCallout<AbilityCastStart> electrifyingOutsideSafe = ModifiableCallout.durationBasedCall("Electrifying Witch Hunt: Outside Safe", "Outside, Avoid Lines");
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> electrifyingWitchHunt = SqtTemplates.sq(30_000,
 			(AbilityCastStart.class), acs -> acs.abilityIdMatches(0x95E5),

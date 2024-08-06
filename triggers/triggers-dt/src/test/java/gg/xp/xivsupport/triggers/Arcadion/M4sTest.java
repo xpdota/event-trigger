@@ -17,7 +17,7 @@ public class M4sTest
 		return List.of(
 				call(9892, "Raidwide", "Raidwide (4.7)"),
 				call(31592, "Avoid Lines", "Avoid Lines (5.7)"),
-				call(44070, "Inside", "Inside (4.7)"),
+				call(44070, "Inside, Avoid Lines", "Inside, Avoid Lines (4.7)"),
 				call(52230, "Outside, Bait Out", "Outside, Bait Out (4.7)"),
 				call(60384, "Inside, Baiters In", "Inside, Baiters In (13.7)"),
 				call(75441, "Outside, Baiters Out", "Outside, Baiters Out"),
