@@ -85,7 +85,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 	}
 
 	/**
-	 * @return Whether or not auto-scrolling is currently active, i.e. {@link #isAutoScrollEnabled()} &&
+	 * @return Whether or not auto-scrolling is currently active, i.e. {@link #isAutoScrollEnabled()} &amp;&amp;
 	 * {@link #isAtBottom()}.
 	 */
 	public boolean isAutoScrollActive() {
