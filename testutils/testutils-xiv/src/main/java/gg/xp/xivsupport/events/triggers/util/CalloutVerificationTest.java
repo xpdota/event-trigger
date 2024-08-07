@@ -252,7 +252,15 @@ public abstract class CalloutVerificationTest {
 			compareLists(rawStorage, actualMarks, expectedAMs);
 		}
 
-		List<String> tooCloseFailures = new ArrayList<>();
+
+		List<String> assortedFailures = new ArrayList<>();
+
+		for (CalloutInitialValues actualCall : actualCalls) {
+			if (actualCall.text().endsWith("(NOW)")) {
+				assortedFailures.add("Call [%s] ends with '(NOW)', indicating possible wrong event or late call");
+			}
+		}
+
 		CalloutInitialValues last = null;
 		long minDelta = minimumMsBetweenCalls();
 		if (minDelta > 0) {
@@ -262,14 +270,14 @@ public abstract class CalloutVerificationTest {
 					long delta = actualCall.ms() - last.ms();
 					// Negative delta happens for logs with multiple pulls, since the time resets to zero
 					if (delta >= 0 && delta < minDelta) {
-						tooCloseFailures.add("Call [%s] was too close (%dms) to call [%s]".formatted(actualCall.toStringShort(), delta, last.toStringShort()));
+						assortedFailures.add("Call [%s] was too close (%dms) to call [%s]".formatted(actualCall.toStringShort(), delta, last.toStringShort()));
 					}
 				}
 				last = actualCall;
 			}
-			if (!tooCloseFailures.isEmpty()) {
-				throw new AssertionError("Issues with callouts which were too close to one another:\n" + String.join("\n", tooCloseFailures));
-			}
+		}
+		if (!assortedFailures.isEmpty()) {
+			throw new AssertionError("Issues with callouts which were too close to one another:\n" + String.join("\n", assortedFailures));
 		}
 	}
 

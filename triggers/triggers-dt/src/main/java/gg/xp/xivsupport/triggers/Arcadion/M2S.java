@@ -95,7 +95,7 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 	@HandleEvents
 	public void poisonMechs(EventContext context, AbilityUsedEvent event) {
 		// Splash of venom/love
-		if (event.abilityIdMatches(0x9184)) {
+		if (event.abilityIdMatches(0x9184, 0x9B08)) {
 			context.accept(spreadLater.getModified());
 			lastPosionBuff = PoisonBuff.SPREAD;
 		}
@@ -147,10 +147,13 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 				if (pb == PoisonBuff.SPREAD) {
 					s.updateCall(spread);
 				}
-				else {
+				else if (pb == PoisonBuff.BUDDY){
 					s.updateCall(buddies);
 				}
-
+				else {
+					log.error("No poison buff!");
+				}
+				resetPoisonBuff();
 			});
 
 	@NpcCastCallout(value = 0x91A9, suppressMs = 100)

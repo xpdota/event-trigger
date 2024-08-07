@@ -69,8 +69,27 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		};
 	}
 
+	/**
+	 * @return Whether auto-scroll is desired. This will return true even if auto-scrolling is paused due to the user
+	 * scrolling up.
+	 */
 	public boolean isAutoScrollEnabled() {
 		return autoScrollEnabled;
+	}
+
+	/**
+	 * @return Whether we are currently at the bottom of the scroll viewport.
+	 */
+	public boolean isAtBottom() {
+		return atBottom;
+	}
+
+	/**
+	 * @return Whether or not auto-scrolling is currently active, i.e. {@link #isAutoScrollEnabled()} &&
+	 * {@link #isAtBottom()}.
+	 */
+	public boolean isAutoScrollActive() {
+		return isAutoScrollEnabled() && isAtBottom();
 	}
 
 	private void doScrollIfEnabled() {

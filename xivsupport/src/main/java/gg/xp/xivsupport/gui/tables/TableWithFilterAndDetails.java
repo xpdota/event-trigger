@@ -344,7 +344,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			filterFully();
 			updateModel();
 			// Only scroll back to selected instance if auto scroll is disabled
-			if (scroller != null && !scroller.isAutoScrollEnabled() && offset != null) {
+			if (scroller != null && (!scroller.isAutoScrollActive()) && offset != null) {
 				mainModel.setVisibleItemScrollOffset(offset);
 				log.info("Offset: {}", offset);
 			}
