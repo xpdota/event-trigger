@@ -44,7 +44,8 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Predicate<AbilityUsedEvent> isQuadCrossingHit = aue -> aue.abilityIdMatches(0x943F, 0x9440, 0x945B, 0x945C, 0x947D, 0x947E);
 	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingInitial = ModifiableCallout.durationBasedCall("Quadruple Crossing - Initial", "Quadruple Crossing");
-	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingInitialLeaping = ModifiableCallout.durationBasedCall("Quadruple Crossing - Initial (Leaping)", "Quadruple Crossing on Clone");
+	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingInitialLeapingLeft = ModifiableCallout.durationBasedCall("Quadruple Crossing - Leaping Left", "Quadruple Crossing - Leaping Left");
+	private final ModifiableCallout<AbilityCastStart> quadrupleCrossingInitialLeapingRight = ModifiableCallout.durationBasedCall("Quadruple Crossing - Leaping Right", "Quadruple Crossing - Leaping Right");
 	private final ModifiableCallout<?> quadrupleCrossingBaitSecond = new ModifiableCallout<>("Quadruple Crossing - Bait Second Wave", "Bait - In");
 	private final ModifiableCallout<?> quadrupleCrossingDontBaitSecond = new ModifiableCallout<>("Quadruple Crossing - Avoid Second Wave", "Don't Bait - Out");
 	private final ModifiableCallout<?> quadrupleCrossingThird = new ModifiableCallout<>("Quadruple Crossing - Dodge First", "Dodge 1");
@@ -52,34 +53,52 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> quadrupleCrossing = SqtTemplates.sq(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x943C, 0x982F),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x943C, 0x982F, 0x9457, 0x982F),
 			(e1, s) -> {
-				s.updateCall(e1.abilityIdMatches(0x943C) ? quadrupleCrossingInitial : quadrupleCrossingInitialLeaping, e1);
-				s.waitMs(50);
-				s.waitEvent(AbilityUsedEvent.class, isQuadCrossingHit);
-				if (buffs.isStatusOnTarget(state.getPlayer(), 0xC3A)) {
+				switch ((int) e1.getAbility().getId()){
+					case 0x943C -> s.updateCall(quadrupleCrossingInitial, e1);
+					// There are two other IDs, 9479 and 9853, which are left/right, but those are paired with
+					// Nailchipper
+					case 0x9457 -> s.updateCall(quadrupleCrossingInitialLeapingLeft, e1);
+					case 0x982F -> s.updateCall(quadrupleCrossingInitialLeapingRight, e1);
+				}
+				var hits = s.waitEventsQuickSuccession(99, AbilityUsedEvent.class, isQuadCrossingHit);
+				if (hits.stream().anyMatch(hit -> hit.getTarget().isThePlayer())) {
 					s.updateCall(quadrupleCrossingDontBaitSecond);
 				}
 				else {
 					s.updateCall(quadrupleCrossingBaitSecond);
 				}
-				s.waitMs(50);
-				s.waitEvent(AbilityUsedEvent.class, isQuadCrossingHit);
+				s.waitMs(250);
+				s.waitEventsQuickSuccession(4, AbilityUsedEvent.class, isQuadCrossingHit);
 				s.updateCall(quadrupleCrossingThird);
-				s.waitMs(50);
-				s.waitEvent(AbilityUsedEvent.class, isQuadCrossingHit);
+				s.waitMs(250);
+				s.waitEventsQuickSuccession(4, AbilityUsedEvent.class, isQuadCrossingHit);
 				s.updateCall(quadrupleCrossingFourth);
 			});
 
-	private final ModifiableCallout<AbilityCastStart> oneTwoLeftFirst = ModifiableCallout.durationBasedCall("One Two - Left First", "Left then Right");
-	private final ModifiableCallout<AbilityCastStart> oneTwoRightFirst = ModifiableCallout.durationBasedCall("One Two - Right First", "Right then Left");
-	private final ModifiableCallout<AbilityCastStart> oneTwoLeapingLeftFirst = ModifiableCallout.durationBasedCall("One Two (Leaping) - Left First", "Left then Right ({whereClone})");
-	private final ModifiableCallout<AbilityCastStart> oneTwoLeapingRightFirst = ModifiableCallout.durationBasedCall("One Two (Leaping) - Right First", "Right then Left ({whereClone})");
+	private static final Duration oneTwoDelay = Duration.ofSeconds(1);
+	private static final Duration oneTwoLeapingDelay = Duration.ofMillis(1_700);
+	private final ModifiableCallout<AbilityCastStart> oneTwoLeftFirst = ModifiableCallout.durationBasedCallWithOffset("One Two - Left First", "Left then Right", oneTwoDelay);
+	private final ModifiableCallout<AbilityCastStart> oneTwoRightFirst = ModifiableCallout.durationBasedCallWithOffset("One Two - Right First", "Right then Left", oneTwoDelay);
+	private final ModifiableCallout<AbilityCastStart> oneTwoLeapingLeftFirst = ModifiableCallout.durationBasedCallWithOffset("One Two (Leaping) - Left First", "Left then Right ({whereClone})", oneTwoLeapingDelay);
+	private final ModifiableCallout<AbilityCastStart> oneTwoLeapingRightFirst = ModifiableCallout.durationBasedCallWithOffset("One Two (Leaping) - Right First", "Right then Left ({whereClone})", oneTwoLeapingDelay);
 	private final ModifiableCallout<AbilityUsedEvent> oneTwoLeft = new ModifiableCallout<>("One Two - Left Second", "Left");
 	private final ModifiableCallout<AbilityUsedEvent> oneTwoRight = new ModifiableCallout<>("One Two - Right Second", "Right");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> oneTwoPaw = SqtTemplates.sq(30_000,
+			/*
+			Normal one-two:
+			Left->Right:
+				9436 Boss
+				9437 First hit
+				9438 Second hit
+			Right->Left:
+				9439 boss
+				943B first hit
+				943A second hit
+			 */
 			/*
 			Leaping
 			944D left right (west)
@@ -87,9 +106,9 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 			944F left right (east)
 			9450 right left (east)
 			 */
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9438, 0x9439, 0x944D, 0x944E, 0x944F, 0x9450),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9436, 0x9439, 0x944D, 0x944E, 0x944F, 0x9450),
 			(e1, s) -> {
-				boolean leftFirst = e1.abilityIdMatches(0x9438, 0x944D, 0x944F);
+				boolean leftFirst = e1.abilityIdMatches(0x9436, 0x944D, 0x944F);
 				boolean leaping = e1.getAbility().getId() > 0x9440;
 				if (leaping) {
 					s.setParam("whereClone", e1.abilityIdMatches(0x944F, 0x9450) ? ArenaSector.EAST : ArenaSector.WEST);
@@ -111,6 +130,10 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
 				}
 				var event = s.waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == e1);
+				// The boss cast is 1 second shorter
+				Duration delay = leaping ? oneTwoLeapingDelay : oneTwoDelay;
+				log.info("Delay: {}", delay);
+				s.waitDuration(delay);
 				if (leftFirst) {
 					s.updateCall(oneTwoRight, event);
 				}
@@ -126,6 +149,7 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> doubleSwipe = ModifiableCallout.durationBasedCall("Double Swipe", "Light Parties");
 	private final ModifiableCallout<AbilityCastStart> quadSwipe = ModifiableCallout.durationBasedCall("Quad Swipe", "Partners");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> doubleQuadSwipeSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x945f, 0x9481, 0x945d, 0x947f),
@@ -194,6 +218,7 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> shockwave = ModifiableCallout.durationBasedCall("Shockwave", "Knockback into Spread");
 	private final ModifiableCallout<AbilityCastStart> shockwaveAfter = ModifiableCallout.durationBasedCall("Shockwave Spread", "Spread");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> shockWave = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x944C),
@@ -236,7 +261,7 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 	@NpcCastCallout({0x9ABB, 0x9ABC})
-	private final ModifiableCallout<AbilityCastStart> rainingCats = ModifiableCallout.durationBasedCall("Raining Cats", "Tethers");
+	private final ModifiableCallout<AbilityCastStart> rainingCats = ModifiableCallout.durationBasedCall("Raining Cats", "Tethers and Stacks");
 
 	private final ModifiableCallout<AbilityCastStart> nailchipperBaitFirst = ModifiableCallout.durationBasedCall("Nailchipper - Bait First Wave", "Bait Protean");
 	private final ModifiableCallout<AbilityCastStart> nailchipperDontBaitFirst = ModifiableCallout.durationBasedCall("Nailchipper - Avoid First Wave", "Out");
@@ -293,7 +318,7 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 	// 9467 = hitting left first
 	// can ignore the actual damaging casts
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> soulshadeOneTwo = SqtTemplates.sq(30_000,
+	private final SequentialTrigger<BaseEvent> soulshadeOneTwo = SqtTemplates.multiInvocation(30_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9464, 0x9467),
 			(e1, s) -> {
 				log.info("Soulshade one-two: start");
@@ -349,4 +374,7 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 	TODO:
 	Trigger for boss destroying tiles?
 	*/
+
+	@NpcCastCallout(value = 0x9AD3, suppressMs = 5_000)
+	private final ModifiableCallout<AbilityCastStart> predaceousPounce = ModifiableCallout.durationBasedCall("Predaceous Pounce", "Watch Pounces");
 }
