@@ -108,7 +108,8 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 	// WHM
 	Benediction(true, CooldownType.HEAL, 0x8c),
 	Temperance(true, CooldownType.PARTY_MIT, 0x4098),
-	Pom(true, CooldownType.PERSONAL_BURST, 0x88),
+	// TODO: this needs to ignore the Glare IV buff
+	Pom(builder(CooldownType.PERSONAL_BURST, true, 0x88).buffIds(0x9d)),
 	Asylum(builder(CooldownType.HEAL, true, 0xDF1)),
 	Aquaveil(true, CooldownType.PERSONAL_MIT, 0x6505),
 	Bell(true, CooldownType.HEAL, 0x6506),
