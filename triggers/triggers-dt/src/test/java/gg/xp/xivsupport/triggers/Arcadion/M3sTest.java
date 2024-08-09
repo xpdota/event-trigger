@@ -62,7 +62,7 @@ public class M3sTest
 				call(575085, "Side Towers to Corners", "Side Towers to Corners"),
 				call(586220, "Corner Towers to Center", "Corner Towers to Center"),
 				call(589604, "Center Tower to West", "Center Tower to West"),
-				call(596734, "East Safe", "East Safe"),
+				call(594641, "East Safe", "East Safe"),
 				call(610060, "Tank Buster - Multi Hit", "Tank Buster - Multi Hit (4.7)"),
 				call(651098, "Multiple Raidwides", "Multiple Raidwides (5.7)")
 		);

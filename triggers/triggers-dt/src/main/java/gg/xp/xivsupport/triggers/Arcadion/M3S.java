@@ -118,34 +118,26 @@ public class M3S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitMs(100);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x968E, 0x93FC));
 				s.waitThenRefreshCombatants(100);
-				// TODO: IDs for this
-				// West safe, boss from south, then east safe (boss from north)
-				// 9AE8 Boss
-				// 9AF0 actual aoe
-				// Then,
-				// 9AEC Boss
-				// 9AF2 actual aoe
-				// The possibilities for the boss aoe are:
 
-
-				// West safe, boss from south, then west safe again (boss from north)
-				// 9AE9 boss
-				// 9AF0 actual aoe
-				// Then,
-				// 9AED boss
-				// 9AF3 actual aoe
 				/*
-				9ADC - 9ADF
-				9AE8 - 9AEB
-				9B2C - 9B2F
+				Initial casts:
+				9AE8 - left safe then left safe
+				9AE9 - left safe then right safe
+				9AEA - right safe then right safe
+				9AEB - right safe then left safe
 				 */
-				var lariatCast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9AF0, 0x9AF1), false);
-				var safe = lariatCast.abilityIdMatches(0x9AF0) ? ArenaSector.WEST : ArenaSector.EAST;
-				s.setParam("safe", safe);
+
+				// TODO: boss can come from either direction
+				var lariatCast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9AE8, 0x9AE9, 0x9AEA, 0x9AEB), false);
+				ArenaSector bossAt = ap.forCombatant(lariatCast.getSource());
+
+				var firstSafe = bossAt.plusQuads(lariatCast.abilityIdMatches(0x9AE8, 0x9AE9) ? 1 : -1);
+				var secondSafe = bossAt.opposite().plusQuads(lariatCast.abilityIdMatches(0x9AE8, 0x9AEB) ? 1 : -1);
+
+				s.setParam("safe", firstSafe);
 				s.updateCall(barbarous2ThirdTower);
-				var lariatCast2 = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9AF2, 0x9AF3), false);
-				var safe2 = lariatCast2.abilityIdMatches(0x9AF3) ? ArenaSector.WEST : ArenaSector.EAST;
-				s.setParam("safe", safe2);
+				s.waitMs(5_000);
+				s.setParam("safe", secondSafe);
 				s.updateCall(barbarous2SecondLariat);
 			});
 
