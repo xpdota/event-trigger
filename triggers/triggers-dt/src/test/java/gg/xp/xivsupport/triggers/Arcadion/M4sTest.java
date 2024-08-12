@@ -75,7 +75,7 @@ public class M4sTest
 				call(581982, "Out of Middle, Arena Splitting", "Out of Middle, Arena Splitting (5.7)"),
 				call(591118, "Soak Tower", "Soak Tower (2.7)"),
 				call(600201, "South-Middle", "South-Middle"),
-				call(612496, "South-Middle, South, North-North-Middle", "South-Middle, South, North-North-Middle"),
+				call(612496, "South-Middle, South, North, North-Middle", "South-Middle, South, North, North-Middle"),
 				call(617798, "South", "South"),
 				call(623192, "North", "North"),
 				call(628628, "North-Middle", "North-Middle"),
