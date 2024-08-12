@@ -1002,7 +1002,14 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> rainingSwordNorthmiddle = new ModifiableCallout<>("Raining Swords: North-middle Safe", "North-Middle");
 	private final ModifiableCallout<?> rainingSwordSouthmiddle = new ModifiableCallout<>("Raining Swords: South-middle Safe", "South-Middle");
 	private final ModifiableCallout<?> rainingSwordSouthmost = new ModifiableCallout<>("Raining Swords: Southmost Safe", "South");
+	private final ModifiableCallout<?> rainingSwordAll = new ModifiableCallout<>("Raining Swords: All", "{{remaining.collect { ['South', 'South-Middle', 'North-Middle', 'North'][it] } }}")
+			.disabledByDefault()
+			.extendedDescription("""
+					This callout will tell you all remaining swords, numbered 0-3, as a list, where 0 is southmost. \
+					You can also use {remainingOtherSide} to get the same info for side which the player is not on. \
+					The default callout shows how to map these numbers to text.""");
 
+	@SuppressWarnings("SerializableInnerClassWithNonSerializableOuterClass")
 	private final class RainingSwordSafeSpotEvent extends BaseEvent implements HasPrimaryValue {
 		@Serial
 		private static final long serialVersionUID = -1177380546147020596L;
@@ -1095,6 +1102,10 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9616),
 			(e1, s) -> {
 				Queue<@NotNull Optional<ModifiableCallout<?>>> queue = new ArrayDeque<>();
+				List<Integer> remaining = new ArrayList<>(4);
+				List<Integer> remainingOtherSide = new ArrayList<>(4);
+				s.setParam("remaining", remaining);
+				s.setParam("remainingOtherSide", remainingOtherSide);
 				// First collect everything
 				for (int i = 0; i < 8; i++) {
 					int wave = i / 2;
@@ -1102,11 +1113,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					ArenaSector playerSide = state.getPlayer().getPos().x() > 100 ? ArenaSector.EAST : ArenaSector.WEST;
 					boolean isMySide = playerSide == event.side;
 					// The exception is that if this is the first wave, fire the callout immediately
+					(isMySide ? remaining : remainingOtherSide).add(event.safeSpot);
 					if (wave == 0) {
 						if (isMySide) {
-							// TODO: this callout is a little bit early relative to the "soak tower" call, but the
-							// delay can't be directly implemented here, as it would interfere with collecting
-							// the events.
 							s.updateCall(event.getCallout());
 						}
 						// Nothing to do
@@ -1121,12 +1130,14 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 						}
 					}
 				}
+				s.call(rainingSwordAll);
 				// Now burn through the queue, waiting for the chain lightning hits
 				for (Optional<ModifiableCallout<?>> item : queue) {
 					// Wait for another round of hits
 					s.waitEventsQuickSuccession(3, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x961A, 0x961B) && aue.isFirstTarget());
 					// If not a null marker, fire the call
 					item.ifPresent(s::updateCall);
+					item.ifPresentOrElse(t -> remaining.remove(0), () -> remainingOtherSide.remove(0));
 				}
 			});
 
