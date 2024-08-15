@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
+import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -280,7 +281,12 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> electropeEdgeInitial = ModifiableCallout.durationBasedCall("Electrope Edge", "Clock Positions");
 	private final ModifiableCallout<?> electropeEdgeFail = new ModifiableCallout<>("Electrope Edge: Fail/Invalid", "Fail");
-	private final ModifiableCallout<?> electropeEdge1long = new ModifiableCallout<>("Electrope Edge: 1 Long", "1 Long");
+	private final ModifiableCallout<?> electropeEdge1long = new ModifiableCallout<>("Electrope Edge: 1 Long", "1 Long")
+			.extendedDescription("""
+					Please note that long 1 and long 2 are commonly referred to as long 2 and long 3 by the community. \
+					In addition, all of these callouts have variables {playerCount} which is the number of times you were hit, \
+					{playerCountPlus} which is adjusted to always be 2 or 3 (i.e. add one to playerCount if you were long), and \
+					{playerIsLong} which is true if you were long.""");
 	private final ModifiableCallout<?> electropeEdge2long = new ModifiableCallout<>("Electrope Edge: 2 Long", "2 Long");
 	private final ModifiableCallout<?> electropeEdge2short = new ModifiableCallout<>("Electrope Edge: 2 Short", "2 Short");
 	private final ModifiableCallout<?> electropeEdge3short = new ModifiableCallout<>("Electrope Edge: 3 Short", "3 Short");
@@ -309,6 +315,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 				int myCount = (int) hits.stream().filter(hit -> hit.getTarget().isThePlayer()).count();
 				// 22 short, 42 long
 				boolean playerIsLong = myBuff.getInitialDuration().toSeconds() > 30;
+				s.setParam("playerIsLong", playerIsLong);
+				s.setParam("playerCount", myCount);
+				s.setParam("playerCountPlus", playerIsLong ? (myCount + 1) : myCount);
 				log.info("Electrope {} {}", myCount, playerIsLong);
 				if (playerIsLong) {
 					s.updateCall(switch (myCount) {
@@ -396,7 +405,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 						buddies = state.getPartyList()
 								.stream()
 								.filter(pc -> pc.getJob().isDps() == playerIsDps)
-								.filter(pc -> buffs.isStatusOnTarget(pc, condenserBuffId))
+								.filter(pc -> !buffs.isStatusOnTarget(pc, condenserBuffId))
 								// Prioritize same role first
 								.sorted(Comparator.comparing(pc -> pc.getJob().getCategory() == playerJob.getCategory() ? 0 : 1))
 								.toList();
@@ -971,9 +980,9 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					log.error("Midnight Sabbath: secondMech null!");
 				}
 
-				Runnable wickedCall = delayedCallWickedThunder(s);
-				// Wait for 'thundering' cast to finish
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9627, 0x962E));
+				Runnable wickedCall = delayedCallWickedSpecial(s);
+				// Wait for other mechanic to resolve first before calling in/out
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9627, 0x962D, 0x962E));
 				wickedCall.run();
 			});
 
@@ -1142,14 +1151,14 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 	/**
-	 * Wait for a wicked thunder cast, and return a runnable that triggers the correct callout.
+	 * Wait for a wicked special cast, and return a runnable that triggers the correct callout.
 	 * <p>
 	 * It returns a runnable rather than directly running the call so that it can be delayed.
 	 *
 	 * @param s The Sequential Trigger Controller to use
 	 * @return The runnable as described above
 	 */
-	private Runnable delayedCallWickedThunder(SequentialTriggerController<?> s) {
+	private Runnable delayedCallWickedSpecial(SequentialTriggerController<?> s) {
 		var wicked = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9610, 0x9612));
 		if (wicked.abilityIdMatches(0x9610)) {
 			return () -> s.updateCall(wickedSpecialOutOfMiddle, wicked);
@@ -1165,7 +1174,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 	 * @param s The sequential trigger controller
 	 */
 	private void callWickedThunder(SequentialTriggerController<?> s) {
-		delayedCallWickedThunder(s).run();
+		delayedCallWickedSpecial(s).run();
 	}
 
 	// Ion Cluster #2, aka Sunrise Sabbath
@@ -1233,6 +1242,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 								.map(finalAp::forCombatant)
 								// The arena sectors are defined north -> CW, so using the ordinal is an acceptable
 								// way to sort them in a north-first CW sort order.
+								// TODO: add a note of this in the description
 								.sorted(Comparator.comparing(Enum::ordinal))
 								.toList();
 						s.setParam("baitLocations", acceptableGuns);
@@ -1288,14 +1298,19 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 	private final ModifiableCallout<AbilityCastStart> swordQuiverRaidwide = ModifiableCallout.durationBasedCall("Sword Quiver: Raidwides", "Raidwides");
-	// Commented out for now so they don't show on the UI
-	private final ModifiableCallout<MapEffectEvent> swordQuiverRearUnsafe = new ModifiableCallout<MapEffectEvent>("Sword Quiver: Rear Unsafe (Untested)", "Front/Middle").disabledByDefault();
-	private final ModifiableCallout<MapEffectEvent> swordQuiverMiddleUnsafe = new ModifiableCallout<MapEffectEvent>("Sword Quiver: Rear Unsafe (Untested)", "Front/Back").disabledByDefault();
-	private final ModifiableCallout<MapEffectEvent> swordQuiverFrontUnsafe = new ModifiableCallout<MapEffectEvent>("Sword Quiver: Rear Unsafe (Untested)", "Middle/Back").disabledByDefault();
+	// Old versions that used the map effect
+//	private final ModifiableCallout<MapEffectEvent> swordQuiverRearUnsafe = new ModifiableCallout<MapEffectEvent>("Sword Quiver: Rear Unsafe (Untested)", "Front/Middle");
+//	private final ModifiableCallout<MapEffectEvent> swordQuiverMiddleUnsafe = new ModifiableCallout<MapEffectEvent>("Sword Quiver: Rear Unsafe (Untested)", "Front/Back");
+//	private final ModifiableCallout<MapEffectEvent> swordQuiverFrontUnsafe = new ModifiableCallout<MapEffectEvent>("Sword Quiver: Rear Unsafe (Untested)", "Middle/Back");
+	// 13.9 seconds after cast start. Cast is 4.7 seconds long.
+	private static final Duration swordQuiverOffset = Duration.ofMillis(13_900 - 4_700);
+	private final ModifiableCallout<AbilityCastStart> swordQuiverRearUnsafe = ModifiableCallout.durationBasedCallWithOffset("Sword Quiver: Rear Unsafe (Untested)", "Front/Middle", swordQuiverOffset);
+	private final ModifiableCallout<AbilityCastStart> swordQuiverMiddleUnsafe = ModifiableCallout.durationBasedCallWithOffset("Sword Quiver: Rear Unsafe (Untested)", "Front/Back", swordQuiverOffset);
+	private final ModifiableCallout<AbilityCastStart> swordQuiverFrontUnsafe = ModifiableCallout.durationBasedCallWithOffset("Sword Quiver: Rear Unsafe (Untested)", "Middle/Back", swordQuiverOffset);
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> swordQuiver = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95FB),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x95F9, 0x95FA, 0x95FB),
 			(e1, s) -> {
 				s.updateCall(swordQuiverRaidwide, e1);
 				// Rear unsafe:
@@ -1309,18 +1324,38 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 				// 800375BE:20001:19:0:0
 				// Guessing that either the 95FF is a different cast (like 96A0 and 96A1),
 				// or that the map effects would be 17 and 18
+				// Front unsafe:
+				// 95F9 from boss
+				// 800375BE:20001:16:0:0
+				// 800375BE:20001:15:0:0
+				// 800375BE:20001:14:0:0
+				// 800375BE:20001:17:0:0
+				// Middle unsafe:
+				// 95FA from boss
+				// 800375BE:20001:16:0:0
+				// 800375BE:20001:15:0:0
+				// 800375BE:20001:14:0:0
+				// 800375BE:20001:18:0:0
 
-				var mee = s.waitEvent(MapEffectEvent.class, e -> {
-					long index = e.getIndex();
-					return e.getFlags() == 0x20001
-					       && index == 0x17 || index == 0x18 || index == 0x19;
-				});
-				s.updateCall(switch ((int) mee.getIndex()) {
-					case 0x17 -> swordQuiverFrontUnsafe;
-					case 0x18 -> swordQuiverMiddleUnsafe;
-					case 0x19 -> swordQuiverRearUnsafe;
-					default -> throw new RuntimeException("Bad index " + mee.getIndex());
-				}, mee);
+//				var mee = s.waitEvent(MapEffectEvent.class, e -> {
+//					long index = e.getIndex();
+//					return e.getFlags() == 0x20001
+//					       && index == 0x17 || index == 0x18 || index == 0x19;
+//				});
+//				s.updateCall(switch ((int) mee.getIndex()) {
+//					case 0x17 -> swordQuiverFrontUnsafe;
+//					case 0x18 -> swordQuiverMiddleUnsafe;
+//					case 0x19 -> swordQuiverRearUnsafe;
+//					default -> throw new RuntimeException("Bad index " + mee.getIndex());
+//				}, mee);
+				s.waitMs(5_000);
+				switch (((int) e1.getAbility().getId())) {
+					case 0x95F9 -> s.updateCall(swordQuiverFrontUnsafe, e1);
+					case 0x95FA -> s.updateCall(swordQuiverMiddleUnsafe, e1);
+					case 0x95FB -> s.updateCall(swordQuiverRearUnsafe, e1);
+				}
 			}).setConcurrency(SequentialTriggerConcurrencyMode.CONCURRENT);
 
+	@NpcCastCallout(0x9632)
+	private final ModifiableCallout<AbilityCastStart> enrage = ModifiableCallout.durationBasedCall("Enrage", "Enrage");
 }
