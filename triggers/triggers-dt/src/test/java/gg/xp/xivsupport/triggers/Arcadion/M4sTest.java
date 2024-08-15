@@ -90,7 +90,7 @@ public class M4sTest
 				call(718147, "Bait Southwest, Northwest", "Bait Southwest, Northwest (9.8)"),
 				call(726613, "Knockback West then East", "Knockback West then East (4.7)"),
 				call(742871, "Raidwides", "Raidwides (4.7)"),
-				call(752537, "Front/Middle", "Front/Middle"),
+				call(747946, "Front/Middle", "Front/Middle (8.8)"),
 				call(760016, "Raidwides", "Raidwides (4.7)")
 		);
 	}
