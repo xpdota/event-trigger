@@ -55,8 +55,8 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x919C)
 	private final ModifiableCallout<AbilityCastStart> killerSting = ModifiableCallout.durationBasedCall("Killer Sting", "Tank Stack");
 	//
-	private final ModifiableCallout<?> spreadLater = new ModifiableCallout<>("Poison: Spread (Stocked)", "Spread Later");
-	private final ModifiableCallout<?> buddiesLater = new ModifiableCallout<>("Poison: Stack (Stocked)", "Buddy Later");
+	private final ModifiableCallout<AbilityCastStart> spreadLater = new ModifiableCallout<>("Poison: Spread (Stocked)", "Spread Later");
+	private final ModifiableCallout<AbilityCastStart> buddiesLater = new ModifiableCallout<>("Poison: Stack (Stocked)", "Buddy Later");
 	private final ModifiableCallout<?> spread = new ModifiableCallout<>("Poison: Spread", "Spread", 10_000);
 	private final ModifiableCallout<?> buddies = new ModifiableCallout<>("Poison: Stack", "Buddy", 10_000);
 
@@ -93,15 +93,15 @@ public class M2S extends AutoChildEventHandler implements FilteredEventHandler {
 	//	private final ModifiableCallout<?> beelineAvoidBlobs = new ModifiableCallout<>("Tempting Twist: Initial", "In - Avoid Blobs");
 
 	@HandleEvents
-	public void poisonMechs(EventContext context, AbilityUsedEvent event) {
+	public void poisonMechs(EventContext context, AbilityCastStart event) {
 		// Splash of venom/love
 		if (event.abilityIdMatches(0x9184, 0x9B08)) {
-			context.accept(spreadLater.getModified());
+			context.accept(spreadLater.getModified(event));
 			lastPosionBuff = PoisonBuff.SPREAD;
 		}
 		// Drop of venom/love
 		else if (event.abilityIdMatches(0x9185, 0x9B09)) {
-			context.accept(buddiesLater.getModified());
+			context.accept(buddiesLater.getModified(event));
 			lastPosionBuff = PoisonBuff.BUDDY;
 		}
 	}
