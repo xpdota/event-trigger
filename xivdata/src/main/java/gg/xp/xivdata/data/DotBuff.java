@@ -8,7 +8,7 @@ public enum DotBuff {
 	// List of ALL buffs to track - WL/BL will be done by user settings
 	// JLS/javac being dumb, had to put the L there to make it a long
 	AST_Combust(AST, "Combust/II/III", 0x346L, 0x34bL, 0x759L),
-	BLM_Thunder(BLM, "Thunder/II/III/IV", 0xa1L, 0xa2L, 0xa3L, 0x4baL),
+	BLM_Thunder(BLM, "Thunder/High Thunder", 0xa1L, 0xa2L, 0xa3L, 0x4baL, 0xf1fL, 0xf20L),
 	BLU_Bleeding(BLU, "Bleeding", 0x6b2L),
 	BRD_CombinedDots(BRD, "Bard DoTs", 0x4b0L, 0x4b1L, 0x7cL, 0x81L),
 	DRG_ChaosThrust(DRG, "Chaos Thrust/Chaotic Spring", 0x76L, 0xa9FL),
