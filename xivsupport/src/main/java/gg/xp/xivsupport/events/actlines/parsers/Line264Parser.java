@@ -99,9 +99,6 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 					return slde;
 				}
 			}
-			else {
-
-			}
 		}
 		return null;
 	}
