@@ -75,4 +75,36 @@ public class Line263Test {
 		Assert.assertEquals(secondEvent.getLocationInfo().getPos().heading(), 1.571);
 
 	}
+
+	@Test
+	public void testOutOfOrderMore() {
+		// Turns out they can be even further out-of-order:
+		// 1. Cast A
+		// 2. Cast B
+		// 3. Extra B
+		// 4. Extra A
+		MutablePicoContainer container = XivMain.testingMasterInit();
+		TestEventCollector coll = new TestEventCollector();
+		EventDistributor dist = container.getComponent(EventDistributor.class);
+		dist.registerHandler(coll);
+		String lines = """
+				20|2024-07-31T17:18:09.3820000-05:00|400066A6|Brute Distortion|9B34|Lariat Combo|400066A6|Brute Distortion|5.800|100.00|85.00|0.00|0.00|e4ec9c3ed023ed70
+				20|2024-07-31T17:18:09.3820000-05:00|400066A8|Brute Distortion|9B34|Lariat Combo|400066A8|Brute Distortion|5.800|85.00|100.00|0.00|1.57|930830aa0fddcd3f
+				263|2024-07-31T17:18:09.3820000-05:00|400066A8|9B34|65.004|112.003|0.000|1.571|3c597a02894ae464
+				263|2024-07-31T17:18:09.3820000-05:00|400066A6|9B34|88.015|65.004|0.000|0.000|4fda2cc7f09b31e2
+				""";
+		lines.lines().filter(s -> !s.isBlank()).forEach(line -> dist.acceptEvent(new ACTLogLineEvent(line)));
+		List<AbilityCastStart> events = coll.getEventsOf(AbilityCastStart.class);
+		var firstEvent = events.get(0);
+		Assert.assertEquals(firstEvent.getLocationInfo().getPos().x(), 88.015);
+		Assert.assertEquals(firstEvent.getLocationInfo().getPos().y(), 65.004);
+		Assert.assertEquals(firstEvent.getLocationInfo().getPos().z(), 0.0);
+		Assert.assertEquals(firstEvent.getLocationInfo().getPos().heading(), 0.0);
+		var secondEvent = events.get(1);
+		Assert.assertEquals(secondEvent.getLocationInfo().getPos().x(), 65.004);
+		Assert.assertEquals(secondEvent.getLocationInfo().getPos().y(), 112.003);
+		Assert.assertEquals(secondEvent.getLocationInfo().getPos().z(), 0.0);
+		Assert.assertEquals(secondEvent.getLocationInfo().getPos().heading(), 1.571);
+
+	}
 }

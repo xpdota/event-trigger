@@ -4,12 +4,13 @@ import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
-import gg.xp.xivsupport.events.misc.OverwritingRingBuffer;
+import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.models.Position;
-import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 
 import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 public class Line263Parser extends AbstractACTLineParser<Line263Parser.Fields> {
@@ -23,43 +24,49 @@ public class Line263Parser extends AbstractACTLineParser<Line263Parser.Fields> {
 		entityId, abilityId, x, y, z, rotation
 	}
 
-	private final OverwritingRingBuffer<AbilityCastStart> buffer = new OverwritingRingBuffer<>(32);
+	private final Map<Long, AbilityCastStart> lastCastByEntity = new HashMap<>();
 
 	@HandleEvents
 	public void consumeAbilityCast(AbilityCastStart acs) {
-		buffer.write(acs);
+		lastCastByEntity.put(acs.getSource().getId(), acs);
+	}
+
+	@HandleEvents
+	public void clear(PullStartedEvent pse) {
+		lastCastByEntity.clear();
 	}
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		long entity = fields.getHex(Fields.entityId);
 		long ability = fields.getHex(Fields.abilityId);
-		AbilityCastStart last;
-		while ((last = buffer.read()) != null) {
-			if ((last.getTarget().isEnvironment()
-			     || last.getTarget().equals(last.getSource()))
-			    && last.getSource().getId() == entity
-			    && last.getAbility().getId() == ability) {
-				double x = fields.getDouble(Fields.x);
-				double y = fields.getDouble(Fields.y);
-				double z = fields.getDouble(Fields.z);
-				double h = fields.getDouble(Fields.rotation);
-				CastLocationDataEvent out;
-				if (x == 0.0 && y == 0.0 && z == 0.0) {
-					if (h == 0.0) {
-						return null;
-					}
-					else {
-						out = new CastLocationDataEvent(last, h);
-					}
+		AbilityCastStart match = lastCastByEntity.remove(entity);
+		if (match == null) {
+			return null;
+		}
+		if ((match.getTarget().isEnvironment()
+		     || match.getTarget().equals(match.getSource()))
+		    && match.getSource().getId() == entity
+		    && match.getAbility().getId() == ability) {
+			double x = fields.getDouble(Fields.x);
+			double y = fields.getDouble(Fields.y);
+			double z = fields.getDouble(Fields.z);
+			double h = fields.getDouble(Fields.rotation);
+			CastLocationDataEvent out;
+			if (x == 0.0 && y == 0.0 && z == 0.0) {
+				if (h == 0.0) {
+					return null;
 				}
 				else {
-					Position pos = new Position(x, y, z, h);
-					out = new CastLocationDataEvent(last, pos);
+					out = new CastLocationDataEvent(match, h);
 				}
-				last.setLocationInfo(out);
-				return out;
 			}
+			else {
+				Position pos = new Position(x, y, z, h);
+				out = new CastLocationDataEvent(match, pos);
+			}
+			match.setLocationInfo(out);
+			return out;
 		}
 		return null;
 	}

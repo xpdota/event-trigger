@@ -413,6 +413,11 @@
             <groupId>gg.xp</groupId>
             <artifactId>postnamazu-easy-triggers</artifactId>
         </dependency>
+        <dependency>
+            <groupId>app.xivgear</groupId>
+            <artifactId>xivapi-java</artifactId>
+            <version>0.1.1</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>gg.xp</groupId>-->
 <!--            <artifactId>telesto-subscriber</artifactId>-->
