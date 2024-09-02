@@ -83,6 +83,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityType
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceHasStatusFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourcePartyMemberFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusIdFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusRawStacksFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.StatusStacksFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetCountFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.TargetEntityNpcIdFilter;
@@ -433,6 +434,7 @@ public final class EasyTriggers {
 			new ConditionDescription<>(AbilityNameFilter.class, HasAbility.class, "Ability Name", AbilityNameFilter::new, this::generic),
 			new ConditionDescription<>(StatusIdFilter.class, HasStatusEffect.class, "Status Effect ID", StatusIdFilter::new, this::generic),
 			new ConditionDescription<>(StatusStacksFilter.class, HasStatusEffect.class, "Status Effect Stack Count", StatusStacksFilter::new, this::generic),
+			new ConditionDescription<>(StatusRawStacksFilter.class, HasStatusEffect.class, "Status Effect Raw Stack Count", StatusRawStacksFilter::new, this::generic),
 			new ConditionDescription<>(SourceEntityTypeFilter.class, HasSourceEntity.class, "Source Combatant", SourceEntityTypeFilter::new, this::generic),
 			new ConditionDescription<>(TargetEntityTypeFilter.class, HasTargetEntity.class, "Target Combatant", TargetEntityTypeFilter::new, this::generic),
 			new ConditionDescription<>(SourceEntityNpcIdFilter.class, HasSourceEntity.class, "Source Combatant NPC ID", SourceEntityNpcIdFilter::new, this::generic),

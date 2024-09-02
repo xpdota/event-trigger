@@ -20,16 +20,16 @@ public record FflogsReportLocator(String report, @Nullable Integer fight) {
 			String report = matcher.group(1);
 			String fightRaw = matcher.group(2);
 			int fight = fightRaw.equals("last") ? -1 : Integer.parseInt(fightRaw);
-			log.info("Parsed fflogs URL: report {}, fight {}", report, fight);
+			log.info("Parsed fflogs URL: report {}, fight {}, url '{}'", report, fight, url);
 			return new FflogsReportLocator(report, fight);
 		}
 		else if ((noFightMatcher = urlPatternNoFight.matcher(url)).find()) {
 			String report = noFightMatcher.group(1);
-			log.info("Parsed fflogs URL: report {}, no fight", report);
+			log.info("Parsed fflogs URL: report {}, no fight, url '{}'", report, url);
 			return new FflogsReportLocator(report, null);
 		}
 		else {
-			log.warn("Failed to parse fflogs URL");
+			log.warn("Failed to parse fflogs URL '{}'", url);
 			throw new IllegalArgumentException("This doesn't look like a valid fflogs fight URL: " + url);
 		}
 	}
