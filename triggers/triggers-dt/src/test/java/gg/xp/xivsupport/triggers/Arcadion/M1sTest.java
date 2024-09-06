@@ -22,8 +22,7 @@ public class M1sTest
 				call(27300, "Tankbuster on Liliwure Ririwure", "Tankbuster on Liliwure Ririwure (4.7)"),
 				call(51444, "Left then Right", "Left then Right (5.7)"),
 				call(57449, "Right", "Right"),
-				// TODO: this can call out a lot earlier
-				call(75858, "Start Northwest-North", "Start Northwest-North (5.7)"),
+				call(61808, "Start Northwest-North", "Start Northwest-North (19.7)"),
 				call(81869, "Move", "Move"),
 				call(82894, "Partners", "Partners (3.7)"),
 				call(94990, "Quadruple Crossing - Leaping Left", "Quadruple Crossing - Leaping Left (4.7)"),

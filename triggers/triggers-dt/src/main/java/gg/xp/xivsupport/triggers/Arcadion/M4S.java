@@ -190,7 +190,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					baitOuts[i] = baitOut(nextBuff);
 				}
 
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x4D11, 0x4D12));
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x4D11, 0x4D12) && aue.isFirstTarget());
 
 				for (int i = 1; i <= 3; i++) {
 					s.setParam("baitOut", baitOuts[i]);
@@ -202,7 +202,7 @@ public class M4S extends AutoChildEventHandler implements FilteredEventHandler {
 					else {
 						s.updateCall(wideNarrowInF);
 					}
-					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x4D11, 0x4D12));
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x4D11, 0x4D12) && aue.isFirstTarget());
 
 				}
 

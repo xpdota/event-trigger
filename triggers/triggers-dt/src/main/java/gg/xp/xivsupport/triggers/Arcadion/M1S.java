@@ -10,6 +10,7 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -18,6 +19,7 @@ import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -310,21 +312,28 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final ArenaPos ap = new ArenaPos(100, 100, 5, 5);
 
-	private static final ModifiableCallout<AbilityCastStart> soulshadeCardinalFirst = ModifiableCallout.durationBasedCallWithOffset("Soul Shade One-Two: Cardinal First", "Start {cardinal}-{intercard.opposite()}", Duration.ofSeconds(1));
-	private static final ModifiableCallout<AbilityCastStart> soulshadeIntercardFirst = ModifiableCallout.durationBasedCallWithOffset("Soul Shade One-Two: Cardinal First", "Start {intercard}-{cardinal.opposite()}", Duration.ofSeconds(1));
-	private static final ModifiableCallout<?> soulshadeMove = new ModifiableCallout<>("Soul Shade One-Two: Cross Over", "Move");
+	// 24410 ms delay between fake and real cast, plus the 1s extra from the fake casts being longer
+	private static final Duration soulshadeOneTwoOffset = Duration.ofMillis(24_410).plusSeconds(1);
+	private final ModifiableCallout<AbilityCastStart> soulshadeCardinalFirst = ModifiableCallout.durationBasedCallWithOffset("Soul Shade One-Two: Cardinal First", "Start {cardinal}-{intercard.opposite()}", soulshadeOneTwoOffset);
+	private final ModifiableCallout<AbilityCastStart> soulshadeIntercardFirst = ModifiableCallout.durationBasedCallWithOffset("Soul Shade One-Two: Cardinal First", "Start {intercard}-{cardinal.opposite()}", soulshadeOneTwoOffset);
+	private final ModifiableCallout<?> soulshadeMove = new ModifiableCallout<>("Soul Shade One-Two: Cross Over", "Move");
 
 	// 9464 = hitting right first
 	// 9467 = hitting left first
 	// can ignore the actual damaging casts
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> soulshadeOneTwo = SqtTemplates.multiInvocation(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9464, 0x9467),
-			(e1, s) -> {
+	private final SequentialTrigger<BaseEvent> soulshadeOneTwo = SqtTemplates.multiInvocation(50_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9436, 0x9439),
+			(initialCast, s) -> {
 				log.info("Soulshade one-two: start");
-				var e2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9464, 0x9467));
-				ArenaSector pos1 = ap.forCombatant(e1.getSource());
-				ArenaSector pos2 = ap.forCombatant(e2.getSource());
+				var buff1 = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0x891));
+				var buff2 = s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0x891));
+				s.waitThenRefreshCombatants(100);
+				XivCombatant fakeCbt1 = state.getLatestCombatantData(buff1.getTarget());
+				XivCombatant fakeCbt2 = state.getLatestCombatantData(buff2.getTarget());
+				ArenaSector pos1 = ap.forCombatant(fakeCbt1);
+				ArenaSector pos2 = ap.forCombatant(fakeCbt2);
+				boolean leftSafeFirst = initialCast.abilityIdMatches(0x9436);
 				log.info("Soulshade one-two: sectors {} and {}", pos1, pos2);
 				ArenaSector cardinalPos;
 				ArenaSector intercardPos;
@@ -337,7 +346,7 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 					intercardPos = pos1;
 				}
 				else {
-					throw new RuntimeException("Could not determine positions! %s %s".formatted(e1.getSource().getPos(), e2.getSource().getPos()));
+					throw new RuntimeException("Could not determine positions! %s %s".formatted(fakeCbt1.getPos(), fakeCbt2.getPos()));
 				}
 				s.setParam("cardinal", cardinalPos);
 				s.setParam("intercard", intercardPos);
@@ -345,27 +354,28 @@ public class M1S extends AutoChildEventHandler implements FilteredEventHandler {
 				if (delta == 3) {
 					// e.g. S + NW
 					// If hitting left first, start on cardinal side. S cleaves W, NW cleaves NE, so only S-SE is safe
-					if (e1.abilityIdMatches(0x9467)) {
-						s.updateCall(soulshadeCardinalFirst, e1);
+					if (!leftSafeFirst) {
+						s.updateCall(soulshadeCardinalFirst, initialCast);
 					}
 					else {
-						s.updateCall(soulshadeIntercardFirst, e1);
+						s.updateCall(soulshadeIntercardFirst, initialCast);
 					}
 				}
 				else if (delta == -3) {
 					// e.g. S + NE
 					// If hitting left first, start on intercardinal side. S cleaves W, NE cleaves SE, so only N-NW is afe.
-					if (e1.abilityIdMatches(0x9467)) {
-						s.updateCall(soulshadeIntercardFirst, e1);
+					if (!leftSafeFirst) {
+						s.updateCall(soulshadeIntercardFirst, initialCast);
 					}
 					else {
-						s.updateCall(soulshadeCardinalFirst, e1);
+						s.updateCall(soulshadeCardinalFirst, initialCast);
 					}
 				}
 				else {
-					throw new RuntimeException("Could not determine delta! %s %s".formatted(e1.getSource().getPos(), e2.getSource().getPos()));
+					throw new RuntimeException("Could not determine delta! %s %s".formatted(fakeCbt1.getPos(), fakeCbt2.getPos()));
 				}
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == e1);
+				var cloneCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9464, 0x9467));
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == cloneCast);
 				s.waitMs(1000);
 				s.updateCall(soulshadeMove);
 			});
