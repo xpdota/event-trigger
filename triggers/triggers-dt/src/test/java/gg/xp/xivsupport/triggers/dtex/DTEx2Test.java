@@ -43,7 +43,7 @@ public class DTEx2Test extends CalloutVerificationTest {
 				call(371183, "Break Chains (with Gamama Gama)", "Break Chains (with Gamama Gama) (15.0)"),
 				call(386373, "Raidwide", "Raidwide (4.7)"),
 				call(399689, "Avoid Balls, Follow Donuts", "Avoid Balls, Follow Donuts (4.7)"),
-				call(419754, "Left/West and Out", "Left/West and Out (Error)"),
+				call(419754, "Left/West and Out", "Left/West and Out (6.7)"),
 				call(434911, "Tank Tethers", "Tank Tethers (7.7)"),
 				call(450126, "Take Stacks Sequentially", "Take Stacks Sequentially (4.7)"),
 				call(471892, "Left/West", "Left/West (6.8)"),

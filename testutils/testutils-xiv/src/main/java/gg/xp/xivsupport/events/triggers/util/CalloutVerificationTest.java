@@ -276,6 +276,13 @@ public abstract class CalloutVerificationTest {
 				last = actualCall;
 			}
 		}
+		if (failOnCalloutErrors()) {
+			for (CalloutInitialValues actualCall : actualCalls) {
+				if (actualCall.tts().contains("Error") || actualCall.text().contains("Error")) {
+					assortedFailures.add("Call [%s, %s] had an error".formatted(actualCall.tts(), actualCall.text()));
+				}
+			}
+		}
 		if (!assortedFailures.isEmpty()) {
 			throw new AssertionError("Issues with callouts which were too close to one another:\n" + String.join("\n", assortedFailures));
 		}
@@ -289,6 +296,10 @@ public abstract class CalloutVerificationTest {
 
 	protected List<AmVerificationValues> getExpectedAms() {
 		return List.of();
+	}
+
+	protected boolean failOnCalloutErrors() {
+		return true;
 	}
 
 	private static <X extends HasEvent> void compareLists(RawEventStorage rawStorage, List<X> actual, List<X> expected) {

@@ -202,18 +202,18 @@ public class DTEx2 extends AutoChildEventHandler implements FilteredEventHandler
 				}
 				if (rightSafe) {
 					if (out) {
-						s.updateCall(halfCircuitRightOut);
+						s.updateCall(halfCircuitRightOut, e1);
 					}
 					else {
-						s.updateCall(halfCircuitRightIn);
+						s.updateCall(halfCircuitRightIn, e1);
 					}
 				}
 				else {
 					if (out) {
-						s.updateCall(halfCircuitLeftOut);
+						s.updateCall(halfCircuitLeftOut, e1);
 					}
 					else {
-						s.updateCall(halfCircuitLeftIn);
+						s.updateCall(halfCircuitLeftIn, e1);
 					}
 				}
 			});
