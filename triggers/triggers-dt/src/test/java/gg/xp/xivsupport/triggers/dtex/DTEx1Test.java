@@ -62,7 +62,7 @@ public class DTEx1Test extends CalloutVerificationTest {
 				call(490260, "Spread Soon", "Spread Soon (7.9)"),
 				call(503704, "Start West", "Start West"),
 				call(542545, "Out", "Out (6.2)"),
-				call(550431, "Northeast safe", "Northeast safe"),
+				call(550565, "Northeast safe", "Northeast safe"),
 				call(559650, "Move", "Move (4.7)"),
 				call(578812, "Raidwide", "Raidwide (3.5)")
 		);
