@@ -615,7 +615,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private static final FileFilter jsonFileFilter = new FileFilter() {
 		@Override
 		public boolean accept(File f) {
-			return f.getName().toUpperCase(Locale.ROOT).endsWith(".JSON");
+			return f.isDirectory() || f.getName().toUpperCase(Locale.ROOT).endsWith(".JSON");
 		}
 
 		@Override
