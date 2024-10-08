@@ -136,7 +136,7 @@ public enum CbEventType {
 	NpcYell(NpcYellEvent.class, List.of(
 			new CbfMap<>("sourceId", "event.source.id", id(NpcYellEvent::getSource)),
 			new CbfMap<>("npcNameId", "event.source.bNpcNameId", intConv((NpcYellEvent event) -> event.getSource().getbNpcNameId(), 16)),
-			new CbfMap<>("instanceContentTextId", "event.instanceContentTextId", intConv(event -> (long) event.getYell().id(), 16))
+			new CbfMap<>("npcYellId", "event.yell.id()", intConv(event -> (long) event.getYell().id(), 16))
 	)),
 	BattleTalk2(BattleTalkEvent.class, List.of(
 			new CbfMap<>("sourceId", "event.source.id", id(BattleTalkEvent::getSource)),
@@ -144,8 +144,8 @@ public enum CbEventType {
 			new CbfMap<>("instanceContentTextId", "event.instanceContentTextId", intConv(BattleTalkEvent::getInstanceContentTextId, 16))
 	)),
 	ActorControlExtra(ActorControlExtraEvent.class, List.of(
-			new CbfMap<>("id", "event.instance", id(ActorControlExtraEvent::getTarget)),
-			new CbfMap<>("category", "event.command", intConv(e -> (long) e.getCategory(), 16)),
+			new CbfMap<>("id", "event.target.id", id(ActorControlExtraEvent::getTarget)),
+			new CbfMap<>("category", "event.category", intConv(e -> (long) e.getCategory(), 16)),
 			new CbfMap<>("param1", "event.data0", intConv(ActorControlExtraEvent::getData0, 16)),
 			new CbfMap<>("param2", "event.data1", intConv(ActorControlExtraEvent::getData1, 16)),
 			new CbfMap<>("param3", "event.data2", intConv(ActorControlExtraEvent::getData2, 16)),
