@@ -24,7 +24,7 @@ public class Line268Parser extends AbstractACTLineParser<Line268Parser.Fields> {
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
 		// 0 result indicates that the countdown was started successfully
 		// non-zero indicates that it failed (e.g. due to being in combat already)
-		if (fields.getHex(Fields.result) == 0) {
+		if (fields.getHex(Fields.result) != 0) {
 			return null;
 		}
 		XivCombatant entity = fields.getEntity(Fields.entityId, Fields.entityName);
