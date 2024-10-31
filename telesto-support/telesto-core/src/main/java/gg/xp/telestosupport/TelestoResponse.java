@@ -1,6 +1,7 @@
 package gg.xp.telestosupport;
 
 import gg.xp.reevent.events.SystemEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
 import java.util.Collections;
@@ -13,9 +14,15 @@ public class TelestoResponse extends BaseTelestoResponse {
 	private final Map<String, Object> data;
 	private final long id;
 
-	public TelestoResponse(Map<String, Object> data) {
-		this.data = data;
-		id = Long.parseLong(data.get("id").toString());
+	public TelestoResponse(@Nullable Map<String, Object> data) {
+		if (data == null) {
+			this.data = Collections.emptyMap();
+			this.id = -1;
+		}
+		else {
+			this.data = data;
+			id = Long.parseLong(data.get("id").toString());
+		}
 	}
 
 	public Map<String, Object> getData() {
