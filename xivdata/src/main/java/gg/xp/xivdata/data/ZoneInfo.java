@@ -2,7 +2,9 @@ package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 
-public record ZoneInfo(int id, @Nullable String dutyName, @Nullable String placeName) {
+import java.io.Serializable;
+
+public record ZoneInfo(int id, @Nullable String dutyName, @Nullable String placeName) implements Serializable {
 
 	public ZoneInfo {
 		if (dutyName == null && placeName == null) {

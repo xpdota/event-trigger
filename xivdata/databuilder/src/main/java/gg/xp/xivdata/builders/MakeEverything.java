@@ -1,4 +1,4 @@
-package gg.xp.xivdata;
+package gg.xp.xivdata.builders;
 
 import gg.xp.xivdata.data.*;
 import org.apache.commons.io.FileUtils;
@@ -194,7 +194,7 @@ public class MakeEverything {
 				thisMin++;
 			}
 			long thisMax = min + delta * (i + 1) / partitions;
-			Process iconsCmd = runScCmd("uihd " + thisMin + " " + thisMax);
+			Process iconsCmd = runScCmd("uihd " + thisMin + ' ' + thisMax);
 			commands.add(iconsCmd);
 		}
 		// TODO: optimize this
@@ -237,10 +237,11 @@ public class MakeEverything {
 			maker.copyFileToDir(List.of("rawexd", "NpcYell.csv"), List.of("xiv", "npcyell"));
 		}
 		{
-			// We don't want the raw for this one
-			Process command = maker.runScCmd("exd TerritoryType");
-			waitForCommand(command);
-			maker.copyFileToDir(List.of("exd", "TerritoryType.csv"), List.of("xiv", "territory"));
+			// Inactive - migrated to xivapi-java
+//			// We don't want the raw for this one
+//			Process command = maker.runScCmd("exd TerritoryType");
+//			waitForCommand(command);
+//			maker.copyFileToDir(List.of("exd", "TerritoryType.csv"), List.of("xiv", "territory"));
 		}
 		List<String> iconDir = List.of("xiv", "icon");
 		// General

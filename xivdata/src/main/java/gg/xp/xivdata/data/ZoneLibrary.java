@@ -10,7 +10,7 @@ public final class ZoneLibrary {
 
 	public static final Logger log = LoggerFactory.getLogger(ZoneLibrary.class);
 
-	private static final ZoneLibraryImpl INSTANCE = new ZoneLibraryImpl(() -> ReadCsv.cellsFromResource("/xiv/territory/TerritoryType.csv"));
+	private static final ZoneLibraryImpl INSTANCE = new ZoneLibraryImpl(ZoneLibrary.class.getResourceAsStream("/xiv/territory/TerritoryType.oos.gz"));
 
 	private ZoneLibrary() {
 	}
