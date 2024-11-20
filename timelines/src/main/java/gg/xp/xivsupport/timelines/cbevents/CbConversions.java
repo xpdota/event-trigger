@@ -3,6 +3,7 @@ package gg.xp.xivsupport.timelines.cbevents;
 import gg.xp.xivsupport.events.actlines.events.NameIdPair;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -65,10 +66,12 @@ class CbConversions {
 
 	static <X> CbConversion<X> strConv(Function<X, String> getter) {
 		return str -> {
+			// Fast path for when the input isn't doing anything regexy and thus can use a simple string match
 			if (simpleString.matcher(str).matches()) {
-				return item -> Objects.equals(getter.apply(item), str);
+				String asUpper = str.toUpperCase(Locale.ROOT);
+				return item -> Objects.equals(getter.apply(item).toUpperCase(Locale.ROOT), asUpper);
 			}
-			Pattern pattern = Pattern.compile(str);
+			Pattern pattern = Pattern.compile(str, Pattern.CASE_INSENSITIVE);
 			return item -> pattern.matcher(getter.apply(item)).matches();
 		};
 	}
