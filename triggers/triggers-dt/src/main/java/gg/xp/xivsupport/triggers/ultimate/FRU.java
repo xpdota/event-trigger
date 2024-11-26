@@ -18,4 +18,18 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 		return state.dutyIs(KnownDuty.FRU);
 	}
 
+	/*
+	 * P1:
+	 * Proteans (baited), check lightning/fire
+	 * Alternates 4 sets
+	 * 1. Baits on player
+	 * 2. Hits where #1 set was (i.e. dodge)
+	 * 3. Move back
+	 * 4. ?
+	 * Spread if lightning, stack if fire
+	 *
+	 * Ilusion mechanic
+	 * Tank thing at the start
+	 * Stack/spread based on last
+	 */
 }
