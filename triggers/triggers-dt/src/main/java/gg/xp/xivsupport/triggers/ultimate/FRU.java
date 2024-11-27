@@ -16,6 +16,7 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
+import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
@@ -32,6 +33,9 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.JobSortOverrideSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
 import java.time.Duration;
@@ -43,6 +47,9 @@ import java.util.stream.IntStream;
 
 @CalloutRepo(name = "FRU Triggers", duty = KnownDuty.FRU)
 public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
+
+	private static final Logger log = LoggerFactory.getLogger(FRU.class);
+
 	private final JobSortSetting defaultPrio;
 	private final JobSortOverrideSetting p1tethersPrio;
 	private final JobSortOverrideSetting p1towersPrio;
@@ -142,7 +149,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				} while (safe.size() != 2);
 				s.setParam("safe", safe);
 				// Get the actual cast so that we have something to display
-				var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CDE));
+				var cast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9CDE), false);
 				s.updateCall(isFire ? utopianSkyStackSafeSpot : utopianSkySpreadSafeSpot, cast);
 			});
 
@@ -376,6 +383,9 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				else {
 					s.updateCall(isKB ? towersKB : towers, e1);
 				}
+				// For identifying towers for an eventual prio:
+				// 9CC7 - single
+				// 9CBF - quad
 			}
 	);
 
@@ -395,17 +405,67 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x9D05)
 	private final ModifiableCallout<AbilityCastStart> diamondDust = ModifiableCallout.durationBasedCall("Diamond Dust", "Raidwide");
 
+	private final ModifiableCallout<AbilityCastStart> ddAxeWithMarker = ModifiableCallout.durationBasedCall("DD: Axe Kick with Marker", "Out with Marker, {firstIces} Safe");
+	private final ModifiableCallout<AbilityCastStart> ddAxeNoMarker = ModifiableCallout.durationBasedCall("DD: Axe Kick, no Marker", "Out, Bait, {firstIces} Safe");
+	private final ModifiableCallout<AbilityCastStart> ddScytheWithMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick with Marker", "In with Marker, {firstIces} Safe");
+	private final ModifiableCallout<AbilityCastStart> ddScytheNoMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick, no Marker", "In, Bait, {firstIces} Safe");
+	private final ModifiableCallout<?> ddDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Drop Puddle");
+	private final ModifiableCallout<?> ddAvoidPuddle = new ModifiableCallout<>("DD: Avoid Puddles", "Avoid Puddles");
+	private final ModifiableCallout<?> ddKB = new ModifiableCallout<>("DD: KB", "Knockback to {firstIces}");
+	private final ModifiableCallout<?> ddKBimmune = new ModifiableCallout<>("DD: KB Immune", "Knockback Immunity");
+	private final ModifiableCallout<?> ddStacks = new ModifiableCallout<>("DD: Stacks", "Multiple Stacks, Keep Moving");
+	private final ModifiableCallout<?> ddGaze = new ModifiableCallout<>("DD: Gaze", "Look Away from {gazeFrom}");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> axeScythe = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D0A, 0x9D0B),
 			(e1, s) -> {
+				// Axe kick = out
 				boolean isAxeKick = e1.abilityIdMatches(0x9D0A);
+				// It's the next four HMs, so it should be fine to just look for four
+				List<HeadMarkerEvent> headmarkers = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> true);
+				s.waitThenRefreshCombatants(100);
+				@Nullable HeadMarkerEvent playerMarker = headmarkers.stream()
+						.filter(hme -> hme.getTarget().isThePlayer())
+						.findFirst()
+						.orElse(null);
+				// Find first pair of Icycle Impact
+				List<ArenaSector> firstIces = casts.getActiveCastsById(0x9D06).stream()
+						.map(CastTracker::getCast)
+						.map(AbilityCastStart::getSource)
+						.map(npc -> arenaPos.forCombatant(state.getLatestCombatantData(npc)))
+						.sorted(ArenaSector.northCcwSort)
+						.toList();
+				if (firstIces.size() != 2) {
+					log.error("firstIces size {}, expected 2! Data: {}", firstIces.size(), firstIces);
+				}
+				s.setParam("firstIces", firstIces);
+
+				boolean playerHasMarker = playerMarker != null;
 				if (isAxeKick) {
 					// out
+					s.updateCall(playerHasMarker ? ddAxeWithMarker : ddAxeNoMarker, e1);
 				}
 				else {
 					// in
+					s.updateCall(playerHasMarker ? ddScytheWithMarker : ddScytheNoMarker, e1);
 				}
+				s.waitCastFinished(casts, e1);
+				// Add a slight delay since things don't go off instantly
+				s.waitMs(300);
+				// Drop or avoid puddle
+				s.updateCall(playerHasMarker ? ddDropPuddle : ddAvoidPuddle);
+				var icycleCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D06));
+				s.updateCall((playerHasMarker && isAxeKick) ? ddKBimmune : ddKB);
+				s.waitCastFinished(casts, icycleCast);
+				s.updateCall(ddStacks);
+				s.waitMs(4_000);
+				XivCombatant gazeNpc = state.npcById(17823);
+				if (gazeNpc != null) {
+					ArenaSector gazeFrom = arenaPos.forCombatant(gazeNpc);
+					s.setParam("gazeFrom", gazeFrom);
+				}
+				s.updateCall(ddGaze);
 			});
 
 	@NpcCastCallout(0x9D01)

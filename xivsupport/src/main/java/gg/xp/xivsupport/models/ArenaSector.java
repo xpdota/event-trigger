@@ -270,4 +270,12 @@ public enum ArenaSector implements HasFriendlyName {
 		return ordinal <= 7 && ordinal % 2 == 1;
 	}
 
+	/**
+	 * Sort starting north and going CCW
+	 */
+	public static final Comparator<ArenaSector> northCcwSort = Comparator.comparing(sector -> {
+		// Ordinal is north==0, NE==1, etc, i.e. the opposite of what we want
+		// By doing this, we flip the order (north = 8, NE = 7, NW = 1), and then %8 to get north back to 0
+		return (8 - sector.ordinal()) % 8;
+	});
 }
