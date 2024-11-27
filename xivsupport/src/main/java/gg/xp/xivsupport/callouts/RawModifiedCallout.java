@@ -28,7 +28,7 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 	private final @Nullable X event;
 	private final Map<String, Object> arguments;
 	private final Function<? super X, ? extends @Nullable Component> guiProvider;
-	private final Predicate<RawModifiedCallout<X>> expiry;
+	private Predicate<RawModifiedCallout<X>> expiry;
 	private @Nullable HasCalloutTrackingKey replaces;
 	private @Nullable Color colorOverride;
 	private final ModifiedCalloutHandle handle;
@@ -72,6 +72,14 @@ public class RawModifiedCallout<X> extends BaseEvent implements HasCalloutTracki
 
 	public BooleanSupplier getExpiry() {
 		return () -> expiry.test(this) || this.forceExpired;
+	}
+
+	public void addExpiryPredicate(Predicate<RawModifiedCallout<X>> condition) {
+		this.expiry = this.expiry.or(condition);
+	}
+
+	public void addExpiryCondition(BooleanSupplier newExpiry) {
+		this.expiry = this.expiry.or(ignored -> newExpiry.getAsBoolean());
 	}
 
 	public @Nullable HasCalloutTrackingKey getReplaces() {

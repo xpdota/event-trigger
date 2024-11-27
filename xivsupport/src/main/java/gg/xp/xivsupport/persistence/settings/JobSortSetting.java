@@ -156,6 +156,8 @@ public class JobSortSetting {
 		int expectedNumberOfJobs = allValidJobs.size();
 		int actualNumberOfJobs = newSort.size();
 		if (expectedNumberOfJobs != actualNumberOfJobs) {
+			// TODO: this spams log on startup
+			// Make it more intelligent - if saved sort is a subset of the available jobs, don't throw this
 			throw new IllegalArgumentException(String.format("New jail sort order was not the same size! %s -> %s", expectedNumberOfJobs, actualNumberOfJobs));
 		}
 		EnumSet<Job> newSortAsSet = EnumSet.copyOf(newSort);

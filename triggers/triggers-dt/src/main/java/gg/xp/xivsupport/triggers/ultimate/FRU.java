@@ -11,6 +11,7 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
@@ -32,6 +33,7 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.JobSortOverrideSetting;
 import gg.xp.xivsupport.persistence.settings.JobSortSetting;
 
+import java.io.Serial;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,8 +111,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(powderMarkBombSoon, debuff);
 			});
 
-	private final ModifiableCallout<AbilityCastStart> utopianSkyStackInitial = ModifiableCallout.durationBasedCall("Utopian Sky: Initial (Fire)", "Stack Later");
-	private final ModifiableCallout<AbilityCastStart> utopianSkySpreadInitial = ModifiableCallout.durationBasedCall("Utopian Sky: Initial (Lightning)", "Spread Later");
+	private final ModifiableCallout<AbilityCastStart> utopianSkyStackInitial = ModifiableCallout.durationBasedCallWithoutDurationText("Utopian Sky: Initial (Fire)", "Stack Later");
+	private final ModifiableCallout<AbilityCastStart> utopianSkySpreadInitial = ModifiableCallout.durationBasedCallWithoutDurationText("Utopian Sky: Initial (Lightning)", "Spread Later");
 	private final ModifiableCallout<AbilityCastStart> utopianSkyStackSafeSpot = ModifiableCallout.durationBasedCall("Utopian Sky: Safe Spot (Fire)", "Stack {safe}");
 	private final ModifiableCallout<AbilityCastStart> utopianSkySpreadSafeSpot = ModifiableCallout.durationBasedCall("Utopian Sky: Safe Spot (Lightning)", "Spread {safe}");
 
@@ -122,11 +124,13 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				boolean isFire = e1.abilityIdMatches(0x9CDA);
 				s.updateCall(isFire ? utopianSkyStackInitial : utopianSkySpreadInitial, e1);
-				var casts = s.waitEventsQuickSuccession(3, AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CDE));
+				// This is the "raising" animation. We can't use the casts directly since they position themselves in the middle.
+				// Could use cast locations but that ends up being more complicated.
+				var events = s.waitEventsQuickSuccession(3, ActorControlExtraEvent.class, acee -> acee.getCategory() == 0x3f && acee.getData0() == 0x4);
 				List<ArenaSector> safe;
 				do {
 					List<ArenaSector> tmpSafe = new ArrayList<>(ArenaSector.all);
-					casts.stream().map(cast -> arenaPos.forCombatant(state.getLatestCombatantData(cast.getSource())))
+					events.stream().map(acee -> arenaPos.forCombatant(state.getLatestCombatantData(acee.getTarget())))
 							.forEach(pos -> {
 								tmpSafe.remove(pos);
 								tmpSafe.remove(pos.opposite());
@@ -137,7 +141,9 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 					}
 				} while (safe.size() != 2);
 				s.setParam("safe", safe);
-				s.updateCall(isFire ? utopianSkyStackSafeSpot : utopianSkySpreadSafeSpot);
+				// Get the actual cast so that we have something to display
+				var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CDE));
+				s.updateCall(isFire ? utopianSkyStackSafeSpot : utopianSkySpreadSafeSpot, cast);
 			});
 
 	@AutoFeed
@@ -158,10 +164,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				// Debounce
 				s.waitMs(1_000);
 
-				var e4 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CD2));
-				s.updateCall(cyclonicBreakMove3, e4);
-				// Debounce
-				s.waitMs(1_000);
+				// The final movement is handled by turnNSSafe call below
 
 				// Prior to the proteans (i.e. need another sq), there is, in one example:
 				// Turn of the Heavens (6.7s) 9CD7 - determines safe spot?
@@ -170,29 +173,46 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				// Burnout (9.4s) 9CE4 - probably KB?
 			});
 
-	private final ModifiableCallout<AbilityCastStart> turnNSSafe = ModifiableCallout.durationBasedCall("Turn of the Heavens: Dodge Lightning", "North/South Out");
-	//	private final ModifiableCallout<AbilityCastStart> turnKB = ModifiableCallout.durationBasedCall("Turn of the Heavens: Dodge Lightning", "Get Knocked to {redSafe ? 'Red' : 'Blue'}");
-	private final ModifiableCallout<AbilityCastStart> turnKB = ModifiableCallout.durationBasedCall("Turn of the Heavens: Dodge Lightning", "Get Knocked to Safe Side");
+	private final ModifiableCallout<AbilityCastStart> turnInitial = new ModifiableCallout<>("Turn of the Heavens: Initial", "{redSafe ? 'Red' : 'Blue'} Safe");
+	private final ModifiableCallout<AbilityCastStart> turnNSSafe = ModifiableCallout.durationBasedCall("Turn of the Heavens: Dodge Lightning", "Move, North/South Out");
+	private final ModifiableCallout<AbilityCastStart> turnKB = ModifiableCallout.durationBasedCall("Turn of the Heavens: Dodge Lightning", "Get Knocked {safe}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> turnOfTheHeavensSq = SqtTemplates.sq(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CD7, 0x9CD6),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CD6, 0x9CD7),
 			(e1, s) -> {
-				// TODO: which is red vs blue safe?
 				// How do we determine where red or blue is?
-//				s.updateCall(TODO);
-				s.waitMs(4_000);
+				// For the rings, they are called Halo of Flame (NPC 17821:9710) or Halo of Levin (17822:9711)
+				// 9CD6 is blue safe, 9CD7 is red safe
+				boolean redSafe = e1.abilityIdMatches(0x9CD7);
+				s.setParam("redSafe", redSafe);
+				s.updateCall(turnInitial);
+				s.waitMs(3_700);
 
-				s.setParam("redSafe", true); // TODO
 
 				Optional<CastTracker> lightning = casts.getActiveCastById(0x9CE3);
 				s.updateCall(turnNSSafe, lightning.map(CastTracker::getCast).orElse(e1));
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CE3));
 				Optional<CastTracker> burnout = casts.getActiveCastById(0x9CE4);
+				ArenaSector safe;
+				do {
+					// Find orbs that are east or west
+					// We are looking for the safe spot, so if fire is safe, look for the fire orb
+					List<ArenaSector> eastWest = state.npcsById(redSafe ? 17821 : 17822).stream()
+							//
+							.map(fireOrb -> arenaPos.forCombatant(state.getLatestCombatantData(fireOrb)))
+							.filter(pos -> pos == ArenaSector.WEST || pos == ArenaSector.EAST)
+							.toList();
+					if (eastWest.size() == 1) {
+						safe = eastWest.get(0);
+						break;
+					}
+					else {
+						s.waitThenRefreshCombatants(200);
+					}
+				} while (true);
+				s.setParam("safe", safe);
 				s.updateCall(turnKB, burnout.map(CastTracker::getCast).orElse(e1));
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CE4));
-
-
 			});
 
 
@@ -233,6 +253,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	}
 
 	public static class FruP1TetherEvent extends BaseEvent implements HasSourceEntity, HasTargetEntity, HasAbility {
+		@Serial
+		private static final long serialVersionUID = -9182985137525672763L;
 		private final AbilityCastStart cast;
 		private final XivCombatant source;
 		private final XivPlayerCharacter target;
@@ -324,8 +346,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 				s.waitMs(1_000);
 
-				// Wait for floating fetters
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CEB));
+				// Call the first one soon, but for the rest, wait until the previous tether goes off
 				s.updateCall(fourTetherResolving1);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CEB));
 				s.updateCall(fourTetherResolving2);
@@ -358,7 +379,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			}
 	);
 
-	@NpcCastCallout(0x9CC0)
+	@NpcCastCallout(value = 0x9CC0, cancellable = true)
 	private final ModifiableCallout<AbilityCastStart> p1enrage = ModifiableCallout.durationBasedCall("P1 Enrage", "Enrage");
 
 	/*
@@ -373,6 +394,24 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> quadrupleSlap = ModifiableCallout.durationBasedCall("Quadruple Slap", "Buster on {event.target}");
 	@NpcCastCallout(0x9D05)
 	private final ModifiableCallout<AbilityCastStart> diamondDust = ModifiableCallout.durationBasedCall("Diamond Dust", "Raidwide");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> axeScythe = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D0A, 0x9D0B),
+			(e1, s) -> {
+				boolean isAxeKick = e1.abilityIdMatches(0x9D0A);
+				if (isAxeKick) {
+					// out
+				}
+				else {
+					// in
+				}
+			});
+
+	@NpcCastCallout(0x9D01)
+	private final ModifiableCallout<AbilityCastStart> twinStillness = ModifiableCallout.durationBasedCall("Twin Stillness", "Back to Front");
+	@NpcCastCallout(0x9D02)
+	private final ModifiableCallout<AbilityCastStart> twinSilence = ModifiableCallout.durationBasedCall("Twin Silence", "Front to Back");
 }
 
 
