@@ -24,6 +24,7 @@ public class TextFieldWithValidation<X> extends JTextField implements Resettable
 	private boolean stopUpdate;
 	private Supplier<String> valueGetter;
 	private boolean validationError;
+	private @Nullable String placeholderText;
 
 	public TextFieldWithValidation(Function<String, X> parser, Consumer<X> consumer, String initialValue) {
 		this(parser, consumer, () -> initialValue);
@@ -103,10 +104,12 @@ public class TextFieldWithValidation<X> extends JTextField implements Resettable
 					consumer.accept(parsedValue);
 				}
 				validationError = false;
-			} catch (ValidationError e) {
+			}
+			catch (ValidationError e) {
 				validationError = true;
 				validationErrorMessage = e.getMessage();
-			} catch (Throwable e) {
+			}
+			catch (Throwable e) {
 				log.error("Error consuming new value ({})", parsedValue, e);
 				validationError = true;
 			}
@@ -125,5 +128,33 @@ public class TextFieldWithValidation<X> extends JTextField implements Resettable
 			setBackground(originalBackground);
 			validationErrorMessage = null;
 		}
+	}
+
+	public @Nullable String getPlaceholderText() {
+		return placeholderText;
+	}
+
+	public TextFieldWithValidation<X> setPlaceholderText(@Nullable String placeholderText) {
+		this.placeholderText = placeholderText;
+		return this;
+	}
+
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		String placeholder = this.placeholderText;
+		// Only render placeholder text if there is a non-empty placeholder, and the actual text entry is not empty
+		if (placeholder == null || placeholder.isEmpty() || !getText().isEmpty()) {
+			return;
+		}
+
+		final Graphics2D g2d = (Graphics2D) g;
+		g2d.setFont(this.getFont());
+		g2d.setRenderingHint(
+				RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+		g2d.setColor(getDisabledTextColor());
+		g2d.drawString(placeholder, getInsets().left, g2d.getFontMetrics()
+				                                            .getMaxAscent() + getInsets().top);
 	}
 }

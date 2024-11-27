@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.LimitBreakGaugeEvent;
 import gg.xp.xivsupport.events.actlines.events.PlayerStats;
 import gg.xp.xivsupport.events.actlines.events.PlayerStatsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.RawJobGaugeEvent;
@@ -114,7 +115,7 @@ public class FflogsEventProcessor {
 		if (cbt != null && resourcesRaw != null) {
 			RawResources resources = mapper.convertValue(resourcesRaw, RawResources.class);
 			HitPoints hp = new HitPoints(resources.hitPoints, resources.maxHitPoints);
-			Position pos = new Position(convertCoordinate(resources.x), convertCoordinate(resources.y), resources.z, resources.facing / 1000.0 * Math.PI);
+			Position pos = new Position(convertCoordinate(resources.x), convertCoordinate(resources.y), resources.z, resources.convertHeading());
 			state.provideCombatantShieldPct(cbt, resources.absorb);
 			state.provideCombatantHP(cbt, hp);
 			state.provideCombatantMP(cbt, new ManaPoints(resources.mp, resources.maxMP));
@@ -135,6 +136,23 @@ public class FflogsEventProcessor {
 			long facing,
 			long absorb
 	) {
+		double convertHeading() {
+			// conversion in other direction: m_facing = (short) Math.floor(-facing - 150 * Math.PI)
+			// m_facing = -facing - 150pi
+			// facing = -150pi - m_facing
+			// TODO this is wrong
+			// -472 seems to be south, while -786 seems to be north, -636 is ne or so
+			// -315 is west, -256 = nw, so a difference of 59 = pi/4 radians
+			// 786-472 = 314, which would support 100 * pi being half a rotation
+			// full rotation ~= 150 * pi
+			// In game uses 0 as south, and pi/-pi as north, with + being CCW
+			// First part converts to where 0 is south
+			var p1 = -facing + -150.0 * Math.PI;
+			// Then, normalize magnitude so that a full rotation is '1'
+			var p2 = p1 / (200 * Math.PI);
+			// Then, normalize back to circle
+			return p2 * 2 * Math.PI;
+		}
 	}
 
 
@@ -303,7 +321,8 @@ public class FflogsEventProcessor {
 							0,
 							1));
 				}
-				case "applybuff", "applybuffstack", "applydebuff", "applydebuffstack", "removebuffstack", "removedebuffstack", "refreshbuff", "refreshdebuff" -> {
+				case "applybuff", "applybuffstack", "applydebuff", "applydebuffstack", "removebuffstack",
+				     "removedebuffstack", "refreshbuff", "refreshdebuff" -> {
 					int stacks = rawEvent.getTypedField("stack", int.class, 0);
 					double duration;
 					Double durationRaw = rawEvent.getTypedField("duration", Double.class);
@@ -376,6 +395,11 @@ public class FflogsEventProcessor {
 					else {
 						context.accept(new WipeEvent());
 					}
+				}
+				case "limitbreakupdate" -> {
+					context.accept(new LimitBreakGaugeEvent(
+							rawEvent.getTypedField("bars", Integer.class),
+							rawEvent.getTypedField("value", Integer.class)));
 				}
 
 				default -> {
