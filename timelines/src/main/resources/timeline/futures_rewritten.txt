@@ -1,7 +1,3 @@
-## TEMP
-# from https://github.com/OverlayPlugin/cactbot/pull/515/
-# do not merge timeline auto-updates until at least a skeleton timeline is merged
-
 ### FUTURES REWRITTEN (ULTIMATE)
 # ZoneId: 1238
 
@@ -62,3 +58,65 @@ hideall "--sync--"
 145.1 "Explosion" #Ability { id: "9CBD", source: "Fatebreaker" }
 150.5 "--sync--"StartsUsing { id: "9CC0", source: "Fatebreaker" } # Burnished Glory
 160.2 "Burnished Glory (enrage)" Ability { id: "9CC0", source: "Fatebreaker" }
+
+# IGNORED ABILITIES
+# Fatebreaker
+# 9CB4 --sync--: Auto-attack
+# 9CC9 Fall of Faith: Tether castbar, fire
+# 9CCA Solemn Charge: Rush to tether target, clones
+# 9CCC Fall of Faith: Tether castbar, lightning
+# 9CCD Solemn Charge: Rush to tether target, Fatebreaker
+# 9CCF Bow Shock: Lightning bait cones (Sinsmite follow-up)
+# 9CD8 Brightfire: Turn of the Heavens circle explosions
+# 9CD9 Brightfire: Turn of the Heavens circle explosions
+# 9CE5 Bound of Faith: Roots + lifts tether target
+# 9CE6 Solemn Charge: Rush to tether target, clones, Turn of the Heavens
+# 9CE9 Burn Mark: Tower failure
+
+# ALL ENCOUNTER ABILITIES
+# 9CB4 --sync--: Auto-attack
+# 9CBD Explosion: Tower damage
+# 9CBE Explosion: Tower damage
+# 9CC0 Burnished Glory: Enrage
+# 9CC1 Burnt Strike: Guillotine cleave, fire
+# 9CC2 Blastburn: Fire Burnt Strike knockback
+# 9CC5 Burnt Strike: Guillotine cleave, lightning
+# 9CC6 Burnout: Lightning Burnt Strike expansion
+# 9CC7 Explosion: Tower damage
+# 9CC9 Fall of Faith: Tether castbar, fire
+# 9CCA Solemn Charge: Rush to tether target, clones
+# 9CCC Fall of Faith: Tether castbar, lightning
+# 9CCD Solemn Charge: Rush to tether target, Fatebreaker
+# 9CCE Sinsmite: Tether damage, lightning
+# 9CCF Bow Shock: Lightning bait cones (Sinsmite follow-up)
+# 9CD0 Cyclonic Break: Protean castbar, fire
+# 9CD1 Cyclonic Break: Protean, targeted
+# 9CD2 Cyclonic Break: Protean, follow-up
+# 9CD3 Sinsmoke: Protean follow-up, pairs
+# 9CD4 Cyclonic Break: Protean castbar, lightning
+# 9CD5 Sinsmite: Protean follow-up, spreads
+# 9CD6 Turn of the Heavens: Emote for Brightfire circle expansion, fire
+# 9CD7 Turn of the Heavens: Emote for Brightfire circle expansion, lightning
+# 9CD8 Brightfire: Turn of the Heavens circle explosions
+# 9CD9 Brightfire: Turn of the Heavens circle explosions
+# 9CDA Utopian Sky: Intermission/trio castbar, fire
+# 9CDB Utopian Sky: Intermission/trio castbar, lightning
+# 9CDC Sinblaze: Tether damage, fire
+# 9CDD Blasting Zone: Utopian Sky line AoE castbar
+# 9CDE Blasting Zone: Utopian Sky line AoEs
+# 9CDF Sinbound Fire III: Utopian Sky light party stacks
+# 9CE0 Sinbound Thunder III: Utopian Sky spreads
+# 9CE1 Burnt Strike: Utopian Sky guillotine cleave, fire
+# 9CE2 Blastburn: Utopian Sky fire Burnt Strike knockback
+# 9CE3 Burnt Strike: Utopian Sky guillotine cleave, lightning
+# 9CE4 Burnout: Utopian Sky lightning Burnt Strike expansion
+# 9CE5 Bound of Faith: Utopian Sky -- Roots + lifts tether target
+# 9CE6 Solemn Charge: Utopian Sky -- Rush to tether target, clones
+# 9CE7 Sinsmoke: Utopian Sky fire tether damage
+# 9CE8 Powder Mark Trail: Splashing tank buster
+# 9CE9 Burn Mark: Tower failure
+# 9CEA Burnished Glory: Raidwide + bleed
+# 9CEB Floating Fetters: Roots + lifts tether target
+# 9CED --sync--: --center--
+# 9D89 Cyclonic Break: Utopian Sky Protean castbar, fire
+# 9D8A Cyckonic Break: Utopian Sky Protean castbar, lightning
