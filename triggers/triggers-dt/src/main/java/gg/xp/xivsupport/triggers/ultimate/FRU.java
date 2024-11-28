@@ -332,7 +332,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.accept(new FruP1TetherEvent(cast, cast.getSource(), (XivPlayerCharacter) tether.getTargetMatching(XivCombatant::isPc)));
 			}).setConcurrency(SequentialTriggerConcurrencyMode.CONCURRENT); // these are not always well-ordered, but the tethers always come before the cast
 
-	private static ModifiableCallout<FruP1TetherEvent> makeTetherDefault(String descPart, int startIndex, int endIndex, boolean isFinal) {
+	private static ModifiableCallout<FruP1TetherEvent> makeTetherCall(String descPart, int startIndex, int endIndex, boolean isFinal) {
 		// If these are the final calls, call out the one that is going off. Otherwise, call the one we just collected
 		int ttsIndex = isFinal ? startIndex : endIndex;
 		String base = "{events[%d].mechType} on {events[%d].target}";
@@ -341,15 +341,15 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 		return new ModifiableCallout<>("Four Tethers: %s".formatted(descPart), tts, text);
 	}
 
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl1 = makeTetherDefault("First Tether Out", 0, 0, false);
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl2 = makeTetherDefault("Second Tether Out", 0, 1, false);
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl3 = makeTetherDefault("Third Tether Out", 0, 2, false);
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl4 = makeTetherDefault("Fourth Tether Out", 0, 3, false);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl1 = makeTetherCall("First Tether Out", 0, 0, true);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl2 = makeTetherCall("Second Tether Out", 0, 1, false);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl3 = makeTetherCall("Third Tether Out", 0, 2, false);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl4 = makeTetherCall("Fourth Tether Out", 0, 3, false);
 
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving1 = makeTetherDefault("First Tether Resolving", 0, 3, true);
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving2 = makeTetherDefault("Second Tether Resolving", 1, 3, true);
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving3 = makeTetherDefault("Third Tether Resolving", 2, 3, true);
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving4 = makeTetherDefault("Fourth Tether Resolving", 3, 3, true);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving1 = makeTetherCall("First Tether Resolving", 0, 3, true);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving2 = makeTetherCall("Second Tether Resolving", 1, 3, true);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving3 = makeTetherCall("Third Tether Resolving", 2, 3, true);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving4 = makeTetherCall("Fourth Tether Resolving", 3, 3, true);
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> fourTethers = SqtTemplates.sq(60_000,
@@ -372,7 +372,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				tethers.add(e4);
 				s.updateCall(fourTetherColl4, e4);
 
-				s.waitMs(1_000);
+//				s.waitMs(1_000);
 
 				// Call the first one soon, but for the rest, wait until the previous tether goes off
 				s.updateCall(fourTetherResolving1);
@@ -553,6 +553,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				Luminous Hammer is the puddle drops
 				Bright Hunger is the tower hit
 				*/
+				// TODO: this should have the tether order. Might be a challenge since there isn't really a natural ordering.
+				// i.e. what if people aren't standing in a circle? Who is "#1"?
 				boolean playerHasTether = tethers.stream().anyMatch(te -> te.eitherTargetMatches(XivCombatant::isThePlayer));
 				boolean playerHasMarker = markers.stream().anyMatch(hm -> hm.getTarget().isThePlayer());
 				if (playerHasTether) {

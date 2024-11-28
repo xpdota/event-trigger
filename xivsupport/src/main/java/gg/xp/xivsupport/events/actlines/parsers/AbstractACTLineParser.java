@@ -27,8 +27,8 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	private final Class<? extends Enum<F>> enumCls;
 	private final int lineNumber;
 	private final List<@Nullable F> groups;
-	private final XivState state;
-	private final @Nullable FakeTimeSource fakeTimeSource;
+	protected final XivState state;
+	protected final @Nullable FakeTimeSource fakeTimeSource;
 
 	AbstractACTLineParser(PicoContainer container, int logLineNumber, Class<F> enumCls) {
 		this(container, logLineNumber, Arrays.asList(enumCls.getEnumConstants()));

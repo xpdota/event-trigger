@@ -73,6 +73,10 @@ public class Line38Parser extends AbstractACTLineParser<Line38Parser.Fields> {
 				}
 				XivCombatant source = fields.getEntity(Long.parseLong(part3, 16));
 				BuffApplied fakeBa = new BuffApplied(status, duration, source, target, rawStacks);
+				FakeTimeSource fts = this.fakeTimeSource;
+				if (fts != null) {
+					fakeBa.setTimeSource(fts);
+				}
 				out.add(fakeBa);
 			}
 			return new StatusEffectList(target, out);
