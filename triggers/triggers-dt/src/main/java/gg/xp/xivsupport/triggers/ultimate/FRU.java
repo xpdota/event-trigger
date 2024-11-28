@@ -50,6 +50,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(FRU.class);
 
+	// TODO - prios
 	private final JobSortSetting defaultPrio;
 	private final JobSortOverrideSetting p1tethersPrio;
 	private final JobSortOverrideSetting p1towersPrio;
@@ -158,8 +159,10 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D89, 0x9D8A), // speculated
 			(e1, s) -> {
 				boolean isFire = e1.abilityIdMatches(0x9D89);
-				// Don't talk over the other calls
-//				s.waitMs(1_000);
+				// Don't talk over the other calls, and wait for blasting zone to be finished casting
+				Optional<CastTracker> blastingZoneMaybe = casts.getActiveCastById(0x9CDE);
+				blastingZoneMaybe.ifPresent(castTracker -> s.waitCastFinished(casts, castTracker.getCast()));
+
 				s.updateCall(isFire ? cyclonicBreakInitialFire : cyclonicBreakInitialLightning, e1);
 				var e2 = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CD1));
 				s.updateCall(isFire ? cyclonicBreakMove1fire : cyclonicBreakMove1lightning, e2);
@@ -182,7 +185,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> turnInitial = new ModifiableCallout<>("Turn of the Heavens: Initial", "{redSafe ? 'Red' : 'Blue'} Safe");
 	private final ModifiableCallout<AbilityCastStart> turnNSSafe = ModifiableCallout.durationBasedCall("Turn of the Heavens: Dodge Lightning", "Move, North/South Out");
-	private final ModifiableCallout<AbilityCastStart> turnKB = ModifiableCallout.durationBasedCall("Turn of the Heavens: Dodge Lightning", "Get Knocked {safe}");
+	private final ModifiableCallout<AbilityCastStart> turnKB = ModifiableCallout.durationBasedCall("Turn of the Heavens: Knockback Cast", "Get Knocked {safe}");
+	private final ModifiableCallout<?> turnKBin = new ModifiableCallout<>("Turn of the Heavens: KB Move In", "Move In");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> turnOfTheHeavensSq = SqtTemplates.sq(30_000,
@@ -197,10 +201,19 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitMs(3_700);
 
 
-				Optional<CastTracker> lightning = casts.getActiveCastById(0x9CE3);
-				s.updateCall(turnNSSafe, lightning.map(CastTracker::getCast).orElse(e1));
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CE3));
-				Optional<CastTracker> burnout = casts.getActiveCastById(0x9CE4);
+				/* For this sequence:
+				9CE3 Burnt Strike is the narrow lightning
+				9CE4 Burnout is the wide lightning
+
+				9CE1 Burnt Strike is the fire initial hit
+				9CE2 Blastburn is the actual knockback
+				*/
+
+				AbilityCastStart wideLightning = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9CE3), false);
+				s.updateCall(turnNSSafe, wideLightning);
+				// 9CE3 is initial hit
+				// 9CE4 is the big hit
+				s.waitCastFinished(casts, wideLightning);
 				ArenaSector safe;
 				do {
 					// Find orbs that are east or west
@@ -219,7 +232,12 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 					}
 				} while (true);
 				s.setParam("safe", safe);
-				s.updateCall(turnKB, burnout.map(CastTracker::getCast).orElse(e1));
+
+				AbilityCastStart burnout = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9CE1), false);
+				// The KB animation skill is 9CE1 and has a cast
+				s.updateCall(turnKB, burnout);
+				s.waitCastFinished(casts, burnout);
+				s.updateCall(turnKBin);
 			});
 
 
@@ -463,6 +481,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				var icycleCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D08));
 				s.updateCall((playerHasMarker && isAxeKick) ? ddKBimmune : ddKB);
 				s.waitCastFinished(casts, icycleCast);
+				// TODO: CW vs CCW rotation
 				s.updateCall(ddStacks);
 				s.waitMs(4_000);
 				XivCombatant gazeNpc = state.npcById(17823);
@@ -498,6 +517,14 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D14),
 			(e1, s) -> {
 				// TODO
+				// Tether is 6E
+				// Also a headmarker and debuffs
+				// Chains of Everlasting Light 103D
+				// The Weight of Light 103F
+				// Lightspeed (stacks) 8D1
+
+				// Gotta move around
+				// 2-stacks take final tower
 			});
 }
 
