@@ -416,8 +416,13 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> ddStacks = new ModifiableCallout<>("DD: Stacks", "Multiple Stacks, Keep Moving");
 	private final ModifiableCallout<?> ddGaze = new ModifiableCallout<>("DD: Gaze", "Look Away from {gazeFrom}");
 
+	private final ModifiableCallout<AbilityCastStart> scytheMirrors1 = ModifiableCallout.durationBasedCall("Scythe Mirrors 1", "Blue Mirror and Boss, In+Proteans");
+	private final ModifiableCallout<AbilityCastStart> scytheMirrors2 = ModifiableCallout.durationBasedCall("Scythe Mirrors 2", "Red Mirrors, In+Proteans");
+	private final ModifiableCallout<AbilityCastStart> banishBuddies = ModifiableCallout.durationBasedCall("Banish III (Buddies)", "Buddies");
+	private final ModifiableCallout<AbilityCastStart> banishSpread = ModifiableCallout.durationBasedCall("Banish III (Spread)", "Spread");
+
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> axeScythe = SqtTemplates.sq(60_000,
+	private final SequentialTrigger<BaseEvent> axeScythe = SqtTemplates.multiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D0A, 0x9D0B),
 			(e1, s) -> {
 				// Axe kick = out
@@ -455,7 +460,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitMs(300);
 				// Drop or avoid puddle
 				s.updateCall(playerHasMarker ? ddDropPuddle : ddAvoidPuddle);
-				var icycleCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D06));
+				var icycleCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D08));
 				s.updateCall((playerHasMarker && isAxeKick) ? ddKBimmune : ddKB);
 				s.waitCastFinished(casts, icycleCast);
 				s.updateCall(ddStacks);
@@ -466,12 +471,34 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 					s.setParam("gazeFrom", gazeFrom);
 				}
 				s.updateCall(ddGaze);
+			}, (e1, s) -> {
+				// Mirrors
+				s.updateCall(scytheMirrors1, e1);
+				var reflectedCast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9D0E), false);
+				s.updateCall(scytheMirrors2, reflectedCast);
+				var banish = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9D1C, 0x9D1D), false);
+				if (banish.abilityIdMatches(0x9D1C)) {
+					s.updateCall(banishBuddies, banish);
+				}
+				else {
+					s.updateCall(banishSpread, banish);
+				}
 			});
 
 	@NpcCastCallout(0x9D01)
 	private final ModifiableCallout<AbilityCastStart> twinStillness = ModifiableCallout.durationBasedCall("Twin Stillness", "Back to Front");
 	@NpcCastCallout(0x9D02)
 	private final ModifiableCallout<AbilityCastStart> twinSilence = ModifiableCallout.durationBasedCall("Twin Silence", "Front to Back");
+
+	@NpcCastCallout(0x9D12)
+	private final ModifiableCallout<AbilityCastStart> hallowedRay = ModifiableCallout.durationBasedCall("Hallowed Ray", "Line Stack");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> lightRampant = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D14),
+			(e1, s) -> {
+				// TODO
+			});
 }
 
 
