@@ -197,7 +197,8 @@ public class FflogsEventProcessor {
 						type = 3;
 						ownerId = rawOwnerId;
 					}
-					Function<Long, RawXivCombatantInfo> rawDataProducer = i -> new RawXivCombatantInfo(id - 1 + i, actor.name(), isPlayer ? convertJob(actor.subType()).getId() : 0, type, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, "TODO", 0, 0, 0, ownerId);
+					long npcId = isPlayer ? 0 : rawId;
+					Function<Long, RawXivCombatantInfo> rawDataProducer = i -> new RawXivCombatantInfo(id - 1 + i, actor.name(), isPlayer ? convertJob(actor.subType()).getId() : 0, type, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, "TODO", npcId, 0, 0, ownerId);
 					cbtInstanceMapping.put(actor.id(), rawDataProducer);
 					return rawDataProducer.apply(1L);
 				})

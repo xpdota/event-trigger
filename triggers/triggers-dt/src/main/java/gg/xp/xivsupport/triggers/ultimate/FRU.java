@@ -406,6 +406,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 				// For identifying towers for an eventual prio:
 				// 9CC7 - single
+				// 9CBE - double
+				// 9CBD - triple
 				// 9CBF - quad
 			}
 	);
