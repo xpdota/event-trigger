@@ -423,7 +423,10 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x9D05)
 	private final ModifiableCallout<AbilityCastStart> diamondDust = ModifiableCallout.durationBasedCall("Diamond Dust", "Raidwide");
 
-	private final ModifiableCallout<AbilityCastStart> ddAxeWithMarker = ModifiableCallout.durationBasedCall("DD: Axe Kick with Marker", "Out with Marker, {firstIces} Safe");
+	private final ModifiableCallout<AbilityCastStart> ddAxeWithMarker = ModifiableCallout.<AbilityCastStart>durationBasedCall("DD: Axe Kick with Marker", "Out with Marker, {firstIces} Safe")
+			.extendedDescription("""
+					{firstIces} is a list of where the first ices are dropping. You can also use the boolean {cardinal} to determine whether \
+					cardinals are puddles, e.g. {cardinal ? 'No Swap' : 'Swap'"}.""");
 	private final ModifiableCallout<AbilityCastStart> ddAxeNoMarker = ModifiableCallout.durationBasedCall("DD: Axe Kick, no Marker", "Out, Bait, {firstIces} Safe");
 	private final ModifiableCallout<AbilityCastStart> ddScytheWithMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick with Marker", "In with Marker, {firstIces} Safe");
 	private final ModifiableCallout<AbilityCastStart> ddScytheNoMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick, no Marker", "In, Bait, {firstIces} Safe");
@@ -463,6 +466,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 					log.error("firstIces size {}, expected 2! Data: {}", firstIces.size(), firstIces);
 				}
 				s.setParam("firstIces", firstIces);
+				s.setParam("cardinal", firstIces.get(0).isCardinal());
 
 				boolean playerHasMarker = playerMarker != null;
 				if (isAxeKick) {
@@ -512,6 +516,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x9D12)
 	private final ModifiableCallout<AbilityCastStart> hallowedRay = ModifiableCallout.durationBasedCall("Hallowed Ray", "Line Stack");
 
+
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> lightRampant = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D14),
@@ -525,6 +531,10 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 				// Gotta move around
 				// 2-stacks take final tower
+				log.info("Light Rampant: Start");
+				// TODO: would be nice to have something like collectEvents() but supporting different types of events
+				List<HeadMarkerEvent> markers = s.waitEvents(2, HeadMarkerEvent.class, (e) -> true);
+				List<TetherEvent> tethers = s.waitEventsQuickSuccession(6, TetherEvent.class, (e) -> e.tetherIdMatches(0x6E));
 			});
 }
 

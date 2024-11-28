@@ -1,16 +1,17 @@
 package gg.xp.xivsupport.gui.library;
 
-import gg.xp.xivdata.data.StatusEffectIcon;
-import gg.xp.xivdata.data.StatusEffectInfo;
-import gg.xp.xivdata.data.StatusEffectLibrary;
+import gg.xp.reevent.scan.ScanMe;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,13 +20,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@Deprecated // Use StatusTableFactory
-public final class StatusTable {
-	private StatusTable() {
+@ScanMe
+public final class StatusTableFactory {
+
+	private final RightClickOptionRepo rightClickOptionRepo;
+
+	public StatusTableFactory(RightClickOptionRepo rightClickOptionRepo) {
+		this.rightClickOptionRepo = rightClickOptionRepo;
 	}
 
-	@Deprecated // Use StatusTableFactory.table()
-	public static TableWithFilterAndDetails<StatusEffectInfo, Object> table() {
+	public TableWithFilterAndDetails<StatusEffectInfo, Object> table() {
 		return TableWithFilterAndDetails.builder("Status Effects", () -> {
 					Map<Integer, StatusEffectInfo> csvValues = StatusEffectLibrary.getAll();
 					List<StatusEffectInfo> values = new ArrayList<>(csvValues.values());
@@ -52,20 +56,26 @@ public final class StatusTable {
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", StatusEffectInfo::statusEffectId, StatusEffectInfo::name, t))
 				.addFilter(t -> new TextBasedFilter<>(t, "Description", StatusEffectInfo::description))
+				.addWidget(tbl -> JumpToIdWidget.create(tbl, StatusEffectInfo::statusEffectId))
 				.setFixedData(true)
+				.withRightClickRepo(rightClickOptionRepo.withMore(
+						CustomRightClickOption.forRow("Open on XivAPI", StatusEffectInfo.class, sei -> {
+							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Status", sei.statusEffectId()));
+						})
+				))
 				.build();
 	}
 
-	public static void showChooser(Window frame, Consumer<StatusEffectInfo> callback) {
+	public void showChooser(Window frame, Consumer<StatusEffectInfo> callback) {
 		TableWithFilterAndDetails<StatusEffectInfo, Object> table = table();
 		ChooserDialog.showChooser(frame, table, callback);
 	}
 
-	public static List<StatusEffectInfo> pickItems(Window window) {
+	public List<StatusEffectInfo> pickItems(Window window) {
 		return ChooserDialog.chooserReturnItems(window, table());
 	}
 
-	public static @Nullable StatusEffectInfo pickItem(Window window) {
+	public @Nullable StatusEffectInfo pickItem(Window window) {
 		return ChooserDialog.chooserReturnItem(window, table());
 	}
 }

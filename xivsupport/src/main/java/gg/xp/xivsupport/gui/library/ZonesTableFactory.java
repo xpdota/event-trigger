@@ -1,9 +1,13 @@
 package gg.xp.xivsupport.gui.library;
 
+import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -13,14 +17,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@Deprecated // Use ZonesTableFactory
-public final class ZonesTable {
+@ScanMe
+public final class ZonesTableFactory {
 
-	private ZonesTable() {
+	private final RightClickOptionRepo rightClickOptionRepo;
+
+	public ZonesTableFactory(RightClickOptionRepo rightClickOptionRepo) {
+		this.rightClickOptionRepo = rightClickOptionRepo;
 	}
 
-	@Deprecated // Use ZonesTableFactory.table()
-	public static TableWithFilterAndDetails<ZoneInfo, Object> table() {
+	public TableWithFilterAndDetails<ZoneInfo, Object> table() {
 		return TableWithFilterAndDetails.builder("Zones", () -> {
 					Map<Integer, ZoneInfo> csvValues = ZoneLibrary.getFileValues();
 					return csvValues.values().stream().sorted(Comparator.comparing(ZoneInfo::id)).toList();
@@ -36,20 +42,26 @@ public final class ZonesTable {
 //					col.setPreferredWidth(200);
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", zi -> (long) zi.id(), zi -> String.format("%s %s", zi.dutyName(), zi.placeName()), t))
+				.addWidget(tbl -> JumpToIdWidget.create(tbl, zi -> (long) zi.id()))
 				.setFixedData(true)
+				.withRightClickRepo(rightClickOptionRepo.withMore(
+						CustomRightClickOption.forRow("Open on XivAPI", ZoneInfo.class, zi -> {
+							GuiUtil.openUrl(XivApiUtils.singleItemUrl("TerritoryType", zi.id()));
+						})
+				))
 				.build();
 	}
 
-	public static void showChooser(Window frame, Consumer<ZoneInfo> callback) {
+	public void showChooser(Window frame, Consumer<ZoneInfo> callback) {
 		TableWithFilterAndDetails<ZoneInfo, Object> table = table();
 		ChooserDialog.showChooser(frame, table, callback);
 	}
 
-	public static List<ZoneInfo> pickItems(Window window) {
+	public List<ZoneInfo> pickItems(Window window) {
 		return ChooserDialog.chooserReturnItems(window, table());
 	}
 
-	public static @Nullable ZoneInfo pickItem(Window window) {
+	public @Nullable ZoneInfo pickItem(Window window) {
 		return ChooserDialog.chooserReturnItem(window, table());
 	}
 }

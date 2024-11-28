@@ -16,7 +16,9 @@ import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.persistence.Platform;
 import org.jetbrains.annotations.Nullable;
+import org.swingexplorer.internal.GuiUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -32,15 +34,13 @@ import java.util.function.Function;
 
 public final class ActionTableFactory {
 
+	private final RightClickOptionRepo rightClickOptionRepo;
+
+	public ActionTableFactory(RightClickOptionRepo rightClickOptionRepo) {
+		this.rightClickOptionRepo = rightClickOptionRepo;
+	}
+
 	public TableWithFilterAndDetails<ActionInfo, Object> table() {
-		// TODO: "initial load on filter update" would be nice
-		//					ActionIcon icon = ai.getIcon();
-		//					if (icon == null) {
-		//						return null;
-		//					}
-		//					else {
-		//						return icon.getIconUrl();
-		//					}
 		return TableWithFilterAndDetails.builder("Actions/Abilities", () -> {
 					Map<Integer, ActionInfo> csvValues = ActionLibrary.getAll();
 					List<ActionInfo> values = new ArrayList<>(csvValues.values());
@@ -104,6 +104,7 @@ public final class ActionTableFactory {
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
 				.addWidget(InGameAbilityPickerButton::new)
+				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
 				.withRightClickRepo(RightClickOptionRepo.of(
 						CustomRightClickOption.forRow(
 								"Copy XIVAPI Icon URL",
@@ -120,6 +121,11 @@ public final class ActionTableFactory {
 //					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
 //					GuiUtil.copyToClipboard(md);
 //				}))
+				.withRightClickRepo(rightClickOptionRepo.withMore(
+						CustomRightClickOption.forRow("Open on XivAPI", ActionInfo.class, ai -> {
+							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Action", ai.actionid()));
+						})
+				))
 				.setFixedData(true)
 				.build();
 	}
