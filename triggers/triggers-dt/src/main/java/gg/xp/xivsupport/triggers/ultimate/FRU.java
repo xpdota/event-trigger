@@ -21,6 +21,7 @@ import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
@@ -56,9 +57,11 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final JobSortOverrideSetting p1towersPrio;
 	private XivState state;
 	private ActiveCastRepository casts;
+	private StatusEffectRepository buffs;
 
-	public FRU(XivState state, PersistenceProvider pers, ActiveCastRepository casts) {
+	public FRU(XivState state, PersistenceProvider pers, ActiveCastRepository casts, StatusEffectRepository buffs) {
 		this.casts = casts;
+		this.buffs = buffs;
 		String settingKeyBase = "triggers.fru.";
 		defaultPrio = new JobSortSetting(pers, settingKeyBase + "defaultPrio", state);
 		p1tethersPrio = new JobSortOverrideSetting(pers, settingKeyBase + "p1-tethers-prio", state, defaultPrio);
@@ -439,7 +442,9 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> scytheMirrors1 = ModifiableCallout.durationBasedCall("Scythe Mirrors 1", "Blue Mirror and Boss, In+Proteans");
 	private final ModifiableCallout<AbilityCastStart> scytheMirrors2 = ModifiableCallout.durationBasedCall("Scythe Mirrors 2", "Red Mirrors, In+Proteans");
+	@NpcCastCallout(0x9D1C)
 	private final ModifiableCallout<AbilityCastStart> banishBuddies = ModifiableCallout.durationBasedCall("Banish III (Buddies)", "Buddies");
+	@NpcCastCallout(0x9D1D)
 	private final ModifiableCallout<AbilityCastStart> banishSpread = ModifiableCallout.durationBasedCall("Banish III (Spread)", "Spread");
 
 	@AutoFeed
@@ -497,15 +502,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			}, (e1, s) -> {
 				// Mirrors
 				s.updateCall(scytheMirrors1, e1);
-				var reflectedCast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9D0E), false);
+				var reflectedCast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9D0D), false);
 				s.updateCall(scytheMirrors2, reflectedCast);
-				var banish = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9D1C, 0x9D1D), false);
-				if (banish.abilityIdMatches(0x9D1C)) {
-					s.updateCall(banishBuddies, banish);
-				}
-				else {
-					s.updateCall(banishSpread, banish);
-				}
 			});
 
 	@NpcCastCallout(0x9D01)
@@ -516,13 +514,19 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x9D12)
 	private final ModifiableCallout<AbilityCastStart> hallowedRay = ModifiableCallout.durationBasedCall("Hallowed Ray", "Line Stack");
 
+	private final ModifiableCallout<AbilityCastStart> lrInitial = ModifiableCallout.durationBasedCall("Light Rampant: Initial", "Light Rampant Positions");
 
+	private final ModifiableCallout<?> lrChainNoStack = new ModifiableCallout<>("Light Rampant: Chain, No Weight Debuff", "Chain").statusIcon(0x103D);
+	private final ModifiableCallout<?> lrChainWithStack = new ModifiableCallout<>("Light Rampant: Chain + Weight Debuff", "Chain").statusIcon(0x103F);
+	private final ModifiableCallout<?> lrHeadmarker = new ModifiableCallout<>("Light Rampant: Puddle", "Puddle");
+	private final ModifiableCallout<?> lrCollapse = new ModifiableCallout<>("Light Rampant: After First Towers", "Stacks");
+	private final ModifiableCallout<?> lrGoInTower = new ModifiableCallout<>("Light Rampant: Take Final Tower", "Take Tower");
+	private final ModifiableCallout<?> lrAvoidTower = new ModifiableCallout<>("Light Rampant: Avoid Final Tower", "Avoid Tower");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> lightRampant = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D14),
 			(e1, s) -> {
-				// TODO
 				// Tether is 6E
 				// Also a headmarker and debuffs
 				// Chains of Everlasting Light 103D
@@ -532,10 +536,64 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				// Gotta move around
 				// 2-stacks take final tower
 				log.info("Light Rampant: Start");
+				s.updateCall(lrInitial, e1);
 				// TODO: would be nice to have something like collectEvents() but supporting different types of events
 				List<HeadMarkerEvent> markers = s.waitEvents(2, HeadMarkerEvent.class, (e) -> true);
-				List<TetherEvent> tethers = s.waitEventsQuickSuccession(6, TetherEvent.class, (e) -> e.tetherIdMatches(0x6E));
+				List<TetherEvent> tethers = s.waitEventsQuickSuccession(6, TetherEvent.class, (e) -> e.tetherIdMatches(0x6E), Duration.ofMillis(100));
+				s.waitMs(100);
+				@Nullable BuffApplied playerStackDebuff = buffs.findBuff(ba -> ba.buffIdMatches(0x103F) && ba.getTarget().isThePlayer());
+				/*
+				Possibilities:
+				Golden Orb (The Weight of Light 103F) will always go on tether players
+				i.e.:
+				4x tether, no orb
+				2x tether, with orb
+				2x puddles
+
+				Luminous Hammer is the puddle drops
+				Bright Hunger is the tower hit
+				*/
+				boolean playerHasTether = tethers.stream().anyMatch(te -> te.eitherTargetMatches(XivCombatant::isThePlayer));
+				boolean playerHasMarker = markers.stream().anyMatch(hm -> hm.getTarget().isThePlayer());
+				if (playerHasTether) {
+					if (playerStackDebuff != null) {
+						// Player has tether + stacks
+						s.updateCall(lrChainWithStack);
+					}
+					else {
+						// Player has tether, no stacks
+						s.updateCall(lrChainNoStack);
+					}
+				}
+				else if (playerHasMarker) {
+					// Player has headmarker
+					s.updateCall(lrHeadmarker);
+				}
+				else {
+					// ???
+					log.error("Player has neither tether nor marker, giving up.\nTethers: {}\nMarkers: {}", tethers, markers);
+				}
+				// Towers going off
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D15));
+				s.updateCall(lrCollapse);
+				// First bursts going off
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D1B));
+				int playerStacks = buffs.buffStacksOnTarget(state.getPlayer(), 0x8D1);
+				if (playerStacks <= 2) {
+					s.updateCall(lrGoInTower);
+				}
+				else {
+					s.updateCall(lrAvoidTower);
+				}
 			});
+
+	@NpcCastCallout(0x9CFD)
+	private final ModifiableCallout<AbilityCastStart> houseOfLight = ModifiableCallout.durationBasedCall("The House of Light", "Proteans");
+	@NpcCastCallout(0x9D20)
+	private final ModifiableCallout<AbilityCastStart> p2enrage = ModifiableCallout.durationBasedCall("P2 Enrage", "Enrage, Knockback");
+
+	@NpcCastCallout(0x9D43)
+	private final ModifiableCallout<AbilityCastStart> intermissionEnrage = ModifiableCallout.durationBasedCall("Endless Ice Age (Intermission)", "Kill Crystals, Bait AoEs");
 }
 
 
