@@ -14,6 +14,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
@@ -22,6 +23,7 @@ import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.events.triggers.seq.EventCollector;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
@@ -43,6 +45,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -598,6 +601,193 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@NpcCastCallout(0x9D43)
 	private final ModifiableCallout<AbilityCastStart> intermissionEnrage = ModifiableCallout.durationBasedCall("Endless Ice Age (Intermission)", "Kill Crystals, Bait AoEs");
+
+	// TODO: there is a raidwide (Junction 9D22) between intermission and p3
+
+	@NpcCastCallout(0x9D49)
+	private final ModifiableCallout<AbilityCastStart> hellsJudgment = ModifiableCallout.durationBasedCall("Hell's Judgment", "1 HP");
+
+	private final ModifiableCallout<AbilityCastStart> ultimateRelativityInit = ModifiableCallout.durationBasedCall("Ultimate Relativity: Initial", "Raidwide");
+
+	private static Predicate<HasDuration> initDurLessThan(int seconds) {
+		return ba -> ba.getInitialDuration().toSeconds() < seconds;
+	}
+
+	private static Predicate<HasDuration> initDurGreaterThan(int seconds) {
+		return ba -> ba.getInitialDuration().toSeconds() > seconds;
+	}
+
+	private static Predicate<HasDuration> initDurBetween(int secondsMin, int secondsMax) {
+		return ba -> {
+			long initDur = ba.getInitialDuration().toSeconds();
+			return initDur >= secondsMin && initDur <= secondsMax;
+		};
+	}
+
+	private final ModifiableCallout<BuffApplied> relDpsShortFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Short Fire", "Short Fire").autoIcon()
+			.extendedDescription("Note that these triggers are designed for the 'Macroless Y Runytivity' strategy.");
+	private final ModifiableCallout<BuffApplied> relDpsMediumFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Medium Fire", "Medium Fire").autoIcon();
+	private final ModifiableCallout<BuffApplied> relDpsLongFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Long Fire", "Long Fire").autoIcon();
+	private final ModifiableCallout<BuffApplied> relDpsIce = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Ice", "Ice").autoIcon();
+	private final ModifiableCallout<BuffApplied> relThShortFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Support Short Fire", "Short Fire").autoIcon();
+	private final ModifiableCallout<BuffApplied> relThMediumFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Support Medium Fire", "Medium Fire").autoIcon();
+	private final ModifiableCallout<BuffApplied> relThLongFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Support Long Fire", "Long Fire").autoIcon();
+	private final ModifiableCallout<BuffApplied> relThIce = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Support Ice", "Ice").autoIcon();
+
+	private final ModifiableCallout<BuffApplied> relShortFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Short Fire Popping", "Move Out").autoIcon()
+			.extendedDescription("The short fire/stack pop calls happen about 5 seconds in.");
+	private final ModifiableCallout<BuffApplied> relShortStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Short Stack Popping", "Stack").autoIcon();
+
+	private final ModifiableCallout<?> relLongRewind = new ModifiableCallout<>("Relativity: Long Rewind", "Bait Spinny")
+			.extendedDescription("This call happens after the first fire/stack pop, if you have long rewind.");
+	private final ModifiableCallout<BuffApplied> relShortRewindEruption = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Eruption", "Stand on Light").autoIcon()
+			.extendedDescription("This call happens after the first fire/stack pop, if you have short rewind and have eruption (no water).");
+	private final ModifiableCallout<BuffApplied> relShortRewindWater = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Water", "Stand on Light").autoIcon()
+			.extendedDescription("This call happens after the first fire/stack pop, if you have short rewind and have water (no eruption).");
+
+	private final ModifiableCallout<BuffApplied> relMedFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Medium Fire Popping", "Move Out").autoIcon()
+			.extendedDescription("The medium fire/stack pop calls happen about 15 seconds in.");
+	private final ModifiableCallout<BuffApplied> relMedStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Medium Stack Popping", "Stack").autoIcon();
+
+	private final ModifiableCallout<?> relShortRewindBait = new ModifiableCallout<>("Relativity: Short Rewind Part 2", "Bait Spinny")
+			.extendedDescription("This call happens after the second fire/stack pop, if you have short rewind and do not have medium fire.");
+	private final ModifiableCallout<?> relShortRewindMedFire = new ModifiableCallout<>("Relativity: Short Rewind Part 2 (Med Fire)", "AFK")
+			.extendedDescription("This call happens after the second fire/stack pop, if you have short rewind and had medium fire.");
+	private final ModifiableCallout<?> relLongRewind2 = new ModifiableCallout<>("Relativity: Long Rewind Part 2", "Stand Middle")
+			.extendedDescription("This call happens after the first fire/stack pop, if you have long rewind.");
+
+	private final ModifiableCallout<BuffApplied> relLongFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Long Fire Popping", "Move Out").autoIcon()
+			.extendedDescription("The long fire/stack pop calls happen about 25 seconds in.");
+	private final ModifiableCallout<BuffApplied> relLongStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Long Stack Popping", "Stack").autoIcon();
+
+	private final ModifiableCallout<?> relMedFireBaitLookOut = new ModifiableCallout<>("Relativity: Medium Fire Final Baits", "Bait Light, Look Outside").statusIcon(0x998)
+			.extendedDescription("Final Traffic Light Bait, with Medium Fire");
+	private final ModifiableCallout<?> relFinalCenterLookOut = new ModifiableCallout<>("Relativity: Final Mechanics", "Look Outside").statusIcon(0x998)
+			.extendedDescription("Final Traffic Light Bait, not Medium Fire");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> ultimateRelativity = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D4A),
+			(e1, s) -> {
+				s.updateCall(ultimateRelativityInit, e1);
+				/*
+				Debuff vomit:
+				7 players get fire 997, either 11s, 21s, or 31s
+					Defamation
+				Player without fire gets blizzard 99E 21s
+					Donut
+				One player gets water 99D 43s
+					4-person stack
+				All 8 get return 9A0, some get 16s while others get 26s (seems to be 5-3 split?)
+					Returns you like in e12s
+				3 get unholy darkness 996, 11/21/31s (one each)
+					Stack
+				4 get eruption 99C 43s
+					Spread
+				3 get gaze 998 43s
+
+				*/
+				// TODO: identify "north"
+				boolean isDps = state.playerJobMatches(Job::isDps);
+				s.waitCastFinished(casts, e1);
+				Predicate<BuffApplied> iceCond = ba -> ba.buffIdMatches(0x99E);
+				Predicate<BuffApplied> fireCond = ba -> ba.buffIdMatches(0x997);
+				Predicate<BuffApplied> returnCond = ba -> ba.buffIdMatches(0x9A0);
+				Predicate<BuffApplied> darknessCond = ba -> ba.buffIdMatches(0x996);
+				Predicate<BuffApplied> waterCond = ba -> ba.buffIdMatches(0x99D);
+				Predicate<BuffApplied> eruptionCond = ba -> ba.buffIdMatches(0x99C);
+				Predicate<BuffApplied> gazeCond = ba -> ba.buffIdMatches(0x998);
+				Predicate<BuffApplied> isPlayer = ba -> ba.getTarget().isThePlayer();
+
+				var shortCond = initDurLessThan(17);
+				var medCond = initDurBetween(17, 27);
+				var longCond = initDurGreaterThan(27);
+
+				var shortFireC = new EventCollector<>(fireCond.and(shortCond));
+				var medFireC = new EventCollector<>(fireCond.and(medCond));
+				var longFireC = new EventCollector<>(fireCond.and(longCond));
+				var iceC = new EventCollector<>(iceCond);
+				var shortStackC = new EventCollector<>(darknessCond.and(shortCond));
+				var medStackC = new EventCollector<>(darknessCond.and(medCond));
+				var longStackC = new EventCollector<>(darknessCond.and(longCond));
+				var shortRewindC = new EventCollector<>(returnCond.and(shortCond));
+				var longRewindC = new EventCollector<>(returnCond.and(medCond));
+				s.collectEvents(27, 1200, BuffApplied.class, true, List.of(shortFireC, longFireC, medFireC, iceC, shortStackC, medStackC, longStackC, shortRewindC, longRewindC));
+
+				// Initial calls
+				shortFireC.findAny(isPlayer).ifPresent(v -> s.updateCall(isDps ? relDpsShortFire : relThShortFire, v));
+				medFireC.findAny(isPlayer).ifPresent(v -> s.updateCall(isDps ? relDpsMediumFire : relThMediumFire, v));
+				longFireC.findAny(isPlayer).ifPresent(v -> s.updateCall(isDps ? relDpsLongFire : relThLongFire, v));
+				iceC.findAny(isPlayer).ifPresent(v -> s.updateCall(isDps ? relDpsIce : relThIce, v));
+
+				// Give time to move out for short fire pops/stack middle if not fire
+				s.waitMs(5_000); // T=5
+				shortFireC.findAny(isPlayer).ifPresentOrElse(
+						e -> s.updateCall(relShortFirePop, e), () -> {
+							shortStackC.findAny(e -> true).ifPresent(e -> s.updateCall(relShortStackPop, e));
+						});
+
+				// Short fires pop
+				// TODO: make a real wait condition for this
+				s.waitMs(6_000); // T=11
+				/*
+				At this point,
+				if you have short rewind, you would stand on traffic light, unless you also have water, in which case you stand center
+				If you have long rewind, bait spinny
+				*/
+				shortRewindC.findAny(isPlayer).ifPresentOrElse(
+						e -> {
+							BuffApplied playerWater = buffs.findStatusOnTarget(state.getPlayer(), waterCond);
+							if (playerWater != null) {
+								s.updateCall(relShortRewindWater, e);
+							}
+							else {
+								s.updateCall(relShortRewindEruption, e);
+							}
+						},
+						() -> s.updateCall(relLongRewind));
+
+				s.waitMs(5_000); // T=16
+
+				medFireC.findAny(isPlayer).ifPresentOrElse(
+						e -> s.updateCall(relMedFirePop, e), () -> {
+							medStackC.findAny(e -> true).ifPresent(e -> s.updateCall(relMedStackPop, e));
+						});
+
+				s.waitMs(5_000); // T=21
+
+				// Now, short rewinds bait stoplight lasers
+				shortRewindC.findAny(isPlayer).ifPresentOrElse(
+						// Bait or do nothing
+						e -> medFireC.findAny(isPlayer).ifPresentOrElse(
+								ignored -> s.updateCall(relShortRewindMedFire),
+								() -> s.updateCall(relShortRewindBait)),
+						() -> {
+							s.updateCall(relLongRewind2);
+						}
+				);
+				s.waitMs(5_000); // T=26
+
+				longFireC.findAny(isPlayer).ifPresentOrElse(
+						e -> s.updateCall(relLongFirePop, e), () -> {
+							longStackC.findAny(e -> true).ifPresent(e -> s.updateCall(relLongStackPop, e));
+						});
+
+				s.waitMs(5_000); // T=31
+
+				medFireC.findAny(isPlayer).ifPresentOrElse(
+						e -> s.updateCall(relMedFireBaitLookOut),
+						() -> s.updateCall(relFinalCenterLookOut)
+				);
+			});
+
+
+	@NpcCastCallout(0x9D5E)
+	private final ModifiableCallout<AbilityCastStart> shellCrusher = ModifiableCallout.durationBasedCall("Shell Crusher", "Stack");
+	@NpcCastCallout(0x9D5A)
+	private final ModifiableCallout<AbilityCastStart> shockwavePulsar = ModifiableCallout.durationBasedCall("Shockwave Pulsar", "Raidwide");
+	@NpcCastCallout(0x9D62)
+	private final ModifiableCallout<AbilityCastStart> blackHalo = ModifiableCallout.durationBasedCall("Black Halo", "Tankbuster on {event.target}");
 }
 
 

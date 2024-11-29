@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.PlayerStats;
 import gg.xp.xivsupport.events.actlines.events.PlayerStatsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.RawJobGaugeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
+import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.TickEvent;
 import gg.xp.xivsupport.events.actlines.events.TickType;
@@ -402,7 +403,11 @@ public class FflogsEventProcessor {
 							rawEvent.getTypedField("bars", Integer.class),
 							rawEvent.getTypedField("value", Integer.class)));
 				}
-
+				case "targetabilityupdate" -> {
+					context.accept(new TargetabilityUpdate(
+							source, target, rawEvent.getTypedField("targetable", Integer.class) == 1
+					));
+				}
 				default -> {
 					context.accept(new FflogsUnsupportedEvent(rawEvent));
 				}
