@@ -1,0 +1,115 @@
+package gg.xp.xivsupport.triggers.ultimate;
+
+import gg.xp.xivsupport.callouts.CalloutGroup;
+import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
+import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
+import gg.xp.xivsupport.events.triggers.util.CalloutInitialValues;
+import gg.xp.xivsupport.events.triggers.util.CalloutVerificationTest;
+import org.picocontainer.MutablePicoContainer;
+
+import java.util.List;
+
+public class FRUTest extends CalloutVerificationTest {
+	@Override
+	protected String getFileName() {
+		return "/fru_anon.log";
+	}
+
+	@Override
+	protected long minimumMsBetweenCalls() {
+		return 400;
+	}
+
+	@Override
+	protected void configure(MutablePicoContainer pico) {
+		// Disable this specific callout since it will fail the timing check (and is unnecessary anyway)
+		ModifiedCalloutRepository mcr = pico.getComponent(ModifiedCalloutRepository.class);
+		CalloutGroup group = mcr.getAllCallouts().stream().filter(grp -> grp.getCallClass().equals(FRU.class))
+				.findFirst().orElseThrow(() -> new RuntimeException("Did not find FRU callouts"));
+		ModifiedCalloutHandle ft4 = group.getCallouts().stream().filter(call -> call.getField().getName().equals("fourTetherColl4"))
+				.findFirst().orElseThrow(() -> new RuntimeException("Did not find fourTetherColl4 callout"));
+		ft4.getEnable().set(false);
+//		FRU fru = pico.getComponent(FRU.class);
+//		try {
+//			Field ft4field = FRU.class.getDeclaredField("fourTetherColl4");
+//			ft4field.setAccessible(true);
+//			ModifiableCallout<?> ft4 = (ModifiableCallout<?>) ft4field.get(fru);
+//			ft4.ha
+//			ft4.disabledByDefault();
+//		}
+//		catch (NoSuchFieldException | IllegalAccessException e) {
+//			throw new RuntimeException(e);
+//		}
+	}
+
+	@Override
+	protected List<CalloutInitialValues> getExpectedCalls() {
+		return List.of(
+				call(6927, "Proteans and Spread", "Proteans and Spread (6.2)"),
+				call(14021, "Move, Spread", "Move, Spread"),
+				call(16104, "Move", "Move"),
+				call(18158, "Move", "Move"),
+				call(18913, "Buster on Chachajire Titijire", "Buster on Chachajire Titijire (4.7)"),
+				call(23906, "Powder Mark on Chachajire Titijire", "Powder Mark on Chachajire Titijire (16.0)"),
+				call(30567, "Stack Later", "Stack Later"),
+				call(37314, "Powder Mark on Chachajire Titijire", "Powder Mark on Chachajire Titijire (2.6)"),
+				call(39728, "Stack Northeast, Southwest", "Stack Northeast, Southwest (9.7)"),
+				call(49778, "Proteans and Buddies", "Proteans and Buddies (5.3)"),
+				call(55953, "Move, Buddies", "Move, Buddies"),
+				call(56355, "Red Safe", "Red Safe"),
+				call(58004, "Move", "Move"),
+				call(60056, "Move, North/South Out", "Move, North/South Out (4.0)"),
+				call(64350, "Get Knocked West", "Get Knocked West (5.7)"),
+				call(70339, "Move In", "Move In"),
+				call(80976, "Raidwide with Bleed", "Raidwide with Bleed (4.7)"),
+				call(92502, "Fire on Sechobetu Jibetu", "Fire on Sechobetu Jibetu"),
+				call(95627, "", "Fire on Sechobetu Jibetu, Fire on YOU"),
+				call(98172, "", "Fire on Sechobetu Jibetu, Fire on YOU, Fire on Zezerobi Sisirobi"),
+//				call(100672, "", "Fire on Sechobetu Jibetu, Fire on YOU, Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
+				call(100672, "Fire on Sechobetu Jibetu", "Fire on Sechobetu Jibetu, Fire on YOU, Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
+				call(102100, "Fire on YOU", "Fire on YOU, Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
+				call(105230, "Fire on Zezerobi Sisirobi", "Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
+				call(107775, "Lightning on Harone Sudune", "Lightning on Harone Sudune"),
+				call(116315, "Raidwide with Bleed", "Raidwide with Bleed (4.7)"),
+				call(124804, "Buster on Zezerobi Sisirobi", "Buster on Zezerobi Sisirobi (4.7)"),
+				call(129799, "Powder Mark on Zezerobi Sisirobi", "Powder Mark on Zezerobi Sisirobi (16.0)"),
+				call(136086, "Soak Tower", "Soak Tower (9.2)"),
+				call(142840, "Powder Mark on Zezerobi Sisirobi", "Powder Mark on Zezerobi Sisirobi (3.0)"),
+				call(150704, "Enrage", "Enrage (9.7)"),
+				call(166065, "Buster on Zezerobi Sisirobi", "Buster on Zezerobi Sisirobi (4.7)"),
+				call(186836, "Raidwide", "Raidwide (4.7)"),
+				call(195289, "Out with Marker, West, East Safe", "Out with Marker, West, East Safe (5.2)"),
+				call(201207, "Drop Puddle", "Drop Puddle"),
+				call(205124, "Knockback Immunity", "Knockback Immunity"),
+				call(210109, "Multiple Stacks, Keep Moving", "Multiple Stacks, Keep Moving"),
+				call(214285, "Look Away from West", "Look Away from West"),
+				call(222863, "Back to Front", "Back to Front (3.2)"),
+				call(234225, "Line Stack", "Line Stack (4.7)"),
+				call(256982, "Blue Mirror and Boss, In+Proteans", "Blue Mirror and Boss, In+Proteans (5.7)"),
+				call(263029, "Red Mirrors, In+Proteans", "Red Mirrors, In+Proteans (9.7)"),
+				call(274140, "Spread", "Spread (4.7)"),
+				call(283518, "Light Rampant Positions", "Light Rampant Positions (4.7)"),
+				call(289475, "Chain and Stack", "Chain and Stack"),
+				call(299695, "Stacks", "Stacks"),
+				call(307824, "Avoid Tower", "Avoid Tower"),
+				call(312577, "Buddies", "Buddies (4.7)"),
+				call(320715, "Proteans", "Proteans (4.7)"),
+				call(334989, "Enrage, Knockback", "Enrage, Knockback (9.7)"),
+				call(371856, "Kill Crystals, Bait AoEs", "Kill Crystals, Bait AoEs (39.7)"),
+				call(437660, "1 HP", "1 HP (3.7)"),
+				call(445922, "Raidwide", "Raidwide (9.7)"),
+				call(457085, "Long Fire", "Long Fire (30.6)"),
+				call(460200, "West is North", "West is North"),
+				call(462111, "Stack", "Stack (5.6)"),
+				call(468120, "Bait Spinny", "Bait Spinny"),
+				call(473149, "Stack", "Stack (4.6)"),
+				call(478175, "Stand Middle", "Stand Middle"),
+				call(483195, "Move Out", "Move Out (4.5)"),
+				call(488217, "Look Outside", "Look Outside"),
+				call(500670, "Stack", "Stack (2.7)"),
+				call(507080, "Raidwide", "Raidwide (4.7)"),
+				call(515215, "Tankbuster on Chachajire Titijire", "Tankbuster on Chachajire Titijire (4.7)"),
+				call(576597, "Raidwide", "Raidwide (4.7)")
+		);
+	}
+}

@@ -61,6 +61,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private XivState state;
 	private ActiveCastRepository casts;
 	private StatusEffectRepository buffs;
+	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
+	private final ArenaPos arenaPosNarrow = new ArenaPos(100, 100, 5, 5);
 
 	public FRU(XivState state, PersistenceProvider pers, ActiveCastRepository casts, StatusEffectRepository buffs) {
 		this.casts = casts;
@@ -130,7 +132,6 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> utopianSkyStackSafeSpot = ModifiableCallout.durationBasedCall("Utopian Sky: Safe Spot (Fire)", "Stack {safe}");
 	private final ModifiableCallout<AbilityCastStart> utopianSkySpreadSafeSpot = ModifiableCallout.durationBasedCall("Utopian Sky: Safe Spot (Lightning)", "Spread {safe}");
 
-	private final ArenaPos arenaPos = new ArenaPos(100, 100, 8, 8);
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> utopianSky = SqtTemplates.sq(60_000,
@@ -347,7 +348,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl1 = makeTetherCall("First Tether Out", 0, 0, true);
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl2 = makeTetherCall("Second Tether Out", 0, 1, false);
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl3 = makeTetherCall("Third Tether Out", 0, 2, false);
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl4 = makeTetherCall("Fourth Tether Out", 0, 3, false);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl4 = makeTetherCall("Fourth Tether Out", 0, 3, false).disabledByDefault();
 
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving1 = makeTetherCall("First Tether Resolving", 0, 3, true);
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving2 = makeTetherCall("Second Tether Resolving", 1, 3, true);
@@ -356,7 +357,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> fourTethers = SqtTemplates.sq(60_000,
-			FruP1TetherEvent.class, te -> te.cast.abilityIdMatches(0x9CC9, 0x9CCC), /* TODO 9CCC is speculative */
+			FruP1TetherEvent.class, te -> te.cast.abilityIdMatches(0x9CC9, 0x9CCC),
 			(e1, s) -> {
 				List<FruP1TetherEvent> tethers = new ArrayList<>();
 				s.setParam("events", tethers);
@@ -373,7 +374,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 				FruP1TetherEvent e4 = s.waitEvent(FruP1TetherEvent.class, te -> te.cast.abilityIdMatches(0x9CC9, 0x9CCC));
 				tethers.add(e4);
-				s.updateCall(fourTetherColl4, e4);
+//				s.updateCall(fourTetherColl4, e4);
 
 //				s.waitMs(1_000);
 
@@ -522,7 +523,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> lrInitial = ModifiableCallout.durationBasedCall("Light Rampant: Initial", "Light Rampant Positions");
 
 	private final ModifiableCallout<?> lrChainNoStack = new ModifiableCallout<>("Light Rampant: Chain, No Weight Debuff", "Chain").statusIcon(0x103D);
-	private final ModifiableCallout<?> lrChainWithStack = new ModifiableCallout<>("Light Rampant: Chain + Weight Debuff", "Chain").statusIcon(0x103F);
+	private final ModifiableCallout<?> lrChainWithStack = new ModifiableCallout<>("Light Rampant: Chain + Weight Debuff", "Chain and Stack").statusIcon(0x103F);
 	private final ModifiableCallout<?> lrHeadmarker = new ModifiableCallout<>("Light Rampant: Puddle", "Puddle");
 	private final ModifiableCallout<?> lrCollapse = new ModifiableCallout<>("Light Rampant: After First Towers", "Stacks");
 	private final ModifiableCallout<?> lrGoInTower = new ModifiableCallout<>("Light Rampant: Take Final Tower", "Take Tower");
@@ -624,6 +625,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 		};
 	}
 
+	private final ModifiableCallout<?> ultimateRelativityRelNorth = new ModifiableCallout<>("Ultimate Relativity: Relative North", "{relNorth} is North")
+			.extendedDescription("Calls which direction is 'north' for the purposes of the mechanic. Assumes normal Y configuration. To invert, use {relNorth.opposite()}.");
 	private final ModifiableCallout<BuffApplied> relDpsShortFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Short Fire", "Short Fire").autoIcon()
 			.extendedDescription("Note that these triggers are designed for the 'Macroless Y Runytivity' strategy.");
 	private final ModifiableCallout<BuffApplied> relDpsMediumFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Medium Fire", "Medium Fire").autoIcon();
@@ -664,6 +667,46 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			.extendedDescription("Final Traffic Light Bait, with Medium Fire");
 	private final ModifiableCallout<?> relFinalCenterLookOut = new ModifiableCallout<>("Relativity: Final Mechanics", "Look Outside").statusIcon(0x998)
 			.extendedDescription("Final Traffic Light Bait, not Medium Fire");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> ultimateRelativityTetherSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D4A),
+			(e1, s) -> {
+				// It *seems* like the "north" is always the first tether, but this relies on less assumptions.
+				log.info("ultimateRelativityTetherSq: start");
+				List<TetherEvent> tethers = s.waitEventsQuickSuccession(3, TetherEvent.class, te -> te.tetherIdMatches(0x86));
+				log.info("ultimateRelativityTetherSq: got tethers");
+				s.waitThenRefreshCombatants(100);
+				List<ArenaSector> sectors = tethers.stream().map(te -> {
+					XivCombatant target = te.getTargetMatching(cbt -> cbt.npcIdMatches(17832));
+					if (target == null) {
+						throw new IllegalStateException("Bad tether: %s".formatted(te));
+					}
+					return arenaPosNarrow.forCombatant(state.getLatestCombatantData(target));
+				}).toList();
+				log.info("ultimateRelativityTetherSq: sectors {}", sectors);
+				ArenaSector fakeNorth = null;
+				outer:
+				for (ArenaSector sector : sectors) {
+					// What we need to do is check that for each sector, every other sector in the list is either +3/8 of a circle, or -3/8,
+					// or is the same tether. If that is true, then this is the middle tether.
+					for (ArenaSector otherSector : sectors) {
+						int delta = sector.eighthsTo(otherSector);
+						if (!(delta == 0 || delta == 3 || delta == -3)) {
+							// Try next one
+							continue outer;
+						}
+					}
+					fakeNorth = sector;
+				}
+				if (fakeNorth == null) {
+					log.error("ultiamteRelativityTetherSq: Could not figure out tether arrangement! Sectors: {}", sectors);
+					return;
+				}
+				s.setParam("relNorth", fakeNorth);
+				s.updateCall(ultimateRelativityRelNorth);
+				log.info("ultimateRelativityTetherSq: end");
+			});
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> ultimateRelativity = SqtTemplates.sq(60_000,
