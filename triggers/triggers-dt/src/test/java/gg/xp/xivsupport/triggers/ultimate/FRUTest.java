@@ -59,7 +59,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(56355, "Red Safe", "Red Safe"),
 				call(58004, "Move", "Move"),
 				call(60056, "Move, North/South Out", "Move, North/South Out (4.0)"),
-				call(64350, "Get Knocked West", "Get Knocked West (5.7)"),
+				call(64394, "Get Knocked West", "Get Knocked West (5.7)"),
 				call(70339, "Move In", "Move In"),
 				call(80976, "Raidwide with Bleed", "Raidwide with Bleed (4.7)"),
 				call(92502, "Fire on Sechobetu Jibetu", "Fire on Sechobetu Jibetu"),

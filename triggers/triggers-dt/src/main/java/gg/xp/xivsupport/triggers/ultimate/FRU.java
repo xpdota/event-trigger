@@ -194,7 +194,9 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> turnInitial = new ModifiableCallout<>("Turn of the Heavens: Initial", "{redSafe ? 'Red' : 'Blue'} Safe");
 	private final ModifiableCallout<AbilityCastStart> turnNSSafe = ModifiableCallout.durationBasedCall("Turn of the Heavens: Dodge Lightning", "Move, North/South Out");
-	private final ModifiableCallout<AbilityCastStart> turnKB = ModifiableCallout.durationBasedCall("Turn of the Heavens: Knockback Cast", "Get Knocked {safe}");
+	private final ModifiableCallout<AbilityCastStart> turnKB = ModifiableCallout.durationBasedCall("Turn of the Heavens: Knockback Cast (No Tether)", "Get Knocked {safe}");
+	private final ModifiableCallout<AbilityCastStart> turnKBclose = ModifiableCallout.durationBasedCall("Turn of the Heavens: Knockback Cast (With Close Tether)", "Get Knocked {safe}, Close Tether");
+	private final ModifiableCallout<AbilityCastStart> turnKBfar = ModifiableCallout.durationBasedCall("Turn of the Heavens: Knockback Cast (With Far Tether)", "Get Knocked {safe}, Far Tether");
 	private final ModifiableCallout<?> turnKBin = new ModifiableCallout<>("Turn of the Heavens: KB Move In", "Move In");
 
 	@AutoFeed
@@ -220,6 +222,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 				AbilityCastStart wideLightning = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9CE3), false);
 				s.updateCall(turnNSSafe, wideLightning);
+				List<FruP1TetherEvent> tetherEvents = s.waitEvents(2, FruP1TetherEvent.class, fp -> true);
 				// 9CE3 is initial hit
 				// 9CE4 is the big hit
 				s.waitCastFinished(casts, wideLightning);
@@ -244,7 +247,24 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 				AbilityCastStart burnout = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9CE1), false);
 				// The KB animation skill is 9CE1 and has a cast
-				s.updateCall(turnKB, burnout);
+
+				tetherEvents.stream().filter(te -> te.getTarget().isThePlayer()).findFirst().ifPresentOrElse(te -> {
+					ArenaSector tetherSector = arenaPos.forCombatant(state.getLatestCombatantData(te.source));
+					// Check if tether is close or far
+					if (tetherSector.isStrictlyAdjacentTo(safe)) {
+						s.updateCall(turnKBclose, burnout);
+					}
+					else if (tetherSector.isStrictlyAdjacentTo(safe.opposite())) {
+						s.updateCall(turnKBfar, burnout);
+					}
+					else {
+						log.error("Unknown tether configuration");
+						// Fallback
+						s.updateCall(turnKB, burnout);
+					}
+				}, () -> {
+					s.updateCall(turnKB, burnout);
+				});
 				s.waitCastFinished(casts, burnout);
 				s.updateCall(turnKBin);
 			});
@@ -357,8 +377,9 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving3 = makeTetherCall("Third Tether Resolving", 2, 3, true);
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving4 = makeTetherCall("Fourth Tether Resolving", 3, 3, true);
 
+	// This does not overlap IDs with the 2x tether mechanic
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> fourTethers = SqtTemplates.sq(60_000,
+	private final SequentialTrigger<BaseEvent> fourTethers = SqtTemplates.sq(30_000,
 			FruP1TetherEvent.class, te -> te.cast.abilityIdMatches(0x9CC9, 0x9CCC),
 			(e1, s) -> {
 				List<FruP1TetherEvent> tethers = new ArrayList<>();
@@ -397,6 +418,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> towersKB = ModifiableCallout.durationBasedCall("Towers: Soak (Non Tank + KB)", "Knockback Into Tower");
 	private final ModifiableCallout<AbilityCastStart> towersTankKB = ModifiableCallout.durationBasedCall("Towers: Don't Soak (Tank + KB)", "Knockback Away From Towers");
+	private final ModifiableCallout<?> towersKBmoveIn = new ModifiableCallout<>("Towers: Move in for KB", "Move In");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> towersSq = SqtTemplates.sq(30_000,
@@ -404,11 +426,25 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				s.waitMs(1_000);
 				boolean isKB = casts.getActiveCastById(0x9CC2).isPresent();
-				if (state.playerJobMatches(Job::isTank)) {
-					s.updateCall(isKB ? towersTankKB : towersTank, e1);
+				boolean isTank = state.playerJobMatches(Job::isTank);
+				if (isKB) {
+					if (isTank) {
+						s.updateCall(towersTankKB, e1);
+					}
+					else {
+						s.updateCall(towersKB, e1);
+					}
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CC1));
+					s.updateCall(towersKBmoveIn);
 				}
 				else {
-					s.updateCall(isKB ? towersKB : towers, e1);
+					if (isTank) {
+						s.updateCall(towersTank, e1);
+					}
+					else {
+						s.updateCall(towers, e1);
+					}
+
 				}
 				// For identifying towers for an eventual prio:
 				// 9CC7 - single
@@ -436,8 +472,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> ddAxeWithMarker = ModifiableCallout.<AbilityCastStart>durationBasedCall("DD: Axe Kick with Marker", "Out with Marker, {firstIces} Safe")
 			.extendedDescription("""
-					{firstIces} is a list of where the first ices are dropping. You can also use the boolean {cardinal} to determine whether \
-					cardinals are puddles, e.g. {cardinal ? 'No Swap' : 'Swap'"}.""");
+					{firstIces} is a list of where the first ices are dropping. You can also use the boolean `cardinal` to determine whether \
+					cardinals are puddles, e.g. {cardinal ? 'No Swap' : 'Swap'}.""");
 	private final ModifiableCallout<AbilityCastStart> ddAxeNoMarker = ModifiableCallout.durationBasedCall("DD: Axe Kick, no Marker", "Out, Bait, {firstIces} Safe");
 	private final ModifiableCallout<AbilityCastStart> ddScytheWithMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick with Marker", "In with Marker, {firstIces} Safe");
 	private final ModifiableCallout<AbilityCastStart> ddScytheNoMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick, no Marker", "In, Bait, {firstIces} Safe");
