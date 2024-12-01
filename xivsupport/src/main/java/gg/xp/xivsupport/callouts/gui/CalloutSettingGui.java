@@ -190,7 +190,7 @@ public class CalloutSettingGui {
 		if (edesc == null) {
 			return null;
 		}
-		ReadOnlyText text = new ReadOnlyText(edesc);
+		ReadOnlyText text = new ReadOnlyText(edesc, false);
 		text.setFocusable(true);
 		return text;
 	}

@@ -202,4 +202,14 @@ public class CalloutHelper extends JPanel implements Scrollable {
 	public boolean getScrollableTracksViewportHeight() {
 		return false;
 	}
+
+	@Override
+	public Dimension getPreferredSize() {
+		return super.getPreferredSize();
+	}
+
+	@Override
+	public void invalidate() {
+		super.invalidate();
+	}
 }
