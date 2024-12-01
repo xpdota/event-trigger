@@ -43,11 +43,13 @@ import org.slf4j.LoggerFactory;
 import java.io.Serial;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @CalloutRepo(name = "FRU Triggers", duty = KnownDuty.FRU)
 public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
@@ -831,6 +833,184 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> shockwavePulsar = ModifiableCallout.durationBasedCall("Shockwave Pulsar", "Raidwide");
 	@NpcCastCallout(0x9D62)
 	private final ModifiableCallout<AbilityCastStart> blackHalo = ModifiableCallout.durationBasedCall("Black Halo", "Tankbuster on {event.target}");
+
+	/*
+	https://clips.twitch.tv/BenevolentEmpathicHorseradishFunRun-cC3p-lzm7nxoAnSk
+	First stacks happen before any explosions
+	Then, you see lights on center and two opposite outers
+	Those start going CW or CCW while more sets spawn
+	For example, the pattern of hits might be (clockwise):
+	Short Stacks
+	Spread for Spirit Taker
+	(Some time between mechs)
+	Spreads in NE/SW (not the same as the spirit taker spread)
+	Middle + E/W explosions
+	Middle + E/W + SE/NW explosions
+	(spreads resolve)
+	(start running in)
+	E/W + SE/NW + S/N
+	(in for stacks)
+	SE/NW + S/N + SW/NE
+	S/N + SW/NE + W/E
+	(stacks #2 resolve)
+	SW/NE + W/E + NW/SE
+	boss jumps
+	kb
+	final stacks
+	*/
+
+	/*
+	Example log seems to be N/S start with CCW rotation
+	Events:
+	All events are ActorControlExtraEvent with 19D 4:N:0:0
+	*Maybe* this also determines direction, and thus we don't need to wait as long?
+	Initial:
+	First, a set of four - two in the middle (N==1), two at the first hits (N/S here) (N==0x40)
+	Then, a set of 8 events is 2 with x==1 for the center, one at N, one at S, as well as duplicates of those
+	two, then two final ones for NW and SE (where the rotation is headed)
+	There are further sets of 8 but we know what to do at this point.
+	So it should be possible to determine safe spot and rotation direction.
+	I'm guessing the duplicates
+	 */
+	// TODO: would be nice to prio this
+	private final ModifiableCallout<?> apocCheckStacks = new ModifiableCallout<>("Apoc: Check Stack Timers", "Check Timers").statusIcon(0x99D);
+	private final ModifiableCallout<BuffApplied> apocStacks = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: First Stacks", "Stacks").statusIcon(0x99D);
+	private final ModifiableCallout<?> apocSpiritTakerSpread = new ModifiableCallout<>("Apoc: Spirit Taker", "Spread");
+	private final ModifiableCallout<ApocDirectionsEvent> apocEruptionSpread = new ModifiableCallout<>("Apoc: Eruption", "Spread {initialSafeSpots}");
+	private final ModifiableCallout<BuffApplied> apocStacks2moveIn = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: Second Stacks", "Move in for Stacks").statusIcon(0x99D);
+	private final ModifiableCallout<BuffApplied> apocStacks2followup = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: Second Stacks", "Stacks then Tank Bait {finalSafeSpots}").statusIcon(0x99D);
+	private final ModifiableCallout<?> apocDarkestDance = new ModifiableCallout<>("Apoc: Darkest Dance", "Tank Bait {finalSafeSpots}");
+	private final ModifiableCallout<BuffApplied> apocStacks3 = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: Third Stacks", "Knockback into Stacks").statusIcon(0x99D);
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> apocSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D4E),
+			(e1, s) -> {
+				// Collect 6 "Spell-in-Waiting: Dark Water III" debuffs
+				var stackBuffs = s.waitEventsQuickSuccession(6, BuffApplied.class, ba -> ba.buffIdMatches(0x99D));
+				s.updateCall(apocCheckStacks);
+				s.waitMs(5_000);
+				stackBuffs.stream().filter(initDurLessThan(15)).findFirst().ifPresent(
+						e -> s.updateCall(apocStacks, e)
+				);
+				// Stacks resolving
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D4F));
+				s.updateCall(apocSpiritTakerSpread);
+
+				var ade = s.waitEvent(ApocDirectionsEvent.class);
+				s.setParam("clockwise", ade.isClockwise());
+				s.setParam("firstHits", ade.getFirstHits());
+				s.setParam("initialSafeSpots", ade.getInitialSafeSpots());
+				s.setParam("finalSafeSpots", ade.getFinalSafeSpots());
+				// Spirit taker resolving
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D61));
+				s.updateCall(apocEruptionSpread, ade);
+
+				// Eruption resolving
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D52));
+
+				stackBuffs.stream().filter(initDurBetween(15, 35)).findFirst().ifPresent(
+						e -> {
+							s.updateCall(apocStacks2moveIn, e);
+							s.waitMs(2_000);
+							s.updateCall(apocStacks2followup, e);
+						}
+				);
+
+				// Stacks resolving
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D4F));
+				s.updateCall(apocDarkestDance);
+
+				// Darkest Dance resolving
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CF5));
+				stackBuffs.stream().filter(initDurGreaterThan(35)).findFirst().ifPresent(
+						e -> s.updateCall(apocStacks3, e)
+				);
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> apocDirectionColl = SqtTemplates.sq(60_000,
+			// Start on Dark Water III
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D4E),
+			(e1, s) -> {
+				Predicate<ActorControlExtraEvent> filter = e -> e.getCategory() == 0x19D && e.getData0() == 0x4;
+				// This is the center + first explosion, but we don't care about this set since it doesn't tell us
+				// the rotation direction.
+				s.waitEventsQuickSuccession(4, ActorControlExtraEvent.class, filter);
+				// This is the set we care about
+				// First two are center, 3-6 are initial, 7-8 are the next set (i.e. tells us the rotation)
+				List<ActorControlExtraEvent> events = s.waitEventsQuickSuccession(8, ActorControlExtraEvent.class, filter);
+				List<ArenaSector> sectors = events.stream().map(e -> arenaPos.forCombatant(state.getLatestCombatantData(e.getTarget()))).toList();
+				ApocDirectionsEvent directions = ApocDirectionsEvent.fromSectors(sectors);
+				s.accept(directions);
+			});
+
+
+	public static final class ApocDirectionsEvent extends BaseEvent {
+		@Serial
+		private static final long serialVersionUID = 5880287039218528050L;
+		private final List<ArenaSector> firstHits;
+		private final List<ArenaSector> initialSafeSpots;
+		private final List<ArenaSector> finalSafeSpots;
+		private final boolean clockwise;
+
+		private ApocDirectionsEvent(List<ArenaSector> firstHits, boolean clockwise) {
+			this.firstHits = firstHits;
+			this.clockwise = clockwise;
+			// For clockwise rotation, we need to start 1/8 CCW from the initial hits, and vice-versa
+			int delta = clockwise ? -1 : 1;
+			initialSafeSpots = firstHits.stream().map(hit -> hit.plusEighths(delta)).toList();
+			// Final safe spots are always "opposite" initial hits, e.g. N/S becomes E/W
+			finalSafeSpots = firstHits.stream().map(hit -> hit.plusQuads(1)).toList();
+		}
+
+		static ApocDirectionsEvent fromSectors(List<ArenaSector> sectors) {
+			// TODO: later, revisit sorting of the safe spots
+			// It should sort safe spots, not initial hits
+			// Not including both since we can figure that out later
+			ArenaSector firstHit = sectors.get(2);
+			List<ArenaSector> firstHits = Stream.of(firstHit, firstHit.opposite()).sorted(ArenaSector.northCcwSort).toList();
+			boolean clockwise;
+			for (ArenaSector sector : sectors) {
+				if (sector == ArenaSector.CENTER || sector == firstHit.opposite() || sector == firstHit) {
+					continue;
+				}
+				int delta = firstHit.eighthsTo(sector);
+				// If our first hit is N, and we see either NE or SW, then it is CW
+				if (delta == 1 || delta == -3) {
+					return new ApocDirectionsEvent(firstHits, true);
+				}
+				// If our first hit is N, and we see either NW or SE, then it is CCW
+				else if (delta == -1 || delta == 3) {
+					return new ApocDirectionsEvent(firstHits, false);
+				}
+				else {
+					log.error("Unrecognized sector: {} -> {}", firstHit, sector);
+				}
+			}
+			log.error("Unable to figure out safe spots from {}", sectors);
+			return new ApocDirectionsEvent(List.of(), false);
+		}
+
+		public List<ArenaSector> getFirstHits() {
+			return Collections.unmodifiableList(firstHits);
+		}
+
+		public boolean isClockwise() {
+			return clockwise;
+		}
+
+		public List<ArenaSector> getInitialSafeSpots() {
+			return initialSafeSpots;
+		}
+
+		public List<ArenaSector> getFinalSafeSpots() {
+			return finalSafeSpots;
+		}
+	}
+
+	@NpcCastCallout(value = 0x9D6C, cancellable = true)
+	private final ModifiableCallout<AbilityCastStart> p3enrage = ModifiableCallout.durationBasedCall("P3 Enrage", "Enrage");
 }
 
 

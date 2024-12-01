@@ -468,6 +468,13 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
+	public void provideTypeOverride(XivCombatant cbt, int type) {
+		getOrCreateData(cbt.getId()).setTypeOverride(type);
+		dirtyOverrides = true;
+	}
+
+
+	@Override
 	public void flushProvidedValues() {
 		if (dirtyOverrides) {
 			dirtyOverrides = false;
@@ -615,6 +622,8 @@ public class XivStateImpl implements XivState {
 
 	//
 	private final class CombatantData {
+		// Cached computed result
+		private XivCombatant computed;
 		// TODO: add party info?
 		private final long id;
 		private @Nullable RawXivCombatantInfo raw;
@@ -625,7 +634,6 @@ public class XivStateImpl implements XivState {
 		private @Nullable RawXivPartyInfo fromPartyInfo;
 		private float radius = -1;
 		private OnlineStatus status = OnlineStatus.UNKNOWN;
-		private XivCombatant computed;
 		private boolean fake;
 		private volatile boolean dirty = true;
 		private boolean removed;
@@ -633,6 +641,7 @@ public class XivStateImpl implements XivState {
 		private long shieldPercent;
 		private short tfId = -1;
 		private short weaponId = -1;
+		private @Nullable Integer typeOverride;
 
 		private CombatantData(long id) {
 			this.id = id;
@@ -726,6 +735,11 @@ public class XivStateImpl implements XivState {
 			dirty = true;
 		}
 
+		public void setTypeOverride(@Nullable Integer typeOverride) {
+			this.typeOverride = typeOverride;
+			dirty = true;
+		}
+
 		public void setRadius(float radius) {
 			this.radius = radius;
 		}
@@ -743,7 +757,7 @@ public class XivStateImpl implements XivState {
 		}
 
 		public boolean includeInList() {
-			return !removed && hasSufficientData();
+			return !removed && (hasSufficientData() || typeOverride != null);
 		}
 
 		public boolean recomputeIfDirty() {
@@ -762,7 +776,10 @@ public class XivStateImpl implements XivState {
 			String name = raw != null ? raw.getName() : (fromOther != null ? fromOther.getName() : (fromPartyInfo != null ? fromPartyInfo.getName() : "???"));
 			long jobId = raw != null ? raw.getJobId() : (fromPartyInfo != null ? fromPartyInfo.getJobId() : 0);
 			XivWorld world = XivWorld.of();
-			long rawType = raw != null ? raw.getRawType() : (id >= 0x4000_0000 ? 2 : 1);
+			// Trust an explicit type override the most
+			// Then, check raw data (03-line or getCombatants)
+			// Finally, assume type 2 (NPC) for >=4xxx IDs or type 1 (PC) otherwise
+			long rawType = typeOverride != null ? typeOverride : raw != null ? raw.getRawType() : (id >= 0x4000_0000 ? 2 : 1);
 
 			// HP prefers trusted ACT hp lines
 			HitPoints hp = hpOverride != null ? hpOverride : raw != null ? raw.getHP() : null;

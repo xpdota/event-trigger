@@ -76,6 +76,8 @@ public interface XivState extends SubState {
 
 	void provideActFallbackCombatant(XivCombatant cbt);
 
+	void provideTypeOverride(XivCombatant cbt, int type);
+
 	void flushProvidedValues();
 
 	default @Nullable Job getPlayerJob() {

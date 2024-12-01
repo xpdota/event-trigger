@@ -126,6 +126,11 @@ public class XivStateDummy implements XivState {
 	}
 
 	@Override
+	public void provideTypeOverride(XivCombatant cbt, int type) {
+		throw new UnsupportedOperationException("not supported");
+	}
+
+	@Override
 	public void flushProvidedValues() {
 		throw new UnsupportedOperationException("not supported");
 	}

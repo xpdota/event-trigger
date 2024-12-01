@@ -109,7 +109,16 @@ public class FRUTest extends CalloutVerificationTest {
 				call(500670, "Stack", "Stack (2.7)"),
 				call(507080, "Raidwide", "Raidwide (4.7)"),
 				call(515215, "Tankbuster on Chachajire Titijire", "Tankbuster on Chachajire Titijire (4.7)"),
-				call(576597, "Raidwide", "Raidwide (4.7)")
+				call(538265, "Check Timers", "Check Timers"),
+				call(543296, "Stacks", "Stacks (5.0)"),
+				call(548338, "Spread", "Spread"),
+				call(550253, "Spread Northeast, Southwest", "Spread Northeast, Southwest"),
+				call(561508, "Move in for Stacks", "Move in for Stacks (5.8)"),
+				call(563689, "Stacks then Tank Bait East, West", "Stacks then Tank Bait East, West (3.6)"),
+				call(567335, "Tank Bait East, West", "Tank Bait East, West"),
+				call(569116, "Knockback into Stacks", "Knockback into Stacks (7.1)"),
+				call(576597, "Raidwide", "Raidwide (4.7)"),
+				call(585287, "Enrage", "Enrage (9.7)")
 		);
 	}
 }
