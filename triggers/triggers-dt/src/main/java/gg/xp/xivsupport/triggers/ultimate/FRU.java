@@ -479,8 +479,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> ddScytheNoMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick, no Marker", "In, Bait, {firstIces} Safe");
 	private final ModifiableCallout<?> ddDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Drop Puddle");
 	private final ModifiableCallout<?> ddAvoidPuddle = new ModifiableCallout<>("DD: Avoid Puddles", "Avoid Puddles");
-	private final ModifiableCallout<?> ddKB = new ModifiableCallout<>("DD: KB", "Knockback to {firstIces}");
-	private final ModifiableCallout<?> ddKBimmune = new ModifiableCallout<>("DD: KB Immune", "Knockback Immunity");
+	private final ModifiableCallout<?> ddKB = new ModifiableCallout<>("DD: KB after Scythe", "Knockback to {firstIces}");
+	private final ModifiableCallout<?> ddKbAxe = new ModifiableCallout<>("DD: KB after Axe", "Knockback to {firstIces}");
 	private final ModifiableCallout<?> ddStacks = new ModifiableCallout<>("DD: Stacks", "Multiple Stacks, Keep Moving");
 	private final ModifiableCallout<?> ddGaze = new ModifiableCallout<>("DD: Gaze", "Look Away from {gazeFrom}");
 
@@ -532,7 +532,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				// Drop or avoid puddle
 				s.updateCall(playerHasMarker ? ddDropPuddle : ddAvoidPuddle);
 				var icycleCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D08));
-				s.updateCall((playerHasMarker && isAxeKick) ? ddKBimmune : ddKB);
+				s.updateCall((playerHasMarker && isAxeKick) ? ddKbAxe : ddKB);
 				s.waitCastFinished(casts, icycleCast);
 				// TODO: CW vs CCW rotation
 				s.updateCall(ddStacks);
@@ -735,7 +735,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 							continue outer;
 						}
 					}
-					fakeNorth = sector;
+					fakeNorth = sector.opposite();
 				}
 				if (fakeNorth == null) {
 					log.error("ultiamteRelativityTetherSq: Could not figure out tether arrangement! Sectors: {}", sectors);
