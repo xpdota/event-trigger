@@ -544,6 +544,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitCastFinished(casts, e1);
 				// Add a slight delay since things don't go off instantly
 				s.waitMs(300);
+				// TODO: check the timing on these
 				// Drop or avoid puddle
 				s.updateCall(playerHasMarker ? ddDropPuddle : ddAvoidPuddle);
 				var icycleCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D08));
@@ -1089,6 +1090,20 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> darklitRaidwide = ModifiableCallout.durationBasedCall("Darklit Dragonsong: Initial", "Raidwide");
 
+	private final ModifiableCallout<BuffApplied> darklitTetherStack = ModifiableCallout.durationBasedCall("Darklit Dragonsong: Stack + Tether", "Tether and Stack");
+	private final ModifiableCallout<BuffApplied> darklitStack = ModifiableCallout.durationBasedCall("Darklit Dragonsong: Stack, No Tether", "Stack");
+	private final ModifiableCallout<?> darklitTether = new ModifiableCallout<>("Darklit Dragonsong: Tether, No Stack", "Tether");
+	private final ModifiableCallout<?> darklitNothing = new ModifiableCallout<>("Darklit Dragonsong: Neither Tether nor Stack", "Nothing");
+
+	private final ModifiableCallout<AbilityCastStart> darklitTowerWithTether = ModifiableCallout.<AbilityCastStart>durationBasedCall("Darklit Dragonsong: Tower with Tether", "Soak Tower")
+			.extendedDescription("""
+					This call and the one below are set up for the typical strat, where tethered players soak towers and non-tethered players bait cleaves.""");
+	private final ModifiableCallout<AbilityCastStart> darklitTowerNoTether = ModifiableCallout.durationBasedCall("Darklit Dragonsong: Tower, no Tether", "Bait Cleave");
+
+	private final ModifiableCallout<?> darklitSpiritTaker = new ModifiableCallout<>("Darklit Dragonsong: Spirit Taker", "Spread");
+	private final ModifiableCallout<AbilityCastStart> darklitStacks = ModifiableCallout.durationBasedCall("Darklit Dragonsong: Stacks", "Stacks");
+	private final ModifiableCallout<?> darklitTankBaits = new ModifiableCallout<>("Darklit Dragonsong: Tank Baits", "Tank Baits");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> darklitDragonsong = SqtTemplates.sq(60_000,
 			AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CB5), // Start on this random thing before the mechanic so that we can capture the headmarkers
@@ -1104,44 +1119,44 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				BuffApplied playerStack = stacks.stream().filter(stack -> stack.getTarget().isThePlayer()).findFirst().orElse(null);
 				TetherEvent playerTether = tethers.stream().filter(tether -> tether.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst().orElse(null);
 
-//				if (playerStack != null) {
-//					if (playerTether != null) {
-//						s.updateCall(darklitTetherStack, playerStack);
-//					}
-//					else {
-//						s.updateCall(darklitStack, playerStack);
-//					}
-//				}
-//				else {
-//					if (playerTether != null) {
-//						s.updateCall(darklitTether);
-//					}
-//					else {
-//						s.updateCall(darklitNothing);
-//					}
-//				}
-//				var towerCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CFB));
-//				// Wait for previous call
-//				s.waitMs(500);
-//				if (playerTether != null) {
-//					// In the typical strat, tethered players take the tower
-//					s.updateCall(darklitTowerWithTether, towerCast);
-//				}
-//				else {
-//					// In the typical strat, non-tethered players bait the chains
-//					s.updateCall(darklitTowerNoTether, towerCast);
-//				}
-//
-//				// Tower actual hit (9CFB is too early by about 800ms)
-//				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CFE));
-//
-//				s.updateCall(darklitSpiritTaker);
-//
-//				var hallowedWings = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D23, 0x9D24));
-//				s.setParam("hallowedSafe", hallowedWings.abilityIdMatches(0x9D23) ? ArenaSector.WEST : ArenaSector.EAST);
-//				s.updateCall(darklitStacks, hallowedWings);
-//				s.waitCastFinished(casts, hallowedWings);
-//				s.updateCall(darklitTankBaits);
+				if (playerStack != null) {
+					if (playerTether != null) {
+						s.updateCall(darklitTetherStack, playerStack);
+					}
+					else {
+						s.updateCall(darklitStack, playerStack);
+					}
+				}
+				else {
+					if (playerTether != null) {
+						s.updateCall(darklitTether);
+					}
+					else {
+						s.updateCall(darklitNothing);
+					}
+				}
+				var towerCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CFB));
+				// Wait for previous call
+				s.waitMs(500);
+				if (playerTether != null) {
+					// In the typical strat, tethered players take the tower
+					s.updateCall(darklitTowerWithTether, towerCast);
+				}
+				else {
+					// In the typical strat, non-tethered players bait the chains
+					s.updateCall(darklitTowerNoTether, towerCast);
+				}
+
+				// Tower actual hit (9CFB is too early by about 800ms)
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CFE));
+
+				s.updateCall(darklitSpiritTaker);
+
+				var hallowedWings = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D23, 0x9D24));
+				s.setParam("hallowedSafe", hallowedWings.abilityIdMatches(0x9D23) ? ArenaSector.WEST : ArenaSector.EAST);
+				s.updateCall(darklitStacks, hallowedWings);
+				s.waitCastFinished(casts, hallowedWings);
+				s.updateCall(darklitTankBaits);
 			});
 }
 
