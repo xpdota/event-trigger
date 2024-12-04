@@ -762,6 +762,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				log.info("ultimateRelativityTetherSq: end");
 			});
 
+	private static final Predicate<BuffApplied> isPlayer = ba -> ba.getTarget().isThePlayer();
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> ultimateRelativity = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D4A),
@@ -794,7 +796,6 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				Predicate<BuffApplied> waterCond = ba -> ba.buffIdMatches(0x99D);
 				Predicate<BuffApplied> eruptionCond = ba -> ba.buffIdMatches(0x99C);
 				Predicate<BuffApplied> gazeCond = ba -> ba.buffIdMatches(0x998);
-				Predicate<BuffApplied> isPlayer = ba -> ba.getTarget().isThePlayer();
 
 				var shortCond = initDurLessThan(17);
 				var medCond = initDurBetween(17, 27);
@@ -1104,14 +1105,15 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> darklitStacks = ModifiableCallout.durationBasedCall("Darklit Dragonsong: Stacks", "Stacks");
 	private final ModifiableCallout<?> darklitTankBaits = new ModifiableCallout<>("Darklit Dragonsong: Tank Baits", "Tank Baits");
 
+	// This can't be an @NpcCastCallout because it can overlap with other calls
+	private final ModifiableCallout<AbilityCastStart> edgeOfOblivion = ModifiableCallout.durationBasedCall("Edge of Oblivion", "Raidwide");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> darklitDragonsong = SqtTemplates.sq(60_000,
-			AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CB5), // Start on this random thing before the mechanic so that we can capture the headmarkers
+			// Technically, we miss the headmarkers by doing this, but the players with stacks get a stack debuff anyway
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D2F),
 			(e1, s) -> {
-				// TODO: add this to an initial callout?
-				s.waitEvents(2, HeadMarkerEvent.class);
-				var initialCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D2F));
-				s.updateCall(darklitRaidwide, initialCast);
+				s.updateCall(darklitRaidwide, e1);
 
 				var stacks = s.waitEvents(2, BuffApplied.class, ba -> ba.buffIdMatches(0x99D));
 				var tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.tetherIdMatches(0x6E));
@@ -1157,7 +1159,81 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(darklitStacks, hallowedWings);
 				s.waitCastFinished(casts, hallowedWings);
 				s.updateCall(darklitTankBaits);
+				var edgeCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CEE));
+				s.updateCall(edgeOfOblivion, edgeCast);
 			});
+
+	private final ModifiableCallout<AbilityCastStart> akhMornStacks = ModifiableCallout.durationBasedCall("Akh Morn (Stacks)", "Stacks");
+	private final ModifiableCallout<AbilityCastStart> mornAfahStack = ModifiableCallout.durationBasedCall("Morn Afah (Stack)", "Stack");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> akhMorn = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D37),
+			(e1, s) -> {
+				s.updateCall(akhMornStacks, e1);
+				var mornAfahCast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9D39), false);
+				s.updateCall(mornAfahStack, mornAfahCast);
+			});
+
+	private final ModifiableCallout<AbilityCastStart> crystallizeTimeInitial = ModifiableCallout.durationBasedCall("Crystallize Time: Initial", "Raidwide");
+
+	private final ModifiableCallout<BuffApplied> crystallizeAero = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Aero + Long Red", "Aero").statusIcon(0x99F);
+	private final ModifiableCallout<BuffApplied> crystallizeIceShortRed = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Ice + Short Red", "Ice and Short Red").statusIcon(0xCBF);
+	private final ModifiableCallout<BuffApplied> crystallizeIceBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Ice + Blue", "Ice and Blue").statusIcon(0x99E);
+	private final ModifiableCallout<BuffApplied> crystallizeEruption = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Eruption + Blue", "Eruption and Blue").statusIcon(0x99C);
+	private final ModifiableCallout<BuffApplied> crystallizeStack = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Stack + Blue", "Stack and Blue").statusIcon(0x996);
+	private final ModifiableCallout<BuffApplied> crystallizeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Water + Blue", "Water and Blue").statusIcon(0x99D);
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> crystallizeTimeSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D30),
+			(e1, s) -> {
+				log.info("Crystallize Time: Initial");
+				s.updateCall(crystallizeTimeInitial, e1);
+				s.waitCastFinished(casts, e1);
+
+				// Collect debuffs
+				// Red debuff
+				var wyrmclawColl = new EventCollector<BuffApplied>(ba -> ba.buffIdMatches(0xCBF));
+				// Blue debuff
+				var wyrmfangColl = new EventCollector<BuffApplied>(ba -> ba.buffIdMatches(0xCC0));
+				// Ice
+				var blizzColl = new EventCollector<BuffApplied>(ba -> ba.buffIdMatches(0x99E));
+				// Wind
+				var aeroColl = new EventCollector<BuffApplied>(ba -> ba.buffIdMatches(0x99F));
+				// Water
+				var waterColl = new EventCollector<BuffApplied>(ba -> ba.buffIdMatches(0x99D));
+				// Stack
+				var darknessColl = new EventCollector<BuffApplied>(ba -> ba.buffIdMatches(0x996));
+				// Spread
+				var eruptionColl = new EventCollector<BuffApplied>(ba -> ba.buffIdMatches(0x99C));
+				// Quietus
+				var quietusColl = new EventCollector<BuffApplied>(ba -> ba.buffIdMatches(0x104E));
+
+				s.collectEvents(19, 1_500, BuffApplied.class, true, List.of(wyrmclawColl, wyrmfangColl, blizzColl, aeroColl, waterColl, darknessColl, eruptionColl, quietusColl));
+
+				// Aero + Long Red
+				aeroColl.findAny(isPlayer).ifPresent(aero -> s.updateCall(crystallizeAero, aero));
+				// Ice
+				blizzColl.findAny(isPlayer).ifPresent(ice -> {
+					// If you have ice, you can either have short red or blue
+					wyrmclawColl.findAny(isPlayer).ifPresentOrElse(redIgnored -> {
+						// Ice + Short Red
+						s.updateCall(crystallizeIceShortRed, ice);
+					}, () -> {
+						// Ice + Blue
+						s.updateCall(crystallizeIceBlue, ice);
+					});
+				});
+				eruptionColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallizeEruption, erupt));
+				darknessColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallizeStack, erupt));
+				waterColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallizeWater, erupt));
+				log.info("Crystallize Time: Finished");
+
+
+			});
+
+
 }
 
 
