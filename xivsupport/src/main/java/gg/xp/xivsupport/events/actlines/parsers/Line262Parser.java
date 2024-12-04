@@ -24,10 +24,14 @@ public class Line262Parser extends AbstractACTLineParser<Line262Parser.Fields> {
 		String localeStr = fields.getString(Fields.locale);
 		GameLanguage lang = GameLanguage.valueOfShort(localeStr);
 
+		String value = fields.getString(Fields.rsvValue);
+		if (value.isBlank()) {
+			return null;
+		}
 		return new RsvEvent(
 				lang,
 				fields.getString(Fields.rsvKey),
-				fields.getString(Fields.rsvValue)
+				value
 		);
 	}
 

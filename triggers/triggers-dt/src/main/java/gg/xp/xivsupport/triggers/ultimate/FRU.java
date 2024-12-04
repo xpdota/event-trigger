@@ -292,7 +292,6 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	 * Do proteans again
 	 * Has stacks/spread mech
 	 * Two tethers
-	 * TODO: how do we check safe color?
 	 *
 	 * Four tether mechanic - in order, make priority system (AM later?)
 	 *
@@ -344,6 +343,16 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 		public AbilityCastStart getCastEvent() {
 			return cast;
 		}
+
+		@SuppressWarnings("unused")
+		public boolean isLightning() {
+			return mechType == MechType.Lightning;
+		}
+
+		@SuppressWarnings("unused")
+		public boolean isFire() {
+			return mechType == MechType.Fire;
+		}
 	}
 
 	@AutoFeed
@@ -367,10 +376,13 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 		return new ModifiableCallout<>("Four Tethers: %s".formatted(descPart), tts, text);
 	}
 
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl1 = makeTetherCall("First Tether Out", 0, 0, true);
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl1 = makeTetherCall("First Tether Out", 0, 0, true)
+			.extendedDescription("""
+					For these callouts, `events` is a list of tethers. In addition to `.target` and `.mechType`, you can also use `.fire` and `.lightning` booleans to\
+					directly check if one is fire or lightning, e.g. {events[0].fire ? 'F' : 'L'} to call 'F' or 'L'.""");
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl2 = makeTetherCall("Second Tether Out", 0, 1, false);
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl3 = makeTetherCall("Third Tether Out", 0, 2, false);
-	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl4 = makeTetherCall("Fourth Tether Out", 0, 3, false).disabledByDefault();
+	private final ModifiableCallout<FruP1TetherEvent> fourTetherColl4 = makeTetherCall("Fourth Tether Out", 0, 3, false);
 
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving1 = makeTetherCall("First Tether Resolving", 0, 3, true);
 	private final ModifiableCallout<FruP1TetherEvent> fourTetherResolving2 = makeTetherCall("Second Tether Resolving", 1, 3, true);
@@ -397,17 +409,20 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 				FruP1TetherEvent e4 = s.waitEvent(FruP1TetherEvent.class, te -> te.cast.abilityIdMatches(0x9CC9, 0x9CCC));
 				tethers.add(e4);
-//				s.updateCall(fourTetherColl4, e4);
+				s.updateCall(fourTetherColl4, e4);
 
-//				s.waitMs(1_000);
+				s.waitMs(1_000);
 
 				// Call the first one soon, but for the rest, wait until the previous tether goes off
 				s.updateCall(fourTetherResolving1);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CEB));
+				s.waitMs(1_000);
 				s.updateCall(fourTetherResolving2);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CEB));
+				s.waitMs(1_000);
 				s.updateCall(fourTetherResolving3);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CEB));
+				s.waitMs(1_000);
 				s.updateCall(fourTetherResolving4);
 
 				// AM Idea: Use binds for lightning, ignores for fire to match the colors
@@ -911,8 +926,11 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	// TODO: would be nice to prio this
 	private final ModifiableCallout<?> apocCheckStacks = new ModifiableCallout<>("Apoc: Check Stack Timers", "Check Timers").statusIcon(0x99D);
 	private final ModifiableCallout<BuffApplied> apocStacks = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: First Stacks", "Stacks").statusIcon(0x99D);
-	private final ModifiableCallout<?> apocSpiritTakerSpread = new ModifiableCallout<>("Apoc: Spirit Taker", "Spread");
-	private final ModifiableCallout<ApocDirectionsEvent> apocEruptionSpread = new ModifiableCallout<>("Apoc: Eruption", "Spread {initialSafeSpots}");
+	private final ModifiableCallout<?> apocSpiritTakerSpread = new ModifiableCallout<>("Apoc: Spirit Taker", "Spread")
+			.extendedDescription("""
+					This call and calls after it can make use of the variables `clockwise` (boolean), `firstHits` (list of the first hits), \
+					`initialSafeSpots (the safe spots for the eruption spreads), and `finalSafeSpots` (the safe spots for a to take the jump).""");
+	private final ModifiableCallout<?> apocEruptionSpread = new ModifiableCallout<>("Apoc: Eruption", "Spread {initialSafeSpots}");
 	private final ModifiableCallout<BuffApplied> apocStacks2moveIn = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: Second Stacks", "Move in for Stacks").statusIcon(0x99D);
 	private final ModifiableCallout<BuffApplied> apocStacks2followup = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: Second Stacks", "Stacks then Tank Bait {finalSafeSpots}").statusIcon(0x99D);
 	private final ModifiableCallout<?> apocDarkestDance = new ModifiableCallout<>("Apoc: Darkest Dance", "Tank Bait {finalSafeSpots}");
@@ -929,18 +947,18 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				stackBuffs.stream().filter(initDurLessThan(15)).findFirst().ifPresent(
 						e -> s.updateCall(apocStacks, e)
 				);
-				// Stacks resolving
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D4F));
-				s.updateCall(apocSpiritTakerSpread);
-
 				var ade = s.waitEvent(ApocDirectionsEvent.class);
 				s.setParam("clockwise", ade.isClockwise());
 				s.setParam("firstHits", ade.getFirstHits());
 				s.setParam("initialSafeSpots", ade.getInitialSafeSpots());
 				s.setParam("finalSafeSpots", ade.getFinalSafeSpots());
+				// Stacks resolving
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D4F));
+				s.updateCall(apocSpiritTakerSpread);
+
 				// Spirit taker resolving
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D61));
-				s.updateCall(apocEruptionSpread, ade);
+				s.updateCall(apocEruptionSpread);
 
 				// Eruption resolving
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D52));
@@ -969,15 +987,19 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			// Start on Dark Water III
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D4E),
 			(e1, s) -> {
-				Predicate<ActorControlExtraEvent> filter = e -> e.getCategory() == 0x19D && e.getData0() == 0x4;
-				// This is the center + first explosion, but we don't care about this set since it doesn't tell us
-				// the rotation direction.
-				s.waitEventsQuickSuccession(4, ActorControlExtraEvent.class, filter);
-				// This is the set we care about
-				// First two are center, 3-6 are initial, 7-8 are the next set (i.e. tells us the rotation)
-				List<ActorControlExtraEvent> events = s.waitEventsQuickSuccession(8, ActorControlExtraEvent.class, filter);
-				List<ArenaSector> sectors = events.stream().map(e -> arenaPos.forCombatant(state.getLatestCombatantData(e.getTarget()))).toList();
-				ApocDirectionsEvent directions = ApocDirectionsEvent.fromSectors(sectors);
+				// It appears that we can use the ACEE data1 attribute to directly determine direction.
+				// 0x1 = center, 0x10 = CW, 0x40 = CCW?
+				// We can also add the safe spot as a parameter to the first "Spread" call for people who want to know it earlier
+				Predicate<ActorControlExtraEvent> filter = e -> e.getCategory() == 0x19D && e.getData0() == 0x4
+				                                                && (e.getData1() == 0x10 || e.getData1() == 0x40);
+				// This is the center + first explosion. 0x10 == clockwise, 0x40 == ccw.
+				List<ActorControlExtraEvent> events = s.waitEventsQuickSuccession(2, ActorControlExtraEvent.class, filter);
+				List<ArenaSector> sectors = events.stream()
+						.map(e -> arenaPos.forCombatant(state.getLatestCombatantData(e.getTarget())))
+						.sorted(ArenaSector.northCcwSort)
+						.toList();
+				boolean clockwise = events.get(0).getData1() == 0x10;
+				ApocDirectionsEvent directions = new ApocDirectionsEvent(sectors, clockwise);
 				s.accept(directions);
 			});
 
@@ -1047,6 +1069,80 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@NpcCastCallout(value = 0x9D6C, cancellable = true)
 	private final ModifiableCallout<AbilityCastStart> p3enrage = ModifiableCallout.durationBasedCall("P3 Enrage", "Enrage");
+
+	private final ModifiableCallout<?> p4stack = new ModifiableCallout<>("P4 Start: Stack", "Stack");
+	private final ModifiableCallout<AbilityCastStart> p4dodge = ModifiableCallout.durationBasedCall("P4 Start: Dodge", "Dodge");
+	private final ModifiableCallout<AbilityCastStart> p4startDmg = ModifiableCallout.durationBasedCall("P4 Start: Damage", "Raidwide");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p4start = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D36),
+			(e1, s) -> {
+				s.waitMs(8_000);
+				s.updateCall(p4stack);
+				var edgeCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CEE));
+				var akhRhaiCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D2D));
+				s.updateCall(p4dodge, akhRhaiCast);
+				s.waitCastFinished(casts, akhRhaiCast);
+				s.updateCall(p4startDmg, edgeCast);
+			});
+
+	private final ModifiableCallout<AbilityCastStart> darklitRaidwide = ModifiableCallout.durationBasedCall("Darklit Dragonsong: Initial", "Raidwide");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> darklitDragonsong = SqtTemplates.sq(60_000,
+			AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CB5), // Start on this random thing before the mechanic so that we can capture the headmarkers
+			(e1, s) -> {
+				// TODO: add this to an initial callout?
+				s.waitEvents(2, HeadMarkerEvent.class);
+				var initialCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D2F));
+				s.updateCall(darklitRaidwide, initialCast);
+
+				var stacks = s.waitEvents(2, BuffApplied.class, ba -> ba.buffIdMatches(0x99D));
+				var tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.tetherIdMatches(0x6E));
+
+				BuffApplied playerStack = stacks.stream().filter(stack -> stack.getTarget().isThePlayer()).findFirst().orElse(null);
+				TetherEvent playerTether = tethers.stream().filter(tether -> tether.eitherTargetMatches(XivCombatant::isThePlayer)).findFirst().orElse(null);
+
+//				if (playerStack != null) {
+//					if (playerTether != null) {
+//						s.updateCall(darklitTetherStack, playerStack);
+//					}
+//					else {
+//						s.updateCall(darklitStack, playerStack);
+//					}
+//				}
+//				else {
+//					if (playerTether != null) {
+//						s.updateCall(darklitTether);
+//					}
+//					else {
+//						s.updateCall(darklitNothing);
+//					}
+//				}
+//				var towerCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CFB));
+//				// Wait for previous call
+//				s.waitMs(500);
+//				if (playerTether != null) {
+//					// In the typical strat, tethered players take the tower
+//					s.updateCall(darklitTowerWithTether, towerCast);
+//				}
+//				else {
+//					// In the typical strat, non-tethered players bait the chains
+//					s.updateCall(darklitTowerNoTether, towerCast);
+//				}
+//
+//				// Tower actual hit (9CFB is too early by about 800ms)
+//				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CFE));
+//
+//				s.updateCall(darklitSpiritTaker);
+//
+//				var hallowedWings = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D23, 0x9D24));
+//				s.setParam("hallowedSafe", hallowedWings.abilityIdMatches(0x9D23) ? ArenaSector.WEST : ArenaSector.EAST);
+//				s.updateCall(darklitStacks, hallowedWings);
+//				s.waitCastFinished(casts, hallowedWings);
+//				s.updateCall(darklitTankBaits);
+			});
 }
 
 

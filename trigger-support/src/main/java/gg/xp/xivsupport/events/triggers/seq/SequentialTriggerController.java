@@ -344,6 +344,32 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	}
 
 	// To be called from internal thread
+
+	/**
+	 * Wait for a fixed number of events and put them in a list. Equivalent to calling {@link #waitEvent(Class)}
+	 * multiple times and adding the results to a list.
+	 *
+	 * @param events     The number of events to wait for
+	 * @param eventClass The class of events to wait for
+	 * @param <Y>        The class of events to wait for
+	 * @return The list of events
+	 */
+	public <Y> List<Y> waitEvents(int events, Class<Y> eventClass) {
+		return waitEvents(events, eventClass, e -> true);
+	}
+
+	// To be called from internal thread
+
+	/**
+	 * Wait for a fixed number of events matching a condition and put them in a list. Equivalent to calling
+	 * {@link #waitEvent(Class, Predicate)} multiple times and adding the results to a list.
+	 *
+	 * @param events      The number of events to wait for
+	 * @param eventClass  The class of events to wait for
+	 * @param eventFilter The condition for the events
+	 * @param <Y>         The class of events to wait for
+	 * @return The list of events
+	 */
 	public <Y> List<Y> waitEvents(int events, Class<Y> eventClass, Predicate<Y> eventFilter) {
 		return IntStream.range(0, events)
 				.mapToObj(i -> waitEvent(eventClass, eventFilter))

@@ -53,6 +53,7 @@ public final class PersistentRsvLibrary implements RsvLibrary {
 				.flatMap(
 						langEntry -> langEntry.getValue().entries()
 								.stream()
+								.filter(rsvEntry -> !rsvEntry.getValue().isBlank())
 								.map(rsvEntry -> new RsvEntry(langEntry.getKey(), rsvEntry.getKey(), rsvEntry.getValue())))
 				.toList();
 	}

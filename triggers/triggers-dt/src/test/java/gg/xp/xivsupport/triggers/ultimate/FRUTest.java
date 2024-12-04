@@ -20,27 +20,16 @@ public class FRUTest extends CalloutVerificationTest {
 		return 400;
 	}
 
-	@Override
-	protected void configure(MutablePicoContainer pico) {
-		// Disable this specific callout since it will fail the timing check (and is unnecessary anyway)
-		ModifiedCalloutRepository mcr = pico.getComponent(ModifiedCalloutRepository.class);
-		CalloutGroup group = mcr.getAllCallouts().stream().filter(grp -> grp.getCallClass().equals(FRU.class))
-				.findFirst().orElseThrow(() -> new RuntimeException("Did not find FRU callouts"));
-		ModifiedCalloutHandle ft4 = group.getCallouts().stream().filter(call -> call.getField().getName().equals("fourTetherColl4"))
-				.findFirst().orElseThrow(() -> new RuntimeException("Did not find fourTetherColl4 callout"));
-		ft4.getEnable().set(false);
-//		FRU fru = pico.getComponent(FRU.class);
-//		try {
-//			Field ft4field = FRU.class.getDeclaredField("fourTetherColl4");
-//			ft4field.setAccessible(true);
-//			ModifiableCallout<?> ft4 = (ModifiableCallout<?>) ft4field.get(fru);
-//			ft4.ha
-//			ft4.disabledByDefault();
-//		}
-//		catch (NoSuchFieldException | IllegalAccessException e) {
-//			throw new RuntimeException(e);
-//		}
-	}
+//	@Override
+//	protected void configure(MutablePicoContainer pico) {
+//		// Disable this specific callout since it will fail the timing check (and is unnecessary anyway)
+//		ModifiedCalloutRepository mcr = pico.getComponent(ModifiedCalloutRepository.class);
+//		CalloutGroup group = mcr.getAllCallouts().stream().filter(grp -> grp.getCallClass().equals(FRU.class))
+//				.findFirst().orElseThrow(() -> new RuntimeException("Did not find FRU callouts"));
+//		ModifiedCalloutHandle ft4 = group.getCallouts().stream().filter(call -> call.getField().getName().equals("fourTetherColl4"))
+//				.findFirst().orElseThrow(() -> new RuntimeException("Did not find fourTetherColl4 callout"));
+//		ft4.getEnable().set(false);
+//	}
 
 	@Override
 	protected List<CalloutInitialValues> getExpectedCalls() {
@@ -65,11 +54,11 @@ public class FRUTest extends CalloutVerificationTest {
 				call(92502, "Fire on Sechobetu Jibetu", "Fire on Sechobetu Jibetu"),
 				call(95627, "", "Fire on Sechobetu Jibetu, Fire on YOU"),
 				call(98172, "", "Fire on Sechobetu Jibetu, Fire on YOU, Fire on Zezerobi Sisirobi"),
-//				call(100672, "", "Fire on Sechobetu Jibetu, Fire on YOU, Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
-				call(100672, "Fire on Sechobetu Jibetu", "Fire on Sechobetu Jibetu, Fire on YOU, Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
-				call(102100, "Fire on YOU", "Fire on YOU, Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
-				call(105230, "Fire on Zezerobi Sisirobi", "Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
-				call(107775, "Lightning on Harone Sudune", "Lightning on Harone Sudune"),
+				call(100672, "", "Fire on Sechobetu Jibetu, Fire on YOU, Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
+				call(101697, "Fire on Sechobetu Jibetu", "Fire on Sechobetu Jibetu, Fire on YOU, Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
+				call(103219, "Fire on YOU", "Fire on YOU, Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
+				call(106255, "Fire on Zezerobi Sisirobi", "Fire on Zezerobi Sisirobi, Lightning on Harone Sudune"),
+				call(108805, "Lightning on Harone Sudune", "Lightning on Harone Sudune"),
 				call(116315, "Raidwide with Bleed", "Raidwide with Bleed (4.7)"),
 				call(124804, "Buster on Zezerobi Sisirobi", "Buster on Zezerobi Sisirobi (4.7)"),
 				call(129799, "Powder Mark on Zezerobi Sisirobi", "Powder Mark on Zezerobi Sisirobi (16.0)"),
@@ -118,7 +107,12 @@ public class FRUTest extends CalloutVerificationTest {
 				call(567335, "Tank Bait East, West", "Tank Bait East, West"),
 				call(569116, "Knockback into Stacks", "Knockback into Stacks (7.1)"),
 				call(576597, "Raidwide", "Raidwide (4.7)"),
-				call(585287, "Enrage", "Enrage (9.7)")
+				call(585287, "Enrage", "Enrage (9.7)"),
+				// TODO: verify these
+				call(617494, "Stack", "Stack"),
+				call(623645, "Dodge", "Dodge (2.2)"),
+				call(626142, "Raidwide", "Raidwide (2.2)"),
+				call(633307, "Raidwide", "Raidwide (4.7)")
 		);
 	}
 }
