@@ -108,7 +108,6 @@ public class FRUTest extends CalloutVerificationTest {
 				call(569116, "Knockback into Stacks", "Knockback into Stacks (7.1)"),
 				call(576597, "Raidwide", "Raidwide (4.7)"),
 				call(585287, "Enrage", "Enrage (9.7)"),
-				// TODO: verify these
 				call(617494, "Stack", "Stack"),
 				call(623645, "Dodge", "Dodge (2.2)"),
 				call(626142, "Raidwide", "Raidwide (2.2)"),
@@ -123,6 +122,13 @@ public class FRUTest extends CalloutVerificationTest {
 				call(678188, "Stack", "Stack (5.7)"),
 				call(689739, "Raidwide", "Raidwide (9.7)"),
 				call(700540, "Ice and Blue", "Ice and Blue (14.0)"),
+				call(703827, "", ""),
+				call(710179, "Move, Get Pushed Northeast", "Move, Get Pushed Northeast (4.4)"),
+				call(714623, "Stack", "Stack (2.9)"),
+				call(717600, "Dodge and Cleanse", "Dodge and Cleanse"),
+				call(727875, "Raidwide", "Raidwide (3.7)"),
+				call(731600, "Drop Rewind Northwest", "Drop Rewind Northwest"),
+				call(733912, "Cleanse and Spread", "Cleanse and Spread (2.7)"),
 				call(752512, "Stacks", "Stacks (3.7)"),
 				call(760694, "Stack", "Stack (5.7)")
 

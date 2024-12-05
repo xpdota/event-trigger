@@ -45,11 +45,11 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @CalloutRepo(name = "FRU Triggers", duty = KnownDuty.FRU)
 public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
@@ -786,7 +786,6 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				3 get gaze 998 43s
 
 				*/
-				// TODO: identify "north"
 				boolean isDps = state.playerJobMatches(Job::isDps);
 				s.waitCastFinished(casts, e1);
 				Predicate<BuffApplied> iceCond = ba -> ba.buffIdMatches(0x99E);
@@ -1024,34 +1023,6 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			finalSafeSpots = firstHits.stream().map(hit -> hit.plusQuads(1)).toList();
 		}
 
-		static ApocDirectionsEvent fromSectors(List<ArenaSector> sectors) {
-			// TODO: later, revisit sorting of the safe spots
-			// It should sort safe spots, not initial hits
-			// Not including both since we can figure that out later
-			ArenaSector firstHit = sectors.get(2);
-			List<ArenaSector> firstHits = Stream.of(firstHit, firstHit.opposite()).sorted(ArenaSector.northCcwSort).toList();
-			boolean clockwise;
-			for (ArenaSector sector : sectors) {
-				if (sector == ArenaSector.CENTER || sector == firstHit.opposite() || sector == firstHit) {
-					continue;
-				}
-				int delta = firstHit.eighthsTo(sector);
-				// If our first hit is N, and we see either NE or SW, then it is CW
-				if (delta == 1 || delta == -3) {
-					return new ApocDirectionsEvent(firstHits, true);
-				}
-				// If our first hit is N, and we see either NW or SE, then it is CCW
-				else if (delta == -1 || delta == 3) {
-					return new ApocDirectionsEvent(firstHits, false);
-				}
-				else {
-					log.error("Unrecognized sector: {} -> {}", firstHit, sector);
-				}
-			}
-			log.error("Unable to figure out safe spots from {}", sectors);
-			return new ApocDirectionsEvent(List.of(), false);
-		}
-
 		public List<ArenaSector> getFirstHits() {
 			return Collections.unmodifiableList(firstHits);
 		}
@@ -1178,17 +1149,53 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> crystallizeTimeInitial = ModifiableCallout.durationBasedCall("Crystallize Time: Initial", "Raidwide");
 
 	private final ModifiableCallout<BuffApplied> crystallizeAero = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Aero + Long Red", "Aero").statusIcon(0x99F);
-	private final ModifiableCallout<BuffApplied> crystallizeIceShortRed = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Ice + Short Red", "Ice and Short Red").statusIcon(0xCBF);
+	private final ModifiableCallout<BuffApplied> crystallizeIceShortRed = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Ice + Short Red", "Ice and Short Red, Pop Head").statusIcon(0xCBF);
 	private final ModifiableCallout<BuffApplied> crystallizeIceBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Ice + Blue", "Ice and Blue").statusIcon(0x99E);
 	private final ModifiableCallout<BuffApplied> crystallizeEruption = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Eruption + Blue", "Eruption and Blue").statusIcon(0x99C);
 	private final ModifiableCallout<BuffApplied> crystallizeStack = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Stack + Blue", "Stack and Blue").statusIcon(0x996);
 	private final ModifiableCallout<BuffApplied> crystallizeWater = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Water + Blue", "Water and Blue").statusIcon(0x99D);
+
+	private final ModifiableCallout<?> crystallizeTethers = new ModifiableCallout<>("Crystallize Time: Tethers", "")
+			.disabledByDefault()
+			.extendedDescription("""
+					During and after this callout, you can use variables `{shortLights}`, `{longLights}`, and `{nonTethered}` to reference the locations of the short (always N/S), long, and un-tethered lights, respectively.\
+					In addition, `{kbSafe}` is the knockback safe spot, i.e. whichever `longLights` is northernmost.""");
+
+	private final ModifiableCallout<BuffApplied> crystallize2Aero = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After First Lights: Aero + Long Red", "Move, Push Party").statusIcon(0x99F);
+	private final ModifiableCallout<BuffApplied> crystallize2IceShortRed = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After First Lights: Ice + Short Red", "Pop Head").statusIcon(0xCBF);
+	private final ModifiableCallout<BuffApplied> crystallize2IceBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After First Lights: Ice + Blue", "Move, Get Pushed {kbSafe}").statusIcon(0x99E);
+	private final ModifiableCallout<BuffApplied> crystallize2Eruption = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After First Lights: Eruption + Blue", "Eruption").statusIcon(0x99C);
+	private final ModifiableCallout<BuffApplied> crystallize2Stack = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After First Lights: Stack + Blue", "Move, Get Pushed {kbSafe}").statusIcon(0x996);
+	private final ModifiableCallout<BuffApplied> crystallize2Water = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After First Lights: Water + Blue", "Move, Get Pushed {kbSafe}").statusIcon(0x99D);
+
+	private final ModifiableCallout<BuffApplied> crystallize3Aero = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After KB: Aero + Long Red", "Avoid Lights").statusIcon(0x99F);
+	private final ModifiableCallout<BuffApplied> crystallize3IceShortRed = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After KB: Ice + Short Red", "Stack/Avoid Light").statusIcon(0xCBF);
+	private final ModifiableCallout<BuffApplied> crystallize3IceBlue = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After KB: Ice + Blue", "Stack").statusIcon(0x99E);
+	private final ModifiableCallout<BuffApplied> crystallize3Eruption = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After KB: Eruption + Blue", "Stack").statusIcon(0x99C);
+	private final ModifiableCallout<BuffApplied> crystallize3Stack = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After KB: Stack + Blue", "Stack").statusIcon(0x996);
+	private final ModifiableCallout<BuffApplied> crystallize3Water = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time, After KB: Water + Blue", "Stack").statusIcon(0x99D);
+
+	private final ModifiableCallout<?> crystallize4Aero = new ModifiableCallout<>("Crystallize Time, After Stacks: Aero + Long Red", "Dodge and Pop Heads").statusIcon(0xCBF);
+	private final ModifiableCallout<?> crystallize4IceShortRed = new ModifiableCallout<>("Crystallize Time, After Stacks: Ice + Short Red", "Dodge");
+	private final ModifiableCallout<?> crystallize4IceBlue = new ModifiableCallout<>("Crystallize Time, After Stacks: Ice + Blue", "Dodge and Cleanse").statusIcon(0xCC0);
+	private final ModifiableCallout<?> crystallize4Eruption = new ModifiableCallout<>("Crystallize Time, After Stacks: Eruption + Blue", "Dodge and Cleanse").statusIcon(0xCC0);
+	private final ModifiableCallout<?> crystallize4Stack = new ModifiableCallout<>("Crystallize Time, After Stacks: Stack + Blue", "Dodge and Cleanse").statusIcon(0xCC0);
+	private final ModifiableCallout<?> crystallize4Water = new ModifiableCallout<>("Crystallize Time, After Stacks: Water + Blue", "Dodge and Cleanse").statusIcon(0xCC0);
+
+	private final ModifiableCallout<BuffApplied> crystallize5quietus = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Quietus", "Raidwide").statusIcon(0x104E);
+	private final ModifiableCallout<?> crystallize5dropRewind = new ModifiableCallout<>("Crystallize Time: Drop Rewind", "Drop Rewind {tidalFrom}").statusIcon(0x1070);
+
+	private final ModifiableCallout<AbilityCastStart> crystallize6cleanse = ModifiableCallout.<AbilityCastStart>durationBasedCall("Crystallize Time, After Rewind: Cleanse", "Cleanse and Spread").statusIcon(0xCC0);
+	private final ModifiableCallout<AbilityCastStart> crystallize6nothing = ModifiableCallout.durationBasedCall("Crystallize Time, After Rewind: Nothing", "Spread");
+
+	private @Nullable ArenaSector tidalLightKbFrom;
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> crystallizeTimeSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D30),
 			(e1, s) -> {
 				log.info("Crystallize Time: Initial");
+				tidalLightKbFrom = null;
 				s.updateCall(crystallizeTimeInitial, e1);
 				s.waitCastFinished(casts, e1);
 
@@ -1228,11 +1235,127 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				eruptionColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallizeEruption, erupt));
 				darknessColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallizeStack, erupt));
 				waterColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallizeWater, erupt));
+
+				// TODO: is the raidwide (9CEE) worth calling here?
+
+				// Collect stoplight tethers
+				var longTethers = s.waitEvents(2, TetherEvent.class, te -> te.tetherIdMatches(0x85));
+				List<ArenaSector> shortSectors = List.of(ArenaSector.NORTH, ArenaSector.SOUTH);
+				List<ArenaSector> longSectors = longTethers.stream()
+						.map(t -> arenaPosNarrow.forCombatant(state.getLatestCombatantData(Objects.requireNonNull(t.getTargetMatching(cbt -> cbt.npcIdMatches(17837))))))
+						.toList();
+				s.setParam("shortLights", shortSectors);
+				s.setParam("longLights", longSectors);
+				ArenaSector kbSafe = longSectors.stream().filter(sect -> sect.isStrictlyAdjacentTo(ArenaSector.NORTH)).findFirst().orElseGet(() -> {
+					log.error("Could not find kb safe spot!");
+					return ArenaSector.NORTH;
+				});
+				s.setParam("kbSafe", kbSafe);
+				// Compute safe by starting with all possible positions and removing the tethered lights
+				var nonTethered = new ArrayList<>(List.of(ArenaSector.NORTH, ArenaSector.SOUTH, ArenaSector.NORTHWEST, ArenaSector.NORTHEAST, ArenaSector.SOUTHWEST, ArenaSector.SOUTHEAST));
+				nonTethered.removeAll(shortSectors);
+				nonTethered.removeAll(longSectors);
+				s.setParam("nonTethered", nonTethered);
+				s.call(crystallizeTethers);
+
+				// Wait for first stoplight
+				s.waitEvent(AbilityCastStart.class, aue -> aue.abilityIdMatches(0x9D6B));
+
+				// First stoplight has just gone off at this point
+				// Aero + Long Red
+				aeroColl.findAny(isPlayer).ifPresent(aero -> s.updateCall(crystallize2Aero, aero));
+				// Ice
+				blizzColl.findAny(isPlayer).ifPresent(ice -> {
+					// If you have ice, you can either have short red or blue
+					wyrmclawColl.findAny(isPlayer).ifPresentOrElse(redIgnored -> {
+						// Ice + Short Red
+						s.updateCall(crystallize2IceShortRed, ice);
+					}, () -> {
+						// Ice + Blue
+						s.updateCall(crystallize2IceBlue, ice);
+					});
+				});
+				eruptionColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize2Eruption, erupt));
+				darknessColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize2Stack, erupt));
+				waterColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize2Water, erupt));
+
+				// This is the knockback
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D58));
+
+				BuffApplied stackBuff = buffs.findBuffById(0x996);
+				// Aero + Long Red
+				aeroColl.findAny(isPlayer).ifPresent(aero -> s.updateCall(crystallize3Aero, stackBuff));
+				// Ice
+				blizzColl.findAny(isPlayer).ifPresent(ice -> {
+					// If you have ice, you can either have short red or blue
+					wyrmclawColl.findAny(isPlayer).ifPresentOrElse(redIgnored -> {
+						// Ice + Short Red
+						s.updateCall(crystallize3IceShortRed, stackBuff);
+					}, () -> {
+						// Ice + Blue
+						s.updateCall(crystallize3IceBlue, stackBuff);
+					});
+				});
+				eruptionColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize3Eruption, stackBuff));
+				darknessColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize3Stack, stackBuff));
+				waterColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize3Water, stackBuff));
+
+				// Stack popping
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D55));
+
+				// Aero + Long Red
+				aeroColl.findAny(isPlayer).ifPresent(aero -> s.updateCall(crystallize4Aero));
+				// Ice
+				blizzColl.findAny(isPlayer).ifPresent(ice -> {
+					// If you have ice, you can either have short red or blue
+					wyrmclawColl.findAny(isPlayer).ifPresentOrElse(redIgnored -> {
+						// Ice + Short Red
+						s.updateCall(crystallize4IceShortRed);
+					}, () -> {
+						// Ice + Blue
+						s.updateCall(crystallize4IceBlue);
+					});
+				});
+				eruptionColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize4Eruption));
+				darknessColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize4Stack));
+				waterColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize4Water));
+
+				s.waitMs(10_000);
+
+				// Quietus call
+				quietusColl.getEvents().stream().findAny().ifPresent(quietus -> s.updateCall(crystallize5quietus, quietus));
+
+				// Quietus resolving
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D59));
+				buffs.findBuffById(0x1070);
+				s.setParam("tidalFrom", tidalLightKbFrom);
+				s.updateCall(crystallize5dropRewind);
+				// "Spell-in-Waiting: Return" is removed, and you get "Return" instead
+				var spiritTakerCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D60));
+				if (buffs.isStatusOnTarget(state.getPlayer(), 0xCC0)) {
+					s.updateCall(crystallize6cleanse, spiritTakerCast);
+				}
+				else {
+					s.updateCall(crystallize6nothing, spiritTakerCast);
+				}
 				log.info("Crystallize Time: Finished");
-
-
 			});
 
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> tidalLightColl = SqtTemplates.sq(10_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D3B),
+			(e1, s) -> {
+				ArenaSector first = arenaPos.forCombatant(state.getLatestCombatantData(e1.getSource()));
+				var e2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D3B));
+				ArenaSector second = arenaPos.forCombatant(state.getLatestCombatantData(e2.getSource()));
+				ArenaSector combined = ArenaSector.tryCombineTwoCardinals(List.of(
+						first,
+						second
+				));
+				log.info("tidalLightColl: {} -> {} ==> {}", first, second, combined);
+				tidalLightKbFrom = combined;
+
+			});
 
 }
 

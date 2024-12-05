@@ -141,6 +141,9 @@ public final class SqtTemplates {
 				});
 	}
 
+	/**
+	 * @return A no-op trigger.
+	 */
 	public static SequentialTrigger<BaseEvent> nothing() {
 		return sq(10_000, BaseEvent.class, be -> false, (e1, s) -> {});
 	}
