@@ -8,16 +8,48 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Supplier;
 
+/**
+ * GUI component provider for a boolean setting, including a label and checkbox.
+ */
 public class BooleanSettingGui {
 
 	private final JCheckBox checkBox;
 	private final BooleanSetting setting;
 	private volatile boolean ignoreChanges;
 
+
+	/**
+	 * @param setting The BooleanSetting
+	 * @param label   The user-facing label to display
+	 */
+	public BooleanSettingGui(BooleanSetting setting, String label) {
+		this(setting, label, true, () -> true);
+	}
+
+	/**
+	 * @param setting The BooleanSetting
+	 * @param label   The user-facing label to display
+	 * @param enabled Condition for whether this setting is enabled
+	 */
+	public BooleanSettingGui(BooleanSetting setting, String label, Supplier<Boolean> enabled) {
+		this(setting, label, true, enabled);
+	}
+
+	/**
+	 * @param setting The BooleanSetting
+	 * @param label   The user-facing label to display
+	 * @param listen  Whether to listen to the setting and reflect any outside changes to the setting
+	 */
 	public BooleanSettingGui(BooleanSetting setting, String label, boolean listen) {
 		this(setting, label, listen, () -> true);
 	}
 
+	/**
+	 * @param setting The BooleanSetting
+	 * @param label   The user-facing label to display
+	 * @param listen  Whether to listen to the setting and reflect any outside changes to the setting
+	 * @param enabled Condition for whether this setting is enabled
+	 */
 	public BooleanSettingGui(BooleanSetting setting, String label, boolean listen, Supplier<Boolean> enabled) {
 		this.setting = setting;
 		checkBox = new JCheckBox(label) {
@@ -110,14 +142,9 @@ public class BooleanSettingGui {
 	}
 
 
-	public BooleanSettingGui(BooleanSetting setting, String label) {
-		this(setting, label, true, () -> true);
-	}
-
-	public BooleanSettingGui(BooleanSetting setting, String label, Supplier<Boolean> enabled) {
-		this(setting, label, true, enabled);
-	}
-
+	/**
+	 * @return The actual component
+	 */
 	public JCheckBox getComponent() {
 		return checkBox;
 	}

@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.map;
 
 import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.floormarkers.FloorMarker;
 import gg.xp.xivsupport.events.triggers.jobs.gui.CastBarComponent;
@@ -64,6 +65,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private final BooleanSetting displayHpBars;
 	private final BooleanSetting displayCastBars;
 	private final BooleanSetting displayIds;
+	private final BooleanSetting displayTethers;
+	private final BooleanSetting displayHitbox;
+	private final MapColorSettings colorSettings;
 	private double zoomFactor = 1;
 	private volatile int curXpan;
 	private volatile int curYpan;
@@ -77,22 +81,18 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private Map<FloorMarker, FloorMarkerDoohickey> markers;
 	private boolean needZorderCheck;
 
-	private static final Color enemyColor = new Color(145, 0, 0);
-	private static final Color fakeEnemyColor = new Color(170, 120, 0);
-	private static final Color otherColor = new Color(128, 128, 128);
-	private static final Color otherPlayerColor = new Color(82, 204, 82);
-	private static final Color partyMemberColor = new Color(104, 120, 222);
-	private static final Color localPcColor = new Color(150, 199, 255);
-	private static final Color playerHitboxColor = new Color(150, 150, 255, 120);
-	private static final Color npcHitboxColor = new Color(250, 30, 30, 90);
 
-	public MapPanel(MapDataController mdc, MapDisplayConfig mapDisplayConfig) {
+	public MapPanel(MapDataController mdc, MapDisplayConfig mapDisplayConfig, MapColorSettings colorSettings) {
 		this.mdc = mdc;
 		omenDisp = mapDisplayConfig.getOmenDisplayMode();
 		nameDisp = mapDisplayConfig.getNameDisplayMode();
 		displayHpBars = mapDisplayConfig.getHpBars();
 		displayCastBars = mapDisplayConfig.getCastBars();
 		displayIds = mapDisplayConfig.getIds();
+		displayTethers = mapDisplayConfig.getTethers();
+		displayHitbox = mapDisplayConfig.getDisplayHitboxes();
+		this.colorSettings = colorSettings;
+		colorSettings.addListener(this::forceRefreshAllCbts);
 
 		setLayout(null);
 		setBackground(new Color(168, 153, 114));
@@ -128,19 +128,50 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	@Override
 	protected void paintChildren(Graphics g) {
+		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
 		int count = getComponentCount();
-		Rectangle bounds = new Rectangle();
 		for (int i = 0; i < count; i++) {
 			Component comp = getComponent(i);
 			if (comp instanceof EntityDoohickey ed) {
 				Graphics subG = g.create();
-//				bounds = comp.getBounds(bounds);
-//				subG.translate(bounds.x, bounds.y);
 				ed.paintUnder(subG);
 				subG.dispose();
 			}
 		}
+		Graphics subG = g.create();
+		if (displayTethers.get()) {
+			drawTethers(subG);
+		}
+		subG.dispose();
 		super.paintChildren(g);
+	}
+
+	private void drawTethers(Graphics g) {
+		Graphics2D g2d = (Graphics2D) g;
+		// Theoretically improves performance
+		g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
+		// Remove jaggies
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		List<TetherEvent> tethers = mdc.getTethers();
+		for (TetherEvent tether : tethers) {
+			// Since we need the drawing coordinates of these anyway, just grab them directly
+			EntityDoohickey source = things.get(tether.getSource().getId());
+			EntityDoohickey target = things.get(tether.getTarget().getId());
+			if (source != null && target != null) {
+				drawTether(g2d, source, target);
+			}
+		}
+	}
+
+	private void drawTether(Graphics2D g, EntityDoohickey source, EntityDoohickey target) {
+		g.setStroke(new BasicStroke(2));
+		g.setColor(colorSettings.tetherColor.get());
+		g.drawLine(
+				translateX(source.x),
+				translateY(source.y),
+				translateX(target.x),
+				translateY(target.y)
+		);
 	}
 
 	private void setNewBackgroundImage(XivMap map) {
@@ -169,6 +200,16 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		refresher.refreshNow();
 	}
 
+	// Force refresh of all combatants by
+	private void forceRefreshAllCbts() {
+		SwingUtilities.invokeLater(() -> {
+			this.things.values().forEach(this::remove);
+			this.things.clear();
+			this.refresh();
+		});
+
+	}
+
 	private volatile List<XivCombatant> combatants = Collections.emptyList();
 
 	public void setCombatants(List<XivCombatant> combatants) {
@@ -177,6 +218,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	}
 
 	private volatile boolean refreshPending;
+
 	private void requestRefresh() {
 		if (refreshPending) {
 			return;
@@ -324,7 +366,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		double yDiff = curPoint.y - dragPoint.y;
 		curXpan += xDiff;
 		curYpan += yDiff;
-//		log.info("Map Panel Drag: {},{}", xDiff, yDiff);
 		dragPoint = curPoint;
 		triggerRefresh();
 	}
@@ -358,7 +399,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		// Ignored
+		// Ignored, we use mouseDragged instead
 	}
 
 	@Override
@@ -377,39 +418,22 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
-	//
-//	@Override
-//	public Component getComponentAt(Point p) {
-//		for (Component component : getComponents()) {
-//			if (component.getBounds().contains(p)) {
-//				return component;
-//			}
-//		}
-//		return this;
-//	}
-//
 	@Override
 	public void mousePressed(MouseEvent e) {
-//		log.info("Pressed");
 		dragPoint = MouseInfo.getPointerInfo().getLocation();
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-//		log.info("Released");
 		triggerRefresh();
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
-//		log.info("Entered");
-
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-//		log.info("Exit");
-
 	}
 
 	public void setSelection(@Nullable XivCombatant selection) {
@@ -473,20 +497,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		return tt.toString();
 	}
 
-	// This seems to be pointless, but put back if it breaks something.
-//	@Override
-//	protected void paintChildren(Graphics g) {
-//		super.paintChildren(g);
-//		things.values().forEach(v -> {
-//			if (v.isSelected()) {
-////				v.repaint();
-////				v.paintComponent(g);
-////				paintComponents();
-////				v.paint(g);
-//			}
-//		});
-//	}
 
+	/**
+	 * Component that displays a floor marker
+	 */
 	private final class FloorMarkerDoohickey extends JPanel {
 
 		private static final int SIZE = 50;
@@ -536,11 +550,11 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
-	// TODO: name....
+	/**
+	 * Component that displays a combatant
+	 */
 	private class EntityDoohickey extends JPanel {
 
-		private static final Border selectionBorder = new LineBorder(Color.CYAN, 2);
-		private static final Color selectedBackground = new Color(192, 255, 255, 175);
 		private final JLabel defaultLabel;
 		private final XivCombatant cbt;
 		// This red should never actually show up
@@ -638,6 +652,13 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		long oldUnresolved = -2;
 
 		// TODO: add debuffs or something to this
+
+		/**
+		 * Provide new data to this component and change its appearance accordingly.
+		 *
+		 * @param cbt      Combatant data
+		 * @param castData The current (or recent) cast, if there is one
+		 */
 		public void update(XivCombatant cbt, @Nullable CastTracker castData) {
 			RenderUtils.setTooltip(this, formatTooltip(cbt));
 			setBounds(getBounds());
@@ -658,20 +679,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 					formatComponent(cbt);
 				}
 				oldJob = newJob;
-				// TODO: add "hide names" setting
 				switch (nameDisp.get()) {
-					case FULL -> {
-						nameLabel.setText(cbt.getName());
-					}
-					case JOB -> {
-						nameLabel.setText(pc.getJob().name());
-					}
-					case HIDE -> {
-						nameLabel.setText("");
-					}
-//					case HIDE_MORE -> {
-//						nameLabel.setText("");
-//					}
+					case FULL -> nameLabel.setText(cbt.getName());
+					case JOB -> nameLabel.setText(pc.getJob().name());
+					case HIDE -> nameLabel.setText("");
 				}
 			}
 			else {
@@ -685,7 +696,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			}
 
 			idLabel.setVisible(displayIds.get());
-			
+
 			if (displayHpBars.get()) {
 				HitPoints hp = cbt.getHp();
 				long hpCurrent = hp == null ? -1 : hp.current();
@@ -719,40 +730,26 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			if (cbt instanceof XivPlayerCharacter pc) {
 				Job job = pc.getJob();
 				if (cbt.isThePlayer()) {
-					mainColor = localPcColor;
-//					inner.setBorder(new LineBorder(localPcColor));
-//					inner.setBackground(localPcColor);
+					mainColor = colorSettings.localPcColor.get();
 				}
 				else if (mdc.getPartyList().contains(cbt)) {
-					mainColor = partyMemberColor;
-//					inner.setBorder(new LineBorder(partyMemberColor));
-//					inner.setBackground(partyMemberColor);
+					mainColor = colorSettings.partyMemberColor.get();
 				}
 				else {
-					mainColor = otherPlayerColor;
-//					inner.setBorder(new LineBorder(otherPlayerColor));
-//					inner.setBackground(otherPlayerColor);
+					mainColor = colorSettings.otherPlayerColor.get();
 				}
 				icon = IconTextRenderer.getComponent(job, defaultLabel, true, false, true, null);
-//				inner.setOpaque(true);
-				// TODO: this doesn't work because it hasn't been added to the container yet
-//				MapPanel.this.setComponentZOrder(this, 0);
 			}
 			else {
 				icon = null;
 				if (cbt.getType() == CombatantType.FAKE) {
-					mainColor = fakeEnemyColor;
+					mainColor = colorSettings.fakeEnemyColor.get();
 				}
 				else if (cbt.getType() == CombatantType.NPC) {
-					mainColor = enemyColor;
-//				inner.setBorder(new LineBorder(enemyColor));
-//				inner.setOpaque(false);
-					// TODO: find good icon
-//				icon = IconTextRenderer.getComponent(ActionLibrary.iconForId(2246), defaultLabel, true, false, true);
-//				MapPanel.this.setComponentZOrder(this, 5);
+					mainColor = colorSettings.enemyColor.get();
 				}
 				else {
-					mainColor = otherColor;
+					mainColor = colorSettings.otherColor.get();
 				}
 			}
 			inner.setBorder(new LineBorder(mainColor));
@@ -787,15 +784,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		protected void paintComponent(Graphics g) {
 			Rectangle bounds = getBounds();
 			if (isSelected()) {
-				g.setColor(selectedBackground);
+				g.setColor(colorSettings.selectedBackground.get());
 				g.fillRect(0, 0, bounds.width, bounds.height);
 			}
-//			g.setColor(mainColor);
-//			int xCenter = bounds.width / 2;
-//			int yCenter = bounds.height / 2;
-//			int radius = bounds.width / 3;
-//			g.drawOval(xCenter - radius, yCenter - radius, radius * 2, radius * 2);
-//			super.paintComponent(g);
 		}
 
 		public void paintUnder(Graphics g) {
@@ -815,7 +806,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				}
 			}
 			drawOmens(g);
-			if (cbt.getRadius() > 0 && !cbt.isFake()) {
+			if (displayHitbox.get() && cbt.getRadius() > 0 && !cbt.isFake()) {
 				drawHitbox((Graphics2D) g);
 			}
 		}
@@ -826,7 +817,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				double radius = translateDist(cbt.getRadius());
 				double xCenter = translateX(x);
 				double yCenter = translateY(y);
-				g2d.setColor(cbt.isPc() ? playerHitboxColor : npcHitboxColor);
+				g2d.setColor(cbt.isPc() ? colorSettings.playerHitboxColor.get() : colorSettings.npcHitboxColor.get());
 				g2d.setStroke(new BasicStroke(3));
 				g2d.drawOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2), (int) (radius * 2));
 			}
@@ -877,10 +868,13 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				}
 
 				if (cbt.walkParentChain() instanceof XivPlayerCharacter) {
-					outlineColor = new Color(80, 200, 255, alpha);
+					outlineColor = RenderUtils.withAlpha(colorSettings.playerOmenOutlineColor.get(), alpha);
+				}
+				else if (cbt.getType() == CombatantType.NPC) {
+					outlineColor = RenderUtils.withAlpha(colorSettings.npcOmenOutlineColor.get(), alpha);
 				}
 				else {
-					outlineColor = new Color(255, 110, 0, alpha);
+					outlineColor = RenderUtils.withAlpha(colorSettings.fakeNpcOmenOutlineColor.get(), alpha);
 				}
 				fillColor = RenderUtils.withAlpha(outlineColor, alpha / 2);
 //				log.info("Outline: {}, Fill: {}", outlineColor.getAlpha(), fillColor.getAlpha());
@@ -978,7 +972,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 						g2d.draw(arc);
 					}
 				}
-			} finally {
+			}
+			finally {
 				g2d.dispose();
 			}
 		}
@@ -986,7 +981,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		@Override
 		public Border getBorder() {
 			if (isSelected()) {
-				return selectionBorder;
+				return colorSettings.getSelectionBorder();
 			}
 			else {
 				return null;

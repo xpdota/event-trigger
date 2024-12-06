@@ -41,13 +41,13 @@ public class MapTab extends JPanel {
 	private final JSplitPane split;
 	private volatile boolean selectionRefreshPending;
 
-	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config, MapDisplayConfig mapDisplayConfig) {
+	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config, MapDisplayConfig mapDisplayConfig, MapColorSettings mcs) {
 //		super("Map");
 		super(new BorderLayout());
 		split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		split.setOneTouchExpandable(true);
 		this.mapDataController = mdc;
-		this.mapPanel = new MapPanel(mdc, mapDisplayConfig);
+		this.mapPanel = new MapPanel(mdc, mapDisplayConfig, mcs);
 //		setPreferredSize(getMaximumSize());
 //		setLayout(new BorderLayout());
 		split.setRightComponent(mapPanel);
@@ -154,6 +154,9 @@ public class MapTab extends JPanel {
 		double before = split.getResizeWeight();
 		split.setResizeWeight(0);
 		configPanel.setVisible(!configPanel.isVisible());
-		SwingUtilities.invokeLater(() -> split.setResizeWeight(before));
+		this.revalidate();
+		SwingUtilities.invokeLater(() -> {
+			split.setResizeWeight(before);
+		});
 	}
 }

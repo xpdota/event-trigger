@@ -21,7 +21,7 @@ public record ActionOmenInfo(OmenType type, int rawEffectRange, int xAxisModifie
 	}
 
 	public boolean isRaidwide() {
-		return type.shape() == OmenShape.CIRCLE && rawEffectRange >= 50;
+		return type.shape() == OmenShape.CIRCLE && rawEffectRange >= 40;
 	}
 
 }
