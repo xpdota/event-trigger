@@ -492,10 +492,12 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> ddAxeNoMarker = ModifiableCallout.durationBasedCall("DD: Axe Kick, no Marker", "Out, Bait, {firstIces} Safe");
 	private final ModifiableCallout<AbilityCastStart> ddScytheWithMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick with Marker", "In with Marker, {firstIces} Safe");
 	private final ModifiableCallout<AbilityCastStart> ddScytheNoMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick, no Marker", "In, Bait, {firstIces} Safe");
-	private final ModifiableCallout<?> ddDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Drop Puddle");
-	private final ModifiableCallout<?> ddAvoidPuddle = new ModifiableCallout<>("DD: Avoid Puddles", "Avoid Puddles");
-	private final ModifiableCallout<?> ddKB = new ModifiableCallout<>("DD: KB after Scythe", "Knockback to {firstIces}");
-	private final ModifiableCallout<?> ddKbAxe = new ModifiableCallout<>("DD: KB after Axe", "Knockback to {firstIces}");
+//	private final ModifiableCallout<?> ddDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Drop Puddle");
+//	private final ModifiableCallout<?> ddAvoidPuddle = new ModifiableCallout<>("DD: Avoid Puddles", "Avoid Puddles");
+	private final ModifiableCallout<?> ddAxeDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Stay, Drop Puddle");
+	private final ModifiableCallout<?> ddScytheDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Out, Drop Puddle");
+	private final ModifiableCallout<?> ddKB = new ModifiableCallout<>("DD: KB after Scythe", "In, Knockback to {firstIces}");
+	private final ModifiableCallout<?> ddKbAxe = new ModifiableCallout<>("DD: KB after Axe", "In, Knockback to {firstIces}");
 	// TODO: call out which way to go
 	private final ModifiableCallout<?> ddStacks = new ModifiableCallout<>("DD: Stacks", "Multiple Stacks, Keep Moving")
 			.extendedDescription("""
@@ -539,21 +541,44 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				if (isAxeKick) {
 					// out
 					s.updateCall(playerHasMarker ? ddAxeWithMarker : ddAxeNoMarker, e1);
+					// wait for axe to finish
+					s.waitCastFinished(casts, e1);
+					if (playerHasMarker) {
+						// Stay out, drop
+						s.updateCall(ddAxeDropPuddle);
+						// puddle drop
+						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D07));
+						// move in for kb
+						s.updateCall(ddKbAxe);
+					}
+					else {
+						// If you're baiting, and it's axe, you can move in as soon as axe goes off, since you won't mess up the bait
+						// by moving directly in
+						s.updateCall(ddKbAxe);
+					}
 				}
 				else {
 					// in
 					s.updateCall(playerHasMarker ? ddScytheWithMarker : ddScytheNoMarker, e1);
+					// wait for scythe to finish
+					s.waitCastFinished(casts, e1);
+					if (playerHasMarker) {
+						// If it's scythe, and you have a marker, you can move out as soon as scythe goes off
+						s.updateCall(ddScytheDropPuddle);
+						// puddle drop
+						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D07));
+						// move in for kb
+						s.updateCall(ddKB);
+					}
+					else {
+						// If you're baiting, wait for the bait to snapshot, then move in for kb
+						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D0E));
+						s.updateCall(ddKB);
+					}
 				}
-				s.waitCastFinished(casts, e1);
-				// Add a slight delay since things don't go off instantly
-				s.waitMs(300);
-				// TODO: check the timing on these
-				// Drop or avoid puddle
-				s.updateCall(playerHasMarker ? ddDropPuddle : ddAvoidPuddle);
-				var icycleCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D08));
-				s.updateCall((playerHasMarker && isAxeKick) ? ddKbAxe : ddKB);
+				var icycleCast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9D08), false);
 				s.waitCastFinished(casts, icycleCast);
-				// TODO: CW vs CCW rotation
+				// TODO: CW vs CCW rotation - there are different strats for this
 				casts.getActiveCastById(0x9D10)
 						.ifPresent(ct -> {
 							XivCombatant shiva = state.getLatestCombatantData(state.getLatestCombatantData(ct.getCast().getSource()));
