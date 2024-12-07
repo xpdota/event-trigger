@@ -496,7 +496,10 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> ddAvoidPuddle = new ModifiableCallout<>("DD: Avoid Puddles", "Avoid Puddles");
 	private final ModifiableCallout<?> ddKB = new ModifiableCallout<>("DD: KB after Scythe", "Knockback to {firstIces}");
 	private final ModifiableCallout<?> ddKbAxe = new ModifiableCallout<>("DD: KB after Axe", "Knockback to {firstIces}");
-	private final ModifiableCallout<?> ddStacks = new ModifiableCallout<>("DD: Stacks", "Multiple Stacks, Keep Moving");
+	// TODO: call out which way to go
+	private final ModifiableCallout<?> ddStacks = new ModifiableCallout<>("DD: Stacks", "Multiple Stacks, Keep Moving")
+			.extendedDescription("""
+					The `{shivaAt}` variable indicates the location of the boss (not the gaze).""");
 	private final ModifiableCallout<?> ddGaze = new ModifiableCallout<>("DD: Gaze", "Look Away from {gazeFrom}");
 
 	private final ModifiableCallout<AbilityCastStart> scytheMirrors1 = ModifiableCallout.durationBasedCall("Scythe Mirrors 1", "Blue Mirror and Boss, In+Proteans");
@@ -551,6 +554,12 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall((playerHasMarker && isAxeKick) ? ddKbAxe : ddKB);
 				s.waitCastFinished(casts, icycleCast);
 				// TODO: CW vs CCW rotation
+				casts.getActiveCastById(0x9D10)
+						.ifPresent(ct -> {
+							XivCombatant shiva = state.getLatestCombatantData(state.getLatestCombatantData(ct.getCast().getSource()));
+							log.info("shivaAt: {}", shiva.getPos());
+							s.setParam("shivaAt", arenaPosNarrow.forCombatant(shiva));
+						});
 				s.updateCall(ddStacks);
 				s.waitMs(4_000);
 				XivCombatant gazeNpc = state.npcById(17823);
@@ -558,6 +567,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 					ArenaSector gazeFrom = arenaPos.forCombatant(gazeNpc);
 					s.setParam("gazeFrom", gazeFrom);
 				}
+				// TODO: call look in vs out
 				s.updateCall(ddGaze);
 			}, (e1, s) -> {
 				// Mirrors
@@ -566,10 +576,23 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(scytheMirrors2, reflectedCast);
 			});
 
-	@NpcCastCallout(0x9D01)
 	private final ModifiableCallout<AbilityCastStart> twinStillness = ModifiableCallout.durationBasedCall("Twin Stillness", "Back to Front");
-	@NpcCastCallout(0x9D02)
+	private final ModifiableCallout<?> twinStillnessMove = new ModifiableCallout<>("Twin Stillness: Move", "Front");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> twinSillnessSq = SqtTemplates.beginningAndEndingOfCast(
+			acs -> acs.abilityIdMatches(0x9D01),
+			twinStillness,
+			twinStillnessMove);
+
 	private final ModifiableCallout<AbilityCastStart> twinSilence = ModifiableCallout.durationBasedCall("Twin Silence", "Front to Back");
+	private final ModifiableCallout<?> twinSilenceMove = new ModifiableCallout<>("Twin Silence: Move", "Back");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> twinSilenceSq = SqtTemplates.beginningAndEndingOfCast(
+			acs -> acs.abilityIdMatches(0x9D02),
+			twinSilence,
+			twinSilenceMove);
 
 	@NpcCastCallout(0x9D12)
 	private final ModifiableCallout<AbilityCastStart> hallowedRay = ModifiableCallout.durationBasedCall("Hallowed Ray", "Line Stack");

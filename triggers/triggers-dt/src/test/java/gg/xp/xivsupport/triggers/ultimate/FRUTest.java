@@ -73,6 +73,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(210109, "Multiple Stacks, Keep Moving", "Multiple Stacks, Keep Moving"),
 				call(214285, "Look Away from West", "Look Away from West"),
 				call(222863, "Back to Front", "Back to Front (3.2)"),
+				call(226280, "Front", "Front"),
 				call(234225, "Line Stack", "Line Stack (4.7)"),
 				call(256982, "Blue Mirror and Boss, In+Proteans", "Blue Mirror and Boss, In+Proteans (5.7)"),
 				call(263029, "Red Mirrors, In+Proteans", "Red Mirrors, In+Proteans (9.7)"),
