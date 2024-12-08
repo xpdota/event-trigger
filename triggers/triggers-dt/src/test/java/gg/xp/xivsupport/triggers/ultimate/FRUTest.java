@@ -1,11 +1,7 @@
 package gg.xp.xivsupport.triggers.ultimate;
 
-import gg.xp.xivsupport.callouts.CalloutGroup;
-import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
-import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.events.triggers.util.CalloutInitialValues;
 import gg.xp.xivsupport.events.triggers.util.CalloutVerificationTest;
-import org.picocontainer.MutablePicoContainer;
 
 import java.util.List;
 
@@ -17,7 +13,7 @@ public class FRUTest extends CalloutVerificationTest {
 
 	@Override
 	protected long minimumMsBetweenCalls() {
-		return 400;
+		return 250;
 	}
 
 //	@Override
@@ -131,8 +127,48 @@ public class FRUTest extends CalloutVerificationTest {
 				call(731600, "Drop Rewind Northwest", "Drop Rewind Northwest"),
 				call(733912, "Cleanse and Spread", "Cleanse and Spread (2.7)"),
 				call(752512, "Stacks", "Stacks (3.7)"),
-				call(760694, "Stack", "Stack (5.7)")
-
+				call(760694, "Stack", "Stack (5.7)"),
+				call(769856, "Enrage", "Enrage (9.7)"),
+				call(855638, "Raidwide", "Raidwide (5.7)"),
+				call(865692, "Fulgent Blade: CCW", "Fulgent Blade: CCW (6.7)"),
+				call(872685, "Move", "Move"),
+				call(874781, "Move", "Move"),
+				call(876826, "Move", "Move"),
+				call(878785, "Move", "Move"),
+				call(880563, "Stacks", "Stacks (7.7)"),
+				call(880831, "Move", "Move"),
+				call(882790, "Move", "Move"),
+				call(884879, "Move", "Move"),
+				call(921762, "Line Stacks", "Line Stacks (6.2)"),
+				call(928829, "Move", "Move"),
+				call(933456, "Move", "Move"),
+				call(938078, "Swap", "Swap"),
+				call(942744, "Move", "Move"),
+				call(968752, "Raidwide", "Raidwide (5.7)"),
+				call(978808, "Fulgent Blade: CCW", "Fulgent Blade: CCW (6.7)"),
+				call(985799, "Move", "Move"),
+				call(987891, "Move", "Move"),
+				call(989938, "Move", "Move"),
+				call(991894, "Move", "Move"),
+				call(993670, "Stacks", "Stacks (7.7)"),
+				call(993981, "Move", "Move"),
+				call(995894, "Move", "Move"),
+				call(997938, "Move", "Move"),
+				call(1033948, "Line Stacks", "Line Stacks (6.2)"),
+				call(1040991, "Move", "Move"),
+				call(1045627, "Move", "Move"),
+				call(1050258, "Swap", "Swap"),
+				call(1054878, "Move", "Move"),
+				call(1059590, "Raidwide", "Raidwide (5.7)"),
+				call(1069679, "Fulgent Blade: CCW", "Fulgent Blade: CCW (6.7)"),
+				call(1076664, "Move", "Move"),
+				call(1078754, "Move", "Move"),
+				call(1080842, "Move", "Move"),
+				call(1082754, "Move", "Move"),
+				call(1084485, "Stacks", "Stacks (7.7)"),
+				call(1084798, "Move", "Move"),
+				call(1086756, "Move", "Move"),
+				call(1088843, "Move", "Move")
 		);
 	}
 }

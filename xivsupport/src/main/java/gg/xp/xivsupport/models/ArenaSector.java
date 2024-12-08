@@ -271,6 +271,17 @@ public enum ArenaSector implements HasFriendlyName {
 	}
 
 	/**
+	 * @return The facing angle for this position
+	 * @throws IllegalArgumentException if this position is not a cardinal or intercard
+	 */
+	public double facingAngle() {
+		if (!isOutside()) {
+			throw new IllegalArgumentException("Can only call facingAngle() on compass directions, but got " + this);
+		}
+		return Math.PI - (ordinal() * Math.PI / 4);
+	}
+
+	/**
 	 * Sort starting north and going CCW
 	 */
 	public static final Comparator<ArenaSector> northCcwSort = Comparator.comparing(sector -> {

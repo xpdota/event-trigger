@@ -19,6 +19,7 @@ import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.StatusAppliedEffect;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
@@ -492,7 +493,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> ddAxeNoMarker = ModifiableCallout.durationBasedCall("DD: Axe Kick, no Marker", "Out, Bait, {firstIces} Safe");
 	private final ModifiableCallout<AbilityCastStart> ddScytheWithMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick with Marker", "In with Marker, {firstIces} Safe");
 	private final ModifiableCallout<AbilityCastStart> ddScytheNoMarker = ModifiableCallout.durationBasedCall("DD: Scythe Kick, no Marker", "In, Bait, {firstIces} Safe");
-//	private final ModifiableCallout<?> ddDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Drop Puddle");
+	//	private final ModifiableCallout<?> ddDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Drop Puddle");
 //	private final ModifiableCallout<?> ddAvoidPuddle = new ModifiableCallout<>("DD: Avoid Puddles", "Avoid Puddles");
 	private final ModifiableCallout<?> ddAxeDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Stay, Drop Puddle");
 	private final ModifiableCallout<?> ddScytheDropPuddle = new ModifiableCallout<>("DD: Drop Puddle", "Out, Drop Puddle");
@@ -1402,6 +1403,200 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				));
 				log.info("tidalLightColl: {} -> {} ==> {}", first, second, combined);
 				tidalLightKbFrom = combined;
+
+			});
+
+
+	@NpcCastCallout(value = 0x9D71, cancellable = true)
+	private final ModifiableCallout<AbilityCastStart> memorysEnd = ModifiableCallout.durationBasedCall("Memory's End", "Enrage");
+
+
+	// P5
+	private final ModifiableCallout<AbilityCastStart> fulgentBlade = ModifiableCallout.durationBasedCall("Fulgent Blade: Initial", "Raidwide");
+
+	private final ModifiableCallout<AbilityCastStart> fulgentBladeCw = ModifiableCallout.durationBasedCall("Fulgent Blade: CW");
+	private final ModifiableCallout<AbilityCastStart> fulgentBladeCcw = ModifiableCallout.durationBasedCall("Fulgent Blade: CCW");
+	private final ModifiableCallout<?> fulgentBladeCw1 = new ModifiableCallout<>("Fulgent Blade: Clockwise, Hit 1", "Move")
+			.extendedDescription("Please take note that in order to reduce spammy calls, only the first hit is called by default. The rest can be enabled below.");
+	private final ModifiableCallout<?> fulgentBladeCw2 = new ModifiableCallout<>("Fulgent Blade: Clockwise, Hit 2", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCw3 = new ModifiableCallout<>("Fulgent Blade: Clockwise, Hit 3", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCw4 = new ModifiableCallout<>("Fulgent Blade: Clockwise, Hit 4", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCw5 = new ModifiableCallout<>("Fulgent Blade: Clockwise, Hit 5", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCw6 = new ModifiableCallout<>("Fulgent Blade: Clockwise, Hit 6", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCw7 = new ModifiableCallout<>("Fulgent Blade: Clockwise, Hit 7", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCcw1 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 1", "Move")
+			.extendedDescription("""
+					Please take note that in order to reduce spammy calls, only the first hit is called by default. The rest can be enabled below.
+										
+					Depending on your strategy, you may not need all of these.""");
+	private final ModifiableCallout<?> fulgentBladeCcw2 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 2", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCcw3 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 3", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCcw4 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 4", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCcw5 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 5", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCcw6 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 6", "Move").disabledByDefault();
+	private final ModifiableCallout<?> fulgentBladeCcw7 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 7", "Move").disabledByDefault();
+
+	private final ArenaPos apFulgent = new ArenaPos(100.0, 100.0, 1, 1);
+
+	private boolean fulgentIsCw(List<ArenaSector> firstHits, List<ArenaSector> subsequentHits) {
+		for (ArenaSector hit : firstHits) {
+			Optional<ArenaSector> adjacent = subsequentHits.stream().filter(otherHit -> otherHit.isStrictlyAdjacentTo(hit)).findFirst();
+			if (adjacent.isPresent()) {
+				ArenaSector nextHit = adjacent.get();
+				if (hit.eighthsTo(nextHit) == 1) {
+					// clockwise
+					return true;
+				}
+				else if (hit.eighthsTo(nextHit) == -1) {
+					// ccw
+					return false;
+				}
+			}
+		}
+		throw new IllegalArgumentException("Unable to determine rotation direction for fulgent: %s -> %s".formatted(firstHits, subsequentHits));
+
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> fulgentSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D72),
+			(e1, s) -> {
+				s.updateCall(fulgentBlade, e1);
+				// There are three sets of lines casting. in the fru_anon.log example, the first set intersects N-NW (hitting E-W and NE-SW),
+				// the second set intsersects W-SW (hitting N-S and NW-SE), and the third set intersects S-SE (hitting E-W and NE-SW like
+				// the first set).
+				// There are also ACEEs, where the first 6 events are all 19D 1:2:0:0. These *might* already indicate the order, but not
+				// sure.
+				// The second set (2s later) is two 19D 20:10:0:0 and seems to represent the first two hits.
+				// The third set (~4s after 2nd set) is two more of the same, and seems to represent the second pair of hits.
+				// Fourth set (~3s after 3rd) is two more.
+				// In addition, each wave starts with two 0x9CB6 Path of Darkness and two 0x9D73 Path of Light.
+				// Two "lines" per wave, plus one going in + one going out = 4
+
+				// All 6
+				var initials = s.waitEvents(6, ActorControlExtraEvent.class, acee -> acee.getCategory() == 0x19D && acee.getData0() == 1);
+				s.refreshCombatants();
+
+				// First 2
+				// We might not need these, if it turns out that the first 2 initials are always the s tart
+				var firstHit = s.waitEvents(2, ActorControlExtraEvent.class, acee -> acee.getCategory() == 0x19D && acee.getData0() == 0x20);
+				// The rotation direction seems to be less obnoxious than previously thought.
+				// Every dummy actor is facing either directly towards or directly away from (100, 100)
+				// Thus, we should be able to use a very narrow ArenaPos to determine directions
+				List<ArenaSector> firstHits = firstHit.stream().map(e -> apFulgent.forCombatant(state.getLatestCombatantData(e.getTarget()))).toList();
+				List<ArenaSector> subsequentHits = initials.stream().map(e -> apFulgent.forCombatant(state.getLatestCombatantData(e.getTarget()))).filter(item -> !firstHits.contains(item)).toList();
+				boolean isCw = fulgentIsCw(firstHits, subsequentHits);
+				var cast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9CB6, 0x9D73), false);
+				s.updateCall(isCw ? fulgentBladeCw : fulgentBladeCcw, cast);
+
+				// First cast goes off
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CB6, 0x9D73));
+				s.updateCall(isCw ? fulgentBladeCw1 : fulgentBladeCcw1);
+				s.waitMs(200); // debounce
+				// First followup from cast 1
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D74, 0x9D75));
+				s.updateCall(isCw ? fulgentBladeCw2 : fulgentBladeCcw2);
+				s.waitMs(300); // debounce
+				// Second cast + second followup from 1
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D74, 0x9D75));
+				s.updateCall(isCw ? fulgentBladeCw3 : fulgentBladeCcw3);
+				s.waitMs(300); // debounce
+				// first followup from 2 + third followup from 1
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D74, 0x9D75));
+				s.updateCall(isCw ? fulgentBladeCw4 : fulgentBladeCcw4);
+				s.waitMs(400); // debounce
+				// third cast + second followup from 2 + fourth followup from 1
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D74, 0x9D75));
+				s.updateCall(isCw ? fulgentBladeCw5 : fulgentBladeCcw5);
+				s.waitMs(400); // debounce
+				// first followup from 3 + third followup from 2 + fifth followup from 1
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D74, 0x9D75));
+				s.updateCall(isCw ? fulgentBladeCw6 : fulgentBladeCcw6);
+				s.waitMs(400); // debounce
+				// second followup from 3 + fourth followup from 2 + sixth followup from 1
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D74, 0x9D75));
+				s.updateCall(isCw ? fulgentBladeCw7 : fulgentBladeCcw7);
+			});
+	// Old notes, for posterity
+
+	// Problem: It should be possible to determine rotation direction from the "full set" and the initial pair.
+	// However, this is harder than it sounds, because the absolute positions are all over the place.
+	// For example:
+	// Look at the first 2 getting hit.
+	// Find the two opposite by checking for actors that are either facing the same or opposite direction of the first two.
+	// Find which one is facing one- or three-eighths CW or CCW from one of the first two.
+	// e.g. fru_anon.log
+	// first two face N and SE
+	// second two face W and NE
+	// third two face S and NW
+	// Our set is N, NE, W, NW, S, SE
+	// We eliminate S and NW because they are opposite of N and SE.
+	// This leaves us with [N, SE] initial and [W, NE]
+	// But this could indicate either CCW (N -> NW -> W) or CW (NW -> N -> NE)
+
+	@NpcCastCallout(0x9D76)
+	private final ModifiableCallout<AbilityCastStart> p5akhMorn = ModifiableCallout.durationBasedCall("P5 Akh Morn", "Stacks");
+
+	// TODO: what does the Paradise Regained (9D7F) cast actually do?
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> paradiseRegainedSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D7F),
+			(e1, s) -> {
+				/*
+				Mech explanation:
+				First tower spawns, this is relative south
+				Second tower spawns, rel NW/NE
+				Third tower spawns, rel NE/NW
+				Dark or light wing starts to glow. This will do a half room cleave, plus an extra 30 degrees towards the boss side.
+				Boss needs to turn so that first tower is safe.
+				This means the MT should get in one of the two north towers, leaving the rel south tower safe.
+				*/
+				// First, there is an ACEE with 3F 4:0:0:0?
+				// This indicates dark then light? (cleaving right -> left)
+				// Wings light or dark cast, this is what does the glowy wings
+				// ACEE with 3F 0:0:0:0 seems to indicate light then dark (cleaving left -> right)
+				s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D29));
+				// Tether ID 1 = close?
+				// Tether ID 2 = far?
+
+				// Mech order seems to be:
+				// Paradise Regained cast (3.7s)
+				// Paradise regained snaps
+				// ~3s later, First tether appears
+				// Cast starts (6.6s)
+				// Cast snaps
+				// ~0.5s later, first tower and cleave
+				// ~0.8s later, first tether hits
+				// ~2.5s later, second tower and cleave
+				// ~0.3s later, second cleave hits
+				// ~0.8s later, second tether hits
+				// ~2.3s later, third tower
+			});
+
+	private final ModifiableCallout<AbilityCastStart> polarizingInitial = ModifiableCallout.durationBasedCall("Polarizing Strikes", "Line Stacks");
+	private final ModifiableCallout<?> polarizingHit = new ModifiableCallout<>("Polarizing Strikes Hit", "Move");
+	private final ModifiableCallout<?> polarizingHitSwap = new ModifiableCallout<>("Polarizing Strikes Swap", "Swap");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> polarizingSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D7C),
+			(e1, s) -> {
+				s.updateCall(polarizingInitial, e1);
+				for (int i = 1; i <= 4; i++) {
+					var hits = s.waitEventsQuickSuccession(8, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D7D, 0x9D7E));
+					Optional<AbilityUsedEvent> playerHit = hits.stream().filter(aue -> aue.getTarget().isThePlayer()).findAny();
+					// Don't bother calling for a swap on the 4th set
+					if (i < 4 && playerHit.isPresent()) {
+						AbilityUsedEvent hit = playerHit.get();
+						Optional<StatusAppliedEffect> status = hit.getEffectsOfType(StatusAppliedEffect.class).stream().filter(sae -> sae.buffIdMatches(0xCFB, 0x1044)).findAny();
+						if (status.isPresent()) {
+							s.updateCall(polarizingHitSwap);
+							continue;
+						}
+					}
+					s.updateCall(polarizingHit);
+				}
 
 			});
 

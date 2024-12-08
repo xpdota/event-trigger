@@ -69,4 +69,14 @@ public class StatusAppliedEffect extends AbilityEffect implements Serializable {
 		byte param3 = (byte) (flags >> 8);
 		return String.format("%s %s %s", param1, param2, param3);
 	}
+
+	public boolean buffIdMatches(long... expected) {
+		long id = status.getId();
+		for (long e : expected) {
+			if (e == id) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
