@@ -1232,19 +1232,16 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> crystallize4Water = new ModifiableCallout<>("Crystallize Time, After Stacks: Water + Blue", "Dodge and Cleanse").statusIcon(0xCC0);
 
 	private final ModifiableCallout<BuffApplied> crystallize5quietus = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Quietus", "Raidwide").statusIcon(0x104E);
-	private final ModifiableCallout<?> crystallize5dropRewind = new ModifiableCallout<>("Crystallize Time: Drop Rewind", "Drop Rewind {tidalFrom}").statusIcon(0x1070);
+	private final ModifiableCallout<BuffApplied> crystallize5dropRewind = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Drop Rewind", "Drop Rewind {tidalFrom}").statusIcon(0x1070);
 
 	private final ModifiableCallout<AbilityCastStart> crystallize6cleanse = ModifiableCallout.<AbilityCastStart>durationBasedCall("Crystallize Time, After Rewind: Cleanse", "Cleanse and Spread").statusIcon(0xCC0);
 	private final ModifiableCallout<AbilityCastStart> crystallize6nothing = ModifiableCallout.durationBasedCall("Crystallize Time, After Rewind: Nothing", "Spread");
-
-	private @Nullable ArenaSector tidalLightKbFrom;
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> crystallizeTimeSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D30),
 			(e1, s) -> {
 				log.info("Crystallize Time: Initial");
-				tidalLightKbFrom = null;
 				s.updateCall(crystallizeTimeInitial, e1);
 				s.waitCastFinished(casts, e1);
 
@@ -1369,16 +1366,18 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				darknessColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize4Stack));
 				waterColl.findAny(isPlayer).ifPresent(erupt -> s.updateCall(crystallize4Water));
 
-				s.waitMs(10_000);
+				TidalLightSafeSpotEvent safeSpotEvent = s.waitEvent(TidalLightSafeSpotEvent.class);
 
-				// Quietus call
-				quietusColl.getEvents().stream().findAny().ifPresent(quietus -> s.updateCall(crystallize5quietus, quietus));
 
 				// Quietus resolving
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D59));
-				buffs.findBuffById(0x1070);
-				s.setParam("tidalFrom", tidalLightKbFrom);
-				s.updateCall(crystallize5dropRewind);
+				var rewindBuff = buffs.findBuffById(0x1070);
+				s.setParam("tidalFrom", safeSpotEvent.getSafe());
+				s.updateCall(crystallize5dropRewind, rewindBuff);
+
+				// Squeeze in the quietus call
+				s.waitMs(3_500);
+				quietusColl.getEvents().stream().findAny().ifPresent(quietus -> s.call(crystallize5quietus, quietus));
+
 				// "Spell-in-Waiting: Return" is removed, and you get "Return" instead
 				var spiritTakerCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D60));
 				if (buffs.isStatusOnTarget(state.getPlayer(), 0xCC0)) {
@@ -1397,14 +1396,37 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				ArenaSector first = arenaPos.forCombatant(state.getLatestCombatantData(e1.getSource()));
 				var e2 = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D3B));
 				ArenaSector second = arenaPos.forCombatant(state.getLatestCombatantData(e2.getSource()));
-				ArenaSector combined = ArenaSector.tryCombineTwoCardinals(List.of(
-						first,
-						second
-				));
-				log.info("tidalLightColl: {} -> {} ==> {}", first, second, combined);
-				tidalLightKbFrom = combined;
-
+				var out = new TidalLightSafeSpotEvent(first, second);
+				log.info("tidalLightColl: {} -> {} ==> {}", first, second, out.getSafe());
+				s.accept(out);
 			});
+
+	private static class TidalLightSafeSpotEvent extends BaseEvent {
+		@Serial
+		private static final long serialVersionUID = -8145814631605864973L;
+		private final ArenaSector firstDirection;
+		private final ArenaSector secondDirection;
+
+		private TidalLightSafeSpotEvent(ArenaSector firstDirection, ArenaSector secondDirection) {
+			this.firstDirection = firstDirection;
+			this.secondDirection = secondDirection;
+		}
+
+		public ArenaSector getFirstDirection() {
+			return firstDirection;
+		}
+
+		public ArenaSector getSecondDirection() {
+			return secondDirection;
+		}
+
+		public ArenaSector getSafe() {
+			return ArenaSector.tryCombineTwoCardinals(List.of(
+					firstDirection,
+					secondDirection
+			));
+		}
+	}
 
 
 	@NpcCastCallout(value = 0x9D71, cancellable = true)
