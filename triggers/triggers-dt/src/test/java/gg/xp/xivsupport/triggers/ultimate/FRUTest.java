@@ -16,6 +16,7 @@ public class FRUTest extends CalloutVerificationTest {
 		return 250;
 	}
 
+	// TODO: turn this into "configure a call" method and specialized "disable call" etc methods
 //	@Override
 //	protected void configure(MutablePicoContainer pico) {
 //		// Disable this specific callout since it will fail the timing check (and is unnecessary anyway)
@@ -74,7 +75,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(256982, "Blue Mirror and Boss, In+Proteans", "Blue Mirror and Boss, In+Proteans (5.7)"),
 				call(263029, "Red Mirrors, In+Proteans", "Red Mirrors, In+Proteans (9.7)"),
 				call(274140, "Spread", "Spread (4.7)"),
-				call(283518, "Light Rampant Positions", "Light Rampant Positions (4.7)"),
+				call(283518, "Raidwide, Light Rampant Positions", "Raidwide, Light Rampant Positions (4.7)"),
 				call(289475, "Chain and Stack", "Chain and Stack"),
 				call(299695, "Stacks", "Stacks"),
 				call(307824, "Avoid Tower", "Avoid Tower"),
@@ -168,7 +169,8 @@ public class FRUTest extends CalloutVerificationTest {
 				call(1084485, "Stacks", "Stacks (7.7)"),
 				call(1084798, "Move", "Move"),
 				call(1086756, "Move", "Move"),
-				call(1088843, "Move", "Move")
+				call(1088843, "Move", "Move"),
+				call(1100948, "Enrage", "Enrage (21.2)")
 		);
 	}
 }

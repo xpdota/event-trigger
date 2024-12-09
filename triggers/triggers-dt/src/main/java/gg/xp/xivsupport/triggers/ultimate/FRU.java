@@ -623,7 +623,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x9D12)
 	private final ModifiableCallout<AbilityCastStart> hallowedRay = ModifiableCallout.durationBasedCall("Hallowed Ray", "Line Stack");
 
-	private final ModifiableCallout<AbilityCastStart> lrInitial = ModifiableCallout.durationBasedCall("Light Rampant: Initial", "Light Rampant Positions");
+	private final ModifiableCallout<AbilityCastStart> lrInitial = ModifiableCallout.durationBasedCall("Light Rampant: Initial", "Raidwide, Light Rampant Positions");
 
 	private final ModifiableCallout<?> lrChainNoStack = new ModifiableCallout<>("Light Rampant: Chain, No Weight Debuff", "Chain").statusIcon(0x103D);
 	private final ModifiableCallout<?> lrChainWithStack = new ModifiableCallout<>("Light Rampant: Chain + Weight Debuff", "Chain and Stack").statusIcon(0x103F);
@@ -1597,7 +1597,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 	private final ModifiableCallout<AbilityCastStart> polarizingInitial = ModifiableCallout.durationBasedCall("Polarizing Strikes", "Line Stacks");
-	private final ModifiableCallout<?> polarizingHit = new ModifiableCallout<>("Polarizing Strikes Hit", "Move");
+	private final ModifiableCallout<?> polarizingHit = new ModifiableCallout<>("Polarizing Strikes Hit (No Swap)", "Move");
 	private final ModifiableCallout<?> polarizingHitSwap = new ModifiableCallout<>("Polarizing Strikes Swap", "Swap");
 
 	@AutoFeed
@@ -1621,6 +1621,9 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 
 			});
+
+	@NpcCastCallout(value = 0x9D88, cancellable = true)
+	private final ModifiableCallout<AbilityCastStart> p5enrage = ModifiableCallout.durationBasedCall("P5 Enrage", "Enrage");
 
 }
 
