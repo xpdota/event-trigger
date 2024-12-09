@@ -1561,6 +1561,18 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	// TODO: what does the Paradise Regained (9D7F) cast actually do?
 
+	private final ModifiableCallout<AbilityCastStart> paradiseRegainedDarkCleaveDarkTether = ModifiableCallout.durationBasedCall("Paradise Regained: Dark Wing + Dark Tether", "Tanks Left, Party Out");
+	private final ModifiableCallout<AbilityCastStart> paradiseRegainedDarkCleaveLightTether = ModifiableCallout.durationBasedCall("Paradise Regained: Dark Wing + Light Tether", "Tanks Left, Party In");
+	private final ModifiableCallout<AbilityCastStart> paradiseRegainedLightCleaveDarkTether = ModifiableCallout.durationBasedCall("Paradise Regained: Light Wing + Dark Tether", "Tanks Right, Party Out");
+	private final ModifiableCallout<AbilityCastStart> paradiseRegainedLightCleaveLightTether = ModifiableCallout.durationBasedCall("Paradise Regained: Light Wing + Light Tether", "Tanks Right, Party In");
+
+	private final ModifiableCallout<?> paradiseRegained2DarkCleaveDarkTether = new ModifiableCallout<>("Paradise Regained 2nd Cleave: Dark Wing + Dark Tether", "Party Out");
+	private final ModifiableCallout<?> paradiseRegained2DarkCleaveLightTether = new ModifiableCallout<>("Paradise Regained 2nd Cleave: Dark Wing + Light Tether", " Party In");
+	private final ModifiableCallout<?> paradiseRegained2LightCleaveDarkTether = new ModifiableCallout<>("Paradise Regained 2nd Cleave: Light Wing + Dark Tether", "Party Out");
+	private final ModifiableCallout<?> paradiseRegained2LightCleaveLightTether = new ModifiableCallout<>("Paradise Regained 2nd Cleave: Light Wing + Light Tether", "Party In");
+
+	private final ModifiableCallout<?> paradiseRegained3 = new ModifiableCallout<>("Paradise Regained 3rd Tower", "Third Tower");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> paradiseRegainedSq = SqtTemplates.sq(30_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D7F),
@@ -1574,13 +1586,55 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				Boss needs to turn so that first tower is safe.
 				This means the MT should get in one of the two north towers, leaving the rel south tower safe.
 				*/
-				// First, there is an ACEE with 3F 4:0:0:0?
-				// This indicates dark then light? (cleaving right -> left)
 				// Wings light or dark cast, this is what does the glowy wings
-				// ACEE with 3F 0:0:0:0 seems to indicate light then dark (cleaving left -> right)
-				s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D29));
-				// Tether ID 1 = close?
-				// Tether ID 2 = far?
+				// 9D29 indicates cleaving right then left (dark glowing first)
+				// 9D79 indicates cleaving left then right (light glowing first)
+				// Tether ID 1 = close
+				// Tether ID 2 = far
+				TetherEvent firstTether = s.waitEvent(TetherEvent.class, te -> te.tetherIdMatches(1, 2));
+				AbilityCastStart cast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9D29, 0x9D79), false);
+
+				boolean darkTether = firstTether.tetherIdMatches(1);
+				boolean darkWingFirst = cast.abilityIdMatches(0x9D29);
+				if (darkTether) {
+					if (darkWingFirst) {
+						s.updateCall(paradiseRegainedDarkCleaveDarkTether, cast);
+					}
+					else {
+						s.updateCall(paradiseRegainedLightCleaveDarkTether, cast);
+					}
+				}
+				else {
+					if (darkWingFirst) {
+						s.updateCall(paradiseRegainedDarkCleaveLightTether, cast);
+					}
+					else {
+						s.updateCall(paradiseRegainedLightCleaveLightTether, cast);
+					}
+				}
+
+				s.waitCastFinished(casts, cast);
+
+				// These are just inverted
+				if (!darkTether) {
+					if (!darkWingFirst) {
+						s.updateCall(paradiseRegained2DarkCleaveDarkTether);
+					}
+					else {
+						s.updateCall(paradiseRegained2LightCleaveDarkTether);
+					}
+				}
+				else {
+					if (!darkWingFirst) {
+						s.updateCall(paradiseRegained2DarkCleaveLightTether);
+					}
+					else {
+						s.updateCall(paradiseRegained2LightCleaveLightTether);
+					}
+				}
+
+
+				// Map effects seem to indicate tower locations
 
 				// Mech order seems to be:
 				// Paradise Regained cast (3.7s)
@@ -1599,6 +1653,11 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> polarizingInitial = ModifiableCallout.durationBasedCall("Polarizing Strikes", "Line Stacks");
 	private final ModifiableCallout<?> polarizingHit = new ModifiableCallout<>("Polarizing Strikes Hit (No Swap)", "Move");
 	private final ModifiableCallout<?> polarizingHitSwap = new ModifiableCallout<>("Polarizing Strikes Swap", "Swap");
+	private final ModifiableCallout<?> polarizingMoveBack = new ModifiableCallout<>("Polarizing Strikes: Move Back to Stacks", "Stacks")
+			.extendedDescription("""
+					The variable `i` ranges from 1 to 4 and indicates which hit just happened.
+					e.g. If you want to take the third hit, set the callout to {i == 2 ? 'Front' 'Back'}""");
+
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> polarizingSq = SqtTemplates.sq(30_000,
@@ -1606,18 +1665,26 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				s.updateCall(polarizingInitial, e1);
 				for (int i = 1; i <= 4; i++) {
+					s.setParam("i", i);
 					var hits = s.waitEventsQuickSuccession(8, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D7D, 0x9D7E));
-					Optional<AbilityUsedEvent> playerHit = hits.stream().filter(aue -> aue.getTarget().isThePlayer()).findAny();
 					// Don't bother calling for a swap on the 4th set
-					if (i < 4 && playerHit.isPresent()) {
-						AbilityUsedEvent hit = playerHit.get();
-						Optional<StatusAppliedEffect> status = hit.getEffectsOfType(StatusAppliedEffect.class).stream().filter(sae -> sae.buffIdMatches(0xCFB, 0x1044)).findAny();
-						if (status.isPresent()) {
-							s.updateCall(polarizingHitSwap);
-							continue;
-						}
+					if (i < 4) {
+						// Check if player got hit, and if so, if they got the debuff
+						hits.stream().filter(aue -> aue.getTarget().isThePlayer())
+								.flatMap(hit -> hit.getEffectsOfType(StatusAppliedEffect.class).stream())
+								.filter(sae -> sae.buffIdMatches(0xCFB, 0x1044))
+								.findFirst()
+								.ifPresentOrElse(
+										ignored -> s.updateCall(polarizingHitSwap),
+										() -> s.updateCall(polarizingHit));
 					}
-					s.updateCall(polarizingHit);
+					else {
+						s.updateCall(polarizingHit);
+					}
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9CB7, 0x9CB8));
+					if (i < 4) {
+						s.updateCall(polarizingMoveBack);
+					}
 				}
 
 			});
