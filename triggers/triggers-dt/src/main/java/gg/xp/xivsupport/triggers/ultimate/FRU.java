@@ -1689,6 +1689,9 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 			});
 
+	@NpcCastCallout(0x9D86)
+	private final ModifiableCallout<AbilityCastStart> pandorasBox = ModifiableCallout.durationBasedCall("Pandora's Box", "Tank LB");
+
 	@NpcCastCallout(value = 0x9D88, cancellable = true)
 	private final ModifiableCallout<AbilityCastStart> p5enrage = ModifiableCallout.durationBasedCall("P5 Enrage", "Enrage");
 

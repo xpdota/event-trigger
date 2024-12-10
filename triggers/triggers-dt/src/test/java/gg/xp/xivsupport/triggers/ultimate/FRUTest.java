@@ -150,6 +150,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(938078, "Swap", "Swap"),
 				call(940208, "Stacks", "Stacks"),
 				call(942744, "Move", "Move"),
+				call(950613, "Tank LB", "Tank LB (11.7)"),
 				call(968752, "Raidwide", "Raidwide (5.7)"),
 				call(978808, "Fulgent Blade: CCW", "Fulgent Blade: CCW (6.7)"),
 				call(985799, "Move", "Move"),
