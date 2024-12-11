@@ -171,6 +171,7 @@ public class CalloutSettingGui {
 		callCheckbox.repaint();
 		ttsPanel.updateUI();
 		textPanel.updateUI();
+		soundPanel.updateUI();
 	}
 
 	public void setEnabledByParent(boolean enabledByParent) {

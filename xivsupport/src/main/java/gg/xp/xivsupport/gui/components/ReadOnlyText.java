@@ -52,7 +52,9 @@ public class ReadOnlyText extends JTextArea {
 		Rectangle currentBounds = getBounds();
 		int currentWidth = currentBounds.width;
 		boolean doResize = width - currentWidth > 3 || width - currentWidth < 0;
-		super.setBounds(x, y, width, height);
+		if (doResize) {
+			super.setBounds(x, y, width, height);
+		}
 		if (!isPreferredSizeSet()) {
 			fakePreferredSize = super.getPreferredSize();
 		}

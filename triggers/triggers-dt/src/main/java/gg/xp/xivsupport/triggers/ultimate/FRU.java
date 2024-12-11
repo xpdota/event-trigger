@@ -740,15 +740,17 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> relThLongFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Support Long Fire", "Long Fire").autoIcon();
 	private final ModifiableCallout<BuffApplied> relThIce = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Support Ice", "Ice").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> relShortFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Short Fire Popping", "Move Out").autoIcon()
+	private final ModifiableCallout<BuffApplied> relShortFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Fire Popping", "Move Out").autoIcon()
 			.extendedDescription("The short fire/stack pop calls happen about 5 seconds in.");
-	private final ModifiableCallout<BuffApplied> relShortStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Short Stack Popping", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> relShortStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Stack Popping", "Stack").autoIcon();
 
 	private final ModifiableCallout<?> relLongRewind = new ModifiableCallout<>("Relativity: Long Rewind", "Bait Spinny")
 			.extendedDescription("This call happens after the first fire/stack pop, if you have long rewind.");
 	private final ModifiableCallout<BuffApplied> relShortRewindEruption = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Eruption", "Stand on Light").autoIcon()
 			.extendedDescription("This call happens after the first fire/stack pop, if you have short rewind and have eruption (no water).");
-	private final ModifiableCallout<BuffApplied> relShortRewindWater = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Water", "Stand on Light").autoIcon()
+	private final ModifiableCallout<BuffApplied> relShortRewindEruptionMedFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Eruption and Med Fire", "Stand inside Light").autoIcon()
+			.extendedDescription("This call happens after the first fire/stack pop, if you have short rewind and have eruption (no water) as well as medium fire.");
+	private final ModifiableCallout<BuffApplied> relShortRewindWater = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Water", "Stand In").autoIcon()
 			.extendedDescription("This call happens after the first fire/stack pop, if you have short rewind and have water (no eruption).");
 
 	private final ModifiableCallout<BuffApplied> relMedFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Medium Fire Popping", "Move Out").autoIcon()
@@ -888,7 +890,13 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 								s.updateCall(relShortRewindWater, e);
 							}
 							else {
-								s.updateCall(relShortRewindEruption, e);
+								// TODO: some people need to bait inside for this?
+								if (medFireC.anyMatch(isPlayer)) {
+									s.updateCall(relShortRewindEruptionMedFire, e);
+								}
+								else {
+									s.updateCall(relShortRewindEruption, e);
+								}
 							}
 						},
 						() -> s.updateCall(relLongRewind));
