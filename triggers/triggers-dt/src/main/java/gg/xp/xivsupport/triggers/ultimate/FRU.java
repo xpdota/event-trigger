@@ -1240,7 +1240,12 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> crystallize4Water = new ModifiableCallout<>("Crystallize Time, After Stacks: Water + Blue", "Dodge and Cleanse").statusIcon(0xCC0);
 
 	private final ModifiableCallout<BuffApplied> crystallize5quietus = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Quietus", "Raidwide").statusIcon(0x104E);
-	private final ModifiableCallout<BuffApplied> crystallize5dropRewind = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Drop Rewind", "Drop Rewind {tidalFrom}").statusIcon(0x1070);
+	private final ModifiableCallout<BuffApplied> crystallize5dropRewind = ModifiableCallout.<BuffApplied>durationBasedCall("Crystallize Time: Drop Rewind", "Drop Rewind {tidalFrom}")
+			.statusIcon(0x1070)
+			.extendedDescription("""
+					In addition to {tidalFrom}, which is the combined direction of the tidal waves (e.g. Northwest), you can
+					also use {tidalFromFirst} and {tidalFromSecond} to reference the individual waves. For example, {tidalFromSecond}
+					would tell you where to stand if you are going to KB immune the first push.""");
 
 	private final ModifiableCallout<AbilityCastStart> crystallize6cleanse = ModifiableCallout.<AbilityCastStart>durationBasedCall("Crystallize Time, After Rewind: Cleanse", "Cleanse and Spread").statusIcon(0xCC0);
 	private final ModifiableCallout<AbilityCastStart> crystallize6nothing = ModifiableCallout.durationBasedCall("Crystallize Time, After Rewind: Nothing", "Spread");
@@ -1380,6 +1385,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				// Quietus resolving
 				var rewindBuff = buffs.findBuffById(0x1070);
 				s.setParam("tidalFrom", safeSpotEvent.getSafe());
+				s.setParam("tidalFromFirst", safeSpotEvent.getFirstDirection());
+				s.setParam("tidalFromSecond", safeSpotEvent.getSecondDirection());
 				s.updateCall(crystallize5dropRewind, rewindBuff);
 
 				// Squeeze in the quietus call
