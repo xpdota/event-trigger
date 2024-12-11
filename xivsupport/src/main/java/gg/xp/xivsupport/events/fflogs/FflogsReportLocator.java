@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public record FflogsReportLocator(String report, @Nullable Integer fight) {
 
 	private static final Logger log = LoggerFactory.getLogger(FflogsReportLocator.class);
-	private static final Pattern urlPattern = Pattern.compile("reports/([^#/]+).*fight=(\\d+|last)");
+	private static final Pattern urlPattern = Pattern.compile("reports/([^#/?&]+).*fight=(\\d+|last)");
 	private static final Pattern urlPatternNoFight = Pattern.compile("reports/([^#/]+)");
 
 	public static FflogsReportLocator fromURL(String url) {
