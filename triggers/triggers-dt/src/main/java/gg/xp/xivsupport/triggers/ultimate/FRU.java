@@ -1632,6 +1632,10 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 						s.updateCall(paradiseRegained2LightCleaveLightTether);
 					}
 				}
+				s.waitMs(2_000);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D7A, 0x9D7B));
+				s.updateCall(paradiseRegained3);
+				// TODO: 3rd tower call
 
 
 				// Map effects seem to indicate tower locations
