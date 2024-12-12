@@ -5,6 +5,10 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 
+// TODO: still bugged
+// Maybe a better approach is to listen for a resize and:
+// 1. Recalculate the new preferred height using the new width (possibly tapping into font metrics)
+// 2. Set this new preferred size (don't just return it via an override), so that it triggers a revalidation
 public class ReadOnlyText extends JTextArea {
 
 	private @Nullable Dimension fakePreferredSize;
@@ -51,10 +55,8 @@ public class ReadOnlyText extends JTextArea {
 	public void setBounds(int x, int y, int width, int height) {
 		Rectangle currentBounds = getBounds();
 		int currentWidth = currentBounds.width;
-		boolean doResize = width - currentWidth > 3 || width - currentWidth < 0;
-		if (doResize) {
-			super.setBounds(x, y, width, height);
-		}
+//		boolean doResize = width - currentWidth > 3 || width - currentWidth < 0;
+		super.setBounds(x, y, width, height);
 		if (!isPreferredSizeSet()) {
 			fakePreferredSize = super.getPreferredSize();
 		}

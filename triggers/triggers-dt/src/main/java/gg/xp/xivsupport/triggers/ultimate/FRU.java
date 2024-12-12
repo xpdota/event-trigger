@@ -753,9 +753,9 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> relShortRewindWater = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Water", "Stand In").autoIcon()
 			.extendedDescription("This call happens after the first fire/stack pop, if you have short rewind and have water (no eruption).");
 
-	private final ModifiableCallout<BuffApplied> relMedFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Medium Fire Popping", "Move Out").autoIcon()
+	private final ModifiableCallout<BuffApplied> relMedFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Medium Fire Popping", "Move Out").autoIcon()
 			.extendedDescription("The medium fire/stack pop calls happen about 15 seconds in.");
-	private final ModifiableCallout<BuffApplied> relMedStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Medium Stack Popping", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> relMedStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Medium Stack Popping", "Stack").autoIcon();
 
 	private final ModifiableCallout<?> relShortRewindBait = new ModifiableCallout<>("Relativity: Short Rewind Part 2", "Bait Spinny")
 			.extendedDescription("This call happens after the second fire/stack pop, if you have short rewind and do not have medium fire.");
@@ -764,9 +764,9 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> relLongRewind2 = new ModifiableCallout<>("Relativity: Long Rewind Part 2", "Stand Middle")
 			.extendedDescription("This call happens after the first fire/stack pop, if you have long rewind.");
 
-	private final ModifiableCallout<BuffApplied> relLongFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Long Fire Popping", "Move Out").autoIcon()
+	private final ModifiableCallout<BuffApplied> relLongFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Long Fire Popping", "Move Out").autoIcon()
 			.extendedDescription("The long fire/stack pop calls happen about 25 seconds in.");
-	private final ModifiableCallout<BuffApplied> relLongStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: DPS Long Stack Popping", "Stack").autoIcon();
+	private final ModifiableCallout<BuffApplied> relLongStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Long Stack Popping", "Stack").autoIcon();
 
 	private final ModifiableCallout<?> relMedFireBaitLookOut = new ModifiableCallout<>("Relativity: Medium Fire Final Baits", "Bait Light, Look Outside").statusIcon(0x998)
 			.extendedDescription("Final Traffic Light Bait, with Medium Fire");
