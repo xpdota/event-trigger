@@ -164,6 +164,7 @@ public final class EasyTriggers {
 				.postConstruct(this::doLegacyMigration)
 				.build();
 		setting.tryRecoverFailures();
+		// TODO: Having lots of EasyTriggers can inflate startup times
 		this.triggers = new ArrayList<>(setting.getItems());
 		recalc();
 	}

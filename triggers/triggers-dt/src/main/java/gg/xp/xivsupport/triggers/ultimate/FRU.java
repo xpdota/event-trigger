@@ -9,6 +9,7 @@ import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastCancel;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
@@ -703,10 +704,18 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x9D20)
 	private final ModifiableCallout<AbilityCastStart> p2enrage = ModifiableCallout.durationBasedCall("P2 Enrage", "Enrage, Knockback");
 
-	@NpcCastCallout(0x9D43)
+	@NpcCastCallout(value = 0x9D43, cancellable = true)
 	private final ModifiableCallout<AbilityCastStart> intermissionEnrage = ModifiableCallout.durationBasedCall("Endless Ice Age (Intermission)", "Kill Crystals, Bait AoEs");
 
-	// TODO: there is a raidwide (Junction 9D22) between intermission and p3
+	private final ModifiableCallout<?> junction = new ModifiableCallout<>("Junction", "Raidwide");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> intermissionRaidwideSq = SqtTemplates.sq(30_000,
+			AbilityCastCancel.class, acc -> acc.abilityIdMatches(0x9D43),
+			(e1, s) -> {
+					s.waitMs(7_000);
+					s.updateCall(junction);
+			});
 
 	@NpcCastCallout(0x9D49)
 	private final ModifiableCallout<AbilityCastStart> hellsJudgment = ModifiableCallout.durationBasedCall("Hell's Judgment", "1 HP");

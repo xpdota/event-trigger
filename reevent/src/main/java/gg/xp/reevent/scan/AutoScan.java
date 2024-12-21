@@ -34,6 +34,11 @@ public class AutoScan {
 	private final AutoHandlerInstanceProvider instanceProvider;
 	private final AutoHandlerConfig config;
 	private static final Pattern jarFileName = Pattern.compile("([a-zA-Z0-9\\-.]+)\\.jar");
+	private static final Pattern targetDirName = Pattern.compile("/([a-zA-Z0-9\\-.]+)/target/classes/?");
+	/**
+	 * List of jar file names to not scan. If running in an IDE, this will also match the /(module name)/target/classes/
+	 * directory.
+	 */
 	private static final List<String> scanBlacklist = List.of(
 			"annotations",
 			"caffeine",
@@ -189,7 +194,11 @@ public class AutoScan {
 			return matcher.group(1);
 		}
 		else {
-			return null;
+			Matcher tgtMatcher = targetDirName.matcher(uriStr);
+			if (tgtMatcher.find()) {
+				return tgtMatcher.group(1);
+			}
 		}
+		return null;
 	}
 }

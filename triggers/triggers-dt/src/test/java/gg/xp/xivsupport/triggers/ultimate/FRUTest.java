@@ -83,6 +83,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(320715, "Proteans", "Proteans (4.7)"),
 				call(334989, "Enrage, Knockback", "Enrage, Knockback (9.7)"),
 				call(371856, "Kill Crystals, Bait AoEs", "Kill Crystals, Bait AoEs (39.7)"),
+				call(417128, "Raidwide", "Raidwide"),
 				call(437660, "1 HP", "1 HP (3.7)"),
 				call(445922, "Raidwide", "Raidwide (9.7)"),
 				call(457085, "Long Fire", "Long Fire (30.6)"),
