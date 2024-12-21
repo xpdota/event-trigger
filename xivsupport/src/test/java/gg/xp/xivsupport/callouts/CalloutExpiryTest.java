@@ -23,7 +23,7 @@ public class CalloutExpiryTest {
 	// TODO: Finish the rest of these test cases
 
 	private static final class Data {
-		private final ModifiableCallout<DebugCommand> myCall = new ModifiableCallout<>("Test Call", "foobar", 1200);
+		private final ModifiableCallout<DebugCommand> myCall = new ModifiableCallout<>("Test Call", "foobar", 800);
 		private final EventDistributor dist;
 		private final FlyingTextOverlay fto;
 		private final Field ccField;
@@ -66,12 +66,12 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(800);
+			Thread.sleep(500);
 
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(600);
+			Thread.sleep(400);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -86,12 +86,12 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(800);
+			Thread.sleep(500);
 
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(600);
+			Thread.sleep(400);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -110,12 +110,12 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(800);
+			Thread.sleep(500);
 
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(600);
+			Thread.sleep(400);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -131,12 +131,12 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(800);
+			Thread.sleep(500);
 
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			Thread.sleep(600);
+			Thread.sleep(400);
 
 			Assert.assertTrue(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.empty());
@@ -161,14 +161,14 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			fakeTimeSource.setNewTime(basis.plusMillis(1000));
+			fakeTimeSource.setNewTime(basis.plusMillis(500));
 			// Give it time to react
 			Thread.sleep(100);
 
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			fakeTimeSource.setNewTime(basis.plusMillis(1500));
+			fakeTimeSource.setNewTime(basis.plusMillis(900));
 			Thread.sleep(100);
 
 			Assert.assertTrue(call.isExpired());
@@ -191,14 +191,14 @@ public class CalloutExpiryTest {
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			fakeTimeSource.setNewTime(basis.plusMillis(1000));
+			fakeTimeSource.setNewTime(basis.plusMillis(500));
 			// This time, let's try something else. Let's sleep for a while to make sure the fake time source is respected.
-			Thread.sleep(5000);
+			Thread.sleep(1500);
 
 			Assert.assertFalse(call.isExpired());
 			MatcherAssert.assertThat(data.getCurrentVisualCalls(), Matchers.hasSize(1));
 
-			fakeTimeSource.setNewTime(basis.plusMillis(1500));
+			fakeTimeSource.setNewTime(basis.plusMillis(900));
 			Thread.sleep(100);
 
 			Assert.assertTrue(call.isExpired());

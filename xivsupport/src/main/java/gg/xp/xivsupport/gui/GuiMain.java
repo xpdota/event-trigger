@@ -202,7 +202,6 @@ public class GuiMain {
 		addTab("Library", container.getComponent(LibraryTab.class));
 		addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class)));
 		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class), container.getComponent(UpdaterConfig.class)));
-		gec.hideLoading();
 		// This is instantiated here because we don't want it getting auto scanned in tests
 		container.addComponent(AdvancedTab.class);
 		addTab("Advanced", container.getComponent(AdvancedTab.class));
@@ -241,6 +240,7 @@ public class GuiMain {
 		SwingUtilities.invokeLater(() -> {
 			long end = System.currentTimeMillis();
 			log.info("GUI startup time: {}", end - start);
+			gec.hideLoading();
 		});
 	}
 
