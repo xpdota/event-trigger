@@ -16,14 +16,14 @@ public final class CompressedObjectStreamLoader {
 	}
 
 	public static <X> Map<Integer, X> loadFrom(InputStream inputStream, Function<X, Integer> keyExtractor) {
-		List<X> zoneInfos;
+		List<X> datum;
 		try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(inputStream))) {
-			zoneInfos = (List<X>) ois.readObject();
+			datum = (List<X>) ois.readObject();
 		}
 		catch (ClassNotFoundException | IOException e) {
 			throw new RuntimeException(e);
 		}
-		Map<Integer, X> tmp = zoneInfos.stream()
+		Map<Integer, X> tmp = datum.stream()
 				.collect(Collectors.toMap(keyExtractor, Function.identity(), (a, b) -> b));
 		return new ArrayBackedMap<>(tmp);
 	}

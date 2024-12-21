@@ -4,6 +4,7 @@ import gg.xp.xivapi.XivApiClient;
 import gg.xp.xivapi.clienttypes.XivApiObject;
 import gg.xp.xivapi.pagination.XivApiPaginator;
 import gg.xp.xivdata.builders.models.ContentFinderCondition;
+import gg.xp.xivdata.builders.models.NpcYell;
 import gg.xp.xivdata.builders.models.PlaceName;
 import gg.xp.xivdata.builders.models.TerritoryType;
 import gg.xp.xivdata.data.*;
@@ -40,7 +41,7 @@ public class MakeEverythingXivapi {
 	public static void main(String[] args) throws Throwable {
 		Path outputPathBase = Path.of("src", "main", "resources", "xiv");
 		// Strongly recommended to use a local BM install rather than the live server
-		String server = System.getProperty("xivapi-server", "https://beta.xivapi.com/api/1");
+		String server = System.getProperty("xivapi-server", "https://bm.xivgear.app/api/1");
 		XivApiClient client = new XivApiClient(builder -> {
 			try {
 				builder.setBaseUri(new URI(server));
@@ -57,18 +58,23 @@ public class MakeEverythingXivapi {
 
 			return new ZoneInfo(entry.getRowId(), cfc == null ? null : cfc.getName(), place == null ? null : place.getName());
 		}, List.of("territory", "TerritoryType.oos.gz"));
+		maker.writeList(NpcYell.class, entry -> {
+			return new NpcYellInfo(entry.getRowId(), entry.getText());
+		}, List.of("npcyell", "NpcYell.oos.gz"));
+		// TODO: remove after bug fixed
+		System.exit(0);
 	}
 
 	private <In extends XivApiObject, Out extends Serializable> void writeList(Class<In> xivApiClass, Function<In, Out> mapper, List<String> path) {
 		log.info("Loading {}...", xivApiClass.getSimpleName());
 		XivApiPaginator<In> pager = client.getListIterator(xivApiClass);
-		List<Out> out = pager.toBufferedStream(10).map(mapper).toList();
+		List<Out> out = pager.toBufferedStream(10).parallel().map(mapper).toList();
 		log.info("Found {} entries of {}", out.size(), xivApiClass.getSimpleName());
 		Path outputPath = outputPathBase;
 		for (String pathPart : path) {
 			outputPath = outputPath.resolve(pathPart);
 		}
-		try (var faos = new FileOutputStream(outputPathBase.resolve("territory").resolve("TerritoryType.oos.gz").toFile());
+		try (var faos = new FileOutputStream(outputPath.toFile());
 		     var gzos = new GZIPOutputStream(faos);
 		     var oos = new ObjectOutputStream(gzos)) {
 			oos.writeObject(out);

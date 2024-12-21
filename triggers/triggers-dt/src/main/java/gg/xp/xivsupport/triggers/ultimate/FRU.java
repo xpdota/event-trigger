@@ -1684,7 +1684,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> polarizingMoveBack = new ModifiableCallout<>("Polarizing Strikes: Move Back to Stacks", "Stacks")
 			.extendedDescription("""
 					The variable `i` ranges from 1 to 4 and indicates which hit just happened.
-					e.g. If you want to take the third hit, set the callout to {i == 2 ? 'Front' 'Back'}""");
+					e.g. If you want to take the third hit, set the callout to {i == 2 ? 'Front' : 'Back'}""");
 
 
 	@AutoFeed

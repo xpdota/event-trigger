@@ -1,5 +1,6 @@
 package gg.xp.xivdata.data;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public final class ZoneLibraryImpl {
 		return value == null ? null : value.getCapitalizedName();
 	}
 
-	public ZoneInfo infoForZoneOrUnknown(int id) {
+	public @NotNull ZoneInfo infoForZoneOrUnknown(int id) {
 		ZoneInfo zoneInfo = infoForZone(id);
 		if (zoneInfo == null) {
 			return new ZoneInfo(id, "Unknown", null);
