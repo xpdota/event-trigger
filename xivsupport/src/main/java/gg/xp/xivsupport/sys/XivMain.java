@@ -1,7 +1,6 @@
 package gg.xp.xivsupport.sys;
 
 import gg.xp.compmonitor.CompMonitor;
-import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.BasicEventDistributor;
 import gg.xp.reevent.events.BasicEventQueue;
 import gg.xp.reevent.events.EventDistributor;
@@ -9,7 +8,6 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.MonitoringEventDistributor;
 import gg.xp.reevent.scan.AutoHandlerConfig;
-import gg.xp.reevent.scan.AutoHandlerScan;
 import gg.xp.reevent.scan.AutoScan;
 import gg.xp.reevent.topology.TopoInfoImpl;
 import gg.xp.xivdata.data.*;
@@ -24,11 +22,13 @@ import gg.xp.xivsupport.persistence.UserDirPropsPersistenceProvider;
 import groovy.lang.GroovyShell;
 import org.picocontainer.MutablePicoContainer;
 import org.picocontainer.PicoBuilder;
+import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.List;
+import java.util.function.Consumer;
 
 public final class XivMain {
 
@@ -58,8 +58,6 @@ public final class XivMain {
 		pico.addComponent(cm);
 		pico.addComponent(MonitoringEventDistributor.class);
 		pico.addComponent(AutoScan.class);
-//		pico.addComponent(AutoEventDistributor.class);
-//		pico.addComponent(AutoHandlerScan.class);
 		pico.addComponent(AutoHandlerConfig.class);
 		pico.addComponent(EventMaster.class);
 		pico.addComponent(BasicEventQueue.class);
@@ -95,7 +93,10 @@ public final class XivMain {
 	public static MutablePicoContainer testingMasterInit() {
 		MutablePicoContainer pico = requiredComponents();
 		pico.addComponent(InMemoryMapPersistenceProvider.class);
-		pico.getComponent(AutoHandlerConfig.class).setNotLive(true);
+		AutoHandlerConfig ahc = pico.getComponent(AutoHandlerConfig.class);
+		ahc.setNotLive(true);
+		// Make testing containers use strict mode
+		ahc.setStrict(true);
 		pico.getComponent(EventMaster.class).start();
 		return pico;
 	}
@@ -121,7 +122,10 @@ public final class XivMain {
 		pico.addComponent(PicoBasedInstanceProvider.class);
 		pico.addComponent(AutoHandlerConfig.class);
 		pico.addComponent(InMemoryMapPersistenceProvider.class);
-		pico.getComponent(AutoHandlerConfig.class).setNotLive(true);
+		AutoHandlerConfig ahc = pico.getComponent(AutoHandlerConfig.class);
+		ahc.setNotLive(true);
+		// Make testing containers use strict mode
+		ahc.setStrict(true);
 		pico.addComponent(pico);
 
 		pico.getComponent(EventMaster.class).start();
@@ -134,6 +138,11 @@ public final class XivMain {
 	 * @return The container
 	 */
 	public static MutablePicoContainer masterInit() {
+		return masterInit(ignored -> {
+		});
+	}
+
+	public static MutablePicoContainer masterInit(Consumer<MutablePicoContainer> earlyInit) {
 		log.info("Starting main program");
 		log.info("PID: {}", ProcessHandle.current().pid());
 
@@ -146,6 +155,8 @@ public final class XivMain {
 		else {
 			pico.addComponent(UserDirPropsPersistenceProvider.inUserDataFolder("triggevent-testing"));
 		}
+
+		earlyInit.accept(pico);
 
 		new Thread(() -> {
 			log.info("StartupHelper begin");

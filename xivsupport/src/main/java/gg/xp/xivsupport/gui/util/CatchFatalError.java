@@ -43,16 +43,16 @@ public final class CatchFatalError {
 			c.weighty = 1;
 			c.fill = GridBagConstraints.BOTH;
 			JTextArea textArea = new JTextArea();
-			textArea.setText("You should report this as a bug and include log files in " +
-					Platform.getTriggeventDir() +
-					" as well as this error message." +
-					"\n\n" +
-					"You can also try moving/renaming the properties files in that directory to see if this error is being caused by a problem with your settings." +
-					"\n\n" +
-					"Also, try updating using the button below." +
-					"\n\n" +
-					ExceptionUtils.getStackTrace(e)
-			);
+			String text = "You should report this as a bug and include log files in " +
+			           Platform.getTriggeventDir() +
+			           " as well as this error message." +
+			           "\n\n" +
+			           "You can also try moving/renaming the properties files in that directory to see if this error is being caused by a problem with your settings." +
+			           "\n\n" +
+			           "Also, try updating using the button below." +
+			           "\n\n" +
+			           ExceptionUtils.getStackTrace(e);
+			textArea.setText(text);
 			textArea.setEditable(false);
 			textArea.setLineWrap(true);
 			textArea.setWrapStyleWord(true);
@@ -84,6 +84,11 @@ public final class CatchFatalError {
 			JPanel buttons = new JPanel(new WrapLayout(WrapLayout.CENTER));
 			buttons.add(exit);
 			buttons.add(update);
+			JButton copy = new JButton("Copy Error Message");
+			copy.addActionListener(l -> {
+				GuiUtil.copyTextToClipboard(text);
+			});
+			buttons.add(copy);
 //			buttons.add(tryContinue);
 			c.fill = GridBagConstraints.HORIZONTAL;
 			panel.add(buttons, c);

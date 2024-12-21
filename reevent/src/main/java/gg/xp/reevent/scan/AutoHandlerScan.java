@@ -30,6 +30,7 @@ import static org.reflections.scanners.Scanners.MethodsAnnotated;
 import static org.reflections.scanners.Scanners.SubTypes;
 
 @SuppressWarnings("ClassWithMultipleLoggers")
+@Deprecated
 public class AutoHandlerScan {
 
 	private static final Logger log = LoggerFactory.getLogger(AutoHandlerScan.class);

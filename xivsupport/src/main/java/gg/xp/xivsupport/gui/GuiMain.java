@@ -5,7 +5,6 @@ import gg.xp.reevent.context.StateStore;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
-import gg.xp.reevent.util.Utils;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
@@ -36,7 +35,6 @@ import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
-import gg.xp.xivsupport.gui.tables.GlobalGuiOptions;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -74,7 +72,6 @@ import gg.xp.xivsupport.persistence.gui.IntSettingSpinner;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import gg.xp.xivsupport.replay.gui.ReplayAdvancePseudoFilter;
-import gg.xp.xivsupport.replay.gui.ReplayControllerGui;
 import gg.xp.xivsupport.rsv.PersistentRsvLibrary;
 import gg.xp.xivsupport.slf4j.LogCollector;
 import gg.xp.xivsupport.slf4j.LogEvent;
@@ -102,10 +99,8 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -113,17 +108,14 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @SuppressWarnings({"ReturnOfNull", "CodeBlock2Expr"})
 public class GuiMain {
@@ -136,7 +128,6 @@ public class GuiMain {
 	private final StandardColumns columns;
 	private final @Nullable ReplayController replay;
 	private final RightClickOptionRepo rightClicks;
-	private final GlobalGuiOptions globalGuiOpts;
 	private final GlobalUiRegistry guiReg;
 	private final EventsTabFactory eventsTabFactory;
 	private JFrame mainFrame;
@@ -151,8 +142,20 @@ public class GuiMain {
 		CatchFatalError.run(() -> {
 			log.info("GUI Setup");
 			CommonGuiSetup.setup();
+			log.info("Early GUI component setup");
 			log.info("Master Init");
-			MutablePicoContainer pico = XivMain.masterInit();
+			MutablePicoContainer pico = XivMain.masterInit(c -> {
+				c.addComponent(WindowConfig.class);
+				c.getComponent(WindowConfig.class);
+				GuiEarlyComponents gec = new GuiEarlyComponents(c);
+				try {
+					SwingUtilities.invokeAndWait(gec::init);
+				}
+				catch (InterruptedException | InvocationTargetException e) {
+					throw new RuntimeException(e);
+				}
+				c.addComponent(gec);
+			});
 			pico.addComponent(GuiMain.class);
 			log.info("GUI Init");
 			pico.getComponent(GuiMain.class);
@@ -161,7 +164,7 @@ public class GuiMain {
 		});
 	}
 
-	public GuiMain(EventMaster master, MutablePicoContainer container) {
+	public GuiMain(EventMaster master, MutablePicoContainer container, GuiEarlyComponents gec) {
 		// TODO: is this really the place for this?
 		// It makes sense from a use case standpoint - if you intend to look at things visually (i.e. a GUI), you'd
 		// want RSV support. If you're running integration tests and stuff like that, you probably don't care.
@@ -177,51 +180,13 @@ public class GuiMain {
 		this.rightClicks = container.getComponent(RightClickOptionRepo.class);
 		columns = container.getComponent(StandardColumns.class);
 		replay = container.getComponent(ReplayController.class);
-		globalGuiOpts = container.getComponent(GlobalGuiOptions.class);
 		guiReg = container.getComponent(GlobalUiRegistry.class);
 		eventsTabFactory = container.getComponent(EventsTabFactory.class);
-		WindowConfig wc = container.getComponent(WindowConfig.class);
 		long start = System.currentTimeMillis();
 		SwingUtilities.invokeLater(() -> {
-			mainFrame = new JFrame("Triggevent");
-			tabPane = new SmartTabbedPane();
-			mainFrame.setLayout(new BorderLayout());
-			mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//			frame.setLocationByPlatform(true);
-			mainFrame.setSize(1280, 960);
-			mainFrame.setLocationRelativeTo(null);
-			mainFrame.addWindowStateListener(new WindowAdapter() {
-				@Override
-				public void windowStateChanged(WindowEvent e) {
-					if (wc.getMinimizeToTray().get()) {
-						if ((e.getNewState() & JFrame.ICONIFIED) != 0) {
-							setUpTrayIcon();
-							mainFrame.setVisible(false);
-						}
-						else {
-							mainFrame.setVisible(true);
-							removeTrayIcon();
-						}
-					}
-				}
-			});
-			if (wc.getStartMinimized().get() && replay == null) {
-				mainFrame.setState(JFrame.ICONIFIED);
-				if (wc.getMinimizeToTray().get()) {
-					setUpTrayIcon();
-					mainFrame.setVisible(false);
-				}
-				else {
-					mainFrame.setVisible(true);
-				}
-			}
-			else {
-				mainFrame.setVisible(true);
-			}
-			mainFrame.add(tabPane);
-			if (replay != null) {
-				mainFrame.add(new ReplayControllerGui(container, replay).getPanel(), BorderLayout.PAGE_START);
-			}
+			gec.init();
+			mainFrame = gec.getMainFrame();
+			tabPane = gec.getTabPane();
 		});
 		addTab("Welcome", new WelcomeTabPanel());
 		addTab("Summary", new SummaryTabPanel());
@@ -237,6 +202,7 @@ public class GuiMain {
 		addTab("Library", container.getComponent(LibraryTab.class));
 		addTab("Groovy", new GroovyTab(container.getComponent(GroovyScriptManager.class)));
 		addTab("Updates", new UpdatesPanel(container.getComponent(PersistenceProvider.class), container.getComponent(UpdaterConfig.class)));
+		gec.hideLoading();
 		// This is instantiated here because we don't want it getting auto scanned in tests
 		container.addComponent(AdvancedTab.class);
 		addTab("Advanced", container.getComponent(AdvancedTab.class));
@@ -276,33 +242,6 @@ public class GuiMain {
 			long end = System.currentTimeMillis();
 			log.info("GUI startup time: {}", end - start);
 		});
-	}
-
-	private @Nullable TrayIcon icon;
-
-	private void removeTrayIcon() {
-		if (icon != null) {
-			SystemTray.getSystemTray().remove(icon);
-		}
-	}
-
-	private void setUpTrayIcon() {
-		if (icon == null) {
-			Dimension size = SystemTray.getSystemTray().getTrayIconSize();
-			icon = new TrayIcon(new ImageIcon(GeneralIcons.DAMAGE_MAGIC.getIconUrl()).getImage().getScaledInstance(size.width, size.height, Image.SCALE_SMOOTH));
-			icon.addActionListener(l -> {
-				mainFrame.setVisible(true);
-				mainFrame.setState(mainFrame.getState() & ~JFrame.ICONIFIED);
-				mainFrame.requestFocus();
-				removeTrayIcon();
-			});
-		}
-		try {
-			SystemTray.getSystemTray().add(icon);
-		}
-		catch (AWTException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	private void addTab(String name, Component component) {

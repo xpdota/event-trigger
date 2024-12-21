@@ -43,6 +43,7 @@ public class JobSortSetting {
 				jobSort = listFromSettings;
 			}
 			catch (Throwable t) {
+				// TODO: this is annoying because it will crop up every time a new job is added
 				log.error("Saved jail order did not pass validation", t);
 			}
 		}
