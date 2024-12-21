@@ -61,8 +61,6 @@ public class MakeEverythingXivapi {
 		maker.writeList(NpcYell.class, entry -> {
 			return new NpcYellInfo(entry.getRowId(), entry.getText());
 		}, List.of("npcyell", "NpcYell.oos.gz"));
-		// TODO: remove after bug fixed
-		System.exit(0);
 	}
 
 	private <In extends XivApiObject, Out extends Serializable> void writeList(Class<In> xivApiClass, Function<In, Out> mapper, List<String> path) {
