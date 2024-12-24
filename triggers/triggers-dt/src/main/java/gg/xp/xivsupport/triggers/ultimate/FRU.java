@@ -777,9 +777,11 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			.extendedDescription("The long fire/stack pop calls happen about 25 seconds in.");
 	private final ModifiableCallout<BuffApplied> relLongStackPop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Long Stack Popping", "Stack").autoIcon();
 
-	private final ModifiableCallout<?> relMedFireBaitLookOut = new ModifiableCallout<>("Relativity: Medium Fire Final Baits", "Bait Light, Look Outside").statusIcon(0x998)
+	private final ModifiableCallout<?> relMedFireBaitLookOut = new ModifiableCallout<>("Relativity: Medium Fire Final Baits", "Bait Light then Look Outside")
 			.extendedDescription("Final Traffic Light Bait, with Medium Fire");
-	private final ModifiableCallout<?> relFinalCenterLookOut = new ModifiableCallout<>("Relativity: Final Mechanics", "Look Outside").statusIcon(0x998)
+	private final ModifiableCallout<BuffApplied> relMedFireBaitMoveInLookOut = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Medium Fire Final Mechanic", "Move In, Look Outside").statusIcon(0x998)
+			.extendedDescription("Final Traffic Light Bait, with Medium Fire, after Baiting Light");
+	private final ModifiableCallout<BuffApplied> relFinalCenterLookOut = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Final Mechanics", "Look Outside").statusIcon(0x998)
 			.extendedDescription("Final Traffic Light Bait, not Medium Fire");
 
 	@AutoFeed
@@ -938,9 +940,15 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 				s.waitMs(5_000); // T=31
 
+				var rewindBuff = s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(0x994));
+
 				medFireC.findAny(isPlayer).ifPresentOrElse(
-						e -> s.updateCall(relMedFireBaitLookOut),
-						() -> s.updateCall(relFinalCenterLookOut)
+						e -> {
+							s.updateCall(relMedFireBaitLookOut);
+							s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D2B));
+							s.updateCall(relMedFireBaitMoveInLookOut, rewindBuff);
+						},
+						() -> s.updateCall(relFinalCenterLookOut, rewindBuff)
 				);
 			});
 

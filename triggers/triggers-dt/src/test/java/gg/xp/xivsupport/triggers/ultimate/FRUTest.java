@@ -93,7 +93,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(473149, "Stack", "Stack (4.6)"),
 				call(478175, "Stand Middle", "Stand Middle"),
 				call(483195, "Move Out", "Move Out (4.5)"),
-				call(488217, "Look Outside", "Look Outside"),
+				call(488217, "Look Outside", "Look Outside (8.5)"),
 				call(500670, "Stack", "Stack (2.7)"),
 				call(507080, "Raidwide", "Raidwide (4.7)"),
 				call(515215, "Tankbuster on Chachajire Titijire", "Tankbuster on Chachajire Titijire (4.7)"),
