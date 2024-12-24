@@ -148,8 +148,9 @@ public enum ArenaSector implements HasFriendlyName {
 	/**
 	 * Like {@link #tryCombineTwoQuadrants(List)} (List)}, but returns a list. If they were combined, the list will
 	 * contain the single combined instance. Otherwise, returns the original input.
+	 *
 	 * @param quadrants The quadrants to combine.
-	 * @return          The original input if no combination possible, otherwise the combination.
+	 * @return The original input if no combination possible, otherwise the combination.
 	 */
 	public static List<ArenaSector> tryMergeQuadrants(List<ArenaSector> quadrants) {
 		ArenaSector combined = tryCombineTwoQuadrants(quadrants);
@@ -210,6 +211,8 @@ public enum ArenaSector implements HasFriendlyName {
 	 * while negative indicates CCW.
 	 * <p>
 	 * e.g. NORTHEAST.eightsTo(WEST) == -3, because the shortest path from northeast to west is CCW.
+	 * <p>
+	 * If the locations being compared are directly opposite (e.g. this==EAST and other==WEST), returns 4 (never -4).
 	 *
 	 * @param other The sector to compare to.
 	 * @return The eighth-turns to get to that sector from this.
