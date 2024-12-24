@@ -59,8 +59,9 @@ public class CastFinishedOmen implements OmenInstance {
 				return pos;
 			}
 			Double heading = locInfo.getHeadingOnly();
-			if (heading != null && sourcePosSnapshot != null) {
-				return sourcePosSnapshot.facing(heading);
+			Position basis = locInfo.getAnimationTarget().getPos();
+			if (heading != null && basis != null) {
+				return basis.facing(heading);
 			}
 		}
 		if (info.type().locationType() == OmenLocationType.CASTER) {
@@ -75,7 +76,11 @@ public class CastFinishedOmen implements OmenInstance {
 			if (sourcePosSnapshot == null) {
 				return null;
 			}
-			return sourcePosSnapshot.facing(aue.getTarget().getPos());
+			Position faceTowards = aue.getTarget().getPos();
+			if (faceTowards != null) {
+				return sourcePosSnapshot.facing(faceTowards);
+			}
+			return null;
 		}
 		else {
 			return aue.getTarget().getPos();

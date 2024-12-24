@@ -5,6 +5,7 @@ import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivEntity;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serial;
@@ -17,25 +18,53 @@ public class SnapshotLocationDataEvent extends BaseEvent implements DescribesCas
 	private final AbilityUsedEvent event;
 	private final Position pos;
 	private final Double heading;
+	private final @Nullable XivCombatant animationTarget;
 
+	public SnapshotLocationDataEvent(AbilityUsedEvent event, @Nullable XivCombatant animationTarget, DescribesCastLocation<?> other) {
+		this.event = event;
+		this.pos = other.getPos();
+		this.heading = other.getHeadingOnly();
+		this.animationTarget = animationTarget;
+	}
+
+	public SnapshotLocationDataEvent(AbilityUsedEvent event, @Nullable XivCombatant animationTarget, Position pos) {
+		this.event = event;
+		this.pos = pos;
+		this.heading = null;
+		this.animationTarget = animationTarget;
+	}
+
+	public SnapshotLocationDataEvent(AbilityUsedEvent event, @Nullable XivCombatant animationTarget, double heading) {
+		this.event = event;
+		this.pos = null;
+		this.heading = heading;
+		this.animationTarget = animationTarget;
+	}
+
+	@Deprecated // Use constructors with animationTarget
 	public SnapshotLocationDataEvent(AbilityUsedEvent event, DescribesCastLocation<?> other) {
 		this.event = event;
 		this.pos = other.getPos();
 		this.heading = other.getHeadingOnly();
+		this.animationTarget = null;
 	}
 
+	@Deprecated // Use constructors with animationTarget
 	public SnapshotLocationDataEvent(AbilityUsedEvent event, Position pos) {
 		this.event = event;
 		this.pos = pos;
 		this.heading = null;
+		this.animationTarget = null;
 	}
 
+	@Deprecated // Use constructors with animationTarget
 	public SnapshotLocationDataEvent(AbilityUsedEvent event, double heading) {
 		this.event = event;
 		this.pos = null;
 		this.heading = heading;
+		this.animationTarget = null;
 	}
-	
+
 	@Override
 	public AbilityUsedEvent originalEvent() {
 		return event;
@@ -64,11 +93,17 @@ public class SnapshotLocationDataEvent extends BaseEvent implements DescribesCas
 	}
 
 	@Override
+	public @Nullable XivCombatant getAnimationTarget() {
+		return animationTarget;
+	}
+
+	@Override
 	public String toString() {
 		return "SnapshotLocationDataEvent{" +
 		       "id=" + event.getAbility().getId() +
 		       ", pos=" + pos +
 		       ", heading=" + heading +
+		       ", animTgt=" + animationTarget +
 		       '}';
 	}
 }

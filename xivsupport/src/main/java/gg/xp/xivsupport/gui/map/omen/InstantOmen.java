@@ -51,6 +51,10 @@ public class InstantOmen implements OmenInstance {
 			if (pos != null) {
 				return pos;
 			}
+			@Nullable XivCombatant animTgt = locInfo.getAnimationTarget();
+			if (animTgt != null) {
+				sourcePos = animTgt.getPos();
+			}
 			Double heading = locInfo.getHeadingOnly();
 			if (heading != null && sourcePos != null) {
 				return sourcePos.facing(heading);
