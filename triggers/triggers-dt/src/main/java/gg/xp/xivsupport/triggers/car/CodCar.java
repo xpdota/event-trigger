@@ -5,7 +5,6 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
-import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
@@ -14,10 +13,10 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
-import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
+import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
@@ -36,32 +35,27 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 
 	private static final Logger log = LoggerFactory.getLogger(CodCar.class);
 	private final XivState state;
+	private final StatusEffectRepository buffs;
 	private ActiveCastRepository casts;
 
-	public CodCar(XivState state, ActiveCastRepository casts) {
+	public CodCar(XivState state, StatusEffectRepository buffs, ActiveCastRepository casts) {
 		this.state = state;
+		this.buffs = buffs;
 		this.casts = casts;
 	}
 
-	private CodCarSection mySection;
-
-	@HandleEvents
-	public void reset(PullStartedEvent pse) {
-		mySection = null;
-	}
-
-	@HandleEvents
-	public void innerOuterDarkness(BuffApplied ba) {
-		if (!ba.getTarget().isThePlayer()) {
-			return;
-		}
-		if (ba.buffIdMatches(0x1051)) {
-			mySection = CodCarSection.INSIDE;
+	public CodCarSection getPlayerSection() {
+		if (buffs.isStatusOnTarget(state.getPlayer(), 0x1051)) {
 			log.info("My area: INSIDE");
+			return CodCarSection.INSIDE;
 		}
-		else if (ba.buffIdMatches(0x1052)) {
-			mySection = CodCarSection.forPos(ba.getTarget().getPos());
+		else if (buffs.isStatusOnTarget(state.getPlayer(), 0x1052)) {
+			var mySection = CodCarSection.forPos(state.getPlayer().getPos());
 			log.info("My area: {}", mySection);
+			return mySection;
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -147,7 +141,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 				s.updateCall(enaeroInitial, e1);
 				s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(ALL_BLADE_IDS));
 				// Don't talk over the other call
-				s.waitMs(2_000);
+				s.waitMs(3_000);
 				s.updateCall(aeroIV);
 			});
 
@@ -158,7 +152,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 				s.updateCall(endeathInitial, e1);
 				s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(ALL_BLADE_IDS));
 				// Don't talk over the other call
-				s.waitMs(2_000);
+				s.waitMs(3_000);
 				s.updateCall(deathIV);
 				// Wait for inner circle to pop
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9E48));
@@ -305,6 +299,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 		// Check that this one is the one that the player is near
 		// TODO: what if someone is walking on outer ring?
 		boolean isEast = combatant.getPos().x() > 0;
+		var mySection = getPlayerSection();
 		if (isEast) {
 			return mySection == CodCarSection.EAST_OUTSIDE;
 		}
@@ -343,14 +338,14 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 				mc1a.setReplaces(call1);
 
 				s.waitEventsQuickSuccession(2, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(ALL_ART_IDS));
-				s.waitMs(800);
+				s.waitMs(300);
 
 				mc1a.forceExpire();
 				RawModifiedCallout<?> mc2a = s.call(mc2);
 				mc2a.setReplaces(call2);
 
 				s.waitEventsQuickSuccession(2, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(ALL_ART_IDS));
-				s.waitMs(800);
+				s.waitMs(300);
 
 				mc2a.forceExpire();
 				RawModifiedCallout<?> mc3a = s.call(mc3);
@@ -403,6 +398,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 				}
 				else {
 					boolean cw = pivotCast.abilityIdMatches(0x9E13);
+					var mySection = getPlayerSection();
 					if (mySection == CodCarSection.EAST_OUTSIDE) {
 						s.setParam("rotationSafe", cw ? ArenaSector.NORTHEAST : ArenaSector.SOUTHEAST);
 					}
@@ -425,6 +421,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	private final SequentialTrigger<BaseEvent> pivot = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9E13, 0x9E15),
 			(e1, s) -> {
+				var mySection = getPlayerSection();
 				if (mySection == CodCarSection.INSIDE) {
 					s.updateCall(e1.abilityIdMatches(0x9E13) ? pivotCW : pivotCCW);
 				}
