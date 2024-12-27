@@ -374,8 +374,8 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	@PlayerStatusCallout(value = 0x1BD, cancellable = true)
 	private final ModifiableCallout<BuffApplied> thornyVine = ModifiableCallout.durationBasedCall("Thorny Vine", "Break Tether");
 
-	private final ModifiableCallout<AbilityCastStart> lateralCore = ModifiableCallout.durationBasedCall("Lateral-Core Phaser", "Sides then In");
-	private final ModifiableCallout<AbilityCastStart> coreLateral = ModifiableCallout.durationBasedCall("Core-Lateral Phaser", "In then Sides");
+	private final ModifiableCallout<AbilityCastStart> lateralCore = ModifiableCallout.durationBasedCallWithOffset("Lateral-Core Phaser", "Sides then In", Duration.ofMillis(3300));
+	private final ModifiableCallout<AbilityCastStart> coreLateral = ModifiableCallout.durationBasedCallWithOffset("Core-Lateral Phaser", "In then Sides", Duration.ofMillis(3300));
 	private final ModifiableCallout<?> coreWithTower = new ModifiableCallout<>("Lateral-Core: Follow-Up with Tower", "In then Tower");
 	private final ModifiableCallout<?> lateralWithTower = new ModifiableCallout<>("Core-Lateral: Follow-Up with Tower", "Out and Tower");
 	private final ModifiableCallout<?> coreWithPivot = new ModifiableCallout<>("Lateral-Core: Follow-Up with Pivot", "In then {rotationSafe}");
@@ -409,7 +409,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 						throw new IllegalStateException("How?");
 					}
 					s.updateCall(sidesFirst ? lateralCore : coreLateral, e1);
-					s.waitCastFinished(casts, e1);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9E31));
 					s.updateCall(sidesFirst ? coreWithPivot : lateralWithPivot);
 				}
 			});
