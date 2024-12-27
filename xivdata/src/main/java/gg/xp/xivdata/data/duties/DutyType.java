@@ -11,7 +11,8 @@ public enum DutyType {
 	HUNT("Hunt"),
 	SOLO_INSTANCE("Solo Instance"),
 	OPEN_WORLD("Eureka-like"),
-	ALLIANCE_RAID("Alliance Raid");
+	ALLIANCE_RAID("Alliance Raid"),
+	CAR("Chaotic AR");
 
 	private final String name;
 

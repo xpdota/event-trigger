@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.gui.tables.groovy;
 
-import gg.xp.xivsupport.gui.groovy.GroovyPanel;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -52,7 +50,14 @@ public final class GroovyColumns {
 		else {
 			return DefaultGroovyMethods.getMetaPropertyValues(obj)
 					.stream()
-					.filter(GroovyColumns::isReadable)
+					.filter(pv1 -> {
+						try {
+							return isReadable(pv1);
+						}
+						catch (Throwable t) {
+							return false;
+						}
+					})
 					.filter(pv -> !"serialVersionUID".equals(pv.getName()))
 					.toList();
 		}

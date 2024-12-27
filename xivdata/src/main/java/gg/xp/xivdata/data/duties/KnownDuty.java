@@ -67,6 +67,7 @@ public enum KnownDuty implements Duty {
 	M4S("M4S", 1232,Expansion.DT, DutyType.SAVAGE_RAID),
 
 	FRU("FRU", 1238, Expansion.DT, DutyType.ULTIMATE),
+	CodCar("CoD CAR", 1241, Expansion.DT, DutyType.CAR),
 	;
 
 	private final String name;

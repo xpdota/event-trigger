@@ -72,7 +72,11 @@ public interface XivState extends SubState {
 
 	void provideCombatantMP(XivCombatant target, @NotNull ManaPoints manaPoints);
 
-	void provideCombatantPos(XivCombatant target, Position newPos);
+	default void provideCombatantPos(XivCombatant target, Position newPos) {
+		provideCombatantPos(target, newPos, false);
+	}
+
+	void provideCombatantPos(XivCombatant target, Position newPos, boolean trusted);
 
 	void provideActFallbackCombatant(XivCombatant cbt);
 

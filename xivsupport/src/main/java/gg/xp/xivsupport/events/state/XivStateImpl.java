@@ -444,8 +444,8 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
-	public void provideCombatantPos(XivCombatant target, Position newPos) {
-		getOrCreateData(target.getId()).setPosOverride(newPos);
+	public void provideCombatantPos(XivCombatant target, Position newPos, boolean trusted) {
+		getOrCreateData(target.getId()).setPosOverride(newPos, trusted);
 		dirtyOverrides = true;
 	}
 
@@ -628,6 +628,7 @@ public class XivStateImpl implements XivState {
 		private final long id;
 		private @Nullable RawXivCombatantInfo raw;
 		private @Nullable Position posOverride;
+		private @Nullable Position posOverrideTrusted;
 		private @Nullable HitPoints hpOverride;
 		private @Nullable ManaPoints mpOverride;
 		private @Nullable XivCombatant fromOtherActLine;
@@ -684,10 +685,18 @@ public class XivStateImpl implements XivState {
 			dirty = true;
 		}
 
-		public void setPosOverride(@Nullable Position posOverride) {
-			if (!Objects.equals(this.posOverride, posOverride)) {
-				this.posOverride = posOverride;
-				dirty = true;
+		public void setPosOverride(@Nullable Position posOverride, boolean trusted) {
+			if (trusted) {
+				if (!Objects.equals(this.posOverrideTrusted, posOverride)) {
+					this.posOverrideTrusted = posOverride;
+					dirty = true;
+				}
+			}
+			else {
+				if (!Objects.equals(this.posOverride, posOverride)) {
+					this.posOverride = posOverride;
+					dirty = true;
+				}
 			}
 		}
 
@@ -784,7 +793,8 @@ public class XivStateImpl implements XivState {
 			// HP prefers trusted ACT hp lines
 			HitPoints hp = hpOverride != null ? hpOverride : raw != null ? raw.getHP() : null;
 			ManaPoints mp = mpOverride != null ? mpOverride : raw != null ? raw.getMP() : null;
-			Position pos = posOverride != null ? posOverride : raw != null ? raw.getPos() : fromOther != null ? fromOther.getPos() : null;
+			// TODO: should there be a way to "un-trust" these if they get stale?
+			Position pos = posOverrideTrusted != null ? posOverrideTrusted : posOverride != null ? posOverride : raw != null ? raw.getPos() : fromOther != null ? fromOther.getPos() : null;
 
 			XivCombatant computed;
 			long bnpcId = raw != null ? raw.getBnpcId() : 0;

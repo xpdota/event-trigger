@@ -310,4 +310,5 @@ public class FieldMapper<K extends Enum<K>> {
 	public void flushStateOverrides() {
 		state.flushProvidedValues();
 	}
+
 }
