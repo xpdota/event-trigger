@@ -16,7 +16,6 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class Line38Parser extends AbstractACTLineParser<Line38Parser.Fields> {
 
-	private static final boolean enableStatusEffectParsing = true;
 	private final StatusEffectRepository buffs;
 
 	public Line38Parser(PicoContainer container, StatusEffectRepository buffs) {
@@ -37,7 +36,7 @@ public class Line38Parser extends AbstractACTLineParser<Line38Parser.Fields> {
 		XivCombatant target = fields.getEntity(Fields.id, Fields.name, Fields.targetCurHp, Fields.targetMaxHp, Fields.targetCurMp, Fields.targetMaxMp, Fields.targetX, Fields.targetY, Fields.targetZ, Fields.targetHeading, Fields.targetShieldPct);
 		// To save processing time, only bother with this if the target has no buffs whatsoever currently on them
 		// TODO: is this the best way of doing this?
-		if (enableStatusEffectParsing && !buffs.targetHasAnyStatus(target)) {
+		if (!buffs.targetHasAnyStatus(target)) {
 			List<String> split = fields.getRawLineSplit();
 			// Last field is hash
 			List<String> remaining = split.subList(Fields.firstFlag.ordinal() + 2, split.size() - 1);

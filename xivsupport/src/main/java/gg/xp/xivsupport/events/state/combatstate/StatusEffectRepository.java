@@ -215,6 +215,7 @@ public class StatusEffectRepository {
 		}
 	}
 
+	// TODO: this has a performance impact
 	@HandleEvents
 	public void workaroundForActNotRemovingCombatants(EventContext context, XivStateRecalculatedEvent event) {
 		Set<Long> combatantsThatExist = state.getCombatants().keySet();

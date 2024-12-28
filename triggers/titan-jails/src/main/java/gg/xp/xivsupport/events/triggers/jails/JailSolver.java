@@ -63,8 +63,7 @@ public class JailSolver implements FilteredEventHandler, OverridesCalloutGroupEn
 
 	@Override
 	public boolean enabled(EventContext context) {
-//		return true;
-		return overrideZoneLock.get() || context.getStateInfo().get(XivState.class).zoneIs(0x309L);
+		return overrideZoneLock.get() || state.dutyIs(KnownDuty.UWU);
 	}
 
 	@HandleEvents
@@ -145,8 +144,7 @@ public class JailSolver implements FilteredEventHandler, OverridesCalloutGroupEn
 	@HandleEvents
 	public void handleJailCast(EventContext context, AbilityUsedEvent event) {
 		// Check ability ID - we only care about these two
-		long id = event.getAbility().getId();
-		if (id != 0x2B6B && id != 0x2B6C) {
+		if (!event.abilityIdMatches(0x2B6B, 0x2B6C)) {
 			return;
 		}
 		XivCombatant target = event.getTarget();
