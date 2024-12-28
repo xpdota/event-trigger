@@ -277,12 +277,12 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 		}
 	}
 
-	private final ModifiableCallout<?> artOfDarknessWestCleaveLeft = new ModifiableCallout<>("North");
-	private final ModifiableCallout<?> artOfDarknessWestCleaveRight = new ModifiableCallout<>("South");
-	private final ModifiableCallout<?> artOfDarknessEastCleaveLeft = new ModifiableCallout<>("South");
-	private final ModifiableCallout<?> artOfDarknessEastCleaveRight = new ModifiableCallout<>("North");
-	private final ModifiableCallout<?> artOfDarknessBuddies = new ModifiableCallout<>("Buddies");
-	private final ModifiableCallout<?> artOfDarknessProteans = new ModifiableCallout<>("Proteans");
+	private final ModifiableCallout<?> artOfDarknessWestCleaveLeft = new ModifiableCallout<>("Third Art of Darkness: West Add Cleaving Left", "North");
+	private final ModifiableCallout<?> artOfDarknessWestCleaveRight = new ModifiableCallout<>("Third Art of Darkness: West Add Cleaving Right", "South");
+	private final ModifiableCallout<?> artOfDarknessEastCleaveLeft = new ModifiableCallout<>("Third Art of Darkness: East Add Cleaving Left", "South");
+	private final ModifiableCallout<?> artOfDarknessEastCleaveRight = new ModifiableCallout<>("Third Art of Darkness: East Add Cleaving Right", "North");
+	private final ModifiableCallout<?> artOfDarknessBuddies = new ModifiableCallout<>("Third Art of Darkness: Partner Stacks", "Buddies");
+	private final ModifiableCallout<?> artOfDarknessProteans = new ModifiableCallout<>("Third Art of Darkness: Proteans", "Proteans");
 
 	private ModifiableCallout<?> calloutForMech(ArtOfDarknessMech artOfDarknessMech, boolean east) {
 		return switch (artOfDarknessMech) {

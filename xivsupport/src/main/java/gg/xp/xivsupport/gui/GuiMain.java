@@ -740,14 +740,23 @@ public class GuiMain {
 		TableWithFilterAndDetails<ACTLogLineEvent, PropertyValue> table = TableWithFilterAndDetails.builder("ACT Log",
 						() -> rawStorage.getEventsOfType(ACTLogLineEvent.class),
 						GroovyColumns::getValues)
-				.addMainColumn(new CustomColumn<>("Line", ACTLogLineEvent::getLogLine))
+				.addMainColumn(new CustomColumn<>("Line", actLogLineEvent -> {
+					String line = actLogLineEvent.getLogLine();
+					if (actLogLineEvent.getLineNumber() < 100) {
+						return ' ' + line;
+					}
+					return line;
+				}))
 				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
 				.addFilter(ActLineFilter::new)
 				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
 				.build();
-		table.getMainTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		JTable mt = table.getMainTable();
+		Font oldFont = mt.getFont();
+		mt.setFont(new Font(Font.MONOSPACED, oldFont.getStyle(), oldFont.getSize()));
+		mt.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		master.getDistributor().registerHandler(ACTLogLineEvent.class, (ctx, e) -> {
 			table.signalNewData();
 		});
