@@ -55,12 +55,12 @@ a2eabd424db89944652ce7f3a1ac7494  telesto-core-1.0-SNAPSHOT.jar
 b7f07e7fd52ea1092f9d72a7a2fc98b7  telesto-gui-1.0-SNAPSHOT.jar
 99ff7fc65b0d71b62346b0b3b81ffdb0  telesto-right-clicks-1.0-SNAPSHOT.jar
 cc7fed801bf358eb9a2d10a9d9085494  timelines-1.0-SNAPSHOT.jar
-e71fcaee9202a2bcf4e798612177ab3f  titan-jails-1.0-SNAPSHOT.jar
-b74f135702e76038436e1849de71a710  triggers-dt-1.0-SNAPSHOT.jar
+2c39ac26021f1adf88e46d8a7daaa504  titan-jails-1.0-SNAPSHOT.jar
+d92aeb72f3865b446ad53518ad87bb55  triggers-dt-1.0-SNAPSHOT.jar
 02742fd3bbb4143bbf39b689879073e4  triggers-ew-1.0-SNAPSHOT.jar
 7be2c605fa5f9756e8989fdb0ff665c7  triggers-general-1.0-SNAPSHOT.jar
 ea1c99f48fe57af11d933ac69b3606b0  triggers-sb-1.0-SNAPSHOT.jar
 19b0d855823dd393f365dd889d852d3c  trigger-support-1.0-SNAPSHOT.jar
 fb91831333f5d348dd3b56a5bdeb396c  xivapi-java-0.1.1.jar
 28b54b57063502b11638e3cd2d949a8d  xivdata-1.0-SNAPSHOT.jar
-ec79244769534c57a149acb29342e022  xivsupport-1.0-SNAPSHOT.jar
+e8518ec3d054bb05f0dee2ba0b3e86ce  xivsupport-1.0-SNAPSHOT.jar
