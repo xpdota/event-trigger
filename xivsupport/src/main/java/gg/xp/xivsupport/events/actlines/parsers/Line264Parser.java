@@ -7,7 +7,9 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.actlines.events.SnapshotLocationDataEvent;
 import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.picocontainer.PicoContainer;
+import org.slf4j.LoggerFactory;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -24,7 +26,7 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 	}
 
 	enum Fields {
-		entityId, abilityId, sequence, hasData, x, y, z, rotation
+		entityId, abilityId, sequence, hasPositionMaybe, x, y, z, rotation, animationTargetId
 	}
 
 	private final Map<Long, List<AbilityUsedEvent>> lastAbilityByEntity = new HashMap<>();
@@ -66,12 +68,17 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 		    && firstMatch.getAbility().getId() == ability
 		    && firstMatch.getSequenceId() == sequenceId) {
 
+			// Animation Target Id
+			// TODO: backwards compat? make sure this doesn't catch the hash
+			XivCombatant animationTarget = fields.getOptionalEntity(Fields.animationTargetId);
+			LoggerFactory.getLogger(Line264Parser.class).info("animation target: {}", animationTarget);
+
 			// Cast location/angle
 			// First, check if the line indicates that such data is actually present.
-			int hasData = fields.getInt(Fields.hasData);
+			int hasPositionMaybe = fields.getInt(Fields.hasPositionMaybe);
 			SnapshotLocationDataEvent slde;
 			// 0 = no data, 1 = data, 256 = error
-			if (hasData == 1) {
+			if (hasPositionMaybe == 1) {
 				double x = fields.getDouble(Fields.x);
 				double y = fields.getDouble(Fields.y);
 				double z = fields.getDouble(Fields.z);
@@ -80,20 +87,25 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 					AbilityCastStart precursor = firstMatch.getPrecursor();
 					DescribesCastLocation<AbilityCastStart> castLocation;
 					if (precursor != null && (castLocation = precursor.getLocationInfo()) != null && castLocation.getPos() != null) {
-						slde = new SnapshotLocationDataEvent(firstMatch, castLocation);
-					}
-					else if (h == 0.0) {
-						slde = null;
+						slde = new SnapshotLocationDataEvent(firstMatch, animationTarget, castLocation);
 					}
 					else {
-						slde = new SnapshotLocationDataEvent(firstMatch, h);
+						slde = new SnapshotLocationDataEvent(firstMatch, animationTarget, h);
 					}
 				}
 				else {
 					Position pos = new Position(x, y, z, h);
-					slde = new SnapshotLocationDataEvent(firstMatch, pos);
+					slde = new SnapshotLocationDataEvent(firstMatch, animationTarget, pos);
 				}
-				if (slde != null) {
+				// Associate back to all events
+				allMatches.forEach(match -> match.setLocationInfo(slde));
+				return slde;
+			}
+			else {
+				Double h = fields.getOptionalDouble(Fields.rotation);
+				// Backwards compat with old OP
+				if (h != null) {
+					slde = new SnapshotLocationDataEvent(firstMatch, animationTarget, h);
 					// Associate back to all events
 					allMatches.forEach(match -> match.setLocationInfo(slde));
 					return slde;
