@@ -15,4 +15,11 @@ public @interface PlayerStatusCallout {
 	 * @return Which status IDs to trigger on
 	 */
 	long[] value();
+
+	/**
+	 * @return Whether the callout should be removed if the buff is removed. A buff being replaced/refreshed
+	 * counts as being removed.
+	 */
+	boolean cancellable() default false;
+
 }

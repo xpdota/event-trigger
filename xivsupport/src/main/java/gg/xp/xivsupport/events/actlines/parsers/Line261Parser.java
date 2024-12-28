@@ -81,7 +81,7 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 							// of them changes does not work on an 'add' line, and the 'add' line will not write 'default'
 							// values. So if there is a Z or heading of 0 (very likely), those will not be written.
 							// To work around this, we just assume those are 0.
-							state.provideCombatantPos(existing, new Position(pos.get(PosKeys.PosX), pos.get(PosKeys.PosY), pos.getOrDefault(PosKeys.PosZ, 0.0), pos.getOrDefault(PosKeys.Heading, 0.0)));
+							state.provideCombatantPos(existing, new Position(pos.get(PosKeys.PosX), pos.get(PosKeys.PosY), pos.getOrDefault(PosKeys.PosZ, 0.0), pos.getOrDefault(PosKeys.Heading, 0.0)), true);
 						}
 						else {
 							log.trace("Incomplete position info for 0x{}", Long.toString(existing.getId(), 16));
@@ -89,7 +89,7 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 						}
 					}
 					else {
-						state.provideCombatantPos(existing, new Position(pos.get(PosKeys.PosX), pos.get(PosKeys.PosY), pos.get(PosKeys.PosZ), pos.get(PosKeys.Heading)));
+						state.provideCombatantPos(existing, new Position(pos.get(PosKeys.PosX), pos.get(PosKeys.PosY), pos.get(PosKeys.PosZ), pos.get(PosKeys.Heading)), true);
 					}
 				}
 				else {
@@ -98,7 +98,7 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 							pos.getOrDefault(PosKeys.PosY, existingPos.y()),
 							pos.getOrDefault(PosKeys.PosZ, existingPos.z()),
 							pos.getOrDefault(PosKeys.Heading, existingPos.heading())
-					));
+					), true);
 				}
 			}
 		}

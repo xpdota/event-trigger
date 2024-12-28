@@ -15,6 +15,10 @@ public interface HasTargetIndex {
 
 	long getTargetIndex();
 
+	/**
+	 * @return The number of targets hit by this action. Each event represents one target getting hit. This may be
+	 * zero if no targets were hit, as there still must be an event generated to indicate such.
+	 */
 	long getNumberOfTargets();
 
 	default boolean isFirstTarget() {

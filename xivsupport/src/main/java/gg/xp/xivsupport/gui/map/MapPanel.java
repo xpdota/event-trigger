@@ -359,15 +359,19 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		return translateDistScrn(translateDistMap(originalDist));
 	}
 
+	private boolean dragActive;
+
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		Point curPoint = e.getLocationOnScreen();
-		double xDiff = curPoint.x - dragPoint.x;
-		double yDiff = curPoint.y - dragPoint.y;
-		curXpan += xDiff;
-		curYpan += yDiff;
-		dragPoint = curPoint;
-		triggerRefresh();
+		if (dragActive) {
+			Point curPoint = e.getLocationOnScreen();
+			double xDiff = curPoint.x - dragPoint.x;
+			double yDiff = curPoint.y - dragPoint.y;
+			curXpan += xDiff;
+			curYpan += yDiff;
+			dragPoint = curPoint;
+			triggerRefresh();
+		}
 	}
 
 	@SuppressWarnings({"NonAtomicOperationOnVolatileField", "NumericCastThatLosesPrecision"})
@@ -418,13 +422,24 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
+	private static boolean isValidDragBtn(MouseEvent e) {
+		int btn = e.getButton();
+		return (btn == MouseEvent.BUTTON1 || btn == MouseEvent.BUTTON3 || btn == MouseEvent.BUTTON2);
+	}
+
 	@Override
 	public void mousePressed(MouseEvent e) {
-		dragPoint = MouseInfo.getPointerInfo().getLocation();
+		if (isValidDragBtn(e)) {
+			dragActive = true;
+			dragPoint = MouseInfo.getPointerInfo().getLocation();
+		}
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		if (isValidDragBtn(e)) {
+			dragActive = false;
+		}
 		triggerRefresh();
 	}
 
@@ -555,6 +570,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	 */
 	private class EntityDoohickey extends JPanel {
 
+		private static final BasicStroke omenOutline = new BasicStroke(2);
+		private static final BasicStroke omenOutlinePre = new BasicStroke(2, omenOutline.getEndCap(), omenOutline.getLineJoin(), omenOutline.getMiterLimit(), new float[]{3.0f, 6.0f}, 0);
 		private final JLabel defaultLabel;
 		private final XivCombatant cbt;
 		// This red should never actually show up
@@ -910,55 +927,62 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				 */
 				// TODO: some of these are wrong due to lack of hitbox size info
 				AffineTransform transform = g2d.getTransform();
+				boolean isCast = omen.type().isInProgress();
+				Stroke outlineStroke = isCast ? omenOutlinePre : omenOutline;
 				switch (oi.type().shape()) {
 					case CIRCLE -> {
-						g2d.setStroke(new BasicStroke(3));
+//						g2d.setStroke(omenOutline);
 						g2d.setColor(fillColor);
 						g2d.fillOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2.0), (int) (radius * 2.0));
+						g2d.setStroke(outlineStroke);
 						g2d.setColor(outlineColor);
 						g2d.drawOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2.0), (int) (radius * 2.0));
 					}
 					case DONUT -> {
-						g2d.setStroke(new BasicStroke(3));
+//						g2d.setStroke(omenOutline);
 //						g2d.setColor(fillColor);
 //						g2d.fillOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2.0), (int) (radius * 2.0));
+						g2d.setStroke(outlineStroke);
 						g2d.setColor(outlineColor);
 						g2d.drawOval((int) (xCenter - radius), (int) (yCenter - radius), (int) (radius * 2.0), (int) (radius * 2.0));
 					}
 					case RECTANGLE -> {
-						g2d.setStroke(new BasicStroke(3));
+//						g2d.setStroke(omenOutline);
 						transform.translate(xCenter, yCenter);
 						transform.rotate(-omenPos.getHeading());
 						g2d.setTransform(transform);
 						g2d.setColor(fillColor);
 						g2d.fillRect((int) -(xModif / 2.0), 0, (int) xModif, (int) radius);
+						g2d.setStroke(outlineStroke);
 						g2d.setColor(outlineColor);
 						g2d.drawRect((int) -(xModif / 2.0), 0, (int) xModif, (int) radius);
 					}
 					case RECTANGLE_CENTERED -> {
-						g2d.setStroke(new BasicStroke(3));
+//						g2d.setStroke(omenOutline);
 						transform.translate(xCenter, yCenter);
 						transform.rotate(-omenPos.getHeading());
 						g2d.setTransform(transform);
 						g2d.setColor(fillColor);
 						g2d.fillRect((int) -(xModif / 2.0), (int) -radius, (int) xModif, (int) (2 * radius));
+						g2d.setStroke(outlineStroke);
 						g2d.setColor(outlineColor);
 						g2d.drawRect((int) -(xModif / 2.0), (int) -radius, (int) xModif, (int) (2 * radius));
 					}
 					case CROSS -> {
-						g2d.setStroke(new BasicStroke(3));
+//						g2d.setStroke(omenOutline);
 						transform.translate(xCenter, yCenter);
 						transform.rotate(-omenPos.getHeading());
 						g2d.setTransform(transform);
 						g2d.setColor(fillColor);
 						g2d.fillRect((int) -(xModif / 2.0), (int) -radius, (int) xModif, (int) (2 * radius));
 						g2d.fillRect((int) -radius, (int) -(xModif / 2.0), (int) (2 * radius), (int) xModif);
+						g2d.setStroke(outlineStroke);
 						g2d.setColor(outlineColor);
 						g2d.drawRect((int) -(xModif / 2.0), (int) -radius, (int) xModif, (int) (2 * radius));
 						g2d.drawRect((int) -radius, (int) -(xModif / 2.0), (int) (2 * radius), (int) xModif);
 					}
 					case CONE -> {
-						g2d.setStroke(new BasicStroke(3));
+//						g2d.setStroke(omenOutline);
 						transform.translate(xCenter, yCenter);
 						transform.rotate(-omenPos.getHeading() + Math.PI);
 						g2d.setTransform(transform);
@@ -968,6 +992,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 						Arc2D.Double arc = new Arc2D.Double(-radius, -radius, 2 * radius, 2 * radius, 90 - angleDegrees / 2.0f, angleDegrees, Arc2D.PIE);
 						g2d.setColor(fillColor);
 						g2d.fill(arc);
+						g2d.setStroke(outlineStroke);
 						g2d.setColor(outlineColor);
 						g2d.draw(arc);
 					}
@@ -977,6 +1002,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				g2d.dispose();
 			}
 		}
+
 
 		@Override
 		public Border getBorder() {

@@ -116,7 +116,7 @@ public class XivStateDummy implements XivState {
 	}
 
 	@Override
-	public void provideCombatantPos(XivCombatant target, Position newPos) {
+	public void provideCombatantPos(XivCombatant target, Position newPos, boolean trusted) {
 		throw new UnsupportedOperationException("not supported");
 	}
 

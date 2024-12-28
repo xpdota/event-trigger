@@ -51,7 +51,7 @@ public class XivMap implements Serializable {
 			if (parts.length == 2) {
 				String stub = parts[0];
 				String index = parts[1];
-				String urlStr = String.format("https://xivapi.com/m/%s/%s.%s.jpg", stub, stub, index);
+				String urlStr = String.format("https://beta.xivapi.com/api/1/asset/map/%s/%s", stub, index);
 				URL url;
 				try {
 					url = new URL(urlStr);

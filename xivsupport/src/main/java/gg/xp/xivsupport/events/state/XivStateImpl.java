@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -48,6 +49,7 @@ import java.util.stream.IntStream;
 public class XivStateImpl implements XivState {
 
 	private static final Logger log = LoggerFactory.getLogger(XivStateImpl.class);
+	private static final int POSITION_TRUST_BUFFER_MS = 200;
 	private final EventMaster master;
 	private final PartySortOrder pso;
 	private final @Nullable CurrentTimeSource fakeTimeSource;
@@ -444,8 +446,8 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
-	public void provideCombatantPos(XivCombatant target, Position newPos) {
-		getOrCreateData(target.getId()).setPosOverride(newPos);
+	public void provideCombatantPos(XivCombatant target, Position newPos, boolean trusted) {
+		getOrCreateData(target.getId()).setPosOverride(newPos, trusted);
 		dirtyOverrides = true;
 	}
 
@@ -620,6 +622,21 @@ public class XivStateImpl implements XivState {
 		}
 	}
 
+	private record TimedPosition(Position position, long whenEpochMs, CurrentTimeSource cts) {
+		long getMsSince() {
+			return cts.now().toEpochMilli() - whenEpochMs;
+		}
+
+		boolean isExpired() {
+			return getMsSince() > POSITION_TRUST_BUFFER_MS;
+		}
+	}
+
+	private TimedPosition makeTimedPosition(Position position) {
+		CurrentTimeSource cts = fakeTimeSource == null ? Instant::now : fakeTimeSource;
+		return new TimedPosition(position, cts.now().toEpochMilli(), cts);
+	}
+
 	//
 	private final class CombatantData {
 		// Cached computed result
@@ -628,6 +645,7 @@ public class XivStateImpl implements XivState {
 		private final long id;
 		private @Nullable RawXivCombatantInfo raw;
 		private @Nullable Position posOverride;
+		private @Nullable TimedPosition posOverrideTrusted;
 		private @Nullable HitPoints hpOverride;
 		private @Nullable ManaPoints mpOverride;
 		private @Nullable XivCombatant fromOtherActLine;
@@ -684,10 +702,24 @@ public class XivStateImpl implements XivState {
 			dirty = true;
 		}
 
-		public void setPosOverride(@Nullable Position posOverride) {
-			if (!Objects.equals(this.posOverride, posOverride)) {
-				this.posOverride = posOverride;
-				dirty = true;
+		public void setPosOverride(@Nullable Position posOverride, boolean trusted) {
+			// Ignore the concept of trusted positions for PCs, it really only makes sense for NPCs, especially fakes
+			if (trusted && computeRawType() != 1) {
+				TimedPosition pot = this.posOverrideTrusted;
+				if (pot == null || !Objects.equals(pot.position, posOverride)) {
+					posOverrideTrusted = makeTimedPosition(posOverride);
+					dirty = true;
+				}
+			}
+			else {
+				if (!Objects.equals(this.posOverride, posOverride)) {
+					this.posOverride = posOverride;
+					TimedPosition pot = this.posOverrideTrusted;
+					if (pot != null && pot.isExpired()) {
+						posOverrideTrusted = null;
+					}
+					dirty = true;
+				}
 			}
 		}
 
@@ -768,6 +800,13 @@ public class XivStateImpl implements XivState {
 			return false;
 		}
 
+		private long computeRawType() {
+			// Trust an explicit type override the most
+			// Then, check raw data (03-line or getCombatants)
+			// Finally, assume type 2 (NPC) for >=4xxx IDs or type 1 (PC) otherwise
+			return typeOverride != null ? typeOverride : raw != null ? raw.getRawType() : (id >= 0x4000_0000 ? 2 : 1);
+		}
+
 		private synchronized void recompute() {
 			RawXivCombatantInfo raw = this.raw;
 			// Each data element has a different "priority" for each field
@@ -776,15 +815,15 @@ public class XivStateImpl implements XivState {
 			String name = raw != null ? raw.getName() : (fromOther != null ? fromOther.getName() : (fromPartyInfo != null ? fromPartyInfo.getName() : "???"));
 			long jobId = raw != null ? raw.getJobId() : (fromPartyInfo != null ? fromPartyInfo.getJobId() : 0);
 			XivWorld world = XivWorld.of();
-			// Trust an explicit type override the most
-			// Then, check raw data (03-line or getCombatants)
-			// Finally, assume type 2 (NPC) for >=4xxx IDs or type 1 (PC) otherwise
-			long rawType = typeOverride != null ? typeOverride : raw != null ? raw.getRawType() : (id >= 0x4000_0000 ? 2 : 1);
+			long rawType = computeRawType();
 
 			// HP prefers trusted ACT hp lines
 			HitPoints hp = hpOverride != null ? hpOverride : raw != null ? raw.getHP() : null;
 			ManaPoints mp = mpOverride != null ? mpOverride : raw != null ? raw.getMP() : null;
-			Position pos = posOverride != null ? posOverride : raw != null ? raw.getPos() : fromOther != null ? fromOther.getPos() : null;
+			// We want to look at the position of the
+			TimedPosition pot = posOverrideTrusted;
+			Position po = posOverride;
+			Position pos = pot != null ? pot.position : po != null ? po : raw != null ? raw.getPos() : fromOther != null ? fromOther.getPos() : null;
 
 			XivCombatant computed;
 			long bnpcId = raw != null ? raw.getBnpcId() : 0;

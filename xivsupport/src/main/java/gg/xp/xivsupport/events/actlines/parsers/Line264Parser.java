@@ -71,7 +71,6 @@ public class Line264Parser extends AbstractACTLineParser<Line264Parser.Fields> {
 			// Animation Target Id
 			// TODO: backwards compat? make sure this doesn't catch the hash
 			XivCombatant animationTarget = fields.getOptionalEntity(Fields.animationTargetId);
-			LoggerFactory.getLogger(Line264Parser.class).info("animation target: {}", animationTarget);
 
 			// Cast location/angle
 			// First, check if the line indicates that such data is actually present.
