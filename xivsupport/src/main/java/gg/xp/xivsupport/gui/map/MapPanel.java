@@ -863,6 +863,8 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				Color outlineColor;
 				int alpha;
 				Duration td = omen.timeDeltaFrom(mdc.getTime());
+				// TODO: this seems to conflict with the logic used to determine whether to use the dotted
+				// or solid border
 				if (td.isNegative()) {
 					// casts - start semi transparent
 					alpha = 120;

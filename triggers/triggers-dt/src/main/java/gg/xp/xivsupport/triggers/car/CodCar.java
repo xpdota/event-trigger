@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
@@ -13,6 +14,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
+import gg.xp.xivsupport.events.actlines.events.abilityeffect.CastInterruptEffect;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
@@ -29,12 +31,13 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.function.Consumer;
 
 @CalloutRepo(name = "CoD (CAR) Triggers", duty = KnownDuty.CodCar)
 public class CodCar extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(CodCar.class);
-	private final XivState state;
+	private XivState state;
 	private final StatusEffectRepository buffs;
 	private ActiveCastRepository casts;
 
@@ -78,8 +81,8 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	private final ModifiableCallout<BuffApplied> grimEmbraceRearInitial = new ModifiableCallout<BuffApplied>("Grim Embrace: Initial Rear Dodge", "Later: Dodge Backwards").autoIcon();
 	private final ModifiableCallout<BuffApplied> grimEmbraceFrontSoon = new ModifiableCallout<BuffApplied>("Grim Embrace: Front Dodge Soon", "Dodge Forwards").autoIcon();
 	private final ModifiableCallout<BuffApplied> grimEmbraceRearSoon = new ModifiableCallout<BuffApplied>("Grim Embrace: Rear Dodge Soon", "Dodge Backwards").autoIcon();
-	private final ModifiableCallout<?> grimEmbraceFrontMove = new ModifiableCallout<>("Grim Embrace: Rear Dodge Now", "Move");
-	private final ModifiableCallout<?> grimEmbraceRearMove = new ModifiableCallout<>("Grim Embrace: Rear Dodge Now", "Move");
+	private final ModifiableCallout<BuffApplied> grimEmbraceFrontMove = new ModifiableCallout<BuffApplied>("Grim Embrace: Rear Dodge Now", "Move").autoIcon();
+	private final ModifiableCallout<BuffApplied> grimEmbraceRearMove = new ModifiableCallout<BuffApplied>("Grim Embrace: Rear Dodge Now", "Move").autoIcon();
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> grimEmbrace = SqtTemplates.sq(180_000,
@@ -93,8 +96,8 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 							s.updateCall(isFront ? grimEmbraceFrontInitial : grimEmbraceRearInitial, b);
 							s.waitDuration(b.remainingDurationPlus(Duration.ofSeconds(-5)));
 							s.updateCall(isFront ? grimEmbraceFrontSoon : grimEmbraceRearSoon, b);
-							s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9E3C));
-							s.updateCall(isFront ? grimEmbraceFrontMove : grimEmbraceRearMove);
+							s.waitDuration(b.remainingDurationPlus(Duration.ofMillis(-1_200)));
+							s.updateCall(isFront ? grimEmbraceFrontMove : grimEmbraceRearMove, b);
 						});
 			});
 
@@ -161,7 +164,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 				s.updateCall(deathIVin, e2);
 			});
 
-	@NpcCastCallout(0x9E3E)
+	@NpcCastCallout({0x9E3E, 0x9E07})
 	private final ModifiableCallout<AbilityCastStart> floodOfDarkness = ModifiableCallout.durationBasedCall("Flood of Darkness", "Raidwide");
 
 	@NpcCastCallout(0x9E0D)
@@ -207,7 +210,27 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	@NpcCastCallout(0x9E09)
 	private final ModifiableCallout<AbilityCastStart> ghastlyGloomCross = ModifiableCallout.durationBasedCall("Ghastly Gloom (Cross)", "Corners");
 
-	private final ModifiableCallout<BuffApplied> curseOfDarkness = ModifiableCallout.durationBasedCall("Curse of Darkness", "Look Out");
+	@NpcCastCallout(0x9E33)
+	private final ModifiableCallout<BuffApplied> curseOfDarknessInitialDamage = ModifiableCallout.durationBasedCall("Curse of Darkness (Initial Damage)", "Raidwide");
+	private final ModifiableCallout<BuffApplied> curseOfDarkness = ModifiableCallout.durationBasedCall("Curse of Darkness (In 3 Seconds)", "Look Out");
+
+	private final ModifiableCallout<AbilityCastStart> floodOfDarknessAdds = ModifiableCallout.durationBasedCall("Flood of Darkness (Interruptable)", "Interrupt Adds");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> floodOfDarknessAddsSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9E37),
+			(e1, s) -> {
+		// TODO
+				if (doWeCareAboutStygian(e1.getSource()) || state.playerJobMatches(Job::caresAboutInterrupt)) {
+					RawModifiedCallout<AbilityCastStart> call = s.updateCall(floodOfDarknessAdds, e1);
+					// Unfortunately, AbilityCastCancel currently does not work for interrupts, so we need to get creative
+					s.waitEventsUntil(1, AbilityUsedEvent.class, aue -> {
+						// Wait for something with an interrupt effect hitting the add
+						return aue.getTarget().equals(e1.getSource()) && !aue.getEffectsOfType(CastInterruptEffect.class).isEmpty();
+					}, AbilityUsedEvent.class, aue -> aue.getPrecursor() == e1);
+					call.forceExpire();
+				}
+			});
 
 	@NpcCastCallout({0x9E01, 0x9E3D})
 	private final ModifiableCallout<AbilityCastStart> deluge = ModifiableCallout.durationBasedCall("Deluge of Darkness", "Raidwide with Bleed");
@@ -283,6 +306,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	private final ModifiableCallout<?> artOfDarknessEastCleaveRight = new ModifiableCallout<>("Third Art of Darkness: East Add Cleaving Right", "North");
 	private final ModifiableCallout<?> artOfDarknessBuddies = new ModifiableCallout<>("Third Art of Darkness: Partner Stacks", "Buddies");
 	private final ModifiableCallout<?> artOfDarknessProteans = new ModifiableCallout<>("Third Art of Darkness: Proteans", "Proteans");
+	private final ModifiableCallout<?> artOfDarknessTowers = new ModifiableCallout<>("Third Art of Darkness: Towers", "Towers");
 
 	private ModifiableCallout<?> calloutForMech(ArtOfDarknessMech artOfDarknessMech, boolean east) {
 		return switch (artOfDarknessMech) {
@@ -293,13 +317,15 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 		};
 	}
 
-	private static final long[] ALL_ART_IDS = {0x9E22, 0x9E25, 0x9E26, 0x9E28};
+	private static final long[] ALL_ART_IDS = {0x9E21, 0x9E22, 0x9E25, 0x9E26, 0x9E28};
 
 	private boolean doWeCareAboutStygian(XivCombatant combatant) {
 		// Check that this one is the one that the player is near
 		// TODO: what if someone is walking on outer ring?
-		boolean isEast = combatant.getPos().x() > 0;
+		double x = combatant.getPos().x();
+		boolean isEast = x > 100;
 		var mySection = getPlayerSection();
+		log.info("doWeCareAboutStygian: x={}, mySection={}", x, mySection);
 		if (isEast) {
 			return mySection == CodCarSection.EAST_OUTSIDE;
 		}
@@ -337,21 +363,37 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 				RawModifiedCallout<?> mc1a = s.call(mc1);
 				mc1a.setReplaces(call1);
 
-				s.waitEventsQuickSuccession(2, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(ALL_ART_IDS));
-				s.waitMs(300);
+				// Different mechanics take different amounts of time to resolve
+				Consumer<ArtOfDarknessMech> waitMech = (mech) -> {
+					if (mech == ArtOfDarknessMech.BUDDIES) {
+						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9E29));
+					}
+					else if (mech == ArtOfDarknessMech.PROTEANS) {
+						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9E27));
+					}
+					else {
+						s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(ALL_ART_IDS));
+					}
+				};
+				waitMech.accept(mech1);
 
 				mc1a.forceExpire();
 				RawModifiedCallout<?> mc2a = s.call(mc2);
 				mc2a.setReplaces(call2);
+				// Debounce
+				s.waitMs(1000);
 
-				s.waitEventsQuickSuccession(2, AbilityUsedEvent.class, aue -> aue.abilityIdMatches(ALL_ART_IDS));
-				s.waitMs(300);
+				waitMech.accept(mech2);
 
 				mc2a.forceExpire();
 				RawModifiedCallout<?> mc3a = s.call(mc3);
 				mc3a.setReplaces(call3);
+				s.waitMs(1000);
 
-				// TODO: tower call?
+				waitMech.accept(mech3);
+
+				RawModifiedCallout<?> towerCall = s.call(artOfDarknessTowers);
+				towerCall.setReplaces(mc3a);
 
 			});
 
@@ -374,8 +416,8 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	@PlayerStatusCallout(value = 0x1BD, cancellable = true)
 	private final ModifiableCallout<BuffApplied> thornyVine = ModifiableCallout.durationBasedCall("Thorny Vine", "Break Tether");
 
-	private final ModifiableCallout<AbilityCastStart> lateralCore = ModifiableCallout.durationBasedCallWithOffset("Lateral-Core Phaser", "Sides then In", Duration.ofMillis(3300));
-	private final ModifiableCallout<AbilityCastStart> coreLateral = ModifiableCallout.durationBasedCallWithOffset("Core-Lateral Phaser", "In then Sides", Duration.ofMillis(3300));
+	private final ModifiableCallout<AbilityCastStart> lateralCore = ModifiableCallout.durationBasedCallWithOffset("Lateral-Core Phaser", "Sides then In", Duration.ofMillis(2000));
+	private final ModifiableCallout<AbilityCastStart> coreLateral = ModifiableCallout.durationBasedCallWithOffset("Core-Lateral Phaser", "In then Sides", Duration.ofMillis(2000));
 	private final ModifiableCallout<?> coreWithTower = new ModifiableCallout<>("Lateral-Core: Follow-Up with Tower", "In then Tower");
 	private final ModifiableCallout<?> lateralWithTower = new ModifiableCallout<>("Core-Lateral: Follow-Up with Tower", "Out and Tower");
 	private final ModifiableCallout<?> coreWithPivot = new ModifiableCallout<>("Lateral-Core: Follow-Up with Pivot", "In then {rotationSafe}");
@@ -438,4 +480,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 
 	@PlayerHeadmarker(0xC5)
 	private final ModifiableCallout<HeadMarkerEvent> chaser = new ModifiableCallout<>("Feint Particle Beam", "Chasing AoE");
+
+	@NpcCastCallout(value = 0x9E55, cancellable = true)
+	private final ModifiableCallout<AbilityCastStart> enrage = ModifiableCallout.durationBasedCall("Deluge of Darkness (Enrage)", "Enrage");
 }
