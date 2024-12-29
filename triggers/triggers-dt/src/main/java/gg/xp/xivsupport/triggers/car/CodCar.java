@@ -96,7 +96,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 							s.updateCall(isFront ? grimEmbraceFrontInitial : grimEmbraceRearInitial, b);
 							s.waitDuration(b.remainingDurationPlus(Duration.ofSeconds(-5)));
 							s.updateCall(isFront ? grimEmbraceFrontSoon : grimEmbraceRearSoon, b);
-							s.waitDuration(b.remainingDurationPlus(Duration.ofMillis(-1_200)));
+							s.waitDuration(b.remainingDurationPlus(Duration.ofMillis(-1_000)));
 							s.updateCall(isFront ? grimEmbraceFrontMove : grimEmbraceRearMove, b);
 						});
 			});
@@ -220,8 +220,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	private final SequentialTrigger<BaseEvent> floodOfDarknessAddsSq = SqtTemplates.sq(30_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9E37),
 			(e1, s) -> {
-		// TODO
-				if (doWeCareAboutStygian(e1.getSource()) || state.playerJobMatches(Job::caresAboutInterrupt)) {
+				if (doWeCareAboutStygian(e1.getSource()) && state.playerJobMatches(Job::caresAboutInterrupt)) {
 					RawModifiedCallout<AbilityCastStart> call = s.updateCall(floodOfDarknessAdds, e1);
 					// Unfortunately, AbilityCastCancel currently does not work for interrupts, so we need to get creative
 					s.waitEventsUntil(1, AbilityUsedEvent.class, aue -> {
@@ -336,14 +335,14 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	}
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> sq = SqtTemplates.sq(30_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9E20, 0x9E23),
-			(e1, s) -> {
+	private final SequentialTrigger<BaseEvent> sq = SqtTemplates.selfManagedMultiInvocation(30_000,
+			AbilityCastStart.class, acs -> {
+				return acs.abilityIdMatches(0x9E20, 0x9E23)
+				       && doWeCareAboutStygian(acs.getSource());
+			},
+			(e1, s, count) -> {
 				XivCombatant npc = e1.getSource();
 				boolean isEast = npc.getPos().x() > 0;
-				if (!doWeCareAboutStygian(npc)) {
-					return;
-				}
 
 				var mech1 = ArtOfDarknessMech.forHm(s.waitEvent(HeadMarkerEvent.class, hme -> hme.getTarget().equals(npc)));
 				ModifiableCallout<?> mc1 = calloutForMech(mech1, isEast);
@@ -381,20 +380,21 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 				RawModifiedCallout<?> mc2a = s.call(mc2);
 				mc2a.setReplaces(call2);
 				// Debounce
-				s.waitMs(1000);
+				s.waitMs(1300);
 
 				waitMech.accept(mech2);
 
 				mc2a.forceExpire();
 				RawModifiedCallout<?> mc3a = s.call(mc3);
 				mc3a.setReplaces(call3);
-				s.waitMs(1000);
+				s.waitMs(1300);
 
 				waitMech.accept(mech3);
 
-				RawModifiedCallout<?> towerCall = s.call(artOfDarknessTowers);
-				towerCall.setReplaces(mc3a);
-
+				if (count == 0) {
+					RawModifiedCallout<?> towerCall = s.call(artOfDarknessTowers);
+					towerCall.setReplaces(mc3a);
+				}
 			});
 
 	private final ModifiableCallout<HeadMarkerEvent> evilSeedOnYou = new ModifiableCallout<>("Evil Seed: On You", "Drop Bramble");
@@ -413,6 +413,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 						}, () -> s.updateCall(evilSeedNotOnYou));
 			});
 
+	// TODO: might be nice to have a player-to-player version of this that calls who you're tethered to
 	@PlayerStatusCallout(value = 0x1BD, cancellable = true)
 	private final ModifiableCallout<BuffApplied> thornyVine = ModifiableCallout.durationBasedCall("Thorny Vine", "Break Tether");
 
@@ -420,23 +421,30 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	private final ModifiableCallout<AbilityCastStart> coreLateral = ModifiableCallout.durationBasedCallWithOffset("Core-Lateral Phaser", "In then Sides", Duration.ofMillis(2000));
 	private final ModifiableCallout<?> coreWithTower = new ModifiableCallout<>("Lateral-Core: Follow-Up with Tower", "In then Tower");
 	private final ModifiableCallout<?> lateralWithTower = new ModifiableCallout<>("Core-Lateral: Follow-Up with Tower", "Out and Tower");
+	private final ModifiableCallout<?> core = new ModifiableCallout<>("Lateral-Core: Follow-Up", "In");
+	private final ModifiableCallout<?> lateral = new ModifiableCallout<>("Core-Lateral: Follow-Up", "Out");
 	private final ModifiableCallout<?> coreWithPivot = new ModifiableCallout<>("Lateral-Core: Follow-Up with Pivot", "In then {rotationSafe}");
 	private final ModifiableCallout<?> lateralWithPivot = new ModifiableCallout<>("Core-Lateral: Follow-Up with Pivot", "Out and {rotationSafe}");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> phaser = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9E2F, 0x9E30),
-			(e1, s) -> {
-				if (!doWeCareAboutStygian(e1.getSource())) {
-					return;
-				}
+	private final SequentialTrigger<BaseEvent> phaser = SqtTemplates.selfManagedMultiInvocation(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9E2F, 0x9E30)
+			                               && doWeCareAboutStygian(acs.getSource()),
+			(e1, s, count) -> {
+				log.info("Phaser #{}", count);
 				boolean sidesFirst = e1.abilityIdMatches(0x9E2F);
 				AbilityCastStart pivotCast = casts.getActiveCastById(0x9E13, 0x9E15).stream().map(CastTracker::getCast).findFirst()
 						.orElse(null);
 				if (pivotCast == null) {
+					// TODO: there is a version of this with neither towers nor pivot
 					s.updateCall(sidesFirst ? lateralCore : coreLateral, e1);
-					s.waitCastFinished(casts, e1);
-					s.updateCall(sidesFirst ? coreWithTower : lateralWithTower);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9E31));
+					if (count >= 2) {
+						s.updateCall(sidesFirst ? core : lateral);
+					}
+					else {
+						s.updateCall(sidesFirst ? coreWithTower : lateralWithTower);
+					}
 				}
 				else {
 					boolean cw = pivotCast.abilityIdMatches(0x9E13);
