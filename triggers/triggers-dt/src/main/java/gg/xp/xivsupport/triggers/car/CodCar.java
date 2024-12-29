@@ -172,7 +172,7 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 
 	private final ModifiableCallout<AbilityCastStart> flare = ModifiableCallout.durationBasedCallWithOffset("Flare", "Flare", Duration.ofMillis(9_300));
 	private final ModifiableCallout<AbilityCastStart> flareOnYou = ModifiableCallout.durationBasedCallWithOffset("Flare on You", "Out", Duration.ofMillis(9_300));
-	private final ModifiableCallout<AbilityCastStart> flareNotOnYou = ModifiableCallout.durationBasedCallWithOffset("Flare on You", "Middle", Duration.ofMillis(9_300));
+	private final ModifiableCallout<AbilityCastStart> flareNotOnYou = ModifiableCallout.durationBasedCallWithOffset("Flare Not on You", "Middle", Duration.ofMillis(9_300));
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> flareSq = SqtTemplates.sq(60_000,
