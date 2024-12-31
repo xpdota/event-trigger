@@ -91,7 +91,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(462111, "Stack", "Stack (5.6)"),
 				call(468120, "Bait Spinny", "Bait Spinny"),
 				call(473149, "Stack", "Stack (4.6)"),
-				call(478175, "Stand Middle", "Stand Middle"),
+				call(478175, "Drop Rewind Middle", "Drop Rewind Middle (4.6)"),
 				call(483195, "Move Out", "Move Out (4.5)"),
 				call(488217, "Look Outside", "Look Outside (8.5)"),
 				call(500670, "Stack", "Stack (2.7)"),

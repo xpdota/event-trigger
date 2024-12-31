@@ -772,7 +772,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	// TODO icons
 	private final ModifiableCallout<?> relShortRewindMedFire = new ModifiableCallout<>("Relativity: Short Rewind Part 2 (Med Fire)", "AFK")
 			.extendedDescription("This call happens after the second fire/stack pop, if you have short rewind and had medium fire.");
-	private final ModifiableCallout<?> relLongRewind2 = new ModifiableCallout<>("Relativity: Long Rewind Part 2", "Drop Rewind Middle")
+	private final ModifiableCallout<BuffApplied> relLongRewind2 = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Long Rewind Part 2", "Drop Rewind Middle")
 			.statusIcon(0x9A0)
 			.extendedDescription("This call happens after the first fire/stack pop, if you have long rewind.");
 
@@ -930,7 +930,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 								ignored -> s.updateCall(relShortRewindMedFire),
 								() -> s.updateCall(relShortRewindBait)),
 						() -> {
-							s.updateCall(relLongRewind2);
+							s.updateCall(relLongRewind2, longRewindC.findAny(r -> true).orElse(null));
 						}
 				);
 				s.waitMs(5_000); // T=26
