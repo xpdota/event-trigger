@@ -24,6 +24,7 @@ import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivZone;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.JobSortValidationException;
 import gg.xp.xivsupport.speech.BaseCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
@@ -631,18 +632,18 @@ public class JailExampleTest {
 		MutablePicoContainer container = setup();
 		JailSolver jail = container.getComponent(JailSolver.class);
 		// Insufficient size
-		Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJobOrder(List.of(Job.WHM, Job.SCH)));
+		Assert.assertThrows(JobSortValidationException.class, () -> jail.getSort().setJobOrder(List.of(Job.WHM, Job.SCH)));
 		{
 			List<Job> current = new ArrayList<>(jail.getSort().getJobOrder());
 			// Make a duplicate
 			current.set(0, current.get(1));
-			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJobOrder(current));
+			Assert.assertThrows(JobSortValidationException.class, () -> jail.getSort().setJobOrder(current));
 		}
 		{
 			List<Job> current = new ArrayList<>(jail.getSort().getJobOrder());
 			// Too many
 			current.add(current.get(0));
-			Assert.assertThrows(IllegalArgumentException.class, () -> jail.getSort().setJobOrder(current));
+			Assert.assertThrows(JobSortValidationException.class, () -> jail.getSort().setJobOrder(current));
 		}
 	}
 

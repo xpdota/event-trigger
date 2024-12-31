@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serial;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class SequentialTriggerController<X extends BaseEvent> {
@@ -43,7 +45,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	private static final AtomicInteger threadIdCounter = new AtomicInteger();
 	//	private final Instant expiresAt;
 	private final BooleanSupplier expired;
-	private final Thread thread;
+	private final Thread triggerThread;
 	private final Object lock = new Object();
 	private final X initialEvent;
 	private final int timeout;
@@ -63,7 +65,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		this.timeout = timeout;
 //		expiresAt = initialEvent.getHappenedAt().plusMillis(timeout);
 		context = initialEventContext;
-		thread = new Thread(() -> {
+		triggerThread = new Thread(() -> {
 			try {
 				triggerCode.accept(initialEvent, this);
 			}
@@ -83,9 +85,9 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			}
 		}, "SequentialTrigger-" + threadIdCounter.getAndIncrement());
 		this.initialEvent = initialEvent;
-		thread.setDaemon(true);
-		thread.setPriority(Thread.MAX_PRIORITY);
-		thread.start();
+		triggerThread.setDaemon(true);
+		triggerThread.setPriority(Thread.MAX_PRIORITY);
+		triggerThread.start();
 		synchronized (lock) {
 			waitProcessingDone();
 		}
@@ -640,7 +642,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
-	private static final int defaultCycleProcessingTime = 250;
+	private static final int defaultCycleProcessingTime = 500;
 	private static final int cycleProcessingTime;
 
 	// Workaround for integration tests exceeding cycle time
@@ -672,7 +674,10 @@ public class SequentialTriggerController<X extends BaseEvent> {
 			try {
 				long timeLeft = failAt - System.currentTimeMillis();
 				if (timeLeft <= 0) {
-					log.error("Cycle processing time max ({}ms) exceeded", timeoutMs);
+					String formattedStackTrace = Arrays.stream(triggerThread.getStackTrace())
+							.map(element -> "\t at %s".formatted(element.toString()))
+							.collect(Collectors.joining("\n"));
+					log.error("Cycle processing time max ({}ms) exceeded. Trigger thread stack:\n{}", timeoutMs, formattedStackTrace);
 					cycleProcessingTimeExceeded = true;
 					return;
 				}

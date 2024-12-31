@@ -704,6 +704,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x9D20)
 	private final ModifiableCallout<AbilityCastStart> p2enrage = ModifiableCallout.durationBasedCall("P2 Enrage", "Enrage, Knockback");
 
+	// TODO: add callout for when main crystal becomes vulnerable
 	@NpcCastCallout(value = 0x9D43, cancellable = true)
 	private final ModifiableCallout<AbilityCastStart> intermissionEnrage = ModifiableCallout.durationBasedCall("Endless Ice Age (Intermission)", "Kill Crystals, Bait AoEs");
 
@@ -755,11 +756,11 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<?> relLongRewind = new ModifiableCallout<>("Relativity: Long Rewind", "Bait Spinny")
 			.extendedDescription("This call happens after the first fire/stack pop, if you have long rewind.");
-	private final ModifiableCallout<BuffApplied> relShortRewindEruption = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Eruption", "Stand on Light").autoIcon()
+	private final ModifiableCallout<BuffApplied> relShortRewindEruption = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Eruption", "Drop Rewind on Light").autoIcon()
 			.extendedDescription("This call happens after the first fire/stack pop, if you have short rewind and have eruption (no water).");
-	private final ModifiableCallout<BuffApplied> relShortRewindEruptionMedFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Eruption and Med Fire", "Stand inside Light").autoIcon()
+	private final ModifiableCallout<BuffApplied> relShortRewindEruptionMedFire = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Eruption and Med Fire", "Drop Rewind inside Light").autoIcon()
 			.extendedDescription("This call happens after the first fire/stack pop, if you have short rewind and have eruption (no water) as well as medium fire.");
-	private final ModifiableCallout<BuffApplied> relShortRewindWater = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Water", "Stand In").autoIcon()
+	private final ModifiableCallout<BuffApplied> relShortRewindWater = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Short Rewind w/ Water", "Drop Rewind Inside").autoIcon()
 			.extendedDescription("This call happens after the first fire/stack pop, if you have short rewind and have water (no eruption).");
 
 	private final ModifiableCallout<BuffApplied> relMedFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Medium Fire Popping", "Move Out").autoIcon()
@@ -768,9 +769,11 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<?> relShortRewindBait = new ModifiableCallout<>("Relativity: Short Rewind Part 2", "Bait Spinny")
 			.extendedDescription("This call happens after the second fire/stack pop, if you have short rewind and do not have medium fire.");
+	// TODO icons
 	private final ModifiableCallout<?> relShortRewindMedFire = new ModifiableCallout<>("Relativity: Short Rewind Part 2 (Med Fire)", "AFK")
 			.extendedDescription("This call happens after the second fire/stack pop, if you have short rewind and had medium fire.");
-	private final ModifiableCallout<?> relLongRewind2 = new ModifiableCallout<>("Relativity: Long Rewind Part 2", "Stand Middle")
+	private final ModifiableCallout<?> relLongRewind2 = new ModifiableCallout<>("Relativity: Long Rewind Part 2", "Drop Rewind Middle")
+			.statusIcon(0x9A0)
 			.extendedDescription("This call happens after the first fire/stack pop, if you have long rewind.");
 
 	private final ModifiableCallout<BuffApplied> relLongFirePop = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Long Fire Popping", "Move Out").autoIcon()
@@ -901,7 +904,6 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 								s.updateCall(relShortRewindWater, e);
 							}
 							else {
-								// TODO: some people need to bait inside for this?
 								if (medFireC.anyMatch(isPlayer)) {
 									s.updateCall(relShortRewindEruptionMedFire, e);
 								}

@@ -18,6 +18,7 @@ public class GuiEarlyComponents {
 
 	private final MutablePicoContainer pico;
 	private Container gp;
+	private JLabel loadingLabel;
 
 	public GuiEarlyComponents(MutablePicoContainer pico) {
 		this.pico = pico;
@@ -75,7 +76,7 @@ public class GuiEarlyComponents {
 			mainFrame.add(new ReplayControllerGui(pico, replay).getPanel(), BorderLayout.PAGE_START);
 		}
 		gp = (Container) mainFrame.getGlassPane();
-		JLabel loadingLabel = new JLabel("Loading...");
+		loadingLabel = new JLabel("Loading...");
 		loadingLabel.setFont(loadingLabel.getFont().deriveFont(Font.PLAIN, 48));
 		gp.setLayout(new GridBagLayout());
 		gp.add(loadingLabel);
@@ -118,7 +119,7 @@ public class GuiEarlyComponents {
 	}
 
 	void hideLoading() {
-		this.gp.setVisible(false);
+		gp.remove(loadingLabel);
 	}
 
 }
