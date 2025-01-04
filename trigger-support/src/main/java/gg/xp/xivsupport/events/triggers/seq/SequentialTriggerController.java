@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastResult;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
+import gg.xp.xivsupport.speech.BaseCalloutEvent;
 import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.speech.HasCalloutTrackingKey;
 import org.jetbrains.annotations.Contract;
@@ -180,6 +181,15 @@ public class SequentialTriggerController<X extends BaseEvent> {
 
 	public @Nullable HasCalloutTrackingKey getLastCall() {
 		return lastCall;
+	}
+
+	public void expireLastCall() {
+		if (lastCall instanceof RawModifiedCallout<?> rmc) {
+			rmc.forceExpire();
+		}
+		else if (lastCall instanceof BaseCalloutEvent bce) {
+			bce.forceExpire();
+		}
 	}
 
 	/**
@@ -528,9 +538,8 @@ public class SequentialTriggerController<X extends BaseEvent> {
 				return end;
 			}
 		}
+		// TODO: not correct - should also check for AbilityCastCancel
 		return waitEvent(AbilityUsedEvent.class, aue -> aue.getPrecursor() == cast);
-
-
 	}
 
 

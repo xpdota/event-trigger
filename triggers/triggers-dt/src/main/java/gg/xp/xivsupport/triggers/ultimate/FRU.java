@@ -15,6 +15,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
+import gg.xp.xivsupport.events.actlines.events.HasCastPrecursor;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
@@ -704,10 +705,48 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0x9D20)
 	private final ModifiableCallout<AbilityCastStart> p2enrage = ModifiableCallout.durationBasedCall("P2 Enrage", "Enrage, Knockback");
 
-	// TODO: add callout for when main crystal becomes vulnerable
-	@NpcCastCallout(value = 0x9D43, cancellable = true)
 	private final ModifiableCallout<AbilityCastStart> intermissionEnrage = ModifiableCallout.durationBasedCall("Endless Ice Age (Intermission)", "Kill Crystals, Bait AoEs");
-	// TODO: add callout for if you get tethered in adds
+	private final ModifiableCallout<TetherEvent> intermissionTether = new ModifiableCallout<>("Endless Ice Age: Tether on You", "Tether");
+	private final ModifiableCallout<AbilityCastStart> intermissionKillMain = ModifiableCallout.durationBasedCall("Endless Ice Age: Kill Main Crystal", "Kill Main Crystal");
+	private final ModifiableCallout<AbilityCastStart> intermissionVulnDown = ModifiableCallout.durationBasedCall("Endless Ice Age: Main Crystal Vuln Down", "Vuln Down");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> intermissionCrystal = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D43),
+			(e1, s) -> {
+				s.updateCall(intermissionEnrage, e1);
+				int goodId = 0x896;
+				int badId = 0x1154;
+				while (true) {
+					var buff = s.waitEventUntil(
+							BuffApplied.class,
+							ba -> ba.getTarget().equals(e1.getSource()) && ba.buffIdMatches(goodId, badId),
+							HasCastPrecursor.class, ha -> {
+								return ha.getPrecursor() == e1 && (ha instanceof AbilityUsedEvent || ha instanceof AbilityCastCancel);
+							});
+					if (buff == null) {
+						s.expireLastCall();
+						return;
+					}
+					else if (buff.buffIdMatches(0x896)) {
+						s.updateCall(intermissionKillMain, e1);
+					}
+					else if (buff.buffIdMatches(0x1154)) {
+						s.updateCall(intermissionVulnDown, e1);
+					}
+				}
+
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> intermissionTethers = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D43),
+			(e1, s) -> {
+				var tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isPc));
+				tethers.stream().filter(tether -> tether.eitherTargetMatches(XivCombatant::isThePlayer)).findAny().ifPresent(tether -> {
+					s.updateCall(intermissionTether, tether);
+				});
+			});
 
 	private final ModifiableCallout<?> junction = new ModifiableCallout<>("Junction", "Raidwide");
 
@@ -715,8 +754,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> intermissionRaidwideSq = SqtTemplates.sq(30_000,
 			AbilityCastCancel.class, acc -> acc.abilityIdMatches(0x9D43),
 			(e1, s) -> {
-					s.waitMs(7_000);
-					s.updateCall(junction);
+				s.waitMs(7_000);
+				s.updateCall(junction);
 			});
 
 	@NpcCastCallout(0x9D49)
@@ -770,7 +809,6 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<?> relShortRewindBait = new ModifiableCallout<>("Relativity: Short Rewind Part 2", "Bait Spinny")
 			.extendedDescription("This call happens after the second fire/stack pop, if you have short rewind and do not have medium fire.");
-	// TODO icons
 	private final ModifiableCallout<?> relShortRewindMedFire = new ModifiableCallout<>("Relativity: Short Rewind Part 2 (Med Fire)", "AFK")
 			.extendedDescription("This call happens after the second fire/stack pop, if you have short rewind and had medium fire.");
 	private final ModifiableCallout<BuffApplied> relLongRewind2 = ModifiableCallout.<BuffApplied>durationBasedCall("Relativity: Long Rewind Part 2", "Drop Rewind Middle")
