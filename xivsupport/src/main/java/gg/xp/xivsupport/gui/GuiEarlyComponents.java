@@ -120,6 +120,7 @@ public class GuiEarlyComponents {
 
 	void hideLoading() {
 		gp.remove(loadingLabel);
+		gp.setVisible(false);
 	}
 
 }
