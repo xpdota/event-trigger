@@ -707,6 +707,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	// TODO: add callout for when main crystal becomes vulnerable
 	@NpcCastCallout(value = 0x9D43, cancellable = true)
 	private final ModifiableCallout<AbilityCastStart> intermissionEnrage = ModifiableCallout.durationBasedCall("Endless Ice Age (Intermission)", "Kill Crystals, Bait AoEs");
+	// TODO: add callout for if you get tethered in adds
 
 	private final ModifiableCallout<?> junction = new ModifiableCallout<>("Junction", "Raidwide");
 
@@ -1129,10 +1130,10 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				s.waitMs(8_000);
 				s.updateCall(p4stack);
-				var edgeCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9CEE));
 				var akhRhaiCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9D2D));
 				s.updateCall(p4dodge, akhRhaiCast);
 				s.waitCastFinished(casts, akhRhaiCast);
+				var edgeCast = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0x9CEE), false);
 				s.updateCall(p4startDmg, edgeCast);
 			});
 
