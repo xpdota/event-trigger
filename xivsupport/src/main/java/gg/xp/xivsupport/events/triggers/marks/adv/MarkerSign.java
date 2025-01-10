@@ -37,19 +37,19 @@ public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 	 */
 
 	ATTACK_NEXT("Next Attack", "attack"),
-	ATTACK1("Attack 1", "attack1", ATTACK_NEXT, 60701),
-	ATTACK2("Attack 2", "attack2", ATTACK_NEXT, 60702),
-	ATTACK3("Attack 3", "attack3", ATTACK_NEXT, 60703),
-	ATTACK4("Attack 4", "attack4", ATTACK_NEXT, 60704),
-	ATTACK5("Attack 5", "attack5", ATTACK_NEXT, 60705),
-	ATTACK6("Attack 6", "attack6", ATTACK_NEXT, 61306),
-	ATTACK7("Attack 7", "attack7", ATTACK_NEXT, 61307),
-	ATTACK8("Attack 8", "attack8", ATTACK_NEXT, 61308),
+	ATTACK1("Attack 1", "attack1", ATTACK_NEXT, 61201),
+	ATTACK2("Attack 2", "attack2", ATTACK_NEXT, 61202),
+	ATTACK3("Attack 3", "attack3", ATTACK_NEXT, 61203),
+	ATTACK4("Attack 4", "attack4", ATTACK_NEXT, 61204),
+	ATTACK5("Attack 5", "attack5", ATTACK_NEXT, 61205),
+	ATTACK6("Attack 6", "attack6", ATTACK_NEXT, 61206),
+	ATTACK7("Attack 7", "attack7", ATTACK_NEXT, 61207),
+	ATTACK8("Attack 8", "attack8", ATTACK_NEXT, 61208),
 
 	BIND_NEXT("Next Bind", "bind"),
-	BIND1("Bind 1", "bind1", BIND_NEXT, 60706),
-	BIND2("Bind 2", "bind2", BIND_NEXT, 60707),
-	BIND3("Bind 3", "bind3", BIND_NEXT, 60708),
+	BIND1("Bind 1", "bind1", BIND_NEXT, 61211),
+	BIND2("Bind 2", "bind2", BIND_NEXT, 61212),
+	BIND3("Bind 3", "bind3", BIND_NEXT, 61213),
 
 	IGNORE_NEXT("Next Ignore", "ignore") {
 		@Override
@@ -62,7 +62,7 @@ public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 			return "ignor";
 		}
 	},
-	IGNORE1("Ignore 1", "ignore1", IGNORE_NEXT, 60709) {
+	IGNORE1("Ignore 1", "ignore1", IGNORE_NEXT, 61221) {
 		@Override
 		public String getKoreanCommand() {
 			return "stop1";
@@ -73,7 +73,7 @@ public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 			return "ignor1";
 		}
 	},
-	IGNORE2("Ignore 2", "ignore2", IGNORE_NEXT, 60710) {
+	IGNORE2("Ignore 2", "ignore2", IGNORE_NEXT, 61222) {
 		@Override
 		public String getKoreanCommand() {
 			return "stop2";
@@ -85,10 +85,10 @@ public enum MarkerSign implements HasFriendlyName, HasOptionalIconURL {
 		}
 	},
 
-	CIRCLE("Circle", "circle", 60712),
-	CROSS("Cross", "cross", 60713),
-	SQUARE("Square", "square", 60711),
-	TRIANGLE("Triangle", "triangle", 60714),
+	CIRCLE("Circle", "circle", 61232),
+	CROSS("Cross", "cross", 61233),
+	SQUARE("Square", "square", 61231),
+	TRIANGLE("Triangle", "triangle", 61234),
 
 	CLEAR("Clear Marker", "clear");
 

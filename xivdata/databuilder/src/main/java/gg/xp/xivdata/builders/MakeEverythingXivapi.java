@@ -6,6 +6,7 @@ import gg.xp.xivapi.clienttypes.XivApiObject;
 import gg.xp.xivapi.pagination.XivApiPaginator;
 import gg.xp.xivdata.builders.models.Action;
 import gg.xp.xivdata.builders.models.ContentFinderCondition;
+import gg.xp.xivdata.builders.models.Map;
 import gg.xp.xivdata.builders.models.NpcYell;
 import gg.xp.xivdata.builders.models.PlaceName;
 import gg.xp.xivdata.builders.models.StatusEffect;
@@ -110,29 +111,33 @@ public class MakeEverythingXivapi {
 			return ai;
 		}, List.of("actions", "Action.oos.gz"));
 
-		maker.writeList(gg.xp.xivdata.builders.models.Map.class, entry -> {
+		maker.writeList(Map.class, entry -> {
 			String subName = entry.getPlaceNameSub().getName();
-			return new XivMap(entry.getRowId(), entry.getOffsetX(), entry.getOffsetY(), entry.getSizeFactor(), entry.mapPath(), entry.getPlaceNameRegion().getName(), entry.getPlaceName().getName(), StringUtils.isBlank(subName) ? null : subName);
+			return new XivMap(entry.getRowId(), entry.getOffsetX(), entry.getOffsetY(), entry.getSizeFactor(), blankToNull(entry.mapPath()), entry.getPlaceNameRegion().getName(), entry.getPlaceName().getName(), blankToNull(subName));
 		}, List.of("maps", "Map.oos.gz"));
 
 		// Assorted Icons
 		// Damage types
-		LongStream.range(60011, 60013).forEach(iconIds::add);
+		LongStream.rangeClosed(60011, 60013).forEach(iconIds::add);
 		// Floor Markers
-		LongStream.range(61241, 61248).forEach(iconIds::add);
+		LongStream.rangeClosed(61241, 61248).forEach(iconIds::add);
 		// Head Markers
-		LongStream.range(60701, 60714).forEach(iconIds::add);
+		LongStream.rangeClosed(61201, 61208).forEach(iconIds::add);
+		LongStream.rangeClosed(61211, 61213).forEach(iconIds::add);
+		LongStream.rangeClosed(61221, 61222).forEach(iconIds::add);
 
 
 		log.info("Need to download {} icons", iconIds.size());
 		// TODO: these icons are larger than they should be. Look into pngtastic to recompress them.
+		Path iconDir = outputPathBase.resolve("icon");
+		iconDir.toFile().mkdirs();
 		iconIds.stream()
 				.distinct()
 				.parallel()
 				.forEach(iconId -> {
 					log.trace("Icon ID: {}", iconId);
 					URI downloadPath = client.getAssetUri("ui/icon/%06d/%06d_hr1.tex".formatted((iconId / 1000) * 1000, iconId), ImageFormat.PNG);
-					File out = outputPathBase.resolve("icon").resolve("%06d_hr1.png".formatted(iconId)).toFile();
+					File out = iconDir.resolve("%06d_hr1.png".formatted(iconId)).toFile();
 					log.trace("Downloading icon {} to {}", downloadPath, out);
 					try (BufferedInputStream in = new BufferedInputStream(downloadPath.toURL().openStream());
 					     FileOutputStream fileOutputStream = new FileOutputStream(out)) {
@@ -144,12 +149,24 @@ public class MakeEverythingXivapi {
 						}
 					}
 					catch (FileNotFoundException e) {
-						log.warn("Icon {} not found, ignoring ({})", iconId, e.toString());
+						if (e.getMessage().contains("http")) {
+							log.warn("Icon {} not found, ignoring ({})", iconId, e.toString());
+						}
+						else {
+							throw new RuntimeException(e);
+						}
 					}
 					catch (IOException e) {
 						throw new RuntimeException(e);
 					}
 				});
+	}
+
+	private static @Nullable String blankToNull(String str) {
+		if (StringUtils.isBlank(str)) {
+			return null;
+		}
+		return str;
 	}
 
 	private <In extends XivApiObject, Out extends Serializable> void writeList(Class<In> xivApiClass, Function<In, @Nullable Out> mapper, List<String> path) {
@@ -161,6 +178,7 @@ public class MakeEverythingXivapi {
 		for (String pathPart : path) {
 			outputPath = outputPath.resolve(pathPart);
 		}
+		outputPath.getParent().toFile().mkdirs();
 		try (var faos = new FileOutputStream(outputPath.toFile());
 		     var gzos = new GZIPOutputStream(faos);
 		     var oos = new ObjectOutputStream(gzos)) {
