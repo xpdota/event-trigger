@@ -186,7 +186,7 @@ public final class SqtTemplates {
 		}
 
 		void reset() {
-			forceExpire();
+			stopSilently();
 		}
 
 	}

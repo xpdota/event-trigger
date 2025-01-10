@@ -1,81 +1,31 @@
 package gg.xp.xivdata.data;
 
-import gg.xp.xivdata.util.ArrayBackedMap;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class StatusEffectLibraryImpl {
 
 	private static final Logger log = LoggerFactory.getLogger(StatusEffectLibraryImpl.class);
 
 	private static final Map<Long, StatusEffectIcon> cache = new ConcurrentHashMap<>();
-	private final CsvMapLoader<Integer, StatusEffectInfo> loader;
+	private final Map<Integer, StatusEffectInfo> values;
 
-	public StatusEffectLibraryImpl(Supplier<List<String[]>> cellSupplier) {
-		loader = CsvMapLoader.builder(
-						cellSupplier,
-						StatusEffectLibraryImpl::parseRow,
-						(row, item) -> (int) item.statusEffectId())
-				.setMapFinisher(ArrayBackedMap::new)
-				.preFilterNullIds()
-				.build();
+	public StatusEffectLibraryImpl(InputStream input) {
+		log.info("Loading status effect library");
+		values = CompressedObjectStreamLoader.loadFrom(input, (StatusEffectInfo t) -> (int) t.statusEffectId());
+		log.info("Loaded status effect library");
 	}
-
-	// TODO: this is kind of jank
-	private static StatusEffectInfo parseRow(CsvRowHelper row) {
-		int id = row.getIntId();
-		String rawImg = row.getRaw(3);
-		if (rawImg.isEmpty()) {
-			log.warn("Image was empty!");
-			return null;
-		}
-		long imageId;
-		long maxStacks = row.getRequiredInt(5);
-		try {
-			imageId = Long.parseLong(rawImg);
-		}
-		catch (NumberFormatException nfe) {
-			Matcher matcher = texFilePattern.matcher(rawImg);
-			if (matcher.find()) {
-				imageId = Long.parseLong(matcher.group(1));
-			}
-			else {
-				throw new RuntimeException("Invalid image specifier: " + rawImg, nfe);
-				// Ignore non-numeric
-//					return;
-			}
-		}
-		int partyListPrio = row.getIntOrDefault(19, 200);
-		String name = row.getRaw(1).intern();
-		if (imageId == 0 && name.isEmpty()) {
-			return null;
-		}
-		return new StatusEffectInfo(id,
-				imageId,
-				maxStacks,
-				name,
-				row.getRaw(2),
-				row.getRequiredBool(16),
-				row.getRequiredBool(18),
-				partyListPrio,
-				row.getRequiredBool(27)
-		);
-	}
-
-	private static final Pattern texFilePattern = Pattern.compile("(\\d+)\\.tex");
 
 	public Map<Integer, StatusEffectInfo> getAll() {
-		return loader.read();
+		return Collections.unmodifiableMap(values);
 	}
 
 	public @Nullable StatusEffectInfo forId(long id) {

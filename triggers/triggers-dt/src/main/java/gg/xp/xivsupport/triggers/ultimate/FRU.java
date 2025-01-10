@@ -1158,6 +1158,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(value = 0x9D6C, cancellable = true)
 	private final ModifiableCallout<AbilityCastStart> p3enrage = ModifiableCallout.durationBasedCall("P3 Enrage", "Enrage");
 
+	// TODO: add HP equalizer trigger like the one in DSR
+
 	private final ModifiableCallout<?> p4stack = new ModifiableCallout<>("P4 Start: Stack", "Stack");
 	private final ModifiableCallout<AbilityCastStart> p4dodge = ModifiableCallout.durationBasedCall("P4 Start: Dodge", "Dodge");
 	private final ModifiableCallout<AbilityCastStart> p4startDmg = ModifiableCallout.durationBasedCall("P4 Start: Damage", "Raidwide");
@@ -1187,7 +1189,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 					This call and the one below are set up for the typical strat, where tethered players soak towers and non-tethered players bait cleaves.""");
 	private final ModifiableCallout<AbilityCastStart> darklitTowerNoTether = ModifiableCallout.durationBasedCall("Darklit Dragonsong: Tower, no Tether", "Bait Cleave");
 
-	private final ModifiableCallout<?> darklitSpiritTaker = new ModifiableCallout<>("Darklit Dragonsong: Spirit Taker", "Spread");
+	private final ModifiableCallout<?> darklitSpiritTaker = new ModifiableCallout<>("Darklit Dragonsong: Spirit Taker", "Spread into Stacks");
 	private final ModifiableCallout<AbilityCastStart> darklitStacks = ModifiableCallout.durationBasedCall("Darklit Dragonsong: Stacks", "Stacks");
 	private final ModifiableCallout<?> darklitTankBaits = new ModifiableCallout<>("Darklit Dragonsong: Tank Baits", "Tank Baits");
 
@@ -1474,7 +1476,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.accept(out);
 			});
 
-	private static class TidalLightSafeSpotEvent extends BaseEvent {
+	public static final class TidalLightSafeSpotEvent extends BaseEvent {
 		@Serial
 		private static final long serialVersionUID = -8145814631605864973L;
 		private final ArenaSector firstDirection;

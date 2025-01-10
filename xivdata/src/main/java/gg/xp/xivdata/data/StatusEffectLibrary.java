@@ -2,13 +2,11 @@ package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.Map;
 
 public class StatusEffectLibrary {
 
-
-	private static final StatusEffectLibraryImpl INSTANCE = new StatusEffectLibraryImpl(() -> ReadCsv.cellsFromResource("/xiv/statuseffect/Status.csv"));
+	private static final StatusEffectLibraryImpl INSTANCE = new StatusEffectLibraryImpl(StatusEffectLibrary.class.getResourceAsStream("/xiv/statuseffect/StatusEffect.oos.gz"));
 
 	public static void main(String[] args) {
 		INSTANCE.getAll().values().stream().distinct().sorted().map(s -> String.format("%06d", s.statusEffectId())).forEach(System.out::println);
@@ -16,10 +14,6 @@ public class StatusEffectLibrary {
 
 	public static Map<Integer, StatusEffectInfo> getAll() {
 		return INSTANCE.getAll();
-	}
-
-	public static StatusEffectLibraryImpl readAltCsv(File file) {
-		return new StatusEffectLibraryImpl(() -> ReadCsv.cellsFromFile(file));
 	}
 
 	public static @Nullable StatusEffectInfo forId(long id) {

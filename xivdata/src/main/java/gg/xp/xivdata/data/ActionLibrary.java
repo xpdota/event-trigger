@@ -2,7 +2,6 @@ package gg.xp.xivdata.data;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.util.Map;
 
 public class ActionLibrary {
@@ -13,19 +12,10 @@ public class ActionLibrary {
 		if (all.size() < 100) {
 			throw new AssertionError("Action Library failed to load!");
 		}
-		// TODO
-//		if (hasErrors) {
-//			throw new RuntimeException("There was an error - check log for errors from ActionLibrary");
-//		}
 	}
 
-	private static final ActionLibraryImpl INSTANCE = new ActionLibraryImpl(() -> ReadCsv.cellsFromResource("/xiv/actions/Action.csv"));
+	private static final ActionLibraryImpl INSTANCE = new ActionLibraryImpl(ActionLibrary.class.getResourceAsStream("/xiv/actions/Action.oos.gz"));
 
-
-//	public static void main(String[] args) {
-//		getAll().values().stream().distinct().sorted().map(s -> String.format("%06d", s)).forEach(System.out::println);
-//	}
-//
 	public static Map<Integer, ActionInfo> getAll() {
 		return INSTANCE.getAll();
 	}
@@ -36,10 +26,6 @@ public class ActionLibrary {
 
 	public static @Nullable ActionInfo forId(long id) {
 		return getAll().get((int) id);
-	}
-
-	public static ActionLibraryImpl readAltCsv(File file) {
-		return new ActionLibraryImpl(() -> ReadCsv.cellsFromFile(file));
 	}
 
 	public static @Nullable ActionIcon iconForId(long id) {

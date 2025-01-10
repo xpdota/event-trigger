@@ -6,6 +6,7 @@ import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
+import gg.xp.xivsupport.gui.tables.filters.BooleanEventFilter;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.filters.TextBasedFilter;
 import gg.xp.xivsupport.gui.tables.renderers.StatusEffectListRenderer;
@@ -56,6 +57,7 @@ public final class StatusTableFactory {
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", StatusEffectInfo::statusEffectId, StatusEffectInfo::name, t))
 				.addFilter(t -> new TextBasedFilter<>(t, "Description", StatusEffectInfo::description))
+				.addFilter(t -> new BooleanEventFilter<>(t, "Show Useless", (checked, item) -> checked || !item.isUseless(), false))
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, StatusEffectInfo::statusEffectId))
 				.setFixedData(true)
 				.withRightClickRepo(rightClickOptionRepo.withMore(

@@ -86,7 +86,7 @@ public enum OmenShape implements HasFriendlyName {
 				sb.append('×').append(ai.xAxisModifier()).append("y Rectangle, Front/Back");
 			}
 			case CONE -> {
-				sb.append(" Cone (").append(ai.coneAngle() > 0 ? ai.coneAngle() : "?").append("°)");
+				sb.append(" Cone (").append(ai.isConeAngleKnown() && ai.coneAngle() > 0 ? ai.coneAngle() : "?").append("°)");
 			}
 			case RAIDWIDE -> {
 				sb.append(" Raidwide");

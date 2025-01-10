@@ -114,7 +114,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(633307, "Raidwide", "Raidwide (4.7)"),
 				call(639140, "Nothing", "Nothing"),
 				call(641988, "Bait Cleave", "Bait Cleave (7.2)"),
-				call(650314, "Spread", "Spread"),
+				call(650314, "Spread into Stacks", "Spread into Stacks"),
 				call(652541, "Stacks", "Stacks (4.7)"),
 				call(657518, "Tank Baits", "Tank Baits"),
 				call(662628, "Raidwide", "Raidwide (4.7)"),

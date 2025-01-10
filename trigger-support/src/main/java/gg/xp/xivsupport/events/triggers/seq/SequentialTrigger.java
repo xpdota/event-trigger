@@ -98,7 +98,7 @@ public class SequentialTrigger<X extends BaseEvent> implements TypedEventHandler
 			inst.forceExpire();
 			instance = null;
 		}
-		instances.forEach(SequentialTriggerController::stopSilently);
+		instances.forEach(SequentialTriggerController::forceExpire);
 		instances.clear();
 	}
 

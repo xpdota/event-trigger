@@ -1,8 +1,10 @@
 package gg.xp.xivdata.data;
 
 import gg.xp.xivdata.data.rsv.*;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +21,7 @@ public record StatusEffectInfo(
 		boolean isPermanent,
 		int partyListPriority,
 		boolean isFcBuff
-) {
+) implements Serializable {
 
 	@Override
 	public String name() {
@@ -70,5 +72,9 @@ public record StatusEffectInfo(
 		else {
 			return LongStream.range(1, maxStacks + 1).mapToObj(this::getIcon).filter(Objects::nonNull).toList();
 		}
+	}
+
+	public boolean isUseless() {
+		return baseIconId == 0 && StringUtils.isBlank(name) && StringUtils.isBlank(description);
 	}
 }

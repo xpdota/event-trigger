@@ -1,16 +1,24 @@
 package gg.xp.xivdata.builders;
 
 import gg.xp.xivapi.XivApiClient;
+import gg.xp.xivapi.assets.ImageFormat;
 import gg.xp.xivapi.clienttypes.XivApiObject;
 import gg.xp.xivapi.pagination.XivApiPaginator;
+import gg.xp.xivdata.builders.models.Action;
 import gg.xp.xivdata.builders.models.ContentFinderCondition;
 import gg.xp.xivdata.builders.models.NpcYell;
 import gg.xp.xivdata.builders.models.PlaceName;
+import gg.xp.xivdata.builders.models.StatusEffect;
 import gg.xp.xivdata.builders.models.TerritoryType;
 import gg.xp.xivdata.data.*;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -19,7 +27,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.LongStream;
 import java.util.zip.GZIPOutputStream;
 
 /*
@@ -29,6 +42,7 @@ TODO:
  */
 public class MakeEverythingXivapi {
 	private static final Logger log = LoggerFactory.getLogger(MakeEverythingXivapi.class);
+	private static final int DUMMY_ACTION_ICON = 405;
 
 	private final Path outputPathBase;
 	private final XivApiClient client;
@@ -52,21 +66,96 @@ public class MakeEverythingXivapi {
 		});
 		MakeEverythingXivapi maker = new MakeEverythingXivapi(outputPathBase, client);
 
+		ConcurrentLinkedQueue<Long> iconIds = new ConcurrentLinkedQueue<>();
+
 		maker.writeList(TerritoryType.class, entry -> {
 			PlaceName place = entry.getPlaceName();
 			ContentFinderCondition cfc = entry.getContentFinderCondition();
 
 			return new ZoneInfo(entry.getRowId(), cfc == null ? null : cfc.getName(), place == null ? null : place.getName());
 		}, List.of("territory", "TerritoryType.oos.gz"));
-		maker.writeList(NpcYell.class, entry -> {
-			return new NpcYellInfo(entry.getRowId(), entry.getText());
-		}, List.of("npcyell", "NpcYell.oos.gz"));
+
+		maker.writeList(NpcYell.class, entry -> new NpcYellInfo(entry.getRowId(), entry.getText()), List.of("npcyell", "NpcYell.oos.gz"));
+
+		maker.writeList(StatusEffect.class, entry -> {
+			int baseIconId = entry.getIcon().getId();
+			StatusEffectInfo statusEffectInfo = new StatusEffectInfo(entry.getRowId(), baseIconId, entry.getMaxStacks(), entry.getName(), entry.getDescription(), entry.canDispel(), entry.isPermanent(), entry.getPartyListPriority(), entry.isFcBuff());
+			if (baseIconId > 0) {
+				List<Long> allIconIds = statusEffectInfo.getAllIconIds();
+				log.trace("Status id {} - icons {}", statusEffectInfo.statusEffectId(), allIconIds);
+				iconIds.addAll(allIconIds);
+			}
+			return statusEffectInfo;
+		}, List.of("statuseffect", "StatusEffect.oos.gz"));
+
+		Pattern omenConePattern = Pattern.compile("_fan(\\d+)_");
+		iconIds.add((long) DUMMY_ACTION_ICON);
+		maker.writeList(Action.class, entry -> {
+			String omenPath = entry.getOmen().getPath();
+			boolean isConeAngleKnown = false;
+			int coneAngle = 30; // TODO
+			if (!StringUtils.isBlank(omenPath)) {
+				Matcher matcher = omenConePattern.matcher(omenPath);
+				if (matcher.matches()) {
+					coneAngle = Integer.parseInt(matcher.group(1));
+					isConeAngleKnown = true;
+				}
+			}
+			ActionInfo ai = new ActionInfo(entry.getRowId(), entry.getName(), entry.getIcon().getId(), entry.getRecastRaw(), entry.getMaxCharges(), entry.getCategoryRaw(), entry.isPlayerAbility(), entry.getCastRaw(), entry.getCastType(), entry.getEffectRange(), entry.getXAxisModifier(), coneAngle, isConeAngleKnown);
+			long id = entry.getIcon().getId();
+			if (id > 0 && id != DUMMY_ACTION_ICON) {
+				log.info("Action id {} - icon {}", ai.actionid(), id);
+				iconIds.add(id);
+			}
+			return ai;
+		}, List.of("actions", "Action.oos.gz"));
+
+		maker.writeList(gg.xp.xivdata.builders.models.Map.class, entry -> {
+			String subName = entry.getPlaceNameSub().getName();
+			return new XivMap(entry.getRowId(), entry.getOffsetX(), entry.getOffsetY(), entry.getSizeFactor(), entry.mapPath(), entry.getPlaceNameRegion().getName(), entry.getPlaceName().getName(), StringUtils.isBlank(subName) ? null : subName);
+		}, List.of("maps", "Map.oos.gz"));
+
+		// Assorted Icons
+		// Damage types
+		LongStream.range(60011, 60013).forEach(iconIds::add);
+		// Floor Markers
+		LongStream.range(61241, 61248).forEach(iconIds::add);
+		// Head Markers
+		LongStream.range(60701, 60714).forEach(iconIds::add);
+
+
+		log.info("Need to download {} icons", iconIds.size());
+		// TODO: these icons are larger than they should be. Look into pngtastic to recompress them.
+		iconIds.stream()
+				.distinct()
+				.parallel()
+				.forEach(iconId -> {
+					log.trace("Icon ID: {}", iconId);
+					URI downloadPath = client.getAssetUri("ui/icon/%06d/%06d_hr1.tex".formatted((iconId / 1000) * 1000, iconId), ImageFormat.PNG);
+					File out = outputPathBase.resolve("icon").resolve("%06d_hr1.png".formatted(iconId)).toFile();
+					log.trace("Downloading icon {} to {}", downloadPath, out);
+					try (BufferedInputStream in = new BufferedInputStream(downloadPath.toURL().openStream());
+					     FileOutputStream fileOutputStream = new FileOutputStream(out)) {
+
+						byte[] dataBuffer = new byte[1024];
+						int bytesRead;
+						while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+							fileOutputStream.write(dataBuffer, 0, bytesRead);
+						}
+					}
+					catch (FileNotFoundException e) {
+						log.warn("Icon {} not found, ignoring ({})", iconId, e.toString());
+					}
+					catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				});
 	}
 
-	private <In extends XivApiObject, Out extends Serializable> void writeList(Class<In> xivApiClass, Function<In, Out> mapper, List<String> path) {
+	private <In extends XivApiObject, Out extends Serializable> void writeList(Class<In> xivApiClass, Function<In, @Nullable Out> mapper, List<String> path) {
 		log.info("Loading {}...", xivApiClass.getSimpleName());
 		XivApiPaginator<In> pager = client.getListIterator(xivApiClass);
-		List<Out> out = pager.toBufferedStream(10).parallel().map(mapper).toList();
+		List<Out> out = pager.toBufferedStream(10).parallel().map(mapper).filter(Objects::nonNull).toList();
 		log.info("Found {} entries of {}", out.size(), xivApiClass.getSimpleName());
 		Path outputPath = outputPathBase;
 		for (String pathPart : path) {

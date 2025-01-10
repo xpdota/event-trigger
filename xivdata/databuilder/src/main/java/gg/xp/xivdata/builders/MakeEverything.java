@@ -159,48 +159,48 @@ public class MakeEverything {
 		}
 	}
 
-	private void copyIconIfExists(long iconId, List<String> dest) {
-		String dirName = String.format("%06d", Math.floorDiv(iconId, 1000) * 1000);
-		String iconName = String.format("%06d_hr1.png", iconId);
-		try {
-			copyFile(List.of("ui", "icon", dirName, iconName), dest);
-		}
-		catch (Throwable t) {
-			if (t.getMessage().contains("FileNotFound")) {
-				//
-			}
-			else {
-				throw t;
-			}
-		}
-	}
+//	private void copyIconIfExists(long iconId, List<String> dest) {
+//		String dirName = String.format("%06d", Math.floorDiv(iconId, 1000) * 1000);
+//		String iconName = String.format("%06d_hr1.png", iconId);
+//		try {
+//			copyFile(List.of("ui", "icon", dirName, iconName), dest);
+//		}
+//		catch (Throwable t) {
+//			if (t.getMessage().contains("FileNotFound")) {
+//				//
+//			}
+//			else {
+//				throw t;
+//			}
+//		}
+//	}
 
-	private void extractIconRange(Collection<Long> icons) {
-		LongSummaryStatistics statusStats = icons.stream().mapToLong(Long::longValue).summaryStatistics();
-		long min = statusStats.getMin();
-		long max = statusStats.getMax();
-		extractIconRange(min, max);
-	}
-
-	private void extractIconRange(long min, long max) {
-		System.out.println("Extracting Icons");
-		long delta = max - min;
-		int partitions = 4;
-		List<Process> commands = new ArrayList<>(partitions);
-		for (long i = 0; i < partitions; i++) {
-			long thisMin = min + delta * i / partitions;
-			if (i > 0) {
-				// avoid fenceposting
-				thisMin++;
-			}
-			long thisMax = min + delta * (i + 1) / partitions;
-			Process iconsCmd = runScCmd("uihd " + thisMin + ' ' + thisMax);
-			commands.add(iconsCmd);
-		}
-		// TODO: optimize this
-		commands.forEach(MakeEverything::waitForCommand);
-		System.out.println("Done extracting icons");
-	}
+//	private void extractIconRange(Collection<Long> icons) {
+//		LongSummaryStatistics statusStats = icons.stream().mapToLong(Long::longValue).summaryStatistics();
+//		long min = statusStats.getMin();
+//		long max = statusStats.getMax();
+//		extractIconRange(min, max);
+//	}
+//
+//	private void extractIconRange(long min, long max) {
+//		System.out.println("Extracting Icons");
+//		long delta = max - min;
+//		int partitions = 4;
+//		List<Process> commands = new ArrayList<>(partitions);
+//		for (long i = 0; i < partitions; i++) {
+//			long thisMin = min + delta * i / partitions;
+//			if (i > 0) {
+//				// avoid fenceposting
+//				thisMin++;
+//			}
+//			long thisMax = min + delta * (i + 1) / partitions;
+//			Process iconsCmd = runScCmd("uihd " + thisMin + ' ' + thisMax);
+//			commands.add(iconsCmd);
+//		}
+//		// TODO: optimize this
+//		commands.forEach(MakeEverything::waitForCommand);
+//		System.out.println("Done extracting icons");
+//	}
 
 	public static void main(String[] args) {
 		if (args.length != 2) {
@@ -229,11 +229,12 @@ public class MakeEverything {
 
 		// CSV FILES
 		{
-			Process command = maker.runScCmd("rawexd Action Map Status");
-			waitForCommand(command);
-			maker.copyFileToDir(List.of("rawexd", "Action.csv"), List.of("xiv", "actions"));
-			maker.copyFileToDir(List.of("rawexd", "Map.csv"), List.of("xiv", "maps"));
-			maker.copyFileToDir(List.of("rawexd", "Status.csv"), List.of("xiv", "statuseffect"));
+//			Process command = maker.runScCmd("rawexd Action Map Status");
+//			Process command = maker.runScCmd("rawexd Map");
+//			waitForCommand(command);
+//			maker.copyFileToDir(List.of("rawexd", "Action.csv"), List.of("xiv", "actions"));
+//			maker.copyFileToDir(List.of("rawexd", "Map.csv"), List.of("xiv", "maps"));
+//			maker.copyFileToDir(List.of("rawexd", "Status.csv"), List.of("xiv", "statuseffect"));
 //			maker.copyFileToDir(List.of("rawexd", "NpcYell.csv"), List.of("xiv", "npcyell"));
 		}
 		{
@@ -243,53 +244,53 @@ public class MakeEverything {
 //			waitForCommand(command);
 //			maker.copyFileToDir(List.of("exd", "TerritoryType.csv"), List.of("xiv", "territory"));
 		}
-		List<String> iconDir = List.of("xiv", "icon");
+//		List<String> iconDir = List.of("xiv", "icon");
 		// General
-		{
-			// Damage types
-			maker.extractAndCopyIconRange(60011, 60013, iconDir);
-			// Floor Markers
-			maker.extractAndCopyIconRange(61241, 61248, iconDir);
-			// Head markers
-			maker.extractAndCopyIconRange(60701, 60714, iconDir);
-		}
+//		{
+//			// Damage types
+//			maker.extractAndCopyIconRange(60011, 60013, iconDir);
+//			// Floor Markers
+//			maker.extractAndCopyIconRange(61241, 61248, iconDir);
+//			// Head markers
+//			maker.extractAndCopyIconRange(60701, 60714, iconDir);
+//		}
 
-		// STATUS EFFECTS
-		{
-			StatusEffectLibraryImpl statusLibrary = StatusEffectLibrary.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
-			Map<Integer, StatusEffectInfo> statusCsvMap = statusLibrary.getAll();
-			List<Long> statusIcons;
-			// TODO: it looks like the way status effects work is that there is one icon for each stack value.
-			// Maximum stack amounts are defined in Status.csv. Maybe it's time to improve the CSV reading?
-			// There's also fields for whether it can be dispelled or not.
-			{
-				statusIcons = statusCsvMap.values().stream().flatMap((data) -> data.getAllIconIds().stream().filter(id -> id > 0)).distinct().toList();
-				System.out.println("Number of status effect icons: " + statusIcons.size());
-				maker.extractIconRange(statusIcons);
-				System.out.println("Copying Icons");
-				statusIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, iconDir));
-			}
-		}
-		// ACTIONS/ABILITIES
-		{
-			ActionLibraryImpl actionLibrary = ActionLibrary.readAltCsv(maker.getTargetFile("xiv", "actions", "Action.csv"));
-			Map<Integer, ActionInfo> actionCsvMap = actionLibrary.getAll();
-			List<Long> actionIcons;
-			{
-				actionIcons = actionCsvMap.values().stream().mapToLong(ActionInfo::iconId).filter(id -> id > 0).distinct().boxed().toList();
-				System.out.println("Number of action icons: " + actionIcons.size());
-				maker.extractIconRange(actionIcons);
-				System.out.println("Copying Icons");
-				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, iconDir));
-			}
-		}
+//		// STATUS EFFECTS
+//		{
+//			StatusEffectLibraryImpl statusLibrary = StatusEffectLibrary.readAltCsv(maker.getTargetFile("xiv", "statuseffect", "Status.csv"));
+//			Map<Integer, StatusEffectInfo> statusCsvMap = statusLibrary.getAll();
+//			List<Long> statusIcons;
+//			// TODO: it looks like the way status effects work is that there is one icon for each stack value.
+//			// Maximum stack amounts are defined in Status.csv. Maybe it's time to improve the CSV reading?
+//			// There's also fields for whether it can be dispelled or not.
+//			{
+//				statusIcons = statusCsvMap.values().stream().flatMap((data) -> data.getAllIconIds().stream().filter(id -> id > 0)).distinct().toList();
+//				System.out.println("Number of status effect icons: " + statusIcons.size());
+//				maker.extractIconRange(statusIcons);
+//				System.out.println("Copying Icons");
+//				statusIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, iconDir));
+//			}
+//		}
+//		// ACTIONS/ABILITIES
+//		{
+//			ActionLibraryImpl actionLibrary = ActionLibrary.readAltCsv(maker.getTargetFile("xiv", "actions", "Action.csv"));
+//			Map<Integer, ActionInfo> actionCsvMap = actionLibrary.getAll();
+//			List<Long> actionIcons;
+//			{
+//				actionIcons = actionCsvMap.values().stream().mapToLong(ActionInfo::iconId).filter(id -> id > 0).distinct().boxed().toList();
+//				System.out.println("Number of action icons: " + actionIcons.size());
+//				maker.extractIconRange(actionIcons);
+//				System.out.println("Copying Icons");
+//				actionIcons.stream().parallel().forEach(iconNumber -> maker.copyIconIfExists(iconNumber, iconDir));
+//			}
+//		}
 	}
-
-	private void extractAndCopyIconRange(int startClosed, int endClosed, List<String> dest) {
-		extractIconRange(startClosed, endClosed);
-		IntStream.rangeClosed(startClosed, endClosed).forEach(icon -> copyIconIfExists(icon, dest));
-	}
-
+//
+//	private void extractAndCopyIconRange(int startClosed, int endClosed, List<String> dest) {
+//		extractIconRange(startClosed, endClosed);
+//		IntStream.rangeClosed(startClosed, endClosed).forEach(icon -> copyIconIfExists(icon, dest));
+//	}
+//
 	private static int waitForCommand(Process command) {
 		int i;
 		try {

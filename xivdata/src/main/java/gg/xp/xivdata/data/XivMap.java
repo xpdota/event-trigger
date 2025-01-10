@@ -15,12 +15,14 @@ public class XivMap implements Serializable {
 	@Serial
 	private static final long serialVersionUID = -4708756454369252820L;
 
-	public static final XivMap UNKNOWN = new XivMap(0, 0, 100, null, "Unknown", "Unknown", "Unknown");
+	public static final XivMap UNKNOWN = new XivMap(0, 0, 0, 100, null, "Unknown", "Unknown", "Unknown");
 
 	@Deprecated // Use MapLibrary directly
 	public static XivMap forId(long id) {
 		return MapLibrary.forId(id);
 	}
+
+	private final int id;
 
 	private final int offsetX;
 	private final int offsetY;
@@ -34,7 +36,8 @@ public class XivMap implements Serializable {
 	private final @Nullable URL url;
 
 	// TODO: is "MapMarkerRange" useful?
-	public XivMap(int offsetX, int offsetY, int scaleFactor, @Nullable String filename, String region, String place, @Nullable String subPlace) {
+	public XivMap(int id, int offsetX, int offsetY, int scaleFactor, @Nullable String filename, String region, String place, @Nullable String subPlace) {
+		this.id = id;
 		this.offsetX = offsetX;
 		this.offsetY = offsetY;
 		this.scaleFactor = ((double) scaleFactor) / 100;
@@ -69,6 +72,9 @@ public class XivMap implements Serializable {
 		}
 	}
 
+	public int getId() {
+		return id;
+	}
 
 	public int getOffsetX() {
 		return offsetX;
