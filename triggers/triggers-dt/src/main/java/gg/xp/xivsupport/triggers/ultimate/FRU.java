@@ -1159,6 +1159,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> p3enrage = ModifiableCallout.durationBasedCall("P3 Enrage", "Enrage");
 
 	// TODO: add HP equalizer trigger like the one in DSR
+	// Or just a persistent boss HP widget
 
 	private final ModifiableCallout<?> p4stack = new ModifiableCallout<>("P4 Start: Stack", "Stack");
 	private final ModifiableCallout<AbilityCastStart> p4dodge = ModifiableCallout.durationBasedCall("P4 Start: Dodge", "Dodge");
@@ -1378,7 +1379,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 				s.call(crystallizeTethers);
 
 				// Wait for first stoplight
-				s.waitEvent(AbilityCastStart.class, aue -> aue.abilityIdMatches(0x9D6B));
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9D6B));
 
 				// First stoplight has just gone off at this point
 				// Aero + Long Red
