@@ -1512,8 +1512,8 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	// P5
 	private final ModifiableCallout<AbilityCastStart> fulgentBlade = ModifiableCallout.durationBasedCall("Fulgent Blade: Initial", "Raidwide");
 
-	private final ModifiableCallout<AbilityCastStart> fulgentBladeCw = ModifiableCallout.durationBasedCall("Fulgent Blade: CW");
-	private final ModifiableCallout<AbilityCastStart> fulgentBladeCcw = ModifiableCallout.durationBasedCall("Fulgent Blade: CCW");
+	private final ModifiableCallout<AbilityCastStart> fulgentBladeCw = ModifiableCallout.durationBasedCall("Fulgent Blade: CW", "Clockwise");
+	private final ModifiableCallout<AbilityCastStart> fulgentBladeCcw = ModifiableCallout.durationBasedCall("Fulgent Blade: CCW", "Counter-Clockwise");
 	private final ModifiableCallout<?> fulgentBladeCw1 = new ModifiableCallout<>("Fulgent Blade: Clockwise, Hit 1", "Move")
 			.extendedDescription("Please take note that in order to reduce spammy calls, only the first hit is called by default. The rest can be enabled below.");
 	private final ModifiableCallout<?> fulgentBladeCw2 = new ModifiableCallout<>("Fulgent Blade: Clockwise, Hit 2", "Move").disabledByDefault();
