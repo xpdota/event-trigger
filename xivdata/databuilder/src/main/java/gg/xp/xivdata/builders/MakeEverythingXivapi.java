@@ -102,7 +102,7 @@ public class MakeEverythingXivapi {
 					isConeAngleKnown = true;
 				}
 			}
-			ActionInfo ai = new ActionInfo(entry.getRowId(), entry.getName(), entry.getIcon().getId(), entry.getRecastRaw(), entry.getMaxCharges(), entry.getCategoryRaw(), entry.isPlayerAbility(), entry.getCastRaw(), entry.getCastType(), entry.getEffectRange(), entry.getXAxisModifier(), coneAngle, isConeAngleKnown);
+			ActionInfo ai = new ActionInfo(entry.getRowId(), entry.getName(), entry.getIcon().getId(), entry.getRecastRaw(), entry.getMaxCharges(), entry.getCategoryRaw(), entry.isPlayerAbility(), entry.getCastRaw(), entry.getCastType(), entry.getEffectRange(), entry.getXAxisModifier(), coneAngle, isConeAngleKnown, entry.getDescription());
 			long id = entry.getIcon().getId();
 			if (id > 0 && id != DUMMY_ACTION_ICON) {
 				log.info("Action id {} - icon {}", ai.actionid(), id);

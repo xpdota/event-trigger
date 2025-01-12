@@ -20,7 +20,8 @@ public record ActionInfo(
 		int effectRange,
 		int xAxisModifier,
 		int coneAngle,
-		boolean isConeAngleKnown
+		boolean isConeAngleKnown,
+		String description
 		) implements Serializable {
 	public @Nullable ActionIcon getIcon() {
 		return ActionLibrary.iconForInfo(this);

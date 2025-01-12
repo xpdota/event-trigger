@@ -71,6 +71,10 @@ public final class ActionTableFactory {
 							return fallback;
 						}
 					});
+					col.setMinWidth(30);
+					col.setMaxWidth(40);
+				}))
+				.addMainColumn(new CustomColumn<>("Description", ActionInfo::description, col -> {
 					col.setPreferredWidth(500);
 				}))
 				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
