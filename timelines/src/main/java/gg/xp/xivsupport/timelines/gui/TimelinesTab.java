@@ -561,6 +561,23 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 						addNewEntry(newEntry);
 					},
 					() -> currentCust != null, null).asButton();
+			JButton newSkillButton = new EasyAction("New Skill Callout",
+					() -> {
+						@Nullable TimelineEntry selectedValue = timelineModel.getSelectedValue();
+						CustomTimelineEntry newEntry = new CustomTimelineEntry();
+						if (selectedValue != null) {
+							newEntry.time = selectedValue.time();
+						}
+						actionTableFactory.showChooser(SwingUtilities.getWindowAncestor(this), action -> {
+							newEntry.name = action.name();
+							ActionIcon icon = action.getIcon();
+							if (icon != null) {
+								newEntry.icon = icon.getIconUrl();
+							}
+							newEntry.callout = true;
+							addNewEntry(newEntry);
+						});
+					}).asButton();
 			JButton newLabelButton = new EasyAction("New Label",
 					() -> {
 						@Nullable TimelineEntry selectedValue = timelineModel.getSelectedValue();
@@ -597,6 +614,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			chooseDirButton.addActionListener(l -> chooseCactbotUserDir());
 			JPanel buttonPanel = new JPanel(new WrapLayout());
 			buttonPanel.add(newButton);
+			buttonPanel.add(newSkillButton);
 			buttonPanel.add(newLabelButton);
 			buttonPanel.add(resetButton);
 			buttonPanel.add(exportCustBtn);
