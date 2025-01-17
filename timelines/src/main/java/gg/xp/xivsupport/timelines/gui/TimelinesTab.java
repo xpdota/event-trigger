@@ -9,7 +9,7 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ActionTableFactory;
-import gg.xp.xivsupport.gui.library.StatusTable;
+import gg.xp.xivsupport.gui.library.StatusTableFactory;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
@@ -40,6 +40,9 @@ import gg.xp.xivsupport.timelines.TimelineOverlay;
 import gg.xp.xivsupport.timelines.TimelineProcessor;
 import gg.xp.xivsupport.timelines.TimelineWindow;
 import gg.xp.xivsupport.timelines.TranslatedTextFileEntry;
+import gg.xp.xivsupport.timelines.icon.ActionTimelineIcon;
+import gg.xp.xivsupport.timelines.icon.StatusTimelineIcon;
+import gg.xp.xivsupport.timelines.icon.UrlTimelineIcon;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
@@ -81,6 +84,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private static final Logger log = LoggerFactory.getLogger(TimelinesTab.class);
 	private final TimelineManager backend;
 	private final ActionTableFactory actionTableFactory;
+	private final StatusTableFactory statusTableFactory;
 	private final AutoHandlerInstanceProvider ip;
 	private final CustomTableModel<TimelineInfo> timelineChooserModel;
 	private final CustomTableModel<TimelineEntry> timelineModel;
@@ -93,11 +97,13 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private TimelineCustomizations currentCust;
 	private final boolean isReplay;
 
-	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state, ActionTableFactory actionTableFactory, TimelineBarColorProviderImpl tbcp, AutoHandlerInstanceProvider ip, PicoContainer container) {
+	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state, ActionTableFactory actionTableFactory, TimelineBarColorProviderImpl tbcp, StatusTableFactory statusTableFactory, AutoHandlerInstanceProvider ip, PicoContainer container) {
 		super("Timelines");
 		// TODO: searching
+		// TODO: custom zones
 		this.backend = backend;
 		this.actionTableFactory = actionTableFactory;
+		this.statusTableFactory = statusTableFactory;
 		this.ip = ip;
 		isReplay = container.getComponent(PrimaryLogSource.class).getLogSource().isImport();
 
@@ -165,7 +171,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setPreferredWidth(timeColPrefWidth);
 				}))
 				.addColumn(new CustomColumn<>("Icon", TimelineEntry::icon, col -> {
-					col.setCellEditor(noLabelEdit(StandardColumns.urlEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.icon = value))));
+					col.setCellEditor(noLabelEdit(StandardColumns.urlEditorEmptyToNull(safeEditTimelineEntry(false,
+							(item, value) -> item.iconSpec = new UrlTimelineIcon(value)))));
 					col.setCellRenderer(new ActionAndStatusRenderer());
 					col.setMinWidth(32);
 					col.setMaxWidth(32);
@@ -570,10 +577,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 						}
 						actionTableFactory.showChooser(SwingUtilities.getWindowAncestor(this), action -> {
 							newEntry.name = action.name();
-							ActionIcon icon = action.getIcon();
-							if (icon != null) {
-								newEntry.icon = icon.getIconUrl();
-							}
+							newEntry.iconSpec = new ActionTimelineIcon(action.actionid());
 							newEntry.callout = true;
 							addNewEntry(newEntry);
 						});
@@ -886,8 +890,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private void chooseActionIcon(TimelineEntry te) {
 		stopEditing();
 		actionTableFactory.showChooser(SwingUtilities.getWindowAncestor(this), action -> this.<ActionInfo>safeEditTimelineEntry(false, (ce, actionInfo) -> {
-					ActionIcon icon = actionInfo.getIcon();
-					ce.icon = icon == null ? null : icon.getIconUrl();
+					ce.iconSpec = new ActionTimelineIcon(action.actionid());
 				}).accept(te, action)
 		);
 		commitEdit();
@@ -896,9 +899,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 	private void chooseStatusInfo(TimelineEntry te) {
 		stopEditing();
-		StatusTable.showChooser(SwingUtilities.getWindowAncestor(this), status -> this.<StatusEffectInfo>safeEditTimelineEntry(false, (ce, statusInfo) -> {
-					StatusEffectIcon icon = statusInfo.getIcon(0);
-					ce.icon = icon == null ? null : icon.getIconUrl();
+		statusTableFactory.showChooser(SwingUtilities.getWindowAncestor(this), status -> this.<StatusEffectInfo>safeEditTimelineEntry(false, (ce, statusInfo) -> {
+					ce.iconSpec = new StatusTimelineIcon(statusInfo.statusEffectId(), 0);
 				}).accept(te, status)
 		);
 		commitEdit();
