@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 public class LongListSetting extends ObservableSetting implements Resettable {
 	private final PersistenceProvider persistence;
@@ -52,6 +54,15 @@ public class LongListSetting extends ObservableSetting implements Resettable {
 		}
 		finally {
 			notifyListeners();
+		}
+	}
+
+	public void mutate(Consumer<List<Long>> mutator) {
+		List<Long> initial = get();
+		List<Long> after = new ArrayList<>(get());
+		mutator.accept(after);
+		if (!Objects.equals(initial, after)) {
+			set(after);
 		}
 	}
 

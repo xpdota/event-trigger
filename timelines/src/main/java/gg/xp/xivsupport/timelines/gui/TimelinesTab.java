@@ -78,6 +78,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ScanMe
 public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab {
@@ -114,8 +115,10 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		int timeColMinWidth = 80;
 		int timeColMaxWidth = 200;
 		int timeColPrefWidth = 80;
-		timelineChooserModel = CustomTableModel.builder(() -> TimelineManager.getTimelines().values()
-						.stream().sorted(Comparator.comparing(TimelineInfo::zoneId)).toList())
+		timelineChooserModel = CustomTableModel.builder(() -> Stream.concat(
+				TimelineManager.getTimelines().values().stream(),
+				backend.getCustomTimelines().values().stream()
+				).sorted(Comparator.comparing(TimelineInfo::zoneId)).toList())
 				.addColumn(new CustomColumn<>("En", t -> backend.getCustomSettings(t.zoneId()).enabled, col -> {
 					col.setCellRenderer(StandardColumns.checkboxRenderer);
 					StandardColumns.CustomCheckboxEditor<Object> editor = new StandardColumns.CustomCheckboxEditor<>((entry, value) -> {
@@ -549,9 +552,16 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				commitAll();
 			}).asButton();
 			enableAllButton.setMargin(new Insets(2, 4, 2, 4));
+			// TODO: zone pick
+			// TODO: delete
+			JButton addCustomButton = new EasyAction("Add New Zone", () -> {
+				backend.addCustomZone(128);
+				timelineChooserModel.fullRefresh();
+			}).asButton();
 			panel.add(selectCurrentButton);
 			panel.add(disableAllButton);
 			panel.add(enableAllButton);
+			panel.add(addCustomButton);
 			this.add(panel, c);
 			c.weighty = 0;
 			c.gridx++;
@@ -1245,10 +1255,6 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		}
 
 	}
-
-//	private TableCellEditor noLabelNoNewSyncEdit(TableCellEditor wrapped) {
-//		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel() && !item.hasEventSync());
-//	}
 
 	private static TableCellEditor noLabelEdit(TableCellEditor wrapped) {
 		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel());
