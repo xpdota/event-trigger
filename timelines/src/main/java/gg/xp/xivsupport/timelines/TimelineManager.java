@@ -24,18 +24,23 @@ import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.FileSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
+import gg.xp.xivsupport.persistence.settings.LongListSetting;
+import gg.xp.xivsupport.timelines.cbevents.CbEventType;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -70,6 +75,7 @@ public final class TimelineManager {
 	private final FileSetting cactbotUserDirSetting;
 	private final IntSetting barTimeBasis;
 	private final IntSetting barWidth;
+	private final LongListSetting customZoneIds;
 
 	private TimelineProcessor currentTimeline;
 	private XivZone zone;
@@ -86,6 +92,7 @@ public final class TimelineManager {
 		resetOnMapChange = new BooleanSetting(pers, "timeline-overlay.reset-on-map-change", false);
 		barWidth = new IntSetting(pers, "timeline-bar-width", 150, 50, 1000);
 		barTimeBasis = new IntSetting(pers, "timeline-overlay.bar-time-basis-seconds", 60, 1, 3600);
+		customZoneIds = new LongListSetting(pers, "timeline.custom.fresh-zone-ids", new long[0]);
 
 		File defaultUserDir;
 		try {
@@ -102,6 +109,7 @@ public final class TimelineManager {
 		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutPre, pers, "timeline-support.trigger-call-pre");
 		this.pers = pers;
 		new Thread(TimelineManager::ensureInit, "TimelineInitHelper").start();
+		customZoneIds.addListener(this::resetCurrentTimelineKeepSync);
 	}
 
 	private static volatile boolean init;
@@ -134,7 +142,14 @@ public final class TimelineManager {
 		return getTimeline(zoneId);
 	}
 
-	public @Nullable TimelineProcessor getTimeline(long zoneId) {
+	private @NotNull TimelineProcessor getTimelineCustom(long zoneId) {
+		// TODO: pre-fill this with some standard entries
+		TimelineCustomizations cust = getCustomSettings(zoneId);
+		InputStream dummy = new ByteArrayInputStream(new byte[0]);
+		return TimelineProcessor.of(this, dummy, cust.getEntries(), state.getPlayerJob(), LanguageReplacements.empty());
+	}
+
+	private @Nullable TimelineProcessor getTimelineReal(long zoneId) {
 		TimelineInfo info = getInfoForZone(zoneId);
 		if (info == null) {
 			log.info("No timeline info for zone {}", zoneId);
@@ -181,7 +196,17 @@ public final class TimelineManager {
 			log.error("Error loading timeline for zone {}", zoneId, e);
 			return null;
 		}
+	}
 
+	public @Nullable TimelineProcessor getTimeline(long zoneId) {
+		TimelineProcessor real = getTimelineReal(zoneId);
+		if (real != null) {
+			return real;
+		}
+		if (customZoneIds.get().contains(zoneId)) {
+			return getTimelineCustom(zoneId);
+		}
+		return null;
 	}
 
 	public List<? extends TimelineEntry> getCustomEntries(long zoneId) {
@@ -307,6 +332,43 @@ public final class TimelineManager {
 	public static Map<Long, TimelineInfo> getTimelines() {
 		ensureInit();
 		return Collections.unmodifiableMap(zoneIdToTimelineFile);
+	}
+
+	public Map<Long, TimelineInfo> getCustomTimelines() {
+		List<Long> zoneIds = customZoneIds.get();
+		if (zoneIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		Map<Long, TimelineInfo> out = new HashMap<>();
+		Map<Long, TimelineInfo> nonCustom = getTimelines();
+		for (Long zoneId : zoneIds) {
+			if (!nonCustom.containsKey(zoneId)) {
+				out.put(zoneId, new TimelineInfo(zoneId, "Custom"));
+			}
+		}
+		return out;
+	}
+
+	public boolean addCustomZone(long zoneId) {
+		// Don't allow adding if there's already a non-custom zone
+		if (getInfoForZone(zoneId) != null || customZoneIds.get().contains(zoneId)) {
+			return false;
+		}
+		boolean added = customZoneIds.mutate(l -> l.add(zoneId));
+		if (added) {
+			TimelineCustomizations custom = getCustomSettings(zoneId);
+			CustomTimelineEntry reset = new CustomTimelineEntry();
+			reset.name = "--reset--";
+			reset.time = 0.0;
+			CustomEventSyncController esc = new CustomEventSyncController(CbEventType.InCombat, Map.of("inACTCombat", new ArrayList<>(List.of("1"))));
+			reset.esc = esc;
+			custom.setEntries(List.of(reset));
+		}
+		return added;
+	}
+
+	public boolean removeCustomZone(long zoneId) {
+		return customZoneIds.mutate(l -> l.remove(zoneId));
 	}
 
 	public List<VisualTimelineEntry> getCurrentDisplayEntries() {

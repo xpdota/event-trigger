@@ -21,6 +21,7 @@ import gg.xp.xivsupport.timelines.TimelineCustomizations;
 import gg.xp.xivsupport.timelines.TimelineInfo;
 import gg.xp.xivsupport.timelines.TimelineManager;
 import gg.xp.xivsupport.timelines.TimelineProcessor;
+import gg.xp.xivsupport.timelines.icon.ActionTimelineIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,11 +106,8 @@ public class TimelineRecordingPopup extends JDialog {
 			newEntry.importSource = IMPORT_SOURCE;
 			newEntry.time = entry.time;
 			newEntry.name = entry.event.getAbility().getName();
-			ActionIcon icon = ActionLibrary.iconForId(entry.event.getAbility().getId());
 			CombatJobSelection jobSel = CombatJobSelection.all();
-			if (icon != null) {
-				newEntry.icon = icon.getIconUrl();
-			}
+			newEntry.iconSpec = new ActionTimelineIcon(entry.event.getAbility().getId());
 			Job job = entry.cd.getJob();
 			JobType jobType = entry.cd.getJobType();
 			if (job != null) {

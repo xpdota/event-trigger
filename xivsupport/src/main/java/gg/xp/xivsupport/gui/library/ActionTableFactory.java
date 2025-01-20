@@ -2,10 +2,7 @@ package gg.xp.xivsupport.gui.library;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.ActionIcon;
-import gg.xp.xivdata.data.ActionInfo;
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.HasIconURL;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.gui.map.omen.OmenShape;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -16,9 +13,7 @@ import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.util.GuiUtil;
-import gg.xp.xivsupport.persistence.Platform;
 import org.jetbrains.annotations.Nullable;
-import org.swingexplorer.internal.GuiUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -93,7 +88,7 @@ public final class ActionTableFactory {
 					}
 					return cd > 0 ? cd : "";
 				}))
-				.addMainColumn(new CustomColumn<>("Range/Shape", Function.identity(),c -> {
+				.addMainColumn(new CustomColumn<>("Range/Shape", Function.identity(), c -> {
 					c.setCellRenderer(new DefaultTableCellRenderer() {
 						@Override
 						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -110,6 +105,15 @@ public final class ActionTableFactory {
 				.addWidget(InGameAbilityPickerButton::new)
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
 				.withRightClickRepo(RightClickOptionRepo.of(
+				))
+//				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
+//					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
+//					GuiUtil.copyToClipboard(md);
+//				}))
+				.withRightClickRepo(rightClickOptionRepo.withMore(
+						CustomRightClickOption.forRow("Open on XivAPI", ActionInfo.class, ai -> {
+							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Action", ai.actionid()));
+						}),
 						CustomRightClickOption.forRow(
 								"Copy XIVAPI Icon URL",
 								ActionInfo.class,
@@ -120,15 +124,7 @@ public final class ActionTableFactory {
 								ai -> {
 									String md = String.format("![%s](%s)", ai.name(), ai.getXivapiUrl());
 									GuiUtil.copyTextToClipboard(md);
-								})))
-//				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
-//					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
-//					GuiUtil.copyToClipboard(md);
-//				}))
-				.withRightClickRepo(rightClickOptionRepo.withMore(
-						CustomRightClickOption.forRow("Open on XivAPI", ActionInfo.class, ai -> {
-							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Action", ai.actionid()));
-						})
+								})
 				))
 				.setFixedData(true)
 				.build();
