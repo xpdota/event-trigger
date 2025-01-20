@@ -53,7 +53,7 @@ public class MakeEverythingXivapi {
 		this.client = client;
 	}
 
-	public static void main(String[] args) throws Throwable {
+	public static void main(String[] args) {
 		Path outputPathBase = Path.of("src", "main", "resources", "xiv");
 		// Strongly recommended to use a local BM install rather than the live server
 		String server = System.getProperty("xivapi-server", "https://bm.xivgear.app/api/1");
@@ -72,8 +72,15 @@ public class MakeEverythingXivapi {
 		maker.writeList(TerritoryType.class, entry -> {
 			PlaceName place = entry.getPlaceName();
 			ContentFinderCondition cfc = entry.getContentFinderCondition();
-
-			return new ZoneInfo(entry.getRowId(), cfc == null ? null : cfc.getName(), place == null ? null : place.getName());
+			String placeName = place.getName();
+			String dutyName = cfc == null ? null : cfc.getName();
+			if (StringUtils.isEmpty(dutyName)) {
+				dutyName = null;
+			}
+			if (StringUtils.isEmpty(placeName)) {
+				placeName = null;
+			}
+			return new ZoneInfo(entry.getRowId(), dutyName, placeName);
 		}, List.of("territory", "TerritoryType.oos.gz"));
 
 		maker.writeList(NpcYell.class, entry -> new NpcYellInfo(entry.getRowId(), entry.getText()), List.of("npcyell", "NpcYell.oos.gz"));

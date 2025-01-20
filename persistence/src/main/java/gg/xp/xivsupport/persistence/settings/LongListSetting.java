@@ -57,13 +57,22 @@ public class LongListSetting extends ObservableSetting implements Resettable {
 		}
 	}
 
-	public void mutate(Consumer<List<Long>> mutator) {
+	/**
+	 * Modify the list according to a mutator function. The function receives a copy of the list of values, and
+	 * should modify the list in-place. If the list was changed, then the modified list will become the new values.
+	 *
+	 * @param mutator The function
+	 * @return whether any modifications were made.
+	 */
+	public boolean mutate(Consumer<List<Long>> mutator) {
 		List<Long> initial = get();
 		List<Long> after = new ArrayList<>(get());
 		mutator.accept(after);
 		if (!Objects.equals(initial, after)) {
 			set(after);
+			return true;
 		}
+		return false;
 	}
 
 	@Override

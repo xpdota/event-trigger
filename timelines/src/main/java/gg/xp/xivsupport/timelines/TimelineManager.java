@@ -25,6 +25,7 @@ import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.FileSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongListSetting;
+import gg.xp.xivsupport.timelines.cbevents.CbEventType;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -107,6 +109,7 @@ public final class TimelineManager {
 		ModifiedCalloutHandle.installHandle(timelineTriggerCalloutPre, pers, "timeline-support.trigger-call-pre");
 		this.pers = pers;
 		new Thread(TimelineManager::ensureInit, "TimelineInitHelper").start();
+		customZoneIds.addListener(this::resetCurrentTimelineKeepSync);
 	}
 
 	private static volatile boolean init;
@@ -337,14 +340,35 @@ public final class TimelineManager {
 			return Collections.emptyMap();
 		}
 		Map<Long, TimelineInfo> out = new HashMap<>();
+		Map<Long, TimelineInfo> nonCustom = getTimelines();
 		for (Long zoneId : zoneIds) {
-			out.put(zoneId, new TimelineInfo(zoneId, "Custom"));
+			if (!nonCustom.containsKey(zoneId)) {
+				out.put(zoneId, new TimelineInfo(zoneId, "Custom"));
+			}
 		}
 		return out;
 	}
 
-	public void addCustomZone(long zoneId) {
-		customZoneIds.mutate(l -> l.add(zoneId));
+	public boolean addCustomZone(long zoneId) {
+		// Don't allow adding if there's already a non-custom zone
+		if (getInfoForZone(zoneId) != null || customZoneIds.get().contains(zoneId)) {
+			return false;
+		}
+		boolean added = customZoneIds.mutate(l -> l.add(zoneId));
+		if (added) {
+			TimelineCustomizations custom = getCustomSettings(zoneId);
+			CustomTimelineEntry reset = new CustomTimelineEntry();
+			reset.name = "--reset--";
+			reset.time = 0.0;
+			CustomEventSyncController esc = new CustomEventSyncController(CbEventType.InCombat, Map.of("inACTCombat", new ArrayList<>(List.of("1"))));
+			reset.esc = esc;
+			custom.setEntries(List.of(reset));
+		}
+		return added;
+	}
+
+	public boolean removeCustomZone(long zoneId) {
+		return customZoneIds.mutate(l -> l.remove(zoneId));
 	}
 
 	public List<VisualTimelineEntry> getCurrentDisplayEntries() {
