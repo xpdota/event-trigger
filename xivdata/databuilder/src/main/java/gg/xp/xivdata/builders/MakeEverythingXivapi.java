@@ -13,6 +13,7 @@ import gg.xp.xivdata.builders.models.StatusEffect;
 import gg.xp.xivdata.builders.models.TerritoryType;
 import gg.xp.xivdata.data.*;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,11 +84,11 @@ public class MakeEverythingXivapi {
 			return new ZoneInfo(entry.getRowId(), dutyName, placeName);
 		}, List.of("territory", "TerritoryType.oos.gz"));
 
-		maker.writeList(NpcYell.class, entry -> new NpcYellInfo(entry.getRowId(), entry.getText()), List.of("npcyell", "NpcYell.oos.gz"));
+		maker.writeList(NpcYell.class, entry -> new NpcYellInfo(entry.getRowId(), intern(entry.getText())), List.of("npcyell", "NpcYell.oos.gz"));
 
 		maker.writeList(StatusEffect.class, entry -> {
 			int baseIconId = entry.getIcon().getId();
-			StatusEffectInfo statusEffectInfo = new StatusEffectInfo(entry.getRowId(), baseIconId, entry.getMaxStacks(), entry.getName(), entry.getDescription(), entry.canDispel(), entry.isPermanent(), entry.getPartyListPriority(), entry.isFcBuff());
+			StatusEffectInfo statusEffectInfo = new StatusEffectInfo(entry.getRowId(), baseIconId, entry.getMaxStacks(), intern(entry.getName()), intern(entry.getDescription()), entry.canDispel(), entry.isPermanent(), entry.getPartyListPriority(), entry.isFcBuff());
 			if (baseIconId > 0) {
 				List<Long> allIconIds = statusEffectInfo.getAllIconIds();
 				log.trace("Status id {} - icons {}", statusEffectInfo.statusEffectId(), allIconIds);
@@ -109,7 +110,7 @@ public class MakeEverythingXivapi {
 					isConeAngleKnown = true;
 				}
 			}
-			ActionInfo ai = new ActionInfo(entry.getRowId(), entry.getName(), entry.getIcon().getId(), entry.getRecastRaw(), entry.getMaxCharges(), entry.getCategoryRaw(), entry.isPlayerAbility(), entry.getCastRaw(), entry.getCastType(), entry.getEffectRange(), entry.getXAxisModifier(), coneAngle, isConeAngleKnown, entry.getDescription());
+			ActionInfo ai = new ActionInfo(entry.getRowId(), intern(entry.getName()), entry.getIcon().getId(), entry.getRecastRaw(), entry.getMaxCharges(), entry.getCategoryRaw(), entry.isPlayerAbility(), entry.getCastRaw(), entry.getCastType(), entry.getEffectRange(), entry.getXAxisModifier(), coneAngle, isConeAngleKnown, entry.getDescription());
 			long id = entry.getIcon().getId();
 			if (id > 0 && id != DUMMY_ACTION_ICON) {
 				log.info("Action id {} - icon {}", ai.actionid(), id);
@@ -120,7 +121,7 @@ public class MakeEverythingXivapi {
 
 		maker.writeList(Map.class, entry -> {
 			String subName = entry.getPlaceNameSub().getName();
-			return new XivMap(entry.getRowId(), entry.getOffsetX(), entry.getOffsetY(), entry.getSizeFactor(), blankToNull(entry.mapPath()), entry.getPlaceNameRegion().getName(), entry.getPlaceName().getName(), blankToNull(subName));
+			return new XivMap(entry.getRowId(), entry.getOffsetX(), entry.getOffsetY(), entry.getSizeFactor(), intern(blankToNull(entry.mapPath())), entry.getPlaceNameRegion().getName(), intern(entry.getPlaceName().getName()), intern(blankToNull(subName)));
 		}, List.of("maps", "Map.oos.gz"));
 
 		// Assorted Icons
@@ -174,6 +175,14 @@ public class MakeEverythingXivapi {
 			return null;
 		}
 		return str;
+	}
+
+	@Contract("!null -> !null; null -> null")
+	private static @Nullable String intern(String str) {
+		if (str != null) {
+			return str.intern();
+		}
+		return null;
 	}
 
 	private <In extends XivApiObject, Out extends Serializable> void writeList(Class<In> xivApiClass, Function<In, @Nullable Out> mapper, List<String> path) {

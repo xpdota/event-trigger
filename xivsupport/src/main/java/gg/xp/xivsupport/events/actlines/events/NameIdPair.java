@@ -10,6 +10,7 @@ public interface NameIdPair {
 
 	// TODO: this is inefficient because we should just assemble a checker once for a given input string
 	// TODO: this also doesn't belong here in the first place...
+	@Deprecated
 	default boolean matchesFilter(String filter) {
 		if (filter.startsWith("0x")) {
 			// TODO: this is also inefficient because we should just be parsing the input text
