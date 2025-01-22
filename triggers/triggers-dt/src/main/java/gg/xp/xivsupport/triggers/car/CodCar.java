@@ -417,8 +417,8 @@ public class CodCar extends AutoChildEventHandler implements FilteredEventHandle
 	@PlayerStatusCallout(value = 0x1BD, cancellable = true)
 	private final ModifiableCallout<BuffApplied> thornyVine = ModifiableCallout.durationBasedCall("Thorny Vine", "Break Tether");
 
-	private final ModifiableCallout<AbilityCastStart> lateralCore = ModifiableCallout.durationBasedCallWithOffset("Lateral-Core Phaser", "Sides then In", Duration.ofMillis(2000));
-	private final ModifiableCallout<AbilityCastStart> coreLateral = ModifiableCallout.durationBasedCallWithOffset("Core-Lateral Phaser", "In then Sides", Duration.ofMillis(2000));
+	private final ModifiableCallout<AbilityCastStart> lateralCore = ModifiableCallout.durationBasedCallWithOffset("Core-Lateral Phaser", "Sides then In", Duration.ofMillis(2000));
+	private final ModifiableCallout<AbilityCastStart> coreLateral = ModifiableCallout.durationBasedCallWithOffset("Lateral-Core Phaser", "In then Sides", Duration.ofMillis(2000));
 	private final ModifiableCallout<?> coreWithTower = new ModifiableCallout<>("Lateral-Core: Follow-Up with Tower", "In then Tower");
 	private final ModifiableCallout<?> lateralWithTower = new ModifiableCallout<>("Core-Lateral: Follow-Up with Tower", "Out and Tower");
 	private final ModifiableCallout<?> core = new ModifiableCallout<>("Lateral-Core: Follow-Up", "In");
