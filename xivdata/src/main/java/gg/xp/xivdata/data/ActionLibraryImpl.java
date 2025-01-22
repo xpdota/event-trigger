@@ -72,7 +72,7 @@ public class ActionLibraryImpl {
 	@Nullable ActionIcon iconForInfo(ActionInfo info) {
 		ActionIcon result = iconCache.computeIfAbsent(info.actionid(), missingId -> {
 			long iconId = info.iconId();
-			URL resource = ActionIcon.class.getResource(String.format("/xiv/icon/%06d_hr1.png", iconId));
+			URL resource = IconUtils.iconUrl((int) iconId);
 			if (resource == null) {
 				return NULL_MARKER;
 			}
