@@ -133,7 +133,7 @@ public class CustomPartyCdTrackerGui extends JPanel {
 		add(scroll, BorderLayout.CENTER);
 		JPanel bottomBettingsPanel = new JPanel();
 		bottomBettingsPanel.setLayout(new WrapLayout());
-		bottomBettingsPanel.add(new BooleanSettingGui(config.getScOnlyRez(), "Hide Swiftcast on BLM/RDM", true).getComponent());
+		bottomBettingsPanel.add(new BooleanSettingGui(config.getScOnlyRez(), "Hide Swiftcast on Non-Rez Casters", true).getComponent());
 		add(bottomBettingsPanel, BorderLayout.SOUTH);
 		config.addListener(model::signalNewData);
 	}
