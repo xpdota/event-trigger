@@ -227,6 +227,20 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		SwingUtilities.invokeLater(this::refresh);
 	}
 
+	// For duties such as CoD Chaotic, we don't want to reset map position/zoom on a map change, because the minimap
+	// will change during the fight.
+	private static boolean areMapsSameArea(XivMap map1, XivMap map2) {
+		if (map1 == null && map2 == null) {
+			return true;
+		}
+		if (map1 == null || map2 == null) {
+			return false;
+		}
+		return Objects.equals(map1.getRegion(), map2.getRegion())
+		       && Objects.equals(map1.getPlace(), map2.getPlace())
+		       && Objects.equals(map1.getSubPlace(), map2.getSubPlace());
+	}
+
 	private void refresh() {
 		refreshPending = false;
 //		log.info("Map refresh");
@@ -235,7 +249,9 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		if (!Objects.equals(map, mapNow)) {
 			map = mapNow;
 			setNewBackgroundImage(mapNow);
-			resetPanAndZoom();
+			if (!areMapsSameArea(map, mapNow)) {
+				resetPanAndZoom();
+			}
 		}
 		if (markers == null) {
 			markers = new EnumMap<>(FloorMarker.class);

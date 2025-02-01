@@ -29,7 +29,7 @@ public interface XivState extends SubState {
 	// Note: can be null until we've seen a 01-line
 	@Nullable XivZone getZone();
 
-	@Nullable XivMap getMap();
+	@NotNull XivMap getMap();
 
 	List<XivPlayerCharacter> getPartyList();
 

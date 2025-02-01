@@ -110,7 +110,7 @@ public class XivMap implements Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("XivMap(%s:%s:%s)", region, place, subPlace);
+		return String.format("XivMap(%s:%s:%s:%s)", region, place, subPlace, filename);
 	}
 }
 

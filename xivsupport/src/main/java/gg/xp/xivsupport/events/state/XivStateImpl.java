@@ -4,14 +4,14 @@ import gg.xp.reevent.events.CurrentTimeSource;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.Job;
-import gg.xp.xivdata.data.XivMap;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.MapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.OnlineStatus;
 import gg.xp.xivsupport.events.actlines.events.RawAddCombatantEvent;
 import gg.xp.xivsupport.events.actlines.events.RawOnlineStatusChanged;
 import gg.xp.xivsupport.events.actlines.events.RawPlayerChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.RawRemoveCombatantEvent;
+import gg.xp.xivsupport.events.actlines.events.SubMapChangeEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
 import gg.xp.xivsupport.models.CombatantType;
@@ -55,7 +55,8 @@ public class XivStateImpl implements XivState {
 	private final @Nullable CurrentTimeSource fakeTimeSource;
 
 	private XivZone zone;
-	private XivMap map = XivMap.UNKNOWN;
+	private @NotNull XivMap baseMap = XivMap.UNKNOWN;
+	private @Nullable XivMap subMap;
 	// EARLY player info before we have combatant data
 	private XivEntity playerPartial;
 	// For override
@@ -124,8 +125,13 @@ public class XivStateImpl implements XivState {
 	 * @return The current map. Very likely to be null until a map change.
 	 */
 	@Override
+	@NotNull
 	public XivMap getMap() {
-		return map;
+		XivMap sm = subMap;
+		if (sm == null) {
+			return baseMap;
+		}
+		return sm;
 	}
 
 	/**
@@ -145,7 +151,7 @@ public class XivStateImpl implements XivState {
 	 */
 	public void setMap(XivMap map) {
 		log.info("Map changed to {}", map);
-		this.map = map;
+		this.baseMap = map;
 	}
 
 	/**
@@ -241,7 +247,7 @@ public class XivStateImpl implements XivState {
 						continue;
 					}
 					if (computed.getHp().max() < primaryCombatant.getHp().max()
-							&& computed.getbNpcId() != primaryCombatant.getbNpcId()) {
+					    && computed.getbNpcId() != primaryCombatant.getbNpcId()) {
 						potentialFakes.add(otherCombatant);
 					}
 				}
@@ -533,7 +539,16 @@ public class XivStateImpl implements XivState {
 
 	@HandleEvents(order = Integer.MIN_VALUE)
 	public void mapChange(EventContext context, MapChangeEvent event) {
-		setMap(event.getMap());
+		if (!event.isSubChange()) {
+			setMap(event.getMap());
+			context.accept(new RefreshCombatantsRequest());
+		}
+	}
+
+	@HandleEvents(order = Integer.MIN_VALUE)
+	public void subMapChange(EventContext context, SubMapChangeEvent event) {
+		this.subMap = event.getMap();
+		context.accept(new MapChangeEvent(getMap(), true));
 		context.accept(new RefreshCombatantsRequest());
 	}
 

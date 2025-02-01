@@ -24,7 +24,7 @@ public class XivStateDummy implements XivState {
 
 	private XivPlayerCharacter player;
 	private XivZone zone;
-	private XivMap map;
+	private XivMap map = XivMap.UNKNOWN;
 	private List<XivPlayerCharacter> partyList = Collections.emptyList();
 	private Map<Long, XivCombatant> combatants = new HashMap<>();
 
