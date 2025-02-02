@@ -110,6 +110,7 @@ gg.xp.xivsupport.gui.themes
 gg.xp.xivsupport.gui.tree
 gg.xp.xivsupport.gui.util
 gg.xp.xivsupport.lang
+gg.xp.xivsupport.minimap
 gg.xp.xivsupport.models
 gg.xp.xivsupport.models.groupmodels
 gg.xp.xivsupport.overlays.castbar
