@@ -1039,8 +1039,10 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	So it should be possible to determine safe spot and rotation direction.
 	I'm guessing the duplicates
 	 */
-	// TODO: would be nice to prio this
-	private final ModifiableCallout<?> apocCheckStacks = new ModifiableCallout<>("Apoc: Check Stack Timers", "Check Timers").statusIcon(0x99D);
+	private final ModifiableCallout<?> apocNoStack = new ModifiableCallout<>("Apoc: No Stack", "No Stack with {buddy}");
+	private final ModifiableCallout<BuffApplied> apocHasFirstStack = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: You Have Short Stack", "Short Stack with {buddy}").statusIcon(0x99D);
+	private final ModifiableCallout<BuffApplied> apocHasSecondStack = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: You Have Medium Stack", "Medium Stack with {buddy}").statusIcon(0x99D);
+	private final ModifiableCallout<BuffApplied> apocHasThirdStack = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: You Have Long Stack", "Long Stack with {buddy}").statusIcon(0x99D);
 	private final ModifiableCallout<BuffApplied> apocStacks = ModifiableCallout.<BuffApplied>durationBasedCall("Apoc: First Stacks", "Stacks").statusIcon(0x99D);
 	private final ModifiableCallout<?> apocSpiritTakerSpread = new ModifiableCallout<>("Apoc: Spirit Taker", "Spread")
 			.extendedDescription("""
@@ -1058,7 +1060,37 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				// Collect 6 "Spell-in-Waiting: Dark Water III" debuffs
 				var stackBuffs = s.waitEventsQuickSuccession(6, BuffApplied.class, ba -> ba.buffIdMatches(0x99D));
-				s.updateCall(apocCheckStacks);
+				stackBuffs.stream().filter(ba -> ba.getTarget().isThePlayer()).findAny()
+						.ifPresentOrElse(myStack -> {
+							// Player has a stack
+							stackBuffs.stream()
+									.filter(stack -> !stack.getTarget().isThePlayer()
+									                 && stack.getInitialDuration().minus(myStack.getInitialDuration()).abs().toMillis() < 300)
+									.findAny()
+									.ifPresentOrElse(buddyStack -> {
+												s.setParam("buddy", buddyStack.getTarget());
+											},
+											() -> log.error("Could not find stack partner!"));
+							long seconds = myStack.getInitialDuration().toSeconds();
+							// Timers are 10/29/38
+							if (seconds < 15) {
+								s.updateCall(apocHasFirstStack, myStack);
+							}
+							else if (seconds < 35) {
+								s.updateCall(apocHasSecondStack, myStack);
+							}
+							else {
+								s.updateCall(apocHasThirdStack, myStack);
+							}
+						}, () -> {
+							// Player has no stack
+							state.getPartyList().stream()
+									.filter(pm -> stackBuffs.stream().noneMatch(stack -> stack.getTarget().equals(pm)))
+									.findFirst()
+									.ifPresentOrElse(player -> s.setParam("buddy", player),
+											() -> log.error("Could not find no-stack partner!"));
+							s.updateCall(apocNoStack);
+						});
 				s.waitMs(5_000);
 				stackBuffs.stream().filter(initDurLessThan(15)).findFirst().ifPresent(
 						e -> s.updateCall(apocStacks, e)
@@ -1525,7 +1557,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> fulgentBladeCcw1 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 1", "Move")
 			.extendedDescription("""
 					Please take note that in order to reduce spammy calls, only the first hit is called by default. The rest can be enabled below.
-										
+					
 					Depending on your strategy, you may not need all of these.""");
 	private final ModifiableCallout<?> fulgentBladeCcw2 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 2", "Move").disabledByDefault();
 	private final ModifiableCallout<?> fulgentBladeCcw3 = new ModifiableCallout<>("Fulgent Blade: Counter-Clockwise, Hit 3", "Move").disabledByDefault();

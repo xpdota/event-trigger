@@ -11,15 +11,13 @@ import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tabs.GroovyTab;
 import gg.xp.xivsupport.gui.util.EasyAction;
 import gg.xp.xivsupport.persistence.gui.BoundCheckbox;
+import gg.xp.xivsupport.sys.Threading;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.mutable.MutableBoolean;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SandboxScope;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,24 +34,20 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 public class GroovyPanel extends JPanel {
 
 	private static final Logger log = LoggerFactory.getLogger(GroovyPanel.class);
 	private static final Color invalidBackground = new Color(62, 27, 27);
 	// TODO: way of cancelling computation
-	private static final ExecutorService evaluator = Executors.newSingleThreadExecutor();
-	private static final ExecutorService saver = Executors.newSingleThreadExecutor();
+	// TODO: should this really only be single-threaded?
+	private static final ExecutorService evaluator = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("GroovyScriptEvaluator"));
+//	private static final ExecutorService saver = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("GroovyScriptSaver"));
 
 	private static final Font mono = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 
@@ -67,6 +61,7 @@ public class GroovyPanel extends JPanel {
 	private final BoundCheckbox startupCb;
 	private boolean suppressStartupRequest;
 
+	@Override
 	public String getName() {
 		return script.getScriptName();
 	}
@@ -384,7 +379,7 @@ public class GroovyPanel extends JPanel {
 	}
 
 	private void setResult(GroovyScriptResult resultHolder) {
-		try (var ignored = sbx.enter()){
+		try (var ignored = sbx.enter()) {
 			if (resultHolder.success()) {
 				Object result = resultHolder.result();
 				if (result == null) {

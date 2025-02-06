@@ -3,7 +3,6 @@ package gg.xp.xivsupport.groovy;
 import gg.xp.compmonitor.CompMonitor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
-import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.Alias;
 import gg.xp.reevent.scan.AutoHandlerConfig;
@@ -11,9 +10,6 @@ import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
-import gg.xp.xivsupport.events.state.XivState;
-import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
-import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.models.HitPoints;
 import gg.xp.xivsupport.models.ManaPoints;
 import gg.xp.xivsupport.models.Position;
@@ -310,7 +306,7 @@ public class GroovyManager {
 		Script script = shell.parse("""
 				"${acs.ability}; ${acs.abilityIdMatches(0x5EF8)}; ${acs.source.name}; ${acs.target.name}"
 				new SpecificAutoMarkRequest(acs.target, MarkerSign.CROSS)
-								""");
+				""");
 		script.getBinding().setVariable("acs", acs);
 		// Uncomment and drop breakpoint on the log.info line to get a stack trace halfway through the script
 //		new Thread(() -> {
@@ -322,9 +318,7 @@ public class GroovyManager {
 //			}
 //			log.info("Slept");
 //		}).start();
-		try (SandboxScope ignored = getSandbox().enter()) {
-			script.run();
-		}
+		getSandbox().run(script::run);
 	}
 
 	public GroovySandbox getSandbox() {
