@@ -98,7 +98,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(500670, "Stack", "Stack (2.7)"),
 				call(507080, "Raidwide", "Raidwide (4.7)"),
 				call(515215, "Tankbuster on Chachajire Titijire", "Tankbuster on Chachajire Titijire (4.7)"),
-				call(538265, "Check Timers", "Check Timers"),
+				call(538265, "Long Stack with Harone Sudune", "Long Stack with Harone Sudune (38.0)"),
 				call(543296, "Stacks", "Stacks (5.0)"),
 				call(548338, "Spread", "Spread"),
 				call(550253, "Spread Northeast, Southwest", "Spread Northeast, Southwest"),
