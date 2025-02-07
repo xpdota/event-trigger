@@ -1085,6 +1085,7 @@ public class FRU extends AutoChildEventHandler implements FilteredEventHandler {
 						}, () -> {
 							// Player has no stack
 							state.getPartyList().stream()
+									.filter(pm -> !pm.isThePlayer())
 									.filter(pm -> stackBuffs.stream().noneMatch(stack -> stack.getTarget().equals(pm)))
 									.findFirst()
 									.ifPresentOrElse(player -> s.setParam("buddy", player),
