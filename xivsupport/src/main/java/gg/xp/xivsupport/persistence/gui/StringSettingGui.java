@@ -38,7 +38,7 @@ public class StringSettingGui {
 
 			@Override
 			public Color getDisabledTextColor() {
-				Color defaultColor = super.getForeground();
+				Color defaultColor = super.getDisabledTextColor();
 				if (setting.isSet()) {
 					return ColorUtils.modifiedSettingColor(defaultColor);
 				}
