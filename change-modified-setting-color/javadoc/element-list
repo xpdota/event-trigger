@@ -20,7 +20,6 @@ gg.xp.telestosupport.gui
 gg.xp.telestosupport.rightclicks
 gg.xp.telestosupport.subscriber
 gg.xp.util
-gg.xp.xivdata
 gg.xp.xivdata.data
 gg.xp.xivdata.data.duties
 gg.xp.xivdata.data.rsv
@@ -111,6 +110,7 @@ gg.xp.xivsupport.gui.themes
 gg.xp.xivsupport.gui.tree
 gg.xp.xivsupport.gui.util
 gg.xp.xivsupport.lang
+gg.xp.xivsupport.minimap
 gg.xp.xivsupport.models
 gg.xp.xivsupport.models.groupmodels
 gg.xp.xivsupport.overlays.castbar
@@ -127,9 +127,12 @@ gg.xp.xivsupport.sys
 gg.xp.xivsupport.timelines
 gg.xp.xivsupport.timelines.cbevents
 gg.xp.xivsupport.timelines.gui
+gg.xp.xivsupport.timelines.icon
 gg.xp.xivsupport.timelines.intl
 gg.xp.xivsupport.triggers.Arcadion
+gg.xp.xivsupport.triggers.car
 gg.xp.xivsupport.triggers.dtex
+gg.xp.xivsupport.triggers.ultimate
 gg.xp.xivsupport.util
 org.jenkinsci.plugins.scriptsecurity.sandbox
 org.jenkinsci.plugins.scriptsecurity.sandbox.groovy
