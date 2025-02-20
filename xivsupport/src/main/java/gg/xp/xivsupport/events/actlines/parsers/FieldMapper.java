@@ -54,7 +54,7 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public @Nullable Long getOptionalHex(K key) {
 		String rawStr = raw.get(key);
-		if (rawStr.isEmpty()) {
+		if (rawStr == null || rawStr.isEmpty()) {
 			return null;
 		}
 		return Long.parseLong(rawStr, 16);
@@ -62,7 +62,7 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public @Nullable Long getOptionalLong(K key) {
 		String rawStr = raw.get(key);
-		if (rawStr.isEmpty()) {
+		if (rawStr == null || rawStr.isEmpty()) {
 			return null;
 		}
 		return Long.parseLong(rawStr, 10);
@@ -70,10 +70,18 @@ public class FieldMapper<K extends Enum<K>> {
 
 	public @Nullable Double getOptionalDouble(K key) {
 		String rawStr = raw.get(key);
-		if (rawStr.isEmpty()) {
+		if (rawStr == null || rawStr.isEmpty()) {
 			return null;
 		}
 		return Double.parseDouble(rawStr);
+	}
+
+	public @Nullable XivCombatant getOptionalEntity(K key) {
+		Long idMaybe = getOptionalHex(key);
+		if (idMaybe == null) {
+			return null;
+		}
+		return getEntity(idMaybe);
 	}
 
 	public int fieldCount() {
@@ -302,4 +310,5 @@ public class FieldMapper<K extends Enum<K>> {
 	public void flushStateOverrides() {
 		state.flushProvidedValues();
 	}
+
 }

@@ -46,23 +46,38 @@ public class CastFinishedOmen implements OmenInstance {
 
 	@Override
 	public @Nullable Position omenPosition(Function<XivCombatant, Position> freshPosLookup) {
-		// TODO: this logic still misses some extreme edge cases, where a cast is targeted but
-		// still whiffs the target.
-		Position sourcePosSnapshot = source().getPos();
-		DescribesCastLocation<?> locInfo = aue.getLocationInfo();
-		if (locInfo == null) {
-			locInfo = preCast.getLocationInfo();
+		// Logic: use a priority:
+		// 1. Snapshot location
+		// 2. Cast location
+		// 3. Snapshot angle (+ animation target)
+		// 4. Cast angle
+		// 5. Caster position at time of snapshot
+		DescribesCastLocation<?> snapLoc = aue.getLocationInfo();
+		DescribesCastLocation<?> castLoc = preCast.getLocationInfo();
+		// 1. Snapshot location
+		if (snapLoc != null && snapLoc.getPos() != null) {
+			return snapLoc.getPos();
 		}
-		if (locInfo != null) {
-			Position pos = locInfo.getPos();
+		// 2. Cast location
+		if (castLoc != null && castLoc.getPos() != null) {
+			return castLoc.getPos();
+		}
+		Position sourcePosSnapshot = source().getPos();
+		DescribesCastLocation<?> bestLoc = snapLoc != null ? snapLoc : castLoc;
+		if (bestLoc != null) {
+			Position pos = bestLoc.getPos();
 			if (pos != null) {
 				return pos;
 			}
-			Double heading = locInfo.getHeadingOnly();
-			if (heading != null && sourcePosSnapshot != null) {
-				return sourcePosSnapshot.facing(heading);
+			// 3. Snapshot angle (+ animation target)
+			// 4. Cast angle
+			Double heading = bestLoc.getHeadingOnly();
+			Position basis = bestLoc.getAnimationTarget().getPos();
+			if (heading != null && basis != null) {
+				return basis.facing(heading);
 			}
 		}
+		// 5. Caster position at time of snapshot
 		if (info.type().locationType() == OmenLocationType.CASTER) {
 			return sourcePosSnapshot;
 		}
@@ -75,7 +90,11 @@ public class CastFinishedOmen implements OmenInstance {
 			if (sourcePosSnapshot == null) {
 				return null;
 			}
-			return sourcePosSnapshot.facing(aue.getTarget().getPos());
+			Position faceTowards = aue.getTarget().getPos();
+			if (faceTowards != null) {
+				return sourcePosSnapshot.facing(faceTowards);
+			}
+			return null;
 		}
 		else {
 			return aue.getTarget().getPos();

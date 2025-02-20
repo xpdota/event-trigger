@@ -1,6 +1,7 @@
 package gg.xp.telestosupport.rightclicks;
 
 import gg.xp.reevent.events.EventMaster;
+import gg.xp.reevent.scan.LiveOnly;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.telestosupport.doodle.CircleDoodleSpec;
 import gg.xp.telestosupport.doodle.CoordSystem;
@@ -18,6 +19,7 @@ import gg.xp.xivsupport.models.XivEntity;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
+import gg.xp.xivsupport.sys.PrimaryLogSource;
 
 import java.awt.*;
 
@@ -25,15 +27,17 @@ import java.awt.*;
 public class TelestoRightClickOptions {
 
 	private final BooleanSetting enableExtraOptions;
+	private final PrimaryLogSource pls;
 
-	public TelestoRightClickOptions(RightClickOptionRepo repo, EventMaster master, PersistenceProvider pers, XivState state, DoodleProcessor dp) {
+	public TelestoRightClickOptions(RightClickOptionRepo repo, EventMaster master, PersistenceProvider pers, XivState state, DoodleProcessor dp, PrimaryLogSource pls) {
 		this.enableExtraOptions = new BooleanSetting(pers, "telesto-support.right-click-options.enabled", false);
+		this.pls = pls;
 		BooleanSetting enableDoodles = dp.enableDoodles();
 		// TODO: these should also only enable if doodles are enabled
 		repo.addOption(CustomRightClickOption.forRow("Mark with Circle",
 				XivPlayerCharacter.class,
 				xpc -> master.pushEvent(new SpecificAutoMarkRequest(xpc, MarkerSign.CIRCLE)),
-				ignored -> enableExtraOptions.get()));
+				ignored -> extraOptionsEnabled()));
 		repo.addOption(CustomRightClickOption.forRow("Draw Circle on Entity",
 				XivEntity.class,
 				xe -> {
@@ -41,7 +45,7 @@ public class TelestoRightClickOptions {
 					spec.color = new Color(255, 0, 255, 192);
 					master.pushEvent(new CreateDoodleRequest(spec));
 				},
-				ignored -> enableExtraOptions.get() && enableDoodles.get()));
+				ignored -> extraOptionsEnabled() && enableDoodles.get()));
 		repo.addOption(CustomRightClickOption.forRow("Draw Line to Entity",
 				XivEntity.class,
 				xe -> {
@@ -49,7 +53,11 @@ public class TelestoRightClickOptions {
 					spec.color = new Color(255, 0, 255, 192);
 					master.pushEvent(new CreateDoodleRequest(spec));
 				},
-				ignored -> enableExtraOptions.get() && enableDoodles.get()));
+				ignored -> extraOptionsEnabled() && enableDoodles.get()));
+	}
+
+	private boolean extraOptionsEnabled() {
+		return pls.getLogSource().isLive() && enableExtraOptions.get();
 	}
 
 	public BooleanSetting getEnableExtraOptions() {

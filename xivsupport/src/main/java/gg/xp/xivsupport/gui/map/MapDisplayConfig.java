@@ -13,14 +13,18 @@ public class MapDisplayConfig {
 	private final BooleanSetting castBars;
 	private final BooleanSetting hpBars;
 	private final BooleanSetting ids;
+	private final BooleanSetting tethers;
+	private final BooleanSetting hitboxes;
 
 	public MapDisplayConfig(PersistenceProvider pers) {
 		String settingBase = "map-display-config.";
 		nameDisplayMode = new EnumSetting<>(pers, settingBase + "name-display-mode", NameDisplayMode.class, NameDisplayMode.FULL);
-		omenDisplayMode = new EnumSetting<>(pers, settingBase + "omen-display-mode", OmenDisplayMode.class, OmenDisplayMode.SELECTED_ONLY);
+		omenDisplayMode = new EnumSetting<>(pers, settingBase + "omen-display-mode", OmenDisplayMode.class, OmenDisplayMode.ENEMIES_ONLY);
 		castBars = new BooleanSetting(pers, settingBase + "display-cast-bars", true);
 		hpBars = new BooleanSetting(pers, settingBase + "display-hp-bars", true);
 		ids = new BooleanSetting(pers, settingBase + "display-ids", true);
+		tethers = new BooleanSetting(pers, settingBase + "display-tethers", true);
+		hitboxes = new BooleanSetting(pers, settingBase + "display-hitboxes", true);
 	}
 
 	public EnumSetting<NameDisplayMode> getNameDisplayMode() {
@@ -41,5 +45,13 @@ public class MapDisplayConfig {
 
 	public BooleanSetting getIds() {
 		return ids;
+	}
+
+	public BooleanSetting getTethers() {
+		return tethers;
+	}
+
+	public BooleanSetting getDisplayHitboxes() {
+		return hitboxes;
 	}
 }

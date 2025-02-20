@@ -2,6 +2,7 @@ package gg.xp.xivsupport.gui.overlay;
 
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
+import gg.xp.compmonitor.CompMonitor;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
@@ -19,14 +20,15 @@ import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class OverlayMain {
 
 	private static final Logger log = LoggerFactory.getLogger(OverlayMain.class);
 	private final BooleanSetting show;
 	private final BooleanSetting forceShow;
-	private final PicoContainer container;
 	private final EventMaster master;
+	private final CompMonitor cm;
 
 	@HandleEvents
 	public void commands(DebugCommand dbg) {
@@ -72,18 +74,20 @@ public final class OverlayMain {
 		recalc();
 	}
 
+	// CoWAList so that we don't have to worry about weird instantiation race conditions
+	private final List<XivOverlay> overlays = new CopyOnWriteArrayList<>();
 	private boolean windowActive;
 	private boolean editing;
 	private boolean cutscene;
 	private boolean inCombat;
 	private final boolean isWindows;
 
-	public OverlayMain(PicoContainer container, OverlayConfig config, EventMaster master) {
+	public OverlayMain(OverlayConfig config, EventMaster master, CompMonitor cm) {
 		this.master = master;
+		this.cm = cm;
 		isWindows = Platform.isWindows();
 		show = config.getShow();
 		forceShow = config.getForceShow();
-		this.container = container;
 	}
 
 	@HandleEvents
@@ -93,8 +97,13 @@ public final class OverlayMain {
 			show.addListener(this::recalc);
 			forceShow.addListener(this::recalc);
 
-			List<XivOverlay> overlays = container.getComponents(XivOverlay.class);
-			overlays.forEach(this::addOverlay);
+
+			cm.addAndRunListener(ic -> {
+				var comp = ic.instance();
+				if (comp instanceof XivOverlay overlay) {
+					this.addOverlay(overlay);
+				}
+			});
 
 			setEditing(false);
 			new RefreshLoop<>("OverlayStateCheck", this, om -> {
@@ -105,6 +114,7 @@ public final class OverlayMain {
 				}
 			}, om -> 200L).start();
 			try {
+				// Wait for EDT queue to drain
 				SwingUtilities.invokeAndWait(() -> {});
 			}
 			catch (InterruptedException | InvocationTargetException e) {
@@ -181,8 +191,6 @@ public final class OverlayMain {
 			}
 		});
 	}
-
-	private final List<XivOverlay> overlays = new ArrayList<>();
 
 	public List<XivOverlay> getOverlays() {
 		return new ArrayList<>(overlays);

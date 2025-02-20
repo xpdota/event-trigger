@@ -34,6 +34,11 @@ public class AutoScan {
 	private final AutoHandlerInstanceProvider instanceProvider;
 	private final AutoHandlerConfig config;
 	private static final Pattern jarFileName = Pattern.compile("([a-zA-Z0-9\\-.]+)\\.jar");
+	private static final Pattern targetDirName = Pattern.compile("/([a-zA-Z0-9\\-.]+)/target/classes/?");
+	/**
+	 * List of jar file names to not scan. If running in an IDE, this will also match the /(module name)/target/classes/
+	 * directory.
+	 */
 	private static final List<String> scanBlacklist = List.of(
 			"annotations",
 			"caffeine",
@@ -56,6 +61,7 @@ public class AutoScan {
 			"xivdata"
 	);
 	private volatile boolean scanned;
+	private volatile List<InitException> initFailures;
 	private final Object scanLock = new Object();
 
 	public AutoScan(AutoHandlerInstanceProvider instanceProvider, AutoHandlerConfig config) {
@@ -103,31 +109,31 @@ public class AutoScan {
 		ClassLoader[] loaders = {Thread.currentThread().getContextClassLoader(), newClassLoader};
 		final Set<Method> annotatedMethods = ConcurrentHashMap.newKeySet();
 		final Set<Class<?>> annotatedClasses = ConcurrentHashMap.newKeySet();
-		final Map<String, Throwable> failedModules = new ConcurrentHashMap<>();
+		final List<InitException> failures = new ArrayList<>();
 		// TODO: make these changes in the Groovy side too
 		urls.parallelStream().forEach(url -> {
 			log.info("URL: '{}'", url);
+			final Set<Method> thisAnnotatedMethods;
+			final Set<Class<?>> thisAnnotatedClasses;
 			Reflections reflections = new Reflections(
 					new ConfigurationBuilder()
 							.setUrls(Collections.singletonList(url))
 							.setParallel(true)
 							.setScanners(Scanners.TypesAnnotated, MethodsAnnotated, SubTypes));
 			try {
-				annotatedMethods.addAll(reflections.get(MethodsAnnotated.with(HandleEvents.class).as(Method.class, loaders)));
-				annotatedClasses.addAll(reflections.get(Scanners.TypesAnnotated.with(ScanMe.class).asClass(loaders)));
+				thisAnnotatedMethods = reflections.get(MethodsAnnotated.with(HandleEvents.class).as(Method.class, loaders));
+				thisAnnotatedClasses = reflections.get(Scanners.TypesAnnotated.with(ScanMe.class).asClass(loaders));
 			}
 			catch (Throwable t) {
-				String jarName = getJarName(url.toString());
-				failedModules.put(jarName, new RuntimeException("Module " + jarName + " failed to load: " + t, t));
+				JarLoadException e = new JarLoadException(url, t);
+				log.error("Load failure!", e);
+				failures.add(e);
+				return;
 			}
+			// Only add if nothing went wrong
+			annotatedMethods.addAll(thisAnnotatedMethods);
+			annotatedClasses.addAll(thisAnnotatedClasses);
 		});
-		if (!failedModules.isEmpty()) {
-			StringBuilder sb = new StringBuilder("One or more modules failed to load. If this problem persists, try deleting them: \n");
-			failedModules.keySet().forEach(jarName -> sb.append("  - ").append(jarName));
-			RuntimeException combined = new RuntimeException(sb.toString());
-			failedModules.values().forEach(combined::addSuppressed);
-			throw combined;
-		}
 		log.info("Scan done, setting up topology now");
 		Reflections reflections = new Reflections(
 				new ConfigurationBuilder()
@@ -173,9 +179,25 @@ public class AutoScan {
 		log.info("Loading instances");
 		// Preload class instances
 		classMethodMap.keySet().forEach(instanceProvider::preAdd);
-		classMethodMap.keySet().forEach(instanceProvider::getInstance);
+		classMethodMap.keySet().forEach(clazz -> {
+			try {
+				instanceProvider.getInstance(clazz);
+			}
+			catch (Throwable t) {
+				InstantiationFailureException e = new InstantiationFailureException(clazz, t);
+				log.error("Instantiation failure!", e);
+				failures.add(e);
+			}
+		});
 		log.info("Loaded instances");
 		scanned = true;
+		config.setScanned();
+		initFailures = failures;
+		if (config.isStrict()) {
+			if (!failures.isEmpty()) {
+				throw new CombinedInitFailuresException(failures);
+			}
+		}
 	}
 
 	// Filter out interfaces, abstract classes, and other junk
@@ -183,13 +205,21 @@ public class AutoScan {
 		return !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnonymousClass() && (clazz.getDeclaringClass() == null);
 	}
 
-	private static @Nullable String getJarName(String uriStr) {
+	static @Nullable String getJarName(String uriStr) {
 		Matcher matcher = jarFileName.matcher(uriStr);
 		if (matcher.find()) {
 			return matcher.group(1);
 		}
 		else {
-			return null;
+			Matcher tgtMatcher = targetDirName.matcher(uriStr);
+			if (tgtMatcher.find()) {
+				return tgtMatcher.group(1);
+			}
 		}
+		return null;
+	}
+
+	public List<InitException> getFailures() {
+		return Collections.unmodifiableList(initFailures);
 	}
 }

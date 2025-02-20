@@ -44,6 +44,7 @@ public class Line263Parser extends AbstractACTLineParser<Line263Parser.Fields> {
 		if (match == null) {
 			return null;
 		}
+		// Logic: Ignore the position info if there is a real target for the cast, since we know that it is unit targeted in that case.
 		if ((match.getTarget().isEnvironment()
 		     || match.getTarget().equals(match.getSource()))
 		    && match.getSource().getId() == entity

@@ -17,14 +17,25 @@ public class PicoBasedInstanceProvider implements AutoHandlerInstanceProvider {
 
 	@Override
 	public <X> X getInstance(Class<X> clazz) {
-		X instance = pico.getComponent(clazz);
+		X instance;
+		try {
+			instance = pico.getComponent(clazz);
+		} catch (Throwable t) {
+			pico.removeComponent(clazz);
+			throw t;
+		}
 		if (instance == null) {
 			synchronized (lock) {
 				instance = pico.getComponent(clazz);
 				if (instance == null) {
 					log.debug("Adding component {}", clazz);
 					pico.addComponent(clazz);
-					instance = pico.getComponent(clazz);
+					try {
+						instance = pico.getComponent(clazz);
+					} catch (Throwable t) {
+						pico.removeComponent(clazz);
+						throw t;
+					}
 				}
 			}
 		}
@@ -36,7 +47,8 @@ public class PicoBasedInstanceProvider implements AutoHandlerInstanceProvider {
 		// TODO: find a better way of doing this
 		try {
 			pico.addComponent(clazz);
-		} catch (PicoCompositionException e) {
+		}
+		catch (PicoCompositionException e) {
 			if (!e.getMessage().contains("Duplicate")) {
 				throw e;
 			}

@@ -32,7 +32,7 @@ public class Line271Parser extends AbstractACTLineParser<Line271Parser.Fields> {
 						fields.getDouble(Fields.x),
 						fields.getDouble(Fields.y),
 						fields.getDouble(Fields.z),
-						fields.getDouble(Fields.heading)));
+						fields.getDouble(Fields.heading)), true);
 		return null;
 	}
 }

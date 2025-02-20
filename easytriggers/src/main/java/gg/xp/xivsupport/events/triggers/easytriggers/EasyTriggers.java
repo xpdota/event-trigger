@@ -43,6 +43,7 @@ import gg.xp.xivsupport.events.actlines.events.actorcontrol.VictoryEvent;
 import gg.xp.xivsupport.events.misc.NpcYellEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullEndedEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
+import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.CountdownCanceledEvent;
 import gg.xp.xivsupport.events.state.combatstate.CountdownStartedEvent;
@@ -77,6 +78,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.LogLineRegexFilt
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.NpcYellIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.OrFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.PlayerHasStatusFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.PullDurationFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.RefireFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityNpcIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourceEntityTypeFilter;
@@ -162,6 +164,7 @@ public final class EasyTriggers {
 				.postConstruct(this::doLegacyMigration)
 				.build();
 		setting.tryRecoverFailures();
+		// TODO: Having lots of EasyTriggers can inflate startup times
 		this.triggers = new ArrayList<>(setting.getItems());
 		recalc();
 	}
@@ -459,8 +462,9 @@ public final class EasyTriggers {
 			new ConditionDescription<>(HitSeverityFilter.class, HasEffects.class, "Hit Severity (Crit/Direct Hit)", HitSeverityFilter::new, this::generic),
 			new ConditionDescription<>(TargetabilityChangeFilter.class, TargetabilityUpdate.class, "Combatant becomes (un)targetable", TargetabilityChangeFilter::new, this::generic),
 			new ConditionDescription<>(NpcYellIdFilter.class, NpcYellEvent.class, "NPC Yell ID", NpcYellIdFilter::new, this::generic),
-			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), (a, b) -> new GroovyFilterEditor<>(a, b)),
-			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic)
+			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), GroovyFilterEditor::new),
+			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic),
+			new ConditionDescription<>(PullDurationFilter.class, Object.class, "Restrict based on pull/combat duration", () -> new PullDurationFilter(inject(PullTracker.class)), this::generic)
 	));
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!

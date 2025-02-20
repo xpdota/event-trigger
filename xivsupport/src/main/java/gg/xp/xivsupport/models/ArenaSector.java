@@ -148,8 +148,9 @@ public enum ArenaSector implements HasFriendlyName {
 	/**
 	 * Like {@link #tryCombineTwoQuadrants(List)} (List)}, but returns a list. If they were combined, the list will
 	 * contain the single combined instance. Otherwise, returns the original input.
+	 *
 	 * @param quadrants The quadrants to combine.
-	 * @return          The original input if no combination possible, otherwise the combination.
+	 * @return The original input if no combination possible, otherwise the combination.
 	 */
 	public static List<ArenaSector> tryMergeQuadrants(List<ArenaSector> quadrants) {
 		ArenaSector combined = tryCombineTwoQuadrants(quadrants);
@@ -210,6 +211,8 @@ public enum ArenaSector implements HasFriendlyName {
 	 * while negative indicates CCW.
 	 * <p>
 	 * e.g. NORTHEAST.eightsTo(WEST) == -3, because the shortest path from northeast to west is CCW.
+	 * <p>
+	 * If the locations being compared are directly opposite (e.g. this==EAST and other==WEST), returns 4 (never -4).
 	 *
 	 * @param other The sector to compare to.
 	 * @return The eighth-turns to get to that sector from this.
@@ -270,4 +273,23 @@ public enum ArenaSector implements HasFriendlyName {
 		return ordinal <= 7 && ordinal % 2 == 1;
 	}
 
+	/**
+	 * @return The facing angle for this position
+	 * @throws IllegalArgumentException if this position is not a cardinal or intercard
+	 */
+	public double facingAngle() {
+		if (!isOutside()) {
+			throw new IllegalArgumentException("Can only call facingAngle() on compass directions, but got " + this);
+		}
+		return Math.PI - (ordinal() * Math.PI / 4);
+	}
+
+	/**
+	 * Sort starting north and going CCW
+	 */
+	public static final Comparator<ArenaSector> northCcwSort = Comparator.comparing(sector -> {
+		// Ordinal is north==0, NE==1, etc, i.e. the opposite of what we want
+		// By doing this, we flip the order (north = 8, NE = 7, NW = 1), and then %8 to get north back to 0
+		return (8 - sector.ordinal()) % 8;
+	});
 }

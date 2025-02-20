@@ -3,9 +3,11 @@ package gg.xp.xivsupport.gui.library;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
+import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
+import gg.xp.xivsupport.gui.util.GuiUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -39,8 +41,13 @@ public final class NpcYellTableFactory {
 					col.setPreferredWidth(200);
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Text/ID", item -> (long) item.id(), NpcYellInfo::text, t))
+				.addWidget(tbl -> JumpToIdWidget.create(tbl, nyi -> (long) nyi.id()))
 				// TODO: ability to create easy trigger from library
-				.withRightClickRepo(rightClicks)
+				.withRightClickRepo(rightClicks.withMore(
+						CustomRightClickOption.forRow("Open on XivAPI", NpcYellInfo.class, nyi -> {
+							GuiUtil.openUrl(XivApiUtils.singleItemUrl("NpcYell", nyi.id()));
+						})
+				))
 				.setFixedData(true)
 				.build();
 	}

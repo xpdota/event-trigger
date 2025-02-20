@@ -14,6 +14,7 @@ public class NpcYellEvent extends BaseEvent implements HasSourceEntity, HasPrima
 	private final XivCombatant source;
 	private final NpcYellInfo yell;
 
+	// TODO: integrate RSV here
 	public NpcYellEvent(XivCombatant source, NpcYellInfo yell) {
 		this.source = source;
 		this.yell = yell;

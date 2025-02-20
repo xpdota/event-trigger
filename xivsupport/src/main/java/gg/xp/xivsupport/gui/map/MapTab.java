@@ -9,6 +9,7 @@ import gg.xp.xivsupport.events.actlines.events.XivBuffsUpdatedEvent;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
+import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.EventEntityFilter;
@@ -41,13 +42,13 @@ public class MapTab extends JPanel {
 	private final JSplitPane split;
 	private volatile boolean selectionRefreshPending;
 
-	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config, MapDisplayConfig mapDisplayConfig) {
+	public MapTab(GroovyManager mgr, MapDataController mdc, MapConfig config, MapDisplayConfig mapDisplayConfig, MapColorSettings mcs, RightClickOptionRepo rc) {
 //		super("Map");
 		super(new BorderLayout());
 		split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		split.setOneTouchExpandable(true);
 		this.mapDataController = mdc;
-		this.mapPanel = new MapPanel(mdc, mapDisplayConfig);
+		this.mapPanel = new MapPanel(mdc, mapDisplayConfig, mcs);
 //		setPreferredSize(getMaximumSize());
 //		setLayout(new BorderLayout());
 		split.setRightComponent(mapPanel);
@@ -67,6 +68,7 @@ public class MapTab extends JPanel {
 //				.addMainColumn(StandardColumns.mpColumn)
 //				.addMainColumn(StandardColumns.posColumn)
 				.apply(GroovyColumns::addDetailColumns)
+				.withRightClickRepo(rc)
 				.setSelectionEquivalence((a, b) -> a.getId() == b.getId())
 				.addFilter(EventEntityFilter::selfFilter)
 				.addFilter(NonCombatEntityFilter::new)
@@ -154,6 +156,9 @@ public class MapTab extends JPanel {
 		double before = split.getResizeWeight();
 		split.setResizeWeight(0);
 		configPanel.setVisible(!configPanel.isVisible());
-		SwingUtilities.invokeLater(() -> split.setResizeWeight(before));
+		this.revalidate();
+		SwingUtilities.invokeLater(() -> {
+			split.setResizeWeight(before);
+		});
 	}
 }

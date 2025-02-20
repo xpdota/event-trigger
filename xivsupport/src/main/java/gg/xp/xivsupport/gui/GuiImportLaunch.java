@@ -111,7 +111,8 @@ public final class GuiImportLaunch {
 				}
 				importFflogsButton.setEnabled(true);
 				return result;
-			}, locator::setValue, "Paste your FFLogs URL here");
+			}, locator::setValue, "");
+			fflogsUrlField.setPlaceholderText("Paste your FFLogs URL here");
 			ActionListener fflogsAction = l -> {
 				FflogsReportLocator fight = locator.getValue();
 				if (!fight.fightSpecified()) {

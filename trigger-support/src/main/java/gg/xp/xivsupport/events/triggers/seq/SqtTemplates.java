@@ -7,6 +7,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.misc.pulls.PullStartedEvent;
+import org.apache.commons.lang3.function.TriConsumer;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,6 +118,26 @@ public final class SqtTemplates {
 		};
 	}
 
+	public static <X> SequentialTrigger<BaseEvent> selfManagedMultiInvocation(
+			int timeoutMs,
+			Class<X> startType,
+			Predicate<X> startCondition,
+			TriConsumer<X, SequentialTriggerController<BaseEvent>, Integer> trigger) {
+		MutableInt mint = new MutableInt();
+		BiConsumer<X, SequentialTriggerController<BaseEvent>> combined = (e1, s) -> {
+			int index = mint.getAndIncrement();
+			trigger.accept(e1, s, index);
+		};
+		return new AutoWipeSequentialTrigger<>(timeoutMs, startType, startCondition, combined) {
+			@Override
+			void reset() {
+				super.reset();
+				mint.setValue(0);
+			}
+		};
+
+	}
+
 	/**
 	 * Trigger template for when you want one call at the start of a cast bar, then
 	 * another call at the end of the cast bar.
@@ -141,8 +162,12 @@ public final class SqtTemplates {
 				});
 	}
 
+	/**
+	 * @return A no-op trigger.
+	 */
 	public static SequentialTrigger<BaseEvent> nothing() {
-		return sq(10_000, BaseEvent.class, be -> false, (e1, s) -> {});
+		return sq(10_000, BaseEvent.class, be -> false, (e1, s) -> {
+		});
 	}
 
 	private static class AutoWipeSequentialTrigger<X> extends SequentialTrigger<BaseEvent> {
@@ -161,7 +186,7 @@ public final class SqtTemplates {
 		}
 
 		void reset() {
-			forceExpire();
+			stopSilently();
 		}
 
 	}

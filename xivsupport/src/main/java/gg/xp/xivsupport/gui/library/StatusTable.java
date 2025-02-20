@@ -19,10 +19,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+@Deprecated // Use StatusTableFactory
 public final class StatusTable {
 	private StatusTable() {
 	}
 
+	@Deprecated // Use StatusTableFactory.table()
 	public static TableWithFilterAndDetails<StatusEffectInfo, Object> table() {
 		return TableWithFilterAndDetails.builder("Status Effects", () -> {
 					Map<Integer, StatusEffectInfo> csvValues = StatusEffectLibrary.getAll();

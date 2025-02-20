@@ -51,14 +51,12 @@ public class EventsTabFactory {
 	private final GlobalGuiOptions globalGuiOpts;
 	private final RightClickOptionRepo rightClicks;
 	private final EventMaster master;
-	private final ReplayController replay;
 
 	public EventsTabFactory(MutablePicoContainer container, GlobalGuiOptions globalGuiOpts, RightClickOptionRepo rightClicks, EventMaster master) {
 		this.container = container;
 		this.globalGuiOpts = globalGuiOpts;
 		this.rightClicks = rightClicks;
 		this.master = master;
-		replay = container.getComponent(ReplayController.class);
 	}
 
 	public Component getEventsTab() {
@@ -150,6 +148,7 @@ public class EventsTabFactory {
 	private final List<WeakReference<TableWithFilterAndDetails<?, ?>>> tables = new CopyOnWriteArrayList<>();
 
 	private <X extends Event> @Nullable Function<TableWithFilterAndDetails<X, ?>, Component> replayNextPseudoFilter(Class<X> clazz) {
+		ReplayController replay = container.getComponent(ReplayController.class);
 		if (replay == null) {
 			return null;
 		}

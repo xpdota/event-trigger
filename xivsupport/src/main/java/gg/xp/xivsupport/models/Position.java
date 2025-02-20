@@ -132,7 +132,79 @@ public record Position(double x, double y, double z, double heading) implements 
 		if (dx == 0 && dy == 0) {
 			return this;
 		}
-		double angle = Math.atan2(-dy, dx) + (Math.PI / 2);
+		double angle = StrictMath.atan2(-dy, dx) + (Math.PI / 2);
 		return facing(angle);
+	}
+
+	/**
+	 * Given two positions, compute the intersection of the positions if you were to draw a line extending forward and
+	 * back from the point.
+	 *
+	 * @param a The first position
+	 * @param b The second position
+	 * @return The intersection, using the z coordinate of the first position.
+	 */
+	public static Position intersection(Position a, Position b) {
+		// Direction vectors for the perpendicular lines
+		double dx1 = -StrictMath.sin(a.heading());
+		double dy1 = StrictMath.cos(a.heading());
+		double dx2 = -StrictMath.sin(b.heading());
+		double dy2 = StrictMath.cos(b.heading());
+
+		// Position differences
+		double dx = b.x() - a.x();
+		double dy = b.y() - a.y();
+
+		// Solve for t and s
+		double determinant = dx1 * dy2 - dy1 * dx2;
+
+		// Check if the lines are parallel
+		if (Math.abs(determinant) < 0.0001f) {
+			throw new IllegalArgumentException("Lines are parallel and do not intersect.");
+		}
+
+		double t = (dx * dy2 - dy * dx2) / determinant;
+
+		// Intersection point
+		double ix = a.x() + t * dx1;
+		double iy = a.y() + t * dy1;
+
+		return new Position(ix, iy, a.z, 0.0); // Heading isn't meaningful for an intersection point
+	}
+
+	/**
+	 * Given two positions, compute the intersection of the positions if you were to draw a line perpendicular to each
+	 * position's facing. Ignores Z-axis entirely for the purposes of intersection.
+	 *
+	 * @param a The first position
+	 * @param b The second position
+	 * @return The intersection, using the z coordinate of the first position.
+	 */
+	public static Position perpendicularIntersection(Position a, Position b) {
+		// Direction vectors for the perpendicular lines
+		double dx1 = StrictMath.cos(a.heading);
+		double dy1 = StrictMath.sin(a.heading);
+		double dx2 = StrictMath.cos(b.heading);
+		double dy2 = StrictMath.sin(b.heading);
+
+		// Position differences
+		double dx = b.x - a.x;
+		double dy = b.y - a.y;
+
+		// Solve for t and s
+		double determinant = dx1 * dy2 - dy1 * dx2;
+
+		// Check if the lines are parallel
+		if (Math.abs(determinant) < 0.0001f) {
+			throw new IllegalArgumentException("Lines are parallel and do not intersect.");
+		}
+
+		double t = (dx * dy2 - dy * dx2) / determinant;
+
+		// Intersection point
+		double ix = a.x + t * dx1;
+		double iy = a.y + t * dy1;
+
+		return new Position(ix, iy, a.z, 0.0); // Heading isn't meaningful for an intersection point
 	}
 }

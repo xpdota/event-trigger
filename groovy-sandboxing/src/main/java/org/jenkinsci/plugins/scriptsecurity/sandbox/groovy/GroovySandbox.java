@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.scriptsecurity.sandbox.groovy;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public interface GroovySandbox {
 	SandboxScope enter();
@@ -19,5 +20,17 @@ public interface GroovySandbox {
 				run.run();
 			}
 		};
+	}
+
+	default void run(Runnable run) {
+		try (var ignored = enter()) {
+			run.run();
+		}
+	}
+
+	default <T> T get(Supplier<T> supp) {
+		try (var ignored = enter()) {
+			return supp.get();
+		}
 	}
 }

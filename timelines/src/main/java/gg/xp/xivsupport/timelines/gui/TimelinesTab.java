@@ -9,12 +9,13 @@ import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ActionTableFactory;
-import gg.xp.xivsupport.gui.library.StatusTable;
+import gg.xp.xivsupport.gui.library.StatusTableFactory;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.CustomTableModel;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.StandardColumns;
+import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.util.EasyAction;
@@ -40,7 +41,11 @@ import gg.xp.xivsupport.timelines.TimelineOverlay;
 import gg.xp.xivsupport.timelines.TimelineProcessor;
 import gg.xp.xivsupport.timelines.TimelineWindow;
 import gg.xp.xivsupport.timelines.TranslatedTextFileEntry;
+import gg.xp.xivsupport.timelines.icon.ActionTimelineIcon;
+import gg.xp.xivsupport.timelines.icon.StatusTimelineIcon;
+import gg.xp.xivsupport.timelines.icon.UrlTimelineIcon;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
@@ -75,12 +80,14 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ScanMe
 public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab {
 	private static final Logger log = LoggerFactory.getLogger(TimelinesTab.class);
 	private final TimelineManager backend;
 	private final ActionTableFactory actionTableFactory;
+	private final StatusTableFactory statusTableFactory;
 	private final AutoHandlerInstanceProvider ip;
 	private final CustomTableModel<TimelineInfo> timelineChooserModel;
 	private final CustomTableModel<TimelineEntry> timelineModel;
@@ -93,11 +100,13 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private TimelineCustomizations currentCust;
 	private final boolean isReplay;
 
-	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state, ActionTableFactory actionTableFactory, TimelineBarColorProviderImpl tbcp, AutoHandlerInstanceProvider ip, PicoContainer container) {
+	public TimelinesTab(TimelineManager backend, TimelineOverlay overlay, XivState state, ActionTableFactory actionTableFactory, TimelineBarColorProviderImpl tbcp, StatusTableFactory statusTableFactory, AutoHandlerInstanceProvider ip, PicoContainer container) {
 		super("Timelines");
 		// TODO: searching
+		// TODO: custom zones
 		this.backend = backend;
 		this.actionTableFactory = actionTableFactory;
+		this.statusTableFactory = statusTableFactory;
 		this.ip = ip;
 		isReplay = container.getComponent(PrimaryLogSource.class).getLogSource().isImport();
 
@@ -108,8 +117,10 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 		int timeColMinWidth = 80;
 		int timeColMaxWidth = 200;
 		int timeColPrefWidth = 80;
-		timelineChooserModel = CustomTableModel.builder(() -> TimelineManager.getTimelines().values()
-						.stream().sorted(Comparator.comparing(TimelineInfo::zoneId)).toList())
+		timelineChooserModel = CustomTableModel.builder(() -> Stream.concat(
+						TimelineManager.getTimelines().values().stream(),
+						backend.getCustomTimelines().values().stream()
+				).sorted(Comparator.comparing(TimelineInfo::zoneId)).toList())
 				.addColumn(new CustomColumn<>("En", t -> backend.getCustomSettings(t.zoneId()).enabled, col -> {
 					col.setCellRenderer(StandardColumns.checkboxRenderer);
 					StandardColumns.CustomCheckboxEditor<Object> editor = new StandardColumns.CustomCheckboxEditor<>((entry, value) -> {
@@ -165,7 +176,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					col.setPreferredWidth(timeColPrefWidth);
 				}))
 				.addColumn(new CustomColumn<>("Icon", TimelineEntry::icon, col -> {
-					col.setCellEditor(noLabelEdit(StandardColumns.urlEditorEmptyToNull(safeEditTimelineEntry(false, (item, value) -> item.icon = value))));
+					col.setCellEditor(noLabelEdit(StandardColumns.urlEditorEmptyToNull(safeEditTimelineEntry(false,
+							(item, value) -> item.iconSpec = new UrlTimelineIcon(value)))));
 					col.setCellRenderer(new ActionAndStatusRenderer());
 					col.setMinWidth(32);
 					col.setMaxWidth(32);
@@ -529,22 +541,54 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 					JOptionPane.showMessageDialog(this, "You are not currently in a zone.", "No Zone", JOptionPane.INFORMATION_MESSAGE);
 				}
 			});
-			selectCurrentButton.setMargin(new Insets(2, 4, 2, 4));
+			configureMargins(selectCurrentButton);
 			JButton disableAllButton = new EasyAction("Disable All", () -> {
 				TimelineManager.getTimelines().keySet().forEach(zone -> backend.getCustomSettings(zone).enabled = false);
 				stopChooserEditing();
 				commitAll();
 			}).asButton();
-			disableAllButton.setMargin(new Insets(2, 4, 2, 4));
+			configureMargins(disableAllButton);
 			JButton enableAllButton = new EasyAction("Enable All", () -> {
 				TimelineManager.getTimelines().keySet().forEach(zone -> backend.getCustomSettings(zone).enabled = true);
 				stopChooserEditing();
 				commitAll();
 			}).asButton();
-			enableAllButton.setMargin(new Insets(2, 4, 2, 4));
+			configureMargins(enableAllButton);
+			// TODO: zone pick from list
+			// TODO: delete
+			JButton addCustomButton = new EasyAction("Add New Zone", () -> {
+				MutableLong zoneIdHolder = new MutableLong();
+				var tf = new TextFieldWithValidation<>(s -> {
+					// Allow 0x hex input or base 10
+					if (s.startsWith("0x")) {
+						return Long.parseLong(s.substring(2), 16);
+					}
+					return Long.parseLong(s, 10);
+				}, zoneIdHolder::setValue, "0");
+				JPanel box = new JPanel();
+				box.setLayout(new WrapLayout());
+				box.add(new JLabel("Zone ID to Add: "));
+				box.add(tf);
+				box.setMaximumSize(box.getPreferredSize());
+				int result = JOptionPane.showOptionDialog(this, box, "Custom Timeline Zone", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, new Object[]{"Add", "Cancel"}, "Add");
+				if (result == JOptionPane.OK_OPTION) {
+					long zoneId = zoneIdHolder.longValue();
+					boolean added = backend.addCustomZone(zoneId);
+					if (!added) {
+						JOptionPane.showMessageDialog(this, "That zone appears to already have been added.");
+						return;
+					}
+					timelineChooserModel.fullRefreshSync();
+					TimelineInfo timelineInfo = backend.getCustomTimelines().get(zoneId);
+					timelineChooserModel.setSelectedValue(timelineInfo);
+					SwingUtilities.invokeLater(timelineChooserModel::scrollToSelectedValue);
+				}
+			}).asButton();
+			configureMargins(addCustomButton);
 			panel.add(selectCurrentButton);
 			panel.add(disableAllButton);
 			panel.add(enableAllButton);
+			panel.add(addCustomButton);
 			this.add(panel, c);
 			c.weighty = 0;
 			c.gridx++;
@@ -561,6 +605,20 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 						addNewEntry(newEntry);
 					},
 					() -> currentCust != null, null).asButton();
+			JButton newSkillButton = new EasyAction("New Skill Callout",
+					() -> {
+						@Nullable TimelineEntry selectedValue = timelineModel.getSelectedValue();
+						CustomTimelineEntry newEntry = new CustomTimelineEntry();
+						if (selectedValue != null) {
+							newEntry.time = selectedValue.time();
+						}
+						actionTableFactory.showChooser(SwingUtilities.getWindowAncestor(this), action -> {
+							newEntry.name = action.name();
+							newEntry.iconSpec = new ActionTimelineIcon(action.actionid());
+							newEntry.callout = true;
+							addNewEntry(newEntry);
+						});
+					}).asButton();
 			JButton newLabelButton = new EasyAction("New Label",
 					() -> {
 						@Nullable TimelineEntry selectedValue = timelineModel.getSelectedValue();
@@ -596,7 +654,16 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			JButton chooseDirButton = new JButton("Set Cactbot Dir");
 			chooseDirButton.addActionListener(l -> chooseCactbotUserDir());
 			JPanel buttonPanel = new JPanel(new WrapLayout());
+			configureMargins(newButton);
+			configureMargins(newSkillButton);
+			configureMargins(newLabelButton);
+			configureMargins(resetButton);
+			configureMargins(exportCustBtn);
+			configureMargins(importCustBtn);
+			configureMargins(cbExportButton);
+			configureMargins(chooseDirButton);
 			buttonPanel.add(newButton);
+			buttonPanel.add(newSkillButton);
 			buttonPanel.add(newLabelButton);
 			buttonPanel.add(resetButton);
 			buttonPanel.add(exportCustBtn);
@@ -606,16 +673,19 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			if (isReplay) {
 				JButton recordingButton = new JButton("Record");
 				recordingButton.addActionListener(l -> showRecordPanel());
+				configureMargins(recordingButton);
 				buttonPanel.add(recordingButton);
 			}
+			this.add(Box.createHorizontalGlue());
 			this.add(buttonPanel, c);
+			this.add(Box.createHorizontalGlue());
 		});
 	}
 
 	private static final FileFilter jsonFileFilter = new FileFilter() {
 		@Override
 		public boolean accept(File f) {
-			return f.getName().toUpperCase(Locale.ROOT).endsWith(".JSON");
+			return f.isDirectory() || f.getName().toUpperCase(Locale.ROOT).endsWith(".JSON");
 		}
 
 		@Override
@@ -868,8 +938,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private void chooseActionIcon(TimelineEntry te) {
 		stopEditing();
 		actionTableFactory.showChooser(SwingUtilities.getWindowAncestor(this), action -> this.<ActionInfo>safeEditTimelineEntry(false, (ce, actionInfo) -> {
-					ActionIcon icon = actionInfo.getIcon();
-					ce.icon = icon == null ? null : icon.getIconUrl();
+					ce.iconSpec = new ActionTimelineIcon(action.actionid());
 				}).accept(te, action)
 		);
 		commitEdit();
@@ -878,9 +947,8 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 	private void chooseStatusInfo(TimelineEntry te) {
 		stopEditing();
-		StatusTable.showChooser(SwingUtilities.getWindowAncestor(this), status -> this.<StatusEffectInfo>safeEditTimelineEntry(false, (ce, statusInfo) -> {
-					StatusEffectIcon icon = statusInfo.getIcon(0);
-					ce.icon = icon == null ? null : icon.getIconUrl();
+		statusTableFactory.showChooser(SwingUtilities.getWindowAncestor(this), status -> this.<StatusEffectInfo>safeEditTimelineEntry(false, (ce, statusInfo) -> {
+					ce.iconSpec = new StatusTimelineIcon(statusInfo.statusEffectId(), 0);
 				}).accept(te, status)
 		);
 		commitEdit();
@@ -1226,10 +1294,6 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 
 	}
 
-//	private TableCellEditor noLabelNoNewSyncEdit(TableCellEditor wrapped) {
-//		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel() && !item.hasEventSync());
-//	}
-
 	private static TableCellEditor noLabelEdit(TableCellEditor wrapped) {
 		return new RowConditionalTableCellEditor<TimelineEntry>(wrapped, item -> !item.isLabel());
 	}
@@ -1237,5 +1301,9 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 	private void showRecordPanel() {
 		TimelineRecordingPopup popup = ip.getInstance(TimelineRecordingPopup.class);
 		popup.setVisible(true);
+	}
+
+	private static void configureMargins(JButton button) {
+		button.setMargin(new Insets(2, 4, 2, 4));
 	}
 }

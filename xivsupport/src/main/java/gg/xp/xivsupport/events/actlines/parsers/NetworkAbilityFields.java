@@ -3,6 +3,9 @@ package gg.xp.xivsupport.events.actlines.parsers;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.models.XivCombatant;
+import org.apache.commons.lang3.time.DurationUtils;
+
+import java.time.Duration;
 
 enum NetworkAbilityFields {
 	casterId, casterName, abilityId, abilityName, targetId, targetName,
@@ -17,8 +20,13 @@ enum NetworkAbilityFields {
 	targetCurHp, targetMaxHp, targetCurMp, targetMaxMp, targetUnknown1, targetUnknown2, targetX, targetY, targetZ, targetHeading,
 	casterCurHp, casterMaxHp, casterCurMp, casterMaxMp, casterUnknown1, casterUnknown2, casterX, casterY, casterZ, casterHeading,
 	sequenceId,
-	targetIndex,
-	numberOfTargets;
+	targetIndex, numberOfTargets,
+	casterOwnerId, casterOwnerName,
+	effectDisplayType,
+	actionId,
+	actionAnimationId,
+	animationLock,
+	castAngleRaw;
 	// New fields (not currently used are):
 	/*
 	source.owner.id
@@ -44,14 +52,24 @@ enum NetworkAbilityFields {
 			// Workaround in case someone is using an old ACT version or importing an old log
 			targets = targetIndex;
 		}
-		return new AbilityUsedEvent(
+		Duration animLock;
+		try {
+			double animLockRaw = fields.getDouble(animationLock);
+			animLock = Duration.ofMillis((long) (animLockRaw * 1000.0));
+		}
+		catch (Throwable e) {
+			animLock = null;
+		}
+		AbilityUsedEvent out = new AbilityUsedEvent(
 				fields.getAbility(abilityId, abilityName),
 				caster,
 				target,
 				fields.getAbilityEffects(targetName.ordinal() + 3, 8),
 				sequenceId == null ? -1 : sequenceId,
 				targetIndex,
-				targets
+				targets,
+				animLock
 		);
+		return out;
 	}
 }

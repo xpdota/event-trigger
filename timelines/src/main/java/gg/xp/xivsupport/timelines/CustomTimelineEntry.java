@@ -2,17 +2,25 @@ package gg.xp.xivsupport.timelines;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.timelines.icon.IconIdTimelineIcon;
+import gg.xp.xivsupport.timelines.icon.TimelineIcon;
+import gg.xp.xivsupport.timelines.icon.UrlTimelineIcon;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 // Just going to use jackson for now
@@ -23,6 +31,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 
 	@Serial
 	private static final long serialVersionUID = 8590938155631598982L;
+	private static final Logger log = LoggerFactory.getLogger(CustomTimelineEntry.class);
 	// TODO: encapsulate these better
 	public double time;
 	public @Nullable String name;
@@ -38,7 +47,8 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 	// TODO: this uses the absolute path to the JAR, which means icons will break if the user moves their install location.
 	// Best solution is to probably make our own little class that lets you specify an ability/status ID in addition to
 	// plain URLs.
-	public @Nullable URL icon;
+	// This also means that we would need to retain old icons if they are replaced.
+	public @Nullable TimelineIcon iconSpec;
 	private @Nullable TimelineReference replaces;
 	public boolean enabled = true;
 	public boolean callout;
@@ -49,6 +59,51 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		name = "Name Goes Here";
 	}
 
+	@Contract("null -> null; !null -> !null")
+	private static @Nullable TimelineIcon convertLegacyIcon(@Nullable URL legacyIcon) {
+		if (legacyIcon == null) {
+			return null;
+		}
+		try {
+			String path = legacyIcon.getPath();
+			Pattern legacyIconPattern = Pattern.compile("(\\d{6})_hr1.png");
+			Matcher matcher = legacyIconPattern.matcher(path);
+			if (matcher.find()) {
+				int id = Integer.parseInt(matcher.group(1));
+				return new IconIdTimelineIcon(id);
+			}
+		} catch (Throwable t) {
+			log.warn("Failed to parse legacyIcon '{}'", legacyIcon, t);
+		}
+		return new UrlTimelineIcon(legacyIcon);
+	}
+
+	// OLD Constructor used for creating fresh entries
+	@SuppressWarnings("NegativelyNamedBooleanVariable")
+	@Deprecated
+	public CustomTimelineEntry(
+			double time,
+			@Nullable String name,
+			@Nullable Pattern sync,
+			@Nullable CustomEventSyncController esc,
+			@Nullable Double duration,
+			@NotNull TimelineWindow timelineWindow,
+			@Nullable Double jump,
+			@Nullable String jumpLabel,
+			@Nullable Boolean forceJump,
+			@Nullable URL legacyIcon,
+			@Nullable TimelineReference replaces,
+			boolean disabled,
+			boolean callout,
+			double calloutPreTime,
+			@Nullable String importSource
+	) {
+		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
+		// but it works.
+		this(time, name, sync, esc, duration, timelineWindow, jump, jumpLabel, forceJump, convertLegacyIcon(legacyIcon), replaces, disabled, callout, calloutPreTime, importSource);
+	}
+
+	// NEW Constructor used for creating fresh entries
 	@SuppressWarnings("NegativelyNamedBooleanVariable")
 	public CustomTimelineEntry(
 			double time,
@@ -60,7 +115,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			@Nullable Double jump,
 			@Nullable String jumpLabel,
 			@Nullable Boolean forceJump,
-			@Nullable URL icon,
+			@Nullable TimelineIcon iconSpec,
 			@Nullable TimelineReference replaces,
 			boolean disabled,
 			boolean callout,
@@ -81,13 +136,13 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		this.jump = jump;
 		this.jumpLabel = jumpLabel;
 		this.forceJump = forceJump != null && forceJump;
-		this.icon = icon;
+		this.iconSpec = iconSpec;
 		this.replaces = replaces;
 		this.enabled = !disabled;
 		this.importSource = importSource;
 	}
 
-	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+	@Deprecated // Old JSON constructor
 	public CustomTimelineEntry(
 			@JsonProperty("time") double time,
 			@JsonProperty("name") @Nullable String name,
@@ -98,10 +153,10 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 			@JsonProperty("jump") @Nullable Double jump,
 			@JsonProperty("jumplabel") @Nullable String jumpLabel,
 			@JsonProperty("forcejump") @Nullable Boolean forceJump,
-			@JsonProperty("icon") @Nullable URL icon,
+			@JsonProperty("icon") @Nullable URL legacyIcon,
 			@JsonProperty("replaces") @Nullable TimelineReference replaces,
 			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled,
-			@JsonProperty(value = "importSource") String importSource,
+			@JsonProperty("importSource") String importSource,
 			@JsonProperty(value = "callout", defaultValue = "false") boolean callout,
 			@JsonProperty(value = "calloutPreTime", defaultValue = "0") double calloutPreTime,
 			@JsonProperty("jobs") @Nullable CombatJobSelection jobs
@@ -119,7 +174,54 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		this.jump = jump;
 		this.jumpLabel = jumpLabel;
 		this.forceJump = forceJump != null && forceJump;
-		this.icon = icon;
+		iconSpec = convertLegacyIcon(legacyIcon);
+		this.replaces = replaces;
+		this.enabled = !disabled;
+		this.enabledJobs = jobs == null ? CombatJobSelection.all() : jobs;
+		this.esc = esc;
+		this.importSource = importSource;
+	}
+
+	// NEW json constructor
+	@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+	public CustomTimelineEntry(
+			@JsonProperty("time") double time,
+			@JsonProperty("name") @Nullable String name,
+			@JsonProperty("sync") @Nullable String sync,
+			@JsonProperty("esc") @Nullable CustomEventSyncController esc,
+			@JsonProperty("duration") @Nullable Double duration,
+			@JsonProperty("timelineWindow") @NotNull TimelineWindow timelineWindow,
+			@JsonProperty("jump") @Nullable Double jump,
+			@JsonProperty("jumplabel") @Nullable String jumpLabel,
+			@JsonProperty("forcejump") @Nullable Boolean forceJump,
+			@JsonProperty("icon") @Nullable URL legacyIcon,
+			@JsonProperty("iconSpec") @Nullable TimelineIcon newIcon,
+			@JsonProperty("replaces") @Nullable TimelineReference replaces,
+			@JsonProperty(value = "disabled", defaultValue = "false") boolean disabled,
+			@JsonProperty("importSource") String importSource,
+			@JsonProperty(value = "callout", defaultValue = "false") boolean callout,
+			@JsonProperty(value = "calloutPreTime", defaultValue = "0") double calloutPreTime,
+			@JsonProperty("jobs") @Nullable CombatJobSelection jobs
+	) {
+		// TODO: this wouldn't be a bad place to do the JAR url correction. Perhaps not the cleanest way,
+		// but it works.
+		this.time = time;
+		this.name = name;
+		this.sync = sync == null ? null : Pattern.compile(sync, Pattern.CASE_INSENSITIVE);
+		this.callout = callout;
+		this.calloutPreTime = calloutPreTime;
+		this.duration = duration;
+		this.windowStart = timelineWindow.start();
+		this.windowEnd = timelineWindow.end();
+		this.jump = jump;
+		this.jumpLabel = jumpLabel;
+		this.forceJump = forceJump != null && forceJump;
+		if (newIcon != null) {
+			iconSpec = newIcon;
+		}
+		else {
+			iconSpec = convertLegacyIcon(legacyIcon);
+		}
 		this.replaces = replaces;
 		this.enabled = !disabled;
 		this.enabledJobs = jobs == null ? CombatJobSelection.all() : jobs;
@@ -185,10 +287,19 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		return forceJump;
 	}
 
-	@Override
 	@JsonProperty
-	public URL icon() {
-		return icon;
+	public @Nullable TimelineIcon iconSpec() {
+		return iconSpec;
+	}
+
+	@Override
+	@JsonIgnore // This is captured in iconSpec now
+	public @Nullable URL icon() {
+		TimelineIcon icon = this.iconSpec;
+		if (icon == null) {
+			return null;
+		}
+		return icon.getIconUrl();
 	}
 
 	@Override
@@ -197,12 +308,12 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		if (o == null || getClass() != o.getClass()) return false;
 		CustomTimelineEntry that = (CustomTimelineEntry) o;
 		boolean syncEquals = Objects.equals(sync == null ? null : sync.pattern(), that.sync == null ? that.sync : that.sync.pattern());
-		return Double.compare(that.time, time) == 0 && forceJump == that.forceJump && enabled == that.enabled && callout == that.callout && Double.compare(that.calloutPreTime, calloutPreTime) == 0 && Objects.equals(name, that.name) && syncEquals && Objects.equals(duration, that.duration) && Objects.equals(windowStart, that.windowStart) && Objects.equals(windowEnd, that.windowEnd) && Objects.equals(jump, that.jump) && Objects.equals(jumpLabel, that.jumpLabel) && Objects.equals(icon, that.icon) && Objects.equals(replaces, that.replaces) && Objects.equals(getEnabledJobs(), that.getEnabledJobs());
+		return Double.compare(that.time, time) == 0 && forceJump == that.forceJump && enabled == that.enabled && callout == that.callout && Double.compare(that.calloutPreTime, calloutPreTime) == 0 && Objects.equals(name, that.name) && syncEquals && Objects.equals(duration, that.duration) && Objects.equals(windowStart, that.windowStart) && Objects.equals(windowEnd, that.windowEnd) && Objects.equals(jump, that.jump) && Objects.equals(jumpLabel, that.jumpLabel) && Objects.equals(iconSpec, that.iconSpec) && Objects.equals(replaces, that.replaces) && Objects.equals(getEnabledJobs(), that.getEnabledJobs());
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(time, name, sync, duration, windowStart, windowEnd, jump, jumpLabel, forceJump, icon, replaces, enabled, callout, calloutPreTime, getEnabledJobs());
+		return Objects.hash(time, name, sync, duration, windowStart, windowEnd, jump, jumpLabel, forceJump, iconSpec, replaces, enabled, callout, calloutPreTime, getEnabledJobs());
 	}
 
 	@Override
@@ -224,7 +335,7 @@ public class CustomTimelineEntry implements CustomTimelineItem, Serializable {
 		       ", jump=" + jump +
 		       ", jumpLabel='" + jumpLabel + '\'' +
 		       ", forceJump=" + forceJump +
-		       ", icon=" + icon +
+		       ", icon=" + iconSpec +
 		       ", replaces=" + replaces +
 		       ", enabled=" + enabled +
 		       ", callout=" + callout +

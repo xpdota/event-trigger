@@ -21,4 +21,7 @@ public enum KnownLogSource {
 		return this != FFLOGS;
 	}
 
+	public boolean isLive() {
+		return !isImport;
+	}
 }

@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.events.state.combatstate;
 
 import gg.xp.reevent.scan.Alias;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +28,13 @@ public interface ActiveCastRepository {
 				.stream()
 				.filter(ct -> ct.getResult() == CastResult.IN_PROGRESS)
 				.filter(ct -> ct.getCast().abilityIdMatches(ids))
+				.findFirst();
+	}
+
+	default Optional<CastTracker> forCast(AbilityCastStart event) {
+		return getAll()
+				.stream()
+				.filter(ct -> ct.getCast() == event)
 				.findFirst();
 	}
 }

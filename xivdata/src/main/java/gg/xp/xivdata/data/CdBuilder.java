@@ -144,7 +144,7 @@ public class CdBuilder {
 			if (ai == null) {
 				return UNKNOWN;
 			}
-			return switch (Integer.parseInt(ai.categoryRaw())) {
+			return switch (ai.categoryRaw()) {
 				case 66, 105, 123, 171 -> PRANGED;
 				case 67, 76, 84, 114, 148 -> MELEE_DPS;
 				case 89, 116, 175, 198 -> CASTER;
@@ -169,7 +169,8 @@ public class CdBuilder {
 			if (ai == null) {
 				return null;
 			}
-			int rawJobCategory = Integer.parseInt(ai.categoryRaw());
+			// TODO: this can be improved
+			int rawJobCategory = ai.categoryRaw();
 			return switch (rawJobCategory) {
 				case 2, 20, 38 -> PLD;
 				case 3, 21, 41 -> MNK;

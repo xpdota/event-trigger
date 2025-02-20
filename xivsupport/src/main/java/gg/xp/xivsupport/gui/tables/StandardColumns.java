@@ -224,7 +224,7 @@ public final class StandardColumns {
 			}
 		});
 		c.setMinWidth(50);
-		c.setMaxWidth(50);
+		c.setMaxWidth(110);
 	});
 
 	public static final CustomColumn<XivCombatant> combatantRawTypeColumn

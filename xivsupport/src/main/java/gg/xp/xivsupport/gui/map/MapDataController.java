@@ -11,8 +11,8 @@ import gg.xp.xivsupport.events.actionresolution.SequenceIdTracker;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeInEvent;
-import gg.xp.xivsupport.events.actlines.events.actorcontrol.FadeOutEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.CastTracker;
@@ -50,6 +50,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -65,6 +66,7 @@ public class MapDataController {
 	private final SequenceIdTracker sqid;
 	private final ExecutorService exs = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("MapDataController"));
 	private static final Duration MAX_OMEN_HISTORY = Duration.ofSeconds(5);
+	private static final Duration tetherMaxDuration = Duration.ofSeconds(15);
 	private static final Snapshot initialEmptySnapshot = new Snapshot(
 			Instant.EPOCH,
 			XivMap.UNKNOWN,
@@ -74,7 +76,8 @@ public class MapDataController {
 			Collections.emptyMap(),
 			Collections.emptyMap(),
 			Collections.emptyMap(),
-			Collections.emptyMap()
+			Collections.emptyMap(),
+			Collections.emptyList()
 	);
 	private final BooleanSetting enableCapture;
 	private final FloorMarkerRepository floorMarkers;
@@ -152,7 +155,8 @@ public class MapDataController {
 			Map<Long, CastTracker> casts,
 			Map<Long, Long> pendingDamage,
 			Map<FloorMarker, Position> floorMarkers,
-			Map<Long, List<OmenInstance>> omens
+			Map<Long, List<OmenInstance>> omens,
+			List<TetherEvent> tethers
 	) {
 	}
 
@@ -200,6 +204,14 @@ public class MapDataController {
 			// Prune old and anything that just finished casting
 			infos.add(new CastOmen(event, info));
 		});
+	}
+
+	// Record recent tethers
+	private final List<TetherEvent> recentTethers = new CopyOnWriteArrayList<>();
+
+	@HandleEvents
+	public void recordTether(TetherEvent te) {
+		recentTethers.add(te);
 	}
 //
 //	@HandleEvents
@@ -306,7 +318,11 @@ public class MapDataController {
 		this.callback = callback;
 	}
 
+	/**
+	 * Capture the current data into a snapshot
+	 */
 	public void captureSnapshot() {
+		// Check if we want to capture a snapshot in the first place
 		if (!enableCapture.get()) {
 			return;
 		}
@@ -319,6 +335,10 @@ public class MapDataController {
 			}
 			lastTimestamp = now;
 		}
+
+		// The strategy here is that we want to do as little work as possible in this thread. We want to capture the
+		// information while we're on the event thread (and thus implicitly locking a lot of things), but shove all
+		// of the actual processing after that onto an executor.
 		Snapshot snap = getLast();
 		List<XivPlayerCharacter> partyList = realState.getPartyList();
 		// We can't dedup the combatant list wholly because
@@ -333,57 +353,66 @@ public class MapDataController {
 		}
 		List<CastTracker> rawCasts = realAcr.getAll();
 		Map<Long, List<OmenInstance>> omens = new HashMap<>(omenTracker);
+		recentTethers.removeIf(te -> te.getEffectiveTimeSince().compareTo(tetherMaxDuration) > 0);
+		List<TetherEvent> tethers = new ArrayList<>(recentTethers);
 		exs.submit(() -> {
-			List<XivCombatant> newEffectiveCombatantsList;
-			// Dedup combatants list if possible
-			if (newCombatantsList.size() == oldCombatantsList.size()) {
-				newEffectiveCombatantsList = oldCombatantsList;
-				for (int i = 0; i < newCombatantsList.size(); i++) {
-					// TODO: dedup individual entries
-					if (!combatantEquals(oldCombatantsList.get(i), newCombatantsList.get(i))) {
-						newEffectiveCombatantsList = newCombatantsList;
-						break;
+			try {
+
+				List<XivCombatant> newEffectiveCombatantsList;
+				// Dedup combatants list if possible
+				if (newCombatantsList.size() == oldCombatantsList.size()) {
+					newEffectiveCombatantsList = oldCombatantsList;
+					for (int i = 0; i < newCombatantsList.size(); i++) {
+						// TODO: dedup individual entries
+						if (!combatantEquals(oldCombatantsList.get(i), newCombatantsList.get(i))) {
+							newEffectiveCombatantsList = newCombatantsList;
+							break;
+						}
 					}
 				}
-			}
-			else {
-				newEffectiveCombatantsList = newCombatantsList;
-			}
-			Map<Long, CastTracker> casts = new HashMap<>(rawCasts.size());
-			for (CastTracker rawCast : rawCasts) {
-				if (timeBasis == null) {
-					timeBasis = rawCast.getCast();
+				else {
+					newEffectiveCombatantsList = newCombatantsList;
 				}
-				casts.put(rawCast.getCast().getSource().getId(), rawCast);
-			}
-			Instant time;
-			if (timeBasis != null) {
-				time = timeBasis.effectiveTimeNow();
-			}
-			else {
-				time = timeSource.now();
-			}
-			List<BuffApplied> rawBuffs = realStatuses.getBuffs();
-			Map<Long, List<BuffApplied>> oldBuffs = snap.statuses;
-			Map<Long, List<BuffApplied>> buffs = new HashMap<>(rawBuffs.size());
-			Map<FloorMarker, Position> floorMarkers = this.floorMarkers.getMarkers();
-			for (BuffApplied rawBuff : rawBuffs) {
-				buffs.computeIfAbsent(rawBuff.getTarget().getId(), unused -> new ArrayList<>()).add(rawBuff);
-			}
-			snapshots.add(new Snapshot(
-					time,
-					realState.getMap(),
-					dedup(partyList, snap.partyList),
-					// Can't dedup this since they're keyed strictly on ID
-					newEffectiveCombatantsList,
+				Map<Long, CastTracker> casts = new HashMap<>(rawCasts.size());
+				for (CastTracker rawCast : rawCasts) {
+					if (timeBasis == null) {
+						timeBasis = rawCast.getCast();
+					}
+					casts.put(rawCast.getCast().getSource().getId(), rawCast);
+				}
+				Instant time;
+				if (timeBasis != null) {
+					time = timeBasis.effectiveTimeNow();
+				}
+				else {
+					time = timeSource.now();
+				}
+				List<BuffApplied> rawBuffs = realStatuses.getBuffs();
+				Map<Long, List<BuffApplied>> oldBuffs = snap.statuses;
+				Map<Long, List<BuffApplied>> buffs = new HashMap<>(rawBuffs.size());
+				Map<FloorMarker, Position> floorMarkers = this.floorMarkers.getMarkers();
+				for (BuffApplied rawBuff : rawBuffs) {
+					buffs.computeIfAbsent(rawBuff.getTarget().getId(), unused -> new ArrayList<>()).add(rawBuff);
+				}
+				snapshots.add(new Snapshot(
+						time,
+						realState.getMap(),
+						dedup(partyList, snap.partyList),
+						// Can't dedup this since they're keyed strictly on ID
+						newEffectiveCombatantsList,
 //				dedup(combatantsListCopy, snap.combatants),
-					dedup(buffs, oldBuffs),
-					dedup(casts, snap.casts),
-					pendingDamage.isEmpty() ? Collections.emptyMap() : dedup(pendingDamage, snap.pendingDamage),
-					dedup(floorMarkers, snap.floorMarkers),
-					dedup(omens, snap.omens)
-			));
-			checkLength();
+						dedup(buffs, oldBuffs),
+						dedup(casts, snap.casts),
+						pendingDamage.isEmpty() ? Collections.emptyMap() : dedup(pendingDamage, snap.pendingDamage),
+						dedup(floorMarkers, snap.floorMarkers),
+						dedup(omens, snap.omens),
+						dedup(tethers, snap.tethers)
+				));
+				checkLength();
+			}
+			catch (Throwable t) {
+				log.error("Error taking map data snapshot", t);
+			}
 		});
 	}
 
@@ -478,6 +507,13 @@ public class MapDataController {
 			return tracker.withNewCurrentTime(time);
 		}
 //		return realAcr.getCastFor(cbt);
+	}
+
+	public List<TetherEvent> getTethers() {
+		if (live) {
+			return Collections.unmodifiableList(recentTethers);
+		}
+		return Collections.unmodifiableList(getCurrent().tethers);
 	}
 
 	public List<XivPlayerCharacter> getPartyList() {

@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 public class LongListSetting extends ObservableSetting implements Resettable {
 	private final PersistenceProvider persistence;
@@ -53,6 +55,24 @@ public class LongListSetting extends ObservableSetting implements Resettable {
 		finally {
 			notifyListeners();
 		}
+	}
+
+	/**
+	 * Modify the list according to a mutator function. The function receives a copy of the list of values, and
+	 * should modify the list in-place. If the list was changed, then the modified list will become the new values.
+	 *
+	 * @param mutator The function
+	 * @return whether any modifications were made.
+	 */
+	public boolean mutate(Consumer<List<Long>> mutator) {
+		List<Long> initial = get();
+		List<Long> after = new ArrayList<>(get());
+		mutator.accept(after);
+		if (!Objects.equals(initial, after)) {
+			set(after);
+			return true;
+		}
+		return false;
 	}
 
 	@Override

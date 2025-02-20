@@ -2,10 +2,7 @@ package gg.xp.xivsupport.gui.library;
 
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
-import gg.xp.xivdata.data.ActionIcon;
-import gg.xp.xivdata.data.ActionInfo;
-import gg.xp.xivdata.data.ActionLibrary;
-import gg.xp.xivdata.data.HasIconURL;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.gui.map.omen.OmenShape;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -32,15 +29,13 @@ import java.util.function.Function;
 
 public final class ActionTableFactory {
 
+	private final RightClickOptionRepo rightClickOptionRepo;
+
+	public ActionTableFactory(RightClickOptionRepo rightClickOptionRepo) {
+		this.rightClickOptionRepo = rightClickOptionRepo;
+	}
+
 	public TableWithFilterAndDetails<ActionInfo, Object> table() {
-		// TODO: "initial load on filter update" would be nice
-		//					ActionIcon icon = ai.getIcon();
-		//					if (icon == null) {
-		//						return null;
-		//					}
-		//					else {
-		//						return icon.getIconUrl();
-		//					}
 		return TableWithFilterAndDetails.builder("Actions/Abilities", () -> {
 					Map<Integer, ActionInfo> csvValues = ActionLibrary.getAll();
 					List<ActionInfo> values = new ArrayList<>(csvValues.values());
@@ -71,6 +66,10 @@ public final class ActionTableFactory {
 							return fallback;
 						}
 					});
+					col.setMinWidth(30);
+					col.setMaxWidth(40);
+				}))
+				.addMainColumn(new CustomColumn<>("Description", ActionInfo::description, col -> {
 					col.setPreferredWidth(500);
 				}))
 				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
@@ -89,7 +88,7 @@ public final class ActionTableFactory {
 					}
 					return cd > 0 ? cd : "";
 				}))
-				.addMainColumn(new CustomColumn<>("Range/Shape", Function.identity(),c -> {
+				.addMainColumn(new CustomColumn<>("Range/Shape", Function.identity(), c -> {
 					c.setCellRenderer(new DefaultTableCellRenderer() {
 						@Override
 						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -104,7 +103,17 @@ public final class ActionTableFactory {
 				}))
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
 				.addWidget(InGameAbilityPickerButton::new)
+				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
 				.withRightClickRepo(RightClickOptionRepo.of(
+				))
+//				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
+//					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
+//					GuiUtil.copyToClipboard(md);
+//				}))
+				.withRightClickRepo(rightClickOptionRepo.withMore(
+						CustomRightClickOption.forRow("Open on XivAPI", ActionInfo.class, ai -> {
+							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Action", ai.actionid()));
+						}),
 						CustomRightClickOption.forRow(
 								"Copy XIVAPI Icon URL",
 								ActionInfo.class,
@@ -115,11 +124,8 @@ public final class ActionTableFactory {
 								ai -> {
 									String md = String.format("![%s](%s)", ai.name(), ai.getXivapiUrl());
 									GuiUtil.copyTextToClipboard(md);
-								})))
-//				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
-//					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
-//					GuiUtil.copyToClipboard(md);
-//				}))
+								})
+				))
 				.setFixedData(true)
 				.build();
 	}

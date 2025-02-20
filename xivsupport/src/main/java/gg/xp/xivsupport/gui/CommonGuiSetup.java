@@ -64,6 +64,7 @@ public final class CommonGuiSetup {
 			}
 		}
 		EnumSetting<BuiltinTheme> themeSetting = WindowConfig.getThemeSettingStatic();
+		log.info("Theme: {}", themeSetting.get());
 		themeSetting.addAndRunListener(() -> setTheme(themeSetting.get()));
 		SwingUtilities.invokeLater(() -> {
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
@@ -82,6 +83,7 @@ public final class CommonGuiSetup {
 			monFuture.complete(monitor);
 		});
 		final Monitor monitor;
+		log.info("Waiting for monitor setup");
 		Monitor monitorTmp;
 		try {
 			monitorTmp = monFuture.get(5, TimeUnit.SECONDS);
@@ -90,6 +92,7 @@ public final class CommonGuiSetup {
 			log.info("Error setting up gui performance monitor", e);
 			monitorTmp = null;
 		}
+		log.info("Monitor setup done");
 		monitor = monitorTmp;
 //		monitor = null;
 		queue.push(new EventQueue() {

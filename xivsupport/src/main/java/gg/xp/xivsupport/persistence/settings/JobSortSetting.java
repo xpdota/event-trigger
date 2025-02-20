@@ -42,8 +42,16 @@ public class JobSortSetting {
 				validateJobSortOrder(listFromSettings);
 				jobSort = listFromSettings;
 			}
+			catch (JobSortValidationException je) {
+				if (je.isSilent()) {
+					log.warn(je.getMessage());
+				}
+				else {
+					log.error(je.getMessage(), je);
+				}
+			}
 			catch (Throwable t) {
-				log.error("Saved jail order did not pass validation", t);
+				log.error("Saved jail order did not pass validation ({})", settingKey, t);
 			}
 		}
 		// Fall back to default
@@ -146,22 +154,45 @@ public class JobSortSetting {
 	}
 
 	/**
-	 * @return Whether or not this setting has actually been set by the user, or if it is using default values.
+	 * @return True if this setting has actually been set by the user, false if it is using default values.
 	 */
 	public boolean isSet() {
 		return sortSetting.isSet();
 	}
 
 	public void validateJobSortOrder(List<Job> newSort) {
-		int expectedNumberOfJobs = allValidJobs.size();
-		int actualNumberOfJobs = newSort.size();
-		if (expectedNumberOfJobs != actualNumberOfJobs) {
-			throw new IllegalArgumentException(String.format("New jail sort order was not the same size! %s -> %s", expectedNumberOfJobs, actualNumberOfJobs));
+		// First, check for duplicates
+		// Convert the list to a set and check that the size is still the same.
+		if (newSort.isEmpty()) {
+			throw new JobSortValidationException("New sort order was empty!", false, allValidJobs, newSort);
 		}
-		EnumSet<Job> newSortAsSet = EnumSet.copyOf(newSort);
+		Set<Job> newSortAsSet = EnumSet.copyOf(newSort);
 		int newUniqueSize = newSortAsSet.size();
+		int actualNumberOfJobs = newSort.size();
 		if (newUniqueSize != actualNumberOfJobs) {
-			throw new IllegalArgumentException("New jail sort had duplicates!");
+			List<Job> tmpJobs = new ArrayList<>(newSort);
+			allValidJobs.forEach(tmpJobs::remove);
+			throw new JobSortValidationException("New jail sort had duplicates! Extras: %s".formatted(tmpJobs), false, allValidJobs, newSort);
+		}
+		if (!newSortAsSet.equals(allValidJobs)) {
+			// Jobs present in base list but not in the new order
+			Set<Job> jobsMissingFromNewSort = EnumSet.copyOf(allValidJobs);
+			jobsMissingFromNewSort.removeAll(newSortAsSet);
+			// Jobs present in new order but not in base list
+			Set<Job> extraneousJobs = EnumSet.copyOf(newSort);
+			extraneousJobs.removeAll(allValidJobs);
+
+			boolean silentFail = true;
+			StringBuilder sb = new StringBuilder("Job sort did not pass validation!");
+
+			if (!jobsMissingFromNewSort.isEmpty()) {
+				sb.append("\nJobs missing from new sort: ").append(jobsMissingFromNewSort);
+			}
+			if (!extraneousJobs.isEmpty()) {
+				sb.append("\nInvalid jobs found: ").append(extraneousJobs);
+				silentFail = false;
+			}
+			throw new JobSortValidationException(sb.toString(), silentFail, allValidJobs, newSort);
 		}
 	}
 

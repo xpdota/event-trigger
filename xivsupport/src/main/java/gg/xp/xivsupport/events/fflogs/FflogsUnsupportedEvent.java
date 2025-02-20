@@ -1,11 +1,13 @@
 package gg.xp.xivsupport.events.fflogs;
 
 import gg.xp.reevent.events.BaseEvent;
+import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 
 import java.io.Serial;
 import java.util.Map;
 
+@SystemEvent
 public class FflogsUnsupportedEvent extends BaseEvent implements HasPrimaryValue {
 
 	@Serial

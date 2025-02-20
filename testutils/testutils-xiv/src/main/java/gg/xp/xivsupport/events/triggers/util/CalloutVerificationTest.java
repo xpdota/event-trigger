@@ -37,6 +37,26 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * CalloutVerificationTest is an all-in-one base class for testing duty callouts. To use this, you need a log file.
+ * The log file should be in the resources, and you specify the path in the {@link #getFileName()} method.
+ * <p>
+ * You also need to implement the {@link #getExpectedCalls()} method. If you have this method return an empty list,
+ * and then run the test, the log output will contain the actual calls, formatted in the exact form that you would need
+ * to specify the expected calls in. Thus, after checking to make sure they are correct, you can simply copy and paste.
+ * <p>
+ * There are also some optional methods to control some extra validations:
+ * <ul>
+ *     <li>{@link #getExpectedAms()} lets you specify expected automarker placements.</li>
+ *     <li>{@link #configure(MutablePicoContainer)} lets you poke around in the DI container,
+ *     in case you want to test alternative configurations or enable triggers which are disabled by default.</li>
+ *     <li>{@link #failOnCalloutErrors()} can be overridden to return 'false' to disable the behavior of flagging any
+ *     callout containing the string "Error" as being a failure.</li>
+ *     <li>{@link #minimumMsBetweenCalls()} defaults to 1000 (ms) but can be overridden to a lower value. This value
+ *     will flag callouts which happen in quick succession as failures, as this would often indicate callouts which are
+ *     talking over one another.</li>
+ * </ul>
+ */
 public abstract class CalloutVerificationTest {
 
 	protected abstract String getFileName();
@@ -284,7 +304,7 @@ public abstract class CalloutVerificationTest {
 			}
 		}
 		if (!assortedFailures.isEmpty()) {
-			throw new AssertionError("Issues with callouts which were too close to one another:\n" + String.join("\n", assortedFailures));
+			throw new AssertionError("Issues with callouts:\n" + String.join("\n", assortedFailures));
 		}
 	}
 
@@ -330,7 +350,8 @@ public abstract class CalloutVerificationTest {
 				try {
 					X item = actual.get(i);
 					failureAdjacentEvent = item.event();
-				} catch (IndexOutOfBoundsException e) {
+				}
+				catch (IndexOutOfBoundsException e) {
 					// ignored
 					firstFailureIndex = Math.min(actSize, expSize);
 				}

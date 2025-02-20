@@ -8,6 +8,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import java.io.Serial;
 import java.time.Duration;
 
+@Deprecated // No longer needed
 @SystemEvent
 public class AnimationLockEvent extends BaseEvent implements HasDuration, HasAbility, HasSourceEntity, HasTargetEntity {
 	@Serial

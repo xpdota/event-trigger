@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.actlines.events;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.models.XivCombatant;
 
 import javax.annotation.Nullable;
 
@@ -30,6 +31,8 @@ public interface DescribesCastLocation<X extends Event & HasSourceEntity & HasAb
 	 */
 	@Nullable
 	Double getHeadingOnly();
+
+	XivCombatant getAnimationTarget();
 
 	default double getBestHeading() {
 		Double heading = getHeadingOnly();

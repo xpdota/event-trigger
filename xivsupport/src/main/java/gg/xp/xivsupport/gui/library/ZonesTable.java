@@ -13,11 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+@Deprecated // Use ZonesTableFactory
 public final class ZonesTable {
 
 	private ZonesTable() {
 	}
 
+	@Deprecated // Use ZonesTableFactory.table()
 	public static TableWithFilterAndDetails<ZoneInfo, Object> table() {
 		return TableWithFilterAndDetails.builder("Zones", () -> {
 					Map<Integer, ZoneInfo> csvValues = ZoneLibrary.getFileValues();

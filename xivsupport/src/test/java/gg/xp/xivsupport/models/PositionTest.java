@@ -97,6 +97,72 @@ public class PositionTest {
 		assertPositionsSame(normalized, expected);
 	}
 
+	@Test
+	void testPerpendicularIntersection() {
+		// South, facing north
+		Position a = new Position(0, 10, 1, ArenaSector.NORTH.facingAngle());
+		// East, facing west
+		Position b = new Position(10, 0, 0, ArenaSector.WEST.facingAngle());
+		{
+			Position result = Position.perpendicularIntersection(a, b);
+			// These two should intersect at 10,10, as we would draw a line east from A and south from B
+			// Since this is the outer heading, the heading should be SE
+			assertPositionsSame(result, new Position(10, 10, 1, 0));
+		}
+	}
+	@Test
+	void testPerpendicularIntersection2() {
+		// Flip one direction. Nothing should change.
+		// South, facing north
+		Position a = new Position(0, 10, 1, ArenaSector.NORTH.facingAngle());
+		// East, facing east
+		Position b = new Position(10, 0, 0, ArenaSector.EAST.facingAngle());
+		{
+			Position result = Position.perpendicularIntersection(a, b);
+			// These two should intersect at 10,10, as we would draw a line east from A and south from B
+			// Since this is the outer heading, the heading should be SE
+			assertPositionsSame(result, new Position(10, 10, 1, 0));
+		}
+	}
+	@Test
+	void testPerpendicularIntersection3() {
+		// Flip one direction. Nothing should change.
+		// South, facing south
+		Position a = new Position(0, 10, 1, ArenaSector.SOUTH.facingAngle());
+		// East, facing east
+		Position b = new Position(10, 0, 0, ArenaSector.EAST.facingAngle());
+		{
+			Position result = Position.perpendicularIntersection(a, b);
+			// These two should intersect at 10,10, as we would draw a line east from A and south from B
+			// Since this is the outer heading, the heading should be SE
+			assertPositionsSame(result, new Position(10, 10, 1, 0));
+		}
+	}
+	@Test
+	void testPerpendicularIntersection4() {
+		// South, facing south
+		Position a = new Position(0, 10, 1, ArenaSector.SOUTH.facingAngle());
+		// East, facing west
+		Position b = new Position(10, 0, 0, ArenaSector.WEST.facingAngle());
+		{
+			Position result = Position.perpendicularIntersection(a, b);
+			// These two should intersect at 10,10, as we would draw a line east from A and south from B
+			// Since this is the outer heading, the heading should be SE
+			assertPositionsSame(result, new Position(10, 10, 1, 0));
+		}
+
+	}
+
+	@Test
+	void testIntersection2() {
+		// South, facing north
+		Position a = new Position(0, 0, 0, ArenaSector.EAST.facingAngle());
+		// East, facing west
+		Position b = new Position(1, 1, 0, ArenaSector.SOUTH.facingAngle());
+		Position result = Position.intersection(a, b);
+		// These two should intersect at 10,10, as we would draw a line east from A and south from B
+		assertPositionsSame(result, new Position(1, 0, 0, 0));
+	}
 
 	private void assertPositionsSame(Position actual, Position expected) {
 		String message = String.format("Expected positions to be equal. Actual: %s; Expected: %s", actual, expected);

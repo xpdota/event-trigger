@@ -12,13 +12,27 @@ public class MapChangeEvent extends BaseEvent implements XivStateChange, HasPrim
 	@Serial
 	private static final long serialVersionUID = -5578740136371565264L;
 	private final XivMap map;
+	private final boolean isSubChange;
 
 	public MapChangeEvent(XivMap map) {
+		this(map, false);
+	}
+
+	public MapChangeEvent(XivMap map, boolean isSubChange) {
 		this.map = map;
+		this.isSubChange = isSubChange;
 	}
 
 	public XivMap getMap() {
 		return map;
+	}
+
+	/**
+	 * @return Whether this event represents an 'in-place' minimap change, where we have not actually moved to a new
+	 * area, but rather only the minimap has changed, usually due to the shape of the arena changing. e.g. CoD Chaotic.
+	 */
+	public boolean isSubChange() {
+		return isSubChange;
 	}
 
 	@Override

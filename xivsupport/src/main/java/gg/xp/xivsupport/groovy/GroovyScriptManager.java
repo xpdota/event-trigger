@@ -13,6 +13,7 @@ import gg.xp.xivsupport.persistence.Platform;
 import gg.xp.xivsupport.persistence.settings.ExternalObservable;
 import groovy.transform.builder.InitializerStrategy;
 import org.apache.commons.io.FileUtils;
+import org.intellij.lang.annotations.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,11 +96,18 @@ public class GroovyScriptManager {
 
 	@HandleEvents
 	public void runStartupScripts(EventContext context, InitEvent init) {
+		log.info("Running startup scripts");
+		long before = System.currentTimeMillis();
 		scripts.forEach(script -> {
 			if (script.isStartup()) {
+				long beforeScript = System.currentTimeMillis();
 				script.run();
+				long afterScript = System.currentTimeMillis();
+				log.info("Startup script {} took {} ms", script.getScriptName(), (afterScript - beforeScript));
 			}
 		});
+		long after = System.currentTimeMillis();
+		log.info("Total startup script execution time: {} ms", after - before);
 	}
 
 	public void reloadAll() {
@@ -283,6 +291,7 @@ public class GroovyScriptManager {
 		return mgr;
 	}
 
+	@Language("groovy")
 	private static final String defaultScriptContent = """
 			\"""Hi There!
 

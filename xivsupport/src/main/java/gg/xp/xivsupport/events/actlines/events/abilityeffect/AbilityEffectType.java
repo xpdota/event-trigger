@@ -27,6 +27,6 @@ public enum AbilityEffectType {
 	STATUS_REMOVED,
 	REFLECT_DUMMY,
 	REFLECTED_DAMAGE,
-
+	INTERRUPT_CAST,
 	OTHER
 }

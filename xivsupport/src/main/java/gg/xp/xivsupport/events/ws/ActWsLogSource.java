@@ -19,6 +19,7 @@ import gg.xp.xivsupport.persistence.settings.WsURISetting;
 import gg.xp.xivsupport.speech.TtsRequest;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
+import gg.xp.xivsupport.sys.Threading;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -47,7 +48,8 @@ import java.util.stream.Collectors;
 public class ActWsLogSource implements EventSource {
 
 	private static final Logger log = LoggerFactory.getLogger(ActWsLogSource.class);
-	private static final ExecutorService taskPool = Executors.newSingleThreadExecutor(new BasicThreadFactory.Builder().namingPattern("ActWsLogPool-%d").build());
+	private static final ExecutorService taskPool = Executors.newSingleThreadExecutor(Threading.namedDaemonThreadFactory("OpWs"));
+	private static final ExecutorService subTaskPool = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("OpWsSub"));
 	private static final ObjectMapper mapper = new ObjectMapper();
 	private static final URI defaultUri = URI.create("ws://127.0.0.1:10501/ws");
 	private final Object connectLock = new Object();
@@ -98,7 +100,7 @@ public class ActWsLogSource implements EventSource {
 
 		void recheckUri() {
 			this.uri = uriSetting.get();
-			this.reconnect();
+			subTaskPool.submit(this::reconnect);
 		}
 
 		@Override

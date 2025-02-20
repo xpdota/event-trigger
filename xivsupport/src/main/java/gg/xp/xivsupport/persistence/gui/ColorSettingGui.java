@@ -22,6 +22,10 @@ public class ColorSettingGui {
 	private final ColorSetting setting;
 	private final Color noColorSelected = new Color(0, 0, 0, 0);
 
+	public ColorSettingGui(ColorSetting setting, String label) {
+		this(setting, label, () -> true);
+	}
+
 	public ColorSettingGui(ColorSetting setting, String label, Supplier<Boolean> enabled) {
 		this.setting = setting;
 		this.label = new JLabel(label);
@@ -55,6 +59,9 @@ public class ColorSettingGui {
 		return button;
 	}
 
+	/**
+	 * @return A container with both the label and color picker, with the label on the left.
+	 */
 	public Component getComponent() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
@@ -63,6 +70,9 @@ public class ColorSettingGui {
 		return panel;
 	}
 
+	/**
+	 * @return A container with both the label and color picker, with the label on the right.
+	 */
 	public Component getComponentReversed() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));

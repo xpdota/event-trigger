@@ -22,8 +22,10 @@ public class NormalBuffsBarPartyComponent extends BaseBuffsBarPartyComponent {
 	protected List<BuffApplied> getBuffsToDisplay(XivPlayerCharacter xpc) {
 		boolean showFc = config.getShowFcBuffs().get();
 		boolean showFood = config.getShowFoodBuff().get();
-		return buffRepo.filteredSortedStatusesOnTarget(xpc, ba -> {
-			return (showFc || !BuffUtils.isFcBuff(ba)) && (showFood || !BuffUtils.isFoodBuff(ba));
-		}, config.getShowPreapps().get());
+		boolean showRationing = config.getShowRationingBuff().get();
+		return buffRepo.filteredSortedStatusesOnTarget(xpc,
+				ba -> (showFc || !BuffUtils.isFcBuff(ba))
+				      && (showFood || !BuffUtils.isFoodBuff(ba))
+				      && (showRationing || !BuffUtils.isRationingBuff(ba)), config.getShowPreapps().get());
 	}
 }

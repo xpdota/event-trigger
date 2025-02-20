@@ -24,7 +24,7 @@ public class XivStateDummy implements XivState {
 
 	private XivPlayerCharacter player;
 	private XivZone zone;
-	private XivMap map;
+	private XivMap map = XivMap.UNKNOWN;
 	private List<XivPlayerCharacter> partyList = Collections.emptyList();
 	private Map<Long, XivCombatant> combatants = new HashMap<>();
 
@@ -116,12 +116,17 @@ public class XivStateDummy implements XivState {
 	}
 
 	@Override
-	public void provideCombatantPos(XivCombatant target, Position newPos) {
+	public void provideCombatantPos(XivCombatant target, Position newPos, boolean trusted) {
 		throw new UnsupportedOperationException("not supported");
 	}
 
 	@Override
 	public void provideActFallbackCombatant(XivCombatant cbt) {
+		throw new UnsupportedOperationException("not supported");
+	}
+
+	@Override
+	public void provideTypeOverride(XivCombatant cbt, int type) {
 		throw new UnsupportedOperationException("not supported");
 	}
 

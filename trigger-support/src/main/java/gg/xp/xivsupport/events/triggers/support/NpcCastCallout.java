@@ -17,4 +17,9 @@ public @interface NpcCastCallout {
 	long[] value();
 
 	long suppressMs() default -1;
+
+	/**
+	 * @return Whether the callout should be removed if the cast stops
+	 */
+	boolean cancellable() default false;
 }

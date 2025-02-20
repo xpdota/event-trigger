@@ -8,6 +8,7 @@ import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,19 +83,23 @@ public class ModifiableCallout<X> {
 	 * @param expiry      A condition for expiring the callout (removes it from the on-screen display)
 	 */
 	public ModifiableCallout(String description, String tts, String text, Predicate<? super X> expiry) {
+		this(description, tts, text, (call, event) -> expiry.test(event));
+	}
+
+	private ModifiableCallout(String description, String tts, String text, CombinedExpiryCondition<X> expiry) {
 		this.description = description;
 		this.defaultTtsText = tts;
 		this.defaultVisualText = text;
-		this.expiry = x -> expiry.test(x.getEvent());
+		this.expiry = expiry.combined();
 	}
 
-//	// last argument is dumb but works
-//	public ModifiableCallout(String description, String tts, String text, Predicate<RawModifiedCallout<X>> expiry, int ignoredUnused) {
-//		this.description = description;
-//		this.defaultTtsText = tts;
-//		this.defaultVisualText = text;
-//		this.expiry = expiry;
-//	}
+	private interface CombinedExpiryCondition<X> {
+		boolean isExpired(RawModifiedCallout<X> callout, X event);
+
+		default Predicate<RawModifiedCallout<X>> combined() {
+			return c -> isExpired(c, c.getEvent());
+		}
+	}
 
 	/**
 	 * A callout with the same TTS and on-screen text, and a custom expiry time.
@@ -131,7 +136,7 @@ public class ModifiableCallout<X> {
 				return be.getEffectiveTimeSince().compareTo(dur) > 0;
 			}
 			else {
-				log.warn("Hit expiresIn false branch - this should never happen!");
+				log.error("Hit expiresIn false branch - this should never happen!");
 				return defaultExpiryAt.isBefore(Instant.now());
 			}
 		};
@@ -341,19 +346,14 @@ public class ModifiableCallout<X> {
 	 * that the buff will.
 	 *
 	 * @param desc The description.
-	 * @param text The base text. For the visual text, the duration will be appended in parenthesis.
+	 * @param text The base text. For the visual text, the duration will be appended in parentheses.
 	 *             e.g. "Water on You" will become "Water on You" (123.4) will be appended, and the timer will count
 	 *             down.
 	 * @return the ModifiableCallout
 	 */
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCall(String desc, String text) {
-		Predicate<Y> expiry = hd -> {
-			if (hd == null) {
-				log.error("durationBasedCall: event was null! No time basis! Expiring callout prematurely.");
-				return true;
-			}
-			return hd.getEstimatedTimeSinceExpiry().compareTo(defaultLingerTime) > 0;
-		};
+		// TODO: this warns once per call per program execution, rather than once per call invocation
+		CombinedExpiryCondition<Y> expiry = combinedExpiry(defaultLingerTime);
 		return new ModifiableCallout<>(desc, text, text + " ({event.estimatedRemainingDuration})", expiry);
 	}
 
@@ -363,15 +363,23 @@ public class ModifiableCallout<X> {
 
 	public static <Y extends HasDuration> ModifiableCallout<Y> durationBasedCallWithOffset(String desc, String text, Duration offset) {
 		Duration combinedLingerTime = defaultLingerTime.plus(offset);
-		Predicate<Y> expiry = hd -> {
+		CombinedExpiryCondition<Y> expiry = combinedExpiry(combinedLingerTime);
+		long millis = offset.toMillis();
+		return new ModifiableCallout<>(desc, text, text + " ({event.remainingDurationPlus(java.time.Duration.ofMillis(" + millis + "))})", expiry);
+	}
+
+	private static <Y extends HasDuration> CombinedExpiryCondition<Y> combinedExpiry(Duration combinedLingerTime) {
+		var alreadyWarned = new MutableBoolean();
+		return (call, hd) -> {
 			if (hd == null) {
-				log.error("durationBasedCall: event was null! No time basis! Expiring callout prematurely.");
-				return true;
+				if (alreadyWarned.isFalse()) {
+					log.error("durationBasedCall: event was null! No time basis! Falling back to fixed duration.");
+					alreadyWarned.setTrue();
+				}
+				return call.getEffectiveTimeSince().compareTo(defaultLingerTime) > 0;
 			}
 			return hd.getEstimatedTimeSinceExpiry().compareTo(combinedLingerTime) > 0;
 		};
-		long millis = offset.toMillis();
-		return new ModifiableCallout<>(desc, text, text + " ({event.remainingDurationPlus(java.time.Duration.ofMillis(" + millis + "))})", expiry);
 	}
 
 

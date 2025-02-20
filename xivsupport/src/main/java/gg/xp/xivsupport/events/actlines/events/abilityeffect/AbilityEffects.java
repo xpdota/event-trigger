@@ -168,6 +168,10 @@ public final class AbilityEffects {
 				// Okay, not HP set - saw it on Machinist Hypercharge + other MCH abilities
 //					return (new CurrentHpSetEffect(calcDamage(value)));
 				// Also saw it on EW EX7's set-hp-to-one mechanic, so it could be?
+				return new OtherEffect(flags, value);
+
+			case 76:
+				return new CastInterruptEffect(flags, value);
 
 			default:
 				return new OtherEffect(flags, value);

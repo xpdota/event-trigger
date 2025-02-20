@@ -1,41 +1,29 @@
 package gg.xp.xivdata.data;
 
-import gg.xp.xivdata.util.ArrayBackedMap;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.InputStream;
+import java.util.Collections;
 import java.util.Map;
 
 public class NpcYellLibrary {
 
-	public static final NpcYellLibrary INSTANCE = new NpcYellLibrary();
-	private final CsvMapLoader<Integer, NpcYellInfo> loader;
+	public static final NpcYellLibrary INSTANCE = new NpcYellLibrary(NpcYellLibrary.class.getResourceAsStream("/xiv/npcyell/NpcYell.oos.gz"));
 
-	public NpcYellLibrary() {
-		loader = CsvMapLoader.builder(() -> ReadCsv.cellsFromResource("/xiv/npcyell/NpcYell.csv"), NpcYellLibrary::parseRow,
-						(row, item) -> item.id())
-				.setMapFinisher(ArrayBackedMap::new)
-				.preFilterNullIds()
-				.build();
-	}
+	private final Map<Integer, NpcYellInfo> values;
 
-	private static NpcYellInfo parseRow(CsvRowHelper row) {
-		int id = row.getIntId();
-		String value = row.getStringOrNull(11);
-		if (value == null) {
-			return null;
-		}
-		return new NpcYellInfo(id, value);
+	public NpcYellLibrary(InputStream input) {
+		values = CompressedObjectStreamLoader.loadFrom(input, NpcYellInfo::id);
 	}
 
 	public Map<Integer, NpcYellInfo> getAll() {
-		return loader.read();
+		return Collections.unmodifiableMap(values);
 	}
 
 	public @Nullable NpcYellInfo forId(int id) {
 		NpcYellInfo npcYellInfo = getAll().get(id);
 		if (npcYellInfo != null) {
-
-		return npcYellInfo;
+			return npcYellInfo;
 		}
 		else {
 			return new NpcYellInfo(id, "Unknown %s (0x%X)".formatted(id, id));

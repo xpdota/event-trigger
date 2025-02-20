@@ -15,12 +15,14 @@ public class XivMap implements Serializable {
 	@Serial
 	private static final long serialVersionUID = -4708756454369252820L;
 
-	public static final XivMap UNKNOWN = new XivMap(0, 0, 100, null, "Unknown", "Unknown", "Unknown");
+	public static final XivMap UNKNOWN = new XivMap(0, 0, 0, 100, null, "Unknown", "Unknown", "Unknown");
 
 	@Deprecated // Use MapLibrary directly
 	public static XivMap forId(long id) {
 		return MapLibrary.forId(id);
 	}
+
+	private final int id;
 
 	private final int offsetX;
 	private final int offsetY;
@@ -34,7 +36,8 @@ public class XivMap implements Serializable {
 	private final @Nullable URL url;
 
 	// TODO: is "MapMarkerRange" useful?
-	public XivMap(int offsetX, int offsetY, int scaleFactor, @Nullable String filename, String region, String place, @Nullable String subPlace) {
+	public XivMap(int id, int offsetX, int offsetY, int scaleFactor, @Nullable String filename, String region, String place, @Nullable String subPlace) {
+		this.id = id;
 		this.offsetX = offsetX;
 		this.offsetY = offsetY;
 		this.scaleFactor = ((double) scaleFactor) / 100;
@@ -51,7 +54,7 @@ public class XivMap implements Serializable {
 			if (parts.length == 2) {
 				String stub = parts[0];
 				String index = parts[1];
-				String urlStr = String.format("https://xivapi.com/m/%s/%s.%s.jpg", stub, stub, index);
+				String urlStr = String.format("https://beta.xivapi.com/api/1/asset/map/%s/%s", stub, index);
 				URL url;
 				try {
 					url = new URL(urlStr);
@@ -69,6 +72,9 @@ public class XivMap implements Serializable {
 		}
 	}
 
+	public int getId() {
+		return id;
+	}
 
 	public int getOffsetX() {
 		return offsetX;
@@ -104,7 +110,7 @@ public class XivMap implements Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("XivMap(%s:%s:%s)", region, place, subPlace);
+		return String.format("XivMap(%s:%s:%s:%s)", region, place, subPlace, filename);
 	}
 }
 

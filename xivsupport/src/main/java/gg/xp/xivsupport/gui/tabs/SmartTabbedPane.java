@@ -242,6 +242,20 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 		});
 	}
 
+	public void addTabEager(String tabName, Component component) {
+		addTab(new TabDef() {
+			@Override
+			public String getTabName() {
+				return tabName;
+			}
+
+			@Override
+			public Component getTabContents() {
+				return new JScrollPane(component);
+			}
+		});
+	}
+
 	public void addTabLazy(TabDef def) {
 		int i = addTabLazy(def.getTabName(), def::getTabContents);
 		def.keys().forEach(k -> {

@@ -29,7 +29,7 @@ public interface XivState extends SubState {
 	// Note: can be null until we've seen a 01-line
 	@Nullable XivZone getZone();
 
-	@Nullable XivMap getMap();
+	@NotNull XivMap getMap();
 
 	List<XivPlayerCharacter> getPartyList();
 
@@ -72,9 +72,15 @@ public interface XivState extends SubState {
 
 	void provideCombatantMP(XivCombatant target, @NotNull ManaPoints manaPoints);
 
-	void provideCombatantPos(XivCombatant target, Position newPos);
+	default void provideCombatantPos(XivCombatant target, Position newPos) {
+		provideCombatantPos(target, newPos, false);
+	}
+
+	void provideCombatantPos(XivCombatant target, Position newPos, boolean trusted);
 
 	void provideActFallbackCombatant(XivCombatant cbt);
+
+	void provideTypeOverride(XivCombatant cbt, int type);
 
 	void flushProvidedValues();
 
