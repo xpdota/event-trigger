@@ -887,13 +887,16 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				}
 				else {
 					// highlight then gradually fade
+					// TODO: make the '50' part configurable
 					alpha = (int) (200.0 - td.toMillis() / 50.0);
-//					alpha = (int) (200.0 - td.toMillis() / 10.0);
-//					log.info("Since: {}, Alpha: {}", cd.getEstimatedTimeSinceExpiry().toMillis(), alpha);
 				}
-				// Don't draw ancient stuff
+				// Don't draw ancient stuff which would be fully transparent anyway.
 				if (alpha <= 0) {
 					return;
+				}
+				// Make selected thing more obvious
+				if (MapPanel.this.selection == cbtId) {
+					alpha += 50;
 				}
 				Position omenPos = omen.omenPosition(omenCbt -> MapPanel.this.combatants
 						.stream()
