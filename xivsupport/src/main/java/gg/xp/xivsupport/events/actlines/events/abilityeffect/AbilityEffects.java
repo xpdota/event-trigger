@@ -136,6 +136,9 @@ public final class AbilityEffects {
 				// reflect
 				return new ReflectFlagEffect(flags, value);
 
+			case 61:
+				return new TeleportEffect(flags, value);
+
 			// 1d,0x60000 = reflect?
 			case 27: //1B
 				// This seems to be on a lot of things that aren't involved in combos
@@ -155,12 +158,9 @@ public final class AbilityEffects {
 				// Deployment Tactics shows it as flags 0x13B, value either 0x566_0000 or 0x567_0000 (buffed vs unbuffed perhaps?)
 				// Superflare shows flags 0x1_013B, value 0x553_0000 or 0x554_0000
 				// Seems that 553 is the DoT, while 554 is the stack-based additional effect
-//					
+//
 			case 60:
 //					// bunch of random stuff like Aether Compass
-//					
-			case 61:
-//					// Gauge build?
 //					
 //
 			case 74:

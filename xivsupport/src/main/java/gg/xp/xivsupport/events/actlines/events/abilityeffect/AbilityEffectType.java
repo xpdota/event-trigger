@@ -28,5 +28,6 @@ public enum AbilityEffectType {
 	REFLECT_DUMMY,
 	REFLECTED_DAMAGE,
 	INTERRUPT_CAST,
+	TELEPORT,
 	OTHER
 }

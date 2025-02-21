@@ -33,7 +33,7 @@ public abstract class AbilityEffect {
 
 	protected String getBaseDescription() {
 		return toString();
-	};
+	}
 
 	public final String getDescription() {
 		if (flags == 0 && value == 0) {
