@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.persistence.gui;
 
 import com.formdev.flatlaf.icons.FlatCheckBoxIcon;
+import gg.xp.xivsupport.gui.util.ColorUtils;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.ResetMenuOption;
 
@@ -86,7 +87,9 @@ public class BooleanSettingGui {
 			protected Color getFocusColor(Component c) {
 				Color fc = super.getFocusColor(c);
 				if (isOverriding()) {
-					return new Color(fc.getBlue(), fc.getGreen(), fc.getRed());
+					// Swap the blue and green channels
+					return ColorUtils.modifiedSettingColor(fc);
+//					return new Color(fc.getRed(), fc.getBlue(), fc.getGreen());
 				}
 				else {
 					return fc;
@@ -119,8 +122,8 @@ public class BooleanSettingGui {
 
 	private Color colorize(Color dflt) {
 		if (isOverriding()) {
-//			return new Color(dflt.getRed(), dflt.getGreen(), Math.min(dflt.getBlue() + 40, 255));
-			return new Color(Math.min(dflt.getRed() + 40, 255), dflt.getGreen(), dflt.getBlue());
+			return new Color(Math.max(dflt.getRed() - 40, 0), Math.min(dflt.getGreen() + 60, 255), Math.min(dflt.getBlue() + 10, 255));
+//			return ColorUtils.modifiedSettingColor(dflt);
 		}
 		else {
 			return dflt;

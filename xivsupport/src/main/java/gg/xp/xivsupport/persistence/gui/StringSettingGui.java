@@ -2,6 +2,7 @@ package gg.xp.xivsupport.persistence.gui;
 
 import gg.xp.xivsupport.gui.WrapLayout;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
+import gg.xp.xivsupport.gui.util.ColorUtils;
 import gg.xp.xivsupport.persistence.settings.ResetMenuOption;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 
@@ -29,24 +30,17 @@ public class StringSettingGui {
 			@Override
 			public Color getForeground() {
 				Color defaultColor = super.getForeground();
-				if (defaultColor == null) {
-					return null;
-				}
 				if (setting.isSet()) {
-					// TODO: this can be moved to the theme
-					return new Color(Math.min(defaultColor.getRed() + 128, 255), Math.min(defaultColor.getGreen(), 200), Math.min(defaultColor.getBlue(), 200));
+					return ColorUtils.modifiedSettingColor(defaultColor);
 				}
 				return defaultColor;
 			}
 
 			@Override
 			public Color getDisabledTextColor() {
-				Color defaultColor = super.getForeground();
-				if (defaultColor == null) {
-					return null;
-				}
+				Color defaultColor = super.getDisabledTextColor();
 				if (setting.isSet()) {
-					return new Color(Math.min(defaultColor.getRed() + 40, 255), defaultColor.getGreen(), defaultColor.getBlue());
+					return ColorUtils.modifiedSettingColor(defaultColor);
 				}
 				return defaultColor;
 			}
