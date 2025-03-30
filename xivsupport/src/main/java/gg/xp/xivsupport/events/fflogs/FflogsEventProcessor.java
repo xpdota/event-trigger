@@ -138,15 +138,6 @@ public class FflogsEventProcessor {
 			long absorb
 	) {
 		double convertHeading() {
-			// conversion in other direction: m_facing = (short) Math.floor(-facing - 150 * Math.PI)
-			// m_facing = -facing - 150pi
-			// facing = -150pi - m_facing
-			// TODO this is wrong
-			// -472 seems to be south, while -786 seems to be north, -636 is ne or so
-			// -315 is west, -256 = nw, so a difference of 59 = pi/4 radians
-			// 786-472 = 314, which would support 100 * pi being half a rotation
-			// full rotation ~= 150 * pi
-			// In game uses 0 as south, and pi/-pi as north, with + being CCW
 			// First part converts to where 0 is south
 			var p1 = -facing + -150.0 * Math.PI;
 			// Then, normalize magnitude so that a full rotation is '1'
