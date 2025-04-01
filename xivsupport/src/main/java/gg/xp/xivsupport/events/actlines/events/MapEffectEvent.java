@@ -38,10 +38,12 @@ public class MapEffectEvent extends BaseEvent implements HasPrimaryValue {
 		return index;
 	}
 
+	@Deprecated
 	public long getUnknown1() {
 		return unknown1;
 	}
 
+	@Deprecated
 	public long getUnknown2() {
 		return unknown2;
 	}

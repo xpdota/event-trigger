@@ -26,7 +26,7 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 
 	private final Class<? extends Enum<F>> enumCls;
 	private final int lineNumber;
-	private final List<@Nullable F> groups;
+	private final List<@Nullable F> fields;
 	protected final XivState state;
 	protected final @Nullable FakeTimeSource fakeTimeSource;
 
@@ -35,15 +35,15 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 	}
 
 	@SuppressWarnings({"ConstantConditions", "unchecked"})
-	AbstractACTLineParser(PicoContainer container, int logLineNumber, List<@Nullable F> groups) {
+	AbstractACTLineParser(PicoContainer container, int logLineNumber, List<@Nullable F> fields) {
 		this.state = Objects.requireNonNull(container.getComponent(XivState.class), "XivState is required");
 		this.fakeTimeSource = container.getComponent(FakeACTTimeSource.class);
-		if (groups.isEmpty()) {
+		if (fields.isEmpty()) {
 			// TODO: could some of them make sense as empty?
 			throw new IllegalArgumentException("Capture groups cannot be empty");
 		}
-		this.groups = new ArrayList<>(groups);
-		F anyCap = groups.stream()
+		this.fields = new ArrayList<>(fields);
+		F anyCap = fields.stream()
 				.filter(Objects::nonNull)
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException("Must have a non-null capture group"));
@@ -62,11 +62,16 @@ public abstract class AbstractACTLineParser<F extends Enum<F>> {
 			String[] splits = event.getRawFields();
 			Map<F, String> out = new EnumMap<>((Class<F>) enumCls);
 			// Subtract 3 - line number, timestamp, hash
-			int fieldCount = Math.min(groups.size(), splits.length - 3);
+			int fieldCount = Math.min(fields.size(), splits.length - 3);
 			// TODO: validate number of fields
 			for (int i = 0; i < fieldCount; i++) {
 				// i + 2 is because the first two are the line number and timestamp.
-				out.put(groups.get(i), splits[i + 2]);
+				if ((i + 2) < splits.length) {
+					out.put(fields.get(i), splits[i + 2]);
+				}
+				else {
+					log.warn("Skipping field '{}' in line '{}' - not long enough", fields.get(i), lineNumber);
+				}
 			}
 			ZonedDateTime zdt = event.getTimestamp();
 			FieldMapper<F> mapper = new FieldMapper<>(out, state, entityLookupMissBehavior(), splits);
