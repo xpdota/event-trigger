@@ -223,7 +223,7 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 				anyShortStackOpt.ifPresent(stack -> {
 					s.setParam("stackOn", stack.getTarget());
 				});
-				List<XivCombatant> longSpreadTargets = longSpread.getEvents().stream().map(longSpreads -> longSpreads.getTarget()).toList();
+				List<XivCombatant> longSpreadTargets = longSpread.getEvents().stream().map(BuffApplied::getTarget).toList();
 				s.setParam("longSpreadOn", longSpreadTargets);
 				Optional<BuffApplied> myLongSpreadOpt = longSpread.findAny(ls -> ls.getTarget().isThePlayer());
 				myLongSpreadOpt.ifPresent(myLs -> {

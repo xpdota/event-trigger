@@ -721,6 +721,10 @@ public class XivStateImpl implements XivState {
 			// Ignore the concept of trusted positions for PCs, it really only makes sense for NPCs, especially fakes
 			if (trusted && computeRawType() != 1) {
 				TimedPosition pot = this.posOverrideTrusted;
+				// TODO: is this logic faulty? why is the 400035C6 position not getting updated in the m5s sample log
+				// at 2025-04-01T20:04:07.263?
+				// There is a 271-line immediately preceeding the offending 21-line, it should be trusted
+				// TODO: make a unit test case for this
 				if (pot == null || !Objects.equals(pot.position, posOverride)) {
 					posOverrideTrusted = makeTimedPosition(posOverride);
 					dirty = true;
