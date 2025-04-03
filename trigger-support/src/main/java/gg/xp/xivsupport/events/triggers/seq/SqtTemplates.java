@@ -107,6 +107,7 @@ public final class SqtTemplates {
 				return;
 			}
 			BiConsumer<X, SequentialTriggerController<BaseEvent>> current = triggers[index];
+			s.setParam("_multiInvocationIndex", index);
 			current.accept(e1, s);
 		};
 		return new AutoWipeSequentialTrigger<>(timeoutMs, startType, startCondition, combined) {
@@ -126,6 +127,7 @@ public final class SqtTemplates {
 		MutableInt mint = new MutableInt();
 		BiConsumer<X, SequentialTriggerController<BaseEvent>> combined = (e1, s) -> {
 			int index = mint.getAndIncrement();
+			s.setParam("_multiInvocationIndex", index);
 			trigger.accept(e1, s, index);
 		};
 		return new AutoWipeSequentialTrigger<>(timeoutMs, startType, startCondition, combined) {

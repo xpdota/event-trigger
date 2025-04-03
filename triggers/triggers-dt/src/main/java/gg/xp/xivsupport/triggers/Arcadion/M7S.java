@@ -25,8 +25,10 @@ import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 @CalloutRepo(name = "M7S", duty = KnownDuty.M7S)
 public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -51,6 +53,11 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xA55B)
 	private final ModifiableCallout<AbilityCastStart> brutalImpact = ModifiableCallout.durationBasedCall("Brutal Impact", "Multi Hit Raidwide");
 
+	// TODO: turn these into a sequential along with the general in/out
+	/*
+		A562 is IN, A561 is OUT
+
+	 */
 	@NpcCastCallout(0xA560)
 	private final ModifiableCallout<AbilityCastStart> smashThere = ModifiableCallout.durationBasedCall("Smash There", "Tanks Out, Party In");
 	@NpcCastCallout(0xA55F)
@@ -124,12 +131,14 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private static final ArenaPos exploPos = new ArenaPos(100, 100, 5, 5);
 
+	@NpcCastCallout(0xA575)
+	private final ModifiableCallout<AbilityCastStart> quarrySwampGaze = ModifiableCallout.durationBasedCall("Quarry Swamp: LoS Gaze", "Hide Behind Monster");
 
 	private final ModifiableCallout<AbilityCastStart> quarrySwamp1 = ModifiableCallout.durationBasedCall("Quarry Swamp: First Safe Spot", "{safe} safe");
 	private final ModifiableCallout<?> quarrySwampDirection = new ModifiableCallout<>("Quarry Swamp: Direction", "{clockwise ? 'Clockwise' : 'Counter-Clockwise'}");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> quarrySwampSq = SqtTemplates.multiInvocation(60_000,
+	private final SequentialTrigger<BaseEvent> explosionsSq = SqtTemplates.multiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA575),
 			(e1, s) -> {
 				// It's DSR gigaflares
@@ -189,8 +198,19 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 	// Glower: Line cleave from boss's face + spread
-	@NpcCastCallout({0xA585, 0xA94A})
+	@NpcCastCallout(0xA585)
 	private final ModifiableCallout<AbilityCastStart> glowerPower = ModifiableCallout.durationBasedCall("Glower Power", "Out and Spread");
+
+	// Thorny deathmatch
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> thornyDeathmatchSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA588),
+			(e1, s) -> {
+
+			});
+
+	// Abominable Blink is the flare, no need separate call
 
 	private final ModifiableCallout<AbilityCastStart> sporesplosionInitial = ModifiableCallout.durationBasedCall("Sporeplosion: Initial", "Dodge 3 to 1");
 	private final ModifiableCallout<?> sporesplosionAfterFirst = new ModifiableCallout<>("Sporeplosion: After First Explosion", "Move");
@@ -205,7 +225,6 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(sporesplosionAfterFirst);
 			});
 
-	// TODO: There's a tether + flare thing in this
 
 	private final ModifiableCallout<?> demolitionDeathmatchInitial = new ModifiableCallout<>("Demolition Deathmatch", "Tethers near Walls");
 
@@ -226,6 +245,7 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 				// TODO: secondary loop trigger to warn you if you get too many stacks
 				// TODO: call if you get marked
 				// Flare on a tank, they need to get away
+				// Call if you got tether too TODO
 				HeadMarkerEvent flare = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -48);
 				if (flare.getTarget().isThePlayer()) {
 					// You have flare
@@ -236,44 +256,48 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(demolitionDeathmatchNoFlare, flare);
 				}
 				// Strange seeds are cast on their targets
+				// TODO: this doesn't seem to be working
 				for (int i = 1; i <= 4; i++) {
 					// TODO: Can the headmarker just be its own separate trigger?
 					List<AbilityCastStart> strangeSeeds = s.waitEvents(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA598));
 					strangeSeeds.stream().filter(ss -> ss.getTarget().isThePlayer())
 							.findAny()
 							.ifPresent(ss -> s.updateCall(demolitionDeathmatchMarker, ss));
-
 				}
-
-				// TODO: more after this
-				// As each set drops, you have to dodge
-				// Not sure what the optimal call order is
-				// New amrkers go out before explosion
-
-				// Then there's stack markers at the end
+				// As each set drops, you have to dodge, but that would be too much noise to call
+				// Then there's stack markers at the end, handled by Killer Seeds
 			});
+
+	// Handled by a sequential since another mech needs to lock it out
+	private final ModifiableCallout<AbilityCastStart> killerSeeds = ModifiableCallout.durationBasedCall("Killer Seeds", "Partners");
 
 	@NpcCastCallout(0xA59E)
 	private final ModifiableCallout<AbilityCastStart> powerSlam = ModifiableCallout.durationBasedCall("Powerslam", "Big Raidwide");
 
-
 	// P3
+
+	@NpcCastCallout(0xA5AE)
+	private final ModifiableCallout<AbilityCastStart> slaminator = ModifiableCallout.durationBasedCall("Slaminator", "Tower");
+
 	private final ModifiableCallout<AbilityCastStart> debrisSporePollenSafe = ModifiableCallout.<AbilityCastStart>durationBasedCall("Debris Deathmatch Pollen Safe Spots", "{safeCorners} Corners Safe")
 			.extendedDescription("""
 					To use inner safe spots instead of corners, use {safeInner} instead of {safeCorners}""");
 
 	private static final ArenaPos pollenPosP3 = new ArenaPos(100, 5, 8, 8);
-	private final ModifiableCallout<AbilityCastStart> debrisSporeSinisterSeedOnYou = ModifiableCallout.durationBasedCall("Sinister Seed on You", "Drop Seed");
-	private final ModifiableCallout<?> debrisSporeDropPuddles = new ModifiableCallout<>("Drop Puddles", "Bait Puddles");
+	private final ModifiableCallout<AbilityCastStart> debrisSporeSinisterSeedOnYou = ModifiableCallout.durationBasedCall("Sinister Seed on You", "Drop Seed into Partners");
+	private final ModifiableCallout<?> debrisSporeDropPuddles = new ModifiableCallout<>("Drop Puddles", "Bait Puddles into Partners");
 	private final ModifiableCallout<AbilityCastStart> debrisSporeDodgeTentril = ModifiableCallout.durationBasedCall("Dodge Tendrils", "Dodge Tendrils");
+	private final ModifiableCallout<AbilityCastStart> debrisSporeSinisterSeedOnYou2 = ModifiableCallout.durationBasedCall("Sinister Seed on You", "Place Seed");
+	private final ModifiableCallout<?> debrisSporeDropPuddles2 = new ModifiableCallout<>("Drop Puddles", "Bait Puddles then Stack");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> debrisDeathmatchSq = SqtTemplates.sq(60_000,
+	private final SequentialTrigger<BaseEvent> debrisDeathmatchSq = SqtTemplates.sq(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA5B0),
 			(e1, s) -> {
-					// TODO
+				// TODO
 				// 4 tethers from outside
 				// Has the same vines as P1 with outside corners + inside intercards safe
+				// First, find pollen safe spot
 				var pollens = s.waitEventsQuickSuccession(12, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA56B));
 				s.waitThenRefreshCombatants(100);
 				var outerSafeCorners = EnumSet.copyOf(ArenaSector.quadrants);
@@ -292,22 +316,127 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Resolve stacks
 				// Dodge 8-ways
 				// 4 people get marked, 4 people have puddles
-				List<AbilityCastStart> markers = s.waitEventsQuickSuccession(4, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA59B));
-				markers.stream().filter(m -> m.getTarget().isThePlayer()).findAny()
-						.ifPresentOrElse(
-								myMarker -> s.updateCall(debrisSporeSinisterSeedOnYou, myMarker),
-								() -> s.updateCall(debrisSporeDropPuddles));
-				s.waitCastFinished(casts, markers.get(0));
-				AbilityCastStart tendrilCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA59C));
+				// Bait puddles into partners
+				{
+					List<AbilityCastStart> markers = s.waitEventsQuickSuccession(4, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA59B));
+
+					markers.stream().filter(m -> m.getTarget().isThePlayer()).findAny()
+							.ifPresentOrElse(
+									myMarker -> s.updateCall(debrisSporeSinisterSeedOnYou, myMarker),
+									() -> s.updateCall(debrisSporeDropPuddles));
+					s.waitCastFinished(casts, markers.get(0));
+				}
+				AbilityCastStart tendrilCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA59C, 0xA59D));
+				// Dodge tendrils
 				s.updateCall(debrisSporeDodgeTentril, tendrilCast);
-				// Same as P1
-				// One stack marker
-				// Proteans
+				// Hide behind monster (handled by other trigger)
+
+
+				{
+					List<AbilityCastStart> markers = s.waitEventsQuickSuccession(4, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA56E));
+					markers.stream().filter(m -> m.getTarget().isThePlayer()).findAny()
+							.ifPresentOrElse(
+									myMarker -> s.updateCall(debrisSporeSinisterSeedOnYou2, myMarker),
+									() -> s.updateCall(debrisSporeDropPuddles2));
+					s.waitCastFinished(casts, markers.get(0));
+				}
+			});
+
+	private final ModifiableCallout<AbilityCastStart> strangeSeed = ModifiableCallout.durationBasedCallWithOffset("P3 Strange Seed", "Drop Seed", Duration.ofMillis(4_200));
+
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> strangeSeedsSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA90A),
+			(e1, s) -> {
+				{
+					List<AbilityCastStart> markers = s.waitEventsQuickSuccession(4, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA598));
+					Optional<AbilityCastStart> myMarker = markers.stream().filter(m -> m.getTarget().isThePlayer()).findAny();
+					myMarker.ifPresent(m -> s.updateCall(strangeSeed, m));
+				}
+				{
+					List<AbilityCastStart> markers = s.waitEventsQuickSuccession(4, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA598));
+					Optional<AbilityCastStart> myMarker = markers.stream().filter(m -> m.getTarget().isThePlayer()).findAny();
+					myMarker.ifPresent(m -> s.updateCall(strangeSeed, m));
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> killerSeedsSq = SqtTemplates.sq(10_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA59B),
+			(e1, s) -> {
+				// This trigger handles the calls itself
+				if (!debrisDeathmatchSq.isActive()) {
+					s.updateCall(killerSeeds, e1);
+				}
+				// Refire suppression
+				s.waitMs(200);
+			});
+
+	@NpcCastCallout(0xA5B1)
+	private final ModifiableCallout<AbilityCastStart> enrage = ModifiableCallout.durationBasedCallWithOffset("Special Bombarian Special (Enrage)", "Enrage", Duration.ofMillis(4_200));
+
+	// TODO: does the precursor also determine the lariat direction?
+	private final ModifiableCallout<AbilityCastStart> brutishSwingInIntoLariat = ModifiableCallout.durationBasedCall("Brutish Swing: In into Lariat", "In at {where} then Dodge");
+	private final ModifiableCallout<AbilityCastStart> brutishSwingOutIntoLariat = ModifiableCallout.durationBasedCall("Brutish Swing: Out into Lariat", "Out from {where} then Dodge");
+	private final ModifiableCallout<AbilityCastStart> lariatDodgeLeft = ModifiableCallout.durationBasedCall("Brutish Swing: Lariat", "Dodge Left");
+	private final ModifiableCallout<AbilityCastStart> lariatDodgeRight = ModifiableCallout.durationBasedCall("Brutish Swing: Lariat", "Dodge Right");
+	private final ModifiableCallout<AbilityCastStart> brutishSwingInIntoGlower = ModifiableCallout.durationBasedCall("Brutish Swing: In into Glower", "In at {where} then Out");
+	private final ModifiableCallout<AbilityCastStart> brutishSwingOutIntoGlower = ModifiableCallout.durationBasedCall("Brutish Swing: Out into Glower", "Out from {where} then Out");
+	private final ModifiableCallout<?> brutishSwingGlowerNow = new ModifiableCallout<>("Brutish Swing: Glower", "Out and Spread");
+	private final ModifiableCallout<AbilityCastStart> brutishSwingInIntoTower = ModifiableCallout.durationBasedCall("Brutish Swing: In into Tower", "In at {where} then Tower");
+	private final ModifiableCallout<AbilityCastStart> brutishSwingOutIntoTower = ModifiableCallout.durationBasedCall("Brutish Swing: Out into Tower", "Out from {where} then Tower");
+
+	// Has more jumping mechs
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> p3jumps = SqtTemplates.selfManagedMultiInvocation(30_000,
+			// A5A3 is out, A5A5 is in
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA5A3, 0xA5A5),
+			(firstBrutish, s, index) -> {
+				s.waitThenRefreshCombatants(100);
+				{
+					XivCombatant bossFake = state.getLatestCombatantData(firstBrutish.getSource());
+					ArenaSector where = p2pos.forCombatant(bossFake);
+					s.setParam("where", where);
+					if (firstBrutish.abilityIdMatches(0xA5A3)) {
+						s.updateCall(brutishSwingOutIntoLariat, firstBrutish);
+					}
+					else {
+						s.updateCall(brutishSwingInIntoLariat, firstBrutish);
+					}
+				}
+				AbilityCastStart lariat = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA5A8, 0xA5AA));
+				// A5A8 hits the Boss's right, therefore we dodge right facing the boss
+				if (lariat.abilityIdMatches(0xA5A8)) {
+					s.updateCall(lariatDodgeRight, lariat);
+				}
+				else {
+					s.updateCall(lariatDodgeLeft, lariat);
+				}
+				s.waitThenRefreshCombatants(100);
+				// TODO: this does NOT transition into glower on the second one where there's the tower the second time?
+				// Can use self managed multi invocation to handle this
+				AbilityCastStart secondBrutish = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA5A3, 0xA5A5));
+				boolean isTower = index == 1;
+				{
+					XivCombatant bossFake = state.getLatestCombatantData(secondBrutish.getSource());
+					ArenaSector where = p2pos.forCombatant(bossFake);
+					s.setParam("where", where);
+					if (secondBrutish.abilityIdMatches(0xA5A3)) {
+						s.updateCall(isTower ? brutishSwingOutIntoTower : brutishSwingOutIntoGlower, secondBrutish);
+					}
+					else {
+						s.updateCall(isTower ? brutishSwingInIntoTower : brutishSwingInIntoGlower, secondBrutish);
+					}
+				}
+				if (!isTower) {
+					s.waitCastFinished(casts, secondBrutish);
+					s.updateCall(brutishSwingGlowerNow);
+				}
+
 
 			});
 
-
-	// Has more jumping mechs
 	/*
 		Jumpies:
 		Brutish Swing again
