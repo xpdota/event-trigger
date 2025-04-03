@@ -10,7 +10,9 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
@@ -96,7 +98,8 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> doubleStyle = SqtTemplates.multiInvocation(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA67D, 0xA67E, 0xA67F, 0xA680, 0xA681, 0xA682),
+			// Double style IDs. Some of these are speculative.
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x93CA, 0x9408, 0xA67D, 0xA67E, 0xA67F, 0xA680, 0xA681, 0xA682),
 			(e1, s) -> {
 				var tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.tetherIdMatches(0x13F, 0x140));
 				// Start with everything safe and eliminate possibilities
@@ -192,8 +195,32 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
+
 	@NpcCastCallout(0xA6A5)
 	private final ModifiableCallout<?> adds = new ModifiableCallout<>("Soul Sugar (Adds)", "Adds");
+	private final ModifiableCallout<?> addsWave1 = new ModifiableCallout<>("Adds Wave 1", "Wave 1");
+	private final ModifiableCallout<?> addsWave2 = new ModifiableCallout<>("Adds Wave 2", "Wave 2");
+	private final ModifiableCallout<?> addsWave3 = new ModifiableCallout<>("Adds Wave 3", "Wave 3");
+	private final ModifiableCallout<?> addsWave4 = new ModifiableCallout<>("Adds Wave 4", "Wave 4");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> addSq = SqtTemplates.sq(120_000,
+			// Cast before adds spawn
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA6A6),
+			(e1, s) -> {
+				// Cat spawn?
+				s.waitEvent(ActorControlExtraEvent.class, acee -> acee.getTarget().npcIdMatches(18347) && acee.getCategory() == 0x197);
+				s.updateCall(addsWave1);
+				// Ray spawn?
+				s.waitEvent(ActorControlExtraEvent.class, acee -> acee.getTarget().npcIdMatches(18346) && acee.getCategory() == 0x197);
+				s.updateCall(addsWave2);
+				// Jabberwock spawn?
+				s.waitEvent(ActorControlExtraEvent.class, acee -> acee.getTarget().npcIdMatches(18345) && acee.getCategory() == 0x197);
+				s.updateCall(addsWave3);
+				// Another cat spawn?
+				s.waitEvent(ActorControlExtraEvent.class, acee -> acee.getTarget().npcIdMatches(18347) && acee.getCategory() == 0x197);
+				s.updateCall(addsWave4);
+			});
 
 	@NpcCastCallout(0xA6AA)
 	private final ModifiableCallout<AbilityCastStart> readyOreNot = ModifiableCallout.durationBasedCall("Ready Ore Not", "Raidwide");
@@ -265,6 +292,71 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitMs(300);
 			});
 
+	private final ModifiableCallout<?> singleStyle1 = new ModifiableCallout<>("Single Style 1", "Avoid Lines");
+	private final ModifiableCallout<?> doubleStyle3fire = new ModifiableCallout<>("Double Style 3: Fire", "Light Parties in Water, Avoid Lines");
+	private final ModifiableCallout<?> doubleStyle3lightning = new ModifiableCallout<>("Single Style 1", "Spread on Land, Avoid Lines");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> singleStyleSq = SqtTemplates.multiInvocation(60_000,
+			// Based on cast times, this is the only ID to worry about
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9A3D),
+			(e1, s) -> {
+				s.updateCall(singleStyle1);
+			});
+
+	private final ModifiableCallout<AbilityCastStart> doubleStyle3twister1 = ModifiableCallout.durationBasedCall("Lightning Bait (Twister)", "Move");
+	private final ModifiableCallout<AbilityCastStart> doubleStyle3twister2 = ModifiableCallout.durationBasedCall("Lightning Bait 2 (Twister)", "Move into Tower");
+	private final ModifiableCallout<AbilityCastStart> doubleStyle3twister3 = ModifiableCallout.durationBasedCall("Lightning Bait 3 (Twister)", "Move into Tower");
+	private final ModifiableCallout<HeadMarkerEvent> doubleStyle3headMarker = new ModifiableCallout<>("Lightning Marker", "Spread");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> doubleStyle3sq = SqtTemplates.multiInvocation(120_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA687, 0xA689),
+			(e1, s) -> {
+				// 1. avoid lines + light parties
+				// 2. how do we know when it's light party vs other types? are there other types?
+				if (e1.abilityIdMatches(0xA687)) {
+					s.updateCall(doubleStyle3fire);
+				}
+				else {
+					s.updateCall(doubleStyle3lightning);
+				}
+				{
+					var twister = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA69D));
+					s.updateCall(doubleStyle3twister1, twister);
+				}
+
+				// Multiple sets of two headmarkers as the storm clouds rotate
+				var myHm = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getTarget().isThePlayer());
+				s.updateCall(doubleStyle3headMarker, myHm);
+
+				// Mousse drip: bait the multi-hits
+
+				// Then towers and twisters
+				// Don't enter tower immediately
+				{
+					var twister = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA69D));
+					s.updateCall(doubleStyle3twister2, twister);
+				}
+				// Callout to fly
+
+				// Then another set of twisters and towers but you also get flown to another part of the arena (based on facing angle)
+				{
+					var twister = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA69D));
+					s.updateCall(doubleStyle3twister3, twister);
+				}
+			});
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> doubleStyle3sqForCloud = SqtTemplates.multiInvocation(120_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA687, 0xA689),
+			(e1, s) -> {
+
+			});
+
+	@NpcCastCallout(0xA6BD)
+	private final ModifiableCallout<AbilityCastStart> enrage = ModifiableCallout.durationBasedCall("Artistic Anarchy (Enrage)", "Enrage");
+
+
 	/*
 	Next mechs:
 	Double style II (0xA683): can be tethered to regular or flying bomb
@@ -275,5 +367,36 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 	One corner is unsafe.
 
 	adds spawn waves? one callout per wave?
+	ActorControlExtraEvent 197 11D1:0:0:0 indicates spawn?
+
+
+	After adds:
+	Single style, with Sweet Shots outside casting rush A686
+
+	Lightning, go in circle
+
+	Sugarscape A663 (out?)
+	Double Style A687 (maybe also A689?), with sweet shots casting rush outside A686
+		Maybe this ID is what determines which type of mech?
+		Fire = light party in water
+		Thunder (A689?) = spread on land
+		How do you know whether to go in water or on land?
+
+	Taste of thinder: thunder twister that is cast on every player individually
+
+	While this happens, Tempest Piece NPC (18339) casts huge thunder (Highlightning A69B) but that is too fast of a cast
+		Perhaps a map effect? I see 3 MEEs in a log where it starts S and moves CW:
+		800375C4:200010:2:0:0
+		800375C4:200010:4:0:0
+		800375C4: 20001:24:0:0
+	Then it starts moving to a different 1/3 of the arena, so you have to rotate
+	Yep, just use the NPC itself
+
+	After that, multi-stack (uses stack icon but taken solo?), towers, twisters
+
+	There is another Color Clash stock into Double Style (9408)
+
 	 */
+
+
 }
