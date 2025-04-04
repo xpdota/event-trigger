@@ -10,6 +10,7 @@ import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
@@ -23,6 +24,7 @@ import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +79,8 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
-	private final ModifiableCallout<AbilityCastStart> dodgeClones = ModifiableCallout.durationBasedCall("Reigns: Dodge Clones", "Dodge Clones, Out of Middle");
+	private final ModifiableCallout<AbilityCastStart> eminentClones = ModifiableCallout.durationBasedCall("Eminent Reign: Dodge Clones", "Dodge Clones, Out of Middle");
+	private final ModifiableCallout<AbilityCastStart> revoClones = ModifiableCallout.durationBasedCall("Revolutionary Reign: Dodge Clones", "Dodge Clones, Out of Middle");
 	private final ModifiableCallout<AbilityCastStart> eminentStacks = ModifiableCallout.durationBasedCall("Eminent Reign: Away, Stacks", "Close Stacks");
 	private final ModifiableCallout<AbilityCastStart> revoStacks = ModifiableCallout.durationBasedCall("Revolutionary Reign: Away, Stacks", "Far Stacks");
 
@@ -90,15 +93,10 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 				Boss can jump to different clones?
 				 */
-				s.updateCall(dodgeClones, e1);
 				boolean isRevolutionary = e1.abilityIdMatches(0xA931);
+				s.updateCall(isRevolutionary ? revoClones : eminentClones, e1);
 				s.waitCastFinished(casts, e1);
-				if (isRevolutionary) {
-					s.updateCall(revoStacks, e1);
-				}
-				else {
-					s.updateCall(eminentStacks, e1);
-				}
+				s.updateCall(isRevolutionary ? revoStacks : eminentStacks, e1);
 
 			});
 
@@ -149,7 +147,6 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xA3B9)
 	private final ModifiableCallout<AbilityCastStart> trackingTremors = ModifiableCallout.durationBasedCall("Tracking Tremors", "Multi Stack");
 
-	// TODO: Great Divide
 	@NpcCastCallout(0xA3D8)
 	private final ModifiableCallout<AbilityCastStart> greatDivide = ModifiableCallout.durationBasedCall("Great Divide", "Tank Buster on {event.target}");
 
@@ -163,7 +160,8 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 			(e1, s) -> {
 				// The two tower casts, but it's actually 2 casts each, so 4 total
 				var towerCasts = s.waitEvents(4, CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA3C6));
-				var crossCasts = s.waitEvents(2, CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA3D7));
+				var crossCasts = s.waitEvents(2, ActorControlExtraEvent.class, acee -> acee.getTarget().npcIdMatches(18221));
+				s.waitThenRefreshCombatants(100);
 				// Assumptions:
 				// Towers can only be cardinal
 				// Fanged is the opposite cardinals from towers
@@ -177,7 +175,8 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 						.forEach(safe::remove);
 
 				crossCasts.stream()
-						.map(CastLocationDataEvent::getPos)
+						.map(ActorControlExtraEvent::getTarget)
+						.map(XivCombatant::getPos)
 						.forEach(pos -> {
 							var at = towersAp.forPosition(pos);
 							var facing = ArenaPos.combatantFacing(pos);
@@ -241,44 +240,56 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 		If the beams point to the intercardinals near you, then the opposite side is safe.
 	 */
 
-//	private final ModifiableCallout<AbilityCastStart> tacticalPack = ModifiableCallout.durationBasedCall("Tactical Pack", "Adds");
-//	private final ModifiableCallout<TetherEvent> addsTether = new ModifiableCallout<TetherEvent>("Tactical Pack: Tether", "Tethered to {tetherLocation}")
-//			.extendedDescription("""
-//					To call where you need to go, change to { tetherLocation.opposite() }""");
-//
-//	private final ModifiableCallout<BuffApplied> addsGreenBuff = ModifiableCallout.durationBasedCall("Tactical Pack: Green Debuff", "Walk to Green");
-//	private final ModifiableCallout<BuffApplied> addsYellowBuff = ModifiableCallout.durationBasedCall("Tactical Pack: Green Debuff", "Walk to Yellow");
-//
-//	@AutoFeed
-//	private final SequentialTrigger<BaseEvent> tactialPackSq = SqtTemplates.sq(180_000,
-//			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3C8),
-//			(e1, s) -> {
-//				s.updateCall(tacticalPack, e1);
-//				List<TetherEvent> tethers = s.waitEventsQuickSuccession(8, TetherEvent.class, te -> te.tetherIdMatches(0x14F, 0x150));
-//				tethers.stream().filter(hm -> hm.getTarget().isThePlayer())
-//						.findAny()
-//						.ifPresent(t -> {
-//							s.waitThenRefreshCombatants(100);
-//							var where = towersAp.forCombatant(state.getLatestCombatantData(t.getTargetMatching(cbt -> !cbt.isPc())));
-//							s.setParam("tetherLocation", where);
-//							s.updateCall(addsTether, t);
-//						});
-//				List<BuffApplied> packBuffs = s.waitEventsQuickSuccession(8, BuffApplied.class, ba -> ba.buffIdMatches(0x1125, 0x1126));
-//				packBuffs.stream().filter(buff -> buff.getTarget().isThePlayer())
-//						.findAny()
-//						.ifPresent(myBuff -> {
-//							RawModifiedCallout<BuffApplied> call;
-//							if (myBuff.buffIdMatches(0x1125)) {
-//								call = s.updateCall(addsGreenBuff, myBuff);
-//							}
-//							else {
-//								call = s.updateCall(addsYellowBuff, myBuff);
-//							}
-//							s.waitBuffRemoved(buffs, myBuff);
-//							call.forceExpire();
-//						});
-//			});
-//
+	private final ModifiableCallout<AbilityCastStart> tacticalPack = ModifiableCallout.durationBasedCall("Tactical Pack", "Adds");
+	private final ModifiableCallout<TetherEvent> addsTether = new ModifiableCallout<TetherEvent>("Tactical Pack: Tether", "Tethered to {tetherLocation}")
+			.extendedDescription("""
+					To call where you need to go, change to { tetherLocation.opposite() }""");
+
+	private final ModifiableCallout<BuffApplied> addsGreenBuffShort = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Short Green Debuff", "Touch Green (Short)").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsYellowBuffShort = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Short Yellow Debuff", "Touch Yellow (Short)").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsGreenBuffMed = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Medium Green Debuff", "Touch Green (Med)").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsYellowBuffMed = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Medium Yellow Debuff", "Touch Yellow (Med)").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsGreenBuffLong = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Long Green Debuff", "Touch Green (Long)").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsYellowBuffLong = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Long Yellow Debuff", "Touch Yellow (Long)").autoIcon();
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> tacticalPackSq = SqtTemplates.sq(180_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3C8),
+			(e1, s) -> {
+				s.updateCall(tacticalPack, e1);
+				List<TetherEvent> tethers = s.waitEventsQuickSuccession(8, TetherEvent.class, te -> te.tetherIdMatches(0x14F, 0x150));
+				tethers.stream().filter(hm -> hm.eitherTargetMatches(XivCombatant::isThePlayer))
+						.findAny()
+						.ifPresent(t -> {
+							s.waitThenRefreshCombatants(100);
+							var where = towersAp.forCombatant(state.getLatestCombatantData(t.getTargetMatching(cbt -> !cbt.isPc())));
+							s.setParam("tetherLocation", where);
+							s.updateCall(addsTether, t);
+						});
+				List<BuffApplied> packBuffs = s.waitEventsQuickSuccession(6, BuffApplied.class, ba -> ba.buffIdMatches(0x1127, 0x1128));
+				packBuffs.stream().filter(buff -> buff.getTarget().isThePlayer())
+						.findAny()
+						.ifPresent(myBuff -> {
+							RawModifiedCallout<BuffApplied> call;
+							boolean isGreen = myBuff.buffIdMatches(0x1128);
+							long secs = myBuff.getInitialDuration().toSeconds();
+							if (secs < 30) {
+								call = s.updateCall(isGreen ? addsGreenBuffShort : addsYellowBuffShort, myBuff);
+							}
+							else if (secs < 45) {
+								call = s.updateCall(isGreen ? addsGreenBuffMed : addsYellowBuffMed, myBuff);
+							}
+							else {
+								call = s.updateCall(isGreen ? addsGreenBuffLong : addsYellowBuffLong, myBuff);
+							}
+							s.waitBuffRemoved(buffs, myBuff);
+							call.forceExpire();
+						});
+				// TODO: tanks call?
+				// TODO: other adds things?
+				// TODO: adds enrage? A3D0 + A3D3
+			});
+
 
 	/*
 	Adds
@@ -299,6 +310,31 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 		By this point, either or both heads are close to dying, so keep DPS up until they're dead.
 		Tanks can also bring them towards each other for easier target switching once either dies.
 	 */
+
+	@NpcCastCallout(0xA749)
+	private final ModifiableCallout<AbilityCastStart> ravenousSaber = ModifiableCallout.durationBasedCall("Ravenous Saber", "Multiple Raidwides");
+
+	private final ModifiableCallout<HeadMarkerEvent> terrestrialRageSpread = new ModifiableCallout<>("Terrestrial Rage Spread", "Spread");
+	private final ModifiableCallout<?> terrestrialRageStack = new ModifiableCallout<>("Terrestrial Rage Stack", "Stack");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> terrestrialRageSq = SqtTemplates.sq(120_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3BE),
+			(e1, s) -> {
+				// Has a fanged charge A3D6, there's some headmarkers and stuff
+				// I think spread is HM 139 -237 and stack is HM 93 -283 ?
+				// Staggered pairs of Fanged Charge A3D6
+				List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
+				spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer())
+						.findAny()
+						.ifPresentOrElse(myHm -> {
+							s.updateCall(terrestrialRageSpread, myHm);
+						}, () -> {
+							s.updateCall(terrestrialRageStack);
+						});
+
+			});
+
 	/*
 	P2
 		Ravenous Saber
