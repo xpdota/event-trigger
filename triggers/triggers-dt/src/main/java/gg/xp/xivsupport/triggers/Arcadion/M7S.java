@@ -53,15 +53,28 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xA55B)
 	private final ModifiableCallout<AbilityCastStart> brutalImpact = ModifiableCallout.durationBasedCall("Brutal Impact", "Multi Hit Raidwide");
 
-	// TODO: turn these into a sequential along with the general in/out
-	/*
-		A562 is IN, A561 is OUT
+	private final ModifiableCallout<AbilityCastStart> inSmashThere = ModifiableCallout.durationBasedCall("In + Smash There", "In, Tanks Out, Party In");
+	private final ModifiableCallout<AbilityCastStart> inSmashHere = ModifiableCallout.durationBasedCall("In + Smash Here", "In, Tanks In, Party Out");
+	private final ModifiableCallout<AbilityCastStart> outSmashThere = ModifiableCallout.durationBasedCall("Out + Smash There", "Out, Tanks Out, Party In");
+	private final ModifiableCallout<AbilityCastStart> outSmashHere = ModifiableCallout.durationBasedCall("Out + Smash Here", "Out, Tanks In, Party Out");
 
-	 */
-	@NpcCastCallout(0xA560)
-	private final ModifiableCallout<AbilityCastStart> smashThere = ModifiableCallout.durationBasedCall("Smash There", "Tanks Out, Party In");
-	@NpcCastCallout(0xA55F)
-	private final ModifiableCallout<AbilityCastStart> smashHere = ModifiableCallout.durationBasedCall("Smash Here", "Tanks In, Party Out");
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> smashHereThere = SqtTemplates.sq(10_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA55F, 0xA560),
+			(e1, s) -> {
+				boolean partyIn = e1.abilityIdMatches(0xA560);
+				// A561 is OUT, A562 is IN
+				AbilityCastStart inOut = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xA561, 0xA562), false);
+				boolean overallIn = inOut.abilityIdMatches(0xA562);
+
+				if (overallIn) {
+					s.updateCall(partyIn ? inSmashThere : inSmashHere, inOut);
+				}
+				else {
+					s.updateCall(partyIn ? outSmashThere : outSmashHere, inOut);
+				}
+
+			});
 
 	private static final ArenaPos pollenPos = new ArenaPos(100, 100, 8, 8);
 
@@ -122,7 +135,7 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 						The headmarker also comes with A56E cast on you
 					Dodge 8-ways (Tendrils of Terror)
 					Adds spawn
-					THey start casting stuff
+					They start casting stuff
 					You can interrupt winding
 					Hurricane force is adds enrage
 
@@ -243,7 +256,6 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(demolitionDeathmatchInitial);
 
 				// TODO: secondary loop trigger to warn you if you get too many stacks
-				// TODO: call if you get marked
 				// Flare on a tank, they need to get away
 				// Call if you got tether too TODO
 				HeadMarkerEvent flare = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -48);
@@ -256,9 +268,7 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(demolitionDeathmatchNoFlare, flare);
 				}
 				// Strange seeds are cast on their targets
-				// TODO: this doesn't seem to be working
 				for (int i = 1; i <= 4; i++) {
-					// TODO: Can the headmarker just be its own separate trigger?
 					List<AbilityCastStart> strangeSeeds = s.waitEvents(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA598));
 					strangeSeeds.stream().filter(ss -> ss.getTarget().isThePlayer())
 							.findAny()
