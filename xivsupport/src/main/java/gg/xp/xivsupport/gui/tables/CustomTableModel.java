@@ -107,6 +107,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 				oldSelections = Arrays.stream(oldSelectionIndices)
 						.mapToObj(i -> data.get(i))
 						.collect(Collectors.toList());
+				// TODO: catch IndexOutOfBounds here
 			} catch (Throwable t) {
 				log.error("Error re-applying selections, clearing selections.", t);
 				oldSelections = Collections.emptyList();
