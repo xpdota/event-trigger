@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
@@ -15,6 +16,7 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.misc.NpcYellEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -25,6 +27,7 @@ import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -340,8 +343,8 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.waitMs(100);
 				// TODO: this is giving a bad call, even with the delay. Some kind of timing issue?
 				// Possible solution: wasn't checking only your own
-				BuffApplied myBuff = s.findOrWaitForBuff(buffs, ba -> ba.getTarget().isThePlayer()
-				                                                      && ba.buffIdMatches(0x1125, 0x1126));
+				BuffApplied myBuff = s.findOrWaitForBuff(buffs,
+						ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0x1125, 0x1126));
 				s.updateCall(myBuff.buffIdMatches(0x1125) ? addsAttackYellow : addsAttackGreen, myBuff);
 
 				// TODO: adds enrage? A3D0 + A3D3
@@ -469,8 +472,10 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 				// There are four weals at the end, hitting cards or intercards (opposite is safe)
 				// TODO: this seems to call a bit late. Is there an earlier tell?
-				ActorControlExtraEvent weal = s.waitEvent(ActorControlExtraEvent.class,
-						acee -> acee.getCategory() == 0x197 && acee.getTarget().npcIdMatches(18507));
+				ActorControlExtraEvent weal = s.waitEvent(
+						ActorControlExtraEvent.class,
+						acee -> acee.getCategory() == 0x197
+						        && acee.getTarget().npcIdMatches(18507));
 				s.waitThenRefreshCombatants(100);
 				ArenaSector wealFacing = ArenaPos.combatantFacing(state.getLatestCombatantData(weal.getTarget()));
 				if (wealFacing.isCardinal()) {
@@ -488,21 +493,13 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				// For the headmarkers, we can call the first one as soon as it comes out
 				{
 					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
-					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer())
-							.findAny()
-							.ifPresentOrElse(
-									myHm -> s.updateCall(moonlightSpread),
-									() -> s.updateCall(moonlightStack));
+					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
 				}
 				{
 					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
 					// We need to not talk all over one of the directional calls
 					s.waitMs(1200);
-					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer())
-							.findAny()
-							.ifPresentOrElse(
-									myHm -> s.updateCall(moonlightSpread),
-									() -> s.updateCall(moonlightStack));
+					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
 				}
 			});
 
@@ -541,4 +538,67 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 		Tracking Tremors (8x heavy stacks) next, then another raidwide into enrage.
 	 */
+
+	// P2
+
+	// 1129 Terrestrial Chains Debuff: unable to jump
+
+	// HM 93 -283
+	// Quake III A45A - stack?
+	@NpcCastCallout(0xA45A)
+	private final ModifiableCallout<AbilityCastStart> quakeIII = ModifiableCallout.durationBasedCall("Quake III", "Stacks");
+
+	private final ModifiableCallout<?> ultraviolentRayOneSupportFourDps = new ModifiableCallout<>("Ultraviolent Ray: One Support, Four DPS", "DPS Marked");
+	private final ModifiableCallout<?> ultraviolentRayOneDpsFourSupport = new ModifiableCallout<>("Ultraviolent Ray: One DPS, Four Support", "Supports Marked");
+	private final ModifiableCallout<?> ultraviolentRayOneOtherConfig = new ModifiableCallout<>("Ultraviolent Ray: One DPS, Four Support", "{supportCount} Supports, {dpsCount} DPS");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> ultraviolentRaySq = SqtTemplates.sq(120_000,
+			NpcYellEvent.class, nye -> nye.getYell().id() == 18441,
+			(e1, s) -> {
+				// There are two of these at the start, but no good start condition exists for the latter
+				for (int i = 0; i < 2; i++) {
+
+				}
+				List<HeadMarkerEvent> markers = s.waitEventsQuickSuccession(5, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -362);
+				int supportCount = 0;
+				int dpsCount = 0;
+				for (HeadMarkerEvent marker : markers) {
+					XivPlayerCharacter target = (XivPlayerCharacter) marker.getTarget();
+					Job job = target.getJob();
+					if (job.isDps()) {
+						dpsCount++;
+					}
+					else {
+						supportCount++;
+					}
+				}
+				s.setParam("supportCount", supportCount);
+				s.setParam("dpsCount", dpsCount);
+				// Happy path 1
+				if (supportCount == 1 && dpsCount == 4) {
+					s.updateCall(ultraviolentRayOneSupportFourDps);
+				}
+				// Happy path 2
+				else if (supportCount == 4 && dpsCount == 1) {
+					s.updateCall(ultraviolentRayOneDpsFourSupport);
+				}
+				// People dead, it got messed up, etc
+				else {
+					s.updateCall(ultraviolentRayOneOtherConfig);
+				}
+				// TODO: gleaming beam - call out left vs right on your platform I guess?
+
+			});
+	// Casts Ultraviolent Ray A45C
+	// Casts multiple Gleaming Beam A45E - these need to be dodged left vs right, but it's unique to each platform
+	// A4CD Twinbite - tankbuster?
+	@NpcCastCallout(0xA4CD)
+	private final ModifiableCallout<AbilityCastStart> twinbite = ModifiableCallout.durationBasedCall("Twinbite", "Double Tankbuster");
+
+	@NpcCastCallout(0xA463)
+	private final ModifiableCallout<AbilityCastStart> fangedMaw = ModifiableCallout.durationBasedCall("Fanged Maw", "Out, Watch Cleave");
+
+	@NpcCastCallout(0xA464)
+	private final ModifiableCallout<AbilityCastStart> fangedPerimeter = ModifiableCallout.durationBasedCall("Fanged Perimeter", "In, Watch Cleave");
 }
