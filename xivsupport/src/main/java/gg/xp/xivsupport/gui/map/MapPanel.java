@@ -888,12 +888,14 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 				else {
 					// highlight then gradually fade
 					// TODO: make the '50' part configurable
-					alpha = (int) (200.0 - td.toMillis() / 50.0);
+					// Fade out over 10s
+					double basis = 1 - td.toMillis() / 10000.0;
+					if (basis <= 0) {
+						return;
+					}
+					alpha = (int) (200.0 * Math.pow(basis, 3));
 				}
 				// Don't draw ancient stuff which would be fully transparent anyway.
-				if (alpha <= 0) {
-					return;
-				}
 				// Make selected thing more obvious
 				if (MapPanel.this.selection == cbtId) {
 					alpha += 50;

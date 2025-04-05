@@ -8,8 +8,8 @@ import gg.xp.reevent.scan.FilteredEventHandler;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
-import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
+import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
@@ -28,6 +28,7 @@ import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -60,8 +61,6 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> stonefangCard = ModifiableCallout.durationBasedCall("Stonefang", "Spread, Out, Cardinals");
 	private final ModifiableCallout<AbilityCastStart> stonefangInter = ModifiableCallout.durationBasedCall("Stonefang", "Spread, Out, Intercards");
 
-	private static final int TODO = 9999999;
-
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> fangSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA39F, 0xA3B0),
@@ -83,21 +82,32 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> revoClones = ModifiableCallout.durationBasedCall("Revolutionary Reign: Dodge Clones", "Dodge Clones, Out of Middle");
 	private final ModifiableCallout<AbilityCastStart> eminentStacks = ModifiableCallout.durationBasedCall("Eminent Reign: Away, Stacks", "Close Stacks");
 	private final ModifiableCallout<AbilityCastStart> revoStacks = ModifiableCallout.durationBasedCall("Revolutionary Reign: Away, Stacks", "Far Stacks");
+	private final ModifiableCallout<AbilityCastStart> eminentStacksWithLines = ModifiableCallout.durationBasedCall("Eminent Reign: Away, Stacks", "Close Stacks, Dodge Lines");
+	private final ModifiableCallout<AbilityCastStart> revoStacksWithLines = ModifiableCallout.durationBasedCall("Revolutionary Reign: Away, Stacks", "Far Stacks, Dodge Lines");
+	private final ModifiableCallout<AbilityCastStart> reignsDodgeHeads = ModifiableCallout.durationBasedCall("Reign: Dodge Lines", "Dodge Lines");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> reignsSq = SqtTemplates.sq(60_000,
+	private final SequentialTrigger<BaseEvent> reignsSq = SqtTemplates.selfManagedMultiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA930, 0xA931),
-			(e1, s) -> {
+			(e1, s, index) -> {
 				/*
 				Revo: A913 + A931
 
-				Boss can jump to different clones?
+				Boss can jump to different clones. It is technically possible to differentiate, but is there really much
+				vaue?
 				 */
 				boolean isRevolutionary = e1.abilityIdMatches(0xA931);
 				s.updateCall(isRevolutionary ? revoClones : eminentClones, e1);
 				s.waitCastFinished(casts, e1);
-				s.updateCall(isRevolutionary ? revoStacks : eminentStacks, e1);
-
+				if (index < 2) {
+					s.updateCall(isRevolutionary ? revoStacks : eminentStacks, e1);
+				}
+				else {
+					s.updateCall(isRevolutionary ? revoStacksWithLines : eminentStacksWithLines, e1);
+					// There is a pair of Weal of Stone with these. A78E
+					AbilityCastStart weal = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xA78D, 0xA78E), false);
+					s.updateCall(reignsDodgeHeads, weal);
+				}
 			});
 
 	// TODO: should KB be called, or would the calls be too busy?
@@ -245,12 +255,17 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 			.extendedDescription("""
 					To call where you need to go, change to { tetherLocation.opposite() }""");
 
-	private final ModifiableCallout<BuffApplied> addsGreenBuffShort = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Short Green Debuff", "Touch Green (Short)").autoIcon();
-	private final ModifiableCallout<BuffApplied> addsYellowBuffShort = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Short Yellow Debuff", "Touch Yellow (Short)").autoIcon();
-	private final ModifiableCallout<BuffApplied> addsGreenBuffMed = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Medium Green Debuff", "Touch Green (Med)").autoIcon();
-	private final ModifiableCallout<BuffApplied> addsYellowBuffMed = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Medium Yellow Debuff", "Touch Yellow (Med)").autoIcon();
-	private final ModifiableCallout<BuffApplied> addsGreenBuffLong = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Long Green Debuff", "Touch Green (Long)").autoIcon();
-	private final ModifiableCallout<BuffApplied> addsYellowBuffLong = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Long Yellow Debuff", "Touch Yellow (Long)").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsGreenBuffShort = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Short Green Debuff", "Touch Green, First").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsYellowBuffShort = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Short Yellow Debuff", "Touch Yellow, First").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsGreenBuffMed = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Medium Green Debuff", "Touch Green, Second").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsYellowBuffMed = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Medium Yellow Debuff", "Touch Yellow, Second").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsGreenBuffLong = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Long Green Debuff", "Touch Green, Third").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsYellowBuffLong = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Long Yellow Debuff", "Touch Yellow, Third").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsAttackGreen = new ModifiableCallout<BuffApplied>("Tactical Pack: Attack Green", "Attack Green").autoIcon();
+	private final ModifiableCallout<BuffApplied> addsAttackYellow = new ModifiableCallout<BuffApplied>("Tactical Pack: Attack Yellow", "Attack Yellow").autoIcon();
+
+	@NpcCastCallout(value = 0xA3CC, suppressMs = 1000)
+	private final ModifiableCallout<AbilityCastStart> packPredation = ModifiableCallout.durationBasedCall("Tactical Pack: Pack Predation", "Cleaves");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> tacticalPackSq = SqtTemplates.sq(180_000,
@@ -270,23 +285,29 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				packBuffs.stream().filter(buff -> buff.getTarget().isThePlayer())
 						.findAny()
 						.ifPresent(myBuff -> {
-							RawModifiedCallout<BuffApplied> call;
 							boolean isGreen = myBuff.buffIdMatches(0x1128);
 							long secs = myBuff.getInitialDuration().toSeconds();
 							if (secs < 30) {
-								call = s.updateCall(isGreen ? addsGreenBuffShort : addsYellowBuffShort, myBuff);
+								s.updateCall(isGreen ? addsGreenBuffShort : addsYellowBuffShort, myBuff);
 							}
 							else if (secs < 45) {
-								call = s.updateCall(isGreen ? addsGreenBuffMed : addsYellowBuffMed, myBuff);
+								s.updateCall(isGreen ? addsGreenBuffMed : addsYellowBuffMed, myBuff);
 							}
 							else {
-								call = s.updateCall(isGreen ? addsGreenBuffLong : addsYellowBuffLong, myBuff);
+								s.updateCall(isGreen ? addsGreenBuffLong : addsYellowBuffLong, myBuff);
 							}
 							s.waitBuffRemoved(buffs, myBuff);
-							call.forceExpire();
 						});
-				// TODO: tanks call?
-				// TODO: other adds things?
+				// If you are either a tank and didn't get a timed debuff, or you already handled yours, then call out which mob to attack
+				// 1125 = Green Debuff, Attack Yellow
+				// 1126 = Yellow Debuff, Attack Green
+				s.waitMs(100);
+				// TODO: this is giving a bad call, even with the delay. Some kind of timing issue?
+				// Possible solution: wasn't checking only your own
+				BuffApplied myBuff = s.findOrWaitForBuff(buffs, ba -> ba.getTarget().isThePlayer()
+				                                                      && ba.buffIdMatches(0x1125, 0x1126));
+				s.updateCall(myBuff.buffIdMatches(0x1125) ? addsAttackYellow : addsAttackGreen, myBuff);
+
 				// TODO: adds enrage? A3D0 + A3D3
 			});
 
@@ -314,29 +335,137 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xA749)
 	private final ModifiableCallout<AbilityCastStart> ravenousSaber = ModifiableCallout.durationBasedCall("Ravenous Saber", "Multiple Raidwides");
 
-	private final ModifiableCallout<HeadMarkerEvent> terrestrialRageSpread = new ModifiableCallout<>("Terrestrial Rage Spread", "Spread");
-	private final ModifiableCallout<?> terrestrialRageStack = new ModifiableCallout<>("Terrestrial Rage Stack", "Stack");
+	private final ModifiableCallout<HeadMarkerEvent> terrestrialRageSpread = new ModifiableCallout<>("Terrestrial Rage Spread", "Spread Between Lines");
+	private final ModifiableCallout<?> terrestrialRageStack = new ModifiableCallout<>("Terrestrial Rage Stack", "Stack Between Lines");
+	private final ModifiableCallout<?> terrestrialRageMove = new ModifiableCallout<>("Terrestrial Rage Move", "Move");
+	private final ModifiableCallout<HeadMarkerEvent> shadowchaseSpread = new ModifiableCallout<>("Shadowchase Spread", "Spread Behind Adds");
+	private final ModifiableCallout<?> shadowchaseStack = new ModifiableCallout<>("Shadowchase Stack", "Stack Behind Adds");
+	private final ModifiableCallout<?> shadowchaseMove = new ModifiableCallout<>("Shadowchase Move", "Rotate");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> terrestrialRageSq = SqtTemplates.sq(120_000,
+	private final SequentialTrigger<BaseEvent> terrestrialRageShadowchaseSq = SqtTemplates.selfManagedMultiInvocation(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3BE),
-			(e1, s) -> {
+			(e1, s, index) -> {
+				// We only care about the first one
+				if (index > 0) {
+					return;
+				}
 				// Has a fanged charge A3D6, there's some headmarkers and stuff
-				// I think spread is HM 139 -237 and stack is HM 93 -283 ?
+				// spread is HM 139 -237 and stack is HM 93 -283
 				// Staggered pairs of Fanged Charge A3D6
-				List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
-				spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer())
-						.findAny()
-						.ifPresentOrElse(myHm -> {
-							s.updateCall(terrestrialRageSpread, myHm);
-						}, () -> {
-							s.updateCall(terrestrialRageStack);
-						});
+				{
+					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
+					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer())
+							.findAny()
+							.ifPresentOrElse(
+									myHm -> s.updateCall(terrestrialRageSpread, myHm),
+									() -> s.updateCall(terrestrialRageStack));
+					// Wait for first fanged charge to go off
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xA3D6));
+					s.updateCall(terrestrialRageMove);
+				}
+				// Shadowchase
+				{
+					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
+					// This comes out pretty early, so delay
 
+					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer())
+							.findAny()
+							.ifPresentOrElse(
+									myHm -> s.updateCall(shadowchaseSpread, myHm),
+									() -> s.updateCall(shadowchaseStack));
+					// Wait for first set of Shadowchase to go off
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xA3BD));
+					s.updateCall(shadowchaseMove);
+				}
+			});
+
+	private static final ArenaPos moonlightAp = new ArenaPos(100, 100, 5, 5);
+
+	private static ArenaSector safeSpotForMoonlight(CastLocationDataEvent moonlightCast) {
+		// e.g. a north cast is 112,90 heading -1.57 (west)
+		// so if we move "forward" 12, that gives us 100,90, i.e. north
+		// This is the place getting hit, so we need to instead use the opposite
+		return moonlightAp.forPosition(moonlightCast.getPos().translateRelative(0, 12)).opposite();
+	}
+
+	private final ModifiableCallout<AbilityCastStart> moonlightFirst = new ModifiableCallout<>("Moonlight First", "Start {safeSpots[0]}", "{safeSpots[i..-1]}");
+	private final ModifiableCallout<AbilityCastStart> moonlightRemaining = new ModifiableCallout<>("Moonlight Remaining", "{safeSpots[i]}", "{safeSpots[i..-1]}");
+	private final ModifiableCallout<?> moonlightStack = new ModifiableCallout<>("Moonlight Stack", "Stack");
+	private final ModifiableCallout<?> moonlightSpread = new ModifiableCallout<>("Moonlight Spread", "Spread");
+	private final ModifiableCallout<AbilityCastStart> moonlightWealCardSafe = ModifiableCallout.durationBasedCall("Moonlight: Weal, Cardinal Safe", "Cardinals");
+	private final ModifiableCallout<AbilityCastStart> moonlightWealInterSafe = ModifiableCallout.durationBasedCall("Moonlight: Weal, Intercard Safe", "Intercards");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> beckonMoonlightSq = SqtTemplates.sq(120_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3C1),
+			(e1, s) -> {
+				// There are actually three tells for each clone
+				// First, they use either action A3E0 (cleaving right) or A3E1 (left)
+				// They also get an actor control extra with 3F 6:0 (right) or 3F 7:0 (left)
+				// Finally, they case Moonbeam's Bite A3C2 (right) or A3C3 (left)
+				// However, the cast is proabably the most reliable because they happen to be in position already for that
+				// The initial actions seem to position them
+				List<AbilityCastStart> allCasts = new ArrayList<>();
+				List<ArenaSector> safe = new ArrayList<>();
+				s.setParam("safeSpots", safe);
+				s.setParam("i", 0);
+				var first = s.waitEvent(CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA3C2, 0xA3C3));
+				ArenaSector firstAs = safeSpotForMoonlight(first);
+				allCasts.add(first.originalEvent());
+				safe.add(firstAs);
+				s.updateCall(moonlightFirst, first.originalEvent());
+				for (int i = 0; i < 3; i++) {
+					var next = s.waitEvent(CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA3C2, 0xA3C3));
+					allCasts.add(next.originalEvent());
+					safe.add(safeSpotForMoonlight(next));
+				}
+
+				for (int i = 0; i < allCasts.size(); i++) {
+					s.setParam("i", i);
+					s.updateCall(moonlightRemaining, allCasts.get(i));
+					var cast = allCasts.get(i);
+					s.waitCastFinished(casts, cast);
+				}
+
+				// There are four weals at the end, hitting cards or intercards (opposite is safe)
+				CastLocationDataEvent weal = s.waitEvent(CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA792));
+				ArenaSector wealFacing = ArenaPos.combatantFacing(weal.getBestHeading());
+				if (wealFacing.isCardinal()) {
+					s.updateCall(moonlightWealInterSafe, weal.originalEvent());
+				}
+				else {
+					s.updateCall(moonlightWealCardSafe, weal.originalEvent());
+				}
+			});
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> beckonMoonlightHeadmarkSq = SqtTemplates.sq(120_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3C1),
+			(e1, s) -> {
+				// For the headmarkers, we can call the first one as soon as it comes out
+				{
+					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
+					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer())
+							.findAny()
+							.ifPresentOrElse(
+									myHm -> s.updateCall(moonlightSpread),
+									() -> s.updateCall(moonlightStack));
+				}
+				{
+					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
+					// We need to not talk all over one of the directional calls
+					s.waitMs(1200);
+					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer())
+							.findAny()
+							.ifPresentOrElse(
+									myHm -> s.updateCall(moonlightSpread),
+									() -> s.updateCall(moonlightStack));
+				}
 			});
 
 	/*
-	P2
+	Post-Adds
 		Ravenous Saber
 		Big raidwide, multiple hits. Mits only after both dragon heads fuse.
 
@@ -353,6 +482,7 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 		5 dragon heads also spawn, the AoEs also resemble the same shape so players rotate to be behind a head.
 
 		Reign afterwards, but with additional dragon heads rendering two 'lanes' unsafe.
+		TODO
 		Dodge heads after conal stacks/busters.
 
 		Beckon Moonlight
