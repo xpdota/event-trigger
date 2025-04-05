@@ -255,6 +255,10 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 			.extendedDescription("""
 					To call where you need to go, change to { tetherLocation.opposite() }""");
 
+	private final ModifiableCallout<?> addsClockwise = new ModifiableCallout<>("Tactical Pack: Clockwise", "Clockwise");
+	private final ModifiableCallout<?> addsCcw = new ModifiableCallout<>("Tactical Pack: Counter-Clockwise", "Counter-Clockwise");
+	// TODO: some strats DO NOT stack the cleave, they just have one person point it out of the arena.
+	// Thus, there is value in knowing whether the cleave (headmarker) is on you or someone else.
 	private final ModifiableCallout<BuffApplied> addsGreenBuffShort = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Short Green Debuff", "Touch Green, First").autoIcon();
 	private final ModifiableCallout<BuffApplied> addsYellowBuffShort = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Short Yellow Debuff", "Touch Yellow, First").autoIcon();
 	private final ModifiableCallout<BuffApplied> addsGreenBuffMed = ModifiableCallout.<BuffApplied>durationBasedCall("Tactical Pack: Medium Green Debuff", "Touch Green, Second").autoIcon();
@@ -281,7 +285,39 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 							s.setParam("tetherLocation", where);
 							s.updateCall(addsTether, t);
 						});
+
 				List<BuffApplied> packBuffs = s.waitEventsQuickSuccession(6, BuffApplied.class, ba -> ba.buffIdMatches(0x1127, 0x1128));
+
+
+				// Rotation - don't stop and wait for this if the callouts are disabled
+				if (addsClockwise.isEnabled() || addsCcw.isEnabled()) {
+					for (int i = 0; i < 20; i++) {
+						s.waitThenRefreshCombatants(100);
+						XivCombatant yellowOrb = state.npcById(18262);
+						XivCombatant yellowHead = state.npcById(18225);
+						if (yellowHead == null || yellowOrb == null) {
+							continue;
+						}
+						// You can imagine it like the orb chases the head
+						ArenaSector orbSec = towersAp.forCombatant(yellowOrb);
+						ArenaSector headSec = towersAp.forCombatant(yellowHead);
+						if (orbSec.isCardinal() && headSec.isCardinal()) {
+							int eighths = orbSec.eighthsTo(headSec);
+							if (eighths == 0 || eighths == 4) {
+								continue;
+							}
+							if (eighths > 0) {
+								s.call(addsClockwise);
+							}
+							else {
+								s.call(addsCcw);
+							}
+							s.waitMs(1_200);
+							break;
+						}
+					}
+				}
+
 				packBuffs.stream().filter(buff -> buff.getTarget().isThePlayer())
 						.findAny()
 						.ifPresent(myBuff -> {
@@ -389,7 +425,7 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 		return moonlightAp.forPosition(moonlightCast.getPos().translateRelative(0, 12)).opposite();
 	}
 
-	private final ModifiableCallout<AbilityCastStart> moonlightFirst = new ModifiableCallout<>("Moonlight First", "Start {safeSpots[0]}", "{safeSpots[i..-1]}");
+	private final ModifiableCallout<AbilityCastStart> moonlightFirst = new ModifiableCallout<>("Moonlight First", "Start {safeSpots[0]}", "{safeSpots[i..-1]}", ModifiableCallout.expiresIn(10));
 	private final ModifiableCallout<AbilityCastStart> moonlightRemaining = new ModifiableCallout<>("Moonlight Remaining", "{safeSpots[i]}", "{safeSpots[i..-1]}");
 	private final ModifiableCallout<?> moonlightStack = new ModifiableCallout<>("Moonlight Stack", "Stack");
 	private final ModifiableCallout<?> moonlightSpread = new ModifiableCallout<>("Moonlight Spread", "Spread");
@@ -425,7 +461,10 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.setParam("i", i);
 					s.updateCall(moonlightRemaining, allCasts.get(i));
 					var cast = allCasts.get(i);
-					s.waitCastFinished(casts, cast);
+					if (i < allCasts.size() - 1) {
+						// If we want on the final one, then we miss the Weal events
+						s.waitCastFinished(casts, cast);
+					}
 				}
 
 				// There are four weals at the end, hitting cards or intercards (opposite is safe)

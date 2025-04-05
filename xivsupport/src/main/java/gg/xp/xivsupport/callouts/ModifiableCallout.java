@@ -409,4 +409,8 @@ public class ModifiableCallout<X> {
 	public @Nullable String getExtendedDescription() {
 		return extendedDescription;
 	}
+
+	public boolean isEnabled() {
+		return handle.isEffectivelyEnabled();
+	}
 }
