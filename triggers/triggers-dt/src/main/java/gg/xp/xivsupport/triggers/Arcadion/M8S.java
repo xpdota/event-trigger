@@ -467,6 +467,8 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
+	// Enrage: it goes untargetable first, no useful callout
+
 	/*
 	Post-Adds
 		Ravenous Saber
