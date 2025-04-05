@@ -213,6 +213,7 @@ public final class TimelineProcessor {
 		TimelineEntry timelineEntry();
 	}
 
+	// TODO: rename this to "EventSync" or something, it's no longer specific to log lines.
 	record LogLineSync(
 			BaseEvent line,
 			double syncTo,

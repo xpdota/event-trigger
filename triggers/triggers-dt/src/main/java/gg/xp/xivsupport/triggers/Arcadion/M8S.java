@@ -360,8 +360,8 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 							.ifPresentOrElse(
 									myHm -> s.updateCall(terrestrialRageSpread, myHm),
 									() -> s.updateCall(terrestrialRageStack));
-					// Wait for first fanged charge to go off
-					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xA3D6));
+					// Calling this immediately after the *lines* go off is too early. We should wait for the actual stack/spread markers to resolve.
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xA3BF, 0xA3C0));
 					s.updateCall(terrestrialRageMove);
 				}
 				// Shadowchase
@@ -393,8 +393,8 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> moonlightRemaining = new ModifiableCallout<>("Moonlight Remaining", "{safeSpots[i]}", "{safeSpots[i..-1]}");
 	private final ModifiableCallout<?> moonlightStack = new ModifiableCallout<>("Moonlight Stack", "Stack");
 	private final ModifiableCallout<?> moonlightSpread = new ModifiableCallout<>("Moonlight Spread", "Spread");
-	private final ModifiableCallout<AbilityCastStart> moonlightWealCardSafe = ModifiableCallout.durationBasedCall("Moonlight: Weal, Cardinal Safe", "Cardinals");
-	private final ModifiableCallout<AbilityCastStart> moonlightWealInterSafe = ModifiableCallout.durationBasedCall("Moonlight: Weal, Intercard Safe", "Intercards");
+	private final ModifiableCallout<?> moonlightWealCardSafe = new ModifiableCallout<>("Moonlight: Weal, Cardinal Safe", "Cardinals");
+	private final ModifiableCallout<?> moonlightWealInterSafe = new ModifiableCallout<>("Moonlight: Weal, Intercard Safe", "Intercards");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> beckonMoonlightSq = SqtTemplates.sq(120_000,
@@ -429,13 +429,16 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 
 				// There are four weals at the end, hitting cards or intercards (opposite is safe)
-				CastLocationDataEvent weal = s.waitEvent(CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA792));
-				ArenaSector wealFacing = ArenaPos.combatantFacing(weal.getBestHeading());
+				// TODO: this seems to call a bit late. Is there an earlier tell?
+				ActorControlExtraEvent weal = s.waitEvent(ActorControlExtraEvent.class,
+						acee -> acee.getCategory() == 0x197 && acee.getTarget().npcIdMatches(18507));
+				s.waitThenRefreshCombatants(100);
+				ArenaSector wealFacing = ArenaPos.combatantFacing(state.getLatestCombatantData(weal.getTarget()));
 				if (wealFacing.isCardinal()) {
-					s.updateCall(moonlightWealInterSafe, weal.originalEvent());
+					s.updateCall(moonlightWealInterSafe);
 				}
 				else {
-					s.updateCall(moonlightWealCardSafe, weal.originalEvent());
+					s.updateCall(moonlightWealCardSafe);
 				}
 			});
 
@@ -482,7 +485,6 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 		5 dragon heads also spawn, the AoEs also resemble the same shape so players rotate to be behind a head.
 
 		Reign afterwards, but with additional dragon heads rendering two 'lanes' unsafe.
-		TODO
 		Dodge heads after conal stacks/busters.
 
 		Beckon Moonlight
