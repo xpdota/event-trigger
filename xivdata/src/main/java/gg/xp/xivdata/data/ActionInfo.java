@@ -45,6 +45,10 @@ public record ActionInfo(
 		return DefaultRsvLibrary.tryResolve(name);
 	}
 
+	public String originalName() {
+		return name;
+	}
+
 	public double getCd() {
 		return cdRaw / 10.0;
 	}

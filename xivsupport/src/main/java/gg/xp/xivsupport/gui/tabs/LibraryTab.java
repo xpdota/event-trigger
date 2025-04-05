@@ -9,6 +9,7 @@ import gg.xp.xivsupport.events.misc.NpcYellEvent;
 import gg.xp.xivsupport.gui.library.ActionTableFactory;
 import gg.xp.xivsupport.gui.library.NpcYellTableFactory;
 import gg.xp.xivsupport.gui.library.RsvTable;
+import gg.xp.xivsupport.gui.library.RsvTableFactory;
 import gg.xp.xivsupport.gui.library.StatusTable;
 import gg.xp.xivsupport.gui.library.StatusTableFactory;
 import gg.xp.xivsupport.gui.library.ZonesTable;
@@ -19,6 +20,7 @@ import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.util.GuiUtil;
 import gg.xp.xivsupport.rsv.RsvEntry;
 import gg.xp.xivsupport.sys.Threading;
+import groovy.lang.PropertyValue;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,36 +38,41 @@ public class LibraryTab extends JTabbedPane {
 	private static final ExecutorService exs = Executors.newCachedThreadPool(Threading.namedDaemonThreadFactory("LibraryTab"));
 	private static final Logger log = LoggerFactory.getLogger(LibraryTab.class);
 
-	private final TableWithFilterAndDetails<ActionInfo, Object> abilityTable;
+	private final TableWithFilterAndDetails<ActionInfo, PropertyValue> abilityTable;
 	private final TableWithFilterAndDetails<StatusEffectInfo, Object> statusTable;
 	private final TableWithFilterAndDetails<ZoneInfo, Object> zonesTable;
 	private final TableWithFilterAndDetails<RsvEntry, Object> rsvTable;
 	private final TableWithFilterAndDetails<NpcYellInfo, Object> npcYellTable;
 	private volatile boolean loaded;
 
-	public LibraryTab(ActionTableFactory atf, StatusTableFactory stf, ZonesTableFactory ztf, NpcYellTableFactory nytf, RightClickOptionRepo rightClicks) {
+	public LibraryTab(ActionTableFactory atf, StatusTableFactory stf, ZonesTableFactory ztf, NpcYellTableFactory nytf, RightClickOptionRepo rightClicks, RsvTableFactory rtf) {
 		super(LEFT);
 		{
-			abilityTable = atf.table();
+			abilityTable = atf.tableWithDetails();
+			abilityTable.getMainTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 			addTab("Actions/Abilities", abilityTable);
 			rightClicks.addOption(makeCro("View in Action Library", abilityTable, HasAbility.class, ha -> ActionLibrary.forId(ha.getAbility().getId())));
 		}
 		{
 			statusTable = stf.table();
+			statusTable.getMainTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 			addTab("Status Effects", statusTable);
 			rightClicks.addOption(makeCro("View in Status Library", statusTable, HasStatusEffect.class, hse -> hse.getBuff().getInfo()));
 		}
 		{
 			zonesTable = ztf.table();
+			zonesTable.getMainTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 			addTab("Zones", zonesTable);
 			rightClicks.addOption(makeCro("View in Zone Library", zonesTable, HasZone.class, hz -> ZoneLibrary.infoForZone((int) hz.getZone().getId())));
 		}
 		{
-			rsvTable = RsvTable.table();
+			rsvTable = rtf.table();
+			rsvTable.getMainTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 			addTab("RSV Entries", rsvTable);
 		}
 		{
 			npcYellTable = nytf.table();
+			npcYellTable.getMainTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 			addTab("Npc Yells", npcYellTable);
 			rightClicks.addOption(makeCro("View in Library", npcYellTable, NpcYellEvent.class, NpcYellEvent::getYell));
 		}

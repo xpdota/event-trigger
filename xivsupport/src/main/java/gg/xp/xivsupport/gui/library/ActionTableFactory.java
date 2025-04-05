@@ -4,16 +4,21 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
+import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.map.omen.OmenShape;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
+import gg.xp.xivsupport.gui.tables.filters.GroovyFilter;
 import gg.xp.xivsupport.gui.tables.filters.IdOrNameFilter;
+import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
 import gg.xp.xivsupport.gui.tables.renderers.IconTextRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.RenderUtils;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import groovy.lang.PropertyValue;
 import org.jetbrains.annotations.Nullable;
+import org.picocontainer.PicoContainer;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -30,9 +35,11 @@ import java.util.function.Function;
 public final class ActionTableFactory {
 
 	private final RightClickOptionRepo rightClickOptionRepo;
+	private final PicoContainer container;
 
-	public ActionTableFactory(RightClickOptionRepo rightClickOptionRepo) {
+	public ActionTableFactory(RightClickOptionRepo rightClickOptionRepo, PicoContainer container) {
 		this.rightClickOptionRepo = rightClickOptionRepo;
+		this.container = container;
 	}
 
 	public TableWithFilterAndDetails<ActionInfo, Object> table() {
@@ -104,6 +111,7 @@ public final class ActionTableFactory {
 				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
 				.addWidget(InGameAbilityPickerButton::new)
 				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
+				.addFilter(GroovyFilter.forClass(ActionInfo.class, container.getComponent(GroovyManager.class), "it"))
 				.withRightClickRepo(RightClickOptionRepo.of(
 				))
 //				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
@@ -127,6 +135,105 @@ public final class ActionTableFactory {
 								})
 				))
 				.setFixedData(true)
+				.build();
+	}
+
+	public TableWithFilterAndDetails<ActionInfo, PropertyValue> tableWithDetails() {
+		return TableWithFilterAndDetails.builder("Actions/Abilities",
+						() -> {
+							Map<Integer, ActionInfo> csvValues = ActionLibrary.getAll();
+							List<ActionInfo> values = new ArrayList<>(csvValues.values());
+							values.sort(Comparator.comparing(ActionInfo::actionid));
+							return values;
+						}, GroovyColumns::getValues
+				)
+				.addMainColumn(new CustomColumn<>("ID", v -> String.format("0x%X (%s)", v.actionid(), v.actionid()), col -> {
+					col.setMinWidth(100);
+					col.setMaxWidth(100);
+				}))
+				.addMainColumn(new CustomColumn<>("Name", ActionInfo::name, col -> {
+					col.setPreferredWidth(200);
+				}))
+				.addMainColumn(new CustomColumn<>("Icon", ai -> {
+					ActionIcon icon = ai.getIcon();
+					if (icon == null || icon.isDefaultIcon()) {
+						return "";
+					}
+					return icon;
+				}, col -> {
+					col.setCellRenderer(new DefaultTableCellRenderer() {
+						@Override
+						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+							Component fallback = super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
+							if (value instanceof HasIconURL hiu) {
+								return IconTextRenderer.getComponent(hiu, fallback, false);
+							}
+							return fallback;
+						}
+					});
+					col.setMinWidth(30);
+					col.setMaxWidth(40);
+				}))
+				.addMainColumn(new CustomColumn<>("Description", ActionInfo::description, col -> {
+					col.setPreferredWidth(500);
+				}))
+				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
+				.addMainColumn(new CustomColumn<>("Cast", ai -> {
+					double ct = ai.getCastTime();
+					if (ct == 0) {
+						return "";
+					}
+					return ct;
+				}))
+				.addMainColumn(new CustomColumn<>("Recast", ai -> {
+					int maxCharges = ai.maxCharges();
+					double cd = ai.getCd();
+					if (maxCharges > 1) {
+						return String.format("%s (%d charges)", cd, maxCharges);
+					}
+					return cd > 0 ? cd : "";
+				}))
+				.addMainColumn(new CustomColumn<>("Range/Shape", Function.identity(), c -> {
+					c.setCellRenderer(new DefaultTableCellRenderer() {
+						@Override
+						public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+							if (value instanceof ActionInfo ai) {
+								Component comp = super.getTableCellRendererComponent(table, OmenShape.describe(ai), isSelected, hasFocus, row, column);
+								RenderUtils.setTooltip(comp, "Raw: ct:%s, er:%sy, x:%sy".formatted(ai.castType(), ai.effectRange(), ai.xAxisModifier()));
+								return comp;
+							}
+							return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+						}
+					});
+				}))
+				.addFilter(t -> new IdOrNameFilter<>("Name/ID", ActionInfo::actionid, ActionInfo::name, t))
+				.addWidget(InGameAbilityPickerButton::new)
+				.addWidget(tbl -> JumpToIdWidget.create(tbl, ActionInfo::actionid))
+				.addFilter(GroovyFilter.forClass(ActionInfo.class, container.getComponent(GroovyManager.class), "it"))
+				.withRightClickRepo(RightClickOptionRepo.of(
+				))
+//				.addRightClickOption(CustomRightClickOption.forRow("Copy XIVAPI Icon As Inline", ActionInfo.class, ai -> {
+//					String md = String.format("{{< inline >}} ![%s](%s) {{< /inline >}}%s", ai.name(), ai.getXivapiUrl(), ai.name());
+//					GuiUtil.copyToClipboard(md);
+//				}))
+				.withRightClickRepo(rightClickOptionRepo.withMore(
+						CustomRightClickOption.forRow("Open on XivAPI", ActionInfo.class, ai -> {
+							GuiUtil.openUrl(XivApiUtils.singleItemUrl("Action", ai.actionid()));
+						}),
+						CustomRightClickOption.forRow(
+								"Copy XIVAPI Icon URL",
+								ActionInfo.class,
+								ai -> GuiUtil.copyTextToClipboard(ai.getXivapiUrl().toString())),
+						CustomRightClickOption.forRow(
+								"Copy XIVAPI Icon As Markdown",
+								ActionInfo.class,
+								ai -> {
+									String md = String.format("![%s](%s)", ai.name(), ai.getXivapiUrl());
+									GuiUtil.copyTextToClipboard(md);
+								})
+				))
+				.setFixedData(true)
+				.apply(GroovyColumns::addDetailColumns)
 				.build();
 	}
 
