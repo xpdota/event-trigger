@@ -603,11 +603,18 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xA4CD)
 	private final ModifiableCallout<AbilityCastStart> twinbite = ModifiableCallout.durationBasedCall("Twinbite", "Double Tankbuster");
 
-	// TODO: these *can* actually call the cleave direction. It's either W or E.
-	@NpcCastCallout(0xA463)
-	private final ModifiableCallout<AbilityCastStart> fangedMaw = ModifiableCallout.durationBasedCall("Fanged Maw", "Out, Watch Cleave");
-	@NpcCastCallout(0xA464)
-	private final ModifiableCallout<AbilityCastStart> fangedPerimeter = ModifiableCallout.durationBasedCall("Fanged Perimeter", "In, Watch Cleave");
+	private final ModifiableCallout<AbilityCastStart> fangedMaw = ModifiableCallout.durationBasedCall("Fanged Maw", "Out, {safe}");
+	private final ModifiableCallout<AbilityCastStart> fangedPerimeter = ModifiableCallout.durationBasedCall("Fanged Perimeter", "In, {safe}");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> fangedMawPerimiterSq = SqtTemplates.sq(10_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA463, 0xA464),
+			(e1, s) -> {
+				boolean isMaw = e1.abilityIdMatches(0xA463);
+				var cleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA460, 0xA462));
+				boolean eastSafe = cleave.abilityIdMatches(0xA460);
+				s.setParam("safe", eastSafe ? ArenaSector.EAST : ArenaSector.WEST);
+			});
 
 	// TODO: this could call the location
 	private final ModifiableCallout<AbilityCastStart> moonCleaver = ModifiableCallout.durationBasedCall("Mooncleaver", "Off Platform, Cleave");
@@ -651,7 +658,6 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	}
 
 	private static ArenaSector getP2platform(Position pos) {
-		// TODO: double check these values
 		double x = pos.x();
 		double y = pos.y();
 		if (y < 95) {
@@ -835,7 +841,6 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	// For towers mechanic, make one callout for each possible 2-player tower location
 	// 3-tower is always fixed south, so that covers every combination
 
-	// TODO: these didn't work
 
 	private final ModifiableCallout<BuffApplied> wolfsLamentLongTetherToDps = ModifiableCallout.<BuffApplied>durationBasedCall("Lone Wolf's Lament: Long Tether with DPS", "Long Tether with {partner}").autoIcon();
 	private final ModifiableCallout<BuffApplied> wolfsLamentShortTetherToDps = ModifiableCallout.<BuffApplied>durationBasedCall("Lone Wolf's Lament: Short Tether with DPS", "Short Tether with {partner}").autoIcon();
@@ -861,13 +866,13 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 				Job partnerJob = partner.getJob();
 				if (partnerJob.isHealer()) {
-					s.updateCall(longTether ? wolfsLamentLongTetherToHealer : wolfsLamentShortTetherToHealer);
+					s.updateCall(longTether ? wolfsLamentLongTetherToHealer : wolfsLamentShortTetherToHealer, myBuff);
 				}
 				else if (partnerJob.isTank()) {
-					s.updateCall(longTether ? wolfsLamentLongTetherToTank : wolfsLamentShortTetherToTank);
+					s.updateCall(longTether ? wolfsLamentLongTetherToTank : wolfsLamentShortTetherToTank, myBuff);
 				}
 				else {
-					s.updateCall(longTether ? wolfsLamentLongTetherToDps : wolfsLamentShortTetherToDps);
+					s.updateCall(longTether ? wolfsLamentLongTetherToDps : wolfsLamentShortTetherToDps, myBuff);
 				}
 
 				// Find the tower with two
@@ -880,13 +885,28 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	/*
 		Lone Wolf's Lament
-		Tether 0x13D = short tether, 0x13E = long tether (TODO check if there is a different ID for satisfied vs unsatisfied tethers)
+		Tether 0x13D = short tether, 0x13E = long tether
 		Support needs to know whether they have short or long
 		DPS needs to know if they have short or long and whether they are tethered to healers or tanks
 	*/
 
 	@NpcCastCallout({0xAA02, 0xA494})
 	private final ModifiableCallout<AbilityCastStart> enrageTower = ModifiableCallout.durationBasedCall("Enrage Tower", "Enrage Tower");
+
+	private final ModifiableCallout<AbilityCastStart> enrageLeavePlatform = ModifiableCallout.<AbilityCastStart>durationBasedCall("Enrage: Leave Platform", "Leave Platform")
+			.extendedDescription("""
+					This is only called when you are still standing on the platform which is about to die.""");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> mooncleaverEnrageSq = SqtTemplates.sq(10_000,
+			CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA74D),
+			(e1, s) -> {
+				ArenaSector dyingPlatform = getP2platform(e1.getPos());
+				ArenaSector playerPlatform = getP2platform(state.getPlayer().getPos());
+				if (dyingPlatform == playerPlatform) {
+					s.updateCall(enrageLeavePlatform, e1.originalEvent());
+				}
+			});
 
 	@NpcCastCallout(0xA49E)
 	private final ModifiableCallout<AbilityCastStart> finalEnrage = ModifiableCallout.durationBasedCall("Starcleaver", "Enrage");
