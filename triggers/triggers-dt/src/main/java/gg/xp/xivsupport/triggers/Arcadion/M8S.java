@@ -614,6 +614,7 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				var cleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA460, 0xA462));
 				boolean eastSafe = cleave.abilityIdMatches(0xA460);
 				s.setParam("safe", eastSafe ? ArenaSector.EAST : ArenaSector.WEST);
+				s.updateCall(isMaw ? fangedMaw : fangedPerimeter, e1);
 			});
 
 	// TODO: this could call the location
