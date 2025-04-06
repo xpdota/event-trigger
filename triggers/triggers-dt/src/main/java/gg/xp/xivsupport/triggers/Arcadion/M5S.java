@@ -310,6 +310,7 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(arcadyInitial, e1);
 				s.waitCastFinished(casts, e1);
 				// TODO: indicate when you got hit
+				// TODO: call out which number you are when you get hit
 				for (int i = 0; i < 7; i++) {
 					if (i % 2 == 0) {
 						s.updateCall(arcadyIn);

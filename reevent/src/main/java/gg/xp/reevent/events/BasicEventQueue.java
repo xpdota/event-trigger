@@ -160,7 +160,7 @@ public class BasicEventQueue implements EventQueue {
 					while (iterator.hasNext()) {
 						current = iterator.next();
 						if (current.delayedEnqueueAt() <= currentTime) {
-							log.info("Delayed event {} is ready to go", current);
+							log.trace("Delayed event {} is ready to go", current);
 							push(current);
 							iterator.remove();
 						}

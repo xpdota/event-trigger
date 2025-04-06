@@ -5,6 +5,7 @@ import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.AutoChildEventHandler;
 import gg.xp.reevent.scan.AutoFeed;
 import gg.xp.reevent.scan.FilteredEventHandler;
+import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivdata.data.duties.*;
 import gg.xp.xivsupport.callouts.CalloutRepo;
@@ -16,7 +17,6 @@ import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
-import gg.xp.xivsupport.events.misc.NpcYellEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -26,14 +26,20 @@ import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
+import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.OptionalLong;
 import java.util.Set;
 
 @CalloutRepo(name = "M8S", duty = KnownDuty.M8S)
@@ -58,7 +64,6 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xA74F)
 	private final ModifiableCallout<AbilityCastStart> extraplanarPursuit = ModifiableCallout.durationBasedCall("Extraplanar Pursuit", "Raidwide");
 
-	// TODO: you have to look at his nouliths to determine whether it's cardinal or intercardinal dodge
 	private final ModifiableCallout<AbilityCastStart> windfangCard = ModifiableCallout.durationBasedCall("Windfang", "Buddies, In, Cardinals");
 	private final ModifiableCallout<AbilityCastStart> windfangInter = ModifiableCallout.durationBasedCall("Windfang", "Buddies, In, Intercards");
 	private final ModifiableCallout<AbilityCastStart> stonefangCard = ModifiableCallout.durationBasedCall("Stonefang", "Spread, Out, Cardinals");
@@ -251,7 +256,7 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 		If you are unable to see the bright blue lines, then the other pair is safe.
 		The safe pair of intercardinals is then narrowed down even further to only one safe spot based on the floating noulith thingos.
 		If the beams point to the intercardinals near you, then the opposite side is safe.
-	 */
+	*/
 
 	private final ModifiableCallout<AbilityCastStart> tacticalPack = ModifiableCallout.durationBasedCall("Tactical Pack", "Adds");
 	private final ModifiableCallout<TetherEvent> addsTether = new ModifiableCallout<TetherEvent>("Tactical Pack: Tether", "Tethered to {tetherLocation}")
@@ -341,8 +346,6 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				// 1125 = Green Debuff, Attack Yellow
 				// 1126 = Yellow Debuff, Attack Green
 				s.waitMs(100);
-				// TODO: this is giving a bad call, even with the delay. Some kind of timing issue?
-				// Possible solution: wasn't checking only your own
 				BuffApplied myBuff = s.findOrWaitForBuff(buffs,
 						ba -> ba.getTarget().isThePlayer() && ba.buffIdMatches(0x1125, 0x1126));
 				s.updateCall(myBuff.buffIdMatches(0x1125) ? addsAttackYellow : addsAttackGreen, myBuff);
@@ -369,7 +372,7 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 		At the end of all 3 sets of shape pops, only the tanks remain on the same head from the original group.
 		By this point, either or both heads are close to dying, so keep DPS up until they're dead.
 		Tanks can also bring them towards each other for easier target switching once either dies.
-	 */
+	*/
 
 	@NpcCastCallout(0xA749)
 	private final ModifiableCallout<AbilityCastStart> ravenousSaber = ModifiableCallout.durationBasedCall("Ravenous Saber", "Multiple Raidwides");
@@ -471,7 +474,6 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 
 				// There are four weals at the end, hitting cards or intercards (opposite is safe)
-				// TODO: this seems to call a bit late. Is there an earlier tell?
 				ActorControlExtraEvent weal = s.waitEvent(
 						ActorControlExtraEvent.class,
 						acee -> acee.getCategory() == 0x197
@@ -490,6 +492,9 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> beckonMoonlightHeadmarkSq = SqtTemplates.sq(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3C1),
 			(e1, s) -> {
+		// TODO: is this used?
+				// scream test
+				if (true) return;
 				// For the headmarkers, we can call the first one as soon as it comes out
 				{
 					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
@@ -537,7 +542,7 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 		For safe spots, players return to their colour-coded assignments as it is immediately proceeded by a Stonefang (out+spread) or Windfang (in+stack).
 
 		Tracking Tremors (8x heavy stacks) next, then another raidwide into enrage.
-	 */
+	*/
 
 	// P2
 
@@ -548,19 +553,20 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xA45A)
 	private final ModifiableCallout<AbilityCastStart> quakeIII = ModifiableCallout.durationBasedCall("Quake III", "Stacks");
 
+	// TODO: these should probably call out whether *you* are marked or not
 	private final ModifiableCallout<?> ultraviolentRayOneSupportFourDps = new ModifiableCallout<>("Ultraviolent Ray: One Support, Four DPS", "DPS Marked");
 	private final ModifiableCallout<?> ultraviolentRayOneDpsFourSupport = new ModifiableCallout<>("Ultraviolent Ray: One DPS, Four Support", "Supports Marked");
 	private final ModifiableCallout<?> ultraviolentRayOneOtherConfig = new ModifiableCallout<>("Ultraviolent Ray: One DPS, Four Support", "{supportCount} Supports, {dpsCount} DPS");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> ultraviolentRaySq = SqtTemplates.sq(120_000,
-			NpcYellEvent.class, nye -> nye.getYell().id() == 18441,
+			// Use the first marker as the start condition
+			HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -362,
 			(e1, s) -> {
-				// There are two of these at the start, but no good start condition exists for the latter
-				for (int i = 0; i < 2; i++) {
-
-				}
-				List<HeadMarkerEvent> markers = s.waitEventsQuickSuccession(5, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -362);
+				List<HeadMarkerEvent> extraMarkers = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -362);
+				List<HeadMarkerEvent> markers = new ArrayList<>();
+				markers.add(e1);
+				markers.addAll(extraMarkers);
 				int supportCount = 0;
 				int dpsCount = 0;
 				for (HeadMarkerEvent marker : markers) {
@@ -588,17 +594,300 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(ultraviolentRayOneOtherConfig);
 				}
 				// TODO: gleaming beam - call out left vs right on your platform I guess?
+				// Casts multiple Gleaming Beam A45E - these need to be dodged left vs right, but it's unique to each platform
+				// probably not enough time to check the platform since someone might move last-minute
 
 			});
 	// Casts Ultraviolent Ray A45C
-	// Casts multiple Gleaming Beam A45E - these need to be dodged left vs right, but it's unique to each platform
 	// A4CD Twinbite - tankbuster?
 	@NpcCastCallout(0xA4CD)
 	private final ModifiableCallout<AbilityCastStart> twinbite = ModifiableCallout.durationBasedCall("Twinbite", "Double Tankbuster");
 
+	// TODO: these *can* actually call the cleave direction. It's either W or E.
 	@NpcCastCallout(0xA463)
 	private final ModifiableCallout<AbilityCastStart> fangedMaw = ModifiableCallout.durationBasedCall("Fanged Maw", "Out, Watch Cleave");
-
 	@NpcCastCallout(0xA464)
 	private final ModifiableCallout<AbilityCastStart> fangedPerimeter = ModifiableCallout.durationBasedCall("Fanged Perimeter", "In, Watch Cleave");
+
+	// TODO: this could call the location
+	private final ModifiableCallout<AbilityCastStart> moonCleaver = ModifiableCallout.durationBasedCall("Mooncleaver", "Off Platform, Cleave");
+	private final ModifiableCallout<HeadMarkerEvent> moonCleaverHasMarker = new ModifiableCallout<>("Mooncleaver", "Marker on YOU");
+	private final ModifiableCallout<?> moonCleaverMarkersNoMarker = new ModifiableCallout<>("Mooncleaver", "Markers on {targets}");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> moonCleaverSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA466),
+			(e1, s) -> {
+				s.updateCall(moonCleaver, e1);
+				List<HeadMarkerEvent> markers = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -353);
+				List<XivCombatant> targets = markers.stream().map(HeadMarkerEvent::getTarget).toList();
+				s.setParam("targets", targets);
+				markers.stream()
+						.filter(marker -> marker.getTarget().isThePlayer())
+						.findAny()
+						.ifPresentOrElse(myMark -> s.updateCall(moonCleaverHasMarker, myMark),
+								() -> s.updateCall(moonCleaverMarkersNoMarker));
+			});
+
+
+	@NpcCastCallout(0xA46E)
+	private final ModifiableCallout<AbilityCastStart> prowlingGale = ModifiableCallout.durationBasedCall("Prowling Gale", "Partner Towers");
+
+	private final ModifiableCallout<TetherEvent> twofoldTempestCurrentTether = new ModifiableCallout<>("Twofold Tempest, Location Changed", "{currentTetherLocation}", "Tether on {currentTetherHolder}, {currentTetherLocation}", ModifiableCallout.expiresIn(10));
+	private final ModifiableCallout<TetherEvent> twofoldTempestCurrentTetherOnlyPlayerChanged = new ModifiableCallout<TetherEvent>("Twofold Tempest, Only Player Changed", "", "Tether on {currentTetherHolder}, {currentTetherLocation}", ModifiableCallout.expiresIn(10))
+			.extendedDescription("""
+					The 'Location Changed' callout is used if the location of the tether changes to a different platform for any reason.
+					This one will trigger if it swaps to a different player on the same platform.
+					As such, it defaults to no TTS so that it does not spam.""");
+
+	private volatile @Nullable TetherEvent twofoldLastTether;
+
+	@HandleEvents
+	public void twofoldTempestTetherHelper(TetherEvent te) {
+		if (te.tetherIdMatches(0x54) && te.eitherTargetMatches(XivCombatant::isPc)) {
+			log.info("New twofold tempest tether: {}", te);
+			twofoldLastTether = te;
+		}
+	}
+
+	private static ArenaSector getP2platform(Position pos) {
+		// TODO: double check these values
+		double x = pos.x();
+		double y = pos.y();
+		if (y < 95) {
+			if (x < 100) {
+				return ArenaSector.NORTHWEST;
+			}
+			else {
+				return ArenaSector.NORTHEAST;
+			}
+		}
+		else if (x < 90) {
+			return ArenaSector.SOUTHWEST;
+		}
+		else if (x > 110) {
+			return ArenaSector.SOUTHEAST;
+		}
+		else {
+			return ArenaSector.SOUTH;
+		}
+
+	}
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> twofoldTempestTetherHelper = SqtTemplates.sq(120_000,
+			// Start on "Rise of the Howling Wind"
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA82A),
+			(e1, s) -> {
+				twofoldLastTether = null;
+				XivCombatant lastTetherHolder = null;
+				ArenaSector lastTetherLocation = null;
+
+				// 40 seconds * 10 checks per second
+				int loops = 40 * 10;
+				for (int i = 0; i < loops; i++) {
+					s.waitMs(100);
+					TetherEvent newTether = twofoldLastTether;
+					if (newTether == null) {
+						continue;
+					}
+					XivCombatant newTetherHolder = state.getLatestCombatantData(newTether.getTargetMatching(XivCombatant::isPc));
+					ArenaSector newTetherLocation = getP2platform(newTetherHolder.getPos());
+					// Check if different
+					if (lastTetherLocation != newTetherLocation
+					    || !Objects.equals(lastTetherHolder, newTetherHolder)) {
+						s.setParam("currentTether", newTether);
+						s.setParam("currentTetherHolder", newTetherHolder);
+						s.setParam("currentTetherLocation", newTetherLocation);
+						if (lastTetherLocation == newTetherLocation) {
+							// Do the "reduced" call if only the holding player changed
+							s.updateCall(twofoldTempestCurrentTetherOnlyPlayerChanged, newTether);
+						}
+						else {
+							// Otherwise do the "full" call
+							s.updateCall(twofoldTempestCurrentTether, newTether);
+						}
+					}
+					lastTetherHolder = newTetherHolder;
+					lastTetherLocation = newTetherLocation;
+				}
+			});
+
+
+	private final ModifiableCallout<AbilityCastStart> championsCircuitCw = ModifiableCallout.durationBasedCall("Champion's Circuit: Clockwise", "Clockwise");
+	private final ModifiableCallout<AbilityCastStart> championsCircuitCcw = ModifiableCallout.durationBasedCall("Champion's Circuit: Counter-Clockwise", "Counter-Clockwise");
+
+	private final ModifiableCallout<?> championsCircuitIn = new ModifiableCallout<>("Champion's Circuit: In", "In {rightSafe ? 'Right' : 'Left'}");
+	private final ModifiableCallout<?> championsCircuitOut = new ModifiableCallout<>("Champion's Circuit: OUt", "Out {rightSafe ? 'Right' : 'Left'}");
+	private final ModifiableCallout<?> championsCircuitSides = new ModifiableCallout<>("Champion's Circuit: Sides", "Sides {rightSafe ? 'Right' : 'Left'}");
+	private final ModifiableCallout<?> championsCircuitCenter = new ModifiableCallout<>("Champion's Circuit: Center", "Center {rightSafe ? 'Right' : 'Left'}");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> championsCircuitSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA477, 0xA478),
+			(e1, s) -> {
+				// Individual cast IDs:
+				/*
+				A477,78: Initial cast
+				A479,7E: 30x12 rectangle (sides)
+				A47A,7F: 13y Donut
+				A47B,7D,80,82 28y Donut
+				A47C,81: out (cone)
+				IDs from 79 to 7D are the long casts, everything above that is the short casts
+
+				Okay, I haven't seen this before - the '28y donut' is actually a cone-donut, like the intersection of a
+				donut and a cone with the tip of the cone at the center of the donut.
+
+				One example:
+				CW A477
+				A47D big donut at center facing NW
+				A47C out at SW
+				A47B big donut at center facing S
+				A47A small donut at SE
+				A479 sides at NE
+
+
+				In, Side, Donut, Right
+				 */
+				// Establish cw vs ccw
+				boolean cw = e1.abilityIdMatches(0xA477);
+				s.updateCall(cw ? championsCircuitCw : championsCircuitCcw, e1);
+				// Wait for the five mechanics
+				List<CastLocationDataEvent> individualCasts = s.waitEvents(5, CastLocationDataEvent.class, acs -> {
+					long id = acs.getAbility().getId();
+					return id >= 0xA479 && id <= 0xA47D;
+				});
+				// Figure out where each of the five mechanics is
+				Map<ArenaSector, XivAbility> sectorMap = new EnumMap<>(ArenaSector.class);
+				for (CastLocationDataEvent cast : individualCasts) {
+					Position pos = cast.getPos();
+					// Cast from center with angle
+					ArenaSector sector;
+					if (pos.distanceFrom2D(Position.of2d(100, 100)) < 1) {
+						sector = getP2platform(pos.translateRelative(0, 117));
+					}
+					else {
+						sector = getP2platform(pos);
+					}
+					sectorMap.put(sector, cast.getAbility());
+				}
+				// I don't like relying on entity IDs, but this is by far the easiest way of going about this
+				// The Left-hand gleaming fang has a lower ID than the right-hand.
+				OptionalLong firstFang = state.npcsById(18223).stream().mapToLong(XivCombatant::getId).min();
+				if (firstFang.isEmpty()) {
+					log.error("could not find fangs!");
+				}
+				long firstFangId = firstFang.orElse(-1);
+				// Now go through the actual mechanics
+				for (int i = 0; i < 5; i++) {
+					// Wait for gleaming casts
+					List<CastLocationDataEvent> gleamingBarrages = s.waitEventsQuickSuccession(5,
+							CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA476));
+					// Platform where the player is currently
+					ArenaSector mySector = getP2platform(state.getPlayer().getPos());
+					// Find the barrage on our platform
+					CastLocationDataEvent myBarrage = gleamingBarrages.stream().filter(barrage -> getP2platform(barrage.getPos()) == mySector)
+							.findAny()
+							.orElseGet(() -> {
+								log.error("No barrage found for {}", mySector);
+								return null;
+							});
+					// Left/right safe
+					if (myBarrage != null && firstFangId != -1) {
+						if ((myBarrage.getSource().getId() - firstFangId) % 2 == 0) {
+							// Hitting left side
+							s.setParam("rightSafe", true);
+						}
+						else {
+							s.setParam("rightSafe", false);
+						}
+					}
+					else {
+						s.setParam("rightSafe", "error");
+					}
+					ArenaSector checkSector = mySector;
+					for (int j = 0; j < i; j++) {
+						// If the mechanic is rotating CW, than that means the next mechanic we need to do is the one that was CCW of us
+						do {
+							checkSector = checkSector.plusEighths(cw ? -1 : 1);
+						}
+						// However, we potentially need to go "one more" because not every eighth has a platform
+						while (!sectorMap.containsKey(checkSector));
+					}
+					XivAbility action = sectorMap.get(checkSector);
+					ModifiableCallout<?> call = switch ((int) action.getId()) {
+						case 0xA479 -> championsCircuitSides;
+						case 0xA47A -> championsCircuitCenter;
+						case 0xA47B, 0xA47D -> championsCircuitIn;
+						case 0xA47C -> championsCircuitOut;
+						default -> null;
+					};
+					if (call != null) {
+						s.updateCall(call);
+					}
+
+				}
+			});
+
+	// Rise of the Hunter's Blade A82C
+
+
+	// For towers mechanic, make one callout for each possible 2-player tower location
+	// 3-tower is always fixed south, so that covers every combination
+
+	// TODO: these didn't work
+
+	private final ModifiableCallout<BuffApplied> wolfsLamentLongTetherToDps = ModifiableCallout.<BuffApplied>durationBasedCall("Lone Wolf's Lament: Long Tether with DPS", "Long Tether with {partner}").autoIcon();
+	private final ModifiableCallout<BuffApplied> wolfsLamentShortTetherToDps = ModifiableCallout.<BuffApplied>durationBasedCall("Lone Wolf's Lament: Short Tether with DPS", "Short Tether with {partner}").autoIcon();
+	private final ModifiableCallout<BuffApplied> wolfsLamentLongTetherToHealer = ModifiableCallout.<BuffApplied>durationBasedCall("Lone Wolf's Lament: Long Tether with Healer", "Long Tether with {partner}").autoIcon();
+	private final ModifiableCallout<BuffApplied> wolfsLamentShortTetherToHealer = ModifiableCallout.<BuffApplied>durationBasedCall("Lone Wolf's Lament: Short Tether with Healer", "Short Tether with {partner}").autoIcon();
+	private final ModifiableCallout<BuffApplied> wolfsLamentLongTetherToTank = ModifiableCallout.<BuffApplied>durationBasedCall("Lone Wolf's Lament: Long Tether with Tank", "Long Tether with {partner}").autoIcon();
+	private final ModifiableCallout<BuffApplied> wolfsLamentShortTetherToTank = ModifiableCallout.<BuffApplied>durationBasedCall("Lone Wolf's Lament: Short Tether with Tank", "Short Tether with {partner}").autoIcon();
+	private final ModifiableCallout<AbilityCastStart> wolfsLamentTwoTower = ModifiableCallout.durationBasedCall("Lone Wolf's Lament: Two-Player Tower Location", "2-Tower {twoTower}");
+
+	// Rotating CW or CCW, there are lasers + in/out/donut/etc while that happens
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> loneWolfsLamentSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA483),
+			(e1, s) -> {
+				TetherEvent myTether = s.waitEvent(TetherEvent.class, te -> te.tetherIdMatches(0x13D, 0x13E) && te.eitherTargetMatches(XivCombatant::isThePlayer));
+				boolean longTether = myTether.tetherIdMatches(0x13E);
+				BuffApplied myBuff = buffs.findStatusOnTarget(state.getPlayer(), ba -> ba.buffIdMatches(0x112C, 0x112D));
+				if (myBuff == null) {
+					log.error("No buff!");
+				}
+				XivPlayerCharacter partner = (XivPlayerCharacter) myTether.getTargetMatching(cbt -> !cbt.isThePlayer());
+				s.setParam("partner", partner);
+
+				Job partnerJob = partner.getJob();
+				if (partnerJob.isHealer()) {
+					s.updateCall(longTether ? wolfsLamentLongTetherToHealer : wolfsLamentShortTetherToHealer);
+				}
+				else if (partnerJob.isTank()) {
+					s.updateCall(longTether ? wolfsLamentLongTetherToTank : wolfsLamentShortTetherToTank);
+				}
+				else {
+					s.updateCall(longTether ? wolfsLamentLongTetherToDps : wolfsLamentShortTetherToDps);
+				}
+
+				// Find the tower with two
+				CastLocationDataEvent twoTower = s.waitEvent(CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA487));
+				ArenaSector twoTowerLocation = getP2platform(twoTower.getPos());
+				s.setParam("twoTower", twoTowerLocation);
+				s.call(wolfsLamentTwoTower, twoTower.originalEvent());
+
+			});
+
+	/*
+		Lone Wolf's Lament
+		Tether 0x13D = short tether, 0x13E = long tether (TODO check if there is a different ID for satisfied vs unsatisfied tethers)
+		Support needs to know whether they have short or long
+		DPS needs to know if they have short or long and whether they are tethered to healers or tanks
+	*/
+
+	@NpcCastCallout({0xAA02, 0xA494})
+	private final ModifiableCallout<AbilityCastStart> enrageTower = ModifiableCallout.durationBasedCall("Enrage Tower", "Enrage Tower");
+
+	@NpcCastCallout(0xA49E)
+	private final ModifiableCallout<AbilityCastStart> finalEnrage = ModifiableCallout.durationBasedCall("Starcleaver", "Enrage");
 }

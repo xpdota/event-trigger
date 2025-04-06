@@ -255,7 +255,6 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 				 */
 				s.updateCall(demolitionDeathmatchInitial);
 
-				// TODO: secondary loop trigger to warn you if you get too many stacks
 				// Flare on a tank, they need to get away
 				// Call if you got tether too TODO
 				HeadMarkerEvent flare = s.waitEvent(HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -48);
@@ -304,7 +303,6 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> debrisDeathmatchSq = SqtTemplates.sq(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA5B0),
 			(e1, s) -> {
-				// TODO
 				// 4 tethers from outside
 				// Has the same vines as P1 with outside corners + inside intercards safe
 				// First, find pollen safe spot
@@ -386,7 +384,7 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xA5B1)
 	private final ModifiableCallout<AbilityCastStart> enrage = ModifiableCallout.durationBasedCallWithOffset("Special Bombarian Special (Enrage)", "Enrage", Duration.ofMillis(4_200));
 
-	// TODO: does the precursor also determine the lariat direction?
+	// TODO: does the precursor also determine the lariat direction? - yes it does, so integrate that
 	private final ModifiableCallout<AbilityCastStart> brutishSwingInIntoLariat = ModifiableCallout.durationBasedCall("Brutish Swing: In into Lariat", "In at {where} then Dodge");
 	private final ModifiableCallout<AbilityCastStart> brutishSwingOutIntoLariat = ModifiableCallout.durationBasedCall("Brutish Swing: Out into Lariat", "Out from {where} then Dodge");
 	private final ModifiableCallout<AbilityCastStart> lariatDodgeLeft = ModifiableCallout.durationBasedCall("Brutish Swing: Lariat", "Dodge Left");
@@ -424,22 +422,21 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(lariatDodgeLeft, lariat);
 				}
 				s.waitThenRefreshCombatants(100);
-				// TODO: this does NOT transition into glower on the second one where there's the tower the second time?
-				// Can use self managed multi invocation to handle this
 				AbilityCastStart secondBrutish = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA5A3, 0xA5A5));
-				boolean isTower = index == 1;
+				// The final one does include a glower, it goes straight into the tower
+				boolean skipGlower = index == 1;
 				{
 					XivCombatant bossFake = state.getLatestCombatantData(secondBrutish.getSource());
 					ArenaSector where = p2pos.forCombatant(bossFake);
 					s.setParam("where", where);
 					if (secondBrutish.abilityIdMatches(0xA5A3)) {
-						s.updateCall(isTower ? brutishSwingOutIntoTower : brutishSwingOutIntoGlower, secondBrutish);
+						s.updateCall(skipGlower ? brutishSwingOutIntoTower : brutishSwingOutIntoGlower, secondBrutish);
 					}
 					else {
-						s.updateCall(isTower ? brutishSwingInIntoTower : brutishSwingInIntoGlower, secondBrutish);
+						s.updateCall(skipGlower ? brutishSwingInIntoTower : brutishSwingInIntoGlower, secondBrutish);
 					}
 				}
-				if (!isTower) {
+				if (!skipGlower) {
 					s.waitCastFinished(casts, secondBrutish);
 					s.updateCall(brutishSwingGlowerNow);
 				}
@@ -461,7 +458,6 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 
 		Followed by Glower Power A94A
 		TODO this glower call is too late to react to
-		TODO Realistically, P2 stuff should just unconditionally call glower after a jump too
 
 		They always come in pairs - is it always lariat then glower?
 
