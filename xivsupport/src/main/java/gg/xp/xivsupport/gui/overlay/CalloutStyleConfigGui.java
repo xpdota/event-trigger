@@ -117,9 +117,19 @@ public class CalloutStyleConfigGui implements PluginTab {
 		}
 		{
 			JPanel panel = new TitleBorderFullsizePanel("Name Conversions");
-			JCheckBox replaceYou = new BooleanSettingGui(svr.getReplaceYou(), "Replace your own name with 'YOU'").getComponent();
+			BooleanSetting replaceYouSetting = svr.getReplaceYou();
+			BooleanSetting appendYouSetting = svr.getAppendYou();
+			JCheckBox replaceYou = new BooleanSettingGui(replaceYouSetting, "Replace your own name", true).getComponent();
+			JCheckBox appendYou = new BooleanSettingGui(appendYouSetting, "Append to your own name", true).getComponent();
+
+			JPanel youText = new StringSettingGui(svr.getReplacementForYou(), "Text to replace/append to your own name",
+					() -> appendYouSetting.get() || replaceYouSetting.get()).getComponent();
+
+			replaceYouSetting.addListener(youText::updateUI);
+			appendYouSetting.addListener(youText::updateUI);
+
 			Component playerNameStylePanel = new EnumSettingGui<>(svr.getPcNameStyle(), "Player Name Style", () -> true).getComponent();
-			GuiUtil.simpleTopDownLayout(panel, 400, replaceYou, playerNameStylePanel);
+			GuiUtil.simpleTopDownLayout(panel, 400, replaceYou, appendYou, youText, playerNameStylePanel);
 			tpane.add("Player Names", panel);
 		}
 		{

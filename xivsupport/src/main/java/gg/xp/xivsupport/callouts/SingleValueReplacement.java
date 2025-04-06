@@ -11,6 +11,7 @@ import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.EnumSetting;
+import gg.xp.xivsupport.persistence.settings.StringSetting;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -20,11 +21,25 @@ import java.util.stream.Collectors;
 @ScanMe
 public class SingleValueReplacement {
 	private final BooleanSetting replaceYou;
+	private final StringSetting replacementForYou;
+	private final BooleanSetting appendYou;
 	private final EnumSetting<PlayerNameConversion> pcNameStyle;
 	private final GlobalArenaSectorConverter asc;
 
 	public SingleValueReplacement(PersistenceProvider pers, GlobalArenaSectorConverter asc) {
 		this.replaceYou = new BooleanSetting(pers, "callout-processor.replace-you", true);
+		this.replacementForYou = new StringSetting(pers, "callout-process.you-replacement", "YOU");
+		this.appendYou = new BooleanSetting(pers, "callout-process.append-you", false);
+		appendYou.addListener(() -> {
+			if (appendYou.get()) {
+				replaceYou.set(false);
+			}
+		});
+		replaceYou.addListener(() -> {
+			if (replaceYou.get()) {
+				appendYou.set(false);
+			}
+		});
 		this.pcNameStyle = new EnumSetting<>(pers, "callout-processor.pc-style", PlayerNameConversion.class, PlayerNameConversion.FULL_NAME);
 		this.asc = asc;
 	}
@@ -39,10 +54,15 @@ public class SingleValueReplacement {
 			return strVal;
 		}
 		else if (rawValue instanceof XivCombatant cbt) {
-			if (cbt.isThePlayer() && replaceYou.get()) {
-				return "YOU";
-			}
-			else if (rawValue instanceof XivPlayerCharacter xpc) {
+			if (rawValue instanceof XivPlayerCharacter xpc) {
+				if (cbt.isThePlayer()) {
+					if (replaceYou.get()) {
+						return replacementForYou.get();
+					}
+					else if (appendYou.get()) {
+						return pcNameStyle.get().convert(xpc) + ' ' + replacementForYou.get();
+					}
+				}
 				return pcNameStyle.get().convert(xpc);
 			}
 			else {
@@ -90,5 +110,13 @@ public class SingleValueReplacement {
 
 	public EnumSetting<PlayerNameConversion> getPcNameStyle() {
 		return pcNameStyle;
+	}
+
+	public StringSetting getReplacementForYou() {
+		return replacementForYou;
+	}
+
+	public BooleanSetting getAppendYou() {
+		return appendYou;
 	}
 }
