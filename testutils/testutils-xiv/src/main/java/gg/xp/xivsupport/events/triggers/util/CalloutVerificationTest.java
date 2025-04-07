@@ -277,7 +277,7 @@ public abstract class CalloutVerificationTest {
 
 		for (CalloutInitialValues actualCall : actualCalls) {
 			if (actualCall.text().endsWith("(NOW)")) {
-				assortedFailures.add("Call [%s] ends with '(NOW)', indicating possible wrong event or late call");
+				assortedFailures.add("Call [%s] ends with '(NOW)', indicating possible wrong event or late call".formatted(actualCall.toStringShort()));
 			}
 		}
 

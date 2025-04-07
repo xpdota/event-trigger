@@ -28,8 +28,10 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @CalloutRepo(name = "M5S", duty = KnownDuty.M5S)
 public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -147,20 +149,24 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 			 * A734 -> ? east -> west, facing north
 			 * A735 -> east -> west, facing north
 			 *
+			 * More:
+			 * A4DD -> west -> east, speculative
+			 * A4DE -> east -> west
+			 *
 			 * Not sure why there are seemingly-redundant entries
 			 */
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA730, 0xA731, 0xA732, 0xA733, 0xA734, 0xA735),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA730, 0xA731, 0xA732, 0xA733, 0xA734, 0xA735, 0xA4DD, 0xA4DE),
 			(e1, s) -> {
 				int id = (int) e1.getAbility().getId();
 				ModifiableCallout<AbilityCastStart> firstCall;
 				ModifiableCallout<?> secondCall;
 				boolean isRoles = lastStock == Stock.Roles;
 				switch (id) {
-					case 0xA730, 0xA731, 0xA732 -> {
+					case 0xA730, 0xA731, 0xA732, 0xA4DD -> {
 						firstCall = isRoles ? threeSnapEastRoles : threeSnapEastLp;
 						secondCall = isRoles ? threeSnapEastRolesFollowup : threeSnapEastLpFollowup;
 					}
-					case 0xA733, 0xA734, 0xA735 -> {
+					case 0xA733, 0xA734, 0xA735, 0xA4DE -> {
 						firstCall = isRoles ? threeSnapWestRoles : threeSnapWestLp;
 						secondCall = isRoles ? threeSnapWestRolesFollowup : threeSnapWestLpFollowup;
 					}
@@ -233,10 +239,10 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<BuffApplied> discoInfernalSoak = ModifiableCallout.<BuffApplied>durationBasedCall("Disco Infernal: Soak Now", "Soak").autoIcon();
 
-	private final ModifiableCallout<BuffApplied> discoInfernal2Long = ModifiableCallout.<BuffApplied>durationBasedCall("Disco Infernal 2: Long Timer", "Bait");
+	private final ModifiableCallout<BuffApplied> discoInfernal2Long = new ModifiableCallout<>("Disco Infernal 2: Long Timer", "Bait");
 	private final ModifiableCallout<BuffApplied> discoInfernal2Short = ModifiableCallout.<BuffApplied>durationBasedCall("Disco Infernal 2: Short Timer", "Soak").autoIcon();
 	private final ModifiableCallout<BuffApplied> discoInfernal2LongFollowup = ModifiableCallout.<BuffApplied>durationBasedCall("Disco Infernal 2: Long Timer", "Soak").autoIcon();
-	private final ModifiableCallout<BuffApplied> discoInfernal2ShortFollowup = ModifiableCallout.<BuffApplied>durationBasedCall("Disco Infernal 2: Short Timer", "Bait");
+	private final ModifiableCallout<BuffApplied> discoInfernal2ShortFollowup = new ModifiableCallout<>("Disco Infernal 2: Short Timer", "Bait");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> discoInfernalSq = SqtTemplates.multiInvocation(75_000,
@@ -269,8 +275,8 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 				else {
 					s.updateCall(outsideIn2);
 				}
-				// Wait until our buff has 5 seconds left
-				s.waitDuration(myBuff.remainingDurationPlus(Duration.ofSeconds(-5)));
+				// Wait until our buff has 7 seconds left
+				s.waitDuration(myBuff.remainingDurationPlus(Duration.ofSeconds(-7)));
 				s.call(discoInfernalSoak, myBuff).setReplaces(buffCall);
 
 
@@ -304,13 +310,13 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<BuffApplied> arcadyNisi = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi", "Touch {partner}").autoIcon();
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> arcadySq = SqtTemplates.sq(75_000,
+	private final SequentialTrigger<BaseEvent> arcadySq = SqtTemplates.selfManagedMultiInvocation(75_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9BE4),
-			(e1, s) -> {
+			(e1, s, inv) -> {
 				s.updateCall(arcadyInitial, e1);
 				s.waitCastFinished(casts, e1);
 				// TODO: indicate when you got hit
-				// TODO: call out which number you are when you get hit
+				// TODO: call out which number you are when you get hit (only applicable to the first one - the second one does not have the nisi mechanic)
 				for (int i = 0; i < 7; i++) {
 					if (i % 2 == 0) {
 						s.updateCall(arcadyIn);
@@ -319,6 +325,10 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 						s.updateCall(arcadyOut);
 					}
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xA762, 0xA763) && aue.isFirstTarget());
+				}
+				if (inv >= 1) {
+					// Only the first one has the nisi mechanic
+					return;
 				}
 				s.waitMs(2_000);
 				// Alpha is 0x116e, Beta is 116f
@@ -344,11 +354,11 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 			});
 
 
-	private final ModifiableCallout<ActorControlExtraEvent> letsDanceFirst = new ModifiableCallout<>("Start {safe}");
+	private final ModifiableCallout<ActorControlExtraEvent> letsDanceFirst = new ModifiableCallout<>("Let's Dance: Initial", "Start {safe}", "{safeSpots[i..-1]}");
 
-	private final ModifiableCallout<ActorControlExtraEvent> letsDanceCross = new ModifiableCallout<>("Move {safe}");
+	private final ModifiableCallout<ActorControlExtraEvent> letsDanceCross = new ModifiableCallout<>("Let's Dance: Move", "Move {safe}");
 
-	private final ModifiableCallout<ActorControlExtraEvent> letsDanceStay = new ModifiableCallout<>("Stay {safe}");
+	private final ModifiableCallout<ActorControlExtraEvent> letsDanceStay = new ModifiableCallout<>("Let's Dance: Stay", "Stay {safe}");
 
 	private static ArenaSector ensembleToSafeDirection(ActorControlExtraEvent event) {
 		return switch ((int) event.getData0()) {
@@ -373,19 +383,27 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 			// Start on "Ensemble Assemble"
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9A32),
 			(e1, s) -> {
-				var first = s.waitEvent(ActorControlExtraEvent.class, acee -> acee.getCategory() == 0x3f);
-				var rest = s.waitEvents(7, ActorControlExtraEvent.class, acee -> acee.getCategory() == 0x3f);
+				var events = s.waitEvents(8, ActorControlExtraEvent.class, acee -> acee.getCategory() == 0x3f);
+				List<ArenaSector> safeSpots = events.stream()
+						.map(M5S::ensembleToSafeDirection)
+						.toList();
 
 				var cast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA76A, 0xA390));
-				var current = first;
+				var current = events.get(0);
 				s.setParam("safe", ensembleToSafeDirection(current));
+				s.setParam("safeSpots", safeSpots);
+				s.setParam("i", 0);
 				s.updateCall(letsDanceFirst, current);
 				s.waitCastFinished(casts, cast);
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9BDD) && aue.isFirstTarget());
-				for (ActorControlExtraEvent acee : rest) {
+				// TODO: timing out on second instance
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9BDD, 0xA395) && aue.isFirstTarget());
+				for (int i = 1; i < safeSpots.size(); i++) {
+					log.info("i == {}, SafeSpot: {}", i, safeSpots.get(i));
+					s.setParam("i", i);
+					ActorControlExtraEvent acee = events.get(i);
 					var prev = current;
 					current = acee;
-					s.setParam("safe", ensembleToSafeDirection(current));
+					s.setParam("safe", safeSpots.get(i));
 					boolean same = current.getData0() == prev.getData0();
 					if (same) {
 						s.updateCall(letsDanceStay, current);
@@ -393,7 +411,7 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 					else {
 						s.updateCall(letsDanceCross, current);
 					}
-					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9BDD) && aue.isFirstTarget());
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x9BDD, 0xA395) && aue.isFirstTarget());
 				}
 			});
 
@@ -405,10 +423,12 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout({0xA76F, 0xA770})
 	private final ModifiableCallout<AbilityCastStart> letsPose = ModifiableCallout.durationBasedCall("Let's Pose", "Raidwide");
 
+	// TODO: still needed?
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> letsDanceRemixSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA390),
 			(e1, s) -> {
+		// TODO: timing out
 				s.waitEvents(7, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA391, 0xA392, 0xA393, 0xA394));
 
 			});
@@ -430,6 +450,8 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> frogtourage2EwInSafe2 = ModifiableCallout.durationBasedCall("Frogtourage 2 Part 2: East-West Safe", "East/West In");
 	private final ModifiableCallout<AbilityCastStart> frogtourage2NsOutSafe2 = ModifiableCallout.durationBasedCall("Frogtourage 2 Part 2: North-South Safe", "North/South Out");
 	private final ModifiableCallout<AbilityCastStart> frogtourage2EwOutSafe2 = ModifiableCallout.durationBasedCall("Frogtourage 2 Part 2: East-West Safe", "East/West Out");
+
+	private final ModifiableCallout<AbilityCastStart> frogtourage2tripleHustle = ModifiableCallout.durationBasedCall("Frogtourage 2 Triple Hustle: Safe Spot", "Between {safe1} and {safe2}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> frogtourageMoonburnSq = SqtTemplates.multiInvocation(60_000,
@@ -563,12 +585,38 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Finally, triple hustle - two from frogs, one from boss
 				// This will need an inter-intercardinal call, i.e. E-SE
 				{
-					// TODO: switch to cast location event?
-					List<AbilityCastStart> hustles = s.waitEvents(2, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA724, 0xA725, 0xA775, 0xA776));
+					List<CastLocationDataEvent> hustles = s.waitEvents(3, CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA724, 0xA725, 0xA775, 0xA776));
+					// The way we can calculate this in the existing ArenaSector system is not too difficult.
+					// Simply rotate every cast angle by 1/16 of a circle CCW (positive angle), then the safe spot is between the resulting
+					// sector and the sector CW that one. This also avoids the awkward half-sector-safe nature of the
+					// 180 degree cleaves.
+					Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.all);
+					for (CastLocationDataEvent hustle : hustles) {
+						double angle = hustle.getBestHeading();
+						// Remove the sector where it is facing, the two adjacent to that, and the sector 90 degrees CCW
+						safe.remove(ArenaPos.combatantFacing(angle));
+						safe.remove(ArenaPos.combatantFacing(angle + Math.PI / 2.0));
+						safe.remove(ArenaPos.combatantFacing(angle + Math.PI / 4.0));
+						safe.remove(ArenaPos.combatantFacing(angle - Math.PI / 4.0));
+					}
+					if (safe.size() == 1) {
+						ArenaSector mainSafe = safe.iterator().next();
+						s.setParam("safe1", mainSafe);
+						s.setParam("safe2", mainSafe.plusEighths(1));
+						s.updateCall(frogtourage2tripleHustle, hustles.get(0).originalEvent());
+					}
+					else {
+						log.error("Invalid hustles: {}", safe);
+					}
 
 				}
 
 			});
+
+
+	@NpcCastCallout(0xA779)
+	private final ModifiableCallout<AbilityCastStart> highNrgFever = ModifiableCallout.durationBasedCall("Hi-NRG Fever", "Enrage");
+
 
 	/*
 	Quarter Beats = Partners
@@ -589,6 +637,7 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 
 
 	TODO: still missing some x-snap twist casts, e.g. A4E0
-	 */
 
+	Missing a couple Inside Out/Outside In casts
+	 */
 }
