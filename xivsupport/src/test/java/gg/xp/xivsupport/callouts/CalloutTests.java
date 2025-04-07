@@ -2,9 +2,12 @@ package gg.xp.xivsupport.callouts;
 
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
+import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.models.XivStatusEffect;
+import gg.xp.xivsupport.models.XivWorld;
 import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.speech.CalloutEvent;
@@ -191,7 +194,7 @@ public class CalloutTests {
 			Assert.assertEquals(modifiedWithOtherPlayer.getCallText(), "Tankbuster on Foo");
 			Assert.assertEquals(modifiedWithOtherPlayer.getVisualText(), "Tankbuster on Foo");
 
-			CalloutEvent modifiedWithThePlayer = proc.processCallout(mc.getModified(Map.of("target", new XivCombatant(0x123, "Bar", true, true, 1, null, null, null, 0, 0, 0, 0, 0, 0))));
+			CalloutEvent modifiedWithThePlayer = proc.processCallout(mc.getModified(Map.of("target", new XivPlayerCharacter(0x123, "Bar", Job.WHM, XivWorld.of(), true, 1, null, null, null, 0, 0, 0, 0, 0, 0))));
 			Assert.assertEquals(modifiedWithThePlayer.getCallText(), "Tankbuster on YOU");
 			Assert.assertEquals(modifiedWithThePlayer.getVisualText(), "Tankbuster on YOU");
 		}
@@ -249,7 +252,7 @@ public class CalloutTests {
 			Assert.assertEquals(modifiedWithOtherPlayer.getCallText(), "Tankbuster on Error Foo");
 			Assert.assertEquals(modifiedWithOtherPlayer.getVisualText(), "Tankbuster on Error Foo");
 
-			CalloutEvent modifiedWithThePlayer = proc.processCallout(mc.getModified(Map.of("target", new XivCombatant(0x123, "Bar", true, true, 1, null, null, null, 0, 0, 0, 0, 0, 0))));
+			CalloutEvent modifiedWithThePlayer = proc.processCallout(mc.getModified(Map.of("target", new XivPlayerCharacter(0x123, "Bar", Job.WHM, XivWorld.of(), true, 1, null, null, null, 0, 0, 0, 0, 0, 0))));
 			Assert.assertEquals(modifiedWithThePlayer.getCallText(), "Tankbuster on Error YOU");
 			Assert.assertEquals(modifiedWithThePlayer.getVisualText(), "Tankbuster on Error YOU");
 		}
