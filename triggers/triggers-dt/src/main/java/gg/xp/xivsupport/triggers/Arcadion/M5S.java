@@ -28,10 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 @CalloutRepo(name = "M5S", duty = KnownDuty.M5S)
 public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -104,7 +102,7 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 			 *
 			 * Not sure why there are seemingly-redundant entries
 			 */
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA728, 0xA729, 0xA72A, 0xA72B, 0xA72C, 0xA72D),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA728, 0xA729, 0xA72A, 0xA72B, 0xA72C, 0xA72D, 0xA4DB, 0xA4DC),
 			(e1, s) -> {
 				int id = (int) e1.getAbility().getId();
 				ModifiableCallout<AbilityCastStart> firstCall;
@@ -200,20 +198,22 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 			 * A734 -> ? east -> west, facing north
 			 * A735 -> east -> west, facing north
 			 *
+			 * A4DF and A4E0 are speculative
+			 *
 			 * Not sure why there are seemingly-redundant entries
 			 */
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA739, 0xA73A, 0xA73B, 0xA73C, 0xA73D, 0xA73E),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA739, 0xA73A, 0xA73B, 0xA73C, 0xA73D, 0xA73E, 0xA4DF, 0xA4E0),
 			(e1, s) -> {
 				int id = (int) e1.getAbility().getId();
 				ModifiableCallout<AbilityCastStart> firstCall;
 				ModifiableCallout<?> secondCall;
 				boolean isRoles = lastStock == Stock.Roles;
 				switch (id) {
-					case 0xA739, 0xA73A, 0xA73B -> {
+					case 0xA739, 0xA73A, 0xA73B, 0xA4DF -> {
 						firstCall = isRoles ? fourSnapEastRoles : fourSnapEastLp;
 						secondCall = isRoles ? fourSnapEastRolesFollowup : fourSnapEastLpFollowup;
 					}
-					case 0xA73C, 0xA73D, 0xA73E -> {
+					case 0xA73C, 0xA73D, 0xA73E, 0xA4E0 -> {
 						firstCall = isRoles ? fourSnapWestRoles : fourSnapWestLp;
 						secondCall = isRoles ? fourSnapWestRolesFollowup : fourSnapWestLpFollowup;
 					}
@@ -237,6 +237,26 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<?> outsideIn2 = new ModifiableCallout<>("Outside In, Followup", "Out");
 	private final ModifiableCallout<?> insideOut2 = new ModifiableCallout<>("Inside Out, Followup", "In");
 
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> outsideInSq = SqtTemplates.sq(30_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA77C, 0xA77E),
+			(e1, s) -> {
+				if (e1.abilityIdMatches(0xA77C)) {
+					s.updateCall(insideOut, e1);
+				}
+				else {
+					s.updateCall(outsideIn, e1);
+				}
+				// These are probably all the followups
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x93C2, 0x93C3, 0x93C4, 0x93C5));
+				if (e1.abilityIdMatches(0xA77C)) {
+					s.updateCall(insideOut2);
+				}
+				else {
+					s.updateCall(outsideIn2);
+				}
+			});
+
 	private final ModifiableCallout<BuffApplied> discoInfernalSoak = ModifiableCallout.<BuffApplied>durationBasedCall("Disco Infernal: Soak Now", "Soak").autoIcon();
 
 	private final ModifiableCallout<BuffApplied> discoInfernal2Long = new ModifiableCallout<>("Disco Infernal 2: Long Timer", "Bait");
@@ -257,23 +277,6 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 				else {
 					buffCall = s.call(discoInfernalShort, myBuff);
-				}
-				// A77C = Inside Out (Out then In safe)
-				// A77E = Outside In (In then Out safe)
-				AbilityCastStart inOutMech = s.waitEvent(AbilityCastStart.class, aue -> aue.abilityIdMatches(0xA77C, 0xA77E));
-				if (inOutMech.abilityIdMatches(0xA77C)) {
-					s.updateCall(insideOut, inOutMech);
-				}
-				else {
-					s.updateCall(outsideIn, inOutMech);
-				}
-				// These are probably all the followups
-				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0x93C2, 0x93C3, 0x93C4, 0x93C5));
-				if (inOutMech.abilityIdMatches(0xA77C)) {
-					s.updateCall(insideOut2);
-				}
-				else {
-					s.updateCall(outsideIn2);
 				}
 				// Wait until our buff has 7 seconds left
 				s.waitDuration(myBuff.remainingDurationPlus(Duration.ofSeconds(-7)));
@@ -423,15 +426,6 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout({0xA76F, 0xA770})
 	private final ModifiableCallout<AbilityCastStart> letsPose = ModifiableCallout.durationBasedCall("Let's Pose", "Raidwide");
 
-	// TODO: still needed?
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> letsDanceRemixSq = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA390),
-			(e1, s) -> {
-		// TODO: timing out
-				s.waitEvents(7, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA391, 0xA392, 0xA393, 0xA394));
-
-			});
 
 	private final ModifiableCallout<AbilityCastStart> frogtourage1NsSafe = ModifiableCallout.durationBasedCall("Frogtourage 1: North-South Safe", "North/South Safe");
 	private final ModifiableCallout<AbilityCastStart> frogtourage1EwSafe = ModifiableCallout.durationBasedCall("Frogtourage 1: East-West Safe", "East/West Safe");
@@ -467,7 +461,7 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 					Frogs are in a fixed position. They cast Moonburn A773 (cleaving right),
 						or A774 (cleaving left)
 					Quarter/Eighth goes off when it resolves
-				 */
+				*/
 				var moonburns = s.waitEvents(4, CastLocationDataEvent.class, clde -> clde.abilityIdMatches(0xA773, 0xA774));
 				// N/S can be made unsafe by either horizontal frogs hitting outwards, or vertical frogs hitting inwards
 				// However, since they happen in tandem (as either N/S or E/W must be left safe), we only need to consider these.
@@ -489,7 +483,7 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 						Second set of frogs do the same
 						Boss casts A724 (cleaving right) or A725 (cleaving left)
 
-				 */
+				*/
 
 				// First/Second Do the Hustle set
 				{
@@ -538,7 +532,7 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 						plus they can cleave in or out). However, this can be simplified a bit:
 						if cleave X is ~97.5 or ~102.5, this is vertical cleave in middle, i.e. E/W safe
 						If cleave Y is ~87.5 or ~112.5, this is a horizontal cleave outside, i.e. E/W safe
-					 */
+					*/
 				{
 					var moonburns = s.waitEvents(2, CastLocationDataEvent.class, clde -> clde.abilityIdMatches(0xA773, 0xA774));
 					// If nsSafe == true, then it is either NS in (i.e. W/E out cleaved) or NS out (horizontal cleaves through center)
@@ -619,25 +613,6 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 
 
 	/*
-	Quarter Beats = Partners
-	Eight Beats = Spread
-	Half Beats = Light Party? I haven't seen this yet
-
-
-
-	Need to ID safe spots for frogtourage in all forms
-
-
-
-	Next mechanic:
-	Two casts of Moonburn, either vertical or horizontal
-
-
-	Frogtourage Finale A4E1 ???
-
-
-	TODO: still missing some x-snap twist casts, e.g. A4E0
-
-	Missing a couple Inside Out/Outside In casts
-	 */
+		Missing a couple Inside Out/Outside In casts
+	*/
 }
