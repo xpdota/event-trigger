@@ -310,27 +310,45 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<?> arcadyIn = new ModifiableCallout<>("Arcady: In", "In");
 	private final ModifiableCallout<?> arcadyOut = new ModifiableCallout<>("Arcady: Out", "Out");
+	private final ModifiableCallout<?> arcadyInGotHit = new ModifiableCallout<>("Arcady: In, Got Hit", "In, Dodge");
+	private final ModifiableCallout<?> arcadyOutGotHit = new ModifiableCallout<>("Arcady: Out, Got Hit", "Out, Dodge");
+	private final ModifiableCallout<?> arcadyFinalGotHit = new ModifiableCallout<>("Arcady: Final Cleave, Got Hit", "Dodge");
+	private final ModifiableCallout<?> arcadyInGotHitByMistake = new ModifiableCallout<>("Arcady: In, Got Hit By Mistake", "In, Wrong Hit")
+			.extendedDescription("""
+					This call, and the one below, trigger if you got hit, but the cleave appears to have been intended for another player.""");
+	private final ModifiableCallout<?> arcadyOutGotHitByMistake = new ModifiableCallout<>("Arcady: Out, Got Hit By Mistake", "Out, Wrong Hit");
+	private final ModifiableCallout<?> arcadyFinalGotHitMistake = new ModifiableCallout<>("Arcady: Final Cleave, Got Hit By Mistake", "Dodge, Wrong Hit");
 	private final ModifiableCallout<BuffApplied> arcadyNisi = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi", "Touch {partner}").autoIcon();
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> arcadySq = SqtTemplates.selfManagedMultiInvocation(75_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x9BE4),
 			(e1, s, inv) -> {
+				// Initial Out call
 				s.updateCall(arcadyInitial, e1);
 				s.waitCastFinished(casts, e1);
-				// TODO: indicate when you got hit
-				// TODO: call out which number you are when you get hit (only applicable to the first one - the second one does not have the nisi mechanic)
+				// Only the first one has the nisi mechanic
+				boolean careAboutNisi = inv == 0;
 				for (int i = 0; i < 7; i++) {
-					if (i % 2 == 0) {
-						s.updateCall(arcadyIn);
+					List<AbilityUsedEvent> hits = s.collectAoeHits(aue -> aue.abilityIdMatches(0xA764));
+					if (hits.get(0).getTarget().isThePlayer()) {
+						s.updateCall(i % 2 == 0 ? arcadyInGotHit : arcadyOutGotHit);
+					}
+					else if (hits.stream().skip(1).anyMatch(hit -> hit.getTarget().isThePlayer())) {
+						s.updateCall(i % 2 == 0 ? arcadyInGotHitByMistake : arcadyOutGotHitByMistake);
 					}
 					else {
-						s.updateCall(arcadyOut);
+						s.updateCall(i % 2 == 0 ? arcadyIn : arcadyOut);
 					}
-					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xA762, 0xA763) && aue.isFirstTarget());
 				}
-				if (inv >= 1) {
-					// Only the first one has the nisi mechanic
+				List<AbilityUsedEvent> hits = s.collectAoeHits(aue -> aue.abilityIdMatches(0xA762, 0xA763));
+				if (hits.get(0).getTarget().isThePlayer()) {
+					s.updateCall(arcadyFinalGotHit);
+				}
+				else if (hits.stream().skip(1).anyMatch(hit -> hit.getTarget().isThePlayer())) {
+					s.updateCall(arcadyFinalGotHitMistake);
+				}
+				if (!careAboutNisi) {
 					return;
 				}
 				s.waitMs(2_000);
