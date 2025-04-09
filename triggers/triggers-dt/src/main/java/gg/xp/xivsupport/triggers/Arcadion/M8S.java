@@ -433,6 +433,37 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> moonlightFirst = new ModifiableCallout<>("Moonlight First", "Start {safeSpots[0]}", "{safeSpots[i..-1]}", ModifiableCallout.expiresIn(10));
 	private final ModifiableCallout<AbilityCastStart> moonlightRemaining = new ModifiableCallout<>("Moonlight Remaining", "{safeSpots[i]}", "{safeSpots[i..-1]}");
+
+	private final ModifiableCallout<AbilityCastStart> moonlightExtraCollFirst = new ModifiableCallout<AbilityCastStart>("Moonlight First", "Start {safeSpots[-1]}", "{safeSpots[i..-1]}", ModifiableCallout.expiresIn(10))
+			.extendedDescription("""
+					This callout triggers when cleaves two through four are collected. This is only useful if you care about \
+					TTS for the second through fourth hits as they start to cast, rather than when you actually need to be in \
+					the safe spot.""");
+
+	private final ModifiableCallout<AbilityCastStart> moonlightFirstTwo = new ModifiableCallout<AbilityCastStart>("Moonlight First Quadrant", "Start {firstQuadrant}", "Start {firstQuadrant}", ModifiableCallout.expiresIn(10))
+			.disabledByDefault()
+			.extendedDescription("""
+					This callout triggers when the first two cleave locations are known. This can be used instead of 'Moonlight First' \
+					if you would rather start at the intercardinal that is safe for the first two hits, but the callout is slightly later.\
+					
+					You should DISABLE the non-quadrant calls when using this.""");
+
+	private final ModifiableCallout<AbilityCastStart> moonlightSecondTwo = new ModifiableCallout<AbilityCastStart>("Moonlight Second Quadrant", "Then {secondQuadrant}", "{firstQuadrant} to {secondQuadrant}", ModifiableCallout.expiresIn(10))
+			.disabledByDefault()
+			.extendedDescription("""
+					This callout triggers when the last two cleave locations are known. This can be used instead of 'Moonlight Remaining' \
+					if you would rather start at the intercardinal that is safe for the second two hits, but the callout is slightly later.\
+					
+					You should DISABLE the non-quadrant calls when using this.""");
+
+	private final ModifiableCallout<AbilityCastStart> moonlightMoveSecondQuadrant = new ModifiableCallout<AbilityCastStart>("Moonlight Second Quadrant Move", "{secondQuadrant}", "{secondQuadrant}", ModifiableCallout.expiresIn(10))
+			.disabledByDefault()
+			.extendedDescription("""
+					This callout triggers when the first two cleaves have fired. This can be used instead of 'Moonlight Remaining' \
+					if you would rather use the quadrant strat.\
+					
+					You should DISABLE the non-quadrant calls when using this.""");
+
 	private final ModifiableCallout<?> moonlightStack = new ModifiableCallout<>("Moonlight Stack", "Stack");
 	private final ModifiableCallout<?> moonlightSpread = new ModifiableCallout<>("Moonlight Spread", "Spread");
 	private final ModifiableCallout<?> moonlightWealCardSafe = new ModifiableCallout<>("Moonlight: Weal, Cardinal Safe", "Cardinals");
@@ -461,12 +492,25 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 					var next = s.waitEvent(CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA3C2, 0xA3C3));
 					allCasts.add(next.originalEvent());
 					safe.add(safeSpotForMoonlight(next));
+					s.updateCall(moonlightExtraCollFirst, first.originalEvent());
+					if (i == 0) {
+						s.setParam("firstQuadrant", ArenaSector.tryCombineTwoCardinals(List.of(safe.get(0), safe.get(1))));
+						s.updateCall(moonlightFirstTwo, first.originalEvent());
+					}
+					else if (i == 2) {
+						s.setParam("secondQuadrant", ArenaSector.tryCombineTwoCardinals(List.of(safe.get(0), safe.get(1))));
+						s.updateCall(moonlightSecondTwo, first.originalEvent());
+
+					}
 				}
 
 				for (int i = 0; i < allCasts.size(); i++) {
-					s.setParam("i", i);
-					s.updateCall(moonlightRemaining, allCasts.get(i));
 					var cast = allCasts.get(i);
+					s.setParam("i", i);
+					s.updateCall(moonlightRemaining, cast);
+					if (i == 2) {
+						s.updateCall(moonlightMoveSecondQuadrant, cast);
+					}
 					if (i < allCasts.size() - 1) {
 						// If we want on the final one, then we miss the Weal events
 						s.waitCastFinished(casts, cast);
@@ -488,25 +532,25 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> beckonMoonlightHeadmarkSq = SqtTemplates.sq(120_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3C1),
-			(e1, s) -> {
-		// TODO: is this used?
-				// scream test
-				if (true) return;
-				// For the headmarkers, we can call the first one as soon as it comes out
-				{
-					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
-					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
-				}
-				{
-					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
-					// We need to not talk all over one of the directional calls
-					s.waitMs(1200);
-					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
-				}
-			});
+//	@AutoFeed
+//	private final SequentialTrigger<BaseEvent> beckonMoonlightHeadmarkSq = SqtTemplates.sq(120_000,
+//			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3C1),
+//			(e1, s) -> {
+//				// TODO: is this used?
+//				// scream test
+//				if (true) return;
+//				// For the headmarkers, we can call the first one as soon as it comes out
+//				{
+//					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
+//					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
+//				}
+//				{
+//					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
+//					// We need to not talk all over one of the directional calls
+//					s.waitMs(1200);
+//					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
+//				}
+//			});
 
 	// Enrage: it goes untargetable first, no useful callout
 
