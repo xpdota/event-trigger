@@ -97,10 +97,11 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 	 */
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> doubleStyle = SqtTemplates.multiInvocation(60_000,
+	private final SequentialTrigger<BaseEvent> doubleStyle = SqtTemplates.sq(60_000,
 			// Double style IDs. Some of these are speculative.
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0x93CA, 0x9408, 0xA67D, 0xA67E, 0xA67F, 0xA680, 0xA681, 0xA682),
 			(e1, s) -> {
+				log.info("Double style 1 start");
 				var tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.tetherIdMatches(0x13F, 0x140));
 				// Start with everything safe and eliminate possibilities
 				Set<ArenaSector> safe = EnumSet.copyOf(ArenaSector.quadrants);
@@ -239,8 +240,6 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> sugarScapeSq = SqtTemplates.multiInvocation(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA668),
 			(e1, s) -> {
-				// TODO: can the stack be long instead of short?
-				// TODO: some weird stuff going on here
 				EventCollector<BuffApplied> shortSpread = new EventCollector<>(ba -> ba.buffIdMatches(0x1166) && ba.getInitialDuration().toSeconds() < 60);
 				EventCollector<BuffApplied> longSpread = new EventCollector<>(ba -> ba.buffIdMatches(0x1166) && ba.getInitialDuration().toSeconds() >= 60);
 				EventCollector<BuffApplied> shortStack = new EventCollector<>(ba -> ba.buffIdMatches(0x1160) && ba.getInitialDuration().toSeconds() < 60);
@@ -294,7 +293,7 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<?> singleStyle1 = new ModifiableCallout<>("Single Style 1", "Avoid Lines");
 	private final ModifiableCallout<?> doubleStyle3fire = new ModifiableCallout<>("Double Style 3: Fire", "Light Parties in Water, Avoid Lines");
-	private final ModifiableCallout<?> doubleStyle3lightning = new ModifiableCallout<>("Single Style 1", "Spread on Land, Avoid Lines");
+	private final ModifiableCallout<?> doubleStyle3lightning = new ModifiableCallout<>("Double Style 3: Lightning", "Spread on Land, Avoid Lines");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> singleStyleSq = SqtTemplates.multiInvocation(60_000,
@@ -304,13 +303,20 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(singleStyle1);
 			});
 
-	private final ModifiableCallout<AbilityCastStart> doubleStyle3twister1 = ModifiableCallout.durationBasedCall("Lightning Bait (Twister)", "Move");
-	private final ModifiableCallout<AbilityCastStart> doubleStyle3twister2 = ModifiableCallout.durationBasedCall("Lightning Bait 2 (Twister)", "Move into Tower");
-	private final ModifiableCallout<AbilityCastStart> doubleStyle3twister3 = ModifiableCallout.durationBasedCall("Lightning Bait 3 (Twister)", "Move into Tower");
-	private final ModifiableCallout<HeadMarkerEvent> doubleStyle3headMarker = new ModifiableCallout<>("Lightning Marker", "Spread");
+	private final ModifiableCallout<AbilityCastStart> doubleStyle3twister1 = ModifiableCallout.durationBasedCall("Double Style 3: Lightning Bait (Twister)", "Move");
+	private final ModifiableCallout<HeadMarkerEvent> doubleStyle3puddlesMarker = new ModifiableCallout<>("Double Style 3: Puddles Marker", "Drop Puddles");
+	private final ModifiableCallout<?> doubleStyle3twister2pre = new ModifiableCallout<>("Double Style 3: Lightning Bait 2 (Twister) Pre", "Wait Outside Tower");
+	private final ModifiableCallout<AbilityCastStart> doubleStyle3twister2 = ModifiableCallout.durationBasedCall("Double Style 3: Lightning Bait 2 (Twister)", "Move into Tower");
+	private final ModifiableCallout<TetherEvent> doubleStyle3flying = new ModifiableCallout<>("Double Style 3: Fly to Next Platform", "Fly to Platform", 13_000);
+	private final ModifiableCallout<?> doubleStyle3twister3pre = new ModifiableCallout<>("Double Style 3: Lightning Bait 3 (Twister) Pre", "Wait Outside Tower");
+	private final ModifiableCallout<AbilityCastStart> doubleStyle3twister3 = ModifiableCallout.durationBasedCall("Double Style 3: Lightning Bait 3 (Twister)", "Move into Tower");
+	private final ModifiableCallout<HeadMarkerEvent> doubleStyle3headMarker = new ModifiableCallout<>("Double Style 3: Lightning Marker", "Spread");
+
+	@NpcCastCallout(0xA66D)
+	private final ModifiableCallout<AbilityCastStart> puddingParty = ModifiableCallout.durationBasedCall("Pudding Party", "Multi Stack");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> doubleStyle3sq = SqtTemplates.multiInvocation(120_000,
+	private final SequentialTrigger<BaseEvent> doubleStyle3sq = SqtTemplates.multiInvocation(180_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA687, 0xA689),
 			(e1, s) -> {
 				// 1. avoid lines + light parties
@@ -335,13 +341,25 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Then towers and twisters
 				// Don't enter tower immediately
 				{
+					List<HeadMarkerEvent> markers = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == 293);
+					markers.stream().filter(hm -> hm.getTarget().isThePlayer())
+							.findAny()
+							.ifPresent(h -> s.updateCall(doubleStyle3puddlesMarker, h));
+					s.waitMs(8_000);
+					s.updateCall(doubleStyle3twister2pre);
 					var twister = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA69D));
 					s.updateCall(doubleStyle3twister2, twister);
 				}
 				// Callout to fly
+				List<TetherEvent> tethers = s.waitEventsQuickSuccession(8, TetherEvent.class, te -> te.tetherIdMatches(0x144));
+				tethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer))
+						.findAny()
+						.ifPresent(te -> s.updateCall(doubleStyle3flying, te));
 
 				// Then another set of twisters and towers but you also get flown to another part of the arena (based on facing angle)
 				{
+					s.waitMs(14_000);
+					s.updateCall(doubleStyle3twister3pre);
 					var twister = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA69D));
 					s.updateCall(doubleStyle3twister3, twister);
 				}
@@ -351,6 +369,7 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final SequentialTrigger<BaseEvent> doubleStyle3sqForCloud = SqtTemplates.multiInvocation(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA687, 0xA689),
 			(e1, s) -> {
+				// TODO: is a trigger for this really needed? just use eyes lmao
 
 			});
 
