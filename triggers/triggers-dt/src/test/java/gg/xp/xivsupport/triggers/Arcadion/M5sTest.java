@@ -47,8 +47,7 @@ public class M5sTest extends CalloutVerificationTest {
 				call(164958, "In", "In"),
 				call(167442, "Out", "Out"),
 				call(169930, "In", "In"),
-				// Second beta
-				call(171932, "Second Beta", "Second Beta (16.1)"),
+				call(174380, "Second Beta", "Second Beta (16.1)"),
 				call(176514, "Start East", "East, East, West, East, West, West, East, West"),
 				call(183309, "Stay East", "Stay East"),
 				call(185800, "Move West", "Move West"),
