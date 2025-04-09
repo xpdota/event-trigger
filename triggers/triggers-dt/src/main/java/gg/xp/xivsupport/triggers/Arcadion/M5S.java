@@ -318,6 +318,18 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 					This call, and the one below, trigger if you got hit, but the cleave appears to have been intended for another player.""");
 	private final ModifiableCallout<?> arcadyOutGotHitByMistake = new ModifiableCallout<>("Arcady: Out, Got Hit By Mistake", "Out, Wrong Hit");
 	private final ModifiableCallout<?> arcadyFinalGotHitMistake = new ModifiableCallout<>("Arcady: Final Cleave, Got Hit By Mistake", "Dodge, Wrong Hit");
+
+	private final ModifiableCallout<BuffApplied> arcadyNisi1a = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi 1 Alpha", "First Alpha").autoIcon();
+	private final ModifiableCallout<BuffApplied> arcadyNisi1b = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi 1 Beta", "First Beta").autoIcon();
+	private final ModifiableCallout<BuffApplied> arcadyNisi2a = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi 2 Alpha", "Second Alpha").autoIcon();
+	private final ModifiableCallout<BuffApplied> arcadyNisi2b = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi 2 Beta", "Second Beta").autoIcon();
+	private final ModifiableCallout<BuffApplied> arcadyNisi3a = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi 3 Alpha", "Third Alpha").autoIcon();
+	private final ModifiableCallout<BuffApplied> arcadyNisi3b = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi 3 Beta", "Third Beta").autoIcon();
+	private final ModifiableCallout<BuffApplied> arcadyNisi4a = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi 4 Alpha", "Fourth Alpha").autoIcon();
+	private final ModifiableCallout<BuffApplied> arcadyNisi4b = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi 4 Beta", "Fourth Beta").autoIcon();
+
+
+	// Called when time to touch
 	private final ModifiableCallout<BuffApplied> arcadyNisi = ModifiableCallout.<BuffApplied>durationBasedCall("Arcady: Nisi", "Touch {partner}").autoIcon();
 
 	@AutoFeed
@@ -341,7 +353,7 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 						s.updateCall(i % 2 == 0 ? arcadyIn : arcadyOut);
 					}
 				}
-				List<AbilityUsedEvent> hits = s.collectAoeHits(aue -> aue.abilityIdMatches(0xA762, 0xA763));
+				List<AbilityUsedEvent> hits = s.collectAoeHits(aue -> aue.abilityIdMatches(0xA764));
 				if (hits.get(0).getTarget().isThePlayer()) {
 					s.updateCall(arcadyFinalGotHit);
 				}
@@ -370,12 +382,28 @@ public class M5S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 				s.setParam("partnerBuff", matchingBuff);
 				s.setParam("partner", matchingBuff.getTarget());
+
+				boolean iHaveAlpha = myBuff.buffIdMatches(0x116e);
+				long seconds = myBuff.getEstimatedRemainingDuration().toSeconds();
+				// They're approx 10/15/20/25 at this point
+				if (seconds < 13) {
+					s.updateCall(iHaveAlpha ? arcadyNisi1a : arcadyNisi1b, myBuff);
+				}
+				else if (seconds < 18) {
+					s.updateCall(iHaveAlpha ? arcadyNisi2a : arcadyNisi2b, myBuff);
+				}
+				else if (seconds < 23) {
+					s.updateCall(iHaveAlpha ? arcadyNisi3a : arcadyNisi3b, myBuff);
+				}
+				else {
+					s.updateCall(iHaveAlpha ? arcadyNisi4a : arcadyNisi4b, myBuff);
+				}
 				s.waitDuration(myBuff.remainingDurationPlus(Duration.ofSeconds(-4)));
 				s.updateCall(arcadyNisi, myBuff);
 			});
 
 
-	private final ModifiableCallout<ActorControlExtraEvent> letsDanceFirst = new ModifiableCallout<>("Let's Dance: Initial", "Start {safe}", "{safeSpots[i..-1]}");
+	private final ModifiableCallout<ActorControlExtraEvent> letsDanceFirst = new ModifiableCallout<ActorControlExtraEvent>("Let's Dance: Initial", "Start {safe}", "{safeSpots[i..-1]}", ModifiableCallout.expiresIn(12));
 
 	private final ModifiableCallout<ActorControlExtraEvent> letsDanceCross = new ModifiableCallout<>("Let's Dance: Move", "Move {safe}");
 

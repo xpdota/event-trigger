@@ -346,6 +346,7 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.updateCall(doubleStyle3twister3, twister);
 				}
 			});
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> doubleStyle3sqForCloud = SqtTemplates.multiInvocation(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA687, 0xA689),
