@@ -24,6 +24,7 @@ import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,9 +56,32 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@NpcCastCallout(0xA6BC)
 	private final ModifiableCallout<AbilityCastStart> mousseMural = ModifiableCallout.durationBasedCall("Mousse Mural", "Raidwide");
-	// TODO: differentiate colors
-	@NpcCastCallout({0xA691, 0xA692})
+
 	private final ModifiableCallout<AbilityCastStart> colorRiot = ModifiableCallout.durationBasedCall("Color Riot", "Double Tankbuster");
+	private final ModifiableCallout<AbilityCastStart> colorRiotClose = ModifiableCallout.durationBasedCall("Color Riot", "Close Buster");
+	private final ModifiableCallout<AbilityCastStart> colorRiotFar = ModifiableCallout.durationBasedCall("Color Riot", "Far Buster");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> colorRiotSq = SqtTemplates.sq(10_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA691, 0xA692),
+			(e1, s) -> {
+				// 1163 Warm Tint
+				// 1164 Cool Tint
+				// A692 put Cool on Far, Warm on Close
+				// A692 Warm far, debuffs swap
+				// A691 Cool far
+				XivPlayerCharacter player = state.getPlayer();
+				boolean playerWarm = buffs.isStatusOnTarget(player, 0x1163);
+				boolean playerCool = buffs.isStatusOnTarget(player, 0x1164);
+				if (!playerWarm && !playerCool) {
+					s.updateCall(colorRiot, e1);
+				}
+				else {
+					boolean coolFar = e1.abilityIdMatches(0xA691);
+					boolean playerFar = coolFar == playerCool;
+					s.updateCall(playerFar ? colorRiotFar : colorRiotClose, e1);
+				}
+			});
 
 	private static final ArenaPos pos = new ArenaPos(100, 100, 5, 5);
 
@@ -363,14 +387,6 @@ public class M6S extends AutoChildEventHandler implements FilteredEventHandler {
 					var twister = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA69D));
 					s.updateCall(doubleStyle3twister3, twister);
 				}
-			});
-
-	@AutoFeed
-	private final SequentialTrigger<BaseEvent> doubleStyle3sqForCloud = SqtTemplates.multiInvocation(120_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA687, 0xA689),
-			(e1, s) -> {
-				// TODO: is a trigger for this really needed? just use eyes lmao
-
 			});
 
 	@NpcCastCallout(0xA6BD)

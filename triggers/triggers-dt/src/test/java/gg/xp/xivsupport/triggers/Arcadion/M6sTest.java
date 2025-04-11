@@ -11,13 +11,6 @@ public class M6sTest extends CalloutVerificationTest {
 		return "/m6s_anon.log";
 	}
 
-//	@Override
-//	protected long minimumMsBetweenCalls() {
-//		// it's the nisi call between Let's Dance cleaves
-//		return 750;
-//	}
-
-
 	@Override
 	protected List<CalloutInitialValues> getExpectedCalls() {
 		return List.of(

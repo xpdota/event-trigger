@@ -122,7 +122,7 @@ public class FRUTest extends CalloutVerificationTest {
 				call(678188, "Stack", "Stack (5.7)"),
 				call(689739, "Raidwide", "Raidwide (9.7)"),
 				call(700540, "Ice and Blue", "Ice and Blue (14.0)"),
-				call(703827, "", ""),
+//				call(703827, "", ""),
 				call(711646, "Move, Get Pushed Northeast", "Move, Get Pushed Northeast (2.9)"),
 				call(714623, "Stack", "Stack (2.9)"),
 				call(717600, "Dodge and Cleanse", "Dodge and Cleanse"),

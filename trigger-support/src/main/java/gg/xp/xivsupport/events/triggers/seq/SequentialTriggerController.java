@@ -333,10 +333,19 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param call The new callout
 	 */
 	public void updateCall(RawModifiedCallout<?> call) {
-		if (lastCall != null) {
-			call.setReplaces(lastCall);
+		// These extra conditions are needed because there might be a call that is disabled/has no text.
+		// e.g. Call 1 = "foo", Call 2 = empty/null, Call 3 = "bar"
+		// We would want "bar" to replace "foo", with call 2 being a no-op as far as text is concerned because it has
+		// no text.
+		// What would happen without this is that call 2 would "replace" call 1, but the visual text overlay
+		// would ignore it because it is blank. Then call 3 would replace call 2, but the visual text overlay completely
+		// forgot about call 2.
+		if (call.getText() != null && !call.getText().isBlank()) {
+			if (lastCall != null) {
+				call.setReplaces(lastCall);
+			}
+			lastCall = call;
 		}
-		lastCall = call;
 		accept(call);
 	}
 

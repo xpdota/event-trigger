@@ -88,10 +88,10 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	private final ModifiableCallout<AbilityCastStart> eminentClones = ModifiableCallout.durationBasedCall("Eminent Reign: Dodge Clones", "Dodge Clones, Out of Middle");
 	private final ModifiableCallout<AbilityCastStart> revoClones = ModifiableCallout.durationBasedCall("Revolutionary Reign: Dodge Clones", "Dodge Clones, Out of Middle");
-	private final ModifiableCallout<AbilityCastStart> eminentStacks = ModifiableCallout.durationBasedCall("Eminent Reign: Away, Stacks", "Close Stacks");
-	private final ModifiableCallout<AbilityCastStart> revoStacks = ModifiableCallout.durationBasedCall("Revolutionary Reign: Away, Stacks", "Far Stacks");
-	private final ModifiableCallout<AbilityCastStart> eminentStacksWithLines = ModifiableCallout.durationBasedCall("Eminent Reign: Away, Stacks", "Close Stacks, Dodge Lines");
-	private final ModifiableCallout<AbilityCastStart> revoStacksWithLines = ModifiableCallout.durationBasedCall("Revolutionary Reign: Away, Stacks", "Far Stacks, Dodge Lines");
+	private final ModifiableCallout<AbilityCastStart> eminentStacks = new ModifiableCallout<>("Eminent Reign: Away, Stacks", "Close Stacks");
+	private final ModifiableCallout<AbilityCastStart> revoStacks = new ModifiableCallout<>("Revolutionary Reign: Away, Stacks", "Far Stacks");
+	private final ModifiableCallout<AbilityCastStart> eminentStacksWithLines = new ModifiableCallout<>("Eminent Reign: Away, Stacks", "Close Stacks, Dodge Lines");
+	private final ModifiableCallout<AbilityCastStart> revoStacksWithLines = new ModifiableCallout<>("Revolutionary Reign: Away, Stacks", "Far Stacks, Dodge Lines");
 	private final ModifiableCallout<AbilityCastStart> reignsDodgeHeads = ModifiableCallout.durationBasedCall("Reign: Dodge Lines", "Dodge Lines");
 
 	@AutoFeed
@@ -434,7 +434,7 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> moonlightFirst = new ModifiableCallout<>("Moonlight First", "Start {safeSpots[0]}", "{safeSpots[i..-1]}", ModifiableCallout.expiresIn(10));
 	private final ModifiableCallout<AbilityCastStart> moonlightRemaining = new ModifiableCallout<>("Moonlight Remaining", "{safeSpots[i]}", "{safeSpots[i..-1]}");
 
-	private final ModifiableCallout<AbilityCastStart> moonlightExtraCollFirst = new ModifiableCallout<AbilityCastStart>("Moonlight First", "Start {safeSpots[-1]}", "{safeSpots[i..-1]}", ModifiableCallout.expiresIn(10))
+	private final ModifiableCallout<AbilityCastStart> moonlightExtraCollFirst = new ModifiableCallout<AbilityCastStart>("Moonlight First", "{safeSpots[-1]}", "{safeSpots[i..-1]}", ModifiableCallout.expiresIn(10))
 			.extendedDescription("""
 					This callout triggers when cleaves two through four are collected. This is only useful if you care about \
 					TTS for the second through fourth hits as they start to cast, rather than when you actually need to be in \
@@ -498,7 +498,7 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 						s.updateCall(moonlightFirstTwo, first.originalEvent());
 					}
 					else if (i == 2) {
-						s.setParam("secondQuadrant", ArenaSector.tryCombineTwoCardinals(List.of(safe.get(0), safe.get(1))));
+						s.setParam("secondQuadrant", ArenaSector.tryCombineTwoCardinals(List.of(safe.get(2), safe.get(3))));
 						s.updateCall(moonlightSecondTwo, first.originalEvent());
 
 					}
@@ -532,25 +532,22 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
-//	@AutoFeed
-//	private final SequentialTrigger<BaseEvent> beckonMoonlightHeadmarkSq = SqtTemplates.sq(120_000,
-//			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3C1),
-//			(e1, s) -> {
-//				// TODO: is this used?
-//				// scream test
-//				if (true) return;
-//				// For the headmarkers, we can call the first one as soon as it comes out
-//				{
-//					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
-//					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
-//				}
-//				{
-//					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
-//					// We need to not talk all over one of the directional calls
-//					s.waitMs(1200);
-//					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
-//				}
-//			});
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> beckonMoonlightHeadmarkSq = SqtTemplates.sq(120_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA3C1),
+			(e1, s) -> {
+				// For the headmarkers, we can call the first one as soon as it comes out
+				{
+					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
+					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
+				}
+				{
+					List<HeadMarkerEvent> spreads = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.getMarkerOffset() == -237);
+					// We need to not talk all over one of the directional calls
+					s.waitMs(1200);
+					spreads.stream().filter(headMarker -> headMarker.getTarget().isThePlayer()).findAny().ifPresentOrElse(myHm -> s.updateCall(moonlightSpread), () -> s.updateCall(moonlightStack));
+				}
+			});
 
 	// Enrage: it goes untargetable first, no useful callout
 
@@ -655,9 +652,8 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA463, 0xA464),
 			(e1, s) -> {
 				boolean isMaw = e1.abilityIdMatches(0xA463);
-				var cleave = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA460, 0xA462));
-				boolean eastSafe = cleave.abilityIdMatches(0xA460);
-				s.setParam("safe", eastSafe ? ArenaSector.EAST : ArenaSector.WEST);
+				var cleave = s.waitEvent(CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA460, 0xA462));
+				s.setParam("safe", ArenaPos.combatantFacing(cleave.getBestHeading()).opposite());
 				s.updateCall(isMaw ? fangedMaw : fangedPerimeter, e1);
 			});
 

@@ -7,6 +7,7 @@ import gg.xp.reevent.events.EventHandler;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.ModifiedCalloutRepository;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.actlines.events.XivStateRecalculatedEvent;
@@ -27,6 +28,7 @@ import gg.xp.xivsupport.speech.CalloutEvent;
 import gg.xp.xivsupport.sys.KnownLogSource;
 import gg.xp.xivsupport.sys.PrimaryLogSource;
 import gg.xp.xivsupport.sys.XivMain;
+import org.apache.commons.lang3.StringUtils;
 import org.picocontainer.MutablePicoContainer;
 import org.testng.annotations.Test;
 
@@ -153,6 +155,9 @@ public abstract class CalloutVerificationTest {
 			}
 		});
 		dist.registerHandler(CalloutEvent.class, (ctx, e) -> {
+			if (StringUtils.isEmpty(e.getCallText()) && StringUtils.isBlank(e.getVisualText())) {
+				return;
+			}
 			PullTracker pulls = pico.getComponent(PullTracker.class);
 			final long msDelta;
 			Pull currentPull = pulls.getCurrentPull();
@@ -250,7 +255,7 @@ public abstract class CalloutVerificationTest {
 				.getAllCallouts()
 				.stream()
 				.flatMap(group -> group.getCallouts().stream())
-				.forEach(call -> call.getEnable().set(true));
+				.forEach(this::modifyCalloutSettings);
 
 		replayController.advanceBy(1);
 		configure(pico);
@@ -310,6 +315,10 @@ public abstract class CalloutVerificationTest {
 
 	protected long minimumMsBetweenCalls() {
 		return 1000;
+	}
+
+	protected void modifyCalloutSettings(ModifiedCalloutHandle callout) {
+		callout.getEnable().set(true);
 	}
 
 	protected abstract List<CalloutInitialValues> getExpectedCalls();
