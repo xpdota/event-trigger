@@ -19,13 +19,14 @@ public class Line257Parser extends AbstractACTLineParser<Line257Parser.Fields> {
 
 	@Override
 	protected Event convert(FieldMapper<Fields> fields, int lineNumber, ZonedDateTime time) {
+		Long icid = fields.getOptionalHex(Fields.instanceContentId);
 		Long opt1 = fields.getOptionalHex(Fields.unknown1);
 		Long opt2 = fields.getOptionalHex(Fields.unknown2);
 		return new MapEffectEvent(
-				fields.getHex(Fields.instanceContentId),
+				icid == null ? -1 : icid,
 				fields.getHex(Fields.flags),
 				fields.getHex(Fields.index),
-				opt1 == null ? 0 : opt1,
-				opt2 == null ? 0 : opt2);
+				opt1 == null ? -1 : opt1,
+				opt2 == null ? -1 : opt2);
 	}
 }

@@ -421,8 +421,8 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 				else {
 					s.updateCall(lariatDodgeLeft, lariat);
 				}
-				s.waitThenRefreshCombatants(100);
 				AbilityCastStart secondBrutish = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA5A3, 0xA5A5));
+				s.waitThenRefreshCombatants(100);
 				// The final one does include a glower, it goes straight into the tower
 				boolean skipGlower = index == 1;
 				{
