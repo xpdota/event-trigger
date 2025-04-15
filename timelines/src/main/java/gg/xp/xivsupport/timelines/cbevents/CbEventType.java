@@ -8,6 +8,7 @@ import gg.xp.xivsupport.events.actlines.events.ActorControlEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.ActorControlSelfExtraEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import gg.xp.xivsupport.events.actlines.events.EntityKilledEvent;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
@@ -107,6 +108,15 @@ public enum CbEventType {
 			new CbfMap<>("effectId", "event.buff.id", id(BuffApplied::getBuff)),
 			new CbfMap<>("effect", "event.buff.name", named(BuffApplied::getBuff)),
 			new CbfMap<>("count", "event.rawStacks", intConv(BuffApplied::getRawStacks, 16))
+	)),
+	LosesEffect(BuffRemoved.class, List.of(
+			new CbfMap<>("sourceId", "event.source.id", id(BuffRemoved::getSource)),
+			new CbfMap<>("source", "event.source.name", named(BuffRemoved::getSource)),
+			new CbfMap<>("targetId", "event.target.id", id(BuffRemoved::getTarget)),
+			new CbfMap<>("target", "event.target.name", named(BuffRemoved::getTarget)),
+			new CbfMap<>("effectId", "event.buff.id", id(BuffRemoved::getBuff)),
+			new CbfMap<>("effect", "event.buff.name", named(BuffRemoved::getBuff)),
+			new CbfMap<>("count", "event.rawStacks", intConv(BuffRemoved::getRawStacks, 16))
 	)),
 	MapEffect(MapEffectEvent.class, List.of(
 			new CbfMap<>("instance", "event.instanceContentId", intConv(MapEffectEvent::getInstanceContentId, 16)),

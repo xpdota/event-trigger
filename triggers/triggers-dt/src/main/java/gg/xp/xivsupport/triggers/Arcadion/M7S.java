@@ -440,8 +440,6 @@ public class M7S extends AutoChildEventHandler implements FilteredEventHandler {
 					s.waitCastFinished(casts, secondBrutish);
 					s.updateCall(brutishSwingGlowerNow);
 				}
-
-
 			});
 
 	/*
