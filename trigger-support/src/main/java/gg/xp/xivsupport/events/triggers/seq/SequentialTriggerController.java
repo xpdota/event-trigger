@@ -11,6 +11,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
+import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
@@ -528,6 +529,31 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 		else {
 			return waitEvent(AbilityCastStart.class, condition);
+		}
+	}
+
+	/**
+	 * Like {@link #findOrWaitForCast(ActiveCastRepository, Predicate, boolean)}, but also requires that the cast have
+	 * location data. Waits if it does not find said data.
+	 *
+	 * @param repo           The ActiveCastRepository
+	 * @param condition      The condition for the cast, i.e. the same thing you would feed to {@link #waitEvent}
+	 *                       and similar methods
+	 * @param includeExpired Whether to allow already-completed casts.
+	 * @return The cast.
+	 */
+	public AbilityCastStart findOrWaitForCastWithLocation(ActiveCastRepository repo, Predicate<AbilityCastStart> condition, boolean includeExpired) {
+		var castMaybe = repo.getAll().stream().filter(ct -> {
+			if (!includeExpired && ct.getResult() != CastResult.IN_PROGRESS) {
+				return false;
+			}
+			return condition.test(ct.getCast()) && ct.getCast().getLocationInfo() != null;
+		}).findFirst().map(CastTracker::getCast).orElse(null);
+		if (castMaybe != null) {
+			return castMaybe;
+		}
+		else {
+			return waitEvent(CastLocationDataEvent.class, clde -> condition.test(clde.originalEvent())).originalEvent();
 		}
 	}
 

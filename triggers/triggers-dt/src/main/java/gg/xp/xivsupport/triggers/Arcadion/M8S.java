@@ -649,11 +649,14 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> fangedMawPerimiterSq = SqtTemplates.sq(10_000,
+			// A463 = Maw => Out
+			// A464 = Perimeter => In
+			// A460, A462 = Cleave
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xA463, 0xA464),
 			(e1, s) -> {
 				boolean isMaw = e1.abilityIdMatches(0xA463);
-				var cleave = s.waitEvent(CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA460, 0xA462));
-				s.setParam("safe", ArenaPos.combatantFacing(cleave.getBestHeading()).opposite());
+				var cleave = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xA460, 0xA462), false);
+				s.setParam("safe", ArenaPos.combatantFacing(cleave.getLocationInfo().getBestHeading()).opposite());
 				s.updateCall(isMaw ? fangedMaw : fangedPerimeter, e1);
 			});
 
