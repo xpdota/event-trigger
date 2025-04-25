@@ -28,7 +28,7 @@ jobs:
         run: mvn test -Pmaketimelines -Dmake-timelines.use-driver-helper=false
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4.2.0
+        uses: peter-evans/create-pull-request@v7
         with:
           commit-message: 'Automatic timeline update'
           branch: timeline-auto-update
