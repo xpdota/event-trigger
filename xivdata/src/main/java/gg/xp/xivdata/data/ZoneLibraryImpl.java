@@ -11,8 +11,6 @@ import java.util.Map;
 
 public final class ZoneLibraryImpl {
 
-	public static final Logger log = LoggerFactory.getLogger(ZoneLibraryImpl.class);
-
 	private final Map<Integer, ZoneInfo> values;
 
 	public ZoneLibraryImpl(InputStream input) {

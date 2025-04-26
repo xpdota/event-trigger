@@ -817,10 +817,14 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 					if (pos.distanceFrom2D(Position.of2d(100, 100)) < 1) {
 						sector = getP2platform(pos.translateRelative(0, 117));
 					}
+					// Casts that directly target the platform
 					else {
 						sector = getP2platform(pos);
 					}
 					sectorMap.put(sector, cast.getAbility());
+				}
+				if (sectorMap.size() != 5) {
+					log.error("Bad sector count: {}, map: {}", sectorMap.size(), sectorMap);
 				}
 				// I don't like relying on entity IDs, but this is by far the easiest way of going about this
 				// The Left-hand gleaming fang has a lower ID than the right-hand.
@@ -832,16 +836,15 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Now go through the actual mechanics
 				for (int i = 0; i < 5; i++) {
 					// Wait for gleaming casts
-					List<CastLocationDataEvent> gleamingBarrages = s.waitEventsQuickSuccession(5,
-							CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA476),
-							Duration.ofMillis(1_500));
+					List<CastLocationDataEvent> gleamingBarrages = s.waitEvents(5,
+							CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA476));
 					// Platform where the player is currently
 					ArenaSector mySector = getP2platform(state.getPlayer().getPos());
 					// Find the barrage on our platform
 					CastLocationDataEvent myBarrage = gleamingBarrages.stream().filter(barrage -> getP2platform(barrage.getPos()) == mySector)
 							.findAny()
 							.orElseGet(() -> {
-								log.error("No barrage found for {}", mySector);
+								log.error("No barrage found for {}. Barrages: {}", mySector, gleamingBarrages);
 								return null;
 							});
 					// Left/right safe
