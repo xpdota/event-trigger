@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -832,7 +833,8 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				for (int i = 0; i < 5; i++) {
 					// Wait for gleaming casts
 					List<CastLocationDataEvent> gleamingBarrages = s.waitEventsQuickSuccession(5,
-							CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA476));
+							CastLocationDataEvent.class, acs -> acs.abilityIdMatches(0xA476),
+							Duration.ofMillis(1_500));
 					// Platform where the player is currently
 					ArenaSector mySector = getP2platform(state.getPlayer().getPos());
 					// Find the barrage on our platform
@@ -875,6 +877,7 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 					if (call != null) {
 						s.updateCall(call);
 					}
+					s.waitMs(200);
 
 				}
 			});
