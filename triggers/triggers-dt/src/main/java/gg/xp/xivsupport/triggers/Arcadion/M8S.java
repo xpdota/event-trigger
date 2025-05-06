@@ -33,7 +33,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -42,6 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 @CalloutRepo(name = "M8S", duty = KnownDuty.M8S)
 public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
@@ -804,14 +804,13 @@ public class M8S extends AutoChildEventHandler implements FilteredEventHandler {
 				boolean cw = e1.abilityIdMatches(0xA477);
 				s.updateCall(cw ? championsCircuitCw : championsCircuitCcw, e1);
 				// Wait for the five mechanics
-				List<CastLocationDataEvent> individualCasts = s.waitEvents(5, CastLocationDataEvent.class, acs -> {
-					long id = acs.getAbility().getId();
-					return id >= 0xA479 && id <= 0xA47D;
-				});
+				List<AbilityCastStart> individualCasts = IntStream.rangeClosed(0xA479, 0xA47D)
+						.mapToObj(id -> s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(id), false))
+						.toList();
 				// Figure out where each of the five mechanics is
 				Map<ArenaSector, XivAbility> sectorMap = new EnumMap<>(ArenaSector.class);
-				for (CastLocationDataEvent cast : individualCasts) {
-					Position pos = cast.getPos();
+				for (AbilityCastStart cast : individualCasts) {
+					Position pos = cast.getLocationInfo().getPos();
 					// Cast from center with angle
 					ArenaSector sector;
 					if (pos.distanceFrom2D(Position.of2d(100, 100)) < 1) {
