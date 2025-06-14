@@ -3,6 +3,15 @@ package gg.xp.util;
 import java.util.Arrays;
 import java.util.Collection;
 
+/**
+ * Efficiently store a mapping of int/long keys to boolean values by using a bitfield. Key set should ideally be
+ * contiguous. Each boolean only takes up a single bit, though the space needed is padded by 20% like ArrayList
+ * to avoid repeated append operations being expensive.
+ * <p>
+ * NOT thread safe! Concurrent reads are fine. Concurrent writes or reads+writes are not. This is for two reasons.
+ * First, if array expansion is necessary, any in-flight writes may end up writing to a "dead" array. Second, writes
+ * must do a read-modify-write, so are inherently unsafe if they lang within the same array element.
+ */
 public class BitField {
 
 	private long[] array = {0L};
