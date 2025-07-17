@@ -77,6 +77,8 @@ public enum KnownDuty implements Duty {
 
 	FRU("FRU", 1238, Expansion.DT, DutyType.ULTIMATE),
 	CodCar("CoD CAR", 1241, Expansion.DT, DutyType.CAR),
+
+	TEA("TEA", 887, Expansion.ShB, DutyType.ULTIMATE)
 	;
 
 	private final String name;
