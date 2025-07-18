@@ -239,7 +239,7 @@ public enum Cooldown implements ExtendedCooldownDescriptor {
 
 	// VPR
 	// Also pit of dread
-	Dreadwinder(builder(CooldownType.PERSONAL_BURST, true, 0x873C, 0x873F).maxCharges(3)),
+	Dreadwinder(builder(CooldownType.PERSONAL_BURST, true, 0x873C, 0x873F).maxCharges(2)),
 	SerpentsIre(builder(CooldownType.PERSONAL_BURST, true, 0x8757)),
 	Slither(builder(CooldownType.PERSONAL_UTILITY, false, 0x8756)),
 

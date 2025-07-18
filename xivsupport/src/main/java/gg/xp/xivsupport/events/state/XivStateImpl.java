@@ -625,7 +625,6 @@ public class XivStateImpl implements XivState {
 	private final Map<Long, WeakReference<XivCombatant>> graveyard = new HashMap<>();
 
 	private CombatantData getData(long cbtId) {
-		// TODO: make something like
 		try (LockAdapter ignored = lock.read()) {
 			return combatantData.get(cbtId);
 		}
