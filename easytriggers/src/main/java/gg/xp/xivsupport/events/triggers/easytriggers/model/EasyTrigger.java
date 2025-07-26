@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableActions<X> {
+public class EasyTrigger<X> extends BaseTrigger<X> implements HasMutableActions<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(EasyTrigger.class);
 
@@ -28,16 +28,12 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 	@JsonIgnore
 	private long hits;
 
-	@JsonProperty(defaultValue = "true")
-	private boolean enabled = true;
-
 	@JsonProperty
 	private SequentialTriggerConcurrencyMode concurrency = SequentialTriggerConcurrencyMode.BLOCK_NEW;
 
 	private Class<X> eventType = (Class<X>) Event.class;
 	private List<Condition<? super X>> conditions = Collections.emptyList();
 	private List<Action<? super X>> actions = Collections.emptyList();
-	private String name = "Give me a name";
 	private int timeoutMs = 600_000;
 
 	private SequentialTrigger<BaseEvent> sqBase = SqtTemplates.nothing();
@@ -48,12 +44,10 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 		recalcFully();
 	}
 
-	public void handleEvent(EventContext context, Event event) {
-		if (!(event instanceof BaseEvent) || !enabled || eventType == null) {
-			return;
-		}
-		ctx = new EasyTriggerContext(context, this);
-		sqBase.feed(context, (BaseEvent) event);
+	@Override
+	protected void handleEventInternal(EventContext context, BaseEvent event, EasyTriggerContext ectx) {
+		this.ctx = ectx;
+		sqBase.feed(context, event);
 	}
 
 	private boolean matchesStartCondition(X event) {
@@ -81,6 +75,7 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 		recalc();
 	}
 
+	@Override
 	public void recalc() {
 		makeWritable();
 		conditions.sort(Comparator.comparing(Condition::sortOrder));
@@ -189,14 +184,6 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 		recalc();
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public long getHits() {
 		return hits;
 	}
@@ -205,91 +192,4 @@ public class EasyTrigger<X> implements HasMutableConditions<X>, HasMutableAction
 		return misses;
 	}
 
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-		recalc();
-	}
-
-
-	// TODO: this doesn't work right anyway, because it doesn't do a deep clone of conditions
-//	public EasyTrigger<X> duplicate() {
-//		EasyTrigger<X> newTrigger = new EasyTrigger<>();
-//		newTrigger.setEventType(eventType);
-//		newTrigger.setName(name + " copy");
-//		newTrigger.setTts(tts);
-//		newTrigger.setText(text);
-//		newTrigger.setConditions(new ArrayList<>(conditions));
-//		return newTrigger;
-//	}
-//	public void handleEventOld(EventContext context, Event event) {
-//		if (!(event instanceof BaseEvent)) {
-//			return;
-//		}
-//		switch (concurrency) {
-//			// Mirrors standard sequential trigger logic
-//			case BLOCK_NEW -> {
-//				// Block new - if currently active, feed.
-//				if (sqCurrent.isActive()) {
-//					sqCurrent.feed(context, (BaseEvent) event);
-//					// TODO: shouldn't there be a 'return' right here?
-//					return;
-//				}
-//				if (!enabled || eventType == null || !eventType.isInstance(event)) {
-//					return;
-//				}
-//				X typedEvent = eventType.cast(event);
-//				ctx = new EasyTriggerContext(context, this);
-//				if (matchesStartCondition(typedEvent)) {
-//					hits++;
-//					sqCurrent = sqBase;
-//					sqCurrent.feed(context, (BaseEvent) event);
-//				}
-//				else {
-//					misses++;
-//				}
-//			}
-//			case REPLACE_OLD -> {
-//				if (!enabled || eventType == null || !eventType.isInstance(event)) {
-//					return;
-//				}
-//				X typedEvent = eventType.cast(event);
-//				ctx = new EasyTriggerContext(context, this);
-//				if (matchesStartCondition(typedEvent)) {
-//					hits++;
-//					if (sqCurrent != null && sqCurrent.isActive()) {
-//						sqCurrent.stopSilently();
-//					}
-//					sqCurrent = sqBase;
-//					sqCurrent.feed(context, (BaseEvent) event);
-//				}
-//				else {
-//					if (sqCurrent.isActive()) {
-//						sqCurrent.feed(context, (BaseEvent) event);
-//					}
-//					misses++;
-//				}
-//			}
-//			case CONCURRENT -> {
-//				X typedEvent = eventType.cast(event);
-//				ctx = new EasyTriggerContext(context, this);
-//				var iter = sqMultiCurrent.iterator();
-//				while (iter.hasNext()) {
-//					SequentialTrigger<BaseEvent> next = iter.next();
-//					next.feed(context, (BaseEvent) event);
-//					if (!next.isActive()) {
-//						iter.remove();
-//					}
-//				}
-//				if (matchesStartCondition(typedEvent)) {
-//					hits++;
-//					sqMultiCurrent.add()
-//				}
-//			}
-//		}
-//	}
 }
