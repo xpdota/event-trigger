@@ -4,14 +4,14 @@ import java.util.List;
 
 public interface HasChildTriggers extends HasEventType {
 
-	List<BaseTrigger<?>> getChildren();
+	List<BaseTrigger<?>> getChildTriggers();
 
-	void setChildren(List<BaseTrigger<?>> children);
+	void setChildTriggers(List<BaseTrigger<?>> children);
 
-	void addChild(BaseTrigger<?> child);
+	void addChildTrigger(BaseTrigger<?> child);
 
-	void addChild(BaseTrigger<?> child, int index);
+	void addChildTrigger(BaseTrigger<?> child, int index);
 
-	void removeChild(BaseTrigger<?> child);
+	void removeChildTriggers(BaseTrigger<?> child);
 
 }

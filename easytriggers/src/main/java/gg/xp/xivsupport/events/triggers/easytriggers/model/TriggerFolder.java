@@ -16,7 +16,7 @@ public class TriggerFolder extends BaseTrigger<Object> implements HasChildTrigge
 	private static final Logger log = LoggerFactory.getLogger(TriggerFolder.class);
 
 	private List<Condition<Object>> conditions = Collections.emptyList();
-	private List<BaseTrigger<?>> children = Collections.emptyList();
+	private List<BaseTrigger<?>> triggers = Collections.emptyList();
 
 	@Override
 	public Class<?> getEventType() {
@@ -57,8 +57,8 @@ public class TriggerFolder extends BaseTrigger<Object> implements HasChildTrigge
 		if (!(conditions instanceof ArrayList)) {
 			conditions = new ArrayList<>(conditions);
 		}
-		if (!(children instanceof ArrayList)) {
-			children = new ArrayList<>(children);
+		if (!(triggers instanceof ArrayList)) {
+			triggers = new ArrayList<>(triggers);
 		}
 	}
 
@@ -67,8 +67,8 @@ public class TriggerFolder extends BaseTrigger<Object> implements HasChildTrigge
 		makeWritable();
 		conditions.sort(Comparator.comparing(Condition::sortOrder));
 		conditions.forEach(Condition::recalc);
-		children.forEach(BaseTrigger::recalc);
-		Stream.concat(conditions.stream(), children.stream()).forEach(item -> {
+		triggers.forEach(BaseTrigger::recalc);
+		Stream.concat(conditions.stream(), triggers.stream()).forEach(item -> {
 			if (item instanceof HasMutableEventType het) {
 				het.setEventType(getEventType());
 			}
@@ -76,34 +76,34 @@ public class TriggerFolder extends BaseTrigger<Object> implements HasChildTrigge
 	}
 
 	@Override
-	public List<BaseTrigger<?>> getChildren() {
-		return Collections.unmodifiableList(children);
+	public List<BaseTrigger<?>> getChildTriggers() {
+		return Collections.unmodifiableList(triggers);
 	}
 
 	@Override
-	public void setChildren(List<BaseTrigger<?>> triggers) {
-		this.children = new ArrayList<>(triggers);
+	public void setChildTriggers(List<BaseTrigger<?>> triggers) {
+		this.triggers = new ArrayList<>(triggers);
 		recalc();
 	}
 
 	@Override
-	public void addChild(BaseTrigger<?> trigger) {
+	public void addChildTrigger(BaseTrigger<?> trigger) {
 		makeWritable();
-		children.add(trigger);
+		triggers.add(trigger);
 		recalc();
 	}
 
 	@Override
-	public void addChild(BaseTrigger<?> trigger, int index) {
+	public void addChildTrigger(BaseTrigger<?> trigger, int index) {
 		makeWritable();
-		children.add(index, trigger);
+		triggers.add(index, trigger);
 		recalc();
 	}
 
 	@Override
-	public void removeChild(BaseTrigger<?> child) {
+	public void removeChildTriggers(BaseTrigger<?> child) {
 		makeWritable();
-		children.remove(child);
+		triggers.remove(child);
 		recalc();
 	}
 
@@ -114,7 +114,7 @@ public class TriggerFolder extends BaseTrigger<Object> implements HasChildTrigge
 			return;
 		}
 
-		for (BaseTrigger<?> child : this.children) {
+		for (BaseTrigger<?> child : this.triggers) {
 			try {
 				child.handleEvent(context, event);
 			}
@@ -122,5 +122,10 @@ public class TriggerFolder extends BaseTrigger<Object> implements HasChildTrigge
 				log.error("Nested trigger threw error (parent {}, child {})", getName(), child.getName(), t);
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "TriggerFolder(%s)".formatted(getName());
 	}
 }

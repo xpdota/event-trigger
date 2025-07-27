@@ -14,7 +14,6 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
@@ -105,15 +104,18 @@ import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEven
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerMigrationHelper;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasChildTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerFolder;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
@@ -133,7 +135,7 @@ import java.util.Collections;
 import java.util.List;
 
 @ScanMe
-public final class EasyTriggers {
+public final class EasyTriggers implements HasChildTriggers {
 	private static final Logger log = LoggerFactory.getLogger(EasyTriggers.class);
 	private static final String settingKey = "easy-triggers.my-triggers";
 	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers";
@@ -146,6 +148,8 @@ public final class EasyTriggers {
 	private final CustomJsonListSetting<EasyTrigger<?>> setting;
 
 	private ArrayList<EasyTrigger<?>> triggers;
+
+	private ArrayList<BaseTrigger<?>> triggers2;
 
 	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state, EventMaster master) {
 		this.pers = pers;
@@ -166,6 +170,17 @@ public final class EasyTriggers {
 		setting.tryRecoverFailures();
 		// TODO: Having lots of EasyTriggers can inflate startup times
 		this.triggers = new ArrayList<>(setting.getItems());
+		this.triggers2 = new ArrayList<>(triggers);
+		TriggerFolder testFolder = new TriggerFolder();
+		testFolder.setName("Test Folder");
+		this.triggers2.add(0, testFolder);
+		TriggerFolder testFolder2 = new TriggerFolder();
+		testFolder2.setName("Test Folder 2");
+		EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newDefaultInst();
+		EasyTrigger<BuffApplied> trigger2 = getEventDescription(BuffApplied.class).newDefaultInst();
+		testFolder.addChildTrigger(trigger);
+		testFolder2.addChildTrigger(trigger2);
+		testFolder.addChildTrigger(testFolder2);
 		recalc();
 	}
 
@@ -200,7 +215,7 @@ public final class EasyTriggers {
 		return pico.getComponent(clazz);
 	}
 
-	public String exportToString(List<EasyTrigger<?>> toExport) {
+	public String exportToString(List<? extends BaseTrigger<?>> toExport) {
 		try {
 			return mapper.writeValueAsString(toExport);
 		}
@@ -225,6 +240,26 @@ public final class EasyTriggers {
 			throw new ValidationError("Error importing trigger: " + e.getMessage(), e);
 		}
 	}
+
+	public List<BaseTrigger<?>> importFromString2(String string) {
+		try {
+			List<JsonNode> nodes = mapper.readValue(string, new TypeReference<>() {
+			});
+			List<BaseTrigger<?>> out = new ArrayList<>(nodes.size());
+			for (JsonNode node : nodes) {
+				BaseTrigger<?> trigger = mapper.convertValue(node, BaseTrigger.class);
+				if (trigger instanceof EasyTrigger et) {
+					doLegacyMigration(node, et);
+				}
+				out.add(trigger);
+			}
+			return out;
+		}
+		catch (JsonProcessingException e) {
+			throw new ValidationError("Error importing trigger: " + e.getMessage(), e);
+		}
+	}
+
 
 	private void save() {
 		recalc();
@@ -267,6 +302,26 @@ public final class EasyTriggers {
 		});
 	}
 
+	@HandleEvents
+	public void runEasyTriggers2(EventContext context, Event event) {
+		if (event instanceof EasyTriggersInitEvent etie) {
+			// TODO: confirm this mechanism for new ETs
+			EasyTrigger<EasyTriggersInitEvent> triggerToInit = etie.getTriggerToInit();
+			if (triggerToInit != null) {
+				triggerToInit.handleEvent(context, event);
+				return;
+			}
+		}
+		triggers.forEach(trig -> {
+			try {
+				trig.handleEvent(context, event);
+			}
+			catch (Throwable t) {
+				log.error("Error running easy trigger '{}'", trig.getName(), t);
+			}
+		});
+	}
+
 	public List<EasyTrigger<?>> getTriggers() {
 		return Collections.unmodifiableList(triggers);
 	}
@@ -283,6 +338,59 @@ public final class EasyTriggers {
 	public void removeTrigger(EasyTrigger<?> trigger) {
 		triggers.remove(trigger);
 		save();
+	}
+
+	public void addTrigger2(@Nullable HasChildTriggers parent, BaseTrigger<?> trigger) {
+		if (parent == null) {
+			addChildTrigger(trigger);
+		}
+		else {
+			parent.addChildTrigger(trigger);
+		}
+		save();
+		if (trigger instanceof EasyTrigger<?> et && et.getEventType().equals(EasyTriggersInitEvent.class)) {
+			initSpecificTrigger((EasyTrigger<EasyTriggersInitEvent>) et);
+		}
+	}
+
+	public void removeTrigger2(@Nullable TriggerFolder parent, BaseTrigger<?> trigger) {
+		if (parent == null) {
+			this.removeChildTriggers(trigger);
+		}
+		else {
+			parent.removeChildTriggers(trigger);
+		}
+		save();
+	}
+
+	@Override
+	public List<BaseTrigger<?>> getChildTriggers() {
+		return Collections.unmodifiableList(triggers2);
+	}
+
+	@Override
+	public void setChildTriggers(List<BaseTrigger<?>> children) {
+		triggers2 = new ArrayList<>(children);
+	}
+
+	@Override
+	public void addChildTrigger(BaseTrigger<?> child) {
+		triggers2.add(child);
+	}
+
+	@Override
+	public void addChildTrigger(BaseTrigger<?> child, int index) {
+		triggers2.add(index, child);
+	}
+
+	@Override
+	public void removeChildTriggers(BaseTrigger<?> child) {
+		triggers2.remove(child);
+	}
+
+	@Override
+	public Class<?> getEventType() {
+		return Object.class;
 	}
 
 	// Be sure to add new types to EasyTriggersTest
@@ -705,6 +813,11 @@ public final class EasyTriggers {
 		else {
 			return Collections.emptyList();
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "EasyTriggersRoot()";
 	}
 
 }

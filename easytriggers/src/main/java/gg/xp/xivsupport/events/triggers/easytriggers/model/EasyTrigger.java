@@ -192,4 +192,8 @@ public class EasyTrigger<X> extends BaseTrigger<X> implements HasMutableActions<
 		return misses;
 	}
 
+	@Override
+	public String toString() {
+		return "EasyTrigger<%s>(%s)".formatted(getEventType().getSimpleName(), getName());
+	}
 }
