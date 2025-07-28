@@ -151,6 +151,7 @@ public class TriggerTree extends JTree {
 							if (path.getLastPathComponent() instanceof BaseTrigger<?> bt) {
 								bt.setEnabled(!bt.isEnabled());
 								SwingUtilities.invokeLater(() -> TriggerTree.this.repaint(bounds));
+								// TODO: this should also prevent a double-click from expanding/collapsing
 								e.consume();
 							}
 						}

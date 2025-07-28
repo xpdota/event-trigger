@@ -604,7 +604,7 @@ public class EasyTriggersTab2 implements PluginTab {
 				return str;
 			}, editTriggerThenSave(trigger::setName), trigger.getName());
 
-			JPanel conditionsPanel = new ConditionsPanel<>(backend, "Conditions", trigger, EasyTriggersTab2.this::requestSave);
+			JPanel conditionsPanel = new ConditionsPanel<>(backend, "Conditions for All Triggers in this Folder", trigger, EasyTriggersTab2.this::requestSave);
 
 			c.weightx = 0;
 
@@ -620,11 +620,6 @@ public class EasyTriggersTab2 implements PluginTab {
 			c.weightx = 0;
 			c.gridx = 0;
 			c.gridy++;
-			add(GuiUtil.labelFor("Event", eventTypeField), c);
-			c.gridx++;
-			add(eventTypeField, c);
-			c.gridy++;
-			c.gridx = 0;
 			c.gridwidth = GridBagConstraints.REMAINDER;
 
 			add(conditionsPanel, c);
