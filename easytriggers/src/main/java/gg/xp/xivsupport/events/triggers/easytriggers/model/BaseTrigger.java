@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import org.jetbrains.annotations.Nullable;
 
 @JsonTypeInfo(
 		use = JsonTypeInfo.Id.MINIMAL_CLASS,
@@ -52,4 +54,25 @@ public abstract class BaseTrigger<X> implements HasMutableConditions<X> {
 	}
 
 	protected abstract void handleEventInternal(EventContext context, BaseEvent event, EasyTriggerContext ectx);
+
+	@JsonIgnore
+	private @Nullable HasChildTriggers parent;
+
+	@JsonIgnore
+	public @Nullable HasChildTriggers getParent() {
+		return this.parent;
+	}
+
+	@JsonIgnore
+	public void setParent(HasChildTriggers parent) {
+		this.parent = parent;
+	}
+
+	@JsonIgnore
+	public boolean isDisabledByParent() {
+		if (parent instanceof BaseTrigger<?> et) {
+			return !et.isEnabled() || et.isDisabledByParent();
+		}
+		return false;
+	}
 }

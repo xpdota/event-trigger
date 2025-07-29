@@ -52,6 +52,18 @@ public class TriggerTree extends JTree {
 								Object last = dl.getPath().getLastPathComponent();
 								// We can only drop onto or into a folder
 								if (last instanceof HasChildTriggers folder) {
+									// Don't allow a trigger to be added to itself, or to a child of itself.
+									HasChildTriggers current = folder;
+									while (current instanceof TriggerFolder currentFolder) {
+										if (current == data.trigger()) {
+											log.warn("Invalid drop attempted!");
+											return false;
+										}
+										current = currentFolder.getParent();
+									}
+									// TODO: there seem to be more bugs with regards to triggers being placed somewhere
+									// inappropriate in the hierarchy, i.e. cycles.
+									// it needs to enforce that a trigger cannot be added to a child of itself.
 									int ci = dl.getChildIndex();
 									BaseTrigger<?> draggedTrigger = data.trigger();
 									// We need to remove it from its current parent first
@@ -80,21 +92,27 @@ public class TriggerTree extends JTree {
 				return false;
 			}
 
-			@Override
-			public boolean canImport(TransferSupport support) {
+			private boolean canImportInternal(TransferSupport support) {
 				if (support.getComponent().equals(TriggerTree.this)) {
 					if (support.isDataFlavorSupported(TRIGGER_FLAVOR)) {
 						try {
-							if (support.getTransferable().getTransferData(TRIGGER_FLAVOR) instanceof TriggerTransferData) {
+							if (support.getTransferable().getTransferData(TRIGGER_FLAVOR) instanceof TriggerTransferData data) {
 								if (support.getDropLocation() instanceof JTree.DropLocation dl) {
 									Object last = dl.getPath().getLastPathComponent();
 									// We can only drop onto or into a folder or the root
-									if (last instanceof TriggerFolder) {
-										TriggerTree.this.setCursor(DragSource.DefaultMoveDrop);
+									if (last instanceof TriggerFolder folder) {
+										// Don't allow a trigger to be added to itself, or to a child of itself.
+										HasChildTriggers current = folder;
+										while (current instanceof TriggerFolder currentFolder) {
+											if (current == data.trigger()) {
+												log.warn("Invalid drop attempted!");
+												return false;
+											}
+											current = currentFolder.getParent();
+										}
 										return true;
 									}
 									else if (last instanceof EasyTriggers) {
-										TriggerTree.this.setCursor(DragSource.DefaultMoveDrop);
 										return true;
 									}
 								}
@@ -105,8 +123,20 @@ public class TriggerTree extends JTree {
 						}
 					}
 				}
-				TriggerTree.this.setCursor(DragSource.DefaultMoveNoDrop);
 				return false;
+
+			}
+
+			@Override
+			public boolean canImport(TransferSupport support) {
+				boolean canImport = this.canImportInternal(support);
+				if (canImport) {
+					TriggerTree.this.setCursor(DragSource.DefaultMoveDrop);
+				}
+				else {
+					TriggerTree.this.setCursor(DragSource.DefaultMoveNoDrop);
+				}
+				return canImport;
 			}
 
 			@Override
@@ -150,7 +180,7 @@ public class TriggerTree extends JTree {
 						if (e.getX() > bounds.x && e.getX() <= bounds.x + bounds.height) {
 							if (path.getLastPathComponent() instanceof BaseTrigger<?> bt) {
 								bt.setEnabled(!bt.isEnabled());
-								SwingUtilities.invokeLater(() -> TriggerTree.this.repaint(bounds));
+								SwingUtilities.invokeLater(TriggerTree.this::repaint);
 								// TODO: this should also prevent a double-click from expanding/collapsing
 								e.consume();
 							}

@@ -139,6 +139,8 @@ public final class EasyTriggers implements HasChildTriggers {
 	private static final Logger log = LoggerFactory.getLogger(EasyTriggers.class);
 	private static final String settingKey = "easy-triggers.my-triggers";
 	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers";
+	private static final String settingKey2 = "easy-triggers.my-triggers-2";
+	private static final String failedTriggersSettingKey2 = "easy-triggers.failed-triggers-2";
 	private final ObjectMapper mapper = new ObjectMapper();
 
 	private final PersistenceProvider pers;
@@ -146,9 +148,9 @@ public final class EasyTriggers implements HasChildTriggers {
 	private final XivState state;
 	private final EventMaster master;
 	private final CustomJsonListSetting<EasyTrigger<?>> setting;
+	private final CustomJsonListSetting<BaseTrigger<?>> setting2;
 
 	private ArrayList<EasyTrigger<?>> triggers;
-
 	private ArrayList<BaseTrigger<?>> triggers2;
 
 	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state, EventMaster master) {
@@ -162,50 +164,64 @@ public final class EasyTriggers implements HasChildTriggers {
 				return inject(beanProperty.getType().getRawClass());
 			}
 		});
-		this.setting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
+
+		setting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
 				}, settingKey, failedTriggersSettingKey)
 				.withMapper(mapper)
 				.postConstruct(this::doLegacyMigration)
 				.build();
 		setting.tryRecoverFailures();
+
+		setting2 = CustomJsonListSetting.<BaseTrigger<?>>builder(pers, new TypeReference<>() {
+				}, settingKey2, failedTriggersSettingKey2)
+				.withMapper(mapper)
+				.postConstruct(this::doLegacyMigration)
+				.build();
+		setting2.tryRecoverFailures();
+
 		// TODO: Having lots of EasyTriggers can inflate startup times
 		this.triggers = new ArrayList<>(setting.getItems());
-		this.triggers2 = new ArrayList<>(triggers);
-		TriggerFolder testFolder = new TriggerFolder();
-		testFolder.setName("Test Folder");
-		this.triggers2.add(0, testFolder);
-		TriggerFolder testFolder2 = new TriggerFolder();
-		testFolder2.setName("Test Folder 2");
-		EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newDefaultInst();
-		EasyTrigger<BuffApplied> trigger2 = getEventDescription(BuffApplied.class).newDefaultInst();
-		testFolder.addChildTrigger(trigger);
-		testFolder2.addChildTrigger(trigger2);
-		testFolder.addChildTrigger(testFolder2);
+		this.triggers2 = new ArrayList<>(setting2.getItems());
+
+		if (true) {
+			TriggerFolder testFolder = new TriggerFolder();
+			testFolder.setName("Test Folder");
+			this.triggers2.add(0, testFolder);
+			TriggerFolder testFolder2 = new TriggerFolder();
+			testFolder2.setName("Test Folder 2");
+			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newDefaultInst();
+			EasyTrigger<BuffApplied> trigger2 = getEventDescription(BuffApplied.class).newDefaultInst();
+			testFolder.addChildTrigger(trigger);
+			testFolder2.addChildTrigger(trigger2);
+			testFolder.addChildTrigger(testFolder2);
+		}
 		recalc();
 	}
 
 	@SuppressWarnings("unchecked")
-	private <X> void doLegacyMigration(JsonNode node, EasyTrigger<X> trigger) {
-		EasyTriggerMigrationHelper migration = mapper.convertValue(node, EasyTriggerMigrationHelper.class);
-		// legacy migration
-		if (migration.tts != null || migration.text != null) {
-			if (migration.useDuration && HasDuration.class.isAssignableFrom(trigger.getEventType())) {
-				DurationBasedCalloutAction action = new DurationBasedCalloutAction();
-				action.setText(migration.text);
-				action.setTts(migration.tts);
-				action.setColorRaw(migration.colorRaw);
-				action.setUseIcon(migration.useIcon);
-				action.setHangTime(migration.hangTime);
-				trigger.addAction((Action<? super X>) action);
-			}
-			else {
-				CalloutAction action = new CalloutAction();
-				action.setText(migration.text);
-				action.setTts(migration.tts);
-				action.setColorRaw(migration.colorRaw);
-				action.setUseIcon(migration.useIcon);
-				action.setHangTime(migration.hangTime);
-				trigger.addAction((Action<? super X>) action);
+	private <X> void doLegacyMigration(JsonNode node, BaseTrigger<X> base) {
+		if (base instanceof EasyTrigger<X> trigger) {
+			EasyTriggerMigrationHelper migration = mapper.convertValue(node, EasyTriggerMigrationHelper.class);
+			// legacy migration
+			if (migration.tts != null || migration.text != null) {
+				if (migration.useDuration && HasDuration.class.isAssignableFrom(trigger.getEventType())) {
+					DurationBasedCalloutAction action = new DurationBasedCalloutAction();
+					action.setText(migration.text);
+					action.setTts(migration.tts);
+					action.setColorRaw(migration.colorRaw);
+					action.setUseIcon(migration.useIcon);
+					action.setHangTime(migration.hangTime);
+					trigger.addAction((Action<? super X>) action);
+				}
+				else {
+					CalloutAction action = new CalloutAction();
+					action.setText(migration.text);
+					action.setTts(migration.tts);
+					action.setColorRaw(migration.colorRaw);
+					action.setUseIcon(migration.useIcon);
+					action.setHangTime(migration.hangTime);
+					trigger.addAction((Action<? super X>) action);
+				}
 			}
 		}
 	}
@@ -264,6 +280,7 @@ public final class EasyTriggers implements HasChildTriggers {
 	private void save() {
 		recalc();
 		setting.setItems(triggers);
+//		setting2.setItems(triggers2);
 	}
 
 	public void commit() {
@@ -272,6 +289,7 @@ public final class EasyTriggers implements HasChildTriggers {
 
 	private void recalc() {
 		triggers.forEach(EasyTrigger::recalc);
+		triggers.forEach(trigger -> trigger.setParent(this));
 	}
 
 	@HandleEvents
@@ -283,24 +301,24 @@ public final class EasyTriggers implements HasChildTriggers {
 		master.pushEvent(new EasyTriggersInitEvent(trigger));
 	}
 
-	@HandleEvents
-	public void runEasyTriggers(EventContext context, Event event) {
-		if (event instanceof EasyTriggersInitEvent etie) {
-			EasyTrigger<EasyTriggersInitEvent> triggerToInit = etie.getTriggerToInit();
-			if (triggerToInit != null) {
-				triggerToInit.handleEvent(context, event);
-				return;
-			}
-		}
-		triggers.forEach(trig -> {
-			try {
-				trig.handleEvent(context, event);
-			}
-			catch (Throwable t) {
-				log.error("Error running easy trigger '{}'", trig.getName(), t);
-			}
-		});
-	}
+//	@HandleEvents
+//	public void runEasyTriggers(EventContext context, Event event) {
+//		if (event instanceof EasyTriggersInitEvent etie) {
+//			EasyTrigger<EasyTriggersInitEvent> triggerToInit = etie.getTriggerToInit();
+//			if (triggerToInit != null) {
+//				triggerToInit.handleEvent(context, event);
+//				return;
+//			}
+//		}
+//		triggers.forEach(trig -> {
+//			try {
+//				trig.handleEvent(context, event);
+//			}
+//			catch (Throwable t) {
+//				log.error("Error running easy trigger '{}'", trig.getName(), t);
+//			}
+//		});
+//	}
 
 	@HandleEvents
 	public void runEasyTriggers2(EventContext context, Event event) {
@@ -312,7 +330,7 @@ public final class EasyTriggers implements HasChildTriggers {
 				return;
 			}
 		}
-		triggers.forEach(trig -> {
+		triggers2.forEach(trig -> {
 			try {
 				trig.handleEvent(context, event);
 			}

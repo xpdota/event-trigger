@@ -11,7 +11,7 @@ public class EasyTriggersTreeRenderer extends DefaultTreeCellRenderer {
 	@Override
 	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
 		if (value instanceof BaseTrigger<?> bt) {
-			return new CheckboxTreeNode(tree, bt, selected, expanded, leaf, row, hasFocus);
+			return new CheckboxTreeNode(tree, bt, sel, expanded, leaf, row, hasFocus);
 		}
 		else if (value instanceof EasyTriggers) {
 			return super.getTreeCellRendererComponent(tree, "Triggers", sel, expanded, leaf, row, hasFocus);
@@ -21,6 +21,7 @@ public class EasyTriggersTreeRenderer extends DefaultTreeCellRenderer {
 
 	@Override
 	public boolean isVisible() {
+		// TODO: remove?
 		return false;
 	}
 }

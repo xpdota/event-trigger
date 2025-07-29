@@ -1,5 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import org.slf4j.Logger;
@@ -11,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TriggerFolder extends BaseTrigger<Object> implements HasChildTriggers {
 
 	private static final Logger log = LoggerFactory.getLogger(TriggerFolder.class);
@@ -19,6 +22,7 @@ public class TriggerFolder extends BaseTrigger<Object> implements HasChildTrigge
 	private List<BaseTrigger<?>> triggers = Collections.emptyList();
 
 	@Override
+	@JsonIgnore
 	public Class<?> getEventType() {
 		return Object.class;
 	}
@@ -73,6 +77,7 @@ public class TriggerFolder extends BaseTrigger<Object> implements HasChildTrigge
 				het.setEventType(getEventType());
 			}
 		});
+		triggers.forEach(trigger -> trigger.setParent(this));
 	}
 
 	@Override
