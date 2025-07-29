@@ -26,7 +26,7 @@ public abstract class BaseTrigger<X> implements HasMutableConditions<X> {
 	private boolean enabled = true;
 	private String name = "Give me a name";
 
-	protected abstract void recalc();
+	public abstract void recalc();
 
 	public boolean isEnabled() {
 		return enabled;

@@ -1,6 +1,5 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.BeanProperty;
@@ -138,7 +137,9 @@ import java.util.List;
 @ScanMe
 public final class EasyTriggers implements HasChildTriggers {
 	private static final Logger log = LoggerFactory.getLogger(EasyTriggers.class);
+	@Deprecated
 	private static final String settingKey = "easy-triggers.my-triggers";
+	@Deprecated
 	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers";
 	private static final String settingKey2 = "easy-triggers.my-triggers-2";
 	private static final String failedTriggersSettingKey2 = "easy-triggers.failed-triggers-2";
@@ -148,9 +149,11 @@ public final class EasyTriggers implements HasChildTriggers {
 	private final PicoContainer pico;
 	private final XivState state;
 	private final EventMaster master;
+	@Deprecated
 	private final CustomJsonListSetting<EasyTrigger<?>> setting;
 	private final CustomJsonListSetting<BaseTrigger<?>> setting2;
 
+	@Deprecated
 	private ArrayList<EasyTrigger<?>> triggers;
 	private ArrayList<BaseTrigger<?>> triggers2;
 
@@ -299,7 +302,8 @@ public final class EasyTriggers implements HasChildTriggers {
 
 	private void recalc() {
 		triggers.forEach(EasyTrigger::recalc);
-		triggers.forEach(trigger -> trigger.setParent(this));
+		triggers2.forEach(BaseTrigger::recalc);
+		triggers2.forEach(trigger -> trigger.setParent(this));
 	}
 
 	@HandleEvents
@@ -311,6 +315,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		master.pushEvent(new EasyTriggersInitEvent(trigger));
 	}
 
+//	@Deprecated
 //	@HandleEvents
 //	public void runEasyTriggers(EventContext context, Event event) {
 //		if (event instanceof EasyTriggersInitEvent etie) {
@@ -350,10 +355,12 @@ public final class EasyTriggers implements HasChildTriggers {
 		});
 	}
 
+	@Deprecated
 	public List<EasyTrigger<?>> getTriggers() {
 		return Collections.unmodifiableList(triggers);
 	}
 
+	@Deprecated
 	@SuppressWarnings("unchecked")
 	public void addTrigger(EasyTrigger<?> trigger) {
 		triggers.add(trigger);
@@ -363,6 +370,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		}
 	}
 
+	@Deprecated
 	public void removeTrigger(EasyTrigger<?> trigger) {
 		triggers.remove(trigger);
 		save();
