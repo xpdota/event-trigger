@@ -8,13 +8,12 @@ import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
 import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
-import gg.xp.xivsupport.events.triggers.easytriggers.gui.tree.EasyTriggersTreeRenderer;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.tree.TriggerTree;
-import gg.xp.xivsupport.events.triggers.easytriggers.gui.tree.TriggerTreeEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.tree.TriggerTreeModel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasChildTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerFolder;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.gui.GuiMain;
@@ -42,10 +41,13 @@ import java.awt.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext.SOURCE_EASY_TRIGGER_KEY;
 
@@ -59,7 +61,6 @@ public class EasyTriggersTab2 implements PluginTab {
 	private final PicoContainer pico;
 	private final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private JPanel detailsInner;
-	private TriggerTreeModel model;
 	private TitleBorderFullsizePanel outer;
 	private RefreshLoop<EasyTriggersTab2> autoSave;
 	private TriggerTree tree;
@@ -101,12 +102,30 @@ public class EasyTriggersTab2 implements PluginTab {
 	}
 
 	private record Selections(List<Selection> selections) {
+		/**
+		 * @return If at least one item is selected
+		 */
 		boolean hasSelection() {
 			return !this.selections.isEmpty();
 		}
 
+		/**
+		 * @return if exactly one item is selected
+		 */
 		boolean hasSingleSelection() {
 			return this.selections.size() == 1;
+		}
+
+		/**
+		 * @return If this selection has at least one item selected, and all selected items have the same parent
+		 * (i.e. you aren't selecting things in different parents)
+		 */
+		boolean hasConsistentParentSelection() {
+			if (this.selections.isEmpty()) {
+				return false;
+			}
+			Map<TreePath, List<TreePath>> parents = getSelectedPaths().stream().collect(Collectors.groupingBy(TreePath::getParentPath));
+			return parents.size() == 1;
 		}
 
 		@Nullable
@@ -117,8 +136,8 @@ public class EasyTriggersTab2 implements PluginTab {
 			return this.selections.get(0);
 		}
 
-		List<? extends BaseTrigger<?>> getSelectedTriggers() {
-			return selections.stream().map(Selection::trigger).toList();
+		List<BaseTrigger<?>> getSelectedTriggers() {
+			return selections.stream().<BaseTrigger<?>>map(Selection::trigger).toList();
 		}
 
 		List<TreePath> getSelectedPaths() {
@@ -135,7 +154,7 @@ public class EasyTriggersTab2 implements PluginTab {
 	public Component getTabContents() {
 		GridBagConstraints c = GuiUtil.defaultGbc();
 		c.weighty = 1;
-		model = new TriggerTreeModel(backend);
+		TriggerTreeModel model = new TriggerTreeModel(backend);
 
 		tree = new TriggerTree(model, backend);
 
@@ -156,7 +175,6 @@ public class EasyTriggersTab2 implements PluginTab {
 		tree.getSelectionModel().addTreeSelectionListener(l -> {
 			refreshSelection();
 		});
-//		triggerChooserTree.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
 		JPanel bottomPanel = new JPanel(new BorderLayout());
 
@@ -192,8 +210,7 @@ public class EasyTriggersTab2 implements PluginTab {
 				JButton cloneTriggerButton = new JButton("Clone Trigger") {
 					@Override
 					public boolean isEnabled() {
-						// TODO: should this support multi-selection?
-						return currentSelections.hasSingleSelection();
+						return currentSelections.hasConsistentParentSelection();
 					}
 				};
 				controlsPanel.add(cloneTriggerButton);
@@ -260,7 +277,7 @@ public class EasyTriggersTab2 implements PluginTab {
 	}
 
 	private void showEasyImportDialog() {
-		List<EasyTrigger<?>> newTriggers = doImportDialog("Import Triggers", backend::importFromString);
+		List<BaseTrigger<?>> newTriggers = doImportDialog("Import Triggers", backend::importFromString2);
 		if (newTriggers != null && !newTriggers.isEmpty()) {
 			addImports(newTriggers);
 		}
@@ -271,7 +288,7 @@ public class EasyTriggersTab2 implements PluginTab {
 		List<EasyTrigger<ACTLogLineEvent>> newTriggers = doImportDialog("Import Legacy Triggers", ActLegacyTriggerImport::parseMultipleTriggerXmlNonEmpty);
 		if (newTriggers != null && !newTriggers.isEmpty()) {
 			// :clown_emoji:
-			addImports((List<EasyTrigger<?>>) (Object) newTriggers);
+			addImports((List<BaseTrigger<?>>) (Object) newTriggers);
 		}
 	}
 
@@ -315,23 +332,20 @@ public class EasyTriggersTab2 implements PluginTab {
 	}
 
 	private void cloneCurrent() {
-		if (true) {
-			JOptionPane.showMessageDialog(outer, "Not Implemented");
+		Selections cur = currentSelections;
+		if (!currentSelections.hasSelection()) {
+			// no-op if nothing is selected
 			return;
 		}
-//		BaseTrigger<?> selectedValue = this.selection;
-//		if (selectedValue == null) {
-//			return;
-//		}
-//		// TODO: needs to import into correct parent
-//		List<EasyTrigger<?>> newTriggers = backend.importFromString(backend.exportToString(Collections.singletonList(selectedValue)));
-//		EasyTrigger<?> newTrigger = newTriggers.get(0);
-//		backend.addTrigger(newTrigger);
-//		refresh();
-//		tree.setSelectionPaths();
-//		model.setSelectedValue(newTrigger);
-//		model.scrollToSelectedValue();
-//		refreshSelection();
+		Map<TreePath, List<TreePath>> parents = cur.getSelectedPaths().stream().collect(Collectors.groupingBy(TreePath::getParentPath));
+		if (parents.size() != 1) {
+			JOptionPane.showMessageDialog(outer, "You can only clone triggers that are in the same parent folder");
+			return;
+		}
+		List<BaseTrigger<?>> triggers = cur.getSelectedTriggers();
+		List<BaseTrigger<?>> reimported = backend.importFromString2(backend.exportToString(triggers));
+
+		addAndSelectTriggers(cur.getSelectedTriggers().get(0).getParent(), reimported);
 	}
 
 	/**
@@ -363,10 +377,8 @@ public class EasyTriggersTab2 implements PluginTab {
 			children = backend.getChildTriggers();
 		}
 		for (BaseTrigger<?> child : children) {
-			if (child instanceof EasyTrigger<?> leaf) {
-				if (leaf == trigger) {
-					return treePath.pathByAddingChild(child);
-				}
+			if (child == trigger) {
+				return treePath.pathByAddingChild(child);
 			}
 			else if (child instanceof TriggerFolder folder) {
 				TreePath newPath = pathForTrigger(treePath.pathByAddingChild(child), folder, trigger);
@@ -378,41 +390,80 @@ public class EasyTriggersTab2 implements PluginTab {
 		return null;
 	}
 
-	private void addExisting(EasyTrigger<?> trigger) {
-		// TODO: needs to look at current parent selection and add under that
-		backend.addTrigger(trigger);
+	private void importAndSelectTrigger(BaseTrigger<?> trigger) {
+		backend.addTrigger2(null, trigger);
 		selectTrigger(trigger);
 	}
 
+	private void addAndSelectTriggers(@Nullable HasChildTriggers parent, List<BaseTrigger<?>> triggers) {
+		for (BaseTrigger<?> trigger : triggers) {
+			backend.addTrigger2(parent, trigger);
+		}
+		selectTriggers(triggers);
+	}
+
+	/**
+	 * Select a trigger and scroll to it.
+	 *
+	 * @param trigger The trigger to select
+	 */
 	public void selectTrigger(BaseTrigger<?> trigger) {
 		SwingUtilities.invokeLater(() -> {
 			if (tree != null) {
 				refresh();
 				SwingUtilities.invokeLater(() -> {
-					TreePath treePath = pathForTrigger(trigger);
-					if (treePath != null) {
-						tree.setSelectionPath(treePath);
-						tree.scrollPathToVisible(treePath);
+					TreePath path = pathForTrigger(trigger);
+					tree.setSelectionPath(path);
+					tree.scrollPathToVisible(path);
+				});
+			}
+		});
+	}
+
+	/**
+	 * Select multiple triggers and scroll to them.
+	 *
+	 * @param triggers The triggers to select
+	 */
+	public void selectTriggers(List<BaseTrigger<?>> triggers) {
+		if (triggers.isEmpty()) {
+			return;
+		}
+		SwingUtilities.invokeLater(() -> {
+			if (tree != null) {
+				refresh();
+				SwingUtilities.invokeLater(() -> {
+					TreePath[] paths = triggers.stream()
+							.map(this::pathForTrigger)
+							.filter(Objects::nonNull)
+							.toArray(TreePath[]::new);
+					tree.setSelectionPaths(paths);
+					// This is a hack to try to get it to do something reasonable when selecting multiple items.
+					// It will first scroll the *last* one into view, and then the first one, so that we can see the top one.
+					if (paths.length > 0) {
+						tree.scrollPathToVisible(paths[paths.length - 1]);
+						tree.scrollPathToVisible(paths[0]);
 					}
 				});
 			}
 		});
 	}
 
-	private @Nullable TriggerFolder getFolderForAdds() {
+	/**
+	 * @return The folder into which newly created or imported triggers should be placed into. If a single folder is
+	 * selected, this returns the folder. If a single trigger is selected, return the single trigger. If nothing
+	 * (or multiple items) are selected, returns null.
+	 */
+	private @Nullable HasChildTriggers getFolderForAdds() {
 		Selections sel = currentSelections;
-		Selection single = sel.getSingleSelection();
-		if (single != null) {
-			if (single.trigger instanceof TriggerFolder) {
-				return (TriggerFolder) single.trigger;
-			}
-			else {
-				return single.getParent();
-			}
-		}
-		else {
+		if (!sel.hasConsistentParentSelection()) {
 			return null;
 		}
+		BaseTrigger<?> firstSelection = sel.getSelectedTriggers().get(0);
+		if (firstSelection instanceof HasChildTriggers folder) {
+			return folder;
+		}
+		return firstSelection.getParent();
 	}
 
 	private void addNewFolder() {
@@ -435,28 +486,24 @@ public class EasyTriggersTab2 implements PluginTab {
 			EasyTrigger<?> newTrigger = eventDescription.newDefaultInst();
 			backend.addTrigger2(getFolderForAdds(), newTrigger);
 			refresh();
+
 			SwingUtilities.invokeLater(() -> {
-				// TODO
-//				model.setSelectedValue(newTrigger);
-//				refreshSelection();
-//				model.scrollToSelectedValue();
+				selectTrigger(newTrigger);
 			});
 		}
 	}
 
-	private void addImports(List<EasyTrigger<?>> toAdd) {
-		// TODO: consider path, or add that as an argument
+	private void addImports(List<BaseTrigger<?>> toAdd) {
 		if (toAdd.isEmpty()) {
 			return;
 		}
-		toAdd.forEach(backend::addTrigger);
+		@Nullable HasChildTriggers parent = getFolderForAdds();
+		toAdd.forEach(add -> backend.addTrigger2(parent, add));
 		refresh();
 	}
 
 	private void delete() {
-		currentSelections.selections.forEach(sel -> {
-			backend.removeTrigger2(sel.getParent(), sel.trigger);
-		});
+		currentSelections.selections.forEach(sel -> backend.removeTrigger2(sel.getParent(), sel.trigger));
 		refresh();
 		tree.clearSelection();
 	}
@@ -687,7 +734,7 @@ public class EasyTriggersTab2 implements PluginTab {
 			JOptionPane.showMessageDialog(pico.getComponent(GuiMain.class).getMainFrame(), "Unfortunately, this event type is not possible to automatically make a trigger for.");
 		}
 		else {
-			addExisting(newTrigger);
+			importAndSelectTrigger(newTrigger);
 		}
 	}
 

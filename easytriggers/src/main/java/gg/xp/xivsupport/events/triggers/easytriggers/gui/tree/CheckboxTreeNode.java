@@ -30,10 +30,8 @@ public class CheckboxTreeNode extends JPanel {
 	public CheckboxTreeNode(JTree tree, BaseTrigger<?> item, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
 		String stringLabel = item.getName();
 		checkBox = new JCheckBox();
-		boolean isActuallySelected = selected || hasFocus;
 		DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
 		this.defaultRenderer = defaultRenderer;
-//		Component label = defaultRenderer.getTreeCellRendererComponent(tree, stringLabel, isActuallySelected, expanded, leaf, row, isActuallySelected);
 		Component label = defaultRenderer.getTreeCellRendererComponent(tree, stringLabel, selected, expanded, leaf, row, false);
 		setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		add(checkBox);
@@ -42,14 +40,7 @@ public class CheckboxTreeNode extends JPanel {
 		setSize(label.getPreferredSize());
 		setMaximumSize(label.getPreferredSize());
 		setMinimumSize(label.getPreferredSize());
-//		if (item.isDisabledByParent()) {
-//			checkBox.setForeground(RenderUtils.withAlpha(checkBox.getForeground(), 90));
-//			label.setForeground(RenderUtils.withAlpha(label.getForeground(), 90));
-//		}
-		// TODO
-//		checkBox.setEnabled(item.isEnabledByParent());
 		checkBox.setSelected(item.isEnabled());
-//		checkBox.setOpaque(false);
 		checkBox.addItemListener(event -> item.setEnabled(((JCheckBox) event.getSource()).isSelected()));
 		this.item = item;
 		this.isSelected = selected;
@@ -60,7 +51,6 @@ public class CheckboxTreeNode extends JPanel {
 	protected void paintChildren(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
 		super.paintChildren(g);
-		log.info("Background: {}", getBackground());
 		if (!item.isEnabled() || item.isDisabledByParent()) {
 			// This is kind of janky but I haven't found a better way.
 			// Forcing transparency with AlphaComposite directly leads to weird font rendering issues.

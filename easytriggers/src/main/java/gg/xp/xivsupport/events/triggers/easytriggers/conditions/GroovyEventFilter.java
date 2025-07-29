@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 
+// TODO: make non-event version of this
 public class GroovyEventFilter implements Condition<Event> {
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
 	private static final Logger log = LoggerFactory.getLogger(GroovyEventFilter.class);

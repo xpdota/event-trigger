@@ -11,7 +11,7 @@ import gg.xp.reevent.events.EventContext;
 import org.jetbrains.annotations.Nullable;
 
 @JsonTypeInfo(
-		use = JsonTypeInfo.Id.MINIMAL_CLASS,
+		use = JsonTypeInfo.Id.NAME,
 		include = JsonTypeInfo.As.PROPERTY,
 		property = "type",
 		defaultImpl = EasyTrigger.class

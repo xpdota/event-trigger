@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.BeanProperty;
@@ -164,6 +165,11 @@ public final class EasyTriggers implements HasChildTriggers {
 				return inject(beanProperty.getType().getRawClass());
 			}
 		});
+//		mapper.activateDefaultTyping(
+//				mapper.getPolymorphicTypeValidator(),
+//				ObjectMapper.DefaultTyping.NON_FINAL,
+//				JsonTypeInfo.As.PROPERTY
+//		);
 
 		setting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
 				}, settingKey, failedTriggersSettingKey)
@@ -231,9 +237,13 @@ public final class EasyTriggers implements HasChildTriggers {
 		return pico.getComponent(clazz);
 	}
 
+	@SuppressWarnings({"SerializableNonStaticInnerClassWithoutSerialVersionUID", "ClassExtendsConcreteCollection", "SerializableInnerClassWithNonSerializableOuterClass"})
 	public String exportToString(List<? extends BaseTrigger<?>> toExport) {
 		try {
-			return mapper.writeValueAsString(toExport);
+			// We have to do this weird jank because Jackson won't include the type information
+			// if we give it a raw list. It thinks that it's a List<Object> due to type erasure, so
+			// it doesn't bother including polymorphic typing information.
+			return mapper.writeValueAsString(new ArrayList<BaseTrigger<?>>(toExport){});
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException("Error exporting trigger", e);
