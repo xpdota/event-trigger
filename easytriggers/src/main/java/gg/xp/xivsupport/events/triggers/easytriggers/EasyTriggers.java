@@ -122,6 +122,7 @@ import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import org.jetbrains.annotations.Nullable;
@@ -137,28 +138,22 @@ import java.util.List;
 @ScanMe
 public final class EasyTriggers implements HasChildTriggers {
 	private static final Logger log = LoggerFactory.getLogger(EasyTriggers.class);
-	@Deprecated
-	private static final String settingKey = "easy-triggers.my-triggers";
-	@Deprecated
-	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers";
-	private static final String settingKey2 = "easy-triggers.my-triggers-2";
-	private static final String failedTriggersSettingKey2 = "easy-triggers.failed-triggers-2";
+
+	private static final String legacySettingKey = "easy-triggers.my-triggers";
+	private static final String legacyFailedTriggersSettingKey = "easy-triggers.failed-triggers";
+
+	private static final String settingKey = "easy-triggers.my-triggers-2";
+	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers-2";
 	private final ObjectMapper mapper = new ObjectMapper();
 
-	private final PersistenceProvider pers;
 	private final PicoContainer pico;
 	private final XivState state;
 	private final EventMaster master;
-	@Deprecated
-	private final CustomJsonListSetting<EasyTrigger<?>> setting;
-	private final CustomJsonListSetting<BaseTrigger<?>> setting2;
+	private final CustomJsonListSetting<BaseTrigger<?>> setting;
 
-	@Deprecated
-	private ArrayList<EasyTrigger<?>> triggers;
-	private ArrayList<BaseTrigger<?>> triggers2;
+	private ArrayList<BaseTrigger<?>> triggers;
 
 	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state, EventMaster master) {
-		this.pers = pers;
 		this.pico = pico;
 		this.state = state;
 		this.master = master;
@@ -168,34 +163,44 @@ public final class EasyTriggers implements HasChildTriggers {
 				return inject(beanProperty.getType().getRawClass());
 			}
 		});
-//		mapper.activateDefaultTyping(
-//				mapper.getPolymorphicTypeValidator(),
-//				ObjectMapper.DefaultTyping.NON_FINAL,
-//				JsonTypeInfo.As.PROPERTY
-//		);
 
-		setting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
+		BooleanSetting legacyMigrationDone = new BooleanSetting(pers, "easy-triggers.legacy-migration-done", false);
+
+		setting = CustomJsonListSetting.<BaseTrigger<?>>builder(pers, new TypeReference<>() {
 				}, settingKey, failedTriggersSettingKey)
 				.withMapper(mapper)
 				.postConstruct(this::doLegacyMigration)
 				.build();
 		setting.tryRecoverFailures();
 
-		setting2 = CustomJsonListSetting.<BaseTrigger<?>>builder(pers, new TypeReference<>() {
-				}, settingKey2, failedTriggersSettingKey2)
-				.withMapper(mapper)
-				.postConstruct(this::doLegacyMigration)
-				.build();
-		setting2.tryRecoverFailures();
 
-		// TODO: Having lots of EasyTriggers can inflate startup times
-		this.triggers = new ArrayList<>(setting.getItems());
-		this.triggers2 = new ArrayList<>(setting2.getItems());
+		// TODO: tests for this
+		if (!legacyMigrationDone.get()) {
+			CustomJsonListSetting<EasyTrigger<?>> legacySetting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
+					}, legacySettingKey, legacyFailedTriggersSettingKey)
+					.withMapper(mapper)
+					.postConstruct(this::doLegacyMigration)
+					.build();
+			legacySetting.tryRecoverFailures();
+			List<EasyTrigger<?>> triggersToMigrate = legacySetting.getItems();
+			if (!triggersToMigrate.isEmpty()) {
+				triggers = new ArrayList<>(triggersToMigrate);
+				setting.setItems(triggers);
+			}
+			else {
+				this.triggers = new ArrayList<>(setting.getItems());
+			}
+			legacyMigrationDone.set(true);
+		}
+		else {
+			this.triggers = new ArrayList<>(setting.getItems());
+		}
 
-		if (true) {
+		if (false) {
 			TriggerFolder testFolder = new TriggerFolder();
 			testFolder.setName("Test Folder");
-			this.triggers2.add(0, testFolder);
+			this.triggers = new ArrayList<>();
+			this.triggers.add(0, testFolder);
 			TriggerFolder testFolder2 = new TriggerFolder();
 			testFolder2.setName("Test Folder 2");
 			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newDefaultInst();
@@ -246,7 +251,8 @@ public final class EasyTriggers implements HasChildTriggers {
 			// We have to do this weird jank because Jackson won't include the type information
 			// if we give it a raw list. It thinks that it's a List<Object> due to type erasure, so
 			// it doesn't bother including polymorphic typing information.
-			return mapper.writeValueAsString(new ArrayList<BaseTrigger<?>>(toExport){});
+			return mapper.writeValueAsString(new ArrayList<BaseTrigger<?>>(toExport) {
+			});
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException("Error exporting trigger", e);
@@ -293,7 +299,6 @@ public final class EasyTriggers implements HasChildTriggers {
 	private void save() {
 		recalc();
 		setting.setItems(triggers);
-//		setting2.setItems(triggers2);
 	}
 
 	public void commit() {
@@ -301,9 +306,8 @@ public final class EasyTriggers implements HasChildTriggers {
 	}
 
 	private void recalc() {
-		triggers.forEach(EasyTrigger::recalc);
-		triggers2.forEach(BaseTrigger::recalc);
-		triggers2.forEach(trigger -> trigger.setParent(this));
+		triggers.forEach(BaseTrigger::recalc);
+		triggers.forEach(trigger -> trigger.setParent(this));
 	}
 
 	@HandleEvents
@@ -315,28 +319,8 @@ public final class EasyTriggers implements HasChildTriggers {
 		master.pushEvent(new EasyTriggersInitEvent(trigger));
 	}
 
-//	@Deprecated
-//	@HandleEvents
-//	public void runEasyTriggers(EventContext context, Event event) {
-//		if (event instanceof EasyTriggersInitEvent etie) {
-//			EasyTrigger<EasyTriggersInitEvent> triggerToInit = etie.getTriggerToInit();
-//			if (triggerToInit != null) {
-//				triggerToInit.handleEvent(context, event);
-//				return;
-//			}
-//		}
-//		triggers.forEach(trig -> {
-//			try {
-//				trig.handleEvent(context, event);
-//			}
-//			catch (Throwable t) {
-//				log.error("Error running easy trigger '{}'", trig.getName(), t);
-//			}
-//		});
-//	}
-
 	@HandleEvents
-	public void runEasyTriggers2(EventContext context, Event event) {
+	public void runEasyTriggers(EventContext context, Event event) {
 		if (event instanceof EasyTriggersInitEvent etie) {
 			// TODO: confirm this mechanism for new ETs
 			EasyTrigger<EasyTriggersInitEvent> triggerToInit = etie.getTriggerToInit();
@@ -345,7 +329,7 @@ public final class EasyTriggers implements HasChildTriggers {
 				return;
 			}
 		}
-		triggers2.forEach(trig -> {
+		triggers.forEach(trig -> {
 			try {
 				trig.handleEvent(context, event);
 			}
@@ -355,28 +339,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		});
 	}
 
-	@Deprecated
-	public List<EasyTrigger<?>> getTriggers() {
-		return Collections.unmodifiableList(triggers);
-	}
-
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	public void addTrigger(EasyTrigger<?> trigger) {
-		triggers.add(trigger);
-		save();
-		if (trigger.getEventType().equals(EasyTriggersInitEvent.class)) {
-			initSpecificTrigger((EasyTrigger<EasyTriggersInitEvent>) trigger);
-		}
-	}
-
-	@Deprecated
-	public void removeTrigger(EasyTrigger<?> trigger) {
-		triggers.remove(trigger);
-		save();
-	}
-
-	public void addTrigger2(@Nullable HasChildTriggers parent, BaseTrigger<?> trigger) {
+	public void addTrigger(@Nullable HasChildTriggers parent, BaseTrigger<?> trigger) {
 		if (parent == null) {
 			addChildTrigger(trigger);
 		}
@@ -389,7 +352,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		}
 	}
 
-	public void removeTrigger2(@Nullable TriggerFolder parent, BaseTrigger<?> trigger) {
+	public void removeTrigger(@Nullable TriggerFolder parent, BaseTrigger<?> trigger) {
 		if (parent == null) {
 			this.removeChildTriggers(trigger);
 		}
@@ -401,27 +364,27 @@ public final class EasyTriggers implements HasChildTriggers {
 
 	@Override
 	public List<BaseTrigger<?>> getChildTriggers() {
-		return Collections.unmodifiableList(triggers2);
+		return Collections.unmodifiableList(triggers);
 	}
 
 	@Override
 	public void setChildTriggers(List<BaseTrigger<?>> children) {
-		triggers2 = new ArrayList<>(children);
+		triggers = new ArrayList<>(children);
 	}
 
 	@Override
 	public void addChildTrigger(BaseTrigger<?> child) {
-		triggers2.add(child);
+		triggers.add(child);
 	}
 
 	@Override
 	public void addChildTrigger(BaseTrigger<?> child, int index) {
-		triggers2.add(index, child);
+		triggers.add(index, child);
 	}
 
 	@Override
 	public void removeChildTriggers(BaseTrigger<?> child) {
-		triggers2.remove(child);
+		triggers.remove(child);
 	}
 
 	@Override

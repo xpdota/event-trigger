@@ -33,8 +33,10 @@ public class TriggerTree extends JTree {
 		setShowsRootHandles(true);
 		setRootVisible(false);
 		setDragEnabled(true);
-//		setEditable(true);
+		setEditable(true);
 		setDropMode(DropMode.ON_OR_INSERT);
+		setLargeModel(true);
+		setCellEditor(new DummyTreeCellEditor());
 		setTransferHandler(new TransferHandler() {
 			@Override
 			public boolean importData(TransferSupport support) {
@@ -68,7 +70,7 @@ public class TriggerTree extends JTree {
 									BaseTrigger<?> draggedTrigger = data.trigger();
 									// We need to remove it from its current parent first
 									@Nullable TriggerFolder parentFolder = data.sourceParentFolder();
-									root.removeTrigger2(parentFolder, draggedTrigger);
+									root.removeTrigger(parentFolder, draggedTrigger);
 									if (ci >= 0) {
 										// If we drop into a specific place in the parent, add it at that index
 										folder.addChildTrigger(draggedTrigger, ci);
@@ -105,7 +107,6 @@ public class TriggerTree extends JTree {
 										HasChildTriggers current = folder;
 										while (current instanceof TriggerFolder currentFolder) {
 											if (current == data.trigger()) {
-												log.warn("Invalid drop attempted!");
 												return false;
 											}
 											current = currentFolder.getParent();

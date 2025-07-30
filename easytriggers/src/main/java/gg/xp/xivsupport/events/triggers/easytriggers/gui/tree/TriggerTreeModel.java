@@ -46,7 +46,13 @@ public class TriggerTreeModel implements TreeModel {
 
 	@Override
 	public void valueForPathChanged(TreePath path, Object newValue) {
-// TODO
+		Object parent = path.getParentPath().getLastPathComponent();
+//		TreeModelEvent e = new TreeModelEvent(this, new Object[]{parent}, new int[]{getIndexOfChild(parent, path.getLastPathComponent())}, new Object[]{newValue});
+		TreeModelEvent e = new TreeModelEvent(this, new Object[]{parent});
+		for (TreeModelListener listener : listenerList.getListeners(TreeModelListener.class)) {
+			listener.treeNodesChanged(e);
+//			listener.treeStructureChanged(e);
+		}
 	}
 
 	@SuppressWarnings("SuspiciousMethodCalls")

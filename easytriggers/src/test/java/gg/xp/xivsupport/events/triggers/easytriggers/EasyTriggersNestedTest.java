@@ -75,9 +75,9 @@ public class EasyTriggersNestedTest {
 
 			TriggerFolder folder1 = new TriggerFolder();
 			TriggerFolder folder2 = new TriggerFolder();
-			ez1.addTrigger2(folder1, folder2);
+			ez1.addTrigger(folder1, folder2);
 			// TODO: test adding in different orders
-			ez1.addTrigger2(null, folder1);
+			ez1.addTrigger(null, folder1);
 
 			EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
 
@@ -94,7 +94,7 @@ public class EasyTriggersNestedTest {
 			call.setTts("{event.getAbility().getId()}");
 			trig1.addAction(call);
 
-			ez1.addTrigger2(folder2, trig1);
+			ez1.addTrigger(folder2, trig1);
 
 			MatcherAssert.assertThat(ez1.getChildTriggers(), Matchers.hasSize(1));
 			TriggerFolder firstFolder = (TriggerFolder) ez1.getChildTriggers().get(0);
@@ -160,9 +160,9 @@ public class EasyTriggersNestedTest {
 
 			TriggerFolder folder1 = new TriggerFolder();
 			TriggerFolder folder2 = new TriggerFolder();
-			ez1.addTrigger2(folder1, folder2);
+			ez1.addTrigger(folder1, folder2);
 			// TODO: test adding in different orders
-			ez1.addTrigger2(null, folder1);
+			ez1.addTrigger(null, folder1);
 
 			EasyTrigger<AbilityUsedEvent> trig1 = new EasyTrigger<>();
 
@@ -184,7 +184,7 @@ public class EasyTriggersNestedTest {
 			condition.operator = NumericOperator.EQ;
 			folder1.addCondition(condition);
 
-			ez1.addTrigger2(folder2, trig1);
+			ez1.addTrigger(folder2, trig1);
 
 
 			MatcherAssert.assertThat(ez1.getChildTriggers(), Matchers.hasSize(1));

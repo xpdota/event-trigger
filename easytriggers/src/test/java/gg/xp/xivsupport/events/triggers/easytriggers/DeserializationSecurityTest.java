@@ -5,7 +5,9 @@ import gg.xp.xivsupport.persistence.InMemoryMapPersistenceProvider;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.picocontainer.MutablePicoContainer;
+import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.testng.asserts.Assertion;
 
 public class DeserializationSecurityTest {
 
@@ -21,7 +23,8 @@ public class DeserializationSecurityTest {
 		MutablePicoContainer pico = ExampleSetup.setup(pers);
 
 		EasyTriggers ez = pico.getComponent(EasyTriggers.class);
-		MatcherAssert.assertThat(ez.getTriggers(), Matchers.empty());
+		MatcherAssert.assertThat(ez.getChildTriggers(), Matchers.empty());
+		Assert.assertEquals(DeserializationDummyClass.getInstantiationCount(), 0);
 	}
 
 	private static final String triggerDataNew = """

@@ -37,9 +37,6 @@ public class CheckboxTreeNode extends JPanel {
 		add(checkBox);
 		add(label);
 		setOpaque(false);
-		setSize(label.getPreferredSize());
-		setMaximumSize(label.getPreferredSize());
-		setMinimumSize(label.getPreferredSize());
 		checkBox.setSelected(item.isEnabled());
 		checkBox.addItemListener(event -> item.setEnabled(((JCheckBox) event.getSource()).isSelected()));
 		this.item = item;
