@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TriggerFolder extends BaseTrigger<Object> implements HasChildTriggers {
+public final class TriggerFolder extends BaseTrigger<Object> implements HasChildTriggers {
 
 	private static final Logger log = LoggerFactory.getLogger(TriggerFolder.class);
 

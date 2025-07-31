@@ -102,6 +102,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilter
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
 import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
+import gg.xp.xivsupport.events.triggers.easytriggers.gui.ConditionsPanel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
@@ -259,6 +260,42 @@ public final class EasyTriggers implements HasChildTriggers {
 		}
 	}
 
+	public String exportCondition(Condition<?> condition) {
+		try {
+			return mapper.writeValueAsString(condition);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public String exportAction(Action<?> action) {
+		try {
+			return mapper.writeValueAsString(action);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public Condition<?> importCondition(String input) {
+		try {
+			return mapper.readValue(input, Condition.class);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public Action<?> importAction(String input) {
+		try {
+			return mapper.readValue(input, Action.class);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public List<EasyTrigger<?>> importFromString(String string) {
 		try {
 			List<JsonNode> nodes = mapper.readValue(string, new TypeReference<>() {
@@ -352,7 +389,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		}
 	}
 
-	public void removeTrigger(@Nullable TriggerFolder parent, BaseTrigger<?> trigger) {
+	public void removeTrigger(@Nullable HasChildTriggers parent, BaseTrigger<?> trigger) {
 		if (parent == null) {
 			this.removeChildTriggers(trigger);
 		}
@@ -370,21 +407,25 @@ public final class EasyTriggers implements HasChildTriggers {
 	@Override
 	public void setChildTriggers(List<BaseTrigger<?>> children) {
 		triggers = new ArrayList<>(children);
+		recalc();
 	}
 
 	@Override
 	public void addChildTrigger(BaseTrigger<?> child) {
 		triggers.add(child);
+		recalc();
 	}
 
 	@Override
 	public void addChildTrigger(BaseTrigger<?> child, int index) {
 		triggers.add(index, child);
+		recalc();
 	}
 
 	@Override
 	public void removeChildTriggers(BaseTrigger<?> child) {
 		triggers.remove(child);
+		recalc();
 	}
 
 	@Override
@@ -798,7 +839,6 @@ public final class EasyTriggers implements HasChildTriggers {
 			TargetPartyMemberFilter tpmf = new TargetPartyMemberFilter(state);
 			return Collections.singletonList(tpmf);
 		}
-		// TODO: party member
 		else if (target.isPc()) {
 			TargetEntityTypeFilter etf = new TargetEntityTypeFilter();
 			etf.type = EntityType.ANY_PLAYER;

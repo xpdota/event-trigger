@@ -35,4 +35,9 @@ public class TargetPartyMemberFilter implements SimpleCondition<HasTargetEntity>
 		boolean isInParty = state.getPartyList().contains(cbt);
 		return isInParty != invert;
 	}
+
+	@Override
+	public Class<HasTargetEntity> getEventType() {
+		return HasTargetEntity.class;
+	}
 }

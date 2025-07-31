@@ -36,4 +36,9 @@ public class TargetHasStatusFilter implements SimpleCondition<HasTargetEntity> {
 		return invert != buffs.statusesOnTarget(event.getTarget())
 				.stream().anyMatch(ba -> ba.buffIdMatches(expected));
 	}
+
+	@Override
+	public Class<HasTargetEntity> getEventType() {
+		return HasTargetEntity.class;
+	}
 }

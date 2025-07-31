@@ -8,6 +8,8 @@ import gg.xp.xivsupport.events.triggers.easytriggers.ActLegacyTriggerImport;
 import gg.xp.xivsupport.events.triggers.easytriggers.EasyTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
 import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
+import gg.xp.xivsupport.events.triggers.easytriggers.gui.tree.Selection;
+import gg.xp.xivsupport.events.triggers.easytriggers.gui.tree.Selections;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.tree.TriggerTree;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.tree.TriggerTreeModel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
@@ -91,62 +93,6 @@ public class EasyTriggersTab implements PluginTab {
 	private @NotNull Selections currentSelections = NO_SELECTIONS;
 	private @Nullable BaseTrigger<?> currentEditorItem;
 
-	private record Selection(BaseTrigger<?> trigger, TreePath path) {
-		@Nullable TriggerFolder getParent() {
-			if (path.getParentPath() == null) {
-				return null;
-			}
-			if (path.getParentPath().getLastPathComponent() instanceof TriggerFolder tf) {
-				return tf;
-			}
-			return null;
-		}
-	}
-
-	private record Selections(List<Selection> selections) {
-		/**
-		 * @return If at least one item is selected
-		 */
-		boolean hasSelection() {
-			return !this.selections.isEmpty();
-		}
-
-		/**
-		 * @return if exactly one item is selected
-		 */
-		boolean hasSingleSelection() {
-			return this.selections.size() == 1;
-		}
-
-		/**
-		 * @return If this selection has at least one item selected, and all selected items have the same parent
-		 * (i.e. you aren't selecting things in different parents)
-		 */
-		boolean hasConsistentParentSelection() {
-			if (this.selections.isEmpty()) {
-				return false;
-			}
-			Map<TreePath, List<TreePath>> parents = getSelectedPaths().stream().collect(Collectors.groupingBy(TreePath::getParentPath));
-			return parents.size() == 1;
-		}
-
-		@Nullable
-		Selection getSingleSelection() {
-			if (this.selections.size() != 1) {
-				return null;
-			}
-			return this.selections.get(0);
-		}
-
-		List<BaseTrigger<?>> getSelectedTriggers() {
-			return selections.stream().<BaseTrigger<?>>map(Selection::trigger).toList();
-		}
-
-		List<TreePath> getSelectedPaths() {
-			return selections.stream().map(Selection::path).toList();
-		}
-	}
-
 	@Override
 	public String getTabName() {
 		return "Easy Triggers 2.0";
@@ -158,7 +104,7 @@ public class EasyTriggersTab implements PluginTab {
 		c.weighty = 1;
 		TriggerTreeModel model = new TriggerTreeModel(backend);
 
-		tree = new TriggerTree(model, backend);
+		tree = new TriggerTree(model, backend, () -> currentSelections);
 
 		outer = new TitleBorderFullsizePanel("Easy Triggers") {
 			@Override
@@ -222,6 +168,7 @@ public class EasyTriggersTab implements PluginTab {
 				JButton exportTriggerButton = new JButton("Export Selected") {
 					@Override
 					public boolean isEnabled() {
+						// TODO: exporting should try to reject when you select a parent but also some children of that same parent
 						return currentSelections.hasSelection();
 					}
 				};
@@ -320,11 +267,11 @@ public class EasyTriggersTab implements PluginTab {
 
 		SwingUtilities.invokeLater(() -> {
 			Selection sel = sels.getSingleSelection();
-			BaseTrigger<?> editorItem = sel == null ? null : sel.trigger;
+			BaseTrigger<?> editorItem = sel == null ? null : sel.trigger();
 			if (editorItem != currentEditorItem) {
 				detailsInner.removeAll();
 				if (sel != null) {
-					detailsInner.add(makeConfigPanel(sel.trigger));
+					detailsInner.add(makeConfigPanel(sel.trigger()));
 				}
 				detailsInner.revalidate();
 				detailsInner.repaint();
@@ -510,7 +457,7 @@ public class EasyTriggersTab implements PluginTab {
 	}
 
 	private void delete() {
-		currentSelections.selections.forEach(sel -> backend.removeTrigger(sel.getParent(), sel.trigger));
+		currentSelections.selections().forEach(sel -> backend.removeTrigger(sel.getParent(), sel.trigger()));
 		refresh();
 		tree.clearSelection();
 	}

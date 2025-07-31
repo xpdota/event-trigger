@@ -155,6 +155,12 @@ public class GroovyEventFilter implements Condition<Event> {
 		return "(Groovy Expression)";
 	}
 
+	@Override
+	public Class<Event> getEventType() {
+		return Event.class;
+	}
+
+	// TODO: expose this on UI?
 	public Throwable getLastError() {
 		return lastError;
 	}

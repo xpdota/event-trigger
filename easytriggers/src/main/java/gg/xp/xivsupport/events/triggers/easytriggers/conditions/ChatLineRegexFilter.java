@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
@@ -24,6 +25,11 @@ public class ChatLineRegexFilter implements Condition<ChatLineEvent> {
 	@Override
 	public String dynamicLabel() {
 		return "Chat Line Matching " + regex.pattern();
+	}
+
+	@Override
+	public Class<ChatLineEvent> getEventType() {
+		return ChatLineEvent.class;
 	}
 
 	@Override

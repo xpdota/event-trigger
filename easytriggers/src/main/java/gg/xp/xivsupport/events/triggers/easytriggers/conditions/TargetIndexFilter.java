@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
+import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
@@ -24,5 +25,10 @@ public class TargetIndexFilter implements SimpleCondition<HasTargetIndex> {
 	@Override
 	public String dynamicLabel() {
 		return "Target Index " + operator.getFriendlyName() + ' ' + expected;
+	}
+
+	@Override
+	public Class<HasTargetIndex> getEventType() {
+		return HasTargetIndex.class;
 	}
 }

@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,5 +20,8 @@ public interface Condition<X> {
 		return 0;
 	}
 
-	;
+	// TODO: make sure this doesn't get serialized - does JsonIgnore propagate?
+	// It seems to
+	@JsonIgnore
+	Class<X> getEventType();
 }

@@ -35,4 +35,9 @@ public class SourcePartyMemberFilter implements SimpleCondition<HasSourceEntity>
 		boolean isInParty = state.getPartyList().contains(cbt);
 		return isInParty != invert;
 	}
+
+	@Override
+	public Class<HasSourceEntity> getEventType() {
+		return HasSourceEntity.class;
+	}
 }

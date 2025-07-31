@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
+import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
 import gg.xp.xivsupport.events.actlines.events.TargetabilityUpdate;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import org.jetbrains.annotations.Nullable;
@@ -22,5 +23,10 @@ public class TargetabilityChangeFilter implements SimpleCondition<TargetabilityU
 	@Override
 	public boolean test(TargetabilityUpdate event) {
 		return event.isTargetable();
+	}
+
+	@Override
+	public Class<TargetabilityUpdate> getEventType() {
+		return TargetabilityUpdate.class;
 	}
 }

@@ -25,4 +25,9 @@ public class TargetEntityNpcIdFilter implements SimpleCondition<HasTargetEntity>
 	public String dynamicLabel() {
 		return "Target NPC ID " + operator.getFriendlyName() + ' ' + expected;
 	}
+
+	@Override
+	public Class<HasTargetEntity> getEventType() {
+		return HasTargetEntity.class;
+	}
 }

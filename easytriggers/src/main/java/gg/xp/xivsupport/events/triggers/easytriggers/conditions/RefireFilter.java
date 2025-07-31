@@ -37,4 +37,9 @@ public class RefireFilter implements SimpleCondition<Event> {
 	public int sortOrder() {
 		return 1_000_000;
 	}
+
+	@Override
+	public Class<Event> getEventType() {
+		return Event.class;
+	}
 }

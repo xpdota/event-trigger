@@ -25,4 +25,9 @@ public class HeadmarkerAbsoluteIdFilter implements SimpleCondition<HeadMarkerEve
 	public boolean test(HeadMarkerEvent event) {
 		return operator.checkLong(event.getMarkerId(), expected);
 	}
+
+	@Override
+	public Class<HeadMarkerEvent> getEventType() {
+		return HeadMarkerEvent.class;
+	}
 }

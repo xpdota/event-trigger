@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
+import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
@@ -25,5 +26,11 @@ public class DurationFilter implements SimpleCondition<HasDuration> {
 	@Override
 	public String dynamicLabel() {
 		return "Duration " + operator.getFriendlyName() + ' ' + expectedMs;
+	}
+
+
+	@Override
+	public Class<HasDuration> getEventType() {
+		return HasDuration.class;
 	}
 }

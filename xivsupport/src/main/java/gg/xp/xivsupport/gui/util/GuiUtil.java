@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -33,6 +35,21 @@ public final class GuiUtil {
 		StringSelection stringSelection = new StringSelection(text);
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
+	}
+
+	public static @Nullable String getTextFromClipboard() {
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		try {
+			Object data = clipboard.getData(DataFlavor.stringFlavor);
+			if (data instanceof String string) {
+				return string;
+			}
+			return null;
+		}
+		catch (UnsupportedFlavorException | IOException e) {
+			return null;
+		}
+
 	}
 
 	public static void openFile(File file) {

@@ -47,4 +47,9 @@ public class AbilityNameFilter implements SimpleCondition<HasAbility> {
 	public String dynamicLabel() {
 		return "Ability Name " + operator.getFriendlyName() + ' ' + expected;
 	}
+
+	@Override
+	public Class<HasAbility> getEventType() {
+		return HasAbility.class;
+	}
 }

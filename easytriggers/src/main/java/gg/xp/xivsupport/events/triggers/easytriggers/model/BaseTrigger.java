@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 		@JsonSubTypes.Type(value = EasyTrigger.class, name = "trigger"),
 		@JsonSubTypes.Type(value = TriggerFolder.class, name = "folder"),
 })
-public abstract class BaseTrigger<X> implements HasMutableConditions<X> {
+public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> permits TriggerFolder, EasyTrigger {
 
 	@JsonProperty(defaultValue = "true")
 	private boolean enabled = true;

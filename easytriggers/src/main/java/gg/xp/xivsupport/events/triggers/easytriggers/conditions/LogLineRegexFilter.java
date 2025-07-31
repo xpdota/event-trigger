@@ -57,4 +57,8 @@ public class LogLineRegexFilter implements Condition<ACTLogLineEvent> {
 		return false;
 	}
 
+	@Override
+	public Class<ACTLogLineEvent> getEventType() {
+		return ACTLogLineEvent.class;
+	}
 }

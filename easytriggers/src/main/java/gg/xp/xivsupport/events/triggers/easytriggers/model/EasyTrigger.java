@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EasyTrigger<X> extends BaseTrigger<X> implements HasMutableActions<X> {
+public final class EasyTrigger<X> extends BaseTrigger<X> implements HasMutableActions<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(EasyTrigger.class);
 
