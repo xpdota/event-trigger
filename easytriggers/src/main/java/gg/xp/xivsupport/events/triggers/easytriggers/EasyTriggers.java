@@ -69,6 +69,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DurationFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DutyCalloutFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EntityType;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyFolderFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerAbsoluteIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerRelativeIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HitSeverityFilter;
@@ -99,10 +100,10 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.CompoundConditionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovySupplierFilterEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
 import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
-import gg.xp.xivsupport.events.triggers.easytriggers.gui.ConditionsPanel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
@@ -611,6 +612,7 @@ public final class EasyTriggers implements HasChildTriggers {
 			new ConditionDescription<>(TargetabilityChangeFilter.class, TargetabilityUpdate.class, "Combatant becomes (un)targetable", TargetabilityChangeFilter::new, this::generic),
 			new ConditionDescription<>(NpcYellIdFilter.class, NpcYellEvent.class, "NPC Yell ID", NpcYellIdFilter::new, this::generic),
 			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), GroovyFilterEditor::new),
+			new ConditionDescription<>(GroovyFolderFilter.class, Object.class, "Groovy Filter for folders (non-event-based)", () -> new GroovyFolderFilter(inject(GroovyManager.class)), GroovySupplierFilterEditor::new),
 			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic),
 			new ConditionDescription<>(PullDurationFilter.class, Object.class, "Restrict based on pull/combat duration", () -> new PullDurationFilter(inject(PullTracker.class)), this::generic)
 	));
