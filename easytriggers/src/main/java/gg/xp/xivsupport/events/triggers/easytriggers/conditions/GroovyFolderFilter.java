@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 /**
  * A version of GroovyEventFilter that doesn't require an event parameter.
  * This is suitable for use with TriggerFolder which doesn't restrict to any specific event type.
- * Instead of a Predicate<? extends Event>, it uses a Supplier<Boolean>.
+ * Instead of a {@code Predicate<? extends Event>}, it uses a {@code Supplier<Boolean>}.
  */
 public class GroovyFolderFilter implements Condition<Object> {
 	private static final ExecutorService exs = Executors.newSingleThreadExecutor();
