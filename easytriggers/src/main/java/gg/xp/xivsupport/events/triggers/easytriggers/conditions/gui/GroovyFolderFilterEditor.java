@@ -12,11 +12,11 @@ import java.util.function.Function;
  * Editor for GroovySupplierFilter, similar to GroovyFilterEditor but without event type handling.
  * This is used for TriggerFolder conditions that don't depend on specific event types.
  */
-public class GroovySupplierFilterEditor extends JPanel {
+public class GroovyFolderFilterEditor extends JPanel {
 	private final TextFieldWithValidation<String> textBox;
 	private final JCheckBox checkBox;
 
-	public GroovySupplierFilterEditor(GroovyFolderFilter filter, HasEventType trigger) {
+	public GroovyFolderFilterEditor(GroovyFolderFilter filter, HasEventType trigger) {
 		setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
 		textBox = new TextFieldWithValidation<>(Function.identity(), groovyScript -> {
 			try {

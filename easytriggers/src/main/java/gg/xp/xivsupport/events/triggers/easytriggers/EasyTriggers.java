@@ -100,7 +100,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.CompoundConditionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
-import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovySupplierFilterEditor;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFolderFilterEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
 import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
@@ -109,6 +109,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionTarget;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerMigrationHelper;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
@@ -611,10 +612,10 @@ public final class EasyTriggers implements HasChildTriggers {
 			new ConditionDescription<>(HitSeverityFilter.class, HasEffects.class, "Hit Severity (Crit/Direct Hit)", HitSeverityFilter::new, this::generic),
 			new ConditionDescription<>(TargetabilityChangeFilter.class, TargetabilityUpdate.class, "Combatant becomes (un)targetable", TargetabilityChangeFilter::new, this::generic),
 			new ConditionDescription<>(NpcYellIdFilter.class, NpcYellEvent.class, "NPC Yell ID", NpcYellIdFilter::new, this::generic),
-			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), GroovyFilterEditor::new),
-			new ConditionDescription<>(GroovyFolderFilter.class, Object.class, "Groovy Filter for folders (non-event-based)", () -> new GroovyFolderFilter(inject(GroovyManager.class)), GroovySupplierFilterEditor::new),
-			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic),
-			new ConditionDescription<>(PullDurationFilter.class, Object.class, "Restrict based on pull/combat duration", () -> new PullDurationFilter(inject(PullTracker.class)), this::generic)
+			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), GroovyFilterEditor::new, ConditionTarget.TRIGGER_ONLY),
+			new ConditionDescription<>(GroovyFolderFilter.class, Object.class, "Groovy Filter for folders (non-event-based)", () -> new GroovyFolderFilter(inject(GroovyManager.class)), GroovyFolderFilterEditor::new, ConditionTarget.FOLDER_ONLY),
+			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic, ConditionTarget.BOTH),
+			new ConditionDescription<>(PullDurationFilter.class, Object.class, "Restrict based on pull/combat duration", () -> new PullDurationFilter(inject(PullTracker.class)), this::generic, ConditionTarget.BOTH)
 	));
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
@@ -633,7 +634,7 @@ public final class EasyTriggers implements HasChildTriggers {
 	));
 
 	{
-		registerConditionType(new ConditionDescription<>(OrFilter.class, Object.class, "Logical OR or multiple conditions", OrFilter::new, (action, trigger) -> new CompoundConditionEditor(this, action)));
+		registerConditionType(new ConditionDescription<>(OrFilter.class, Object.class, "Logical OR or multiple conditions", OrFilter::new, (action, trigger) -> new CompoundConditionEditor(this, action), ConditionTarget.BOTH));
 		registerActionType(new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)));
 	}
 
@@ -651,7 +652,18 @@ public final class EasyTriggers implements HasChildTriggers {
 	}
 
 	public <X> List<ConditionDescription<?, ?>> getConditionsApplicableTo(HasMutableConditions<X> trigger) {
-		return conditions.stream().filter(cdesc -> cdesc.appliesTo(trigger.classForConditions())).toList();
+		return conditions.stream()
+				.filter(cdesc -> cdesc.appliesTo(trigger.classForConditions()))
+				.filter(cdesc -> {
+					// Filter based on the target type
+					if (trigger instanceof EasyTrigger) {
+						return cdesc.target() == ConditionTarget.TRIGGER_ONLY || cdesc.target() == ConditionTarget.BOTH;
+					} else if (trigger instanceof TriggerFolder) {
+						return cdesc.target() == ConditionTarget.FOLDER_ONLY || cdesc.target() == ConditionTarget.BOTH;
+					}
+					return true; // Default to showing all conditions for unknown trigger types
+				})
+				.toList();
 	}
 
 	public List<ActionDescription<?, ?>> getActions() {
