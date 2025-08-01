@@ -1,6 +1,6 @@
-67e8a5f2844f9771f73b23176bf5d684  triggevent.exe
-5a284571fc11b28b7ae0b064c01fb852  triggevent-import.exe
-3488a6569992787276a53d4fcecd4e58  triggevent-upd.exe
+331e369369666ba1928a93c1340cbe24  triggevent.exe
+cd515b8e7d0d66c7dc39b2ad719686a2  triggevent-import.exe
+e9b462a969ecfbf43d9a25aca9c95a96  triggevent-upd.exe
 8c79eba0445fdc5f7afa1df3a8b40fa7  Triggevent_Stub.dll
 70c37acc3868d8d1aa5321361c1bc152  deps/actimport-1.0-SNAPSHOT.jar
 38673abe87d12508cd05498eff0b9731  deps/annotations-24.1.0.jar
@@ -17,7 +17,7 @@ f54a8510f834a1a57166970bfc982e94  deps/commons-collections-3.2.2.jar
 ebfec4f77cc595c518d655f7e68346be  deps/commons-text-1.11.0.jar
 e5c3bdc3c3e5d0af39f2b79d6906ddd4  deps/custom-party-overlay-1.0-SNAPSHOT.jar
 3d7afea4064aae53f5a3c03c169798c6  deps/dot-tracker-1.0-SNAPSHOT.jar
-fc9379a195efa97e1214a9680d8bcca7  deps/easytriggers-1.0-SNAPSHOT.jar
+f0129d28c35982bb8455cdc2d686f772  deps/easytriggers-1.0-SNAPSHOT.jar
 0a7c3e99d822a8834727f72d7dcfc9ec  deps/flatlaf-3.2.5.jar
 134d338eab82f8cf0e4fe22f0bd6a350  deps/groovy-5.0.0-alpha-2.jar
 d42b8855e3b7e4f3506ffc0b5b85d149  deps/groovy-sandbox-1.27.jar
@@ -55,7 +55,7 @@ fa7a7346707287f42d43fcc73779a1dc  deps/postnamazu-gui-1.0-SNAPSHOT.jar
 a4c67e79b55e951a3acb868b08e470ba  deps/skill-hit-overlay-1.0-SNAPSHOT.jar
 45630e54b0f0ac2b3c80462515ad8fda  deps/slf4j-api-2.0.9.jar
 a2eabd424db89944652ce7f3a1ac7494  deps/telesto-core-1.0-SNAPSHOT.jar
-5ed1e55d5ba82f18b526872545039ad3  deps/telesto-easy-triggers-1.0-SNAPSHOT.jar
+c999ea9f552abcd4065a47c7fea74300  deps/telesto-easy-triggers-1.0-SNAPSHOT.jar
 2715ab3e538a1faf2a17539f3786992b  deps/telesto-gui-1.0-SNAPSHOT.jar
 99ff7fc65b0d71b62346b0b3b81ffdb0  deps/telesto-right-clicks-1.0-SNAPSHOT.jar
 40b577d99333c4e669b83548a43161b9  deps/timelines-1.0-SNAPSHOT.jar
