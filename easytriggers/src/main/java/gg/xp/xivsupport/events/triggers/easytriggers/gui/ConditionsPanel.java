@@ -40,9 +40,9 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 		c.insets = new Insets(0, 2, 2, 3);
 		buttonsArea.setAlignmentX(LEFT_ALIGNMENT);
 
-		JButton newButton = button("New", this::addNewCondition);
+		JButton newButton = EtGuiUtils.smallButton("New", this::addNewCondition);
 		buttonsArea.add(newButton, c);
-		JButton pasteButton = button("Paste", this::tryPasteCondition);
+		JButton pasteButton = EtGuiUtils.smallButton("Paste", this::tryPasteCondition);
 		c.gridx++;
 		buttonsArea.add(pasteButton, c);
 		c.gridx++;
@@ -54,14 +54,6 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 		trigger.getConditions().forEach(cond -> {
 			add(new ConditionPanel<>(cond));
 		});
-	}
-
-	private static JButton button(String label, Runnable action) {
-		JButton button = new JButton(label);
-		button.addActionListener(l -> action.run());
-		button.setPreferredSize(new Dimension(50, button.getPreferredSize().height));
-		button.setMargin(new Insets(0, 0, 0, 0));
-		return button;
 	}
 
 	private void addNewCondition() {
@@ -134,14 +126,15 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 			c.anchor = GridBagConstraints.WEST;
 			c.fill = GridBagConstraints.NONE;
 			c.weightx = 0;
+
 			c.insets = new Insets(2, 2, 2, 3);
-			JButton deleteButton = button("Delete", this::delete);
+			JButton deleteButton = EtGuiUtils.smallButton("Delete", this::delete);
 			add(deleteButton, c);
 			c.gridx++;
-			JButton cutButton = button("Cut", this::cut);
+			JButton cutButton = EtGuiUtils.smallButton("Cut", this::cut);
 			add(cutButton, c);
 			c.gridx++;
-			JButton copyButton = button("Copy", this::copy);
+			JButton copyButton = EtGuiUtils.smallButton("Copy", this::copy);
 			add(copyButton, c);
 			c.gridx++;
 			JLabel labelLabel = new JLabel(condition.fixedLabel());

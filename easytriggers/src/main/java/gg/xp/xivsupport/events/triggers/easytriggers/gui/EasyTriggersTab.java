@@ -52,6 +52,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static gg.xp.xivsupport.events.triggers.easytriggers.gui.EtGuiUtils.compactButton;
 import static gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext.SOURCE_EASY_TRIGGER_KEY;
 
 @ScanMe
@@ -129,62 +130,16 @@ public class EasyTriggersTab implements PluginTab {
 		{
 			// TODO: most of these could also be right click options
 			JPanel controlsPanel = new JPanel(new WrapLayout());
-			{
-				JButton newTriggerButton = new JButton("New Trigger");
-				controlsPanel.add(newTriggerButton);
-				newTriggerButton.addActionListener(l -> addNew());
-			}
-			{
-				JButton newTriggerButton = new JButton("New Folder");
-				controlsPanel.add(newTriggerButton);
-				newTriggerButton.addActionListener(l -> addNewFolder());
-			}
-			{
-				JButton rfBtn = new JButton("Refresh");
-				controlsPanel.add(rfBtn);
-				rfBtn.addActionListener(l -> refresh());
-			}
-			{
-				JButton deleteTriggerButton = new JButton("Delete Selected") {
-					@Override
-					public boolean isEnabled() {
-						return currentSelections.hasSelection();
-					}
-				};
-				controlsPanel.add(deleteTriggerButton);
-				deleteTriggerButton.addActionListener(l -> delete());
-			}
-			{
-				JButton cloneTriggerButton = new JButton("Clone Trigger") {
-					@Override
-					public boolean isEnabled() {
-						return currentSelections.hasConsistentParentSelection();
-					}
-				};
-				controlsPanel.add(cloneTriggerButton);
-				cloneTriggerButton.addActionListener(l -> cloneCurrent());
-			}
-			{
-				JButton exportTriggerButton = new JButton("Export Selected") {
-					@Override
-					public boolean isEnabled() {
-						// TODO: exporting should try to reject when you select a parent but also some children of that same parent
-						return currentSelections.hasSelection();
-					}
-				};
-				controlsPanel.add(exportTriggerButton);
-				exportTriggerButton.addActionListener(l -> exportCurrent());
-			}
-			{
-				JButton importTriggerButton = new JButton("Import Triggers");
-				controlsPanel.add(importTriggerButton);
-				importTriggerButton.addActionListener(l -> showEasyImportDialog());
-			}
-			{
-				JButton importLegacyTriggerButton = new JButton("Import Legacy ACT Triggers");
-				controlsPanel.add(importLegacyTriggerButton);
-				importLegacyTriggerButton.addActionListener(l -> showActImportDialog());
-			}
+			controlsPanel.add(EtGuiUtils.compactButton("New Trigger", this::addNew));
+			controlsPanel.add(EtGuiUtils.compactButton("New Folder", this::addNewFolder));
+			controlsPanel.add(EtGuiUtils.compactButton("Collapse All", this::collapseAll));
+			controlsPanel.add(EtGuiUtils.compactButton("Expand All", this::expandAll));
+			controlsPanel.add(EtGuiUtils.compactButton("Refresh", this::refresh));
+			controlsPanel.add(compactButton("Delete Selected", this::delete, currentSelections::hasSelection));
+			controlsPanel.add(compactButton("Clone Trigger", this::cloneCurrent, currentSelections::hasConsistentParentSelection));
+			controlsPanel.add(compactButton("Export Selected", this::exportCurrent, currentSelections::hasSelection));
+			controlsPanel.add(EtGuiUtils.compactButton("Import Triggers", this::showEasyImportDialog));
+			controlsPanel.add(EtGuiUtils.compactButton("Import Legacy ACT Triggers", this::showActImportDialog));
 			bottomPanel.add(controlsPanel, BorderLayout.NORTH);
 		}
 
@@ -219,6 +174,24 @@ public class EasyTriggersTab implements PluginTab {
 
 		autoSave.start();
 		return outer;
+	}
+
+	private void collapseAll() {
+		int row = tree.getRowCount() - 1;
+		while (row >= 0) {
+			tree.collapseRow(row);
+			row--;
+		}
+		SwingUtilities.invokeLater(() -> scrollToPaths(tree.getSelectionPaths()));
+	}
+
+	private void expandAll() {
+		int row = 0;
+		while (row < tree.getRowCount()) {
+			tree.expandRow(row);
+			row++;
+		}
+		SwingUtilities.invokeLater(() -> scrollToPaths(tree.getSelectionPaths()));
 	}
 
 	private static <X> @Nullable X doImportDialog(String title, Function<String, X> converter) {
@@ -392,15 +365,19 @@ public class EasyTriggersTab implements PluginTab {
 							.filter(Objects::nonNull)
 							.toArray(TreePath[]::new);
 					tree.setSelectionPaths(paths);
-					// This is a hack to try to get it to do something reasonable when selecting multiple items.
-					// It will first scroll the *last* one into view, and then the first one, so that we can see the top one.
-					if (paths.length > 0) {
-						tree.scrollPathToVisible(paths[paths.length - 1]);
-						tree.scrollPathToVisible(paths[0]);
-					}
+					scrollToPaths(paths);
 				});
 			}
 		});
+	}
+
+	private void scrollToPaths(TreePath[] paths) {
+		// This is a hack to try to get it to do something reasonable when selecting multiple items.
+		// It will first scroll the *last* one into view, and then the first one, so that we can see the top one.
+		if (paths != null && paths.length > 0) {
+			tree.scrollPathToVisible(paths[paths.length - 1]);
+			tree.scrollPathToVisible(paths[0]);
+		}
 	}
 
 	/**

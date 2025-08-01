@@ -27,8 +27,4 @@ public class ChatLineTypeFilter implements SimpleCondition<ChatLineEvent> {
 		return "Chat Line Number " + operator.getFriendlyName() + ' ' + expected;
 	}
 
-	@Override
-	public Class<ChatLineEvent> getEventType() {
-		return ChatLineEvent.class;
-	}
 }

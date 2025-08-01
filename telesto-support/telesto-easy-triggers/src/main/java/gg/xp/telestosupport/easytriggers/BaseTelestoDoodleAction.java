@@ -25,7 +25,7 @@ public abstract class BaseTelestoDoodleAction implements Action<Event>, HasMutab
 	@Description("Duration (ms)")
 	public int duration = 10_000;
 
-	private Class<?> eventType;
+	private Class<Event> eventType;
 
 	protected void finishSpec(DoodleSpec spec, BaseEvent triggerEvent) {
 		if (name != null && !name.isBlank()) {
@@ -42,13 +42,13 @@ public abstract class BaseTelestoDoodleAction implements Action<Event>, HasMutab
 	}
 
 	@Override
-	public Class<?> getEventType() {
+	public Class<Event> getEventType() {
 		return eventType;
 	}
 
 	@Override
 	public void setEventType(Class<?> eventType) {
-		this.eventType = eventType;
+		this.eventType = (Class<Event>) eventType;
 	}
 
 	@JsonProperty("color")
