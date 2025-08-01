@@ -103,11 +103,13 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1); // Should trigger
         
         // Verify that the callout was made
-        List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 1, "Expected 1 callout");
-        CalloutEvent theCall = calls.get(0);
-        Assert.assertEquals(theCall.getVisualText(), "Ability used: Foo Ability");
-        Assert.assertEquals(theCall.getCallText(), "Ability used");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 1, "Expected 1 callout");
+            CalloutEvent theCall = calls.get(0);
+            Assert.assertEquals(theCall.getVisualText(), "Ability used: Foo Ability");
+            Assert.assertEquals(theCall.getCallText(), "Ability used");
+        }
         
         // Now change the GroovyFolderFilter to always return false
         alwaysTrue.setGroovyScript("return false");
@@ -119,8 +121,10 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1); // Should not trigger (folder condition is false)
         
         // Verify that no callout was made
-        calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 0, "Expected 0 callouts");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 0, "Expected 0 callouts");
+        }
     }
     
     /**
@@ -174,19 +178,23 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1); // Should not trigger (wrong zone)
         
         // Verify that no callout was made
-        List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 0, "Expected 0 callouts in wrong zone");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 0, "Expected 0 callouts in wrong zone");
+        }
         
         // Send events in correct zone
         dist.acceptEvent(zoneChange); // Set zone to 987
         dist.acceptEvent(abilityUsed1); // Should trigger
         
         // Verify that the callout was made
-        calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 1, "Expected 1 callout in correct zone");
-        CalloutEvent theCall = calls.get(0);
-        Assert.assertEquals(theCall.getVisualText(), "Ability used in correct zone");
-        Assert.assertEquals(theCall.getCallText(), "Ability used in correct zone");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 1, "Expected 1 callout in correct zone");
+            CalloutEvent theCall = calls.get(0);
+            Assert.assertEquals(theCall.getVisualText(), "Ability used in correct zone");
+            Assert.assertEquals(theCall.getCallText(), "Ability used in correct zone");
+        }
     }
     
     /**
@@ -251,8 +259,10 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1);
         
         // Verify that no callout was made
-        List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 0, "Expected 0 callouts with error script");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 0, "Expected 0 callouts with error script");
+        }
     }
     
     /**
@@ -420,8 +430,10 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1); // Should trigger
         
         // Verify that the callout was made
-        List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 1, "Expected 1 callout with folder enabled");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 1, "Expected 1 callout with folder enabled");
+        }
         
         // Disable the folder
         folder.setEnabled(false);
@@ -433,8 +445,10 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1); // Should not trigger
         
         // Verify that no callout was made
-        calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 0, "Expected 0 callouts with folder disabled");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 0, "Expected 0 callouts with folder disabled");
+        }
         
         // Enable the folder but disable the trigger
         folder.setEnabled(true);
@@ -444,8 +458,10 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1); // Should not trigger
         
         // Verify that no callout was made
-        calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 0, "Expected 0 callouts with trigger disabled");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 0, "Expected 0 callouts with trigger disabled");
+        }
         
         // Enable both
         trigger.setEnabled(true);
@@ -457,8 +473,10 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1); // Should trigger
         
         // Verify that the callout was made
-        calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 1, "Expected 1 callout with both enabled");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 1, "Expected 1 callout with both enabled");
+        }
     }
     
     /**
@@ -530,19 +548,23 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1); // Should not trigger (wrong zone)
         
         // Verify that no callout was made
-        List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 0, "Expected 0 callouts in wrong zone");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 0, "Expected 0 callouts in wrong zone");
+        }
         
         // Send events in correct zone
         dist.acceptEvent(zoneChange); // Set zone to 987
         dist.acceptEvent(abilityUsed1); // Should trigger
         
         // Verify that the callout was made
-        calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 1, "Expected 1 callout in correct zone");
-        CalloutEvent theCall = calls.get(0);
-        Assert.assertEquals(theCall.getVisualText(), "Deep nested trigger activated");
-        Assert.assertEquals(theCall.getCallText(), "Deep nested trigger activated");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 1, "Expected 1 callout in correct zone");
+            CalloutEvent theCall = calls.get(0);
+            Assert.assertEquals(theCall.getVisualText(), "Deep nested trigger activated");
+            Assert.assertEquals(theCall.getCallText(), "Deep nested trigger activated");
+        }
         
         // Disable the mid folder
         midFolder.setEnabled(false);
@@ -554,8 +576,10 @@ public class EasyTriggersFolderTest {
         dist.acceptEvent(abilityUsed1); // Should not trigger
         
         // Verify that no callout was made
-        calls = coll.getEventsOf(CalloutEvent.class);
-        Assert.assertEquals(calls.size(), 0, "Expected 0 callouts with mid folder disabled");
+        {
+            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+            Assert.assertEquals(calls.size(), 0, "Expected 0 callouts with mid folder disabled");
+        }
     }
     
     /**
@@ -657,8 +681,10 @@ public class EasyTriggersFolderTest {
             dist.acceptEvent(abilityUsed1); // Should trigger
             
             // Verify that the callout was made
-            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
-            Assert.assertEquals(calls.size(), 1, "Expected 1 callout before serialization");
+            {
+                List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+                Assert.assertEquals(calls.size(), 1, "Expected 1 callout before serialization");
+            }
         }
         
         // Now load the serialized version and make sure it all still works
@@ -684,11 +710,13 @@ public class EasyTriggersFolderTest {
             dist.acceptEvent(abilityUsed1); // Should trigger
             
             // Verify that the callout was made
-            List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
-            Assert.assertEquals(calls.size(), 1, "Expected 1 callout after serialization");
-            CalloutEvent theCall = calls.get(0);
-            Assert.assertEquals(theCall.getVisualText(), "Serialization test");
-            Assert.assertEquals(theCall.getCallText(), "Serialization test");
+            {
+                List<CalloutEvent> calls = coll.getEventsOf(CalloutEvent.class);
+                Assert.assertEquals(calls.size(), 1, "Expected 1 callout after serialization");
+                CalloutEvent theCall = calls.get(0);
+                Assert.assertEquals(theCall.getVisualText(), "Serialization test");
+                Assert.assertEquals(theCall.getCallText(), "Serialization test");
+            }
         }
     }
 }
