@@ -68,6 +68,7 @@ public class EasyTriggersTab implements PluginTab {
 	private TitleBorderFullsizePanel outer;
 	private RefreshLoop<EasyTriggersTab> autoSave;
 	private TriggerTree tree;
+	private JPanel controlsPanel;
 
 	public EasyTriggersTab(EasyTriggers backend, RightClickOptionRepo rightClicks, GlobalUiRegistry tabReg, PicoContainer pico) {
 		this.backend = backend;
@@ -129,15 +130,15 @@ public class EasyTriggersTab implements PluginTab {
 
 		{
 			// TODO: most of these could also be right click options
-			JPanel controlsPanel = new JPanel(new WrapLayout());
+			controlsPanel = new JPanel(new WrapLayout());
 			controlsPanel.add(EtGuiUtils.compactButton("New Trigger", this::addNew));
 			controlsPanel.add(EtGuiUtils.compactButton("New Folder", this::addNewFolder));
 			controlsPanel.add(EtGuiUtils.compactButton("Collapse All", this::collapseAll));
 			controlsPanel.add(EtGuiUtils.compactButton("Expand All", this::expandAll));
 			controlsPanel.add(EtGuiUtils.compactButton("Refresh", this::refresh));
-			controlsPanel.add(compactButton("Delete Selected", this::delete, currentSelections::hasSelection));
-			controlsPanel.add(compactButton("Clone Trigger", this::cloneCurrent, currentSelections::hasConsistentParentSelection));
-			controlsPanel.add(compactButton("Export Selected", this::exportCurrent, currentSelections::hasNonSelfNestedSelection));
+			controlsPanel.add(compactButton("Delete Selected", this::delete, () -> currentSelections.hasSelection()));
+			controlsPanel.add(compactButton("Clone Trigger", this::cloneCurrent, () -> currentSelections.hasConsistentParentSelection()));
+			controlsPanel.add(compactButton("Export Selected", this::exportCurrent, () -> currentSelections.hasNonSelfNestedSelection()));
 			controlsPanel.add(EtGuiUtils.compactButton("Import Triggers", this::showEasyImportDialog));
 			controlsPanel.add(EtGuiUtils.compactButton("Import Legacy ACT Triggers", this::showActImportDialog));
 			bottomPanel.add(controlsPanel, BorderLayout.NORTH);

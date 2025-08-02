@@ -26,14 +26,18 @@ public final class EtGuiUtils {
 	}
 
 	public static JButton compactButton(String label, Runnable action, @Nullable BooleanSupplier enabledWhen) {
+		@Nullable BooleanSupplier condition = enabledWhen == null ? () -> true : enabledWhen;
 		JButton button = new JButton(label) {
 			@Override
 			public boolean isEnabled() {
-				return enabledWhen == null ? super.isEnabled() : enabledWhen.getAsBoolean();
+				return condition.getAsBoolean();
 			}
 		};
-		button.addActionListener(l -> action.run());
-//		button.setPreferredSize(new Dimension(50, button.getPreferredSize().height));
+		button.addActionListener(l -> {
+			if (condition.getAsBoolean()) {
+				action.run();
+			}
+		});
 		button.setMargin(new Insets(2, 2, 2, 2));
 		return button;
 	}
