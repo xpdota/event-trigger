@@ -45,7 +45,7 @@ public class ActLegacyImportTest {
 		EventDistributor dist = pico.getComponent(EventDistributor.class);
 		dist.registerHandler(coll);
 		EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
-		ez1.addTrigger(trigger);
+		ez1.addTrigger(null, trigger);
 
 		dist.acceptEvent(new ACTLogLineEvent("00|2022-06-06T17:43:24.0000000+08:00|0139||Battle commencing in 15 seconds! (DRK Player)|d25e02d29eef53f7"));
 		{

@@ -26,4 +26,9 @@ public class TetherIdFilter implements SimpleCondition<TetherEvent> {
 	public String dynamicLabel() {
 		return String.format("Tether ID %s 0x%x (%s)", operator.getFriendlyName(), expected, expected);
 	}
+
+	@Override
+	public Class<TetherEvent> getEventType() {
+		return TetherEvent.class;
+	}
 }

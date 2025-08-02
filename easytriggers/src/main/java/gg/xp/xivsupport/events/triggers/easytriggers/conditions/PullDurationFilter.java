@@ -62,4 +62,9 @@ public class PullDurationFilter implements SimpleCondition<Object> {
 	public String dynamicLabel() {
 		return "Pull Duration Between %.1fs and %.1fs".formatted(minDuration, maxDuration);
 	}
+
+	@Override
+	public Class<Object> getEventType() {
+		return Object.class;
+	}
 }

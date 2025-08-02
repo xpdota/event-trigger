@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.conditions;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
@@ -32,6 +33,7 @@ public class OrFilter<X> implements Condition<X>, HasMutableEventType {
 	}
 
 	@Override
+	@JsonInclude
 	public Class<X> getEventType() {
 		return eventType;
 	}

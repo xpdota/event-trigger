@@ -26,4 +26,9 @@ public class StatusRawStacksFilter implements SimpleCondition<HasStatusEffect> {
 	public String dynamicLabel() {
 		return "# of Raw Stacks " + operator.getFriendlyName() + ' ' + expected;
 	}
+
+	@Override
+	public Class<HasStatusEffect> getEventType() {
+		return HasStatusEffect.class;
+	}
 }

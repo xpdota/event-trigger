@@ -40,4 +40,9 @@ public class PlayerHasStatusFilter implements SimpleCondition<Event> {
 		return invert != buffs.statusesOnTarget(state.getPlayer())
 				.stream().anyMatch(ba -> ba.buffIdMatches(expected));
 	}
+
+	@Override
+	public Class<Event> getEventType() {
+		return Event.class;
+	}
 }

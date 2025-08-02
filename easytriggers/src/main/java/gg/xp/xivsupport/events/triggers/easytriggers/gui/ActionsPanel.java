@@ -34,26 +34,31 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 		this.trigger = trigger;
 		this.saveCallback = saveCallback;
 		setPreferredSize(null);
-//		setLayout(new GridBagLayout());
-//		GridBagConstraints c = GuiUtil.defaultGbc();
-//		c.fill = GridBagConstraints.NONE;
-//		c.anchor = GridBagConstraints.WEST;
-//		JButton newButton = new JButton("New");
-//		add(newButton, c);
-//		c.gridy++;
-//		newButton.addActionListener(l -> addNewCondition());
-//		trigger.getConditions().forEach(cond -> {
-//			add(new ConditionPanel<>(cond), c);
-//			c.gridy++;
-//		});
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-		JButton newButton = new JButton("New");
-		add(newButton);
+
+		var buttonsArea = new JPanel();
+		buttonsArea.setLayout(new GridBagLayout());
+		GridBagConstraints c = GuiUtil.defaultGbc();
+		c.anchor = GridBagConstraints.WEST;
+		c.fill = GridBagConstraints.NONE;
+		c.weightx = 0;
+		c.insets = new Insets(0, 2, 2, 3);
+		buttonsArea.setAlignmentX(LEFT_ALIGNMENT);
+
+		JButton newButton = EtGuiUtils.smallButton("New", this::addNewAction);
+		buttonsArea.add(newButton, c);
+		JButton pasteButton = EtGuiUtils.smallButton("Paste", this::tryPasteAction);
+		c.gridx++;
+		buttonsArea.add(pasteButton, c);
+		c.gridx++;
+		c.weightx = 1;
+		buttonsArea.add(Box.createHorizontalGlue(), c);
+
+		add(buttonsArea);
+
 		add(Box.createHorizontalGlue());
 		inner = new ActionsPanelInner();
-		newButton.addActionListener(l -> addNewAction());
 		inner.initialize();
-//		inner.setMinimumSize(new Dimension(100, 400));
 		add(inner);
 		revalidate();
 	}
@@ -231,7 +236,7 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 
 		ActionPanel(Action<Y> action) {
 			this.action = action;
-			setAlignmentX(Component.LEFT_ALIGNMENT);
+			setAlignmentX(LEFT_ALIGNMENT);
 			setBorder(null);
 			setLayout(new GridBagLayout());
 
@@ -344,12 +349,17 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 				c.gridx++;
 			}
 
-			JButton deleteButton = new JButton("Delete");
-//			JPanel buttonHolder = new JPanel();
-//			buttonHolder.add(deleteButton);
-//			add(buttonHolder, c);
+			c.insets = new Insets(2, 2, 2, 3);
+			JButton deleteButton = EtGuiUtils.smallButton("Delete", this::delete);
 			add(deleteButton, c);
 			c.gridx++;
+			JButton cutButton = EtGuiUtils.smallButton("Cut", this::cut);
+			add(cutButton, c);
+			c.gridx++;
+			JButton copyButton = EtGuiUtils.smallButton("Copy", this::copy);
+			add(copyButton, c);
+			c.gridx++;
+
 			String fixedLabel = action.fixedLabel();
 			if (fixedLabel != null) {
 				JLabel labelLabel = new JLabel(fixedLabel);
@@ -358,7 +368,6 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 			}
 			c.weightx = 1;
 			c.fill = GridBagConstraints.HORIZONTAL;
-			deleteButton.addActionListener(l -> this.delete());
 			Component component;
 			Class<? extends Action> actionClass = action.getClass();
 			ActionDescription<Action<Y>, Y> desc = backend.getActionDescription(actionClass);
@@ -388,6 +397,15 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 
 		private void delete() {
 			inner.remove(action);
+		}
+
+		private void copy() {
+			GuiUtil.copyTextToClipboard(backend.exportAction(action));
+		}
+
+		private void cut() {
+			copy();
+			delete();
 		}
 
 		private void propSaveCallback(Component component) {
@@ -422,5 +440,38 @@ public class ActionsPanel<X> extends TitleBorderFullsizePanel {
 		save();
 	}
 
+	private void showError(String msg) {
+		JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
+	}
+
+	private void tryPasteAction() {
+		String text = GuiUtil.getTextFromClipboard();
+		if (text == null) {
+			showError("No action on clipboard");
+			return;
+		}
+		Action<?> action;
+		try {
+			action = backend.importAction(text);
+		}
+		catch (Exception e) {
+			showError("No action on clipboard");
+			return;
+		}
+		if (action == null) {
+			showError("No action on clipboard");
+			return;
+		}
+		Class<?> triggerType = trigger.getEventType();
+		Class<?> conditionType = action.getEventType();
+		if (!conditionType.isAssignableFrom(triggerType)) {
+			showError("Action type " + action.getClass().getSimpleName() + " is not applicable to a trigger for " + triggerType.getSimpleName());
+			return;
+		}
+		inner.add(action);
+		SwingUtilities.invokeLater(this::revalidate);
+		SwingUtilities.invokeLater(this::repaint);
+		saveCallback.run();
+	}
 
 }

@@ -38,4 +38,9 @@ public class SourceHasStatusFilter implements SimpleCondition<HasSourceEntity> {
 //		return invert != buffs.statusesOnTarget(event.getSource())
 //				.stream().anyMatch(ba -> ba.buffIdMatches(expected));
 	}
+
+	@Override
+	public Class<HasSourceEntity> getEventType() {
+		return HasSourceEntity.class;
+	}
 }

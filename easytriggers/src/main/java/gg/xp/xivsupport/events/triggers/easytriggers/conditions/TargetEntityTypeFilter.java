@@ -21,4 +21,9 @@ public class TargetEntityTypeFilter implements SimpleCondition<HasTargetEntity> 
 	public boolean test(HasTargetEntity hasTargetEntity) {
 		return type.test(hasTargetEntity.getTarget());
 	}
+
+	@Override
+	public Class<HasTargetEntity> getEventType() {
+		return HasTargetEntity.class;
+	}
 }

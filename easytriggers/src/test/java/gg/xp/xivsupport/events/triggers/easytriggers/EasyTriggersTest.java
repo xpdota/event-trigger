@@ -133,7 +133,7 @@ public class EasyTriggersTest {
 			dist.registerHandler(coll);
 			EasyTriggers ez1 = pico.getComponent(EasyTriggers.class);
 			EasyTrigger<X> easy = ez1.getEventDescription(testCase.type()).newEmptyInst(null);
-			ez1.addTrigger(easy);
+			ez1.addTrigger(null, easy);
 
 			dist.acceptEvent(testCase.event());
 			{
@@ -185,7 +185,7 @@ public class EasyTriggersTest {
 			call.setText("{event.getAbility().getId()}");
 			call.setTts("{event.getAbility().getId()}");
 			trig1.addAction(call);
-			ez1.addTrigger(trig1);
+			ez1.addTrigger(null, trig1);
 
 			dist.acceptEvent(abilityUsed2);
 			dist.acceptEvent(zoneChange);
@@ -241,7 +241,7 @@ public class EasyTriggersTest {
 		GroovyAction action = new GroovyAction(groovy);
 		action.setGroovyScript("s.waitMs(400); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
 		trig1.addAction(action);
-		ez1.addTrigger(trig1);
+		ez1.addTrigger(null, trig1);
 
 		master.pushEventAndWait(abilityUsed1);
 		{
@@ -299,7 +299,7 @@ public class EasyTriggersTest {
 		GroovyAction action = new GroovyAction(groovy);
 		action.setGroovyScript("s.waitMs(400); s.accept(new TtsRequest(String.valueOf(context instanceof gg.xp.reevent.events.EventContext))); globals.foo = 'bar'");
 		trig1.addAction(action);
-		ez1.addTrigger(trig1);
+		ez1.addTrigger(null, trig1);
 
 		FakeTimeSource fts = new FakeTimeSource();
 		Instant now = Instant.now();
@@ -405,7 +405,7 @@ public class EasyTriggersTest {
 		ca.setText("{match.group('stuff')}");
 		ca.setTts("{match.group('stuff')}");
 		easy.addAction(ca);
-		ez1.addTrigger(easy);
+		ez1.addTrigger(null, easy);
 
 		TestEventCollector coll = new TestEventCollector();
 		EventDistributor dist = pico.getComponent(EventDistributor.class);
@@ -502,7 +502,7 @@ public class EasyTriggersTest {
 
 		trig1.addAction(action1);
 		trig1.addAction(action2);
-		ez1.addTrigger(trig1);
+		ez1.addTrigger(null, trig1);
 
 		FakeTimeSource fts = new FakeTimeSource();
 		Instant startTime = Instant.now();
@@ -554,7 +554,7 @@ public class EasyTriggersTest {
 
 		trig1.addAction(action1);
 		trig1.addAction(action2);
-		ez1.addTrigger(trig1);
+		ez1.addTrigger(null, trig1);
 
 		FakeTimeSource fts = new FakeTimeSource();
 		Instant startTime = Instant.now();
@@ -606,7 +606,7 @@ public class EasyTriggersTest {
 
 		trig1.addAction(action1);
 		trig1.addAction(action2);
-		ez1.addTrigger(trig1);
+		ez1.addTrigger(null, trig1);
 
 		FakeTimeSource fts = new FakeTimeSource();
 		Instant startTime = Instant.now();
@@ -671,7 +671,7 @@ public class EasyTriggersTest {
 
 		trig1.addAction(action1);
 		trig1.addAction(action2);
-		ez1.addTrigger(trig1);
+		ez1.addTrigger(null, trig1);
 
 		FakeTimeSource fts = new FakeTimeSource();
 		Instant startTime = Instant.now();

@@ -22,4 +22,9 @@ public class SourceEntityTypeFilter implements SimpleCondition<HasSourceEntity> 
 	public boolean test(HasSourceEntity hasSourceEntity) {
 		return type.test(hasSourceEntity.getSource());
 	}
+
+	@Override
+	public Class<HasSourceEntity> getEventType() {
+		return HasSourceEntity.class;
+	}
 }

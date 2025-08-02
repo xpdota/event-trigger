@@ -96,4 +96,9 @@ public class HitSeverityFilter implements SimpleCondition<HasEffects> {
 			return false;
 		});
 	}
+
+	@Override
+	public Class<HasEffects> getEventType() {
+		return HasEffects.class;
+	}
 }

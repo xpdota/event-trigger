@@ -33,4 +33,9 @@ public class TetherEntityTypeFilter implements SimpleCondition<TetherEvent> {
 			return false;
 		}
 	}
+
+	@Override
+	public Class<TetherEvent> getEventType() {
+		return TetherEvent.class;
+	}
 }

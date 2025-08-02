@@ -26,4 +26,9 @@ public class StatusStacksFilter implements SimpleCondition<HasStatusEffect> {
 	public String dynamicLabel() {
 		return "# of Stacks " + operator.getFriendlyName() + ' ' + expected;
 	}
+
+	@Override
+	public Class<HasStatusEffect> getEventType() {
+		return HasStatusEffect.class;
+	}
 }

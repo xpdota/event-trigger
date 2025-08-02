@@ -25,4 +25,9 @@ public class HeadmarkerRelativeIdFilter implements SimpleCondition<HeadMarkerEve
 	public boolean test(HeadMarkerEvent event) {
 		return operator.checkLong(event.getMarkerOffset(), expected);
 	}
+
+	@Override
+	public Class<HeadMarkerEvent> getEventType() {
+		return HeadMarkerEvent.class;
+	}
 }

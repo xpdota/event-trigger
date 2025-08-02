@@ -29,4 +29,9 @@ public class NpcYellIdFilter implements SimpleCondition<NpcYellEvent> {
 	public String dynamicLabel() {
 		return String.format("NPC Yell ID %s 0x%x (%s)", operator.getFriendlyName(), expected, expected);
 	}
+
+	@Override
+	public Class<NpcYellEvent> getEventType() {
+		return NpcYellEvent.class;
+	}
 }

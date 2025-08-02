@@ -26,4 +26,9 @@ public class LogLineNumberFilter implements SimpleCondition<ACTLogLineEvent> {
 	public String dynamicLabel() {
 		return "Log Line Number " + operator.getFriendlyName() + ' ' + expected;
 	}
+
+	@Override
+	public Class<ACTLogLineEvent> getEventType() {
+		return ACTLogLineEvent.class;
+	}
 }

@@ -26,4 +26,5 @@ public class ChatLineTypeFilter implements SimpleCondition<ChatLineEvent> {
 	public String dynamicLabel() {
 		return "Chat Line Number " + operator.getFriendlyName() + ' ' + expected;
 	}
+
 }

@@ -25,4 +25,9 @@ public class TargetCountFilter implements SimpleCondition<HasTargetIndex> {
 	public String dynamicLabel() {
 		return "Target Count " + operator.getFriendlyName() + ' ' + expected;
 	}
+
+	@Override
+	public Class<HasTargetIndex> getEventType() {
+		return HasTargetIndex.class;
+	}
 }
