@@ -10,6 +10,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.FailedDeserializationTrigger;
 import gg.xp.xivsupport.models.XivAbility;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
@@ -312,6 +313,19 @@ public class EasyTriggersPersistenceTest2 {
 		MatcherAssert.assertThat(mapper.readTree(ez.exportToString(ez.getChildTriggers())), Matchers.equalTo(mapper.readTree(triggerDataNew)));
 	}
 
+	@Test
+	void newPersistenceTestWithFail() throws JsonProcessingException {
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		pers.save("easy-triggers.my-triggers-2", triggerDataNewWithNonexistentCOndition);
+
+		MutablePicoContainer pico = ExampleSetup.setup(pers);
+
+		EasyTriggers ez = pico.getComponent(EasyTriggers.class);
+		MatcherAssert.assertThat(ez.getChildTriggers(), Matchers.hasSize(2));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(0), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(1), Matchers.instanceOf(FailedDeserializationTrigger.class));
+	}
+
 	@Language("JSON")
 	private static final String triggerDataOldLegacy = """
 			[
@@ -487,4 +501,66 @@ public class EasyTriggersPersistenceTest2 {
 			  }
 			]""";
 
+	private static final String triggerDataNewWithNonexistentCOndition = """
+			[
+			  {
+			    "type": "trigger",
+			    "enabled": true,
+			    "name": "Rez Start",
+			    "concurrency": "BLOCK_NEW",
+			    "eventType": "gg.xp.xivsupport.events.actlines.events.AbilityCastStart",
+			    "conditions": [
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter",
+			        "operator": "EQ",
+			        "expected": 173
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.SourcePartyMemberFilter",
+			        "invert": false
+			      }
+			    ],
+			    "actions": [
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.actions.DurationBasedCalloutAction",
+			        "tts": "{event.source} is raising {event.target}",
+			        "text": "{event.source} is raising {event.target} ({event.estimatedRemainingDuration})",
+			        "colorRaw": -993263514,
+			        "plusDuration": true,
+			        "hangTime": 1234,
+			        "useIcon": true,
+			        "uuid": "883ecb35-8324-411b-9d0f-cd131de42a57"
+			      }
+			    ]
+			  },
+			  {
+			    "type": "trigger",
+			    "enabled": true,
+			    "name": "Give me a name",
+			    "concurrency": "BLOCK_NEW",
+			    "eventType": "gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent",
+			    "conditions": [
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.AbilityIdFilter",
+			        "operator": "EQ",
+			        "expected": 173
+			      },
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.conditions.NonExistent",
+			        "invert": false
+			      }
+			    ],
+			    "actions": [
+			      {
+			        "@class": "gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction",
+			        "tts": "{event.source} just raised {event.target}",
+			        "text": "{event.source} just raised {event.target}",
+			        "colorRaw": -6684928,
+			        "hangTime": 3333,
+			        "useIcon": true,
+			        "uuid": "4fcdcfb5-4f74-4a49-b425-2faf7460caae"
+			      }
+			    ]
+			  }
+			]""";
 }

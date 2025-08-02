@@ -2,11 +2,16 @@ package gg.xp.xivsupport.events.triggers.easytriggers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.BeanProperty;
+import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.InjectableValues;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -107,6 +112,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTriggerDeserializer;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionTarget;
@@ -166,6 +172,17 @@ public final class EasyTriggers implements HasChildTriggers {
 				return inject(beanProperty.getType().getRawClass());
 			}
 		});
+		SimpleModule failModule = new SimpleModule();
+		failModule.setDeserializerModifier(new BeanDeserializerModifier() {
+			@Override
+			public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc, JsonDeserializer<?> deserializer) {
+				if (BaseTrigger.class.isAssignableFrom(beanDesc.getBeanClass())) {
+					return new BaseTriggerDeserializer(deserializer);
+				}
+				return deserializer;
+			}
+		});
+		mapper.registerModule(failModule);
 
 		BooleanSetting legacyMigrationDone = new BooleanSetting(pers, "easy-triggers.legacy-migration-done", false);
 
