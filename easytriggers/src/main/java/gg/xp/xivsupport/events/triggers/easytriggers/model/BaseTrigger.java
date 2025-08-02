@@ -21,18 +21,20 @@ import org.jetbrains.annotations.Nullable;
 		@JsonSubTypes.Type(value = EasyTrigger.class, name = "trigger"),
 		@JsonSubTypes.Type(value = TriggerFolder.class, name = "folder"),
 })
+@JsonDeserialize(using = BaseTriggerDeserializer2.class)
 public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> permits TriggerFolder, EasyTrigger, FailedDeserializationTrigger {
 
-	@JsonProperty(defaultValue = "true")
 	private boolean enabled = true;
 	private String name = "Give me a name";
 
 	public abstract void recalc();
 
+	@JsonProperty
 	public boolean isEnabled() {
 		return enabled;
 	}
 
+	@JsonProperty(defaultValue = "true")
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;

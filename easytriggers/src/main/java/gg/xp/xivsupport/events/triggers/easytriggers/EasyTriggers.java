@@ -177,7 +177,7 @@ public final class EasyTriggers implements HasChildTriggers {
 			@Override
 			public JsonDeserializer<?> modifyDeserializer(DeserializationConfig config, BeanDescription beanDesc, JsonDeserializer<?> deserializer) {
 				if (BaseTrigger.class.isAssignableFrom(beanDesc.getBeanClass())) {
-					return new BaseTriggerDeserializer(deserializer);
+//					return new BaseTriggerDeserializer(deserializer);
 				}
 				return deserializer;
 			}

@@ -316,13 +316,14 @@ public class EasyTriggersPersistenceTest2 {
 	@Test
 	void newPersistenceTestWithFail() throws JsonProcessingException {
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
-		pers.save("easy-triggers.my-triggers-2", triggerDataNewWithNonexistentCOndition);
+		pers.save("easy-triggers.my-triggers-2", triggerDataNewWithNonexistentCondition);
 
 		MutablePicoContainer pico = ExampleSetup.setup(pers);
 
 		EasyTriggers ez = pico.getComponent(EasyTriggers.class);
 		MatcherAssert.assertThat(ez.getChildTriggers(), Matchers.hasSize(2));
 		MatcherAssert.assertThat(ez.getChildTriggers().get(0), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(0).getName(), Matchers.equalTo("Rez Start"));
 		MatcherAssert.assertThat(ez.getChildTriggers().get(1), Matchers.instanceOf(FailedDeserializationTrigger.class));
 	}
 
@@ -501,7 +502,7 @@ public class EasyTriggersPersistenceTest2 {
 			  }
 			]""";
 
-	private static final String triggerDataNewWithNonexistentCOndition = """
+	private static final String triggerDataNewWithNonexistentCondition = """
 			[
 			  {
 			    "type": "trigger",
@@ -535,8 +536,8 @@ public class EasyTriggersPersistenceTest2 {
 			  },
 			  {
 			    "type": "trigger",
-			    "enabled": true,
-			    "name": "Give me a name",
+			    "enabled": false,
+			    "name": "Trigger which fails",
 			    "concurrency": "BLOCK_NEW",
 			    "eventType": "gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent",
 			    "conditions": [

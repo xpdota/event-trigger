@@ -2,8 +2,13 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.BeanDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +31,39 @@ public class BaseTriggerDeserializer extends StdDeserializer<BaseTrigger<?>> {
 
 	@Override
 	public BaseTrigger<?> deserialize(JsonParser parser, DeserializationContext ctx) throws IOException, JacksonException {
+		JsonNode node = parser.readValueAsTree();
 		try {
-			return (BaseTrigger<?>) defaultDeserializer.deserialize(parser, ctx);
+			// Try to use the standard deserialization process
+			ObjectMapper mapper = (ObjectMapper) parser.getCodec();
+			// Create a new parser from the node to avoid parser state issues
+			JsonParser newParser = mapper.treeAsTokens(node);
+			// Move to the first token
+			newParser.nextToken();
+
+			JavaType valueType = getValueType(ctx);
+			BeanDescription desc = ctx.getConfig().introspect(valueType);
+			JsonDeserializer<Object> deser = ctx.getFactory().createBeanDeserializer(ctx, valueType, desc);
+
+			// Use the standard deserialization process
+			if (defaultDeserializer instanceof BeanDeserializer bd) {
+				BaseTrigger<?> result = (BaseTrigger<?>) deser.deserialize(newParser, ctx);
+				return result;
+			}
+			else {
+				BaseTrigger<?> result = (BaseTrigger<?>) defaultDeserializer.deserialize(newParser, ctx);
+				return result;
+			}
+		}
+		catch (StackOverflowError t) {
+			// Plugging a StackOverflow into the logger can cause yet another stack overflow, so just toString it.
+			log.error("Error deserializing trigger: {}", t.toString());
+			// Return a FailedDeserializationTrigger with the original JSON and error
+			return new FailedDeserializationTrigger(node, t);
 		}
 		catch (Throwable t) {
-			log.info("Error deserializing trigger", t);
-			return new FailedDeserializationTrigger(ctx.readTree(parser), t);
+			log.error("Error deserializing trigger", t);
+			// Return a FailedDeserializationTrigger with the original JSON and error
+			return new FailedDeserializationTrigger(node, t);
 		}
 	}
 
