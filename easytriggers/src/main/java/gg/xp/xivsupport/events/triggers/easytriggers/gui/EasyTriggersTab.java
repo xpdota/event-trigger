@@ -137,7 +137,7 @@ public class EasyTriggersTab implements PluginTab {
 			controlsPanel.add(EtGuiUtils.compactButton("Refresh", this::refresh));
 			controlsPanel.add(compactButton("Delete Selected", this::delete, currentSelections::hasSelection));
 			controlsPanel.add(compactButton("Clone Trigger", this::cloneCurrent, currentSelections::hasConsistentParentSelection));
-			controlsPanel.add(compactButton("Export Selected", this::exportCurrent, currentSelections::hasSelection));
+			controlsPanel.add(compactButton("Export Selected", this::exportCurrent, currentSelections::hasNonSelfNestedSelection));
 			controlsPanel.add(EtGuiUtils.compactButton("Import Triggers", this::showEasyImportDialog));
 			controlsPanel.add(EtGuiUtils.compactButton("Import Legacy ACT Triggers", this::showActImportDialog));
 			bottomPanel.add(controlsPanel, BorderLayout.NORTH);
