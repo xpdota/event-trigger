@@ -199,19 +199,6 @@ public final class EasyTriggers implements HasChildTriggers {
 			this.triggers = new ArrayList<>(setting.getItems());
 		}
 
-		if (false) {
-			TriggerFolder testFolder = new TriggerFolder();
-			testFolder.setName("Test Folder");
-			this.triggers = new ArrayList<>();
-			this.triggers.add(0, testFolder);
-			TriggerFolder testFolder2 = new TriggerFolder();
-			testFolder2.setName("Test Folder 2");
-			EasyTrigger<AbilityCastStart> trigger = getEventDescription(AbilityCastStart.class).newDefaultInst();
-			EasyTrigger<BuffApplied> trigger2 = getEventDescription(BuffApplied.class).newDefaultInst();
-			testFolder.addChildTrigger(trigger);
-			testFolder2.addChildTrigger(trigger2);
-			testFolder.addChildTrigger(testFolder2);
-		}
 		recalc();
 	}
 
