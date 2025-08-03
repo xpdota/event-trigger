@@ -46,7 +46,7 @@ public class EasyTriggerContext {
 		this(context, (String) null);
 	}
 
-	public EasyTriggerContext(EventContext context, EasyTrigger<?> trigger) {
+	public EasyTriggerContext(EventContext context, BaseTrigger<?> trigger) {
 		this(context, trigger.getName());
 		addVariable(SOURCE_EASY_TRIGGER_KEY, trigger);
 	}

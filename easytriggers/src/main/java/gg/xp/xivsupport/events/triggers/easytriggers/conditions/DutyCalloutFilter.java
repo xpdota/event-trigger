@@ -5,7 +5,6 @@ import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
 import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerContext;
-import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,5 +51,10 @@ public class DutyCalloutFilter implements Condition<ProcessedCalloutEvent> {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public Class<ProcessedCalloutEvent> getEventType() {
+		return ProcessedCalloutEvent.class;
 	}
 }

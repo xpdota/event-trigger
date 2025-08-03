@@ -5,6 +5,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.model.AcceptsSaveCallback;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerFolder;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
@@ -28,22 +29,28 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 		this.trigger = trigger;
 		this.saveCallback = saveCallback;
 		setPreferredSize(null);
-//		setLayout(new GridBagLayout());
-//		GridBagConstraints c = GuiUtil.defaultGbc();
-//		c.fill = GridBagConstraints.NONE;
-//		c.anchor = GridBagConstraints.WEST;
-//		JButton newButton = new JButton("New");
-//		add(newButton, c);
-//		c.gridy++;
-//		newButton.addActionListener(l -> addNewCondition());
-//		trigger.getConditions().forEach(cond -> {
-//			add(new ConditionPanel<>(cond), c);
-//			c.gridy++;
-//		});
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-		JButton newButton = new JButton("New");
-		add(newButton);
-		newButton.addActionListener(l -> addNewCondition());
+
+		var buttonsArea = new JPanel();
+		buttonsArea.setLayout(new GridBagLayout());
+		GridBagConstraints c = GuiUtil.defaultGbc();
+		c.anchor = GridBagConstraints.WEST;
+		c.fill = GridBagConstraints.NONE;
+		c.weightx = 0;
+		c.insets = new Insets(0, 2, 2, 3);
+		buttonsArea.setAlignmentX(LEFT_ALIGNMENT);
+
+		JButton newButton = EtGuiUtils.smallButton("New", this::addNewCondition);
+		buttonsArea.add(newButton, c);
+		JButton pasteButton = EtGuiUtils.smallButton("Paste", this::tryPasteCondition);
+		c.gridx++;
+		buttonsArea.add(pasteButton, c);
+		c.gridx++;
+		c.weightx = 1;
+		buttonsArea.add(Box.createHorizontalGlue(), c);
+
+		add(buttonsArea);
+
 		trigger.getConditions().forEach(cond -> {
 			add(new ConditionPanel<>(cond));
 		});
@@ -68,31 +75,73 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 		}
 	}
 
+	private void showError(String msg) {
+		JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
+	}
+
+	private void tryPasteCondition() {
+		String text = GuiUtil.getTextFromClipboard();
+		if (text == null) {
+			showError("No condition on clipboard");
+			return;
+		}
+		Condition<?> condition;
+		try {
+			condition = backend.importCondition(text);
+		}
+		catch (Exception e) {
+			showError("No condition on clipboard");
+			return;
+		}
+		if (condition == null) {
+			showError("No condition on clipboard");
+			return;
+		}
+		Class<?> triggerType = trigger.getEventType();
+		Class<?> conditionType = condition.getEventType();
+		if (!conditionType.isAssignableFrom(triggerType)) {
+			if (trigger instanceof TriggerFolder) {
+				showError("Condition type " + condition.getClass().getSimpleName() + " is not applicable to a trigger folder");
+			}
+			else {
+				showError("Condition type " + condition.getClass().getSimpleName() + " is not applicable to a trigger for " + triggerType.getSimpleName());
+			}
+			return;
+		}
+		trigger.addCondition((Condition<? super X>) condition);
+		add(new ConditionPanel<>(condition));
+		revalidate();
+		saveCallback.run();
+	}
+
 	private class ConditionPanel<Y> extends JPanel {
 
 		private final Condition<Y> condition;
 
 		ConditionPanel(Condition<Y> condition) {
 			this.condition = condition;
-			setAlignmentX(Component.LEFT_ALIGNMENT);
-			setBorder(null);
+			setAlignmentX(LEFT_ALIGNMENT);
 			setLayout(new GridBagLayout());
 			GridBagConstraints c = GuiUtil.defaultGbc();
 			c.anchor = GridBagConstraints.WEST;
 			c.fill = GridBagConstraints.NONE;
 			c.weightx = 0;
-			JButton deleteButton = new JButton("Delete");
-//			JPanel buttonHolder = new JPanel();
-//			buttonHolder.add(deleteButton);
-//			add(buttonHolder, c);
+
+			c.insets = new Insets(2, 2, 2, 3);
+			JButton deleteButton = EtGuiUtils.smallButton("Delete", this::delete);
 			add(deleteButton, c);
+			c.gridx++;
+			JButton cutButton = EtGuiUtils.smallButton("Cut", this::cut);
+			add(cutButton, c);
+			c.gridx++;
+			JButton copyButton = EtGuiUtils.smallButton("Copy", this::copy);
+			add(copyButton, c);
 			c.gridx++;
 			JLabel labelLabel = new JLabel(condition.fixedLabel());
 			add(labelLabel, c);
 			c.gridx++;
 			c.weightx = 1;
 			c.fill = GridBagConstraints.HORIZONTAL;
-			deleteButton.addActionListener(l -> this.delete());
 			Component component;
 			Class<? extends Condition> condClass = condition.getClass();
 			ConditionDescription<Condition<Y>, Y> desc = backend.getConditionDescription(condClass);
@@ -115,8 +164,10 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 			if (component instanceof AcceptsSaveCallback asc) {
 				asc.setSaveCallback(saveCallback);
 			}
-//			c.weightx = 1;
-//			add(Box.createHorizontalGlue(), c);
+		}
+
+		private void copy() {
+			GuiUtil.copyTextToClipboard(backend.exportCondition(condition));
 		}
 
 		private void delete() {
@@ -124,6 +175,12 @@ public class ConditionsPanel<X> extends TitleBorderFullsizePanel {
 			ConditionsPanel.this.remove(this);
 			ConditionsPanel.this.revalidate();
 		}
+
+		private void cut() {
+			copy();
+			delete();
+		}
+
 	}
 
 }

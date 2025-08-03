@@ -3,7 +3,6 @@ package gg.xp.xivsupport.events.triggers.easytriggers;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.callouts.ModifiableCallout;
 import gg.xp.xivsupport.callouts.ModifiedCalloutHandle;
-import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.callouts.gui.ExtraCalloutAction;
 import gg.xp.xivsupport.callouts.gui.ExtraCalloutActionInstance;
 import gg.xp.xivsupport.events.triggers.easytriggers.actions.CalloutAction;
@@ -15,8 +14,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Objects;
 
 @ScanMe
 public class EasyTriggerDutyCalloutExtraAction implements ExtraCalloutAction {
@@ -75,7 +72,7 @@ public class EasyTriggerDutyCalloutExtraAction implements ExtraCalloutAction {
 				easyTrigger.setEventType(ProcessedCalloutEvent.class);
 				easyTrigger.addCondition(dcf);
 				easyTrigger.addAction(ca);
-				et.addTrigger(easyTrigger);
+				et.addTrigger(null, easyTrigger);
 				ett.bringToFront();
 				ett.selectTrigger(easyTrigger);
 			}

@@ -14,7 +14,6 @@ import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.callouts.audio.SoundFilesManager;
 import gg.xp.xivsupport.callouts.audio.gui.SoundFileTab;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
@@ -70,6 +69,7 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DurationFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.DutyCalloutFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.EntityType;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyEventFilter;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.GroovyFolderFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerAbsoluteIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HeadmarkerRelativeIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.HitSeverityFilter;
@@ -100,26 +100,32 @@ import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.CompoundConditionEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GenericFieldEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFilterEditor;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui.GroovyFolderFilterEditor;
 import gg.xp.xivsupport.events.triggers.easytriggers.creators.EasyTriggerCreationQuestions;
 import gg.xp.xivsupport.events.triggers.easytriggers.events.EasyTriggersInitEvent;
 import gg.xp.xivsupport.events.triggers.easytriggers.gui.CalloutActionPanel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Action;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ActionDescription;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.Condition;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionDescription;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.ConditionTarget;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTriggerMigrationHelper;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescriptionImpl;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.HasChildTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableActions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasMutableConditions;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerFolder;
 import gg.xp.xivsupport.groovy.GroovyManager;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.tables.filters.ValidationError;
 import gg.xp.xivsupport.models.CombatantType;
 import gg.xp.xivsupport.models.XivCombatant;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
 import gg.xp.xivsupport.speech.ProcessedCalloutEvent;
 import org.jetbrains.annotations.Nullable;
@@ -133,22 +139,24 @@ import java.util.Collections;
 import java.util.List;
 
 @ScanMe
-public final class EasyTriggers {
+public final class EasyTriggers implements HasChildTriggers {
 	private static final Logger log = LoggerFactory.getLogger(EasyTriggers.class);
-	private static final String settingKey = "easy-triggers.my-triggers";
-	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers";
+
+	private static final String legacySettingKey = "easy-triggers.my-triggers";
+	private static final String legacyFailedTriggersSettingKey = "easy-triggers.failed-triggers";
+
+	private static final String settingKey = "easy-triggers.my-triggers-2";
+	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers-2";
 	private final ObjectMapper mapper = new ObjectMapper();
 
-	private final PersistenceProvider pers;
 	private final PicoContainer pico;
 	private final XivState state;
 	private final EventMaster master;
-	private final CustomJsonListSetting<EasyTrigger<?>> setting;
+	private final CustomJsonListSetting<BaseTrigger<?>> setting;
 
-	private ArrayList<EasyTrigger<?>> triggers;
+	private ArrayList<BaseTrigger<?>> triggers;
 
 	public EasyTriggers(PicoContainer pico, PersistenceProvider pers, XivState state, EventMaster master) {
-		this.pers = pers;
 		this.pico = pico;
 		this.state = state;
 		this.master = master;
@@ -158,39 +166,66 @@ public final class EasyTriggers {
 				return inject(beanProperty.getType().getRawClass());
 			}
 		});
-		this.setting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
+
+		BooleanSetting legacyMigrationDone = new BooleanSetting(pers, "easy-triggers.legacy-migration-done", false);
+
+		setting = CustomJsonListSetting.<BaseTrigger<?>>builder(pers, new TypeReference<>() {
 				}, settingKey, failedTriggersSettingKey)
 				.withMapper(mapper)
 				.postConstruct(this::doLegacyMigration)
 				.build();
 		setting.tryRecoverFailures();
-		// TODO: Having lots of EasyTriggers can inflate startup times
-		this.triggers = new ArrayList<>(setting.getItems());
+
+
+		// TODO: tests for this
+		if (!legacyMigrationDone.get()) {
+			CustomJsonListSetting<EasyTrigger<?>> legacySetting = CustomJsonListSetting.<EasyTrigger<?>>builder(pers, new TypeReference<>() {
+					}, legacySettingKey, legacyFailedTriggersSettingKey)
+					.withMapper(mapper)
+					.postConstruct(this::doLegacyMigration)
+					.build();
+			legacySetting.tryRecoverFailures();
+			List<EasyTrigger<?>> triggersToMigrate = legacySetting.getItems();
+			if (!triggersToMigrate.isEmpty()) {
+				triggers = new ArrayList<>(triggersToMigrate);
+				setting.setItems(triggers);
+			}
+			else {
+				this.triggers = new ArrayList<>(setting.getItems());
+			}
+			legacyMigrationDone.set(true);
+		}
+		else {
+			this.triggers = new ArrayList<>(setting.getItems());
+		}
+
 		recalc();
 	}
 
 	@SuppressWarnings("unchecked")
-	private <X> void doLegacyMigration(JsonNode node, EasyTrigger<X> trigger) {
-		EasyTriggerMigrationHelper migration = mapper.convertValue(node, EasyTriggerMigrationHelper.class);
-		// legacy migration
-		if (migration.tts != null || migration.text != null) {
-			if (migration.useDuration && HasDuration.class.isAssignableFrom(trigger.getEventType())) {
-				DurationBasedCalloutAction action = new DurationBasedCalloutAction();
-				action.setText(migration.text);
-				action.setTts(migration.tts);
-				action.setColorRaw(migration.colorRaw);
-				action.setUseIcon(migration.useIcon);
-				action.setHangTime(migration.hangTime);
-				trigger.addAction((Action<? super X>) action);
-			}
-			else {
-				CalloutAction action = new CalloutAction();
-				action.setText(migration.text);
-				action.setTts(migration.tts);
-				action.setColorRaw(migration.colorRaw);
-				action.setUseIcon(migration.useIcon);
-				action.setHangTime(migration.hangTime);
-				trigger.addAction((Action<? super X>) action);
+	private <X> void doLegacyMigration(JsonNode node, BaseTrigger<X> base) {
+		if (base instanceof EasyTrigger<X> trigger) {
+			EasyTriggerMigrationHelper migration = mapper.convertValue(node, EasyTriggerMigrationHelper.class);
+			// legacy migration
+			if (migration.tts != null || migration.text != null) {
+				if (migration.useDuration && HasDuration.class.isAssignableFrom(trigger.getEventType())) {
+					DurationBasedCalloutAction action = new DurationBasedCalloutAction();
+					action.setText(migration.text);
+					action.setTts(migration.tts);
+					action.setColorRaw(migration.colorRaw);
+					action.setUseIcon(migration.useIcon);
+					action.setHangTime(migration.hangTime);
+					trigger.addAction((Action<? super X>) action);
+				}
+				else {
+					CalloutAction action = new CalloutAction();
+					action.setText(migration.text);
+					action.setTts(migration.tts);
+					action.setColorRaw(migration.colorRaw);
+					action.setUseIcon(migration.useIcon);
+					action.setHangTime(migration.hangTime);
+					trigger.addAction((Action<? super X>) action);
+				}
 			}
 		}
 	}
@@ -200,12 +235,53 @@ public final class EasyTriggers {
 		return pico.getComponent(clazz);
 	}
 
-	public String exportToString(List<EasyTrigger<?>> toExport) {
+	@SuppressWarnings({"SerializableNonStaticInnerClassWithoutSerialVersionUID", "ClassExtendsConcreteCollection", "SerializableInnerClassWithNonSerializableOuterClass"})
+	public String exportToString(List<? extends BaseTrigger<?>> toExport) {
 		try {
-			return mapper.writeValueAsString(toExport);
+			// We have to do this weird jank because Jackson won't include the type information
+			// if we give it a raw list. It thinks that it's a List<Object> due to type erasure, so
+			// it doesn't bother including polymorphic typing information.
+			return mapper.writeValueAsString(new ArrayList<BaseTrigger<?>>(toExport) {
+			});
 		}
 		catch (JsonProcessingException e) {
 			throw new RuntimeException("Error exporting trigger", e);
+		}
+	}
+
+	public String exportCondition(Condition<?> condition) {
+		try {
+			return mapper.writeValueAsString(condition);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public String exportAction(Action<?> action) {
+		try {
+			return mapper.writeValueAsString(action);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public Condition<?> importCondition(String input) {
+		try {
+			return mapper.readValue(input, Condition.class);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public Action<?> importAction(String input) {
+		try {
+			return mapper.readValue(input, Action.class);
+		}
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -226,6 +302,26 @@ public final class EasyTriggers {
 		}
 	}
 
+	public List<BaseTrigger<?>> importFromString2(String string) {
+		try {
+			List<JsonNode> nodes = mapper.readValue(string, new TypeReference<>() {
+			});
+			List<BaseTrigger<?>> out = new ArrayList<>(nodes.size());
+			for (JsonNode node : nodes) {
+				BaseTrigger<?> trigger = mapper.convertValue(node, BaseTrigger.class);
+				if (trigger instanceof EasyTrigger et) {
+					doLegacyMigration(node, et);
+				}
+				out.add(trigger);
+			}
+			return out;
+		}
+		catch (JsonProcessingException e) {
+			throw new ValidationError("Error importing trigger: " + e.getMessage(), e);
+		}
+	}
+
+
 	private void save() {
 		recalc();
 		setting.setItems(triggers);
@@ -236,7 +332,8 @@ public final class EasyTriggers {
 	}
 
 	private void recalc() {
-		triggers.forEach(EasyTrigger::recalc);
+		triggers.forEach(BaseTrigger::recalc);
+		triggers.forEach(trigger -> trigger.setParent(this));
 	}
 
 	@HandleEvents
@@ -251,6 +348,7 @@ public final class EasyTriggers {
 	@HandleEvents
 	public void runEasyTriggers(EventContext context, Event event) {
 		if (event instanceof EasyTriggersInitEvent etie) {
+			// TODO: confirm this mechanism for new ETs
 			EasyTrigger<EasyTriggersInitEvent> triggerToInit = etie.getTriggerToInit();
 			if (triggerToInit != null) {
 				triggerToInit.handleEvent(context, event);
@@ -267,22 +365,61 @@ public final class EasyTriggers {
 		});
 	}
 
-	public List<EasyTrigger<?>> getTriggers() {
-		return Collections.unmodifiableList(triggers);
-	}
-
-	@SuppressWarnings("unchecked")
-	public void addTrigger(EasyTrigger<?> trigger) {
-		triggers.add(trigger);
+	public void addTrigger(@Nullable HasChildTriggers parent, BaseTrigger<?> trigger) {
+		if (parent == null) {
+			addChildTrigger(trigger);
+		}
+		else {
+			parent.addChildTrigger(trigger);
+		}
 		save();
-		if (trigger.getEventType().equals(EasyTriggersInitEvent.class)) {
-			initSpecificTrigger((EasyTrigger<EasyTriggersInitEvent>) trigger);
+		if (trigger instanceof EasyTrigger<?> et && et.getEventType().equals(EasyTriggersInitEvent.class)) {
+			initSpecificTrigger((EasyTrigger<EasyTriggersInitEvent>) et);
 		}
 	}
 
-	public void removeTrigger(EasyTrigger<?> trigger) {
-		triggers.remove(trigger);
+	public void removeTrigger(@Nullable HasChildTriggers parent, BaseTrigger<?> trigger) {
+		if (parent == null) {
+			this.removeChildTriggers(trigger);
+		}
+		else {
+			parent.removeChildTriggers(trigger);
+		}
 		save();
+	}
+
+	@Override
+	public List<BaseTrigger<?>> getChildTriggers() {
+		return Collections.unmodifiableList(triggers);
+	}
+
+	@Override
+	public void setChildTriggers(List<BaseTrigger<?>> children) {
+		triggers = new ArrayList<>(children);
+		recalc();
+	}
+
+	@Override
+	public void addChildTrigger(BaseTrigger<?> child) {
+		triggers.add(child);
+		recalc();
+	}
+
+	@Override
+	public void addChildTrigger(BaseTrigger<?> child, int index) {
+		triggers.add(index, child);
+		recalc();
+	}
+
+	@Override
+	public void removeChildTriggers(BaseTrigger<?> child) {
+		triggers.remove(child);
+		recalc();
+	}
+
+	@Override
+	public Class<?> getEventType() {
+		return Object.class;
 	}
 
 	// Be sure to add new types to EasyTriggersTest
@@ -462,9 +599,10 @@ public final class EasyTriggers {
 			new ConditionDescription<>(HitSeverityFilter.class, HasEffects.class, "Hit Severity (Crit/Direct Hit)", HitSeverityFilter::new, this::generic),
 			new ConditionDescription<>(TargetabilityChangeFilter.class, TargetabilityUpdate.class, "Combatant becomes (un)targetable", TargetabilityChangeFilter::new, this::generic),
 			new ConditionDescription<>(NpcYellIdFilter.class, NpcYellEvent.class, "NPC Yell ID", NpcYellIdFilter::new, this::generic),
-			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), GroovyFilterEditor::new),
-			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic),
-			new ConditionDescription<>(PullDurationFilter.class, Object.class, "Restrict based on pull/combat duration", () -> new PullDurationFilter(inject(PullTracker.class)), this::generic)
+			new ConditionDescription<>(GroovyEventFilter.class, Event.class, "Make your own filter code with Groovy", () -> new GroovyEventFilter(inject(GroovyManager.class)), GroovyFilterEditor::new, ConditionTarget.TRIGGER_ONLY),
+			new ConditionDescription<>(GroovyFolderFilter.class, Object.class, "Groovy Filter for folders (non-event-based)", () -> new GroovyFolderFilter(inject(GroovyManager.class)), GroovyFolderFilterEditor::new, ConditionTarget.FOLDER_ONLY),
+			new ConditionDescription<>(ZoneIdFilter.class, Object.class, "Restrict the Zone ID in which this trigger may run", () -> new ZoneIdFilter(inject(XivState.class)), this::generic, ConditionTarget.BOTH),
+			new ConditionDescription<>(PullDurationFilter.class, Object.class, "Restrict based on pull/combat duration", () -> new PullDurationFilter(inject(PullTracker.class)), this::generic, ConditionTarget.BOTH)
 	));
 
 	// XXX - DO NOT CHANGE NAMES OF THESE CLASSES OR PACKAGE PATH - FQCN IS PART OF DESERIALIZATION!!!
@@ -483,7 +621,7 @@ public final class EasyTriggers {
 	));
 
 	{
-		registerConditionType(new ConditionDescription<>(OrFilter.class, Object.class, "Logical OR or multiple conditions", OrFilter::new, (action, trigger) -> new CompoundConditionEditor(this, action)));
+		registerConditionType(new ConditionDescription<>(OrFilter.class, Object.class, "Logical OR or multiple conditions", OrFilter::new, (action, trigger) -> new CompoundConditionEditor(this, action), ConditionTarget.BOTH));
 		registerActionType(new ActionDescription<>(ConditionalAction.class, BaseEvent.class, "If/Else Conditional Action", ConditionalAction::new, (action, trigger) -> new ConditionalActionEditor(this, action)));
 	}
 
@@ -501,7 +639,18 @@ public final class EasyTriggers {
 	}
 
 	public <X> List<ConditionDescription<?, ?>> getConditionsApplicableTo(HasMutableConditions<X> trigger) {
-		return conditions.stream().filter(cdesc -> cdesc.appliesTo(trigger.classForConditions())).toList();
+		return conditions.stream()
+				.filter(cdesc -> cdesc.appliesTo(trigger.classForConditions()))
+				.filter(cdesc -> {
+					// Filter based on the target type
+					if (trigger instanceof EasyTrigger) {
+						return cdesc.target() == ConditionTarget.TRIGGER_ONLY || cdesc.target() == ConditionTarget.BOTH;
+					} else if (trigger instanceof TriggerFolder) {
+						return cdesc.target() == ConditionTarget.FOLDER_ONLY || cdesc.target() == ConditionTarget.BOTH;
+					}
+					return true; // Default to showing all conditions for unknown trigger types
+				})
+				.toList();
 	}
 
 	public List<ActionDescription<?, ?>> getActions() {
@@ -691,7 +840,6 @@ public final class EasyTriggers {
 			TargetPartyMemberFilter tpmf = new TargetPartyMemberFilter(state);
 			return Collections.singletonList(tpmf);
 		}
-		// TODO: party member
 		else if (target.isPc()) {
 			TargetEntityTypeFilter etf = new TargetEntityTypeFilter();
 			etf.type = EntityType.ANY_PLAYER;
@@ -705,6 +853,11 @@ public final class EasyTriggers {
 		else {
 			return Collections.emptyList();
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "EasyTriggersRoot()";
 	}
 
 }

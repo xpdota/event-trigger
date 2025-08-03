@@ -1,11 +1,9 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
 import gg.xp.reevent.events.EventDistributor;
-import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.events.InitEvent;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.xivsupport.events.actlines.events.ChatLineEvent;
-import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.speech.TtsRequest;
@@ -28,7 +26,7 @@ public class EasyTriggersPersistenceTest {
 		pico.getComponent(EventDistributor.class).acceptEvent(new InitEvent());
 
 		EasyTriggers et = pico.getComponent(EasyTriggers.class);
-		Assert.assertEquals(et.getTriggers().size(), 7);
+		Assert.assertEquals(et.getChildTriggers().size(), 7);
 
 		EventDistributor dist = pico.getComponent(EventDistributor.class);
 

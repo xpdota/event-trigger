@@ -63,4 +63,9 @@ public class ZoneIdFilter implements SimpleCondition<Object> {
 		}
 		return operator.checkLong(currentZone, expected);
 	}
+
+	@Override
+	public Class<Object> getEventType() {
+		return Object.class;
+	}
 }
