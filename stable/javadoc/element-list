@@ -70,6 +70,7 @@ gg.xp.xivsupport.events.triggers.easytriggers.conditions.gui
 gg.xp.xivsupport.events.triggers.easytriggers.creators
 gg.xp.xivsupport.events.triggers.easytriggers.events
 gg.xp.xivsupport.events.triggers.easytriggers.gui
+gg.xp.xivsupport.events.triggers.easytriggers.gui.tree
 gg.xp.xivsupport.events.triggers.easytriggers.model
 gg.xp.xivsupport.events.triggers.jails
 gg.xp.xivsupport.events.triggers.jails.gui
