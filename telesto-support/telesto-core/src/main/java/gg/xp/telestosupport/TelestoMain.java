@@ -140,10 +140,10 @@ public class TelestoMain implements FilteredEventHandler {
 			return null;
 		}
 		String body;
+		String logLabel = msg.getLogLabel();
 		try {
 			body = mapper.writeValueAsString(msg.getJson());
 			log.trace("Sending Telesto message: {}", body);
-			String logLabel = msg.getLogLabel();
 			if (logLabel != null) {
 				log.info("Sending Telesto message labeled '{}'", logLabel);
 			}
@@ -155,9 +155,15 @@ public class TelestoMain implements FilteredEventHandler {
 											.ofString(
 													body)).build(),
 					HttpResponse.BodyHandlers.ofString());
+			if (logLabel != null) {
+				log.info("Telesto response for label '{}': {} {}", logLabel, response.statusCode(), response.body());
+			}
 			return response;
 		}
 		catch (IOException | InterruptedException e) {
+			if (logLabel != null) {
+				log.info("Telesto error for label '{}'", logLabel, e);
+			}
 			throw new RuntimeException(e);
 		}
 
