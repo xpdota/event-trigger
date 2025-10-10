@@ -376,6 +376,16 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 				cancelEdit();
 			}
 		};
+		var chooserRightClicks = RightClickOptionRepo.of(CustomRightClickOption.forRow("Delete", TimelineInfo.class, ti -> {
+			SwingUtilities.invokeLater(() -> {
+				int deleteConfirm = JOptionPane.showConfirmDialog(this, "Are you sure you wish to delete this timeline?", "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+				if (deleteConfirm != JOptionPane.OK_OPTION) {
+					return;
+				}
+				backend.removeCustomZone(ti.zoneId());
+				timelineChooserModel.fullRefresh();
+			});
+		}, ti -> backend.getCustomTimelines().containsKey(ti.zoneId())));
 
 
 		SwingUtilities.invokeLater(() -> {
@@ -471,6 +481,7 @@ public class TimelinesTab extends TitleBorderFullsizePanel implements PluginTab 
 			};
 			timelineChooserModel.configureColumns(timelineChooserTable);
 			timelineChooserTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			chooserRightClicks.configureTable(timelineChooserTable, timelineChooserModel);
 
 
 			JScrollPane chooserScroller = new JScrollPane(timelineChooserTable);
