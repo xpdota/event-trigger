@@ -1,15 +1,14 @@
 package gg.xp.xivsupport.events.ws;
 
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.module.blackbird.BlackbirdModule;
+import tools.jackson.core.JsonPointer;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.HandleEvents;
@@ -39,6 +38,8 @@ import gg.xp.xivsupport.models.XivZone;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.node.StringNode;
+import tools.jackson.module.blackbird.BlackbirdModule;
 
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +53,7 @@ public class ActWsHandlers {
 	private static final Logger log = LoggerFactory.getLogger(ActWsHandlers.class);
 	private static final ObjectMapper mapper = JsonMapper.builder()
 			.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+			.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false)
 			.addModule(new BlackbirdModule())
 			.build();
 	private final EventMaster master;
@@ -123,7 +125,7 @@ public class ActWsHandlers {
 				jsonNode = mapper.readTree(raw);
 				lastJson = jsonNode;
 			}
-			catch (JsonProcessingException e) {
+			catch (JacksonException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -167,7 +169,7 @@ public class ActWsHandlers {
 		if (typeNode.isTextual()) {
 			type = typeNode.textValue().intern();
 			try {
-				((ObjectNode) jsonNode).set("type", new TextNode(type));
+				((ObjectNode) jsonNode).set("type", new StringNode(type));
 			}
 			catch (Throwable t) {
 				log.error("Error optimizing JsonNode", t);

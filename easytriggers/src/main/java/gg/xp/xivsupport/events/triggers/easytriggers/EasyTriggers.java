@@ -1,12 +1,12 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.BeanProperty;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.InjectableValues;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.BeanProperty;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.InjectableValues;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -132,6 +132,8 @@ import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.cfg.MapperBuilder;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -147,7 +149,7 @@ public final class EasyTriggers implements HasChildTriggers {
 
 	private static final String settingKey = "easy-triggers.my-triggers-2";
 	private static final String failedTriggersSettingKey = "easy-triggers.failed-triggers-2";
-	private final ObjectMapper mapper = new ObjectMapper();
+	private final ObjectMapper mapper;
 
 	private final PicoContainer pico;
 	private final XivState state;
@@ -160,12 +162,19 @@ public final class EasyTriggers implements HasChildTriggers {
 		this.pico = pico;
 		this.state = state;
 		this.master = master;
-		mapper.setInjectableValues(new InjectableValues() {
-			@Override
-			public Object findInjectableValue(Object o, DeserializationContext deserializationContext, BeanProperty beanProperty, Object o1) {
-				return inject(beanProperty.getType().getRawClass());
-			}
-		});
+		this.mapper = JsonMapper.builder().injectableValues(
+				new InjectableValues() {
+					@Override
+					public InjectableValues snapshot() {
+						return this;
+					}
+
+					@Override
+					public Object findInjectableValue(DeserializationContext ctxt, Object valueId, BeanProperty forProperty, Object beanInstance, Boolean optional, Boolean useInput) throws JacksonException {
+						return inject(forProperty.getType().getRawClass());
+					}
+				}
+		).build();
 
 		BooleanSetting legacyMigrationDone = new BooleanSetting(pers, "easy-triggers.legacy-migration-done", false);
 
@@ -244,7 +253,7 @@ public final class EasyTriggers implements HasChildTriggers {
 			return mapper.writeValueAsString(new ArrayList<BaseTrigger<?>>(toExport) {
 			});
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException("Error exporting trigger", e);
 		}
 	}
@@ -253,7 +262,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		try {
 			return mapper.writeValueAsString(condition);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -262,7 +271,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		try {
 			return mapper.writeValueAsString(action);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -271,7 +280,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		try {
 			return mapper.readValue(input, Condition.class);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -280,7 +289,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		try {
 			return mapper.readValue(input, Action.class);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -297,7 +306,7 @@ public final class EasyTriggers implements HasChildTriggers {
 			}
 			return out;
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new ValidationError("Error importing trigger: " + e.getMessage(), e);
 		}
 	}
@@ -316,7 +325,7 @@ public final class EasyTriggers implements HasChildTriggers {
 			}
 			return out;
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new ValidationError("Error importing trigger: " + e.getMessage(), e);
 		}
 	}

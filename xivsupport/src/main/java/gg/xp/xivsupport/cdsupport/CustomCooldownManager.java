@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.cdsupport;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivdata.data.*;

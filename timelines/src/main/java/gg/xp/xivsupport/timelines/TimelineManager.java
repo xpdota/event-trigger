@@ -1,7 +1,5 @@
 package gg.xp.xivsupport.timelines;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.CurrentTimeSource;
 import gg.xp.reevent.events.EventContext;
@@ -33,10 +31,13 @@ import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -55,7 +56,9 @@ public final class TimelineManager {
 
 	private static final Logger log = LoggerFactory.getLogger(TimelineManager.class);
 	private static final Map<Long, TimelineInfo> zoneIdToTimelineFile = new HashMap<>();
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = JsonMapper.builder()
+			.disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+			.build();
 	public static final String CUSTOMIZATION_EXPORT_SOURCE = "Exported Customization";
 	private final CurrentTimeSource timeSource;
 	private final BooleanSetting debugMode;
@@ -180,7 +183,7 @@ public final class TimelineManager {
 										log.debug("Timeline translation: {} ({} name translations and {} sync translations)", lang, lr == null ? 0 : lr.replaceText().size(), lr == null ? 0 : lr.replaceSync().size());
 										return lr;
 									}
-									catch (IOException e) {
+									catch (Throwable e) {
 										log.error("Error loading timeline translations for zone {}", zoneId, e);
 										return null;
 									}
@@ -448,7 +451,7 @@ public final class TimelineManager {
 		try {
 			return mapper.writeValueAsString(exportCustomizations(zones));
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -457,7 +460,7 @@ public final class TimelineManager {
 		try {
 			return mapper.readValue(serialized, TimelineCustomizationExport.class);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}

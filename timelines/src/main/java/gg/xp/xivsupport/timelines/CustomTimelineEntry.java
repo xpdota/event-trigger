@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.timelines.icon.IconIdTimelineIcon;
 import gg.xp.xivsupport.timelines.icon.TimelineIcon;

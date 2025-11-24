@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.gui;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;

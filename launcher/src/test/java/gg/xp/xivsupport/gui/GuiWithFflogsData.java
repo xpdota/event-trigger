@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.gui;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import gg.xp.xivsupport.eventstorage.EventReader;
 import org.intellij.lang.annotations.Language;
 
@@ -10,7 +10,7 @@ import java.util.Collections;
 
 public class GuiWithFflogsData {
 
-	public static void main(String[] args) throws JsonProcessingException {
+	public static void main(String[] args) throws JacksonException {
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode root = mapper.readTree(theString);
 		LaunchImportedFflogs.fromEvents(EventReader.readFflogsJson(Collections.singletonList(root)));

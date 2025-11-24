@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.events.fflogs;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -90,7 +90,7 @@ public class FflogsClient {
 		String actualBody;
 		try {
 			actualBody = mapper.writeValueAsString(queryMap);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new ApiException(e);
 		}
 		HttpPost req = new HttpPost(apiBaseUrlV2);

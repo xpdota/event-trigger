@@ -1,11 +1,11 @@
 package gg.xp.xivsupport.timelines.cbevents;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.json.JsonReadFeature;
-import com.fasterxml.jackson.core.json.JsonWriteFeature;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.json.JsonReadFeature;
+import tools.jackson.core.json.JsonWriteFeature;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import gg.xp.reevent.events.Event;
 import gg.xp.xivsupport.timelines.EventSyncController;
 import gg.xp.xivsupport.timelines.FileEventSyncController;
@@ -20,14 +20,14 @@ public final class CbEventFmt {
 
 	private static final ObjectMapper mapper = JsonMapper.builder()
 			// get as close as possible to json5
-			.configure(JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES, true)
+			.configure(JsonReadFeature.ALLOW_UNQUOTED_PROPERTY_NAMES, true)
 			.configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
 			.configure(JsonReadFeature.ALLOW_SINGLE_QUOTES, true)
 			.configure(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true)
 			.configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
 			.configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
 			.configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
-			.configure(JsonWriteFeature.QUOTE_FIELD_NAMES, false)
+			.configure(JsonWriteFeature.QUOTE_PROPERTY_NAMES, false)
 			.build();
 
 	private CbEventFmt() {
@@ -98,7 +98,7 @@ public final class CbEventFmt {
 		try {
 			return String.format("%s %s", originalType, mapper.writeValueAsString(reformattedValues));
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}

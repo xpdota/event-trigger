@@ -1,10 +1,9 @@
 package gg.xp.xivsupport.persistence.settings;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -110,7 +109,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 			pers.save(settingKey, serialized);
 			notifyListeners();
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -146,7 +145,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 			failures = mapper.readValue(failedSetting, new TypeReference<>() {
 			});
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 		return failures;
@@ -181,7 +180,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 		try {
 			value = mapper.writeValueAsString(stillFailing);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 		log.info("After recovery: {} recovered, {} still failing", noLongerFailing.size(), stillFailing.size());

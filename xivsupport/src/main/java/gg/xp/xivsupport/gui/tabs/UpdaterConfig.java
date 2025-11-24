@@ -1,7 +1,5 @@
 package gg.xp.xivsupport.gui.tabs;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 import gg.xp.xivsupport.persistence.Platform;
@@ -10,6 +8,8 @@ import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
 import gg.xp.xivsupport.persistence.settings.StringSetting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,7 +80,7 @@ public class UpdaterConfig {
 	private AddonDef getAddonDef(String url) {
 		AddonDef newAddonDef;
 		try {
-			newAddonDef = mapper.readValue(new URL(url), new TypeReference<>() {
+			newAddonDef = mapper.readValue(new URL(url).openStream(), new TypeReference<>() {
 			});
 		}
 		catch (IOException e) {
