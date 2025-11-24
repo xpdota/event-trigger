@@ -155,6 +155,7 @@ public class CustomPartyConfig implements PluginTab {
 				panel.add(new BooleanSettingGui(enabled, "Enable Overlay", true).getComponent());
 				panel.add(new IntSettingSpinner(overlay.getYOffset(), "Y Offset Between Party Members").getComponent());
 				overlay.getYOffset().addListener(this::resetComponents);
+				panel.add(new BooleanSettingGui(overlay.getAlignToBottom(), "Align to Bottom", true).getComponent());
 				// TODO: put these back when something new is added so there's actually a reason
 //				JButton addButton = new JButton("Add Component");
 //				JButton removeButton = new JButton("Remove Component");
