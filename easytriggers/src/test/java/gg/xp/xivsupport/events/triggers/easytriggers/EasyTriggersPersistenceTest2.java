@@ -1,7 +1,7 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.util.ReflectHelpers;
@@ -34,7 +34,7 @@ public class EasyTriggersPersistenceTest2 {
 
 	// Test that we can import existing triggers
 	@Test
-	void legacyPersistenceTestOld() throws JsonProcessingException {
+	void legacyPersistenceTestOld() throws JacksonException {
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
 		pers.save("easy-triggers.my-triggers", triggerDataOldLegacy);
 
@@ -129,7 +129,7 @@ public class EasyTriggersPersistenceTest2 {
 	}
 
 	@Test
-	void legacyPersistenceTest() throws JsonProcessingException {
+	void legacyPersistenceTest() throws JacksonException {
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
 		pers.save("easy-triggers.my-triggers", triggerDataLegacy);
 
@@ -222,7 +222,7 @@ public class EasyTriggersPersistenceTest2 {
 	}
 
 	@Test
-	void newPersistenceTest() throws JsonProcessingException {
+	void newPersistenceTest() throws JacksonException {
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
 		pers.save("easy-triggers.my-triggers-2", triggerDataNew);
 

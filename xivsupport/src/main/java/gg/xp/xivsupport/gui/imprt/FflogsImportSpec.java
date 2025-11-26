@@ -2,7 +2,7 @@ package gg.xp.xivsupport.gui.imprt;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import gg.xp.reevent.events.AutoEventDistributor;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventDistributor;

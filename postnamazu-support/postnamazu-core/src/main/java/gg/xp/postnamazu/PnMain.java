@@ -1,7 +1,7 @@
 package gg.xp.postnamazu;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.EventMaster;
 import gg.xp.reevent.scan.FilteredEventHandler;
@@ -108,7 +108,7 @@ public class PnMain implements FilteredEventHandler {
 		try {
 			body = payload instanceof String sp ? sp : mapper.writeValueAsString(payload);
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 		return switch (modeSetting.get()) {

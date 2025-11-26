@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.persistence.settings;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class LongListSetting extends ObservableSetting implements Resettable {
 				return cached = Collections.unmodifiableList(mapper.readValue(asString, new TypeReference<List<Long>>() {
 				}));
 			}
-			catch (JsonProcessingException e) {
+			catch (JacksonException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -49,7 +49,7 @@ public class LongListSetting extends ObservableSetting implements Resettable {
 		try {
 			persistence.save(settingKey, mapper.writeValueAsString(newValue));
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new RuntimeException(e);
 		}
 		finally {

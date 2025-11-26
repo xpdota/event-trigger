@@ -1,6 +1,6 @@
 package gg.xp.telestosupport;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
 import org.jetbrains.annotations.Nullable;

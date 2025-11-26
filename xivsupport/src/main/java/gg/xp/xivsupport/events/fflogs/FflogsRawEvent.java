@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.events.fflogs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;

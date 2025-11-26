@@ -1,8 +1,8 @@
 package gg.xp.xivsupport.timelines;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 import gg.xp.xivsupport.timelines.intl.LanguageReplacements;
 import gg.xp.xivsupport.timelines.intl.TimelineReplacements;
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -177,12 +177,7 @@ public final class MakeTimelines {
 					}
 					TimelineReplacements tr = new TimelineReplacements(allLangs);
 					// Write them
-					try {
-						mapper.writeValue(translationsDir.resolve(timelineFileName + ".json").toFile(), tr);
-					}
-					catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+					mapper.writeValue(translationsDir.resolve(timelineFileName + ".json").toFile(), tr);
 				}
 			});
 			{
@@ -199,12 +194,7 @@ public final class MakeTimelines {
 					commonReplacements.put(lang, LanguageReplacements.fromRaw(replacementsForThisLang, Map.of()));
 				});
 				TimelineReplacements globalReplacements = new TimelineReplacements(commonReplacements);
-				try {
-					mapper.writeValue(translationsDir.resolve("global_timeline_replacements.txt.json").toFile(), globalReplacements);
-				}
-				catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+				mapper.writeValue(translationsDir.resolve("global_timeline_replacements.txt.json").toFile(), globalReplacements);
 			}
 			String inCsvFormat = zoneToFile.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(e -> e.getKey() + ",\"" + e.getValue() + '"').collect(Collectors.joining("\n"));
 			Files.writeString(timelineBasePath.resolve("timelines.csv"), inCsvFormat, StandardCharsets.UTF_8);

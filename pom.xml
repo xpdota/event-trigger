@@ -17,7 +17,7 @@
         <!--        Reproducible builds - allows updater to not download stuff that didn't actually change-->
         <project.build.outputTimestamp>10</project.build.outputTimestamp>
         <surefire.threadcount>2</surefire.threadcount>
-        <jackson.version>2.16.0</jackson.version>
+        <jackson.version>3.0.2</jackson.version>
         <apache-http.version>4.5.14</apache-http.version>
     </properties>
     <packaging>pom</packaging>
@@ -171,8 +171,14 @@
                 <version>1.5.4</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
+                <groupId>tools.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/tools.jackson.module/jackson-module-blackbird -->
+            <dependency>
+                <groupId>tools.jackson.module</groupId>
+                <artifactId>jackson-module-blackbird</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>

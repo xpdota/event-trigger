@@ -2,7 +2,6 @@ package gg.xp.xivsupport.gui.tables;
 
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivdata.data.ActionInfo;
 import gg.xp.xivsupport.events.ACTLogLineEvent;
 import gg.xp.xivsupport.events.fflogs.FflogsRawEvent;
 import gg.xp.xivsupport.events.ws.ActWsRawMsg;

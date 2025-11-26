@@ -1,6 +1,6 @@
 package gg.xp.xivsupport.custompartyoverlay;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.gui.overlay.OverlayConfig;
@@ -8,6 +8,7 @@ import gg.xp.xivsupport.gui.overlay.RefreshLoop;
 import gg.xp.xivsupport.gui.overlay.XivOverlay;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
 import gg.xp.xivsupport.persistence.PersistenceProvider;
+import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.CustomJsonListSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +32,7 @@ public class CustomPartyOverlay extends XivOverlay {
 
 	private List<List<RefreshablePartyListComponent>> refreshables = Collections.emptyList();
 	private final IntSetting yOffset;
+	private final BooleanSetting alignToBottom;
 	private final CustomJsonListSetting<CustomOverlayComponentSpec> elements;
 
 
@@ -58,6 +60,8 @@ public class CustomPartyOverlay extends XivOverlay {
 		newItems.forEach(elements::addItem);
 		this.yOffset = new IntSetting(persistence, "custom-party-overlay.y-offset", 39, 0, 1000);
 		this.yOffset.addListener(this::placeComponents);
+		this.alignToBottom = new BooleanSetting(persistence, "custom-party-overlay.align-to-bottom", false);
+		this.alignToBottom.addListener(this::placeComponents);
 		this.elements.addListener(this::placeComponents);
 		this.state = state;
 		this.factory = factory;
@@ -78,8 +82,9 @@ public class CustomPartyOverlay extends XivOverlay {
 	}
 
 	public void periodicRefresh() {
+		int bottomAlignedOffset = 8 - state.getPartyList().size();
 		for (int i = 0; i < refreshables.size(); i++) {
-			XivPlayerCharacter partySlot = getPartySlot(i);
+			XivPlayerCharacter partySlot = alignToBottom.get() ? getPartySlot(i - bottomAlignedOffset) : getPartySlot(i);
 			List<RefreshablePartyListComponent> refsForSlot = refreshables.get(i);
 			for (RefreshablePartyListComponent refreshable : refsForSlot) {
 				refreshable.refresh(partySlot);
@@ -221,7 +226,7 @@ public class CustomPartyOverlay extends XivOverlay {
 
 	private @Nullable XivPlayerCharacter getPartySlot(int partySlot) {
 		List<XivPlayerCharacter> partyList = state.getPartyList();
-		if (partySlot >= partyList.size()) {
+		if (partySlot >= partyList.size() || partySlot < 0) {
 			return null;
 		}
 		else {
@@ -231,6 +236,10 @@ public class CustomPartyOverlay extends XivOverlay {
 
 	public IntSetting getYOffset() {
 		return yOffset;
+	}
+
+	public BooleanSetting getAlignToBottom() {
+		return alignToBottom;
 	}
 
 	public CustomJsonListSetting<CustomOverlayComponentSpec> getElements() {
