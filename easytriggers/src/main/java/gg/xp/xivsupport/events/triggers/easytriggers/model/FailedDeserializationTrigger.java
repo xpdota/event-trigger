@@ -1,13 +1,17 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
-import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.JsonNode;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
+import tools.jackson.databind.JsonNode;
 
 import java.util.List;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.NONE, include = JsonTypeInfo.As.EXISTING_PROPERTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class FailedDeserializationTrigger extends BaseTrigger<Object> {
 
 	private final JsonNode originalJson;
@@ -18,13 +22,29 @@ public final class FailedDeserializationTrigger extends BaseTrigger<Object> {
 		this.originalError = originalError;
 	}
 
+	@Override
+	public String getName() {
+		String base = "FAILED";
+		if (originalJson.has("name")) {
+			JsonNode nameNode = originalJson.get("name");
+			if (nameNode != null && nameNode.isString()) {
+				return base += ": " + nameNode.asString();
+			}
+		}
+		return base + " (unknown name)";
+	}
+
+	@Override
+	public void setName(String name) {
+		// Do nothing
+	}
 
 	@JsonValue
-	@JsonRawValue
 	public JsonNode getOriginalJson() {
 		return originalJson;
 	}
 
+	@JsonIgnore
 	public Throwable getOriginalError() {
 		return originalError;
 	}

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -15,13 +15,15 @@ import org.jetbrains.annotations.Nullable;
 		use = JsonTypeInfo.Id.NAME,
 		include = JsonTypeInfo.As.PROPERTY,
 		property = "type",
-		defaultImpl = EasyTrigger.class
+		defaultImpl = EasyTrigger.class,
+		visible = true,
+		requireTypeIdForSubtypes = OptBoolean.FALSE
 )
 @JsonSubTypes({
 		@JsonSubTypes.Type(value = EasyTrigger.class, name = "trigger"),
 		@JsonSubTypes.Type(value = TriggerFolder.class, name = "folder"),
+		@JsonSubTypes.Type(value = FailedDeserializationTrigger.class, name = "fail"),
 })
-@JsonDeserialize(using = BaseTriggerDeserializer2.class)
 public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> permits TriggerFolder, EasyTrigger, FailedDeserializationTrigger {
 
 	private boolean enabled = true;

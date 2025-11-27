@@ -1,7 +1,5 @@
 package gg.xp.xivsupport.events.triggers.easytriggers;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 import gg.xp.reevent.events.EventDistributor;
 import gg.xp.reevent.events.TestEventCollector;
 import gg.xp.util.ReflectHelpers;
@@ -22,6 +20,8 @@ import org.intellij.lang.annotations.Language;
 import org.picocontainer.MutablePicoContainer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.awt.*;
 import java.time.Duration;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class EasyTriggersPersistenceTest2 {
+public class EasyTriggersPersistence2Test {
 
 	// Test that we can import existing triggers
 	@Test
@@ -314,7 +314,7 @@ public class EasyTriggersPersistenceTest2 {
 	}
 
 	@Test
-	void newPersistenceTestWithFail() throws JsonProcessingException {
+	void newPersistenceTestWithFail() {
 		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
 		pers.save("easy-triggers.my-triggers-2", triggerDataNewWithNonexistentCondition);
 
@@ -325,6 +325,30 @@ public class EasyTriggersPersistenceTest2 {
 		MatcherAssert.assertThat(ez.getChildTriggers().get(0), Matchers.instanceOf(EasyTrigger.class));
 		MatcherAssert.assertThat(ez.getChildTriggers().get(0).getName(), Matchers.equalTo("Rez Start"));
 		MatcherAssert.assertThat(ez.getChildTriggers().get(1), Matchers.instanceOf(FailedDeserializationTrigger.class));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(1).getName(), Matchers.equalTo("FAILED: Trigger which fails"));
+		String exported = ez.exportToString(ez.getChildTriggers());
+		ObjectMapper mapper = new ObjectMapper();
+		MatcherAssert.assertThat(mapper.readTree(exported), Matchers.equalTo(mapper.readTree(triggerDataNewWithNonexistentCondition)));
+	}
+
+	@Test
+	void testImportWithoutType() {
+		// If no type, should become triggers
+		InMemoryMapPersistenceProvider pers = new InMemoryMapPersistenceProvider();
+		pers.save("easy-triggers.my-triggers-2", triggerDataLegacy);
+
+		MutablePicoContainer pico = ExampleSetup.setup(pers);
+
+		EasyTriggers ez = pico.getComponent(EasyTriggers.class);
+		MatcherAssert.assertThat(ez.getChildTriggers(), Matchers.hasSize(2));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(0), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(0).getName(), Matchers.equalTo("Rez Start"));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(1), Matchers.instanceOf(EasyTrigger.class));
+		MatcherAssert.assertThat(ez.getChildTriggers().get(1).getName(), Matchers.equalTo("Give me a name"));
+		String exported = ez.exportToString(ez.getChildTriggers());
+		ObjectMapper mapper = new ObjectMapper();
+		MatcherAssert.assertThat(mapper.readTree(exported), Matchers.equalTo(mapper.readTree(triggerDataNew)));
+
 	}
 
 	@Language("JSON")
