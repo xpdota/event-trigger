@@ -15,23 +15,28 @@ import gg.xp.xivsupport.events.triggers.easytriggers.gui.tree.TriggerTreeModel;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EasyTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.EventDescription;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.FailedDeserializationTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.HasChildTriggers;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerFolder;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.gui.GuiMain;
 import gg.xp.xivsupport.gui.TitleBorderFullsizePanel;
 import gg.xp.xivsupport.gui.WrapLayout;
+import gg.xp.xivsupport.gui.components.ReadOnlyText;
 import gg.xp.xivsupport.gui.extra.PluginTab;
 import gg.xp.xivsupport.gui.library.ChooserDialog;
 import gg.xp.xivsupport.gui.lists.FriendlyNameListCellRenderer;
 import gg.xp.xivsupport.gui.nav.GlobalUiRegistry;
 import gg.xp.xivsupport.gui.overlay.RefreshLoop;
+import gg.xp.xivsupport.gui.overlay.SimpleMultiLineText;
 import gg.xp.xivsupport.gui.tables.CustomColumn;
 import gg.xp.xivsupport.gui.tables.CustomRightClickOption;
 import gg.xp.xivsupport.gui.tables.RightClickOptionRepo;
 import gg.xp.xivsupport.gui.tables.TableWithFilterAndDetails;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import gg.xp.xivsupport.gui.util.GuiUtil;
+import gg.xp.xivsupport.persistence.Platform;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
@@ -84,11 +89,6 @@ public class EasyTriggersTab implements PluginTab {
 				this::trySelectTriggerFromCallout,
 				EasyTriggersTab::canSelectTriggerFromCallout
 		));
-		// TODO: good candidate for sub-menus
-//				.addRightClickOption(CustomRightClickOption.forRowWithConverter("Make Easy Trigger", Event.class, Function.identity(), e -> {
-//					container.getComponent(EasyTrig)
-//					GuiUtil.copyTextToClipboard(line.getFields().toString());
-//				}))
 	}
 
 	private static final Selections NO_SELECTIONS = new Selections(Collections.emptyList());
@@ -475,6 +475,9 @@ public class EasyTriggersTab implements PluginTab {
 		if (item instanceof TriggerFolder folder) {
 			return new FolderConfigPanel(folder);
 		}
+		if (item instanceof FailedDeserializationTrigger failed) {
+			return new FailedConfigPanel(failed);
+		}
 		throw new IllegalArgumentException("Unknown trigger type: " + item.getClass().getName());
 	}
 
@@ -614,6 +617,32 @@ public class EasyTriggersTab implements PluginTab {
 
 		private <X> Consumer<X> editTriggerThenSave(Consumer<X> modification) {
 			return modification.andThen((unused) -> afterChange(trigger)).andThen((unused) -> requestSave());
+		}
+	}
+
+	private class FailedConfigPanel extends JPanel {
+
+		FailedConfigPanel(FailedDeserializationTrigger trigger) {
+//			SimpleMultiLineText text = new SimpleMultiLineText();
+			ReadOnlyText text = new ReadOnlyText("This trigger failed to load. It is possible that you are missing a plugin which is required for this trigger to work. If you know what is wrong, you can export the JSON, edit it, and re-import it.");
+//			text.setText("This trigger failed to load. It is possible that you are missing a plugin which is required for this trigger to work. If you know what is wrong, you can export the JSON, edit it, and re-import it.");
+			setLayout(new BorderLayout());
+			add(text, BorderLayout.NORTH);
+			Throwable err = trigger.getOriginalError();
+			if (err != null) {
+				JTextArea errArea = new JTextArea();
+				String errText = "The error loading this trigger was:\n\n" + ExceptionUtils.getStackTrace(err);
+				errArea.setText(errText);
+				errArea.setEditable(false);
+				errArea.setLineWrap(true);
+				errArea.setWrapStyleWord(true);
+				errArea.setCaretPosition(0);
+				add(errArea, BorderLayout.CENTER);
+//				JScrollPane scroll = new JScrollPane(errArea);
+//				scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+//				scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+//				add(scroll, BorderLayout.CENTER);
+			}
 		}
 	}
 

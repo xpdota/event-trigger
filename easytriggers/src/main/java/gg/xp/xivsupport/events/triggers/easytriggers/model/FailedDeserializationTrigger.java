@@ -1,23 +1,26 @@
 package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonValue;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
+import org.jetbrains.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.jsontype.TypeSerializer;
 
 import java.util.List;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NONE, include = JsonTypeInfo.As.EXISTING_PROPERTY)
-@JsonIgnoreProperties(ignoreUnknown = true)
+// Jackson has some behavior that we don't want when we use @JsonValue, so we use our own serializer instead.
+@JsonSerialize(using = FailedDeserializationTrigger.FailedSerializer.class)
 public final class FailedDeserializationTrigger extends BaseTrigger<Object> {
 
 	private final JsonNode originalJson;
-	private final Throwable originalError;
+	private final @Nullable Throwable originalError;
 
-	public FailedDeserializationTrigger(JsonNode originalJson, Throwable originalError) {
+	public FailedDeserializationTrigger(JsonNode originalJson, @Nullable Throwable originalError) {
 		this.originalJson = originalJson;
 		this.originalError = originalError;
 	}
@@ -28,7 +31,7 @@ public final class FailedDeserializationTrigger extends BaseTrigger<Object> {
 		if (originalJson.has("name")) {
 			JsonNode nameNode = originalJson.get("name");
 			if (nameNode != null && nameNode.isString()) {
-				return base += ": " + nameNode.asString();
+				return base + ": " + nameNode.asString();
 			}
 		}
 		return base + " (unknown name)";
@@ -39,13 +42,11 @@ public final class FailedDeserializationTrigger extends BaseTrigger<Object> {
 		// Do nothing
 	}
 
-	@JsonValue
 	public JsonNode getOriginalJson() {
-		return originalJson;
+		return originalJson.deepCopy();
 	}
 
-	@JsonIgnore
-	public Throwable getOriginalError() {
+	public @Nullable Throwable getOriginalError() {
 		return originalError;
 	}
 
@@ -87,5 +88,18 @@ public final class FailedDeserializationTrigger extends BaseTrigger<Object> {
 	@Override
 	public List<Condition<? super Object>> getConditions() {
 		return List.of();
+	}
+
+	static class FailedSerializer extends ValueSerializer<FailedDeserializationTrigger> {
+
+		@Override
+		public void serializeWithType(FailedDeserializationTrigger value, JsonGenerator gen, SerializationContext ctxt, TypeSerializer typeSer) throws JacksonException {
+			serialize(value, gen, ctxt);
+		}
+
+		@Override
+		public void serialize(FailedDeserializationTrigger value, JsonGenerator gen, SerializationContext ctxt) throws JacksonException {
+			gen.writeTree(value.getOriginalJson());
+		}
 	}
 }

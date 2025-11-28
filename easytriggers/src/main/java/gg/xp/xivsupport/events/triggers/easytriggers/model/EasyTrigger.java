@@ -3,6 +3,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName("trigger")
 public final class EasyTrigger<X> extends BaseTrigger<X> implements HasMutableActions<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(EasyTrigger.class);

@@ -3,7 +3,6 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.reevent.events.BaseEvent;
@@ -19,11 +18,6 @@ import org.jetbrains.annotations.Nullable;
 		visible = true,
 		requireTypeIdForSubtypes = OptBoolean.FALSE
 )
-@JsonSubTypes({
-		@JsonSubTypes.Type(value = EasyTrigger.class, name = "trigger"),
-		@JsonSubTypes.Type(value = TriggerFolder.class, name = "folder"),
-		@JsonSubTypes.Type(value = FailedDeserializationTrigger.class, name = "fail"),
-})
 public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> permits TriggerFolder, EasyTrigger, FailedDeserializationTrigger {
 
 	private boolean enabled = true;
@@ -69,7 +63,7 @@ public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> p
 	}
 
 	@JsonIgnore
-	public void setParent(HasChildTriggers parent) {
+	public void setParent(@Nullable HasChildTriggers parent) {
 		this.parent = parent;
 	}
 

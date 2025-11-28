@@ -2,6 +2,7 @@ package gg.xp.xivsupport.events.triggers.easytriggers.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.EventContext;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName("folder")
 public final class TriggerFolder extends BaseTrigger<Object> implements HasChildTriggers {
 
 	private static final Logger log = LoggerFactory.getLogger(TriggerFolder.class);

@@ -137,6 +137,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.module.SimpleModule;
 import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.ser.ValueSerializerModifier;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -167,7 +168,7 @@ public final class EasyTriggers implements HasChildTriggers {
 		this.state = state;
 		this.master = master;
 		var failSurrogate = new SimpleModule();
-		failSurrogate.setDeserializerModifier(new FailCaptureDeserializerModifier<>(BaseTrigger.class, FailedDeserializationTrigger.class, (n, e) -> new FailedDeserializationTrigger(n, e)));
+		failSurrogate.setDeserializerModifier(new FailCaptureDeserializerModifier<>(BaseTrigger.class, FailedDeserializationTrigger.class, FailedDeserializationTrigger::new));
 		InjectableValues inject = new InjectableValues() {
 			@Override
 			public InjectableValues snapshot() {
