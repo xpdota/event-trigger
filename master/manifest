@@ -1,4 +1,4 @@
-70c37acc3868d8d1aa5321361c1bc152  actimport-1.0-SNAPSHOT.jar
+e6ce75e58a72477a8e0cf2a40d5f387c  actimport-1.0-SNAPSHOT.jar
 38673abe87d12508cd05498eff0b9731  annotations-24.1.0.jar
 7aa86dc0c185691ebfedf507cd02f0bf  caffeine-2.9.2.jar
 6d4e6fd385da16b9418a5ff9170aa3bd  caffeine-api-2.9.2-29.v717aac953ff3.jar
@@ -62,5 +62,5 @@ bd7563534ba56c04a72f9201a911a772  triggers-dt-1.0-SNAPSHOT.jar
 ea1c99f48fe57af11d933ac69b3606b0  triggers-sb-1.0-SNAPSHOT.jar
 d5b095ebcb691ec0efb483581f380d9c  trigger-support-1.0-SNAPSHOT.jar
 fb91831333f5d348dd3b56a5bdeb396c  xivapi-java-0.1.1.jar
-43643d0fae0f08ab6aeec2494de4329f  xivdata-1.0-SNAPSHOT.jar
-649c82cc633ed3b12c6c5c63f8a3008c  xivsupport-1.0-SNAPSHOT.jar
+fa1f7037634d00bd47ef34c78ce33424  xivdata-1.0-SNAPSHOT.jar
+cd73078d41f45fe3ae12c231dfb0014a  xivsupport-1.0-SNAPSHOT.jar
