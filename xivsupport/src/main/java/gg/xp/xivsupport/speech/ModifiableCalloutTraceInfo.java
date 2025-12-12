@@ -15,8 +15,8 @@ public class ModifiableCalloutTraceInfo implements CalloutTraceInfo {
 
 	private final @Nullable Field calloutField;
 	private final @Nullable String calloutDesc;
-	private final String rawTts;
-	private final String rawText;
+	private final @Nullable String rawTts;
+	private final @Nullable String rawText;
 	private final Map<String, Object> args;
 
 	public ModifiableCalloutTraceInfo(RawModifiedCallout<?> raw) {
@@ -57,12 +57,12 @@ public class ModifiableCalloutTraceInfo implements CalloutTraceInfo {
 	}
 
 	@Override
-	public String getRawTts() {
+	public @Nullable String getRawTts() {
 		return rawTts;
 	}
 
 	@Override
-	public String getRawText() {
+	public @Nullable String getRawText() {
 		return rawText;
 	}
 

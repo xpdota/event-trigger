@@ -25,6 +25,7 @@ import gg.xp.xivsupport.persistence.gui.LongSettingGui;
 import gg.xp.xivsupport.persistence.settings.BooleanSetting;
 import gg.xp.xivsupport.persistence.settings.DoubleSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
+import gg.xp.xivsupport.persistence.settings.StringSetting;
 import gg.xp.xivsupport.replay.ReplayController;
 import org.jetbrains.annotations.Nullable;
 import org.picocontainer.PicoContainer;
@@ -296,6 +297,29 @@ public final class StandardColumns {
 				}
 			});
 			col.setCellEditor(new BooleanSettingCellEditor(enabledBy));
+		});
+	}
+
+	public static <X> CustomColumn<X> stringSettingColumn(String name, Function<X, StringSetting> settingGetter, @Nullable Integer width) {
+		return new CustomColumn<>(name, settingGetter.andThen(StringSetting::get), col -> {
+			if (width != null) {
+				col.setMaxWidth(width);
+				col.setMinWidth(width);
+			}
+			col.setCellRenderer(new TableCellRenderer() {
+				private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
+
+				@Override
+				public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+					if (value instanceof StringSetting ss) {
+						return defaultRenderer.getTableCellRendererComponent(table, ss.get(), isSelected, hasFocus, row, column);
+					}
+					else {
+						return defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+					}
+				}
+			});
+			col.setCellEditor(StandardColumns.<X>stringEditorNonNull((obj, value) -> settingGetter.apply(obj).set(value)));
 		});
 	}
 

@@ -147,6 +147,7 @@ public abstract class BaseCdTrackerGui implements PluginTab {
 				.addColumn(StandardColumns.booleanSettingColumn("Overlay", cd -> cd.setting.getOverlay(), 50, enableOverlaySetting))
 				.addColumn(StandardColumns.booleanSettingColumn("TTS (Ready)", cd -> cd.setting.getTtsReady(), 80, enableTtsSetting))
 				.addColumn(StandardColumns.booleanSettingColumn("TTS (On Use)", cd -> cd.setting.getTtsOnUse(), 80, enableTtsSetting))
+				.addColumn(StandardColumns.stringSettingColumn("TTS Override", cd -> cd.setting.getTtsOverride(), null))
 				.addColumn(new CustomColumn<>("Job", cdi -> {
 					ExtendedCooldownDescriptor cd = cdi.cd;
 					if (cd.getJob() != null) {
