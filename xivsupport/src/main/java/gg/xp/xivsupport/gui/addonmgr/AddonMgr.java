@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.HierarchyEvent;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -37,6 +38,8 @@ public class AddonMgr implements PluginTab {
 	private List<AddonDef> multiSelections = Collections.emptyList();
 	private CustomTableModel<AddonDef> model;
 	private TitleBorderFullsizePanel outer;
+	private Thread checkerThread;
+	private boolean dirty;
 
 	@Override
 	public String getTabName() {
@@ -149,19 +152,40 @@ public class AddonMgr implements PluginTab {
 		});
 		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
+		outer.addHierarchyListener(this::processHierarchyEvent);
+
 		return outer;
+	}
+
+	private void processHierarchyEvent(HierarchyEvent e) {
+		if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) > 0) {
+			if (!e.getComponent().isShowing()) {
+				onNotShowing();
+			}
+		}
+	}
+
+	private void onNotShowing() {
+		log.info("Not Showing");
+		if (dirty) {
+			int selected = JOptionPane.showOptionDialog(outer,
+					"You must apply updates to make your addon changes effective.",
+					"Apply Updates?",
+					JOptionPane.YES_NO_OPTION,
+					JOptionPane.WARNING_MESSAGE,
+					null,
+					new Object[]{"Apply Now", "Later"},
+					"Apply Now");
+			if (selected == JOptionPane.YES_OPTION) {
+				updaterConfig.runUpdaterNow();
+			}
+		}
+
 	}
 
 	private void refreshSelection() {
 		this.multiSelections = model.getSelectedValues();
-//		this.selection = multiSelections.size() == 1 ? multiSelections.get(0) : null;
 		SwingUtilities.invokeLater(() -> {
-//			detailsInner.removeAll();
-//			if (selection != null) {
-//				detailsInner.add(new TriggerConfigPanel(selection));
-//			}
-//			detailsInner.revalidate();
-//			detailsInner.repaint();
 			outer.repaint();
 		});
 	}
@@ -170,6 +194,7 @@ public class AddonMgr implements PluginTab {
 	private void deleteSelected() {
 		multiSelections.forEach(updaterConfig::removeAddon);
 		SwingUtilities.invokeLater(outer::repaint);
+		markDirty();
 	}
 
 	private void addFromUrl() {
@@ -179,12 +204,20 @@ public class AddonMgr implements PluginTab {
 		}
 		try {
 			updaterConfig.addNewAddon(url);
-		} catch (Throwable t) {
+		}
+		catch (Throwable t) {
 			log.error("Error adding addon", t);
 			JOptionPane.showMessageDialog(outer, "There was an error adding that URL: " + t + ".\nCheck the log for more details.", "Error adding addon", JOptionPane.ERROR_MESSAGE);
 		}
 		SwingUtilities.invokeLater(outer::repaint);
+		markDirty();
 	}
 
+	/**
+	 * Mark that there are pending updates which require updates to be applied + restart.
+	 */
+	private synchronized void markDirty() {
+		dirty = true;
+	}
 
 }
