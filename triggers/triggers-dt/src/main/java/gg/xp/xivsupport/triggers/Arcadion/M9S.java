@@ -77,7 +77,7 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 	// Coffinfiller: in or out lines, also safe or unsafe based on where VF is hitting
 	// Dead Wake (b705 4.2s or b367 4.7s) is the moving
 	@NpcCastCallout(0xb367)
-	private final ModifiableCallout<AbilityCastStart> deadWake = ModifiableCallout.durationBasedCall("Dead Wake", "Move Back");
+	private final ModifiableCallout<AbilityCastStart> deadWake = ModifiableCallout.durationBasedCall("Dead Wake", "Move Away");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> coffinFillerSq = SqtTemplates.sq(60_000,
