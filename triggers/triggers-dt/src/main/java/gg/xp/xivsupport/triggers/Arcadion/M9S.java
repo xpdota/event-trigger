@@ -198,7 +198,7 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 				var myTetherNpc = myTether.getTargetMatching(cbt -> !cbt.isPc());
 				for (int i = 0; i < 2; i++) {
 					var slva = s.waitEvent(StatusLoopVfxApplied.class, e -> e.getTarget().equals(myTetherNpc));
-					boolean out = slva.getStatusLoopVfx().getId() == 0x1062;
+					boolean out = slva.getStatusLoopVfx().getId() == 0x426;
 					s.updateCall(out ? undeadDeathmatchOut : undeadDeathmatchIn);
 				}
 			});
