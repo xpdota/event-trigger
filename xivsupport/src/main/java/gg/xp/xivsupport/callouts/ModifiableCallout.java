@@ -57,10 +57,10 @@ public class ModifiableCallout<X> {
 	 * The on-screen text will appear for the default time (5 seconds)
 	 *
 	 * @param description A description for the callout to be shown to the user.
-	 * @param text        The default TTS and on-screen text.
+	 * @param ttsAndText  The default TTS and on-screen text.
 	 */
-	public ModifiableCallout(String description, String text) {
-		this(description, text, 5000);
+	public ModifiableCallout(String description, String ttsAndText) {
+		this(description, ttsAndText, 5000);
 	}
 
 	/**

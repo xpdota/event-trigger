@@ -49,8 +49,17 @@ public class NpcCastAdapter implements FeedHelperAdapter<NpcCastCallout, Ability
 
 			@Override
 			public void handle(EventContext context, AbilityCastStart event) {
+				// Ignore player casts
+				if (event.getSource().isPc()) {
+					return;
+				}
+				// If annotation specifies that it should only activate on the player, then ignore if it is not targeted
+				// on you.
+				if (ann.onYou() && !event.getTarget().isThePlayer()) {
+					return;
+				}
 				for (int i = 0; i < castIds.length; i++) {
-					if (!event.getSource().isPc() && castIds[i] == event.getAbility().getId()) {
+					if (castIds[i] == event.getAbility().getId()) {
 						if (supp.check(event)) {
 							RawModifiedCallout<AbilityCastStart> modified = info.getHandlerFieldValue().getModified(event);
 							if (ann.cancellable()) {

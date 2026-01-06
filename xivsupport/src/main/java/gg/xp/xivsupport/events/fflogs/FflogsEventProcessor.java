@@ -316,6 +316,7 @@ public class FflogsEventProcessor {
 				}
 				case "applybuff", "applybuffstack", "applydebuff", "applydebuffstack", "removebuffstack",
 				     "removedebuffstack", "refreshbuff", "refreshdebuff" -> {
+					// TODO: extra info (e.g. for Status Loop VFX) is sometimes in the `extrainfo` field, not 'stacks'
 					int stacks = rawEvent.getTypedField("stack", int.class, 0);
 					double duration;
 					Double durationRaw = rawEvent.getTypedField("duration", Double.class);
@@ -373,7 +374,7 @@ public class FflogsEventProcessor {
 				case "headmarker" -> {
 					// fflogs reverses these from what we do - the source is the target
 					context.accept(new HeadMarkerEvent(
-							target,
+							source,
 							rawEvent.getTypedField("markerID", Long.class)
 					));
 				}
