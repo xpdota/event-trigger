@@ -75,6 +75,15 @@ public enum KnownDuty implements Duty {
 	M7S("M7S", 1261,Expansion.DT, DutyType.SAVAGE_RAID),
 	M8S("M8S", 1263,Expansion.DT, DutyType.SAVAGE_RAID),
 
+	M9N("M9N", 1320,Expansion.DT, DutyType.RAID),
+	M10N("M10N", 1322,Expansion.DT, DutyType.RAID),
+	M11N("M11N", 1324,Expansion.DT, DutyType.RAID),
+	M12N("M12N", 1326,Expansion.DT, DutyType.RAID),
+	M9S("M9S", 1321,Expansion.DT, DutyType.SAVAGE_RAID),
+	M10S("M10S", 1323,Expansion.DT, DutyType.SAVAGE_RAID),
+	M11S("M11S", 1325,Expansion.DT, DutyType.SAVAGE_RAID),
+	M12S("M12S", 1327,Expansion.DT, DutyType.SAVAGE_RAID),
+
 	FRU("FRU", 1238, Expansion.DT, DutyType.ULTIMATE),
 	CodCar("CoD CAR", 1241, Expansion.DT, DutyType.CAR),
 
