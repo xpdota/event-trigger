@@ -49,7 +49,9 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(0xb384)
 	private final ModifiableCallout<AbilityCastStart> killerVoice = ModifiableCallout.durationBasedCall("Killer Voice", "Raidwide");
 	@NpcCastCallout(value = 0xb37f, suppressMs = 100)
-	private final ModifiableCallout<AbilityCastStart> hardcore = ModifiableCallout.durationBasedCall("Hardcore", "Double Tankbuster");
+	private final ModifiableCallout<AbilityCastStart> hardcore = ModifiableCallout.durationBasedCall("Hardcore (Small)", "Double Tankbuster");
+	@NpcCastCallout(value = 0xb380, suppressMs = 100)
+	private final ModifiableCallout<AbilityCastStart> hardcoreBig = ModifiableCallout.durationBasedCall("Hardcore (Large)", "Double Tankbuster, Large");
 
 	// TODO: is the second one different?
 	@NpcCastCallout({0xb34b, 0xb374})
