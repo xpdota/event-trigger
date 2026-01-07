@@ -22,9 +22,11 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
+import gg.xp.xivsupport.models.ArenaPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.List;
 
 @CalloutRepo(name = "M10S", duty = KnownDuty.M10S)
@@ -46,14 +48,14 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 		return state.dutyIs(KnownDuty.M10S);
 	}
 
-	@NpcCastCallout(0xB5B6)
+	@NpcCastCallout({0xB5B6, 0xB580}) // TODO what is the difference
 	private final ModifiableCallout<AbilityCastStart> hotImpact = ModifiableCallout.durationBasedCall("Hot Impact", "Buster on {event.target}");
 
 	private final ModifiableCallout<BuffApplied> flameFloater1 = new ModifiableCallout<BuffApplied>("Flame Floater", "First", 30_000).autoIcon();
 	private final ModifiableCallout<BuffApplied> flameFloater2 = new ModifiableCallout<BuffApplied>("Flame Floater", "Second", 30_000).autoIcon();
 	private final ModifiableCallout<BuffApplied> flameFloater3 = new ModifiableCallout<BuffApplied>("Flame Floater", "Third", 30_000).autoIcon();
 	private final ModifiableCallout<BuffApplied> flameFloater4 = new ModifiableCallout<BuffApplied>("Flame Floater", "Fourth", 30_000).autoIcon();
-	private final ModifiableCallout<BuffApplied> flameFloaterNothing = new ModifiableCallout<BuffApplied>("Flame Floater", "Nothing", 30_000);
+	private final ModifiableCallout<BuffApplied> flameFloaterNothing = new ModifiableCallout<>("Flame Floater", "Nothing", 30_000);
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> flameFloaterSq = SqtTemplates.sq(
@@ -105,9 +107,7 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	+15 Awesome Splash (spread)?
 	+15 Awesome Slab (light parties) 0x3ED vfx
 
-
-
-	Reverse Alley-oop B5E0, followed by B5E1
+	The mob is visible from outside the arena
 	 */
 
 	private final ModifiableCallout<StatusLoopVfxApplied> sickestTakeOffSpreadLater = new ModifiableCallout<>("Sickest Take-off Spread Later", "Spread Later");
@@ -126,16 +126,34 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.updateCall(spread ? sickestTakeOffSpread : sickestTakeOffLightParty, raidwide);
 			});
 
-	@NpcCastCallout(value = {0xB5B8, 0xB5B9}, suppressMs = 100)
+	private static final ArenaPos ap = new ArenaPos(100, 100, 10, 10);
+
+	private final ModifiableCallout<AbilityCastStart> sickestTakeoffHitting = ModifiableCallout.durationBasedCallWithOffset("Sickest Take-off: Hitting Location", "From {from}, Hitting {unsafe}", Duration.ofMillis(0));
+
+	// Sickest take-off - B5CE has the location info
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> sickestLocationSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB5CE),
+			(e1, s) -> {
+				var e1loc = s.findOrWaitForCastWithLocation(casts, acs -> acs == e1, false);
+				// If facing north, then it is going from the south
+				var from = ArenaPos.combatantFacing(e1loc.getLocationInfo().getBestHeading()).opposite();
+				// The location is at the edge of the aoe, so translate it 25 units forward to get to the center
+				var hitting = ap.forPosition(e1loc.getLocationInfo().getPos().translateRelative(0, 25));
+				s.setParam("from", from);
+				s.setParam("unsafe", hitting);
+				// Arbitrary wait to not talk over other calls
+				s.waitMs(1_500);
+				s.updateCall(sickestTakeoffHitting, e1);
+			});
+
+	@NpcCastCallout(value = {0xB5B8, 0xB5B9}, suppressMs = 500)
 	private final ModifiableCallout<AbilityCastStart> diverDare = ModifiableCallout.durationBasedCall("Diver's Dare", "Raidwide");
 
-	// Alley-oop double dip proteans
-
-	// Deep Impact something with tanks?
-
-
 	@NpcCastCallout(0xB5DD) // TODO: this needs to be locked out during the water/fire phase
-	private final ModifiableCallout<AbilityCastStart> alleyOopDoubleDip = ModifiableCallout.durationBasedCall("Alley-oop Double Dip", "Proteans");
+	private final ModifiableCallout<AbilityCastStart> alleyOopDoubleDip = ModifiableCallout.durationBasedCall("Alley-oop Double Dip", "Proteans, Move");
+	@NpcCastCallout(0xB5E0) // TODO: this needs to be locked out during the water/fire phase
+	private final ModifiableCallout<AbilityCastStart> reverseAlleyOop = ModifiableCallout.durationBasedCall("Reverse Alley-oop", "Proteans, Stay");
 
 	private final ModifiableCallout<AbilityCastStart> deepImpactTank = ModifiableCallout.durationBasedCall("Deep Impact (Tank)", "Bait Buster Far");
 	private final ModifiableCallout<AbilityCastStart> deepImpactNonTank = ModifiableCallout.durationBasedCall("Deep Impact (Non-tank)", "In, Avoid Tank");
@@ -151,15 +169,27 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 				}
 			});
 
-	@NpcCastCallout(0xB5A4)
 	private final ModifiableCallout<AbilityCastStart> xtremeSpectacular = ModifiableCallout.durationBasedCall("Xtreme Spectacular", "Out, Multiple Raidwides");
 
 	// these happen in pairs - annoying for a trigger!
 	// insane air protean, light party, or buster
 
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> xtremeSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB5A4),
+			(e1, s) -> {
+				s.updateCall(xtremeSpectacular, e1);
+				// After this is the stuff for Insane Air
+				// https://discord.com/channels/551474815727304704/594899820976668673/1458390191134736414
+
+			});
+
+	// B897 + b898, but the map effect is before that?
+	// Also say B899 + B89A
+
 	private final ModifiableCallout<AbilityCastStart> snaking = ModifiableCallout.durationBasedCall("Snaking", "Raidwide");
-	private final ModifiableCallout<?> snakingFire = new ModifiableCallout<>("Snaking: Fire", "Fire");
-	private final ModifiableCallout<?> snakingWater = new ModifiableCallout<>("Snaking: Water", "Water");
+	private final ModifiableCallout<?> snakingFire = new ModifiableCallout<>("Snaking: Fire", "Fire").statusIcon(0x136E);
+	private final ModifiableCallout<?> snakingWater = new ModifiableCallout<>("Snaking: Water", "Water").statusIcon(0x136F);
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> snakingSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB381),
@@ -175,6 +205,7 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 				long expectedNameId = fire ? 14370 : 14369;
 				for (int i = 0; i < 4; i++) {
 					s.findOrWaitForCast(casts, acs -> {
+						// We don't need spreads because they cast directly on the target thus are already handled by another trigger
 						return acs.getSource().getbNpcNameId() == expectedNameId && acs.abilityIdMatches(
 								// Proteans
 								0xB5DD,
@@ -198,12 +229,12 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<HeadMarkerEvent> deepAerialFire = new ModifiableCallout<>("Deep Aerial: Fire On You", "Stretch Through Water");
 
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> deepAerial = SqtTemplates.sq(60_000,
+	private final SequentialTrigger<BaseEvent> deepAerial = SqtTemplates.sq(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB5E4),
 			(e1, s) -> {
-				// TODO: how many are there? does it just go until the orb dies?
-				// Should just force terminate this when the orb dies
+				//noinspection InfiniteLoopStatement - This trigger is force terminated by deepArialEnd
 				while (true) {
+					// TODO: this fired on a completely unrelated headmarker - the trigger seems to persist for too long
 					List<HeadMarkerEvent> markers = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> true);
 					markers.stream().filter(m -> m.getTarget().isThePlayer()).findFirst().ifPresent(m -> {
 						if (m.getMarkerId() == 635) {
@@ -215,7 +246,6 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 					});
 					s.waitMs(100);
 				}
-
 			});
 
 	@AutoFeed
@@ -239,6 +269,42 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	Missing the sick swells in general
 
 	 */
+
+	/**
+	 * Splits arena in two
+	 */
+	private final ModifiableCallout<AbilityCastStart> flameFloaterSplit = ModifiableCallout.durationBasedCall("Flame Floater (Split)", "Arena Split");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> flameFloater2sq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB5D4),
+			(e1, s) -> {
+				s.updateCall(flameFloaterSplit, e1);
+			});
+
+	private final ModifiableCallout<AbilityCastStart> exSnaking = ModifiableCallout.durationBasedCall("Xtreme Snaking", "Raidwide");
+	private final ModifiableCallout<?> exSnakingFire = new ModifiableCallout<>("Xtreme Snaking: Fire", "Fire").statusIcon(0x12DB);
+	private final ModifiableCallout<?> exSnakingWater = new ModifiableCallout<>("Xtreme Snaking: Water", "Water").statusIcon(0x12DC);
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> exSnakingSq = SqtTemplates.sq(60_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB5AE, 0xB5AF),
+			(e1, s) -> {
+				s.updateCall(exSnaking, e1);
+				// Player will get hit by one or the other which is actually
+				var playerHit = s.waitEvent(
+						AbilityUsedEvent.class,
+						aue -> aue.getTarget().isThePlayer() && aue.abilityIdMatches(0xB5AE, 0xB5AF));
+				boolean fire = playerHit.abilityIdMatches(0xB5AE);
+				s.updateCall(fire ? exSnakingFire : exSnakingWater);
+				// For some of the skills, the fake cast has better timing info, so use the name ID rather than the NPC ID
+				long expectedNameId = fire ? 14370 : 14369;
+			});
+
+	@NpcCastCallout(value = {0xB5FC, 0xB5FD}, suppressMs = 200)
+	private final ModifiableCallout<AbilityCastStart> overTheFalls = ModifiableCallout.durationBasedCall("Over the Falls", "Enrage");
+
+	// TODO: end has stacks + tankbuster at the same time
+
 
 }
 

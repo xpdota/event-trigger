@@ -177,6 +177,7 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 				s.updateCall(hellInACell, e1);
 			});
 
+	// TODO: hell awaits debuff?
 	@NpcCastCallout(0xB39C)
 	private final ModifiableCallout<AbilityCastStart> ultrasonicSpread = ModifiableCallout.durationBasedCall("Ultrasonic Spread", "Role Groups");
 
