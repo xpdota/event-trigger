@@ -205,5 +205,7 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 				}
 			});
 
+	@NpcCastCallout(0xB36E)
+	private final ModifiableCallout<AbilityCastStart> finaleFataleEnrage = ModifiableCallout.durationBasedCall("Finale Fatale (Enrage)", "Enrage");
 
 }
