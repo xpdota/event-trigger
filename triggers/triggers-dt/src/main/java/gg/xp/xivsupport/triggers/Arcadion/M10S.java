@@ -130,6 +130,7 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	The mob is visible from outside the arena
 	 */
 
+	// TODO: these can talk over "cleave from X" call
 	private final ModifiableCallout<StatusLoopVfxApplied> sickestTakeOffSpreadLater = new ModifiableCallout<>("Sickest Take-off Spread Later", "Spread Later");
 	private final ModifiableCallout<StatusLoopVfxApplied> sickestTakeOffLightPartyLater = new ModifiableCallout<>("Sickest Take-off LP Later", "Light Party Later");
 	private final ModifiableCallout<AbilityCastStart> sickestTakeOffSpread = ModifiableCallout.durationBasedCall("Sickest Take-off Spread Now", "Raidwide then Spread");
@@ -178,7 +179,7 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB5DD, 0xB5E0),
 			(e1, s) -> {
 				// Don't call these in this phase if the player has fire debuff - they will be doing the other mechanic
-				if (buffs.findBuff(ba -> ba.buffIdMatches(0x136E)) != null) {
+				if (buffs.isStatusOnTarget(state.getPlayer(), 0x136E)) {
 					return;
 				}
 				if (e1.abilityIdMatches(0xB5DD)) {
@@ -347,6 +348,7 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<AbilityCastStart> deepAerialCast = ModifiableCallout.durationBasedCall("Deep Aerial: Cast", "Orb");
 	private final ModifiableCallout<HeadMarkerEvent> deepAerialWater = new ModifiableCallout<>("Deep Aerial: Water On You", "Stretch, Avoid Water");
 	private final ModifiableCallout<HeadMarkerEvent> deepAerialFire = new ModifiableCallout<>("Deep Aerial: Fire On You", "Stretch Through Water");
+	private final ModifiableCallout<?> deepAerialNothing = new ModifiableCallout<>("Deep Aerial: No Tether", "Avoid Tethers").disabledByDefault();
 
 
 	@AutoFeed
@@ -358,13 +360,15 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 				while (true) {
 					// TODO: this fired on a completely unrelated headmarker - the trigger seems to persist for too long
 					List<HeadMarkerEvent> markers = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> true);
-					markers.stream().filter(m -> m.getTarget().isThePlayer()).findFirst().ifPresent(m -> {
+					markers.stream().filter(m -> m.getTarget().isThePlayer()).findFirst().ifPresentOrElse(m -> {
 						if (m.getMarkerId() == 635) {
 							s.updateCall(deepAerialWater, m);
 						}
 						else {
 							s.updateCall(deepAerialFire, m);
 						}
+					}, () -> {
+						s.updateCall(deepAerialNothing);
 					});
 					s.waitMs(100);
 				}
@@ -445,6 +449,13 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(value = {0xB5FC, 0xB5FD}, suppressMs = 200)
 	private final ModifiableCallout<AbilityCastStart> overTheFalls = ModifiableCallout.durationBasedCall("Over the Falls", "Enrage");
 
+	@NpcCastCallout(value = 0xB5FB, suppressMs = 1_000)
+	private final ModifiableCallout<AbilityCastStart> steamBurst = ModifiableCallout.<AbilityCastStart>durationBasedCall("Steam Burst", "Avoid Steam Orb")
+			.disabledByDefault()
+			.extendedDescription("""
+					This trigger fires on all generic 'Steam Burst' explosions.""");
+
+	// TODO: missing call at 3:53PM
 
 }
 
