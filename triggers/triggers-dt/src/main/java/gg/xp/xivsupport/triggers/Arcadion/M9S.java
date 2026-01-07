@@ -98,7 +98,7 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 	private final ModifiableCallout<AbilityCastStart> halfMoonWideMove = new ModifiableCallout<>("Half Moon (Wide) Move", "Move {initialSafe.opposite()}, Wide");
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> halfMoonSq = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB34E, 0xB350),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB34E, 0xB350, 0xB34F, 0xb351),
 			(e1, s) -> {
 				var shortCast = s.findOrWaitForCastWithLocation(casts, acs -> acs.abilityIdMatches(0xB377, 0xB379, 0xB37B, 0xB37D), false);
 				var shortCastTowards = ArenaPos.combatantFacing(shortCast.getLocationInfo().getBestHeading());
@@ -134,7 +134,6 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 				// Extra lockout
 				s.waitMs(15_000);
 			});
-	// TODO: aoe direction
 
 	// Sadistic Screech 2
 	// Tank towers, idk whate else
