@@ -250,23 +250,23 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 					s.setParam("redMech", -1);
 					s.setParam("blueMech", -1);
 					for (MapEffectEvent effect : effects) {
-						long index = effect.getIndex();
-						if (index == BLUE_PROTEAN) {
+						long value = effect.getFlags();
+						if (value == BLUE_PROTEAN) {
 							s.setParam("blueMech", 0);
 						}
-						else if (index == BLUE_LIGHTPARTY) {
+						else if (value == BLUE_LIGHTPARTY) {
 							s.setParam("blueMech", 1);
 						}
-						else if (index == BLUE_BUSTER) {
+						else if (value == BLUE_BUSTER) {
 							s.setParam("blueMech", 2);
 						}
-						else if (index == RED_PROTEAN) {
+						else if (value == RED_PROTEAN) {
 							s.setParam("redMech", 0);
 						}
-						else if (index == RED_LIGHTPARTY) {
+						else if (value == RED_LIGHTPARTY) {
 							s.setParam("redMech", 1);
 						}
-						else if (index == RED_BUSTER) {
+						else if (value == RED_BUSTER) {
 							s.setParam("redMech", 2);
 						}
 					}

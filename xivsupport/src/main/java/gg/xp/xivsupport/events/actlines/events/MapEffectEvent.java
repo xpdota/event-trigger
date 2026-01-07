@@ -50,11 +50,7 @@ public class MapEffectEvent extends BaseEvent implements HasPrimaryValue {
 
 	@Override
 	public String toString() {
-		return "MapEffect{" +
-				"instanceContentId=" + instanceContentId +
-				", flags=" + flags +
-				", index=" + index +
-				'}';
+		return String.format("MapEffect{instanceContentId=%X, flags=%X, index=%X}", instanceContentId, flags, index);
 	}
 
 	@Override
