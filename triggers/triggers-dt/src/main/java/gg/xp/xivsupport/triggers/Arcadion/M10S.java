@@ -23,6 +23,7 @@ import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
 import gg.xp.xivsupport.events.triggers.support.NpcCastCallout;
+import gg.xp.xivsupport.events.triggers.support.PlayerStatusCallout;
 import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.XivCombatant;
 import org.slf4j.Logger;
@@ -164,7 +165,7 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.setParam("from", from);
 				s.setParam("unsafe", hitting);
 				// Arbitrary wait to not talk over other calls
-				s.waitMs(1_500);
+				s.waitMs(1_900);
 				s.updateCall(sickestTakeoffHitting, e1);
 			});
 
@@ -358,9 +359,9 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.updateCall(deepAerialCast, e1);
 				//noinspection InfiniteLoopStatement - This trigger is force terminated by deepArialEnd
 				while (true) {
-					// TODO: this fired on a completely unrelated headmarker - the trigger seems to persist for too long
 					List<HeadMarkerEvent> markers = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> true);
-					markers.stream().filter(m -> m.getTarget().isThePlayer()).findFirst().ifPresentOrElse(m -> {
+					markers.stream().filter(m -> m.markerIdMatches(635, 636)
+					                             && m.getTarget().isThePlayer()).findFirst().ifPresentOrElse(m -> {
 						if (m.getMarkerId() == 635) {
 							s.updateCall(deepAerialWater, m);
 						}
@@ -412,23 +413,21 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<AbilityCastStart> freakyPyrotation = ModifiableCallout.durationBasedCall("Freaky Pyro-rotation", "Partners");
 
 	private final ModifiableCallout<AbilityCastStart> exSnaking = ModifiableCallout.durationBasedCall("Xtreme Snaking", "Raidwide");
-	private final ModifiableCallout<?> exSnakingFire = new ModifiableCallout<>("Xtreme Snaking: Fire", "Fire").statusIcon(0x12DB);
-	private final ModifiableCallout<?> exSnakingWater = new ModifiableCallout<>("Xtreme Snaking: Water", "Water").statusIcon(0x12DC);
+
+	@PlayerStatusCallout(value = 0x12DB, cancellable = true)
+	private final ModifiableCallout<BuffApplied> exSnakingFire = ModifiableCallout.<BuffApplied>durationBasedCall("Xtreme Snaking: Fire", "Fire").autoIcon();
+	@PlayerStatusCallout(value = 0x12DC, cancellable = true)
+	private final ModifiableCallout<BuffApplied> exSnakingWater = ModifiableCallout.<BuffApplied>durationBasedCall("Xtreme Snaking: Water", "Water").autoIcon();
+
 	private final ModifiableCallout<?> exSnakingBuster = new ModifiableCallout<>("Xtreme Snaking: Buster", "Buster");
 	private final ModifiableCallout<?> exSnakingLightParty = new ModifiableCallout<>("Xtreme Snaking: Light Party", "Light Party");
 	private final ModifiableCallout<?> exSnakingProteans = new ModifiableCallout<>("Xtreme Snaking: Proteans", "Proteans");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> exSnakingSq = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB5AE, 0xB5AF),
 			(e1, s) -> {
 				s.updateCall(exSnaking, e1);
-				// Player will get hit by one or the other which is actually
-				var playerHit = s.waitEvent(
-						AbilityUsedEvent.class,
-						aue -> aue.getTarget().isThePlayer() && aue.abilityIdMatches(0xB5AE, 0xB5AF));
-				boolean fire = playerHit.abilityIdMatches(0xB5AE);
-				s.updateCall(fire ? exSnakingFire : exSnakingWater);
-				// For some of the skills, the fake cast has better timing info, so use the name ID rather than the NPC ID
 				for (int i = 0; i < 4; i++) {
 					// Both bosses do the same action this time, so we only need to look at one event.
 					var effect = s.waitEvent(MapEffectEvent.class, M10S::isSurfboardEffect);
@@ -454,8 +453,6 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 			.disabledByDefault()
 			.extendedDescription("""
 					This trigger fires on all generic 'Steam Burst' explosions.""");
-
-	// TODO: missing call at 3:53PM
 
 }
 
