@@ -34,6 +34,15 @@ import java.util.List;
 
 @CalloutRepo(name = "M10S", duty = KnownDuty.M10S)
 public class M10S extends AutoChildEventHandler implements FilteredEventHandler {
+	/*
+	Current reported issues:
+
+	"insane air 2 does not work if it's protean or tankbuster"
+	"extreme snaking on the blue side it will keep saying LP even tho it's spread on the waves"
+
+	TODO: Double Alley-oop orbs
+	Also this https://discord.com/channels/551474815727304704/594899820976668673/1458743122271146201
+	 */
 
 	private static final Logger log = LoggerFactory.getLogger(M10S.class);
 	private XivState state;
@@ -132,8 +141,8 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	 */
 
 	// TODO: these can talk over "cleave from X" call
-	private final ModifiableCallout<StatusLoopVfxApplied> sickestTakeOffSpreadLater = new ModifiableCallout<>("Sickest Take-off Spread Later", "Spread Later");
-	private final ModifiableCallout<StatusLoopVfxApplied> sickestTakeOffLightPartyLater = new ModifiableCallout<>("Sickest Take-off LP Later", "Light Party Later");
+	private final ModifiableCallout<?> sickestTakeOffSpreadLater = new ModifiableCallout<>("Sickest Take-off Spread Later", "Spread Later");
+	private final ModifiableCallout<?> sickestTakeOffLightPartyLater = new ModifiableCallout<>("Sickest Take-off LP Later", "Light Party Later");
 	private final ModifiableCallout<AbilityCastStart> sickestTakeOffSpread = ModifiableCallout.durationBasedCall("Sickest Take-off Spread Now", "Raidwide then Spread");
 	private final ModifiableCallout<AbilityCastStart> sickestTakeOffLightParty = ModifiableCallout.durationBasedCall("Sickest Take-off LP Now", "Raidwide then Light Parties");
 
@@ -141,11 +150,37 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final SequentialTrigger<BaseEvent> sickestTakeOff = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB5CB),
 			(e1, s) -> {
-				var vfx = s.waitEvent(StatusLoopVfxApplied.class, v -> v.getTarget().npcIdMatches(19288));
-				boolean spread = vfx.vfxIdMatches(0x3EE);
-				s.updateCall(spread ? sickestTakeOffSpreadLater : sickestTakeOffLightPartyLater, vfx);
-				var raidwide = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xB5CC), false);
-				s.updateCall(spread ? sickestTakeOffSpread : sickestTakeOffLightParty, raidwide);
+				/*
+				Search for `event instanceof StatusLoopVfxApplied || (event instanceof CalloutEvent && event.ttsText.contains("Later")) || event instanceof MapEffectEvent || (event instanceof AbilityCastStart && event.ability.id == 0xB5CB) || (event instanceof AbilityUsedEvent && (event.abilityIdMatches(0xB5CF) || event.ability.name.contains("Awesome")))`
+
+				8000400 = B5D7 spread
+				800040 = B5D8 light party
+				3ED = B5D0 light party
+				3EE = B5CF spread
+				3F0 = B5CF spread but not the same one
+
+				TODO: need a VFX filter?
+				Got 435 VFX and 8000400 and it was spread
+
+				 */
+				var event = s.waitEvent(BaseEvent.class, e ->
+						(e instanceof MapEffectEvent mee
+						 && mee.indexMatches(0x8000400, 0x800040))
+						|| (e instanceof StatusLoopVfxApplied vfx
+						    && vfx.getTarget().npcIdMatches(19288)
+						    && vfx.vfxIdMatches(0x3ED, 0x3EE)));
+				if (event instanceof MapEffectEvent mee) {
+					boolean spread = mee.indexMatches(0x8000400);
+					s.updateCall(spread ? sickestTakeOffSpreadLater : sickestTakeOffLightPartyLater);
+					var raidwide = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xB5CC), false);
+					s.updateCall(spread ? sickestTakeOffSpread : sickestTakeOffLightParty, raidwide);
+				}
+				else if (event instanceof StatusLoopVfxApplied vfx) {
+					boolean spread = vfx.vfxIdMatches(0x3EE);
+					s.updateCall(spread ? sickestTakeOffSpreadLater : sickestTakeOffLightPartyLater);
+					var raidwide = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xB5CC), false);
+					s.updateCall(spread ? sickestTakeOffSpread : sickestTakeOffLightParty, raidwide);
+				}
 			});
 
 	private static final ArenaPos ap = new ArenaPos(100, 100, 10, 10);
@@ -455,8 +490,6 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 					This trigger fires on all generic 'Steam Burst' explosions.""");
 
 	/*
-	TODO: Double Alley-oop orbs
-	Also this https://discord.com/channels/551474815727304704/594899820976668673/1458743122271146201
 	 */
 }
 
