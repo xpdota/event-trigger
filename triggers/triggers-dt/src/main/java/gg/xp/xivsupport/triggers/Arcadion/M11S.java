@@ -179,7 +179,7 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 
 
 	@NpcCastCallout(0xB412)
-	private final ModifiableCallout<AbilityCastStart> voidStardust = ModifiableCallout.durationBasedCall("Void Stardust", "Puddles and Stack");
+	private final ModifiableCallout<AbilityCastStart> voidStardust = ModifiableCallout.durationBasedCall("Void Stardust", "Puddles");
 
 	private final ModifiableCallout<AbilityCastStart> danceOfDominationTrophy = ModifiableCallout.durationBasedCallWithExtraCastTime("Dance of Domination Trophy", "Multiple Raidwides");
 	private final ModifiableCallout<AbilityCastStart> danceOfDominationTrophySafe = ModifiableCallout.durationBasedCallWithExtraCastTime("Dance of Domination Trophy: Safe Spot", "Partners {safe}");
@@ -440,18 +440,7 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 
 
 	/*
-	TODO: meteor drop after second set of 3 weapons
-	"Puddles and stack" is sometimes "Puddles and spread"
-	The puddles and stack mechanic has no call?
+	"Puddles and stack" is sometimes "Puddles and spread"?
 
-lasers, there is stack and two lasers, then some shit with tethers and meteors
-
-
-"4th set" was too early
-
-
-6 weapon call broke 8:31PM
-
-Add Great Wall of Fire
 	 */
 }
