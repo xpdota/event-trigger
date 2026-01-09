@@ -8,6 +8,7 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.actlines.events.HasEffects;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
+import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.groovy.GroovyManager;
@@ -24,6 +25,7 @@ import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.QuickFilters;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
+import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectAndIndexRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
@@ -81,11 +83,11 @@ public class EventsTabFactory {
 					c.setCellRenderer(asRenderer);
 				}))
 				.addMainColumn(new CustomColumn<>("Effects", e -> {
-					if (e instanceof HasEffects event) {
-						return event.getEffects();
+					if (e instanceof HasEffects || e instanceof HasTargetIndex) {
+						return e;
 					}
 					return null;
-				}, c -> c.setCellRenderer(new AbilityEffectListRenderer())))
+				}, c -> c.setCellRenderer(new AbilityEffectAndIndexRenderer())))
 				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
 				.addFilter(SystemEventFilter::new)

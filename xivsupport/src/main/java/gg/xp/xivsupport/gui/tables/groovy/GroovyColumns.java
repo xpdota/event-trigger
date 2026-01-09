@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public final class GroovyColumns {
 	private static final Logger log = LoggerFactory.getLogger(GroovyColumns.class);
-	public static final CustomColumn<PropertyValue> propName = new CustomColumn<>("Name", PropertyValue::getName);
+	public static final CustomColumn<PropertyValue> propName = new CustomColumn<>("Property", PropertyValue::getName);
 	public static final CustomColumn<PropertyValue> propVal = new CustomColumn<>("Value", propertyValue -> {
 		try {
 			return propertyValue.getValue();

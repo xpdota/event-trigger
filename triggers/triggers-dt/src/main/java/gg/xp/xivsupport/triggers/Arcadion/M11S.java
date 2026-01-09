@@ -184,7 +184,10 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<AbilityCastStart> voidStardust = ModifiableCallout.durationBasedCall("Void Stardust", "Puddles");
 
 	private final ModifiableCallout<AbilityCastStart> danceOfDominationTrophy = ModifiableCallout.durationBasedCallWithExtraCastTime("Dance of Domination Trophy", "Multiple Raidwides");
-	private final ModifiableCallout<AbilityCastStart> danceOfDominationTrophySafe = ModifiableCallout.durationBasedCallWithExtraCastTime("Dance of Domination Trophy: Safe Spot", "Partners {safe}");
+	private final ModifiableCallout<AbilityCastStart> danceOfDominationTrophySafe = ModifiableCallout.durationBasedCallWithExtraCastTime("Dance of Domination Trophy: Safe Spot", "Partners {safe}")
+			.extendedDescription("""
+					This calls the 'middle' of the safe area. e.g. if safe is W/N/E, it will call N.
+					To have it call one of the sides, use {safe.plusEighths(1)}, to shift the call to NE, or any other number.""");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> danceOfDomSq = SqtTemplates.sq(120_000,
