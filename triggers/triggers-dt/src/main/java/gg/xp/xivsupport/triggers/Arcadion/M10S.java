@@ -159,9 +159,6 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 				3EE = B5CF spread
 				3F0 = B5CF spread but not the same one
 
-				TODO: need a VFX filter?
-				Got 435 VFX and 8000400 and it was spread
-
 				 */
 				var event = s.waitEvent(BaseEvent.class, e ->
 						(e instanceof MapEffectEvent mee
