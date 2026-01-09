@@ -30,6 +30,11 @@ import java.util.List;
 @CalloutRepo(name = "M9S", duty = KnownDuty.M9S)
 public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 
+	/*
+	TODO:
+	 If anyone could make a trigger for which direction the bat goes in sanguine that would be great. Fucking dumb bat
+	 */
+
 	private static final Logger log = LoggerFactory.getLogger(M9S.class);
 	private XivState state;
 	private ActiveCastRepository casts;
@@ -53,7 +58,6 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 	@NpcCastCallout(value = 0xb380, suppressMs = 100)
 	private final ModifiableCallout<AbilityCastStart> hardcoreBig = ModifiableCallout.durationBasedCall("Hardcore (Large)", "Double Tankbuster, Large");
 
-	// TODO: is the second one different?
 	@NpcCastCallout({0xb34b, 0xb374})
 	private final ModifiableCallout<AbilityCastStart> vampStomp = ModifiableCallout.durationBasedCall("Vamp Stomp", "Out, Watch Bats, In");
 
