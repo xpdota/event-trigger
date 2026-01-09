@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
+import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
@@ -555,6 +556,13 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		else {
 			return waitEvent(CastLocationDataEvent.class, clde -> condition.test(clde.originalEvent())).originalEvent();
 		}
+	}
+
+	public DescribesCastLocation<AbilityCastStart> waitForCastLocation(AbilityCastStart event) {
+		if (event.getLocationInfo() != null) {
+			return event.getLocationInfo();
+		}
+		return waitEvent(CastLocationDataEvent.class, clde -> clde.originalEvent() == event);
 	}
 
 	/**

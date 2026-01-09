@@ -250,6 +250,15 @@ public enum ArenaSector implements HasFriendlyName {
 	}
 
 	/**
+	 * @param other A sector to compare to
+	 * @return true if and only if this sector is exactly one eight-turn away from 'other', or the same.
+	 * @throws IllegalArgumentException if 'this' or 'other' is center or unknown.
+	 */
+	public boolean isAdjacentOrEqualTo(ArenaSector other) {
+		return Math.abs(eighthsTo(other)) <= 1;
+	}
+
+	/**
 	 * @return true if and only if this is an 'outside' direction, i.e. not 'center' or 'unknown'
 	 */
 	public boolean isOutside() {

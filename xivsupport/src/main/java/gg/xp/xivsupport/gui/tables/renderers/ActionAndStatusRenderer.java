@@ -1,6 +1,7 @@
 package gg.xp.xivsupport.gui.tables.renderers;
 
 import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
@@ -90,7 +91,12 @@ public class ActionAndStatusRenderer implements TableCellRenderer {
 			XivAbility ability = hasAbility.getAbility();
 			icon = ActionLibrary.iconForId(ability.getId());
 			if (value instanceof HasDuration hd && !hd.isIndefinite()) {
-				text = ability.getName() + String.format(" (%.02fs)", hd.getInitialDuration().toMillis() / 1_000.0);
+				if (value instanceof AbilityCastStart acs && acs.hasExtraCastDuration()) {
+					text = ability.getName() + String.format(" (%.02fs + %.02fs)", acs.getInitialDuration().toMillis() / 1_000.0, acs.getExtraCastDuration().toMillis() / 1_000.0);
+				}
+				else {
+					text = ability.getName() + String.format(" (%.02fs)", hd.getInitialDuration().toMillis() / 1_000.0);
+				}
 			}
 			else {
 				text = ability.getName();

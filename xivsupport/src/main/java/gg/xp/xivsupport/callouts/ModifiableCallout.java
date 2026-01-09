@@ -3,6 +3,7 @@ package gg.xp.xivsupport.callouts;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.time.TimeUtils;
 import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.events.actlines.events.AbilityCastStart;
 import gg.xp.xivsupport.events.actlines.events.HasAbility;
 import gg.xp.xivsupport.events.actlines.events.HasDuration;
 import gg.xp.xivsupport.events.actlines.events.HasStatusEffect;
@@ -366,6 +367,21 @@ public class ModifiableCallout<X> {
 		CombinedExpiryCondition<Y> expiry = combinedExpiry(combinedLingerTime);
 		long millis = offset.toMillis();
 		return new ModifiableCallout<>(desc, text, text + " ({event.remainingDurationPlus(java.time.Duration.ofMillis(" + millis + "))})", expiry);
+	}
+
+	public static ModifiableCallout<AbilityCastStart> durationBasedCallWithExtraCastTime(String desc, String text) {
+		var alreadyWarned = new MutableBoolean();
+		CombinedExpiryCondition<AbilityCastStart> expiry = (call, hd) -> {
+			if (hd == null) {
+				if (alreadyWarned.isFalse()) {
+					log.error("durationBasedCall: event was null! No time basis! Falling back to fixed duration.");
+					alreadyWarned.setTrue();
+				}
+				return call.getEffectiveTimeSince().compareTo(defaultLingerTime) > 0;
+			}
+			return hd.getEstimatedTimeSinceExpiryWithExtra().compareTo(defaultLingerTime) > 0;
+		};
+		return new ModifiableCallout<>(desc, text, text + " ({event.remainingDurationWithExtra})", expiry);
 	}
 
 	private static <Y extends HasDuration> CombinedExpiryCondition<Y> combinedExpiry(Duration combinedLingerTime) {

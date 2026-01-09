@@ -12,6 +12,8 @@ public interface Action extends XivApiObject {
 	int getCastRaw();
 	@XivApiField("Recast100ms")
 	int getRecastRaw();
+	@XivApiField("ExtraCastTime100ms")
+	int getExtraCastTime100ms();
 	int getMaxCharges();
 
 	@XivApiTransientField
@@ -28,4 +30,5 @@ public interface Action extends XivApiObject {
 	int getEffectRange();
 	int getXAxisModifier();
 	Omen getOmen();
+
 }

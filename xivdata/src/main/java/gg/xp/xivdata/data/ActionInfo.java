@@ -21,7 +21,8 @@ public record ActionInfo(
 		int xAxisModifier,
 		int coneAngle,
 		boolean isConeAngleKnown,
-		String description
+		String description,
+		int castTimeExtra100ms
 		) implements Serializable {
 	public @Nullable ActionIcon getIcon() {
 		return ActionLibrary.iconForInfo(this);
@@ -55,5 +56,9 @@ public record ActionInfo(
 
 	public double getCastTime() {
 		return castTimeRaw / 10.0;
+	}
+
+	public double getExtraCastTime() {
+		return castTimeExtra100ms / 10.0;
 	}
 }

@@ -454,5 +454,9 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 			.extendedDescription("""
 					This trigger fires on all generic 'Steam Burst' explosions.""");
 
+	/*
+	TODO: Double Alley-oop orbs
+	Also this https://discord.com/channels/551474815727304704/594899820976668673/1458743122271146201
+	 */
 }
 
