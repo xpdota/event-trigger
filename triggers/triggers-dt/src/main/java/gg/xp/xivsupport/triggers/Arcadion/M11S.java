@@ -71,7 +71,6 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final SequentialTrigger<BaseEvent> axeScytheSq = SqtTemplates.sq(30_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB422, 0xB423),
 			(e1, s) -> {
-				// TODO: has follow-through time. just do something about this properly.
 				boolean isTank = state.playerJobMatches(Job::isTank);
 				if (e1.abilityIdMatches(0xB422)) {
 					s.updateCall(isTank ? axeTank : axeNonTank, e1);
@@ -84,9 +83,6 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 
 	@NpcCastCallout(0xB42A)
 	private final ModifiableCallout<AbilityCastStart> oneAndOnly = ModifiableCallout.durationBasedCall("One and Only", "Raidwide");
-
-	@NpcCastCallout({0xB3FF, 0xB45D})
-	private final ModifiableCallout<AbilityCastStart> heartbreakKick = ModifiableCallout.durationBasedCall("Heartbreak Kick", "Tower, Multiple Hits");
 
 	@NpcCastCallout(value = 0xB414, onYou = true)
 	private final ModifiableCallout<AbilityCastStart> comet = ModifiableCallout.durationBasedCall("Comet", "Spread");
@@ -133,8 +129,13 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 		return out;
 	}
 
-	private final ModifiableCallout<AbilityCastStart> assaultEvolvedFirst = ModifiableCallout.durationBasedCallWithOffset("Assault Evolved: First", "{{ mechanics.collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}", Duration.ofMillis(1_500));
-	private final ModifiableCallout<?> assaultEvolvedSecond = new ModifiableCallout<>("Assault Evolved: Second", "{{ mechanics.collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}");
+	private final ModifiableCallout<AbilityCastStart> assaultEvolvedFirst = ModifiableCallout.<AbilityCastStart>durationBasedCallWithOffset(
+			"Assault Evolved: First",
+					"Start { bossFacing } {{ mechanics.take(2).collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}",
+					Duration.ofMillis(1_500))
+			.extendedDescription("""
+			To change the number of mechanics read out at once, change `take(2)` to 1 or 3.""");
+	private final ModifiableCallout<?> assaultEvolvedSecond = new ModifiableCallout<>("Assault Evolved: Second", "{{ mechanics.take(2).collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}");
 	private final ModifiableCallout<?> assaultEvolvedThird = new ModifiableCallout<>("Assault Evolved: Third", "{{ mechanics.collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}");
 	private final ModifiableCallout<?> assaultEvolvedPuddleAfter = new ModifiableCallout<>("Assault Evolved: Puddle", "Drop Puddle");
 
@@ -144,6 +145,7 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 			(e1, s, i) -> {
 				var e1l = s.findOrWaitForCastWithLocation(casts, acs -> acs == e1, false);
 				ArenaSector bossFacing = ArenaPos.combatantFacing(e1l.getLocationInfo().getBestHeading());
+				s.setParam("bossFacing", bossFacing);
 				Map<ArenaSector, Weapon> sectorWeaponsOuter = getSectorWeaponsOuter();
 				Set<Weapon> weapons = EnumSet.allOf(Weapon.class);
 				Weapon firstWeapon = sectorWeaponsOuter.get(bossFacing);
@@ -219,6 +221,16 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(0xB425)
 	private final ModifiableCallout<AbilityCastStart> charybdistopia = ModifiableCallout.durationBasedCall("Charybdistopia", "1 HP");
 
+
+	private final ModifiableCallout<?> ultimateTrophyEarly = new ModifiableCallout<>("Ultimate Trophy First", "{ firstMechAt } {{ ['Stack Out', 'Proteans In', 'Light Parties Cross'][firstMech] }}").extendedDescription("""
+			Please note that this callout cannot call the direction as the direction is not known until the second mechanic.""");
+	private final ModifiableCallout<?> ultimateTrophyInitial = new ModifiableCallout<>("Ultimate Trophy Initial", "Then { clockwise ? 'Clockwise' : 'CCW' } {{ ['Stack Out', 'Proteans In', 'Light Parties Cross'][mechanics[1]] }}");
+	private final ModifiableCallout<?> ultimateTrophyFollowup = new ModifiableCallout<>("Ultimate Trophy Followup", "{{ mechanics.take(2).collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}")
+			.extendedDescription("""
+					To change the number of mechanics read out at once, change `take(2)` to a different number. You can do the same for the followup call as well.
+					You can also use the parameter 'startAt' to indicate starting location.""");
+	private final ModifiableCallout<?> ultimateTrophyTornado = new ModifiableCallout<>("Ultimate Trophy Bait Tornado", "Bait Tornado");
+
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> ultimateTrophyCollectorSq = SqtTemplates.sq(120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB7ED),
@@ -229,29 +241,25 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 				int count = 0;
 				// Collector logic
 				while (count < 6) {
-					var acee = s.waitEvent(ActorControlExtraEvent.class, ace -> {
-						return Weapon.forNpc(ace.getTarget()) != null && ace.getData0() >= 0x11D1 && ace.getData0() <= 0x11D3;
-					});
+					var acee = s.waitEvent(ActorControlExtraEvent.class,
+							ace -> Weapon.forNpc(ace.getTarget()) != null && ace.getData0() >= 0x11D1 && ace.getData0() <= 0x11D3);
 					XivCombatant tgt = acee.getTarget();
-//					 Ignore duplicates, since the old weapons will have started firing by the time all of them spawn
-//					boolean seen = !seenIds.add(tgt.getbNpcId());
-//					if (seen) {
-//						log.info("Weapon duplicate: {}", Long.toString(tgt.getId(), 16));
-//						continue;
-//					}
 					s.waitThenRefreshCombatants(50);
 					XivCombatant cbt = state.getLatestCombatantData(tgt);
 					pendingUltimateWeapons.add(cbt);
 					Weapon weapon = Weapon.forNpc(tgt);
 					log.info("Weapon: {} : {} at {}", Long.toString(tgt.getId(), 16), weapon, cbt.getPos());
-					pendingUltimateMechs.add(weapon.ordinal());
+					int mech = weapon.ordinal();
+					pendingUltimateMechs.add(mech);
+					if (count == 0) {
+						s.setParam("firstMech", mech);
+						var firstSector = ap.forCombatant(tgt);
+						s.setParam("firstMechAt", firstSector);
+						s.updateCall(ultimateTrophyEarly);
+					}
 					count++;
 				}
 			});
-
-	private final ModifiableCallout<?> ultimateTrophyInitial = new ModifiableCallout<>("Ultimate Trophy Initial", "{ clockwise ? 'Clockwise' : 'CCW' } {{ mechanics.take(2).collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}");
-	private final ModifiableCallout<?> ultimateTrophyFollowup = new ModifiableCallout<>("Ultimate Trophy Followup", "{{ mechanics.take(2).collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}");
-	private final ModifiableCallout<?> ultimateTrophyTornado = new ModifiableCallout<>("Ultimate Trophy Bait Tornado", "Bait Tornado");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> ultimateTrophyCallSq = SqtTemplates.sq(120_000,
@@ -268,6 +276,7 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 				var firstSector = ap.forCombatant(first);
 				var secondSector = ap.forCombatant(second);
 				boolean clockwise = firstSector.eighthsTo(secondSector) > 0;
+				s.setParam("startAt", firstSector);
 				s.setParam("clockwise", clockwise);
 				s.setParam("mechanics", new ArrayList<>(pendingUltimateMechs));
 				s.setParam("weapons", new ArrayList<>(pendingUltimateWeapons));
@@ -344,10 +353,10 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 
 	private final ModifiableCallout<AbilityCastStart> flatliner = ModifiableCallout.durationBasedCall("Flatliner", "Raidwide, Knockback");
 	private final ModifiableCallout<?> flatlinerNoTether = new ModifiableCallout<>("Flatliner: No Tether", "No Tether");
-	private final ModifiableCallout<TetherEvent> flatlinerTetherCross = new ModifiableCallout<>("Flatliner: Tether, Cross", "{tetherFrom} Tether, Cross");
-	private final ModifiableCallout<TetherEvent> flatlinerTetherNoCross = new ModifiableCallout<>("Flatliner: Tether, Stay", "{tetherFrom} Tether, Stay");
-	private final ModifiableCallout<?> flatlinerBaitPuddlesTether = new ModifiableCallout<>("Flatliner: Bait Puddles w/ Tether", "Bait Puddles");
-	private final ModifiableCallout<?> flatlinerBaitPuddlesNoTether = new ModifiableCallout<>("Flatliner: Bait Puddles No Tether", "Bait Puddles");
+	private final ModifiableCallout<TetherEvent> flatlinerTetherCross = new ModifiableCallout<>("Flatliner: Tether, Cross", "{tetherFrom} {outer ? 'Outer' : 'Inner'} Tether, Cross");
+	private final ModifiableCallout<TetherEvent> flatlinerTetherNoCross = new ModifiableCallout<>("Flatliner: Tether, Stay", "{tetherFrom} {outer ? 'Outer' : 'Inner'} Tether, Stay");
+	private final ModifiableCallout<?> flatlinerBaitPuddlesTether = new ModifiableCallout<>("Flatliner: Bait Puddles w/ Tether", "Bait Puddles Far");
+	private final ModifiableCallout<?> flatlinerBaitPuddlesNoTether = new ModifiableCallout<>("Flatliner: Bait Puddles No Tether", "Bait Puddles Close");
 
 
 	private final ArenaPos flatlinerAp = new ArenaPos(100, 100, 0, 0);
@@ -368,6 +377,8 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 								XivCombatant npcTarget = state.getLatestCombatantData(myTether.getTargetMatching(cbt -> !cbt.isPc()));
 								// Where the tether comes from
 								ArenaSector tetherFrom = flatlinerAp.forCombatant(npcTarget);
+								// Is it an inner or outer tether? Inners are 95/105, outer is 85/115
+								boolean outer = Math.abs(npcTarget.getPos().y() - 100) > 10;
 								// Where the player is
 								ArenaSector playerAt = flatlinerAp.forCombatant(state.getPlayer());
 								// Where the player needs to get knocked to
@@ -378,26 +389,22 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 								boolean tetherFromEast = tetherFrom.isAdjacentOrEqualTo(ArenaSector.EAST);
 								// Does the player need to get knocked to the other side?
 								boolean cross = playerEast == tetherFromEast;
-								// TODO: also indicate if tethered laser is "in" or "out"
 								s.setParam("tetherFrom", tetherFrom);
 								s.setParam("knockTo", knockTo);
+								s.setParam("outer", outer);
 								s.updateCall(cross ? flatlinerTetherCross : flatlinerTetherNoCross, myTether);
 							}, () -> {
 								// no tether
 								s.updateCall(flatlinerNoTether);
 							}
 					);
+					// Tower goes off
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB444, 0xB445));
-					s.waitMs(3_000);
+					s.waitMs(2_800);
+					// Wait for landing
 					playerTether.ifPresentOrElse(t -> s.updateCall(flatlinerBaitPuddlesTether), () -> s.updateCall(flatlinerBaitPuddlesNoTether));
-					// TODO: what does the marker actually do?
-					// Since a correctly executed mechanic always has 4 tethers and 4 markers, why do we need this at all?
-//				var markers = s.waitEventsQuickSuccession(4, HeadMarkerEvent.class, hme -> hme.markerIdMatches(244));
-//				markers.stream().filter(fm -> fm.getTarget().isThePlayer())
-//						.findAny()
-//						.ifPresentOrElse(myMarker -> s.updateCall());
-
 					// TODO: close/far laser
+					// I suspect it is MapEffect
 					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB443));
 					s.waitMs(2_000);
 				}
@@ -413,7 +420,11 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> arcadionAvalanche = SqtTemplates.sq(120_000,
-			// TODO: validate these IDs
+			// B44C is SE safe
+			// B44E is SW safe
+			// B450 is NW safe
+			// B44A is NE safe (unconfirmed)
+			// Could simplify logic by using IDs directly
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB44A, 0xB44C, 0xB44E, 0xB450),
 			(e1, s) -> {
 				// This is the boss facing
@@ -439,8 +450,87 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 			});
 
 
-	/*
-	"Puddles and stack" is sometimes "Puddles and spread"?
+	private final ModifiableCallout<AbilityCastStart> eclipticStampedeInitial = ModifiableCallout.durationBasedCall("Ecliptic Stampede", "Ecliptic Stampede");
 
-	 */
+	private final ModifiableCallout<HeadMarkerEvent> eclipticMarker = new ModifiableCallout<HeadMarkerEvent>("Ecliptic Stampede: Marker", "Marker with {buddy}");
+	private final ModifiableCallout<?> eclipticNoMarker = new ModifiableCallout<>("Ecliptic Stampede: No Marker", "No Marker");
+
+	private final ModifiableCallout<?> eclipticDropPuddlesOutside = new ModifiableCallout<>("Ecliptic Stampede: Drop Puddles (Had Marker)", "Drop Puddles");
+	private final ModifiableCallout<?> eclipticDropPuddlesThenTower = new ModifiableCallout<>("Ecliptic Stampede: Drop Puddles (No Marker)", "Drop Puddles then Tower");
+	private final ModifiableCallout<AbilityCastStart> eclipticPuddlesTower = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Tower", "Tower");
+
+	private final ModifiableCallout<TetherEvent> eclipticTether = new ModifiableCallout<TetherEvent>("Ecliptic Stampede: Tether", "{tetherFrom} Tether").extendedDescription("""
+			`tetherFrom` indicates the arena sector where the tether is from.
+			If you want to automatically have this converted to a safe spot (e.g. E -> NW), you can do `tetherFrom.plusEighths(-3)`.
+			""");
+	private final ModifiableCallout<TetherEvent> eclipticNoTether = new ModifiableCallout<TetherEvent>("Ecliptic Stampede: No Tether", "No Tether");
+
+	private final ModifiableCallout<AbilityCastStart> eclipticTwoWayWithTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Two-Way with Fireball Tether", "Light Parties, Behind");
+	private final ModifiableCallout<AbilityCastStart> eclipticTwoWayNoTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Two-Way with Fireball Tether", "Light Parties, Bait");
+
+	private final ModifiableCallout<AbilityCastStart> eclipticFourWayWithTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Two-Way with Fireball Tether", "Buddies, Behind");
+	private final ModifiableCallout<AbilityCastStart> eclipticFourWayNoTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Two-Way with Fireball Tether", "Buddies, Bait");
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> eclipticStampedeSq = SqtTemplates.sq(120_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB452),
+			(e1, s) -> {
+		s.updateCall(eclipticStampedeInitial, e1);
+		/*
+		Mammoth Meteor 5.7s B453
+		Weighty Impact 2x 4.7s B457 and Cosmic Kiss (4.7s) B456
+		 */
+				var headmarkers = s.waitEventsQuickSuccession(2, HeadMarkerEvent.class, hme -> hme.markerIdMatches(30));
+				Optional<HeadMarkerEvent> maybeMarker = headmarkers.stream().filter(hme -> hme.getTarget().isThePlayer()).findAny();
+				maybeMarker.ifPresentOrElse(
+						myMarker -> {
+							headmarkers.stream().filter(hme -> !hme.getTarget().isThePlayer())
+									.findAny()
+									.ifPresent(otherMarker -> s.setParam("buddy", otherMarker.getTarget()));
+							s.updateCall(eclipticMarker);
+						}, () -> {
+							s.updateCall(eclipticNoMarker);
+						}
+				);
+
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB453));
+				if (maybeMarker.isPresent()) {
+					s.updateCall(eclipticDropPuddlesOutside);
+				}
+				else {
+					s.updateCall(eclipticDropPuddlesThenTower);
+					var tower = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB456));
+					// TODO: call locations of tank vs non-tank towers?
+					s.updateCall(eclipticPuddlesTower, tower);
+				}
+
+				var tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.tetherIdMatches(57));
+				Optional<TetherEvent> maybeMyTether = tethers.stream().filter(t -> t.eitherTargetMatches(XivCombatant::isThePlayer)).findAny();
+				maybeMyTether.ifPresentOrElse(
+						myTether -> {
+							XivCombatant tetheredTo = myTether.getTargetMatching(cbt -> !cbt.isPc());
+							ArenaSector tetherFrom = ap.forCombatant(tetheredTo);
+							s.setParam("tetherFrom", tetherFrom);
+							s.updateCall(eclipticTether, myTether);
+						}, () -> {
+							s.updateCall(eclipticNoTether);
+						}
+				);
+				boolean hadTether = maybeMyTether.isPresent();
+				// B7BD two-way fireball, B45A four-wall fireball
+				var fireball = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB7BD, 0xB45A));
+				if (fireball.abilityIdMatches(0xB45A)) {
+					s.updateCall(hadTether ? eclipticFourWayWithTether : eclipticFourWayNoTether, fireball);
+				}
+				else {
+					s.updateCall(hadTether ? eclipticTwoWayWithTether : eclipticTwoWayNoTether, fireball);
+				}
+
+			});
+
+
+	@NpcCastCallout({0xB3FF, 0xB45D})
+	private final ModifiableCallout<AbilityCastStart> heartbreakKick = ModifiableCallout.durationBasedCall("Heartbreak Kick", "Tower, Multiple Hits");
+	@NpcCastCallout(value = 0xB462, cancellable = true)
+	private final ModifiableCallout<AbilityCastStart> heartbreaker = ModifiableCallout.durationBasedCall("Heartbreaker", "Enrage");
 }
