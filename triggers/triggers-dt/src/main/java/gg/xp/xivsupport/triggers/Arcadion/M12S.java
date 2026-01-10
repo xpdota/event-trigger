@@ -161,7 +161,7 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.setParam("numInLine", inLine);
 				var buddyBuff = s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(lineBuff.getBuff().getId()) && !ba.getTarget().isThePlayer());
 				s.setParam("buddy", buddyBuff.getTarget());
-				s.updateCall(alpha ? grot2beta : grot2alpha, alphaBeta);
+				s.updateCall(alpha ? grot2alpha : grot2beta, alphaBeta);
 				// Longer delay between debuffs and first in line
 				s.waitMs(14_000);
 				for (int i = 1; i <= 4; i++) {
