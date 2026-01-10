@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -301,4 +302,9 @@ public enum ArenaSector implements HasFriendlyName {
 		// By doing this, we flip the order (north = 8, NE = 7, NW = 1), and then %8 to get north back to 0
 		return (8 - sector.ordinal()) % 8;
 	});
+
+	// TODO unit test this
+	public ArenaSector closest(boolean ccwTiebreaker, ArenaSector... arenaSectors) {
+		return Arrays.stream(arenaSectors).min(Comparator.comparing(sec -> Math.abs(this.eighthsTo(sec)) * 4 + (ccwTiebreaker ? 1 : -1))).orElse(null);
+	}
 }

@@ -12,14 +12,15 @@ public class AbilityHitIndexIndicator extends Component {
 	@Override
 	public void paint(Graphics g) {
 		if (g instanceof Graphics2D g2d) {
+			g2d.setColor(RenderUtils.withAlpha(getForeground(), 128));
 			int w = getWidth();
 			int h = getHeight();
 			if (isFirst) {
-				g.drawLine(0, 1, w, 1);
+				g.drawLine(1, 1, w, 1);
 				g.drawLine(0, 1, 0, h - 1);
 			}
 			else if (isLast) {
-				g.drawLine(0, h - 3, w, h - 3);
+				g.drawLine(1, h - 3, w, h - 3);
 				g.drawLine(0, 0, 0, h - 3);
 			}
 			else {

@@ -36,6 +36,7 @@ public class AbilityEffectAndIndexRenderer implements TableCellRenderer {
 				hitIndexIndicator.setValue(hti);
 				hitIndexIndicator.setSize(4, table.getRowHeight());
 				allComponents.add(hitIndexIndicator);
+				hitIndexIndicator.setForeground(table.getForeground());
 			}
 			if (value instanceof HasEffects he) {
 				List<AbilityEffect> coll = he.getEffects();

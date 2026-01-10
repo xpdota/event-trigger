@@ -596,6 +596,17 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		return out;
 	}
 
+	/**
+	 * Wait for an event matching a filter, but bail if we see an event matching a different filter.
+	 *
+	 * @param eventClass The event we want.
+	 * @param eventFilter The filter for the event.
+	 * @param stopOnType The type of event we want to stop on.
+	 * @param stopOn The filter for the stop event.
+	 * @return The event, unless we hit the stop condition first, in which case null is returned.
+	 * @param <Y> The type of event we want.
+	 * @param <Z> The type of event we want to stop on.
+	 */
 	public <Y, Z> @Nullable Y waitEventUntil(Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {
 		List<Y> events = waitEventsUntil(1, eventClass, eventFilter, stopOnType, stopOn);
 		if (events.isEmpty()) {
@@ -606,6 +617,20 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+
+	/**
+	 * Wait for events matching a filter, but stop collecting events once we see an event matching a different filter,
+	 * or when we hit our limit.
+	 *
+	 * @param limit The maximum number of events to wait for.
+	 * @param eventClass The event we want.
+	 * @param eventFilter The filter for the event.
+	 * @param stopOnType The type of event we want to stop on.
+	 * @param stopOn The filter for the stop event.
+	 * @return The list of events collected.
+	 * @param <Y> The type of event we want.
+	 * @param <Z> The type of event we want to stop on.
+	 */
 	public <Y, Z> List<Y> waitEventsUntil(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {
 		List<Y> out = new ArrayList<>();
 		while (true) {
