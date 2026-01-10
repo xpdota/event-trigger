@@ -28,6 +28,7 @@ import gg.xp.xivsupport.models.ArenaPos;
 import gg.xp.xivsupport.models.ArenaSector;
 import gg.xp.xivsupport.models.Position;
 import gg.xp.xivsupport.models.XivCombatant;
+import gg.xp.xivsupport.models.XivPlayerCharacter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -475,7 +476,6 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				// For outside, it's the opposite, if the cleaves are E/W then the safe spot is N/S
 				var outerCloneCard = cleavingHoriz ? outerCloneSector.closest(false, ArenaSector.NORTH, ArenaSector.SOUTH) : outerCloneSector.closest(false, ArenaSector.WEST, ArenaSector.EAST);
 				log.info("Replication 1: Inner clone card is {}, outer clone card is {}", innerCloneCard, outerCloneCard);
-				s.accept(new DebugEvent("foo"));
 				if (needFire) {
 					s.setParam("fireIn", innerCloneSector);
 					s.setParam("fireInCard", innerCloneCard);
@@ -523,7 +523,10 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> stgStacks = new ModifiableCallout<>("Staging: Stacks Now", "Light Parties");
 	private final ModifiableCallout<?> stgStacksWithCone = new ModifiableCallout<>("Staging: Stacks Now", "Light Parties, Face Out");
 
-//	private final ModifiableCallout<?> stgRecollectionMech =
+	private final ModifiableCallout<AbilityCastStart> netherwrathNear = ModifiableCallout.durationBasedCall("Netherwrath Near", "Near");
+	private final ModifiableCallout<AbilityCastStart> netherwrathFar = ModifiableCallout.durationBasedCall("Netherwrath Far", "Far");
+
+	private final ModifiableCallout<?> stgRecollectionMechs = new ModifiableCallout<>("Staging: Reenactment Mechanics Pair", "{['Protean', 'Defamation', 'Stack', 'Boss'][mech1]} {sector1}, {['Protean', 'Defamation', 'Stack', 'Boss'][mech2]} {sector2}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> staging = SqtTemplates.sq(
@@ -550,7 +553,8 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 					case SOUTHEAST -> s.updateCall(stgCloneTetherSE, myTether);
 				}
 
-				// Track the last TetherEvent from each mob
+				// Track the last TetherEvent from each mob. ACT doesn't tell us when a tether is removed, so we just
+				// rely on the fact that each mob only has one tether.
 				Map<Long, TetherEvent> tetherTracker = new HashMap<>();
 				// 16F triangle
 				// 170 defa
@@ -590,23 +594,36 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				else {
 					s.updateCall(stgStacks);
 				}
-				// TODO: conals need to point out as well
 
 				// TODO: near/far? slide 13-14 on https://raidplan.io/plan/hxub7q7ptpzgpq6h
-				// TODO: re-enactment
 				AbilityCastStart netherWrathCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB52E, 0xB52F));
 				if (netherWrathCast.abilityIdMatches(0xB52E)) {
-					// near
+					s.updateCall(netherwrathNear, netherWrathCast);
 				}
 				else {
-					// far
+					s.updateCall(netherwrathFar, netherWrathCast);
 				}
 				s.waitCastFinished(casts, netherWrathCast);
 				// calling the rest of the mechanics is non-trivial since we need to figure out what order they will happen in
 				// how is the boss itself factored in here?
-
-
-
+				for (int i = 0; i < 4; i++) {
+					ArenaSector sector1 = ArenaSector.values()[i];
+					ArenaSector sector2 = sector1.opposite();
+					// The first clones to go off are N/S. So we start by looking at what player was tethered to that clone,
+					// and then what mob the player was tethered to.
+					XivCombatant player1 = allCloneTethers.stream().filter(tether -> tightAp.forCombatant(tether.getSource()) == sector1).map(tether -> tether.getTargetMatching(XivCombatant::isPc)).findAny().orElse(null);
+					XivCombatant player2 = allCloneTethers.stream().filter(tether -> tightAp.forCombatant(tether.getSource()) == sector2).map(tether -> tether.getTargetMatching(XivCombatant::isPc)).findAny().orElse(null);
+					TetherEvent tether1 = tetherTracker.values().stream().filter(tether -> tether.eitherTargetMatches(player1)).findAny().orElse(null);
+					TetherEvent tether2 = tetherTracker.values().stream().filter(tether -> tether.eitherTargetMatches(player2)).findAny().orElse(null);
+					long mech1 = tether1 == null ? 1 : (tether1.getId() == 0x176 ? 3 : tether1.getId() - 0x16F);
+					long mech2 = tether2 == null ? 1 : (tether2.getId() == 0x176 ? 3 : tether2.getId() - 0x16F);
+					s.setParam("mech1", mech1);
+					s.setParam("mech2", mech2);
+					s.setParam("sector1", sector1);
+					s.setParam("sector2", sector2);
+					s.updateCall(stgRecollectionMechs);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBBE3, 0xB4ED, 0xB922, 0xBE5D));
+				}
 			}
 	);
 
@@ -621,7 +638,7 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				log.info("Mutation start");
 				var myBuff = s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(0x12A1, 0x12A3) && ba.getTarget().isThePlayer());
 				boolean alpha = myBuff.buffIdMatches(0x12A1);
-				s.updateCall(alpha ? mutationAlpha : mutationBeta);
+				s.updateCall(alpha ? mutationAlpha : mutationBeta, myBuff);
 
 
 			});
