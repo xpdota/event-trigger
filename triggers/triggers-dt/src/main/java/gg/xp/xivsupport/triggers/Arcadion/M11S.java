@@ -135,7 +135,7 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 					Duration.ofMillis(1_500))
 			.extendedDescription("""
 			To change the number of mechanics read out at once, change `take(2)` to 1 or 3.""");
-	private final ModifiableCallout<?> assaultEvolvedSecond = new ModifiableCallout<>("Assault Evolved: Second", "{{ mechanics.take(2).collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}");
+	private final ModifiableCallout<?> assaultEvolvedSecond = new ModifiableCallout<>("Assault Evolved: Second", "{{ mechanics.take(1).collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}");
 	private final ModifiableCallout<?> assaultEvolvedThird = new ModifiableCallout<>("Assault Evolved: Third", "{{ mechanics.collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}");
 	private final ModifiableCallout<?> assaultEvolvedPuddleAfter = new ModifiableCallout<>("Assault Evolved: Puddle", "Drop Puddle");
 
@@ -228,7 +228,7 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> ultimateTrophyEarly = new ModifiableCallout<>("Ultimate Trophy First", "{ firstMechAt } {{ ['Stack Out', 'Proteans In', 'Light Parties Cross'][firstMech] }}").extendedDescription("""
 			Please note that this callout cannot call the direction as the direction is not known until the second mechanic.""");
 	private final ModifiableCallout<?> ultimateTrophyInitial = new ModifiableCallout<>("Ultimate Trophy Initial", "Then { clockwise ? 'Clockwise' : 'CCW' } {{ ['Stack Out', 'Proteans In', 'Light Parties Cross'][mechanics[1]] }}");
-	private final ModifiableCallout<?> ultimateTrophyFollowup = new ModifiableCallout<>("Ultimate Trophy Followup", "{{ mechanics.take(2).collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}")
+	private final ModifiableCallout<?> ultimateTrophyFollowup = new ModifiableCallout<>("Ultimate Trophy Followup", "{{ mechanics.take(1).collect{['Stack Out', 'Proteans In', 'Light Parties Cross'][it]} }}")
 			.extendedDescription("""
 					To change the number of mechanics read out at once, change `take(2)` to a different number. You can do the same for the followup call as well.
 					You can also use the parameter 'startAt' to indicate starting location.""");
