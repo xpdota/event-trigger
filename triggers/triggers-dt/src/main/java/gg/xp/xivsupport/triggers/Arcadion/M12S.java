@@ -17,6 +17,7 @@ import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.actlines.events.HeadMarkerEvent;
 import gg.xp.xivsupport.events.actlines.events.TetherEvent;
+import gg.xp.xivsupport.events.debug.DebugEvent;
 import gg.xp.xivsupport.events.state.XivState;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
 import gg.xp.xivsupport.events.state.combatstate.StatusEffectRepository;
@@ -340,7 +341,7 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 						);
 			});
 
-	@NpcCastCallout(0xB538)
+	@NpcCastCallout(value = 0xB538, cancellable = true)
 	private final ModifiableCallout<AbilityCastStart> refreshingOverkill = ModifiableCallout.durationBasedCall("Refreshing Overkill", "Enrage");
 
 	// PHASE 2
@@ -348,10 +349,10 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(0xB528)
 	private final ModifiableCallout<AbilityCastStart> arcadiaAflame = ModifiableCallout.durationBasedCall("Arcadia Aflame", "Raidwide");
 
-	private final ModifiableCallout<AbilityCastStart> replHorizontalCleavingHorizontal = ModifiableCallout.durationBasedCall("Replication: Horizonal, Cleaving Horizontal");
-	private final ModifiableCallout<AbilityCastStart> replHorizontalCleavingVertical = ModifiableCallout.durationBasedCall("Replication: Horizontal, Cleaving Vertical");
-	private final ModifiableCallout<AbilityCastStart> replVerticalCleavingHorizontal = ModifiableCallout.durationBasedCall("Replication: Vertical, Cleaving Horizontal");
-	private final ModifiableCallout<AbilityCastStart> replVerticalCleavingVertical = ModifiableCallout.durationBasedCall("Replication: Vertical, Cleaving Verical");
+	private final ModifiableCallout<AbilityCastStart> replHorizontalCleavingHorizontal = ModifiableCallout.durationBasedCall("Replication: Horizonal, Cleaving Horizontal", "Horizontal");
+	private final ModifiableCallout<AbilityCastStart> replHorizontalCleavingVertical = ModifiableCallout.durationBasedCall("Replication: Horizontal, Cleaving Vertical", "Vertical");
+	private final ModifiableCallout<AbilityCastStart> replVerticalCleavingHorizontal = ModifiableCallout.durationBasedCall("Replication: Vertical, Cleaving Horizontal", "Horizontal");
+	private final ModifiableCallout<AbilityCastStart> replVerticalCleavingVertical = ModifiableCallout.durationBasedCall("Replication: Vertical, Cleaving Vertical", "Vertical");
 
 	private final ModifiableCallout<BuffApplied> replFireRes = ModifiableCallout.<BuffApplied>durationBasedCall("Replication: Fire Res Down", "Fire Res").autoIcon();
 	private final ModifiableCallout<BuffApplied> replDarkRes = ModifiableCallout.<BuffApplied>durationBasedCall("Replication: Dark Res Down", "Dark Res").autoIcon();
@@ -360,13 +361,15 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(0xB527)
 	private final ModifiableCallout<AbilityCastStart> snakingKick = ModifiableCallout.durationBasedCall("Snaking Kick", "Behind");
 
-	// TODO add description
-	private final ModifiableCallout<AbilityCastStart> replGetHitByFire = ModifiableCallout.durationBasedCall("Replication: Get Hit By Fire", "Stack {fireIn} In, {fireOutCard}{fireOut} Out");
-	private final ModifiableCallout<AbilityCastStart> replGetHitByDark = ModifiableCallout.durationBasedCall("Replication: Get Hit By Dark", "Spread {darkIn} In, {darkOutCard}{darkOut} Out");
+	private final ModifiableCallout<?> replGetHitByFire = new ModifiableCallout<>("Replication: Get Hit By Fire", "Stack {fireInCard} In, {fireOutCard}{fireOut} Out")
+			.extendedDescription("""
+					It is recommended that you remove whichever half of this callout you are not using.
+					The variables you can use are fireIn and fireOut (where the inner and outer fire clones are), and fireInCard and fireOutCard (the adjacent safe cardinal based on the cleaves).""");
+	private final ModifiableCallout<?> replGetHitByDark = new ModifiableCallout<>("Replication: Get Hit By Dark", "Spread {darkInCard} In, {darkOutCard}{darkOut} Out").extendedDescription("See above, but replace 'fire' with 'dark'");
 
 	private final ArenaPos tightAp = new ArenaPos(100, 100, 4, 4);
 
-//	@AutoFeed
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> replication = SqtTemplates.sq(
 			120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB4D8),
@@ -383,8 +386,12 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				DescribesCastLocation<AbilityCastStart> wingedLoc = s.waitForCastLocation(winged);
 				var cleavingFrom = tightAp.forPosition(wingedLoc.getPos());
 				var cleavingTo = ArenaPos.combatantFacing(wingedLoc.getBestHeading());
-				boolean fromHoriz = cleavingFrom == ArenaSector.NORTH || cleavingFrom == ArenaSector.SOUTH;
-				boolean cleavingHoriz = cleavingTo == ArenaSector.NORTH || cleavingTo == ArenaSector.SOUTH;
+				log.info("winged: {}", winged);
+				log.info("wingedLoc: {}", wingedLoc);
+				log.info("Cleaving from {}, to {}", cleavingFrom, cleavingTo);
+				boolean fromHoriz = cleavingFrom == ArenaSector.WEST || cleavingFrom == ArenaSector.EAST;
+				boolean cleavingHoriz = cleavingTo == ArenaSector.WEST || cleavingTo == ArenaSector.EAST;
+				log.info("fromHoriz={}, cleavingHoriz={}", fromHoriz, cleavingHoriz);
 				if (fromHoriz) {
 					s.updateCall(cleavingHoriz ? replHorizontalCleavingHorizontal : replHorizontalCleavingVertical, winged);
 				}
@@ -398,7 +405,6 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 
 				s.waitEvent(BuffApplied.class, ba -> ba.buffIdMatches(0xCFB));
 
-				// Wait because we don't want to talk over the snaking call
 				s.waitMs(1_000);
 				// At this point, player has Fire Rest Down (B79), Dark Resistance Down (CFB), or nothing
 				var myFire = buffs.findStatusOnTarget(state.getPlayer(), 0xB79);
@@ -441,28 +447,41 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				// It's something like:
 				/*
 				[Clone 1a, Clone 1b, Clone 2a..., Clone 4b, Original 1, Original 2, ..., Original 4]
+				This, to get from "Original X", we take the index, subtract 8, then multiply by 2.
 				 */
-				List<XivCombatant> lindschrats = state.npcsById(19204);
-				int baseIndex = lindschrats.indexOf(neededMob) - 8;
-				List<XivCombatant> neededClones = Stream.of(lindschrats.get(baseIndex), lindschrats.get(baseIndex + 1)).sorted(Comparator.comparing(clone -> clone.getPos().distanceFrom2D(Position.of2d(100, 100)))).toList();
 				// Collect all the cleaves
-				var newCleaves = s.waitEventsQuickSuccession(8, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB4DC));
-				s.waitThenRefreshCombatants(50);
-				var innerClone = neededClones.get(0);
-				var outerClone = neededClones.get(1);
-				var innerCloneSector = tightAp.forCombatant(innerClone);
-				var outerCloneSector = tightAp.forCombatant(outerClone);
+//				var newCleaves = s.waitEventsQuickSuccession(8, AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB4DC));
+				// I don't know what this unknown action is but it seems to line up well enough for timing
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB4D9));
+				s.waitMs(1000);
+				XivCombatant innerClone;
+				XivCombatant outerClone;
+				ArenaSector innerCloneSector;
+				ArenaSector outerCloneSector;
+				do {
+					s.waitThenRefreshCombatants(50);
+					List<XivCombatant> lindschrats = state.npcsById(19204);
+					int baseIndex = (lindschrats.indexOf(neededMob) - 8) * 2;
+					List<XivCombatant> neededClones = Stream.of(lindschrats.get(baseIndex), lindschrats.get(baseIndex + 1)).sorted(Comparator.comparing(clone -> clone.getPos().distanceFrom2D(Position.of2d(100, 100)))).toList();
+					innerClone = (neededClones.get(0));
+					outerClone = (neededClones.get(1));
+					innerCloneSector = tightAp.forCombatant(innerClone);
+					outerCloneSector = tightAp.forCombatant(outerClone);
+				} while (innerCloneSector.opposite() != outerCloneSector);
 				log.info("Replication 1: Inner clone is {}, outer clone is {}", innerClone, outerClone);
 				log.info("Replication 1: Inner clone sector is {}, outer clone sector is {}", innerCloneSector, outerCloneSector);
+				// For inside, the direction of the cleave is "safe" - if the cleaves are going E/W then the safespot is horizontal
 				var innerCloneCard = cleavingHoriz ? innerCloneSector.closest(false, ArenaSector.WEST, ArenaSector.EAST) : innerCloneSector.closest(false, ArenaSector.NORTH, ArenaSector.SOUTH);
-				var outerCloneCard = cleavingHoriz ? outerCloneSector.closest(false, ArenaSector.WEST, ArenaSector.EAST) : outerCloneSector.closest(false, ArenaSector.NORTH, ArenaSector.SOUTH);
+				// For outside, it's the opposite, if the cleaves are E/W then the safe spot is N/S
+				var outerCloneCard = cleavingHoriz ? outerCloneSector.closest(false, ArenaSector.NORTH, ArenaSector.SOUTH) : outerCloneSector.closest(false, ArenaSector.WEST, ArenaSector.EAST);
 				log.info("Replication 1: Inner clone card is {}, outer clone card is {}", innerCloneCard, outerCloneCard);
+				s.accept(new DebugEvent("foo"));
 				if (needFire) {
 					s.setParam("fireIn", innerCloneSector);
 					s.setParam("fireInCard", innerCloneCard);
 					s.setParam("fireOut", outerCloneSector);
 					s.setParam("fireOutCard", outerCloneCard);
-					s.updateCall(replGetHitByFire, newCleaves.get(0));
+					s.updateCall(replGetHitByFire);
 				}
 				else {
 					// TODO these only have one set of vars, not the other set
@@ -470,7 +489,7 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 					s.setParam("darkInCard", innerCloneCard);
 					s.setParam("darkOut", outerCloneSector);
 					s.setParam("darkOutCard", outerCloneCard);
-					s.updateCall(replGetHitByDark, newCleaves.get(0));
+					s.updateCall(replGetHitByDark);
 				}
 
 				/*
@@ -487,21 +506,26 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(0xB525)
 	private final ModifiableCallout<AbilityCastStart> doubleSobatSecond = ModifiableCallout.durationBasedCall("Double Sobat: Second Hit", "Tankbuster");
 
-	private final ModifiableCallout<TetherEvent> cloneTetherN = new ModifiableCallout<>("Staging: Tethered to N Clone", "{tetheredTo} Clone");
-	private final ModifiableCallout<TetherEvent> cloneTetherE = new ModifiableCallout<>("Staging: Tethered to E Clone", "{tetheredTo} Clone");
-	private final ModifiableCallout<TetherEvent> cloneTetherS = new ModifiableCallout<>("Staging: Tethered to S Clone", "{tetheredTo} Clone");
-	private final ModifiableCallout<TetherEvent> cloneTetherW = new ModifiableCallout<>("Staging: Tethered to W Clone", "{tetheredTo} Clone");
-	private final ModifiableCallout<TetherEvent> cloneTetherNW = new ModifiableCallout<>("Staging: Tethered to NW Clone", "{tetheredTo} Clone");
-	private final ModifiableCallout<TetherEvent> cloneTetherNE = new ModifiableCallout<>("Staging: Tethered to NE Clone", "{tetheredTo} Clone");
-	private final ModifiableCallout<TetherEvent> cloneTetherSW = new ModifiableCallout<>("Staging: Tethered to SW Clone", "{tetheredTo} Clone");
-	private final ModifiableCallout<TetherEvent> cloneTetherSE = new ModifiableCallout<>("Staging: Tethered to SE Clone", "{tetheredTo} Clone");
+	private final ModifiableCallout<TetherEvent> stgCloneTetherN = new ModifiableCallout<>("Staging: Tethered to N Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> stgCloneTetherE = new ModifiableCallout<>("Staging: Tethered to E Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> stgCloneTetherS = new ModifiableCallout<>("Staging: Tethered to S Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> stgCloneTetherW = new ModifiableCallout<>("Staging: Tethered to W Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> stgCloneTetherNW = new ModifiableCallout<>("Staging: Tethered to NW Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> stgCloneTetherNE = new ModifiableCallout<>("Staging: Tethered to NE Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> stgCloneTetherSW = new ModifiableCallout<>("Staging: Tethered to SW Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> stgCloneTetherSE = new ModifiableCallout<>("Staging: Tethered to SE Clone", "{tetherFrom} Clone");
 
-	private final ModifiableCallout<?> defamation = new ModifiableCallout<>("Staging: Defamation Locked In", "Defamation");
-	private final ModifiableCallout<?> protean = new ModifiableCallout<>("Staging: Protean Locked In", "Protean");
-	private final ModifiableCallout<?> stack = new ModifiableCallout<>("Staging: Stack Locked In", "Stack");
-	private final ModifiableCallout<?> boss = new ModifiableCallout<>("Staging: Boss Tether Locked In", "Boss");
+	private final ModifiableCallout<?> stgDefamation = new ModifiableCallout<>("Staging: Defamation Locked In", "Defamation");
+	private final ModifiableCallout<?> stgProtean = new ModifiableCallout<>("Staging: Protean Locked In", "Protean");
+	private final ModifiableCallout<?> stgStack = new ModifiableCallout<>("Staging: Stack Locked In", "Stack On You");
+	private final ModifiableCallout<?> stgBoss = new ModifiableCallout<>("Staging: Boss Tether Locked In", "Boss");
 
-//	@AutoFeed
+	private final ModifiableCallout<?> stgStacks = new ModifiableCallout<>("Staging: Stacks Now", "Light Parties");
+	private final ModifiableCallout<?> stgStacksWithCone = new ModifiableCallout<>("Staging: Stacks Now", "Light Parties, Face Out");
+
+//	private final ModifiableCallout<?> stgRecollectionMech =
+
+	@AutoFeed
 	private final SequentialTrigger<BaseEvent> staging = SqtTemplates.sq(
 			120_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB4E1),
@@ -513,15 +537,17 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 						.orElseThrow();
 				var tetheredTo = myTether.getTargetMatching(t -> !t.isPc());
 				ArenaSector tetherFrom = tightAp.forCombatant(tetheredTo);
+				s.setParam("tetheredTo", tetheredTo);
+				s.setParam("tetherFrom", tetherFrom);
 				switch (tetherFrom) {
-					case NORTH -> s.updateCall(cloneTetherN, myTether);
-					case EAST -> s.updateCall(cloneTetherE, myTether);
-					case SOUTH -> s.updateCall(cloneTetherS, myTether);
-					case WEST -> s.updateCall(cloneTetherW, myTether);
-					case NORTHWEST -> s.updateCall(cloneTetherNW, myTether);
-					case NORTHEAST -> s.updateCall(cloneTetherNE, myTether);
-					case SOUTHWEST -> s.updateCall(cloneTetherSW, myTether);
-					case SOUTHEAST -> s.updateCall(cloneTetherSE, myTether);
+					case NORTH -> s.updateCall(stgCloneTetherN, myTether);
+					case EAST -> s.updateCall(stgCloneTetherE, myTether);
+					case SOUTH -> s.updateCall(stgCloneTetherS, myTether);
+					case WEST -> s.updateCall(stgCloneTetherW, myTether);
+					case NORTHWEST -> s.updateCall(stgCloneTetherNW, myTether);
+					case NORTHEAST -> s.updateCall(stgCloneTetherNE, myTether);
+					case SOUTHWEST -> s.updateCall(stgCloneTetherSW, myTether);
+					case SOUTHEAST -> s.updateCall(stgCloneTetherSE, myTether);
 				}
 
 				// Track the last TetherEvent from each mob
@@ -546,21 +572,59 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 						.toList();
 				// No tether = defa
 				if (myTethers.isEmpty()) {
-					s.updateCall(defamation);
+					s.updateCall(stgDefamation);
 				}
 				else for (TetherEvent tether : myTethers) {
 					switch ((int) tether.getId()) {
-						case 0x16F -> s.updateCall(protean);
-						case 0x170 -> s.updateCall(defamation);
-						case 0x171 -> s.updateCall(stack);
-						case 0x176 -> s.updateCall(boss);
+						case 0x16F -> s.updateCall(stgProtean);
+						case 0x170 -> s.updateCall(stgDefamation);
+						case 0x171 -> s.updateCall(stgStack);
+						case 0x176 -> s.updateCall(stgBoss);
 					}
 				}
-				// Later, call when the stack needs to actually happen
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB4E7));
+
+				if (myTethers.stream().anyMatch(t -> t.getId() == 0x16F)) {
+					s.updateCall(stgStacksWithCone);
+				}
+				else {
+					s.updateCall(stgStacks);
+				}
+				// TODO: conals need to point out as well
+
+				// TODO: near/far? slide 13-14 on https://raidplan.io/plan/hxub7q7ptpzgpq6h
+				// TODO: re-enactment
+				AbilityCastStart netherWrathCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB52E, 0xB52F));
+				if (netherWrathCast.abilityIdMatches(0xB52E)) {
+					// near
+				}
+				else {
+					// far
+				}
+				s.waitCastFinished(casts, netherWrathCast);
+				// calling the rest of the mechanics is non-trivial since we need to figure out what order they will happen in
+				// how is the boss itself factored in here?
+
 
 
 			}
 	);
+
+	private final ModifiableCallout<BuffApplied> mutationAlpha = ModifiableCallout.<BuffApplied>durationBasedCall("Mutation: Alpha", "Mutation").autoIcon();
+	private final ModifiableCallout<BuffApplied> mutationBeta = ModifiableCallout.<BuffApplied>durationBasedCall("Mutation: Beta", "Mutation").autoIcon();
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> mutatingCells = SqtTemplates.sq(
+			120_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB4E1),
+			(e1, s) -> {
+				log.info("Mutation start");
+				var myBuff = s.findOrWaitForBuff(buffs, ba -> ba.buffIdMatches(0x12A1, 0x12A3) && ba.getTarget().isThePlayer());
+				boolean alpha = myBuff.buffIdMatches(0x12A1);
+				s.updateCall(alpha ? mutationAlpha : mutationBeta);
+
+
+			});
 
 
 }
