@@ -162,12 +162,12 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 				 */
 				var event = s.waitEvent(BaseEvent.class, e ->
 						(e instanceof MapEffectEvent mee
-						 && mee.indexMatches(0x8000400, 0x800040))
+						 && mee.flagsMatches(0x8000400, 0x800040))
 						|| (e instanceof StatusLoopVfxApplied vfx
 						    && vfx.getTarget().npcIdMatches(19288)
 						    && vfx.vfxIdMatches(0x3ED, 0x3EE)));
 				if (event instanceof MapEffectEvent mee) {
-					boolean spread = mee.indexMatches(0x8000400);
+					boolean spread = mee.flagsMatches(0x8000400);
 					s.updateCall(spread ? sickestTakeOffSpreadLater : sickestTakeOffLightPartyLater);
 					var raidwide = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xB5CC), false);
 					s.updateCall(spread ? sickestTakeOffSpread : sickestTakeOffLightParty, raidwide);
@@ -257,7 +257,7 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 	private static boolean isSurfboardEffect(MapEffectEvent mee) {
 		// Other locations use these same values for other purposes, so filter based on location as well.
 		return mee.getLocation() >= 0xE && mee.getLocation() <= 0x16
-		       && mee.indexMatches(
+		       && mee.flagsMatches(
 				BLUE_PROTEAN, BLUE_LIGHTPARTY, BLUE_BUSTER, RED_PROTEAN, RED_LIGHTPARTY, RED_BUSTER
 		);
 	}
@@ -462,15 +462,17 @@ public class M10S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.updateCall(exSnaking, e1);
 				for (int i = 0; i < 4; i++) {
 					// Both bosses do the same action this time, so we only need to look at one event.
+					// TODO: this isn't working on some pulls - check 20:04:55
+					// It has 20001:C, 20001:F, 2000100:15, 20001:D
 					var effect = s.waitEvent(MapEffectEvent.class, M10S::isSurfboardEffect);
-					long index = effect.getIndex();
-					if (index == BLUE_PROTEAN || index == RED_PROTEAN) {
+					long flags = effect.getFlags();
+					if (flags == BLUE_PROTEAN || flags == RED_PROTEAN) {
 						s.updateCall(exSnakingProteans);
 					}
-					else if (index == BLUE_LIGHTPARTY || index == RED_LIGHTPARTY) {
+					else if (flags == BLUE_LIGHTPARTY || flags == RED_LIGHTPARTY) {
 						s.updateCall(exSnakingLightParty);
 					}
-					else if (index == BLUE_BUSTER || index == RED_BUSTER) {
+					else if (flags == BLUE_BUSTER || flags == RED_BUSTER) {
 						s.updateCall(exSnakingBuster);
 					}
 					s.waitMs(1_000);

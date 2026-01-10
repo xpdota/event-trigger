@@ -61,7 +61,7 @@ public class MapEffectEvent extends BaseEvent implements HasPrimaryValue {
 		return String.format(":%X:%X", flags, index);
 	}
 
-	public boolean indexMatches(long... expected) {
+	public boolean flagsMatches(long... expected) {
 		long id = flags;
 		for (long e : expected) {
 			if (e == id) {
