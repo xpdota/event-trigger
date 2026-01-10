@@ -227,6 +227,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param value The value
 	 */
 	public void setParam(String name, Object value) {
+		log.debug("setParam: '{}'={}", name, value);
 		params.put(name, value);
 	}
 //
