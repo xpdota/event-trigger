@@ -35,10 +35,13 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @CalloutRepo(name = "M12S", duty = KnownDuty.M12S)
@@ -69,17 +72,81 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	private static final int STACK_TETHER = 0x171;
 	private static final int BOSS_TETHER = 0x176;
 
+	private final ArenaPos tightAp = new ArenaPos(100, 100, 4, 4);
+
+
 	@NpcCastCallout(0xB4D7)
 	private final ModifiableCallout<AbilityCastStart> theFixer = ModifiableCallout.durationBasedCall("The Fixer", "Raidwide");
 
+	private final ModifiableCallout<?> mortalSlayerBothPurpleLeft = new ModifiableCallout<>("Mortal Slayer: Both Purple Left, Initial", "Both Purple Left");
+	private final ModifiableCallout<?> mortalSlayerBothPurpleRight = new ModifiableCallout<>("Mortal Slayer: Both Purple Right, Initial", "Both Purple Right");
+	private final ModifiableCallout<?> mortalSlayerPurpleBothSides = new ModifiableCallout<>("Mortal Slayer: Purple Both Sides, Initial", "Purple Both Sides");
+
+	private final ModifiableCallout<?> mortalSlayerHit = new ModifiableCallout<>("Mortal Slayer: Hitting", "{ leftPurple ? 'Purple' : 'Green' } { rightPurple ? 'Purple' : 'Green' }", "{ i } { leftPurple ? 'Purple' : 'Green' }/{ rightPurple ? 'Purple' : 'Green' }");
+
+	private static boolean isPurple(XivCombatant orb) {
+		return orb.npcIdMatches(19200);
+	}
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> mortalSlayerSq = SqtTemplates.sq(
 			90_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB495),
 			(e1, s) -> {
-				// Balls have NPC ID of either 19200 (purple) or 19201 (green)
+				// Balls have NPC ID of either 19200 (purple tank orb) or 19201 (green normal orb)
 				log.info("Mortal Slayer Start");
+				List<XivCombatant> orbs = new ArrayList<>();
+				List<XivCombatant> left = new ArrayList<>();
+				List<XivCombatant> right = new ArrayList<>();
+				List<XivCombatant> purples = new ArrayList<>();
+				while (orbs.size() < 8) {
+					s.waitThenRefreshCombatants(150);
+					List<XivCombatant> allOrbs = state.npcsByIds(19200, 19201);
+					for (XivCombatant orb : allOrbs) {
+						Position pos = orb.getPos();
+						if (pos.y() > 80 || Math.abs(pos.x() - 100) < 2) {
+							continue;
+						}
+						if (!orbs.contains(orb)) {
+							orbs.add(orb);
+							if (pos.x() < 100) {
+								left.add(orb);
+							}
+							else {
+								right.add(orb);
+							}
+							if (isPurple(orb)) {
+								purples.add(orb);
+								if (purples.size() == 2) {
+									var x1 = purples.get(0).getPos().x();
+									var x2 = purples.get(1).getPos().x();
+									if (x1 < 100 && x2 < 100) {
+										s.updateCall(mortalSlayerBothPurpleLeft);
+									}
+									else if (x1 > 100 && x2 > 100) {
+										s.updateCall(mortalSlayerBothPurpleRight);
+									}
+									else {
+										s.updateCall(mortalSlayerPurpleBothSides);
+									}
+								}
+							}
+						}
+					}
+				}
+				s.waitMs(2_000);
+				for (int i = 1; i <= 4; i++) {
+					XivCombatant leftOrb = left.get(i - 1);
+					XivCombatant rightOrb = right.get(i - 1);
+					boolean leftPurple = isPurple(leftOrb);
+					boolean rightPurple = isPurple(rightOrb);
+					s.setParam("i", i);
+					s.setParam("leftPurple", leftPurple);
+					s.setParam("rightPurple", rightPurple);
+					s.updateCall(mortalSlayerHit);
+					s.waitMs(1_000);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB496, 0xB498));
+				}
 			});
 
 	/*
@@ -242,7 +309,7 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<AbilityCastStart> grotesquerie3getHit = ModifiableCallout.<AbilityCastStart>durationBasedCall("Grotesquerie 3: Get Hit", "Spread {unsafe}").statusIcon(0x129b);
 
 	private final ModifiableCallout<?> gt3middleGetTether = new ModifiableCallout<>("Grotesquerie 3: Wait Middle for Tether", "Wait Middle");
-	private final ModifiableCallout<TetherEvent> gt3tetherPartner = new ModifiableCallout<>("Grotesquerie 3: Tether", "Spread, Break Tether With {buddy}");
+	private final ModifiableCallout<TetherEvent> gt3tetherPartner = new ModifiableCallout<>("Grotesquerie 3: Tether", "{spreadSafe} With {buddy}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> grotesquerie3sq = SqtTemplates.sq(
@@ -311,6 +378,14 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.waitEvent(BuffRemoved.class, br -> br.buffIdMatches(0x1299, 0x129b));
 				s.updateCall(gt3middleGetTether);
 
+				var badSpotEvents = s.waitEvents(5, ActorControlExtraEvent.class, acee -> !acee.getTarget().isPc());
+				Set<ArenaSector> spreadSafe = EnumSet.of(ArenaSector.NORTHWEST, ArenaSector.NORTHEAST, ArenaSector.SOUTHWEST, ArenaSector.SOUTHEAST);
+
+				for (ActorControlExtraEvent badSpotEvent : badSpotEvents) {
+					spreadSafe.remove(tightAp.forCombatant(badSpotEvent.getTarget()));
+				}
+				s.setParam("spreadSafe", spreadSafe);
+
 				// Wait for the 4 player tethers in quick succession, find ours, and call out who we are tethered to
 				var tethers = s.waitEventsQuickSuccession(4, TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isPc));
 				tethers.stream()
@@ -322,15 +397,18 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 							s.updateCall(gt3tetherPartner, myTether);
 						});
 
-				// TODO: tether safe spot
 
 			});
+
+	// TODO: left/right mechanic before this
 
 	@NpcCastCallout(0xB4C6)
 	private final ModifiableCallout<AbilityCastStart> slaughterShed = ModifiableCallout.durationBasedCall("Slaughtershed", "Raidwide");
 
 	private final ModifiableCallout<HeadMarkerEvent> slaughtershedSpread = new ModifiableCallout<>("End: Spread", "Spread");
 	private final ModifiableCallout<?> slaughtershedStack = new ModifiableCallout<>("End: Stack", "Stack on {stackOn}");
+
+	// TODO: knockback thing
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> slaughter = SqtTemplates.sq(60_000,
@@ -380,7 +458,6 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 					The variables you can use are fireIn and fireOut (where the inner and outer fire clones are), and fireInCard and fireOutCard (the adjacent safe cardinal based on the cleaves).""");
 	private final ModifiableCallout<?> replGetHitByDark = new ModifiableCallout<>("Replication: Get Hit By Dark", "Spread {darkInCard} In, {darkOutCard} Out").extendedDescription("See above, but replace 'fire' with 'dark'");
 
-	private final ArenaPos tightAp = new ArenaPos(100, 100, 4, 4);
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> replication = SqtTemplates.selfManagedMultiInvocation(
@@ -661,8 +738,8 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<BuffApplied> mutatingFireDonutBeta2 = ModifiableCallout.<BuffApplied>durationBasedCall("Mutation: Fire + Dynamo, Second Beta", "Pop Fire and Donut, {firstSide} Safe").autoIcon();
 	private final ModifiableCallout<BuffApplied> mutatingLightningChariotBeta2 = ModifiableCallout.<BuffApplied>durationBasedCall("Mutation: Lightning + Chariot, Second Beta", "Pop Lightning and Orb, {firstSide.opposite()} Safe").autoIcon();
 
-	private final ModifiableCallout<?> mutatingFirstSafe = new ModifiableCallout<>("Mutation: First Safe", "{firstSafeSide}, { nsSafe ? 'North/South' : 'Sides' }").autoIcon();
-	private final ModifiableCallout<?> mutatingSecondSafe = new ModifiableCallout<>("Mutation: First Safe", "{secondSafeSide}, { nsSafe ? 'North/South' : 'Sides' }").autoIcon();
+	private final ModifiableCallout<?> mutatingFirstSafe = new ModifiableCallout<>("Mutation: First Safe", "{firstSafeSide} North/South").autoIcon();
+	private final ModifiableCallout<?> mutatingSecondSafe = new ModifiableCallout<>("Mutation: First Safe", "{secondSafeSide} North/South").autoIcon();
 
 
 	private final ModifiableCallout<AbilityCastStart> netherworldNearAlpha = ModifiableCallout.<AbilityCastStart>durationBasedCall("Mutation: Netherworld Near, Alpha", "Stay Far").statusIcon(0x12A1);
@@ -703,6 +780,7 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				 */
 
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB4FD));
+				// TODO: play with timing - better yet, loop until the configuration is valid
 				s.waitMs(4_000);
 				s.waitThenRefreshCombatants(50);
 				List<XivCombatant> baseNpcs = state.npcsByIds(19205);
@@ -752,7 +830,6 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				}
 				s.waitMs(6_000);
 
-				s.setParam("nsSafe", isFireDonut);
 				ArenaSector firstSafeSide = isFireDonut ? firstSide : firstSide.opposite();
 				s.setParam("firstSafeSide", firstSafeSide);
 				s.setParam("secondSafeSide", firstSafeSide.opposite());
@@ -772,220 +849,389 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 
 			});
 
-//	private final ModifiableCallout<AbilityCastStart> idyllicDream = ModifiableCallout.durationBasedCall("Idyllic Dream", "Raidwide");
-//
-//	private final ModifiableCallout<?> idyllicCardFirst = new ModifiableCallout<>("Idyllic: Cardinals First", "Cardinals First");
-//	private final ModifiableCallout<?> idyllicIntercardFirst = new ModifiableCallout<>("Idyllic: Intercardinals First", "Intercards First");
-//
-//	private final ModifiableCallout<TetherEvent> idyllicCloneTetherN = new ModifiableCallout<>("Idyllic: Tethered to N Clone", "{tetherFrom} Clone");
-//	private final ModifiableCallout<TetherEvent> idyllicCloneTetherE = new ModifiableCallout<>("Idyllic: Tethered to E Clone", "{tetherFrom} Clone");
-//	private final ModifiableCallout<TetherEvent> idyllicCloneTetherS = new ModifiableCallout<>("Idyllic: Tethered to S Clone", "{tetherFrom} Clone");
-//	private final ModifiableCallout<TetherEvent> idyllicCloneTetherW = new ModifiableCallout<>("Idyllic: Tethered to W Clone", "{tetherFrom} Clone");
-//	private final ModifiableCallout<TetherEvent> idyllicCloneTetherNW = new ModifiableCallout<>("Idyllic: Tethered to NW Clone", "{tetherFrom} Clone");
-//	private final ModifiableCallout<TetherEvent> idyllicCloneTetherNE = new ModifiableCallout<>("Idyllic: Tethered to NE Clone", "{tetherFrom} Clone");
-//	private final ModifiableCallout<TetherEvent> idyllicCloneTetherSW = new ModifiableCallout<>("Idyllic: Tethered to SW Clone", "{tetherFrom} Clone");
-//	private final ModifiableCallout<TetherEvent> idyllicCloneTetherSE = new ModifiableCallout<>("Idyllic: Tethered to SE Clone", "{tetherFrom} Clone");
-//
-//	private final ModifiableCallout<?> idyllicSafeSpotLaterOut = new ModifiableCallout<>("Idyllic: Safe Spots Stock, Further Out", "{safeSpots} Safe, Out");
-//	private final ModifiableCallout<?> idyllicSafeSpotLater = new ModifiableCallout<>("Idyllic: Safe Spots Stock, Normal", "{safeSpots} Safe");
-//
-//	private final ModifiableCallout<?> idyllicDefaFirst = new ModifiableCallout<>("Idyllic: Defamation First", "Defa First").extendedDescription("""
-//			This tells you whether defamation would be first if tethers are not swapped.""");
-//	private final ModifiableCallout<?> idyllicStackFirst = new ModifiableCallout<>("Idyllic: Stack First", "Stack First").extendedDescription("""
-//			This tells you whether stack would be first if tethers are not swapped.""");
-//
-//	private final ModifiableCallout<?> idyllicSafeSpotOut = new ModifiableCallout<>("Idyllic: Safe Spots Now, Further Out", "{safeSpots} Safe, Out");
-//	private final ModifiableCallout<?> idyllicSafeSpot = new ModifiableCallout<>("Idyllic: Safe Spots Now, Normal", "{safeSpots} Safe");
-//
-//	@NpcCastCallout(0xB4F2)
-//	private final ModifiableCallout<AbilityCastStart> lindwurmMeteor = ModifiableCallout.durationBasedCall("Lindwurm's Meteor", "Raidwide");
-//
-//	private final ModifiableCallout<?> idyllicNoTether = ModifiableCallout.durationBasedCall("Idyllic: No Tether (Failed)", "No Tether");
-//	private final ModifiableCallout<?> idyllicDefaNum = ModifiableCallout.durationBasedCall("Idyllic: Defa Order", "Defa {myTetherOrder}");
-//	private final ModifiableCallout<?> idyllicStackNum = ModifiableCallout.durationBasedCall("Idyllic: Stack Order", "Stack {myTetherOrder}");
-//
-//	@NpcCastCallout(0xB529)
-//	private final ModifiableCallout<AbilityCastStart> arcadianArcanum = ModifiableCallout.durationBasedCall("Arcadian Arcanum", "Spread");
-//
-//	private final ModifiableCallout<?> idyllicTakePlainTowerLater = new ModifiableCallout<>("Idyllic: Take Plain Tower Later", "Fire/Earth Tower Later").statusIcon(0x1044);
-//	private final ModifiableCallout<?> idyllicTakeLightningTowerLater = new ModifiableCallout<>("Idyllic: Take Lightning Tower Later", "Lightning Tower Later");
-//
-//	private final ModifiableCallout<?> idyllicBothStacks = new ModifiableCallout<>("Idyllic: Both Stacks", "Stacks on {stackTargets}", "{i}: Stacks on {stackTargets}");
-//	private final ModifiableCallout<?> idyllicBothDefa = new ModifiableCallout<>("Idyllic: Both Defa", "Defa on {defaTargets}", "{i}: Defas on {defaTargets}");
-//	private final ModifiableCallout<?> idyllicStackAndDefa = new ModifiableCallout<>("Idyllic: Stack+Defa", "Stack on {stackTarget}, Defa on {defaTarget}", "Stack on {stackTarget}, Defa on {defaTarget}");
-//
-//	@AutoFeed
-//	private final SequentialTrigger<BaseEvent> idyllicDreamSq = SqtTemplates.sq(
-//			120_000,
-//			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB509),
-//			(e1, s) -> {
-//				// reference: https://raidplan.io/plan/h5fcfzw229yty84q
-//				s.updateCall(idyllicDream, e1);
-//				var firstClone = s.waitEvent(ActorControlExtraEvent.class, acee -> acee.getTarget().npcIdMatches(19210)).getTarget();
-//				s.waitThenRefreshCombatants(100);
-//				ArenaSector firstCloneAt = tightAp.forCombatant(state.getLatestCombatantData(firstClone));
-//				boolean cardFirst = firstCloneAt.isCardinal();
-//				s.updateCall(cardFirst ? idyllicCardFirst : idyllicIntercardFirst);
-//				var tethers = s.waitEventsQuickSuccession(8, TetherEvent.class, te -> te.eitherTargetMatches(target -> target.npcIdMatches(19210)));
-//				TetherEvent myCloneTether = tethers.stream().filter(t -> t.getTarget().isThePlayer()).findAny()
-//						.orElseThrow();
-//				var tetheredTo = myCloneTether.getTargetMatching(t -> !t.isPc());
-//				ArenaSector tetherFrom = tightAp.forCombatant(tetheredTo);
-//				s.setParam("tetheredTo", tetheredTo);
-//				s.setParam("tetherFrom", tetherFrom);
-//				// Is the player in the first or second tether group?
-//				boolean myTetherFirst = tetherFrom.isCardinal() == cardFirst;
-//				s.setParam("myTetherFirst", myTetherFirst);
-//				switch (tetherFrom) {
-//					case NORTH -> s.updateCall(idyllicCloneTetherN, myCloneTether);
-//					case EAST -> s.updateCall(idyllicCloneTetherE, myCloneTether);
-//					case SOUTH -> s.updateCall(idyllicCloneTetherS, myCloneTether);
-//					case WEST -> s.updateCall(idyllicCloneTetherW, myCloneTether);
-//					case NORTHWEST -> s.updateCall(idyllicCloneTetherNW, myCloneTether);
-//					case NORTHEAST -> s.updateCall(idyllicCloneTetherNE, myCloneTether);
-//					case SOUTHWEST -> s.updateCall(idyllicCloneTetherSW, myCloneTether);
-//					case SOUTHEAST -> s.updateCall(idyllicCloneTetherSE, myCloneTether);
-//				}
-//				// We care about Power Gusher B512 x4, and Snaking Kick B511
-//				// Actually, easier to use B510 (vertical) and B50F (horizontal)?
-//				var snaking = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xB511), false);
-//				var snakingAt = tightAp.forCombatant(state.getLatestCombatantData(snaking.getTarget()));
-//				s.setParam("snakingAt", snakingAt);
-//				var vertGusher = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xB510), false);
-//				var vertGusherAt = tightAp.forCombatant(state.getLatestCombatantData(vertGusher.getTarget()));
-//				List<ArenaSector> safeSpots = List.of(vertGusherAt.plusEighths(-1), vertGusherAt.plusEighths(1));
-//				s.setParam("safeSpots", safeSpots);
-//				// If the snaking is near the vertical gusher, you have to move a bit further out
-//				boolean safeOut = vertGusherAt == snakingAt;
-//				s.setParam("safeOut", safeOut);
-//				s.updateCall(safeOut ? idyllicSafeSpotLaterOut : idyllicSafeSpotLater);
-//
-//				Map<Long, TetherEvent> tetherTracker = new HashMap<>();
-//				// 170 defa
-//				// 171 stack
-//				boolean calledInitial = false;
-//				boolean defamationFirst = false;
-//				while (true) {
-//					TetherEvent tether = s.waitEventUntil(
-//							TetherEvent.class, te -> te.tetherIdMatches(DEFA_TETHER, STACK_TETHER),
-//							// Locks in after Twisted Vision BBE2 cast
-//							AbilityUsedEvent.class, acs -> acs.abilityIdMatches(0xBBE2)
-//					);
-//					if (tether == null) {
-//						break;
-//					}
-//					tetherTracker.put(tether.getSource().getId(), tether);
-//					if (!calledInitial) {
-//						ArenaSector thisTetherFrom = tightAp.forCombatant(tether.getTargetMatching(t -> !t.isPc()));
-//						boolean tetherOnCard = thisTetherFrom.isCardinal();
-//						boolean tetherIsDefa = tether.tetherIdMatches(DEFA_TETHER);
-//						boolean tetherIsFirst = tetherOnCard == cardFirst;
-//						defamationFirst = tetherIsFirst == tetherIsDefa;
-//						s.updateCall(defamationFirst ? idyllicDefaFirst : idyllicStackFirst);
-//						calledInitial = true;
-//					}
-//				}
-//				List<TetherEvent> myTethers = tetherTracker.values()
-//						.stream()
-//						.filter(tetherEvent -> tetherEvent.getTarget().isThePlayer())
-//						.toList();
-//				Map<ArenaSector, TetherEvent> tetherSectors = new HashMap<>();
-//				tetherTracker.forEach((id, tether) -> tetherSectors.put(tightAp.forCombatant(state.getCombatant(id)), tether));
-//				// No tether = defa
-//				Optional<TetherEvent> myTetherMaybe = myTethers.stream().filter(te -> te.eitherTargetMatches(XivCombatant::isThePlayer)).findAny();
-//				if (myTetherMaybe.isEmpty()) {
-//					log.info("No tether");
-//					s.updateCall(idyllicNoTether);
-//					return;
-//				}
-//
-//				// TODO: timing might be awkward - split into two triggers?
-//				s.call(safeOut ? idyllicSafeSpotOut : idyllicSafeSpot);
-//
-//				TetherEvent myMechanicTether = myTetherMaybe.get();
-//				boolean haveDefa = myTethers.stream().noneMatch(te -> te.tetherIdMatches(STACK_TETHER));
-//				ArenaSector myTetherSector = tightAp.forCombatant(state.getLatestCombatantData(myMechanicTether.getTargetMatching(te -> !te.isPc())));
-//				int myTetherOrder = switch (myTetherSector) {
-//					case NORTH, SOUTH -> 1;
-//					case NORTHEAST, SOUTHWEST -> 2;
-//					case EAST, WEST -> 3;
-//					case NORTHWEST, SOUTHEAST -> 4;
-//					default -> throw new IllegalStateException("Unexpected value: " + myTetherSector);
-//				};
-////				boolean myTetherCard = myTetherSector.isCardinal();
-//				s.setParam("myTetherOrder", myTetherOrder);
-//				s.setParam("haveDefa", haveDefa);
-//				s.setParam("myTetherSector", myTetherSector);
-//				s.waitMs(6_000);
-//				s.updateCall(haveDefa ? idyllicDefaNum : idyllicStackNum);
-//
-//				s.waitEvents(4, AbilityResolvedEvent.class, aue -> aue.abilityIdMatches(0xB9D9) && aue.isLastTarget());
-//				s.waitMs(100);
-//				var myLightResDown = buffs.findStatusOnTarget(state.getPlayer(), 0x1044);
-//				if (myLightResDown == null) {
-//					// Take triple tower
-//					s.updateCall(idyllicTakeLightningTowerLater);
-//				}
-//				else {
-//					// Take plain earth/fire tower
-//					s.updateCall(idyllicTakePlainTowerLater);
-//				}
-//
-//				for (int i = 1; i <= 4; i++) {
-//					var sector1 = ArenaSector.values()[i - 1];
-//					var sector2 = sector1.opposite();
-//					var tether1 = tetherSectors.get(sector1);
-//					var tether2 = tetherSectors.get(sector2);
-//					log.info("Tether mechanics {}: {} has {}, {} has {}", i, sector1, tether1.getId(), sector2, tether2.getId());
-//				}
-//
-//				if (true) return;
-//				// TODO: wait
-//
-//				for (int i = 1; i <= 4; i++) {
-//					var sector1 = ArenaSector.values()[i - 1];
-//					var sector2 = sector1.opposite();
-//					var tether1 = tetherSectors.get(sector1);
-//					var tether2 = tetherSectors.get(sector2);
-//					if (tether1.getId() == STACK_TETHER && tether2.getId() == STACK_TETHER) {
-//						// both stacks
-//						s.setParam("stackTargets", List.of(tether1.getTargetMatching(XivCombatant::isPc), tether2.getTargetMatching(XivCombatant::isPc)));
-//					}
-//					else if (tether1.getId() == DEFA_TETHER && tether2.getId() == DEFA_TETHER) {
-//						// both defa
-//						s.setParam("defaTargets", List.of(tether1.getTargetMatching(XivCombatant::isPc), tether2.getTargetMatching(XivCombatant::isPc)));
-//					}
-//					else {
-//						TetherEvent stackTether;
-//						TetherEvent defaTether;
-//						if (tether1.getId() == STACK_TETHER) {
-//							stackTether = tether1;
-//							defaTether = tether2;
-//						}
-//						else {
-//							stackTether = tether2;
-//							defaTether = tether1;
-//						}
-//						s.setParam("stackTarget", stackTether.getTargetMatching(XivCombatant::isPc));
-//						s.setParam("defaTarget", defaTether.getTargetMatching(XivCombatant::isPc));
-//					}
-//					log.info("Tether mechanics {}: {} has {}, {} has {}", i, sector1, tether1.getId(), sector2, tether2.getId());
-//				}
-//
-//				/*
-//				Now you do the towers for real
-//
-//				Fire tower: Pyretic (stillness)
-//				Rock tower: No debuff, but you need to move out of the tower because there is a followup AoE in the tower
-//				Wind triple tower: Knockup - aim across the arena
-//				Dark triple tower: Doom bean - aim out
-//
-//				Next mechanics:
-//				Near/Far shoots a beam at nearest/farthest.
-//				You also have close/far tethers.
-//				 */
-//
-//
-//			});
+	private final ModifiableCallout<AbilityCastStart> idyllicDream = ModifiableCallout.durationBasedCall("Idyllic Dream", "Raidwide");
+
+	private final ModifiableCallout<?> idyllicCardFirst = new ModifiableCallout<>("Idyllic: Cardinals First", "Cardinals First");
+	private final ModifiableCallout<?> idyllicIntercardFirst = new ModifiableCallout<>("Idyllic: Intercardinals First", "Intercards First");
+
+	private final ModifiableCallout<TetherEvent> idyllicCloneTetherN = new ModifiableCallout<>("Idyllic: Tethered to N Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> idyllicCloneTetherE = new ModifiableCallout<>("Idyllic: Tethered to E Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> idyllicCloneTetherS = new ModifiableCallout<>("Idyllic: Tethered to S Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> idyllicCloneTetherW = new ModifiableCallout<>("Idyllic: Tethered to W Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> idyllicCloneTetherNW = new ModifiableCallout<>("Idyllic: Tethered to NW Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> idyllicCloneTetherNE = new ModifiableCallout<>("Idyllic: Tethered to NE Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> idyllicCloneTetherSW = new ModifiableCallout<>("Idyllic: Tethered to SW Clone", "{tetherFrom} Clone");
+	private final ModifiableCallout<TetherEvent> idyllicCloneTetherSE = new ModifiableCallout<>("Idyllic: Tethered to SE Clone", "{tetherFrom} Clone");
+
+	private final ModifiableCallout<?> idyllicSafeSpotLaterOut = new ModifiableCallout<>("Idyllic: Safe Spots Stock, Further Out", "Later: {safeSpots} Safe, Out");
+	private final ModifiableCallout<?> idyllicSafeSpotLater = new ModifiableCallout<>("Idyllic: Safe Spots Stock, Normal", "Later: {safeSpots} Safe");
+
+	private final ModifiableCallout<?> idyllicDefaFirst = new ModifiableCallout<>("Idyllic: Defamation First", "Defa First").extendedDescription("""
+			This tells you whether defamation would be first if tethers are not swapped.""");
+	private final ModifiableCallout<?> idyllicStackFirst = new ModifiableCallout<>("Idyllic: Stack First", "Stack First").extendedDescription("""
+			This tells you whether stack would be first if tethers are not swapped.""");
+
+	private final ModifiableCallout<?> idyllicSafeSpotOut = new ModifiableCallout<>("Idyllic: Safe Spots Now, Further Out", "{safeSpots} Safe, Out");
+	private final ModifiableCallout<?> idyllicSafeSpot = new ModifiableCallout<>("Idyllic: Safe Spots Now, Normal", "{safeSpots} Safe");
+
+	@NpcCastCallout(0xB4F2)
+	private final ModifiableCallout<AbilityCastStart> lindwurmMeteor = ModifiableCallout.durationBasedCall("Lindwurm's Meteor", "Raidwide");
+
+	private final ModifiableCallout<?> idyllicNoTether = new ModifiableCallout<>("Idyllic: No Tether (Failed)", "No Tether");
+	private final ModifiableCallout<?> idyllicDefaNum = new ModifiableCallout<>("Idyllic: Defa Order (Early Call)", "Defa {myTetherOrder}");
+	private final ModifiableCallout<?> idyllicStackNum = new ModifiableCallout<>("Idyllic: Stack Order (Early Call)", "Stack {myTetherOrder}");
+	private final ModifiableCallout<?> idyllicDefaNumAgain = new ModifiableCallout<>("Idyllic: Defa Order (Late Call)", "Defa {myTetherOrder}");
+	private final ModifiableCallout<?> idyllicStackNumAgain = new ModifiableCallout<>("Idyllic: Stack Order (Late Call)", "Stack {myTetherOrder}");
+
+	@NpcCastCallout(0xB529)
+	private final ModifiableCallout<AbilityCastStart> arcadianArcanum = ModifiableCallout.durationBasedCall("Arcadian Arcanum", "Spread");
+
+	private final ModifiableCallout<?> idyllicTakePlainTowerLater = new ModifiableCallout<>("Idyllic: Take Plain Tower Later", "Fire/Earth Tower Later").statusIcon(0x1044);
+	private final ModifiableCallout<?> idyllicTakeLightningTowerLater = new ModifiableCallout<>("Idyllic: Take Lightning Tower Later", "Lightning Tower Later");
+	private final ModifiableCallout<?> idyllicTakePlainTowerNow = new ModifiableCallout<>("Idyllic: Take Plain Tower", "Fire/Earth Tower").statusIcon(0x1044);
+	private final ModifiableCallout<?> idyllicTakeLightningTowerNow = new ModifiableCallout<>("Idyllic: Take Lightning Tower", "Lightning Tower");
+
+	private final ModifiableCallout<?> idyllicBothStacks = new ModifiableCallout<>("Idyllic: Both Stacks", "Stacks on {stackTargets}", "{i}: Stacks on {stackTargets}");
+	private final ModifiableCallout<?> idyllicBothDefa = new ModifiableCallout<>("Idyllic: Both Defa", "Defa on {defaTargets}", "{i}: Defas on {defaTargets}");
+	private final ModifiableCallout<?> idyllicStackAndDefa = new ModifiableCallout<>("Idyllic: Stack+Defa", "Stack on {stackTarget}, Defa on {defaTarget}", "Stack on {stackTarget}, Defa on {defaTarget}");
+
+	private final ModifiableCallout<BuffApplied> idyllicFarPortent = ModifiableCallout.<BuffApplied>durationBasedCall("Idyllic: Far Portent", "Far Portent").autoIcon();
+	private final ModifiableCallout<BuffApplied> idyllicNearPortent = ModifiableCallout.<BuffApplied>durationBasedCall("Idyllic: Near Portent", "Near Portent").autoIcon();
+	private final ModifiableCallout<BuffApplied> idyllicPyretic = ModifiableCallout.<BuffApplied>durationBasedCall("Idyllic: Pyretic", "Don't Move").autoIcon();
+	private final ModifiableCallout<BuffApplied> idyllicPyreticAfter = new ModifiableCallout<BuffApplied>("Idyllic: Pyretic", "Move").autoIcon();
+	private final ModifiableCallout<AbilityCastStart> idyllicStone = ModifiableCallout.<AbilityCastStart>durationBasedCall("Idyllic: Stone Tower", "Out of Tower").autoIcon();
+
+	private final ModifiableCallout<?> idyllicLaterSafePlatform = new ModifiableCallout<>("Idyllic: Later Safe Platform", "Later: {safePlatform} Platform, {safePlatformDirs} Safe").autoIcon();
+
+	private final ModifiableCallout<?> idyllicReenactmentStacks1 = new ModifiableCallout<>("Idyllic: Reenactment Stacks 1", "Stacks {stacksAt}");
+
+	private final ModifiableCallout<?> idyllicSafePlatform = new ModifiableCallout<>("Idyllic: Safe Platform", "{safePlatform} Platform, {safePlatformDirs} Safe").autoIcon();
+
+	private final ModifiableCallout<?> idyllicReenactmentStacks2 = new ModifiableCallout<>("Idyllic: Reenactment Stacks 2", "Stacks {stacksAt}");
+
+	private final ModifiableCallout<?> idyllicPortalSafeDirs = new ModifiableCallout<>("Idyllic: Portal Safe Directions", "{portalSafeDirs} Safe").autoIcon();
+
+	@AutoFeed
+	private final SequentialTrigger<BaseEvent> idyllicDreamSq = SqtTemplates.sq(
+			240_000,
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB509),
+			(e1, s) -> {
+				// reference: https://raidplan.io/plan/h5fcfzw229yty84q
+				s.updateCall(idyllicDream, e1);
+				var firstClone = s.waitEvent(ActorControlExtraEvent.class, acee -> acee.getTarget().npcIdMatches(19210)).getTarget();
+				s.waitThenRefreshCombatants(100);
+				ArenaSector firstCloneAt = tightAp.forCombatant(state.getLatestCombatantData(firstClone));
+				boolean cardFirst = firstCloneAt.isCardinal();
+				s.updateCall(cardFirst ? idyllicCardFirst : idyllicIntercardFirst);
+				var originalCloneTethers = s.waitEventsQuickSuccession(8, TetherEvent.class, te -> te.eitherTargetMatches(target -> target.npcIdMatches(19210)));
+				TetherEvent myCloneTether = originalCloneTethers.stream().filter(t -> t.getTarget().isThePlayer()).findAny()
+						.orElseThrow();
+				var tetheredTo = myCloneTether.getTargetMatching(t -> !t.isPc());
+				ArenaSector tetherFrom = tightAp.forCombatant(tetheredTo);
+				s.setParam("tetheredTo", tetheredTo);
+				s.setParam("tetherFrom", tetherFrom);
+				// Is the player in the first or second tether group?
+				boolean myTetherFirst = tetherFrom.isCardinal() == cardFirst;
+				s.setParam("myTetherFirst", myTetherFirst);
+				switch (tetherFrom) {
+					case NORTH -> s.updateCall(idyllicCloneTetherN, myCloneTether);
+					case EAST -> s.updateCall(idyllicCloneTetherE, myCloneTether);
+					case SOUTH -> s.updateCall(idyllicCloneTetherS, myCloneTether);
+					case WEST -> s.updateCall(idyllicCloneTetherW, myCloneTether);
+					case NORTHWEST -> s.updateCall(idyllicCloneTetherNW, myCloneTether);
+					case NORTHEAST -> s.updateCall(idyllicCloneTetherNE, myCloneTether);
+					case SOUTHWEST -> s.updateCall(idyllicCloneTetherSW, myCloneTether);
+					case SOUTHEAST -> s.updateCall(idyllicCloneTetherSE, myCloneTether);
+				}
+				// We care about Power Gusher B512 x4, and Snaking Kick B511
+				// Actually, easier to use B510 (vertical) and B50F (horizontal)?
+				var snaking = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xB511), false);
+				var snakingAt = tightAp.forCombatant(state.getLatestCombatantData(snaking.getTarget()));
+				s.setParam("snakingAt", snakingAt);
+				var vertGusher = s.findOrWaitForCast(casts, acs -> acs.abilityIdMatches(0xB510), false);
+				var vertGusherAt = tightAp.forCombatant(state.getLatestCombatantData(vertGusher.getTarget()));
+				List<ArenaSector> safeSpots = List.of(vertGusherAt.plusEighths(-1), vertGusherAt.plusEighths(1));
+				s.setParam("safeArea", vertGusherAt);
+				s.setParam("safeSpots", safeSpots);
+				// If the snaking is near the vertical gusher, you have to move a bit further out
+				boolean safeOut = vertGusherAt == snakingAt;
+				s.setParam("safeOut", safeOut);
+				s.updateCall(safeOut ? idyllicSafeSpotLaterOut : idyllicSafeSpotLater);
+
+				// There is another one of these - we need to wait
+				s.waitEvent(AbilityUsedEvent.class, acs -> acs.abilityIdMatches(0xBBE2));
+
+				Map<Long, TetherEvent> tetherTracker = new HashMap<>();
+				// 170 defa
+				// 171 stack
+				boolean calledInitial = false;
+				boolean defamationFirst = false;
+				while (true) {
+					TetherEvent tether = s.waitEventUntil(
+							TetherEvent.class, te -> te.tetherIdMatches(DEFA_TETHER, STACK_TETHER),
+							// Locks in after Twisted Vision BBE2 cast
+							AbilityUsedEvent.class, acs -> acs.abilityIdMatches(0xBBE2)
+					);
+					log.info("Processing tether: {}", tether);
+					if (tether == null) {
+						break;
+					}
+					tetherTracker.put(tether.getSource().getId(), tether);
+					if (!calledInitial) {
+						ArenaSector thisTetherFrom = tightAp.forCombatant(tether.getTargetMatching(t -> !t.isPc()));
+						log.info("Initial tether: {} from {}", tether, thisTetherFrom);
+						boolean tetherOnCard = thisTetherFrom.isCardinal();
+						boolean tetherIsDefa = tether.tetherIdMatches(DEFA_TETHER);
+						boolean tetherIsFirst = tetherOnCard == cardFirst;
+						log.info("tetherOnCard: {}, tetherIsDefa: {}, tetherIsFirst: {}, cardFirst: {}", tetherOnCard, tetherIsDefa, tetherIsFirst, cardFirst);
+						defamationFirst = tetherIsFirst == tetherIsDefa;
+						log.info("defamationFirst: {}", defamationFirst);
+						s.updateCall(defamationFirst ? idyllicDefaFirst : idyllicStackFirst);
+						calledInitial = true;
+					}
+				}
+				List<TetherEvent> myTethers = tetherTracker.values()
+						.stream()
+						.filter(tetherEvent -> tetherEvent.getTarget().isThePlayer())
+						.toList();
+				Map<ArenaSector, TetherEvent> tetherSectors = new EnumMap<>(ArenaSector.class);
+				log.info("Tether tracker");
+				tetherTracker.forEach((id, tether) -> {
+					log.info("Tether on {}: {}", Long.toString(id, 16), tether);
+				});
+				tetherTracker.forEach((id, tether) -> tetherSectors.put(tightAp.forCombatant(state.getCombatant(id)), tether));
+				// No tether = defa
+				Optional<TetherEvent> myTetherMaybe = myTethers.stream().findAny();
+				if (myTetherMaybe.isEmpty()) {
+					log.info("No tether");
+					s.updateCall(idyllicNoTether);
+					return;
+				}
+
+				// TODO: timing might be awkward - split into two triggers?
+				s.call(safeOut ? idyllicSafeSpotOut : idyllicSafeSpot);
+
+				TetherEvent myMechanicTether = myTetherMaybe.get();
+				boolean haveDefa = myTethers.stream().noneMatch(te -> te.tetherIdMatches(STACK_TETHER));
+				ArenaSector myTetherSector = tightAp.forCombatant(state.getLatestCombatantData(myMechanicTether.getTargetMatching(te -> !te.isPc())));
+				int myTetherOrder = switch (myTetherSector) {
+					case NORTH, SOUTH -> 1;
+					case NORTHEAST, SOUTHWEST -> 2;
+					case EAST, WEST -> 3;
+					case NORTHWEST, SOUTHEAST -> 4;
+					default -> throw new IllegalStateException("Unexpected value: " + myTetherSector);
+				};
+//				boolean myTetherCard = myTetherSector.isCardinal();
+				s.setParam("myTetherOrder", myTetherOrder);
+				s.setParam("haveDefa", haveDefa);
+				s.setParam("myTetherSector", myTetherSector);
+				s.waitMs(6_000);
+				// TODO: re-call this later
+				s.updateCall(haveDefa ? idyllicDefaNum : idyllicStackNum);
+
+				s.waitEvents(4, AbilityResolvedEvent.class, aue -> aue.abilityIdMatches(0xB9D9) && aue.isLastTarget());
+				s.waitMs(100);
+				var myLightResDown = buffs.findStatusOnTarget(state.getPlayer(), 0x1044);
+				if (myLightResDown == null) {
+					// Take triple tower
+					s.updateCall(idyllicTakeLightningTowerLater);
+				}
+				else {
+					// Take plain earth/fire tower
+					s.updateCall(idyllicTakePlainTowerLater);
+				}
+
+				for (int i = 1; i <= 4; i++) {
+					var sector1 = ArenaSector.values()[i - 1];
+					var sector2 = sector1.opposite();
+					var tether1 = tetherSectors.get(sector1);
+					var tether2 = tetherSectors.get(sector2);
+					log.info("Tether mechanics {}: {} has {}, {} has {}", i, sector1, tether1.getId(), sector2, tether2.getId());
+				}
+				s.waitMs(3_000);
+				s.updateCall(haveDefa ? idyllicDefaNumAgain : idyllicStackNumAgain);
+				s.waitMs(2_000);
+
+				for (int i = 1; i <= 4; i++) {
+					s.setParam("i", i);
+					var sector1 = ArenaSector.values()[i - 1];
+					var sector2 = sector1.opposite();
+					var tether1 = tetherSectors.get(sector1);
+					var tether2 = tetherSectors.get(sector2);
+					if (tether1.getId() == STACK_TETHER && tether2.getId() == STACK_TETHER) {
+						// both stacks
+						s.setParam("stackTargets", List.of(tether1.getTargetMatching(XivCombatant::isPc), tether2.getTargetMatching(XivCombatant::isPc)));
+						s.updateCall(idyllicBothStacks);
+					}
+					else if (tether1.getId() == DEFA_TETHER && tether2.getId() == DEFA_TETHER) {
+						// both defa
+						s.setParam("defaTargets", List.of(tether1.getTargetMatching(XivCombatant::isPc), tether2.getTargetMatching(XivCombatant::isPc)));
+						s.updateCall(idyllicBothDefa);
+					}
+					else {
+						TetherEvent stackTether;
+						TetherEvent defaTether;
+						if (tether1.getId() == STACK_TETHER) {
+							stackTether = tether1;
+							defaTether = tether2;
+						}
+						else {
+							stackTether = tether2;
+							defaTether = tether1;
+						}
+						s.setParam("stackTarget", stackTether.getTargetMatching(XivCombatant::isPc));
+						s.setParam("defaTarget", defaTether.getTargetMatching(XivCombatant::isPc));
+						s.updateCall(idyllicStackAndDefa);
+					}
+					log.info("Tether mechanics {}: {} has {}, {} has {}", i, sector1, tether1.getId(), sector2, tether2.getId());
+					s.waitMs(1_000);
+					s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB518, 0xB519));
+				}
+				if (myLightResDown == null) {
+					// Take triple tower
+					s.updateCall(idyllicTakeLightningTowerNow);
+				}
+				else {
+					// Take plain earth/fire tower
+					s.updateCall(idyllicTakePlainTowerNow);
+				}
+
+				/*
+				Now you do the towers for real
+
+				Fire tower: Pyretic (stillness)
+				Rock tower: No debuff, but you need to move out of the tower because there is a followup AoE in the tower
+				Wind triple tower: Knockup - aim across the arena
+				Dark triple tower: Doom bean - aim out
+
+				Next mechanics:
+				Near/Far shoots a beam at nearest/farthest.
+				You also have close/far tethers.
+				 */
+
+				// Redundant?
+				int PORTENT = 0x129D;
+				int FAR_PORTENT = 0x129E;
+				int NEAR_PORTENT = 0x129F;
+				int HOT_BLOODED = 0x12A0;
+
+				/*
+				stone cast: B4F7 (move out of tower)
+				doom laser: B4F6 (inflicts doom D24 for 8 seconds on people)
+				jump across is too fast
+				 */
+				// TODO: could *technically* record the tower positions and have a visual callout to tell you what you're about to get
+				var towerCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB4F7));
+				var myDebuff = buffs.findStatusOnTarget(state.getPlayer(), ba -> ba.buffIdMatches(FAR_PORTENT, NEAR_PORTENT, HOT_BLOODED));
+				if (myDebuff == null) {
+					// Got nothing - move out
+					s.updateCall(idyllicStone, towerCast);
+				}
+				else {
+					if (myDebuff.buffIdMatches(HOT_BLOODED)) {
+						s.updateCall(idyllicPyretic, myDebuff);
+						s.waitBuffRemoved(buffs, myDebuff);
+						s.updateCall(idyllicPyreticAfter, myDebuff);
+					}
+					else if (myDebuff.buffIdMatches(FAR_PORTENT)) {
+						s.updateCall(idyllicFarPortent, myDebuff);
+					}
+					else {
+						s.updateCall(idyllicNearPortent, myDebuff);
+					}
+				}
+
+				/*
+				One mob teleports to the portal.
+				The other two teleport to platforms.
+				Later, the two platform mobs come back - one platform will have N/S or E/W cleave, the other will have a chariot.
+				Then, the mob jumps out of the portal and does its E/W or N/S cleave.
+				 */
+				// Only the real cleaver does this.
+				var platformCleave = s.findOrWaitForCast(casts, acs -> {
+					return acs.abilityIdMatches(0xB50F, 0xB510);
+				}, false);
+				s.waitThenRefreshCombatants(100);
+				var safePlatform = tightAp.forCombatant(state.getLatestCombatantData(platformCleave.getTarget()));
+				// B510 is vertical power gusher, so horizontal is safe
+				// B50F is horizontal, so north/south is safe
+				var platformSafeDirs = platformCleave.abilityIdMatches(0xB50F) ? List.of(ArenaSector.NORTH, ArenaSector.SOUTH) : List.of(ArenaSector.EAST, ArenaSector.WEST);
+				s.setParam("safePlatform", safePlatform);
+				s.setParam("safePlatformDirs", platformSafeDirs);
+				s.updateCall(idyllicLaterSafePlatform);
+
+				/*
+				After that, you get reenactment.
+				The mobs do the mechanic of what you tethered to, but they do it in card/intercard order
+
+
+				You'll have two defas and two stacks (most likely but depends on strat)
+				 */
+
+				s.waitMs(2_500);
+
+				{
+					List<ArenaSector> sectors = cardFirst ? ArenaSector.cardinals : ArenaSector.quadrants;
+//				// TODO: this might be overcomlicating the logic and/or wrong
+					// It's probably wrong - what it should be is:
+					// 1. Look at what player was tethered to the cardinal
+					// 2. Look at the what lindschrat they were tethered to
+					// 3. Look at what mechanic that lindschrat was doing
+					List<ArenaSector> stacksAt = new ArrayList<>();
+					for (ArenaSector sector : sectors) {
+						// The tether from the given sector's mechanics NPC to a player
+						TetherEvent mechTether = tetherSectors.get(sector);
+						// The player
+						XivCombatant tetheredPlayer = mechTether.getTargetMatching(XivCombatant::isPc);
+						// The tether between that player and an original clone
+						TetherEvent cloneTether = originalCloneTethers.stream().filter(t -> t.eitherTargetMatches(tetheredPlayer)).findAny().orElse(null);
+						// The clone
+						XivCombatant clone = cloneTether.getTargetMatching(t -> !t.isPc());
+						ArenaSector cloneSector = tightAp.forCombatant(clone);
+						TetherEvent otherMechanicTether = tetherSectors.get(cloneSector);
+						if (otherMechanicTether.tetherIdMatches(STACK_TETHER)) {
+							stacksAt.add(sector);
+						}
+					}
+					s.setParam("stacksAt", stacksAt);
+					s.updateCall(idyllicReenactmentStacks1);
+				}
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBE5D, 0xB4EF, 0xB4EE));
+				s.updateCall(idyllicSafePlatform);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB514, 0xB515, 0xBE95));
+				{
+					// Inverted since this is the second set.
+					List<ArenaSector> sectors = !cardFirst ? ArenaSector.cardinals : ArenaSector.quadrants;
+//				// TODO: this might be overcomlicating the logic and/or wrong
+					List<ArenaSector> stacksAt = new ArrayList<>();
+					for (ArenaSector sector : sectors) {
+						// The tether from the given sector's mechanics NPC to a player
+						TetherEvent mechTether = tetherSectors.get(sector);
+						// The player
+						XivCombatant tetheredPlayer = mechTether.getTargetMatching(XivCombatant::isPc);
+						// The tether between that player and an original clone
+						TetherEvent cloneTether = originalCloneTethers.stream().filter(t -> t.eitherTargetMatches(tetheredPlayer)).findAny().orElse(null);
+						// The clone
+						XivCombatant clone = cloneTether.getTargetMatching(t -> !t.isPc());
+						ArenaSector cloneSector = tightAp.forCombatant(clone);
+						TetherEvent otherMechanicTether = tetherSectors.get(cloneSector);
+						if (otherMechanicTether.tetherIdMatches(STACK_TETHER)) {
+							stacksAt.add(sector);
+						}
+					}
+					s.setParam("stacksAt", stacksAt);
+					s.updateCall(idyllicReenactmentStacks2);
+				}
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBE5D, 0xB4EF, 0xB4EE));
+				var portalSafeDirs = platformSafeDirs.stream().map(as -> as.plusQuads(1)).toList();
+				s.setParam("portalSafeDirs", portalSafeDirs);
+				s.updateCall(idyllicPortalSafeDirs);
+			});
+
+	@NpcCastCallout(0xB533)
+	private final ModifiableCallout<AbilityCastStart> arcadianHell = ModifiableCallout.durationBasedCall("Arcadian Hell", "Raidwide");
+
+	@NpcCastCallout(0xB537)
+	private final ModifiableCallout<AbilityCastStart> arcadianHellEnrage = ModifiableCallout.durationBasedCall("Arcadian Hell (Enrage)", "Enrage");
 
 }

@@ -59,10 +59,11 @@ public final class StandardColumns {
 	}
 
 	public static final CustomColumn<XivEntity> entityIdColumn
-			= new CustomColumn<>("ID", c -> "0x" + Long.toString(c.getId(), 16),
+			= new CustomColumn<>("ID", c -> Long.toString(c.getId(), 16),
 			c -> {
-				c.setMinWidth(80);
-				c.setMaxWidth(80);
+				// TODO: check width
+				c.setMinWidth(63);
+				c.setMaxWidth(63);
 			}
 	);
 
