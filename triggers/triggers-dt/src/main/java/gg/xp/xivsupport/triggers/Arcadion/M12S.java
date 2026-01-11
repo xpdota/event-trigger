@@ -926,17 +926,17 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<BuffApplied> idyllicPyreticAfter = new ModifiableCallout<BuffApplied>("Idyllic: Pyretic", "Move").autoIcon();
 	private final ModifiableCallout<AbilityCastStart> idyllicStone = ModifiableCallout.<AbilityCastStart>durationBasedCall("Idyllic: Stone Tower", "Out of Tower").autoIcon();
 
-	private final ModifiableCallout<?> idyllicLaterSafePlatform = new ModifiableCallout<>("Idyllic: Later Safe Platform", "Later: {safePlatform} Platform, {safePlatformDirs} Safe").autoIcon();
+	private final ModifiableCallout<?> idyllicLaterSafePlatform = new ModifiableCallout<>("Idyllic: Later Safe Platform", "Later: {safePlatform} Platform, { join('/', safePlatformDirs) } Safe").autoIcon();
 
 	private final ModifiableCallout<?> idyllicReenactmentStacks1 = new ModifiableCallout<>("Idyllic: Reenactment Stacks 1", "Stacks {stacksAt}").extendedDescription("""
 			You can also use {defasAt} to indicate where the defamations are.""");
 
-	private final ModifiableCallout<?> idyllicSafePlatform = new ModifiableCallout<>("Idyllic: Safe Platform", "{safePlatform} Platform, {safePlatformDirs} Safe").autoIcon();
+	private final ModifiableCallout<?> idyllicSafePlatform = new ModifiableCallout<>("Idyllic: Safe Platform", "{safePlatform} Platform, { join('/', safePlatformDirs) } Safe").autoIcon();
 
 	private final ModifiableCallout<?> idyllicReenactmentStacks2 = new ModifiableCallout<>("Idyllic: Reenactment Stacks 2", "Stacks {stacksAt}").extendedDescription("""
 			You can also use {defasAt} to indicate where the defamations are.""");
 
-	private final ModifiableCallout<?> idyllicPortalSafeDirs = new ModifiableCallout<>("Idyllic: Portal Safe Directions", "{portalSafeDirs} Safe").autoIcon();
+	private final ModifiableCallout<?> idyllicPortalSafeDirs = new ModifiableCallout<>("Idyllic: Portal Safe Directions", "{ join('/', portalSafeDirs) } Safe").autoIcon();
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> idyllicDreamSq = SqtTemplates.sq(
@@ -1257,7 +1257,7 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 					s.updateCall(idyllicReenactmentStacks2);
 				}
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBE5D, 0xB4EF, 0xB4EE));
-				var portalSafeDirs = platformSafeDirs.stream().map(as -> as.plusQuads(1)).toList();
+				var portalSafeDirs = platformSafeDirs.stream().map(as -> as.plusQuads(1)).sorted().toList();
 				s.setParam("portalSafeDirs", portalSafeDirs);
 				s.updateCall(idyllicPortalSafeDirs);
 			});

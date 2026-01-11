@@ -12,9 +12,11 @@ import org.picocontainer.MutablePicoContainer;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import java.awt.*;
 
 public final class ReplayControllerGui {
 
+	public static ReplayControllerGui instance;
 	private final ReplayController controller;
 	private final JPanel panel;
 	private final JLabel progressLabel;
@@ -24,6 +26,7 @@ public final class ReplayControllerGui {
 	private int advanceAmount = 1;
 
 	public ReplayControllerGui(MutablePicoContainer container, ReplayController controller) {
+		instance = this;
 		this.controller = controller;
 		{
 			panel = new JPanel();
@@ -62,7 +65,15 @@ public final class ReplayControllerGui {
 			panel.add(playPauseButton);
 		}
 		{
-			progressLabel = new JLabel();
+			progressLabel = new JLabel("Replay: ") {
+				@Override
+				public Dimension getPreferredSize() {
+					Dimension min = getMinimumSize();
+					// Set an effective min width so that the label doesn't expand too much dynamically (looks weird)
+					return new Dimension(Math.max(140, min.width), min.height);
+				}
+			};
+			progressLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 			panel.add(progressLabel);
 		}
 		{
