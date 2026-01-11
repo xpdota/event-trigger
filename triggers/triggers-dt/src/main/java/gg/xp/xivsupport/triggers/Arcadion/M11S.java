@@ -471,8 +471,8 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<AbilityCastStart> eclipticTwoWayWithTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Two-Way with Fireball Tether", "Light Parties, Behind");
 	private final ModifiableCallout<AbilityCastStart> eclipticTwoWayNoTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Two-Way with No Tether", "Light Parties, Bait");
 
-	private final ModifiableCallout<AbilityCastStart> eclipticFourWayWithTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Two-Way with Fireball Tether", "Buddies, Behind");
-	private final ModifiableCallout<AbilityCastStart> eclipticFourWayNoTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Two-Way with No Tether", "Buddies, Bait");
+	private final ModifiableCallout<AbilityCastStart> eclipticFourWayWithTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Four-Way with Fireball Tether", "Buddies, Behind");
+	private final ModifiableCallout<AbilityCastStart> eclipticFourWayNoTether = ModifiableCallout.durationBasedCall("Ecliptic Stampede: Four-Way with No Tether", "Buddies, Bait");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> eclipticStampedeSq = SqtTemplates.sq(120_000,
