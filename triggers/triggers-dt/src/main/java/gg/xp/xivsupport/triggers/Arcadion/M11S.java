@@ -306,13 +306,13 @@ public class M11S extends AutoChildEventHandler implements FilteredEventHandler 
 	@NpcCastCallout(0xB430)
 	private final ModifiableCallout<AbilityCastStart> fireAndFury = ModifiableCallout.durationBasedCall("Fire and Fury", "Sides Safe");
 
-	private final ModifiableCallout<AbilityCastStart> orbitalOmenInitial = ModifiableCallout.durationBasedCall("Orbital Omen: Initial", "Watch Lasers");
+	private final ModifiableCallout<AbilityCastStart> orbitalOmenInitial = ModifiableCallout.durationBasedCall("Orbital Omen/Meteorain: Initial", "Watch Lasers");
 
-	private final ModifiableCallout<HeadMarkerEvent> orbitalOmenMarkerOnYou = new ModifiableCallout<>("Orbital Omen: Marker on You", "Marker with {buddy}");
-	private final ModifiableCallout<AbilityCastStart> orbitalOmenNoMarkerFirst = ModifiableCallout.durationBasedCall("Orbital Omen: No Marker (First Set)", "First Set");
-	private final ModifiableCallout<AbilityCastStart> orbitalOmenNoMarkerSecond = ModifiableCallout.durationBasedCall("Orbital Omen: No Marker (First Set)", "Second Set");
-	private final ModifiableCallout<AbilityCastStart> orbitalOmenNoMarkerThird = ModifiableCallout.durationBasedCall("Orbital Omen: No Marker (First Set)", "Third Set");
-	private final ModifiableCallout<AbilityCastStart> orbitalOmenNoMarkerFourth = ModifiableCallout.durationBasedCall("Orbital Omen: Final Set", "Fourth Set");
+	private final ModifiableCallout<HeadMarkerEvent> orbitalOmenMarkerOnYou = new ModifiableCallout<>("Orbital Omen/Meteorain: Marker on You", "Marker with {buddy}");
+	private final ModifiableCallout<AbilityCastStart> orbitalOmenNoMarkerFirst = ModifiableCallout.durationBasedCall("Orbital Omen/Meteorain: No Marker (First Set)", "First Set");
+	private final ModifiableCallout<AbilityCastStart> orbitalOmenNoMarkerSecond = ModifiableCallout.durationBasedCall("Orbital Omen/Meteorain: No Marker (Second Set)", "Second Set");
+	private final ModifiableCallout<AbilityCastStart> orbitalOmenNoMarkerThird = ModifiableCallout.durationBasedCall("Orbital Omen/Meteorain: No Marker (Third Set)", "Third Set");
+	private final ModifiableCallout<AbilityCastStart> orbitalOmenNoMarkerFourth = ModifiableCallout.durationBasedCall("Orbital Omen/Meteorain: Final Set", "Fourth Set");
 
 	private void doOrbitalMarkers(SequentialTriggerController<BaseEvent> s, ModifiableCallout<AbilityCastStart> noMarkerCall) {
 		var markers = s.waitEvents(2, HeadMarkerEvent.class, hme -> hme.markerIdMatches(244));
