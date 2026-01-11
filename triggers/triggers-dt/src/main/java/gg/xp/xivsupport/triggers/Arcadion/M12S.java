@@ -921,6 +921,8 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				var firstClone = s.waitEvent(ActorControlExtraEvent.class, acee -> acee.getTarget().npcIdMatches(19210)).getTarget();
 				s.waitThenRefreshCombatants(100);
 				ArenaSector firstCloneAt = tightAp.forCombatant(state.getLatestCombatantData(firstClone));
+				log.info("firstClone: {}", firstClone);
+				log.info("firstCloneAt: {}", firstCloneAt);
 				boolean cardFirst = firstCloneAt.isCardinal();
 				s.updateCall(cardFirst ? idyllicCardFirst : idyllicIntercardFirst);
 				var originalCloneTethers = s.waitEventsQuickSuccession(8, TetherEvent.class, te -> te.eitherTargetMatches(target -> target.npcIdMatches(19210)));
@@ -978,12 +980,12 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 					}
 					tetherTracker.put(tether.getSource().getId(), tether);
 					if (!calledInitial) {
-						ArenaSector thisTetherFrom = tightAp.forCombatant(tether.getTargetMatching(t -> !t.isPc()));
+						ArenaSector thisTetherFrom = tightAp.forCombatant(state.getLatestCombatantData(tether.getTargetMatching(t -> !t.isPc())));
 						log.info("Initial tether: {} from {}", tether, thisTetherFrom);
-						boolean tetherOnCard = thisTetherFrom.isCardinal();
 						boolean tetherIsDefa = tether.tetherIdMatches(DEFA_TETHER);
-						boolean tetherIsFirst = tetherOnCard == cardFirst;
-						log.info("tetherOnCard: {}, tetherIsDefa: {}, tetherIsFirst: {}, cardFirst: {}", tetherOnCard, tetherIsDefa, tetherIsFirst, cardFirst);
+						// Technically the "first" is N/S, but since the mechanics alternate, that implies it would also have the same mechanic E/W .
+						boolean tetherIsFirst = thisTetherFrom.isCardinal();
+						log.info("tetherIsDefa: {}, tetherIsFirst: {}, cardFirst: {}", tetherIsDefa, tetherIsFirst, cardFirst);
 						defamationFirst = tetherIsFirst == tetherIsDefa;
 						log.info("defamationFirst: {}", defamationFirst);
 						s.updateCall(defamationFirst ? idyllicDefaFirst : idyllicStackFirst);
