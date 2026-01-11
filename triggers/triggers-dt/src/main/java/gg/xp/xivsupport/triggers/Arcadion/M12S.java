@@ -632,8 +632,8 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				}
 
 				// First, you get tethered to your clone
-				var allCloneTethers = s.waitEvents(8, TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isPc));
-				TetherEvent myTether = allCloneTethers.stream().filter(t -> t.getTarget().isThePlayer()).findAny()
+				var playerCloneTethers = s.waitEvents(8, TetherEvent.class, te -> te.eitherTargetMatches(XivCombatant::isPc));
+				TetherEvent myTether = playerCloneTethers.stream().filter(t -> t.getTarget().isThePlayer()).findAny()
 						.orElseThrow();
 				var tetheredTo = myTether.getTargetMatching(t -> !t.isPc());
 				ArenaSector tetherFrom = tightAp.forCombatant(tetheredTo);
@@ -705,8 +705,8 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 					ArenaSector sector2 = sector1.opposite();
 					// The first clones to go off are N/S. So we start by looking at what player was tethered to that clone,
 					// and then what mob the player was tethered to.
-					XivCombatant player1 = allCloneTethers.stream().filter(tether -> tightAp.forCombatant(tether.getSource()) == sector1).map(tether -> tether.getTargetMatching(XivCombatant::isPc)).findAny().orElse(null);
-					XivCombatant player2 = allCloneTethers.stream().filter(tether -> tightAp.forCombatant(tether.getSource()) == sector2).map(tether -> tether.getTargetMatching(XivCombatant::isPc)).findAny().orElse(null);
+					XivCombatant player1 = playerCloneTethers.stream().filter(tether -> tightAp.forCombatant(tether.getSource()) == sector1).map(tether -> tether.getTargetMatching(XivCombatant::isPc)).findAny().orElse(null);
+					XivCombatant player2 = playerCloneTethers.stream().filter(tether -> tightAp.forCombatant(tether.getSource()) == sector2).map(tether -> tether.getTargetMatching(XivCombatant::isPc)).findAny().orElse(null);
 					TetherEvent tether1 = tetherTracker.values().stream().filter(tether -> tether.eitherTargetMatches(player1)).findAny().orElse(null);
 					TetherEvent tether2 = tetherTracker.values().stream().filter(tether -> tether.eitherTargetMatches(player2)).findAny().orElse(null);
 					long mech1 = tether1 == null ? 1 : (tether1.getId() == BOSS_TETHER ? 3 : tether1.getId() - PROTEAN_TETHER);
@@ -722,6 +722,31 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				}
 			}
 	);
+
+	/**
+	 * Based on the list of tethers, compute a map from arena sectors to what player was tethered to an npc in that sector.
+	 *
+	 * @param tethers The tethers.
+	 * @return A map from clone sectors to players.
+	 */
+	private Map<ArenaSector, XivCombatant> mapTethersToSectors(List<TetherEvent> tethers) {
+		Map<ArenaSector, XivCombatant> sectorToPlayer = new EnumMap<>(ArenaSector.class);
+		for (TetherEvent tether : tethers) {
+			XivCombatant npcTarget = tether.getTargetMatching(cbt -> !cbt.isPc());
+			if (npcTarget == null) {
+				log.error("Tether {} has no NPC target", tether);
+				continue;
+			}
+			XivCombatant pcTarget = tether.getTargetMatching(XivCombatant::isPc);
+			if (pcTarget == null) {
+				log.error("Tether {} has no player target", tether);
+				continue;
+			}
+			sectorToPlayer.put(tightAp.forCombatant(npcTarget), pcTarget);
+		}
+		return sectorToPlayer;
+
+	}
 
 	private final ModifiableCallout<BuffApplied> mutationAlpha = ModifiableCallout.<BuffApplied>durationBasedCall("Mutation: Alpha", "Alpha").autoIcon();
 	private final ModifiableCallout<BuffApplied> mutationBeta = ModifiableCallout.<BuffApplied>durationBasedCall("Mutation: Beta", "Beta").autoIcon();
@@ -903,11 +928,13 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 
 	private final ModifiableCallout<?> idyllicLaterSafePlatform = new ModifiableCallout<>("Idyllic: Later Safe Platform", "Later: {safePlatform} Platform, {safePlatformDirs} Safe").autoIcon();
 
-	private final ModifiableCallout<?> idyllicReenactmentStacks1 = new ModifiableCallout<>("Idyllic: Reenactment Stacks 1", "Stacks {stacksAt}");
+	private final ModifiableCallout<?> idyllicReenactmentStacks1 = new ModifiableCallout<>("Idyllic: Reenactment Stacks 1", "Stacks {stacksAt}").extendedDescription("""
+			You can also use {defasAt} to indicate where the defamations are.""");
 
 	private final ModifiableCallout<?> idyllicSafePlatform = new ModifiableCallout<>("Idyllic: Safe Platform", "{safePlatform} Platform, {safePlatformDirs} Safe").autoIcon();
 
-	private final ModifiableCallout<?> idyllicReenactmentStacks2 = new ModifiableCallout<>("Idyllic: Reenactment Stacks 2", "Stacks {stacksAt}");
+	private final ModifiableCallout<?> idyllicReenactmentStacks2 = new ModifiableCallout<>("Idyllic: Reenactment Stacks 2", "Stacks {stacksAt}").extendedDescription("""
+			You can also use {defasAt} to indicate where the defamations are.""");
 
 	private final ModifiableCallout<?> idyllicPortalSafeDirs = new ModifiableCallout<>("Idyllic: Portal Safe Directions", "{portalSafeDirs} Safe").autoIcon();
 
@@ -925,8 +952,8 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				log.info("firstCloneAt: {}", firstCloneAt);
 				boolean cardFirst = firstCloneAt.isCardinal();
 				s.updateCall(cardFirst ? idyllicCardFirst : idyllicIntercardFirst);
-				var originalCloneTethers = s.waitEventsQuickSuccession(8, TetherEvent.class, te -> te.eitherTargetMatches(target -> target.npcIdMatches(19210)));
-				TetherEvent myCloneTether = originalCloneTethers.stream().filter(t -> t.getTarget().isThePlayer()).findAny()
+				var playerCloneTethers = s.waitEventsQuickSuccession(8, TetherEvent.class, te -> te.eitherTargetMatches(target -> target.npcIdMatches(19210)));
+				TetherEvent myCloneTether = playerCloneTethers.stream().filter(t -> t.getTarget().isThePlayer()).findAny()
 						.orElseThrow();
 				var tetheredTo = myCloneTether.getTargetMatching(t -> !t.isPc());
 				ArenaSector tetherFrom = tightAp.forCombatant(tetheredTo);
@@ -1002,6 +1029,15 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 					log.info("Tether on {}: {}", Long.toString(id, 16), tether);
 				});
 				tetherTracker.forEach((id, tether) -> tetherSectors.put(tightAp.forCombatant(state.getCombatant(id)), tether));
+				Map<XivCombatant, TetherEvent> playerLindschratMap = new HashMap<>();
+				tetherTracker.forEach((id, tether) -> {
+					XivCombatant pc = tether.getTargetMatching(XivCombatant::isPc);
+					if (pc == null) {
+						log.error("Tether has no player: {}", tether);
+						return;
+					}
+					playerLindschratMap.put(pc, tether);
+				});
 				// No tether = defa
 				Optional<TetherEvent> myTetherMaybe = myTethers.stream().findAny();
 				if (myTetherMaybe.isEmpty()) {
@@ -1172,30 +1208,27 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 
 				s.waitMs(2_500);
 
+				Map<ArenaSector, XivCombatant> playerCloneTetherMap = mapTethersToSectors(playerCloneTethers);
+
 				{
 					List<ArenaSector> sectors = cardFirst ? ArenaSector.cardinals : ArenaSector.quadrants;
-//				// TODO: this might be overcomlicating the logic and/or wrong
-					// It's probably wrong - what it should be is:
-					// 1. Look at what player was tethered to the cardinal
-					// 2. Look at the what lindschrat they were tethered to
-					// 3. Look at what mechanic that lindschrat was doing
 					List<ArenaSector> stacksAt = new ArrayList<>();
+					List<ArenaSector> defasAt = new ArrayList<>();
 					for (ArenaSector sector : sectors) {
-						// The tether from the given sector's mechanics NPC to a player
-						TetherEvent mechTether = tetherSectors.get(sector);
-						// The player
-						XivCombatant tetheredPlayer = mechTether.getTargetMatching(XivCombatant::isPc);
-						// The tether between that player and an original clone
-						TetherEvent cloneTether = originalCloneTethers.stream().filter(t -> t.eitherTargetMatches(tetheredPlayer)).findAny().orElse(null);
-						// The clone
-						XivCombatant clone = cloneTether.getTargetMatching(t -> !t.isPc());
-						ArenaSector cloneSector = tightAp.forCombatant(clone);
-						TetherEvent otherMechanicTether = tetherSectors.get(cloneSector);
-						if (otherMechanicTether.tetherIdMatches(STACK_TETHER)) {
+						// 1. Look at what player was originally tethered to that sector's player clone
+						XivCombatant tetheredPlayer = playerCloneTetherMap.get(sector);
+						// 2. Look at what Lindschrat NPC that player grabbed a tether from
+						TetherEvent tetherEvent = playerLindschratMap.get(tetheredPlayer);
+						// 3. Look at what mechanic that lindschrat was doing
+						if (tetherEvent.tetherIdMatches(STACK_TETHER)) {
 							stacksAt.add(sector);
+						}
+						else {
+							defasAt.add(sector);
 						}
 					}
 					s.setParam("stacksAt", stacksAt);
+					s.setParam("defasAt", defasAt);
 					s.updateCall(idyllicReenactmentStacks1);
 				}
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBE5D, 0xB4EF, 0xB4EE));
@@ -1204,24 +1237,23 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				{
 					// Inverted since this is the second set.
 					List<ArenaSector> sectors = !cardFirst ? ArenaSector.cardinals : ArenaSector.quadrants;
-//				// TODO: this might be overcomlicating the logic and/or wrong
 					List<ArenaSector> stacksAt = new ArrayList<>();
+					List<ArenaSector> defasAt = new ArrayList<>();
 					for (ArenaSector sector : sectors) {
-						// The tether from the given sector's mechanics NPC to a player
-						TetherEvent mechTether = tetherSectors.get(sector);
-						// The player
-						XivCombatant tetheredPlayer = mechTether.getTargetMatching(XivCombatant::isPc);
-						// The tether between that player and an original clone
-						TetherEvent cloneTether = originalCloneTethers.stream().filter(t -> t.eitherTargetMatches(tetheredPlayer)).findAny().orElse(null);
-						// The clone
-						XivCombatant clone = cloneTether.getTargetMatching(t -> !t.isPc());
-						ArenaSector cloneSector = tightAp.forCombatant(clone);
-						TetherEvent otherMechanicTether = tetherSectors.get(cloneSector);
-						if (otherMechanicTether.tetherIdMatches(STACK_TETHER)) {
+						// 1. Look at what player was originally tethered to that sector's player clone
+						XivCombatant tetheredPlayer = playerCloneTetherMap.get(sector);
+						// 2. Look at what Lindschrat NPC that player grabbed a tether from
+						TetherEvent tetherEvent = playerLindschratMap.get(tetheredPlayer);
+						// 3. Look at what mechanic that lindschrat was doing
+						if (tetherEvent.tetherIdMatches(STACK_TETHER)) {
 							stacksAt.add(sector);
+						}
+						else {
+							defasAt.add(sector);
 						}
 					}
 					s.setParam("stacksAt", stacksAt);
+					s.setParam("defasAt", defasAt);
 					s.updateCall(idyllicReenactmentStacks2);
 				}
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xBE5D, 0xB4EF, 0xB4EE));
