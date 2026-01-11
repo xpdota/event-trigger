@@ -11,6 +11,8 @@ import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -55,10 +57,7 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 				if (isTabSplit(index)) {
 					menuItem = new JMenuItem("Return to This Window");
 					menuItem.addActionListener(l -> {
-						SplitWindowComponent swc = (SplitWindowComponent) getComponentAt(index);
-						setComponentAt(index, swc.actualComponent);
-						swc.window.setVisible(false);
-						swc.window.dispose();
+						unsplit(index);
 					});
 				}
 				else {
@@ -126,14 +125,22 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 	/**
 	 * Dummy "Component" which represents a tab that has been split off to a new window
 	 */
-	private static final class SplitWindowComponent extends Component {
+	private final class SplitWindowComponent extends Component {
 
 		private final Component actualComponent;
 		private final JFrame window;
 
-		private SplitWindowComponent(Component actualComponent, JFrame window) {
+		private SplitWindowComponent(Component actualComponent, JFrame window, int index) {
 			this.actualComponent = actualComponent;
 			this.window = window;
+			window.addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowClosed(WindowEvent e) {
+					SwingUtilities.invokeLater(() -> {
+						SmartTabbedPane.this.unsplit(index);
+					});
+				}
+			});
 		}
 	}
 
@@ -149,7 +156,7 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 		}
 		String name = getTitleAt(index);
 		JFrame newWindow = new JFrame(name);
-		SplitWindowComponent swc = new SplitWindowComponent(tabAt, newWindow);
+		SplitWindowComponent swc = new SplitWindowComponent(tabAt, newWindow, index);
 		setComponentAt(index, swc);
 		newWindow.setContentPane((Container) tabAt);
 		newWindow.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -159,10 +166,24 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 		newWindow.setLocation(new Point(parent.getX() + 100, parent.getY() + 100));
 		newWindow.setVisible(true);
 		newWindow.revalidate();
+		tabAt.setVisible(true);
 		int goodIndex = findGoodTab();
 		SwingUtilities.invokeLater(() -> {
 			setSelectedIndex(goodIndex);
 		});
+	}
+
+	/**
+	 * Unsplit a split window
+	 *
+	 * @param index The tab index to unsplit
+	 */
+	private void unsplit(int index) {
+		if (getComponentAt(index) instanceof SplitWindowComponent swc) {
+			setComponentAt(index, swc.actualComponent);
+			swc.window.setVisible(false);
+			swc.window.dispose();
+		}
 	}
 
 	private volatile int lastGoodIndex = -1;
@@ -173,7 +194,8 @@ public class SmartTabbedPane extends JTabbedPane implements TabAware {
 	}
 
 	private boolean isTabSplit(int index) {
-		return getComponentAt(index) instanceof SplitWindowComponent;
+		// isDisplayable check tells us whether the window has been closed.
+		return getComponentAt(index) instanceof SplitWindowComponent swc && swc.window.isDisplayable();
 	}
 
 	private int findGoodTab() {
