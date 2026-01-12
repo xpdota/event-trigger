@@ -40,6 +40,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -309,7 +310,7 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<AbilityCastStart> grotesquerie3getHit = ModifiableCallout.<AbilityCastStart>durationBasedCall("Grotesquerie 3: Get Hit", "Spread {unsafe}").statusIcon(0x129b);
 
 	private final ModifiableCallout<?> gt3middleGetTether = new ModifiableCallout<>("Grotesquerie 3: Wait Middle for Tether", "Wait Middle");
-	private final ModifiableCallout<TetherEvent> gt3tetherPartner = new ModifiableCallout<>("Grotesquerie 3: Tether", "{spreadSafe} With {buddy}");
+	private final ModifiableCallout<TetherEvent> gt3tetherPartner = new ModifiableCallout<>("Grotesquerie 3: Tether", "{ join('/', spreadSafe) } with {buddy}");
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> grotesquerie3sq = SqtTemplates.sq(
@@ -396,28 +397,88 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 							s.setParam("buddy", buddy);
 							s.updateCall(gt3tetherPartner, myTether);
 						});
-
-
 			});
-
-	// TODO: left/right mechanic before this
 
 	@NpcCastCallout(0xB4C6)
 	private final ModifiableCallout<AbilityCastStart> slaughterShed = ModifiableCallout.durationBasedCall("Slaughtershed", "Raidwide");
 
-	private final ModifiableCallout<HeadMarkerEvent> slaughtershedSpread = new ModifiableCallout<>("End: Spread", "Spread");
-	private final ModifiableCallout<?> slaughtershedStack = new ModifiableCallout<>("End: Stack", "Stack on {stackOn}");
+	private final ModifiableCallout<HeadMarkerEvent> slaughtershedSpread = new ModifiableCallout<>("Slaughtershed: Spread", "Spread {bigSafe}");
+	private final ModifiableCallout<?> slaughtershedStack = new ModifiableCallout<>("Slaughtershed: Stack", "Stack {smallSafe}")
+			.extendedDescription("""
+					You can also use the `stackOn` variable to indicate who has the stack marker.""");
 
-	// TODO: knockback thing
+	private final ModifiableCallout<?> slaughtershedNwKb = new ModifiableCallout<>("Slaughtershed: Northwest Knockback", "Left Knockback");
+	private final ModifiableCallout<?> slaughtershedNeKb = new ModifiableCallout<>("Slaughtershed: Northeast Knockback", "Right Knockback");
+	private final ModifiableCallout<?> slaughtershedWCleave = new ModifiableCallout<>("Slaughtershed: West Cleave", "East Safe");
+	private final ModifiableCallout<?> slaughtershedECleave = new ModifiableCallout<>("Slaughtershed: East Cleave", "West Safe");
+
+	/*
+	9:37:59
+	Left KB hand
+	3F 7::
+	4x 31 F::
+	unknown b4cc 49:8000
+
+	9:38:28
+	Right KB hand
+	3F 7::
+	4x 31 F::
+	unknown_b4ce 49:8000
+
+	9:38:57
+	Left cleave:
+	3F 7::
+	4x 31 F::
+	unknown_b4cb 49:8000
+
+
+	9:52:12
+	Right cleave:
+	3F 7::
+	4x 31: F::
+	b4cd
+
+
+	KB impact is B9C7 Raptor Knuckles
+	Cleave is B9BC serpentine scourge (precursor is B4D2 or B4D1)
+	 */
+
+	private static final Position TOP_LEFT_BAD = Position.of2d(89.25, 96.50);
+	private static final Position TOP_RIGHT_BAD = Position.of2d(110.75, 96.50);
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> slaughter = SqtTemplates.sq(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB4C6),
 			(e1, s) -> {
+				var acees = s.waitEvents(5, ActorControlExtraEvent.class, acee -> acee.getTarget().getRawType() == 7);
 				// 317 is stack, 375 is spread
 				List<HeadMarkerEvent> markers = s.waitEvents(5, HeadMarkerEvent.class, hme -> hme.markerIdMatches(317, 375));
-				// If player has spread, call that
-				// TODO: call safe spots
+				List<Position> unsafe = acees.stream()
+						.map(ActorControlExtraEvent::getTarget)
+						.map(state::getLatestCombatantData)
+						.map(XivCombatant::getPos)
+						.filter(Objects::nonNull)
+						.toList();
+
+				var followUpMechanic = s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB4CB, 0xB4CC, 0xB4CD, 0xB4CE));
+
+				if (unsafe.stream().anyMatch(p -> p.distanceFrom2D(TOP_LEFT_BAD) < 1)) {
+					// If top left is getting hit, then top left is the small safespot and top right is the large safespot
+					s.setParam("smallSafe", ArenaSector.NORTHWEST);
+					s.setParam("bigSafe", ArenaSector.NORTHEAST);
+				}
+				else if (unsafe.stream().anyMatch(p -> p.distanceFrom2D(TOP_RIGHT_BAD) < 1)) {
+					// If top right is getting hit, then top right is the small safespot and top left is the large safespot
+					s.setParam("bigSafe", ArenaSector.NORTHWEST);
+					s.setParam("smallSafe", ArenaSector.NORTHEAST);
+				}
+				else {
+					s.setParam("bigSafe", ArenaSector.UNKNOWN);
+					s.setParam("smallSafe", ArenaSector.UNKNOWN);
+				}
+
+
+				// Call stack/spread
 				markers.stream()
 						.filter(m -> m.markerIdMatches(375) && m.getTarget().isThePlayer())
 						.findAny()
@@ -430,6 +491,33 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 									s.updateCall(slaughtershedStack);
 								}
 						);
+
+				// Wait for stack/spread hit
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB4D4, 0xB4D5));
+				ModifiableCallout<?> firstCall;
+				ModifiableCallout<?> secondCall;
+				switch ((int) followUpMechanic.getAbility().getId()) {
+					case 0xB4CB -> {
+						firstCall = slaughtershedWCleave;
+						secondCall = slaughtershedECleave;
+					}
+					case 0xB4CD -> {
+						firstCall = slaughtershedECleave;
+						secondCall = slaughtershedWCleave;
+					}
+					case 0xB4CC -> {
+						firstCall = slaughtershedNwKb;
+						secondCall = slaughtershedNeKb;
+					}
+					case 0xB4CE -> {
+						firstCall = slaughtershedNeKb;
+						secondCall = slaughtershedNwKb;
+					}
+					default -> throw new IllegalStateException("Unexpected value: " + followUpMechanic.getAbility().getId());
+				}
+				s.updateCall(firstCall);
+				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB9C7, 0xB9BC));
+				s.updateCall(secondCall);
 			});
 
 	@NpcCastCallout(value = 0xB538, cancellable = true)
@@ -585,12 +673,6 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 					s.updateCall(replGetHitByDark);
 				}
 
-				/*
-
-	private final ModifiableCallout<AbilityCastStart> replGetHitByFire = ModifiableCallout.durationBasedCall("Replication: Get Hit By Fire", "Fire {fireInCard} In, {fireOutCard}{fireOut} Out");
-	private final ModifiableCallout<AbilityCastStart> replGetHitByDark = ModifiableCallout.durationBasedCall("Replication: Get Hit By Dark", "Dark {darkInCard} In, {darkOutCard}{darkOut} Out");
-				 */
-
 			});
 
 	@NpcCastCallout(0xB520)
@@ -688,7 +770,6 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 					s.updateCall(stgStacks);
 				}
 
-				// TODO: near/far? slide 13-14 on https://raidplan.io/plan/hxub7q7ptpzgpq6h
 				AbilityCastStart netherWrathCast = s.waitEvent(AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB52E, 0xB52F));
 				if (netherWrathCast.abilityIdMatches(0xB52E)) {
 					s.updateCall(netherwrathNear, netherWrathCast);
@@ -1064,7 +1145,6 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 				s.setParam("haveDefa", haveDefa);
 				s.setParam("myTetherSector", myTetherSector);
 				s.waitMs(6_000);
-				// TODO: re-call this later
 				s.updateCall(haveDefa ? idyllicDefaNum : idyllicStackNum);
 
 				s.waitEvents(4, AbilityResolvedEvent.class, aue -> aue.abilityIdMatches(0xB9D9) && aue.isLastTarget());

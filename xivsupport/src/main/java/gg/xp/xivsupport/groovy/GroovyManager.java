@@ -52,6 +52,7 @@ import java.util.List;
 
 import static org.reflections.scanners.Scanners.SubTypes;
 
+@SuppressWarnings("ClassWithMultipleLoggers")
 @ScanMe
 public class GroovyManager {
 
@@ -62,7 +63,6 @@ public class GroovyManager {
 	private final BooleanSetting sandboxSetting;
 	private final AutoHandlerConfig ahc;
 	private final boolean useSandbox;
-	private Binding binding;
 
 	public GroovyManager(PicoContainer container, Whitelist whitelist, PersistenceProvider pers, AutoHandlerConfig ahc) {
 		this.container = container;
