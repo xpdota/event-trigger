@@ -399,7 +399,6 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 						});
 			});
 
-	@NpcCastCallout(0xB4C6)
 	private final ModifiableCallout<AbilityCastStart> slaughterShed = ModifiableCallout.durationBasedCall("Slaughtershed", "Raidwide");
 
 	private final ModifiableCallout<HeadMarkerEvent> slaughtershedSpread = new ModifiableCallout<>("Slaughtershed: Spread", "Spread {bigSafe}");
@@ -407,8 +406,8 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 			.extendedDescription("""
 					You can also use the `stackOn` variable to indicate who has the stack marker.""");
 
-	private final ModifiableCallout<?> slaughtershedNwKb = new ModifiableCallout<>("Slaughtershed: Northwest Knockback", "Left Knockback");
-	private final ModifiableCallout<?> slaughtershedNeKb = new ModifiableCallout<>("Slaughtershed: Northeast Knockback", "Right Knockback");
+	private final ModifiableCallout<?> slaughtershedNwKb = new ModifiableCallout<>("Slaughtershed: Knockback from Northwest", "Left Knockback");
+	private final ModifiableCallout<?> slaughtershedNeKb = new ModifiableCallout<>("Slaughtershed: Knockback from Northeast", "Right Knockback");
 	private final ModifiableCallout<?> slaughtershedWCleave = new ModifiableCallout<>("Slaughtershed: West Cleave", "East Safe");
 	private final ModifiableCallout<?> slaughtershedECleave = new ModifiableCallout<>("Slaughtershed: East Cleave", "West Safe");
 
@@ -448,8 +447,9 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 
 	@AutoFeed
 	private final SequentialTrigger<BaseEvent> slaughter = SqtTemplates.sq(60_000,
-			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB4C6),
+			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB4C3, 0xB4C6),
 			(e1, s) -> {
+				s.updateCall(slaughterShed, e1);
 				var acees = s.waitEvents(5, ActorControlExtraEvent.class, acee -> acee.getTarget().getRawType() == 7);
 				// 317 is stack, 375 is spread
 				List<HeadMarkerEvent> markers = s.waitEvents(5, HeadMarkerEvent.class, hme -> hme.markerIdMatches(317, 375));
@@ -513,7 +513,8 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 						firstCall = slaughtershedNeKb;
 						secondCall = slaughtershedNwKb;
 					}
-					default -> throw new IllegalStateException("Unexpected value: " + followUpMechanic.getAbility().getId());
+					default ->
+							throw new IllegalStateException("Unexpected value: " + followUpMechanic.getAbility().getId());
 				}
 				s.updateCall(firstCall);
 				s.waitEvent(AbilityUsedEvent.class, aue -> aue.abilityIdMatches(0xB9C7, 0xB9BC));
