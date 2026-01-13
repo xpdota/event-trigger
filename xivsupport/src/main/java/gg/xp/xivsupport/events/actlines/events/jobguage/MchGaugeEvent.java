@@ -21,6 +21,15 @@ public class MchGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
         this.batteryGauge = batteryGauge;
     }
 
+    public static MchGaugeEvent fromRaw(byte[] data) {
+        double hyperchargeDuration = JobGaugeHandlers.bytesToLong(data[2], data[1]);
+        double queenDuration = JobGaugeHandlers.bytesToLong(data[4], data[3]);
+        int heatGauge = data[5];
+        int batteryGauge = data[6];
+
+        return new MchGaugeEvent(hyperchargeDuration, queenDuration, heatGauge, batteryGauge);
+    }
+
     @Override
     public String getPrimaryValue() {
         return String.format("%.0f HC, %.0f Q, %d HG,%d BG", hyperchargeDuration, queenDuration, heatGauge, batteryGauge);

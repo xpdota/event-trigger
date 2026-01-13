@@ -5,7 +5,6 @@ import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.JobGaugeUpdate;
 
-import java.io.Serial;
 import java.time.Duration;
 
 public class DrkGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaugeUpdate {
@@ -19,6 +18,14 @@ public class DrkGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
 		this.bloodGauge = bloodGauge;
 		this.darkSide = darkSide;
 		this.esteemDuration = esteemDuration;
+	}
+
+	public static DrkGaugeEvent fromRaw(byte[] data) {
+		int bloodGauge = data[1];
+		long darkSideDuration = JobGaugeHandlers.bytesToLong(data[4], data[3]);
+		long esteemDuration = JobGaugeHandlers.bytesToLong(data[8], data[7]);
+
+		return new DrkGaugeEvent(bloodGauge, darkSideDuration, esteemDuration);
 	}
 
 	@Override

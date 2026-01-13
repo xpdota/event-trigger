@@ -21,6 +21,15 @@ public class SchGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
         this.unknown5 = unknown5;
     }
 
+    public static SchGaugeEvent fromRaw(byte[] data) {
+        int aetherflow = data[1];
+        int faerieGauge = data[2];
+        long seraphDuration = JobGaugeHandlers.bytesToLong(data[4], data[3]);
+        int unknown5 = data[5];
+
+        return new SchGaugeEvent(aetherflow, faerieGauge, seraphDuration, unknown5);
+    }
+
     @Override
     public String getPrimaryValue() {
         return String.format("%d AF, %d FG, %.0f SD, %d u5", aetherflow, faerieGauge, seraphDuration, unknown5);

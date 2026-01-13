@@ -13,6 +13,12 @@ public class PldGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
         this.oathGauge = oathGauge;
     }
 
+    public static PldGaugeEvent fromRaw(byte[] data) {
+        int oathGauge = data[1];
+
+        return new PldGaugeEvent(oathGauge);
+    }
+
     @Override
     public String getPrimaryValue() {
         return String.format("%d OG", oathGauge);

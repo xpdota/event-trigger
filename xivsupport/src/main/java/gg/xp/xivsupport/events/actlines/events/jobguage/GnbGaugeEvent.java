@@ -13,6 +13,12 @@ public class GnbGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
         this.powderGauge = powderGauge;
     }
 
+    public static GnbGaugeEvent fromRaw(byte[] data) {
+        int powderGauge = data[1];
+
+        return new GnbGaugeEvent(powderGauge);
+    }
+
     @Override
     public String getPrimaryValue() {
         return String.format("%d PG", powderGauge);

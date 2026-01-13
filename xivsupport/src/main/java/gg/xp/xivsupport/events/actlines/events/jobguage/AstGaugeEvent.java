@@ -21,6 +21,16 @@ public class AstGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
         this.slot3 = slot3;
     }
 
+    public static AstGaugeEvent fromRaw(byte[] data) {
+        int cardHeld = data[6] & 0xf;
+        int minorHeld = (data[6] >> 8) & 0xf;
+        int slot1 = data[7] & 3;
+        int slot2 = (data[7] >> 2) & 3;
+        int slot3 = (data[7] >> 4) & 3;
+
+        return new AstGaugeEvent(cardHeld, minorHeld, slot1, slot2, slot3);
+    }
+
     @Override
     public String getPrimaryValue() {
         return String.format("%d CH, %d MH, %d S1, %d S2, %d S3", cardHeld, minorHeld, slot1, slot2, slot3);

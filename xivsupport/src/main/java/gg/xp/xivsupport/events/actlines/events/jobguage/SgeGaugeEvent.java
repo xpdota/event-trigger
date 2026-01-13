@@ -7,7 +7,6 @@ import gg.xp.xivsupport.events.actlines.events.HasPrimaryValue;
 import gg.xp.xivsupport.events.actlines.events.JobGaugeUpdate;
 
 import java.io.Serial;
-import java.time.Duration;
 import java.time.Instant;
 
 @SystemEvent
@@ -22,6 +21,17 @@ public class SgeGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
 		this.addersGallOverall = addersGallOverall;
 		this.adderSting = adderSting;
 		this.eukrasiaActive = eukrasiaActive;
+	}
+
+	public static SgeGaugeEvent fromRaw(byte[] data) {
+		// Out of 20000 ms
+		long addersGallProgess = JobGaugeHandlers.bytesToLong(data[2], data[1]);
+		int fullStacks = data[3] & 0xff;
+		double addersGallOverall = fullStacks + addersGallProgess / (double) JobGaugeConstants.SGE_GAUGE_RECHARGE_TIME;
+		int adderSting = data[4];
+		boolean eukrasiaActive = data[5] > 0;
+
+		return new SgeGaugeEvent(addersGallOverall, adderSting, eukrasiaActive);
 	}
 
 	@Override

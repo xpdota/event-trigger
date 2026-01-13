@@ -13,6 +13,12 @@ public class WarGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
         this.beastGauge = beastGauge;
     }
 
+    public static WarGaugeEvent fromRaw(byte[] data) {
+        int beastGauge = data[1];
+
+        return new WarGaugeEvent(beastGauge);
+    }
+
     @Override
     public String getPrimaryValue() {
         return String.format("%d BG", beastGauge);

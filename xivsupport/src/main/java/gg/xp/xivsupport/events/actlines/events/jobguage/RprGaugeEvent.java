@@ -23,6 +23,16 @@ public class RprGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
         this.pinkShroudOrbs = pinkShroudOrbs;
     }
 
+    public static RprGaugeEvent fromRaw(byte[] data) {
+        int soulGauge = data[1];
+        int shroudGauge = data[2];
+        double enshroudDuration = JobGaugeHandlers.bytesToLong(data[4], data[3]);
+        int blueShroudOrbs = data[5];
+        int pinkShroudOrbs = data[6];
+
+        return new RprGaugeEvent(soulGauge, shroudGauge, enshroudDuration, blueShroudOrbs, pinkShroudOrbs);
+    }
+
     @Override
     public String getPrimaryValue() {
         return String.format("%d SG, %d ShG, %.0f ED, %d BO, %d PO", soulGauge, shroudGauge, enshroudDuration, blueShroudOrbs, pinkShroudOrbs);

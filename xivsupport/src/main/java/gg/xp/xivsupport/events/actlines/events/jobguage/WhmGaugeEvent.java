@@ -19,6 +19,14 @@ public class WhmGaugeEvent extends BaseEvent implements HasPrimaryValue, JobGaug
         this.bloodLily = bloodLily;
     }
 
+    public static WhmGaugeEvent fromRaw(byte[] data) {
+        long lilyDuration = JobGaugeHandlers.bytesToLong(data[4], data[3]);
+        int lilyCount = data[5];
+        int bloodLily = data[6];
+
+        return new WhmGaugeEvent(lilyDuration, lilyCount, bloodLily);
+    }
+
     @Override
     public String getPrimaryValue() {
         return String.format("%.0f LD, %d L, %d BL", lilyDuration, lilyCount, bloodLily);
