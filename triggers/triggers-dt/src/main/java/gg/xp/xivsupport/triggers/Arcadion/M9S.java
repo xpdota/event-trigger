@@ -33,6 +33,8 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 	/*
 	TODO:
 	 If anyone could make a trigger for which direction the bat goes in sanguine that would be great. Fucking dumb bat
+
+	 I looked and didn't see anything obvious, so it must just be a matter of entity movement unfortunately.
 	 */
 
 	private static final Logger log = LoggerFactory.getLogger(M9S.class);
@@ -173,15 +175,23 @@ public class M9S extends AutoChildEventHandler implements FilteredEventHandler {
 	you have to kill your think
 	 */
 
-	private final ModifiableCallout<AbilityCastStart> hellInACell = ModifiableCallout.durationBasedCall("Hell in a Cell", "Towers and Baits");
+	private final ModifiableCallout<AbilityCastStart> hellInACell = ModifiableCallout.durationBasedCall("Hell in a Cell 1", "Towers and Baits");
+	private final ModifiableCallout<AbilityCastStart> hellInACell2withoutDebuff = ModifiableCallout.durationBasedCall("Hell in a Cell 2: No Debuff", "Towers and Baits");
+	private final ModifiableCallout<AbilityCastStart> hellInACell2withDebuff = ModifiableCallout.<AbilityCastStart>durationBasedCall("Hell in a Cell 2: With Debuff", "Avoid Towers").statusIcon(0x127a);
 	@AutoFeed
-	private final SequentialTrigger<BaseEvent> hellInACellSq = SqtTemplates.sq(60_000,
+	private final SequentialTrigger<BaseEvent> hellInACellSq = SqtTemplates.multiInvocation(60_000,
 			AbilityCastStart.class, acs -> acs.abilityIdMatches(0xB395),
 			(e1, s) -> {
 				s.updateCall(hellInACell, e1);
+			}, (e1, s) -> {
+				if (buffs.isStatusOnTarget(state.getPlayer(), 0x127A)) {
+					s.updateCall(hellInACell2withDebuff, e1);
+				}
+				else {
+					s.updateCall(hellInACell2withoutDebuff, e1);
+				}
 			});
 
-	// TODO: hell awaits debuff?
 	@NpcCastCallout(0xB39C)
 	private final ModifiableCallout<AbilityCastStart> ultrasonicSpread = ModifiableCallout.durationBasedCall("Ultrasonic Spread", "Role Groups");
 
