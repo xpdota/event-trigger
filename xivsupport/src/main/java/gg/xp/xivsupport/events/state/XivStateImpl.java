@@ -503,6 +503,18 @@ public class XivStateImpl implements XivState {
 	}
 
 	@Override
+	public void provideNpcId(XivCombatant existing, long id) {
+		getOrCreateData(existing.getId()).setNpcId(id);
+		dirtyOverrides = true;
+	}
+
+	@Override
+	public void provideNpcNameId(XivCombatant existing, long id) {
+		getOrCreateData(existing.getId()).setNpcNameId(id);
+		dirtyOverrides = true;
+	}
+
+	@Override
 	public @Nullable XivCombatant getCombatant(long id) {
 		CombatantData cbt = combatantData.get(id);
 		if (cbt == null) {
@@ -673,6 +685,8 @@ public class XivStateImpl implements XivState {
 		private long shieldPercent;
 		private short tfId = -1;
 		private short weaponId = -1;
+		private long npcIdOverride = -1;
+		private long npcNameIdOverride = -1;
 		private @Nullable Integer typeOverride;
 
 		private CombatantData(long id) {
@@ -790,6 +804,16 @@ public class XivStateImpl implements XivState {
 			dirty = true;
 		}
 
+		public void setNpcId(long id) {
+			this.npcIdOverride = id;
+			dirty = true;
+		}
+
+		public void setNpcNameId(long id) {
+			this.npcNameIdOverride = id;
+			dirty = true;
+		}
+
 		public void setRadius(float radius) {
 			this.radius = radius;
 		}
@@ -807,7 +831,7 @@ public class XivStateImpl implements XivState {
 		}
 
 		public boolean includeInList() {
-			return !removed && (hasSufficientData() || typeOverride != null);
+			return !removed && (hasSufficientData() || typeOverride != null || npcIdOverride >= 0);
 		}
 
 		public boolean recomputeIfDirty() {
@@ -844,8 +868,8 @@ public class XivStateImpl implements XivState {
 			Position pos = pot != null ? pot.position : po != null ? po : raw != null ? raw.getPos() : fromOther != null ? fromOther.getPos() : null;
 
 			XivCombatant computed;
-			long bnpcId = raw != null ? raw.getBnpcId() : 0;
-			long bnpcNameId = raw != null ? raw.getBnpcNameId() : 0;
+			long bnpcId = npcIdOverride >= 0 ? npcIdOverride : raw != null ? raw.getBnpcId() : 0;
+			long bnpcNameId = npcNameIdOverride >= 0 ? npcNameIdOverride : raw != null ? raw.getBnpcNameId() : 0;
 			long partyType = raw != null ? raw.getPartyType() : 0;
 			long level = raw != null ? raw.getLevel() : fromPartyInfo != null ? fromPartyInfo.getLevel() : 90;
 			long ownerId = raw != null ? raw.getOwnerId() : 0;

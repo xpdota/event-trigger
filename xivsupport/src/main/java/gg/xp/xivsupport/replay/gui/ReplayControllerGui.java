@@ -77,7 +77,7 @@ public final class ReplayControllerGui {
 		{
 			updateAll();
 			controller.addCallback(this::refresh);
-			new RefreshLoop<>("ReplayControllerRefresher", this, ReplayControllerGui::refresh, (unused) -> 200L).start();
+			new RefreshLoop<>("ReplayControllerRefresher", this, ReplayControllerGui::refresh, (unused) -> 100L).start();
 		}
 	}
 

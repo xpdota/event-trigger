@@ -65,6 +65,9 @@ public class Line261Parser extends AbstractACTLineParser<Line261Parser.Fields> {
 						case "Radius" -> state.provideCombatantRadius(existing, Float.parseFloat(valueRaw));
 						// TODO: this might also be readable from ActorControlExtraEvent category 0x3F
 						case "WeaponId" -> state.provideWeaponId(existing, Short.parseShort(valueRaw));
+						// As seen in m11s, sometimes these don't work
+						case "BNpcID" -> state.provideNpcId(existing, Long.parseLong(valueRaw, 16));
+						case "BNpcNameID" -> state.provideNpcNameId(existing, Long.parseLong(valueRaw, 16));
 					}
 				}
 				if (pos.isEmpty()) {
