@@ -974,9 +974,9 @@ public class M12S extends AutoChildEventHandler implements FilteredEventHandler 
 	private final ModifiableCallout<?> idyllicSafeSpotLater = new ModifiableCallout<>("Idyllic: Safe Spots Stock, Normal", "Later: {safeSpots} Safe");
 
 	private final ModifiableCallout<?> idyllicDefaFirst = new ModifiableCallout<>("Idyllic: Defamation First", "Defa First").extendedDescription("""
-			This tells you whether defamation would be first if tethers are not swapped.""");
+			This call indicates that defamation is on cardinals.""");
 	private final ModifiableCallout<?> idyllicStackFirst = new ModifiableCallout<>("Idyllic: Stack First", "Stack First").extendedDescription("""
-			This tells you whether stack would be first if tethers are not swapped.""");
+			This call indicates that stack is on cardinals..""");
 
 	private final ModifiableCallout<?> idyllicSafeSpotOut = new ModifiableCallout<>("Idyllic: Safe Spots Now, Further Out", "{safeSpots} Safe, Out");
 	private final ModifiableCallout<?> idyllicSafeSpot = new ModifiableCallout<>("Idyllic: Safe Spots Now, Normal", "{safeSpots} Safe");
