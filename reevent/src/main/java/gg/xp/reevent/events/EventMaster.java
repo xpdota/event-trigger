@@ -100,6 +100,7 @@ public class EventMaster {
 		queue.push(event);
 	}
 
+	// TODO: this is not thread safe
 	public void pushEventAndWait(Event event) {
 		CountDownLatch latch = new CountDownLatch(1);
 		drainCallback = latch::countDown;
