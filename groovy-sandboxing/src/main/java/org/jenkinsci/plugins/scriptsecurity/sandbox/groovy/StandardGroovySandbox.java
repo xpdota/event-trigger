@@ -24,22 +24,25 @@
 
 package org.jenkinsci.plugins.scriptsecurity.sandbox.groovy;
 
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.NotNull;
 import groovy.grape.GrabAnnotationTransformation;
 import groovy.lang.GroovyShell;
-import groovy.lang.Script;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.ProxyWhitelist;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.kohsuke.groovy.sandbox.GroovyInterceptor;
 import org.kohsuke.groovy.sandbox.SandboxTransformer;
+import org.kohsuke.groovy.sandbox.impl.Ops;
 
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.concurrent.Callable;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static org.codehaus.groovy.syntax.Types.REMAINDER;
 
 /**
  * Allows Groovy scripts (including Groovy Templates) to be run inside a sandbox.
@@ -49,6 +52,20 @@ public class StandardGroovySandbox implements GroovySandbox {
 	public static final Logger LOGGER = Logger.getLogger(StandardGroovySandbox.class.getName());
 
 	private @Nullable Whitelist whitelist;
+
+	static {
+		try {
+			Field f = Ops.class.getDeclaredField("binaryOperatorMethods");
+			f.setAccessible(true);
+			Object o = f.get(null);
+			if (o instanceof Map map) {
+				map.putIfAbsent(REMAINDER, "remainder");
+			}
+		}
+		catch (Throwable e) {
+			LOGGER.log(Level.WARNING, "Unable to add extra binaryOperatorMethods", e);
+		}
+	}
 
 	/**
 	 * Creates a sandbox with default settings.
@@ -66,7 +83,6 @@ public class StandardGroovySandbox implements GroovySandbox {
 		this.whitelist = whitelist;
 		return this;
 	}
-
 
 
 	private @NotNull Whitelist whitelist() {
@@ -104,7 +120,7 @@ public class StandardGroovySandbox implements GroovySandbox {
 
 	/**
 	 * Prepares a compiler configuration the sandbox.
-	 *
+	 * <p>
 	 * CAUTION
 	 * <p>
 	 * When creating {@link GroovyShell} with this {@link CompilerConfiguration},
