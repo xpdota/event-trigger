@@ -17,7 +17,7 @@ ebfec4f77cc595c518d655f7e68346be  commons-text-1.11.0.jar
 0a7c3e99d822a8834727f72d7dcfc9ec  flatlaf-3.2.5.jar
 134d338eab82f8cf0e4fe22f0bd6a350  groovy-5.0.0-alpha-2.jar
 d42b8855e3b7e4f3506ffc0b5b85d149  groovy-sandbox-1.27.jar
-5d35b1b422122f5319ee34ebab61a27e  groovy-sandboxing-1.0-SNAPSHOT.jar
+3e5ea5f440484942966e46336c02a0ae  groovy-sandboxing-1.0-SNAPSHOT.jar
 2cb357c4b763f47e58af6cad47df6ba3  httpclient-4.5.14.jar
 de1810a606b27192cbf5bbad9c25a648  httpclient5-5.3.1.jar
 28d2cd9bf8789fd2ec774fb88436ebd1  httpcore-4.4.16.jar
@@ -63,4 +63,4 @@ ea1c99f48fe57af11d933ac69b3606b0  triggers-sb-1.0-SNAPSHOT.jar
 cf2dd5ef7ed7b1ee97a208cf42297c9a  trigger-support-1.0-SNAPSHOT.jar
 fb91831333f5d348dd3b56a5bdeb396c  xivapi-java-0.1.1.jar
 e508885aac615680d38721339a4ab35c  xivdata-1.0-SNAPSHOT.jar
-73c01a44a089b0fdc49163d7e5f94311  xivsupport-1.0-SNAPSHOT.jar
+bf907a05c7fa1261233ff50c8ce34931  xivsupport-1.0-SNAPSHOT.jar
