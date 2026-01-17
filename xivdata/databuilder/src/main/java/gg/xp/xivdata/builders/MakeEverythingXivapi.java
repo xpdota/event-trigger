@@ -40,7 +40,13 @@ import java.util.zip.GZIPOutputStream;
 /*
 TODO:
 - Pipeline for this
-- Migrate the rest of stuff from SC to this
+ */
+
+/**
+ * Script to build the data files from a boilmaster instance.
+ * <p>
+ * Despite having 'xivapi' in the name, DO NOT run this against the actual xivapi, run it against a local or self-hosted
+ * Boilmaster.
  */
 public class MakeEverythingXivapi {
 	private static final Logger log = LoggerFactory.getLogger(MakeEverythingXivapi.class);
