@@ -856,7 +856,7 @@ public class XivStateImpl implements XivState {
 			RawXivPartyInfo fromPartyInfo = this.fromPartyInfo;
 			String name = raw != null ? raw.getName() : (fromOther != null ? fromOther.getName() : (fromPartyInfo != null ? fromPartyInfo.getName() : "???"));
 			long jobId = raw != null ? raw.getJobId() : (fromPartyInfo != null ? fromPartyInfo.getJobId() : 0);
-			XivWorld world = XivWorld.of();
+			XivWorld world = XivWorld.forId(raw != null ? (int) raw.getWorldId() : 0);
 			long rawType = computeRawType();
 
 			// HP prefers trusted ACT hp lines

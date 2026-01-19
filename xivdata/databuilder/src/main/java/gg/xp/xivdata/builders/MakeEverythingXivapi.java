@@ -6,11 +6,13 @@ import gg.xp.xivapi.clienttypes.XivApiObject;
 import gg.xp.xivapi.pagination.XivApiPaginator;
 import gg.xp.xivdata.builders.models.Action;
 import gg.xp.xivdata.builders.models.ContentFinderCondition;
+import gg.xp.xivdata.builders.models.DataCenter;
 import gg.xp.xivdata.builders.models.Map;
 import gg.xp.xivdata.builders.models.NpcYell;
 import gg.xp.xivdata.builders.models.PlaceName;
 import gg.xp.xivdata.builders.models.StatusEffect;
 import gg.xp.xivdata.builders.models.TerritoryType;
+import gg.xp.xivdata.builders.models.World;
 import gg.xp.xivdata.data.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Contract;
@@ -143,6 +145,14 @@ public class MakeEverythingXivapi {
 			String subName = entry.getPlaceNameSub().getName();
 			return new XivMap(entry.getRowId(), entry.getOffsetX(), entry.getOffsetY(), entry.getSizeFactor(), intern(blankToNull(entry.mapPath())), entry.getPlaceNameRegion().getName(), intern(entry.getPlaceName().getName()), intern(blankToNull(subName)));
 		}, List.of("maps", "Map.oos.gz"));
+
+		maker.writeList(DataCenter.class, entry -> {
+			return new DcInfo(entry.getRowId(), entry.getName(), entry.getRegion());
+		}, List.of("worlds", "Datacenter.oos.gz"));
+
+		maker.writeList(World.class, entry -> {
+			return new WorldInfo(entry.getRowId(), entry.getName(), entry.getDataCenter());
+		}, List.of("worlds", "Worlds.oos.gz"));
 
 		// Assorted Icons
 		// Damage types
