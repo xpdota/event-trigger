@@ -25,25 +25,41 @@ public class ActWsVersionChecker {
 		this.container = container;
 	}
 
+	static boolean isOutOfDate(String actualVersion) {
+		int[] versionParts = Arrays.stream(actualVersion.split("\\.")).mapToInt(Integer::parseInt).toArray();
+		if (versionParts.length < expectedVersion.length) {
+			log.error("Unusual OverlayPlugin version: {}", actualVersion);
+			return false;
+		}
+		for (int i = 0; i < expectedVersion.length; i++) {
+			if (versionParts[i] < expectedVersion[i]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@HandleEvents
 	public void opVersion(EventContext context, ActWsVersionEvent event) {
 		if (alreadyWarnedThisRun) {
 			return;
 		}
 		String version = event.getVersion();
+		if (isOutOfDate(version)) {
+			alreadyWarnedThisRun = true;
+			new Thread(() -> {
+				try {
+					Thread.sleep(10_000);
+				}
+				catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(null, """
+						Your OverlayPlugin is out of date.
+						You have %s, but you should have at least %s.
+						If you were not prompted to automatically update, you should remove and reinstall it via the 'Get Plugins' button in ACT.""".formatted(version, expectedVersionStr)));
+			}).start();
+		}
 
-		int[] versionParts = Arrays.stream(version.split("\\.")).mapToInt(Integer::parseInt).toArray();
-		if (versionParts.length < expectedVersion.length) {
-			log.error("Unusual OverlayPlugin version: {}", version);
-		}
-		for (int i = 0; i < expectedVersion.length; i++) {
-			if (versionParts[i] < expectedVersion[i]) {
-				// TODO: add an option to disable the message for the particular version
-//				JFrame frame = container.getComponent(GuiMain.class).getMainFrame();
-				// TODO fix, can't use the main frame directly because of race condition (this event comes in very early in startup)
-				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(null, "Your OverlayPlugin is out of date. You have %s, but you should have at least %s. If you were not prompted to automatically update, you should remove and reinstall it via the 'Get Plugins' button in ACT.".formatted(version, expectedVersionStr)));
-				alreadyWarnedThisRun = true;
-			}
-		}
 	}
 }
