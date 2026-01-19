@@ -3,8 +3,6 @@ package gg.xp.xivsupport.events.ws;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivsupport.gui.GuiMain;
-import org.picocontainer.PicoContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,12 +16,7 @@ public class ActWsVersionChecker {
 	private static final String expectedVersionStr = "0.19.14";
 	private static final int[] expectedVersion = Arrays.stream(expectedVersionStr.split("\\.")).mapToInt(Integer::parseInt).toArray();
 
-	private final PicoContainer container;
 	private boolean alreadyWarnedThisRun;
-
-	public ActWsVersionChecker(PicoContainer container) {
-		this.container = container;
-	}
 
 	static boolean isOutOfDate(String actualVersion) {
 		int[] versionParts = Arrays.stream(actualVersion.split("\\.")).mapToInt(Integer::parseInt).toArray();
