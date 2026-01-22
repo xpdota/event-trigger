@@ -53,10 +53,10 @@ public class ModifiedCalloutRepository {
 			Class<?> clazz = o.getClass();
 			String description = clazz.getAnnotation(CalloutRepo.class).name();
 			List<ModifiedCalloutHandle> callouts = new ArrayList<>();
-			List<Field> fields = Arrays.stream(clazz.getDeclaredFields()).filter(f -> ModifiableCallout.class.isAssignableFrom(f.getType())).toList();
+			List<Field> calloutFields = Arrays.stream(clazz.getDeclaredFields()).filter(f -> ModifiableCallout.class.isAssignableFrom(f.getType())).toList();
 			String classPropStub = "callouts." + clazz.getCanonicalName();
 			String topLevelPropStub = "callouts.group." + clazz.getCanonicalName();
-			fields.forEach(f -> {
+			calloutFields.forEach(f -> {
 				String fieldName = f.getName();
 				String fullPropStub = classPropStub + '.' + fieldName;
 				f.setAccessible(true);
@@ -70,6 +70,24 @@ public class ModifiedCalloutRepository {
 				ModifiedCalloutHandle modified = ModifiedCalloutHandle.installHandle(f, original, persistence, fullPropStub, enableTts, enableOverlay, globalDefaults.getGlobalDefaults());
 				callouts.add(modified);
 			});
+			List<Field> varFields = Arrays.stream(clazz.getDeclaredFields()).filter(f -> CalloutVar.class.isAssignableFrom(f.getType())).toList();
+			String varsPropStub = "callout-vars." + clazz.getCanonicalName();
+			List<CalloutVarHandle> vars = new ArrayList<>();
+			varFields.forEach(f -> {
+				String fieldName = f.getName();
+				String fullpropStub = varsPropStub + '.' + fieldName;
+				f.setAccessible(true);
+				CalloutVar original;
+				try {
+					original = (CalloutVar) f.get(o);
+				}
+				catch (IllegalAccessException e) {
+					throw new RuntimeException(e);
+				}
+				CalloutVarHandle modified = CalloutVarHandle.installHandle(f, original, persistence, fullpropStub);
+				vars.add(modified);
+			});
+
 			CalloutGroup cg;
 			if (o instanceof OverridesCalloutGroupEnabledSetting override) {
 				cg = new CalloutGroup(clazz, description, topLevelPropStub, override.getCalloutGroupEnabledSetting(), callouts);
