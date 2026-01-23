@@ -160,4 +160,14 @@ public class XivStateDummy implements XivState {
 	public void provideWeaponId(XivCombatant existing, short weaponId) {
 		throw new UnsupportedOperationException("not supported");
 	}
+
+	@Override
+	public void provideNpcId(XivCombatant existing, long id) {
+		throw new UnsupportedOperationException("not supported");
+	}
+
+	@Override
+	public void provideNpcNameId(XivCombatant existing, long id) {
+		throw new UnsupportedOperationException("not supported");
+	}
 }

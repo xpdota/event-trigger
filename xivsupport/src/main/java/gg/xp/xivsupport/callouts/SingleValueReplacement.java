@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class SingleValueReplacement {
 	private final BooleanSetting replaceYou;
 	private final StringSetting replacementForYou;
+	private final StringSetting defaultJoin;
 	private final BooleanSetting appendYou;
 	private final EnumSetting<PlayerNameConversion> pcNameStyle;
 	private final GlobalArenaSectorConverter asc;
@@ -30,6 +31,7 @@ public class SingleValueReplacement {
 		this.replaceYou = new BooleanSetting(pers, "callout-processor.replace-you", true);
 		this.replacementForYou = new StringSetting(pers, "callout-process.you-replacement", "YOU");
 		this.appendYou = new BooleanSetting(pers, "callout-process.append-you", false);
+		this.defaultJoin = new StringSetting(pers, "callout-processor.default-join", ", ");
 		appendYou.addListener(() -> {
 			if (appendYou.get()) {
 				replaceYou.set(false);
@@ -97,7 +99,7 @@ public class SingleValueReplacement {
 		else if (rawValue instanceof Collection<?> coll) {
 			return coll.stream()
 					.map(this::singleReplacement)
-					.collect(Collectors.joining(", "));
+					.collect(Collectors.joining(defaultJoin.get()));
 		}
 		else {
 			return rawValue.toString();
@@ -118,5 +120,9 @@ public class SingleValueReplacement {
 
 	public BooleanSetting getAppendYou() {
 		return appendYou;
+	}
+
+	public StringSetting getDefaultJoin() {
+		return defaultJoin;
 	}
 }

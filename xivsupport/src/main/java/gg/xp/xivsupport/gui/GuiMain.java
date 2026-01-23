@@ -192,7 +192,7 @@ public class GuiMain {
 		addTab("Summary", new SummaryTabPanel());
 		addTab("Plugin Settings", new PluginSettingsPanel());
 		addTab("Combatants", getCombatantsPanel());
-		addTab("Buffs", getStatusEffectsPanel());
+		addTab("Statuses", getStatusEffectsPanel());
 		addTab("Events", (eventPanel = getEventsPanel()));
 		addTab("ACT Log", getActLogPanel());
 		addTab("System Log", getSystemLogPanel());

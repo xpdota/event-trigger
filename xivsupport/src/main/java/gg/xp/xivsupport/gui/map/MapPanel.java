@@ -176,6 +176,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	private void setNewBackgroundImage(XivMap map) {
 		URL image = map.getImage();
+		log.info("New map image: {}", image);
 		if (image == null) {
 			this.backgroundImage = null;
 		}
@@ -476,9 +477,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			newSelection = selection.getId();
 		}
 		if (newSelection != this.selection) {
-			log.debug("New map selection: {} -> {}",
-					this.selection == -1 ? "none" : String.format("0x%X", this.selection),
-					newSelection == -1 ? "none" : String.format("0x%X", newSelection));
 			this.selection = newSelection;
 			fixZorder();
 		}
