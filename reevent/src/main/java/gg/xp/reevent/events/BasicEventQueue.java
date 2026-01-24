@@ -12,14 +12,16 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadFactory;
 
 public class BasicEventQueue implements EventQueue {
 
 
 	private static final Logger log = LoggerFactory.getLogger(BasicEventQueue.class);
-	private final Deque<Tracker> backingQueue = new ArrayDeque<>();
-	private final Object queueLock = new Object();
+	private final BlockingQueue<Tracker> backingQueue = new ArrayBlockingQueue<>(65536);
+//	private final Object queueLock = new Object();
 	private final List<Event> delayedEvents = new ArrayList<>();
 	private volatile boolean delayedEventsDirtyFlag;
 	private static final ThreadFactory delayedEventProcessorThreadFactory = new BasicThreadFactory.Builder()
@@ -59,25 +61,37 @@ public class BasicEventQueue implements EventQueue {
 		if (runAt == 0 || runAt <= System.currentTimeMillis()) {
 			event.setEnqueuedAt(TimeUtils.now());
 			Tracker tracker = new Tracker(event);
-			synchronized (queueLock) {
-				if (enableCombine) {
-					Tracker existingTracker = backingQueue.peekLast();
-					Event combined;
-					if (existingTracker == null || (combined = existingTracker.event.combineWith(event)) == null) {
-						backingQueue.add(existingTracker);
-					}
-					else {
-//					log.info("Combined!");
-						backingQueue.removeLast();
-						backingQueue.add(new Tracker(combined));
-					}
-				}
-				else {
-					backingQueue.add(tracker);
-				}
-//				log.info("Push: {}", event);
-				queueLock.notifyAll();
+			try {
+				backingQueue.put(tracker);
 			}
+			catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			// old impl
+//			synchronized (queueLock) {
+//				if (enableCombine) {
+//					Tracker existingTracker = backingQueue.peek();
+//					Event combined;
+//					if (existingTracker == null || (combined = existingTracker.event.combineWith(event)) == null) {
+//						backingQueue.add(existingTracker);
+//					}
+//					else {
+////					log.info("Combined!");
+//						try {
+//							backingQueue.take();
+//						}
+//						catch (InterruptedException e) {
+//							throw new RuntimeException(e);
+//						}
+//						backingQueue.add(new Tracker(combined));
+//					}
+//				}
+//				else {
+//					backingQueue.add(tracker);
+//				}
+////				log.info("Push: {}", event);
+//				queueLock.notifyAll();
+//			}
 		}
 		else {
 			queueDelayedEvent(event);
@@ -86,32 +100,43 @@ public class BasicEventQueue implements EventQueue {
 
 	@Override
 	public Event pull() {
-		synchronized (queueLock) {
-			while (true) {
-				Tracker tracker = backingQueue.poll();
-				if (tracker == null) {
-					try {
-						queueLock.wait(5000);
-					}
-					catch (InterruptedException e) {
-						// ignored
-					}
-				}
-				else {
-					tracker.markExit();
-					queueLock.notifyAll();
-//					log.info("Pull: {}", tracker.event);
-					return tracker.event;
-				}
-			}
+		Tracker tracker;
+		try {
+			tracker = backingQueue.take();
+			tracker.markExit();
+			return tracker.event;
 		}
+		catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		// TODO: see if a lockless queue + wait only if nothing there might be better for performance.
+		// Old impl
+//		synchronized (queueLock) {
+//			while (true) {
+//				Tracker tracker = backingQueue.poll();
+//				if (tracker == null) {
+//					try {
+//						queueLock.wait(5000);
+//					}
+//					catch (InterruptedException e) {
+//						// ignored
+//					}
+//				}
+//				else {
+//					tracker.markExit();
+//					queueLock.notifyAll();
+////					log.info("Pull: {}", tracker.event);
+//					return tracker.event;
+//				}
+//			}
+//		}
 	}
 
 	@Override
 	public int pendingSize() {
-		synchronized (queueLock) {
+//		synchronized (queueLock) {
 			return backingQueue.size();
-		}
+//		}
 	}
 
 	// Should only be used for testing, or maybe hot reloads
@@ -119,16 +144,17 @@ public class BasicEventQueue implements EventQueue {
 	// event to be fully processed. This probably needs to be on EventMaster.
 	@Override
 	public void waitDrain() {
-		synchronized (queueLock) {
+//		synchronized (queueLock) {
 			while (pendingSize() > 0) {
 				try {
-					queueLock.wait(1000);
+					Thread.sleep(10);
+//					queueLock.wait(1000);
 				}
 				catch (InterruptedException e) {
 					throw new RuntimeException(e);
 				}
 			}
-		}
+//		}
 	}
 
 	private void queueDelayedEvent(Event event) {
