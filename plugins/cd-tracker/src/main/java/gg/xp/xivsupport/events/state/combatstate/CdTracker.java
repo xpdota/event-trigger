@@ -1,11 +1,14 @@
 package gg.xp.xivsupport.events.state.combatstate;
 
+import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.events.SystemEvent;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.time.TimeUtils;
 import gg.xp.util.BitField;
 import gg.xp.xivdata.data.*;
+import gg.xp.xivsupport.callouts.ModifiableCallout;
+import gg.xp.xivsupport.callouts.RawModifiedCallout;
 import gg.xp.xivsupport.cdsupport.CustomCooldown;
 import gg.xp.xivsupport.cdsupport.CustomCooldownManager;
 import gg.xp.xivsupport.cdsupport.CustomCooldownsUpdated;
@@ -27,7 +30,6 @@ import gg.xp.xivsupport.persistence.settings.CooldownSetting;
 import gg.xp.xivsupport.persistence.settings.EnumSetting;
 import gg.xp.xivsupport.persistence.settings.IntSetting;
 import gg.xp.xivsupport.persistence.settings.LongSetting;
-import gg.xp.xivsupport.speech.BasicCalloutEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,10 +54,19 @@ public class CdTracker {
 	private static final Logger log = LoggerFactory.getLogger(CdTracker.class);
 	private static final String cdKeyStub = "cd-tracker.enable-cd.";
 
+	/**
+	 * Whether TTS (and optionally text) is enabled for personal CDs
+	 */
 	private final BooleanSetting enableTtsPersonal;
+	/**
+	 * Whether TTS (and optionally text) is enabled for personal CDs
+	 */
 	private final BooleanSetting enableTtsParty;
+	/**
+	 * Whether flying text is enabled for both of the above. TODO was this ever exposed anywhere?
+	 */
 	private final BooleanSetting enableFlyingText;
-	private final EnumSetting<PartyRestriction> enemyTargetSouceFilter;
+	private final EnumSetting<PartyRestriction> enemyTargetSourceFilter;
 	private final LongSetting cdTriggerAdvancePersonal;
 	private final LongSetting cdTriggerAdvanceParty;
 	private final IntSetting overlayMaxPersonal;
@@ -89,7 +100,7 @@ public class CdTracker {
 		cdTriggerAdvanceParty = new LongSetting(persistence, "cd-tracker.pre-call-ms.party", 5000L);
 		overlayMaxPersonal = new IntSetting(persistence, "cd-tracker.overlay-max", 8, 1, 32);
 		overlayMaxParty = new IntSetting(persistence, "cd-tracker.overlay-max.party", 8, 1, 32);
-		enemyTargetSouceFilter = new EnumSetting<>(persistence, "cd-tracker.enemy-targeted-source-filter", PartyRestriction.class, PartyRestriction.PARTY);
+		enemyTargetSourceFilter = new EnumSetting<>(persistence, "cd-tracker.enemy-targeted-source-filter", PartyRestriction.class, PartyRestriction.PARTY);
 	}
 
 	private static String getKey(ExtendedCooldownDescriptor buff) {
@@ -181,15 +192,18 @@ public class CdTracker {
 		private static final long serialVersionUID = 6817565445334081296L;
 		final CdTrackingKey key;
 		final AbilityUsedEvent originalEvent;
+		// TODO: this isn't being used?
 		final int originalResetKey;
+		final CooldownSetting setting;
 		final Instant replenishedAt;
 
-		protected DelayedCdCallout(AbilityUsedEvent originalEvent, Instant replenishedAt, CdTrackingKey key, int originalResetKey, long delayMs) {
+		protected DelayedCdCallout(AbilityUsedEvent originalEvent, Instant replenishedAt, CdTrackingKey key, int originalResetKey, long delayMs, CooldownSetting setting) {
 			super(delayMs);
 			this.originalEvent = originalEvent;
 			this.replenishedAt = replenishedAt;
 			this.key = key;
 			this.originalResetKey = originalResetKey;
+			this.setting = setting;
 		}
 
 		@Override
@@ -202,31 +216,36 @@ public class CdTracker {
 		}
 	}
 
-	private boolean isEnabledForPersonalTts(ExtendedCooldownDescriptor cd) {
-		CooldownSetting personalCdSetting = personalCds.get(cd);
-		return personalCdSetting != null && personalCdSetting.getTtsReady().get();
+	private boolean isEnabledForPersonalTts(@Nullable CooldownSetting personalCdSetting) {
+		return enableTtsPersonal.get() && personalCdSetting != null && personalCdSetting.getTtsReady().get();
 	}
 
-	private boolean isEnabledForPartyTts(ExtendedCooldownDescriptor cd) {
-		CooldownSetting partyCdSetting = partyCds.get(cd);
-		return partyCdSetting != null && partyCdSetting.getTtsReady().get();
+	private boolean isEnabledForPartyTts(@Nullable CooldownSetting partyCdSetting) {
+		return enableTtsParty.get() && partyCdSetting != null && partyCdSetting.getTtsReady().get();
 	}
 
-	private boolean isEnabledForPersonalTtsOnUse(ExtendedCooldownDescriptor cd) {
-		CooldownSetting personalCdSetting = personalCds.get(cd);
-		return personalCdSetting != null && personalCdSetting.getTtsOnUse().get();
+	private boolean isEnabledForPersonalTtsOnUse(CooldownSetting personalCdSetting) {
+		return enableTtsPersonal.get() && personalCdSetting != null && personalCdSetting.getTtsOnUse().get();
 	}
 
-	private boolean isEnabledForPartyTtsOnUse(ExtendedCooldownDescriptor cd) {
-		CooldownSetting partyCdSetting = partyCds.get(cd);
-		return partyCdSetting != null && partyCdSetting.getTtsOnUse().get();
+	private boolean isEnabledForPartyTtsOnUse(CooldownSetting partyCdSetting) {
+		return enableTtsParty.get() && partyCdSetting != null && partyCdSetting.getTtsOnUse().get();
 	}
 
+	/**
+	 * Determine whether this usage is a party usage or not. This includes both where the source is a party member,
+	 * as well as when the source is not a party member but the cooldown in question debuffs an enemy and thus is
+	 * still relevant to the player and the player has selected "Everyone" in the relevant setting.
+	 *
+	 * @param event The event to test.
+	 * @param <X>   Useless type to allow us to use a union type for the 'event' parameter.
+	 * @return True if this should be treated as a party usage.
+	 */
 	@SuppressWarnings("SuspiciousMethodCalls")
 	private <X extends HasSourceEntity & HasTargetEntity> boolean countsAsPartyUsage(X event) {
 		XivCombatant source = event.getSource();
 		if (event.getTarget().getType() == CombatantType.NPC) {
-			PartyRestriction restriction = enemyTargetSouceFilter.get();
+			PartyRestriction restriction = enemyTargetSourceFilter.get();
 			return switch (restriction) {
 				case PARTY -> state.getPartyList().contains(source);
 				default -> source.isPc();
@@ -237,7 +256,6 @@ public class CdTracker {
 		}
 	}
 
-	@SuppressWarnings({"SuspiciousMethodCalls"})
 	@HandleEvents
 	public void cdUsed(EventContext context, AbilityUsedEvent event) {
 		// Ignore AoE except the first target
@@ -252,13 +270,15 @@ public class CdTracker {
 		List<CdAuxUsage> aux = getAuxInfo(id);
 		{
 			ExtendedCooldownDescriptor cd = getCdInfo(id);
+			// If no primary cooldown nor aux cd reduction matches, then nothing to do
 			if (cd == null && aux.isEmpty()) {
-				// Nothing to do
 				return;
 			}
+			// Found a matching CD
 			if (cd != null) {
 				final Instant newReplenishedAt;
 				CdTrackingKey key;
+				// Critical section
 				synchronized (cdLock) {
 					key = CdTrackingKey.of(event, cd);
 					cds.put(key, event);
@@ -276,36 +296,41 @@ public class CdTracker {
 				}
 				Duration delta = Duration.between(event.effectiveTimeNow(), newReplenishedAt);
 				log.trace("Delta: {}", delta);
-				// TODO: there's some duplicate whitelist logic
 				boolean isSelf = event.getSource().isThePlayer();
-				if (enableTtsPersonal.get() && isEnabledForPersonalTts(cd) && isSelf) {
+				boolean isParty = countsAsPartyUsage(event);
+				CooldownSetting pers = personalCds.get(cd);
+				CooldownSetting party = partyCds.get(cd);
+				if (isEnabledForPersonalTts(pers) && isSelf) {
 					log.trace("Personal CD delayed: {}", event);
-					context.enqueue(new DelayedCdCallout(event, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvancePersonal.get()).toMillis()));
+					context.enqueue(new DelayedCdCallout(event, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvancePersonal.get()).toMillis(), pers));
 				}
-				else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && countsAsPartyUsage(event)) {
+				else if (isEnabledForPartyTts(party) && isParty) {
 					log.trace("Party CD delayed: {}", event);
-					context.enqueue(new DelayedCdCallout(event, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvanceParty.get()).toMillis()));
+					context.enqueue(new DelayedCdCallout(event, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvanceParty.get()).toMillis(), party));
 				}
-				if (enableTtsPersonal.get() && isEnabledForPersonalTtsOnUse(cd) && isSelf) {
+				if (isEnabledForPersonalTtsOnUse(pers) && isSelf) {
 					log.trace("Personal CD immediate: {}", event);
-					context.accept(makeCallout(event.getAbility()));
+					context.accept(makeCallout(event.getAbility(), pers, event));
 				}
-				else if (enableTtsParty.get() && isEnabledForPartyTtsOnUse(cd) && countsAsPartyUsage(event)) {
+				else if (isEnabledForPartyTtsOnUse(party) && isParty) {
 					log.trace("Party CD immediate: {}", event);
-					context.accept(makeCallout(event.getAbility()));
+					context.accept(makeCallout(event.getAbility(), party, event));
 				}
 			}
 		}
 		if (aux.isEmpty()) {
 			return;
 		}
+		// If we're here, it means there is one or more aux (i.e. skill that reduces another skill's CD)
 		log.trace("aux: {}", aux);
 		for (CdAuxUsage cdAuxUsage : aux) {
+			// Get the actual CD that we're modifying
 			ExtendedCooldownDescriptor cd = cdAuxUsage.cd;
 			Instant newReplenishedAt;
 			CdTrackingKey key;
 			AbilityUsedEvent keyAbility;
 			AbilityUsedEvent existingAbility;
+			// Critical section
 			synchronized (cdLock) {
 				// This works because the ability ID actually doesn't matter for the CD tracking key's hash/equals
 				key = CdTrackingKey.of(event, cd);
@@ -323,7 +348,12 @@ public class CdTracker {
 				// Now add our modification
 				newReplenishedAt = newReplenishedAt.plus(cdAuxUsage.aux.getAsDuration());
 				// But then clamp the bounds - it can't be before the current time, nor after the longest possible CD
-				newReplenishedAt = TimeUtils.clampInstant(newReplenishedAt, event.effectiveTimeNow(), event.effectiveTimeNow().plus(cd.getCooldownAsDuration().multipliedBy(cd.getMaxCharges())));
+				newReplenishedAt = TimeUtils.clampInstant(
+						newReplenishedAt,
+						event.effectiveTimeNow(),
+						// now + cd time * max charges
+						event.effectiveTimeNow().plus(cd.getCooldownAsDuration().multipliedBy(cd.getMaxCharges()))
+				);
 				chargesReplenishedAt.put(key, newReplenishedAt);
 			}
 			if (existingAbility != null) {
@@ -334,22 +364,25 @@ public class CdTracker {
 			}
 			Duration delta = Duration.between(event.effectiveTimeNow(), newReplenishedAt);
 			log.trace("Delta: {}", delta);
-			// TODO: there's some duplicate whitelist logic
 			boolean isSelf = event.getSource().isThePlayer();
-			if (enableTtsPersonal.get() && isEnabledForPersonalTts(cd) && isSelf) {
+			boolean isParty = countsAsPartyUsage(event);
+			CooldownSetting pers = personalCds.get(cd);
+			CooldownSetting party = partyCds.get(cd);
+
+			if (isEnabledForPersonalTts(pers) && isSelf) {
 				log.info("Personal CD delayed: {}", event);
-				context.enqueue(new DelayedCdCallout(keyAbility, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvancePersonal.get()).toMillis()));
+				context.enqueue(new DelayedCdCallout(keyAbility, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvancePersonal.get()).toMillis(), pers));
 			}
-			else if (enableTtsParty.get() && isEnabledForPartyTts(cd) && state.getPartyList().contains(event.getSource())) {
+			else if (isEnabledForPartyTts(party) && isParty) {
 				log.info("Party CD delayed: {}", event);
-				context.enqueue(new DelayedCdCallout(keyAbility, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvanceParty.get()).toMillis()));
+				context.enqueue(new DelayedCdCallout(keyAbility, newReplenishedAt, key, cdResetKey, delta.minusMillis(cdTriggerAdvanceParty.get()).toMillis(), party));
 			}
 			// Ignore "on use" for these
 		}
 	}
 
 	private void reset() {
-		//noinspection NonAtomicOperationOnVolatileField
+		//noinspection NonAtomicOperationOnVolatileField - doesn't matter here, we just need the value to change
 		cdResetKey++;
 		synchronized (cdLock) {
 			log.debug("Clearing {} cds", cds.size());
@@ -384,15 +417,20 @@ public class CdTracker {
 		}
 		if (Objects.equals(replenishedAt, event.replenishedAt)) {
 			log.trace("CD callout still valid");
-			context.accept(makeCallout(originalAbility));
+			context.accept(makeCallout(originalAbility, event.setting, event));
 		}
 		else {
 			log.trace("Not calling {} - no longer valid", originalAbility.getName());
 		}
 	}
 
-	private BasicCalloutEvent makeCallout(XivAbility ability) {
-		return new BasicCalloutEvent(ability.getName(), enableFlyingText.get() ? ability.getName() : null);
+	private Event makeCallout(XivAbility ability, CooldownSetting setting, Event event) {
+		String ttsOver = setting.getTtsOverride().get();
+		String textOver = setting.getTextOverride().get();
+		String tts = ttsOver.isBlank() ? ability.getName() : ttsOver;
+		String text = enableFlyingText.get() ? (textOver.isBlank() ? ability.getName() : textOver) : null;
+		return new RawModifiedCallout<>("Cooldown", tts, text, null, event, Collections.emptyMap(), (ignored) -> null, ModifiableCallout.expiresIn(5000), null, null);
+//		return new BasicCalloutEvent(ability.getName(), enableFlyingText.get() ? ability.getName() : null);
 	}
 
 	// TODO: this is only being used for testing
@@ -472,7 +510,7 @@ public class CdTracker {
 	}
 
 	public EnumSetting<PartyRestriction> getEnemyTargetSourceFilter() {
-		return enemyTargetSouceFilter;
+		return enemyTargetSourceFilter;
 	}
 
 	@HandleEvents(order = -100)
