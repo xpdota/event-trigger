@@ -29,7 +29,6 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -82,7 +81,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private Map<FloorMarker, FloorMarkerDoohickey> markers;
 	private boolean needZorderCheck;
 
-	private volatile boolean isAltPressed;
 	private volatile boolean isMouseIn;
 	private volatile Point lastMousePoint;
 
@@ -113,12 +111,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		addMouseMotionListener(this);
 		addMouseListener(this);
 		setIgnoreRepaint(true);
-		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(ke -> {
-			if (ke.getKeyCode() == KeyEvent.VK_ALT || ke.getKeyCode() == KeyEvent.VK_ALT_GRAPH) {
-				isAltPressed = ke.getID() == KeyEvent.KEY_PRESSED;
-			}
-			return false;
-		});
 	}
 
 	@Override
