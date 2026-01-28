@@ -142,6 +142,7 @@ public final class OverlayMain {
 		SwingUtilities.invokeLater(() -> {
 			overlays.add(overlay);
 			overlay.finishInit();
+			overlay.getHideInCombatSetting().addListener(this::recalc);
 			recalc();
 		});
 	}

@@ -29,6 +29,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -81,6 +82,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 	private Map<FloorMarker, FloorMarkerDoohickey> markers;
 	private boolean needZorderCheck;
 
+	private volatile boolean isAltPressed;
+	private volatile boolean isMouseIn;
+	private volatile Point lastMousePoint;
+
 
 	public MapPanel(MapDataController mdc, MapDisplayConfig mapDisplayConfig, MapColorSettings colorSettings) {
 		this.mdc = mdc;
@@ -108,6 +113,12 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		addMouseMotionListener(this);
 		addMouseListener(this);
 		setIgnoreRepaint(true);
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(ke -> {
+			if (ke.getKeyCode() == KeyEvent.VK_ALT || ke.getKeyCode() == KeyEvent.VK_ALT_GRAPH) {
+				isAltPressed = ke.getID() == KeyEvent.KEY_PRESSED;
+			}
+			return false;
+		});
 	}
 
 	@Override
@@ -144,6 +155,39 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 		subG.dispose();
 		super.paintChildren(g);
+		// Paint mouse cursor position in top-left corner
+		Point lmp = lastMousePoint;
+		if (lmp != null && isMouseIn) {
+			var g2d = ((Graphics2D) g);
+			Position pos = translateScreenToGame(lmp);
+			g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+			g2d.setColor(getParent().getBackground());
+
+			int ITEM_WIDTH = 55;
+			int OUTER_PAD = 5;
+			int INNER_PAD = 15;
+			int yDraw = 16;
+
+
+			int xLeft = OUTER_PAD;
+			int xRight = xLeft + ITEM_WIDTH;
+			int yLeft = xRight + INNER_PAD;
+			int yRight = yLeft + ITEM_WIDTH;
+
+			g2d.fillRect(0, 0, yRight + OUTER_PAD, 20);
+
+
+			g2d.setColor(getForeground());
+			g2d.drawString("x:", xLeft, yDraw);
+			String xFmt = "%.2f".formatted(pos.getX());
+			int xw = g2d.getFontMetrics().stringWidth(xFmt);
+			g2d.drawString(xFmt, xRight - xw, yDraw);
+
+			g2d.drawString("y:", yLeft, yDraw);
+			String yFmt = "%.2f".formatted(pos.getY());
+			int yw = g2d.getFontMetrics().stringWidth(yFmt);
+			g2d.drawString(yFmt, yRight - yw, yDraw);
+		}
 	}
 
 	private void drawTethers(Graphics g) {
@@ -304,8 +348,6 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		return player;
 	}
 
-	// Translate in-game X to map coordinates
-
 	/**
 	 * @param originalX in-game X coordinate
 	 * @return equivalent map coordinates on the current map.
@@ -376,8 +418,22 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		return translateDistScrn(translateDistMap(originalDist));
 	}
 
+	/**
+	 * Translate a point on the MapPanel back to in-game coordinates.
+	 *
+	 * @param screenPoint screen coordinates
+	 * @return equivalent in-game coordinates
+	 */
+	private Position translateScreenToGame(Point screenPoint) {
+		double c = map.getScaleFactor();
+		double inGameX = (screenPoint.x - curXpan - getWidth() / 2.0) / (zoomFactor * c) - map.getOffsetX();
+		double inGameY = (screenPoint.y - curYpan - getHeight() / 2.0) / (zoomFactor * c) - map.getOffsetY();
+		return Position.of2d(inGameX, inGameY);
+	}
+
 	private boolean dragActive;
 
+	@SuppressWarnings({"NonAtomicOperationOnVolatileField", "lossy-conversions"})
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		if (dragActive) {
@@ -389,6 +445,7 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 			dragPoint = curPoint;
 			triggerRefresh();
 		}
+		updateMouseHoverPoint(e);
 	}
 
 	@SuppressWarnings({"NonAtomicOperationOnVolatileField", "NumericCastThatLosesPrecision"})
@@ -401,6 +458,10 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 		}
 		//Zoom out
 		if (e.getWheelRotation() > 0) {
+			// Limit zoom out
+			if (zoomFactor < 0.10) {
+				return;
+			}
 			zoomFactor /= 1.1;
 		}
 		// Roundoff error - make sure it actually snaps back to exactly 1.0 if it's somewhere close to that.
@@ -418,9 +479,13 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	}
 
+	private void updateMouseHoverPoint(MouseEvent e) {
+		this.lastMousePoint = SwingUtilities.convertPoint(e.getComponent(), e.getPoint(), this);
+	}
+
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		// Ignored, we use mouseDragged instead
+		updateMouseHoverPoint(e);
 	}
 
 	@Override
@@ -462,10 +527,12 @@ public class MapPanel extends JPanel implements MouseMotionListener, MouseListen
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
+		isMouseIn = true;
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
+		isMouseIn = false;
 	}
 
 	public void setSelection(@Nullable XivCombatant selection) {
