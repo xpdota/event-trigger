@@ -829,7 +829,7 @@ public class GuiMain {
 					.addWidget(ignored -> {
 						JButton button = new JButton("Show Log File");
 						button.addActionListener(l -> {
-							Platform.showFileInExplorer(Platform.getTriggeventDir().resolve("triggevent.log").toFile());
+							Platform.showLogFile();
 						});
 						return button;
 					})
