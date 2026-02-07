@@ -11,21 +11,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableColumnModelEvent;
 import javax.swing.event.TableColumnModelListener;
 import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -110,6 +106,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		mainModel.configureColumns(table);
 		table.setTableHeader(new JTableHeader(table.getColumnModel()));
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.setOpaque(true);
 		ListSelectionModel selectionModel = table.getSelectionModel();
 		selectionModel.addListSelectionListener(e -> {
 			int[] selected = selectionModel.getSelectedIndices();
@@ -125,7 +122,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 //			detailsModel.fireTableDataChanged();
 		});
 
-		FilterRowPanel filterRowPanel = new FilterRowPanel(table.getTableHeader());
+		FilterRowPanel filterRowPanel = new FilterRowPanel();
 
 		// Top panel
 		JPanel topBasicPanel = new JPanel() {
@@ -165,7 +162,6 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			stayAtBottom = null;
 			isAutoRefreshEnabled = true;
 		}
-		configureScrollHeaderCorner(scroller, table, filterRowPanel);
 		List<VisualFilter<? super X>> allFilters = new ArrayList<>();
 		filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
 				.filter(Objects::nonNull)
@@ -214,19 +210,46 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 		JTable detailsTable = detailsModel.makeTable();
 		JScrollPane detailsScroller = new JScrollPane(detailsTable);
-		configureScrollHeaderCorner(detailsScroller, detailsTable, null);
+		configureScrollHeaderCorner(detailsScroller, detailsTable);
 		detailsScroller.setPreferredSize(detailsScroller.getMaximumSize());
 
 		rightClickOptions.configureTable(table, mainModel);
 
+		configureScrollHeaderCorner(scroller, table);
+		Component tableComp = scroller;
+		if (filterRowPanel.getComponentCount() > 0) {
+			JPanel combined = new JPanel(new BorderLayout());
+			combined.setOpaque(false);
+
+			JViewport filterViewport = new JViewport();
+			filterViewport.setOpaque(false);
+			filterViewport.setView(filterRowPanel);
+
+			scroller.getColumnHeader().addChangeListener(e -> {
+				filterViewport.setViewPosition(scroller.getColumnHeader().getViewPosition());
+			});
+
+			// This is the corner in the filter
+			JPanel filterCorner = new HeaderCorner(null) {
+				@Override
+				public Dimension getPreferredSize() {
+					return new Dimension(scroller.getVerticalScrollBar().getPreferredSize().width, HEADER_FILTER_HEIGHT);
+				}
+			};
+			filterCorner.setOpaque(false);
+			combined.add(filterViewport, BorderLayout.NORTH);
+			combined.add(scroller, BorderLayout.CENTER);
+			tableComp = combined;
+		}
+
 		// If no details, don't bother with a splitpane
 		// TODO: also cut out some of the selection logic
 		if (detailsColumns.isEmpty()) {
-			add(scroller, c);
+			add(tableComp, c);
 		}
 		else {
 			// Split pane
-			splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, scroller, detailsScroller);
+			splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, tableComp, detailsScroller);
 			add(splitPane, c);
 			SwingUtilities.invokeLater(() -> {
 				splitPane.setDividerLocation(0.7);
@@ -495,7 +518,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	public void setEditMode(EditMode editMode) {
 		this.editMode = editMode;
 	}
-	
+
 	/**
 	 * Configures the scroll pane for the table, including setting up the custom header corner,
 	 * making components transparent, and applying the custom border.
@@ -503,25 +526,10 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	 * @param scroller the scroll pane to configure
 	 * @param table    the table within the scroll pane
 	 */
-	private void configureScrollHeaderCorner(JScrollPane scroller, JTable table, @Nullable Component filterRow) {
+	private void configureScrollHeaderCorner(JScrollPane scroller, JTable table) {
 		JTableHeader tableHeader = table.getTableHeader();
 		if (tableHeader != null) {
-			if (filterRow == null) {
-				setColumnHeader(scroller, tableHeader);
-			}
-			else {
-				log.debug("Configuring combined header for table");
-				JPanel combined = new JPanel(new BorderLayout()) {
-					@Override
-					public Color getBackground() {
-						return TableWithFilterAndDetails.this.getBackground();
-					}
-				};
-				combined.setOpaque(true);
-				combined.add(filterRow, BorderLayout.NORTH);
-				combined.add(tableHeader, BorderLayout.CENTER);
-				setColumnHeader(scroller, combined);
-			}
+			setColumnHeader(scroller, tableHeader);
 		}
 		scroller.setCorner(JScrollPane.UPPER_RIGHT_CORNER, new HeaderCorner(tableHeader));
 		scroller.setOpaque(false);
@@ -549,11 +557,10 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	 */
 	private static final int HEADER_FILTER_HEIGHT = 32;
 
-	private static class FilterRowPanel extends JPanel {
-		private final JTableHeader header;
+	private class FilterRowPanel extends JPanel {
 
-		FilterRowPanel(JTableHeader header) {
-			this.header = header;
+		FilterRowPanel() {
+			JTableHeader header = getHeader();
 			setLayout(new HeaderFilterLayout(header));
 			setOpaque(false);
 			header.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
@@ -569,7 +576,13 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 				@Override
 				public void columnMoved(TableColumnModelEvent e) {
+					// This event fires when the column is moved in the literal sense - including during the drag.
+					// However, we don't redo the layout until the drag stops.
+					// The problem with trying to actually defer it is because at the point where e.getFromIndex() != e.getToIndex(),
+					// the drag is still in progress, so the column is in a weird X position, not the final X pos.
 					sync();
+					// It seems to do a small layout jump sometimes, so do this just in case
+					SwingUtilities.invokeLater(this::sync);
 				}
 
 				@Override
@@ -589,22 +602,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			// Repaint when dragging
 			header.addMouseMotionListener(new MouseAdapter() {
 				@Override
-				public void mouseDragged(MouseEvent e) {
-					revalidate();
-					repaint();
-				}
-			});
-			header.addPropertyChangeListener(e -> {
-				if ("draggedColumn".equals(e.getPropertyName())) {
-					TableColumn column = (TableColumn) e.getNewValue();
-					if (column != null) {
-						for (Component comp : getComponents()) {
-							if (comp instanceof HeaderFilterWrapper wrapper && wrapper.getColumn() == column) {
-								setComponentZOrder(comp, 0);
-								break;
-							}
-						}
-					}
+				public void mouseReleased(MouseEvent e) {
 					revalidate();
 					repaint();
 				}
@@ -614,9 +612,13 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		@Override
 		public Dimension getPreferredSize() {
 			if (getComponentCount() > 0) {
-				return new Dimension(header.getPreferredSize().width, HEADER_FILTER_HEIGHT);
+				return new Dimension(getHeader().getPreferredSize().width, HEADER_FILTER_HEIGHT);
 			}
-			return new Dimension(header.getPreferredSize().width, 0);
+			return new Dimension(getHeader().getPreferredSize().width, 0);
+		}
+
+		private JTableHeader getHeader() {
+			return TableWithFilterAndDetails.this.table.getTableHeader();
 		}
 	}
 
@@ -651,9 +653,13 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 		@Override
 		public void layoutContainer(Container parent) {
+			if (header.getDraggedColumn() != null) {
+				// Wait for drag to end
+				return;
+			}
 			TableColumnModel tcm = header.getColumnModel();
 			for (Component comp : parent.getComponents()) {
-				if (comp instanceof HeaderFilterWrapper wrapper) {
+				if (comp instanceof TableWithFilterAndDetails.HeaderFilterWrapper wrapper) {
 					TableColumn column = wrapper.getColumn();
 					int viewIndex = -1;
 					for (int i = 0; i < tcm.getColumnCount(); i++) {
@@ -680,13 +686,14 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	 * A wrapper component that associates a filter component with a TableColumn.
 	 * This is used by HeaderFilterLayout to correctly position filters.
 	 */
-	private static class HeaderFilterWrapper extends JPanel {
+	private class HeaderFilterWrapper extends JPanel {
 		private final TableColumn column;
 
 		public HeaderFilterWrapper(TableColumn column, Component filter) {
 			super(new BorderLayout());
 			this.column = column;
 			add(filter, BorderLayout.CENTER);
+			// Provide small amount of inset
 			setBorder(new EmptyBorder(3, 2, 5, 2));
 			setOpaque(false);
 		}
@@ -699,25 +706,25 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	/**
 	 * A corner component for the JScrollPane that matches the header's look.
 	 */
-	private static class HeaderCorner extends JPanel {
+	private class HeaderCorner extends JPanel {
 		private final JTableHeader header;
 
 		HeaderCorner(JTableHeader header) {
 			this.header = header;
-			setOpaque(false);
 		}
 
 		@Override
 		public Color getBackground() {
-			return (header == null) ? super.getBackground() : header.getBackground();
+			return (header == null) ? TableWithFilterAndDetails.this.getBackground() : header.getBackground();
 		}
 
 		@Override
 		protected void paintComponent(Graphics g) {
-			if (header != null) {
-				g.setColor(header.getBackground());
-				g.fillRect(0, 0, getWidth(), getHeight());
+			if (header == null) {
+				return;
 			}
+			g.setColor(header.getBackground());
+			g.fillRect(0, 0, getWidth(), getHeight());
 			Color separatorColor = UIManager.getColor("TableHeader.separatorColor");
 			if (separatorColor == null) {
 				separatorColor = UIManager.getColor("TableHeader.bottomSeparatorColor");
