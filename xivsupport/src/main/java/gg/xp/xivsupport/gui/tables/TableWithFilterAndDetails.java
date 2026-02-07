@@ -329,6 +329,8 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 				refreshNeeded = RefreshType.FULL;
 				return;
 			}
+			// Since this is append or prune only, and event objects are not re-used, we can safely assume that if the
+			// first elements are the same, that there was no prune.
 			X firstBefore = dataBefore.get(0);
 			X firstAfter = dataAfter.get(0);
 			if (firstBefore == firstAfter) {
