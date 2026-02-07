@@ -503,7 +503,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	 * @param scroller the scroll pane to configure
 	 * @param table    the table within the scroll pane
 	 */
-	private static void configureScrollHeaderCorner(JScrollPane scroller, JTable table, @Nullable Component filterRow) {
+	private void configureScrollHeaderCorner(JScrollPane scroller, JTable table, @Nullable Component filterRow) {
 		JTableHeader tableHeader = table.getTableHeader();
 		if (tableHeader != null) {
 			if (filterRow == null) {
@@ -511,10 +511,15 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			}
 			else {
 				log.debug("Configuring combined header for table");
-				JPanel combined = new JPanel(new BorderLayout());
-				combined.setOpaque(false);
-				combined.add(tableHeader, BorderLayout.NORTH);
-				combined.add(filterRow, BorderLayout.CENTER);
+				JPanel combined = new JPanel(new BorderLayout()) {
+					@Override
+					public Color getBackground() {
+						return TableWithFilterAndDetails.this.getBackground();
+					}
+				};
+				combined.setOpaque(true);
+				combined.add(filterRow, BorderLayout.NORTH);
+				combined.add(tableHeader, BorderLayout.CENTER);
 				setColumnHeader(scroller, combined);
 			}
 		}
