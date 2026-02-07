@@ -138,4 +138,9 @@ public final class EventEntityFilter<I, X> implements VisualFilter<I> {
 		panel.add(comboBox);
 		return panel;
 	}
+
+	@Override
+	public Component getHeaderComponent() {
+		return comboBox;
+	}
 }

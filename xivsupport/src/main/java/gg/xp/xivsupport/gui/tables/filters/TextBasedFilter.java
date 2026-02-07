@@ -149,5 +149,10 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 		return panel;
 	}
 
+	@Override
+	public Component getHeaderComponent() {
+		return textBox;
+	}
+
 
 }

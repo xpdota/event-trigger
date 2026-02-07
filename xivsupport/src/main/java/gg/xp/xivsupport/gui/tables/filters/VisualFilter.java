@@ -24,4 +24,13 @@ public interface VisualFilter<X> {
 	 */
 	Component getComponent();
 
+	/**
+	 * Component to display when it is being shown in a table header.
+	 *
+	 * @return a component to display
+	 */
+	default Component getHeaderComponent() {
+		return getComponent();
+	}
+
 }

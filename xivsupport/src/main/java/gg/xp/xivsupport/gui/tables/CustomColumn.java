@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables;
 
+import gg.xp.xivsupport.gui.tables.filters.VisualFilter;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.table.TableColumn;
@@ -11,6 +12,7 @@ public class CustomColumn<X> {
 	private final String columnName;
 	private final Function<X, Object> getter;
 	private final Consumer<TableColumn> columnConfigurer;
+	private @Nullable Function<Runnable, VisualFilter<? super X>> filterCreator;
 
 	public CustomColumn(String columnName, Function<X, @Nullable Object> getter) {
 		this(columnName, getter, ignored -> {
@@ -58,5 +60,14 @@ public class CustomColumn<X> {
 			columnConfigurer.accept(c);
 			extraColumnConfigurer.accept(c);
 		});
+	}
+
+	public CustomColumn<X> withFilter(Function<Runnable, VisualFilter<? super X>> filterCreator) {
+		this.filterCreator = filterCreator;
+		return this;
+	}
+
+	public @Nullable VisualFilter<? super X> getFilter(Runnable onUpdate) {
+		return filterCreator == null ? null : filterCreator.apply(onUpdate);
 	}
 }
