@@ -26,8 +26,9 @@ public interface VisualFilter<X> {
 
 	/**
 	 * Component to display when it is being shown in a table header.
+	 * This typically returns a more compact version of the filter UI (e.g. just the input field).
 	 *
-	 * @return a component to display
+	 * @return a component to display in the table header
 	 */
 	default Component getHeaderComponent() {
 		return getComponent();

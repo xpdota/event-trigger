@@ -151,6 +151,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 
 	@Override
 	public Component getHeaderComponent() {
+		// Only return the text box for header display to save space
 		return textBox;
 	}
 
