@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.function.Consumer;
 
 public class AutoBottomScrollHelper extends JScrollPane {
@@ -24,7 +25,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		// and then have the event scroll down then remove itself.
 		// This isn't perfect, but it's good enough for now
 		setPreferredSize(getMaximumSize());
-		setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
 		atBottom = true;
 		this.stateCallback = val -> {
 			boolean old = autoScrollEnabled;
@@ -32,6 +33,32 @@ public class AutoBottomScrollHelper extends JScrollPane {
 			autoScrollEnabled = old;
 		};
 
+	}
+
+	private boolean headerLock;
+
+	@Override
+	public void setColumnHeaderView(Component view) {
+		if (headerLock) {
+			log.info("setColumnHeaderView blocked by lock");
+			return;
+		}
+		super.setColumnHeaderView(view);
+	}
+
+	@Override
+	public void setColumnHeader(JViewport columnHeader) {
+		if (headerLock) {
+			log.info("setColumnHeader blocked by lock");
+			return;
+		}
+		super.setColumnHeader(columnHeader);
+	}
+
+	public void setColumnHeaderViewLocked(Component view) {
+		headerLock = false;
+		setColumnHeaderView(view);
+		headerLock = true;
 	}
 
 	@Override
