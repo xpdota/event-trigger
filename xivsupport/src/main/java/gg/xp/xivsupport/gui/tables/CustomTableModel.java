@@ -253,14 +253,6 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		return Collections.unmodifiableList(data);
 	}
 
-	// Experimenting, don't use
-	public void overlayHackRefresh() {
-		updateDataOnly();
-		pendingRefresh.set(false);
-		data = newData;
-		dataSize = data.size();
-	}
-
 	private void processNewDataFull() {
 		JTable table = getTable();
 		if (table == null) {
