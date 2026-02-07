@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables;
 
+import gg.xp.xivsupport.gui.tables.filters.VisualFilter;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.table.TableColumn;
@@ -11,6 +12,7 @@ public class CustomColumn<X> {
 	private final String columnName;
 	private final Function<X, Object> getter;
 	private final Consumer<TableColumn> columnConfigurer;
+	private @Nullable Function<Runnable, VisualFilter<? super X>> filterCreator;
 
 	public CustomColumn(String columnName, Function<X, @Nullable Object> getter) {
 		this(columnName, getter, ignored -> {
@@ -58,5 +60,26 @@ public class CustomColumn<X> {
 			columnConfigurer.accept(c);
 			extraColumnConfigurer.accept(c);
 		});
+	}
+
+	/**
+	 * Associates a visual filter with this column.
+	 *
+	 * @param filterCreator a function that creates a {@link VisualFilter} given a callback to run when the filter is updated.
+	 * @return this column instance for chaining.
+	 */
+	public CustomColumn<X> withFilter(Function<Runnable, VisualFilter<? super X>> filterCreator) {
+		this.filterCreator = filterCreator;
+		return this;
+	}
+
+	/**
+	 * Returns the filter associated with this column, if any.
+	 *
+	 * @param onUpdate a callback to run when the filter is updated.
+	 * @return the visual filter, or null if no filter is associated.
+	 */
+	public @Nullable VisualFilter<? super X> getFilter(Runnable onUpdate) {
+		return filterCreator == null ? null : filterCreator.apply(onUpdate);
 	}
 }

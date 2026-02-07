@@ -70,6 +70,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 	private final Supplier<List<? extends X>> dataGetter;
 	private final List<CustomColumn<? super X>> columns;
 	private List<X> data = Collections.emptyList();
+	private int dataSize;
 	private volatile List<X> newData = data;
 	private final BiPredicate<? super X, ? super X> selectionEquivalence;
 
@@ -90,17 +91,20 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		JTable table = getTable();
 		if (table == null) {
 			data = newData;
+			dataSize = data.size();
 			// This shouldn't really happen anyway, no need to optimize
 			fireTableDataChanged();
 		}
 		else {
 			if (data.isEmpty()) {
+				data = newData;
+				dataSize = data.size();
 				// Fast path for when data is currently empty
 				fireTableDataChanged();
 				return;
 			}
 			ListSelectionModel selectionModel = table.getSelectionModel();
-			int oldSize = data.size();
+			int oldSize = dataSize;
 			int[] oldSelectionIndices = selectionModel.getSelectedIndices();
 			List<X> oldSelections;
 			try {
@@ -115,7 +119,14 @@ public class CustomTableModel<X> extends AbstractTableModel {
 			// TODO: smarter data provider that informs us of append-only operations
 			data = newData;
 			int newSize = data.size();
-			fireTableRowsInserted(oldSize, newSize - 1);
+			if (newSize > oldSize) {
+				dataSize = newSize;
+				// TODO: is this optimization actually providing any benefit?
+				// If you have a lot of things on the table, where it has to scroll, then appending to the bottom
+				// forces a re-render of every visible row anyway. So this is only useful when there are very few things
+				// on the screen, which isn't where optimization is important in the first place.
+				fireTableRowsInserted(oldSize, newSize - 1);
+			}
 			// fast path for typical case where data is only appended and we only have a single selection
 			if (oldSelections.size() == 1) {
 				X theItem = oldSelections.get(0);
@@ -247,18 +258,21 @@ public class CustomTableModel<X> extends AbstractTableModel {
 		updateDataOnly();
 		pendingRefresh.set(false);
 		data = newData;
+		dataSize = data.size();
 	}
 
 	private void processNewDataFull() {
 		JTable table = getTable();
 		if (table == null) {
 			data = newData;
+			dataSize = data.size();
 			fireTableDataChanged();
 		}
 		else {
 			if (data.isEmpty()) {
 				// Fast path for when data is currently empty
 				data = newData;
+				dataSize = data.size();
 				fireTableDataChanged();
 				return;
 			}
@@ -269,6 +283,7 @@ public class CustomTableModel<X> extends AbstractTableModel {
 					.collect(Collectors.toList());
 			// TODO: smarter data provider that informs us of append-only operations
 			data = newData;
+			dataSize = data.size();
 			fireTableDataChanged();
 			for (X oldItem : oldSelections) {
 				for (int i = 0; i < data.size(); i++) {
