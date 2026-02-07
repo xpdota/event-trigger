@@ -102,6 +102,20 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 					case ALWAYS -> true;
 				};
 			}
+
+			// TODO: when scrolled to the bottom, with auto scroll enabled, this repaints
+			// three times when new data is added.
+			// First is a partial repaint from the fireTableRowsInserted() call
+			// Second is a full repaint from the table itself, because it has to stretch itself out of its normal bounds
+			// Third is a full repaint from the AutoBottomScrollHelper
+			// We need #3 - otherwise, it wouldn't repaint after we scroll it down
+			// #2 is a bit more tricky - even if auto scroll is disabled, we still need some kind of repaint,
+			// especially if the row count decreases and we do a full repaint
+//			@Override
+//			public void repaint(long tm, int x, int y, int width, int height) {
+//				super.repaint(tm, x, y, width, height);
+//			}
+
 		};
 		mainModel.configureColumns(table);
 		table.setTableHeader(new JTableHeader(table.getColumnModel()));

@@ -1,5 +1,6 @@
 package gg.xp.xivsupport.gui.tables.filters;
 
+import gg.xp.xivsupport.gui.JTextFieldWithPlaceholder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 
 	private static final Logger log = LoggerFactory.getLogger(TextBasedFilter.class);
 
-	protected final JTextField textBox;
+	protected final JTextFieldWithPlaceholder textBox;
 	protected final Runnable filterUpdatedCallback;
 	protected final Function<X, String> textExtractor;
 	protected final Color originalBackground;
@@ -33,7 +34,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 		this.filterUpdatedCallback = filterUpdatedCallback;
 		this.textExtractor = textExtractor;
 		this.fieldLabel = fieldLabel;
-		textBox = new JTextField(10);
+		textBox = new JTextFieldWithPlaceholder(10);
 		textBox.setEditable(true);
 		textBox.getDocument().addDocumentListener(new DocumentListener() {
 			@Override
@@ -152,7 +153,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 	@Override
 	public Component getHeaderComponent() {
 		// Only return the text box for header display to save space
-		return textBox;
+		return textBox.setPlaceholderText(fieldLabel);
 	}
 
 

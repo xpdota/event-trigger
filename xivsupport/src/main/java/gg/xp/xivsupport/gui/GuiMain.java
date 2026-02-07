@@ -702,7 +702,7 @@ public class GuiMain {
 						GroovyColumns::getValues)
 				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer())))
 				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer())))
-				.addMainColumn(new CustomColumn<>("Buff/Ability", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer())))
+				.addMainColumn(new CustomColumn<>("Ability/Status", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer())))
 				.addMainColumn(new CustomColumn<>("Initial Duration", buffApplied -> {
 					long duration = buffApplied.getInitialDuration().getSeconds();
 					if (duration >= 9998 && duration <= 10000) {

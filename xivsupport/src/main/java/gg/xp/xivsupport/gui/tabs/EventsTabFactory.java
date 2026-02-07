@@ -82,7 +82,7 @@ public class EventsTabFactory {
 						.withFilter(EventEntityFilter::eventSourceFilter))
 				.addMainColumn(new CustomColumn<Event>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(nameJobRenderer))
 						.withFilter(EventEntityFilter::eventTargetFilter))
-				.addMainColumn(new CustomColumn<Event>("Buff/Ability", e -> e, c -> {
+				.addMainColumn(new CustomColumn<Event>("Ability/Status", e -> e, c -> {
 					c.setCellRenderer(asRenderer);
 				}).withFilter(EventAbilityOrBuffFilter::new))
 				.addMainColumn(new CustomColumn<Event>("Effects", e -> {
