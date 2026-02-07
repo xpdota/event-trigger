@@ -176,6 +176,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			stayAtBottom = null;
 			isAutoRefreshEnabled = true;
 		}
+		scroller.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		List<VisualFilter<? super X>> allFilters = new ArrayList<>();
 		filterCreators.stream().map(filterCreator -> filterCreator.apply(this::updateFiltering))
 				.filter(Objects::nonNull)

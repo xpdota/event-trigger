@@ -700,9 +700,12 @@ public class GuiMain {
 		StatusEffectRepository repo = container.getComponent(StatusEffectRepository.class);
 		TableWithFilterAndDetails<BuffApplied, PropertyValue> table = TableWithFilterAndDetails.builder("Status Effects", repo::getBuffs,
 						GroovyColumns::getValues)
-				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer())))
-				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer())))
-				.addMainColumn(new CustomColumn<>("Ability/Status", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer())))
+				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer()))
+						.withFilter(EventEntityFilter::buffSourceFilter))
+				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer()))
+						.withFilter(EventEntityFilter::buffTargetFilter))
+				.addMainColumn(new CustomColumn<>("Ability/Status", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer()))
+						.withFilter(EventAbilityOrBuffFilter::new))
 				.addMainColumn(new CustomColumn<>("Initial Duration", buffApplied -> {
 					long duration = buffApplied.getInitialDuration().getSeconds();
 					if (duration >= 9998 && duration <= 10000) {
@@ -715,9 +718,6 @@ public class GuiMain {
 				}))
 				.apply(GroovyColumns::addDetailColumns)
 				.setSelectionEquivalence(Object::equals)
-				.addFilter(EventEntityFilter::buffSourceFilter)
-				.addFilter(EventEntityFilter::buffTargetFilter)
-				.addFilter(EventAbilityOrBuffFilter::new)
 				.withRightClickRepo(rightClicks)
 				.build();
 		table.setBottomScroll(false);
@@ -740,16 +740,15 @@ public class GuiMain {
 		TableWithFilterAndDetails<ACTLogLineEvent, PropertyValue> table = TableWithFilterAndDetails.builder("ACT Log",
 						() -> rawStorage.getEventsOfType(ACTLogLineEvent.class),
 						GroovyColumns::getValues)
-				.addMainColumn(new CustomColumn<>("Line", actLogLineEvent -> {
+				.addMainColumn(new CustomColumn<ACTLogLineEvent>("Line", actLogLineEvent -> {
 					String line = actLogLineEvent.getLogLine();
 					if (actLogLineEvent.getLineNumber() < 100) {
 						return ' ' + line;
 					}
 					return line;
-				}))
+				}).withFilter(ActLineFilter::new))
 				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
-				.addFilter(ActLineFilter::new)
 				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
 				.build();

@@ -32,7 +32,7 @@ public class TextBasedFilter<X> implements VisualFilter<X> {
 
 	public TextBasedFilter(Runnable filterUpdatedCallback, String fieldLabel, Function<X, String> textExtractor) {
 		this.filterUpdatedCallback = filterUpdatedCallback;
-		this.textExtractor = textExtractor;
+		this.textExtractor = textExtractor.andThen(s -> s == null ? "" : s);
 		this.fieldLabel = fieldLabel;
 		textBox = new JTextFieldWithPlaceholder(10);
 		textBox.setEditable(true);

@@ -5,7 +5,9 @@ import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.gui.library.ActionTableFactory;
 import gg.xp.xivsupport.gui.library.NpcYellTableFactory;
 import gg.xp.xivsupport.gui.library.StatusTable;
+import gg.xp.xivsupport.gui.library.StatusTableFactory;
 import gg.xp.xivsupport.gui.library.ZonesTable;
+import gg.xp.xivsupport.gui.library.ZonesTableFactory;
 import gg.xp.xivsupport.gui.tables.filters.TextFieldWithValidation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +22,14 @@ public class IdPickerFactory {
 
 	private final ActionTableFactory actionTableFactory;
 	private final NpcYellTableFactory npcYellTableFactory;
+	private final ZonesTableFactory zonesTableFactory;
+	private final StatusTableFactory statusTableFactory;
 
-	public IdPickerFactory(ActionTableFactory actionTableFactory, NpcYellTableFactory npcYellTableFactory) {
+	public IdPickerFactory(ActionTableFactory actionTableFactory, NpcYellTableFactory npcYellTableFactory, ZonesTableFactory zonesTableFactory, StatusTableFactory statusTableFactory) {
 		this.actionTableFactory = actionTableFactory;
 		this.npcYellTableFactory = npcYellTableFactory;
+		this.zonesTableFactory = zonesTableFactory;
+		this.statusTableFactory = statusTableFactory;
 	}
 
 	public <X> Component pickerFor(Class<X> clazz, boolean required, Supplier<Long> getter, Consumer<Long> setter) {
@@ -31,10 +37,10 @@ public class IdPickerFactory {
 			return new IdPicker<>(required, getter, setter, ActionLibrary::forId, ActionInfo::actionid, ActionInfo::name, actionTableFactory::pickItem, ActionInfo::getIcon);
 		}
 		else if (clazz.equals(StatusEffectInfo.class)) {
-			return new IdPicker<>(required, getter, setter, StatusEffectLibrary::forId, StatusEffectInfo::statusEffectId, StatusEffectInfo::name, StatusTable::pickItem, statusEffectInfo -> statusEffectInfo.getIcon(0));
+			return new IdPicker<>(required, getter, setter, StatusEffectLibrary::forId, StatusEffectInfo::statusEffectId, StatusEffectInfo::name, statusTableFactory::pickItem, statusEffectInfo -> statusEffectInfo.getIcon(0));
 		}
 		else if (clazz.equals(ZoneInfo.class)) {
-			return new IdPicker<>(required, getter, setter, id -> ZoneLibrary.infoForZoneOrUnknown(id.intValue()), zi -> (long) zi.id(), ZoneInfo::getCapitalizedName, ZonesTable::pickItem, zone -> null);
+			return new IdPicker<>(required, getter, setter, id -> ZoneLibrary.infoForZoneOrUnknown(id.intValue()), zi -> (long) zi.id(), ZoneInfo::getCapitalizedName, zonesTableFactory::pickItem, zone -> null);
 		}
 		else if (clazz.equals(NpcYellInfo.class)) {
 			return new IdPicker<>(required, getter, setter, NpcYellLibrary.INSTANCE::forId, yi -> (long) yi.id(), NpcYellInfo::text, npcYellTableFactory::pickItem, item -> null);

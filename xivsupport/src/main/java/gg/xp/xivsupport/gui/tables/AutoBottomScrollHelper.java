@@ -25,7 +25,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		// and then have the event scroll down then remove itself.
 		// This isn't perfect, but it's good enough for now
 		setPreferredSize(getMaximumSize());
-		setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
 		atBottom = true;
 		this.stateCallback = val -> {
 			boolean old = autoScrollEnabled;
