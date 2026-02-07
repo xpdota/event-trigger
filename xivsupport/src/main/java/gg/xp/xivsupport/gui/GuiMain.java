@@ -781,12 +781,12 @@ public class GuiMain {
 						col.setMinWidth(80);
 						col.setMaxWidth(80);
 					}))
-					.addMainColumn(new CustomColumn<>("Thread", e -> e.getEvent().getThreadName(), col -> {
+					.addMainColumn(new CustomColumn<LogEvent>("Thread", e -> e.getEvent().getThreadName(), col -> {
 						col.setPreferredWidth(150);
-					}))
-					.addMainColumn(new CustomColumn<>("Level", e -> e.getEvent().getLevel(), col -> {
-						col.setMinWidth(50);
-						col.setMaxWidth(50);
+					}).withFilter(SystemLogThreadFilter::new))
+					.addMainColumn(new CustomColumn<LogEvent>("Level", e -> e.getEvent().getLevel(), col -> {
+						col.setMinWidth(80);
+						col.setMaxWidth(80);
 						col.setResizable(false);
 						col.setCellRenderer(new DefaultTableCellRenderer() {
 							private final Color defaultFg = getForeground();
@@ -806,26 +806,22 @@ public class GuiMain {
 								return comp;
 							}
 						});
-					}))
-					.addMainColumn(new CustomColumn<>("Where", e -> {
+					}).withFilter(LogLevelVisualFilter::new))
+					.addMainColumn(new CustomColumn<LogEvent>("Where", e -> {
 						StackTraceElement callerDataTop = e.getEvent().getCallerData()[0];
 						String className = callerDataTop.getClassName();
 						String[] split = className.split("\\.");
 						String simpleClassName = split[split.length - 1];
 						return simpleClassName + ':' + callerDataTop.getLineNumber();
-//						return e.getEvent().getLoggerName() + ":";
 					}, col -> {
 						col.setPreferredWidth(200);
-					}))
-					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded, col -> {
+					}).withFilter(SystemLogLoggerNameFilter::new))
+					.addMainColumn(new CustomColumn<LogEvent>("Line", LogEvent::getEncoded, col -> {
 						col.setPreferredWidth(900);
-					}))
+					}).withFilter(SystemLogTextFilter::new))
+
 					.withRightClickRepo(rightClicks)
 					.apply(GroovyColumns::addDetailColumns)
-					.addFilter(LogLevelVisualFilter::new)
-					.addFilter(SystemLogThreadFilter::new)
-					.addFilter(SystemLogLoggerNameFilter::new)
-					.addFilter(SystemLogTextFilter::new)
 					.addWidget(ignored -> {
 						JButton button = new JButton("Show Log File");
 						button.addActionListener(l -> {
