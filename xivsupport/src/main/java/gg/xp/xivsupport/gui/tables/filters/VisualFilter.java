@@ -24,4 +24,15 @@ public interface VisualFilter<X> {
 	 */
 	Component getComponent();
 
+	/**
+	 * Component to display when it is being shown in a table header.
+	 * This typically returns a more compact version of the filter UI (e.g. just the input field, with no associated
+	 * label, since it should be obvious what it is for by virtue of being part of the column).
+	 *
+	 * @return a component to display in the table header
+	 */
+	default Component getHeaderComponent() {
+		return getComponent();
+	}
+
 }

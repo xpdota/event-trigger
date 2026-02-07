@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@Deprecated // Use ZonesTableFactory
+@Deprecated(forRemoval = true) // Use ZonesTableFactory
 public final class ZonesTable {
 
 	private ZonesTable() {
