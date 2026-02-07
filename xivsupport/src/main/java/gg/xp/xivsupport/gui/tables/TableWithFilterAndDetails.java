@@ -530,7 +530,10 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		scroller.setBorder(new FilterTableScrollPaneBorder(scroller.getBorder(), tableHeader));
 	}
 
-	private static final int HEADER_FILTER_HEIGHT = 26;
+	/**
+	 * Height in pixels for the filter component area in the table header.
+	 */
+	private static final int HEADER_FILTER_HEIGHT = 32;
 
 	/**
 	 * A custom border for the JScrollPane that contains a table with header filters.
@@ -661,7 +664,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			super(new BorderLayout());
 			this.column = column;
 			add(filter, BorderLayout.CENTER);
-			setBorder(new EmptyBorder(1, 2, 1, 2));
+			setBorder(new EmptyBorder(3, 2, 5, 2));
 			setOpaque(false);
 		}
 
@@ -674,7 +677,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	 * A wrapper for TableCellRenderer that ensures header content (labels) are
 	 * positioned at the bottom, leaving room for filters at the top.
 	 */
-	private static class FilterHeaderRenderer implements TableCellRenderer {
+	private static class FilterHeaderRenderer implements TableCellRenderer, javax.swing.plaf.UIResource {
 		private final TableCellRenderer delegate;
 		private final JPanel wrapper = new JPanel(new BorderLayout());
 
@@ -686,12 +689,11 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
 			Component c = delegate.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-			if (wrapper.getComponentCount() == 0 || wrapper.getComponent(0) != c) {
-				wrapper.removeAll();
-				if (c != null) {
-					wrapper.add(c, BorderLayout.SOUTH);
-				}
+			wrapper.removeAll();
+			if (c != null) {
+				wrapper.add(c, BorderLayout.SOUTH);
 			}
+			wrapper.setBorder(new EmptyBorder(HEADER_FILTER_HEIGHT, 0, 0, 0));
 			return wrapper;
 		}
 	}
@@ -705,6 +707,30 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			super(columnModel);
 			setLayout(new HeaderFilterLayout(this));
 			setOpaque(false);
+		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+			// Paint the header background only for the area below filters.
+			// This enables rollover/pressed effects and standard header look in that area
+			// while keeping the filter area transparent.
+			int skipHeight = Arrays.stream(getComponents()).anyMatch(c -> c instanceof HeaderFilterWrapper) ? HEADER_FILTER_HEIGHT : 0;
+			Graphics2D g2 = (Graphics2D) g.create();
+			try {
+				g2.clipRect(0, skipHeight, getWidth(), getHeight() - skipHeight);
+				// Temporarily make it opaque so the UI delegate paints the background
+				boolean wasOpaque = isOpaque();
+				try {
+					setOpaque(true);
+					super.paintComponent(g2);
+				}
+				finally {
+					setOpaque(wasOpaque);
+				}
+			}
+			finally {
+				g2.dispose();
+			}
 		}
 
 		@Override
@@ -730,13 +756,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 
 		@Override
 		public Dimension getPreferredSize() {
-			Dimension d = super.getPreferredSize();
-			boolean hasFilters = Arrays.stream(getComponents()).anyMatch(c -> c instanceof HeaderFilterWrapper);
-			if (hasFilters) {
-				// Increase preferred height to accommodate filters
-				d.height += HEADER_FILTER_HEIGHT;
-			}
-			return d;
+			return super.getPreferredSize();
 		}
 	}
 
