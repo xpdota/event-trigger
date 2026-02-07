@@ -12,12 +12,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -522,7 +525,9 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 		}
 		scroller.setCorner(JScrollPane.UPPER_RIGHT_CORNER, new HeaderCorner(tableHeader));
 		scroller.setOpaque(false);
-		scroller.getViewport().setOpaque(false);
+		// Note: we do NOT set the main viewport to non-opaque, because we want the table area
+		// to have its normal background.
+		table.setFillsViewportHeight(true);
 		JViewport columnHeader = scroller.getColumnHeader();
 		if (columnHeader != null) {
 			columnHeader.setOpaque(false);
@@ -666,6 +671,40 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			add(filter, BorderLayout.CENTER);
 			setBorder(new EmptyBorder(3, 2, 5, 2));
 			setOpaque(false);
+			installRedispatcher(this);
+		}
+
+		private void installRedispatcher(Component comp) {
+			MouseAdapter adapter = new MouseAdapter() {
+				@Override
+				public void mouseMoved(MouseEvent e) {
+					redispatch(e);
+				}
+
+				@Override
+				public void mouseEntered(MouseEvent e) {
+					redispatch(e);
+				}
+
+				@Override
+				public void mouseExited(MouseEvent e) {
+					redispatch(e);
+				}
+
+				private void redispatch(MouseEvent e) {
+					JTableHeader header = (JTableHeader) SwingUtilities.getAncestorOfClass(JTableHeader.class, HeaderFilterWrapper.this);
+					if (header != null) {
+						header.dispatchEvent(SwingUtilities.convertMouseEvent(e.getComponent(), e, header));
+					}
+				}
+			};
+			comp.addMouseListener(adapter);
+			comp.addMouseMotionListener(adapter);
+			if (comp instanceof Container container) {
+				for (Component child : container.getComponents()) {
+					installRedispatcher(child);
+				}
+			}
 		}
 
 		public TableColumn getColumn() {
@@ -679,7 +718,50 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	 */
 	private static class FilterHeaderRenderer implements TableCellRenderer, javax.swing.plaf.UIResource {
 		private final TableCellRenderer delegate;
-		private final JPanel wrapper = new JPanel(new BorderLayout());
+		private final JPanel wrapper = new JPanel(new BorderLayout()) {
+			@Override
+			public void setBackground(Color bg) {
+				super.setBackground(bg);
+				if (getComponentCount() > 0) {
+					getComponent(0).setBackground(bg);
+				}
+			}
+
+			@Override
+			public void setForeground(Color fg) {
+				super.setForeground(fg);
+				if (getComponentCount() > 0) {
+					getComponent(0).setForeground(fg);
+				}
+			}
+
+			@Override
+			public void setFont(Font font) {
+				super.setFont(font);
+				if (getComponentCount() > 0) {
+					getComponent(0).setFont(font);
+				}
+			}
+
+			@Override
+			public void setBorder(Border border) {
+				Border spacing = new EmptyBorder(HEADER_FILTER_HEIGHT, 0, 0, 0);
+				if (border == null || border == spacing) {
+					super.setBorder(spacing);
+				}
+				else {
+					super.setBorder(new CompoundBorder(spacing, border));
+				}
+			}
+
+			@Override
+			protected void paintComponent(Graphics g) {
+				if (isOpaque()) {
+					g.setColor(getBackground());
+					g.fillRect(0, HEADER_FILTER_HEIGHT, getWidth(), getHeight() - HEADER_FILTER_HEIGHT);
+				}
+			}
+		};
 
 		public FilterHeaderRenderer(TableCellRenderer delegate) {
 			this.delegate = delegate;
@@ -692,8 +774,12 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 			wrapper.removeAll();
 			if (c != null) {
 				wrapper.add(c, BorderLayout.SOUTH);
+				wrapper.setBackground(c.getBackground());
+				wrapper.setForeground(c.getForeground());
+				wrapper.setFont(c.getFont());
+				wrapper.setEnabled(c.isEnabled());
+				wrapper.setOpaque(c.isOpaque());
 			}
-			wrapper.setBorder(new EmptyBorder(HEADER_FILTER_HEIGHT, 0, 0, 0));
 			return wrapper;
 		}
 	}
