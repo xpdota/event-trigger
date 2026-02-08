@@ -54,10 +54,10 @@ public final class ActionTableFactory {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
 				}).withFilter(t -> new IdFilter<>(t, "ID", ActionInfo::actionid)))
-				.addMainColumn(new CustomColumn<ActionInfo>("Name", ActionInfo::name, col -> {
+				.addMainColumn(new CustomColumn<>("Name", ActionInfo::name, col -> {
 					col.setPreferredWidth(200);
 				}).withFilter(t -> new TextBasedFilter<>(t, "Name", ActionInfo::name)))
-				.addMainColumn(new CustomColumn<ActionInfo>("Icon", ai -> {
+				.addMainColumn(new CustomColumn<>("Icon", ai -> {
 					ActionIcon icon = ai.getIcon();
 					if (icon == null || icon.isDefaultIcon()) {
 						return "";
@@ -77,16 +77,22 @@ public final class ActionTableFactory {
 					col.setMinWidth(30);
 					col.setMaxWidth(40);
 				}))
-				.addMainColumn(new CustomColumn<ActionInfo>("Description", ActionInfo::description, col -> {
+				.addMainColumn(new CustomColumn<>("Description", ActionInfo::description, col -> {
 					col.setPreferredWidth(500);
 				}).withFilter(t -> new TextBasedFilter<>(t, "Description", ActionInfo::description)))
 				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
 				.addMainColumn(new CustomColumn<>("Cast", ai -> {
+					// In the game files, cast times are represented as 100ms units, so we never need more than
+					// one decimal place.
 					double ct = ai.getCastTime();
 					if (ct == 0) {
 						return "";
 					}
-					return ct;
+					double extra = ai.getExtraCastTime();
+					if (extra > 0)  {
+						return "%.1f + %.1f".formatted(ct, extra);
+					}
+					return "%.1f".formatted(ct);
 				}))
 				.addMainColumn(new CustomColumn<>("Recast", ai -> {
 					int maxCharges = ai.maxCharges();
@@ -151,10 +157,10 @@ public final class ActionTableFactory {
 					col.setMinWidth(100);
 					col.setMaxWidth(100);
 				}).withFilter(t -> new IdFilter<>(t, "ID", ActionInfo::actionid)))
-				.addMainColumn(new CustomColumn<ActionInfo>("Name", ActionInfo::name, col -> {
+				.addMainColumn(new CustomColumn<>("Name", ActionInfo::name, col -> {
 					col.setPreferredWidth(200);
 				}).withFilter(t -> new TextBasedFilter<>(t, "Name", ActionInfo::name)))
-				.addMainColumn(new CustomColumn<ActionInfo>("Icon", ai -> {
+				.addMainColumn(new CustomColumn<>("Icon", ai -> {
 					ActionIcon icon = ai.getIcon();
 					if (icon == null || icon.isDefaultIcon()) {
 						return "";
@@ -174,16 +180,22 @@ public final class ActionTableFactory {
 					col.setMinWidth(30);
 					col.setMaxWidth(40);
 				}))
-				.addMainColumn(new CustomColumn<ActionInfo>("Description", ActionInfo::description, col -> {
+				.addMainColumn(new CustomColumn<>("Description", ActionInfo::description, col -> {
 					col.setPreferredWidth(500);
 				}).withFilter(t -> new TextBasedFilter<>(t, "Description", ActionInfo::description)))
 				.addMainColumn(new CustomColumn<>("Player Ability", ai -> ai.isPlayerAbility() ? "✓" : ""))
 				.addMainColumn(new CustomColumn<>("Cast", ai -> {
+					// In the game files, cast times are represented as 100ms units, so we never need more than
+					// one decimal place.
 					double ct = ai.getCastTime();
 					if (ct == 0) {
 						return "";
 					}
-					return ct;
+					double extra = ai.getExtraCastTime();
+					if (extra > 0)  {
+						return "%.1f + %.1f".formatted(ct, extra);
+					}
+					return "%.1f".formatted(ct);
 				}))
 				.addMainColumn(new CustomColumn<>("Recast", ai -> {
 					int maxCharges = ai.maxCharges();
