@@ -22,4 +22,9 @@ public @interface NpcCastCallout {
 	 * @return Whether the callout should be removed if the cast stops
 	 */
 	boolean cancellable() default false;
+
+	/**
+	 * @return Whether the callout should only trigger on the player casting the spell
+	 */
+	boolean onYou() default false;
 }

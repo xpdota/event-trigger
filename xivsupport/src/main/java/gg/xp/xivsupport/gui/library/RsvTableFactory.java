@@ -27,20 +27,19 @@ public class RsvTableFactory {
 	}
 
 	public TableWithFilterAndDetails<RsvEntry, Object> table() {
-		TableWithFilterAndDetails<RsvEntry, Object> table = TableWithFilterAndDetails.builder("RSV Entries", () -> {
+		TableWithFilterAndDetails<RsvEntry, Object> table = TableWithFilterAndDetails.<RsvEntry, Object>builder("RSV Entries", () -> {
 					List<RsvEntry> rsvEntries = new ArrayList<>(PersistentRsvLibrary.INSTANCE.dumpAll());
 					rsvEntries.sort(Comparator.comparing(RsvEntry::numericId));
 					return rsvEntries;
 				}, unused -> Collections.emptyList())
-				.addMainColumn(new CustomColumn<>("Language", rsv -> rsv.language().getShortCode(), c -> {
+				.addMainColumn(new CustomColumn<RsvEntry>("Language", rsv -> rsv.language().getShortCode(), c -> {
 					c.setMinWidth(50);
 					c.setMaxWidth(100);
-				}))
-				.addMainColumn(new CustomColumn<>("Key", RsvEntry::key))
-				.addMainColumn(new CustomColumn<>("Value", RsvEntry::value))
-				.addFilter(t -> new TextBasedFilter<>(t, "Language", rsv -> rsv.language().getShortCode() + ' ' + rsv.language().name()))
-				.addFilter(t -> new TextBasedFilter<>(t, "Key", RsvEntry::key))
-				.addFilter(t -> new TextBasedFilter<>(t, "Value", RsvEntry::value))
+				}).withFilter(t -> new TextBasedFilter<>(t, "Language", rsv -> rsv.language().getShortCode() + ' ' + rsv.language().name())))
+				.addMainColumn(new CustomColumn<RsvEntry>("Key", RsvEntry::key, c -> {
+				}).withFilter(t -> new TextBasedFilter<>(t, "Key", RsvEntry::key)))
+				.addMainColumn(new CustomColumn<RsvEntry>("Value", RsvEntry::value, c -> {
+				}).withFilter(t -> new TextBasedFilter<>(t, "Value", RsvEntry::value)))
 				.addFilter(GroovyFilter.forClass(RsvEntry.class, container.getComponent(GroovyManager.class), "it"))
 				.setFixedData(false)
 				.build();

@@ -8,6 +8,7 @@ import gg.xp.reevent.scan.ScanMe;
 import gg.xp.xivsupport.events.actlines.events.HasEffects;
 import gg.xp.xivsupport.events.actlines.events.HasSourceEntity;
 import gg.xp.xivsupport.events.actlines.events.HasTargetEntity;
+import gg.xp.xivsupport.events.actlines.events.HasTargetIndex;
 import gg.xp.xivsupport.events.misc.RawEventStorage;
 import gg.xp.xivsupport.events.misc.pulls.PullTracker;
 import gg.xp.xivsupport.groovy.GroovyManager;
@@ -24,6 +25,7 @@ import gg.xp.xivsupport.gui.tables.filters.PullNumberFilter;
 import gg.xp.xivsupport.gui.tables.filters.QuickFilters;
 import gg.xp.xivsupport.gui.tables.filters.SystemEventFilter;
 import gg.xp.xivsupport.gui.tables.groovy.GroovyColumns;
+import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectAndIndexRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.AbilityEffectListRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.ActionAndStatusRenderer;
 import gg.xp.xivsupport.gui.tables.renderers.NameJobRenderer;
@@ -74,26 +76,25 @@ public class EventsTabFactory {
 						rawStorage::getEvents,
 						GroovyColumns::getValues)
 				.addMainColumn(tdc.getColumnDef())
-				.addMainColumn(new CustomColumn<>("Type", e -> e.getClass().getSimpleName()))
-				.addMainColumn(new CustomColumn<>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(nameJobRenderer)))
-				.addMainColumn(new CustomColumn<>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(nameJobRenderer)))
-				.addMainColumn(new CustomColumn<>("Buff/Ability", Function.identity(), c -> {
+				.addMainColumn(new CustomColumn<Event>("Type", e -> e.getClass().getSimpleName())
+						.withFilter(EventClassFilterFilter::new))
+				.addMainColumn(new CustomColumn<Event>("Source", e -> e instanceof HasSourceEntity ? ((HasSourceEntity) e).getSource() : null, c -> c.setCellRenderer(nameJobRenderer))
+						.withFilter(EventEntityFilter::eventSourceFilter))
+				.addMainColumn(new CustomColumn<Event>("Target", e -> e instanceof HasTargetEntity ? ((HasTargetEntity) e).getTarget() : null, c -> c.setCellRenderer(nameJobRenderer))
+						.withFilter(EventEntityFilter::eventTargetFilter))
+				.addMainColumn(new CustomColumn<Event>("Ability/Status", e -> e, c -> {
 					c.setCellRenderer(asRenderer);
-				}))
-				.addMainColumn(new CustomColumn<>("Effects", e -> {
-					if (e instanceof HasEffects event) {
-						return event.getEffects();
+				}).withFilter(EventAbilityOrBuffFilter::new))
+				.addMainColumn(new CustomColumn<Event>("Effects", e -> {
+					if (e instanceof HasEffects || e instanceof HasTargetIndex) {
+						return e;
 					}
 					return null;
-				}, c -> c.setCellRenderer(new AbilityEffectListRenderer())))
+				}, c -> c.setCellRenderer(new AbilityEffectAndIndexRenderer())))
 				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
 				.addFilter(SystemEventFilter::new)
-				.addFilter(EventClassFilterFilter::new)
 				.addFilter(AbilityResolutionFilter::new)
-				.addFilter(EventEntityFilter::eventSourceFilter)
-				.addFilter(EventEntityFilter::eventTargetFilter)
-				.addFilter(EventAbilityOrBuffFilter::new)
 //				.addFilter(FreeformEventFilter::new)
 				.addFilter(r -> {
 					PullNumberFilter pullNumberFilter = new PullNumberFilter(pulls, r);

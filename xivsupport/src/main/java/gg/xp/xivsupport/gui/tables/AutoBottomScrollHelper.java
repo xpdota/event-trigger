@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.function.Consumer;
 
 public class AutoBottomScrollHelper extends JScrollPane {
@@ -24,7 +25,7 @@ public class AutoBottomScrollHelper extends JScrollPane {
 		// and then have the event scroll down then remove itself.
 		// This isn't perfect, but it's good enough for now
 		setPreferredSize(getMaximumSize());
-		setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
 		atBottom = true;
 		this.stateCallback = val -> {
 			boolean old = autoScrollEnabled;
@@ -32,6 +33,41 @@ public class AutoBottomScrollHelper extends JScrollPane {
 			autoScrollEnabled = old;
 		};
 
+	}
+
+	/**
+	 * A lock to prevent JTable's default configuration from overriding our custom header setup.
+	 */
+	private boolean headerLock;
+
+	@Override
+	public void setColumnHeaderView(Component view) {
+		if (headerLock) {
+			log.trace("setColumnHeaderView blocked by lock");
+			return;
+		}
+		super.setColumnHeaderView(view);
+	}
+
+	@Override
+	public void setColumnHeader(JViewport columnHeader) {
+		if (headerLock) {
+			log.trace("setColumnHeader blocked by lock");
+			return;
+		}
+		super.setColumnHeader(columnHeader);
+	}
+
+	/**
+	 * Sets the column header view and locks it, preventing JTable from automatically resetting
+	 * it to a standard JTableHeader via configureEnclosingScrollPane.
+	 *
+	 * @param view the component to set as the column header view
+	 */
+	public void setColumnHeaderViewLocked(Component view) {
+		headerLock = false;
+		setColumnHeaderView(view);
+		headerLock = true;
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.BuffRemoved;
 import gg.xp.xivsupport.events.actlines.events.CastLocationDataEvent;
+import gg.xp.xivsupport.events.actlines.events.DescribesCastLocation;
 import gg.xp.xivsupport.events.delaytest.BaseDelayedEvent;
 import gg.xp.xivsupport.events.state.RefreshCombatantsRequest;
 import gg.xp.xivsupport.events.state.combatstate.ActiveCastRepository;
@@ -226,6 +227,7 @@ public class SequentialTriggerController<X extends BaseEvent> {
 	 * @param value The value
 	 */
 	public void setParam(String name, Object value) {
+		log.debug("setParam: '{}'={}", name, value);
 		params.put(name, value);
 	}
 //
@@ -557,6 +559,13 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+	public DescribesCastLocation<AbilityCastStart> waitForCastLocation(AbilityCastStart event) {
+		if (event.getLocationInfo() != null) {
+			return event.getLocationInfo();
+		}
+		return waitEvent(CastLocationDataEvent.class, clde -> clde.originalEvent() == event);
+	}
+
 	/**
 	 * Wait for a cast to finish, or return immediately if it already has finished.
 	 *
@@ -588,6 +597,17 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		return out;
 	}
 
+	/**
+	 * Wait for an event matching a filter, but bail if we see an event matching a different filter.
+	 *
+	 * @param eventClass The event we want.
+	 * @param eventFilter The filter for the event.
+	 * @param stopOnType The type of event we want to stop on.
+	 * @param stopOn The filter for the stop event.
+	 * @return The event, unless we hit the stop condition first, in which case null is returned.
+	 * @param <Y> The type of event we want.
+	 * @param <Z> The type of event we want to stop on.
+	 */
 	public <Y, Z> @Nullable Y waitEventUntil(Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {
 		List<Y> events = waitEventsUntil(1, eventClass, eventFilter, stopOnType, stopOn);
 		if (events.isEmpty()) {
@@ -598,6 +618,20 @@ public class SequentialTriggerController<X extends BaseEvent> {
 		}
 	}
 
+
+	/**
+	 * Wait for events matching a filter, but stop collecting events once we see an event matching a different filter,
+	 * or when we hit our limit.
+	 *
+	 * @param limit The maximum number of events to wait for.
+	 * @param eventClass The event we want.
+	 * @param eventFilter The filter for the event.
+	 * @param stopOnType The type of event we want to stop on.
+	 * @param stopOn The filter for the stop event.
+	 * @return The list of events collected.
+	 * @param <Y> The type of event we want.
+	 * @param <Z> The type of event we want to stop on.
+	 */
 	public <Y, Z> List<Y> waitEventsUntil(int limit, Class<Y> eventClass, Predicate<Y> eventFilter, Class<Z> stopOnType, Predicate<Z> stopOn) {
 		List<Y> out = new ArrayList<>();
 		while (true) {

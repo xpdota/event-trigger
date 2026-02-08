@@ -65,6 +65,10 @@ public final class Platform {
 		return userDataDir;
 	}
 
+	public static Path getSystemLogFile() {
+		return getTriggeventDir().resolve("triggevent.log");
+	}
+
 	public static Path getSessionsDir() {
 		return Paths.get(getTriggeventDir().toString(), "sessions");
 	}
@@ -161,12 +165,22 @@ public final class Platform {
 				Runtime.getRuntime().exec(new String[]{"explorer.exe", "/select,\"" + file + '"'});
 			}
 			else {
-				Desktop.getDesktop().open(file.getParentFile());
+				Desktop desktop = Desktop.getDesktop();
+				if (desktop.isSupported(Desktop.Action.BROWSE_FILE_DIR)) {
+					desktop.browseFileDirectory(file);
+				}
+				else {
+					desktop.open(file.getParentFile());
+				}
 			}
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static void showLogFile() {
+		showFileInExplorer(getSystemLogFile().toFile());
 	}
 
 	public static File getFileSaveDir() {

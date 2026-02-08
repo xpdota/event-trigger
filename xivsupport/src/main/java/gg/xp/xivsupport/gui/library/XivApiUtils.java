@@ -5,6 +5,6 @@ final class XivApiUtils {
 	}
 
 	static String singleItemUrl(String sheetName, long id) {
-		return String.format("https://beta.xivapi.com/api/1/sheet/%s/%d", sheetName, id);
+		return String.format("https://v2.xivapi.com/api/sheet/%s/%d", sheetName, id);
 	}
 }

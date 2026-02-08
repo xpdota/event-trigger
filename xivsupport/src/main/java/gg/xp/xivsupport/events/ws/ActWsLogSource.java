@@ -197,6 +197,7 @@ public class ActWsLogSource implements EventSource {
 	}
 
 	// TODO: Request* methods should only work if we are running live
+	@LiveOnly
 	@HandleEvents
 	public void requestVersion(EventContext context, ActWsConnectedEvent event) {
 		try {
@@ -207,6 +208,7 @@ public class ActWsLogSource implements EventSource {
 		}
 	}
 
+	@LiveOnly
 	@HandleEvents
 	public void requestLanguage(EventContext context, ActWsConnectedEvent event) {
 		try {

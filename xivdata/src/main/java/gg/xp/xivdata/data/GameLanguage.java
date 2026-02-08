@@ -1,5 +1,8 @@
 package gg.xp.xivdata.data;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public enum GameLanguage {
 
 	Unknown("unknown"),
@@ -9,7 +12,10 @@ public enum GameLanguage {
 	Japanese("ja"),
 	Chinese("cn"),
 	Korean("ko"),
+	TraditionalChinese("tc")
 	;
+
+	private static final Logger log = LoggerFactory.getLogger(GameLanguage.class);
 
 	private final String shortCode;
 
@@ -27,6 +33,7 @@ public enum GameLanguage {
 				return value;
 			}
 		}
-		throw new IllegalArgumentException("No such language: " + code);
+		log.warn("Unknown language code: {}", code);
+		return Unknown;
 	}
 }

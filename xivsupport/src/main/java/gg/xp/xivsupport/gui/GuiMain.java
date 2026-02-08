@@ -192,7 +192,7 @@ public class GuiMain {
 		addTab("Summary", new SummaryTabPanel());
 		addTab("Plugin Settings", new PluginSettingsPanel());
 		addTab("Combatants", getCombatantsPanel());
-		addTab("Buffs", getStatusEffectsPanel());
+		addTab("Statuses", getStatusEffectsPanel());
 		addTab("Events", (eventPanel = getEventsPanel()));
 		addTab("ACT Log", getActLogPanel());
 		addTab("System Log", getSystemLogPanel());
@@ -700,9 +700,12 @@ public class GuiMain {
 		StatusEffectRepository repo = container.getComponent(StatusEffectRepository.class);
 		TableWithFilterAndDetails<BuffApplied, PropertyValue> table = TableWithFilterAndDetails.builder("Status Effects", repo::getBuffs,
 						GroovyColumns::getValues)
-				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer())))
-				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer())))
-				.addMainColumn(new CustomColumn<>("Buff/Ability", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer())))
+				.addMainColumn(new CustomColumn<>("Source", BuffApplied::getSource, c -> c.setCellRenderer(new NameJobRenderer()))
+						.withFilter(EventEntityFilter::buffSourceFilter))
+				.addMainColumn(new CustomColumn<>("Target", BuffApplied::getTarget, c -> c.setCellRenderer(new NameJobRenderer()))
+						.withFilter(EventEntityFilter::buffTargetFilter))
+				.addMainColumn(new CustomColumn<>("Ability/Status", BuffApplied::getBuff, c -> c.setCellRenderer(new ActionAndStatusRenderer()))
+						.withFilter(EventAbilityOrBuffFilter::new))
 				.addMainColumn(new CustomColumn<>("Initial Duration", buffApplied -> {
 					long duration = buffApplied.getInitialDuration().getSeconds();
 					if (duration >= 9998 && duration <= 10000) {
@@ -715,9 +718,6 @@ public class GuiMain {
 				}))
 				.apply(GroovyColumns::addDetailColumns)
 				.setSelectionEquivalence(Object::equals)
-				.addFilter(EventEntityFilter::buffSourceFilter)
-				.addFilter(EventEntityFilter::buffTargetFilter)
-				.addFilter(EventAbilityOrBuffFilter::new)
 				.withRightClickRepo(rightClicks)
 				.build();
 		table.setBottomScroll(false);
@@ -740,16 +740,15 @@ public class GuiMain {
 		TableWithFilterAndDetails<ACTLogLineEvent, PropertyValue> table = TableWithFilterAndDetails.builder("ACT Log",
 						() -> rawStorage.getEventsOfType(ACTLogLineEvent.class),
 						GroovyColumns::getValues)
-				.addMainColumn(new CustomColumn<>("Line", actLogLineEvent -> {
+				.addMainColumn(new CustomColumn<ACTLogLineEvent>("Line", actLogLineEvent -> {
 					String line = actLogLineEvent.getLogLine();
 					if (actLogLineEvent.getLineNumber() < 100) {
 						return ' ' + line;
 					}
 					return line;
-				}))
+				}).withFilter(ActLineFilter::new))
 				.apply(GroovyColumns::addDetailColumns)
 				.withRightClickRepo(rightClicks)
-				.addFilter(ActLineFilter::new)
 				.addWidget(replayNextPseudoFilter(ACTLogLineEvent.class))
 				.setAppendOrPruneOnly(true)
 				.build();
@@ -781,12 +780,12 @@ public class GuiMain {
 						col.setMinWidth(80);
 						col.setMaxWidth(80);
 					}))
-					.addMainColumn(new CustomColumn<>("Thread", e -> e.getEvent().getThreadName(), col -> {
+					.addMainColumn(new CustomColumn<LogEvent>("Thread", e -> e.getEvent().getThreadName(), col -> {
 						col.setPreferredWidth(150);
-					}))
-					.addMainColumn(new CustomColumn<>("Level", e -> e.getEvent().getLevel(), col -> {
-						col.setMinWidth(50);
-						col.setMaxWidth(50);
+					}).withFilter(SystemLogThreadFilter::new))
+					.addMainColumn(new CustomColumn<LogEvent>("Level", e -> e.getEvent().getLevel(), col -> {
+						col.setMinWidth(80);
+						col.setMaxWidth(80);
 						col.setResizable(false);
 						col.setCellRenderer(new DefaultTableCellRenderer() {
 							private final Color defaultFg = getForeground();
@@ -806,30 +805,26 @@ public class GuiMain {
 								return comp;
 							}
 						});
-					}))
-					.addMainColumn(new CustomColumn<>("Where", e -> {
+					}).withFilter(LogLevelVisualFilter::new))
+					.addMainColumn(new CustomColumn<LogEvent>("Where", e -> {
 						StackTraceElement callerDataTop = e.getEvent().getCallerData()[0];
 						String className = callerDataTop.getClassName();
 						String[] split = className.split("\\.");
 						String simpleClassName = split[split.length - 1];
 						return simpleClassName + ':' + callerDataTop.getLineNumber();
-//						return e.getEvent().getLoggerName() + ":";
 					}, col -> {
 						col.setPreferredWidth(200);
-					}))
-					.addMainColumn(new CustomColumn<>("Line", LogEvent::getEncoded, col -> {
+					}).withFilter(SystemLogLoggerNameFilter::new))
+					.addMainColumn(new CustomColumn<LogEvent>("Line", LogEvent::getEncoded, col -> {
 						col.setPreferredWidth(900);
-					}))
+					}).withFilter(SystemLogTextFilter::new))
+
 					.withRightClickRepo(rightClicks)
 					.apply(GroovyColumns::addDetailColumns)
-					.addFilter(LogLevelVisualFilter::new)
-					.addFilter(SystemLogThreadFilter::new)
-					.addFilter(SystemLogLoggerNameFilter::new)
-					.addFilter(SystemLogTextFilter::new)
 					.addWidget(ignored -> {
 						JButton button = new JButton("Show Log File");
 						button.addActionListener(l -> {
-							Platform.showFileInExplorer(Platform.getTriggeventDir().resolve("triggevent.log").toFile());
+							Platform.showLogFile();
 						});
 						return button;
 					})

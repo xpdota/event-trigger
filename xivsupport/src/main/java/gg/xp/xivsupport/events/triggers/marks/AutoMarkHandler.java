@@ -41,11 +41,6 @@ public class AutoMarkHandler {
 		return useTelesto;
 	}
 
-	@Deprecated
-	public BooleanSetting getKoreanMode() {
-		return koreanMode;
-	}
-
 	public EnumSetting<AutoMarkLanguage> getLanguageSetting() {
 		return languageSetting;
 	}
@@ -61,6 +56,8 @@ public class AutoMarkHandler {
 				case Japanese -> AutoMarkLanguage.JP;
 				// TODO: is this correct?
 				case Chinese -> AutoMarkLanguage.JP;
+				// TODO: is this correct?
+				case TraditionalChinese -> AutoMarkLanguage.JP;
 				case Korean -> AutoMarkLanguage.JP;
 			};
 		}

@@ -40,6 +40,7 @@ public class DotRefreshReminders {
 	private static final String dotKeyStub = "dot-tracker.enable-buff.";
 
 	private final BooleanSetting enableTts;
+	// TODO: is this exposed anywhere?
 	private final BooleanSetting enableFlyingText;
 	private final LongSetting dotRefreshAdvance;
 	private final Map<DotBuff, BooleanSetting> enabledDots = new LinkedHashMap<>();

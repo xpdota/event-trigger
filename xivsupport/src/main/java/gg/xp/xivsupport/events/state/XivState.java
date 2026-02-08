@@ -124,7 +124,19 @@ public interface XivState extends SubState {
 				.toList();
 	}
 
+	default List<XivCombatant> npcsByIds(long... ids) {
+		return getCombatantsListCopy()
+				.stream()
+				.filter(cbt -> cbt.npcIdMatches(ids))
+				.sorted(Comparator.comparing(XivCombatant::getId))
+				.toList();
+	}
+
 	void provideTransformation(long entityId, short transformationId);
 
 	void provideWeaponId(XivCombatant existing, short weaponId);
+
+	void provideNpcId(XivCombatant existing, long id);
+
+	void provideNpcNameId(XivCombatant existing, long id);
 }

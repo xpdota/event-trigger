@@ -36,4 +36,9 @@ public class LogLevelVisualFilter implements VisualFilter<LogEvent> {
 		panel.add(comboBox);
 		return panel;
 	}
+
+	@Override
+	public Component getHeaderComponent() {
+		return comboBox;
+	}
 }

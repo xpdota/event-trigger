@@ -39,6 +39,7 @@ public final class ScalableJFrameWindowsImpl extends ScalableJFrame {
 			createBufferStrategy(numBuffers);
 		}
 		super.setVisible(b);
+		SwingUtilities.invokeLater(() -> setAlwaysOnTop(b));
 	}
 
 	@Override
