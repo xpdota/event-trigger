@@ -129,7 +129,7 @@ public class GroovyFolderFilter implements Condition<Object> {
 
 	@Override
 	public String fixedLabel() {
-		return "Groovy Supplier Filter";
+		return "Groovy Folder Filter";
 	}
 
 	@Override
