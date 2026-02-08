@@ -560,7 +560,7 @@ public final class TableWithFilterAndDetails<X, D> extends TitleBorderFullsizePa
 	}
 
 	private static void setColumnHeader(JScrollPane scroller, Component view) {
-		log.debug("Setting column header view for scroller {}: {}", scroller, view);
+		log.trace("Setting column header view for scroller {}: {}", scroller, view);
 		if (scroller instanceof AutoBottomScrollHelper helper) {
 			helper.setColumnHeaderViewLocked(view);
 		}

@@ -28,7 +28,7 @@ public class CheckboxTreeNode extends JPanel {
 	private final DefaultTreeCellRenderer defaultRenderer;
 
 	public CheckboxTreeNode(JTree tree, BaseTrigger<?> item, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-		String stringLabel = item.getName();
+		String stringLabel = item.getTreeLabel();
 		checkBox = new JCheckBox();
 		DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
 		this.defaultRenderer = defaultRenderer;

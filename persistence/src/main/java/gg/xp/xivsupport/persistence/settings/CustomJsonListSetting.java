@@ -174,7 +174,7 @@ public class CustomJsonListSetting<X> extends ObservableSetting {
 			}
 			catch (Throwable e) {
 				stillFailing.add(failedItem);
-				log.trace("Failure: ", e);
+				log.warn("Failed to deserialize: ", e);
 			}
 		}
 		String value;
