@@ -35,12 +35,15 @@ public class AutoBottomScrollHelper extends JScrollPane {
 
 	}
 
+	/**
+	 * A lock to prevent JTable's default configuration from overriding our custom header setup.
+	 */
 	private boolean headerLock;
 
 	@Override
 	public void setColumnHeaderView(Component view) {
 		if (headerLock) {
-			log.info("setColumnHeaderView blocked by lock");
+			log.trace("setColumnHeaderView blocked by lock");
 			return;
 		}
 		super.setColumnHeaderView(view);
@@ -49,12 +52,18 @@ public class AutoBottomScrollHelper extends JScrollPane {
 	@Override
 	public void setColumnHeader(JViewport columnHeader) {
 		if (headerLock) {
-			log.info("setColumnHeader blocked by lock");
+			log.trace("setColumnHeader blocked by lock");
 			return;
 		}
 		super.setColumnHeader(columnHeader);
 	}
 
+	/**
+	 * Sets the column header view and locks it, preventing JTable from automatically resetting
+	 * it to a standard JTableHeader via configureEnclosingScrollPane.
+	 *
+	 * @param view the component to set as the column header view
+	 */
 	public void setColumnHeaderViewLocked(Component view) {
 		headerLock = false;
 		setColumnHeaderView(view);
