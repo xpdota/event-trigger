@@ -12,6 +12,7 @@ import gg.xp.xivsupport.events.state.XivState;
 /**
  * Example trigger pack for a duty
  */
+// TODO: this is very outdated
 // @CalloutRepo indicates that the system should scan for fields defined as ModifiableCallout. The user is presented
 // with a UI to enable/disable them, and change the callout text under the Plugins > Callouts tab.
 // The name chosen here will show in the UI.
@@ -24,11 +25,17 @@ public class Odin implements FilteredEventHandler {
 	// Since we have @CalloutRepo
 	private final ModifiableCallout<AbilityCastStart> valknut = ModifiableCallout.durationBasedCall("Valknut (Out)", "Out");
 
+	private final XivState state;
+
+	public Odin(XivState state) {
+		this.state = state;
+	}
+
 	// This comes from FilteredEventHandler. In this case, we want to restrict this set of triggers to a specific
 	// zone (Urth's Fount, in this case, Zone ID 394).
 	@Override
 	public boolean enabled(EventContext context) {
-		return context.getStateInfo().get(XivState.class).zoneIs(394);
+		return state.zoneIs(394);
 	}
 
 	// This is an actual callout. You can specify as many as you want, but you have to follow the usual Java conventions
