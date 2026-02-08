@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -20,6 +21,9 @@ public final class TriggerFolder extends BaseTrigger<Object> implements HasChild
 
 	private List<Condition<Object>> conditions = Collections.emptyList();
 	private List<BaseTrigger<?>> triggers = Collections.emptyList();
+
+	@JsonIgnore
+	private String extraLabel;
 
 	@Override
 	@JsonIgnore
@@ -78,6 +82,13 @@ public final class TriggerFolder extends BaseTrigger<Object> implements HasChild
 			}
 		});
 		triggers.forEach(trigger -> trigger.setParent(this));
+		List<String> extraLabels = conditions.stream().map(c -> c.getTreeLabel(this)).filter(Objects::nonNull).toList();
+		if (extraLabels.isEmpty()) {
+			extraLabel = null;
+		}
+		else {
+			extraLabel = String.join(", ", extraLabels);
+		}
 	}
 
 	@Override
@@ -132,5 +143,19 @@ public final class TriggerFolder extends BaseTrigger<Object> implements HasChild
 	@Override
 	public String toString() {
 		return "TriggerFolder(%s)".formatted(getName());
+	}
+
+	@JsonIgnore
+	@Override
+	public String getTreeLabel() {
+		String defaultLabel = super.getTreeLabel();
+		String extra = extraLabel;
+		if (extra == null)
+		{
+			return defaultLabel;
+		}
+		else {
+			return "%s (%s)".formatted(defaultLabel, extra);
+		}
 	}
 }

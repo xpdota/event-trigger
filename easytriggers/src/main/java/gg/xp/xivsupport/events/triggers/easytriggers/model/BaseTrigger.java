@@ -42,6 +42,11 @@ public abstract sealed class BaseTrigger<X> implements HasMutableConditions<X> p
 		return name;
 	}
 
+	@JsonIgnore
+	public String getTreeLabel() {
+		return getName();
+	}
+
 	public void setName(String name) {
 		this.name = name;
 	}

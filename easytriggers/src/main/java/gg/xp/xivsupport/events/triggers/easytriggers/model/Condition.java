@@ -41,4 +41,12 @@ public interface Condition<X> {
 		}
 		return (Class<X>) Object.class;
 	}
+
+	/**
+	 * @return An optional extra label to be used on the tree node for a trigger (e.g. to display a zone)
+	 */
+	@JsonIgnore
+	default @Nullable String getTreeLabel(BaseTrigger<?> parent) {
+		return null;
+	}
 }

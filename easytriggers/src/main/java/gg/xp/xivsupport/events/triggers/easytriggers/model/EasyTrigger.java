@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.reevent.events.Event;
 import gg.xp.reevent.events.EventContext;
+import gg.xp.xivsupport.events.triggers.easytriggers.conditions.ZoneIdFilter;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTrigger;
 import gg.xp.xivsupport.events.triggers.seq.SequentialTriggerConcurrencyMode;
 import gg.xp.xivsupport.events.triggers.seq.SqtTemplates;
@@ -16,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -30,6 +33,9 @@ public final class EasyTrigger<X> extends BaseTrigger<X> implements HasMutableAc
 
 	@JsonProperty
 	private SequentialTriggerConcurrencyMode concurrency = SequentialTriggerConcurrencyMode.BLOCK_NEW;
+
+	@JsonIgnore
+	private String extraLabel;
 
 	private Class<X> eventType = (Class<X>) Event.class;
 	private List<Condition<? super X>> conditions = Collections.emptyList();
@@ -87,6 +93,13 @@ public final class EasyTrigger<X> extends BaseTrigger<X> implements HasMutableAc
 				het.setEventType(getEventType());
 			}
 		});
+		List<String> extraLabels = conditions.stream().map(c -> c.getTreeLabel(this)).filter(Objects::nonNull).toList();
+		if (extraLabels.isEmpty()) {
+			extraLabel = null;
+		}
+		else {
+			extraLabel = String.join(", ", extraLabels);
+		}
 	}
 
 	@Override
@@ -195,5 +208,19 @@ public final class EasyTrigger<X> extends BaseTrigger<X> implements HasMutableAc
 	@Override
 	public String toString() {
 		return "EasyTrigger<%s>(%s)".formatted(getEventType().getSimpleName(), getName());
+	}
+
+	@JsonIgnore
+	@Override
+	public String getTreeLabel() {
+		String defaultLabel = super.getTreeLabel();
+		String extra = extraLabel;
+		if (extra == null)
+		{
+			return defaultLabel;
+		}
+		else {
+			return "%s (%s)".formatted(defaultLabel, extra);
+		}
 	}
 }

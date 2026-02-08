@@ -5,8 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.OptBoolean;
 import gg.xp.xivdata.data.*;
 import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.BaseTrigger;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.NumericOperator;
 import gg.xp.xivsupport.events.triggers.easytriggers.model.SimpleCondition;
+import gg.xp.xivsupport.events.triggers.easytriggers.model.TriggerFolder;
 import gg.xp.xivsupport.models.XivZone;
 import org.jetbrains.annotations.Nullable;
 
@@ -67,5 +69,14 @@ public class ZoneIdFilter implements SimpleCondition<Object> {
 	@Override
 	public Class<Object> getEventType() {
 		return Object.class;
+	}
+
+	@Override
+	@JsonIgnore
+	public @Nullable String getTreeLabel(BaseTrigger<?> bt) {
+		if (bt instanceof TriggerFolder && operator == NumericOperator.EQ && expected != 0) {
+			return ZoneLibrary.nameForZone((int) expected);
+		}
+		return SimpleCondition.super.getTreeLabel(bt);
 	}
 }
